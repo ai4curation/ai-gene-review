@@ -174,14 +174,21 @@ def quote_digest(reference_id: str, quote: str) -> str:
     return hashlib.sha256(f"{reference_id.strip()}\n{text}".encode()).hexdigest()[:16]
 
 
-def iter_local_quotes(data: Any) -> Iterator[Tuple[str, str, str]]:
-    """Yield ``(path, reference_id, supporting_text)`` for every local-source quote.
+def iter_local_quote_items(data: Any) -> Iterator[Tuple[str, str, Dict[str, Any]]]:
+    """Yield ``(path, reference_id, item)`` for every local-source quote.
 
+    ``item`` is the mapping holding the ``supporting_text``, so callers can read
+    sibling slots such as ``record_section``; ``path`` locates the item itself.
     Covers every ``supported_by`` list in the document and the quotes on
     ``references[].findings[]``, which inherit the parent reference's id.
+
+    >>> doc = {"references": [{"id": "file:x/y.txt", "findings": [{"supporting_text": "q"}]}],
+    ...        "core_functions": [{"supported_by": [{"reference_id": "PMID:1", "supporting_text": "p"}]}]}
+    >>> [(p, r) for p, r, _ in iter_local_quote_items(doc)]
+    [('references[0].findings[0]', 'file:x/y.txt')]
     """
 
-    def walk(node: Any, path: str) -> Iterator[Tuple[str, str, str]]:
+    def walk(node: Any, path: str) -> Iterator[Tuple[str, str, Dict[str, Any]]]:
         if isinstance(node, dict):
             supported_by = node.get("supported_by")
             if isinstance(supported_by, list):
@@ -217,7 +224,16 @@ def _emit(reference_id: Any, item: Dict[str, Any], path: str):
     quote = item.get("supporting_text")
     if not isinstance(quote, str) or not quote.strip():
         return
-    yield f"{path}.supporting_text", reference_id.strip(), quote
+    yield path, reference_id.strip(), item
+
+
+def iter_local_quotes(data: Any) -> Iterator[Tuple[str, str, str]]:
+    """Yield ``(path, reference_id, supporting_text)`` for every local-source quote.
+
+    ``path`` points at the ``supporting_text`` value; see ``iter_local_quote_items``.
+    """
+    for path, reference_id, item in iter_local_quote_items(data):
+        yield f"{path}.supporting_text", reference_id, item["supporting_text"]
 
 
 def find_local_quote_failures(

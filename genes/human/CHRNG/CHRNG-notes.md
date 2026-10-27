@@ -32,7 +32,7 @@ The displayed 517-residue P07510-1 and alternative P07510-2 are preserved. VSP05
 
 ### Provenance and checks
 
-The real Falcon provider attempt timed out at 90 seconds; the real Perplexity fallback returned 401 insufficient quota. No fabricated provider output was written. Exact-main caches take precedence over archived fresh variants. Human calcium source 16527851 is authenticated from published CHRNA1 PR4611; newly fetched primary caches are genuine normal outputs. The selected GO-CAM index has no target activity. No NEW process is proposed.
+The real Falcon provider attempt timed out at 90 seconds; the real Perplexity fallback returned 401 insufficient quota. No fabricated provider output was written. Exact-main caches take precedence over archived fresh variants. Human calcium source PMID:16527851 is authenticated from published CHRNA1 PR4611; newly fetched primary caches are genuine normal outputs. The selected GO-CAM index has no target activity. No NEW process is proposed.
 
 Authored source-artifact citations are bare provenance references and contain no self-quotations or VERIFIED claim for the artifact. Short primary snippets are counted cumulatively across the YAML and notes, including repetitions, within 25 words per source. These notes add no primary quotations. Normal validation/status/render and fresh source/ownership guards precede sealing. Review status does not count a campaign completion before the later approved/check-passing merge gate.
 
@@ -51,3 +51,17 @@ The core process link changes from skeletal muscle contraction (GO:0003009) to t
 For ligand recognition, native bovine fetal receptor Results identify the gamma pocket contribution: [PMID:39085615, “γY139 provides a hydrophobic cover, locking ACh”]. This is conserved subunit participation, not isolated human-gamma affinity. For calcium, the human study measures a modest fractional current near 3%; epsilon-containing adult receptors carry more. The revised YAML anchors state a measured current and calcium result rather than only naming the construct.
 
 The GO:0004888 replacement is lateral and mechanism-based: GO:0022848 is not its typed descendant in the retrieved ontology. In contrast, GO:0022848 is an explicit is_a child of GO:1904315. Historical qualifiers and all annotation actions stay intact. Five primary-supported reviews now cite their actual publications without a redundant artifact pointer; source-chain, binding-record and ontology provenance remains available where it contributes information. The earlier notes and history remain intact. This appendix adds one seven-word primary excerpt; conservative aggregate quotation counts include it and all repeats across the authored files.
+
+
+## 2026-10-26 acetylcholine module audit
+
+Reviewed all seeded assertions against human receptor reconstitution, calcium-current measurements and the existing source-specific audit. Original row payloads, product identifiers, signs and inherited proposals are retained. The core is a subunit contribution to the heteropentamer: alpha1 twice, beta1, delta and gamma or epsilon. Human PMID:27375219 / PMID:16527851 functional experiments are distinct from the native bovine structures in PMID:39085615 and Torpedo structural/pharmacological sources PMID:15701510 / PMID:21480901. The human calcium-current study independently supports complex-level calcium conduction and separates fetal/adult channels; no subunit alone is a calcium-selective channel.
+
+Historical binding observations remain observations. Where old reviews kept uninformative GO:0005515 as non-core, the current binding policy requires removal of that annotation only; supported specific keratin binding remains refined, and historical notes/provenance are not rewritten. The inherited CHRNG acetylcholine-binding proposal is retained as an inherited claim based on complementary ligand-pocket contribution in the bovine structural comparison; it is not a new gap filled in this module audit. CHRNA1's displayed P02708-2 corresponds to named isoform1, while P02708-1 is the P3A-containing named isoform2: accession suffix and displayed name are not interchangeable.
+
+Broad signaling, channel and transport assertions are resolved to measured receptor chemistry when warranted. Root organelle assertions are not replaced by subcompartments. Fetal akinesia establishes movement failure; reduced muscle mass does not independently prove a receptor-performed muscle growth program. Genuine presynaptic/homeostatic uncertainties in the prior fully sourced reviews remain explicit rather than being cleared mechanically. Provider/publication attempts are recorded by the shared normal acquisition job in acetylcholine-foundation-fetch; provider prose is not evidence.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. Removed 7 blanket reference-review templates; source-specific assessments and the underlying references/evidence remain available. All annotation actions remain unchanged for this gene.

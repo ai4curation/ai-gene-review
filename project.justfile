@@ -197,6 +197,13 @@ fetch-panther-paint-all *args="":
 paint-review-coverage *args="":
     uv run python scripts/paint_review_coverage.py {{args}}
 
+# Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
+# `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
+# verdict or overwrites a curated field; lists losses still judged with a gain verdict.
+# Dry run by default. Example: just fill-node-evidence --apply interpro/panther/PTHR12210/PTHR12210-review.yaml
+fill-node-evidence *args="":
+    uv run python -m ai_gene_review.validation.family_node_evidence {{args}}
+
 # Regenerate the PANTHER IBA project tables through public wrapper recipes.
 # These may download cached PAINT source data on the first run.
 [group('QC')]
@@ -996,9 +1003,11 @@ validate-predictions +files:
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;
 # predicted GO terms are deliberately unbound (a model may predict an obsolete or
 # nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
-# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which have no
-# excerpts for validate-predictions' source-evidence check. Same blocking policy
-# as validate-all.
+# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which follow
+# other conventions than validate-predictions' source-evidence check expects.
+# The one evidence rule they share, that a GOA file is never support
+# (supporting_text_goa_file), is checked here too. Same blocking policy as
+# validate-all.
 [group('QC')]
 validate-prediction-terms +files:
     #!/usr/bin/env bash
@@ -1010,6 +1019,7 @@ validate-prediction-terms +files:
     if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
         exit 1
     fi
+    uv run validate-goa-support {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -1433,6 +1443,13 @@ check-missing-goa organism:
         echo "Run 'just seed-goa-organism {{organism}}' to fix"
     fi
 
+# Fill record_section (CC:CAUTION, CC:FUNCTION, FT:BINDING, ...) on UniProt quotes.
+# Example: just backfill-record-sections genes/human/TP53
+#          just backfill-record-sections --dry-run
+#          just backfill-record-sections --fix
+backfill-record-sections *args:
+    uv run ai-gene-review backfill-record-sections {{args}}
+
 # Backfill isoform field on existing annotations for a specific gene
 backfill-isoforms organism gene:
     uv run ai-gene-review backfill-isoforms genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
@@ -1624,9 +1641,39 @@ refresh-benchmark-snapshot commit="origin/main":
     uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
     uv run python projects/BIOREASON_COMPARISON/cafa_style_argo139.py > /dev/null
     uv run python projects/BIOREASON_COMPARISON/analyze_second_review.py > /dev/null
-    uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
     echo "Review snapshot is now ${sha:0:10} (${date}). Headline changes:"
     diff <(echo "$before") <(uv run python scripts/benchmark_snapshot_headlines.py) || true
+
+# Move the ProtNLM2 evaluation's review snapshot (independent of the BioReason one) and
+# rebuild its derived reports, tables and figures. Prose numbers in projects/PROTNLM_EVALUATION.md,
+# donkey40.md, TREEGRAFTER.md and the per-cohort pages are hand-maintained; update them afterwards.
+refresh-protnlm-snapshot commit="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sha="$(git rev-parse --verify "{{commit}}^{commit}")"
+    date="$(git show -s --format=%cs "$sha")"
+    policy=projects/PROTNLM_EVALUATION/review-snapshot.yaml
+    uv run python - "$policy" "$sha" "$date" <<'PY'
+    import re, sys
+    path, sha, date = sys.argv[1:]
+    text = open(path).read()
+    text = re.sub(r"(?m)^review_snapshot_commit: .*$", f"review_snapshot_commit: {sha}", text, count=1)
+    text = re.sub(r'(?m)^review_snapshot_date: .*$', f'review_snapshot_date: "{date}"', text, count=1)
+    open(path, "w").write(text)
+    PY
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
+    uv run python projects/PROTNLM_EVALUATION/cor_goa_entailment.py
+    # OpenScientist reconciliation pins verbatim rationale excerpts; if it fails, re-pick
+    # the excerpts in openscientist-reconciliation/override-rationale.tsv.
+    uv run python projects/PROTNLM_EVALUATION/reconcile_openscientist.py > /dev/null
+    # DONKEY40 is post-snapshot and read from the working tree, but its tables must track
+    # the current prediction and gene reviews (offline; horse_iba.tsv is committed).
+    obo="$(uv run python -c 'from ai_gene_review.bioreason_ontology import ensure_frozen_go; print(ensure_frozen_go())')"
+    uv run python projects/PROTNLM_EVALUATION/donkey40/compare_donkey40.py --go-obo "$obo" > /dev/null
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_funnel.py refresh-reviews
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_funnel.py render
+    echo "ProtNLM2 review snapshot is now ${sha:0:10} (${date})."
+    echo "Update the hand-maintained numbers in PROTNLM_EVALUATION.md, donkey40.md, TREEGRAFTER.md and the per-cohort pages."
 
 # Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
 check-bioreason-sft-reviews:
@@ -2618,6 +2665,21 @@ scan-prose-panther *args="": ensure-panther-members
 panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
 
+# Audit Swiss-Prot reviews outside their exact taxon's reference proteome.
+# Default writes CSV + issue-ready Markdown; use --format csv/markdown, --species POPTR,
+# --refresh, --offline, or --output-dir PATH. See projects/ORPHAN_CURATED.md.
+[group('QC')]
+[positional-arguments]
+orphan-curated *ARGS:
+    uv run python -m ai_gene_review.analysis.orphan_curated "$@"
+
+# Render counterpart assessments from project frontmatter genes and curated review YAML.
+# Defaults to ORPHAN_CURATED; accepts --project PATH, --output-dir PATH and --check.
+[group('QC')]
+[positional-arguments]
+project-counterparts *ARGS:
+    uv run python -m ai_gene_review.analysis.project_counterparts "$@"
+
 # ============ History records (ported from dismech) ============
 # Append-only curation session history under history/. See docs/history.md.
 
@@ -2713,4 +2775,6 @@ validate-families: ensure-panther-members
     uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
     echo "Validating gene-level residue claims..."
     uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    echo "Validating residue numbers reported on reference findings..."
+    uv run python -m ai_gene_review.validation.finding_residue_mappings || rc=1
     exit $rc

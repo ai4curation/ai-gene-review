@@ -930,6 +930,7 @@
             ('review-references', 'References', (gene.references or []) | length, 'References cited in the gene review'),
             ('review-documentation', 'Documents', (gene.markdown_sections or []) | length, 'Additional documentation and notes'),
             ('review-isoforms', 'Isoforms', (gene.functional_isoforms or []) | length, 'Functional isoforms'),
+            ('review-alternative-records', 'Alternative Records', ((gene.alternative_records or []) | length) + ((gene.reference_proteome_assessments or []) | length), 'Manually assessed alternative accessions and searches'),
             ('review-proposed-terms', 'Proposed Terms', (gene.proposed_new_terms or []) | length, 'Proposed new ontology terms'),
             ('review-knowledge-gaps', 'Knowledge Gaps', (gene.knowledge_gaps or []) | length, 'Open biological questions'),
             ('review-questions', 'Questions', (gene.suggested_questions or []) | length, 'Suggested questions for experts'),
@@ -952,6 +953,51 @@
             </span>
         </div>
         <p>{{ gene.description }}</p>
+    </div>
+    {% endif %}
+
+    {% if gene.alternative_records or gene.reference_proteome_assessments %}
+    <div class="section" id="review-alternative-records">
+        <h2 class="section-title">Alternative Records</h2>
+        <p>The preferred accession for this review is {{ gene.id }}. These relationships are manually assessed.</p>
+        {% for record in gene.alternative_records or [] %}
+        <div class="description-card">
+            <h3><a href="https://www.uniprot.org/uniprotkb/{{ record.id }}/entry">{{ record.id }}</a></h3>
+            <p>{{ record.relationship | replace('_', ' ') }} · Reviewed {{ record.reviewed_on }}</p>
+            <p>Reference proteome: <a href="https://www.uniprot.org/proteomes/{{ record.reference_proteome }}">{{ record.reference_proteome }}</a></p>
+            <p>{{ record.reason }}</p>
+            {% for evidence in record.evidence %}
+            <details>
+                <summary>{{ evidence.type | replace('_', ' ') }}</summary>
+                <p>{{ evidence.description }}</p>
+                {% for support in evidence.supported_by %}
+                {% set source_href = (gene.alternative_reference_hrefs or {}).get(support.reference_id, support.reference_id | curie_to_url) %}
+                <p>{% if source_href != '#' %}<a href="{{ source_href }}">{{ support.reference_id }}</a>{% else %}{{ support.reference_id }}{% endif %}</p>
+                {% if support.supporting_text %}<blockquote>{{ support.supporting_text }}</blockquote>{% endif %}
+                {% endfor %}
+            </details>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% for assessment in gene.reference_proteome_assessments or [] %}
+        <div class="description-card">
+            <h3>{{ assessment.status | replace('_', ' ') }}</h3>
+            <p>Reviewed {{ assessment.reviewed_on }} · Searched:
+            {% for proteome in assessment.reference_proteomes %}<a href="https://www.uniprot.org/proteomes/{{ proteome }}">{{ proteome }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+            <p>{{ assessment.reason }}</p>
+            {% for evidence in assessment.evidence %}
+            <details>
+                <summary>{{ evidence.type | replace('_', ' ') }}</summary>
+                <p>{{ evidence.description }}</p>
+                {% for support in evidence.supported_by %}
+                {% set source_href = (gene.alternative_reference_hrefs or {}).get(support.reference_id, support.reference_id | curie_to_url) %}
+                <p>{% if source_href != '#' %}<a href="{{ source_href }}">{{ support.reference_id }}</a>{% else %}{{ support.reference_id }}{% endif %}</p>
+                {% if support.supporting_text %}<blockquote>{{ support.supporting_text }}</blockquote>{% endif %}
+                {% endfor %}
+            </details>
+            {% endfor %}
+        </div>
+        {% endfor %}
     </div>
     {% endif %}
 
@@ -1222,6 +1268,21 @@
                                 </a>
                             </span>
                             {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% set dec = annotation.review.decomposed_into if annotation.review else none %}
+                        {% if dec %}
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Context of precomposed term:</strong>
+                            {% for g in dec.gocam_associations or [] %}
+                            <span class="badge">GO-CAM <a href="https://bioregistry.io/{{ g.model if g.model.startswith('gomodel:') else 'gomodel:' ~ g.model }}" target="_blank" class="term-link">{{ g.title | default(g.model) }}</a></span>
+                            {% endfor %}
+                            {% for m in dec.module_associations or [] %}
+                            <span class="badge">module {{ m.module }}{% if m.element %} / {{ m.element }}{% endif %}</span>
+                            {% endfor %}
+                            {% if dec.in_core_functions %}<span class="badge">in core functions</span>{% endif %}
+                            {% if dec.context_dropped %}<span class="badge">context dropped</span>{% endif %}
+                            {% if dec.notes %}<div>{{ dec.notes }}</div>{% endif %}
                         </div>
                         {% endif %}
                         {% if annotation.review and annotation.review.supported_by %}

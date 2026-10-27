@@ -16,3 +16,32 @@
   No direct biochemical assay of Q88KT1 from KT2440 was found, so its assignment
   remains a strong family- and pathway-context inference rather than
   strain-specific experimental evidence.
+
+## 2026-10-25: PhnWX cross-species module audit
+
+Rechecked all seven existing annotations. The defining activity and phosphonate
+catabolism remain ACCEPT, supported by curated HAMAP MF_01375 and the exact PhnX
+family. Independent chemistry is established in **Bacillus cereus and Salmonella**
+(PMID:9649311), and magnesium coordination in **B. cereus** (PMID:10956028).
+Neither experiment tested KT2440 Q88KT1. NG2 pathway activity (PMID:9841125) and
+BIRD-1 regulation (PMID:35229442) likewise remain explicitly strain-scoped.
+
+Changed cytosol from KEEP_AS_NON_CORE to UNDECIDED: its only cited support was its
+own UniProt electronic GO line. Intracellular catabolic context makes the location
+plausible, but no independent localization evidence for Q88KT1 was retrieved.
+The absence of such evidence does not establish a different localization.
+
+Retained removal of phosphoglycolate phosphatase and DNA-repair annotations. The
+HAD superfamily includes multiple substrate specializations; Q88KT1 has the
+PhnX-specific signature and catalytic mechanism. Corrected the earlier rationale:
+a free phosphoglycolate phosphatase annotation is not evidence for hydrolyzing
+3'-phosphoglycolate directly on damaged DNA. No claim about a particular ancestral
+TreeGrafter node is made without inspecting that node.
+
+Replaced the AI-report citation in core support with PMID:9649311, added explicit
+reference assessments, and annotated UniProt quote sections using the helper.
+No new GO assertion was added.
+
+`just fetch-fitness PSEPK phnX` failed because neither a local FEBA database nor
+the remote source was reachable; no artifact was written. This is a data-access
+limitation, not a negative fitness result.

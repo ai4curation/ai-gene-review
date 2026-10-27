@@ -16,3 +16,21 @@
 
 ## Review decisions
 - Generic root/parent MFs MODIFY -> GO:0004737; all else ACCEPT. Core BP = GO:0019660 to follow PomBase (differs from ScPDC1 core, which uses GO:0019655).
+
+
+## 2026-10-25 alcoholic-fermentation member audit
+
+PMID:25102102 identifies Pdc101 (SPAC1F8.07c; Q92345) as the predominant growth-phase PDC. “Therefore, Pdc101 is most likely the primary pyruvate decarboxylase that supports exponential growth.” Failure to recover deletion is suggestive, not definitive proof of essentiality. Its generic 2-oxocarboxylate UniProt reaction does not alone prove pyruvate specificity; the PDC family classification and primary paralog analysis provide that context.
+
+Exact current UniProt PANTHER cross-references (official labels checked against the local PANTHER ontology):
+
+- DR   PANTHER; PTHR43452; PYRUVATE DECARBOXYLASE; 1.
+- DR   PANTHER; PTHR43452:SF1; PYRUVATE DECARBOXYLASE C186.09-RELATED; 1.
+
+The cached PomBase GO-CAM 678073a900000393 includes the acetaldehyde-producing PDC activities and downstream ethanol/acetate branches. This supports keeping the upstream process appropriately broad; it does not assign all product branches to every enzyme. PDC activities are family-supported, with stronger isozyme-specific physiology for Pdc101/Pdc201/Pdc202 than Pdc102.
+
+Research provenance: normal fetch/publication caching completed. No pre-existing provider research was available for these records. The default Falcon attempt for SCHPO adh4 failed authentication; its perplexity-lite fallback failed because quota/credits were unavailable (session log /tmp/bacillus-ferment-deep.log). The same known outage was not retried for seven additional genes. This is manual primary-literature research, not a generated provider report. FEBA fitness data are not required for these eukaryotic genes. Cached full-text flags were inspected; abstracts are not represented as full-text readings. UniProt quotes use curated statements or family/features, not DE names, GO annotation lines, ARBA predictions or protein-existence levels.
+
+Every original annotation was independently assessed; no source annotation fields or negation flags were changed. No NEW annotation rows were added. Core functions distinguish catalytic activity from stress induction and avoid pathway-exclusivity or compartment assumptions. Review counts: 9 rows; ACCEPT=7, MODIFY=2. Targeted schema, quote, consistency and ontology validation is run after record-section backfill.
+
+Validation outcome: targeted `just validate SCHPO pdc101` passed; the matching codex history record also passed schema validation. Original source annotation fields were preserved.
