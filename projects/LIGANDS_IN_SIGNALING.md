@@ -324,12 +324,15 @@ validators.
 - **[Bombesin receptor signaling](../modules/bombesin_receptor_signaling.yaml)** (*bombesin receptor
   signaling pathway*, `GO:0031989`). Two-step pan-species module. Ligands: GRP
   (`PANTHER:PTHR16866:SF2`) and NMB (`PANTHER:PTHR16866:SF3`, within `PANTHER:PTHR16866`
-  `GASTRIN-RELEASING PEPTIDE`, PAINT node `PTN008565241`), *bombesin receptor binding*
-  (`GO:0031853`), *neuromedin B receptor binding* (`GO:0031710`), and *neuropeptide hormone
-  activity* (`GO:0005184`). Receptors: GRPR (`PANTHER:PTHR45695:SF7`), NMBR
-  (`PANTHER:PTHR45695:SF8`), and BRS3 (`PANTHER:PTHR45695:SF6`), *bombesin receptor activity*
-  (`GO:0004946`). GOA Category A gap resolved in the new human `GRP` and `NMB` gene reviews (`NEW`
-  `GO:0031989` on both genes, plus `MODIFY` on `GO:0007218` → `GO:0031989`).
+  `GASTRIN-RELEASING PEPTIDE`, PAINT node `PTN008565241`), *neuropeptide hormone activity*
+  (`GO:0005184`; with receptor-specific binding terms *gastrin-releasing peptide receptor binding*
+  `GO:0031709` and *neuromedin B receptor binding* `GO:0031710` under *bombesin receptor binding*
+  `GO:0031705`). Receptors: GRPR (`PANTHER:PTHR45695:SF7`), NMBR (`PANTHER:PTHR45695:SF8`), and BRS3
+  (`PANTHER:PTHR45695:SF6`), *bombesin receptor activity* (`GO:0004946`). GOA Category A gap
+  resolved in the new human `GRP` and `NMB` gene reviews (`NEW` `GO:0031989` on both genes,
+  retaining complementary `GO:0007218` *neuropeptide signaling pathway* as `ACCEPT`, plus `MODIFY` on
+  `GO:0007165` → `GO:0031989` on both genes, `MODIFY` on `GO:1900738` → `GO:0007200` on `GRP`, and
+  `MODIFY` on `GO:0005179` → `GO:0005184` on `NMB`).
 - **[Collagen-DDR receptor tyrosine kinase signaling](../modules/collagen_ddr_signaling.yaml)**
   (*collagen-activated tyrosine kinase receptor signaling pathway*, `GO:0038063`). Two-step
   pan-species module. Ligands: fibrillar and basement-membrane collagen triple-helical chains
@@ -388,17 +391,18 @@ validators.
   `GO:0008009` (*chemokine activity*, `PMID:10820279`, with `source_defects`) and the InterPro2GO
   `IEA` `GO:0004866` (*endopeptidase inhibitor activity*).
 - **C3, TSHB, CGA, GRP, NMB, and COL1A1 gene reviews (Tranche 4B):** updated human `C3`
-  (`genes/human/C3/C3-ai-review.yaml`) to change all four UniProt `IDA` `GO:0008009` (*chemokine
-  activity*) rows (`PMID:342601`, `PMID:5778786`, `PMID:37169960`, `PMID:37852260`) from `ACCEPT`
-  to `REMOVE` with `source_defects` (`WRONG_TERM` → `GO:0001664`), matching `C5` and
-  `PTHR11412-review.yaml`; created the full human `TSHB` (`genes/human/TSHB/TSHB-ai-review.yaml`)
-  and `CGA` (`genes/human/CGA/CGA-ai-review.yaml`) reviews for `GO:0038194` (*thyroid-stimulating
-  hormone signaling pathway*); created the full human `GRP` (`genes/human/GRP/GRP-ai-review.yaml`)
-  and `NMB` (`genes/human/NMB/NMB-ai-review.yaml`) reviews for `GO:0031989` (*bombesin receptor
-  signaling pathway*); and updated human `COL1A1` (`genes/human/COL1A1/COL1A1-ai-review.yaml`) to
-  add `NEW` `IC` annotations and a second `core_functions` entry for `GO:0048018` (*receptor
-  ligand activity*) and `GO:0038063` (*collagen-activated tyrosine kinase receptor signaling
-  pathway*).
+  (`genes/human/C3/C3-ai-review.yaml`) so that all four UniProt `IDA` `GO:0008009` (*chemokine
+  activity*) rows (`PMID:342601` previously `REMOVE`, `PMID:37169960` and `PMID:37852260` previously
+  `MODIFY`, and `PMID:5778786` previously `UNDECIDED`) are uniformly `REMOVE` with `source_defects`
+  (`WRONG_TERM` with `REPOINT` to `GO:0048018` on `PMID:37169960`/`PMID:37852260` and `DELETE_ROW` on
+  `PMID:342601`/`PMID:5778786`), matching `C5` and `PTHR11412-review.yaml`; created the full human
+  `TSHB` (`genes/human/TSHB/TSHB-ai-review.yaml`) and `CGA` (`genes/human/CGA/CGA-ai-review.yaml`)
+  reviews for `GO:0038194` (*thyroid-stimulating hormone signaling pathway*); created the full human
+  `GRP` (`genes/human/GRP/GRP-ai-review.yaml`) and `NMB` (`genes/human/NMB/NMB-ai-review.yaml`)
+  reviews for `GO:0031989` (*bombesin receptor signaling pathway*); and updated human `COL1A1`
+  (`genes/human/COL1A1/COL1A1-ai-review.yaml`) to add `NEW` `IC` annotations and a second
+  `core_functions` entry for `GO:0048018` (*receptor ligand activity*) and `GO:0038063`
+  (*collagen-activated tyrosine kinase receptor signaling pathway*).
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
   `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`, `PTHR11515`, `PTHR11509`,
   `PTHR16866`, `PTHR24023`):
