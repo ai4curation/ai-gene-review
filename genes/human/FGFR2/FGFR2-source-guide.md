@@ -9,9 +9,10 @@ The review YAML remains the single record of decisions.
 
 FGFR2 is the FGF receptor and tyrosine kinase; GRB2 is a signaling adaptor that
 binds it. An interaction with GRB2 does not give FGFR2 GRB2's adaptor activity.
-The narrower FGF-binding replacements at indices 32 and 34 are supported by
-actual ligand–receptor structural results, rather than by a general objection
-to the term protein binding.
+The FGF-binding replacements at indices 32–36 identify measured ligand
+recognition. Indices 32 and 34 use recovered original structural evidence;
+33, 35 and 36 use explicit positive abstract-level reports with complete
+Methods limits retained. No replacement is inferred solely from a paper title.
 
 The original PMID:8663044 Table I, Materials and Figure 3 distinguish **human
 FGFR2b** from **mouse FGFR2c**, expressed in murine BaF3 cells. FGF1 can activate
@@ -83,7 +84,7 @@ human products.
 
 | Indices | Actual evidence and boundary |
 | --- | --- |
-| 37 | PMID:22726438 identifies GRB2 as adaptor and FGFR2 as receptor. Full operative interaction evidence was not recovered; receptor–adaptor binding is not adaptor activity. |
+| 37 | The PMID:22726438 abstract explicitly reports dimeric GRB2 binding FGFR2 C termini. Complete Methods remain unread; the positive association does not give FGFR2 adaptor activity. |
 | 38, 40 | IntAct identifies exact FGFR2–FGF1 or FGFR2–FGF2 NMR/direct-pair records despite drug-focused titles. Original panels remain unread, as does the later erratum associated with PMID:23597563. |
 | 39 | PMID:25241761 IntAct records identify HeLa proximity-ligation evidence with FGF1/FGF10. Proximity is not a direct-affinity measurement; original panels remain unread. |
 | 41 | Genuine BioPlex network rows identify FGFR1/FGF2 in 293T and FGF1 in HCT116. Original Methods use tagged human baits and gene-level network assembly. Association is supported; direct interfaces and natural-isoform specificity are not established by those rows. |
@@ -104,8 +105,12 @@ read original Methods text and exact network rows. Conversely, an HTTP 200 BioC
 response saying no article was found is not full-text access.
 
 Original operative evidence remains incomplete for the sources listed in
-`access_limits` in the evidence file. Their source-specific decisions remain
-UNDECIDED; other supporting annotations are retained independently. In particular,
+`access_limits` in the evidence file. That limit is not a blanket judgment on
+every claim. The `abstract_followup_2026_10_27` section records positive
+statements directly present in the immutable abstracts and distinguishes them
+from unresolved source details. Established generic receptor, kinase and membrane
+claims can also be retained with explicit curator deference and independently
+read target evidence. In particular,
 the PMID:21412257 abstract does not justify rejecting the negative keratinocyte
 proliferation annotation, and endogenous nuclear localization is not dismissed
 merely because FGFR2 is a transmembrane receptor. The original PMID:17959718
@@ -116,3 +121,35 @@ All inherited publication quotations and reference/findings associations remain
 unchanged. No new quotations were added. Current assessments and precise locators
 carry the new evidence boundaries; the inherited provider report is background,
 not a substitute for reading a primary source.
+
+## Follow-up: positive evidence versus missing detail
+
+PMID:8386828 explicitly reports human FGFR2 binding/autophosphorylation and
+nanomolar FGF5 binding; missing complete Methods do not erase that measurement.
+PMID:15629145 reports KGFR Y769-mutant effects on PLCG/FRS2 phosphorylation,
+MAPK activation and proliferation. Generic receptor and membrane statements
+also have independent target support. PMID:1697263 reports cloned human BEK
+membrane architecture and ligand binding. A clinical NAS reference is not
+misrepresented as an activity experiment when an established generic receptor
+function is retained by explicit curator deference.
+
+The human urothelial abstracts PMID:16597614 and PMID:17471512 explicitly report
+receptor localization. These support contextual compartments, not functions for
+every product. The latter paper's ligand redistribution experiment is not
+relabelled as receptor cytoplasmic or cortical evidence.
+
+PMID:7874170 and PMID:7987400 positively associate FGFR2 variants with
+craniosynostosis. The [official GO:0048701 definition](https://www.ebi.ac.uk/QuickGO/term/GO:0048701)
+requires cranial-skeleton organization during the embryonic phase. That precise
+stage remains unresolved in the accessible clinical evidence, and PMID:7874170
+has an unread erratum. The narrower embryonic core is not restored merely from
+a disease label; conserved bone and branching-organ signaling retain their
+separately documented ortholog support. No core BP was omitted for presumed
+ontology redundancy.
+
+Supported BioPlex/RTK associations remain non-core under the
+[ClinGen campaign instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions).
+The exact network/IntAct/original-source evidence is in the now-cited evidence
+file; the inherited title quotation is not its sole support. AP-MS/co-IP
+association and BioID proximity are not converted into an unsupported
+direct-binding subtype. All inherited quotations remain untouched.

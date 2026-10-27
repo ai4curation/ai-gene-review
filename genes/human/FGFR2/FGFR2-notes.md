@@ -142,3 +142,31 @@ Unresolved human localization and soluble-product physiology remain questions,
 not new annotations. All 229 source objects, 94 inherited references/findings,
 65 inherited quotation associations and immutable source caches are preserved.
 No publication quotations were added.
+
+
+## 2026-10-27 — Review follow-up: positive evidence and bounded deferral
+
+Re-read the immutable abstracts after PR #5613 review 5665591151. The first
+audit treated missing complete Methods too uniformly. PMID:8386828 explicitly
+reports human FGFR2–FGF5 binding/KD; PMID:10830168, PMID:12591959 and PMID:1309608
+report the relevant complexes or binding assays. Positive abstract statements
+are now distinguished from unread construct and assay details.
+
+PMID:15629145 reports receptor-mutant signaling/proliferation. Generic receptor,
+kinase and membrane NAS claims are also retained with curator deference and
+separately read target experiments, without inventing functional assays in
+clinical papers. Human urothelial localization and mutant human osteoblast
+differentiation are positive contextual results in PMID:16597614, PMID:17471512
+and PMID:15190072; they do not resolve every sibling annotation or product.
+
+The clinical craniosynostosis evidence remains positive. The official
+[GO:0048701 definition](https://www.ebi.ac.uk/QuickGO/term/GO:0048701), separately
+recorded in the source evidence, specifically requires embryonic-stage cranial
+organization. That narrow scope and the PMID:7874170 erratum remain unresolved.
+The core omission is not based on an ancestor/descendant argument.
+
+GRB2 binding does not make FGFR2 an adaptor. Supported generic associations
+remain non-core under the explicit campaign policy. The source-evidence file
+now has reference-only joins from relevant reviews. Biological summaries and
+evidential reasons are separated. No inherited quotation/source assertion,
+reference identity/finding, product record or cache was changed in this follow-up.
