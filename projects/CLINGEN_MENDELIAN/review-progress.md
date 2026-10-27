@@ -7024,3 +7024,79 @@ Acceptance denotes the coordinating AI agent's campaign audit, not a human
 maintainer sign-off or a site-deployment claim.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/cc4fe8238b1cc52ff0c2fbfdf05027582d4fd7b0/history/projects/CLINGEN_MENDELIAN/2026-10-26T192506Z-codex-b29a42.yaml).
+
+
+## Completion checkpoint 630 — 2026-10-26 22:45:32 UTC
+
+**630 complete; 2,246 remaining out of 2,876 catalogue genes.**
+This update adds FERMT1, FERMT3 and FGA to [public checkpoint 627](https://github.com/ai4curation/ai-gene-review/pull/5597).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FERMT1 #5594](https://github.com/ai4curation/ai-gene-review/pull/5594) | 31 / 31 | COMPLETE; 2 UNDECIDED; 0 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/839a6c90c30218dadfa2da81c24d5cc576607823) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40382715052) |
+| [FERMT3 #5596](https://github.com/ai4curation/ai-gene-review/pull/5596) | 31 / 31 | COMPLETE; 3 UNDECIDED; 0 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/3441a741e394eba9ff39250c4054b7dfe8f61d96) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40393461687) |
+| [FGA #5598](https://github.com/ai4curation/ai-gene-review/pull/5598) | 131 / 131 | DRAFT; 10 UNDECIDED; 7 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/3f5a8f71b969e4c2f1fa36defd651056c5532196) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40408743501) |
+
+FERMT1 retains 31 source contexts, 13 references, four natural splice products,
+one integrin-binding core and no quotations. Its computed status is COMPLETE,
+with nine ACCEPT, 16 KEEP_AS_NON_CORE, three MODIFY, one TOO_GENERAL and two
+UNDECIDED decisions. The nuclear-import and actin-binding questions remain
+source-specific uncertainties; zero target validation advisories do not resolve them.
+
+FERMT3 retains 31 source contexts, 20 references, two natural splice products,
+one core and no quotations. Its computed status is COMPLETE, with ten ACCEPT,
+16 KEEP_AS_NON_CORE, two MODIFY and three UNDECIDED decisions. Two functional
+splice-product records map to those same two natural products, rather than adding
+two more products. Platelet-granule and exosome source uncertainties remain explicit.
+No target validation advisories remain.
+
+FGA retains 131 source contexts, 90 references, two natural splice products and
+two distinct cleavage-product records, with 2 cores and no quotations.
+Its computed status is DRAFT, with 76 ACCEPT, 36 KEEP_AS_NON_CORE, three MODIFY,
+six TOO_GENERAL and ten UNDECIDED decisions. Seven previously adjudicated target
+advisories remain. The source map preserves processed-product contexts omitted
+from the seed; free fibrinopeptide A is not assigned the mature fibrin chain's
+functions. Completion records an accepted evidence review, not resolution of every
+source-specific uncertainty.
+
+The accepted source closures contain 37 FERMT1, 44 FERMT3 and 105 FGA paths,
+including 16, 15 and 18 complete gene/history paths respectively. Their union
+contains 175 distinct paths, all matching the actual merges and this
+captured main snapshot. FERMT3's 29 published payload paths yield 27 actual merge
+deltas because two shared sources were already byte-identical in the parent;
+those two files remain in its full closure. ROOT accepted all three operative
+merge-group jobs for each review. This proposal reuses those acceptances and
+makes no independent full-log or global zero-warning claim.
+
+All 235 dated queue objects, 137 preceding completion updates, 221 project
+histories, catalogue identities, source inventories and earlier progress remain
+unchanged. Only these three distinct genes are newly credited, taking the public
+checkpoint directly from 627 to 630. No further review or private proposal receives
+credit. Acceptance denotes the coordinating AI agent's campaign audit, not a human
+maintainer sign-off or a site-deployment claim.
+
+## Completion checkpoint 631 — 2026-10-27 01:52:57 UTC
+
+**631 complete; 2,245 remaining out of 2,876 catalogue genes.**
+The preceding checkpoint records FERMT1, FERMT3 and FGA; this adds only
+[FGD1 #5600](https://github.com/ai4curation/ai-gene-review/pull/5600), merged at
+2026-10-27 01:40:27 UTC as
+[51dbf45991](https://github.com/ai4curation/ai-gene-review/commit/51dbf459911e2231686d5781076f67c27f27b3bf).
+Together these four accepted merges reconcile the public count from 627 to 631.
+
+FGD1 preserves 34 imported annotation contexts and 15 references, with one core
+function. Its computed status is COMPLETE: 11 ACCEPT, 14 KEEP_AS_NON_CORE, six
+TOO_GENERAL, two MODIFY and one UNDECIDED. Completion does not resolve that
+source-specific uncertainty. All 27 source-closure objects matched the accepted
+commit, including the complete 17-file gene/history namespace and 23-file merge
+delta.
+
+[Merge-group validation and tests](https://github.com/ai4curation/ai-gene-review/actions/runs/40432149151)
+passed. The suite actually executed: 4,400 pytest tests, 282 doctests, 444 agent
+tests and 19 JavaScript tests passed. Changed-gene validation, all-gene schema
+checks and 17,990 history records passed. This records the accepted actual merge
+and its checks, not a new independent full-log audit or a site-deployment claim.
+
+All earlier progress, 138 preceding completion updates, 235 dated queue objects,
+catalogue identities and availability inventories are preserved. Pending PRs and
+private work receive no completion credit.

@@ -2998,9 +2998,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**627 of 2,876 genes are complete; 2,249 remain.**
-This checkpoint adds FBXL4, FCHO1 and FDXR after their accepted merges and successful
-merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-627-2026-10-26-190430-utc)
+**631 of 2,876 genes are complete; 2,245 remain.**
+This checkpoint adds FERMT1, FERMT3, FGA and FGD1 after their accepted merges and successful
+merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-631-2026-10-27-015257-utc)
 links the completed reviews and their validation records.
 
 Completion records accepted merged work; it does not resolve every biological
@@ -3768,11 +3768,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FCHO1** — HGNC:29002; [immunodeficiency 76](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae21f2b2-e283-404b-9517-74fad00a352a-2023-07-20T170000.000Z) (MONDO:0030898; AR; Definitive).
 - [x] **FDXR** — HGNC:3642; [FDXR-related optic atrophy mitochondrial dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bcbf052e-c61e-4d0a-9aec-10409e8a5bdb-2025-07-17T160000.000Z) (MONDO:1060116; AR; Definitive).
 - [ ] **FECH** — HGNC:3647; [protoporphyria, erythropoietic, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1b6529d-0a99-4ffd-9bbf-6bc15d76cb10-2023-01-27T200000.000Z) (MONDO:0008319; AR; Definitive).
-- [ ] **FERMT1** — HGNC:15889; [Kindler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6023a89b-8aa7-4ed8-abd0-6a50c4d31af6-2026-04-08T160000.000Z) (MONDO:0008260; AR; Definitive).
-- [ ] **FERMT3** — HGNC:23151; [leukocyte adhesion deficiency 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_df792161-5efb-45f7-91ed-5fe76045fa06-2019-08-28T160000.000Z) (MONDO:0013016; AR; Definitive).
-- [ ] **FGA** — HGNC:3661; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d34ded98-dbf7-4dc7-bea4-803db1857bf8-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
+- [x] **FERMT1** — HGNC:15889; [Kindler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6023a89b-8aa7-4ed8-abd0-6a50c4d31af6-2026-04-08T160000.000Z) (MONDO:0008260; AR; Definitive).
+- [x] **FERMT3** — HGNC:23151; [leukocyte adhesion deficiency 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_df792161-5efb-45f7-91ed-5fe76045fa06-2019-08-28T160000.000Z) (MONDO:0013016; AR; Definitive).
+- [x] **FGA** — HGNC:3661; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d34ded98-dbf7-4dc7-bea4-803db1857bf8-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
 - [ ] **FGB** — HGNC:3662; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_638c1588-9674-4bc3-a39c-2fc8f8b0ef09-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
-- [ ] **FGD1** — HGNC:3663; [Aarskog-Scott syndrome, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b652280-1291-4166-ac59-62caabd977bb-2017-12-06T110000.000Z) (MONDO:0010589; XL; Definitive).
+- [x] **FGD1** — HGNC:3663; [Aarskog-Scott syndrome, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b652280-1291-4166-ac59-62caabd977bb-2017-12-06T110000.000Z) (MONDO:0010589; XL; Definitive).
 - [ ] **FGD4** — HGNC:19125; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0aae8cd-9d57-4d8c-83ae-ed968cf186bc-2020-04-14T131822.010Z) (MONDO:0015626; AR; Definitive).
 - [ ] **FGF12** — HGNC:3668; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54324da6-e7c7-4ad2-a669-d8ccd1a6b71a-2023-11-01T160000.000Z) (MONDO:0100062; AD; Definitive).
 - [ ] **FGF3** — HGNC:3681; [deafness with labyrinthine aplasia, microtia, and microdontia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5ca11e8c-6703-4be5-a8c2-82e6dcc865e4-2019-05-21T160000.000Z) (MONDO:0012541; AR; Definitive).
