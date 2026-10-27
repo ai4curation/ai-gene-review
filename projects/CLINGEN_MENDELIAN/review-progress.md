@@ -7129,3 +7129,21 @@ The accepted PR payloads contain 41, 16, 23, 35, 17 and 30 paths respectively. T
 All 235 dated queue objects, 139 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only these six accepted merges receive credit; pending work remains unchecked. Acceptance is the coordinating AI agent’s campaign audit, not human maintainer sign-off or a site-deployment claim.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T030530Z-codex-435862.yaml).
+
+## Completion checkpoint 638 — 2026-10-27 04:24:18 UTC
+
+**638 complete; 2,238 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FGF12 after verification of its actual merge from [PR #5606](https://github.com/ai4curation/ai-gene-review/pull/5606).
+
+The [merged review](https://github.com/ai4curation/ai-gene-review/commit/e29871c6ac3eb80bcb45ea353565cdb5c59e85d2) remains DRAFT, with 49 stored/active annotation contexts, 19 references, two natural splice products, no functional-product records, one core function and no quotations.
+
+FGF12 retains 7 ACCEPT, 25 KEEP_AS_NON_CORE, 1 MODIFY, 3 MARK_AS_OVER_ANNOTATED and 13 UNDECIDED decisions. Its two natural splice products, 15 isoform-bearing contexts and two historical NOT contexts remain distinct; no NEW annotation or publication quotation is added. The core describes sodium-channel regulation. Unresolved contexts preserve inaccessible-source limits, construct- and assay-dependent receptor/release findings, and uncertainty about productive ribosome-biogenesis participation. PAINT loss judgments are retained without counting their unidentified underlying publications as independent experiments. Completion does not resolve every annotation or change its DRAFT status.
+
+The actual [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/40446970705) passed validation, suite and aggregate checks. The suite executed 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests successfully. Changed-gene validation, all-gene schema checks and 18,009 history records passed. The accepted log review retained the nonfatal ignored SQLAlchemy destructor diagnostic; this records that verification without a global zero-warning or site-deployment claim.
+
+All 28 accepted payload files match the actual merge, including the complete 19-file FGF12 gene/history namespace and its two history records. The parent comparison also contains 28 changed paths; no accepted payload files were already identical in the parent commit. Exact Git blobs, modes and SHA-256 values are recorded in the completion entry. This is not a new audit of all normal source dependencies.
+
+All 235 dated queue objects, 140 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FGF12 receives additional credit. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T042242Z-codex-0640ee.yaml).
