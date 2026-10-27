@@ -170,3 +170,25 @@ remain non-core under the explicit campaign policy. The source-evidence file
 now has reference-only joins from relevant reviews. Biological summaries and
 evidential reasons are separated. No inherited quotation/source assertion,
 reference identity/finding, product record or cache was changed in this follow-up.
+
+
+## 2026-10-27 — Second review follow-up: generic claims and source limits
+
+Re-read latest formal 5666051033 and companion 6440239906. Human receptor
+microscopy and BEK evidence support the generic surface/cytoplasmic decisions.
+The curated UniProt target-function statement supports osteoblast proliferation
+and skeletal development; human craniosynostosis genetics corroborate broad
+skeletal morphogenesis. Mouse-Fc, ligand redistribution and unread osteoblast
+endpoints remain explicit caveats. Embryonic-stage uncertainty remains.
+
+Current raw QuickGO metadata has two alternative extension groups on positive
+PMID:16597614 siblings 120/121, preserved exactly in the authored evidence.
+The disputed generic contexts have null current extensions; historic ARBA row 25
+is absent today. Historical extensions cannot be inferred from the old TSV.
+Neither source objects nor their qualifiers/products are rewritten.
+
+Seven saved positive human IntAct NMR/direct pairs support specific FGF binding
+for PMID:23597563 and PMID:26267536. Fragment boundaries, the unread erratum and
+unread original panels remain limits. Proximity evidence in PMID:25241761 is
+unchanged. All inherited quotations/reference associations are preserved; no
+new publication quotation, source cache or experiment suggestion is added.

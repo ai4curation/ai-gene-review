@@ -85,7 +85,7 @@ human products.
 | Indices | Actual evidence and boundary |
 | --- | --- |
 | 37 | The PMID:22726438 abstract explicitly reports dimeric GRB2 binding FGFR2 C termini. Complete Methods remain unread; the positive association does not give FGFR2 adaptor activity. |
-| 38, 40 | IntAct identifies exact FGFR2–FGF1 or FGFR2–FGF2 NMR/direct-pair records despite drug-focused titles. Original panels remain unread, as does the later erratum associated with PMID:23597563. |
+| 38, 40 | Seven positive human IntAct NMR/direct-pair records identify FGFR2–processed FGF1 or FGFR2-fragment–FGF2-fragment binding. Together with independently established FGF recognition, these support refinement to FGF binding. Original panels and the PMID:23597563 erratum remain unread; no all-product or new affinity assertion follows. |
 | 39 | PMID:25241761 IntAct records identify HeLa proximity-ligation evidence with FGF1/FGF10. Proximity is not a direct-affinity measurement; original panels remain unread. |
 | 41 | Genuine BioPlex network rows identify FGFR1/FGF2 in 293T and FGF1 in HCT116. Original Methods use tagged human baits and gene-level network assembly. Association is supported; direct interfaces and natural-isoform specificity are not established by those rows. |
 | 42 | PMID:35384245 original Results/Methods and Figure EV1 distinguish FGFR1 co-IP and FGFR1/FGF2 AP-MS association from the GRB2 BioID proximity record. The assay uses tagged human RTKs and phosphatase inhibition. |
@@ -115,7 +115,8 @@ the PMID:21412257 abstract does not justify rejecting the negative keratinocyte
 proliferation annotation, and endogenous nuclear localization is not dismissed
 merely because FGFR2 is a transmembrane receptor. The original PMID:17959718
 Methods instead identify mouse explants and a mouse FGFR2b–human Fc probe; the
-source-specific human localization question is left open.
+source-specific human assay is not newly verified. The generic surface location
+is retained using independent human receptor evidence.
 
 All inherited publication quotations and reference/findings associations remain
 unchanged. No new quotations were added. Current assessments and precise locators
@@ -153,3 +154,27 @@ The exact network/IntAct/original-source evidence is in the now-cited evidence
 file; the inherited title quotation is not its sole support. AP-MS/co-IP
 association and BioID proximity are not converted into an unsupported
 direct-binding subtype. All inherited quotations remain untouched.
+
+## Second follow-up: generic claims and source-specific limits
+
+The three cell-surface rows retain the core receptor location; both cytoplasm
+rows retain a contextual compartment. PMID:16597614 reports human receptor
+microscopy, and PMID:1697263 describes human cell-surface BEK. The mouse
+FGFR2b–human Fc probe in PMID:17959718 remains a mouse-reagent experiment,
+and PMID:17471512 ligand redistribution is not relabelled as receptor evidence.
+
+Osteoblast-proliferation and broad skeletal-morphogenesis rows retain non-core
+roles with curator deference. The inspected UniProt FUNCTION statement supports
+these target functions; human mutant-osteoblast responses in PMID:15190072 and
+craniosynostosis genetics in PMID:7987400/7874170 give their respective contexts.
+The unread PMID:15190072 proliferation/tissue endpoints are not newly claimed,
+and the narrower embryonic-stage uncertainty remains.
+
+The current complete 250-record QuickGO response has grouped cell/tissue
+extensions on the positive PMID:16597614 siblings (120/121). The evidence index
+preserves each connected group verbatim; it does not flatten alternatives into
+a conjunction. The disputed generic rows have null current extensions; the old
+ARBA row 25 has no current exact match. The historical TSV lacks an extension
+column, so historical extension presence is not inferred and no original source
+field is changed. Contextual microscopy still supports the generic compartment
+without a claim about all tissues. PLA proximity at index 39 remains unresolved.
