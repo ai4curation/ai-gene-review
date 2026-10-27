@@ -17,3 +17,8 @@ PMID:10828978 full text is normally cached at publications/url_https___citeseerx
 The coupled NADH-dependent peroxide-reduction rows are retained as valid component activities. Core functions distinguish direct molecular function from contribution; ordinary relationship qualifiers never determine the action. Homodimeric AhpF does not imply a fixed permanent AhpCF supercomplex. Broad binding terms refine to the independently supported NAD and FAD binding functions. Obsolete GO:0008379 is independently checked against QuickGO before refinement to the existing peroxiredoxin term.
 
 Source access and short mined findings are recorded per reference in the review. Questions about unknown native donor kinetics or localization remain biological questions; failure of a research service is not a biological knowledge gap. Focused checks, record-section backfill, rendering and helper provenance are recorded in the panel handoff.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

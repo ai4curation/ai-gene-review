@@ -13,3 +13,8 @@ Native chemistry supports GO:0140824. PMID:11222594 states that "The maximal sus
 The native soluble-antigen result in PMID:1987145 corroborates cytosol together with the PAINT inference and curated location. Its older sequence differs at several positions from the 26695 record, so this is species-level localization evidence, not claimed exact-strain imaging. Full PMID:24097943 distinguishes recombinant HP1563 methionine oxidation/repair from SS1 msr-mutant survival and E. coli protection assays. AhpC is the repaired substrate, not the repair catalyst; no protein-repair BP is added.
 
 Full PMID:16481626 studies HD30/HC28 clinical isolates, not 26695. Their oxidized high-molecular-weight AhpC suppresses insulin aggregation. This useful source finding and an exact-target question are retained, but no strain-specific holdase/folding annotation is manufactured. The paper's intramolecular-disulfide language and speculative human-gene-recombination explanation are not adopted. PMID:16213196 was additionally inspected as a structural lead, but its abstract does not resolve the exact construct/strain; no new structural claim rests on it.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

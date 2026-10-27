@@ -11,3 +11,8 @@ Live QuickGO definitions were checked on 2026-10-26. GO:0008379 is obsolete; cur
 The two NADPH-dependent thioredoxin reductase rows are accepted using the native TrxR assays, including donor substitution and reduction of both Trx1 and Trx2 (PMID:11222594). Broad oxidoreductase activity is refined to the already-present specific reductase term. FAD is an integral enzyme cofactor; native spectral evidence and curated cofactor annotation support its description without a redundant NEW binding annotation.
 
 Cytoplasm is retained at the precision of the curated by-similarity location, not upgraded merely from heterologous solubility. The IPR005982 superoxide-removal row is UNDECIDED. Tested reductase/peroxide-relay chemistry and paraquat-sensitivity phenotypes do not establish a specific superoxide-removal step, but absence of direct SOD chemistry does not disprove multistep participation. The precise unresolved mechanism is recorded rather than an unsupported family-wide negative.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

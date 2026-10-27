@@ -11,3 +11,8 @@ AhpC is the peroxide-attacking enzyme, distinct from its reducing partners. PMID
 The full 2017 Scientific Reports paper DOI:10.1038/s41598-017-05354-5 was recovered normally and inspected. It uses M. bovis BCG AhpC, explicitly identical in amino-acid sequence to Mtb AhpC, with M. bovis TrxC/TrxB2. Its NMR interaction and coupled peroxide turnover corroborate the mechanism but are not native H37Rv experiments. Reduced protein forms a dodecamer under the measured conditions; oxidized protein is dimeric. These results and the earlier decamer report (PMID:11171096) preclude an unconditional oligomeric stoichiometry.
 
 Live QuickGO confirms GO:0008379 is obsolete and redundant with GO:0140824. The original annotation remains intact; any replacement is recorded only in review metadata.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

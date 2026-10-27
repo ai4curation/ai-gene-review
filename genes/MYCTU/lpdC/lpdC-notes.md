@@ -15,3 +15,8 @@ PMID:17849409 identifies Lpd among plasminogen-binding proteomic spots; recombin
 ### Final independent review refinement
 
 The broad molecular-function replacement now lists both supported activities, preserving the existing secondary-activity assay limits and non-core assessment. Original annotation payloads and actions remain unchanged.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

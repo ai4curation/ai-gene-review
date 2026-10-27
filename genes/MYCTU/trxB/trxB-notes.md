@@ -11,3 +11,8 @@ The official symbol trxB (Rv3913, P9WHH1) denotes thioredoxin reductase, called 
 Full PMID:19737561 uses H37Rv Rv3913 expressed in M. smegmatis and Rv3914 expressed in E. coli. TrxR plus TrxC reduces GSSG, GSNO and MSSM; individual proteins do not show the corresponding NADPH-coupled activity. The assay should not turn TrxR into a direct superoxide-disposal enzyme. PMID:27249779 independently distinguishes thiol-oxidant vulnerability from peroxide/RNS responses under partial depletion.
 
 Final source synthesis: PMID:15528667 explicitly names TrxB2 among anaerobically enriched proteomic spots in strain Harlingen. The existing hypoxia-response annotation is retained as non-core with that strain boundary, not left undecided merely because the full paper was inaccessible.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

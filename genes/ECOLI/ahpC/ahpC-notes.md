@@ -95,3 +95,8 @@ PMID:7499381 mainly describes Tpx but explicitly contrasts its localization with
 ### Final paired-reaction decision after annotation-reviewer consultation
 
 The preceding historical MODIFY treatment of GO:0102039 is superseded. Native E. coli genetics and reconstitution establish the AhpCF coupled reaction, and the ordinary GOA relationship string is inert in this review. Both AhpC rows and the AhpF row are ACCEPT, consistent with the separately reviewed Salmonella and Bacillus components. This accepts the real coupled activity without asserting that an isolated subunit catalyzes both half-reactions. The individual molecular functions and `contributes_to_molecular_function` core representation remain explicit. H. pylori's NADH rows are a different biological question because the tested native donor is NADPH through thioredoxin, not AhpF.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.

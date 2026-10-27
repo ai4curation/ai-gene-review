@@ -13,3 +13,8 @@ The protein-disulfide reductase and redox-homeostasis claims are supported indep
 The canonical PMID:12576586 abstract reports viable trx mutants, limiting the early universal-essentiality hypothesis. Normal forced retrieval remained abstract-only. Full PMID:25964471 identifies the prior 26695 work and carefully distinguishes its own 43504 oxidative-damage assays from X47 mouse-colonization experiments. No DNA-repair or colonization annotation is inferred merely from damage/necessity phenotypes.
 
 PMID:16354674 reports Trx1-dependent reactivation of denatured arginase. The canonical abstract was read, and normal forced and publisher-URL recovery were attempted but did not recover full text (publisher 403). Exact strain/construct and separation of folding from thiol chemistry therefore remain a meaningful question. The reported positive finding is preserved; neither a negative conclusion nor a new exact-target chaperone assertion is manufactured.
+
+
+## 2026-10-27 — PR #5595 reference and wording follow-up
+
+Resolved article identities using canonical PMID-to-full-text mappings in `modules/bacterial_alkyl_hydroperoxide_reductase-source-analysis/reference-identities.yaml.txt`; URL sources remain intact for quotations not present in cached abstracts. Added canonical article titles alongside immutable extraction metadata and removed source-ID/workflow boilerplate from reasons. Annotation payloads and actions remain unchanged.
