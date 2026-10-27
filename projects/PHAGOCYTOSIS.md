@@ -2,7 +2,7 @@
 title: "Phagocytosis Modules"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [human, mouse, worm, fly, DICDI]
+species: [human, mouse, worm, DROME, DICDI]
 genes: [MEGF10, GULP1, ELMO1, DOCK1, RAC1, MERTK, GAS6, TIMD4, RAB5A, RAB7A, MON1A, CCZ1, PIK3C3, DNASE2, SLC48A1, SLC66A1, PRKDC, RICTOR, MYC, BHLHE40, BACH1, SPIC, HMOX1, NR1H3, NR1H2, PPARD, AHR, IDO1, TLR9, SIRT1, PBX1, DNMT3A, PTGS2, SLC12A2]
 ---
 
