@@ -2984,6 +2984,7 @@ and evidence records. A reference-only citation does not claim that a quotation
 was checked by the verbatim-substring validator. This convention does not waive
 source verification or permit invented findings; inaccessible evidence retains
 its explicit uncertainty. It applies to this campaign, not repository-wide.
+Use reference-only `supported_by` entries; do not add new publication excerpts in `supporting_text`.
 
 A `<GENE>-source-guide.md` file is an authored evidence and locator guide, linked from the gene notes. It records source-access limits and precise locations of the evidence used in the review. It is distinct from an automatically generated provider deep-research file. When a provider output is unavailable, record that limitation in the notes or source guide; never manufacture a provider output or label authored text as one.
 
@@ -2998,14 +2999,13 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**631 of 2,876 genes are complete; 2,245 remain.**
-This checkpoint adds FERMT1, FERMT3, FGA and FGD1 after their accepted merges and successful
-merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-631-2026-10-27-015257-utc)
-links FGD1 and its validation records; [checkpoint 630](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-630-2026-10-26-224532-utc)
-records FERMT1, FERMT3 and FGA.
+**637 of 2,876 genes are complete; 2,239 remain.**
+This checkpoint adds DNM1, EIF2B1, FGB, EIF2B5, FGD4 and EIF2AK4 after their accepted actual
+merges and successful merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-637-2026-10-27-031347-utc)
+records their merge commits, validation evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
-uncertainty or change the reviews' computed DRAFT status. Catalogue identities,
+uncertainty or change the reviews' computed statuses. Catalogue identities,
 associations, earlier progress and dated availability inventories remain preserved.
 
 Earlier checkpoints, queue records and histories remain preserved. Pending genes
@@ -3631,7 +3631,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **DNAJC30** — HGNC:16410; [Leber-like hereditary optic neuropathy, autosomal recessive 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bf49959-c6bd-4a9f-9613-76450068380a-2025-09-18T160000.000Z) (MONDO:0958183; AR; Definitive).
 - [x] **DNAL1** — HGNC:23247; [primary ciliary dyskinesia 16](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54088550-2704-4c1b-ac1b-51b62353a223-2024-04-11T160000.000Z) (MONDO:0013525; AR; Definitive).
 - [x] **DNASE1L3** — HGNC:2959; [autosomal systemic lupus erythematosus type 16](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_77450e46-30fa-4be0-aa0e-4e31f04a117e-2024-05-08T190000.000Z) (MONDO:0013743; AR; Definitive).
-- [ ] **DNM1** — HGNC:2972; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_31f598a3-7efd-4e43-83f3-587e98924260-2024-02-06T080000.000Z) (MONDO:0100062; AD; Definitive); [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0d252b0e-4777-4fbf-a23f-4ea7175b37d5-2024-02-06T200000.000Z) (MONDO:0100062; AR; Moderate).
+- [x] **DNM1** — HGNC:2972; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_31f598a3-7efd-4e43-83f3-587e98924260-2024-02-06T080000.000Z) (MONDO:0100062; AD; Definitive); [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0d252b0e-4777-4fbf-a23f-4ea7175b37d5-2024-02-06T200000.000Z) (MONDO:0100062; AR; Moderate).
 - [x] **DNM1L** — HGNC:2973; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c22e9c6b-f04d-4d56-acb3-baa308c596b7-2021-06-30T144120.695Z) (MONDO:0009723; AD; Limited); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0a922695-f136-44f8-ab1a-6581e0efafec-2021-06-30T144517.300Z) (MONDO:0009723; AR; Limited); [encephalopathy due to mitochondrial and peroxisomal fission defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_320f4ab3-19c3-458e-9e81-0f380cbfebbd-2022-04-15T160000.000Z) (MONDO:0054865; AD; Definitive).
 - [x] **DNM2** — HGNC:2974; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bc54e5d-eed5-4d40-9e0d-143bfeb88cac-2020-10-27T131827.010Z) (MONDO:0015626; AD; Definitive); [autosomal dominant centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e4156721-f6b9-482c-b610-97753f3f722d-2019-12-20T170000.000Z) (MONDO:0008048; AD; Definitive).
 - [x] **DNMT1** — HGNC:2976; [autosomal dominant cerebellar ataxia, deafness and narcolepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_6235) (MONDO:0011397; AD; Definitive).
@@ -3680,12 +3680,12 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **EGLN1** — HGNC:1232; [EGLN1-related erythrocytosis and pheochromocytoma/paraganglioma predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_647ffb08-3740-43a0-8601-258324e995ab-2025-09-09T160000.000Z) (MONDO:1060184; AD; Definitive).
 - [x] **EGR2** — HGNC:3239; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6e83e27-0c9a-4475-92f5-745303931858-2021-11-17T033516.468Z) (MONDO:0015626; SD; Definitive).
 - [x] **EHMT1** — HGNC:24650; [Kleefstra syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db91a861-6a88-4848-b6d5-4772bdef52ff-2018-06-06T100000.000Z) (MONDO:0012455; AD; Definitive).
-- [ ] **EIF2AK4** — HGNC:19687; [pulmonary veno-occlusive disease and/or pulmonary capillary haemangiomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d20386c-ad1a-4c88-9f43-4ca3cedbfd6f-2022-12-02T170000.000Z) (MONDO:0018554; AR; Definitive).
-- [ ] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
+- [x] **EIF2AK4** — HGNC:19687; [pulmonary veno-occlusive disease and/or pulmonary capillary haemangiomatosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d20386c-ad1a-4c88-9f43-4ca3cedbfd6f-2022-12-02T170000.000Z) (MONDO:0018554; AR; Definitive).
+- [x] **EIF2B1** — HGNC:3257; [leukoencephalopathy with vanishing white matter 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_35e2ff63-0a4f-4425-9330-cc70fbe9954d-2025-02-05T170000.000Z) (MONDO:0020507; AR; Definitive).
 - [x] **EIF2B2** — HGNC:3258; [leukoencephalopathy with vanishing white matter 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_875faedd-30bd-4e6d-803f-6244a04f37a5-2024-12-11T170000.000Z) (MONDO:0957870; AR; Definitive).
 - [x] **EIF2B3** — HGNC:3259; [leukoencephalopathy with vanishing white matter 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e68c2029-c69e-4874-a072-bf86ca148cdd-2024-12-11T170000.000Z) (MONDO:0957871; AR; Definitive).
 - [x] **EIF2B4** — HGNC:3260; [leukoencephalopathy with vanishing white matter 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3c95d30-0045-4bf9-8529-3c701bb1eab5-2024-12-11T170000.000Z) (MONDO:0957872; AR; Definitive).
-- [ ] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
+- [x] **EIF2B5** — HGNC:3261; [leukoencephalopathy with vanishing white matter 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d6cf3226-04b0-4709-bc55-b97ca4bea8d7-2024-12-11T170000.000Z) (MONDO:0957873; AR; Definitive).
 - [x] **EIF2S3** — HGNC:3267; [MEHMO syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bb96fe11-dd31-47b2-820d-9071035ec7b0-2021-11-11T110000.000Z) (MONDO:0010258; XL; Definitive).
 - [x] **EIF3F** — HGNC:3275; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d0f623e7-ea96-461a-a348-7aa5a7a1d7ff-2023-12-06T070000.000Z) (MONDO:0000508; AR; Definitive).
 - [x] **ELAC2** — HGNC:14198; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff57f761-51cd-41aa-a287-7387e0f5f028-2022-07-21T040000.000Z) (MONDO:0044970; AR; Definitive).
@@ -3772,9 +3772,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FERMT1** — HGNC:15889; [Kindler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6023a89b-8aa7-4ed8-abd0-6a50c4d31af6-2026-04-08T160000.000Z) (MONDO:0008260; AR; Definitive).
 - [x] **FERMT3** — HGNC:23151; [leukocyte adhesion deficiency 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_df792161-5efb-45f7-91ed-5fe76045fa06-2019-08-28T160000.000Z) (MONDO:0013016; AR; Definitive).
 - [x] **FGA** — HGNC:3661; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d34ded98-dbf7-4dc7-bea4-803db1857bf8-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
-- [ ] **FGB** — HGNC:3662; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_638c1588-9674-4bc3-a39c-2fc8f8b0ef09-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
+- [x] **FGB** — HGNC:3662; [congenital fibrinogen deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_638c1588-9674-4bc3-a39c-2fc8f8b0ef09-2020-01-22T170000.000Z) (MONDO:0018060; SD; Definitive).
 - [x] **FGD1** — HGNC:3663; [Aarskog-Scott syndrome, X-linked](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b652280-1291-4166-ac59-62caabd977bb-2017-12-06T110000.000Z) (MONDO:0010589; XL; Definitive).
-- [ ] **FGD4** — HGNC:19125; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0aae8cd-9d57-4d8c-83ae-ed968cf186bc-2020-04-14T131822.010Z) (MONDO:0015626; AR; Definitive).
+- [x] **FGD4** — HGNC:19125; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0aae8cd-9d57-4d8c-83ae-ed968cf186bc-2020-04-14T131822.010Z) (MONDO:0015626; AR; Definitive).
 - [ ] **FGF12** — HGNC:3668; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54324da6-e7c7-4ad2-a669-d8ccd1a6b71a-2023-11-01T160000.000Z) (MONDO:0100062; AD; Definitive).
 - [ ] **FGF3** — HGNC:3681; [deafness with labyrinthine aplasia, microtia, and microdontia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5ca11e8c-6703-4be5-a8c2-82e6dcc865e4-2019-05-21T160000.000Z) (MONDO:0012541; AR; Definitive).
 - [ ] **FGF9** — HGNC:3687; [multiple synostoses syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1fd535ba-f5b4-469b-8866-894cf9e4e1d0-2025-06-24T040000.000Z) (MONDO:0017923; AD; Definitive).
