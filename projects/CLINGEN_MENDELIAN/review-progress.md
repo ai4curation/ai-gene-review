@@ -7104,3 +7104,28 @@ catalogue identities and availability inventories are preserved. Pending PRs and
 private work receive no completion credit.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T020454Z-codex-48c864.yaml).
+
+## Completion checkpoint 637 — 2026-10-27 03:13:47 UTC
+
+**637 complete; 2,239 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds six distinct genes to the accepted public checkpoint 631. Each has an accepted actual merge and successful merge-group validation and tests.
+
+| Gene / accepted PR | Actual merge | Merge-group run | Stored / active rows | References | Splice / functional products | Core / inherited quotations | Status / UNDECIDED |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [DNM1 #5165](https://github.com/ai4curation/ai-gene-review/pull/5165) | [003959e40f](https://github.com/ai4curation/ai-gene-review/commit/003959e40f22f231933769882e1305f52a9c4977) | [40435442289](https://github.com/ai4curation/ai-gene-review/actions/runs/40435442289) | 79 / 79 | 53 | 4 / 0 | 1 / 6 | DRAFT / 2 |
+| [EIF2B1 #5263](https://github.com/ai4curation/ai-gene-review/pull/5263) | [55e14dbbbd](https://github.com/ai4curation/ai-gene-review/commit/55e14dbbbd569d25b17c8d5a75f581c3936f0e0d) | [40435444970](https://github.com/ai4curation/ai-gene-review/actions/runs/40435444970) | 53 / 53 | 36 | 2 / 0 | 1 / 0 | DRAFT / 3 |
+| [FGB #5602](https://github.com/ai4curation/ai-gene-review/pull/5602) | [c007674672](https://github.com/ai4curation/ai-gene-review/commit/c007674672eb2d86f8b38173034a5f3b6c358762) | [40437006493](https://github.com/ai4curation/ai-gene-review/actions/runs/40437006493) | 113 / 113 | 82 | 0 / 2 | 1 / 0 | DRAFT / 14 |
+| [EIF2B5 #5302](https://github.com/ai4curation/ai-gene-review/pull/5302) | [53b5f5de89](https://github.com/ai4curation/ai-gene-review/commit/53b5f5de8957e55b2c5554aa9ee8df081b941f61) | [40438681445](https://github.com/ai4curation/ai-gene-review/actions/runs/40438681445) | 58 / 58 | 46 | 0 / 0 | 1 / 0 | DRAFT / 3 |
+| [FGD4 #5604](https://github.com/ai4curation/ai-gene-review/pull/5604) | [58dd1e3474](https://github.com/ai4curation/ai-gene-review/commit/58dd1e3474af3b21afef119dbf4a8efc7b34c61d) | [40439675014](https://github.com/ai4curation/ai-gene-review/actions/runs/40439675014) | 25 / 25 | 18 | 3 / 0 | 1 / 0 | DRAFT / 3 |
+| [EIF2AK4 #5259](https://github.com/ai4curation/ai-gene-review/pull/5259) | [35e316d166](https://github.com/ai4curation/ai-gene-review/commit/35e316d166e1d1d05fae437df66d397628ab01e1) | [40440792703](https://github.com/ai4curation/ai-gene-review/actions/runs/40440792703) | 52 / 52 | 24 | 3 / 0 | 2 / 0 | COMPLETE / 2 |
+
+Five reviews remain DRAFT; EIF2AK4 is COMPLETE. Completion records accepted merged reviews, not resolution of every annotation. DNM1 retains two source-specific uncertainties; EIF2B1 retains three and its source-defect assessments. FGB retains 14 unresolved contexts, including beta-chain attribution and inaccessible target identifications; its two functional records describe cleavage products, not splice isoforms. EIF2B5 retains three uncertainties and a PROBABLE/CHECK ovarian-source query, without asserting a corrected citation. FGD4 retains three source-specific uncertainties. EIF2AK4 retains two unresolved contexts, cold response and transfer of fungal checkpoint participation to human, despite its computed COMPLETE status. The six inherited DNM1 quotations remain unchanged; no new publication quotations are added.
+
+Actual merge-group suites executed for all six merges: each passed 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests. ROOT accepted the full operative logs, including the nonfatal ignored SQLAlchemy destructor diagnostic; this tracker reuses that acceptance and makes no global zero-warning or independent full-log-audit claim.
+
+The accepted PR payloads contain 41, 16, 23, 35, 17 and 30 paths respectively. Their complete gene/history namespaces contain 17, 13, 17, 17, 14 and 18 paths. DNM1 has three and EIF2B5 five parent-byte-identical source no-ops, yielding actual deltas of 38 and 30 paths; the other deltas equal their payload counts. The new machine-readable completion entry records exact Git blobs, modes and SHA-256 values for these accepted payloads. This is not a new audit of all normal source dependencies.
+
+All 235 dated queue objects, 139 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only these six accepted merges receive credit; pending work remains unchecked. Acceptance is the coordinating AI agent’s campaign audit, not human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T030530Z-codex-435862.yaml).
