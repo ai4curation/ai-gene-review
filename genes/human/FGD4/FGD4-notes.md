@@ -29,3 +29,9 @@ The cDNA studies provide sequence provenance rather than functional assays. The 
 No new annotation or publication quotation is proposed. Evidence locators and explicit uncertainty follow the [ClinGen project instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions).
 
 The current ontology explicitly includes an exchange-defined process, GO:0090630 activation of GTPase activity, as a strict descendant of GO:0043087. It describes activation by replacing GDP with GTP, so the existing row 19 is refined to that term without asserting GAP activity or faster GTP hydrolysis. The core uses GO:0032489 regulation of Cdc42 protein signal transduction, a strict descendant of the broader GO:0051056 already retained in the imported rows. Actual target CDC42 catalyst membership supports this specificity. No new annotation is added, and no historical term-merge claim is inferred from IDs absent from the API response. See [ontology evidence](FGD4-ontology-evidence.yaml).
+
+## 2026-10-27: PR review follow-up
+
+Make the existing human UniProt FUNCTION and PMID:15133042 cellular evidence explicit in the exchange-activity reviews and core, preserving the distinction from purified biochemical assays. Refine the existing Reactome process row to GO:0032489 and retain the positive is_active_in cytoplasm IBA separately from located_in cytosol coverage. The 25 imported source objects, 17 prior references, three splice records and source caches remain unchanged; the sole additional reference is the existing UniProt file. No new annotation or quotation is added.
+
+Computed status remains DRAFT with two advisory action differences. The cytoplasm decisions distinguish is_active_in from located_in. The process decisions distinguish the specific Reactome CDC42 catalytic route, refined to GO:0032489, from the broader ARBA assertion. These source/relation distinctions are retained rather than forcing identical decisions solely to remove warnings.
