@@ -7147,3 +7147,23 @@ All 28 accepted payload files match the actual merge, including the complete 19-
 All 235 dated queue objects, 140 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FGF12 receives additional credit. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
 
 Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T042242Z-codex-0640ee.yaml).
+
+## Completion checkpoint 640 — 2026-10-27 09:14:21 UTC
+
+**640 complete; 2,236 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FGF3 from [PR #5610](https://github.com/ai4curation/ai-gene-review/pull/5610) and FGF9 from [PR #5611](https://github.com/ai4curation/ai-gene-review/pull/5611) after verification of their actual merges.
+
+The [FGF3 merge](https://github.com/ai4curation/ai-gene-review/commit/892815b342735616a8dc0d575a68dbbcf7f70a08) retains 99 stored/active annotation contexts, 86 references, no natural or functional product records, one core function and no quotations. Its computed status remains DRAFT, with six UNDECIDED contexts. Its actual [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/40472936749) supplies the CI evidence below.
+
+The [FGF9 merge](https://github.com/ai4curation/ai-gene-review/commit/cf504822937f42a617651d50dd8945bbfa4e334e) retains 179 stored/active contexts, 180 references, no natural or functional product records, one core function and no quotations. Its computed status is COMPLETE, with two explicitly UNDECIDED contexts. Its actual [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/40474223385) supplies the separate CI evidence below.
+
+FGF3 retains 85 ACCEPT, 8 KEEP_AS_NON_CORE and 6 UNDECIDED decisions. FGF9 retains 166 ACCEPT, 10 KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED and 2 UNDECIDED decisions. Each has one FGF receptor ligand core; neither review adds a NEW annotation or publication quotation. Missing original evidence remains explicit: FGF3 retains five PMID2470007 contexts and an RPS2 interaction context as unresolved, while FGF9 retains the two PMID8575785 contexts as unresolved. Cytoplasm annotations remain bounded positive ancestral inferences; neither review claims an independently demonstrated endogenous human soluble-cytoplasmic mechanism. Completion does not resolve every annotation or require every review to have the same status.
+
+Both actual merge-group runs passed validation, suite and aggregate checks. Each executed 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests successfully; 86 pytest cases were deselected and 37 doctests skipped. The runs retained 9 pytest warnings and 8 doctest warnings each. FGF3 validation passed with three documented source-specific advisories and 18,020 history records; FGF9 validation passed and checked 18,022 history records. Both logs retained a nonfatal ignored SQLAlchemy cleanup exception after successful pytest; subsequent checks and aggregate jobs succeeded. Existing repository advisories and explicitly skipped checks remain recorded in the accepted evidence; this is not a claim of warning-free validation or site deployment.
+
+The accepted heads contain 15 FGF3 and 24 FGF9 payload files, with complete gene/history namespaces of 8 and 9 files, respectively. Their retained source closures contain 93 and 186 files. FGF3 added all 15 payload files. FGF9 added 23 files; its accepted publications/PMID_20094046.md was already byte-identical in the actual parent from the FGF3 merge. Exact payload objects, modes and actual parent comparisons are recorded in the completion entry; shared source files already identical in the parent commit are counted separately from changed paths.
+
+All 235 dated queue objects, 141 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FGF3 and FGF9 receive additional credit. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T091421Z-codex-264abb.yaml).
