@@ -7075,6 +7075,8 @@ checkpoint directly from 627 to 630. No further review or private proposal recei
 credit. Acceptance denotes the coordinating AI agent's campaign audit, not a human
 maintainer sign-off or a site-deployment claim.
 
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T020454Z-codex-48c864.yaml).
+
 ## Completion checkpoint 631 — 2026-10-27 01:52:57 UTC
 
 **631 complete; 2,245 remaining out of 2,876 catalogue genes.**
@@ -7100,3 +7102,5 @@ and its checks, not a new independent full-log audit or a site-deployment claim.
 All earlier progress, 138 preceding completion updates, 235 dated queue objects,
 catalogue identities and availability inventories are preserved. Pending PRs and
 private work receive no completion credit.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T020454Z-codex-48c864.yaml).

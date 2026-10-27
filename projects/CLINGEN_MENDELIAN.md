@@ -3001,7 +3001,8 @@ generic-binding guidance.
 **631 of 2,876 genes are complete; 2,245 remain.**
 This checkpoint adds FERMT1, FERMT3, FGA and FGD1 after their accepted merges and successful
 merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-631-2026-10-27-015257-utc)
-links the completed reviews and their validation records.
+links FGD1 and its validation records; [checkpoint 630](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-630-2026-10-26-224532-utc)
+records FERMT1, FERMT3 and FGA.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed DRAFT status. Catalogue identities,
