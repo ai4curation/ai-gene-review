@@ -2998,13 +2998,10 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**613 of 2,876 genes are complete; 2,263 remain.**
-This checkpoint adds only FANCC, FANCD2 and FANCE to the
-[merged 610 tracker](https://github.com/ai4curation/ai-gene-review/pull/5530).
-[Checkpoint 613](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-613-2026-10-25-180507-utc) records their
-approved heads, actual merges, preserved dependencies and executed merge-group CI.
-Complete gene directories, histories and selected sources match fixed main
-[`4589b35c1162`](https://github.com/ai4curation/ai-gene-review/commit/4589b35c1162dd5956356ff482dfdfaf7a044639).
+**627 of 2,876 genes are complete; 2,249 remain.**
+This checkpoint adds FBXL4, FCHO1 and FDXR after their accepted merges and successful
+merge-group checks. [Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-627-2026-10-26-190430-utc)
+links the completed reviews and their validation records.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed DRAFT status. Catalogue identities,
@@ -3754,22 +3751,22 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FANCC** — HGNC:3584; [Fanconi anemia complementation group C](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cf4881c3-15b3-4e10-bd24-2da80433863b-2019-04-19T160000.000Z) (MONDO:0009213; AR; Definitive).
 - [x] **FANCD2** — HGNC:3585; [Fanconi anemia complementation group D2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5f0c260f-52d2-4225-9044-608f066ccfb2-2021-06-15T231506.767Z) (MONDO:0009214; AR; Definitive).
 - [x] **FANCE** — HGNC:3586; [Fanconi anemia complementation group E](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6da55a6e-2cf8-499c-b842-b5a435dbff3f-2020-05-14T001745.604Z) (MONDO:0010953; AR; Definitive).
-- [ ] **FANCF** — HGNC:3587; [Fanconi anemia complementation group F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_60719ed8-36fa-4d11-93b2-8036133510a6-2021-02-03T225456.822Z) (MONDO:0011325; AR; Definitive).
-- [ ] **FANCG** — HGNC:3588; [Fanconi anemia complementation group G](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1913bd10-1355-4067-93b6-9068924d77df-2019-04-19T160000.000Z) (MONDO:0013565; AR; Definitive).
-- [ ] **FANCI** — HGNC:25568; [Fanconi anemia complementation group I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a103db2f-a8b3-403b-993a-ac4215c118df-2021-06-15T233841.081Z) (MONDO:0012186; AR; Definitive).
-- [ ] **FANCL** — HGNC:20748; [Fanconi anemia complementation group L](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93d0cb5f-4859-4b28-b647-3f8226fe5921-2020-07-30T203845.671Z) (MONDO:0013566; AR; Definitive).
-- [ ] **FANCM** — HGNC:23168; [FANCM Fanconi-like genomic instability disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb231b6-1452-4f24-a8c1-ab45a791e73c-2024-11-12T170000.000Z) (MONDO:0100578; AR; Definitive); [hereditary breast carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25744c57-8e53-403b-a2ec-fb405ad452cc-2024-11-22T180000.000Z) (MONDO:0016419; AD; Limited).
-- [ ] **FARS2** — HGNC:21062; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cf7594a-d934-4b6c-8052-94066d608c5a-2019-11-25T144756.827Z) (MONDO:0009723; AR; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f73e39c8-7021-4c25-846d-f7109f8d0e83-2024-12-16T050000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **FAS** — HGNC:11920; [FAS-related autoimmune lymphoproliferative immune disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f15d745-17a7-4aba-8083-72c7c13c2786-2025-10-14T160000.000Z) (MONDO:1060194; SD; Definitive).
+- [x] **FANCF** — HGNC:3587; [Fanconi anemia complementation group F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_60719ed8-36fa-4d11-93b2-8036133510a6-2021-02-03T225456.822Z) (MONDO:0011325; AR; Definitive).
+- [x] **FANCG** — HGNC:3588; [Fanconi anemia complementation group G](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1913bd10-1355-4067-93b6-9068924d77df-2019-04-19T160000.000Z) (MONDO:0013565; AR; Definitive).
+- [x] **FANCI** — HGNC:25568; [Fanconi anemia complementation group I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a103db2f-a8b3-403b-993a-ac4215c118df-2021-06-15T233841.081Z) (MONDO:0012186; AR; Definitive).
+- [x] **FANCL** — HGNC:20748; [Fanconi anemia complementation group L](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93d0cb5f-4859-4b28-b647-3f8226fe5921-2020-07-30T203845.671Z) (MONDO:0013566; AR; Definitive).
+- [x] **FANCM** — HGNC:23168; [FANCM Fanconi-like genomic instability disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_abb231b6-1452-4f24-a8c1-ab45a791e73c-2024-11-12T170000.000Z) (MONDO:0100578; AR; Definitive); [hereditary breast carcinoma](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25744c57-8e53-403b-a2ec-fb405ad452cc-2024-11-22T180000.000Z) (MONDO:0016419; AD; Limited).
+- [x] **FARS2** — HGNC:21062; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cf7594a-d934-4b6c-8052-94066d608c5a-2019-11-25T144756.827Z) (MONDO:0009723; AR; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f73e39c8-7021-4c25-846d-f7109f8d0e83-2024-12-16T050000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **FAS** — HGNC:11920; [FAS-related autoimmune lymphoproliferative immune disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f15d745-17a7-4aba-8083-72c7c13c2786-2025-10-14T160000.000Z) (MONDO:1060194; SD; Definitive).
 - [ ] **FASLG** — HGNC:11936; [autoimmune lymphoproliferative syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_41cb5abc-acba-4838-8965-2051c4a9e9ca-2024-06-07T160000.000Z) (MONDO:0011158; AR; Definitive).
-- [ ] **FASTKD2** — HGNC:29160; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82883e8c-7ee6-447e-bdc6-8898c4848e7a-2022-07-21T160000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **FAT4** — HGNC:23109; [FAT4-related neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_32ce4642-0431-4bd8-b1da-fb69ef6b01da-2025-02-20T050000.000Z) (MONDO:0100603; AR; Definitive).
-- [ ] **FBN1** — HGNC:3603; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8251) (MONDO:0019625; AD; Definitive).
-- [ ] **FBN2** — HGNC:3604; [congenital contractural arachnodactyly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_deb482b7-5d38-44ee-a010-fe8f5a3413da-2025-11-07T170000.000Z) (MONDO:0007363; AD; Definitive).
+- [x] **FASTKD2** — HGNC:29160; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82883e8c-7ee6-447e-bdc6-8898c4848e7a-2022-07-21T160000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **FAT4** — HGNC:23109; [FAT4-related neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_32ce4642-0431-4bd8-b1da-fb69ef6b01da-2025-02-20T050000.000Z) (MONDO:0100603; AR; Definitive).
+- [x] **FBN1** — HGNC:3603; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8251) (MONDO:0019625; AD; Definitive).
+- [x] **FBN2** — HGNC:3604; [congenital contractural arachnodactyly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_deb482b7-5d38-44ee-a010-fe8f5a3413da-2025-11-07T170000.000Z) (MONDO:0007363; AD; Definitive).
 - [ ] **FBP1** — HGNC:3606; [fructose-1,6-bisphosphatase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b60910a5-26c4-484b-b323-d55ae96eb6f5-2025-11-14T170000.000Z) (MONDO:0009251; AR; Definitive).
-- [ ] **FBXL4** — HGNC:13601; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fed67104-182c-48f2-85c0-ecb05cd6dd72-2020-11-23T193117.246Z) (MONDO:0009723; AR; Definitive); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b211e7b2-d93b-4995-ad30-1f4d962867b0-2024-05-23T160000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **FCHO1** — HGNC:29002; [immunodeficiency 76](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae21f2b2-e283-404b-9517-74fad00a352a-2023-07-20T170000.000Z) (MONDO:0030898; AR; Definitive).
-- [ ] **FDXR** — HGNC:3642; [FDXR-related optic atrophy mitochondrial dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bcbf052e-c61e-4d0a-9aec-10409e8a5bdb-2025-07-17T160000.000Z) (MONDO:1060116; AR; Definitive).
+- [x] **FBXL4** — HGNC:13601; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fed67104-182c-48f2-85c0-ecb05cd6dd72-2020-11-23T193117.246Z) (MONDO:0009723; AR; Definitive); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b211e7b2-d93b-4995-ad30-1f4d962867b0-2024-05-23T160000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **FCHO1** — HGNC:29002; [immunodeficiency 76](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae21f2b2-e283-404b-9517-74fad00a352a-2023-07-20T170000.000Z) (MONDO:0030898; AR; Definitive).
+- [x] **FDXR** — HGNC:3642; [FDXR-related optic atrophy mitochondrial dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bcbf052e-c61e-4d0a-9aec-10409e8a5bdb-2025-07-17T160000.000Z) (MONDO:1060116; AR; Definitive).
 - [ ] **FECH** — HGNC:3647; [protoporphyria, erythropoietic, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1b6529d-0a99-4ffd-9bbf-6bc15d76cb10-2023-01-27T200000.000Z) (MONDO:0008319; AR; Definitive).
 - [ ] **FERMT1** — HGNC:15889; [Kindler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6023a89b-8aa7-4ed8-abd0-6a50c4d31af6-2026-04-08T160000.000Z) (MONDO:0008260; AR; Definitive).
 - [ ] **FERMT3** — HGNC:23151; [leukocyte adhesion deficiency 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_df792161-5efb-45f7-91ed-5fe76045fa06-2019-08-28T160000.000Z) (MONDO:0013016; AR; Definitive).

@@ -195,6 +195,54 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+**Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
+went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
+model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
+was itself the over-annotation). Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
+retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
+not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
+`replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
+`replaced_by` upstream.
+See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
+
+### Root organelle terms: keep the organelle, add the sub-compartment
+
+Cellular-component rows on a root organelle term (`GO:0005739` mitochondrion,
+`GO:0005783` endoplasmic reticulum, `GO:0005794` Golgi apparatus, `GO:0005777`
+peroxisome, `GO:0005764` lysosome) follow the policy in `projects/ORGANELLES.md`.
+The nucleus, the series organelles (endosome, vacuole, autophagosome) and plastids
+are not covered yet. For these five terms the policy is an exception to the
+"correct but general is `MODIFY`" rule above:
+
+- **The organelle term is informative.** Never use `TOO_GENERAL` for it, and never
+  `MODIFY` it to a sub-compartment. Knowing a protein is in the mitochondrion is a real
+  claim even when its membrane or lumen is also known. (A generic term such as
+  `GO:0016020` membrane is not a root organelle term, so the rules above still apply
+  to it.)
+- **Direct evidence** (IDA, EXP, HDA, HTP, ...) from an assay that cannot resolve the
+  sub-compartment (organelle proteomics, whole-organelle co-staining, GFP fusion) is
+  `ACCEPT`, or `KEEP_AS_NON_CORE` if the location is peripheral to the function.
+- **Existing synthesis rows** (IBA, IEA, ISS, ISO, IC, ...) are a red flag for
+  granularity, not soundness: examine what the source rests on (the PAINT IBD seeds, the
+  UniProt keyword, the ortholog's own annotation) to see why the row stops at the
+  organelle and whether the organelle claim holds. For IBA this is the phylogenetic
+  reading described below, not a donor count. If the organelle claim holds, keep the row and record the check in
+  `reason`; if it does not, `MARK_AS_OVER_ANNOTATED`, or `REMOVE` for a demonstrably
+  wrong electronic mapping or over-propagation.
+- **Be bold about the sub-compartment, but add it, don't substitute.** When the gene
+  has no sub-compartment row and at least two independent lines agree (a TM segment, a
+  cleavable presequence, a sub-organelle assay, a function that only makes sense on one
+  side), add the matrix, membrane or lumen term as a `NEW` row (usually IC, an
+  inference you author and justify) beside the root rows. With one line, or lines that
+  disagree, stay at the root and say why.
+- **`core_functions.locations`** names the sub-compartment only where the core activity
+  is shown to happen; a well-supported sub-compartment location is not by itself
+  where the function acts (see the MMADHC note in the project).
+- **Check crude fractions for ER.** A "mitochondrial" fraction that was not checked for
+  an ER marker cannot separate mitochondrion from mitochondria-associated ER membranes;
+  transient recruitment to the organelle surface (signalling, innate immunity) is not an
+  outer-membrane location.
+
 ### Do not overrule curators from incomplete evidence
 
 PomBase, and the GO consortium databases generally, are highly reliable. Curators
@@ -614,6 +662,32 @@ just backfill-isoforms-organism human  # all genes in organism
 ```
 
 See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
+
+### When UniProt's isoforms and the literature disagree
+
+Two kinds of mismatch are recorded in structured form, not prose:
+
+- **An isoform the literature describes is missing from the reviewed entry**
+  (SYNGAP1: the alpha1 PDZ-ligand C-terminus is not among Q96PV0's isoforms).
+  Add a `functional_isoforms` entry, map it to the sequences that do carry it
+  (`REFSEQ_PROTEIN`, `UNIPROTKB_UNREVIEWED`), and record a `source_defects`
+  item with `defect_type: MISSING_ISOFORM`, `resource: UNIPROT`,
+  `requested_change: ADD`. `just export-source-defects` includes it in the
+  report for UniProt.
+- **A paper numbers residues on a non-displayed isoform** (RASAL2 "S351" is
+  Ser351 of Q9UJF2-2 and Ser203 of the displayed Q9UJF2, where 351 is Asp).
+  UniProt is not wrong here, so this is not a source defect. Add
+  `residue_mappings` to the finding: `as_reported` is the residue in the
+  numbering the paper used, `canonical` the same residue in the review's own
+  displayed sequence (the CURIE without an isoform suffix, `UniProtKB:Q9UJF2`,
+  never `-1`: the displayed isoform is not always isoform 1). Pin
+  `sequence_version` on both sides, as for any `ResiduePosition`. Each side is checked against the real sequence
+  (`python -m ai_gene_review.validation.finding_residue_mappings`, run by
+  `just validate-families`), so a number read on the wrong sequence fails;
+  a side that is not a UniProtKB sequence (a RefSeq-only isoform) is reported
+  unresolved rather than checked.
+  Never state a residue number in a finding without knowing which sequence it
+  refers to.
 
 ### Alternative-ORF peptides: one folder per UniProt accession
 
