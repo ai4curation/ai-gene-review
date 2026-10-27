@@ -85,3 +85,10 @@ Same gap as AcrIIA4 and AcrF2: no GO molecular-function term for mimicry-based c
 inhibition. The proposed term `nucleic acid mimicry-based competitive inhibitor activity`
 is restated here with AcrIIA2-specific supporting text, since the three reviews should be
 able to cite one proposal independently.
+
+
+## 2026-10-25 comparative anti-CRISPR audit
+
+The record is viral LP101_024 (tax1458856), not the directly assayed J0161 prophage protein AEO04363.1. Existing alignment notes report 114/123 identical residues. This supports ISS-level transfer, not IDA or an assertion that every substitution is functionally neutral. PMID:30606466 supports the characterized family mechanism; PMID:28448066 establishes guide-dependent binding of the studied homologue. Descriptions and core function now carry that accession-level boundary.
+
+Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals were reassessed independently. Primary references were obtained through the normal publication cache. A normal Falcon attempt with perplexity-lite fallback failed; logs are in `.cache/module-audit-logs/anti-crispr-deep-9CAUD-acrIIA2.log`. These are manual research notes, not provider-generated research.
