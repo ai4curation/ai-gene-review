@@ -294,7 +294,7 @@ Source: https://pubmed.ncbi.nlm.nih.gov/8430778/; cache `publications/PMID_84307
 
 ### PMID:8567668
 
-Rat pancreatic-islet glucose increase raises exchange activity rapidly; metabolic inhibition blocks the response.
+Rat pancreatic-islet glucose increases exchange activity rapidly; mannoheptulose did not activate eIF2B. The accessible abstract does not demonstrate blockade of the glucose response.
 
 **Inspected:** Official Europe PMC core metadata/abstract, checked against the selected normal cache metadata; no full body inspected.
 
@@ -347,3 +347,17 @@ Source: https://pubmed.ncbi.nlm.nih.gov/9341116/; cache `publications/PMID_93411
 Rows 48, 49 and 57 remain UNDECIDED. These concern the shared myelination claim and an epsilon-specific T-cell-receptor pathway step. The inaccessible original patient ER-stress and rat hormone-donor experiments remain source-specific limitations, while independent mammalian epsilon evidence supports the broad response claims as non-core. PMID:11500362 provides a direct GSK3 docking experiment and an explicitly secondary account of insulin-dependent epsilon regulation; PMID:11756553 is not an insulin-challenge study.
 
 The STX11, DYNC1H1 and KLK6 generic positive interactions remain non-core; their partner identities do not supply independently established epsilon-specific functional roles. Missing screen Methods limit the proposed refinements, not the existence of the curated positive pairs. STX11 is corroborated across binary-screen and cellular-association datasets. No native-interface requirement is added to GO binding definitions. Heat and glucose responses retain their existing non-core scope. Clinical and perturbation observations are not promoted into autonomous developmental or apoptotic mechanisms. The positive mouse nuclear observation remains contextual: stronger fixation increases cytoplasmic relative staining without demonstrating loss of nuclear signal.
+
+## Curated UniProt cross-check (2026-10-27)
+
+The existing [UniProtKB Q13144 record](EIF2B5-uniprot.txt) is retained byte-for-byte and now has an explicit file reference in the review. Its statements have different evidence scopes:
+
+| Record section and lines | Coverage and limit |
+|---|---|
+| FUNCTION, 303–312 | ECO:0000269 citations 25858979, 27023709 and 31048492 support eIF2 GDP/GTP exchange and regulation by phosphorylated eIF2. This corroborates the independently assessed catalytic core; it is not evidence of isolated human epsilon activity. |
+| SUBUNIT, 317–326 | The same cited studies support the heterodecamer and epsilon/gamma catalytic subcomplex. Complex architecture does not turn every co-recovered partner into a demonstrated binary interface. |
+| ACTIVITY REGULATION, 313–316 | PMID:25858979 is the curated basis for ISRIB activation of eIF2B. No new annotation is proposed here. |
+| INTERACTION, 327–331 | Exact DYNC1H1, GSK3B, KLK6 and STX11 records corroborate the partner identifiers. The existing source-specific binding judgments remain unchanged. |
+| PTM, 334–338 | Ser-544 priming by DYRK2 is explicitly by similarity (ECO:0000250). The separately stated GSK3B phosphorylation/inhibition evidence cites PMID:8397507. Conserved-site context does not remove the engineered human-peptide or rat-construct limits of the kinase-binding evidence. |
+
+These are reads of the curated record, not additional claims of underlying primary-paper access. Existing primary read scopes above remain controlling.
