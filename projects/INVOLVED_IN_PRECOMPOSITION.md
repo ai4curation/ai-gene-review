@@ -134,8 +134,8 @@ snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves 
 mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 324,
 IEA 265, ISS 176, IDA 128, IBA 96, IGI 79, other 136.
 
-By organism folder: human 662 rows, mouse 149, DROME 95, worm 87, DICDI 75,
-yeast 34, DANRE 19, other 83.
+By organism folder (`by_organism` in `data/summary.yaml`): human 662 rows,
+mouse 149, DROME 95, worm 87, DICDI 75, yeast 34, DANRE 19, other 83.
 
 ### Rows on already-obsolete terms (fix first)
 

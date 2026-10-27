@@ -343,6 +343,10 @@ def authored_uses(doc: dict, gene: str, inv: dict[str, GoTerm]) -> list[dict]:
     return out
 
 
+#: descriptor slots that mark a mapping as a module annoton
+ANNOTON_SLOTS = {"function", "processes", "locations"}
+
+
 def _term_dicts(node: Any) -> list[dict]:
     """Every ``term`` mapping in a nested YAML structure."""
     if isinstance(node, dict):
@@ -356,28 +360,37 @@ def _term_dicts(node: Any) -> list[dict]:
 def module_annoton_uses(node: Any, module: str, inv: dict[str, GoTerm]) -> list[dict]:
     """Precomposed terms used anywhere in a module annoton.
 
-    An annoton is a mapping with a ``function``. Every term inside it is
-    checked (function, processes, targets, inputs, locations), and the slot is
-    the annoton key it sits under.
+    An annoton is a mapping with an ``id`` and at least one descriptor slot
+    (``function``, ``processes`` or ``locations``), so function-less annotons
+    are scanned too. Every GO term inside it is checked (function, processes,
+    targets, inputs, locations), and the slot is the annoton key it sits under.
+    The label fallback applies to GO ids only, so a participant's protein name
+    is never mistaken for a precomposed term.
 
     >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
     >>> doc = {"parts": [{"node": {"annotons": [
     ...     {"id": "a1", "function": {"term": {"id": "GO:1"}}},
     ...     {"id": "a2", "function": {"term": {"id": "GO:3"}},
-    ...      "processes": [{"term": {"id": "GO:1"}}]}]}}]}
+    ...      "processes": [{"term": {"id": "GO:1"}}]},
+    ...     {"id": "a3", "processes": [{"term": {"id": "GO:1"}}],
+    ...      "participant": {"gene_product": {"term": {"id": "UniProtKB:P1",
+    ...                                                "label": "protein involved in y"}}}}]}}]}
     >>> [(u["annoton"], u["slot"]) for u in module_annoton_uses(doc, "m", t)]
-    [('a1', 'module.annoton.function'), ('a2', 'module.annoton.processes')]
+    [('a1', 'module.annoton.function'), ('a2', 'module.annoton.processes'), ('a3', 'module.annoton.processes')]
     """
     if isinstance(node, list):
         return [u for item in node for u in module_annoton_uses(item, module, inv)]
     if not isinstance(node, dict):
         return []
-    if "function" not in node:
+    if "id" not in node or not ANNOTON_SLOTS & node.keys():
         return [u for v in node.values() for u in module_annoton_uses(v, module, inv)]
     out = []
     for key, value in node.items():
         for term in _term_dicts(value):
-            if term.get("id") in inv or INVOLVED_IN in str(term.get("label", "")):
+            tid = str(term.get("id", ""))
+            if tid in inv or (
+                tid.startswith("GO:") and INVOLVED_IN in str(term.get("label", ""))
+            ):
                 out.append(
                     {
                         "module": module,
@@ -533,6 +546,10 @@ def main() -> None:
             "by_pattern": count(ann_rows, "pattern"),
             "by_action": count(ann_rows, "action"),
             "by_evidence": count(ann_rows, "evidence_type"),
+            "species_folders": len({r["gene"].split("/")[0] for r in ann_rows}),
+            "by_organism": dict(
+                Counter(r["gene"].split("/")[0] for r in ann_rows).most_common()
+            ),
             "rows_nested": sum(
                 bool((r.get("decomposition") or {}).get("nested")) for r in ann_rows
             ),
