@@ -60,8 +60,9 @@ in *E. coli* K-12, still have no known reaction.
 
 ### Scope
 
-Membership is defined by the InterPro **IPR007197 Radical SAM** signature in
-reviewed UniProtKB entries, retrieved live on 2026-10-18:
+Membership is defined by the InterPro **IPR007197 Radical SAM** entry in
+reviewed UniProtKB entries, retrieved live on 2026-10-18 (the query below is a
+cross-reference to the InterPro entry, not to a member-database signature):
 
 ```
 https://rest.uniprot.org/uniprotkb/search?query=(xref:interpro-IPR007197)+AND+reviewed:true+AND+organism_id:9606
