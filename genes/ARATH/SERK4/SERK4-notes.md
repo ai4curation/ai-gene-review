@@ -33,3 +33,10 @@
   (ECD screens), informative partner binding captured by GO:0033612 rows.
 - Stomatal development: not added as NEW; SERK4 is the least important SERK in
   this pathway [PMID:26320950 "descending order of importance from BAK1, SERK2, SERK1 to SERK4"].
+
+## 2026-10-28 correction: protein phosphorylation row (PR #5674 review)
+
+The GO:0006468 protein phosphorylation ISS row is now ACCEPT rather than MODIFY to protein
+autophosphorylation. SERK4 also transphosphorylates its partner LRR receptor kinases, and GO has no more
+specific term for phosphorylating another protein. Autophosphorylation is recorded as a separate NEW
+GO:0046777 IDA row (PMID:19105183; UniProt PTM).
