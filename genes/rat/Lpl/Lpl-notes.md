@@ -14,3 +14,9 @@
 - Non-core: PLA1 activity, calcium binding, homodimerization, signaling receptor binding, triglyceride binding, inflammatory/cytokine terms, adipogenesis terms, nutrient/fatty acid response terms, and negative regulation of cellular response to insulin stimulus (the IMP from L6 knockdown is sound, but the effect is indirect, through fatty acid supply).
 - No REMOVE actions.
 - No NEW terms. A GPIHBP1-dependent protein-membrane adaptor role (accepted in the human review as TAS) has no rat-specific evidence and is not proposed here.
+
+## 2026-10-28 correction: extracellular space is obsolete
+
+- GO:0005615 extracellular space is obsolete in the current GO release. The GO:0005576
+  extracellular region rows that had been MODIFIED to it are now ACCEPT (the extracellular
+  location is correct and core), and core_functions locations use GO:0005576 extracellular region.

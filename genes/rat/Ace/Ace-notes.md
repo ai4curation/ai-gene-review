@@ -48,3 +48,9 @@
   REMOVE (flagged for expert check).
 - No NEW terms proposed. AcSDKP degradation and Ang-(1-7) degradation have no
   specific GO process terms; covered by peptide catabolic process.
+
+## 2026-10-28 correction: extracellular space is obsolete
+
+- GO:0005615 extracellular space is obsolete in the current GO release. The GO:0005576
+  extracellular region rows that had been MODIFIED to it are now ACCEPT (the extracellular
+  location is correct and core), and core_functions locations use GO:0005576 extracellular region.

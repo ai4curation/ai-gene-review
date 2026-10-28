@@ -15,3 +15,9 @@
 - Abstract-only experimental rows: 1826679 (protein-containing complex binding) and
   17549731 (positive regulation of myelination) cannot be checked against full text; set UNDECIDED.
 - No NEW terms proposed (strict NEW bar). receptor ligand activity would be redundant with growth factor activity (its descendant), which the gene already carries.
+
+## 2026-10-28 correction: extracellular space is obsolete
+
+- GO:0005615 extracellular space is obsolete in the current GO release. The GO:0005576
+  extracellular region rows that had been MODIFIED to it are now ACCEPT (the extracellular
+  location is correct and core), and core_functions locations use GO:0005576 extracellular region.

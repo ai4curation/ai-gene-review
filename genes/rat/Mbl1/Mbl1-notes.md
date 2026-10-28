@@ -27,3 +27,11 @@
   the existing carbohydrate-binding and protease-binding MF terms already capture the activity.
 - Phagocytosis / anti-S. aureus ISO rows rest on mouse Mbl1/Mbl2 double knockout
   (PMID:15148336), which does not separate MBL-A from MBL-C: KEEP_AS_NON_CORE.
+
+## 2026-10-28 correction: extracellular space is obsolete
+
+- The earlier note above ("Extracellular region rows (6): MODIFY to extracellular space
+  (GO:0005615)") is superseded. GO:0005615 extracellular space is obsolete in the current GO
+  release, and no live descendant of extracellular region describes a soluble serum lectin
+  better. All six GO:0005576 extracellular region rows are now ACCEPT (the location is core),
+  and the core_functions locations use GO:0005576 extracellular region.
