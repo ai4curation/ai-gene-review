@@ -1,6 +1,6 @@
 # FLNC source and context guide
 
-The genuine seed preserves all 32 original contexts and both natural products. This guide retains original context identifiers and extensions that the review YAML projection does not represent. No source field is corrected by interpretation.
+All 32 original contexts and both natural products remain preserved. This guide retains their original identifiers and full source objects; the two original extensions omitted by the genuine seed projection are now also rehydrated in the structured review YAML. No source field is corrected by interpretation.
 
 ## Original context mapping
 
@@ -22,7 +22,7 @@ The genuine seed preserves all 32 original contexts and both natural products. T
 | 13 | 19 | UniProtKB:Q14315!447160627 | GO:0005737 | IEA | GO_REF:0000044 | UniProt | UniProtKB-SubCell:SL-0086 | null | TOO_GENERAL |
 | 14 | 22 | UniProtKB:Q14315!447160630 | GO:0005829 | IDA | GO_REF:0000052 | HPA |  | null | ACCEPT |
 | 15 | 23 | UniProtKB:Q14315!447160631 | GO:0005829 | TAS | Reactome:R-HSA-430347 | Reactome |  | null | ACCEPT |
-| 16 | 24 | UniProtKB:Q14315!447160632 | GO:0005856 | IEA | GO_REF:0000044 | UniProt | UniProtKB-SubCell:SL-0090 | null | ACCEPT |
+| 16 | 24 | UniProtKB:Q14315!447160632 | GO:0005856 | IEA | GO_REF:0000044 | UniProt | UniProtKB-SubCell:SL-0090 | null | MODIFY |
 | 17 | 25 | UniProtKB:Q14315!447160633 | GO:0005925 | HDA | PMID:21423176 | UniProt |  | [{"connectedXrefs":[{"db":"CL","id":"0000057","relation":"part_of"}]}] | KEEP_AS_NON_CORE |
 | 18 | 11 | UniProtKB:Q14315!447160619 | GO:0008092 | IPI | PMID:17987659 | UniProt | UniProtKB:O76041 | null | KEEP_AS_NON_CORE |
 | 19 | 12 | UniProtKB:Q14315!447160620 | GO:0008092 | IPI | PMID:17987659 | AgBase | UniProtKB:Q90684 | null | KEEP_AS_NON_CORE |
@@ -98,3 +98,12 @@ The private preparation and independent peer records are retained locally; the d
 - FLNC-review-20261028-v1/FLNC-ai-review.yaml.seed: `24fbd1fe57d705865bf7b8540dc7594ef742dc063dabe266383ff51fb8fca5aa`
 - FLNC-review-20261028-v1/context-projection-proof.json: `9b9c080f34d05314b0e707e48511252def34800fedbbf67ced9e2037dd55bc80`
 - FLNA-review-20261028-v1/paint-replay-proof.json: `a359561a2adfd132a915e10432a72f33142872966f732566d3f28f4abcdc883c`
+
+## Follow-up ontology and context recovery
+
+The source extensions are exact recoveries of original raw4/stored4 and raw25/stored17, using BFO:0000066 occurs in and BFO:0000050 part of. Official labels are [GO:0014704 intercalated disc](https://www.ebi.ac.uk/QuickGO/term/GO:0014704) and [CL:0000057 fibroblast](https://www.ebi.ac.uk/ols4/ontologies/cl/classes?obo_id=CL%3A0000057). All remaining original source fields and all normal-source hashes above are unchanged.
+
+[GO:0015629 actin cytoskeleton](https://www.ebi.ac.uk/QuickGO/term/GO:0015629) directly is_a GO:0005856 and includes actin-associated proteins. Source-specific localization supports the refined stored16 decision. The core process path is GO:0045214 is_a GO:0031032 is_a GO:0030036; it explains the broader accepted process without adding a duplicate core entry. The evidence synthesis records exact primary locators and the turnover/crosslinking limits. Final counts are 10 ACCEPT, 8 KEEP_AS_NON_CORE, 10 MODIFY and 4 TOO_GENERAL; two original extensions are now queryable in YAML.
+
+- Follow-up proposal: `af4127dfbfd80d4b19dc3bbbcbd689cbe9635ce5b204b8d0f4ce8ce884914c21`
+- Official ontology peer: `a726febc8a43f6a1fe05df28dd63b4c5cbafc7f7b0540a3e2890760e65bb49a0`
