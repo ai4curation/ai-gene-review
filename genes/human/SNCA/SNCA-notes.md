@@ -41,3 +41,4 @@ The self-association core function listed Lewy body as its location, while the L
 - Protein domain specific binding has no asserted descendant, so TOO_GENERAL does not apply; it is UNDECIDED pending a look at the rat source row.
 - The caspase inhibitor activity reason now says the full text was not available.
 - Lipid binding (three EXP rows) stays ACCEPT: the cited assays include detergent micelles as well as lipid vesicles, so lipid binding is as specific as those papers support; phospholipid binding is carried on its own rows and in the core functions.
+- Follow-up (same review): the microtubule binding row now cites only PMID:27628239, with its quote; PMID:11698390 does not mention microtubules. The beta-tubulin binding and cytoplasmic vesicle membrane reasons no longer argue subsumption, and the protein domain specific binding source status is UNRESOLVED to match its root cause.
