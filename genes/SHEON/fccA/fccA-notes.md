@@ -92,6 +92,37 @@ was found for this accession.
 ## Localization
 
 Periplasm, UniProt ECO:0000269|PubMed:19837833 and the structural/purification work;
-no evidence for a cytoplasmic pool. The IBA cytoplasm annotation derives from eukaryotic
-and archaeal soluble fumarate reductases in PANTHER node PTN000180369 and does not hold
-for this signal-peptide-bearing periplasmic protein.
+no evidence for a cytoplasmic pool. The IBA cytoplasm annotation derives from
+eukaryotic soluble NADH-dependent fumarate reductases in PANTHER node PTN000180369 and
+does not hold for this signal-peptide-bearing periplasmic protein.
+
+### PTN000180369 seed set, resolved against UniProt REST on 2026-10-28
+
+An earlier draft of these notes and of the review described three of the five seeds as
+"archaeal". That was wrong; the accessions were resolved against the UniProt REST API
+(`https://rest.uniprot.org/uniprotkb/<acc>.txt`) on 2026-10-28 and a later reader need
+not recheck them:
+
+| Seed | Entry | Organism / lineage | Reported location |
+|---|---|---|---|
+| SGD:S000000773 | P32614 FRDS_YEAST (FRD1/FRDS1) | *Saccharomyces cerevisiae* S288c | Cytoplasm (ECO:0000269|PubMed:8946166, PubMed:9587404) |
+| SGD:S000003812 | P21375 OSM1_YEAST (OSM1/FRDS2) | *Saccharomyces cerevisiae* S288c | Mitochondrion (ECO:0000269|PubMed:9587404) |
+| UniProtKB:Q38BN4 | Q38BN4_TRYB2 | *Trypanosoma brucei brucei* 927/4 GUTat10.1; Eukaryota; Discoba; Euglenozoa; Kinetoplastea | glycosome, mitochondrion, kinetoplast (IDA, GeneDB) |
+| UniProtKB:Q57W38 | Q57W38_TRYB2 | same | glycosome (IDA, GeneDB) |
+| UniProtKB:Q57W39 | Q57W39_TRYB2 | same | cytoplasm, nucleus (IDA, GeneDB) |
+
+So the node is seeded entirely by **eukaryotic** soluble NADH-dependent fumarate
+reductases (fungal plus trypanosomatid), none archaeal, and their locations are mixed
+rather than uniformly cytosolic: three of the five carry organellar annotations
+(mitochondrion, glycosome). Two consequences for the review:
+
+- The `LINEAGE_OR_TAXON_MISMATCH` failure mode on the cytoplasm row still holds, but
+  the mismatch to state is eukaryotic-intracellular versus bacterial-periplasmic, not
+  archaeal versus bacterial: the compartments these seeds occupy have no counterpart on
+  the periplasmic side of a Gram-negative envelope.
+- The claim that the node's *own* cytoplasm placement is sound is hedged rather than
+  asserted. With a mitochondrial and two glycosomal/organellar seeds, a bare `cytoplasm`
+  IBD at PTN000180369 is arguable; that is left as an open question for PAINT rather
+  than decided here, since it does not change the `REMOVE` outcome for P83223 (signal
+  peptide, periplasmic heme c maturation, and an experimental periplasm location make
+  the inherited compartment impossible regardless).
