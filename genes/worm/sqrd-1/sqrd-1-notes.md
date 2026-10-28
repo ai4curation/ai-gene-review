@@ -33,3 +33,7 @@
   GO:0106436 / GO:0019418 / mitochondrion.
 - Not proposed: response to hydrogen sulfide, proteostasis/UPR, gonad development (all
   necessity/phenotype evidence).
+
+## 2026-10-28 PR review fixes
+
+Extended the truncated 'Neither predicted product carries an obvious N-terminal' quotes through 'mitochondrial presequence comparable to the ~40-residue extension of human SQOR'. Added supporting_entities UniProtKB:Q9Y6N5 (SQOR_HUMAN, verified in UniProt) to the NEW ISS GO:0019418 row.

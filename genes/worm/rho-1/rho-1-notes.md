@@ -28,3 +28,7 @@
 - Update: the IBA GO:0019901 row was also MODIFIED to GO:0019900 kinase binding for claim
   consistency with the IPI row; protein-kinase effector binding (LET-502/ROCK) is plausible
   but not directly shown for worm RHO-1.
+
+## 2026-10-28 PR review fixes
+
+GO:0032794 GTPase activating protein binding (IPI, RHGF-2) changed from REMOVE to MODIFY. GO:0019899 enzyme binding was not used: oaklib shows it is not an ancestor of GO:0032794 (both are direct children of protein binding), and a GEF is not an enzyme in GO. No GEF-binding GO term exists (OLS and oaklib searched), so the replacement is an NTR, guanyl-nucleotide exchange factor binding, with a matching proposed_new_terms entry. The source_defects entry is kept.

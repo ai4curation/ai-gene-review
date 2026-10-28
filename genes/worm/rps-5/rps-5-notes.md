@@ -5,3 +5,7 @@
 - PMID:39209556 (Sehgal 2024) C. elegans 80S cryo-EM; uS7 among modelled proteins [PMID:39209556 "We also modeled the ribosomal proteins, with the exceptions of those bound to the P- and L-stalks (uL10/P0, P1, P2, uL1, uL11), eL28, and RACK-1"].
 - PubMed search hit PMID:23698443 concerns mrps-5 (mitochondrial, E02A10.1), not rps-5; not cited in the review.
 - Decisions: ACCEPT structural constituent of ribosome (IBA, IEA) and cytosolic small ribosomal subunit (IBA). MODIFY translation (IBA, IEA) -> cytoplasmic translation; ribosome (IBA) and small ribosomal subunit (IEA) -> cytosolic small ribosomal subunit; cytoplasm (IEA, ISS) -> cytosol; RNA binding (IEA) -> rRNA binding + mRNA binding. KEEP_AS_NON_CORE rRNA binding, mRNA binding, nucleolus, SSU processome, ribosomal small subunit biogenesis.
+
+## 2026-10-28 PR review fixes
+
+The rRNA binding KEEP_AS_NON_CORE reason now notes why it differs from rps-18. That review promotes rRNA binding to a core function from a 9CAI contact analysis, while rps-5 has only an IBA from E. coli S7.

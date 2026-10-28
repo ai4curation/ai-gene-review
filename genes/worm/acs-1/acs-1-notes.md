@@ -32,3 +32,7 @@
 - Embryonic development, lipid droplet growth, ER integrity, IP3 signalling: downstream phenotypes
   of mmBCFA loss; not added.
 - Mitochondrion: no worm evidence; not added.
+
+## 2026-10-28 PR review fixes
+
+Added a NEW GO:1902321 methyl-branched fatty acid biosynthetic process row (IMP, PMID:18676815) and restored it to core_functions directly_involved_in. Participation argument: ACS-1 forms the acyl-CoA thioester, a chemical step in mmBCFA synthesis; comparator elo-6 carries the same term by IMP from PMID:15340492. The exact step and substrate are not biochemically established.

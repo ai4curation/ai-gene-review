@@ -26,3 +26,7 @@
   provisioning); ovulation MARK_AS_OVER_ANNOTATED (indirect; no evidence RME-2 acts in spermatheca, and
   RME-2 is not detected outside the germline/embryo).
 - No NEW process terms beyond the MODIFY replacement; vitellogenesis-type terms not added as NEW.
+
+## 2026-10-28 PR review fixes
+
+The GO:0016192 MODIFY now points to the genus GO:0072583 clathrin-dependent endocytosis instead of the precomposed GO:0061883. decomposed_into.in_core_functions records that the vitellogenesis context is carried in core_functions, which now lists GO:0072583 and GO:0007296 vitellogenesis. Validation warns that GO:0007296 has no existing_annotations row; no NEW row was added.

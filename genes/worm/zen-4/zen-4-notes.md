@@ -28,3 +28,7 @@
   over-annotated.
 - Bare protein binding (CYK-4) removed per policy; complex membership captured by NEW
   centralspindlin complex row.
+
+## 2026-10-28 PR review fixes
+
+Rewrote the summaries of the two IMP GO:0031991 rows (PMID:11050384, PMID:9693365) so that each describes its own RNAi/allele evidence, not the IGI row's CYK-1 interaction.

@@ -28,3 +28,7 @@
 - Curation gaps (not knowledge gaps): no GOA annotation yet from PMID:32009965 (HEK293 calcium-activated
   channel), from PMID:16054081 (Mg2+/Ni2+ uptake), or from PMID:22483941/PMID:32009965 (PVD sensory
   roles).
+
+## 2026-10-28 PR review fixes
+
+Extended the truncated deep-research-manual quote 'Plasma-membrane activity follows from' through the patch-clamp evidence.

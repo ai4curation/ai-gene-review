@@ -23,3 +23,7 @@
   activity of its own beyond zinc-dependent binding to CSC-1 (protein binding is not
   informative). H3T3ph-binding by analogy with Survivin is not shown in C. elegans; raised as a
   question.
+
+## 2026-10-28 PR review fixes
+
+Extended three truncated PMID:10983970 quotes to 'The C. elegans BIRP BIR-1 was localized to chromosomes and to the spindle midzone'.
