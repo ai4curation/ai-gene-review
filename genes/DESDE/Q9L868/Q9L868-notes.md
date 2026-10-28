@@ -53,9 +53,13 @@ against UniProt REST, 2026-10-28):
   Its positions 81/84/546/549 correspond to 72/75/537/540 of Q9L868, so the position
   missing a `Ni(2+)` feature here is exactly the one P21852 annotates at 549.
 
-A UniProt record defect follows from this (missing `FT BINDING 540 /ligand="Ni(2+)"`); it
-is recorded here rather than as a `source_defects` entry because it is a missing sequence
-feature rather than a defect in any GO annotation row under review.
+A UniProt record defect follows from this (missing `FT BINDING 540 /ligand="Ni(2+)"`). It is
+recorded as a `source_defects` entry on the `GO:0016151 nickel cation binding` row, which is
+the annotation whose claim the incomplete ligand set under-supports: `resource: UNIPROT`,
+`record: UniProtKB:Q9L868`, `slot: FT BINDING`, `requested_change: ADD`,
+`confidence: PROBABLE` (the basis is comparative plus the canonical architecture, not this
+entry's own structure). Filing it there is what gets it into
+`just export-source-defects`' report for UniProt.
 
 The two `FT DISULFID` features pair the same four cysteines across the two motifs —
 `DISULFID 72..537` and `DISULFID 75..540`, both `ECO:0007829|PDB:1E3D`, i.e. automatic
