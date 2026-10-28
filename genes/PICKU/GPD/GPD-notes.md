@@ -156,9 +156,17 @@ read-only for this work):
    `C5L36_0E02100`). Recording that would make the grounding checkable. (The PYC
    entry's `reference_proteome_id: UP000249646` is wrong and was reported from the
    PYC review; the GPD entry has no such field, so the error does not recur here.)
-3. **The 14.72 g/L figure is more precise than the cited text.** The paper's running
-   text gives 14.7 g/L for JL02; 14.72 is presumably read from the source data. Minor,
-   but the evidence explanation attributes it to the main-text section.
+3. **The 14.72 g/L titer is quoted correctly but attached to the wrong one of two
+   fermentations.** The paper reports two JL02 titers in the same paragraph, both in the
+   main text: 14.7 g/L for the bioreactor comparison shown in Fig. 2c
+   [PMID:41617712 "Fermentation of strain JL02 yielded a comparable oxalic acid titer of 14.7 g·L-1
+   without any detectable glycerol accumulation (Fig. 2c)"], and 14.72 g/L for a separate
+   fed-batch run [PMID:41617712 "The fed-batch fermentation of strain JL02 in SC-URA medium with
+   glucose feeding produced 14.72 g·L-1 of oxalic acid with a yield of 0.09 g·g-1 glucose
+   equivalent and a productivity of 0.12 g·L-1·h-1."]. CMMMech's evidence explanation pairs
+   14.72 with "Fig. 2c", where the figure's number is 14.7. The titer itself is accurately
+   quoted from the main text; only the fermentation it is attributed to would need adjusting,
+   either by citing the SC-URA glucose-feeding run or by using 14.7 for Fig. 2c. Minor.
 
 Nothing in CMMMech overstates this protein's function: calling it an "endogenous
 NAD-dependent glycerol-3-phosphate dehydrogenase" whose deletion removes glycerol
