@@ -161,14 +161,22 @@ On the choice of `GO:0015408` over its generic parent `GO:0015091`: the
 ABC-type child is defined by exactly the FbpABC reaction (ATP + H2O +
 Fe(3+)(out) = ADP + phosphate + Fe(3+)(in)), and the `contributes_to`
 relation, not a deliberately weaker term, is what keeps the claim from saying
-FbpA alone performs primary active transport. The sibling phosphate-ABC
-reviews in this series, `genes/GLUOX/pstS` and `genes/GLUOX/pstC`, both use
-the specific `GO:0015415` in that slot, so the generic term would have made
-the series internally inconsistent. (`genes/ECOLI/pstC`, which does stop at
-the generic `GO:0005315`, is the older counter-example.) `GO:0015408` was
-checked on 2026-10-28: live, not obsolete, present in the
-molecular-function enum used by term validation, and with `GO:0015091` in its
-`is_a` ancestor closure.
+FbpA alone performs primary active transport. That term definition is the
+whole of the argument; in-repo practice points the other way and is not
+offered in support. Every phosphate-ABC subunit currently in the tree stops at
+the generic parent `GO:0005315` in its `contributes_to_molecular_function`
+slot: `genes/ECOLI/pstC/pstC-ai-review.yaml:315`,
+`genes/ECOLI/pstA/pstA-ai-review.yaml:323`,
+`genes/PSEPK/pstC/pstC-ai-review.yaml:153` and
+`genes/PSEPK/pstA/pstA-ai-review.yaml:131` (all verified 2026-10-28). The
+unmerged PR #5634 proposes the specific `GO:0015415` for the `GLUOX` pst
+subunits, but that branch is not in `main` and `genes/GLUOX/` does not exist
+here, so it is a proposal rather than a precedent. `GO:0015408` was checked on
+2026-10-28: live, not obsolete, present in the molecular-function enum used by
+term validation, and with `GO:0015091` in its `is_a` ancestor closure.
+Naming the child rather than `GO:0015091` is not an assertion that FbpA by
+itself enables primary active transport; `contributes_to` is the relation that
+carries that qualification.
 
 Two hierarchy claims the automated reviewer flagged as reasoned-but-unverified
 were checked against QuickGO on 2026-10-28 and both hold: `GO:0055085` is in
