@@ -360,12 +360,13 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 
 ## Family 17: HMG-CoA Reductases
 
-`PTHR10572` contains class I HMG-CoA reductases. PAINT places
-`GO:0004420` HMG-CoA reductase activity, `GO:0008299` isoprenoid
-biosynthesis, and `GO:0016126` sterol biosynthesis at the family-root
-`PANTHER:PTN000060346`, a eukaryotic ER-membrane assertion plus an over-broad
-peroxisomal-membrane assertion at `PANTHER:PTN000060347`, and a fungal
-ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
+`PTHR10572` contains the conserved class I HMG-CoA reductase catalytic node
+`PANTHER:PTN000060346`, which carries exact NADPH-dependent HMG-CoA reductase
+activity and isoprenoid biosynthesis, plus a fungal `PANTHER:PTN000832055`
+placement for ergosterol biosynthesis. PAINT also places ER membrane and a
+deeper peroxisomal-membrane term together at `PANTHER:PTN000060347`; the
+peroxisomal term is mammalian-source compartment propagation that needs pruning
+from fungal ER HMG-CoA reductases.
 
 - [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
   `COMPLETE`
@@ -375,9 +376,10 @@ ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
   exemplar
 - [x] `CANAL/HMG1` - CGD *Candida albicans* class I HMG-CoA reductase; drafted
   in PR #5454
-- [x] `ASPFU/hmg1` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 1;
-  drafted in this branch
-- [ ] `ASPFU/hmg2` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 2
+- [x] `ASPFU/hmg1` - major *Aspergillus fumigatus* HMG-CoA reductase with
+  TAFC-linked mevalonate evidence; drafted in PR #5456
+- [x] `ASPFU/hmg2` - second *A. fumigatus* HMG-CoA reductase paralog; drafted
+  in PR #5458
 - [ ] `EMENI/AN1593` - *Aspergillus nidulans* short PTHR10572 member
 
 ---
