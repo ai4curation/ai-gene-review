@@ -91,7 +91,6 @@ paralog-aware activity and complex checks.
 ## Later Candidates
 
 - [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
-- [ ] `PTHR31297` fungal glucan exo-1,3-beta-glucosidases
 - [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
 
 ## Family 3: Chitin Synthase Export Chaperones
@@ -129,15 +128,24 @@ EXG1/XOG1-family IBA rows split over a broad Aspergillus-root
 cell-wall beta-glucan node, and a Saccharomycetes `PTN001262687`
 exo-1,3-beta-glucosidase node.
 
-- [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; drafted in PR #4610
-- [ ] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
-  clade
-- [ ] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
-  fungal wall beta-glucan node
-- [ ] `CANAL/XOG1` - CGD-seeded *Candida albicans*
-  exo-1,3-beta-glucosidase; review in PR #4596
-- [ ] `NEUCR/NCU09652` - *Neurospora crassa* PTHR31297 member to place against
-  the yeast, PomBase, and CGD subtrees
+- [x] `yeast/EXG1` - secreted exo-1,3-beta-glucosidase; merged in PR #4610
+- [x] `yeast/SPR1` - sporulation-specific glucanase in the EXG1/Spr1/XOG1
+  clade; merged in PR #4612
+- [x] `SCHPO/exg1` - fission-yeast extracellular glucanase seed for the
+  fungal wall beta-glucan node; merged in PR #4699
+- [x] `SCHPO/exg2` - SF34 membrane GH5 protein with S. pombe cell-wall
+  phenotypes; merged in PR #4701
+- [x] `SCHPO/exg3` - SF43 glucanase-family protein; merged in PR
+  #4702
+- [x] `CANAL/XOG1` - CGD-seeded *Candida albicans*
+  exo-1,3-beta-glucosidase; merged in PR #4596
+- [x] `CANAL/EXG2` - CGD-seeded SF1 exo-1,3-beta-glucosidase; merged in PR
+  #4618
+- [x] `ASPFU/exgA` - *Aspergillus fumigatus* SF1 exoglucanase inheriting
+  the broad exgD/exgB-seeded glucan-catabolism node; merged in PR #5417
+- [x] `NEUCR/NCU03914` - *Neurospora crassa* SF34 exgD-like member; supersedes
+  the earlier `NCU09652` placeholder, which is a GH43 beta-xylosidase; drafted
+  in PR #5433
 
 ## Family 6: PKA Regulatory Subunits
 
@@ -392,6 +400,10 @@ broad isoprenoid-biosynthesis terms.
   already marks the exact HMG-CoA reductase, broad isoprenoid/sterol, ER
   membrane, and fungal ergosterol-biosynthesis IBD rows as sound while flagging
   the eukaryotic peroxisomal-membrane IBA for fungal pruning.
+- Continued PTHR10572 with `ASPFU/hmg1`, carrying forward the same conserved
+  exact HMG-CoA reductase, isoprenoid, ER-membrane, fungal ergosterol, and
+  fungal peroxisomal-overpropagation decisions into a siderophore-producing
+  filamentous ascomycete.
 
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
