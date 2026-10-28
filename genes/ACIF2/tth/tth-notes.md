@@ -48,9 +48,16 @@ publications (abstracts unless marked full text) and the bioinformatics in
   - Culture supernatant proteomics identified TetH (MALDI-TOF MS band 1) and extracellular TTH activity [PMID:21833324 "supernatants from both OSC- and OLC-incubated cells showed extracellular TTH activity, which most likely accounted for tetrathionate consumption in the culture medium."] [PMID:21833324 "Protein band No. 1 corresponded to TetH protein of A. ferrooxidans ATCC 53993, which is identical to TetH from A. ferrooxidans ATCC 23270 used in this study"].
   - Mature chain (33-499) has no transmembrane segment in UniProt; acid optimum (pH 3) requires an
     outside-the-cytoplasm location.
-- Decision: MODIFY both plasma-membrane rows to GO:0009279 cell outer membrane (a lateral
-  correction; plasma membrane in a Gram-negative bacterium is the inner membrane) and record a
-  PROBABLE UniProt source defect (SL-0039 Cell membrane → SL-0040 Cell outer membrane).
+- Against a confident outer-membrane call:
+  - The UniProt RP line for PubMed:17904676 includes "SUBCELLULAR LOCATION", so a Swiss-Prot
+    curator read the 2007 full text and chose "Cell membrane"; we have only the abstract.
+  - An independent 2011 group [PMID:21833324 "Although TetH has a predicted Sec-type signal peptide, to date its subcellular location is not clear."], listing outer membrane, soluble/probably periplasmic and membrane-associated (Kanao 2007) reports.
+  - Table 1 of PMID:38348185 gives the ATCC 23270 localization only as "membrane"; ATCC 19859 is "periplasm".
+  - None of the outer-membrane statements we can read reports an inner/outer membrane separation;
+    the 2010 and 2024 statements may rest on the 1999 OMP isolation.
+- Decision (revised after PR #5627 review): do not overrule the curator. Both plasma-membrane rows
+  (EXP and IEA) are UNDECIDED; GO:0009279 cell outer membrane is asserted separately as a NEW TAS
+  row (PMID:38348185); the UniProt source defect is a CHECK query (SUSPECTED), not a REPOINT.
   Add GO:0005576 extracellular region (IDA, PMID:21833324) as non-core.
 
 ## Notes on CMMMech's claims (do not edit CMMMech)
@@ -59,8 +66,10 @@ CMMMech records (36+ protein examples for B7J3C9) describe it as a "Periplasmic 
 hydrolase ... generating sulfuric acid protons" and some causal-graph nodes as a "Periplasmic
 pyrroloquinoline-domain hydrolase disproportionating tetrathionate into sulfate and protons".
 Points where this exceeds the evidence:
-1. Location: for A. ferrooxidans the evidence is outer membrane (peripheral) plus secreted, not
-   periplasmic. Periplasmic localization was shown for A. caldus TetH [PMID:14717695] and a
+1. Location: for A. ferrooxidans the evidence is membrane-associated, described as outer membrane
+   (peripheral), plus secreted; the exact membrane is not settled, and none of the sources we could read demonstrates a
+   periplasmic location for ATCC 23270 (earlier soluble/periplasmic reports are cited in
+   PMID:21833324). Periplasmic localization was shown for A. caldus TetH [PMID:14717695] and a
    different A. ferrooxidans strain (ATCC 19859, Table 1 of PMID:38348185), not for ATCC 23270.
 2. "Pyrroloquinoline-domain": the PQQ-repeat signature describes the beta-propeller fold; the
    enzyme does not use PQQ [PMID:20546308].

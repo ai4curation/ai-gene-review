@@ -9,8 +9,8 @@ analysis in `ACIF2/tth/tth-bioinformatics/RESULTS.md` (script `compare_teth.py`)
 - It covers only the central part of the TetH propeller
   [file:ACIF2/tth/tth-bioinformatics/RESULTS.md "A0A5P9XPU3 (A. thiooxidans ATCC 19377, GCD22_00683): 140/235 = 59.6% identity; covers 47.1% of B7J3C9."].
   The upstream ORF GCD22_00682 (QFX95165, 107 aa) holds the signal-peptide N-terminus in
-  another frame, and no C-terminal (B7J3C9 350-499 equivalent) segment was found within 2 kb
-  downstream: a frame-shifted, C-terminally truncated tth copy (pseudogene or assembly indel error;
+  another frame, and no convincing C-terminal (B7J3C9 350-499 equivalent) segment was found
+  within 2 kb downstream (only a noise-level 11/31, 35% frame +1 hit to B7J3C9 341-375): a frame-shifted, C-terminally truncated tth copy (pseudogene or assembly indel error;
   not distinguishable here).
 - The catalytic Asp is present in the fragment (D212 aligned to Af-Tth D325), but a protein lacking
   ~110 N-terminal (including the export signal) and ~150 C-terminal residues of an eight-bladed

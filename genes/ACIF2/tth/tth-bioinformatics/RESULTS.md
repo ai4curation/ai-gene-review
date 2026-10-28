@@ -29,8 +29,11 @@ identical/aligned positions.
    The upstream ORF GCD22_00682 (QFX95165, 107 aa) carries a TetH-like signal-peptide N-terminus
    in another reading frame (82.2% identical to the SS3 tetH1 N-terminus). Translation of the
    locus CP045571.1:618911-622560 finds the N-terminal region in frame +2 (B7J3C9 13-105) and the
-   central region in frame +0 (B7J3C9 111-349), and no segment matching the C-terminal ~150
-   residues (B7J3C9 350-499) at ≥35% identity over ≥30 residues within 2 kb downstream.
+   central region in frame +0 (B7J3C9 111-349), at 53% and 59% identity. For the C-terminal
+   ~150 residues (B7J3C9 350-499) the only hit within 2 kb downstream is a marginal frame +1
+   segment (11/31 identical, 35%, to B7J3C9 341-375) that just meets the script's reporting
+   threshold (≥35% over ≥30 residues); it is noise-level, like the other frame +1 hits
+   (35-38%), and nothing covers B7J3C9 376-499.
    The locus therefore encodes a frame-shifted, C-terminally truncated tth copy (either a
    genuine pseudogene or an indel error in the PacBio-only assembly; this analysis cannot
    distinguish them). The same genome carries an intact 503-aa tth (A0A5P9XS05, GCD22_02315;
