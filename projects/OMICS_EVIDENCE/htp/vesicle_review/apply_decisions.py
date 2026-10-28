@@ -89,13 +89,15 @@ def binding_ids() -> frozenset[str]:
     return ids
 
 
-def binding_evidence(organism: str, gene: str) -> list[str]:
+def binding_evidence(organism: str, gene: str, codes: frozenset[str] | set[str] = EXPERIMENTAL) -> list[str]:
+    # the loose EXPERIMENTAL set is conservative for CAT5's negative clause; the positive CAT5_BOUND
+    # claim cites direct assays, so it is checked with the narrow set
     folder = os.path.join(ROOT, "genes", organism, gene)
     with open(os.path.join(folder, f"{gene}-goa.tsv")) as fh:
         hits = {f'{r["GO TERM"]} {r["GO NAME"]} ({r["GO EVIDENCE CODE"]})'
                 for r in csv.DictReader(fh, delimiter="\t")
                 if r["GO ASPECT"] == "molecular_function" and "NOT" not in r["QUALIFIER"]
-                and r["GO EVIDENCE CODE"] in EXPERIMENTAL and r["GO TERM"] in binding_ids()}
+                and r["GO EVIDENCE CODE"] in codes and r["GO TERM"] in binding_ids()}
     uniprot = os.path.join(folder, f"{gene}-uniprot.txt")
     assert os.path.exists(uniprot), f"{gene}: no cached UniProt entry to check the CAT5 clause against"
     with open(uniprot) as fh:
@@ -191,6 +193,7 @@ def go_pm_endosome(organism: str, gene: str) -> bool:
 # CAT4's residency claim and CAT2A's cytosolic/membrane-binding claim, checked against UniProt or GO.
 RESIDENT_CLAIM = "Mainly resident in an intracellular compartment"
 RESIDENT_TEXT = re.compile(r"nucleus|nuclear|mitochondri|endoplasmic|golgi|peroxisom|lipid droplet|sarcoplasmic", re.I)
+RIBOSOMAL_CLAIM = "Ribosomal protein; MISEV2018"
 CAT2A_CLAIM = "Cytosolic protein with lipid or membrane-protein binding ability"
 CAT2A_TEXT = re.compile(r"cytoplasm|cytosol|peripheral membrane|lipid-anchor", re.I)
 
@@ -260,7 +263,12 @@ def main() -> int:
             assert has_anchor(d["organism"], d["gene"]), f"{key}: CAT1 says transmembrane/lipid-anchored, UniProt has no anchor"
         # the positive clauses of CAT5_BOUND and CAT4_SURFACE, checked the same way
         if BOUND_CLAIM in basis:
-            assert binding_evidence(d["organism"], d["gene"]), f"{key}: CAT5_BOUND but no experimental binding found"
+            assert any(not h.startswith("UniProt:") for h in
+                       binding_evidence(d["organism"], d["gene"], SURFACE_EVIDENCE)), \
+                f"{key}: CAT5_BOUND but no directly assayed (EXP/IDA/IMP/IPI) binding found"
+        if RIBOSOMAL_CLAIM in basis:
+            assert go_rows_in(d["organism"], d["gene"], closure("GO:0005840", "GO:0003735")), \
+                f"{key}: CAT3B says ribosomal protein, but GO records no ribosome row"
         if SURFACE_POOL_CLAIM in basis:
             assert surface_rows(d["organism"], d["gene"]), f"{key}: CAT4_SURFACE but the review keeps no surface row"
         if SURFACE_CLAIM in basis:

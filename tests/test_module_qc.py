@@ -369,6 +369,7 @@ def test_collect_module_qc_smoke():
         "data_qc",
         "leaf_nodes_missing_representatives",
         "conformance_violations",
+        "module_ref_violations",
         "reaction_chaining",
         "feedback_loops",
         "gene_reviews",
@@ -376,6 +377,7 @@ def test_collect_module_qc_smoke():
         "function_conformance",
     }
     assert qc["module_deep_research"]["has_deep_research"] is False
+    assert qc["module_ref_violations"] == []
 
 
 # ---------------------------------------------------------------------------
