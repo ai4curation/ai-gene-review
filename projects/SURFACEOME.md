@@ -175,7 +175,10 @@ Review-level calls worth expert eyes:
 5. **PM subdomains** with tissue-dependent accessibility: apical vs basolateral,
    T-tubule, sarcolemma, cilium, postsynaptic membrane, acrosome.
 6. **Between membranes**:
-   - ER–PM contact site (`GO:0140268`; STIM1): not under PM.
+   - ER–PM contact site (`GO:0140268`; STIM1): the ER membrane reaching across to
+     the PM at a junction. In the reasoned GO hierarchy it *is* under plasma
+     membrane (part of the PM region), so a PM-descendant rule does pick it up — but
+     it denotes the ER side of the junction, not PM insertion.
    - Intercellular junctions spanning two PMs: desmosome (`GO:0030057`) and gap junction (`GO:0005921`) are not under PM either, so PM-descendant rules miss DSG3 and the connexins.
    - Synaptic cleft.
 7. **Transient or vesicle-derived** surface presence: lysosomal exocytosis (LAMP1, CD63), the phagocytic cup, exosomes.
@@ -274,10 +277,15 @@ One row was inconsistent and is now fixed: ATP5F1B had its ecto-ATP-synthase
 `cell surface` row `KEEP_AS_NON_CORE` but its `plasma membrane` row `UNDECIDED`
 only because the publication was uncached; fetching Moser et al. 1999
 (PMID:10077593, the angiostatin/surface ATP-synthase paper) resolved it to
-`KEEP_AS_NON_CORE` with verbatim support. A remaining candidate refinement: STIM1's
-non-core `plasma membrane` rows could be MODIFYed to `GO:0140268` ER–PM contact
-site, since STIM1 stays in the ER and only reaches toward the PM at junctions
-(left as is for now — a minor genuinely PM-inserted pool also exists).
+`KEEP_AS_NON_CORE` with verbatim support. STIM1 was also refined: all six of its
+non-core `plasma membrane` rows (one IBA, four SOCE-function IDA, one UniProt IEA)
+were MODIFYed to `GO:0140268` ER–PM contact site, since STIM1 stays in the ER
+membrane and gates ORAI from the ER side at junctions rather than inserting into
+the PM. The contact-site term is more specific than `plasma membrane` (a part of
+the PM region in the reasoned hierarchy), so this is a refinement, not a lateral
+move; the IBA row carries a `propagation_review` with `TERM_SCOPING_PROBLEM`. The
+debated minor genuinely-PM-inserted STIM1 pool is noted in the reasons but is not
+what these six translocation/function rows demonstrate.
 
 Not every contextual mechanism is structurable this way, and the contextual
 buckets split cleanly:
