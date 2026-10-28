@@ -58,9 +58,9 @@ Official full HTML selected Methods/Results/Discussion read. Human astrocytoma 1
 
 ## Context projection and source boundaries
 
-Forty-four original QuickGO contexts map to 43 stored decisions. The table preserves each original identifier and assigning database; indices are zero-based. The two POMGNT1-binding contexts map to index 10. IntAct context 447030760 contains two alternative original extension groups: occurs_in GO:0005783 (endoplasmic reticulum), or occurs_in GO:0005794 (Golgi apparatus). UniProt context 447030759 has no extension. The16-column fetched TSV retains both assigning-database records but has no extension column; the genuine seed represents their shared fields once. No source field or duplicate NEW row was manually created. These extension alternatives describe the source assertion and are not new exclusive native-location claims.
+Forty-four original QuickGO contexts map to 43 stored decisions. The table preserves each original identifier and assigning database; indices are zero-based. The two POMGNT1-binding contexts map to index 10. IntAct context 447030760 contains two alternative original extension groups: occurs_in GO:0005783 (endoplasmic reticulum), or occurs_in GO:0005794 (Golgi apparatus). UniProt context 447030759 has no extension. The 16-column fetched TSV retains both assigning-database records but has no extension column; the genuine seed represents their shared fields once. No source field or duplicate NEW row was manually created. These extension alternatives describe the source assertion and are not new exclusive native-location claims.
 
-Stored actions:26 ACCEPT,14 KEEP_AS_NON_CORE,2 TOO_GENERAL,1 UNDECIDED. Original-context actions:26 ACCEPT,15 KEEP_AS_NON_CORE,2 TOO_GENERAL,1 UNDECIDED.
+Stored actions: 26 ACCEPT, 13 KEEP_AS_NON_CORE, 2 TOO_GENERAL, 1 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED. Original-context actions: 26 ACCEPT, 14 KEEP_AS_NON_CORE, 2 TOO_GENERAL, 1 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED.
 
 | Original QuickGO identifier | Assigned by | GO term | Evidence / reference | Stored index | Decision |
 | --- | --- | --- | --- | --- | --- |
@@ -84,7 +84,7 @@ Stored actions:26 ACCEPT,14 KEEP_AS_NON_CORE,2 TOO_GENERAL,1 UNDECIDED. Original
 | UniProtKB:O75072!447030776 | GO_Central | GO:0009101 | IBA / GO_REF:0000033 | 33 | ACCEPT |
 | UniProtKB:O75072!447030777 | UniProt | GO:0035269 | IMP / PMID:25279699 | 40 | ACCEPT |
 | UniProtKB:O75072!447030778 | ComplexPortal | GO:0035269 | IDA / PMID:29477842 | 39 | ACCEPT |
-| UniProtKB:O75072!447030779 | BHF-UCL | GO:0046329 | IMP / PMID:18808525 | 41 | KEEP_AS_NON_CORE |
+| UniProtKB:O75072!447030779 | BHF-UCL | GO:0046329 | IMP / PMID:18808525 | 41 | MARK_AS_OVER_ANNOTATED |
 | UniProtKB:O75072!447030780 | GO_Central | GO:0000139 | IBA / GO_REF:0000033 | 1 | ACCEPT |
 | UniProtKB:O75072!447030781 | UniProt | GO:0000139 | IEA / GO_REF:0000120 | 5 | ACCEPT |
 | UniProtKB:O75072!447030782 | UniProt | GO:0000139 | IDA / PMID:17034757 | 2 | ACCEPT |
@@ -109,8 +109,10 @@ Stored actions:26 ACCEPT,14 KEEP_AS_NON_CORE,2 TOO_GENERAL,1 UNDECIDED. Original
 | UniProtKB:O75072!447030801 | UniProt | GO:0005801 | IDA / PMID:15213246 | 27 | ACCEPT |
 | UniProtKB:O75072!447030802 | ComplexPortal | GO:1902494 | IDA / PMID:29477842 | 42 | ACCEPT |
 
-The regulatory and developmental observations are retained as context, not as additional catalytic cores. The unresolved ER annotation is not a claim that ER localization is false. Both nuclear and extracellular observations are separated from the established Golgi glycan-transfer function. The source-specific reasons retain experimental species, constructs and access limits.
+Supported proliferation and developmental observations are retained as context, not as additional catalytic cores. The JNK-cascade term is marked over-annotated because the earlier phospho-c-Jun readout does not isolate regulation of that cascade. Structured CURRENT findings preserve both proliferation outcomes and record opposing directions and context limits without marking either source result as superseded. The unresolved ER annotation is not a claim that ER localization is false. Both nuclear and extracellular observations are separated from the established Golgi glycan-transfer function. The source-specific reasons retain experimental species, constructs and access limits.
 
 The two natural UniProt products are O75072-1 and O75072-2; VSP_045961 changes the isoform 2 C-terminal segment. The seed product objects are retained without assigning engineered soluble/tagged proteins, secretion or nuclear localization to either natural product. No primary study here establishes that those pools are isoform-specific.
 
 For original links, ontology definitions, PAINT provenance and immutable normal-source hashes, see [the source guide](FKTN-source-guide.md). These notes summarize primary findings without inserting new supporting-text quotations.
+
+The follow-up retains both human-cell outcomes as CURRENT findings, with reference-only support and explicit opposing-direction notes. The earlier paper accurately proposed suppression in its tested cells; no hypothetical universal claim is attributed to it as a DISPUTED finding and no superseded_by link is added. The earlier 20 nM/five-day and later 40 nM/four-day protocols were re-read; context dependence is plausible, but no single differing variable was isolated as the explanation.
