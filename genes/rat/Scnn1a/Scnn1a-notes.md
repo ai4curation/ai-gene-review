@@ -33,3 +33,17 @@
   human/mouse/rat does. ENaC itself performs the apical Na+ entry step, so it passes the
   "does the gene product do the work" test.
 - Consistent with sibling reviews of rat Scnn1b/Scnn1g where the same terms recur.
+
+## 2026-10-28 Harmonization across ENaC subunit reviews (Scnn1a/Scnn1b/Scnn1g)
+
+Shared GO terms were aligned across the three rat ENaC subunit reviews where the evidence is the same. Settled
+actions: plasma membrane ACCEPT (as precise as warranted across polarized and non-polarized cells, kept beside
+apical plasma membrane); intracellular sodium ion homeostasis MARK_AS_OVER_ANNOTATED (organismal Na+ balance is
+already accepted as GO:0055078); external side of plasma membrane KEEP_AS_NON_CORE; sensory perception of salty
+taste KEEP_AS_NON_CORE (direct for alpha via the taste-cell knockout in PMID:20107438, indirect for beta/gamma);
+cellular response to acidic pH MARK_AS_OVER_ANNOTATED; response to aldosterone and response to vasopressin
+KEEP_AS_NON_CORE (both are entailed by the kept cellular response to aldosterone/vasopressin rows; the alpha
+vasopressin row notes that PMID:16528252 reports changes only in beta and gamma). The NEW row for renal sodium ion
+absorption (GO:0070294) was removed, together with its core_functions entry, because no ENaC subunit in human,
+mouse or rat carries the term while NKCC2/NCC do; under the strict NEW bar this is treated as a convention to
+check, and the issue is now a suggested question shared by all three subunit reviews.

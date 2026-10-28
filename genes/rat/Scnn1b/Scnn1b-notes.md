@@ -35,3 +35,19 @@
 - Added PMID:18308722 (CK2 phosphorylation of beta S631 required for ENaC activity; full
   text read) as reference for regulation.
 - No NEW process terms proposed (NEW-term bar).
+
+## 2026-10-28 Harmonization across ENaC subunit reviews (Scnn1a/Scnn1b/Scnn1g)
+
+Shared GO terms were aligned with the alpha and gamma reviews where the evidence is the same. Changes here: cell
+surface MODIFY -> KEEP_AS_NON_CORE (surface-labelling assays support it; plasma membrane is not a refinement of
+cell surface); sensory perception of salty taste UNDECIDED -> KEEP_AS_NON_CORE (ENaC is the sodium taste receptor
+in mice, PMID:20107438; support for beta is indirect, via the obligate heteromer); response to aldosterone
+MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE and response to vasopressin MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE
+(both entailed by the kept cellular response rows; the beta aldosterone row notes that its only paper reports a
+decrease in Dahl salt-sensitive rats). Renal system process (GO:0003014) MODIFY -> KEEP_AS_NON_CORE and renal sodium
+ion absorption (GO:0070294) dropped from core_functions, matching removal of the GO:0070294 NEW row from Scnn1a; the
+question of whether ENaC subunits should carry GO:0070294 is now a suggested question. The NOT response to
+dexamethasone row stays KEEP_AS_NON_CORE, differing from gamma, because neither beta transcript nor protein rose in
+PMID:16263802. Other shared terms (plasma membrane, intracellular sodium ion homeostasis, external side of plasma
+membrane, neuron projection development, cellular response to acidic pH) already matched the settled action; their
+reasons were unified.

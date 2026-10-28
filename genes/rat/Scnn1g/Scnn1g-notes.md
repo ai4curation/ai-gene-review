@@ -23,3 +23,17 @@
 - NOT response to dexamethasone (PMID:16263802): UNDECIDED. The abstract reports that dexamethasone increased gamma protein.
 - No NEW annotations. Renal sodium ion absorption (GO:0070294) was considered, but no ENaC subunit carries it
   in human, mouse or rat (QuickGO check), so sodium ion homeostasis was kept.
+
+## 2026-10-28 Harmonization across ENaC subunit reviews (Scnn1a/Scnn1b/Scnn1g)
+
+Shared GO terms were aligned with the alpha and beta reviews where the evidence is the same. Changes here: plasma
+membrane MODIFY -> ACCEPT (as precise as warranted across polarized and non-polarized cells, kept beside apical plasma
+membrane); intracellular sodium ion homeostasis MODIFY -> MARK_AS_OVER_ANNOTATED (sodium ion homeostasis is already
+accepted); external side of plasma membrane MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (large extracellular domain);
+neuron projection development MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (curator IMP, abstract-only, indirect);
+cellular response to acidic pH KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (pH modulation is not a response
+process). Salty taste stays KEEP_AS_NON_CORE, now supported by PMID:20107438. Response to aldosterone and response to
+vasopressin stay KEEP_AS_NON_CORE. The NOT response to dexamethasone row moved from UNDECIDED to
+MARK_AS_OVER_ANNOTATED so that both rows on the term share one action; it differs from beta's kept NOT row because
+gamma-ENaC protein rose in PMID:16263802. Added the shared suggested question on renal sodium ion absorption
+(GO:0070294).
