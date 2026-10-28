@@ -39,3 +39,8 @@
 - Golgi membrane now has direct Drosophila support [PMID:36435842].
 - Protein binding rows: REMOVE per protein-binding policy (interactions with Tctp, Cln7, sau are
   real but uninformative as GO:0005515).
+
+## 2026-10-28 PR review fix: GO:0016239 row
+
+- The GO:0016239 positive regulation of macroautophagy IMP row (PMID:22952930) is still MODIFY to GO:0016242. Its only support was the non-significant p62 result, so it now also cites the PMID:18474623 (GFP-2xFYVE punctae) and PMID:24265594 (GFP-Atg8 in muscle) quotes, which show that Rheb negatively regulates macroautophagy.
+- Its FlyBase source defect now asks for DELETE_ROW instead of REPOINT, and corrected_value/corrected_label were dropped. GO:0016242 is already annotated independently from PMID:18474623, and a non-significant result cannot support either sign. The explanation now says this.
