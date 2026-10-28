@@ -106,6 +106,36 @@ is the refinement path; neither needed the `NEW` bar. No process term was propos
 oxalic acid production: GPD is deleted in those strains, and a gene whose removal
 improves a pathway is not a participant in it.
 
+### Why GO:0006973 intracellular accumulation of glycerol was not added
+
+`GO:0006973` intracellular accumulation of glycerol was considered as a `NEW` row and
+declined. The participation test is not the obstacle: an enzyme that makes the glycerol
+that accumulates does part of the work of accumulating it, and `genes/yeast/GPD1`
+carries the term as a core process. The obstacle is whose phenotype was measured. The
+only accumulation data for this protein come from expressing it in a heterologous
+*S. cerevisiae* host, where the osmotic response machinery, the glycerol channel Fps1
+and the transcriptional regulation are all *S. cerevisiae*'s, not
+*P. kudriavzevii*'s [PMID:18452539 "Transformants also accumulated glycerol
+intracellularly and GPD-specific activity increased significantly when stressed with
+NaCl"]. No osmotic phenotype, and no intracellular glycerol measurement, has been
+reported for *P. kudriavzevii* itself: the only native-host data are the fermentation
+knockout, which measures glycerol in the broth, not retained inside the cell
+[PMID:41617712 "without any detectable glycerol accumulation"]. Accumulation is a
+process of the cell that retains the solute, so transferring it on the strength of a
+heterologous host's regulation would be asserting more than was measured. If an osmotic
+or intracellular-glycerol phenotype is reported for *P. kudriavzevii*, the term should
+be added; `suggested_experiments` item 2, which now scores localisation under
+hyperosmotic conditions, is the natural place for that measurement.
+
+### Cross-review follow-up (not in this PR)
+
+`GO:0006072` glycerol-3-phosphate metabolic process is `MODIFY` here but `ACCEPT` in
+the merged `genes/yeast/GPD1` review, from the same PAINT node PTN000198006. Per
+CLAUDE.md's "correct but general terms are MODIFY" rule the call in this review is the
+one to keep, since glycerol 3-phosphate is this enzyme's product and the direction-
+specific descendant `GO:0046167` is supported. Aligning `genes/yeast/GPD1` is a
+follow-up on that review, outside this change.
+
 ## CMMMech cross-check (data/records/allanite-leachate.yaml)
 
 The grounding of the `gpd_glycerol3P_dehydrogenase` node to UniProtKB:A8W1U0 is
