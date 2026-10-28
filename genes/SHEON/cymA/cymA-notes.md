@@ -28,9 +28,16 @@ an inline quote from a cached publication under `publications/`.
   cofactor [PMID:22393052 "vesicle-bound menaquinone-7 is not only a substrate for this enzyme but is also required as a cofactor when converting other quinones"].
 - Monotopic membrane protein, "the smallest example of a quinol dehydrogenase in nature"
   [PMID:22393052 "CymA is a monotopic membrane tetraheme c-type cytochrome belonging to the NapC/NirT family"].
-  There is no evidence that CymA itself pumps or translocates protons; the protons from
-  quinol oxidation are released on the periplasmic side, and the protonmotive
-  contribution belongs to the redox loop with the quinone-reducing dehydrogenases.
+  There is no evidence that CymA itself pumps protons: it has no proton channel and no
+  Q-cycle, and UniProt/Rhea write the curated reaction (RHEA:11484) with H(+) only as an
+  `(out)` product and no `H(+)(in)` term, i.e. as non-translocating
+  [file:SHEON/cymA/cymA-uniprot.txt CC:CATALYTIC ACTIVITY]. This is not the same as saying
+  no proton crosses the membrane. In a Mitchellian redox loop the cytoplasm-facing
+  dehydrogenases (Nuo, Fdh, hydrogenase) take up 2 H+ from the cytoplasm to reduce
+  menaquinone, those protons ride across the membrane on the menaquinol, and CymA releases
+  them to the periplasm. CymA performs the release half of net H+ translocation, so the
+  protonmotive contribution is shared across the loop rather than owned by the
+  dehydrogenases; what CymA lacks is a translocating mechanism of its own.
 - Thermodynamics: reduction of CymA by menadiol needed the driving force from NADH
   oxidation [PMID:22458729 "CymA is reduced with menadiol (E(m) = -80 mV) in the presence of NADH (E(m) = -320 mV) and an NADH-menadione (2-methyl-1,4-naphthoquinone) oxidoreductase, but not by menadiol alone"].
 
