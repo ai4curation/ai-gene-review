@@ -54,3 +54,24 @@ subfamily, and the Rags are not in it.
 ### Transfer guidance for orthologs (e.g. EQUAS/HORSE FLCN in SF2)
 Safe to transfer within SF2: GO:0005096, GO:1990877, GO:1904263, GO:0005765, GO:0005829 and GO:0034198.
 Do not transfer: the mouse knockout phenotype terms listed above; GO:0160193 (LDHA inhibition, one human study only).
+
+
+## 2026-10-28 — ClinGen Mendelian audit
+
+The current disposition is in [FLCN-ai-review.yaml](FLCN-ai-review.yaml); this appended entry supersedes conflicting interpretations in the historical journal above without rewriting it. The [source evidence guide](FLCN-source-evidence.yaml) records assay boundaries, actual source access, PAINT provenance, product reconstruction and quotation relocations.
+
+All 121 original machine contexts and their order, all three natural-product records, and all 244 inherited quotation/reference occurrences (46 resolved pairs) are preserved. Actual formatter/seeder replay resolves 125 current raw rows through 124 formatted rows into the same 121 contexts, with no missing annotation or added row. The review has 36 ACCEPT, 63 KEEP_AS_NON_CORE, 19 MODIFY and three TOO_GENERAL decisions; no NEW assertion is proposed.
+
+The explicit campaign instructions retain supported generic binding as non-core and prohibit new publication quotations, overriding conflicting local skill defaults. The 20 generic-binding contexts are assessed by partner and source. Their association assays do not automatically establish binary contact or an adapter subtype. In particular, FLCN is an Hsp90 client; FNIP1/2 supply cochaperone activity (PMID:27353360). Default validators remain unchanged, so their policy advisories are disclosed rather than suppressed.
+
+Twenty inherited quote occurrences are relocated to truthful reference findings because the excerpts did not establish their original row-specific claims. Each finding records its original occurrence path. Repeated excerpts preserve the original provenance and are not counted as independent experiments. The remaining excerpts and all source identifiers remain intact; newly consulted primary evidence is reference-only. This includes separating the PMID:22709692 pro-B phenotype from the current PMID:21258407 hemopoiesis donor, and separating TFE3 transcription from the unidentified higher-mass modification in PMID:21209915.
+
+The two molecular cores are partner-dependent RagC/D GAP activity and directly measured LDHA inhibition. The latter is supported by purified human protein experiments and tested-cell glycolytic effects, while endogenous stoichiometry and broader physiological replication remain open (PMID:34381247). Natural truncated products are not equated with canonical Arg164 mutants or the synthetic inhibitory peptide. Structural inactive/intermediate states in PMID:31672913 and PMID:31704029 are distinguished from the engineered active complex in PMID:36103527.
+
+Context-dependent negative TOR regulation in flow/ciliary and renal experiments coexists with the predominant positive Rag/TFEB role (PMID:27072130; PMID:32612235). S6K/4E-BP1 selectivity is conditional: PMID:24081491 also measures S6K/S6 effects in its human depletion model. Embryonic, hematopoietic, junction, renal and pro-B annotations are retained as contextual non-core associations with actual species, allele and endpoint limits. Fnip1 rescue/transplant experiments are not transferred to Flcn. Unknown higher-mass TFE3 modification is distinct from FLCN-promoted phosphorylation (PMID:21209915).
+
+Selected actual primary sections were read across the 28 accessible papers and independent consultations; PMID:18663353 remains abstract/preview-only and is corroborated independently where retained. Several ordinary caches are abstract-only or omit Results despite a full-text flag. Separately recovered original text is identified by official URL and hash in the guide, without replacing those caches. No claim is made to have inspected every figure pixel or supplementary file.
+
+All 31 existing normal sources were hydrated from exact main bytes before genuine fetch. The only new normal source is the qualified PTHR31441 PAINT slice. The actual 91-node tree and 91-sequence MSA reproduce the 579-aa human target and all six incoming IBD joins; the seventh family record is not a new annotation. Original PAINT GAF and PANTHER API release 19 retain separate provenance. Human experimental grounding among IBD seeds is legitimate, not circular.
+
+Canonical schema, ontology, GOA, reference-title and quotation validation passes with 20 generic-binding advisories under the explicit campaign policy. The status manager computes DRAFT; the existing status is updated accordingly, with validators unchanged.
