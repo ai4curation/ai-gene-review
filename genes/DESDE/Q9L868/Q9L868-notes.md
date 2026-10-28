@@ -11,7 +11,10 @@
   - Q9L868 is identical at 542/543 positions (one difference, position 542 T vs V)
     to GenBank `ACL48945.1`, "nickel-dependent hydrogenase large subunit",
     `locus_tag="Ddes_1038"`, 558 aa, from the ATCC 27774 genome `CP001358`. So
-    Q9L868 is the truncated 1999 sequence of the genome gene `Ddes_1038`.
+    Q9L868 is the 1999 sequence of the genome gene `Ddes_1038`, 15 residues shorter at
+    the C terminus. Those 15 residues are most likely the maturation propeptide rather
+    than an unsequenced remainder — see the discussion under "Relation to the CMMMech
+    record", point 2.
   - The same EMBL entry `AF216303` also encodes Q9L869 (266 aa, fragment), which is
     identical at 265/266 positions to the mature chain (50–315) of
     UniProtKB:P13061 (`hydA`, `Ddes_1039`), the Swiss-Prot small subunit reviewed
@@ -29,9 +32,39 @@
 ## Function
 
 This is the catalytic chain. The bimetallic Ni–Fe centre at which H2 is heterolytically
-cleaved is built entirely from large-subunit residues, annotated in the entry as Ni(2+)
-and Fe-cation ligands at positions 72/75/537/540 plus structural Mg(2+)
-[UniProtKB:Q9L868 `FT BINDING 72 /ligand="Ni(2+)"`; `FT BINDING 75 /ligand="Fe cation"`].
+cleaved is built entirely from large-subunit residues. The entry's `FT BINDING` features
+annotate, exactly, **Ni(2+) at 72, 75 and 537**, **Fe cation at 75 and 540**, and
+structural **Mg(2+) at 53, 489 and 543**
+[UniProtKB:Q9L868 `FT BINDING 72 /ligand="Ni(2+)"`; `FT BINDING 75 /ligand="Fe cation"`;
+`FT BINDING 537 /ligand="Ni(2+)"`; `FT BINDING 540 /ligand="Fe cation"`].
+The four cysteines are 72 and 75 (the N-terminal CxxC) and 537 and 540 (the C-terminal
+DPCxxC); in the canonical [NiFe] large-subunit architecture all four coordinate the
+nickel, and 75 and 540 are the **bridging** pair shared between the nickel and the iron.
+Note therefore that **540 is not annotated as a Ni(2+) ligand in this entry** even though
+it is one on the biology: the reviewed Desulfovibrio-lineage homologues do annotate it,
+and this entry's PIRSR-derived set is incomplete at that position (checks run live
+against UniProt REST, 2026-10-28):
+
+- `UniProtKB:P12944` (*Megalodesulfovibrio gigas* periplasmic [NiFe] hydrogenase large
+  subunit) annotates `FT BINDING 65/68/530/533 /ligand="Ni(2+)"` — all four cysteines.
+- `UniProtKB:P21852` (*Nitratidesulfovibrio vulgaris* Miyazaki F) annotates
+  `FT BINDING 81/84/546/549 /ligand="Ni(2+)"` **and** `FT BINDING 84/549 /ligand="Fe cation"`
+  — i.e. the same Fe pair as here, but with the fourth cysteine also typed as a Ni ligand.
+  Its positions 81/84/546/549 correspond to 72/75/537/540 of Q9L868, so the position
+  missing a `Ni(2+)` feature here is exactly the one P21852 annotates at 549.
+
+A UniProt record defect follows from this (missing `FT BINDING 540 /ligand="Ni(2+)"`); it
+is recorded here rather than as a `source_defects` entry because it is a missing sequence
+feature rather than a defect in any GO annotation row under review.
+
+The two `FT DISULFID` features pair the same four cysteines across the two motifs —
+`DISULFID 72..537` and `DISULFID 75..540`, both `ECO:0007829|PDB:1E3D`, i.e. automatic
+annotation derived from the deposited coordinates. They pair each N-terminal cysteine
+with its C-terminal partner, which is the geometry imposed by both pairs clamping the
+shared Ni–Fe centre; neither P12944 nor P21852 carries any `DISULFID` feature at the
+equivalent positions, where the same cysteines are typed as metal ligands. The features
+should therefore be read as the structure-derived proximity of the active-site cysteines,
+not as disulfide bonds in the metallated holoenzyme.
 The structural work on this enzyme resolves the nickel ligand Cys536 in three rotamers
 and reports a partially occupied bridging sulfur, i.e. a partly activated active site
 [PMID:11191224 "a three-fold disorder was observed for Cys536 which binds to the nickel atom"].
@@ -82,9 +115,42 @@ this review supports. Two notes (CMMMech is not edited here):
    P13061 small subunit. The two protein examples are operon partners (`Ddes_1038`/
    `Ddes_1039`), which strengthens the record's "periplasmic [NiFe] hydrogenase system"
    framing beyond what it currently claims.
-2. The record does not note that Q9L868 is a sequence **fragment** (543 of 558 aa);
-   the complete large subunit is `Ddes_1038` / GenBank `ACL48945.1`, which has no
-   UniProtKB accession of its own.
+2. The record does not note that Q9L868 is flagged a sequence **fragment** (543 aa against
+   the 558 aa of `Ddes_1038` / GenBank `ACL48945.1`, which has no UniProtKB accession of
+   its own). This is a record-keeping point, and probably one about **precursor versus
+   mature chain** rather than about an incompletely known protein — so it does not weaken
+   the record's use of Q9L868 as the catalytic subunit. [NiFe] hydrogenase large subunits
+   are synthesised as precursors whose C-terminal propeptide is removed by a HycI/HybD-type
+   endopeptidase that cuts immediately after the His of the conserved `DPCxxCxxH` motif,
+   and four independent things line up with Q9L868 already being the mature chain (checks
+   run live against UniProt REST and NCBI efetch, 2026-10-28):
+
+   - Q9L868 ends `...IHSFDPCIACSTH` at position 543 — exactly at that motif His, with the
+     Ni/Fe-ligating Cys537 and Cys540 inside the motif
+     [UniProtKB:Q9L868 `SQ SEQUENCE   543 AA`].
+   - **His543, the final residue, is an annotated `Mg(2+)` ligand with structure-derived
+     evidence** [UniProtKB:Q9L868 `FT BINDING 543 /ligand="Mg(2+)" /evidence="ECO:0000256|PIRSR:PIRSR601501-1, ECO:0007829|PDB:1E3D"`].
+     The structural Mg site of these subunits is ligated by the C-terminal His of the
+     *mature* chain: `UniProtKB:P21852` annotates `CHAIN 1..552` with `FT BINDING 552
+     /ligand="Mg(2+)"`, its last mature residue. A sequencing truncation would not stop at
+     a structurally liganded C-terminus.
+   - `1E3D` chains B/D cover residues 2–543, the whole of what UniProt has, with nothing
+     unmodelled at either end.
+   - The 15 residues by which `ACL48945.1` exceeds this entry are `VIDGESNEVHDYKVL`
+     (positions 544–558), and they align to curated propeptides of the same length and
+     position: `UniProtKB:P0ACE0` (*E. coli* hydrogenase-2 large chain) has
+     `CHAIN 2..552` / `PROPEP 553..567 /note="Cleavage; by HybD"`, whose mature chain ends
+     `...IHSFDPCMACAVH` and whose 15-residue propeptide is `VVDADGNEVVSVKVL`;
+     `UniProtKB:P12944` has `CHAIN 2..536` / `PROPEP 537..551`, also 15 residues.
+
+   So the likeliest reading is that `ACL48945.1` is the full-length precursor and Q9L868's
+   543 residues are the mature subunit, the species actually crystallised. The entry's own
+   `Flags: Fragment` and `FT NON_TER 543 /evidence="ECO:0000313|EMBL:AAF43138.1"` say only
+   that the 1999 EMBL CDS `AAF43138.1` was submitted as non-terminal; they are not evidence
+   that the protein continues past 543 *in the mature form*. This has not been confirmed
+   experimentally for this enzyme (no `PROPEP` or `CHAIN` feature exists on either
+   sequence), so it is recorded here and raised as a `suggested_question` rather than
+   asserted in the review body.
 
 The Pd(II)-reduction evidence remains indirect for this subunit: Lloyd et al. used strain
 ATCC 29577 and inferred hydrogenase involvement from H2 dependence and Cu2+ pretreatment
