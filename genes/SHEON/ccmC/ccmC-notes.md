@@ -65,8 +65,20 @@ claims and marks the transmembrane-transporter molecular function as an
 over-annotation rather than removing it outright.
 
 Note also that all of this mechanism is *E. coli* biochemistry. No biochemical study
-of the *S. oneidensis* protein itself exists; its assignment rests on family
-membership plus the mutant phenotype below.
+of the *S. oneidensis* protein itself exists. Its assignment does not rest on family
+membership alone, however: the characterised heme-binding site is present in the
+MR-1 sequence itself. A pairwise global alignment of Q8EK42 against *E. coli*
+P0ABM1, computed in `ccmC-bioinformatics/` and summarised in
+`ccmC-bioinformatics/RESULTS.md`, is gap-free from the N-terminus through residue
+184 at 58.8% identity and maps both axial histidines onto His60 and His184 *of
+Q8EK42*, with the WWD motif intact as `WWVWD` at Q8EK42 122-126
+[file:SHEON/ccmC/ccmC-bioinformatics/RESULTS.md "Both axial histidines are conserved
+and fall at the **same positions in Q8EK42**, His60 and His184."]. These are
+positions in the reviewed sequence, established by that alignment, not the *E. coli*
+numbers carried across by assumption — they happen to coincide because the two
+proteins align without gaps over that span. The mutant phenotype below corroborates
+the assignment; the heme-attachment chemistry itself remains unassayed for this
+protein.
 
 ## Shewanella-specific evidence
 
@@ -137,10 +149,20 @@ type IV pilus-dependent motility, `GO:0071977` and `GO:0071978` flagellum-depend
 swimming and swarming motility. That set is the phenotype profile of a strain with
 no mature c-type cytochromes, recorded as if each phenotype were a function of
 CcmC — and `catalase activity` is a molecular function, which a mutant phenotype
-cannot establish at all. The cited paper is moreover a study of *E. coli* CcmABC
-heme trafficking and does not report any of these *P. aeruginosa* phenotypes
+cannot establish at all. The cited paper is moreover a biochemical study of System I
+CcmABC-mediated release of holoCcmE and does not report any of these
+*P. aeruginosa* phenotypes
 [PMID:16824107 "We have previously shown evidence that the system I pathway has a
 higher affinity for haem than system II for cytochrome c biogenesis."].
+The cached record for PMID:16824107 is abstract-only (`full_text_available: false`)
+and its abstract names no organism at all — a case-insensitive search for
+`Escherichia`/`coli` in `publications/PMID_16824107.md` returns nothing — so no
+organism is attributed to that study anywhere in this review. An earlier draft said
+it was an *E. coli* study; that was an inference the cached abstract does not
+support, and it was removed from the review, from the two `source_defects`
+explanations and from the `reference_review` notes. The `REMOVE` does not depend on
+it: it rests on the two independent arguments that a mutant phenotype cannot
+establish a molecular function and that no WWD-superfamily member dismutates H2O2.
 
 Catalase (EC 1.11.1.6) is a soluble heme enzyme with a distinct fold; a six-TMS
 integral membrane protein of the WWD heme-handling superfamily has no catalase
