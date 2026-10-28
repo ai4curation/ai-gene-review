@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aruC, braD, braF, ccmC, cif, dctQ, dgcB, estA, fleN, gbuA, hom, hutH, hutI, lap, mgtE, nrdJa, PA0692, PA1024, PA1055, PA1057, PA3760, PA3891, PA4503, PA4504, PA4624, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pscC, pvdE, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
+genes: [aruC, braD, braF, ccmC, cif, dctQ, dgcB, estA, fleN, gbuA, gltA, hom, hutH, hutI, lap, liuC, mgtE, nrdJa, PA0692, PA0920, PA1024, PA1055, PA1057, PA3760, PA3891, PA4079, PA4503, PA4504, PA4624, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pscC, pvdE, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -65,7 +65,12 @@ column. A seeding is *PseudoCAP-supported* when one of the protein's
 non-negated experimental annotations, assigned by PseudoCAP, is the node term
 or an is_a/part_of descendant of it. Every PAO1 seeding found at least one
 supporting experimental annotation, which is a useful check on the join.
-Leaf IBAs are counted per node and term from the leaf IBA file.
+Leaf IBAs are counted per node and term from the leaf IBA file. That file
+covers only PANTHER's reference proteomes, so the counts are lower bounds:
+GOA also projects IBAs onto the rest of UniProtKB. For three nodes checked in
+QuickGO on 2026-10-28 (all terms from the node together), the GOA rows were
+925 for PTN001247822 (ccmC; 143 catalase IBAs in the reference file), 1,770 for
+PTN005219546 (estA; 960 per term) and 369 for PTN002388087 (PA4079; 27).
 
 Ranking: **tier 1** genes are the only seed of at least one node term;
 **tier 2** genes share every node with other seeds. Within a tier, genes are
@@ -143,11 +148,15 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 28 | nrdJa | PA5497 | ribonucleoside-diphosphate reductase activity, thioredoxin as acceptor (PTN000171476) | 39 | OVER-SPECIFIC: purified NrdJ prefers CTP over CDP >60-fold and thioredoxin was never used | Clade mixes NDP- and NTP-specific reductases | P, G |
 | 29 | cif | PA2934 | epoxide hydrolase activity (PTN002458043) | 38 | SOUND (structure, kinetics) | Sound; its broad hydrolase node (791 IBAs) also sound | P (reference on another row) |
 | 30 | braD | PA1073 | L-isoleucine import, L-alanine transport (PTN000765102) | 36 | SOUND (as braF) | Sound, same caveat; D-alanine transport seed is an indirect phenotype | none |
+| 31 | gltA | PA1580 | tricarboxylic acid cycle (PTN002450857) | 36 | SOUND claim; IDA on an enzyme purification (IC would be accurate) | Sound | P |
 | 32 | aruC | PA0895 | L-arginine biosynthetic process (PTN000241318) | 35 | SOUND (dual biosynthetic/catabolic aminotransferase; enzyme data only) | Node also passes it to LysJ, diaminobutyrate aminotransferase and AstC leaves | G |
 | 33 | gbuA | PA1421 | L-arginine catabolic process (PTN004253691) | 34 | SOUND for GbuA | Over-reaches across a guanidino-acid hydrolase clade (AGMAT, GpuA); separate guanidinopropionase IBA contradicted by assay | G (x2) |
 | 34 | pilD | PA4528 | aspartic-type endopeptidase activity (PTN000766410) | 33 | SOUND (purified enzyme) | Sound | P (reference query on a plasma membrane row) |
 | 35 | dgcB | PA5399 | oxidoreductase activity (PTN000229983) | 33 | INDIRECT: transposon growth + NMR coded IDA; the chemistry probably belongs to DgcA | Generic node term defensible from domains | P (x2), G |
+| 37 | PA0920 | PA0920 | phospholipid homeostasis; aminoacyltransferase; PG alanyltransferase (PTN002162750, PTN005059806) | 28 | Activities SOUND; phospholipid homeostasis WRONG (the gene makes A-PG; homeostasis needs the PA0919 hydrolase) | Homeostasis IBD unsupported, and the node includes fungal ErgS sterol glycyltransferases | P, G, UniProt |
+| 38 | PA4079 | PA4079 | NAD(P) CH-OH oxidoreductase (PTN002388087) | 27 | SOUND (direct enzymology) | Sound; generic term suits a cross-kingdom SDR clade | none |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
+| 40 | liuC | PA2013 | terpene catabolic process; methylglutaconyl-CoA hydratase activity (PTN001733227) | 26 | Terpene OVER-SPECIFIC (true for PAO1 only because the terpene pathway feeds leucine catabolism); hydratase UNVERIFIABLE (paper never mentions liuC) | Terpene IBD should go: most leaves lack the pathway; node also covers AtuE and PksH | P, G (x2) |
 | 41 | PA4503 | PA4503 | dipeptide transmembrane transporter activity (PTN000765601) | 25 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikB (nickel) and SapB (putrescine) permeases; binding protein sets substrate | P, G |
 | 43 | pscC | PA1716 | protein secretion by the type III secretion system (PTN009110345) | 25 | SOUND | Sound; node is the T3SS-specific subnode | none |
 | 45 | PA4624 | PA4624 | transmembrane protein transporter activity (PTN002160772) | 25 | SOUND (secretion readout of CdrA) | Sound (TpsB subfamily) | P (biofilm row) |
@@ -163,7 +172,7 @@ pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 5 (in progress): gltA, PA0920, PA4079, liuC, thiI, cifR, lpxA.
+Batch 5 (in progress): thiI, cifR, lpxA.
 
 ### Patterns emerging
 
@@ -198,6 +207,11 @@ Batch 5 (in progress): gltA, PA0920, PA4079, liuC, thiI, cifR, lpxA.
   transport, which needs the separate binding protein CaiX, seeded on the
   permease node; Sha antiporter activity, measured for the whole PA1054-PA1059
   cluster after deleting only PA1054, given as IMP `enables` to each subunit.
+- **Consequences as processes** (PA0920): an alanyl-phosphatidylglycerol
+  synthase annotated to phospholipid homeostasis.
+- **Pathway context that does not travel** (liuC): terpene catabolism is true
+  for PAO1 only because its terpene pathway feeds the leucine pathway, but it
+  was seeded on a hydratase node whose other members lack it.
 - **Phenotypes as locations** (pilM): IMP "mutant has no pili" recorded as
   `located_in` type IV pilus, and given identically to pilN, pilO and pilP.
 - **One citation for a whole operon** (hom): the ThrH/ThrB kinase paper cited
