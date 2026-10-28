@@ -6,6 +6,8 @@ No deep-research provider was available. This file is a manual literature and re
 - UniProtKB A0A1V2LT98_PICKU, TrEMBL, PE 4 (predicted). ORF C5L36_0A02450 (EMBL AWU73641.1), proteome UP000249293 (chromosome 1), 1180 aa. No gene symbol in UniProt; the literature calls it PYC.
 - It is the only pyruvate carboxylase in the P. kudriavzevii reference proteome. The other two biotin enzymes there are urea carboxylase/amidolyase entries (UniProt REST query, 2026-10-28).
 - Family: PANTHER PTHR43778:SF2, NCBIfam TIGR01235, PIRSF001594. Domains: biotin carboxylation 22-474, ATP-grasp 144-341, carboxyltransferase 560-827, biotinyl 1098-1173, predicted biotinyl-Lys1139. No N-terminal extension relative to S. cerevisiae Pyc1p.
+- PTN placement: the TreeGrafter rows place this protein at PTN001447571 (Saccharomycetaceae-Candida). In the PANTHER 19 tree for PTHR43778 (PANTHER API `treeinfo?family=PTHR43778`, 2026-10-28) that node's ancestry is PTN001821692 (LUCA) > PTN000429426 (Eukaryota) > PTN008685058 (Unikonts) > PTN000429427 (Opisthokonts) > PTN001050931 (Fungi) > PTN001050932 (Dikarya) > PTN000429467 (Ascomycota) > PTN000429468 (Pezizomycotina-Saccharomycotina) > PTN001050933 (Saccharomycetales) > PTN001447571. So the protein descends from both PAINT IBD nodes, PTN001821692 (activity, gluconeogenesis) and PTN001050931 (cytosol).
+- The subfamily PTHR43778:SF2 is named "PYRUVATE CARBOXYLASE, MITOCHONDRIAL". The name comes from the mammalian members and says nothing about where fungal members are located. The PAINT cytosol assertion at the Fungi node (taxon:4751) is the relevant statement for localization.
 
 ## Literature
 - Oxalic acid engineering in I. orientalis SD108. Endogenous PYC was integrated into an oxaloacetate hydrolase (Pcoah) strain [PMID:41617712 "To enhance oxalic acid production, we expressed the endogenous pyruvate carboxylase (PYC) in the strain OA_Pcoah."], with the stated rationale [PMID:41617712 "PYC facilitates the conversion of pyruvate into oxaloacetate (OAA), a precursor of oxalate."]. Copy number had no further effect [PMID:41617712 "Strains with two and three copies of PYC produced a similar oxalic acid titer of 1.52 g·L-1"], compared with 1.28 g/L for the parent OA_Pcoah strain. The paper reports no enzyme assay and does not name the PYC locus.
@@ -15,8 +17,8 @@ No deep-research provider was available. This file is a manual literature and re
 ## Review decisions (8 IEA rows)
 - Pyruvate carboxylase activity: ACCEPT. Catalytic activity: MODIFY to that term.
 - Biotin carboxylase activity: KEEP_AS_NON_CORE, as a partial reaction.
-- ATP binding: KEEP_AS_NON_CORE. Metal ion binding: KEEP_AS_NON_CORE. Nucleotide binding: TOO_GENERAL.
-- Cytoplasm: ACCEPT. Gluconeogenesis: ACCEPT. No NEW rows. Source defects: none.
+- ATP binding: KEEP_AS_NON_CORE. Metal ion binding: MODIFY to manganese ion binding (GO:0030145), based on the four PIRSR001594-3 Mn(2+)-binding site features. Nucleotide binding: TOO_GENERAL.
+- Cytoplasm: MODIFY to cytosol (GO:0005829), based on the yeast localization papers and the PAINT Fungi-node cytosol assertion; core_functions location set to cytosol. Gluconeogenesis: ACCEPT. No NEW rows. Source defects: none.
 - I did not add an oxalate-biosynthesis process term. In the engineered strain, oxalate is made by heterologous Pcoah; PYC supplies its substrate, which is not participation in the oxalate-forming step.
 
 ## CMMMech cross-check (allanite-leachate.yaml)

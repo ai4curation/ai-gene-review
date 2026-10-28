@@ -6,6 +6,8 @@ No deep-research provider was available. This file is a manual literature and re
 - UniProtKB A0A5M3MJR8_CONPW, TrEMBL, PE 4 (predicted). ORF CONPUDRAFT_91456 (EMBL EIW79180.1), proteome UP000053558, 1199 aa.
 - It is the only protein named pyruvate carboxylase in the C. puteana RWD-64-598 SS2 proteome (UniProt REST query, 2026-10-28).
 - Family: PANTHER PTHR43778:SF2, NCBIfam TIGR01235, PIRSF001594. Single-chain PC architecture: biotin carboxylation domain 45-495, ATP-grasp 165-362, carboxyltransferase 585-854, biotinyl domain 1120-1198, predicted biotinyl-Lys1164.
+- PTN placement: the TreeGrafter rows place this protein at PTN001050939 (Basidiomycota). In the PANTHER 19 tree for PTHR43778 (PANTHER API `treeinfo?family=PTHR43778`, 2026-10-28) that node's ancestry is PTN001821692 (LUCA) > PTN000429426 (Eukaryota) > PTN008685058 (Unikonts) > PTN000429427 (Opisthokonts) > PTN001050931 (Fungi) > PTN001050932 (Dikarya) > PTN001050939. So the protein descends from both PAINT IBD nodes, PTN001821692 (activity, gluconeogenesis) and PTN001050931 (cytosol).
+- The subfamily PTHR43778:SF2 is named "PYRUVATE CARBOXYLASE, MITOCHONDRIAL". The name comes from the mammalian members and says nothing about where fungal members are located. The PAINT cytosol assertion at the Fungi node (taxon:4751) is the relevant statement for localization.
 - Residues 1-30 form an N-terminal extension that MobiDB-lite predicts to be disordered; S. cerevisiae Pyc1p has no such extension. No transit peptide is annotated, and I did not run a targeting predictor. Localization of basidiomycete PC is untested.
 
 ## Literature
@@ -18,7 +20,7 @@ No deep-research provider was available. This file is a manual literature and re
 ## Review decisions (8 IEA rows)
 - Pyruvate carboxylase activity: ACCEPT. Catalytic activity: MODIFY to that term.
 - Biotin carboxylase activity: KEEP_AS_NON_CORE, as a partial reaction of the single-chain enzyme.
-- ATP binding: KEEP_AS_NON_CORE. Metal ion binding: KEEP_AS_NON_CORE. Nucleotide binding: TOO_GENERAL.
+- ATP binding: KEEP_AS_NON_CORE. Metal ion binding: MODIFY to manganese ion binding (GO:0030145), based on the four PIRSR001594-3 Mn(2+)-binding site features. Nucleotide binding: TOO_GENERAL.
 - Cytoplasm: ACCEPT, with the caveat above. Gluconeogenesis: ACCEPT.
 - No NEW rows. Source defects: none. UniProt's automatic annotation is consistent with the family.
 
