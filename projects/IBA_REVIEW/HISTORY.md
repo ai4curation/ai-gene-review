@@ -135,6 +135,50 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-10-28 — Quantitative phylogenetic distance analysis for single-organism IBAs
+
+Built [`single_organism_distance.py`](single_organism_distance.py) and
+[`single-organism-distance.md`](single-organism-distance.md) to quantify how far up and
+down the tree single-organism IBAs travel across all 25,298 positive GOA `IBA` rows
+(3,517 non-self single-organism IBAs across 2,165 genes; 3,433 rated). Defined four
+complementary metrics:
+
+1. **Taxonomic LCA Clade Depth ($d_{\text{LCA}}$) & Branch Steps ($s_{\text{up}} + s_{\text{down}}$):**
+   Downgrade rates climb from **14.0%** (`REMOVE` **2.6%**) in close clades (Tier 1) and
+   **17.5%–19.4%** in order/phylum/Bilateria splits (Tiers 2–4) to **21.5%** across
+   Opisthokonta/Amorphea (Tier 5), **20.5%** (`REMOVE` **10.8%**) at Eukaryota root (Tier 6),
+   and **31.6%** (`REMOVE` **15.0%**) at `LUCA` (Tier 7).
+2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):**
+   Within close vertebrate pairs ($d_{\text{LCA}} \ge 6$), single-organism IBAs whose `IBD`
+   was placed at `LUCA`/`Eukaryota` ($d_{\text{PTN}} \le 1$) have an **8-fold higher `REMOVE`
+   rate** (**4.1%**, 14.9% downgraded) than those scoped within Vertebrata ($d_{\text{PTN}} \ge 6$:
+   **0.5%** `REMOVE`, 13.4% downgraded).
+3. **PANTHER Subfamily Dilution (`CROSS_SF` vs `SAME_SF`):** Crossing a PANTHER subfamily
+   boundary adds +5 to +8 percentage points to the downgrade rate and nearly doubles the
+   `REMOVE` rate (13.7% $\to$ 21.7% downgraded, 2.3% $\to$ 4.2% `REMOVE` in close/moderate taxa;
+   19.8% $\to$ 24.8% downgraded, 5.7% $\to$ 8.9% `REMOVE` in distant taxa).
+4. **Exact TreeGrafter Tree Steps & Duplications (`steps_from_ibd`, `duplication_on_path`):**
+   Short orthologous paths ($< 10$ tree steps without duplication) show 0.0% `REMOVE` rate in
+   the matched GOA IBA subset, whereas $\ge 10$ steps with duplication on path concentrate
+   cross-paralog over-propagations.
+
+Used the Tier 4–7 + `CROSS_SF` filter to identify and re-review 15 genes where high-distance
+single-organism IBAs had been left at `ACCEPT` or `KEEP_AS_NON_CORE` despite biological or
+ortholog-review evidence of over-propagation:
+- **Tier 7 / Tier 6 batch (8 genes):** `human/MDH1` (`GO:0006099` TCA cycle from *M. tuberculosis* `mdh`),
+  `BACSU/sigF` (`GO:0000976` cis-regulatory binding from *Arabidopsis* plastid `SIG2`),
+  `human/IDI1` & `human/IDI2` (`GO:0009240` IPP biosynthesis from *Arabidopsis* `IPP1`),
+  `SCHPO/SPAC11D3.09` & `SCHPO/SPAPB24D3.03` (`GO:0009446` putrescine biosynthesis from *Arabidopsis* agmatinases),
+  and `SCHPO/SPAC17G8.02` & `SCHPO/SPBC1683.06c` (`GO:0006152` / `GO:0008477` purine nucleosidase from *Arabidopsis* `NRH1`/`NRH2`).
+- **Tier 5 / Tier 4 batch (7 genes):** `human/ATG4D`, `human/ATG2B`, & `DICDI/atg1` (`GO:0034727`
+  piecemeal microautophagy of the nucleus from *S. cerevisiae* `ATG4`/`ATG2`/`ATG1`),
+  `SCHPO/cit1` (`GO:0005975` carbohydrate metabolic process from human `CS`),
+  `SCHPO/lsb6` (`GO:0005802`, `GO:0007030`, `GO:0007032` from *Drosophila* `Pi4KIIalpha`),
+  `SCHPO/oar2` (`GO:0048038` quinone binding from human `CBR4`), and
+  `human/HSPB2` (`GO:0042026` protein refolding from *Drosophila* sHSPs).
+
+---
+
 ## 2026-08-26 — Systematic MSA pass over the pseudo-enzyme backlog
 
 The (e) pass built the first MSAs but only for Argonautes and CRMP; every other

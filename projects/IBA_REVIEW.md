@@ -1747,6 +1747,24 @@ the text defensible was the limb arguing against the action it sat on.
 
 ---
 
+## Single-organism IBA phylogenetic distance analysis
+
+While a short `WITH/FROM` donor list is not by itself evidence against an IBA, a single organism's experimental annotation used to seed a deep ancestral `IBD` node (`Opisthokonta`, `Eukaryota`, `LUCA`) and propagated across kingdoms or subfamily boundaries fails at a much higher rate than close-clade transfers. Across all 25,298 positive GOA `IBA` rows in this repository, **3,517 (13.9%)** across 2,165 genes rest on experimental support from a single distinct non-self organism (3,433 rated; and **8,161 / 20,108 = 40.6%** of cached PAINT `IBD` rows rest on a single resolved taxon).
+
+We defined and benchmarked four quantitative phylogenetic distance metrics in [`IBA_REVIEW/single-organism-distance.md`](IBA_REVIEW/single-organism-distance.md) (computed by [`IBA_REVIEW/single_organism_distance.py`](IBA_REVIEW/single_organism_distance.py)):
+
+1. **Taxonomic LCA Clade Depth ($d_{\text{LCA}}$) & Branch Steps ($s_{\text{up}} + s_{\text{down}}$):** Curator downgrade rates and `REMOVE` rates climb substantially as the donor–target LCA moves from close clades to deep cross-kingdom and cross-domain splits:
+   - **Tier 1** (Close clade, e.g. `Euarchontoglires`, `Murinae`, `Caenorhabditis`, $n = 1{,}346$): **14.0%** downgraded (`REMOVE` **2.6%**).
+   - **Tier 2–4** (Order / Phylum / Bilateria splits, e.g. `Euteleostomi`, `Ascomycota`, `Bilateria`, $n = 1{,}136$): **17.5%–19.4%** downgraded (`REMOVE` **1.2%–5.9%**).
+   - **Tier 5** (`Opisthokonta` Fungi $\leftrightarrow$ Metazoa / `Amorphea` / deep bacterial split, $n = 735$): **21.5%** downgraded (`REMOVE` **5.4%**).
+   - **Tier 6** (`Eukaryota` root, e.g. `Viridiplantae` $\leftrightarrow$ `Opisthokonta`, $n = 83$): **20.5%** downgraded (`REMOVE` **10.8%**).
+   - **Tier 7** (`cellular_organisms` / `LUCA`, `Bacteria`/`Archaea` $\leftrightarrow$ `Eukaryota`, $n = 133$): **31.6%** downgraded (`REMOVE` **15.0%** — nearly 6$\times$ the Tier 1 `REMOVE` rate).
+2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):** Even for close vertebrate donor–target pairs ($d_{\text{LCA}} \ge 6$), single-organism IBAs whose `IBD` was placed at `LUCA` or `Eukaryota` ($d_{\text{PTN}} \le 1$) have an **8-fold higher `REMOVE` rate** (**4.1%**, 14.9% downgraded, $n = 121$) than those scoped within Vertebrata ($d_{\text{PTN}} \ge 6$: **0.5%** `REMOVE`, 13.4% downgraded, $n = 404$).
+3. **PANTHER Subfamily Dilution (`SAME_SF` vs `CROSS_SF`):** Crossing a PANTHER subfamily boundary adds a **+5 to +8 percentage-point** downgrade penalty and nearly doubles the `REMOVE` rate across both close/moderate taxa (**21.7%** vs **13.7%** downgraded; **4.2%** vs **2.3%** `REMOVE`) and distant taxa (**24.8%** vs **19.8%** downgraded; **8.9%** vs **5.7%** `REMOVE`).
+4. **Exact PANTHER Tree Edge Steps & Duplications (`projects/TREEGRAFTER/graft_paths_all.tsv`):** Short orthologous paths (`< 10` tree steps from the `IBD` node with `duplication_on_path = False`) show **0.0%** `REMOVE` rate in the matched GOA IBA subset, whereas long paths ($\ge 10$ tree steps with `duplication_on_path = True`) concentrate cross-paralog over-propagations.
+
+---
+
 ## Project history & methodology
 
 This page records the **synthesized findings**. The dated project log, the per-pass
@@ -1756,3 +1774,6 @@ verification narrative (what was added, what was retracted and why), and the
 A reproducible **multiple-sequence-alignment check** of the two central pseudo-enzyme
 claims (Argonaute catalytic tetrad; CRMP/DPYSL metal-coordinating residues) lives in
 [IBA_REVIEW/msa/](IBA_REVIEW/msa/RESULTS.md) — `uv run python catalytic_residue_msa.py`.
+Quantitative phylogenetic distance analysis for single-organism IBAs lives in
+[IBA_REVIEW/single-organism-distance.md](IBA_REVIEW/single-organism-distance.md) —
+`python3 projects/IBA_REVIEW/single_organism_distance.py --summary`.
