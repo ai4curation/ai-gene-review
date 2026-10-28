@@ -19,3 +19,7 @@
   GO:0007219 or GO:0016485 in the current GO build), checked with OAK.
 - Substrate binding (APP/Jagged) has no informative MF term short of protein binding;
   not proposed as NEW.
+
+## 2026-10-28: core function locations (PR #5679 review)
+
+The core function listed only ER membrane, which is where the complex assembles. The rat-brain fractionation (PMID:20126630) puts gamma-secretase activity mainly with the early endosome marker syntaxin 13 and partly with the plasma membrane marker N-cadherin, so the core locations are now early endosome and plasma membrane, and the early endosome IDA row is ACCEPT.

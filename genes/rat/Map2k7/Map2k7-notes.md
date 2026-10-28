@@ -16,3 +16,7 @@
 - Mouse ISO rows for response to wounding / regulation of motor neuron apoptotic process come from PMID:25100604
   (axotomy-induced motoneuron death; MKK7 loss makes some motoneurons resistant) - refined to response to axon injury
   and positive regulation of motor neuron apoptotic process.
+
+## 2026-10-28: positive regulation of JNK cascade rows (PR #5679 review)
+
+The five GO:0046330 rows (three IDA, IEA, ISO) were first MODIFYed laterally to GO:0007254 JNK cascade. The rat Map3k5 review in the same batch keeps the identical rows as non-core, because GO conventionally gives the cascade kinases the positive-regulation term as well as the cascade term. For consistency the Map2k7 rows are now KEEP_AS_NON_CORE too, and JNK cascade stays the core process.

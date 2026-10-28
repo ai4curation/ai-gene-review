@@ -46,3 +46,7 @@
 
 - Consider a regulatory volume decrease / cell volume homeostasis annotation from
   PMID:21262839 (rat astrocyte siRNA) - currently only a pig ISO row carries GO:0045794.
+
+## 2026-10-28: ATP transport and export reasons (PR #5679 review)
+
+The two pig-ISO rows were MARK_AS_OVER_ANNOTATED with a reason that flatly denied ATP transport, which argued for removal. The reason now matches the action: TRPV4-dependent ATP release is real, but the ATP is not moved by TRPV4 itself, and the pig source was not inspected.
