@@ -32,3 +32,7 @@
 ## 2026-10-28 PR review fixes
 
 GO:0032794 GTPase activating protein binding (IPI, RHGF-2) changed from REMOVE to MODIFY. GO:0019899 enzyme binding was not used: oaklib shows it is not an ancestor of GO:0032794 (both are direct children of protein binding), and a GEF is not an enzyme in GO. No GEF-binding GO term exists (OLS and oaklib searched), so the replacement is an NTR, guanyl-nucleotide exchange factor binding, with a matching proposed_new_terms entry. The source_defects entry is kept.
+
+## 2026-10-28 PR review fix: GO:0032794 source defect
+
+The source_defects entry on the GO:0032794 GTPase activating protein binding row (IPI, PMID:22363657) now has requested_change CHECK instead of DELETE_ROW, matching the row's MODIFY to the proposed NTR guanyl-nucleotide exchange factor binding. Its explanation now says the binding is real and the row should be repointed once the pending GEF-binding term exists, not deleted.

@@ -36,3 +36,7 @@
 ## 2026-10-28 PR review fixes
 
 Added a NEW GO:1902321 methyl-branched fatty acid biosynthetic process row (IMP, PMID:18676815) and restored it to core_functions directly_involved_in. Participation argument: ACS-1 forms the acyl-CoA thioester, a chemical step in mmBCFA synthesis; comparator elo-6 carries the same term by IMP from PMID:15340492. The exact step and substrate are not biochemically established.
+
+## 2026-10-28 PR review fix: GO:1902321 support
+
+Removed the two PMID:15340492 quotes from the supported_by of the NEW GO:1902321 row. They describe elo-5/elo-6 RNAi, not acs-1, so they do not support the row; the elo-6 comparator argument stays in the row's reason. The row is supported by the two PMID:18676815 acs-1 quotes.
