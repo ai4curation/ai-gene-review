@@ -1,0 +1,57 @@
+# FIG4 source evidence and assay boundaries
+
+Human FIG4 is UniProtKB Q92562, HGNC:16873, also called SAC3 or KIAA0274. The fetched record contains a 907-residue canonical protein and supplies no alternative-product records. The review preserves all 45 imported annotation contexts, including the explicitly mouse Pikfyve interaction partner. This document summarizes primary evidence without adding publication quotations.
+
+## Lipid and protein phosphatase activities
+
+[PMID:17556371](../../../publications/PMID_17556371.md) reports Sac3/FIG4 phosphatase activity with preference for PI(3,5)P2, while other D5-phosphorylated polyphosphoinositides also serve as substrates. The immutable cache is abstract-only. The reviewed human [UniProt record](FIG4-uniprot.txt) explicitly identifies PI(4,5)P2 and PI(3,4,5)P3 and their corresponding Rhea reactions. The existing substrate-specific experimental annotations and electronic mappings are retained as non-core biochemical activities. Individual substrate traces and quantitative selectivity were not independently inspected, and physiological PIP3/PI(4,5)P2 flux is not established by that abstract.
+
+[PMID:33098764](../../../publications/PMID_33098764.md), Results on lipid metabolism and protein kinase/phosphatase activity, provides separate evidence for the two core activities. Its Methods describe tagged proteins expressed in Expi293F cells and reconstituted human complexes. FIG4 alone could not be prepared stably without VAC14. The soluble diC8-PI(3,5)P2 phosphatase assay measures released orthophosphate; robust activity was observed in the ternary complex containing wild-type PIKFYVE. This readout alone is not positional lipid-product identification. The specific 5-phosphate reaction also rests on the paper's biological assignment, the earlier study and the reviewed catalytic record.
+
+Wild-type FIG4 and catalytic mutant C486S complexes were compared after ATP/Mg/Mn incubation. Mass spectrometry found FIG4-dependent differences in PIKFYVE phosphorylation at S48, S1669 and S2053; S48 and S2053 also differed in complexes produced together in Expi293F cells. PIKFYVE S2053E reduced lipid-kinase activity compared with the wild-type and S2053A controls. These observations support FIG4 protein-serine phosphatase activity within the complex. They measure phosphosite occupancy after incubation, not isolated-FIG4 phosphopeptide kinetics. The residues belong to PIKFYVE. Broad threonine-substrate activity or an extensive protein-substrate repertoire was not demonstrated.
+
+The reported complex preparations have one PIKFYVE, one FIG4 and five VAC14 subunits. VAC14 is the principal scaffold. FIG4 contacts VAC14 and contributes to complex stability; neither PIKFYVE kinase activity nor VAC14 scaffold activity is assigned to FIG4. The observed cryo-EM conformation does not permit both lipid active sites to engage a membrane simultaneously, and does not place the PIKFYVE activation loop in the FIG4 active site. Flexibility, other conformations, inter-complex action and assembly/disassembly remain proposed explanations. No figure pixels were inspected. Repeated XML-derived text blocks were not counted as independent evidence.
+
+## Complex assembly and pathway participation
+
+[PMID:18950639](../../../publications/PMID_18950639.md), Results Figures 1–3 and Methods, distinguishes human Sac3/FIG4 and VAC14 from mouse PIKfyve constructs in COS7 cells. It also examines endogenous human HEK293 complexes and uses PC12 or 3T3L1 cells for other assays. Approximately 68% Sac3 depletion in HEK293 cells reduced PIKfyve coassociation with VAC14 by 38 ± 4%, without reducing recovered VAC14. Sac3 coexpression enhanced PIKfyve–VAC14 complex recovery. This is positive evidence for FIG4 participation in complex assembly/stability, rather than merely a partner list.
+
+VAC14-fragment experiments perturb the wider complex; their lipid-kinase and GLUT4-transport readouts are not selective assays of FIG4 catalytic activity. Together with the direct FIG4 catalysis in PMID:33098764, the assembly results support the existing PI(3,5)P2-metabolic-process annotation. No separate scaffold or kinase molecular function is inferred for FIG4.
+
+The official GO:0006661 definition includes formation of phosphoinositides. FIG4 directly produces PI3P by dephosphorylating PI(3,5)P2, supporting both the existing broad biosynthesis process and GO:0036092. These assertions do not require FIG4 to phosphorylate a lipid. The early- and late-endosome Reactome pathway summaries explicitly include phosphatases. The broader process annotations remain meaningful pathway context; the generic phosphatase and bisphosphoinositide-phosphatase molecular activities are marked TOO_GENERAL beside the supported specific activities.
+
+## Rat donor and cellular context
+
+The Ensembl source identifiers A6KTC8 and ENSRNOP00000000343 resolve to rat Fig4/Sac3. [PMID:17909536](../../../publications/PMID_17909536.md) explicitly reports rat rSac3 activity against PI3P, PI4P and PI(3,5)P2 in vitro, abolished by a catalytic-core mutation. It reports recycling-endosome, Golgi and endoplasmic-reticulum localization. In NGF-stimulated PC12 differentiation, rSac3 expression promotes neurite outgrowth; antisense inhibition reduces it, and the catalytic mutant loses the promoting activity. These observations supply positive ortholog evidence for the five existing Ensembl transfer contexts.
+
+The rat paper is abstract-only in the normal cache. Its full Methods, exact substrate preparations and images were not inspected. PI3P/PI4P activities, neurite regulation and recycling-endosome localization are retained as non-core ortholog-derived claims, with no assertion that these were measured in human neurons or represent dominant human physiological fluxes. Other donor compartments are not introduced as new human annotations. The present rat UniProt record retains PI3P/PI4P IDA:RGD cross-references, whereas the separately retrieved current QuickGO response lacks the historical experimental donor rows. This database difference does not refute the primary rat experiments or establish a recovered historical QuickGO chain.
+
+## Nine binding contexts
+
+Supported generic protein-binding annotations are retained as non-core under the campaign instruction. Binding does not transfer the partner's function. In particular, PAS association does not establish direct binary FIG4–PIKFYVE binding: VAC14 mediation is explicit in the assembly and structural work. The table lists assay-record identifiers, not independent biological replications.
+
+| PMID | Preserved partner | Evidence inspected and limit |
+| --- | --- | --- |
+| 17556371 | Human PIKFYVE Q9Y2I7 | Abstract reports stable ternary association; independent human complex work in PMID:33098764 corroborates association. Exact current IntAct pair absent. |
+| 17556371 | Mouse Pikfyve Q9Z1T6 | Cross-species partner preserved. Follow-up PMID:18950639 Methods explicitly use human Sac3/VAC14 with mouse PIKfyve. No direct binary contact inferred. |
+| 19037259 | Human VAC14 Q08AM6 | Full Results/Figure 2B explicitly report human VAC14–FIG4 yeast two-hybrid interaction despite the yeast/mouse title. Current IntAct absence is not contrary evidence. |
+| 28514442 | Human VAC14 Q08AM6 | Positive anti-tag coimmunoprecipitation association, IntAct EBI-21634069 / IM-25778-3735. |
+| 32296183 | Human VAC14 Q08AM6 | Positive prey-pooling, array and validated two-hybrid records EBI-22337401, EBI-22795651, EBI-24289640. |
+| 32296183 | Human GORASP2 Q9H8Y8 | Positive prey-pooling, array and validated two-hybrid records EBI-25196395, EBI-24163506, EBI-24777480. No Golgi-scaffold activity inferred for FIG4. |
+| 33961781 | Human VAC14 Q08AM6 | Positive anti-tag coimmunoprecipitation associations EBI-54558089, EBI-54901807, EBI-55017599. |
+| 33961781 | Human PIKFYVE Q9Y2I7 | Positive anti-tag coimmunoprecipitation associations EBI-54729614, EBI-55017599. |
+| 35271311 | Human PIKFYVE Q9Y2I7 | Exact OpenCell table entry not exposed by the cache or recovered in current IntAct. Retained on independent human PAS association evidence, without claiming verification of this source-specific assay. |
+
+The exact human-pair joins were checked against complete, count-checked IntAct responses for the cited publications and official UniProt partner identities. PMID:35271311's source limitation remains explicit in its annotation rationale and reference assessment; a general resource description is not presented as a recovered target-specific result.
+
+## Endosomal and Golgi localization
+
+The Sac3 experiments in PMID:17556371 directly support endosome localization, including EEA1-positive structures. [PMID:16954148](../../../publications/PMID_16954148.md) instead images tagged PIKfyve in human HeLa cells and examines PIKfyve depletion. It does not independently image FIG4. Its ComplexPortal-derived NAS row is retained because the broader FIG4 endosome location is corroborated by the direct Sac3 evidence and established PAS membership; the cited NAS source is not described as a FIG4 IDA assay.
+
+The four R-NUL reactions were resolved through the Reactome content API, following catalyst to complex to protein entities. Each reaction is explicitly chimeric and contains human FIG4 Q92562, human VAC14 and mouse Pikfyve. Their human FIG4 entities carry the early-endosome, late-endosome or Golgi-membrane locations matching the incoming rows. The top-level mouse label is therefore not a wrong-species finding. The described phosphorylation belongs to Pikfyve; the FIG4 annotations here assert locations. No stronger endogenous human imaging experiment is inferred from this database graph. Golgi localization is retained as a non-core pool.
+
+## PAINT ancestry
+
+The official PTHR45738 tree contains the human leaf `HUMAN|HGNC=16873|UniProtKB=Q92562`; its canonical sequence was checked against the family alignment. PTN000127900 lies on the target path. The original IBD.gaf contains positive assertions at this node for GO:0043813 and GO:0046856, matching both incoming IBAs. Human FIG4 among the molecular-function seeds is expected experimental grounding, not circularity. A single SGD seed for the biological process does not weaken the curator's ancestral judgment merely by being singular.
+
+The small [normal PAINT slice](../../../interpro/panther/PTHR45738/PTHR45738-paint.tsv) was generated with the repository's `parse_ibd_gaf` and `write_family_paint` helpers from the complete original IBD source and all 470 persistent nodes in the official family tree. Three positive records and no negative record were recovered across those family nodes. The third cellular-component record is not an incoming annotation and was not proposed as NEW. The topology and IBD source have separately recorded provenance; complete release equivalence is not asserted. Reproduction details and source hashes are in the [source guide](FIG4-source-guide.md).
