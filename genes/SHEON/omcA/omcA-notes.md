@@ -58,18 +58,27 @@ the Fur modulon paper PMID:15576789.
   computationally. No iron stimulus was applied, and the authors say the motifs still
   need verification [PMID:15576789 "Future research will focus on experimentally
   verifying the functionality of predicted Fur-binding regulatory motifs"]. The
-  underlying claim (omcA is in the Fur modulon, and OmcA respires Fe(III)) is not
-  false, so the row is kept and flagged rather than deleted.
-- A `source_defects` entry of type `WRONG_TERM` with `requested_change: CHECK` and
-  `confidence: SUSPECTED` records this for the assigning group. Confidence is
+  underlying claim (omcA is in the Fur modulon) is not false, so the row is kept and
+  flagged rather than deleted. The case rests on the evidence, not on the term: the
+  GO:0071281 definition explicitly includes responses expressed as changes in gene
+  expression, so an expression change in omcA is the kind of thing the term covers.
+  (An earlier draft also argued that an abundance change "happens to" OmcA rather
+  than being work it performs; that argument was dropped in review because it would
+  invalidate every expression-level response annotation.)
+- A `source_defects` entry of type `WRONG_EVIDENCE_CODE` (slot `Evidence_Code`,
+  asserted value `EXP`) with `requested_change: CHECK` and `confidence: SUSPECTED`
+  records this for the assigning group. An earlier draft typed it `WRONG_TERM` with
+  the GO id as asserted value, which did not match the `Evidence_Code` slot. Confidence is
   deliberately low: the GAF row does not show the full curation rationale, and the
   repository rule against overruling curators from incomplete evidence applies.
   `resource` is `OTHER` because `CollecTF` is not in `SourceResourceEnum`; the
   assigning group is named in the explanation.
-- Five NEW rows from direct evidence on this protein: GO:0020037 heme binding,
-  GO:0016722 oxidoreductase activity acting on metal ions, GO:0009055 electron transfer
-  activity, GO:0031240 external side of cell outer membrane, GO:0019645 anaerobic
-  electron transport chain. Before adding GO:0019645, the participation test was
+- Six NEW rows from direct evidence on this protein: GO:0020037 heme binding,
+  GO:0010181 FMN binding, GO:0016722 oxidoreductase activity acting on metal ions,
+  GO:0009055 electron transfer activity, GO:0031240 external side of cell outer
+  membrane, GO:0019645 anaerobic electron transport chain. GO:0010181 rests on
+  PMID:26126857, which shows glutathione-dependent, ~0.95:1 FMN binding by OmcA itself.
+  Before adding GO:0019645, the participation test was
   applied: OmcA itself performs the terminal electron transfer (purified-protein
   assays), so the mutant phenotypes are read as corroboration of participation rather
   than as the sole argument.

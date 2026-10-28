@@ -56,12 +56,22 @@ S. oneidensis MccA/SirA Q8EJI6). PAINT data was fetched with
 - MODIFY the IBA to `GO:0016722 oxidoreductase activity, acting on metal ions`: the node
   placement is right, the term is simply generic because the family's characterized
   members reduce sulfite and nitrite rather than metals.
-- Four NEW rows, each from direct experiment on this protein: heme binding
-  (GO:0020037), electron transfer activity (GO:0009055), external side of cell outer
-  membrane (GO:0031240), anaerobic electron transport chain (GO:0019645).
+- Five NEW rows, each from direct experiment on this protein: heme binding
+  (GO:0020037), FMN binding (GO:0010181), electron transfer activity (GO:0009055),
+  external side of cell outer membrane (GO:0031240), anaerobic electron transport
+  chain (GO:0019645).
 - No `NEW` term was proposed for Cr/U/Mn reduction specifically: GO has no term for
   terminal reduction of an extracellular or insoluble acceptor, and inventing one was
-  not warranted here. It is raised as a `suggested_questions` entry instead.
+  not warranted here. It is raised as a `suggested_questions` entry instead. This was
+  checked rather than assumed: OLS/QuickGO searches for "extracellular electron
+  transfer", "dissimilatory metal reduction", "metal oxide reduction" and "iron oxide"
+  returned no matching molecular-function or process term (the nearest hits are the
+  generic GO:0009055 electron transfer activity and GO:0016722 oxidoreductase activity
+  acting on metal ions, both already used here; GO:0019420 is dissimilatory *sulfate*
+  reduction). FMN binding (GO:0010181) does exist and is now a `NEW` row.
+- Flavin cofactor: PMID:26126857 shows stoichiometric, glutathione-dependent FMN
+  binding by MtrC itself (0.93 FMN per MtrC), so `GO:0010181 FMN binding` is added as a
+  `NEW` IDA row rather than left implicit in the flavocytochrome prose.
 
 ## Relation to the CMMMech records
 
