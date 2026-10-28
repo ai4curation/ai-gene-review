@@ -229,6 +229,10 @@ class SourceResourceEnum(str, Enum):
     DICTYBASE = "DICTYBASE"
     XENBASE = "XENBASE"
     ECOCYC = "ECOCYC"
+    PSEUDOCAP = "PSEUDOCAP"
+    """
+    Pseudomonas Genome Database community annotation (assigned_by PseudoCAP).
+    """
     REACTOME = "REACTOME"
     ARUK_UCL = "ARUK_UCL"
     """
