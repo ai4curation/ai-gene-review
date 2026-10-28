@@ -141,10 +141,60 @@ notes say as much.
 | GO:0055085 transmembrane transport | IEA (InterPro IPR006061) | MODIFY → GO:0034755 | True but uninformative: the substrate and direction are known. The replacement is an `is_a` descendant. |
 | GO:0008199 ferric iron binding | NEW, IDA | — | 1D9Y Fe(3+) structure plus solution biochemistry. |
 | GO:0033212 iron import into cell | NEW, IMP | — | Conditional *fbpABC* mutants; periplasm-to-cytosol transport. Not an ancestor or descendant of GO:0034755. |
-| GO:0055052 ABC transporter complex, substrate-binding subunit-containing | NEW, IC | — | FbpA is the substrate-binding subunit of FbpABC; follows the `genes/ECOLI/pstS` precedent. |
+| GO:0055052 ABC transporter complex, substrate-binding subunit-containing | NEW, IC | — | FbpA is the substrate-binding subunit of FbpABC; the term itself follows the `genes/ECOLI/pstS` precedent. |
 
-Per the `genes/ECOLI/pstS` / `genes/ECOLI/pstC` precedent, the solute-binding
-protein is not asserted to *enable* the primary active transporter activity:
-`core_functions` carries `molecular_function: GO:0008199` for the binding
-activity and `contributes_to_molecular_function: GO:0015091` for the
-complex-level ferric iron transmembrane transporter activity.
+On the precedent, precisely: `genes/ECOLI/pstS` carries only
+`molecular_function: GO:0042301` and has **no**
+`contributes_to_molecular_function` at all, so it is the precedent for the
+`GO:0055052` complex term and for the solute-binding-protein shape generally,
+but not for the `contributes_to` slot. The `contributes_to` precedent is the
+permease `genes/ECOLI/pstC`, which carries
+`contributes_to_molecular_function: GO:0005315`. The two-core-function shape
+used here is therefore a reasonable extension of that pattern rather than a
+direct application of it: `core_functions` carries
+`molecular_function: GO:0008199` for FbpA's own binding activity and
+`contributes_to_molecular_function: GO:0015408` for the complex-level
+ABC-type ferric iron transporter activity, so the solute-binding protein is
+never asserted to *enable* primary active transport.
+
+On the choice of `GO:0015408` over its generic parent `GO:0015091`: the
+ABC-type child is defined by exactly the FbpABC reaction (ATP + H2O +
+Fe(3+)(out) = ADP + phosphate + Fe(3+)(in)), and the `contributes_to`
+relation, not a deliberately weaker term, is what keeps the claim from saying
+FbpA alone performs primary active transport. The sibling phosphate-ABC
+reviews in this series, `genes/GLUOX/pstS` and `genes/GLUOX/pstC`, both use
+the specific `GO:0015415` in that slot, so the generic term would have made
+the series internally inconsistent. (`genes/ECOLI/pstC`, which does stop at
+the generic `GO:0005315`, is the older counter-example.) `GO:0015408` was
+checked on 2026-10-28: live, not obsolete, present in the
+molecular-function enum used by term validation, and with `GO:0015091` in its
+`is_a` ancestor closure.
+
+Two hierarchy claims the automated reviewer flagged as reasoned-but-unverified
+were checked against QuickGO on 2026-10-28 and both hold: `GO:0055085` is in
+the `is_a` ancestor closure of `GO:0034755` (so the MODIFY is a refinement),
+and neither `GO:0033212` nor `GO:0034755` is in the other's closure (so
+asserting both is not double-counting), although they share `GO:0006826`,
+`GO:0030001` and `GO:0051234` as ancestors.
+
+`GO:0033214` siderophore-iron import into cell is live but is deliberately not
+used for the `GO:0033212` row, and is recorded in that row's `reason` as a
+term a later curator should not "refine" to. The gonococcus makes no
+siderophores of its own [PMID:21041493 "Neisseria gonorrhoeae produces no
+known siderophores but can employ host-derived, iron-binding proteins,
+including transferrin and lactoferrin, as iron sources."], and even in the
+xenosiderophore experiments the authors' model has the iron removed from the
+siderophore outside the cell, with free Fe(3+) entering through porins
+[PMID:21041493 "Thus, our favored model at present involves the extracellular
+removal of iron from xenosiderophores and passage of the ferric iron through
+porins into the periplasm where FbpA can bind and shuttle the ferric ion to
+the cytoplasmic permease and ATPase components FbpB and FbpC."]. FbpA binds a
+free ferric ion, not a ferric-siderophore chelate, so the siderophore term
+would be positively wrong rather than more specific.
+
+On the metal chemistry in the `description`: Fe(3+), Ti(4+), Zr(4+) and
+Hf(4+) are the hard, highly charged set that nucleate multinuclear oxo-metal
+clusters on the di-tyrosyl motif [PMID:12598891]. Cu(II) is divalent and
+chemically much softer, and binds differently — two coppers, one per tyrosine,
+with the protein staying open — so it is described separately rather than
+grouped with them [PMID:23884152].
