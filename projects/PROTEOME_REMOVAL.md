@@ -111,8 +111,9 @@ TSV column of them, and for each reports, in order of preference:
    (`A0A2S9ZZK0.1`) and active ones without (`P09385`); reviewed entries are
    preferred, then the same taxon.
 3. `same_gene` (≥ 90% identity over ≥ 80% of the query),
-   `same_gene_partial_model` (≥ 95% identity over a shorter span, because the
-   gene models differ in length) or `weak`: best phmmer hit of the archived
+   `same_gene_partial_model` (≥ 95% identity over a shorter span of at least
+   100 residues, or half the query if that is shorter, as when the gene models
+   differ in length) or `weak`: best phmmer hit of the archived
    sequence against the reference proteome(s) of its species, found
    automatically (`taxonomy_id:<species> AND reference:true`) or given with
    `--proteome`.
