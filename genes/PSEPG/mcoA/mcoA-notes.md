@@ -64,7 +64,15 @@ protein that dominates McoA's PANTHER subfamily (below).
   `PTHR48267-metadata.yaml` gives `matches: 7748` and `proteins: 7748` for the FAMILY and no
   count for SF1 at all, and one subfamily does not entail that every family member carries a
   subfamily assignment. Do not restate any member count for SF1. The GO call is unaffected
-  by either correction.
+  by either correction. The two superseded drafts and their refutations live here only: the
+  YAML `reason` was trimmed to the conclusion and its live grounds (IPR045087 architecture,
+  one subfamily, SF1's name and member composition, PF07731 plus the four conserved
+  copper-binding domains), since no reader of the review sees the drafts being argued with.
+  Separately, the `panther.obo` finding no longer implies that the SF1 stanza quotation
+  establishes uniqueness. A quotation is positive evidence for what it contains; the
+  single-subfamily claim rests on an exhaustive anchored search of the committed OBO for
+  `is_a` lines naming PANTHER:PTHR48267 as parent (exactly one match, line 702165),
+  corroborated by the `subfamilies: 1` counter, and the finding now says so in its own text.
 - Proposed new term "manganese oxidase activity" (EC 1.16.3.3, no GO term). The MODIFY
   replacement is GO:0016724 because that is what is annotatable today; when GO creates the
   proposed term, `proposed_replacement_terms` should become it and
