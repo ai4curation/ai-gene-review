@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [ccmC, estA, pqsH, lap, fleN, pvdE, PA5458, PA1024, hutI, phzS, phzM, pilB, pilU, xcpX, PA0692]
+genes: [ccmC, estA, pqsH, lap, fleN, pvdE, PA5458, PA1024, hutI, hutH, phzS, phzM, pilB, pilU, xcpX, PA0692]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -127,13 +127,13 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 12 | phzM | PA4209 | S-adenosylmethionine-dependent methyltransferase activity (PTN002463933) | 80 | SOUND | Sound at family root | none on seed |
 | 15 | xcpX | PA3097 | T2SS complex; protein secretion by T2SS (PTN000475915) | 35 | SOUND; process row is IDA on a review paper | Sound | P |
 | 19 | PA0692 | PA0692 | type V secretion process and complex (PTN002160772) | 25 | SOUND; complex row is IMP, which cannot show membership | Sound | P |
+| 24 | hutH | PA5098 | histidine ammonia-lyase activity; L-histidine catabolic process (PTN000796665) | 42 | SOUND (direct assay of the partially purified enzyme), coded IMP instead of IDA | Sound; but PAO1 paralog PA5093, which lacks the catalytic Ala-Ser-Gly motif, inherits it | P, G (NOT on PA5093) |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 2 (in progress): hutH.
 Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, PA3891, PA5377.
 
 ### Patterns emerging
