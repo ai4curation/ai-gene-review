@@ -16,3 +16,11 @@
   in full text; regulation of glucosinolate biosynthesis is independently established for MYB76,
   so ACCEPT and defer to TAIR.
 - No NEW process terms: no further process supported beyond expression/phenotype.
+
+## 2026-10-28 correction (PR #5675 review)
+
+The ISS GO:0003700 row now MODIFYs to GO:0001216 DNA-binding transcription activator activity, and the
+GO:0006355 IEA row to GO:0045893 positive regulation of DNA-templated transcription, rather than the
+RNA polymerase II-specific GO:0001228 and GO:0045944 noted above. Polymerase specificity has not been
+tested, and the MYB28 review uses the same terms for the same claim from PMID:18042203. The core
+function uses the same two terms.
