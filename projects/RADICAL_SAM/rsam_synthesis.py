@@ -6,9 +6,11 @@ term or a proposed one, the treatment-rule outcomes on the domain-derived generi
 rows (including deviations from the rule), SAM-binding coverage, upstream
 defects, and the IBA rows whose node placement was argued.
 
-Nothing is hardcoded: the gene list and the organism directories both come from
-the project page's frontmatter, and every number is derived from
-genes/<org>/<gene>/<gene>-ai-review.yaml.
+No *result* is hardcoded: the gene list and the organism directories come from the
+project page's frontmatter, and every count is derived from
+genes/<org>/<gene>/<gene>-ai-review.yaml. The project's own editorial choices are
+encoded here deliberately and are the only constants: RULE (the treatment rule) and
+the asserted values that count as PflB-substrate pushes.
 
 A gene counts as REVIEWED when it has annotation rows and none of them is still
 `PENDING`. That deliberately does not consult `status:`, which can go stale
@@ -42,7 +44,12 @@ FE4S4 = "GO:0051539"
 # The rows the project's treatment rule governs, and what the rule expects.
 # "refine" => MODIFY to the specific term; "accept" => ACCEPT.
 # `no_catalysis_alt` is the action the rule's second branch permits for a member
-# whose catalysis is not established.
+# whose catalysis is not established. It is set only on the two rows the rule names
+# that branch for: GO:0003824 (no reaction known, so it cannot be refined to one) and
+# GO:0051539 (the cluster is present but not shown to be catalytic). The other four
+# rows have no such branch -- refining `iron-sulfur cluster binding` to the 4Fe-4S
+# term, or accepting a SAM-binding row, does not depend on catalysis being proven --
+# so their alt is None and any non-primary action there is a deviation.
 RULE = {
     "GO:0003824": ("catalytic activity", "refine", "KEEP_AS_NON_CORE"),
     "GO:0051536": ("iron-sulfur cluster binding", "refine", None),
@@ -190,10 +197,14 @@ def build() -> dict:
             if c["kind"] == "GO":
                 core_go[c["id"]] += 1
 
-    sam_new = sorted(k for k, v in genes.items() if v["sam_binding_actions"] == ["NEW"])
-    sam_in_goa = sorted(k for k, v in genes.items()
+    # Partition only over REVIEWED genes: an unreviewed gene has no SAM row because
+    # nobody has reviewed it yet, which says nothing about whether its catalysis is
+    # established. lipA is lipoyl synthase and would otherwise land in the wrong bucket.
+    sam_new = sorted(k for k, v in rev.items() if v["sam_binding_actions"] == ["NEW"])
+    sam_in_goa = sorted(k for k, v in rev.items()
                         if v["sam_binding_actions"] and "ACCEPT" in v["sam_binding_actions"])
-    sam_absent = sorted(k for k, v in genes.items() if not v["sam_binding_actions"])
+    sam_absent = sorted(k for k, v in rev.items() if not v["sam_binding_actions"])
+    sam_not_reviewed = sorted(k for k, v in genes.items() if not v["reviewed"])
 
     interpro = [d for d in defects if str(d["record"]).startswith("InterPro")]
     # Defects whose asserted value pushes PflB/formate-C-acetyltransferase
@@ -225,9 +236,11 @@ def build() -> dict:
         "treatment_rule_deviations": deviations,
         "treatment_rule_branch_uses": rule_branch,
         "sam_binding": {
+            "scope": "reviewed genes only",
             "new_rows_absent_from_goa": sam_new,
             "already_in_goa": sam_in_goa,
             "absent_catalysis_not_established": sam_absent,
+            "not_reviewed_so_not_classified": sam_not_reviewed,
         },
         "core_function_go_terms": dict(core_go.most_common()),
         "genes_whose_core_activity_has_no_go_term": sorted(

@@ -256,9 +256,9 @@ TYW1B, aslB and ydeM assert **no core function at all**, deliberately.
 
 ## The scaffold is universal; GOA records half of it
 
-`GO:0051539` (4Fe-4S binding) and `GO:1904047` (SAM binding) are each core in **19**
+`GO:0051539` (4Fe-4S binding) and `GO:1904047` (SAM binding) are each core in **20**
 of the reviewed genes — the superfamily's defining pair. But `GO:1904047` appears
-as a `NEW` row, meaning absent from GOA, in **18** reviews, against only **2**
+as a `NEW` row, meaning absent from GOA, in **18** of those, against only **2**
 (moaA and queE) where GOA already carried it.
 
 That is a systematic, machine-fixable gap, not 18 independent oversights. The
@@ -267,9 +267,13 @@ exchangeable ligand of the cluster, so the assertion is sitting in UniProt
 unexploited. It is the single highest-leverage item this project found and is
 worth raising with GO/UniProt as a rule rather than gene by gene.
 
-The nine genes that did **not** get it — RSAD1, TYW1B, aslB, hemW, pflC, ybiY,
-ydeM, yjjW and (unreviewed) lipA — are exactly the set where catalysis is not
-established. The rule's two branches partition the family cleanly.
+The **eight** reviewed genes that did not get it — RSAD1, TYW1B, aslB, hemW, pflC,
+ybiY, ydeM and yjjW — are exactly the set whose catalysis the reviews did not
+establish. That partition was read off the reviews one gene at a time, not asserted:
+each of the eight was independently judged to lack a demonstrated reaction, and the
+script simply reports the result. lipA is **excluded, not unestablished** — it is
+lipoyl synthase (EC 2.8.1.8), the same enzyme as human LIAS, and lacks a row only
+because it is unreviewed; it is reported under `not_reviewed_so_not_classified`.
 
 ## The treatment rule held
 
