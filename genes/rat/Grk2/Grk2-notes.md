@@ -40,3 +40,10 @@ The vasodilation IMP row (PMID:23913704) was modified to negative regulation of 
 (GO:0042310), does not fit. The row now modifies to GO:0046627 negative regulation of insulin receptor
 signaling pathway: lower GRK2 raises insulin-stimulated vascular Akt/eNOS activation
 [PMID:23913704 "In addition, exercise downregulated vascular GRK2 expression and activity, which further increased insulin-stimulated vascular Akt/eNOS activation in exercised SHRs."].
+
+## 2026-10-28 correction: replacement term for the vasodilation row
+
+The replacement chosen above, GO:0046627 negative regulation of insulin receptor signaling pathway, is an
+is_a descendant of GO:1900077, which the review already keeps from the same paper. The row now modifies to
+GO:1901081 negative regulation of relaxation of smooth muscle, matching the positive regulation of
+vasoconstriction row (PMID:28882814) and a term the gene already carries.
