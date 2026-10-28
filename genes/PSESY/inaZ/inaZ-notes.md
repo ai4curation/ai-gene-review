@@ -220,9 +220,22 @@ established, it should be fetched and added as a normal reference.
   (`reachable_from: GO:0003674`, `obligation_level: REQUIRED`). So the molecular-function
   aspect of both terms is verifiable from a repository artifact, not only from a live
   lookup, and a wrong-branch term in this slot would be a blocking validation error.
-- What does rest on the live OLS lookup of 2026-10-28, and left no cached artifact, is
-  only the term's definition *wording* quoted in `suggested_questions`. The aspect is
-  not in that position.
+- That enum is a flat list of molecular-function-reachable CURIEs, not an edge list: its
+  single column header is `curie`. `GO:0019833` and `GO:0050825` both appearing in it
+  therefore establishes that each is *a* molecular function, and nothing at all about one
+  being the other's parent. Nor is the parentage recorded elsewhere: `cache/go/terms.csv`
+  carries `GO:0019833` but not `GO:0050825`, `cache/ontologies/go.tsv`
+  (`term_id/label/is_obsolete/fetched_date`) carries neither, and there is no `is_a` edge
+  artifact anywhere under `cache/` at all (`rg --no-ignore --hidden -l is_a cache/` returns
+  nothing), so no parentage claim about any term has a repository anchor.
+- What therefore rests on the live OLS lookup of 2026-10-28, with no cached artifact behind
+  it, is three things: the term's definition *wording* quoted in `suggested_questions`, the
+  `is_a` edge from `GO:0019833` to `GO:0050825`, and `GO:0050825`'s own label "ice binding".
+  The placement is load-bearing rather than decorative — it is asserted in the review's
+  `reason` text and the ontology-feedback item in `suggested_questions` argues precisely that
+  the "Catalysis of..." definition wording conflicts with it — so it carries the same
+  provenance caveat as the definition wording. The molecular-function aspect is not in that
+  position.
 - `projects/TCDB/data/propagation_evidence.tsv` line 195:
   `9.B.133.1.1  GO:0019833  ice nucleation activity  5  1  0  0.0  GAP_CANDIDATE  P06620`
   — an independent in-repo analysis reaching the same conclusion that this is a
