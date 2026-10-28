@@ -68,3 +68,7 @@ All nine official product records are preserved in their original order. Sequenc
 ## Validation and provenance
 
 A scaffolded Codex history record accompanies this review. Targeted schema/term/reference checks, exact GOA conservation, status reporting, history validation, private HTML rendering, source/context conservation and product replay are recorded in the final review packet. No default validator is relaxed to accommodate the explicit campaign policy.
+
+## 2026-10-28 — preserve original structured extensions
+
+The genuine seeder retained the 37 source contexts but omitted three original singleton extensions from its YAML representation. The existing `ExistingAnnotation.extensions` schema slot now explicitly carries the original cytoplasm context for FLNA binding (`occurs_in GO:0005737`), the fibroblast context for focal-adhesion proteomics (`part_of CL:0000057`) and the urine context for exosome detection (`part_of UBERON:0001088`). Official QuickGO/OLS terms and BFO predicates were checked. These are source-context restorations, not newly inferred annotations; all 37 reviews, core function, references, natural products and normal sources are unchanged. The conservation check allows exactly these three additions while requiring all previously seeded fields and order to remain identical. The initial commit and its history are preserved; a new scaffolded EDIT record documents this correction.
