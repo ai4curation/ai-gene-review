@@ -16,6 +16,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "projects" / "RADICAL_SAM" / "rsam_synthesis.py"
 DATA = ROOT / "projects" / "RADICAL_SAM" / "data" / "synthesis.yaml"
+PHASE3_SCOPE = ROOT / "projects" / "RADICAL_SAM" / "data" / "phase3_scope.yaml"
 
 
 def _build():
@@ -62,3 +63,31 @@ def test_internal_consistency():
     assert set(sam["not_reviewed_so_not_classified"]).isdisjoint(reviewed)
     # The REMOVE breakdown accounts for every REMOVE row.
     assert sum(d["remove_breakdown"].values()) == d["actions_in_reviewed_genes"]["REMOVE"]
+
+
+def test_phase3_scope_is_covered_and_conformant():
+    """Every pre-existing review named in the Phase 3 scope is actually checked.
+
+    The Phase 3 claim on the project page is that the treatment rule now holds
+    across the reviews the project did not write, as well as the ones it did.
+    That claim is only worth anything if the scope file is non-empty, resolves,
+    and comes back clean, so assert all three rather than trusting the prose.
+    """
+    d = yaml.safe_load(DATA.read_text())
+    p3 = d["phase3_rule_conformance"]
+    scope = yaml.safe_load(PHASE3_SCOPE.read_text())["genes"]
+
+    assert scope, "the Phase 3 scope file lists no genes"
+    assert p3["genes_checked"] == len(scope)
+    assert [g["gene"] for g in p3["genes"]] == list(scope)
+    # Organism-qualified, so a multi-organism symbol cannot be checked by accident.
+    assert all("/" in name for name in scope)
+    # The pass is only finished when both scopes come back clean.
+    assert p3["deviations"] == [], p3["deviations"]
+    assert d["treatment_rule_deviations"] == [], d["treatment_rule_deviations"]
+    # Phase 3 reviews stay out of the Phase 4 totals, which report what this
+    # project reviewed from scratch. Compared organism-qualified, not by bare
+    # symbol: lipA, bioB, moaA, hemN and pqqE are reviewed in several organisms,
+    # and it is the review FILE that must not be counted twice.
+    phase4 = {f"{v['organism']}/{k}" for k, v in d["genes"].items()}
+    assert set(scope).isdisjoint(phase4), sorted(set(scope) & phase4)

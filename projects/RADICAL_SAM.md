@@ -10,7 +10,7 @@ genes: [LIAS, RSAD2, MOCS1, CDKAL1, CDK5RAP1, ELP3, TYW1, TYW1B, RSAD1, bioB, li
 
 **Bottom line:** across 28 reviewed members of the largest known enzyme
 superfamily, the annotation problem is **resolution, not error** — 210 rows
-accepted against 49 removed, but 112 modified, almost all pulling a
+accepted against 49 removed, but 115 modified, almost all pulling a
 correct-but-generic term down to the actual reaction. Two findings are
 family-wide and machine-fixable. **`GO:1904047` S-adenosyl-L-methionine binding
 is absent from GOA for 18 of the 20 members whose catalysis is established**,
@@ -73,9 +73,10 @@ included for the consistency pass (Phase 3), not re-reviewed from scratch.
 
 ### Starting observation: inconsistent handling of the generic rows
 
-The 17 radical SAM reviews already in the repository (matched by IPR007197,
-PS51918 or IPR058240 in their UniProt records) treat the same domain-derived
-terms in contradictory ways:
+**Resolved by the Phase 3 pass on 2026-10-28; kept here because it is what the
+treatment rule below was written to fix.** The 17 radical SAM reviews already in
+the repository (matched by IPR007197, PS51918 or IPR058240 in their UniProt
+records) treated the same domain-derived terms in contradictory ways:
 
 | Term | Actions used across the 17 reviews |
 |---|---|
@@ -88,13 +89,15 @@ Under the repository guidelines, a true-but-general term is `MODIFY` (to the
 specific reaction term the gene carries) or `TOO_GENERAL`, not
 `MARK_AS_OVER_ANNOTATED`. `GO:0051536` is a parent of `GO:0051539`, which is
 always correct for the radical SAM cluster. Whether `GO:0051539` belongs in
-core function (it is the catalytic cofactor) or is non-core is the main
-judgement call to fix in Phase 3.
+core function (it is the catalytic cofactor) or is non-core was the main
+judgement call Phase 3 had to settle; the rule below settles it on catalysis,
+and `GO:0051536` is now `MODIFY` on every row that carries it, in both scopes.
 
 ### Treatment rule for the generic rows
 
-Adopted 2026-10-18 for all new reviews in this project, and to be applied in
-the Phase 3 pass. Hierarchy checked in QuickGO: `GO:0051539` is_a `GO:0051536`
+Adopted 2026-10-18 for all new reviews in this project, and applied to the
+pre-existing reviews in the Phase 3 pass (2026-10-28). Hierarchy checked in
+QuickGO: `GO:0051539` is_a `GO:0051536`
 is_a `GO:0051540` metal cluster binding; `GO:0046872` metal ion binding is
 **not** an ancestor of either.
 
@@ -102,23 +105,37 @@ is_a `GO:0051540` metal cluster binding; `GO:0046872` metal ion binding is
 |---|---|---|
 | `GO:0003824` catalytic activity | `MODIFY` | The specific reaction MF the gene carries or is shown to have. If no reaction is known (e.g. RSAD1), `KEEP_AS_NON_CORE`: it is already as precise as the evidence allows. |
 | `GO:0051536` iron-sulfur cluster binding | `MODIFY` | `GO:0051539`, the descendant the radical SAM cluster always satisfies. |
-| `GO:0051539` 4 iron, 4 sulfur cluster binding | `ACCEPT` | The radical SAM cluster is the catalytic cofactor, so it is core for every active member. `KEEP_AS_NON_CORE` only where catalysis is not established. |
+| `GO:0051539` 4 iron, 4 sulfur cluster binding | `ACCEPT`, or `NEW` where GOA lacks the row | The radical SAM cluster is the catalytic cofactor, so it is core for every active member, and a core cofactor has to be proposable where it is missing (PSEPK/bioB carries `GO:0051537` but not `GO:0051539`). `KEEP_AS_NON_CORE` only where catalysis is not established. |
 | `GO:0005506` iron ion binding | `MODIFY` | Same as `GO:0046872`: the iron is bound as a cluster, so replace with `GO:0051539`. |
 | `GO:0046872` metal ion binding | `MODIFY` | `GO:0051539` (lateral correction: the iron is bound as a cluster). Keep only if the protein binds a separate metal ion. |
-| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT` | Cosubstrate binding, true for every active member. |
+| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT`, or `NEW` where GOA lacks the row | Cosubstrate binding, true for every active member. GOA lacks it far more often than not: 18 of the 20 members with established catalysis. |
 
-Never `MARK_AS_OVER_ANNOTATED` for these rows: none of them is false.
+Never `MARK_AS_OVER_ANNOTATED` for these rows: none of them is false. The same
+principle carries to the adjacent generic MF rows that are not in the table
+(`GO:0016740` transferase activity, `GO:0016783` sulfurtransferase activity):
+they are true, so they are `MODIFY`ed to the reaction term, not flagged.
+
+The rule is enforced in code rather than by reading, over both scopes: for the
+29 genes this project reviewed from scratch
+(`treatment_rule_deviations`) and for the pre-existing reviews listed in
+[`data/phase3_scope.yaml`](RADICAL_SAM/data/phase3_scope.yaml)
+(`phase3_rule_conformance.deviations`). Both are asserted empty by
+`tests/test_radical_sam_synthesis.py`, so a later edit that breaks the rule
+reddens CI instead of going unnoticed. The one sanctioned escape is the rule's
+own second branch, recorded as `branch_uses` rather than silently allowed: 17
+rows in Phase 4 and 6 in Phase 3, all on members whose catalysis is not
+established.
 
 ---
 # STATUS
 
-Last updated: 2026-10-28
+Last updated: 2026-10-28 (Phase 3)
 
 ## Phase 1: human (9)
 
 - [x] LIAS (O43766): lipoyl synthase, mitochondrial. 21 rows: 11 ACCEPT, 6 MODIFY (incl. 3 obsolete GO:0009107 → GO:0009249), 3 MARK_AS_OVER_ANNOTATED (mouse phenotype ISS), 1 NEW (SAM binding)
 - [x] RSAD2 (Q8WXG1): viperin, CTP → ddhCTP dehydratase. 59 rows: 26 ACCEPT, 17 KEEP_AS_NON_CORE (infection-driven mitochondrial/Golgi pools, mouse T-cell rows), 8 REMOVE (protein binding), 3 TOO_GENERAL, 2 MODIFY, 1 MARK_AS_OVER_ANNOTATED, 2 NEW (SAM binding; protein-macromolecule adaptor for IRAK1–TRAF6). Proposed new term: SAM-dependent CTP dehydratase activity (RHEA:65944)
-- [x] MOCS1 (Q9NZB8): GTP 3',8-cyclase (MOCS1A) + cPMP synthase (MOCS1B). Reviewed earlier; include in Phase 3
+- [x] MOCS1 (Q9NZB8): GTP 3',8-cyclase (MOCS1A) + cPMP synthase (MOCS1B). Reviewed before this project; brought under the treatment rule in Phase 3 (3 generic rows re-actioned, stale `status` corrected)
 - [x] CDKAL1 (Q5VV42): cytosolic tRNA t6A37 → ms2t6A methylthiotransferase. 23 rows: 8 ACCEPT, 9 MODIFY, 2 KEEP_AS_NON_CORE, 3 REMOVE (protein binding), 1 NEW (SAM binding). No insulin-secretion terms: upstream necessity, not participation
 - [x] CDK5RAP1 (Q96SZ6): mitochondrial tRNA i6A37 → ms2i6A methylthiotransferase. 28 rows: 12 ACCEPT, 6 MODIFY, 4 MARK_AS_OVER_ANNOTATED (nuclear/cytosolic pool, refuted by PMID:28981754), 2 KEEP_AS_NON_CORE, 2 REMOVE (NAS brain development/neuron differentiation), 1 UNDECIDED, 1 NEW (SAM binding)
 - [x] ELP3 (Q9H9T3): Elongator catalytic subunit, tRNA U34 acetyltransferase. 42 rows: 12 ACCEPT, 12 MODIFY, 11 KEEP_AS_NON_CORE, 3 MARK_AS_OVER_ANNOTATED (Pol II transcription, cell migration), 4 REMOVE (protein binding), 1 UNDECIDED (nucleolus), 1 NEW (SAM binding)
@@ -161,29 +178,152 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 
 ## Phase 3: consistency pass over existing reviews
 
+Done 2026-10-28, over the 17 radical SAM reviews that existed before this
+project. **43 rows re-actioned, 10 `NEW` SAM-binding rows added, 29
+core-function entries added and one core molecular function withdrawn**, across
+17 files. The POPTR trio was the only group already conformant on its actions;
+it still gained the SAM row and the cofactor core functions, like the rest.
+
 - [x] Write the treatment rule for the generic rows — adopted 2026-10-18 and
       applied to all 28 Phase 1 and Phase 2 reviews; the table is in the
       Overview above, under "Treatment rule for the generic rows"
-- [ ] Apply to: BACSU/lipA, METEA/pqqE, POPTR/LIP1, POPTR/LIP1P-1, POPTR/LIP1P-2,
-      PSEPK/PP_1969, PSEPK/PP_2482, PSEPK/bioB, PSEPK/hemN, PSEPK/lipA,
-      PSEPK/moaA, PSEPK/pqqE, SACEN/eryCV, SCHPO/bio2, STAWA/cfr, human/MOCS1,
-      yeast/BIO2.
-      Conflicts confirmed during Phase 2, each by the reviewer of the
-      corresponding E. coli orthologue: PSEPK/bioB and PSEPK/lipA
-      MARK_AS_OVER_ANNOTATED the generic rows (the rule forbids this, since none
-      of them is false); BACSU/lipA ACCEPTs GO:0051536 and GO:0046872 instead of
-      refining them; yeast/BIO2 and SCHPO/bio2 ACCEPT GO:0051536; STAWA/cfr
-      MARK_AS_OVER_ANNOTATED GO:0003824 and KEEP_AS_NON_CORE GO:0051539;
-      PSEPK/moaA and PSEPK/hemN KEEP_AS_NON_CORE rows the rule would ACCEPT or
-      MODIFY, and PSEPK/moaA keeps GO:1904047 non-core. None of these reviews
-      carries a GO:1904047 row.
-- [ ] human/MOCS1 carries `status: INITIALIZED` although its 30 annotations are
-      reviewed and it has 4 core functions. Pre-existing; not touched by this
-      project's PR.
-- [ ] Cross-check against the relevant modules (biotin_biosynthesis,
-      endogenous_protein_lipoylation, molybdenum_cofactor_biosynthesis,
-      heme_biosynthesis, pqq_biosynthesis, bacterial_preq1_incorporation_queuosine_maturation,
-      thiamine_diphosphate_biosynthesis)
+- [x] Apply it to BACSU/lipA, METEA/pqqE, POPTR/LIP1, POPTR/LIP1P-1,
+      POPTR/LIP1P-2, PSEPK/PP_1969, PSEPK/PP_2482, PSEPK/bioB, PSEPK/hemN,
+      PSEPK/lipA, PSEPK/moaA, PSEPK/pqqE, SACEN/eryCV, SCHPO/bio2, STAWA/cfr,
+      human/MOCS1 and yeast/BIO2. Both scopes now report zero deviations, and
+      the check runs in CI (see the rule table above)
+- [x] human/MOCS1 carried `status: INITIALIZED` although its 30 annotations were
+      reviewed and it had 4 core functions. Corrected; `data_quality` is now empty
+- [x] Cross-check against the relevant modules — findings below
+
+### What the conflicts turned out to be
+
+Every conflict listed when the rule was adopted resolved in the direction the
+rule names, and almost all in the same direction: **a true row had been marked
+false, or a core cofactor had been filed as peripheral.** Not one needed the rule
+bent. The 43 transitions, as computed from the diff:
+
+| Term | From | To | n | Genes |
+|---|---|---|--:|---|
+| `GO:0003824` | MARK_AS_OVER_ANNOTATED | MODIFY | 5 | PSEPK/bioB, PSEPK/lipA, PSEPK/pqqE, STAWA/cfr, human/MOCS1 |
+| `GO:0003824` | UNDECIDED | KEEP_AS_NON_CORE | 2 | PSEPK/PP_1969, PSEPK/PP_2482 |
+| `GO:0003824` | KEEP_AS_NON_CORE | MODIFY | 1 | METEA/pqqE |
+| `GO:0003824` | MARK_AS_OVER_ANNOTATED | KEEP_AS_NON_CORE | 1 | SACEN/eryCV |
+| `GO:0051536` | TOO_GENERAL | MODIFY | 4 | PSEPK/PP_1969, PSEPK/PP_2482, SCHPO/bio2, yeast/BIO2 |
+| `GO:0051536` | ACCEPT | MODIFY | 3 | BACSU/lipA, METEA/pqqE, SACEN/eryCV |
+| `GO:0051536` | KEEP_AS_NON_CORE | MODIFY | 3 | PSEPK/hemN, PSEPK/pqqE, human/MOCS1 |
+| `GO:0051536` | MARK_AS_OVER_ANNOTATED | MODIFY | 3 | PSEPK/bioB, PSEPK/lipA, PSEPK/moaA |
+| `GO:0046872` | KEEP_AS_NON_CORE | MODIFY | 6 | METEA/pqqE, PSEPK/PP_1969, PSEPK/PP_2482, PSEPK/hemN, PSEPK/moaA, human/MOCS1 |
+| `GO:0046872` | ACCEPT | MODIFY | 1 | BACSU/lipA |
+| `GO:0046872` | MARK_AS_OVER_ANNOTATED | MODIFY | 1 | PSEPK/pqqE |
+| `GO:0005506` | KEEP_AS_NON_CORE | MODIFY | 2 | METEA/pqqE, PSEPK/pqqE |
+| `GO:0005506` | MARK_AS_OVER_ANNOTATED | MODIFY | 1 | PSEPK/bioB |
+| `GO:0051539` | KEEP_AS_NON_CORE | ACCEPT | 4 | PSEPK/hemN, PSEPK/lipA, PSEPK/moaA, STAWA/cfr |
+| `GO:0051539` | ACCEPT | KEEP_AS_NON_CORE | 1 | SACEN/eryCV |
+| `GO:1904047` | KEEP_AS_NON_CORE | ACCEPT | 1 | PSEPK/moaA |
+| `GO:0051537` | KEEP_AS_NON_CORE | ACCEPT | 1 | PSEPK/bioB |
+| `GO:0016783` | ACCEPT | MODIFY | 1 | BACSU/lipA |
+| `GO:0016783` | MARK_AS_OVER_ANNOTATED | MODIFY | 1 | PSEPK/lipA |
+| `GO:0016740` | ACCEPT | MODIFY | 1 | BACSU/lipA |
+
+Reading it by pattern rather than by row:
+
+- **12 rows had been `MARK_AS_OVER_ANNOTATED`**, which the rule forbids outright:
+  none of these terms is false. Eleven become `MODIFY` to the reaction or cluster
+  term the entry already carries. The twelfth is eryCV, where no reaction is
+  established, so there is nothing to refine to and the row is already as precise
+  as the evidence allows (`KEEP_AS_NON_CORE`).
+- **4 `TOO_GENERAL` rows become `MODIFY`**, so the replacement is stated rather
+  than implied. In SCHPO/bio2 and yeast/BIO2 the action was also simply wrong:
+  `TOO_GENERAL` requires a more specific term asserted elsewhere in the review,
+  and neither review asserted any 4Fe-4S row at all — the parent was the only
+  cluster claim they made.
+- **6 rows move the catalytic cofactor into core**: `GO:0051539` in PSEPK/hemN,
+  PSEPK/lipA, PSEPK/moaA and STAWA/cfr, `GO:1904047` in PSEPK/moaA, and
+  `GO:0051537` in PSEPK/bioB. The cluster is not a prerequisite of these
+  activities, it *is* what performs the chemistry. PSEPK/bioB's auxiliary
+  [2Fe-2S] cluster is the sulfur that ends up in biotin and is destroyed in the
+  turnover, which ECOLI/bioB had already treated as core on direct evidence; the
+  `biotin_biosynthesis` module independently lists both clusters as cofactors of
+  `GO:0004076`, so that is the same judgement reached twice.
+- **2 `UNDECIDED` rows on `GO:0003824` become `KEEP_AS_NON_CORE`.** The enum
+  reserves `UNDECIDED` for annotations whose supporting publications could not be
+  read. For PP_1969 and PP_2482 the cluster and SAM sites are intact, so
+  catalysis is not what is in doubt — only its reaction, which is why there is no
+  specific term to refine to.
+- **3 rows on terms outside the rule table** (`GO:0016740`, `GO:0016783`) follow
+  the same principle and the same precedent: human/LIAS already `MODIFY`s
+  `GO:0016783` sulfurtransferase activity to `GO:0016992`.
+
+Two changes went beyond flipping an action:
+
+- **SACEN/eryCV no longer asserts a core molecular function.** It had
+  `GO:0051539` as its only core MF, on a protein that is `PE 4: Predicted`,
+  whose sole name is an unreviewed submitter annotation, whose GOA reaction row
+  (`GO:0016841`) this review leaves `UNDECIDED`, and whose cluster is inferred
+  from Pfam and NCBIfam signatures rather than measured. Asserting cluster
+  binding as *the* core function of such a protein overstates what is known; the
+  project's other uncharacterised members (PSEPK/PP_1969, PSEPK/PP_2482, TYW1B,
+  aslB, ydeM) assert none, and eryCV now matches them. Its `GO:0051539` row
+  moves the other way from the four above, to `KEEP_AS_NON_CORE`.
+- **10 `NEW` `GO:1904047` rows.** Phase 4's headline finding is that GOA is
+  missing SAM binding for 18 of the 20 members with established catalysis; the
+  pre-existing reviews were missing it too. Coded `IC`, grounded in each entry's
+  own curated cofactor note ("coordinated with 3 cysteines and an exchangeable
+  S-adenosyl-L-methionine") and its `4Fe-4S-S-AdoMet` binding features, not in an
+  electronic GO line. The three uncharacterised members get no such row, which is
+  what keeps them in the rule's second branch.
+
+### Module cross-check
+
+The seven named modules reference 11 of these reviews as representative members.
+Where a module states a molecular function for a radical SAM step, **it agrees
+with the review's core MF in every case** — including the two that matter most:
+
+- `heme_biosynthesis/hemn_route` types HemN with `GO:0051989`
+  coproporphyrinogen **dehydrogenase** activity, not the O<sub>2</sub>-dependent
+  `GO:0004109`. That is the same correction this project filed against
+  InterPro2GO IPR004558, reached independently by the module curator.
+- `molybdenum_cofactor_biosynthesis` splits `GO:0061798` (moaA node) from
+  `GO:0061799` (moaC node, different representative members), which is exactly
+  the basis on which ECOLI/moaA and PSEPK/moaA `REMOVE` the cPMP-synthase row.
+- `thiamine_diphosphate_biosynthesis` puts `GO:1990107` thiazole synthase on
+  ThiG and `GO:0036355` on ThiH, matching ECOLI/thiH's decision to leave thiazole
+  synthase to ThiG.
+- `biotin_biosynthesis/bioB_activity` (`GO:0004076`) and
+  `endogenous_protein_lipoylation` (three `GO:0016992` nodes) agree with all six
+  biotin- and lipoyl-synthase reviews.
+
+Four **module** gaps follow, recorded here rather than as `knowledge_gaps`,
+because a curator closes them by annotating, not by experiment:
+
+1. **ECOLI/queE is in no module.** `bacterial_preq1_incorporation_queuosine_maturation`
+   has no QueE annoton, although QueE performs the radical SAM ring
+   contraction that makes CDG. queE's core MF is a `proposed_new_terms` entry
+   (7-carboxy-7-deazaguanine synthase activity), so the module node would need
+   `proposed_molecular_function`.
+2. **Cofactors are recorded unevenly.** The bioB, moaA, hemN and thiH annotons
+   list their Fe-S clusters; the three lipoylation nodes and the
+   `pqqe_peptide_cyclase` node list none, although UniProt records 2× [4Fe-4S]
+   for the lipoyl synthases and [4Fe-4S] for both METEA/pqqE and PSEPK/pqqE.
+   Phase 3 has just made `GO:0051539` a core function in every one of those
+   reviews, so the asymmetry is now visible from the gene side too.
+3. **`moaA_gtp_38_cyclase` has no family descriptor**, while its sibling moaC
+   annoton has `PANTHER:PTHR22960:SF29`. Per the repository rule, omitting the
+   id is the right call when the family is not established — but MoaA's is
+   (PTHR22960 is the MoaA/MoaC-containing family), so this looks like an
+   omission rather than a judgement.
+4. **Reviewed orthologues are missing from representative-member lists.**
+   human/MOCS1 is absent from both molybdopterin annotons although it is the
+   human MoaA–MoaC fusion; METEA/pqqE is absent from the
+   `pqqe_peptide_cyclase` annoton although it is reviewed and better
+   characterised than PSEPK/pqqE; the three POPTR
+   lipoyl synthases are absent from the lipoylation module, which has bacterial,
+   *Bacillus* and human variants but no plant one.
+
+HemW and RSAD1 are correctly absent from `heme_biosynthesis`: they are heme
+chaperones, not enzymes of the pathway, which is the whole point of this
+project's HemN/HemW finding.
 
 ## Phase 4: synthesis
 
@@ -209,24 +349,25 @@ do, and also checks that the totals quoted here actually partition.
 
 29 proteins in scope, **28 reviewed** across **500 annotation rows**. A gene
 counts as reviewed here when it has rows and none is still `PENDING`, which
-deliberately ignores `status:`: MOCS1 is fully reviewed but still carries a stale
-`status: INITIALIZED`, and the script reports that separately under
-`data_quality` rather than letting it skew the arithmetic. lipA is the one
-genuine gap, and its 18 `PENDING` rows are excluded throughout. Actions across
-the 500:
+deliberately ignores `status:`, which can go stale: MOCS1 was fully reviewed
+while still carrying `status: INITIALIZED`, and the script reported that
+separately under `data_quality` rather than letting it skew the arithmetic
+(Phase 3 has since corrected it, and `data_quality` is now empty). lipA is the
+one genuine gap, and its 18 `PENDING` rows are excluded throughout. Actions
+across the 500:
 
 | Action | n |
 |---|---:|
 | ACCEPT | 210 |
-| MODIFY | 112 |
-| KEEP_AS_NON_CORE | 67 |
+| MODIFY | 115 |
+| KEEP_AS_NON_CORE | 65 |
 | REMOVE | 49 |
 | NEW | 28 |
-| MARK_AS_OVER_ANNOTATED | 21 |
+| MARK_AS_OVER_ANNOTATED | 20 |
 | UNDECIDED | 10 |
 | TOO_GENERAL | 3 |
 
-`MODIFY` at 112 is the signature of this family: a quarter of all rows were true
+`MODIFY` at 115 is the signature of this family: a quarter of all rows were true
 but pitched at the wrong level, which is exactly what a shared catalytic domain
 with unshared chemistry produces.
 
@@ -370,7 +511,7 @@ Three claims the data supports, and one it does not.
    CDK5RAP1 projecting CDK5 neuronal biology onto a mitochondrial tRNA enzyme.
    The split is computed from each row's **evidence code** — how the row arose,
    not which term it carries (`remove_breakdown`).
-2. **The shared domain is an attractor for over-general annotation.** 112 MODIFY,
+2. **The shared domain is an attractor for over-general annotation.** 115 MODIFY,
    almost all pulling a correct-but-generic term down to the specific reaction.
 3. **Discovery is outrunning the ontology.** Three of the six missing terms are
    for reactions described in 2018 or later, two of them in 2026.
