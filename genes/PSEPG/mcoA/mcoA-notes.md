@@ -48,17 +48,23 @@ protein that dominates McoA's PANTHER subfamily (below).
 - copper ion binding IEA -> ACCEPT; oxidoreductase activity IEA -> MODIFY to GO:0016724.
   The copper-centre claim is cited at the **subfamily** level, PTHR48267:SF1 (BILIRUBIN
   OXIDASE), rather than the bare family PTHR48267 (CUPREDOXIN SUPERFAMILY PROTEIN). The
-  reason is the family's *name*, not its membership: `PTHR48267-metadata.yaml` gives
-  `subfamilies: 1`, `proteins: 7748` and `integrated: IPR045087`, and every row of
-  `PTHR48267-entries.csv` is `PTHR48267:SF1`, so family and subfamily are coextensive in
-  membership and the family does carry the three-domain multicopper oxidase claim via
-  IPR045087. What "CUPREDOXIN SUPERFAMILY PROTEIN" does not state is the type-1-copper-plus-
-  trinuclear-cluster architecture, whereas SF1's name and member composition do: all 36
-  listed members are CotA laccases, E. coli CueO, FtsP/SufI and fungal bilirubin oxidase,
-  i.e. canonical three-domain MCOs. (An earlier draft of these notes said the bare family
-  "also contains single-domain type-1-only cupredoxins with no trinuclear cluster"; that is
-  false - the fetched data show one subfamily and a single member set - and is superseded by
-  the naming argument above. The GO call is unaffected.)
+  reason is the family's *name*, not its membership: the family carries the three-domain
+  multicopper oxidase claim via `integrated: IPR045087`, and it has exactly one subfamily -
+  `PANTHER:PTHR48267:SF1` is the only term in `interpro/panther/panther.obo` with
+  `is_a: PANTHER:PTHR48267`, matching the `subfamilies: 1` counter in
+  `PTHR48267-metadata.yaml` - so no second subfamily exists by which the family could be
+  broader. What "CUPREDOXIN SUPERFAMILY PROTEIN" does not state is the type-1-copper-plus-
+  trinuclear-cluster architecture, whereas SF1's name and member composition do: the 36
+  proteins in the `PTHR48267-entries.csv` sample all sit in SF1 and are CotA laccases,
+  E. coli CueO, FtsP/SufI and fungal bilirubin oxidase, i.e. canonical three-domain MCOs.
+  Two superseded drafts of this paragraph, for the record. The first said the bare family
+  "also contains single-domain type-1-only cupredoxins with no trinuclear cluster", which the
+  fetched data refute. The second replaced it with the claim that family and SF1 are
+  "coextensive in membership", reporting the same 7,748 proteins; that is also unsupported -
+  `PTHR48267-metadata.yaml` gives `matches: 7748` and `proteins: 7748` for the FAMILY and no
+  count for SF1 at all, and one subfamily does not entail that every family member carries a
+  subfamily assignment. Do not restate any member count for SF1. The GO call is unaffected
+  by either correction.
 - Proposed new term "manganese oxidase activity" (EC 1.16.3.3, no GO term). The MODIFY
   replacement is GO:0016724 because that is what is annotatable today; when GO creates the
   proposed term, `proposed_replacement_terms` should become it and
