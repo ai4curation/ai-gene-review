@@ -32,3 +32,11 @@
 ## 2026-10-28 review-fix pass
 
 - Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.
+
+## 2026-10-28 correction: obsolete replacement term
+
+The vasodilation IMP row (PMID:23913704) was modified to negative regulation of vasodilation
+(GO:0045908), which is obsolete in the current GO release; its replaced_by, vasoconstriction
+(GO:0042310), does not fit. The row now modifies to GO:0046627 negative regulation of insulin receptor
+signaling pathway: lower GRK2 raises insulin-stimulated vascular Akt/eNOS activation
+[PMID:23913704 "In addition, exercise downregulated vascular GRK2 expression and activity, which further increased insulin-stimulated vascular Akt/eNOS activation in exercised SHRs."].
