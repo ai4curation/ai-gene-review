@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [braD, braF, ccmC, estA, fleN, hutH, hutI, lap, PA0692, PA1024, PA3760, PA5458, phzM, phzS, pilB, pilU, pqsH, pvdE, waaL, wbpD, wbpY, xcpX]
+genes: [braD, braF, ccmC, estA, fleN, hutH, hutI, lap, PA0692, PA1024, PA3760, PA3891, PA5377, PA5458, phzM, phzS, pilB, pilU, pqsH, pvdE, waaL, wbpD, wbpY, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -129,10 +129,12 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 14 | wbpD | PA3156 | acetyltransferase activity (PTN001917401); UDP-glucuronate biosynthetic process (PTN001292385) | 67 + 8 | Acetyltransferase SOUND; UDP-glucuronate WRONG (WbpD acetylates UDP-GlcNAc3NA, not in UDP-GlcA synthesis) | Acetyltransferase sound; UDP-glucuronate IBD wrong | P, G |
 | 15 | xcpX | PA3097 | T2SS complex; protein secretion by T2SS (PTN000475915) | 35 | SOUND; process row is IDA on a review paper | Sound | P |
 | 16 | waaL | PA4999 | polysaccharide biosynthetic process (PTN008076295) | 64 | SOUND; seed term arguably the wrong step | Sound; ligase-activity row removed (WaaL is ATP-independent) | P (x6) |
+| 17 | PA3891 | PA3891 | plasma membrane (PTN001953445); ABC-type glycine betaine transporter activity (PTN001953060) | 54 | INDIRECT: "IDA" is cross-species complementation of a P. syringae opuCA mutant; substrate data are the ortholog's | Plausible, but should be re-seeded from the characterised ortholog | P (x2), G (x2) |
 | 18 | wbpY | PA5448 | lipopolysaccharide biosynthetic process (PTN000749272) | 51 | SOUND | Sound; its shared glycosyltransferase node should be re-seeded from a 2022 direct assay | P, G |
 | 19 | PA0692 | PA0692 | type V secretion process and complex (PTN002160772) | 25 | SOUND; complex row is IMP, which cannot show membership | Sound | P |
 | 23 | PA3760 | PA3760 | N-acetylglucosamine transport (PTN000532509) | 43 | SOUND for PA3760 | OVER-SPECIFIC: node is general Enzyme I (PtsI, PtsP, FruB) | G |
 | 24 | hutH | PA5098 | histidine ammonia-lyase activity; L-histidine catabolic process (PTN000796665) | 42 | SOUND (direct assay of the partially purified enzyme), coded IMP instead of IDA | Sound; but PAO1 paralog PA5093, which lacks the catalytic Ala-Ser-Gly motif, inherits it | P, G (NOT on PA5093) |
+| 27 | PA5377 | PA5377 | carnitine transport and transporter activity; choline transport (PTN000766131) | 39 | Choline/betaine SOUND; carnitine OVER-SPECIFIC (needs the separate binding protein CaiX); amine transporter activity WRONG (quaternary ammonium is not an amine in GO) | Carnitine IBDs on the permease node not supported; amine IBD should be repointed | P (x4), G (x3) |
 | 30 | braD | PA1073 | L-isoleucine import, L-alanine transport (PTN000765102) | 36 | SOUND (as braF) | Sound, same caveat; D-alanine transport seed is an indirect phenotype | none |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
 
@@ -140,9 +142,10 @@ pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 3 (in progress): PA3891, PA5377.
 Batch 4 (in progress): mgtE, PA1055, PA1057, pilM, pilD, hom, aruC, gbuA,
 nrdJa, cif, dgcB.
+Batch 5 (in progress): xcpS, xcpW, xcpV, xcpQ, xcpR, pscC, gltA, PA0920,
+PA4079, liuC, PA4503, PA4504, PA4624, dctQ, thiI, cifR, lpxA.
 
 ### Patterns emerging
 
@@ -161,8 +164,11 @@ nrdJa, cif, dgcB.
   (*E. coli* CcmABC biochemistry for ccmC; a crystallization note for phzS).
   The pilB/pilU paper looked like a mis-keyed neighbour of the ccmC paper but
   is correct.
-- **Evidence codes that overstate the assay** (fleN, xcpX, PA0692, PA5458):
-  IDA on a sequence motif or a review, IMP for complex membership.
+- **Evidence codes that overstate the assay** (fleN, xcpX, PA0692, PA5458,
+  PA3891): IDA on a sequence motif, a review, or cross-species
+  complementation; IMP for complex membership.
+- **Subunit and partner conflation** (PA5377): carnitine transport, which
+  needs the separate binding protein CaiX, seeded on the permease node.
 - **Old papers that predate the gene** (hutI): a 1967 pathway paper cannot tie
   an activity to PA5092. Here the term is right and the node reaches human
   AMDHD1, but its only anchor needs replacing.
