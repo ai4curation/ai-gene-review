@@ -1,5 +1,7 @@
 # FITM2 curation notes and evidence guide
 
+The initial entries below are preserved as a curation journal. The review follow-up at the end records the current disposition where it supersedes an earlier decision.
+
 ## Identity and scope
 
 Human FITM2 is UniProtKB Q8N6M3, HGNC:16135, also called FIT2 or C20orf142. The genuine seed contains 35 annotation contexts and no natural alternative protein products. All incoming term IDs, evidence codes, references, qualifiers and supporting entities are preserved. The canonical sequence has 262 residues. Engineered catalytic or binding mutants, disease-associated truncations, the mouse ortholog and the HTATIP2 partner isoform are not recorded as alternative FITM2 products.
@@ -51,3 +53,11 @@ The candidate began at main `2cbe66960f237b9ed3c937642e5a6a918662b200` after a c
 ## Validation and independent review
 
 Two independent readers found no material scientific issue in the 35 decisions and two core functions. Targeted schema, ontology-ID/label, reference-title, strict GOA, history and status checks passed, and a private HTML preview rendered successfully. The gene validator reports four advisory warnings for the deliberately retained generic-binding rows, so the computed status is DRAFT. No rule was weakened. History schema/backfill tests passed after hydrating their three small, unchanged main fixtures omitted by the sparse view; the initial missing-fixture failures were retained in the private audit trail. No general application test expansion or source-cache change was needed.
+
+## Review follow-up: differentiation and primary access
+
+Re-reading the Results together with the Discussion of [PMID:18160536](https://pmc.ncbi.nlm.nih.gov/articles/PMC2224239/) supports marking both incoming GO:0045444 fat-cell-differentiation transfers as MARK_AS_OVER_ANNOTATED. The authors interpret the principal phenotype as impaired triglyceride-droplet accumulation rather than differentiation. The strongest shRNA1 condition did reduce PPARγ, aP2 and adiponectin; that observation is preserved alongside the broadly retained markers in shRNA2/3. Severe storage impairment could secondarily affect those markers, but this explanation was not established experimentally. The later aP2-driven deletion in PMID:24519944 cannot establish or exclude an earlier role. The off-path family IBD is not independent evidence against the separate mouse transfers. The current review therefore has 26 ACCEPT, six KEEP_AS_NON_CORE, two MARK_AS_OVER_ANNOTATED and one UNDECIDED decisions, with all 35 incoming contexts preserved.
+
+DAG-binding and TAG-competition details for PMID:22106267 were read in externally accessed indexed [PMC3241795 Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC3241795/), not recovered from its abstract-only normal cache. Complete original Methods and all construct provenance remain unavailable. PMID:32915949 describes the earlier purified protein as human; that later account does not substitute for auditing every original construct. The two core functions remain supported, and the unresolved physical ER–droplet tether remains UNDECIDED.
+
+Explicit user campaign instructions retain supported generic binding as non-core when no informative subtype is established and require new support to remain reference-only without publication quotations. These instructions take precedence over conflicting local skill and CLAUDE.md defaults; they are not a legacy-content exception. The four association contexts and source-specific evidence remain documented, and default validators remain unchanged.
