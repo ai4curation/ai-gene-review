@@ -27,7 +27,7 @@
 - The GO:0016151 row comes from interpro2go. Both source entries were checked against the
   InterPro API: IPR002026 (Urease, gamma/gamma-beta subunit) and IPR036463 (Urease, gamma
   subunit superfamily) each map to GO:0016151 nickel cation binding and GO:0043419 urea
-  catabolic process. The second mapping is right; the first propagates a nickel-binding
+  catabolic process. The GO:0043419 mappings are right; the GO:0016151 mappings propagate a nickel-binding
   claim to every urease gamma subunit and to the fused gamma-beta subunits. Recorded as
   two `source_defects` (resource InterPro, `requested_change: DELETE_VALUE`), and the row
   is REMOVEd.
@@ -38,7 +38,7 @@
 - GO:0009039 urease activity: MARK_AS_OVER_ANNOTATED. The reaction belongs to the
   assembled enzyme; the gamma chain contributes to it (recorded as
   `contributes_to_molecular_function`) but cannot perform it.
-- GO:0019627: KEEP_AS_NON_CORE (parent of the accepted GO:0043419).
+- GO:0019627: TOO_GENERAL (true, but entailed by the accepted descendant GO:0043419).
 - GO:0005737 and GO:0043419: ACCEPT.
 - Added as NEW: GO:0035550 urease complex (part_of) and GO:0005198 structural molecule
   activity, following the treatment of the Pseudomonas putida gamma subunit in
