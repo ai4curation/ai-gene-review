@@ -342,10 +342,19 @@ The work is incomplete. In priority order:
    - Report every change in a new row in §3; never tune on per-gene names.
 2. **Confirm the `db_go` finding** (§2, point 2) with the authors before
    publicizing it. Their code is pinned at commit `80930d0` (cloned 2026-10-21).
-3. **Score our reviews** with the final rule (§4), and decide whether to make inner-face proteins consistently
-   use `GO:0009898` / `GO:0031234` instead of bare `GO:0005886`. Candidates:
-   JAK1, MAP2K1, LRRK2, IKBKB, AKT2, BTK, KRAS, NRAS, LYN, BRAF, SYK, RAC1, RHOA, HCK.
-   That is a refinement (MODIFY), allowed where the evidence supports it.
+3. **Inner-leaflet proteins → cytoplasmic-side term (partly done).** The clean
+   lipid-anchored set — **KRAS, NRAS, RAC1, RHOA, LYN, HCK, BTK** — has been
+   refined: every `GO:0005886` plasma-membrane existing-annotation row MODIFYed to
+   `GO:0009898` cytoplasmic side of plasma membrane (a descendant the gene already
+   carries), core_functions locations updated to match, and the IBA row given a
+   `propagation_review` (`TERM_SCOPING_PROBLEM`). JAK2/JAK3/TYK2/GNAQ/GNB1 were
+   already done by the review agents. This makes them machine-distinguishable from
+   genuinely surface-exposed proteins (they fail both the outward-CC and the
+   PM-AND-TM-function rules once PM is re-pointed). **Still open:** the
+   transiently-recruited kinases BRAF, MAP2K1, AKT2, SYK, IKBKB, LRRK2 — the
+   inner-side call is softer there (they are recruited to the cytoplasmic face
+   rather than constitutively lipid-anchored), so they were deliberately left for a
+   separate judgement. Re-running §3/§4 scores after this change is a to-do.
 4. **Expert-review the flagged review calls** in §4 (DLL3, LGR5, IZUMO4, F2,
    the source defects).
 5. **Optional:** compare against UniProt topology (`TOPO_DOM Extracellular`,
