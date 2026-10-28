@@ -76,11 +76,13 @@ that conditionality.
   and agrees with it. GO has no bacterial "inner membrane" term distinct from plasma
   membrane, so no MODIFY is available.
 - `GO:0009055 electron transfer activity` (IBA, node PANTHER:PTN001251186, seeded by
-  TorC and TorY of *E. coli* and CymA of *S. oneidensis*): ACCEPT, core. The node sits
+  TorC and TorY of *E. coli* and CymA of *S. oneidensis*): TOO_GENERAL (was ACCEPT; see
+  the correction note below). The node sits
   at taxon:2 (Bacteria) in the PAINT file; ImcH is a NapC/NirT/NrfH member by UniProt
   SIMILARITY, by PROSITE MULTIHEME_CYTC and by the published structural comparison
   with NrfH, so it is inside the clade, and it has direct electron-transfer evidence
-  of its own.
+  of its own. The node placement is sound; the term is simply entailed by the
+  `GO:0008121` row asserted below, which is its direct `is_a` child.
 - `GO:0019645 anaerobic electron transport chain` (IBA, same node, seeded by TorC and
   TorY): ACCEPT, core. ImcH itself performs a step of the chain (it carries the
   electrons), not merely enabling one.
@@ -94,7 +96,34 @@ necessity, not participation in the terminal reduction); `GO:0009061 anaerobic
 respiration` (ancestor-level relative to GO:0019645 already asserted); a
 response-to-redox-potential term (the sensing/regulatory entity is unidentified, and
 imcH is constitutively expressed, so ImcH is the switched-past component rather than
-the sensor).
+the sensor); `GO:0048038 quinone binding` — the quinone site is real to the extent the
+evidence goes, but the evidence is a structural model superposed on NrfH plus the
+conserved protonatable residues around heme 1, not a bound-ligand structure or a binding
+measurement, and menadiol reduction of the protein shows reduction occurs without
+localising the site [PMID:37779214 "Based on the ImcH model, it seems that these two
+proteins have similar menaquinone‐binding sites, close to heme 1, immediately following
+the transmembrane domain, and with an unusual coordination."]. Model-only evidence makes
+`NEW` the wrong call; the pocket-mutagenesis entry in `suggested_experiments` is where
+the question belongs, and the site itself is cited in the `GO:0008121` row as part of the
+topology argument rather than as an annotation of its own. `GO:0005887 integral component
+of plasma membrane` was likewise declined, for the reasons recorded in the `GO:0005886`
+IEA row.
+
+## Correction note (review feedback, PR #5640)
+
+Two errors found in review and corrected: (i) the `GO:0008121` row had claimed the term
+is "not an ancestor or descendant" of the `GO:0009055` row — it is in fact a direct
+`is_a` child of it (verified against the QuickGO is_a ancestor closure of GO:0008121,
+which contains GO:0009055, GO:0015078, GO:0015399, GO:0015453, GO:0016491, GO:0016679 and
+GO:0022857), so the `GO:0009055` IBA row is now `TOO_GENERAL` and the two core functions
+are collapsed into one; (ii) `GO:0008121` is also `is_a GO:0015078 proton transmembrane
+transporter activity`, which asserts the proton translocation PMID:37779214 refutes for
+ImcH. The term is kept, since it is the only one naming both the quinol donor and the
+cytochrome c acceptor and `GO:0016681` is obsolete, with the mismatch recorded in the
+row's `reason`, in `suggested_questions` and as a `proposed_new_terms` entry for an
+electroneutral menaquinol:cytochrome c oxidoreductase activity under `GO:0016679`. This
+is the same resolution reached for the family member CymA in the parallel SHEON/cymA
+review.
 
 ## Note on the CMMMech grounding
 
