@@ -24,3 +24,11 @@
     Transmembrane transport: ACCEPT, because it is as precise as the evidence allows.
   - No NEW terms. Detoxification and herbicide response rest on expression data only, which does not
     meet the NEW bar. Possible iron transport by orthology is raised as a question instead.
+
+## 2026-10-28 correction (PR #5677 review)
+
+The two GO:0035673 oligopeptide transmembrane transporter activity rows (IBA, InterPro2GO IEA) are now
+MODIFY to GO:0022857 transmembrane transporter activity rather than UNDECIDED, and the GO:0035672 process
+row is MODIFY to GO:0055085 transmembrane transport. The separate NEW IC GO:0022857 row is dropped: it was
+the parent of a term the gene already carried, so generalising the existing rows states the same judgement
+(transporter certain, substrate unresolved) without a redundant pair.
