@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aruC, braD, braF, ccmC, cif, cifR, dctQ, dgcB, estA, fleN, gbuA, gltA, hom, hutH, hutI, lap, liuC, lpxA, mgtE, nrdJa, PA0692, PA0920, PA1024, PA1055, PA1057, PA3760, PA3891, PA4079, PA4503, PA4504, PA4624, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pscC, pvdE, thiI, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
+genes: [aruC, braD, braF, ccmC, cif, cifR, dctQ, dgcB, dksA, estA, fimU, fleN, fpr, fur, gbuA, gltA, hfq, hom, hutH, hutI, lap, liuC, lpxA, mgtE, nirJ, nrdJa, oprG, PA0692, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA3760, PA3891, PA4079, PA4503, PA4504, PA4624, PA5377, PA5458, pchB, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsH, pscC, pvdE, relA, thiI, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -168,14 +168,30 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 50 | lpxA | PA3644 | lipopolysaccharide biosynthetic process (PTN000602377) | 24 | SOUND claim; reference is a lipid A structure paper that predates the gene | Sound; lipid A biosynthesis would be sharper | P |
 | 51 | xcpV | PA3099 | T2SS process and complex (PTN002446181) | 24 | SOUND terms; same seed problems as xcpW | Node may be too broad: 14 of 49 leaves named PilV/MshD/pilin | P (x2), G (x2) |
 | 52 | xcpQ | PA3105 | protein secretion by the T2SS (PTN000768388) | 23 | SOUND term; IDA on a review article | Sound | P |
+| 53 | relA | PA0934 | response to starvation (PTN001083175) | 23 | SOUND | Sound; a SpoT hydrolase IBA from the same node was removed from RelA | G |
+| 56 | pilN | PA5043 | type IV pilus; motility; pilus assembly (PTN002220336) | 21 | Location WRONG (same IMP "no pili" row as pilM, on an inner-membrane protein); motility and assembly SOUND | Pilus CC IBD (added 2026-06-17) should be withdrawn | P, G |
+| 59 | hfq | PA4944 | regulation of RNA stability (PTN002164223) | 20 | SOUND (Hfq stabilises RsmY) | Sound; less certain for Firmicutes leaves | none on seed |
+| 60 | pilA | PA4525 | type IV pilus-dependent motility; type IV pilus (PTN002013003) | 20 | SOUND claims; evidence codes wrong (mutant assay as IDA, review as IMP) | Sound | P (x2) |
+| 62 | PA1059 | PA1059 | sodium:proton antiporter activity (PTN002162936) | 19 | INDIRECT: subunit never mutated (ShaG) | Should be contributes_to; node reaches archaeal hydrogenase subunits MbhC/MbxC | P (x2), G |
+| 63 | PA1058 | PA1058 | sodium:proton antiporter activity (PTN002162906) | 19 | INDIRECT: subunit never mutated (ShaF) | Should be contributes_to; node reaches MbhB/MbxB | P (x2), G |
+| 65 | dksA | PA4723 | regulation of DNA-templated transcription (PTN002139169) | 17 | SOUND | Sound | P (wrong reference: paralog DksA2 paper) |
+| 66 | pchB | PA4230 | salicylic acid biosynthetic process (PTN002211012) | 17 | SOUND for PchB (isochorismate pyruvate lyase) | OVER-SPECIFIC: node is the AroQ chorismate mutase family root; the other 16 leaves are mutases with no lyase activity | G |
+| 68 | PA1054 | PA1054 | sodium ion transmembrane transport (PTN000511949) | 16 | SOUND: the one subunit actually deleted (ShaAB) | Antiporter activity should be contributes_to | P, G |
+| 69 | PA1056 | PA1056 | sodium ion transmembrane transport (PTN001865541) | 16 | SOUND claim; IMP without a PA1056 mutant | Sound; two complex I-derived IEA rows removed | P (x2), G |
+| 71 | nirJ | PA0511 | heme biosynthetic process (PTN000132400) | 15 | SOUND for NirJ (heme d1) | OVER-SPECIFIC: archaeal SPASM radical SAM clade; one other leaf is a heme-pathway enzyme | G |
 | 72 | xcpR | PA3103 | T2SS process and complex (PTN002016240) | 14 | Complex SOUND; process IDA on a review article | Sound; node restricted to Gammaproteobacteria, keeping T2SS terms off PilB-type ATPases | P |
+| 73 | oprG | PA4067 | transmembrane transport (PTN005107949) | 13 | SOUND (channel in planar bilayers) | Sound | none |
+| 74 | fpr | PA3397 | heme catabolic process (PTN002500048) | 13 | SOUND for fpr as heme oxygenase electron donor | OVER-SPECIFIC: a partner-specific role on a family node that includes E. coli and Salmonella Fpr | G |
 | 75 | PA4504 | PA4504 | dipeptide transmembrane transporter activity (PTN000766696) | 12 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikC (nickel) and GsiD (glutathione) | P, G |
+| 76 | fur | PA4764 | negative regulation of siderophore biosynthetic process (PTN002112483) | 12 | SOUND for Fur | OVER-SPECIFIC: leaves include Fur of Neisseria, Helicobacter, Coxiella; a sibling secondary-metabolite IBD sits on the whole Fur superfamily (Zur, PerR, Irr) | G (x2) |
+| 89 | pilT | PA0395 | ATP hydrolysis activity (PTN002020799) | 8 | SOUND (purified enzyme, motif mutants) | Sound | P (a non-seed located_in pilus row) |
+| 95 | fimU | PA4550 | type IV pilus (PTN008624060) | 7 | SOUND | Sound | none on seed |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-
+Batch 6 (in progress): arcA, arcD, thrB, hutF, nmoA, lasB, tgpA, fliD.
 
 ### Patterns emerging
 
@@ -215,8 +231,15 @@ redoing.
 - **Pathway context that does not travel** (liuC): terpene catabolism is true
   for PAO1 only because its terpene pathway feeds the leucine pathway, but it
   was seeded on a hydratase node whose other members lack it.
-- **Phenotypes as locations** (pilM): IMP "mutant has no pili" recorded as
-  `located_in` type IV pilus, and given identically to pilN, pilO and pilP.
+- **Phenotypes as locations** (pilM, pilN): IMP "mutant has no pili" recorded
+  as `located_in` type IV pilus, and given identically to pilN, pilO and pilP;
+  confirmed on pilN.
+- **Gene-specific roles on family-root nodes** (pchB, nirJ, fpr, fur): the
+  seed is right for the PAO1 gene, but the node is the whole family. Salicylate
+  synthesis on the chorismate mutase root, heme d1 synthesis on an archaeal
+  radical SAM clade, heme catabolism on ferredoxin reductases that include
+  *E. coli* Fpr, and siderophore repression on Fur proteins of bacteria that
+  make no siderophores.
 - **One citation for a whole operon** (hom): the ThrH/ThrB kinase paper cited
   for hom, thrB and thrH alike.
 - **Another organism's paper coded IDA** (thiI): a *Salmonella* genetics study
