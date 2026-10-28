@@ -34,7 +34,7 @@ cached with `ai-gene-review fetch-pmid` (abstract only). PMID:8331069 has a PMC 
 ### PseudoCAP rows
 
 - GO:0015628 IDA PMID:9818381: the paper is a review (FEMS Microbiol Rev 1998, PubMed type Review);
-  IDA unverified (abstract only; the review may contain original data). Same WRONG_EVIDENCE_CODE / CHECK defect as on xcpX and xcpS. Term correct; primary
+  IDA not supported: full text checked, no original secretion data. Same WRONG_EVIDENCE_CODE / CHECK defect as on xcpX and xcpS. Term correct; primary
   IMP evidence: PMID:30346996, PMID:1309616.
 - GO:0015627 IDA PMID:8331069: the paper is primary research (not a review), but its abstract
   reports leader cleavage, N-methylation and inner-membrane fractionation of XcpT-W. That supports
@@ -57,5 +57,5 @@ version renumbering; not verified. The PAINT file for PTHR39583 is not cached in
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002446812 (PTN002218419 in current GOA) | GO:0015628 protein secretion by the type II secretion system | 1 (sole seed) | 12 (7 taxa) in worklist; 618 proteins under PTN002218419 in QuickGO | GO:0015628, IDA, PMID:9818381 | SOUND (term); evidence code UNVERIFIED (cited paper is a review; abstract only) | xcpW mutant loses secretion and is complemented (PMID:30346996); pdd mutants (PMID:1309616). PMID:9818381 is a review, so IDA is invalid; re-key as IMP. Node leaves are GspJ proteins; term suits the clade. |
+| PTN002446812 (PTN002218419 in current GOA) | GO:0015628 protein secretion by the type II secretion system | 1 (sole seed) | 12 (7 taxa) in worklist; 618 proteins under PTN002218419 in QuickGO | GO:0015628, IDA, PMID:9818381 | SOUND (term); evidence code WRONG (cited paper is a review with no original secretion data; full text checked) | xcpW mutant loses secretion and is complemented (PMID:30346996); pdd mutants (PMID:1309616). PMID:9818381 is a review, so IDA is invalid; re-key as IMP. Node leaves are GspJ proteins; term suits the clade. |
 | PTN002446812 | GO:0015627 type II protein secretion system complex | 1 (sole seed) | 12 (7 taxa) in worklist; none found in current QuickGO | GO:0015627, IDA, PMID:8331069 | SOUND (term); seed reference OVER-SPECIFIC | The cited paper shows inner-membrane localisation and PilD processing, not complex membership (abstract; full text unavailable). XcpW is in the tip complex (PMID:19828448, PMID:30346996), so the claim and the node term hold for GspJ; better reference PMID:19828448. |

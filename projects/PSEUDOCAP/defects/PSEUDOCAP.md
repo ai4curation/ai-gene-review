@@ -1273,35 +1273,35 @@ GO:0016757 glycosyltransferase activity for wbpY (PA5448) is annotated IMP to PM
 > NMR spectroscopic analysis of the WbpY reaction product showed that WbpY transferred one D-Rha residue in α1-3 linkage
 > — PMID:35166992
 
-## 106. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 106. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P35818 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpQ/xcpQ-ai-review.yaml`
 
-GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
-## 107. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 107. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00512 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpR/xcpR-ai-review.yaml`
 
-GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
-## 108. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 108. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00513 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpS/xcpS-ai-review.yaml`
 
-GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
@@ -1319,15 +1319,15 @@ GO:0015627 for XcpV (PA3099, Q00516) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 110. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 110. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00516 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpV/xcpV-ai-review.yaml`
 
-GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
@@ -1345,28 +1345,28 @@ GO:0015627 for XcpW (PA3098, Q00517) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 112. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 112. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00517 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpW/xcpW-ai-review.yaml`
 
-GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 113. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 113. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00518 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpX/xcpX-ai-review.yaml`
 
-GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381

@@ -23,8 +23,8 @@ repointed. Examples are catalase activity on a heme exporter (ccmC), lipid
 biosynthesis on an esterase (estA), DNA endonuclease activity from a mistyped
 GO id (pilU), and signal transduction on a signal synthase (lasI). For 24 the
 seed is right for PAO1 but the node carries the term to proteins or lineages it
-does not fit. For 25 the claim is true but the PseudoCAP row looks to misstate the
-evidence code, qualifier or reference, and 37 are sound. The reviews record 114
+does not fit. For 30 the claim is true but the PseudoCAP row misstates the
+evidence code, qualifier or reference, and 32 are sound. The reviews record 114
 defects for PseudoCAP and 74 for PAINT, written up in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
 
@@ -126,8 +126,8 @@ reference-proteome counts for those terms, so they are lower bounds.
 |---|---:|---:|
 | Seed wrong or indirect: the IBD should be withdrawn or repointed | 21 | 1,481 |
 | Seed right for PAO1, but the node term does not fit its clade | 24 | 804 |
-| Claim true, but the seed row's evidence code, qualifier or reference looks wrong | 25 | 887 |
-| Sound | 37 | 1,589 |
+| Claim true, but the seed row's evidence code, qualifier or reference is wrong | 30 | 1,043 |
+| Sound | 32 | 1,433 |
 | Review not yet written (pqsA, PA2403) | 2 | 11 |
 | **Total** | **109** | **4,772** |
 
@@ -137,16 +137,13 @@ reference-proteome counts for those terms, so they are lower bounds.
 - **Node does not fit the clade (24):** pvdE, PA5458, PA3760, mgtE, aruC, gbuA,
   mucB, pchB, nirJ, fpr, fur, nmoA, tgpA, dctQ, PA4503, PA4504, pqsC, wzm,
   phzC1, thiI, pelA, xcpV, braF, PA5359.
-- **Fix the seed row, keep the IBD (25):** fleN, hutI, hutF, hom, thrB, PA3891,
-  the six Sha subunits PA1054-PA1059, PA2280, phzS, lpxA, PA0692, dgcB, PA4521,
-  pilA, oprB, PA4505, gltA, arcD, PA2580, fliD.
-- **Sound (37):** lap, pqsH, PA1024, pilB, phzM, hutH, braD, waaL, wbpY, cif,
+- **Fix the seed row, keep the IBD (30):** fleN, hutI, hutF, hom, thrB, PA3891,
+  the six Sha subunits PA1054-PA1059, PA2280, phzS, lpxA, xcpX, xcpS, xcpW,
+  xcpQ, xcpR, PA0692, dgcB, PA4521, pilA, oprB, PA4505, gltA, arcD, PA2580,
+  fliD.
+- **Sound (32):** lap, pqsH, PA1024, pilB, phzM, hutH, braD, waaL, wbpY, cif,
   pilD, pscC, relA, hfq, dksA, cifR, PA4079, PA4624, oprG, pilT, fimU, arcA,
-  lasB, PA1486, PA5085, PA0906, dctP, PA1341, mucD, pfeA, pvdH, eddB, and the
-  type II secretion genes xcpQ, xcpR, xcpS, xcpW and xcpX. Their process rows
-  cite a review (PMID:9818381) as IDA; we have only its abstract, which cannot
-  show whether the review reports original data, so this is a SUSPECTED check
-  rather than an error.
+  lasB, PA1486, PA5085, PA0906, dctP, PA1341, mucD, pfeA, pvdH, eddB.
 
 The classification is by the worst outcome among a gene's sole-seeded nodes;
 several "sound" genes still have defects on other rows (for example lap and
@@ -186,7 +183,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 12 | phzM | PA4209 | S-adenosylmethionine-dependent methyltransferase activity (PTN002463933) | 80 | SOUND | Sound at family root | none on seed |
 | 13 | braF | PA1071 | L-valine/L-isoleucine import, L-alanine transport (PTN000656921) | 75 | SOUND via reconstitution (PMID:1400443); the growth screen alone is weak | Substrate terms stretch across a node of paralogous ATPases whose binding proteins set specificity | none |
 | 14 | wbpD | PA3156 | acetyltransferase activity (PTN001917401); UDP-glucuronate biosynthetic process (PTN001292385) | 67 + 8 | Acetyltransferase SOUND; UDP-glucuronate WRONG (WbpD acetylates UDP-GlcNAc3NA, not in UDP-GlcA synthesis) | Acetyltransferase sound; UDP-glucuronate IBD wrong | P, G |
-| 15 | xcpX | PA3097 | T2SS complex; protein secretion by T2SS (PTN000475915) | 35 | SOUND; process row cites a review as IDA (abstract only, unverified) | Sound | P (CHECK, SUSPECTED) |
+| 15 | xcpX | PA3097 | T2SS complex; protein secretion by T2SS (PTN000475915) | 35 | SOUND; process row cites a review as IDA; the full text has no original secretion data, so TAS | Sound | P (CONFIRMED) |
 | 16 | waaL | PA4999 | polysaccharide biosynthetic process (PTN008076295) | 64 | SOUND; seed term arguably the wrong step | Sound; ligase-activity row removed (WaaL is ATP-independent) | P (x6) |
 | 17 | PA3891 | PA3891 | plasma membrane (PTN001953445); ABC-type glycine betaine transporter activity (PTN001953060) | 54 | INDIRECT: "IDA" is cross-species complementation of a P. syringae opuCA mutant; substrate data are the ortholog's | Plausible, but should be re-seeded from the characterised ortholog | P (x2), G (x2) |
 | 18 | wbpY | PA5448 | lipopolysaccharide biosynthetic process (PTN000749272) | 51 | SOUND | Sound; its shared glycosyltransferase node should be re-seeded from a 2022 direct assay | P, G |
@@ -217,13 +214,13 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 43 | pscC | PA1716 | protein secretion by the type III secretion system (PTN009110345) | 25 | SOUND | Sound; node is the T3SS-specific subnode | none |
 | 44 | cifR | PA2931 | negative regulation of DNA-templated transcription (PTN002934616) | 25 | SOUND (purified repressor binds mapped operators) | Sound | none |
 | 45 | PA4624 | PA4624 | transmembrane protein transporter activity (PTN002160772) | 25 | SOUND (secretion readout of CdrA) | Sound (TpsB subfamily) | P (biofilm row) |
-| 46 | xcpS | PA3102 | protein secretion by the T2SS (PTN000768597) | 25 | SOUND term; IDA cites a review (PMID:9818381), abstract only, so the evidence code is unverified | Sound | P (CHECK, SUSPECTED) |
-| 47 | xcpW | PA3098 | T2SS process and complex (PTN002446812) | 24 | SOUND terms; process IDA cites a review, complex IDA cites a paper whose abstract shows only membrane fractionation (both abstract only, unverified) | Sound | P (x2, CHECK, SUSPECTED) |
+| 46 | xcpS | PA3102 | protein secretion by the T2SS (PTN000768597) | 25 | SOUND term; IDA cites a review (PMID:9818381) that has no original secretion data (full text checked); should be TAS | Sound | P (CONFIRMED) |
+| 47 | xcpW | PA3098 | T2SS process and complex (PTN002446812) | 24 | SOUND terms; process IDA cites a review with no original secretion data (full text checked, should be TAS); complex IDA cites a paper whose abstract shows only membrane fractionation (unverified) | Sound | P (x2) |
 | 48 | wzm | PA5451 | lipopolysaccharide transport (PTN002019107) | 24 | SOUND | Over-broad: reaches teichoic-acid and capsule exporters and Gram-positive/archaeal permeases; polysaccharide transport would fit | G |
 | 49 | dctQ | PA5168 | C4-dicarboxylate transport (PTN002169725) | 24 | SOUND for DctQ | OVER-SPECIFIC: YiaM-type clade (E. coli YiaM moves 2,3-diketo-L-gulonate) | G |
 | 50 | lpxA | PA3644 | lipopolysaccharide biosynthetic process (PTN000602377) | 24 | SOUND claim; reference is a lipid A structure paper that predates the gene | Sound; lipid A biosynthesis would be sharper | P |
-| 51 | xcpV | PA3099 | T2SS process and complex (PTN002446181) | 24 | SOUND terms; same unverified seed queries as xcpW | Node may be too broad: 14 of 49 leaves named PilV/MshD/pilin | P (x2), G (x2) |
-| 52 | xcpQ | PA3105 | protein secretion by the T2SS (PTN000768388) | 23 | SOUND term; IDA cites a review, abstract only, evidence code unverified | Sound | P (CHECK, SUSPECTED) |
+| 51 | xcpV | PA3099 | T2SS process and complex (PTN002446181) | 24 | SOUND terms; same seed issues as xcpW | Node may be too broad: 14 of 49 leaves named PilV/MshD/pilin | P (x2), G (x2) |
+| 52 | xcpQ | PA3105 | protein secretion by the T2SS (PTN000768388) | 23 | SOUND term; IDA cites a review with no original secretion data (full text checked); should be TAS | Sound | P (CONFIRMED) |
 | 53 | relA | PA0934 | response to starvation (PTN001083175) | 23 | SOUND | Sound; a SpoT hydrolase IBA from the same node was removed from RelA | G |
 | 54 | arcA | PA5171 | arginine deiminase activity (PTN005338738) | 23 | SOUND (mutants defined by loss of ADI alone; locus shown to encode it) | Sound; a few short non-ADI leaves (YkgA, archaeal) to check | G |
 | 55 | nmoA | PA4202 | nitronate monooxygenase activity (PTN001284536) | 23 | SOUND (purified enzyme, structure) | Over-broad: sibling leaf PA0660 was purified and has no NMO activity (a quinone reductase) | G |
@@ -243,7 +240,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 69 | PA1056 | PA1056 | sodium ion transmembrane transport (PTN001865541) | 16 | SOUND claim; IMP without a PA1056 mutant | Sound; two complex I-derived IEA rows removed | P (x2), G |
 | 70 | hutF | PA5106 | L-histidine catabolic process (PTN000138516) | 16 | UNVERIFIABLE (1967 paper, as hutI); activity seed SOUND | Re-anchor on PMID:16475788; three nematode leaves lack HutF signatures | P, G |
 | 71 | nirJ | PA0511 | heme biosynthetic process (PTN000132400) | 15 | SOUND for NirJ (heme d1) | OVER-SPECIFIC: archaeal SPASM radical SAM clade; one other leaf is a heme-pathway enzyme | G |
-| 72 | xcpR | PA3103 | T2SS process and complex (PTN002016240) | 14 | Complex SOUND; process IDA cites a review, abstract only, evidence code unverified | Sound; node restricted to Gammaproteobacteria, keeping T2SS terms off PilB-type ATPases | P |
+| 72 | xcpR | PA3103 | T2SS process and complex (PTN002016240) | 14 | Complex SOUND; process IDA cites a review with no original secretion data (full text checked) | Sound; node restricted to Gammaproteobacteria, keeping T2SS terms off PilB-type ATPases | P |
 | 73 | oprG | PA4067 | transmembrane transport (PTN005107949) | 13 | SOUND (channel in planar bilayers) | Sound | none |
 | 74 | fpr | PA3397 | heme catabolic process (PTN002500048) | 13 | SOUND for fpr as heme oxygenase electron donor | OVER-SPECIFIC: a partner-specific role on a family node that includes E. coli and Salmonella Fpr | G |
 | 75 | PA4504 | PA4504 | dipeptide transmembrane transporter activity (PTN000766696) | 12 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikC (nickel) and GsiD (glutathione) | P, G |
@@ -314,13 +311,16 @@ are committed. The research findings for the other two:
   (*E. coli* CcmABC biochemistry for ccmC; a crystallization note for phzS).
   The pilB/pilU paper looked like a mis-keyed neighbour of the ccmC paper but
   is correct.
-- **Evidence codes that overstate the assay** (fleN, PA0692, PA5458, PA3891,
-  PA4503, PA4504, dgcB): IDA on a sequence motif, on cross-species
-  complementation or on an operon deletion; IMP for complex membership. The Xcp
-  type II secretion process rows all cite one review (PMID:9818381) as IDA.
-  That is worth a check, but we have only the abstract, and a review from the
-  laboratory that did the work can report original data, so it is recorded as
-  SUSPECTED, not as an error.
+- **Evidence codes that overstate the assay** (fleN, xcpX, xcpS, xcpW, xcpQ,
+  xcpR, PA0692, PA5458, PA3891, PA4503, PA4504, dgcB): IDA on a sequence motif,
+  on cross-species complementation, on an operon deletion or on a review; IMP
+  for complex membership. All six Xcp type II secretion process rows cite one
+  review (PMID:9818381) as IDA. We first flagged this from the abstract alone,
+  which was not enough: a review from the laboratory that did the work can
+  report original data. The full text (supplied by the user, read 2026-10-28)
+  settles it. Its only new observations are unpublished notes on XcpT and XcpR
+  multimerization, XcpR membrane association and an XcpP-XcpQ interaction,
+  with no original secretion data, so the rows should be TAS.
 - **Substrate terms on clades where the binding protein sets the substrate**
   (PA4503, PA4504, braF, dctQ): dipeptide transport seeded on permease nodes
   that also hold NikB/NikC (nickel), SapB (putrescine) and GsiD (glutathione);

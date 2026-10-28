@@ -41,7 +41,7 @@ the cached PAINT table `interpro/panther/PTHR30332/PTHR30332-paint.tsv`.
   secretin complex. Term correct, evidence code appropriate.
 - `GO:0015628` IDA PMID:9818381: Filloux, Michel & Bally 1998 is a **review** (PubMed
   publication type Review; `publication_type: REVIEW` in the cached file). The same row and the
-  same possible mis-coding was found in the xcpX review (`genes/PSEAE/xcpX`), so this is a systematic
+  same mis-coding was found in the xcpX review (`genes/PSEAE/xcpX`), so this is a systematic
   PseudoCAP pattern across the xcp cluster, not a one-off. The term itself is correct for XcpQ —
   it is the outer-membrane channel of the machine, and deletion abolishes export of the Xcp
   substrates. Recorded as a `WRONG_EVIDENCE_CODE` source defect (re-key to a primary paper, e.g.
@@ -61,7 +61,7 @@ right shape: a shared "bacterial secretin" node would propagate T2SS terms onto 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
 | PTN000768388 | GO:0015627 type II protein secretion system complex | 3 (not sole) | 23 (13 taxa) | GO:0015627, IDA, PMID:9466268 | SOUND | XcpQ is the GspD secretin of the Xcp T2SS, purified as a ring-forming homomultimer (PMID:9466268) and resolved as a pentadecameric secretin complex by cryo-EM (PMID:29042496). The node is the GspD-specific subnode of PTHR30332 (the T3SS secretins sit on PTN009110345), so a T2SS-complex term fits the clade. |
-| PTN000768388 | GO:0015628 protein secretion by the type II secretion system | 1 (sole seed) | 23 (13 taxa) | GO:0015628, IDA, PMID:9818381 | SOUND (term); evidence code UNVERIFIED (cited paper is a review; abstract only) | The claim is correct — XcpQ is the outer-membrane conduit of the Xcp T2SS and its deletion abolishes export of the Xcp substrates (UniProt disruption phenotype from PMID:29042493). But PMID:9818381 is a review, so IDA cannot stand; the IBD conclusion is unaffected and the seed should be re-keyed rather than the node dropped. Same defect as the xcpX seed on the identical reference. |
+| PTN000768388 | GO:0015628 protein secretion by the type II secretion system | 1 (sole seed) | 23 (13 taxa) | GO:0015628, IDA, PMID:9818381 | SOUND (term); evidence code WRONG (cited paper is a review with no original secretion data; full text checked) | The claim is correct — XcpQ is the outer-membrane conduit of the Xcp T2SS and its deletion abolishes export of the Xcp substrates (UniProt disruption phenotype from PMID:29042493). But PMID:9818381 is a review, so IDA cannot stand; the IBD conclusion is unaffected and the seed should be re-keyed rather than the node dropped. Same defect as the xcpX seed on the identical reference. |
 | PTN001251149 | GO:0009306 protein secretion | 2 (not sole) | 0 | GO:0015628, IDA, PMID:9818381 | SOUND (term) | The general node carries no leaf IBAs, so nothing propagates; the parent term is true of XcpQ. The same wrong evidence code applies to the underlying row. |
 
 ## Open questions
