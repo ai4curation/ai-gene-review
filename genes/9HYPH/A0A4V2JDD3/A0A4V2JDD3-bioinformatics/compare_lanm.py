@@ -76,13 +76,13 @@ def main() -> int:
     (a_s, a_e) = read_chain(FILES["Hans-LanM A0A4V2JDD3"])
     (b_s, b_e) = read_chain(FILES["Mex-LanM C5B164"])
     mature_label = f"mature {a_s}-{a_e} vs {b_s}-{b_e}"
-    for label, x, y in (
-        ("full-length", a, b),
-        (mature_label, a[a_s - 1 : a_e], b[b_s - 1 : b_e]),
+    for label, denominator, x, y in (
+        ("full-length", "Hans-LanM full-length sequence", a, b),
+        (mature_label, "Hans-LanM mature chain", a[a_s - 1 : a_e], b[b_s - 1 : b_e]),
     ):
         ident, aln = identity(x, y)
         print(f"\n## Global identity ({label}): {ident} identical residues; "
-              f"{100*ident/len(x):.1f}% of Hans-LanM length, "
+              f"{100*ident/len(x):.1f}% of {denominator} ({len(x)} aa), "
               f"{100*ident/aln.shape[1]:.1f}% of alignment columns")
         print(aln)
     return 0

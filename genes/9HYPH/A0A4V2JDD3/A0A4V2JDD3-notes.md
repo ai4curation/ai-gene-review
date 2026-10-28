@@ -3,7 +3,11 @@
 ## Identity
 
 - UniProtKB A0A4V2JDD3 (TrEMBL, unreviewed), ORF EYR15_14300, Hansschlegelia quercus
-  strain Dub (NCBITaxon:2528245), 133 aa, predicted Sec signal peptide 1-23 (SignalP).
+  strain Dub (NCBITaxon:2528245), 133 aa, predicted signal peptide 1-23 (SignalP).
+  UniProt records only `FT SIGNAL 1..23 {ECO:0000256|SAM:SignalP}` and `KW Signal`,
+  and the paper's Methods say only that signal peptides were predicted with SignalP
+  v6.0 and removed; neither names a translocon class, so no Sec assignment is made
+  here (an earlier draft said "Sec signal peptide" and that was unsupported).
   Named "EF-hand domain-containing protein" automatically from PROSITE PS50222.
 - Folder is named by accession (no gene symbol), with the ORF as gene_symbol, following
   the genes/9BACT/I9U7L5 precedent. No other genes/9HYPH folder existed.
