@@ -1,0 +1,45 @@
+# FLT4 annotation review notes
+
+## 2026-10-28 — manual review
+
+Genuine repository fetching seeded 89 source contexts and three natural products. The review retains every source field and row order. Each context was assessed against primary-source consultations, official interaction and localization records, mouse donor evidence, and the actual PANTHER target path. The [source evidence guide](FLT4-source-evidence.yaml) records access scope, public retrieval provenance, content hashes and the unchanged normal sources. Provider authentication/quota failures were already established in this campaign, so no repeated provider attempt or provider-branded manual report was created.
+
+The synthesis is one plasma-membrane VEGF-C/D receptor function, combining ligand binding with receptor association and tyrosine kinase activation. Direct human receptor experiments distinguish ligand capture and structural extracellular-domain assays from cellular signaling. Endothelial growth, migration and ERK responses are supported central outputs; carcinoma autocrine responses and early embryonic vascular remodeling remain contextual. Downstream phosphorylation does not establish that every measured protein is a direct FLT4 substrate ([PMID:23878260](https://pubmed.ncbi.nlm.nih.gov/23878260/), [PMID:9435229](https://pubmed.ncbi.nlm.nih.gov/9435229/), [PMID:11532940](https://pubmed.ncbi.nlm.nih.gov/11532940/), [PMID:19779139](https://pubmed.ncbi.nlm.nih.gov/19779139/)).
+
+The decisions are 42 ACCEPT, 25 KEEP_AS_NON_CORE, 17 TOO_GENERAL, three MODIFY and two UNDECIDED. Three growth-factor-binding contexts are refined to vascular endothelial growth factor binding using actual ligand evidence and official ontology ancestry. Broad kinase, pathway and selected regulatory terms are TOO_GENERAL where a supported narrower term entails them. Broad cytoplasm is treated consistently with the retained HPA cytosol context; internalized membrane receptor is not called a free cytosolic protein.
+
+Nine supported generic protein-binding contexts remain KEEP_AS_NON_CORE under the explicit campaign instruction. This instruction takes precedence over local requests to remove generic binding or add publication quotations. Associations are scoped to their actual assays: receptor complexes, ligand-domain binding, extracellular screens or chaperone-client co-complexes. They do not create a new adapter, cochaperone or substrate activity. References provide support without new publication quotations. Default validators are unchanged, and their resulting advisories are reported rather than suppressed.
+
+## Products and experimental constructs
+
+Official name 1/Long is **P35916-2**, the displayed 1363-aa sequence; name 2/Short is **P35916-1**, 1298 aa. The accession suffix must not be inferred from the product name. The 830-aa **P35916-3** sequence contains altered canonical residues 724–765, lacks 766–1298 and retains the final canonical 65-aa tail. Its mapped membrane-anchor and kinase regions are absent. All three official FASTAs were reconstructed from the UniProt sequence events.
+
+The secreted VEGFR3-765 clone characterized in [PMID:18593464](https://pubmed.ncbi.nlm.nih.gov/18593464/) is 765 aa and is not established as identical to current P35916-3. Its ligand binding and secretion do not establish all activities of the 830-aa product. CSF1R/FLT4 and EGFR/FLT4 chimeras, domain deletions, tagged fragments and dominant-negative constructs are experimental tools, not additional natural products. The core therefore describes the characterized membrane receptor and does not transfer kinase signaling to the soluble splice product.
+
+## Evidence boundaries
+
+Primary human endothelial ligand-selective experiments are distinguished from Ba/F3 human-receptor-ECD/mouse-EpoR chimeras ([PMID:11532940](https://pubmed.ncbi.nlm.nih.gov/11532940/)). EGFR-ECD/FLT4-tail chimeras stimulated with EGF support a tail-dependent JNK branch, with that engineered context explicit ([PMID:16076871](https://pubmed.ncbi.nlm.nih.gov/16076871/)). The tumor study separates human SAS-cell signaling and VEGF production from mouse xenograft vascular endpoints ([PMID:19779139](https://pubmed.ncbi.nlm.nih.gov/19779139/)).
+
+Independent peer review clarified the growth-assay scope in PMID:11532940: VEGF or VEGF-C was used for the proliferation/PCNA observations. VEGFR3-selective VEGF-C156S was used in separate signaling, survival and migration experiments. The two endothelial-proliferation decisions retain ACCEPT without describing a C156S proliferation assay or claiming that the PCNA experiment isolates FLT4 from VEGFR2.
+
+The two nuclear-location assertions remain UNDECIDED. The authentic [PMID:16452200](https://pubmed.ncbi.nlm.nih.gov/16452200/) abstract does not resolve the localization experiments, and bounded full-text retrieval failed. Membrane-receptor architecture is not a reason to declare the nuclear annotation false. Human surface/internalized localization in [PMID:20445537](https://pubmed.ncbi.nlm.nih.gov/20445537/) was inspected in selected indexed original Methods/Results/captions; separate mouse experiments, unseen figures and supplements are not silently counted as human evidence.
+
+The receptor-complex annotation citing [PMID:23382219](https://pubmed.ncbi.nlm.nih.gov/23382219/) is retained from independently demonstrated human ligand-induced receptor assembly and the on-target IBD. The cited paper's receptor-tail peptide arrays do not demonstrate a native FLT4–SNX trafficking complex, and its detailed cellular validations concern other receptors. The source-specific limitation remains visible in the annotation rationale.
+
+The mixed-species [Reactome R-NUL-9604519](https://reactome.org/content/detail/R-NUL-9604519) event has a human FLT4 promoter and mouse NICD4 input. Its nucleoplasmic entity is DNA; its protein output is membrane FLT4. It supports the recorded protein location, not nuclear receptor localization or a transcriptional role for the receptor.
+
+## Phylogeny and preservation
+
+The actual 2746-node family tree and 2746-sequence alignment reproduce the exact displayed 1363-aa target. All ten incoming IBA origins join positive original IBD records on that target path. Self-donation is legitimate descendant evidence, and donor count is not used as a quality proxy. Node taxonomic ranges are reported as such when an explicit species field is absent.
+
+All 159 existing PTHR24416 PAINT rows match the original IBD GAF. The current API projection contains 135 of them; the remaining 24 valid original rows are preserved unchanged. The API projection is not a replacement cache. No family-node metadata or off-path function produces a new annotation. Nine normal sources were reused byte-for-byte from the approved main commit before genuine fetching; the other 23 sources were absent and unowned at the complete stable PR-ownership check.
+
+## Validation and unresolved questions
+
+The curation history, source-context conservation, normal-source conservation, status calculation, schema/reference/GO checks and private rendering are checked in the accompanying candidate packet. The renderer is a review aid; it does not add a public generated page to this payload. The final status is determined by the ordinary checker, with the campaign binding advisories and unresolved nuclear evidence disclosed.
+
+Priority follow-up questions are endogenous nuclear localization, natural-product-specific function of the 830-aa splice form, and long-versus-short C-terminal signaling differences. None is filled by inventing a new GO assertion or transferring engineered-construct behavior to every natural product.
+
+### Validation disposition
+
+The ordinary checker computes DRAFT. The full validation reports 13 disclosed advisories: nine generic-binding policy advisories and four source-context action differences. Lymphangiogenesis is central in endothelial/donor evidence but contextual in the tumor-cell paracrine experiment; general proliferation, cellular VEGF response and MAPK regulation retain carcinoma-specific results alongside narrower endothelial/pathway annotations. These distinctions follow actual experimental contexts, not preference for an evidence code. The growth-factor-binding IBA refinement includes structured metadata identifying a sound ancestral transfer and a target-specific term-granularity improvement. The default validator is unchanged.
