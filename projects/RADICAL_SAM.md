@@ -192,7 +192,7 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 ## Phase 3: consistency pass over existing reviews
 
 Done 2026-10-28, over the 17 radical SAM reviews that existed before this
-project. **43 rows re-actioned, 10 `NEW` SAM-binding rows added, 29
+project. **44 rows re-actioned, 10 `NEW` SAM-binding rows added, 29
 core-function entries added and one core molecular function withdrawn**, across
 17 files. The POPTR trio was the only group already conformant on its actions;
 it still gained the SAM row and the cofactor core functions, like the rest.
@@ -214,7 +214,7 @@ it still gained the SAM row and the cofactor core functions, like the rest.
 Every conflict listed when the rule was adopted resolved in the direction the
 rule names, and almost all in the same direction: **a true row had been marked
 false, or a core cofactor had been filed as peripheral.** Not one needed the rule
-bent. The 43 transitions, as computed from the diff:
+bent. The 44 transitions, as computed from the diff:
 
 | Term | From | To | n | Genes |
 |---|---|---|--:|---|
@@ -233,6 +233,7 @@ bent. The 43 transitions, as computed from the diff:
 | `GO:0005506` | MARK_AS_OVER_ANNOTATED | MODIFY | 1 | PSEPK/bioB |
 | `GO:0051539` | KEEP_AS_NON_CORE | ACCEPT | 4 | PSEPK/hemN, PSEPK/lipA, PSEPK/moaA, STAWA/cfr |
 | `GO:0051539` | ACCEPT | KEEP_AS_NON_CORE | 1 | SACEN/eryCV |
+| `GO:0033068` | ACCEPT | KEEP_AS_NON_CORE | 1 | SACEN/eryCV |
 | `GO:1904047` | KEEP_AS_NON_CORE | ACCEPT | 1 | PSEPK/moaA |
 | `GO:0051537` | KEEP_AS_NON_CORE | ACCEPT | 1 | PSEPK/bioB |
 | `GO:0016783` | ACCEPT | MODIFY | 1 | BACSU/lipA |
@@ -277,14 +278,22 @@ Two changes went beyond flipping an action, and one convention was settled along
   from Pfam and NCBIfam signatures rather than measured. Asserting cluster
   binding as *the* core function of such a protein overstates what is known; the
   project's other uncharacterised members (PSEPK/PP_1969, PSEPK/PP_2482, TYW1B,
-  aslB, ydeM) assert none, and eryCV now matches them. Its `GO:0051539` row
-  moves the other way from the four above, to `KEEP_AS_NON_CORE`. The entry's
-  `directly_involved_in: GO:1901115` erythromycin biosynthetic process went with
-  it, for the same reason one field up: the reviewed record has no `CC:PATHWAY`
+  aslB, ydeM) assert none, and eryCV now matches them. Two of its rows move the
+  other way from the four above, to `KEEP_AS_NON_CORE`: `GO:0051539`, and
+  `GO:0033068` macrolide biosynthetic process, which cannot be the core function
+  of a review that asserts none. The entry's
+  `directly_involved_in: GO:1901115` erythromycin biosynthetic process went too,
+  for the same reason one field up: the reviewed record has no `CC:PATHWAY`
   line and no erythromycin keyword, so the only thing placing this protein in the
   pathway is the submitter gene name `eryCV` — the annotation this review
   discounts when it declines to name a molecular function. A review cannot
-  discount a source in one field and lean on it in the next.
+  discount a source in one field and lean on it in the next. `GO:0033068` itself
+  survives on different evidence: the GOA row's `WITH/FROM` names
+  `InterPro:IPR016863`, so the DesII family signature it quotes is the one the
+  InterPro2GO mapping fired on, which places the protein in macrolide deoxysugar
+  biosynthesis without the gene name. The genus follows from the family; the
+  erythromycin-specific child would need the cluster's identity, which only that
+  gene name supplies.
 - **10 `NEW` `GO:1904047` rows.** Phase 4's headline finding is that GOA is
   missing SAM binding for 18 of the 20 members with established catalysis; the
   pre-existing reviews were missing it too. Coded `IC`, grounded in each entry's
