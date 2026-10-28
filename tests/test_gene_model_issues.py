@@ -2,13 +2,14 @@
 
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from ai_gene_review.validation.gene_model_issues import validate_gene_model_issues
 from ai_gene_review.validation.validation_report import ValidationReport
 
-ISSUE = {
+ISSUE: dict[str, Any] = {
     "issue_type": "FUSED_GENE_MODEL",
     "status": "CONFIRMED",
     "description": "Two neighbouring genes joined into one model.",
@@ -24,7 +25,7 @@ ISSUE = {
 }
 
 
-def check(issue: dict) -> list[str]:
+def check(issue: dict[str, Any]) -> list[str | None]:
     report = ValidationReport(file_path=Path("t.yaml"), is_valid=True)
     validate_gene_model_issues({"gene_model_issues": [issue]}, report)
     return [i.check_type for i in report.issues]
