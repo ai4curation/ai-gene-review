@@ -88,6 +88,7 @@ genes:
   - fleN
   - pvdE
   - pqsH
+  - PA5458
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -1141,6 +1142,14 @@ protein is the sole seed.
   (EcfA/CbiO, ModF, FtsE, plant ABCI). A transporter activity seeded from a
   fused TMD-NBD exporter does not fit a node made mostly of NBD-only proteins:
   the term belongs on the PvdE/SyrD clade, or as `contributes_to`.
+- **PA5458 (PSEAE)**, an O-antigen-modifying acyltransferase (PMID:23341552),
+  sole seed of two process IBDs. `GO:0009103` LPS biosynthetic process on
+  **PTN000546841** reaches 31 leaves, 15 in organisms with no LPS (the
+  peptidoglycan O-acetyltransferase OatA of *S. aureus* and *Listeria*,
+  mycobacteria, *Streptomyces*); `GO:0000271` polysaccharide biosynthetic
+  process on **PTN000546715** reaches 113 leaves, 109 of them nematode and
+  oomycete proteins. The seed is fine; the nodes carry a lineage-specific
+  process past the lineage (compare pattern 14).
 - **pqsH (PSEAE, PA2587)**, `GO:0004497` monooxygenase activity on
   **PTN008173107** (sole seed, 297 leaf IBAs). The seed is sound (purified
   enzyme, PMID:20662781) and the generic term suits the node, which is the
@@ -1465,6 +1474,7 @@ and a representative seed) in the corresponding
 | lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
 | fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
 | pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |
+| PA5458 | PSEAE | Seed sound; LPS (PTN000546841) and polysaccharide (PTN000546715) biosynthesis IBDs reach non-LPS bacteria and eukaryotes | MEDIUM | COMPLETE |
 | pqsH | PSEAE | Seed sound; one bacterial seed carries ~294 plant monooxygenase IBAs across an HGT node (PTN008173107) | LOW | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate

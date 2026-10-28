@@ -117,14 +117,16 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 2 | pqsH | PA2587 | monooxygenase activity (PTN008173107) | 297 | SOUND, under-specific (should be GO:0102164 HHQ monooxygenase) | Sound at family root; ~294 plant leaves rest on this one bacterial seed | P |
 | 3 | lap | PA2939 | proteolysis (PTN000254534) | 272 | SOUND (purified enzyme) | Sound | none on seed; 2 P on T2SS/Sec cargo rows |
 | 4 | fleN | PA1454 | ATP binding (PTN000344128) | 149 | WRONG evidence code: IDA for a sequence motif | Term true (later structures), needs a real seed | P, G |
+| 5 | PA5458 | PA5458 | lipopolysaccharide biosynthetic process (PTN000546841); polysaccharide biosynthetic process (PTN000546715) | 31 + 113 | SOUND but general (O-antigen modification; one row IDA without an assay) | Both wrong for clade: 15/31 leaves in non-LPS organisms (OatA peptidoglycan O-acetyltransferases); 109/113 leaves eukaryotic | P, G (x2) |
 | 6 | ccmC | PA1477 | catalase activity (PTN001247822) | 143 | INDIRECT-PHENOTYPE, and cites an *E. coli* paper | Unsupported: drop catalase from the node | P (x7), G |
 | 7 | pvdE | PA2397 | ATPase-coupled transmembrane transporter activity (PTN000656738) | 140 | SOUND | Node too deep: 126 of 140 leaves are NBD-only proteins | G (planned) |
+| 8 | PA1024 | PA1024 | oxidoreductase activity (PTN002844975) | 122 | SOUND (purified enzyme) | Sound; generic term right for a clade with one characterised member | none on seed; InterPro2GO NMO mapping removed |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 2 (in progress): PA5458, PA1024, hutI, hutH, phzS, phzM, pilB, pilU.
+Batch 2 (in progress): hutI, hutH, phzS, phzM, pilB, pilU.
 Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, xcpX, PA0692,
 PA3891, PA5377.
 
@@ -141,9 +143,12 @@ PA3891, PA5377.
   PMID is a different paper from the one the phenotypes come from.
 - **Cargo annotated as machinery** (lap): a secreted enzyme given secretion
   system process terms.
-- **Sound seeds on nodes that are too broad** (pvdE, pqsH): the PseudoCAP row is
-  right, but the node carries the term to proteins that are a different kind of
-  thing, or rests a large clade on a single seed.
+- **Sound seeds on nodes that are too broad** (pvdE, pqsH, PA5458): the
+  PseudoCAP row is right, but the node carries the term to proteins that are a
+  different kind of thing (soluble ATPase subunits given a transmembrane
+  transporter activity), to lineages without the process (LPS biosynthesis on
+  Gram-positive peptidoglycan O-acetyltransferases), or rests a large clade on a
+  single seed.
 
 These are catalogued for PAINT as pattern 16 of [IBA_REVIEW](IBA_REVIEW.md).
 
