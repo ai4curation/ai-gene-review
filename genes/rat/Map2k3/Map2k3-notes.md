@@ -25,7 +25,7 @@
   MODIFY -> GO:0038066. GO:0031098 SAPK cascade is not an ancestor of GO:0038066 (OAK), so it
   is accepted as its own correct grouping.
 - positive regulation of MAPK cascade rows: MKK3 is a member of the cascade, not a regulator;
-  MODIFY -> GO:0038066 and source_defects recorded.
+  MODIFY -> GO:0038066 and source_defects recorded. [Corrected 2026-10-28: superseded; these rows now MODIFY -> GO:1900745 and the source_defects are withdrawn, see the dated section below.]
 - Comparator check for NEW: none of the process terms proposed; only one NEW MF row.
 - No CC rows in GOA; no rat localization data, so no NEW CC row (human evidence is TAS only).
 
