@@ -19,7 +19,7 @@
 - NEW: GO:0008511 (IDA-equivalent evidence: oocyte flux, PMID:8021284; PMID:16291577) and
   GO:0070294 renal sodium ion absorption. NKCC2 performs the apical Na+ entry step of TAL NaCl
   reabsorption itself (it is the transporter, not a substrate), and comparators in the same role
-  (SLC12A3/NCC, CLCNKB, and the Swiss-Prot rat entry P55016 itself) carry this term. [Corrected 2026-10-28: ENaC was wrongly listed here; see dated note below.]
+  (SLC12A3/NCC, CLCNKB, and the Swiss-Prot rat entry P55016 itself) carry this term. [Corrected 2026-10-28: CLCNKB, a basolateral Cl- exit channel, is not in the same role; it also carries the term but is not a comparator.] [Corrected 2026-10-28: ENaC was wrongly listed here; see dated note below.]
 - Did not add regulatory / phenotype process terms (urine concentration, blood pressure) - these
   rest on knockout/disease phenotypes rather than a specific step NKCC2 performs at the level of
   those processes beyond NaCl uptake.

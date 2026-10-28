@@ -18,7 +18,7 @@
 
 ## 2026-10-28 review-fix pass
 
-- The second core function (spine targeting of ASIC1a through PSD-95) now uses GO:0030165 PDZ domain binding as molecular_function in place of GO:0160125 pH-gated sodium channel activity, since the conductance does not do the targeting. Support is quoted from PMID:19571134 (mouse ASIC2a binds PSD-95 through its C-terminal PDZ-binding motif). Added a matching NEW IC row for GO:0030165. Rat ASIC2a (Q62962-1) ends in the same Ile-Ala-Cys motif.
+- The second core function (spine targeting of ASIC1a through PSD-95) now uses GO:0030165 PDZ domain binding as molecular_function in place of GO:0160125 pH-gated sodium channel activity, since the conductance does not do the targeting. Support is quoted from PMID:19571134 (mouse ASIC2a binds PSD-95 through its C-terminal PDZ-binding motif). Added a matching NEW IC row for GO:0030165. [Corrected 2026-10-28: the row is ISS from mouse UniProtKB:Q925H0, not IC; see the dated note below.] Rat ASIC2a (Q62962-1) ends in the same Ile-Ala-Cys motif.
 - Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.
 
 ## 2026-10-28: PDZ-binding row evidence code
