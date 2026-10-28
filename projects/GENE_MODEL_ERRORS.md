@@ -72,7 +72,7 @@ differs from the cases here, which is part of the case for a controlled
 field.
 
 **Scope.** Entries that UniProt itself marks as fragments (`DE   Flags:
-Fragment`, with `NON_TER` features; 23 reviewed entries, including
+Fragment`, with `NON_TER` features; for example
 <gene species="9AVES" symbol="TAS1R1">9AVES/TAS1R1</gene>, <gene species="9AVES" symbol="TAS1R3">9AVES/TAS1R3</gene> and <gene species="MONBE" symbol="MONBRDRAFT_1233">MONBE/MONBRDRAFT_1233</gene>) were deliberately not
 back-filled. UniProt already records that their sequence is incomplete, in a
 machine-readable form; `gene_model_issues` is for problems the source record

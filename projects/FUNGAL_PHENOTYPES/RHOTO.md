@@ -16,7 +16,8 @@ polyols (9), fatty acids and acetate (5), lactate (3), galactose (1) and
 cellobiose (1). The method
 recovers expected enzymes, such as galactokinase on galactose and
 branched-chain keto acid dehydrogenase on leucine and valine. Of the 137
-strong genes, 30 have no GO annotation in UniProt, and 11 map to current
+strong genes, 26 map to a UniProt entry with no GO annotation (5 more have no
+current entry at all), and 11 map to current
 entries that are fused gene models, two or more neighbouring genes joined
 into one protein and often named after the wrong part: a
 3-methylcrotonyl-CoA carboxylase entry is called "Nup85" and an intradiol
@@ -155,8 +156,10 @@ entries carrying strong candidates (column `current_entry_fused` in
 - **A0A0K3CA73** ("2-oxoisovalerate dehydrogenase subunit α", RTO4_12566,
   leucine −6.4) is the E1α fused to a neighbouring amino acid transporter
   (RTO4_12567, leucine −0.3).
-- **30 of the 137 strong genes have no GO annotation**, mostly in the aromatic
-  module (25 of 96).
+- **26 of the 137 strong genes map to an entry with no GO annotation**, mostly
+  in the aromatic module (22 of 96). Another 5 (4 aromatic) have no current
+  UniProt entry to check; their `n_go_terms` is left blank in
+  `data/rhoto_candidates.tsv`.
 
 ## Caveats
 

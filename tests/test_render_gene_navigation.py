@@ -147,3 +147,18 @@ def test_gene_model_issues_section_renders_all_fields() -> None:
     ]
     assert '"tiled by two genes"' in text
     assert "file:TEST/TEST/RESULTS.md" in text
+
+
+def test_gene_model_issue_source_without_quote_renders_no_empty_quotes() -> None:
+    """A supported_by entry with only a reference shows the reference, not ``""``."""
+    issue = {
+        **GENE_MODEL_ISSUE,
+        "supported_by": [{"reference_id": "file:TEST/TEST/RESULTS.md"}],
+    }
+    data = enrich_gene_data({"gene_symbol": "TEST", "gene_model_issues": [issue]})
+    soup = BeautifulSoup(render_html(data, TEMPLATE), "html.parser")
+    section = soup.select_one("#review-gene-model")
+    assert section is not None
+    quotes = section.select("ul")[1].select("li")
+    assert [li.get_text(" ", strip=True) for li in quotes] == ["file:TEST/TEST/RESULTS.md"]
+    assert '""' not in section.get_text()

@@ -64,7 +64,7 @@ def module_of(defects: dict[str, float]) -> str:
     return "other"
 
 
-def uniprot_info(accs: list[str]) -> dict[str, tuple[str, str, int]]:
+def uniprot_info(accs: list[str]) -> dict[str, tuple[str, str, int | str]]:
     info = {}
     for i in range(0, len(accs), 100):
         batch = accs[i : i + 100]
@@ -119,7 +119,9 @@ def main() -> None:
         for r, d in keep:
             rr = res.get(r["uniprot_2023"], unresolved)
             acc = rr["replacement"] if rr["call"] != "weak" else ""
-            name, score, ngo = info.get(acc, ("", "", 0))
+            # No current entry: leave the GO count blank, not 0, so "has no GO
+            # annotation" is not confused with "has nothing in UniProt to check".
+            name, score, ngo = info.get(acc, ("", "", "")) if acc else ("", "", "")
             mod = module_of(d)
             counts[mod] += 1
             rows.append(

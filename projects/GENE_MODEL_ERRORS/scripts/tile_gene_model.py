@@ -35,6 +35,7 @@ import csv
 import json
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -55,10 +56,14 @@ def get(url: str, retries: int = 4) -> str:
         try:
             with urllib.request.urlopen(url, timeout=900) as r:
                 return r.read().decode()
+        except urllib.error.HTTPError as err:
+            # A client error (e.g. 404) will not change on retry.
+            if err.code < 500 or attempt == retries:
+                raise
         except OSError:
             if attempt == retries:
                 raise
-            time.sleep(2 ** (attempt + 1))
+        time.sleep(2 ** (attempt + 1))
     raise AssertionError("unreachable")
 
 
@@ -82,8 +87,14 @@ def member_accessions(upis: list[str]) -> dict[str, str]:
 
 
 def domains(acc: str) -> list[tuple[str, str, int, int]]:
-    # InterPro answers 204 (empty body) for a protein with no entries.
-    body = get(INTERPRO.format(acc))
+    # InterPro answers 204 (empty body) for a protein with no entries, and 404
+    # for an accession it does not hold; neither has domains to report.
+    try:
+        body = get(INTERPRO.format(acc))
+    except urllib.error.HTTPError as err:
+        if err.code != 404:
+            raise
+        return []
     data = json.loads(body) if body.strip() else {}
     out = []
     for r in data.get("results", []):
