@@ -21,3 +21,13 @@
   - No NEW terms: meiotic crossover (PMID:20530576) and TORC1 postembryonic growth
     (PMID:23705068) evidence is mutant phenotype only; the work is done by MSH-4/5 and TORC1.
   - Conflict: PMID:30282029 (P bodies) vs PMID:25061667 (SG, not PBs) - suggested question.
+
+## 2026-10-28 correction (PR #5672 review)
+
+The two positive regulation of translation (GO:0045727, IMP) rows are now ACCEPT, not MODIFY to
+translational initiation, and their WRONG_TERM source defects are withdrawn. PMID:20530576 (full text)
+shows IFE-2 is needed for the temperature-dependent polysome shift of msh-4/him-14, msh-5 and spo-11
+mRNAs and the matching rise in MSH-5 protein at 25 C, while gpd-3 and zhp-3 mRNAs do not shift
+[PMID:20530576 "These results indicate that efficient translation of spo-11, msh-4/him-14, msh-5 and zhp-3 mRNAs at 25°C depends on the presence of IFE-2."].
+That mRNA-selective upregulation is what GO:0045727 describes, so the claim holds even though the two
+rows' own papers report only reduced bulk synthesis. GO:0045727 is added to the third core function.
