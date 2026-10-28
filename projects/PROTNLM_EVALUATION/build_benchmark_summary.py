@@ -6,7 +6,8 @@ Gene files are read at the declared benchmark ``review_snapshot_commit``, not fr
 the working tree, so ordinary curation cannot stale the report. The curator-edited
 config (cohort scope, narrative index) is read from ``config`` -- the working tree
 in production -- so editing it takes effect, and an index hash that no longer
-matches the snapshot review fails loudly. Refresh with ``just refresh-benchmark-snapshot``.
+matches the snapshot review fails loudly. The snapshot is declared in ``review-snapshot.yaml``
+next to this script, independently of the BioReason benchmark; refresh with ``just refresh-protnlm-snapshot``.
 Run from any directory with ``uv run python path/to/build_benchmark_summary.py``.
 """
 
@@ -23,6 +24,7 @@ from ai_gene_review.source_tree import (
     ReviewSnapshot,
     SourceTree,
     WorkingTree,
+    PROTNLM_SNAPSHOT,
     declared_review_snapshot,
     review_snapshot_tree,
 )
@@ -404,8 +406,8 @@ def write_report(root: Path, data: dict[str, Any], snapshot: ReviewSnapshot) -> 
 
 if __name__ == "__main__":
     repository = Path(__file__).resolve().parents[2]
-    result = collect(review_snapshot_tree(repository), WorkingTree(repository))
-    write_report(repository, result, declared_review_snapshot(repository))
+    result = collect(review_snapshot_tree(repository, PROTNLM_SNAPSHOT), WorkingTree(repository))
+    write_report(repository, result, declared_review_snapshot(repository, PROTNLM_SNAPSHOT))
     print(
         json.dumps(
             {

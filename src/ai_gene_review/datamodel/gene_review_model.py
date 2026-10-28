@@ -190,6 +190,10 @@ class SourceDefectTypeEnum(str, Enum):
     """
     A GO-CAM causal edge has the wrong relation or direction.
     """
+    MISSING_ISOFORM = "MISSING_ISOFORM"
+    """
+    An isoform established in the literature is not among the isoforms of the reviewed UniProt entry. asserted_value is the entry (UniProtKB:Q96PV0); corrected_value names a sequence that carries the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
+    """
     OTHER = "OTHER"
     """
     Any other source-record defect; describe it in the explanation.
@@ -297,6 +301,10 @@ class SourceDefectRequestedChangeEnum(str, Enum):
     DELETE_ROW = "DELETE_ROW"
     """
     Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+    """
+    ADD = "ADD"
+    """
+    Add something the record lacks, e.g. a missing isoform; corrected_value names what should be added.
     """
     CHECK = "CHECK"
     """
@@ -1605,6 +1613,14 @@ class FunctionalIsoformMappingTypeEnum(str, Enum):
     """
     UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)
     """
+    REFSEQ_PROTEIN = "REFSEQ_PROTEIN"
+    """
+    Versioned RefSeq protein accession (e.g., NP_001123538.1). Use when the isoform is not among the reviewed UniProt entry's isoforms.
+    """
+    UNIPROTKB_UNREVIEWED = "UNIPROTKB_UNREVIEWED"
+    """
+    Unreviewed UniProtKB (TrEMBL) accession carrying the isoform's sequence (e.g., B7ZCA0). Use when the reviewed entry lacks the isoform.
+    """
 
 
 class PredictedTermTypeEnum(str, Enum):
@@ -2568,6 +2584,7 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'RuleReview',
                        'PredictionReview']} })
     isoform_specific_terms: Optional[list[Term]] = Field(default=None, description="""GO terms that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Using Term objects enables linkml-term-validator checking.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in UniProt's (or another source's) record of this isoform, for example an isoform established in the literature that the reviewed UniProt entry does not list (defect_type MISSING_ISOFORM). See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
 
 
 class FunctionalIsoformMapping(ConfiguredBaseModel):
@@ -2576,11 +2593,11 @@ class FunctionalIsoformMapping(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    type: FunctionalIsoformMappingTypeEnum = Field(default=..., description="""Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+    type: FunctionalIsoformMappingTypeEnum = Field(default=..., description="""Type of identifier (UNIPROT_ISOFORM, UNIPROT_CHAIN, REFSEQ_PROTEIN or UNIPROTKB_UNREVIEWED)""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'FunctionalIsoform',
                        'FunctionalIsoformMapping',
                        'RuleReviewEntry']} })
-    ids: list[str] = Field(default=..., description="""UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoformMapping']} })
+    ids: list[str] = Field(default=..., description="""UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc. For REFSEQ_PROTEIN: NP_001123538.1 (versioned RefSeq protein). For UNIPROTKB_UNREVIEWED: B7ZCA0 (a TrEMBL accession).""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoformMapping']} })
     residues: Optional[str] = Field(default=None, description="""Residue range for cleavage products (e.g., \"138-176\" for ACTH). Only applicable for UNIPROT_CHAIN type.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoformMapping']} })
 
 
@@ -2764,6 +2781,7 @@ class Finding(ConfiguredBaseModel):
     reference_section_type: Optional[ManuscriptSection] = Field(default=None, description="""Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference'], 'recommended': True} })
     record_section: Optional[list[str]] = Field(default=None, description="""For a quote from a database record (currently a cached UniProt record: a flat file, `file:...-uniprot.txt`, or a UniSave snapshot, `file:...-record-evidence.yaml`), the section(s) of the record the quote comes from, as the line code followed, where the line code has one, by its topic: the comment topic for `CC` (e.g. `CC:CAUTION`, `CC:FUNCTION`, `CC:SUBCELLULAR LOCATION`), the feature key for `FT` (e.g. `FT:BINDING`), the database for `DR` (e.g. `DR:Pfam`), and `REF` for a citation block. Plain line codes are used otherwise (e.g. `DE`, `KW`). A quote whose `...`-separated parts come from different sections lists each once, in order. A quote whose text occurs in several sections (a short phrase found in both a keyword and a comment) has no established section and is left without a value. This is the database-record counterpart of `reference_section_type`, which describes manuscript sections. The value is derived from the cited file, so fill it with `just backfill-record-sections` rather than by hand; validation warns when a stated value disagrees with the cited file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding', 'SupportingTextInReference']} })
     finding_review: Optional[FindingReview] = Field(default=None, description="""Manual reviewer assessment of this specific finding - in particular whether the finding remains current, is disputed, or has been overturned/superseded by later evidence. Reviewer-supplied; distinct from the statement/supporting_text that describe the finding itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding']} })
+    residue_mappings: Optional[list[ResidueMapping]] = Field(default=None, description="""Residues that this finding names by number, each given in the numbering the source used and, when that is not the displayed UniProt sequence, also in the displayed sequence. Papers often number residues on an isoform other than the one UniProt displays, so the same residue can appear under two numbers (RASAL2 Ser351 in isoform 2 is Ser203 in the displayed isoform). Both sides are checked against the real sequences.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding']} })
 
     @field_validator('record_section')
     def pattern_record_section(cls, v):
@@ -2878,6 +2896,8 @@ class EvidenceItem(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -2946,6 +2966,8 @@ class Descriptor(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3014,6 +3036,8 @@ class ChemicalEntityDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3082,6 +3106,8 @@ class GeneDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3150,6 +3176,8 @@ class GeneProductDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3221,6 +3249,8 @@ class FamilyDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3289,6 +3319,8 @@ class AncestralNodeDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3357,6 +3389,8 @@ class DomainDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3425,6 +3459,8 @@ class CellularComponentDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3494,6 +3530,8 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3568,6 +3606,8 @@ class ComplexUnit(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3636,6 +3676,8 @@ class CellTypeDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3704,6 +3746,8 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3772,6 +3816,8 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3840,6 +3886,8 @@ class TaxonDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3915,6 +3963,8 @@ class MolecularFunctionDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -3988,6 +4038,8 @@ class BiologicalProcessDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4056,6 +4108,8 @@ class RelationDescriptor(Descriptor):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4139,7 +4193,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'RuleReview',
                        'PredictionReview']} })
     scope: Optional[ModuleScopeEnum] = Field(default=None, description="""Whether this module is a concrete biological realization or an abstract reusable motif/template. ABSTRACT modules are intentionally gene-free and are not expected to declare representative protein members for every leaf node.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview']} })
-    module: ModuleNode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview']} })
+    module: ModuleNode = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview', 'ModuleAssociation']} })
     executable_models: Optional[list[ExecutableModel]] = Field(default=None, description="""Executable models (Boolean, kinetic, constraint-based, agent-based) that realize this module, either derived from its own `connections` or associated external models. List a model only once its behaviour has been checked: each entry carries the scenarios it was run under and what the module predicts in each, so the expectation is a regression test on the curated wiring.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
                        'AlternativeRecord',
@@ -4168,6 +4222,8 @@ class ModuleReview(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4187,7 +4243,7 @@ class LogicExpression(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    element: Optional[str] = Field(default=None, description="""Id of a module node or annoton (a regulator of the element that owns this expression).""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting']} })
+    element: Optional[str] = Field(default=None, description="""Id of a module node or annoton (a regulator of the element that owns this expression).""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting', 'ModuleAssociation']} })
     all_of: Optional[list[LogicExpression]] = Field(default=None, description="""Conjunction (AND) of the sub-expressions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression']} })
     any_of: Optional[list[LogicExpression]] = Field(default=None, description="""Disjunction (OR) of the sub-expressions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression']} })
     none_of: Optional[list[LogicExpression]] = Field(default=None, description="""Negated disjunction (NOT (a OR b ...)) of the sub-expressions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression']} })
@@ -4272,6 +4328,8 @@ class ExecutableModel(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4367,7 +4425,7 @@ class ScenarioSetting(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    element: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting']} })
+    element: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting', 'ModuleAssociation']} })
     active: bool = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ScenarioSetting']} })
 
 
@@ -4447,7 +4505,7 @@ class ModuleNode(ConfiguredBaseModel):
     module_ref: Optional[str] = Field(default=None, description="""Reference to another module that realizes this node, as the stem of a module file in the same directory as the referencing module, with an optional node id after a hash (e.g. \"mitophagy\" or \"mitophagy#atg8_capture\"). This is the same form, resolved the same way, as a conformance template. Unlike conforms_to (instance-of a motif), module_ref is inclusion: the node is a stand-in for the referenced module, so umbrella modules (e.g. organelle lifecycles) can compose existing modules without copying their annotons. A referencing node carries no annotons, parts or variant_sets of its own; it may carry label, description, concepts, context and evidence. For satisfiability the node is satisfied exactly when the referenced module or node is satisfied; mark the enclosing part optional when the referenced module is not required (e.g. a function that some lineages lack). References must resolve and must not form cycles.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Every regulator must be used unless it is listed under `omitted_regulators`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     omitted_regulators: Optional[list[str]] = Field(default=None, description="""Elements with a signed connection into this element that its `activation_logic` deliberately leaves out, typically a modulator that tunes an already-active step rather than switching it on or off, which a Boolean rule cannot express. Listing an omission makes it a stated claim; an unused regulator that is not listed is a validation error. Only meaningful alongside `activation_logic`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
-    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM models (or specific activities) that realize this module node as a whole.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
+    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM models (or specific activities) that realize this module node as a whole.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton', 'Decomposition']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
                        'AlternativeRecord',
                        'Descriptor',
@@ -4475,6 +4533,8 @@ class ModuleNode(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4516,6 +4576,8 @@ class Conformance(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4566,6 +4628,8 @@ class ModulePart(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4639,6 +4703,8 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4689,7 +4755,7 @@ class ModuleAnnoton(ConfiguredBaseModel):
     role_description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleAnnoton']} })
     activation_logic: Optional[LogicExpression] = Field(default=None, description="""Declarative Boolean logic stating when this element is active, as a function of the elements that regulate it through `connections`. Omit it to use the default (active when any activating regulator is active and no inhibiting regulator is; the CaSQ convention). State it only where that default is wrong, e.g. a step that needs ALL of several inputs, or an activator that overrides an inhibitor. Every element named must be the source of a signed connection into this element: an activating connection in a positive position, an inhibiting one inside `none_of`. Every regulator must be used unless it is listed under `omitted_regulators`. Read by the Boolean translator (`ai-gene-review module-to-bnet`), which exports it as the update rule.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
     omitted_regulators: Optional[list[str]] = Field(default=None, description="""Elements with a signed connection into this element that its `activation_logic` deliberately leaves out, typically a modulator that tunes an already-active step rather than switching it on or off, which a Boolean rule cannot express. Listing an omission makes it a stated claim; an unused regulator that is not listed is a validation error. Only meaningful alongside `activation_logic`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
-    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM model activities (annotons) that realize this module annoton. Used to ground an abstract/non-grounded module role in concrete curated causal activity models.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton']} })
+    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""References to production GO-CAM model activities (annotons) that realize this module annoton. Used to ground an abstract/non-grounded module role in concrete curated causal activity models.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton', 'Decomposition']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
                        'AlternativeRecord',
                        'Descriptor',
@@ -4717,6 +4783,8 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4791,6 +4859,78 @@ class GoCamAssociation(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
+                       'GoCamReview',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'RuleConditionSet',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment']} })
+
+
+class Decomposition(ConfiguredBaseModel):
+    """
+    Where the context of a decomposed precomposed term (\"X involved in Y\") is represented after a MODIFY to the genus X. At least one slot should be filled. Validation checks that modules and elements resolve under modules/ and that GO-CAM models are cached under gocams/.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    gocam_associations: Optional[list[GoCamAssociation]] = Field(default=None, description="""Production GO-CAM activities (of this gene or a named ortholog) whose process context realizes Y.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleAnnoton', 'Decomposition']} })
+    module_associations: Optional[list[ModuleAssociation]] = Field(default=None, description="""Module elements in which this gene's role in Y is modelled.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Decomposition']} })
+    in_core_functions: Optional[bool] = Field(default=None, description="""True when Y is recorded in this review's core_functions (as directly_involved_in of the core function whose activity is X, or that X is part of).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Decomposition']} })
+    context_dropped: Optional[bool] = Field(default=None, description="""True when Y is deliberately not carried forward: either the context was itself the over-annotation (the gene does X, but not as part of Y), or it is peripheral context (typically a propagated developmental phenotype) that does not warrant a model and is not a core function. The review reason or notes must say which.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Decomposition']} })
+    notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModuleNode',
+                       'Conformance',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
+                       'GoCamReview',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'RuleConditionSet',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment']} })
+
+
+class ModuleAssociation(ConfiguredBaseModel):
+    """
+    A reference from a gene review to an element of a module under modules/.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    module: str = Field(default=..., description="""Module file stem, i.e. modules/<module>.yaml.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleReview', 'ModuleAssociation']} })
+    element: Optional[str] = Field(default=None, description="""Optional id of a node, part or annoton within the module.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LogicExpression', 'ScenarioSetting', 'ModuleAssociation']} })
+    notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModuleNode',
+                       'Conformance',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4873,6 +5013,8 @@ class GoCamReview(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -4921,7 +5063,7 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4933,6 +5075,8 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5013,6 +5157,8 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5065,6 +5211,8 @@ class ModuleContext(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5138,6 +5286,8 @@ class ModuleConnection(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5195,6 +5345,7 @@ class Review(ConfiguredBaseModel):
     proposed_replacement_terms: Optional[list[Term]] = Field(default=None, description="""If the action is MODIFY, then this is a list of proposed replacement terms""", json_schema_extra = { "linkml_meta": {'comments': ['note there is a separate rule that this is required IF the '
                       'action is MODIFY'],
          'domain_of': ['Review']} })
+    decomposed_into: Optional[Decomposition] = Field(default=None, description="""For a MODIFY that decomposes a precomposed \"X involved in Y\" term to X, where the context Y is now represented: production GO-CAM activities, module elements, this review's core_functions, or a deliberate decision not to carry it. There is intentionally no annotation-extension form: X plus part_of(Y) restates the retired class, whereas GO asks for the context to be captured in a model. See projects/INVOLVED_IN_PRECOMPOSITION.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     additional_reference_ids: Optional[list[str]] = Field(default=None, description="""IDs of the references""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
@@ -5218,7 +5369,7 @@ class Review(ConfiguredBaseModel):
                        'CoreFunction']} })
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
 
 
 class ConsistencyException(ConfiguredBaseModel):
@@ -5304,6 +5455,17 @@ The validator compares this against the current record and, when they differ, sa
             err_msg = f"Invalid residue format: {v}"
             raise ValueError(err_msg)
         return v
+
+
+class ResidueMapping(ConfiguredBaseModel):
+    """
+    One residue named in a source, recorded in the sequence whose numbering the source used, and optionally the same residue in the displayed UniProt sequence of this gene. Each side is a ResiduePosition, so the validator can confirm both residues and that they are the same amino acid.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    as_reported: ResiduePosition = Field(default=..., description="""The residue as the source numbers it, in the sequence that numbering refers to, e.g. UniProtKB:Q9UJF2-2 (a UniProt isoform) or an unreviewed UniProtKB accession when the isoform is not in the reviewed entry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueMapping']} })
+    canonical: Optional[ResiduePosition] = Field(default=None, description="""The same residue in the displayed sequence of this review's entry (the review's own id). Omit when as_reported already is the displayed sequence, or when the residue has no counterpart there.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueMapping']} })
+    note: Optional[str] = Field(default=None, description="""How the mapping was established, or why canonical is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueMapping']} })
 
 
 class PropagationSource(ConfiguredBaseModel):
@@ -5631,6 +5793,8 @@ class RuleConditionSet(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5809,6 +5973,8 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5859,6 +6025,8 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5909,6 +6077,8 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -5959,6 +6129,8 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -6009,6 +6181,8 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'ModuleVariantSet',
                        'ModuleAnnoton',
                        'GoCamAssociation',
+                       'Decomposition',
+                       'ModuleAssociation',
                        'GoCamReview',
                        'GoCamActivityReview',
                        'ParticipantSelector',
@@ -6211,6 +6385,8 @@ ModulePart.model_rebuild()
 ModuleVariantSet.model_rebuild()
 ModuleAnnoton.model_rebuild()
 GoCamAssociation.model_rebuild()
+Decomposition.model_rebuild()
+ModuleAssociation.model_rebuild()
 GoCamReview.model_rebuild()
 GoCamActivityReview.model_rebuild()
 ParticipantSelector.model_rebuild()
@@ -6222,6 +6398,7 @@ ConsistencyException.model_rebuild()
 PropagationReview.model_rebuild()
 ResidueClaim.model_rebuild()
 ResiduePosition.model_rebuild()
+ResidueMapping.model_rebuild()
 PropagationSource.model_rebuild()
 CoreFunction.model_rebuild()
 AnnotationExtension.model_rebuild()

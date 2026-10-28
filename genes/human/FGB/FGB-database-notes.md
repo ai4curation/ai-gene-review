@@ -1,0 +1,27 @@
+# FGB database evidence notes
+
+The beta chain supplies structure to soluble fibrinogen and to the fibrin network formed after thrombin cleavage. Human plasma fibrinogen structures place beta-chain segments in the coiled coils and terminal domains; human-chain assembly experiments independently establish beta-containing intermediates and secreted complexes. Crystal packing is informative about possible contacts but is not a direct measurement of solution polymerization or clot mechanics. See PMID:19296670, Materials and Methods, Overall Structure and Crystal Packing, and PMID:8910396, chain-combination Results and Figures 1–5. The latter complete reference assessment is maintained with the direct-source review.
+
+## Chain identity and reaction roles
+
+The official 491-residue precursor has a signal peptide at 1–30, fibrinopeptide B at 31–44 and a chain feature at 45–491. These are processing features, not natural splice products. Every imported GO source assertion uses parent P02675; none identifies a PRO product. The [product map](FGB-database-product-evidence.yaml) records the literal features and Reactome entities without rewriting those source identities.
+
+The 44 Reactome sources contain five explicit beta-chain entities. Fibrinogen material at 31–491 appears in extracellular and platelet alpha-granule compartments. Fibrin-chain material at 45–491 appears in extracellular fibrin and surface-associated integrin complexes. Released fibrinopeptide B at 31–44 appears in the modeled TLR4 ligand set. Those coordinates make the source scope visible: the TLR4 model alone does not demonstrate isolated fibrinopeptide-B agonism, and an intracellular kinase event does not give kinase activity to its extracellular ligand. R-HSA-140840 separates substrate, released peptide and fibrin chain; R-HSA-140842 models structural polymer assembly. R-HSA-140851 and R-HSA-9921091 assign cross-linking catalysis to factor XIII, with beta retained in the fibrin complex.
+
+The beta chain's structural contribution is distinct from the alpha-C cofactor activity measured with isolated alpha-chain constructs. No beta enzyme-substrate adaptor activity is inferred by analogy. Whole fibrinogen can support receptor binding and platelet aggregation even where an isolated modified beta chain does not. The negative isolated-chain result in PMID:6281794 therefore limits an autonomous beta activity without negating its contribution to the intact complex.
+
+## Physical location versus a peripheral image
+
+The original donor paper PMID:15914557 was recovered beyond its abstract. Its Materials and Methods, Figure 1 and first Results section measure externally added fluorescent fibrinogen on mouse megakaryocytes. The supplier is identified but the ligand species is not. The measured cell periphery is therefore an external ligand-binding compartment; it is not the intracellular cell cortex defined by GO:0005938. Independent human platelet surface-labeling in PMID:6777381 supports external fibrin containing alpha, beta and gamma chains. The compartment correction retains both source boundaries and makes no membrane-insertion claim.
+
+The HPA release-25 record assigns enhanced ER localization in HepG2 cells with HPA001900 and HPA001901. Both selected images were viewed: reticular/perinuclear target staining is compatible with that assignment, with variable intensity among cells. This is a biosynthetic location rather than the main extracellular structural site. The inspected U2OS record has images but no equivalent positive location assignment. The selected composites do not resolve luminal topology or processing state.
+
+## Ortholog and phylogenetic evidence
+
+In PMID:17521427, rat RINm5F cells increase Fgb transcript following leptin and interleukin-1 exposure. Table 1, Northern-blot Results and Figures 1, 3 and 5 establish the expression response; receptor manipulations provide context. They do not establish FGB as a signaling effector, and equivalent human transcriptional control was not measured. These remain contextual response annotations.
+
+The exact Fgb supplementary identification in the mouse postsynaptic-density study PMID:16452087 was not recovered. Its accessible original Methods do not justify declaring the target absent or contaminated. Likewise, PMID:22014850 names beta-chain enrichment in rat microparticles, but the complete target table and preparation evidence remain inaccessible. These two source-specific location questions remain unresolved despite other positive extracellular or vesicle observations.
+
+The four literal PAINT IBD joins now have actual target ancestry and sequence proof. Version-19 PTHR19143 places human FGB leaf PTN002498958 beneath PTN000441162 and PTN002709771; the ungapped MSA sequence exactly matches all 491 canonical residues. The current accepted family files use PTHR47221 and different official labels. Those files remain unchanged, with persistent nodes providing the cross-version join. This establishes placement, not every descendant experiment or identical activity of all processed products. See the [phylogeny evidence](FGB-phylogeny-evidence.yaml).
+
+The [source guide](FGB-database-source-guide.md) and [source-keyed record](FGB-database-source-evidence.yaml) give precise locators. The genuine provider invocation did not produce a report. Sensitive traces were not decoded, and no provider output or failure cause has been invented.

@@ -101,6 +101,13 @@ def markdown_table(headers: list[str], rows: Iterable[Iterable[str | int]]) -> s
     return "\n".join(lines)
 
 
+def markdown_inline_code(value: Any) -> str:
+    text = str(value or "").replace("`", "\\`")
+    if not text:
+        return ""
+    return f"`{text}`"
+
+
 def source_reactome_id(value: Any) -> str | None:
     if isinstance(value, str) and value.startswith("Reactome:R-"):
         return value.split(":", 1)[1]
@@ -789,7 +796,7 @@ def write_alignment_report(
                 row["node_id"],
                 row["annoton_id"],
                 row["function_id"] or row["function_label"],
-                event.get("display_name", ""),
+                markdown_inline_code(event.get("display_name")),
             ]
         )
 
@@ -801,7 +808,7 @@ def write_alignment_report(
             events[gap["reactome_event"]].get("schema_class", ""),
             ", ".join(event_uniprots(events[gap["reactome_event"]]))
             or "no catalyst members",
-            events[gap["reactome_event"]].get("display_name", ""),
+            markdown_inline_code(events[gap["reactome_event"]].get("display_name")),
         ]
         for gap in alignment["reactome_only_events"]
     ]
@@ -849,7 +856,7 @@ def write_alignment_report(
             ", ".join(match["match_basis"]),
             match["module_node"],
             match["module_annoton"],
-            events[match["reactome_event"]].get("display_name", ""),
+            markdown_inline_code(events[match["reactome_event"]].get("display_name")),
         ]
         for match in alignment["matches"]
         if match["verdict"] != "reaction_id_exact"
