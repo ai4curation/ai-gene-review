@@ -62,6 +62,12 @@
   SoxB its canonical role [PMID:28127420 "Finally soxB encodes a hydrolase that
   removes the terminal sulfone group as sulfate"]. Without SoxCD, the sulfane sulfur
   is not oxidised on SoxY, as in *A. vinosum*.
+- The same paper is agnostic about whether Sox acts in *T. thioparus* at all. Batch
+  cultures show tetrathionate as an intermediate, the Kelly-Trudinger signature, and
+  the authors write [PMID:28127420 "If soxXYZAB genes are being expressed then they
+  may be required as a functional part of the Kelly-Trudinger pathway. The action of
+  Sox proteins (if any)"] ... "remains poorly understood". This supports keeping all
+  process claims for U5TVQ7 at the homology level.
 
 ## Annotation decisions (summary)
 
@@ -78,12 +84,31 @@
 - NEW GO:0030145 manganese ion binding (IC). Two lines of evidence: the dimanganese
   site of characterised SoxB, and conservation of all four Mn ligands covered by the
   fragment.
-- No NEW process term was added. GO:0019416 "thiosulfate oxidation" is defined as
-  thiosulfate to tetrathionate, which is the Tsd/TQO reaction, not Sox. GO:0019414
-  "aerobic respiration, using sulfur or sulfate as electron donor" has no annotations
-  at all in QuickGO (checked 2026-10-28). Even the structurally characterised
-  T. thermophilus SoxB (Q72IT0) carries only the same three IEA rows. This is raised
-  as a suggested question rather than asserted.
+- NEW GO:0019417 sulfur oxidation (IC), added after the PR review (#5628). SoxB
+  catalyses a step of the pathway, so it passes the participation test. Process terms
+  searched in QuickGO on 2026-10-28 (children of GO:0006790 sulfur compound metabolic
+  process, plus searches for "thiosulfate", "sulfur oxidation", "sulfite oxidation",
+  "tetrathionate", "polythionate", "sulfane"):
+  - GO:0019416 thiosulfate oxidation: defined as thiosulfate to tetrathionate with
+    cytochrome c as acceptor (Tsd/TQO). Rejected, not the SoxB step.
+  - GO:0019418 sulfide oxidation (sulfide to sulfite or sulfate): not established for
+    SoxB. Rejected.
+  - GO:0019414 aerobic respiration, using sulfur or sulfate as electron donor: the
+    definition includes thiosulfate, but it frames the process as respiration, SoxB
+    transfers no electrons, and nothing is annotated to it. Rejected.
+  - GO:0044273 sulfur compound catabolic process: "breakdown" fits an oxidative energy
+    pathway poorly. Rejected.
+  - GO:0006790 sulfur compound metabolic process: true but uninformative; it is the
+    parent of the chosen term.
+  - GO:0019417 sulfur oxidation (no children): its definition says elemental sulfur,
+    but the comparator check shows it is the Sox-system term in practice. SoxA carries
+    it by IDA in five species (O33434 P. pantotrophus from PMID:10940005, D7A6E5,
+    Q08IS0, Q8KDM7, Q8RLX0), assigned by UniProt. Chosen. The definition mismatch is
+    raised as a suggested question.
+  The inference is by homology only: U5TVQ7 is a fragment from strain NZ, no
+  T. thioparus SoxB has been assayed, and the type-strain genome paper is unsure
+  whether Sox acts in this organism. Even the structurally characterised
+  T. thermophilus SoxB (Q72IT0) carries only the same three IEA rows.
 
 ## CMMMech claim check (data/records/metacinnabar.yaml; not edited)
 
