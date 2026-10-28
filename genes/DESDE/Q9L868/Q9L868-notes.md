@@ -145,7 +145,21 @@ this review supports. Two notes (CMMMech is not edited here):
      position: `UniProtKB:P0ACE0` (*E. coli* hydrogenase-2 large chain) has
      `CHAIN 2..552` / `PROPEP 553..567 /note="Cleavage; by HybD"`, whose mature chain ends
      `...IHSFDPCMACAVH` and whose 15-residue propeptide is `VVDADGNEVVSVKVL`;
-     `UniProtKB:P12944` has `CHAIN 2..536` / `PROPEP 537..551`, also 15 residues.
+     `UniProtKB:P12944` has `CHAIN 2..536` / `PROPEP 537..551`, also 15 residues;
+     and `UniProtKB:P21852` has `CHAIN 1..552` / `PROPEP 553..567
+     /id="PRO_0000013406"`, again 15 residues, on a 567-residue precursor. So all
+     three reviewed orthologues of this subunit annotate a C-terminal propeptide
+     of exactly this length.
+   - **The P21852 correspondence holds for the full precursor, not only for the
+     annotated features.** The P21852-to-Q9L868 offset of 9 that aligns all seven
+     annotated metal positions (81/84/546/549 against 72/75/537/540, and
+     62/498/552 against 53/489/543) also predicts the precursor length and the
+     propeptide boundaries: 567 - 9 = 558, which is exactly the length of
+     `ACL48945.1` [GenBank:ACL48945.1 `LOCUS       ACL48945                 558 aa`],
+     and P21852's `PROPEP 553..567` maps onto 544-558, exactly the 15 residues by
+     which `ACL48945.1` exceeds this entry. The offset was derived from the metal
+     features alone, so the precursor length and the propeptide boundaries are
+     predictions it makes rather than inputs to it.
 
    So the likeliest reading is that `ACL48945.1` is the full-length precursor and Q9L868's
    543 residues are the mature subunit, the species actually crystallised. The entry's own
@@ -155,6 +169,36 @@ this review supports. Two notes (CMMMech is not edited here):
    experimentally for this enzyme (no `PROPEP` or `CHAIN` feature exists on either
    sequence), so it is recorded here and raised as a `suggested_question` rather than
    asserted in the review body.
+
+## The entry's two DISULFID features contradict its own metal assignment
+
+Q9L868 carries `FT DISULFID 72..537` and `FT DISULFID 75..540`, both with evidence
+`ECO:0007829|PDB:1E3D`, over the same four cysteines it types as Ni-Fe cluster ligands.
+Those cannot both hold in one conformer. Checks run live on 2026-10-28:
+
+- The current `1E3D` coordinate file (files.rcsb.org, revision 2.4 of 2026-09-02) contains
+  **no `SSBOND` record**, and carries `LINK` records bonding every one of the four cysteine
+  SG atoms to the cluster nickel in both large-subunit chains — `SG CYS B 71 - NI` (2.17 A),
+  `SG CYS B 74 - NI` (2.58 A), `SG ACYS B 536 - NI` (2.20 A), `SG CYS B 539 - NI` (2.53 A) —
+  with `SG CYS B 74 - FE` and `SG CYS B 539 - FE` (2.28 A each) in addition. PDB numbering
+  here is one lower than UniProt's, so these are Q9L868's 72, 75, 537 and 540. The structure
+  therefore asserts the metal bonds, including one at 540, and no disulfide.
+- Measured from that file's SG coordinates, the two pairs the entry calls disulfides are
+  2.87 A and 2.95 A apart in chain B (72/537 taken at the major rotamer of 537) and 2.96 A
+  and 2.95 A in chain D — short, because the sulfurs clamp a single metal centre, but well
+  above the roughly 2.05 A of a disulfide bond.
+- The `REVDAT 7` line of the coordinate file records revision 2.4 as changing `REMARK`,
+  `SSBOND` and `LINK`, and the RCSB revision history classes that revision under "Derived
+  calculations". No `SSBOND` survives it. The likeliest history is that the UniProt features
+  are automatic output derived from a superseded version of the entry they cite; that is an
+  inference about provenance, not something either resource states.
+- None of the three reviewed orthologues carries any `DISULFID` feature: `UniProtKB:P21852`,
+  `UniProtKB:P12944` and `UniProtKB:P0ACE0` have none between them, and each types the
+  equivalent cysteines as nickel ligands.
+
+Q9L868 is `Unreviewed`, so it has had no curator pass over the automatic features. Both
+points — the missing `BINDING 540 /ligand="Ni(2+)"` and the two spurious disulfides — are
+filed as `source_defects` on the `GO:0016151` row.
 
 The Pd(II)-reduction evidence remains indirect for this subunit: Lloyd et al. used strain
 ATCC 29577 and inferred hydrogenase involvement from H2 dependence and Cu2+ pretreatment
