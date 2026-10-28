@@ -188,6 +188,40 @@ Neither point is recorded as a `source_defect`: per the project brief, errors
 in CMMMech's own fields belong in these notes and the report, not in
 `review.source_defects`, which are for GOA/UniProt/InterPro.
 
+## Green & Warren 1985: the founding *inaZ* paper, and why it is not a reference entry
+
+UniProt reference [1] for P06620 is Green R.L., Warren G.J., "Physical and
+functional repetition in a bacterial ice nucleation gene", Nature 317:645-648
+(1985) [file:PSESY/inaZ/inaZ-uniprot.txt]. It is the source of the cloned
+*inaZ* sequence and of the repeat architecture, and so stands behind both the
+repeat description in `description` and the heterologous gain of function that
+the GO:0019833 row argues from.
+
+It is deliberately **not** added to the review's `references` list. UniProt's
+`RN [1]` block carries neither an `RX PubMed=` nor an `RX DOI=` line, and
+repeated PubMed E-utilities searches (title phrase; `Nature[jour] AND 1985[pdat]
+AND ice nucleation`) return zero hits, so the paper is not in PubMed and cannot
+be cached in `publications/`. There is therefore no identifier for it that can
+be verified from a repository artifact, and any `supporting_text` quoted from it
+would fail the verbatim-substring check. Per the project rule against guessing
+identifiers, it is recorded here with its UniProt provenance instead of being
+given a fabricated or unverifiable `id`. If a PMID or DOI for it is later
+established, it should be fetched and added as a normal reference.
+
+## In-repo anchors for the GO:0019833 claim
+
+- `cache/go/terms.csv` line 4483: `GO:0019833,ice nucleation activity,` with
+  fetch timestamp 2026-07-26 — the in-repo record that the id exists and is not
+  obsolete. The aspect (molecular function under GO:0050825 ice binding) and the
+  definition text quoted in `suggested_questions` rest on the live OLS/QuickGO
+  lookups of 2026-10-28 and left no cached artifact; `core_functions.molecular_function`
+  is hard-validated against MF branch reachability, so CI is the real check on
+  the aspect.
+- `projects/TCDB/data/propagation_evidence.tsv` line 195:
+  `9.B.133.1.1  GO:0019833  ice nucleation activity  5  1  0  0.0  GAP_CANDIDATE  P06620`
+  — an independent in-repo analysis reaching the same conclusion that this is a
+  real curation gap for exactly this protein and term.
+
 ## Source note on this file
 
 No deep-research provider was available in this environment, so no
