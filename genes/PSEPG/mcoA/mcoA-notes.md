@@ -38,17 +38,27 @@ Recorded verbatim-ish so it need not be re-checked (see also mnxG notes):
 
 The overall product is Mn(IV)O2; Mn(III) is an intermediate (step 1a), not the product, so
 the proposed term's definition states MnO2 and the one-electron steps live in
-`justification` as mechanism. Note that cotA, one of the EC entry's gene names, is also the
+`justification` as mechanism. The definition quotes the ExplorEnz overall reaction in that
+entry's own canonical form (4 Mn2+ + 2 O2 + 4 H2O = 4 Mn(IV)O2 + 8 H+); an earlier draft
+wrote the same reaction halved (2 Mn2+ + O2 + 2 H2O = 2 MnO2 + 4 H+), which balances but
+does not match the form quoted two lines above it. Note that cotA, one of the EC entry's gene names, is also the
 protein that dominates McoA's PANTHER subfamily (below).
 
 ## GO
 - copper ion binding IEA -> ACCEPT; oxidoreductase activity IEA -> MODIFY to GO:0016724.
   The copper-centre claim is cited at the **subfamily** level, PTHR48267:SF1 (BILIRUBIN
-  OXIDASE), not the bare family PTHR48267 (CUPREDOXIN SUPERFAMILY PROTEIN), which also
-  contains single-domain type-1-only cupredoxins with no trinuclear cluster.
-  `interpro/panther/PTHR48267/PTHR48267-entries.csv` is cited for that: all 36 listed
-  members sit in SF1 and are CotA laccases, E. coli CueO, FtsP/SufI and fungal bilirubin
-  oxidase, i.e. canonical three-domain MCOs.
+  OXIDASE), rather than the bare family PTHR48267 (CUPREDOXIN SUPERFAMILY PROTEIN). The
+  reason is the family's *name*, not its membership: `PTHR48267-metadata.yaml` gives
+  `subfamilies: 1`, `proteins: 7748` and `integrated: IPR045087`, and every row of
+  `PTHR48267-entries.csv` is `PTHR48267:SF1`, so family and subfamily are coextensive in
+  membership and the family does carry the three-domain multicopper oxidase claim via
+  IPR045087. What "CUPREDOXIN SUPERFAMILY PROTEIN" does not state is the type-1-copper-plus-
+  trinuclear-cluster architecture, whereas SF1's name and member composition do: all 36
+  listed members are CotA laccases, E. coli CueO, FtsP/SufI and fungal bilirubin oxidase,
+  i.e. canonical three-domain MCOs. (An earlier draft of these notes said the bare family
+  "also contains single-domain type-1-only cupredoxins with no trinuclear cluster"; that is
+  false - the fetched data show one subfamily and a single member set - and is superseded by
+  the naming argument above. The GO call is unaffected.)
 - Proposed new term "manganese oxidase activity" (EC 1.16.3.3, no GO term). The MODIFY
   replacement is GO:0016724 because that is what is annotatable today; when GO creates the
   proposed term, `proposed_replacement_terms` should become it and

@@ -48,7 +48,9 @@ Two consequences. (i) The EC entry lists **mnxG itself as a gene name** for this
 which is independent corroboration of this gene's identity on top of the GB-1 genetics.
 (ii) The product of the overall reaction is Mn(IV)O2; Mn(III) is an **intermediate**
 (step 1a), not the product. The proposed term's definition therefore states MnO2 as the
-product and the one-electron steps are kept in `justification` as mechanism, matching
+product, in the ExplorEnz entry's own canonical form (4 Mn2+ + 2 O2 + 4 H2O = 4 Mn(IV)O2 +
+8 H+; an earlier draft wrote the same reaction halved), and the one-electron steps are kept
+in `justification` as mechanism, matching
 [PMID:42757987 "Sequential one-electron oxidation reactions occur along the tunnel, with Mn(IV) ultimately condensing into MnO2 nanoparticles"].
 
 ## GO
