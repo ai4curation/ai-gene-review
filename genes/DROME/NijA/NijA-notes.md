@@ -55,3 +55,11 @@
 ## 2026-10-28 review fixes
 
 GO:0019835 cytolysis IDA (PMID:33472215) changed ACCEPT -> UNDECIDED; added a SUSPECTED UniProt source_defects CHECK on the evidence code (no mis-attribution asserted). Dropped GO:0012501 from core function directly_involved_in. NEW GO:0140912 row: added supporting_entities UniProtKB:Q92982 (human NINJ1, verified) and a clause on why the ISS is used while the adhesion IBA is rejected. Status DRAFT because the IBA (ACCEPT) and IDA (UNDECIDED) cytolysis rows now differ, which validation warns on.
+
+## 2026-10-28: cytolysis IDA restored to ACCEPT
+
+The UniProt record for Ninjurin-A (genes/DROME/NijA/NijA-uniprot.txt) attributes the cytolysis
+function to PMID:33472215 with ECO:0000269 and lists FUNCTION for that reference. That is direct
+evidence the paper's full text includes a Drosophila NijA assay, so the GO:0019835 IDA row is ACCEPTed
+in deference to the curator, and the SUSPECTED evidence-code defect raised in the previous fix round
+is withdrawn. Both cytolysis rows now agree, which clears the consistency warning; status is COMPLETE.
