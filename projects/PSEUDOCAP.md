@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aruC, braD, braF, ccmC, estA, fleN, gbuA, hom, hutH, hutI, lap, mgtE, PA0692, PA1024, PA1055, PA1057, PA3760, PA3891, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pvdE, waaL, wbpD, wbpY, xcpX]
+genes: [aruC, braD, braF, ccmC, cif, dctQ, dgcB, estA, fleN, gbuA, hom, hutH, hutI, lap, mgtE, nrdJa, PA0692, PA1024, PA1055, PA1057, PA3760, PA3891, PA4503, PA4504, PA4624, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pscC, pvdE, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -140,19 +140,30 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 25 | hom | PA3736 | L-threonine biosynthetic process (PTN000752178) | 41 | UNVERIFIABLE: cited paper is about ThrH/ThrB; one PMID applied to all thr genes | Term right for an all-homoserine-dehydrogenase clade; needs a real anchor | P |
 | 26 | PA1057 | PA1057 | sodium:proton antiporter activity; sodium ion transmembrane transport (PTN002160407) | 40 | INDIRECT, as PA1055; MrpE is an assembly subunit | Should be contributes_to | P (x2), G |
 | 27 | PA5377 | PA5377 | carnitine transport and transporter activity; choline transport (PTN000766131) | 39 | Choline/betaine SOUND; carnitine OVER-SPECIFIC (needs the separate binding protein CaiX); amine transporter activity WRONG (quaternary ammonium is not an amine in GO) | Carnitine IBDs on the permease node not supported; amine IBD should be repointed | P (x4), G (x3) |
+| 28 | nrdJa | PA5497 | ribonucleoside-diphosphate reductase activity, thioredoxin as acceptor (PTN000171476) | 39 | OVER-SPECIFIC: purified NrdJ prefers CTP over CDP >60-fold and thioredoxin was never used | Clade mixes NDP- and NTP-specific reductases | P, G |
+| 29 | cif | PA2934 | epoxide hydrolase activity (PTN002458043) | 38 | SOUND (structure, kinetics) | Sound; its broad hydrolase node (791 IBAs) also sound | P (reference on another row) |
 | 30 | braD | PA1073 | L-isoleucine import, L-alanine transport (PTN000765102) | 36 | SOUND (as braF) | Sound, same caveat; D-alanine transport seed is an indirect phenotype | none |
 | 32 | aruC | PA0895 | L-arginine biosynthetic process (PTN000241318) | 35 | SOUND (dual biosynthetic/catabolic aminotransferase; enzyme data only) | Node also passes it to LysJ, diaminobutyrate aminotransferase and AstC leaves | G |
 | 33 | gbuA | PA1421 | L-arginine catabolic process (PTN004253691) | 34 | SOUND for GbuA | Over-reaches across a guanidino-acid hydrolase clade (AGMAT, GpuA); separate guanidinopropionase IBA contradicted by assay | G (x2) |
 | 34 | pilD | PA4528 | aspartic-type endopeptidase activity (PTN000766410) | 33 | SOUND (purified enzyme) | Sound | P (reference query on a plasma membrane row) |
+| 35 | dgcB | PA5399 | oxidoreductase activity (PTN000229983) | 33 | INDIRECT: transposon growth + NMR coded IDA; the chemistry probably belongs to DgcA | Generic node term defensible from domains | P (x2), G |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
+| 41 | PA4503 | PA4503 | dipeptide transmembrane transporter activity (PTN000765601) | 25 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikB (nickel) and SapB (putrescine) permeases; binding protein sets substrate | P, G |
+| 43 | pscC | PA1716 | protein secretion by the type III secretion system (PTN009110345) | 25 | SOUND | Sound; node is the T3SS-specific subnode | none |
+| 45 | PA4624 | PA4624 | transmembrane protein transporter activity (PTN002160772) | 25 | SOUND (secretion readout of CdrA) | Sound (TpsB subfamily) | P (biofilm row) |
+| 46 | xcpS | PA3102 | protein secretion by the T2SS (PTN000768597) | 25 | SOUND term; IDA on a review article (PMID:9818381) | Sound | P |
+| 47 | xcpW | PA3098 | T2SS process and complex (PTN002446812) | 24 | SOUND terms; process IDA on a review, complex IDA on a paper showing only membrane fractionation | Sound | P (x2) |
+| 49 | dctQ | PA5168 | C4-dicarboxylate transport (PTN002169725) | 24 | SOUND for DctQ | OVER-SPECIFIC: YiaM-type clade (E. coli YiaM moves 2,3-diketo-L-gulonate) | G |
+| 51 | xcpV | PA3099 | T2SS process and complex (PTN002446181) | 24 | SOUND terms; same seed problems as xcpW | Node may be too broad: 14 of 49 leaves named PilV/MshD/pilin | P (x2), G (x2) |
+| 52 | xcpQ | PA3105 | protein secretion by the T2SS (PTN000768388) | 23 | SOUND term; IDA on a review article | Sound | P |
+| 72 | xcpR | PA3103 | T2SS process and complex (PTN002016240) | 14 | Complex SOUND; process IDA on a review article | Sound; node restricted to Gammaproteobacteria, keeping T2SS terms off PilB-type ATPases | P |
+| 75 | PA4504 | PA4504 | dipeptide transmembrane transporter activity (PTN000766696) | 12 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikC (nickel) and GsiD (glutathione) | P, G |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 4 (in progress): nrdJa, cif, dgcB.
-Batch 5 (in progress): xcpS, xcpW, xcpV, xcpQ, xcpR, pscC, gltA, PA0920,
-PA4079, liuC, PA4503, PA4504, PA4624, dctQ, thiI, cifR, lpxA.
+Batch 5 (in progress): gltA, PA0920, PA4079, liuC, thiI, cifR, lpxA.
 
 ### Patterns emerging
 
@@ -171,9 +182,18 @@ PA4079, liuC, PA4503, PA4504, PA4624, dctQ, thiI, cifR, lpxA.
   (*E. coli* CcmABC biochemistry for ccmC; a crystallization note for phzS).
   The pilB/pilU paper looked like a mis-keyed neighbour of the ccmC paper but
   is correct.
-- **Evidence codes that overstate the assay** (fleN, xcpX, PA0692, PA5458,
-  PA3891): IDA on a sequence motif, a review, or cross-species
-  complementation; IMP for complex membership.
+- **Evidence codes that overstate the assay** (fleN, xcpX, xcpS, xcpW, xcpV,
+  xcpQ, xcpR, PA0692, PA5458, PA3891, PA4503, PA4504, dgcB): IDA on a sequence
+  motif, on cross-species complementation or on an operon deletion; IMP for
+  complex membership. Every Xcp type II secretion process row cites the same
+  review article (PMID:9818381) as IDA.
+- **Substrate terms on clades where the binding protein sets the substrate**
+  (PA4503, PA4504, braF, dctQ): dipeptide transport seeded on permease nodes
+  that also hold NikB/NikC (nickel), SapB (putrescine) and GsiD (glutathione);
+  C4-dicarboxylate transport on a YiaM (diketogulonate) clade.
+- **Over-specific activity** (nrdJa): a thioredoxin-dependent diphosphate
+  reductase term on an enzyme that prefers triphosphates and was never assayed
+  with thioredoxin.
 - **Subunit and partner conflation** (PA5377, PA1055, PA1057): carnitine
   transport, which needs the separate binding protein CaiX, seeded on the
   permease node; Sha antiporter activity, measured for the whole PA1054-PA1059
