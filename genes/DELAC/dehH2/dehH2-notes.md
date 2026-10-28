@@ -82,7 +82,10 @@ CMMMech grounds a causal-graph node `dehh2_haloacetate_dehalogenase` to
 `UniProtKB:Q7DI63`. The identity grounding is correct (accession, entry name, TrEMBL status,
 gene symbol, taxon and InterPro/Pfam identifiers all match the live UniProt record). Three
 problems in CMMMech's own fields, noted here and **not** recorded as `source_defects`,
-because `source_defects` is reserved for defects in GOA/UniProt/InterPro:
+because there is no annotation row on this review for such a defect to attach to. (The schema's
+`SourceResourceEnum` does include `OTHER`, so a structured record would be possible in principle;
+the obstacle is the missing host row, not the enumeration. The mis-attribution is better raised
+directly with CMMMech.)
 
 1. **The Dodge et al. 2024 evidence is attributed to the wrong protein.** Both CMMMech
    evidence blocks on the Q7DI63 protein example read "Purified from Delftia acidovorans
@@ -126,12 +129,17 @@ not part of the Dodge construct.
 |---|---|---|---|
 | GO:0018784 (S)-2-haloacid dehalogenase activity | IEA, GO_REF:0000120 (RuleBase RU368077 / EC 3.8.1.2) | ACCEPT | HAD type II family membership from multiple independent signatures; stereospecificity itself untested on this protein |
 | GO:0019120 hydrolase activity, acting on halide bonds, in C-halide compounds | IEA, GO_REF:0000002 (InterPro:IPR006328) | ACCEPT | The claim directly demonstrated for DehH2 (haloacetate dehalogenase; iodoacetate resistance) |
-| GO:0018785 haloacetate dehalogenase activity | NEW (IC) | NEW | The enzyme's defining published activity, missing from GOA |
+| GO:0018785 haloacetate dehalogenase activity | NEW (IDA) | NEW | The enzyme's defining published activity, missing from GOA; recorded as the core molecular function |
 
 No cellular-component or biological-process annotations exist for this entry and none are
-proposed: there is no localization evidence, and a haloacetate-catabolism process term would
-require knowing which downstream pathway consumes the glycolate product in strain B, which
-has not been established for this plasmid.
+proposed. For the cellular component there is no localization evidence (the review's
+`description` therefore says "soluble", not "cytoplasmic"). For the biological process the
+reason is ontological rather than evidential: an OLS search found no haloacetate,
+haloalkanoate or dehalogenation catabolic-process term in GO, and the only applicable
+ancestor, GO:0090345 organohalogen metabolic process, has no catabolic child fitting this
+chemistry and would add nothing over the molecular function. DehH2 performs the dehalogenation
+step itself, so participation would not be in doubt if a suitable term existed; which pathway
+consumes the glycolate is a separate question (open questions, below).
 
 ## Open questions
 
