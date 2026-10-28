@@ -24,10 +24,35 @@ network access. Run from the repository root:
 python genes/GEOSL/cbcL/cbcL-bioinformatics/cxxch_scan.py
 ```
 
+**The sequence is pinned.** The script recomputes the UniProt CRC64 of the
+residues it parsed and exits non-zero unless the sequence is **619 aa, CRC64
+`12CE553CC08B6BA0`** — the values below were produced against that sequence. A
+refetch that changes the entry therefore fails loudly instead of leaving this
+table, and the review `description`'s motif-span claim, silently stale. When
+that happens, re-run the script and rewrite this section and the pins from its
+output; do not edit the table to match.
+
 ## Result
 
-Sequence length 619 aa. Nine CXXCH motifs, at (1-based position of the first
-cysteine):
+Verbatim output of the run that produced this section:
+
+```
+sequence length: 619 (pinned 619)
+sequence CRC64: 12CE553CC08B6BA0 (pinned 12CE553CC08B6BA0)
+CXXCH motifs found: 9
+  35	CLGCH
+  58	CTSCH
+  83	CERCH
+  106	CADCH
+  130	CIQCH
+  159	CNDCH
+  187	CLKCH
+  230	CADCH
+  258	CAKCH
+motif span: residues 35-262
+```
+
+Nine CXXCH motifs, at the 1-based position of the first cysteine:
 
 | Position | Motif |
 |---------:|-------|
@@ -40,6 +65,9 @@ cysteine):
 | 187 | CLKCH |
 | 230 | CADCH |
 | 258 | CAKCH |
+
+The motifs span residues 35-262, from the first cysteine of the first motif to
+the histidine of the last, which is the span the review's `description` states.
 
 ## Interpretation
 
