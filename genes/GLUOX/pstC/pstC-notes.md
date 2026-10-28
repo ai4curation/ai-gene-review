@@ -37,24 +37,51 @@ assembled complex (PstS delivers Pi; PstB hydrolyses ATP). The review records th
 `contributes_to` the complex-level activity rather than as an independently enabled
 transporter activity, following the subunit convention used for `genes/PSEPK/ureA`.
 
-## InterPro2GO defect: GO:0005315 is on the wrong branch
+## GO:0005315: an over-broad mapping and a GO-side inconsistency
 
-The current InterPro2GO mapping file maps the PstC family to a **secondary active**
-transporter term:
+The current InterPro2GO mapping file maps the PstC family to the substrate-level term:
 
 ```
 InterPro:IPR011864 Phosphate ABC transporter, permease protein PstC > GO:phosphate transmembrane transporter activity ; GO:0005315
 ```
 
-GO:0005315 "phosphate transmembrane transporter activity" is a direct child of GO:0015291
-secondary active transmembrane transporter activity, and its definition says transport "is
-driven by a chemiosmotic source of energy. Secondary active transporters include symporters
-and antiporters" (verified via OLS). PstSCAB is an ABC importer: primary active, ATP-driven.
-The correct term is GO:0015415 "ATPase-coupled phosphate ion transmembrane transporter
-activity" (`ATP + H2O + phosphate(out) = ADP + phosphate + phosphate(in)`), which is under
-GO:0042626 / GO:0015399, **not** under GO:0005315 — so this is a wrong-branch mapping, not an
-over-general one. Recorded as a `review.source_defects` entry (resource OTHER = InterPro,
-slot `interpro2go`, `WRONG_TERM`/`REPOINT`), and the row is `MODIFY`-ed to GO:0015415.
+GO:0015415 "ATPase-coupled phosphate ion transmembrane transporter activity"
+(`ATP + H2O + phosphate(out) = ADP + phosphate + phosphate(in)`) **is** an is_a descendant
+of GO:0005315: GO dual-parents it under GO:0005315 (substrate) and GO:0042626
+ATPase-coupled transmembrane transporter activity (energy source). QuickGO, checked
+2026-10-28: is_a ancestors of GO:0015415 = GO:0005315, GO:0042626, GO:0015399, GO:0022857,
+GO:0140657, GO:0022804, GO:0015291, GO:0003674, GO:0005215; is_a ancestors of GO:0005315 =
+GO:0022857, GO:0022804, GO:0015291, GO:0005215, GO:0003674. So GO:0015415 is a
+**refinement** of GO:0005315, not a branch correction, and the InterPro2GO mapping is at
+worst over-broad (it must hold for every protein the entry matches). An earlier draft of
+this review called it a wrong-branch mapping and filed a CONFIRMED InterPro WRONG_TERM
+defect; that was withdrawn because its premise was false.
+
+What does survive is a GO-side oddity. GO:0005315 is directly is_a GO:0015291 secondary
+active transmembrane transporter activity, and its definition reads "Transport works equally
+well in either direction and is driven by a chemiosmotic source of energy. Secondary active
+transporters include symporters and antiporters." Through it, the ABC term GO:0015415
+inherits GO:0015291 alongside GO:0015399 primary active transmembrane transporter activity.
+That is recorded as a `source_defects` entry addressed to the GO editors (resource OTHER,
+`requested_change: CHECK`, confidence PROBABLE), not as an InterPro defect.
+
+If an over-broad InterPro2GO mapping is to be recorded for the repository's InterPro
+project, the place for it is a `broadMatch` row in `projects/INTERPRO/interpro2go.sssom.yaml`
+(see `projects/INTERPRO/README.md`); no such row is added in this PR.
+
+## Action on the GO:0005315 row: MARK_AS_OVER_ANNOTATED
+
+The row is `enables GO:0005315` on a single permease subunit. The transport activity is a
+property of the assembled PstSCAB complex, so the row is marked over-annotated, and the
+specific complex-level activity GO:0015415 is kept as `contributes_to_molecular_function`
+in `core_functions`. This follows the sibling reviews of the same complex:
+`genes/ECOLI/pstC` (same IPR011864 → GO:0005315 IEA row, MARK_AS_OVER_ANNOTATED),
+`genes/ECOLI/pstA` (GO:0005315, MARK_AS_OVER_ANNOTATED), and `genes/ECOLI/pstB`
+(GO:0015415, MARK_AS_OVER_ANNOTATED). `genes/PSEPK/pstC` instead uses MODIFY to retain
+GO:0005315 with contributes_to; the over-annotation precedent is followed here because it
+is the majority convention and does not imply that the subunit enables the activity. The
+system is modelled as `modules/bacterial_pst_phosphate_uptake.yaml`, with PstA/PstC in
+the `pstsacb_phosphate_translocation` part.
 
 The same file maps IPR011864 to GO:0006817 phosphate ion transport (correct but more general
 than GO:0035435, which the evidence supports) and to GO:0016020 membrane (true, but entailed
@@ -101,3 +128,11 @@ raised in `suggested_questions`/`suggested_experiments` instead.
   strains do not isolate (CMMMech's own `supports: partial` and its note on the Figure S2 /
   main-text pstS label discrepancy capture this). The strain used for the allanite work in
   Schmitz et al. (2025) was ΔpstS, not ΔpstC. No edit was made to CMMMech.
+
+## Related reviews and module
+
+- Sibling reviews: `genes/ECOLI/pstC`, `genes/ECOLI/pstA`, `genes/ECOLI/pstB`,
+  `genes/ECOLI/pstS`, `genes/PSEPK/pstC`, and `genes/GLUOX/pstS`.
+- Module: `modules/bacterial_pst_phosphate_uptake.yaml` (PstC in the
+  `pstsacb_phosphate_translocation` part). The gene-review schema only carries
+  `module_associations` inside `review.decomposed_into`, so the link is recorded here.

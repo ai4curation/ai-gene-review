@@ -32,14 +32,19 @@ substrate-binding subunit"), so the GOA row on the parent term GO:0043190 is ref
 GO:0055052 in the review.
 
 Localization: the entry carries **no** `CC SUBCELLULAR LOCATION` and no SignalP feature,
-but (i) G. oxydans is a diderm alphaproteobacterium, so it has a periplasm; (ii) the
-PBP domain starts at residue 25 (`FT DOMAIN 25..299`), leaving an N-terminal extension
-`MFHRVGFIARGLAVALVVMVFGTAHSA` with the canonical tripartite Sec signal architecture
-(basic n-region `MFHR`, long apolar h-region, small-residue `AHSA|ATLT` c-region/cleavage
-site) and no lipobox cysteine; and (iii) the primary literature on this very system calls
+but (i) G. oxydans is a diderm alphaproteobacterium, so it has an outer
+membrane-bounded periplasm; (ii) residues 1-27 (`MFHRVGFIARGLAVALVVMVFGTAHSA`) have the
+canonical tripartite Sec signal architecture (basic n-region with H3/R4/R10, long apolar
+h-region of about residues 11-21, small-residue c-region `GTAHSA` at residues 22-27) and no
+lipobox cysteine. This is my own reading of the sequence, not a UniProt feature; the exact
+cleavage position (somewhere in residues 24-27) is not determined, and the Pfam PBP_like_2
+domain (`FT DOMAIN 25..299`) starts at or just inside that c-region, so the mature
+N-terminus is expected near residue 25-28; and (iii) the primary literature on this very system calls
 PstS periplasmic [PMID:40425722 "The transmembrane sub-units PstA and PstC bind to the
 periplasmic phosphate-binding protein, PstS, and to the cytoplasmic signaling protein,
-PstB"]. A `NEW` IC row for GO:0042597 periplasmic space is therefore added. (Note the same
+PstB"]. A `NEW` IC row for GO:0030288 outer membrane-bounded periplasmic space is therefore
+added; the diderm-specific term is used rather than GO:0042597 periplasmic space, matching
+`genes/ECOLI/pstS`. (Note the same
 sentence mis-describes PstB, the ABC ATPase, as "the cytoplasmic signaling protein" — see
 below.)
 
@@ -101,3 +106,12 @@ improve leaching:
   come from a combined ΔpstS + P112:mgdh strain that does not isolate pstS. CMMMech already
   marks that evidence `supports: partial`, which is the right reading. No edit was made to
   CMMMech.
+
+## Related reviews and module
+
+- Sibling reviews of the same system: `genes/ECOLI/pstS`, `genes/ECOLI/pstC`,
+  `genes/ECOLI/pstA`, `genes/ECOLI/pstB`, `genes/PSEPK/pstC`, and `genes/GLUOX/pstC`.
+- The system is modelled as `modules/bacterial_pst_phosphate_uptake.yaml`; PstS is the
+  `psts_phosphate_capture` part (GO:0042301 phosphate ion binding). The gene-review schema
+  only carries `module_associations` inside `review.decomposed_into` (for decomposed
+  precomposed terms), so the link is recorded here rather than as a structured field.
