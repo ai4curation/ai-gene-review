@@ -212,11 +212,17 @@ established, it should be fetched and added as a normal reference.
 
 - `cache/go/terms.csv` line 4483: `GO:0019833,ice nucleation activity,` with
   fetch timestamp 2026-07-26 — the in-repo record that the id exists and is not
-  obsolete. The aspect (molecular function under GO:0050825 ice binding) and the
-  definition text quoted in `suggested_questions` rest on the live OLS/QuickGO
-  lookups of 2026-10-28 and left no cached artifact; `core_functions.molecular_function`
-  is hard-validated against MF branch reachability, so CI is the real check on
-  the aspect.
+  obsolete.
+- `cache/enums/gomolecularactivityenum_d457a56b08d3.csv` line 3435: `GO:0019833`,
+  with `GO:0050825` ice binding at line 7271, in a committed 10,130-term expansion
+  of the molecular-function dynamic enum. `src/ai_gene_review/schema/gene_review.yaml`
+  binds `core_functions.molecular_function.id` to that same `GOMolecularActivityEnum`
+  (`reachable_from: GO:0003674`, `obligation_level: REQUIRED`). So the molecular-function
+  aspect of both terms is verifiable from a repository artifact, not only from a live
+  lookup, and a wrong-branch term in this slot would be a blocking validation error.
+- What does rest on the live OLS lookup of 2026-10-28, and left no cached artifact, is
+  only the term's definition *wording* quoted in `suggested_questions`. The aspect is
+  not in that position.
 - `projects/TCDB/data/propagation_evidence.tsv` line 195:
   `9.B.133.1.1  GO:0019833  ice nucleation activity  5  1  0  0.0  GAP_CANDIDATE  P06620`
   — an independent in-repo analysis reaching the same conclusion that this is a
