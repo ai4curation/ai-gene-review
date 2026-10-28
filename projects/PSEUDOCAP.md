@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [ccmC, estA, pqsH, lap, fleN, pvdE]
+genes: [ccmC, estA, pqsH, lap, fleN, pvdE, PA5458, PA1024, hutI, phzS, phzM, pilB, pilU, xcpX, PA0692]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -121,14 +121,20 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 6 | ccmC | PA1477 | catalase activity (PTN001247822) | 143 | INDIRECT-PHENOTYPE, and cites an *E. coli* paper | Unsupported: drop catalase from the node | P (x7), G |
 | 7 | pvdE | PA2397 | ATPase-coupled transmembrane transporter activity (PTN000656738) | 140 | SOUND | Node too deep: 126 of 140 leaves are NBD-only proteins | G (planned) |
 | 8 | PA1024 | PA1024 | oxidoreductase activity (PTN002844975) | 122 | SOUND (purified enzyme) | Sound; generic term right for a clade with one characterised member | none on seed; InterPro2GO NMO mapping removed |
+| 9 | hutI | PA5092 | imidazolonepropionase activity; L-histidine catabolic process (PTN000505272) | 52 | UNVERIFIABLE: 1967 paper predates genes and never mentions step III | Term right for a LUCA node (reaches human AMDHD1), but its only anchor is weak: re-seed | P |
+| 10 | phzS | PA4217 | monooxygenase activity (PTN002492679) | 104 | SOUND claim, wrong reference (a crystallization note) | Sound at family root; one misplaced leaf (Synechocystis ChlP) | P |
+| 11 | pilB | PA4526 | ATP hydrolysis activity (PTN001250205) | 90 | SOUND (purified ATPase, PMID:18174131) | Sound | P (x2, other rows: wrong reference / evidence code) |
+| 12 | phzM | PA4209 | S-adenosylmethionine-dependent methyltransferase activity (PTN002463933) | 80 | SOUND | Sound at family root | none on seed |
+| 15 | xcpX | PA3097 | T2SS complex; protein secretion by T2SS (PTN000475915) | 35 | SOUND; process row is IDA on a review paper | Sound | P |
+| 19 | PA0692 | PA0692 | type V secretion process and complex (PTN002160772) | 25 | SOUND; complex row is IMP, which cannot show membership | Sound | P |
+| 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 2 (in progress): hutI, hutH, phzS, phzM, pilB, pilU.
-Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, xcpX, PA0692,
-PA3891, PA5377.
+Batch 2 (in progress): hutH.
+Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, PA3891, PA5377.
 
 ### Patterns emerging
 
@@ -139,8 +145,19 @@ PA3891, PA5377.
   glycolipid and lipid biosynthesis, and seeds a 960-leaf lipid biosynthesis IBD.
 - **Inflated evidence codes** (fleN): IDA on a paper that reports a sequence
   motif.
-- **Mis-keyed references** (ccmC; pilB and pilU are being checked): the cited
-  PMID is a different paper from the one the phenotypes come from.
+- **Wrong GO id** (pilU): PseudoCAP entered GO:0016888 DNA endonuclease
+  activity, the id after GO:0016887 ATP hydrolysis activity, which it gave PilB
+  from the same paper on the same day. PAINT then used it as the only seed of
+  a node, so a pilus retraction ATPase clade inherits endonuclease activity.
+- **Wrong references** (ccmC, phzS): the cited PMID is a different paper
+  (*E. coli* CcmABC biochemistry for ccmC; a crystallization note for phzS).
+  The pilB/pilU paper looked like a mis-keyed neighbour of the ccmC paper but
+  is correct.
+- **Evidence codes that overstate the assay** (fleN, xcpX, PA0692, PA5458):
+  IDA on a sequence motif or a review, IMP for complex membership.
+- **Old papers that predate the gene** (hutI): a 1967 pathway paper cannot tie
+  an activity to PA5092. Here the term is right and the node reaches human
+  AMDHD1, but its only anchor needs replacing.
 - **Cargo annotated as machinery** (lap): a secreted enzyme given secretion
   system process terms.
 - **Sound seeds on nodes that are too broad** (pvdE, pqsH, PA5458): the

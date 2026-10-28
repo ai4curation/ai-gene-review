@@ -89,6 +89,8 @@ genes:
   - pvdE
   - pqsH
   - PA5458
+  - pilU
+  - hutI
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -1156,13 +1158,25 @@ protein is the sole seed.
   PTHR45934 root. But about 294 of the leaves are plant FAD monooxygenases
   below a horizontal-transfer node, so a whole plant clade's MF IBA rests on one
   bacterial enzyme. Sound today; fragile if the seed is ever revised.
+- **pilU (PSEAE, PA0396)**, `GO:0016888` DNA endonuclease activity, producing
+  5'-phosphomonoesters on **PTN000766390** (sole seed). PilU is a PilT-like
+  pilus retraction ATPase. The paper (PMID:18174131) reports ATPase activity of
+  purified PilB, PilT and PilU, and PseudoCAP gave PilB `GO:0016887` ATP
+  hydrolysis activity from it on the same day: the PilU row is a one-digit id
+  slip. The clade's endonuclease IBA exists only because of it.
+- **hutI (PSEAE, PA5092)**, imidazolonepropionase activity on the LUCA-level
+  node **PTN000505272** (sole seed, 52 leaves including human AMDHD1). The term
+  is right, but the only seed is an IMP row on a 1967 pathway paper that
+  predates the gene and does not describe step III. Right answer, no anchor.
 - **Control: lap (PSEAE, PA2939)**, `GO:0006508` proteolysis on
   **PTN000254534** (sole seed, 272 leaf IBAs in 109 taxa) is SOUND: the
   PseudoCAP IDA (PMID:11533066) assays the purified aminopeptidase directly.
   A sole seed is a reason to look, not a verdict.
 
 **Lesson**: when an IBA looks wrong but the node placement looks right, read
-the seed rows behind the IBD. An IMP seed for a molecular-function term is the
+the seed rows behind the IBD. Seed-side errors seen so far: indirect
+phenotypes (ccmC, estA), a mistyped GO id (pilU), inflated evidence codes
+(fleN), and anchors that predate the gene (hutI). An IMP seed for a molecular-function term is the
 first thing to check: ask whether the mutant lost the activity because the gene
 does it, or because the gene is needed upstream (cofactor supply, export,
 regulation). Record a wrong seed twice, as a `source_defects` item for the
@@ -1471,6 +1485,8 @@ and a representative seed) in the corresponding
 | DNAH12 / Dnah12 | human, mouse | **Ortholog split across PANTHER families** (human PTHR46532, mouse PTHR10676 in PANTHER 19): human gets no IBA, while mouse inherits inner dynein arm assembly (PTN008951089). Mouse also over-inherits microtubule motor activity, although DNAH12 lacks a microtubule-binding domain | MEDIUM | COMPLETE |
 | ccmC | PSEAE | **Seed-side error**: catalase activity IBD (PTN001247822, sole seed, 143 leaves) seeded by a PseudoCAP IMP mutant phenotype on a heme exporter; seed also cites the wrong PMID | HIGH | COMPLETE |
 | estA | PSEAE | **Seed-side error**: lipid biosynthetic process IBD (PTN005219546, sole seed, 960 leaves) seeded by a rhamnolipid-deficiency phenotype of an outer-membrane esterase | HIGH | COMPLETE |
+| pilU | PSEAE | **Seed-side error**: DNA endonuclease IBD (PTN000766390, sole seed) from a PseudoCAP GO id slip (GO:0016888 for GO:0016887) on a pilus ATPase | HIGH | COMPLETE |
+| hutI | PSEAE | Seed-side: LUCA imidazolonepropionase IBD (PTN000505272, reaches AMDHD1) anchored only on a 1967 paper that predates the gene | LOW | COMPLETE |
 | lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
 | fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
 | pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |
