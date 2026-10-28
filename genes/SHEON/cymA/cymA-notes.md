@@ -89,9 +89,17 @@ an inline quote from a cached publication under `publications/`.
   Recorded as a `source_defects` entry against the interpro2go mapping (DELETE_VALUE).
 - `GO:1902600 proton transmembrane transport` is an inter-ontology inference from
   GO:0008121, which carries proton-transporter parentage because of the cytochrome bc1
-  Q-cycle. CymA has no Q-cycle: it is a monotopic single-TM protein with the catalytic
-  domain wholly periplasmic, so the protons released on quinol oxidation are released on
-  the side they are already on. Marked MARK_AS_OVER_ANNOTATED rather than REMOVE,
+  Q-cycle. CymA has neither a proton channel nor a Q-cycle: it is a single-pass protein
+  with one N-terminal helix and its entire catalytic domain in the periplasm, and it
+  oxidises menaquinol at a single periplasmic site. UniProt and Rhea model the curated
+  reaction (RHEA:11484) with H(+) only as an `(out)` product and no `H(+)(in)` term, i.e.
+  as non-translocating [file:SHEON/cymA/cymA-uniprot.txt CC:CATALYTIC ACTIVITY]. That does
+  not mean no proton crosses the membrane: the cytoplasm-facing dehydrogenases (Nuo, Fdh,
+  hydrogenase) take up the protons to reduce menaquinone, the protons ride across on the
+  menaquinol, and CymA performs the periplasmic release half-reaction, so CymA does share
+  in the loop's vectorial chemistry. The over-read is attributing to one half-reaction,
+  catalysed entirely on the periplasmic face, a transport process that only the redox loop
+  as a whole carries out. Marked MARK_AS_OVER_ANNOTATED rather than REMOVE,
   since the row is a mechanical consequence of a term the gene legitimately carries.
 - `GO:0016020 membrane` is MODIFY to `GO:0005886 plasma membrane`, which the gene already
   carries by direct evidence.
