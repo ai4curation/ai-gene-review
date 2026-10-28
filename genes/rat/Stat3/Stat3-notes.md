@@ -40,3 +40,8 @@
 - Physiological/organismal ISO terms (feeding, energy/glucose/temperature homeostasis,
   development) kept as non-core: real in mouse but downstream of the TF activity.
 - No NEW terms proposed.
+
+## 2026-10-28 review-fix pass
+
+- Added structured propagation_review to 33 ISO/IBA rows with MODIFY/MARK_AS_OVER_ANNOTATED actions, derived from each row's reason: TERM_SCOPING_PROBLEM with GRANULARITY_MISMATCH for correct-but-general rows, with ROLE_CONFLATION for process terms STAT3 regulates or is the cargo of (transcription by Pol II, gene expression, proliferation, nuclear import, TGF-beta signalling), and with no failure mode for nuclear receptor activity and intracellular receptor signalling. Sources (mouse Stat3 MGI:103038, human STAT3 P40763, PANTHER PTN000927860) were not re-inspected, and the comments say so instead of asserting a status.
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.

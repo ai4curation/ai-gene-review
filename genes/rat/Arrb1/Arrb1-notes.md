@@ -38,3 +38,9 @@ for AIP4, an E3 ubiquitin ligase responsible for TRPV4 ubiquitination."]. Nuclea
 - No NEW terms proposed for processes; the only NEW row is the MF "ubiquitin-like
   ligase-substrate adaptor activity" (GO:1990756) for the AIP4-TRPV4 adaptor function, which
   is direct participation (the paper shows beta-arrestin-1 bridges the ligase to its substrate).
+
+## 2026-10-28 review-fix pass
+
+- Phototransduction ISO row: softened 'Beta-arrestin-1 is not studied' to what the abstract of PMID:11853756 (abstract only) supports, namely that it describes rod-arrestin-deleted and transducin-deleted mice and does not mention beta-arrestin-1.
+- source_defects corrected_value is now MGI:MGI:98227 (mouse Sag, S-arrestin; MGI cross-reference of UniProt P20443), with the name in corrected_label.
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.

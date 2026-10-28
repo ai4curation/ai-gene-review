@@ -51,3 +51,9 @@ dexamethasone row stays KEEP_AS_NON_CORE, differing from gamma, because neither 
 PMID:16263802. Other shared terms (plasma membrane, intracellular sodium ion homeostasis, external side of plasma
 membrane, neuron projection development, cellular response to acidic pH) already matched the settled action; their
 reasons were unified.
+
+## 2026-10-28 review-fix pass
+
+- The negated GO:0071548 response to dexamethasone row (PMID:16263802) changed from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED, matching the four other GO:0071548 rows on Scnn1a and Scnn1g: an IEP expression-response term does not describe channel function in either polarity. The factual point stands that beta transcript and protein did not rise in PMID:16263802.
+- GO:0015280 IMP row (PMID:11773057): removed the apical-localization quote, which says nothing about gating; PMID:8107805 support remains.
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.

@@ -30,3 +30,7 @@
   moves pyruvate but does not catabolise it).
 - NEW: pyruvate transmembrane transporter activity (GO:0050833), direct oocyte
   evidence [PMID:9639576].
+
+## 2026-10-28 review-fix pass
+
+- Removed the deep-research-manual self-citation from the GO:0042802 identical protein binding row (REMOVE); PMID:19473976 and PMID:11719518 already support it. The citations of that file on the succinate rows are kept because they record a negative result (no dicarboxylate transport in neutral-pH oocytes) that no single cited PMID states.

@@ -31,3 +31,8 @@
   (vasoconstriction, NO biosynthesis, NF-kB, calcium transport): MARK_AS_OVER_ANNOTATED.
 - Generic cell adhesion / cell-cell adhesion / membrane / protein-containing complex binding:
   MODIFY to the specific terms already carried.
+
+## 2026-10-28 review-fix pass
+
+- Added propagation_review to 9 ISO rows (mouse Icam1 MGI:96392 / human ICAM1 P05362): granularity for the adhesion terms, SOURCE_WEAK_OR_INFERRED for phenotype- and expression-based rows, UNRESOLVED for the two UNDECIDED human-source rows. Sources were not re-inspected, and the comments say so.
+- The warning that no annotation cites the deep-research-manual file is accepted; every claim rests on primary papers.

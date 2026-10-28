@@ -16,3 +16,8 @@
   reference (RGD:14227533) that I could not inspect. Phototransduction proper is the opsin
   cascade; M1 does none of its steps -> over-annotation. Circadian entrainment left UNDECIDED.
 - Human CHRM1 review (genes/human/CHRM1) used for consistency of actions.
+
+## 2026-10-28 review-fix pass
+
+- Added propagation_review to the two RGD:14227533 ISO rows (phototransduction: TERM_SCOPING_PROBLEM/ROLE_CONFLATION; circadian entrainment: UNRESOLVED). The source reference could not be inspected, which is recorded in the source comment and not as a status.
+- The warning that no annotation cites Chrm1-deep-research-manual.md is accepted; every claim rests on primary papers.

@@ -26,3 +26,8 @@
   consequences of actin stabilization; kept consistent with human TPM1 review).
 - No NEW terms proposed: the existing set covers the core functions; GO:0005862 (muscle thin
   filament tropomyosin) is used only in core_functions.in_complex.
+
+## 2026-10-28 review-fix pass
+
+- A curated CC:FUNCTION quote ("Plays a central role, in association with the troponin complex...") now cites file:rat/Tpm1/Tpm1-uniprot.txt instead of UniProtKB:P04692, so record_section backfill and the local quote check apply; added that file to references.
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.

@@ -34,3 +34,8 @@
   methyltransferase complex -> KEEP_AS_NON_CORE.
 - No NEW terms proposed. Nuclear pool (PMID:8278367) left as a question rather
   than a NEW row (single line of evidence).
+
+## 2026-10-28 review-fix pass
+
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.
+  (The removed Gnmt quote, about N-acetylation and folate inhibition, also did not bear on glycine catabolism.)

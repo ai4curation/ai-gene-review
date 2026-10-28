@@ -33,3 +33,7 @@
 - Physiological roles (liver regeneration, hepatocyte proliferation, neurite outgrowth, apoptosis,
   fertilization, epithelial fluid transport, TCR signalosome) kept as non-core.
 - No NEW terms proposed.
+
+## 2026-10-28 review-fix pass
+
+- source_defects on the GO:0019855 and GO:0050849 rows: corrected_value is now the CURIE UniProtKB:O43865 (human AHCYL1/IRBIT, checked by UniProt REST), with the name moved to corrected_label.

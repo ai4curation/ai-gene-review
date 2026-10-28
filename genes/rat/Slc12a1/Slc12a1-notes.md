@@ -19,9 +19,18 @@
 - NEW: GO:0008511 (IDA-equivalent evidence: oocyte flux, PMID:8021284; PMID:16291577) and
   GO:0070294 renal sodium ion absorption. NKCC2 performs the apical Na+ entry step of TAL NaCl
   reabsorption itself (it is the transporter, not a substrate), and comparators in the same role
-  (SLC12A3/NCC, SCNN1A/ENaC, and the Swiss-Prot rat entry P55016 itself) carry this term.
+  (SLC12A3/NCC, CLCNKB, and the Swiss-Prot rat entry P55016 itself) carry this term. [Corrected 2026-10-28: ENaC was wrongly listed here; see dated note below.]
 - Did not add regulatory / phenotype process terms (urine concentration, blood pressure) - these
   rest on knockout/disease phenotypes rather than a specific step NKCC2 performs at the level of
   those processes beyond NaCl uptake.
 - Key paper PMID:19592485 (full text, rat TAL): apical surface NKCC2 by biotinylation and
   extracellular-epitope immunolabelling, cAMP/PKA-stimulated exocytic insertion.
+
+## 2026-10-28 review-fix pass
+
+- Corrected the GO:0070294 comparator claim. A QuickGO exact-term query (GO:0070294, taxa 9606,
+  10090, 10116; 111 annotations) returns NKCC2/Slc12a1, NCC/SLC12A3, CLCNKB, KCNQ1, KCNJ1, the
+  WNK/SPAK/OSR1/KLHL3 regulators, endothelin pathway genes and others, but no SCNN1A, SCNN1B or
+  SCNN1G row in any of the three species. The review and these notes previously said ENaC carries
+  the term; that statement was wrong and has been removed (the Scnn1a review was right). The NEW
+  action on the Slc12a1 row is unchanged.

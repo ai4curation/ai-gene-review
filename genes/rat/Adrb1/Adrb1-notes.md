@@ -52,3 +52,7 @@
   (non-selective beta agonist) to drive Gs/AC/PKA and shows AKAP-PKA anchoring shapes
   beta-adrenergic cAMP compartmentation and contractility. Does not assay Adrb1 specifically; it
   informs downstream compartmentalized cAMP/PKA signaling. Relevance MEDIUM.
+
+## 2026-10-28 review-fix pass
+
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.

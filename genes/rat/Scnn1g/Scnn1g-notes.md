@@ -37,3 +37,8 @@ vasopressin stay KEEP_AS_NON_CORE. The NOT response to dexamethasone row moved f
 MARK_AS_OVER_ANNOTATED so that both rows on the term share one action; it differs from beta's kept NOT row because
 gamma-ENaC protein rose in PMID:16263802. Added the shared suggested question on renal sodium ion absorption
 (GO:0070294).
+
+## 2026-10-28 review-fix pass
+
+- Updated the cross-reference in the negated GO:0071548 row reason: the beta subunit's NOT row in the Scnn1b review is now also MARK_AS_OVER_ANNOTATED.
+- Removed supported_by self-citations of the gene's own -deep-research-manual.md where a primary citation in the same block already supports the row (the reviewer's own conclusion is not independent evidence). The validator now warns that no annotation cites the deep-research file; that warning is accepted deliberately, which sets the status to DRAFT.
