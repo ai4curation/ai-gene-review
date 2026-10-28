@@ -29,3 +29,17 @@ The existing PTHR45738 entries and metadata were reused from main. The new slice
 | Derived normal PAINT slice (3 data rows) | 412 | `a24fa48c7e427ffc676a22952999fb20eb9dcea066683d284e67a6ddfe25d2ec` |
 
 The [family alignment endpoint](https://www.pantherdb.org/services/oai/pantherdb/familymsa?family=PTHR45738) and [target gene endpoint](https://www.pantherdb.org/services/oai/pantherdb/geneinfo?geneInputList=Q92562&organism=9606) support the human leaf/sequence identity check. The slice selection uses the complete tree instead of downloading the much larger leaf GAF. It does not assert that separately dated topology and IBD datasets are identical releases, or that expanded GO-slim summaries are original PAINT assertions.
+
+## Ontology follow-up, 2026-10-28
+
+Fresh official QuickGO responses distinguish labels and synonyms from the actual graph. [GO:0006661](https://www.ebi.ac.uk/QuickGO/term/GO:0006661) retains broad phosphoinositide-biosynthesis exact synonyms, but the PI-phosphate branch is separate. The complete is_a/part_of ancestor results for GO:0036092, GO:0046854 and GO:1903102 exclude GO:0006661; this is not a declaration that missing edges prove disjointness. The source-evidence document explains the independent chemical reason for the three over-annotation decisions.
+
+The [explicit GO:0043813 to GO:0036092 path](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0043813/paths/GO:0036092?relations=is_a,part_of) is one part_of edge. It supports correct direct PI3P production while leaving the physiological importance of that product to biological assessment. [GO:0097110](https://www.ebi.ac.uk/QuickGO/term/GO:0097110) describes binding a scaffold protein, and [GO:0004722](https://www.ebi.ac.uk/QuickGO/term/GO:0004722) includes protein serine phosphatase activity as a narrow synonym.
+
+| Official response | Bytes | SHA256 |
+| --- | ---: | --- |
+| [terms.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0006661,GO:0036092,GO:0043813,GO:0097110,GO:0046854,GO:1903102,GO:0004722) | 6,248 | `5f85faee53867d9bf826c05bc6711869aac9b76f94df0c367cadd4db8e6f8a5f` |
+| [ancestors.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0006661,GO:0036092,GO:0043813,GO:0097110,GO:0046854,GO:1903102,GO:0004722/ancestors?relations=is_a,part_of) | 7,828 | `268eacd0ea27a504a8fb04109235e398a5e7fb8c72fa9bbea84f1c12953442b6` |
+| [paths-43813-36092.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0043813/paths/GO:0036092?relations=is_a,part_of) | 118 | `ca501fae84ab2104071f8aeb01dd91e746faba5611f6db2773841a8e4fe46abd` |
+| [paths-36092-6661.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0036092/paths/GO:0006661?relations=is_a,part_of) | 47 | `07920d8594aec48d49ad0f36504e8c658eebf70a2e03f274e61899a21cc4c8ed` |
+| [paths-46854-6661.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0046854/paths/GO:0006661?relations=is_a,part_of) | 47 | `07920d8594aec48d49ad0f36504e8c658eebf70a2e03f274e61899a21cc4c8ed` |
