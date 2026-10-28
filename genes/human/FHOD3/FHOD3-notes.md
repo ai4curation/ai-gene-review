@@ -1,6 +1,6 @@
 # FHOD3 research and annotation review
 
-FHOD3 (HGNC:26178; UniProtKB:Q2V2M9; historical FHOS2/KIAA1695) is an actin-organizing formin with a cardiac myofibril role. The ten incoming GO annotation contexts were reviewed individually. Seven are accepted, supported generic protein binding and contextual stress-fiber assembly are retained as non-core, and Z-disc localization remains undecided. No new annotation is proposed.
+FHOD3 (HGNC:26178; UniProtKB:Q2V2M9; historical FHOS2/KIAA1695) is an actin-organizing formin with a cardiac myofibril role. The ten incoming GO annotation contexts were reviewed individually. Five are accepted; supported generic protein binding, contextual stress-fiber assembly and broad cytoplasmic localization are retained as non-core; the cytoskeleton IEA is modified to the observed sarcomere location; and Z-disc localization remains undecided. No NEW annotation is proposed.
 
 ## Actin organization, assembly and maintenance
 
@@ -26,7 +26,7 @@ The broad cytoskeletal location is supported. The Z-disc claim requires more cau
 
 PMID:22509354 instead reports FHOD3 doublets within sarcomeres, away from Z-lines, including human ventricular samples. Its noncardiomyopathic specimen came from a patient with severe aortic stenosis; it is not an uncomplicated healthy-donor control. Rodent experiments used several antibodies and included preadsorption controls. The paper discusses differences in antibody recognition and fixation, while leaving the discrepancy unresolved. These results justify retaining uncertainty rather than selecting a study by date. The human observations and mouse antibody controls are not conflated. [Kan-o et al.](https://pubmed.ncbi.nlm.nih.gov/22509354/)
 
-The same study finds the acidic insertion dispensable for localization in its tested systems. This prevents a universal claim that the insertion determines localization across species, constructs and tissue states. The review uses broad cytoskeletal localization in its core synthesis and leaves the incoming Z-disc IEA as UNDECIDED. No assertion of definitive antibody artifact, universal relocalization, or an isoform-specific GO row is made. [PMID:22509354](https://pubmed.ncbi.nlm.nih.gov/22509354/)
+The same study finds the acidic insertion dispensable for localization in its tested systems. This prevents a universal claim that the insertion determines localization across species, constructs and tissue states. The review records their shared sarcomere location in its core synthesis and leaves the incoming Z-disc IEA as UNDECIDED. No assertion of definitive antibody artifact, universal relocalization, or an isoform-specific GO row is made. [PMID:22509354](https://pubmed.ncbi.nlm.nih.gov/22509354/)
 
 ## Human disease evidence
 
@@ -45,3 +45,13 @@ On 2026-10-28 the genuine Falcon request failed with HTTP 403 authentication fai
 The full cached text of PMID:21149568 was read selectively for interaction, splice regulation, localization, maintenance/recovery and Methods. PMID:19706596 was read for construct/cell and polymerization Methods, depletion/rescue, mutant comparisons and purified-protein Results. PMID:22509354 was read for localization Results and antibody, human-tissue and construct Methods, with its publisher text also consulted. The four other newly fetched publications are abstract-only. Selected line locators and immutable cache hashes are recorded in the evidence guide. Figure pixels and separate supplements were not inspected; repeated XML-derived paragraphs do not constitute independent replication.
 
 PMID:19413330 is the Lys-N/trypsin phosphoproteomics study, not Taniguchi's functional paper. PMID:16177791 supplies chromosome-sequence provenance, not evidence of a molecular activity. Existing main publication/family files were reused unchanged, and the additional publications were fetched only after exact-path ownership qualification. No publication quotations were added to the review or these notes.
+
+## Independent-review follow-up, 2026-10-28
+
+The independent reviewer on PR #5661 correctly identified that the shared sarcomeric location should be explicit in the machine-readable synthesis even while its subregion remains disputed. The UniProt-sourced cytoskeleton IEA now has MODIFY with GO:0030017 sarcomere as its replacement; its original term, evidence, reference and supporting entity are preserved. The separate cytoskeleton IBA remains accepted. Cytoplasm remains supported but is non-core, without disputing its inherited PAINT placement. Both localization papers support the sarcomere location in the core synthesis. [PR review](https://github.com/ai4curation/ai-gene-review/pull/5661#issuecomment-6461203315)
+
+Official QuickGO confirms sarcomere, myofibril, cytoskeleton and cytoplasm are current cellular-component terms. Its is_a/part_of ancestor closure places GO:0030016 myofibril and GO:0005737 cytoplasm above sarcomere, but does **not** include GO:0005856 cytoskeleton. Accordingly, this MODIFY is an empirical replacement with an observed location, not a formal ontology-child refinement. The biological rationale comes from the two primary localization studies; no missing ontology edge is invented. The exact ontology result and response hashes are recorded in the evidence guide. [Official sarcomere ancestry](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0030017/ancestors?relations=is_a,part_of)
+
+The final actions are five ACCEPT, three KEEP_AS_NON_CORE, one MODIFY and one UNDECIDED. The Z-disc uncertainty, natural-product boundaries, reference-only support, and absence of NEW assertions remain intact.
+
+Validation passes with two advisories: the established generic-binding retention exception, and differing actions for the two cytoskeleton sources. The latter is intentional: the inherited broad-location assertion remains supported, while the electronic mapping receives an empirical replacement that records the shared sarcomere observation. This does not declare the broad location false or alter the validator policy. The computed status remains DRAFT.
