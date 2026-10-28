@@ -3,7 +3,10 @@
 Reads a QuickGO download of all annotations with assignedBy=CACAO, finds the
 gene reviews in genes/ whose accession carries CACAO rows, and records the
 review action given to each CACAO row (matched on term, evidence code and
-reference). Writes projects/CACAO/cacao-inventory.yaml.
+reference). Taxon groups come from data/taxon-groups.yaml (see
+fetch_taxon_groups.py); unreviewed microbial gene products (everything but
+Metazoa and Viridiplantae) are ranked by CACAO row count. Writes
+projects/CACAO/cacao-inventory.yaml.
 
 Usage:
     uv run python projects/CACAO/scripts/cacao_inventory.py [QUICKGO_TSV]
@@ -23,7 +26,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_TSV = ROOT / "projects/CACAO/data/cacao-quickgo-2026-10-28.tsv"
+GROUPS = ROOT / "projects/CACAO/data/taxon-groups.yaml"
 OUT = ROOT / "projects/CACAO/cacao-inventory.yaml"
+NON_MICROBIAL = {"Metazoa", "Viridiplantae"}
 ID_RE = re.compile(r"^id:\s*['\"]?([A-Z0-9-]+)", re.M)
 
 
@@ -70,6 +75,11 @@ def main():
     tsv = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_TSV
     by_acc = load_cacao(tsv)
     reviews = index_reviews(set(by_acc))
+    groups = yaml.safe_load(GROUPS.read_text())
+
+    def group(rows):
+        return groups.get(int(rows[0]["TAXON ID"]), {}).get("group", "Unclassified")
+
     total_rows = sum(len(v) for v in by_acc.values())
     taxa = collections.Counter(r["TAXON ID"] for v in by_acc.values() for r in v)
     action_counts = collections.Counter()
@@ -83,14 +93,32 @@ def main():
             "accession": acc,
             "symbol": rows[0]["SYMBOL"],
             "taxon": f"NCBITaxon:{rows[0]['TAXON ID']}",
+            "group": group(rows),
             "review": str(f.relative_to(ROOT)),
             "review_status": status,
             "cacao_rows": acted,
         })
     unreviewed = collections.Counter()
+    by_group = collections.defaultdict(collections.Counter)
+    microbial = []
     for acc, rows in by_acc.items():
-        if acc not in reviews:
-            unreviewed[rows[0]["TAXON ID"]] += 1
+        g = group(rows)
+        by_group[g]["rows"] += len(rows)
+        by_group[g]["gene_products"] += 1
+        if acc in reviews:
+            by_group[g]["reviewed"] += 1
+            continue
+        unreviewed[rows[0]["TAXON ID"]] += 1
+        if g not in NON_MICROBIAL:
+            microbial.append({
+                "accession": acc,
+                "symbol": rows[0]["SYMBOL"],
+                "taxon": f"NCBITaxon:{rows[0]['TAXON ID']}",
+                "organism": groups.get(int(rows[0]["TAXON ID"]), {}).get("name"),
+                "group": g,
+                "cacao_rows": len(rows),
+            })
+    microbial.sort(key=lambda m: (-m["cacao_rows"], m["accession"]))
     summary = {
         "source": str(tsv.relative_to(ROOT)) if tsv.is_relative_to(ROOT) else str(tsv),
         "cacao_annotations": total_rows,
@@ -99,9 +127,10 @@ def main():
         "cacao_rows_in_reviewed_genes": sum(len(g["cacao_rows"]) for g in genes),
         "actions": dict(action_counts.most_common()),
         "top_taxa_by_rows": {f"NCBITaxon:{t}": n for t, n in taxa.most_common(15)},
+        "by_group": {g: dict(c) for g, c in sorted(by_group.items(), key=lambda x: -x[1]["rows"])},
         "unreviewed_gene_products_by_taxon": {f"NCBITaxon:{t}": n for t, n in unreviewed.most_common(15)},
     }
-    OUT.write_text(yaml.safe_dump({"summary": summary, "genes": genes}, sort_keys=False, width=100))
+    OUT.write_text(yaml.safe_dump({"summary": summary, "unreviewed_microbial": microbial[:100], "genes": genes}, sort_keys=False, width=100))
     print(yaml.safe_dump(summary, sort_keys=False))
 
 
