@@ -53,20 +53,25 @@ protein that binds 1 Hg(2+)/domain and delivers it to the catalytic core at kine
   filed on this row: the GOA WITH/FROM also names UniRule:UR000329331, but that rule asserts five GO terms
   (GO:0016152, GO:0016668, GO:0046689, GO:0046872, GO:0050660) and GO:0003955 is not one of them, so the rule
   is a matching signature for the entry here, not the source of the term. The entry's own cross-reference agrees,
-  carrying this term as `IEA:TreeGrafter` rather than `IEA:UniProtKB-UniRule`. (Rule contents read from the
-  UniRule record UR000329331 on 2026-10-28; there is no committed artifact for it, so it is recorded here as
-  reasoning rather than cited as a `file:` source.)
+  carrying this term as `IEA:TreeGrafter` rather than `IEA:UniProtKB-UniRule`. The rule's contents are committed
+  and cited: `rules/unirule/UR000329331/UR000329331.json` is the whole rule record, and
+  `rules/rules-export-go-summary.csv` holds five rows for UR000329331 and no others
+  [file:rules/rules-export-go-summary.csv "UR000329331,unirule,GO:0046689,response to mercury ion,1"].
+  Both sources are complete records rather than extracts, which is what makes the absence of GO:0003955
+  from them a reading of the rule and not an argument from silence.
 - GO:0016668 oxidoreductase activity, acting on a sulfur group of donors, NAD(P) as acceptor: REMOVE. The donor/acceptor
   pairing is that of lipoamide dehydrogenase/glutathione reductase relatives; in MerA the cysteines are part of the enzyme,
   the substrate is Hg(II). GO:0016152 is under GO:0016723 (acting on metal ions, NAD or NADP as acceptor),
   not under GO:0016668 (OLS, 2026-10-28). Source defects: one against the family-wide PROSITE/InterPro IPR012999
   mapping, and one against UniProt for UniRule UR000329331, which the entry's `IEA:UniProtKB-UniRule` GO line for
-  this term shows is the rule asserting it on a MerA-family entry. The rule record UR000329331 (read 2026-10-28)
-  gives its old rule number as PIRNR000350, which is one of the two MerA-specific systems the entry carries as
+  this term shows is the rule asserting it on a MerA-family entry. The committed rule record
+  [file:rules/unirule/UR000329331/UR000329331.json '"oldRuleNum": "PIRNR000350"'] gives its old rule number as
+  PIRNR000350, which is one of the two MerA-specific systems the entry carries as
   rule-based evidence (with RuleBase:RU361223), so the rule applied here is the MerA-specific one and not a
   family-wide fallback. The same rule asserts GO:0016152 mercury (II) reductase (NADP+) activity, the specific
-  term this review modifies towards, alongside GO:0016668, GO:0046689, GO:0046872 and GO:0050660: it already
-  carries the correct term, so dropping the broader one costs nothing.
+  term this review modifies towards, alongside GO:0016668, GO:0046689, GO:0046872 and GO:0050660 — the five rows
+  that `rules/rules-export-go-summary.csv` holds for this rule and the five GO cross-references the rule record
+  carries. It already carries the correct term, so dropping the broader one costs nothing.
 
 No `NEW` cytoplasm row is added: there is no localisation evidence for this protein beyond the
 absence of signal/TM features and analogy with Tn501. The top-level `description` originally called
