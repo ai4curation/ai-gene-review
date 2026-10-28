@@ -38,11 +38,19 @@ structural **Mg(2+) at 53, 489 and 543**
 [UniProtKB:Q9L868 `FT BINDING 72 /ligand="Ni(2+)"`; `FT BINDING 75 /ligand="Fe cation"`;
 `FT BINDING 537 /ligand="Ni(2+)"`; `FT BINDING 540 /ligand="Fe cation"`].
 The four cysteines are 72 and 75 (the N-terminal CxxC) and 537 and 540 (the C-terminal
-DPCxxC); in the canonical [NiFe] large-subunit architecture all four coordinate the
-nickel, and 75 and 540 are the **bridging** pair shared between the nickel and the iron.
+DPCxxC). That all four coordinate the nickel, and that 75 and 540 are the **bridging**
+pair shared between the nickel and the iron, is not merely the canonical architecture or
+UniProt's own feature typing: the deposited coordinates of this enzyme show it. In the
+current `1E3D` file each of the four cysteine sulfurs lies 2.17–2.62 Å from the cluster
+nickel in both large-subunit chains, and only two of them — the counterparts of 75 and 540
+— are also within bonding distance of the iron (2.28–2.32 Å, against 4.5–4.9 Å for the
+other two) (see "The entry's two DISULFID features contradict its own metal assignment",
+below, for the measurements, the numbering offset, and why the file's own `LINK` records
+are an index to them rather than the evidence).
 Note therefore that **540 is not annotated as a Ni(2+) ligand in this entry** even though
-it is one on the biology: the reviewed Desulfovibrio-lineage homologues do annotate it,
-and this entry's PIRSR-derived set is incomplete at that position (checks run live
+the structure UniProt already cites for this entry records a nickel–sulfur bond there, and
+even though the reviewed Desulfovibrio-lineage homologues annotate the equivalent position:
+this entry's PIRSR-derived set is incomplete at position 540 (checks run live
 against UniProt REST, 2026-10-28):
 
 - `UniProtKB:P12944` (*Megalodesulfovibrio gigas* periplasmic [NiFe] hydrogenase large
@@ -57,18 +65,16 @@ A UniProt record defect follows from this (missing `FT BINDING 540 /ligand="Ni(2
 recorded as a `source_defects` entry on the `GO:0016151 nickel cation binding` row, which is
 the annotation whose claim the incomplete ligand set under-supports: `resource: UNIPROT`,
 `record: UniProtKB:Q9L868`, `slot: FT BINDING`, `requested_change: ADD`,
-`confidence: PROBABLE` (the basis is comparative plus the canonical architecture, not this
-entry's own structure). Filing it there is what gets it into
-`just export-source-defects`' report for UniProt.
+`confidence: CONFIRMED`. The warrant is this entry's own cited structure, not the
+comparative argument: the author-deposited `1E3D` coordinates put the sulfur of every one
+of the four cysteines within 2.17–2.62 Å of the cluster nickel in both large-subunit
+chains, position 540 (PDB 539) among them at 2.53 Å and 2.51 Å. So the structure UniProt
+already cites records a nickel–sulfur bond at exactly the position that carries no `Ni(2+)`
+feature, and the homologue annotations above corroborate that rather than carry it. Filing
+it on that row is what gets it into `just export-source-defects`' report for UniProt. Two
+further defects, one per contradicted `DISULFID` feature, are filed on the same row — see
+"The entry's two DISULFID features contradict its own metal assignment", below.
 
-The two `FT DISULFID` features pair the same four cysteines across the two motifs —
-`DISULFID 72..537` and `DISULFID 75..540`, both `ECO:0007829|PDB:1E3D`, i.e. automatic
-annotation derived from the deposited coordinates. They pair each N-terminal cysteine
-with its C-terminal partner, which is the geometry imposed by both pairs clamping the
-shared Ni–Fe centre; neither P12944 nor P21852 carries any `DISULFID` feature at the
-equivalent positions, where the same cysteines are typed as metal ligands. The features
-should therefore be read as the structure-derived proximity of the active-site cysteines,
-not as disulfide bonds in the metallated holoenzyme.
 The structural work on this enzyme resolves the nickel ligand Cys536 in three rotamers
 and reports a partially occupied bridging sulfur, i.e. a partly activated active site
 [PMID:11191224 "a three-fold disorder was observed for Cys536 which binds to the nickel atom"].
@@ -173,32 +179,57 @@ this review supports. Two notes (CMMMech is not edited here):
 ## The entry's two DISULFID features contradict its own metal assignment
 
 Q9L868 carries `FT DISULFID 72..537` and `FT DISULFID 75..540`, both with evidence
-`ECO:0007829|PDB:1E3D`, over the same four cysteines it types as Ni-Fe cluster ligands.
-Those cannot both hold in one conformer. Checks run live on 2026-10-28:
+`ECO:0007829|PDB:1E3D` — automatic annotation derived from the deposited coordinates — over
+the same four cysteines the entry types as Ni-Fe cluster ligands. Each feature pairs an
+N-terminal cysteine with its C-terminal partner, which is the geometry imposed by both pairs
+clamping the shared Ni–Fe centre, not the geometry of a disulfide bond. The metal assignment
+and the disulfides cannot both hold in one conformer. Checks run live on 2026-10-28:
 
-- The current `1E3D` coordinate file (files.rcsb.org, revision 2.4 of 2026-09-02) contains
-  **no `SSBOND` record**, and carries `LINK` records bonding every one of the four cysteine
-  SG atoms to the cluster nickel in both large-subunit chains — `SG CYS B 71 - NI` (2.17 A),
-  `SG CYS B 74 - NI` (2.58 A), `SG ACYS B 536 - NI` (2.20 A), `SG CYS B 539 - NI` (2.53 A) —
-  with `SG CYS B 74 - FE` and `SG CYS B 539 - FE` (2.28 A each) in addition. PDB numbering
-  here is one lower than UniProt's, so these are Q9L868's 72, 75, 537 and 540. The structure
-  therefore asserts the metal bonds, including one at 540, and no disulfide.
-- Measured from that file's SG coordinates, the two pairs the entry calls disulfides are
-  2.87 A and 2.95 A apart in chain B (72/537 taken at the major rotamer of 537) and 2.96 A
-  and 2.95 A in chain D — short, because the sulfurs clamp a single metal centre, but well
-  above the roughly 2.05 A of a disulfide bond.
-- The `REVDAT 7` line of the coordinate file records revision 2.4 as changing `REMARK`,
-  `SSBOND` and `LINK`, and the RCSB revision history classes that revision under "Derived
-  calculations". No `SSBOND` survives it. The likeliest history is that the UniProt features
-  are automatic output derived from a superseded version of the entry they cite; that is an
-  inference about provenance, not something either resource states.
-- None of the three reviewed orthologues carries any `DISULFID` feature: `UniProtKB:P21852`,
-  `UniProtKB:P12944` and `UniProtKB:P0ACE0` have none between them, and each types the
-  equivalent cysteines as nickel ligands.
+- **The author-deposited coordinates are what settle it, and they are measurements, not
+  annotations.** Taken straight from the `ATOM`/`HETATM` records of the current `1E3D` file
+  (files.rcsb.org, revision 2.4 of 2026-09-02), each of the four cysteine sulfurs lies
+  2.17–2.62 Å from the cluster nickel in both large-subunit chains (chain B: 71 at 2.17 Å,
+  74 at 2.58 Å, 536 major rotamer at 2.20 Å, 539 at 2.53 Å; chain D: 2.20, 2.62, 2.19,
+  2.51 Å), with 74 and 539 additionally 2.28–2.32 Å from the iron, while 71 and 536 are
+  4.5–4.9 Å from it. The two pairs the entry calls disulfides are 2.87 Å and 2.95 Å apart in
+  chain B (72/537 at the major rotamer of 537) and 2.96 Å and 2.95 Å in chain D — short,
+  because the sulfurs clamp a single metal centre, but well above the roughly 2.05 Å of a
+  real disulfide. PDB numbering here is one lower than UniProt's, so these are Q9L868's 72,
+  75, 537 and 540. Every sulfur is at bonding distance from the nickel and no pair is at
+  bonding distance from its partner.
+- The file's derived records agree, and are a convenient index to the measurements rather
+  than the evidence for them: there is **no `SSBOND` record** at all, and the `LINK` records
+  bond every one of the four SG atoms to the nickel. They are not independent of the
+  problem, though — `REVDAT 7` records revision 2.4 as changing `REMARK`, `SSBOND` **and**
+  `LINK` together, and the RCSB revision history classes that revision under "Derived
+  calculations", so `LINK` is the same class of automatic output whose earlier generation
+  most likely produced the stale `DISULFID` features. That is why the argument above is
+  made from the coordinates. The provenance reading is an inference, not something either
+  resource states.
+- The entry's own reference block corroborates that provenance reading. The `RP` scope for
+  PMID:11191224 reads `X-RAY CRYSTALLOGRAPHY (1.80 ANGSTROMS) OF 2-543 IN COMPLEX WITH
+  MG(2+), AND DISULFIDE BONDS.` — it names the Mg(2+) and the disulfides and **does not
+  mention the Ni-Fe cluster at all**, although that is the structure's defining feature.
+  Those are exactly the features carrying `ECO:0007829|PDB:1E3D` (the three Mg(2+) sites at
+  53/489/543 and the two disulfides); every Ni and Fe feature is PIRSR-only
+  (`ECO:0000256|PIRSR:PIRSR601501-1`). So the scope line appears to have been generated from
+  the PDB-derived feature set, and inherits its error. If both `DISULFID` features go, that
+  scope goes stale with them. For contrast, the reviewed `UniProtKB:P21852` describes its own
+  1.8 Å structure as `X-RAY CRYSTALLOGRAPHY (1.8 ANGSTROMS) OF 19-552, AND COFACTOR.`
+- None of the three reviewed orthologues carries any `DISULFID` feature at the equivalent
+  positions, where the same cysteines are typed as metal ligands instead: `UniProtKB:P21852`,
+  `UniProtKB:P12944` and `UniProtKB:P0ACE0` have no `DISULFID` feature between them, and no
+  occurrence of "DISULFIDE BOND" in any `RP` scope either.
 
-Q9L868 is `Unreviewed`, so it has had no curator pass over the automatic features. Both
-points — the missing `BINDING 540 /ligand="Ni(2+)"` and the two spurious disulfides — are
-filed as `source_defects` on the `GO:0016151` row.
+Q9L868 is `Unreviewed`, so it has had no curator pass over the automatic features. Three
+defects are filed as `source_defects` on the `GO:0016151` row: the missing
+`BINDING 540 /ligand="Ni(2+)"` (`requested_change: ADD`) and one `DELETE_VALUE` per
+contradicted feature, `DISULFID 72..537` and `DISULFID 75..540` separately. They are split
+because `report_status` is per entry and `just export-source-defects` keys rows on
+`asserted_value`, so a bundled pair could not record UniProt removing one feature and
+keeping the other; the two entries share their reasoning and differ only in the value asked
+to be removed. The request is removal, not reinterpretation: the features assert bonds the
+cited structure does not contain.
 
 The Pd(II)-reduction evidence remains indirect for this subunit: Lloyd et al. used strain
 ATCC 29577 and inferred hydrogenase involvement from H2 dependence and Cu2+ pretreatment
