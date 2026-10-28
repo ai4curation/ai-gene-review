@@ -11,3 +11,8 @@ Native PMID:35285712 was read in full: gltBD effects vary with nitrogen source; 
 PMID:14624355 native gltB disruption supports acidic-amino-acid physiology and effects on PGA induction. It does not identify GltB as the separate periplasmic PGA or establish a direct regulatory mechanism. The retained inherited glutaminase proposal is instead supported by the Ntn domain and the homolog structural hydrolysis/tunnel evidence in PMID:11188694. No additional NEW process was manufactured.
 
 Actual Falcon/fallback research attempts failed; normal gene PMID caching succeeded; fitness retrieval failed because no FEBA source was reachable. Existing Asta artifacts were genuine retrievals but did not supply target-specific experimental support. No provider report was fabricated. Logs: `.cache/module-audit-logs/ammonia-acquisition/PSEPK-gltB-results.json`. New primary retrieval and access-limit logs are in `.cache/module-audit-logs/ammonia-psepk-review/`.
+
+
+## 2026-10-28 — PR #5696 review follow-up
+
+The glutamine-hydrolysis and ammonia-channel mechanism remains in the biological description and core-function prose. The machine-readable core now records contribution to GO:0004355 glutamate synthase (NADPH) activity, with the native small chain required for NADPH input, rather than a separate GO:0004359 glutaminase activity. This policy is applied to all four reviewed large chains; the inherited PSEPK standalone proposal is archived, and no new rows are added to fill coverage warnings. Direct E. coli partial-activity evidence (PMID:770440) remains valid and retained.

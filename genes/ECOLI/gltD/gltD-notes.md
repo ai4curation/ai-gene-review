@@ -13,3 +13,8 @@ Primary Azospirillum biochemistry PMID:10785395 assigns the pyridine-nucleotide 
 The original generic protein-binding screen rows (PMID:15690043 and PMID:16606699) remain UNDECIDED because the actual target interaction partners and experiments could not be recovered. The known GltB–GltD complex does not establish the meaning of every screen edge; no experimental REMOVE or invented enzyme-binding replacement is introduced. Cytosol is retained from the coherent native MC4100 proteomic assignment (PMID:18304323), acknowledging that supplemental target rows were not retrieved.
 
 The core function separates each chain's direct activity from contribution to coupled NADPH-GOGAT: GltB glutamine hydrolysis and FMN chemistry; GltD NADPH electron input. Original qualifiers and all machine assertion fields are preserved. Broad classes refine to supported specific activities already covered by the reaction or replacement terms; no NEW row is added.
+
+
+## 2026-10-28 — PR #5696 review follow-up
+
+Both generic binding rows name the reciprocal GOGAT subunit. Their refinement to GO:0046982 is supported independently by the curated UniProt CC:SUBUNIT heterodimer statement and native gltBDF genetics (PMID:2448295); unrecovered assay details from the interaction screens are not invented.

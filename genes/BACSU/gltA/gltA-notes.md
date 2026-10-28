@@ -23,3 +23,8 @@ PMID:22625175 is an abstract-only regulatory review, useful for synthesis but no
 ## Focused validation interpretation
 
 The explicit core glutaminase subactivity (GltA) and NADPH-GOGAT complex membership (both chains) can trigger advisory requests for additional annotation rows. They are supported core context, but the review does not manufacture NEW assertions just to silence warnings. All machine rows remain intact. The GltA generic-GOGAT IBA has structured metadata after inspection of the actual PTN000234342 PAINT IBD row; native NADPH evidence supplies its target refinement.
+
+
+## 2026-10-28 — PR #5696 review follow-up
+
+The glutamine-hydrolysis and ammonia-channel mechanism remains in the biological description and core-function prose. The machine-readable core now records contribution to GO:0004355 glutamate synthase (NADPH) activity, with the native small chain required for NADPH input, rather than a separate GO:0004359 glutaminase activity. This policy is applied to all four reviewed large chains; the inherited PSEPK standalone proposal is archived, and no new rows are added to fill coverage warnings. Direct E. coli partial-activity evidence (PMID:770440) remains valid and retained.

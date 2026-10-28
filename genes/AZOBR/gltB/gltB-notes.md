@@ -32,3 +32,8 @@ The primary source allocation corrects historical raw UniProt prose that suggest
 All original machine annotation fields, ordering and 19 total rows across the three genes are preserved. Only review metadata is changed. Ordinary relationship strings are inert. Whole-complex NADPH GOGAT annotations are accepted as subunit contributions; core functions use `contributes_to_molecular_function` to make that role explicit. Direct GltB glutaminase and GltD NADPH oxidation are distinguished in the core synthesis without manufacturing redundant NEW rows. Correct broad terms are refined using supported descendants. No new process term is proposed, no experimental claim is removed, and no inherited precomposed involved-in term requires decomposition. No source GOA file is used as biological support.
 
 Focused validation includes schema/terms/best practices, literal supporting quotes, record-section derivation, notes PMID checks, HTML render and helper-created history validation. Exact paths and immutable-row/raw-hash proof are in `.cache/module-audit-logs/ammonia-azobr-review/`.
+
+
+## 2026-10-28 — PR #5696 review follow-up
+
+The glutamine-hydrolysis and ammonia-channel mechanism remains in the biological description and core-function prose. The machine-readable core now records contribution to GO:0004355 glutamate synthase (NADPH) activity, with the native small chain required for NADPH input, rather than a separate GO:0004359 glutaminase activity. This policy is applied to all four reviewed large chains; the inherited PSEPK standalone proposal is archived, and no new rows are added to fill coverage warnings. Direct E. coli partial-activity evidence (PMID:770440) remains valid and retained.

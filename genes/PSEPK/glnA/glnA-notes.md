@@ -20,3 +20,9 @@ Kept the description independent of the review workflow; source-access limits re
 ## 2026-10-27 — independent provenance QA
 
 The original membrane TreeGrafter annotation names PANTHER:PTN002459220. This observed proximate source is now recorded separately from the inspected family PAINT IBD PTN000464923 and its mouse Lgsn seed. Their ancestral relationship was not verified and is not asserted. The membrane decision remains UNDECIDED; all original annotation payloads and both raw sources are unchanged.
+
+## 2026-10-28 — PR #5696 membrane evidence correction
+
+The previous reason invoked unspecified bacterial GS membrane reports without citing them. That clause is withdrawn. The electronic membrane claim is now MARK_AS_OVER_ANNOTATED: the inspected family evidence concerns noncatalytic mouse lengsin and its specialized lens cytoskeletal/membrane role, which does not establish the corresponding location of catalytic KT2440 GlnA. Full PMID:18178558 states, “Lengsin has no GS activity, suggesting that it has a structural rather than catalytic role in lens.” This is biological evidence against transferring that specialized location, not a claim that a cytoplasmic enzyme cannot attach to a membrane.
+
+The original TreeGrafter node PTN002459220 and the separately inspected family IBD PTN000464923 remain recorded with their actual access limits. Their ancestral relationship has not been established, so the revised decision does not pretend to have proved the precise propagation error or assert experimental absence from membranes. The conservative over-annotation action replaces the prior uncertainty action; no machine assertion, GOA row, raw source, or other gene review is changed. E. coli retains its distinct unresolved native experimental membrane evidence.
