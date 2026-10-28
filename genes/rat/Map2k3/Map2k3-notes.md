@@ -28,3 +28,7 @@
   MODIFY -> GO:0038066 and source_defects recorded.
 - Comparator check for NEW: none of the process terms proposed; only one NEW MF row.
 - No CC rows in GOA; no rat localization data, so no NEW CC row (human evidence is TAS only).
+
+## 2026-10-28: positive regulation of MAPK cascade rows (PR #5678 follow-up)
+
+The two GO:0043410 rows (ARBA IEA, ISO from mouse) were first MODIFYed laterally to GO:0038066 p38MAPK cascade, with SUSPECTED WRONG_TERM defects, on the view that a cascade kinase should not carry a regulation term. The rat Map2k7 and Map3k5 reviews (PR #5679) settled on the GO convention that cascade kinases also carry the positive-regulation term. To match, both rows now MODIFY to the descendant GO:1900745 positive regulation of p38MAPK cascade, and the two source defects are withdrawn. p38MAPK cascade remains the core process.
