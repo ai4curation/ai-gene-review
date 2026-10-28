@@ -43,3 +43,13 @@ The following pins identify the prepared evidence inspected by the coordinator, 
 Original IBD: [PANTHER current IBD.gaf](https://data.pantherdb.org/ftp/downloads/paint/current/IBD.gaf), SHA256 `0c672914e10c1f79d3fb365077d843a92e518eb6eee2aac00c67150274adf569`, retrieved 2026-10-28T05:21:02Z; source last-modified 2026-08-28. The small existing normal family slice is unchanged. The complete 102-node topology and positive IBD placement, rather than donor counts, support the three inherited assertions.
 
 The original PMID:15213246 scanned article PDF has SHA256 `65d858e4d7683851fca71242c712a0814c7600699d7d3bdc36b0ecef3ab7fd0e`; see the government URL in the evidence table. Other separately retrieved original and author-summary links are listed with their access limits in that table. No full-text claim is inferred solely from HTTP 200, a title, an abstract or a provider summary.
+
+## Cytoplasm refinement, 2026-10-28
+
+Fresh official GO responses confirm the path GO:0000139 Golgi membrane part_of GO:0005794 Golgi apparatus part_of GO:0005737 cytoplasm. The two broad cytoplasm assertions are true but already entailed by accepted Golgi localization, so their current action is TOO_GENERAL. This refinement preserves the original IEA/ISS evidence and does not infer a distinct cytosolic pool or reject the uninspected donor experiment.
+
+| Official response | Bytes | SHA256 |
+| --- | ---: | --- |
+| [go-location-terms.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0000139,GO:0005794,GO:0005737) | 9343 | `c9965755a248b0b5d99e3aacfc3f14c904d0d8057aae976eab7e3091b31f7c64` |
+| [golgi-membrane-to-cytoplasm.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0000139/paths/GO:0005737?relations=is_a,part_of) | 188 | `a37f7f3aea05c7f1900929078d604158bfee3b1262ea57e4830c75d7fddede42` |
+| [golgi-to-cytoplasm.json](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0005794/paths/GO:0005737?relations=is_a,part_of) | 118 | `f4e7a03eebb9d9e42ab37329c80c9716220e3f591ca4388e598d0d9120476153` |
