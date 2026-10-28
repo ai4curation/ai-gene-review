@@ -41,3 +41,14 @@
 - No NEW terms. Further phenotypes (germline proliferation, autophagy, mate
   searching, CO2 avoidance) are pleiotropic pathway outputs and do not meet the
   NEW bar.
+
+## PR review follow-up: unsigned dauer terms (GO:0040024, GO:0043053)
+
+A comparator check in QuickGO (C. elegans, exact term) found that WormBase annotates involved_in GO:0040024
+dauer larval development to Daf pathway genes of both signs: dauer-constitutive (daf-1, daf-2, daf-4, daf-7,
+daf-8, daf-11, daf-14, daf-28) and dauer-defective (daf-3, daf-5, daf-9, daf-12, daf-16). GO:0043053 dauer
+entry likewise sits on age-1, daf-1, daf-4, daf-7, daf-8 and daf-22. The unsigned terms are therefore a MOD
+convention for "role in the dauer decision", not a claim that DAF-7 executes dauer development, and the
+merged daf-4 review accepts the same rows. The daf-7 rows are kept as non-core; the signed terms GO:0061067
+and GO:1905910, which daf-7 also carries, are the core terms. The convention is raised as a suggested
+question rather than a source defect.
