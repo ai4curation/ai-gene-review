@@ -40,3 +40,11 @@
 - [PMID:20472934 "free RhoA rapidly exchanged its bound nucleotide (GDP) with GTP, and the reaction was saturated after 15 min"]
 - [PMID:21423166 "RhoA and Cdc42 were rapidly activated in the stimulated spine"]
 - [PMID:17662049 "ICAM-1 cross-linking induces a strong activation of RhoA in RBE4 cells"]
+
+## 2026-10-28: reason text on experimental rows
+
+- On the 17 IMP/IEP/IGI rows with quoted supporting text, replaced the templated hedge "(from
+  the cited source or transfer from the orthologous human/mouse RhoA)" with a statement that the
+  evidence is the experiment in the cited publication (an RGD experimental annotation to rat
+  Rhoa, not an ortholog transfer). The organism of each cell system was not re-checked beyond
+  this. Actions unchanged; ISO/ISS/IBA rows keep their original wording.

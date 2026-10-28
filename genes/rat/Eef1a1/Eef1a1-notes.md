@@ -21,3 +21,15 @@
 - NOT nucleus ISO vs positive nucleus ISO/ISS: conflict; positive kept as non-core (EGF/ZPR1),
   NOT left UNDECIDED. The resulting consistency warning is deliberate.
 - No NEW terms proposed (necessity/expression evidence only for extra processes).
+
+## 2026-10-28: nucleus action consistency
+
+- Re-examined the GO:0005634 rows. The two positive rows (ISO, ISS) and the NOT row (ISO,
+  negated) are opposite claims, not one claim. Kept the positive rows KEEP_AS_NON_CORE
+  (conditional EGF/ZPR1-driven nuclear entry) and the NOT row UNDECIDED, which is the
+  resolution docs/action_consistency.md prescribes for a positive/NOT conflict; expanded the
+  NOT row's reason to say so.
+- A consistency_exception does not help: the action_consistency check reports no conflict for
+  this pair (it flagged the exception as stale), and the older `inconsistent_review_actions`
+  check ignores both `negated` and `consistency_exception`. The remaining warning is therefore a
+  validator limitation, not a curation inconsistency. Status stays DRAFT per update-status.

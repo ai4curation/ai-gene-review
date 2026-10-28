@@ -28,3 +28,15 @@
 - No NEW terms proposed: all candidate processes are either already present or rest only
   on phenotype/expression evidence.
 - Unverifiable ISO rows (lncRNA binding, hemoglobin biosynthesis) left UNDECIDED.
+
+## 2026-10-28: propagation_review metadata
+
+- Added structured `propagation_review` to the 24 ISO rows with MODIFY, MARK_AS_OVER_ANNOTATED
+  or UNDECIDED, derived only from each row's existing reason text (no new analysis). Sources are
+  mouse Klf4 (MGI:MGI:1342287) or human KLF4 (UniProtKB:O43474) per With/From; the source
+  annotations themselves were not inspected, and each comment says so.
+- "Correct but general" MODIFY rows: TERM_SCOPING_PROBLEM / GRANULARITY_MISMATCH. DNA-templated
+  transcription and canonical Wnt signaling: TERM_SCOPING_PROBLEM / ROLE_CONFLATION. Gene
+  expression (phenotype-based source): SOURCE_WEAK_OR_INFERRED. lncRNA binding and hemoglobin
+  biosynthesis (UNDECIDED): UNRESOLVED.
+- Validation now clean of propagation warnings; status set to COMPLETE per update-status.
