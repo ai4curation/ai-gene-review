@@ -32,13 +32,38 @@ mnxG (<10 μM) and then mcoA (>10 to 500 μM)"].
   unrelated in fold to the MCOs: functional redundancy, not paralogy
   [PMID:27084014 "Mass spectrometry and directed mutagenesis identified this protein as MopA, an animal heme peroxidase"].
 
+## EC 1.16.3.3 (ExplorEnz, looked up 2026-10-28)
+The load-bearing claim behind the proposed term, recorded here verbatim-ish so it need
+not be re-checked:
+- Accepted name: **manganese oxidase**
+- Reaction: 4 Mn2+ + 2 O2 + 4 H2O = 4 Mn(IV)O2 + 8 H+ (overall reaction)
+  - (1a) 4 Mn2+ + O2 + 4 H+ = 4 Mn3+ + 2 H2O
+  - (1b) 4 Mn3+ + O2 + 6 H2O = 4 Mn(IV)O2 + 12 H+
+- Other name(s): mnxG (gene name); mofA (gene name); moxA (gene name); cotA (gene name)
+- Systematic name: manganese(II):oxygen oxidoreductase
+- Comments: "The enzyme, which belongs to the multicopper oxidase family, is found in many
+  bacterial strains. It oxidizes soluble manganese(II) to insoluble manganese(IV) oxides."
+
+Two consequences. (i) The EC entry lists **mnxG itself as a gene name** for this activity,
+which is independent corroboration of this gene's identity on top of the GB-1 genetics.
+(ii) The product of the overall reaction is Mn(IV)O2; Mn(III) is an **intermediate**
+(step 1a), not the product. The proposed term's definition therefore states MnO2 as the
+product and the one-electron steps are kept in `justification` as mechanism, matching
+[PMID:42757987 "Sequential one-electron oxidation reactions occur along the tunnel, with Mn(IV) ultimately condensing into MnO2 nanoparticles"].
+
 ## GO
 - Only GOA row: copper ion binding (IEA InterPro) -> ACCEPT.
 - NEW: GO:0016724 (IMP, PMID:23124227). No GO term exists for EC 1.16.3.3 manganese
   oxidase (checked ec2go and QuickGO search, 2026-10-28); proposed as new term.
-- No BP added: there is no GO process for Mn(II) oxidation/biomineralization.
+- No BP added: there is no GO process for Mn(II) oxidation/biomineralization. A sibling
+  review (SIL1, ai4curation/ai-gene-review#5636) ran the OLS search for a lineage-neutral
+  biomineralization process term and found none: every hit is GO:0031214 biomineral tissue
+  development or a descendant, all of which presuppose an animal tissue. The decline here
+  is consistent with that finding.
+- `interpro/panther/PTHR48267/` was fetched by `just fetch-gene` for mcoA, not for mnxG:
+  UniProt assigns mnxG no PANTHER family. Those files are cited from the mcoA review.
 
-## CMMMech record notes (data/records/manganese.yaml; not edited)
+## CMMMech record notes (CMMMech repository, data/records/manganese.yaml; not edited here)
 - Protein example evidence says "genetic deletion and complementation in Wright et al.
   (2018)". Wright 2018 used existing mutants (the deletions were made in Geszvain et al.
   2013, PMID:23124227, and Geszvain et al. 2016, PMID:27084014, plus two strains built in

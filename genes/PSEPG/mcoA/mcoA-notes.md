@@ -25,11 +25,39 @@ inhibition of MnxG at high Mn(II) concentrations"]; [PMID:40122939 "McoA contrib
 - Not a duplication product of MnxG [PMID:42757987 "suggesting they did not arise by gene duplication"];
   MopA is an unrelated heme peroxidase (see mnxG notes).
 
+## EC 1.16.3.3 (ExplorEnz, looked up 2026-10-28)
+Recorded verbatim-ish so it need not be re-checked (see also mnxG notes):
+- Accepted name: **manganese oxidase**
+- Reaction: 4 Mn2+ + 2 O2 + 4 H2O = 4 Mn(IV)O2 + 8 H+ (overall reaction)
+  - (1a) 4 Mn2+ + O2 + 4 H+ = 4 Mn3+ + 2 H2O
+  - (1b) 4 Mn3+ + O2 + 6 H2O = 4 Mn(IV)O2 + 12 H+
+- Other name(s): mnxG (gene name); mofA (gene name); moxA (gene name); cotA (gene name)
+- Systematic name: manganese(II):oxygen oxidoreductase
+- Comments: "The enzyme, which belongs to the multicopper oxidase family, is found in many
+  bacterial strains. It oxidizes soluble manganese(II) to insoluble manganese(IV) oxides."
+
+The overall product is Mn(IV)O2; Mn(III) is an intermediate (step 1a), not the product, so
+the proposed term's definition states MnO2 and the one-electron steps live in
+`justification` as mechanism. Note that cotA, one of the EC entry's gene names, is also the
+protein that dominates McoA's PANTHER subfamily (below).
+
 ## GO
 - copper ion binding IEA -> ACCEPT; oxidoreductase activity IEA -> MODIFY to GO:0016724.
-- Proposed new term "manganese oxidase activity" (EC 1.16.3.3, no GO term).
+  The copper-centre claim is cited at the **subfamily** level, PTHR48267:SF1 (BILIRUBIN
+  OXIDASE), not the bare family PTHR48267 (CUPREDOXIN SUPERFAMILY PROTEIN), which also
+  contains single-domain type-1-only cupredoxins with no trinuclear cluster.
+  `interpro/panther/PTHR48267/PTHR48267-entries.csv` is cited for that: all 36 listed
+  members sit in SF1 and are CotA laccases, E. coli CueO, FtsP/SufI and fungal bilirubin
+  oxidase, i.e. canonical three-domain MCOs.
+- Proposed new term "manganese oxidase activity" (EC 1.16.3.3, no GO term). The MODIFY
+  replacement is GO:0016724 because that is what is annotatable today; when GO creates the
+  proposed term, `proposed_replacement_terms` should become it and
+  `core_functions.molecular_function` should take its id.
+- No BP added: no lineage-neutral biomineralization process term exists. A sibling review
+  (SIL1, ai4curation/ai-gene-review#5636) ran that OLS search; every hit is GO:0031214
+  biomineral tissue development or a descendant.
 
-## CMMMech record notes (data/records/manganese.yaml; not edited)
+## CMMMech record notes (CMMMech repository, data/records/manganese.yaml; not edited here)
 - Evidence text says McoA was "shown by clean deletion and overexpression in Wright et al.
   (2018) to oxidize Mn(II)". The clean deletion is from Geszvain et al. 2013
   (PMID:23124227); I found no McoA overexpression in Wright 2018 (it studied Mn(III)-L
