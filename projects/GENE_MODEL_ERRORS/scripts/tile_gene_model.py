@@ -34,6 +34,7 @@ import argparse
 import csv
 import json
 import sys
+import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -44,9 +45,21 @@ REST = "https://rest.uniprot.org"
 INTERPRO = "https://www.ebi.ac.uk/interpro/api/entry/interpro/protein/uniprot/{}"
 
 
-def get(url: str) -> str:
-    with urllib.request.urlopen(url, timeout=900) as r:
-        return r.read().decode()
+def get(url: str, retries: int = 4) -> str:
+    """Fetch a URL, retrying transient failures, then failing loudly.
+
+    A silently failed lookup would read as "no domains" and change the output,
+    so after the last retry the error propagates instead.
+    """
+    for attempt in range(retries + 1):
+        try:
+            with urllib.request.urlopen(url, timeout=900) as r:
+                return r.read().decode()
+        except OSError:
+            if attempt == retries:
+                raise
+            time.sleep(2 ** (attempt + 1))
+    raise AssertionError("unreachable")
 
 
 def comparison_fasta(upid: str, cache: Path) -> Path:
@@ -69,11 +82,9 @@ def member_accessions(upis: list[str]) -> dict[str, str]:
 
 
 def domains(acc: str) -> list[tuple[str, str, int, int]]:
-    try:
-        body = get(INTERPRO.format(acc))
-        data = json.loads(body) if body.strip() else {}
-    except (OSError, ValueError):
-        return []
+    # InterPro answers 204 (empty body) for a protein with no entries.
+    body = get(INTERPRO.format(acc))
+    data = json.loads(body) if body.strip() else {}
     out = []
     for r in data.get("results", []):
         m = r["metadata"]
