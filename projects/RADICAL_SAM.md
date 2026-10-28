@@ -195,8 +195,12 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 Every figure below is computed from the reviews by
 [`rsam_synthesis.py`](RADICAL_SAM/rsam_synthesis.py), which takes its gene list
 from this page's own frontmatter and writes
-[`data/synthesis.yaml`](RADICAL_SAM/data/synthesis.yaml). Nothing is hardcoded;
-re-run it after any review changes.
+[`data/synthesis.yaml`](RADICAL_SAM/data/synthesis.yaml). No *result* is
+hardcoded; the project's own editorial choices are (the treatment rule itself,
+and which asserted values count as PflB-substrate pushes). Editing any of the 29
+reviews changes these figures, so re-run the script and commit the regenerated
+data in the same change — `tests/test_radical_sam_synthesis.py` fails until you
+do, and also checks that the totals quoted here actually partition.
 
 # Synthesis
 
@@ -356,8 +360,11 @@ filed as `resource: OTHER` with InterPro named in each explanation.
 Three claims the data supports, and one it does not.
 
 1. **The family's annotation problem is resolution, not error.** 210 ACCEPT
-   against 49 REMOVE, and most removals were uninformative `protein binding` or
-   demonstrably wrong signature mappings — not bad biology.
+   against 49 REMOVE — and **47 of those 49 removals** were uninformative
+   `protein binding` (34) or terms pushed onto a protein by a wrong InterPro2GO,
+   EC or PAINT mapping (13), not bad biology. Only **2** were anything else, both
+   `NAS` rows on CDK5RAP1 projecting CDK5 neuronal biology onto a mitochondrial
+   tRNA enzyme. The split is computed (`remove_breakdown`), not asserted.
 2. **The shared domain is an attractor for over-general annotation.** 112 MODIFY,
    almost all pulling a correct-but-generic term down to the specific reaction.
 3. **Discovery is outrunning the ontology.** Three of the six missing terms are

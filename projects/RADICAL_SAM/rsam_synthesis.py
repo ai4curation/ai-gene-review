@@ -17,6 +17,10 @@ A gene counts as REVIEWED when it has annotation rows and none of them is still
 (MOCS1 is fully reviewed but still reads `INITIALIZED`); status mismatches are
 reported separately under `data_quality`.
 
+Editing any of the 29 gene reviews changes these figures, so re-run this script
+and commit the regenerated data/synthesis.yaml in the same change; CI fails until
+you do (tests/test_radical_sam_synthesis.py).
+
 Run from the repository root:
     uv run python projects/RADICAL_SAM/rsam_synthesis.py
     uv run python projects/RADICAL_SAM/rsam_synthesis.py --check   # CI: fail if stale
@@ -124,7 +128,10 @@ def build() -> dict:
             (a.get("review") or {}).get("action")
             for a in rows if (a.get("term") or {}).get("id") == SAM_BINDING
         } - {None})
-        catalysis_established = bool(sam_actions)
+        # Only an affirmative SAM row counts: a REMOVE or UNDECIDED on GO:1904047
+        # would otherwise read as "catalysis established" and silently flip a gene
+        # into the wrong branch of the treatment rule.
+        catalysis_established = bool({"ACCEPT", "NEW"} & set(sam_actions))
 
         per_gene = Counter()
         for a in rows:
@@ -186,6 +193,10 @@ def build() -> dict:
             "n_core_proposed": sum(1 for c in cfs if c["kind"] == "PROPOSED"),
             "sam_binding_actions": sam_actions or None,
             "catalysis_established": catalysis_established,
+            "_remove_terms": [
+                ((a.get("term") or {}).get("id"), "REMOVE") for a in rows
+                if ((a.get("review") or {}).get("action")) == "REMOVE"
+            ],
         }
 
     rev = {k: v for k, v in genes.items() if v["reviewed"]}
@@ -205,6 +216,21 @@ def build() -> dict:
                         if v["sam_binding_actions"] and "ACCEPT" in v["sam_binding_actions"])
     sam_absent = sorted(k for k, v in rev.items() if not v["sam_binding_actions"])
     sam_not_reviewed = sorted(k for k, v in genes.items() if not v["reviewed"])
+
+    # What the REMOVE rows actually are, so the page need not assert it.
+    # "signature/mapping" = a term withdrawn because an InterPro2GO, EC or PAINT
+    # mapping pushed it onto a protein the evidence excludes.
+    mapping_removals = {"GO:0004109", "GO:0006779", "GO:0043365", "GO:0061799",
+                        "GO:0004748", "GO:0006400"}
+    removes = Counter()
+    for sym, v in rev.items():
+        for t, act in v["_remove_terms"]:
+            if t == "GO:0005515":
+                removes["uninformative_protein_binding"] += 1
+            elif t in mapping_removals:
+                removes["wrong_signature_or_mapping"] += 1
+            else:
+                removes["other"] += 1
 
     interpro = [d for d in defects if str(d["record"]).startswith("InterPro")]
     # Defects whose asserted value pushes PflB/formate-C-acetyltransferase
@@ -248,6 +274,7 @@ def build() -> dict:
         "genes_with_no_core_function": sorted(k for k, v in rev.items() if not v["core_functions"]),
         "proposed_new_terms": proposed_terms,
         "source_defects": defects,
+        "remove_breakdown": dict(removes),
         "source_defect_summary": {
             "total": len(defects),
             "by_resource": dict(sorted(Counter(d["resource"] for d in defects).items())),
@@ -258,7 +285,8 @@ def build() -> dict:
         "ibas_whose_node_placement_was_argued": argued_ibas,
         "iba_root_causes": dict(sorted(Counter(
             i["root_cause"] for i in argued_ibas).items())),
-        "genes": genes,
+        "genes": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")}
+                  for k, v in genes.items()},
     }
 
 

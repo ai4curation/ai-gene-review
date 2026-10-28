@@ -26,9 +26,12 @@ def _build():
 
 
 def test_committed_synthesis_is_current():
-    """data/synthesis.yaml equals a fresh run (the --check contract)."""
-    fresh = yaml.safe_dump(_build(), sort_keys=False, allow_unicode=True)
-    assert DATA.read_text() == fresh, (
+    """data/synthesis.yaml equals a fresh run (the --check contract).
+
+    Compares parsed data, not bytes: the contract is that the committed figures
+    match the reviews, and a PyYAML formatting change should not redden CI.
+    """
+    assert yaml.safe_load(DATA.read_text()) == _build(), (
         "projects/RADICAL_SAM/data/synthesis.yaml is stale; re-run "
         "`uv run python projects/RADICAL_SAM/rsam_synthesis.py`"
     )
@@ -57,3 +60,5 @@ def test_internal_consistency():
     assert len(sam["new_rows_absent_from_goa"]) + len(sam["already_in_goa"]) + \
         len(sam["absent_catalysis_not_established"]) == len(reviewed)
     assert set(sam["not_reviewed_so_not_classified"]).isdisjoint(reviewed)
+    # The REMOVE breakdown accounts for every REMOVE row.
+    assert sum(d["remove_breakdown"].values()) == d["actions_in_reviewed_genes"]["REMOVE"]
