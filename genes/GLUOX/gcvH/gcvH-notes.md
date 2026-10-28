@@ -92,6 +92,29 @@ and protein name within a TrEMBL proteome, not a profile-HMM search of the genom
 "absent" means "not annotated as present". That is why the call is
 `MARK_AS_OVER_ANNOTATED` and not `REMOVE`.
 
+### Follow-up: `genes/METEA/gcvH` needs the same correction
+
+Recording this as an explicit follow-up rather than leaving the divergence noted and
+unresolved. The argument above is not specific to *G. oxydans*: its first leg — that
+carrying the lipoylated lysine makes GcvH the **substrate** of `protein lipoylation`,
+not a participant in it — applies to every GcvH, and its second leg holds for
+*M. extorquens* AM1 as well. That proteome carries the *E. coli*-type pair, LipB
+(C5AQW0, lipB / MexAM1_META1p4604, Octanoyltransferase) and LipA (C5AVR2, lipA /
+MexAM1_META1p3000, Lipoyl synthase), and no entry matches `lipM` or `lipL` (UniProtKB
+REST, `organism_id:272630`, run 2026-10-28; the same name-search caveat applies as
+above). So `genes/METEA/gcvH` (C5AUG1), which on `main` both ACCEPTs `GO:0009249` on
+the grounds that GcvH carries the lipoyl cofactor and lists `GO:0009249` under
+`core_functions.directly_involved_in`, asserts the donor role for an organism that
+appears to be on the *E. coli* side of the line too, and asserts it as a core function
+on reasoning that does not distinguish acceptor from donor. Both the annotation action
+and the core-function entry should be revisited, and the UniProt quotes cited there
+("Binds 1 lipoyl cofactor covalently"; "N6-lipoyllysine") re-read as establishing the
+acceptor role only.
+
+That is a separate gene and a separate change, deliberately not made in this PR: it is
+work not yet done rather than something nobody knows, so it belongs here and in a
+follow-up PR, not in `knowledge_gaps`.
+
 ## 4. The process term: does GcvH do any of the work of glycine decarboxylation?
 
 This is the question CLAUDE.md's participation test is for, and the answer is yes, by a
