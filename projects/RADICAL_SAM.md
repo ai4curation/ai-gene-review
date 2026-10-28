@@ -289,9 +289,13 @@ Two changes went beyond flipping an action, and one convention was settled along
   discounts when it declines to name a molecular function. A review cannot
   discount a source in one field and lean on it in the next. `GO:0033068` itself
   survives on different evidence: the GOA row's `WITH/FROM` names
-  `InterPro:IPR016863`, so the DesII family signature it quotes is the one the
-  InterPro2GO mapping fired on, which places the protein in macrolide deoxysugar
-  biosynthesis without the gene name. The genus follows from the family; the
+  `InterPro:IPR016863`, and the DesII *entry* the row quotes is that one — so the
+  quote is what the InterPro2GO mapping fired on, not merely something consistent
+  with it, which places the protein in macrolide deoxysugar biosynthesis without
+  the gene name. (Entry, not member signature: a UniProt record lists InterPro
+  entries and member-database signatures as unrelated `DR` lines, so which
+  signature InterPro integrates into which entry is not a fact the record
+  carries, and the reviews assert no such pairing.) The genus follows from the family; the
   erythromycin-specific child would need the cluster's identity, which only that
   gene name supplies.
 - **10 `NEW` `GO:1904047` rows.** Phase 4's headline finding is that GOA is
