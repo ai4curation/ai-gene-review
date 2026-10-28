@@ -1,7 +1,10 @@
 """Align Thiobacillus denitrificans MerA (Q3SJ73) with Tn501 MerA (P00392).
 
 Reports global identity and which Q3SJ73 residues align to the experimentally
-characterised Tn501 catalytic cysteines and NmerA GMTCXXC motif.
+characterised Tn501 catalytic cysteines and NmerA GMTCXXC motif. Also reports
+global identity to the two non-MerA PTHR43014 subfamily representatives that the
+committed family entry list names: P9WHH7 (M. tuberculosis LpdA, PTHR43014:SF1,
+the IBD seed for GO:0003955) and P77212 (E. coli RclA, PTHR43014:SF4).
 Run: uv run python genes/THIDA/merA/merA-bioinformatics/compare_tn501.py
 """
 import re
@@ -17,36 +20,66 @@ def fasta(acc):
     return "".join(txt.split("\n")[1:])
 
 
-q = fasta("Q3SJ73")
-t = fasta("P00392")
-print(f"Q3SJ73 length {len(q)}; P00392 (Tn501 MerA) length {len(t)}")
-
 al = Align.PairwiseAligner()
 al.mode = "global"
 al.substitution_matrix = substitution_matrices.load("BLOSUM62")
 al.open_gap_score = -10
 al.extend_gap_score = -0.5
-aln = al.align(q, t)[0]
 
-# map target positions -> query positions
-t2q = {}
-ident = aligned = 0
-for (qs, qe), (ts, te) in zip(*aln.aligned):
-    for i in range(qe - qs):
-        t2q[ts + i + 1] = qs + i + 1
-        aligned += 1
-        ident += q[qs + i] == t[ts + i]
+
+def align(query, target):
+    """Return (alignment, target_pos -> query_pos map, aligned, identical)."""
+    aln = al.align(query, target)[0]
+    pos_map = {}
+    ident = aligned = 0
+    for (qs, qe), (ts, te) in zip(*aln.aligned):
+        for i in range(qe - qs):
+            pos_map[ts + i + 1] = qs + i + 1
+            aligned += 1
+            ident += query[qs + i] == target[ts + i]
+    return aln, pos_map, aligned, ident
+
+
+def find_once(pattern, seq, what):
+    """Locate an anchored motif, failing loudly unless it occurs exactly once."""
+    hits = [m.start() for m in re.finditer(pattern, seq)]
+    if len(hits) != 1:
+        raise SystemExit(
+            f"expected exactly one {what} ({pattern}) in the sequence, found {len(hits)}"
+        )
+    return hits[0]
+
+
+q = fasta("Q3SJ73")
+t = fasta("P00392")
+print(f"Q3SJ73 length {len(q)}; P00392 (Tn501 MerA) length {len(t)}")
+
+_, t2q, aligned, ident = align(q, t)
 print(f"aligned positions {aligned}; identical {ident}; identity {100*ident/aligned:.1f}% of aligned")
 
-# Tn501 landmarks: locate in the P00392 sequence by motif rather than hard-coding numbers
+# Non-MerA PTHR43014 subfamily representatives, for comparison with the MerA reference.
+for acc, label in (
+    ("P9WHH7", "M. tuberculosis LpdA, PTHR43014:SF1, GO:0003955 IBD seed"),
+    ("P77212", "E. coli RclA, PTHR43014:SF4"),
+):
+    o = fasta(acc)
+    _, _, oaligned, oident = align(q, o)
+    print(
+        f"Q3SJ73 vs {acc} ({label}): length {len(o)}; aligned {oaligned}; "
+        f"identical {oident}; identity {100*oident/oaligned:.1f}% of aligned"
+    )
+
+# Tn501 landmarks: locate in the P00392 sequence by anchored motif rather than hard-coding numbers
 landmarks = {}
-m = re.search(r"GMTC..C", t)
-landmarks["NmerA GMTCxxC first Cys"] = m.start() + 4
-landmarks["NmerA GMTCxxC second Cys"] = m.start() + 7
-m = re.search(r"C....C", t[100:200])
-landmarks["redox-active disulfide Cys1"] = 100 + m.start() + 1
-landmarks["redox-active disulfide Cys2"] = 100 + m.start() + 6
+s = find_once(r"GMTC..C", t, "NmerA GMTCxxC motif")
+landmarks["NmerA GMTCxxC first Cys"] = s + 4
+landmarks["NmerA GMTCxxC second Cys"] = s + 7
+s = find_once(r"CVNVGC", t, "redox-active CVNVGC motif")
+landmarks["redox-active disulfide Cys1"] = s + 1
+landmarks["redox-active disulfide Cys2"] = s + 6
 for pos in (558, 559):
+    if t[pos - 1] != "C":
+        raise SystemExit(f"P00392 position {pos} is {t[pos-1]}, not the expected Cys")
     landmarks[f"Tn501 Cys{pos} (C-terminal pair)"] = pos
 for name, tp in landmarks.items():
     qp = t2q.get(tp)

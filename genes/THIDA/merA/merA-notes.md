@@ -22,7 +22,9 @@ in an operon under control of MerR"].
 
 ## Sequence analysis
 
-`merA-bioinformatics/RESULTS.md`: 61.2% identity to Tn501 MerA (P00392) over 539 aligned positions.
+`merA-bioinformatics/RESULTS.md`: 61.2% identity to Tn501 MerA (P00392) over 539 aligned positions,
+against 33.3% to P9WHH7 (M. tuberculosis LpdA, PTHR43014:SF1) and 32.2% to P77212 (E. coli RclA,
+PTHR43014:SF4), the two non-MerA subfamily representatives in the committed family entry list.
 All three cysteine sets align: NmerA GMTCDHC (C13/C16), redox-active disulfide CVNVGC (C117/C122)
 and the MerA-specific C-terminal pair (C538/C539). The C-terminal pair is the feature that separates MerA
 from other class-I pyridine nucleotide-disulfide oxidoreductases, which mercurials inhibit:
@@ -41,15 +43,29 @@ protein that binds 1 Hg(2+)/domain and delivers it to the catalytic core at kine
 - GO:0016491 oxidoreductase activity, GO:0046872 metal ion binding: MODIFY to the specific terms already present.
 - GO:0003955 NAD(P)H dehydrogenase (quinone) activity: REMOVE. TreeGrafter propagation from the family-level
   PAINT node PTN002453100 (PTHR43014), whose only seed for this term is M. tuberculosis LpdA (P9WHH7), a
-  quinone reductase. No quinone reductase activity has been reported for MerA proteins in the papers read here.
-  Recorded as a source defect against GO_CENTRAL (PAINT node placement).
+  quinone reductase, which `PTHR43014-entries.csv` places in subfamily PTHR43014:SF1 while the UniProt entry
+  assigns Q3SJ73 to SF2 (`DR PANTHER; PTHR43014:SF2`). The ancestry of PTN005140324 (the node named in the GOA
+  WITH/FROM) below PTN002453100 is shown by the committed slice itself: GO:0050660 reaches Q3SJ73 through the
+  same PTN005140324 and has its only IBD at PTN002453100 too, so both terms travel the identical node path.
+  The extended alignment gives the distance: 61.2% identity to Tn501 MerA against 33.3% to P9WHH7 (SF1) and
+  32.2% to P77212 (RclA, SF4). No quinone reductase activity has been reported for MerA proteins in the papers
+  read here. Recorded as a source defect against GO_CENTRAL (PAINT node placement), plus a `CHECK` against
+  UniProt on the UniRule token in the WITH/FROM: the entry's own cross-reference carries this term as
+  `IEA:TreeGrafter`, not `IEA:UniProtKB-UniRule`, so it is not established that UR000329331 asserts it.
 - GO:0016668 oxidoreductase activity, acting on a sulfur group of donors, NAD(P) as acceptor: REMOVE. The donor/acceptor
   pairing is that of lipoamide dehydrogenase/glutathione reductase relatives; in MerA the cysteines are part of the enzyme,
   the substrate is Hg(II). GO:0016152 is under GO:0016723 (acting on metal ions, NAD or NADP as acceptor),
-  not under GO:0016668 (OLS, 2026-10-28). Source defect against the family-wide PROSITE/InterPro IPR012999 mapping.
+  not under GO:0016668 (OLS, 2026-10-28). Source defects: one against the family-wide PROSITE/InterPro IPR012999
+  mapping, and one against UniProt for UniRule UR000329331, which the entry's `IEA:UniProtKB-UniRule` GO line for
+  this term shows is the rule asserting it on a MerA-family entry (the rule systems applied here, PIRNR000350 and
+  RuleBase:RU361223, are MerA-specific).
 
 No `NEW` cytoplasm row is added: there is no localisation evidence for this protein beyond the
-absence of signal/TM features and analogy with Tn501. Cytoplasm is used only in core_functions context text.
+absence of signal/TM features and analogy with Tn501. The top-level `description` originally called
+the protein "cytoplasmic"; that locational claim has been removed so that the review does not assert
+in prose what no annotation and no `core_functions.locations` entry carries. (The mer system does
+deliver Hg(II) into the cytoplasm via MerT/MerP, so a cytoplasm IC row would be defensible; it is
+left out as the more conservative of the two self-consistent options.)
 
 ## CMMMech record check (data/records/metacinnabar.yaml)
 
