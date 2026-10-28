@@ -2999,9 +2999,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**648 of 2,876 genes are complete; 2,228 remain.**
-This checkpoint adds FKRP and FLAD1 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-648-2026-10-28-192302-utc) records the evidence and retained uncertainties.
+**650 of 2,876 genes are complete; 2,226 remain.**
+This checkpoint adds FKTN and FLCN after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-650-2026-10-28-205941-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3786,9 +3786,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FIG4** — HGNC:16873; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cbc44812-5fe4-4e11-ac89-58e4175d4463-2025-01-08T170000.000Z) (MONDO:0015626; AR; Definitive); [amyotrophic lateral sclerosis type 11](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d038fb84-1f98-4047-b6c5-039a53756775-2022-08-09T160000.000Z) (MONDO:0012945; AD; Limited).
 - [x] **FITM2** — HGNC:16135; [Siddiqi syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0a18aeda-fbe1-49b3-9542-6402ea61b4c0-2022-10-17T160000.000Z) (MONDO:0032842; AR; Definitive).
 - [x] **FKRP** — HGNC:17997; [myopathy caused by variation in FKRP](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6cb46400-ca4b-48cd-aaf7-dd493f0d2971-2024-08-13T190000.000Z) (MONDO:0700066; AR; Definitive).
-- [ ] **FKTN** — HGNC:3622; [myopathy caused by variation in FKTN](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54e23f1a-3b1b-49ef-aa02-6b46374b1546-2024-08-13T040000.000Z) (MONDO:0700067; AR; Definitive).
+- [x] **FKTN** — HGNC:3622; [myopathy caused by variation in FKTN](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_54e23f1a-3b1b-49ef-aa02-6b46374b1546-2024-08-13T040000.000Z) (MONDO:0700067; AR; Definitive).
 - [x] **FLAD1** — HGNC:24671; [myopathy with abnormal lipid metabolism](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_769764bf-09c5-4a7d-8501-5fcf154fcdda-2020-12-16T181902.981Z) (MONDO:0009703; AR; Definitive).
-- [ ] **FLCN** — HGNC:27310; [obsolete Birt-Hogg-Dube syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c96620e8-f9c9-41a0-a979-31fb9928abb6-2019-04-19T160000.000Z) (MONDO:0007607; AD; Definitive).
+- [x] **FLCN** — HGNC:27310; [obsolete Birt-Hogg-Dube syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c96620e8-f9c9-41a0-a979-31fb9928abb6-2019-04-19T160000.000Z) (MONDO:0007607; AD; Definitive).
 - [ ] **FLNA** — HGNC:3754; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8274) (MONDO:0019625; XL; Limited); [periventricular nodular heterotopia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_80bc6280-7c21-4168-8a98-93c31fead5d7-2020-12-27T231155.213Z) (MONDO:0020341; XL; Definitive).
 - [ ] **FLNB** — HGNC:3755; [FLNB-associated autosomal dominant filamin related bone disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_543fbfa2-1036-4ef5-94fb-9b7c2d2e3fe6-2025-09-03T160000.000Z) (MONDO:1060173; AD; Definitive).
 - [ ] **FLNC** — HGNC:3756; [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_edb5197f-05dc-42a4-a497-fff472985c6b-2025-05-30T160000.000Z) (MONDO:0005021; AD; Definitive); [myofibrillar myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d61672a0-06f2-4df4-845b-57566075fdb1-2023-10-26T010000.000Z) (MONDO:0018943; AD; Definitive).
