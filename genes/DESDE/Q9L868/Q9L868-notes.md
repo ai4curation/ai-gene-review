@@ -36,7 +36,9 @@ cleaved is built entirely from large-subunit residues. The entry's `FT BINDING` 
 annotate, exactly, **Ni(2+) at 72, 75 and 537**, **Fe cation at 75 and 540**, and
 structural **Mg(2+) at 53, 489 and 543**
 [UniProtKB:Q9L868 `FT BINDING 72 /ligand="Ni(2+)"`; `FT BINDING 75 /ligand="Fe cation"`;
-`FT BINDING 537 /ligand="Ni(2+)"`; `FT BINDING 540 /ligand="Fe cation"`].
+`FT BINDING 75 /ligand="Ni(2+)"`; `FT BINDING 537 /ligand="Ni(2+)"`;
+`FT BINDING 540 /ligand="Fe cation"`]. Position 75 carries both features, which is
+why it appears in each list.
 The four cysteines are 72 and 75 (the N-terminal CxxC) and 537 and 540 (the C-terminal
 DPCxxC). That all four coordinate the nickel, and that 75 and 540 are the **bridging**
 pair shared between the nickel and the iron, is not merely the canonical architecture or
@@ -183,7 +185,14 @@ Q9L868 carries `FT DISULFID 72..537` and `FT DISULFID 75..540`, both with eviden
 the same four cysteines the entry types as Ni-Fe cluster ligands. Each feature pairs an
 N-terminal cysteine with its C-terminal partner, which is the geometry imposed by both pairs
 clamping the shared Ni–Fe centre, not the geometry of a disulfide bond. The metal assignment
-and the disulfides cannot both hold in one conformer. Checks run live on 2026-10-28:
+and the disulfides cannot both hold in one conformer. For `DISULFID 75..540` the entry does
+not even need the structure to be caught out: position 75 carries **both**
+`FT BINDING 75 /ligand="Fe cation"` and `FT BINDING 75 /ligand="Ni(2+)"`, so the record
+asserts of that one residue that it coordinates the nickel, coordinates the iron, **and** is
+half of a disulfide to 540 — a three-way contradiction internal to the record. Position 540
+carries the Fe-cation feature only, and `DISULFID 72..537` pairs two residues the entry types
+as Ni(2+) ligands, so for those positions the conflict is the two-way one and the structural
+measurements below are what carry it. Checks run live on 2026-10-28:
 
 - **The author-deposited coordinates are what settle it, and they are measurements, not
   annotations.** Taken straight from the `ATOM`/`HETATM` records of the current `1E3D` file
@@ -227,9 +236,13 @@ defects are filed as `source_defects` on the `GO:0016151` row: the missing
 contradicted feature, `DISULFID 72..537` and `DISULFID 75..540` separately. They are split
 because `report_status` is per entry and `just export-source-defects` keys rows on
 `asserted_value`, so a bundled pair could not record UniProt removing one feature and
-keeping the other; the two entries share their reasoning and differ only in the value asked
-to be removed. The request is removal, not reinterpretation: the features assert bonds the
-cited structure does not contain.
+keeping the other. Each entry has to stand alone when exported, so they share the whole
+common argument verbatim — the provenance reading, the `RP`-scope point, the orthologue
+point, the disclaimer about the generating pipeline — and differ only where the two pairs
+genuinely differ: the positions and distances, the internal three-way contradiction at
+residue 75, and the bearing of `DISULFID 75..540` on the missing `Ni(2+)` feature at 540.
+A correction to the shared argument has to be made in both. The request is removal, not
+reinterpretation: the features assert bonds the cited structure does not contain.
 
 The Pd(II)-reduction evidence remains indirect for this subunit: Lloyd et al. used strain
 ATCC 29577 and inferred hydrogenase involvement from H2 dependence and Cu2+ pretreatment
