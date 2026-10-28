@@ -93,6 +93,9 @@ genes:
   - hutI
   - wbpD
   - PA3760
+  - pilM
+  - PA1055
+  - PA1057
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -1491,6 +1494,8 @@ and a representative seed) in the corresponding
 | hutI | PSEAE | Seed-side: LUCA imidazolonepropionase IBD (PTN000505272, reaches AMDHD1) anchored only on a 1967 paper that predates the gene | LOW | COMPLETE |
 | wbpD | PSEAE | Seed-side: UDP-glucuronate biosynthesis IBD (PTN001292385, sole seed) from a PseudoCAP row placing a UDP-ManNAc3NAcA-pathway acetyltransferase in the wrong pathway | MEDIUM | COMPLETE |
 | PA3760 | PSEAE | Seed sound, node too broad: N-acetylglucosamine transport (PTN000532509) on a general PTS Enzyme I node (PtsI, PtsP, FruB) | MEDIUM | COMPLETE |
+| pilM | PSEAE | Seed-side: type IV pilus CC IBD (PTN001286216, sole seed) from an IMP 'no pili' phenotype recorded as located_in; node also reaches EutJ | MEDIUM | COMPLETE |
+| PA1055 / PA1057 | PSEAE | Seed-side: Na+/H+ antiporter activity IBDs seeded as IMP `enables` on subunits that were never mutated; complex activity, should be contributes_to | MEDIUM | COMPLETE |
 | lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
 | fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
 | pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |

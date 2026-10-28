@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [braD, braF, ccmC, estA, fleN, hutH, hutI, lap, PA0692, PA1024, PA3760, PA3891, PA5377, PA5458, phzM, phzS, pilB, pilU, pqsH, pvdE, waaL, wbpD, wbpY, xcpX]
+genes: [aruC, braD, braF, ccmC, estA, fleN, gbuA, hom, hutH, hutI, lap, mgtE, PA0692, PA1024, PA1055, PA1057, PA3760, PA3891, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pvdE, waaL, wbpD, wbpY, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -132,18 +132,25 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 17 | PA3891 | PA3891 | plasma membrane (PTN001953445); ABC-type glycine betaine transporter activity (PTN001953060) | 54 | INDIRECT: "IDA" is cross-species complementation of a P. syringae opuCA mutant; substrate data are the ortholog's | Plausible, but should be re-seeded from the characterised ortholog | P (x2), G (x2) |
 | 18 | wbpY | PA5448 | lipopolysaccharide biosynthetic process (PTN000749272) | 51 | SOUND | Sound; its shared glycosyltransferase node should be re-seeded from a 2022 direct assay | P, G |
 | 19 | PA0692 | PA0692 | type V secretion process and complex (PTN002160772) | 25 | SOUND; complex row is IMP, which cannot show membership | Sound | P |
+| 20 | mgtE | PA0913 | magnesium ion transport; magnesium ion binding (PTN000227060) | 50 | Transport SOUND; binding INDIRECT (IMP on homology-model sites; binding very likely true by conservation) | 6 of 22 leaves lack the MgtE transmembrane domain yet inherit transport | P, G (x2) |
+| 21 | PA1055 | PA1055 | sodium:proton antiporter activity; sodium ion transmembrane transport (PTN002160376) | 48 | INDIRECT: only shaA was deleted; antiporter activity is the whole Sha complex's, so contributes_to | Should be contributes_to; node includes archaeal hydrogenase subunits | P (x2), G |
+| 22 | pilM | PA5044 | type IV pilus; type IV pilus-dependent motility (PTN001286216) | 46 | Location WRONG: IMP "no pili" turned into located_in pilus (same row given to pilN/O/P); motility SOUND | Pilus CC IBD unsupported; node also reaches EutJ ethanolamine-utilization proteins | P, G (x2) |
 | 23 | PA3760 | PA3760 | N-acetylglucosamine transport (PTN000532509) | 43 | SOUND for PA3760 | OVER-SPECIFIC: node is general Enzyme I (PtsI, PtsP, FruB) | G |
 | 24 | hutH | PA5098 | histidine ammonia-lyase activity; L-histidine catabolic process (PTN000796665) | 42 | SOUND (direct assay of the partially purified enzyme), coded IMP instead of IDA | Sound; but PAO1 paralog PA5093, which lacks the catalytic Ala-Ser-Gly motif, inherits it | P, G (NOT on PA5093) |
+| 25 | hom | PA3736 | L-threonine biosynthetic process (PTN000752178) | 41 | UNVERIFIABLE: cited paper is about ThrH/ThrB; one PMID applied to all thr genes | Term right for an all-homoserine-dehydrogenase clade; needs a real anchor | P |
+| 26 | PA1057 | PA1057 | sodium:proton antiporter activity; sodium ion transmembrane transport (PTN002160407) | 40 | INDIRECT, as PA1055; MrpE is an assembly subunit | Should be contributes_to | P (x2), G |
 | 27 | PA5377 | PA5377 | carnitine transport and transporter activity; choline transport (PTN000766131) | 39 | Choline/betaine SOUND; carnitine OVER-SPECIFIC (needs the separate binding protein CaiX); amine transporter activity WRONG (quaternary ammonium is not an amine in GO) | Carnitine IBDs on the permease node not supported; amine IBD should be repointed | P (x4), G (x3) |
 | 30 | braD | PA1073 | L-isoleucine import, L-alanine transport (PTN000765102) | 36 | SOUND (as braF) | Sound, same caveat; D-alanine transport seed is an indirect phenotype | none |
+| 32 | aruC | PA0895 | L-arginine biosynthetic process (PTN000241318) | 35 | SOUND (dual biosynthetic/catabolic aminotransferase; enzyme data only) | Node also passes it to LysJ, diaminobutyrate aminotransferase and AstC leaves | G |
+| 33 | gbuA | PA1421 | L-arginine catabolic process (PTN004253691) | 34 | SOUND for GbuA | Over-reaches across a guanidino-acid hydrolase clade (AGMAT, GpuA); separate guanidinopropionase IBA contradicted by assay | G (x2) |
+| 34 | pilD | PA4528 | aspartic-type endopeptidase activity (PTN000766410) | 33 | SOUND (purified enzyme) | Sound | P (reference query on a plasma membrane row) |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 4 (in progress): mgtE, PA1055, PA1057, pilM, pilD, hom, aruC, gbuA,
-nrdJa, cif, dgcB.
+Batch 4 (in progress): nrdJa, cif, dgcB.
 Batch 5 (in progress): xcpS, xcpW, xcpV, xcpQ, xcpR, pscC, gltA, PA0920,
 PA4079, liuC, PA4503, PA4504, PA4624, dctQ, thiI, cifR, lpxA.
 
@@ -167,8 +174,14 @@ PA4079, liuC, PA4503, PA4504, PA4624, dctQ, thiI, cifR, lpxA.
 - **Evidence codes that overstate the assay** (fleN, xcpX, PA0692, PA5458,
   PA3891): IDA on a sequence motif, a review, or cross-species
   complementation; IMP for complex membership.
-- **Subunit and partner conflation** (PA5377): carnitine transport, which
-  needs the separate binding protein CaiX, seeded on the permease node.
+- **Subunit and partner conflation** (PA5377, PA1055, PA1057): carnitine
+  transport, which needs the separate binding protein CaiX, seeded on the
+  permease node; Sha antiporter activity, measured for the whole PA1054-PA1059
+  cluster after deleting only PA1054, given as IMP `enables` to each subunit.
+- **Phenotypes as locations** (pilM): IMP "mutant has no pili" recorded as
+  `located_in` type IV pilus, and given identically to pilN, pilO and pilP.
+- **One citation for a whole operon** (hom): the ThrH/ThrB kinase paper cited
+  for hom, thrB and thrH alike.
 - **Old papers that predate the gene** (hutI): a 1967 pathway paper cannot tie
   an activity to PA5092. Here the term is right and the node reaches human
   AMDHD1, but its only anchor needs replacing.
