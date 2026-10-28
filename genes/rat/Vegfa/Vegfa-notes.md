@@ -40,3 +40,7 @@
 - No GO term for VEGF's role as VEGFR2 ligand beyond binding/growth factor activity; the
   existing GO:0030297 (transmembrane receptor protein tyrosine kinase activator activity)
   is used as the most specific activity term.
+
+## 2026-10-28: blood-brain barrier permeability row (PR #5682 review)
+
+The GO:1905604 negative regulation of blood-brain barrier permeability ISO row was first REMOVEd, although its reason and source defect both said the correct term is positive regulation. It is now a sign-correcting MODIFY to GO:1905605, which the gene does not otherwise carry, and the RGD defect now asks for a repoint rather than a deletion.
