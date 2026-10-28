@@ -23,3 +23,5 @@
 ## 2026-10-28: core function locations (PR #5679 review)
 
 The core function listed only ER membrane, which is where the complex assembles. The rat-brain fractionation (PMID:20126630) puts gamma-secretase activity mainly with the early endosome marker syntaxin 13 and partly with the plasma membrane marker N-cadherin, so the core locations are now early endosome and plasma membrane, and the early endosome IDA row is ACCEPT.
+
+The plasma membrane ISO row now also moves from KEEP_AS_NON_CORE to ACCEPT, so its reason agrees with the core function, which names plasma membrane as a location.

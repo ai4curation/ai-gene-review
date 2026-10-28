@@ -35,3 +35,7 @@
   binding row is refined to GO:0005546.
 - Added NEW clathrin-coated pit (ISS from PMID:11239472 / PMID:23823722) beside the
   plasma membrane rows.
+
+## 2026-10-28: PI(4,5)P2 3-kinase activity rows (PR #5679 CI)
+
+The two GO:0046934 rows (EC-mapped IEA, ISO from human IDA) were first KEEP_AS_NON_CORE. CI's family cross-check flagged them, because the PANTHER PTHR10048 family review scopes this activity to the class I catalytic subunits only. That matches this review's own evidence: the recombinant enzyme phosphorylates PtdIns(4,5)P2 only with a phosphatidylserine carrier, and in cells the products are PI3P and PI(3,4)P2. Both rows are now MARK_AS_OVER_ANNOTATED, and the ISO row has a propagation_review.
