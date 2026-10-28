@@ -268,7 +268,7 @@ Reading it by pattern rather than by row:
   the same principle and the same precedent: human/LIAS already `MODIFY`s
   `GO:0016783` sulfurtransferase activity to `GO:0016992`.
 
-Three changes went beyond flipping an action:
+Two changes went beyond flipping an action, and one convention was settled along the way:
 
 - **SACEN/eryCV asserts no core molecular function and no core process.** It had
   `GO:0051539` as its only core MF, on a protein that is `PE 4: Predicted`,

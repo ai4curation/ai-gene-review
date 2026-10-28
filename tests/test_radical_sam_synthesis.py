@@ -104,7 +104,12 @@ def test_documented_rule_exceptions_are_live():
     d = yaml.safe_load(DATA.read_text())
     ex = d["documented_rule_exceptions"]
     assert ex["stale"] == [], ex["stale"]
-    assert len(ex["used"]) == len(ex["declared"])
+    # Compare the KEYS, not the list lengths: `used` is appended once per matching
+    # row while exceptions are keyed (organism, gene, term), so a term carrying two
+    # rows would make a length comparison fail on a perfectly live exception.
+    declared = {(e["gene"], e["term"]) for e in ex["declared"]}
+    used = {(f"{u['organism']}/{u['gene']}", u["term"]) for u in ex["used"]}
+    assert used == declared, {"declared_only": declared - used, "used_only": used - declared}
 
 
 def test_rule_exception_suppresses_a_deviation():
