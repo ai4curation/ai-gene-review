@@ -19,8 +19,11 @@ because an error there is copied to every descendant leaf. Of 471 PAO1
 proteins that seed an IBD, 398 have a PseudoCAP annotation that supports at
 least one of their seedings; those 522 node terms feed 51,455 leaf IBAs. For
 139 node terms (109 proteins, 4,772 leaf IBAs) the PAO1 protein is the only
-seed, so the IBD rests entirely on the PseudoCAP row. A pilot of six such genes
-is under way.
+seed, so the IBD rests entirely on the PseudoCAP row. Of the first six sole-seeded node terms reviewed, two rest on an indirect
+mutant phenotype and are unsupported (estA: lipid biosynthesis on an esterase,
+960 leaf IBAs; ccmC: catalase activity on a heme exporter, 143), one rests on a
+sequence motif coded as IDA (fleN), and three seeds are sound, two of them on
+nodes that are too broad or too dependent on them (pvdE, pqsH).
 
 ## Why start with IBA seeds
 
@@ -103,18 +106,46 @@ wrong seed leaves the IBD unsupported, a second defect with
 `resource: GO_CENTRAL` names the PTN node, so `just export-source-defects`
 produces one report for PseudoCAP and one for PAINT.
 
-## Pilot batch (tier 1, ranks 1-7)
+## Results so far
 
-| Rank | Gene | Locus | Sole-seeded node term | Leaf IBAs | Seed row | Status |
-|---:|---|---|---|---:|---|---|
-| 1 | estA | PA5112 | lipid biosynthetic process | 960 | IMP PMID:17631636 (glycolipid biosynthetic process; UniProt also IMP) | in progress |
-| 2 | pqsH | PA2587 | monooxygenase activity | 297 | IDA PMID:20662781 | in progress |
-| 3 | lap | PA2939 | proteolysis | 272 | IDA PMID:11533066 | in progress |
-| 4 | fleN | PA1454 | ATP binding | 149 | IDA PMID:10629180 | in progress |
-| 6 | ccmC | PA1477 | catalase activity | 143 | IMP PMID:16824107 | in progress |
-| 7 | pvdE | PA2397 | ATPase-coupled transmembrane transporter activity | 140 | IMP PMID:19787431 | in progress |
+Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
+`source_defects` recorded in the review (P = PseudoCAP, G = GO_CENTRAL/PAINT).
 
-Rank 5 (PA5458) is deferred to the next batch.
+| Rank | Gene | Locus | Sole-seeded node term (PTN) | Leaf IBAs | Seed verdict | IBD verdict | Defects |
+|---:|---|---|---|---:|---|---|---|
+| 1 | estA | PA5112 | lipid biosynthetic process (PTN005219546) | 960 | INDIRECT-PHENOTYPE: a deletion makes less rhamnolipid; EstA is an outer-membrane esterase, the synthesis steps are RhlA/B/C | Unsupported: withdraw this IBD (the node's esterase IBD is sound) | P (x3), G, UniProt |
+| 2 | pqsH | PA2587 | monooxygenase activity (PTN008173107) | 297 | SOUND, under-specific (should be GO:0102164 HHQ monooxygenase) | Sound at family root; ~294 plant leaves rest on this one bacterial seed | P |
+| 3 | lap | PA2939 | proteolysis (PTN000254534) | 272 | SOUND (purified enzyme) | Sound | none on seed; 2 P on T2SS/Sec cargo rows |
+| 4 | fleN | PA1454 | ATP binding (PTN000344128) | 149 | WRONG evidence code: IDA for a sequence motif | Term true (later structures), needs a real seed | P, G |
+| 6 | ccmC | PA1477 | catalase activity (PTN001247822) | 143 | INDIRECT-PHENOTYPE, and cites an *E. coli* paper | Unsupported: drop catalase from the node | P (x7), G |
+| 7 | pvdE | PA2397 | ATPase-coupled transmembrane transporter activity (PTN000656738) | 140 | SOUND | Node too deep: 126 of 140 leaves are NBD-only proteins | G (planned) |
+
+pvdE's review file is still a stub: the research, notes and bioinformatics
+are done, but the agent's write of the review YAML was blocked and needs
+redoing.
+
+Batch 2 (in progress): PA5458, PA1024, hutI, hutH, phzS, phzM, pilB, pilU.
+Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, xcpX, PA0692,
+PA3891, PA5377.
+
+### Patterns emerging
+
+- **Indirect phenotypes as functions** (ccmC, estA): a mutant lacking catalase
+  activity because it cannot mature heme proteins was annotated as having
+  catalase activity, and PAINT used it as the only seed of a catalase node.
+  An esterase whose deletion lowers rhamnolipid output was annotated to
+  glycolipid and lipid biosynthesis, and seeds a 960-leaf lipid biosynthesis IBD.
+- **Inflated evidence codes** (fleN): IDA on a paper that reports a sequence
+  motif.
+- **Mis-keyed references** (ccmC; pilB and pilU are being checked): the cited
+  PMID is a different paper from the one the phenotypes come from.
+- **Cargo annotated as machinery** (lap): a secreted enzyme given secretion
+  system process terms.
+- **Sound seeds on nodes that are too broad** (pvdE, pqsH): the PseudoCAP row is
+  right, but the node carries the term to proteins that are a different kind of
+  thing, or rests a large clade on a single seed.
+
+These are catalogued for PAINT as pattern 16 of [IBA_REVIEW](IBA_REVIEW.md).
 
 ## Plan
 
