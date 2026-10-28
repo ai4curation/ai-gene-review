@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aruC, braD, braF, ccmC, cif, dctQ, dgcB, estA, fleN, gbuA, gltA, hom, hutH, hutI, lap, liuC, mgtE, nrdJa, PA0692, PA0920, PA1024, PA1055, PA1057, PA3760, PA3891, PA4079, PA4503, PA4504, PA4624, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pscC, pvdE, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
+genes: [aruC, braD, braF, ccmC, cif, cifR, dctQ, dgcB, estA, fleN, gbuA, gltA, hom, hutH, hutI, lap, liuC, lpxA, mgtE, nrdJa, PA0692, PA0920, PA1024, PA1055, PA1057, PA3760, PA3891, PA4079, PA4503, PA4504, PA4624, PA5377, PA5458, phzM, phzS, pilB, pilD, pilM, pilU, pqsH, pscC, pvdE, thiI, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -158,11 +158,14 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
 | 40 | liuC | PA2013 | terpene catabolic process; methylglutaconyl-CoA hydratase activity (PTN001733227) | 26 | Terpene OVER-SPECIFIC (true for PAO1 only because the terpene pathway feeds leucine catabolism); hydratase UNVERIFIABLE (paper never mentions liuC) | Terpene IBD should go: most leaves lack the pathway; node also covers AtuE and PksH | P, G (x2) |
 | 41 | PA4503 | PA4503 | dipeptide transmembrane transporter activity (PTN000765601) | 25 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikB (nickel) and SapB (putrescine) permeases; binding protein sets substrate | P, G |
+| 42 | thiI | PA5118 | thiazole biosynthetic process (PTN001804941) | 25 | WRONG evidence: the paper is a Salmonella genetics study, coded IDA for P. aeruginosa | Node is the family root, mostly short rhodanese-less ThiI that make s4U but not thiazole: re-place at the proteobacterial clade | P, G |
 | 43 | pscC | PA1716 | protein secretion by the type III secretion system (PTN009110345) | 25 | SOUND | Sound; node is the T3SS-specific subnode | none |
+| 44 | cifR | PA2931 | negative regulation of DNA-templated transcription (PTN002934616) | 25 | SOUND (purified repressor binds mapped operators) | Sound | none |
 | 45 | PA4624 | PA4624 | transmembrane protein transporter activity (PTN002160772) | 25 | SOUND (secretion readout of CdrA) | Sound (TpsB subfamily) | P (biofilm row) |
 | 46 | xcpS | PA3102 | protein secretion by the T2SS (PTN000768597) | 25 | SOUND term; IDA on a review article (PMID:9818381) | Sound | P |
 | 47 | xcpW | PA3098 | T2SS process and complex (PTN002446812) | 24 | SOUND terms; process IDA on a review, complex IDA on a paper showing only membrane fractionation | Sound | P (x2) |
 | 49 | dctQ | PA5168 | C4-dicarboxylate transport (PTN002169725) | 24 | SOUND for DctQ | OVER-SPECIFIC: YiaM-type clade (E. coli YiaM moves 2,3-diketo-L-gulonate) | G |
+| 50 | lpxA | PA3644 | lipopolysaccharide biosynthetic process (PTN000602377) | 24 | SOUND claim; reference is a lipid A structure paper that predates the gene | Sound; lipid A biosynthesis would be sharper | P |
 | 51 | xcpV | PA3099 | T2SS process and complex (PTN002446181) | 24 | SOUND terms; same seed problems as xcpW | Node may be too broad: 14 of 49 leaves named PilV/MshD/pilin | P (x2), G (x2) |
 | 52 | xcpQ | PA3105 | protein secretion by the T2SS (PTN000768388) | 23 | SOUND term; IDA on a review article | Sound | P |
 | 72 | xcpR | PA3103 | T2SS process and complex (PTN002016240) | 14 | Complex SOUND; process IDA on a review article | Sound; node restricted to Gammaproteobacteria, keeping T2SS terms off PilB-type ATPases | P |
@@ -172,7 +175,7 @@ pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 5 (in progress): thiI, cifR, lpxA.
+
 
 ### Patterns emerging
 
@@ -216,7 +219,9 @@ Batch 5 (in progress): thiI, cifR, lpxA.
   `located_in` type IV pilus, and given identically to pilN, pilO and pilP.
 - **One citation for a whole operon** (hom): the ThrH/ThrB kinase paper cited
   for hom, thrB and thrH alike.
-- **Old papers that predate the gene** (hutI): a 1967 pathway paper cannot tie
+- **Another organism's paper coded IDA** (thiI): a *Salmonella* genetics study
+  given to PA5118 as IDA.
+- **Old papers that predate the gene** (hutI, lpxA): a 1967 pathway paper cannot tie
   an activity to PA5092. Here the term is right and the node reaches human
   AMDHD1, but its only anchor needs replacing.
 - **Wrong pathway** (wbpD): an acetyltransferase of the UDP-ManNAc3NAcA

@@ -96,6 +96,9 @@ genes:
   - pilM
   - PA1055
   - PA1057
+  - thiI
+  - PA0920
+  - liuC
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -1173,6 +1176,13 @@ protein is the sole seed.
   node **PTN000505272** (sole seed, 52 leaves including human AMDHD1). The term
   is right, but the only seed is an IMP row on a 1967 pathway paper that
   predates the gene and does not describe step III. Right answer, no anchor.
+- **thiI (PSEAE, PA5118)**, `GO:0052837` thiazole biosynthetic process on
+  **PTN001804941** (sole seed, 25 leaves). The seed paper (PMID:9209060) is a
+  *Salmonella* genetics study coded as a P. aeruginosa IDA. The node is the ThiI
+  family root, which is mostly short, rhodanese-less ThiI proteins (Firmicutes,
+  archaea) that make tRNA 4-thiouridine but not thiazole; the rhodanese domain is
+  what thiazole synthesis needs (PMID:21724998, PMID:22773787). A seed-side error
+  and a sub-activity loss (pattern 8) at once.
 - **Control: lap (PSEAE, PA2939)**, `GO:0006508` proteolysis on
   **PTN000254534** (sole seed, 272 leaf IBAs in 109 taxa) is SOUND: the
   PseudoCAP IDA (PMID:11533066) assays the purified aminopeptidase directly.
@@ -1496,6 +1506,9 @@ and a representative seed) in the corresponding
 | PA3760 | PSEAE | Seed sound, node too broad: N-acetylglucosamine transport (PTN000532509) on a general PTS Enzyme I node (PtsI, PtsP, FruB) | MEDIUM | COMPLETE |
 | pilM | PSEAE | Seed-side: type IV pilus CC IBD (PTN001286216, sole seed) from an IMP 'no pili' phenotype recorded as located_in; node also reaches EutJ | MEDIUM | COMPLETE |
 | PA1055 / PA1057 | PSEAE | Seed-side: Na+/H+ antiporter activity IBDs seeded as IMP `enables` on subunits that were never mutated; complex activity, should be contributes_to | MEDIUM | COMPLETE |
+| thiI | PSEAE | Seed-side + sub-activity loss: thiazole IBD (PTN001804941, sole seed) from a Salmonella paper coded IDA, placed on a root of rhodanese-less ThiI | MEDIUM | COMPLETE |
+| PA0920 | PSEAE | Seed-side: phospholipid homeostasis IBD (PTN002162750) is a consequence of A-PG synthesis; node includes fungal sterol glycyltransferases | MEDIUM | COMPLETE |
+| liuC | PSEAE | Seed-side: terpene catabolic process IBD (PTN001733227) true for PAO1 only through pathway context the other leaves lack | MEDIUM | COMPLETE |
 | lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
 | fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
 | pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |
