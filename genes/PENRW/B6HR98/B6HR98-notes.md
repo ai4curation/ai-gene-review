@@ -23,7 +23,10 @@ PRU10119 alone. Two independent lines show that is a mis-assignment.
    [PMID:21549851 "oxaloacetate hydrolase (OAH; EC3.7.1.1) is generally responsible for oxalate"],
    and notes that "The P. chrysogenum genome harbours four orthologs of the A. niger"
    oahA gene [PMID:21549851 "The P. chrysogenum genome harbours four orthologs of the A. niger"],
-   of which only this one has the activity. (The abstract's deletion sentence
+   of which this is the one oxalate formation depends on (only it and
+   Pc18g05100 were tested in yeast; Pc18g05100 has Pro, not the marker Ser, at
+   the Ser-308-equivalent position, consistent with its lack of activity; see
+   RESULTS.md). (The abstract's deletion sentence
    contains an evident typo, "Pc22g28430"; the gene cloned, assayed and deleted
    is Pc22g24830, as its own title and the preceding sentence state.)
 2. **Sequence evidence.** B6HR98 is 81.6% identical to *A. niger* OahA and

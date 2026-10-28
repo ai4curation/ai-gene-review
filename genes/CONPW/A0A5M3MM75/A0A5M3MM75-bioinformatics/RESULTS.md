@@ -16,8 +16,9 @@ accessions and the reference residue positions taken from PMID:20558740.
 
 PS00161 (ISOCITRATE_LYASE, ProRule PRU10119) is the six-residue pattern
 `K-[KR]-C-G-H-[LMQR]`, whose third position PROSITE itself flags as
-`active_site(?)`. It matches the catalytic-cysteine loop shared by the whole
-PEP mutase/isocitrate lyase superfamily. In this run it matched, besides the
+`active_site(?)`. It matches the catalytic-cysteine loop shared across the
+PEP mutase/isocitrate lyase superfamily (not every member: the G. trabeum
+PF13714 protein S7Q148, with `KRCGQL` in that loop, has no match). In this run it matched, besides the
 three query proteins and three characterised OAHs, also:
 
 | protein | PS00161 match |
@@ -92,18 +93,35 @@ A. niger OahA and 68-70% to the two OAHs with enzymology, carries the Ser marker
 and is the gene whose heterologous expression conferred oxalate production on
 S. cerevisiae and whose deletion abolished oxalate formation in P. chrysogenum
 (PMID:21549851). Its paralog B6HBX9/Pc18g05100, which did not confer oxalate
-production in that experiment, is only 57.7% identical to it, so sequence
-similarity within this family is not by itself sufficient - the experimental
-result is what settles B6HR98.
+production in that experiment, is only 57.7% identical to it and has Pro, not
+Ser, at the 308 position (window `VIIFPFATL`, as in DMML), consistent with the
+marker. Overall similarity within this family is not by itself sufficient - the
+experimental result is what settles B6HR98.
 
-**A0A5M3MM75 and F8PSW8 are OAH-branch lyase/hydrolase enzymes of unresolved
-substrate specificity.** They are not isocitrate lyases, and the Ser marker is
-present, but they are closer to A. niger DMML (51.5-51.9%) than to any
-characterised OAH (43.5-46.9%), and their nearest relative in this set is the
-single OAH-branch PF13714 protein of another brown-rot fungus, Gloeophyllum
-trabeum (S7Q6Y6, 78.8-82.1%); each is also the only PF13714 protein in its own
-reference proteome. Several active-site neighbourhoods differ from the
-ascomycete OAHs (e.g. Thr-113 to Ser, and the Glu-259 window `VCFIEGVKT` against
-`VGLLEGFRS`). No basidiomycete OAH has been characterised at the protein level,
-so "oxaloacetase candidate" is as far as sequence takes these two; assigning
-EC 3.7.1.1 would be as unsupported as the EC 4.1.3.1 now on them.
+**A0A5M3MM75 and F8PSW8 are OAH-branch enzymes whose sequence evidence leans
+towards oxaloacetase, but whose activity is unproven.** They are not isocitrate
+lyases. The one residue shown experimentally to switch OAH and DMML activity is
+the Ser-308 position (PMID:20558740), and both queries have Ser there, where
+A. niger DMML (3FA3, window `IIIFPFAAL`) has Pro. The Penicillium paralog
+B6HBX9/Pc18g05100, which did not confer oxalate production (PMID:21549851), also
+has Pro there (window `VIIFPFATL`), so that paralog agrees with the Joosten
+marker rather than contradicting it. The same Ser/Pro split runs inside a single
+basidiomycete genome: Gloeophyllum trabeum has two PF13714 proteins in this set,
+S7Q6Y6 (Ser at 308, PS00161 match, 78.8-82.1% identical to the two queries) and
+S7Q148 (Pro at 308, no PS00161 match, 42.6-44.0%), and the queries fall on the
+Ser side. Each query is the only PF13714 protein in its own reference proteome.
+
+Two observations had seemed to point away from OAH, and neither holds up.
+Globally they are closer to A. niger DMML (51.5-51.9%) than to any characterised OAH (43.5-46.9%),
+but this compares basidiomycete with ascomycete sequences, where global pairwise
+identity is a weak orthology signal, and no tree was built, so the queries may
+simply be outgroup to the ascomycete OAH/DMML split. And the Thr-113 to Ser
+difference is not diagnostic: DMML 3FA3 has Thr there, and the petal death
+protein Q05957, which has OAH activity, has Ser. Other neighbourhoods do differ
+from the ascomycete OAHs (e.g. the Glu-259 window `VCFIEGVKT` against
+`VGLLEGFRS`), with no known consequence.
+
+The marker was derived and tested on ascomycete and plant proteins, and no
+basidiomycete member of this branch has been characterised as a purified
+protein, so "probable oxaloacetase" is as far as sequence takes these two; an
+EC 3.7.1.1 assignment would rest on the marker alone.

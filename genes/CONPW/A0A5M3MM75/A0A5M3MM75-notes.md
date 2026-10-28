@@ -10,8 +10,8 @@ named by accession. It is the **only** PF13714 protein in the reference proteome
 ## The "Isocitrate lyase (EC 4.1.3.1)" name is wrong
 
 UniProt's name and EC come from PROSITE-ProRule PRU10119 alone. PS00161 is the
-six-residue pattern `K-[KR]-C-G-H-[LMQR]` around the catalytic cysteine shared by
-the whole PEP mutase/isocitrate lyase superfamily; in the analysis it matched
+six-residue pattern `K-[KR]-C-G-H-[LMQR]` around the catalytic cysteine shared
+across the PEP mutase/isocitrate lyase superfamily; in the analysis it matched
 2,3-dimethylmalate lyase, *E. coli* 2-methylisocitrate lyase and the petal death
 protein as readily as it matched the characterised oxaloacetases, so it cannot
 discriminate. The `FT ACT_SITE 186` that the rule places on this entry is the
@@ -29,7 +29,7 @@ Three independent observations exclude isocitrate lyase:
 See [file:CONPW/A0A5M3MM75/A0A5M3MM75-bioinformatics/RESULTS.md] for the method
 and the full residue table.
 
-## What it probably is, and why the review stops short of saying so
+## What it probably is, and why the review stops short of asserting it
 
 The protein has the OAH specificity serine aligned to Ser-308 of *C. parasitica*
 OAH, the position where dimethylmalate lyase and methylisocitrate lyase carry a
@@ -51,17 +51,30 @@ expressed distinctly from the "paralogous of isocitrate lyases"
 [PMID:27543342 "paralogous of isocitrate lyases"] and is upregulated at the
 advancing hyphal front [PMID:27543342 "oxaloacetase expression was up upregulated for both fungi"].
 Consistent with that, this protein's closest relative in the comparison set is
-the single OAH-branch PF13714 protein of *G. trabeum* (S7Q6Y6, 78.8% identical).
+the Ser-308-carrying PF13714 protein of *G. trabeum* (S7Q6Y6, 78.8% identical).
+*G. trabeum* has a second PF13714 protein, S7Q148, with Pro at that position and
+no PS00161 match (44.0% identical), so the Ser/Pro split tracks the branch inside
+one basidiomycete genome and this protein sits on the Ser side.
 
-Against calling it OAH outright: it is **more** similar to *A. niger*
-2,3-dimethylmalate lyase (51.5%) than to any characterised OAH (43.5-44.1%),
-several active-site neighbourhoods differ from the ascomycete OAHs (Thr-113 to
-Ser; Glu-259 window `VCFIEGVKT` against `VGLLEGFRS`), and no basidiomycete
-oxaloacetase has ever been characterised at the protein level — the *Fomitopsis*
-work is enzymology on cell extracts, not on a cloned gene. So the review removes
-the isocitrate lyase claim, keeps the superfamily-level catalytic activity, and
-asserts no EC 3.7.1.1: writing EC 3.7.1.1 here would repeat the mistake that
-PRU10119 made, with a different guess.
+Correction (PR #5631 review): an earlier version of this review said the
+*Penicillium* paralog Pc18g05100 carries the serine yet gave no oxalate, and
+used that as a counterexample to the marker. The analysis table says otherwise:
+B6HBX9/Pc18g05100 has **Pro** at the 308 position (window `VIIFPFATL`, as in
+DMML), so it lacks both the serine and the activity and corroborates the marker.
+
+The evidence therefore leans towards OAH. What keeps the review from asserting
+it: the marker was derived and tested on ascomycete and plant proteins, and no
+basidiomycete oxaloacetase has ever been characterised at the protein level — the
+*Fomitopsis* work is enzymology on cell extracts, not on a cloned gene. The two
+other arguments once offered against OAH are weak. Global identity is higher to
+*A. niger* 2,3-dimethylmalate lyase (51.5%) than to any characterised OAH
+(43.5-44.1%), but this is a basidiomycete-to-ascomycete comparison without a
+tree, and the queries may be outgroup to the ascomycete OAH/DMML split. The
+Thr-113 to Ser difference is not diagnostic: DMML 3FA3 has Thr there and the
+OAH-active petal death protein Q05957 has Ser. So the review removes the
+isocitrate lyase claim, keeps the superfamily-level catalytic activity, states
+that the sequence evidence leans towards oxaloacetase, and asserts no
+EC 3.7.1.1, leaving it to the enzymology in `suggested_experiments`.
 
 ## Curation decisions
 

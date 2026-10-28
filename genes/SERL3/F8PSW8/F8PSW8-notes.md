@@ -8,7 +8,7 @@ proteome UP000008063. Pfam PF13714 (PEP_mutase) only; no gene symbol, so the
 folder is named by accession. It is the only PF13714 protein in the proteome.
 
 This entry is the *S. lacrymans* counterpart of *C. puteana* A0A5M3MM75: the two
-are the same single-copy basidiomycete gene, and the reasoning below is the same
+are the same basidiomycete gene (each the only PF13714 protein of its proteome), and the reasoning below is the same
 analysis applied to this sequence.
 
 ## The "Isocitrate lyase (EC 4.1.3.1)" name is wrong
@@ -27,7 +27,7 @@ the `FT ACT_SITE 180` placed by the rule is that cysteine.
 
 Method and residue table: [file:CONPW/A0A5M3MM75/A0A5M3MM75-bioinformatics/RESULTS.md].
 
-## What it probably is, and why the review stops short of saying so
+## What it probably is, and why the review stops short of asserting it
 
 The OAH specificity serine (Ser-308 in *C. parasitica* numbering) is present,
 the position where dimethylmalate lyase and methylisocitrate lyase have a proline
@@ -50,15 +50,33 @@ and in two brown-rot fungi "oxaloacetase expression was up upregulated for both
 fungi" near the hyphal front, separately from the "paralogous of isocitrate lyases"
 [PMID:27543342 "oxaloacetase expression was up upregulated for both fungi"]
 [PMID:27543342 "paralogous of isocitrate lyases"]. The nearest relative in the
-comparison set is the equivalent *G. trabeum* protein S7Q6Y6 (82.1% identical).
+comparison set is the Ser-308-carrying *G. trabeum* protein S7Q6Y6 (82.1%
+identical). *G. trabeum* has a second PF13714 protein, S7Q148, with Pro at that
+position and no PS00161 match (42.6% identical), so the Ser/Pro split tracks the
+branch inside one basidiomycete genome and this protein sits on the Ser side.
 
-Against calling it OAH outright: it is more similar to *A. niger*
-2,3-dimethylmalate lyase (51.9%) than to any characterised OAH (44.6-46.9%),
-several active-site neighbourhoods differ from the ascomycete OAHs (Thr-113 to
-Ser; Glu-259 window `VCFIEGVKT` against `VGLLEGFRS`), and no basidiomycete
-oxaloacetase has been characterised as a cloned protein. The review therefore
+Correction (PR #5631 review): an earlier version of this review said the
+*Penicillium* paralog Pc18g05100 carries the serine yet gave no oxalate, and
+used that as a counterexample to the marker. The analysis table says otherwise:
+B6HBX9/Pc18g05100 has **Pro** at the 308 position (window `VIIFPFATL`, as in
+DMML), so it lacks both the serine and the activity and corroborates the marker.
+
+The evidence therefore leans towards OAH. What keeps the review from asserting
+it: the marker was derived and tested on ascomycete and plant proteins, and no
+basidiomycete oxaloacetase has been characterised as a cloned protein. The two
+other arguments once offered against OAH are weak. Global identity is higher to
+*A. niger* 2,3-dimethylmalate lyase (51.9%) than to any characterised OAH
+(44.6-46.9%), but this is a basidiomycete-to-ascomycete comparison without a
+tree. The Thr-113 to Ser difference is not diagnostic: DMML 3FA3 has Thr there
+and the OAH-active petal death protein Q05957 has Ser. The review therefore
 removes the isocitrate lyase claim, keeps the superfamily-level catalytic
-activity, and asserts no EC.
+activity, states that the evidence leans towards oxaloacetase, and asserts no EC.
+
+Independent concurrence, not evidence: the GOA file's gene-name column for this
+entry reads "Oxaloacetate acetylhydrolase" (apparently the submitter name from
+the genome submission, EMBL EGO00826.1), although UniProt's own DE line is the
+PRU10119 "Isocitrate lyase". Submitter-imported names (ECO:0000313 class) are
+not used as support, but the genome annotators reached the same branch call.
 
 ## Curation decisions
 
