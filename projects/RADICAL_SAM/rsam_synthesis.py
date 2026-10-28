@@ -64,6 +64,11 @@ RULE = {
 }
 EXPECTED = {"refine": {"MODIFY"}, "accept": {"ACCEPT"}, "accept_or_new": {"ACCEPT", "NEW"}}
 
+# Evidence codes that mean the row was propagated to this gene rather than asserted
+# about it: electronic signature/EC mappings, PAINT phylogenetic inference, and
+# homology transfer. Used to classify REMOVE rows by how they arose.
+PROPAGATED_EVIDENCE = {"IEA", "IBA", "ISS", "ISO", "ISA", "ISM", "IGC", "RCA"}
+
 
 def frontmatter() -> dict:
     m = re.match(r"^---\n(.*?)\n---\n", PAGE.read_text(), re.S)
@@ -194,7 +199,7 @@ def build() -> dict:
             "sam_binding_actions": sam_actions or None,
             "catalysis_established": catalysis_established,
             "_remove_terms": [
-                ((a.get("term") or {}).get("id"), "REMOVE") for a in rows
+                ((a.get("term") or {}).get("id"), a.get("evidence_type")) for a in rows
                 if ((a.get("review") or {}).get("action")) == "REMOVE"
             ],
         }
@@ -218,19 +223,23 @@ def build() -> dict:
     sam_not_reviewed = sorted(k for k, v in genes.items() if not v["reviewed"])
 
     # What the REMOVE rows actually are, so the page need not assert it.
-    # "signature/mapping" = a term withdrawn because an InterPro2GO, EC or PAINT
-    # mapping pushed it onto a protein the evidence excludes.
-    mapping_removals = {"GO:0004109", "GO:0006779", "GO:0043365", "GO:0061799",
-                        "GO:0004748", "GO:0006400"}
+    # Classified by HOW THE ROW AROSE (its evidence code), not by which term it
+    # carries: a term-keyed bucket silently files an experimental row as a mapping
+    # error, which is a different claim about a different kind of mistake.
     removes = Counter()
+    removes_by_evidence = Counter()
     for sym, v in rev.items():
-        for t, act in v["_remove_terms"]:
+        for t, ev in v["_remove_terms"]:
             if t == "GO:0005515":
                 removes["uninformative_protein_binding"] += 1
-            elif t in mapping_removals:
-                removes["wrong_signature_or_mapping"] += 1
+            elif ev in PROPAGATED_EVIDENCE:
+                removes["propagated_mapping_or_inference"] += 1
+                removes_by_evidence[ev] += 1
             else:
-                removes["other"] += 1
+                # An asserted row (experimental, or an author/curator statement)
+                # withdrawn on the biology rather than on how it propagated.
+                removes["asserted_row_rejected_on_biology"] += 1
+                removes_by_evidence[ev] += 1
 
     interpro = [d for d in defects if str(d["record"]).startswith("InterPro")]
     # Defects whose asserted value pushes PflB/formate-C-acetyltransferase
@@ -275,6 +284,7 @@ def build() -> dict:
         "proposed_new_terms": proposed_terms,
         "source_defects": defects,
         "remove_breakdown": dict(removes),
+        "remove_non_protein_binding_by_evidence": dict(sorted(removes_by_evidence.items())),
         "source_defect_summary": {
             "total": len(defects),
             "by_resource": dict(sorted(Counter(d["resource"] for d in defects).items())),

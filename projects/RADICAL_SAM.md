@@ -197,7 +197,8 @@ Every figure below is computed from the reviews by
 from this page's own frontmatter and writes
 [`data/synthesis.yaml`](RADICAL_SAM/data/synthesis.yaml). No *result* is
 hardcoded; the project's own editorial choices are (the treatment rule itself,
-and which asserted values count as PflB-substrate pushes). Editing any of the 29
+and which asserted values count as PflB-substrate pushes). Classifications are
+keyed on evidence codes rather than on lists of term ids wherever possible. Editing any of the 29
 reviews changes these figures, so re-run the script and commit the regenerated
 data in the same change — `tests/test_radical_sam_synthesis.py` fails until you
 do, and also checks that the totals quoted here actually partition.
@@ -360,11 +361,15 @@ filed as `resource: OTHER` with InterPro named in each explanation.
 Three claims the data supports, and one it does not.
 
 1. **The family's annotation problem is resolution, not error.** 210 ACCEPT
-   against 49 REMOVE — and **47 of those 49 removals** were uninformative
-   `protein binding` (34) or terms pushed onto a protein by a wrong InterPro2GO,
-   EC or PAINT mapping (13), not bad biology. Only **2** were anything else, both
-   `NAS` rows on CDK5RAP1 projecting CDK5 neuronal biology onto a mitochondrial
-   tRNA enzyme. The split is computed (`remove_breakdown`), not asserted.
+   against 49 REMOVE — and only **3 of those 49** overturned a claim anyone had
+   actually asserted about the gene. The rest were uninformative `protein
+   binding` (**34**) or terms that had propagated in rather than been asserted
+   (**12**: 8 `IEA` signature/EC mappings, 3 `IBA`, 1 `ISS`). The 3 are nrdG's
+   `IMP` ribonucleoside-diphosphate reductase row, removed because the activase
+   is necessary for the reaction without performing it, and two `NAS` rows on
+   CDK5RAP1 projecting CDK5 neuronal biology onto a mitochondrial tRNA enzyme.
+   The split is computed from each row's **evidence code** — how the row arose,
+   not which term it carries (`remove_breakdown`).
 2. **The shared domain is an attractor for over-general annotation.** 112 MODIFY,
    almost all pulling a correct-but-generic term down to the specific reaction.
 3. **Discovery is outrunning the ontology.** Three of the six missing terms are
