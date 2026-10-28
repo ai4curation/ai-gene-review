@@ -16,3 +16,7 @@
 - UniProt DISRUPTION PHENOTYPE says cardiac deletion "prevents pathological cardiac hypertrophy" but
   PMID:19265040 reports exacerbated hypertrophy; recorded as a UniProt source defect on the cardiac growth row.
 - Bare protein binding rows (MEKK1, JIP3/JSAP1): REMOVE per protein-binding policy.
+
+## 2026-10-28: positive regulation of JNK cascade rows (PR #5693 review)
+
+The two GO:0046330 ISO rows were first MARK_AS_OVER_ANNOTATED on the view that a cascade kinase should not carry the regulation term. That contradicted the rat Map2k7, Map3k5, Map2k3 and Map2k6 reviews, which keep such rows as true but non-core (curators give cascade kinases the term in some cases: rat Map2k7 by RGD IDA, human MAP3K5 by IMP). Both rows are now KEEP_AS_NON_CORE, with NO_FAILURE_NON_CORE propagation reviews; JNK cascade remains the core process.
