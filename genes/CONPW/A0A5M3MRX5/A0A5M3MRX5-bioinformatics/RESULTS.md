@@ -47,11 +47,20 @@ to yeast MDH2 (cytosolic).
   composition and on homology to yeast MDH1.
 - The target has no PTS1 (ends in FVA). Its paralog A0A5M3MC96 ends in SKL, a
   canonical PTS1, and lacks the presequence, matching yeast peroxisomal MDH3.
-- Family classifiers agree: the target is in CDD cd01337
-  (MDH_glyoxysomal_mitochondrial) and PANTHER PTHR11540:SF73 (MALATE
-  DEHYDROGENASE, MITOCHONDRIAL). (The paralog is also placed in a subfamily
-  named "MALATE DEHYDROGENASE, MITOCHONDRIAL", SF16, despite its PTS1; PANTHER
-  subfamily names are not localization calls.)
+- PANTHER subfamily membership agrees: the target is in PTHR11540:SF73 (UniProt
+  PANTHER cross-reference), the subfamily that contains yeast MDH1 (P17505,
+  experimentally mitochondrial; `interpro/panther/PTHR11540/PTHR11540-entries.csv`).
+  The peroxisomal subfamily is SF72, which holds yeast MDH3 (P32419) and not the
+  target. Subfamily names are not localization calls: SF16 is also named
+  "MALATE DEHYDROGENASE, MITOCHONDRIAL" yet contains yeast cytosolic MDH2
+  (P22133). The paralog A0A5M3MC96 is placed in SF16, not SF72, so its
+  peroxisomal call rests on its SKL alone.
+- CDD cd01337 (MDH_glyoxysomal_mitochondrial) holds both the target and the
+  paralog; it covers glyoxysomal and mitochondrial MDHs and so cannot separate
+  the two.
+- UniProt's Pfam PF00056 domain feature starts at residue 27 (FT DOMAIN
+  27..169), independently corroborating an N-terminal extension of about 26
+  residues ahead of the conserved domain.
 - Conclusion: A0A5M3MRX5 is most likely the mitochondrial MDH of C. puteana,
   not a cytosolic enzyme. No yeast-MDH2-like cytosolic type-1 MDH, and no
   type-2 (IPR010945/IPR011274) MDH, was found among the UniProt entries of

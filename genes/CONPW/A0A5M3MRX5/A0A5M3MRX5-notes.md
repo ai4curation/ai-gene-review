@@ -2,8 +2,9 @@
 
 Coniophora puteana RWD-64-598 SS2, TrEMBL, 339 aa, PE 3. Named by ARBA
 "(S)-malate dehydrogenase (NAD(+), oxaloacetate-forming)", EC 1.1.1.37. No gene
-symbol; folder named by accession, ORF name used as gene_symbol (precedent
-genes/CONPW/A0A5M3MJR8).
+symbol; folder named by accession, ORF name used as gene_symbol (CLAUDE.md
+convention; same pattern as genes/CONPW/A0A5M3MJR8, which is in PR #5626 and
+not yet in main).
 
 No deep-research provider was available; these notes are my own research.
 
@@ -12,7 +13,15 @@ No deep-research provider was available; these notes are my own research.
 - Type-1 MDH: NCBIfam TIGR01772 (MDH_euk_gproteo), InterPro IPR010097
   (Malate_DH_type1), PIRSF000102, CDD cd01337 (MDH_glyoxysomal_mitochondrial),
   PANTHER PTHR11540:SF73 (MALATE DEHYDROGENASE, MITOCHONDRIAL). PIRSR places the
-  proton-acceptor His (position 201), NAD(+)- and substrate-binding residues.
+  proton-acceptor His (position 201), NAD(+)- and substrate-binding residues; the
+  CDD and PANTHER assignments are family calls only and say nothing about residues.
+- CDD cd01337 covers glyoxysomal and mitochondrial MDHs (the PTS1 paralog
+  A0A5M3MC96 is in it too), so it cannot separate mitochondrion from peroxisome.
+  Subfamily names are not localization calls either (SF16 is also named
+  MITOCHONDRIAL and holds yeast cytosolic MDH2 P22133). What counts is SF73
+  membership: SF73 contains yeast MDH1 P17505 (mitochondrial), while yeast
+  peroxisomal MDH3 P32419 is in SF72 (PTHR11540-entries.csv). The paralog
+  A0A5M3MC96 is in SF16, not SF72 (UniProt, Oct 2026).
 - Genome from the 31-genome lignin-decay study [PMID:22745431 "Comparative analyses
   of 31 fungal genomes (12 generated for this study)"].
 
@@ -25,6 +34,8 @@ Mitochondrial. See `A0A5M3MRX5-bioinformatics/RESULTS.md`:
   [PMID:3072021 "The open-reading frame encodes a precursor form of the mature enzyme containing an amino-terminal extension of 17 amino acid residues."].
 - No PTS1 (C-terminus FVA). The only other type-1 MDH in the proteome, A0A5M3MC96
   (CONPUDRAFT_157993), has no presequence and ends in SKL (PTS1), like yeast peroxisomal MDH3.
+- UniProt FT DOMAIN 27..169 (Pfam PF00056) starts the conserved N-terminal domain at
+  residue 27, independently corroborating an extension of about 26 residues.
 - Identity 0.63 to yeast MDH1, 0.48 to yeast cytosolic MDH2.
 - No targeting predictor (TargetP/MitoFates) was run, so the presequence call rests on
   composition plus homology. No experimental localization exists for any C. puteana MDH.
