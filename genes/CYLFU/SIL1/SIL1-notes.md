@@ -24,7 +24,7 @@ Architecture from the UniProt record (Q9SE35 feature table):
 - 163–177, 182–196, 201–215, 220–234, 239–253 — five copies of silaffin-1A1
   (`PRO_0000032602`, `_604`, `_606`, `_608`, `_610`)
 - seven atypical/canonical repeats R1–R7 over 108–257, with a declared
-  `19 X 7 AA` consensus `S-S-K-K-S-G-S-Y-S-G-S-K-G-S-K-R-R-[IL]-L`
+  `7 X 19 AA` consensus `S-S-K-K-S-G-S-Y-S-G-S-K-G-S-K-R-R-[IL]-L`
 - cleavage occurs on pairs of basic residues (KW `Cleavage on pair of basic
   residues`), consistent with the RR/KR motifs flanking each repeat
 
@@ -125,6 +125,17 @@ to a lineage-specific child, and the children it lists (bacterial, plant-type,
 fungal-type, S-layer) have no diatom option. The missing diatom child is
 recorded as a proposed term.
 
+Widened BP search (review follow-up, PR #5636): OLS searches of `go` for
+"biomineral" and "mineralization" return no lineage-neutral biomineralization
+or mineral-deposition process. Every "biomineral" hit is `GO:0031214`
+biomineral tissue development, its regulation terms (`GO:0070167`-`GO:0070169`,
+under regulation of multicellular organismal development) or a child of it
+(e.g. `GO:0036340` chitin-based cuticle sclerotization by biomineralization);
+the "mineralization" hits are bone, tooth/dentin and otolith mineralization
+(all under `GO:0031214`/tissue development) plus unrelated mineralocorticoid
+terms. So there is no non-tissue parent for a unicellular silicifier, and
+`GO:0042546` cell wall biogenesis remains the most accurate existing BP.
+
 ## CMMMech cross-check (biosilica / silica precipitation)
 
 CMMMech grounds Q9SE35 in `data/records/anatase.yaml`, in the
@@ -170,15 +181,25 @@ No existing annotations, so no ACCEPT/MODIFY/REMOVE calls. Three `NEW` rows,
 kept deliberately narrow:
 
 - `GO:0030312` external encapsulating structure (CC, IDA, PMID:11106386) — the
-  HF-requirement result is direct evidence of integration into the wall.
+  HF-requirement result is direct evidence of integration into the wall. After
+  review on PR #5636 the row quotes the paper's own Results (C. fusiformis walls
+  isolated and dissolved in anhydrous HF, silaffin pattern recovered), not its
+  introduction's restatement of PMID:10550045.
 - `GO:0042546` cell wall biogenesis (BP, IDA, PMID:10550045) — silaffin-1
   peptides themselves perform the silica precipitation step that builds the
   wall, so the participation test in CLAUDE.md is satisfied: this gene product
   does the work, it is not merely required for or consumed by the process.
-- `GO:0005199` structural constituent of cell wall (MF, IDA, PMID:11106386) —
-  the tight, HF-resistant association with biosilica supports a structural role
-  in the wall. This is the *structural* half of the function; the
-  *precipitating* half has no GO term and is left to `proposed_new_terms`.
+- `GO:0005199` structural constituent of cell wall (MF, IC, PMID:12386330) —
+  a curator inference, not a direct demonstration. Originally entered as IDA on
+  the HF-insolubility result; changed after review on PR #5636 because HF
+  insolubility is a location fact (it is the evidence for the GO:0030312 row)
+  and no experiment has measured a contribution to wall integrity. Now anchored
+  on PMID:12386330 [PMID:12386330 "Time-resolved analysis of silica
+  morphogenesis in vitro detected a plastic silaffin-silica phase, which may
+  represent a building material for diatom biosilica."], with the authors'
+  "may represent" hedge kept, and HF occlusion as corroboration only. This is the
+  *structural* half of the function; the *precipitating* half has no GO term
+  and is left to `proposed_new_terms`.
 
 I considered and rejected a `NEW` row for `GO:0031214` biomineral tissue
 development (wrong branch: tissue/multicellular, see above) and for any
