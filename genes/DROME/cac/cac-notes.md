@@ -42,3 +42,10 @@
 ### No NEW terms proposed
 All supported functions are already represented in GOA; applying the strict NEW bar, no
 mutant-phenotype-only process was added.
+
+## 2026-10-28 correction: one NEW row
+
+The "No NEW terms proposed" section above predates the review fixes. One NEW row now exists:
+GO:0036477 somatodendritic compartment (IC, PMID:22183725). It is inferred from in situ patch-clamp
+recordings of somatodendritic Ca2+ currents, combined with conditional mutants and RNAi showing those
+currents come from Cac, and it backs the location of the core channel function.
