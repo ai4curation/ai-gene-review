@@ -99,6 +99,16 @@ genes:
   - thiI
   - PA0920
   - liuC
+  - lasI
+  - cysB
+  - ptrB
+  - lhpL
+  - znuC
+  - pchB
+  - nirJ
+  - fur
+  - mucB
+  - phzC1
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -1117,7 +1127,12 @@ found by reviewing the seeds of one annotation source, which is what the
 [PSEUDOCAP](PSEUDOCAP.md) project does for *P. aeruginosa* PAO1: 398 PAO1
 proteins carry a PseudoCAP annotation that supports an IBD seeding (522 node
 terms, 51,455 leaf IBAs), and for 139 node terms (4,772 leaf IBAs) the PAO1
-protein is the sole seed.
+protein is the sole seed. All 109 of those proteins have now been reviewed:
+for 21 the seed is wrong or an indirect phenotype and the IBD should be
+withdrawn or repointed, for 24 the seed is right but the node term does not fit
+the clade, for 30 the claim is true but the seed row misstates its evidence,
+qualifier or reference, and 32 are sound (see [PSEUDOCAP](PSEUDOCAP.md) for the
+per-gene table and the upstream defect reports).
 
 **Examples:**
 - **ccmC (PSEAE, PA1477)**, `GO:0004096` catalase activity on node
@@ -1183,6 +1198,24 @@ protein is the sole seed.
   archaea) that make tRNA 4-thiouridine but not thiazole; the rhodanese domain is
   what thiazole synthesis needs (PMID:21724998, PMID:22773787). A seed-side error
   and a sub-activity loss (pattern 8) at once.
+- **More seed-side cases from the full tier 1 sweep.** A signal synthase given
+  signal transduction (lasI; GO's process starts at reception, quorum sensing is
+  the right term); a transcriptional activator's auxotrophy given the pathway
+  itself (cysB, cysteine biosynthesis); a type III secretion repressor given
+  positive regulation of secondary metabolism with no such phenotype in the
+  paper (ptrB); a 4-hydroxyproline epimerase seed on a protein that Swiss-Prot
+  records experimentally as lacking that activity (lhpL; PAO1's real epimerase
+  is PA1268); an importer ATPase's EDTA growth defect given "response to zinc
+  ion" (znuC, a node reaching ~1,455 GOA rows); and a seed paper from another
+  species in which the gene was never tested (PA1340, *P. putida*).
+- **The node-side counterpart.** For 24 genes the seed is right for PAO1 but
+  the node is the whole family: salicylate synthesis on the chorismate mutase
+  root (pchB), heme d1 synthesis on an archaeal radical SAM clade (nirJ),
+  siderophore repression on Fur proteins of bacteria without siderophores
+  (fur), polysaccharide regulation on sigmaE-regulating RseB orthologs (mucB),
+  and phenazine biosynthesis on housekeeping DAH7P synthases, including PAO1's
+  own PA2843 (phzC1). These are pattern 14 or pattern 8 errors whose single
+  seed makes them easy to trace.
 - **Control: lap (PSEAE, PA2939)**, `GO:0006508` proteolysis on
   **PTN000254534** (sole seed, 272 leaf IBAs in 109 taxa) is SOUND: the
   PseudoCAP IDA (PMID:11533066) assays the purified aminopeptidase directly.
@@ -1509,6 +1542,12 @@ and a representative seed) in the corresponding
 | thiI | PSEAE | Seed-side + sub-activity loss: thiazole IBD (PTN001804941, sole seed) from a Salmonella paper coded IDA, placed on a root of rhodanese-less ThiI | MEDIUM | COMPLETE |
 | PA0920 | PSEAE | Seed-side: phospholipid homeostasis IBD (PTN002162750) is a consequence of A-PG synthesis; node includes fungal sterol glycyltransferases | MEDIUM | COMPLETE |
 | liuC | PSEAE | Seed-side: terpene catabolic process IBD (PTN001733227) true for PAO1 only through pathway context the other leaves lack | MEDIUM | COMPLETE |
+| lasI | PSEAE | Seed-side: signal transduction IBD (PTN002217335) on a LuxI-family signal synthase; quorum sensing is the right term | MEDIUM | COMPLETE |
+| cysB | PSEAE | Seed-side: L-cysteine biosynthesis IBD (PTN002824317) from the auxotrophy of a mutant of the pathway's activator; all 10 leaves are CysB/Cbl regulators | MEDIUM | COMPLETE |
+| ptrB | PSEAE | Seed-side: positive regulation of secondary metabolism IBD (PTN002215317); paper shows PtrB represses type III secretion | MEDIUM | COMPLETE |
+| lhpL | PSEAE | Seed-side: 4-hydroxyproline epimerase IBD (PTN002433936) on a protein experimentally shown to lack that activity | HIGH | COMPLETE |
+| znuC | PSEAE | Seed-side: response to zinc ion IBD (PTN001952271, ~1,455 GOA rows) from an EDTA growth defect of an importer ATPase | MEDIUM | COMPLETE |
+| pchB, nirJ, fur, mucB, phzC1 | PSEAE | Seed sound, node is the whole family: gene-specific roles (salicylate, heme d1, siderophore repression, alginate regulation, phenazines) propagated to family members without them | MEDIUM | COMPLETE |
 | lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
 | fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
 | pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |

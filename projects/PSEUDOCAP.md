@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aruC, braD, braF, ccmC, cif, cifR, dctQ, dgcB, dksA, estA, fimU, fleN, fpr, fur, gbuA, gltA, hfq, hom, hutH, hutI, lap, liuC, lpxA, mgtE, nirJ, nrdJa, oprG, PA0692, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA3760, PA3891, PA4079, PA4503, PA4504, PA4624, PA5377, PA5458, pchB, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsH, pscC, pvdE, relA, thiI, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX]
+genes: [arcA, arcD, aruC, braD, braF, ccmC, cif, cifR, cysB, dctP, dctQ, dgcB, dksA, eddB, estA, fimU, fleN, fliD, fpr, fur, gbuA, gltA, hfq, hom, hutF, hutH, hutI, lap, lasB, lasI, lhpL, liuC, lpxA, mgtE, motB, mucB, mucD, nirJ, nmoA, nrdJa, oprB, oprG, PA0692, PA0906, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1340, PA1341, PA1486, PA2280, PA2580, PA3697, PA3760, PA3891, PA4079, PA4503, PA4504, PA4505, PA4521, PA4624, PA5085, PA5208, PA5359, PA5377, PA5458, pchB, pelA, pfeA, phnB, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsC, pqsH, pscC, pslC, ptrB, pvdE, pvdH, Q9HTB8, relA, tgpA, thiI, thrB, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -12,18 +12,21 @@ genes: [aruC, braD, braF, ccmC, cif, cifR, dctQ, dgcB, dksA, estA, fimU, fleN, f
 **Bottom line:** PseudoCAP, the community annotation group of the
 *Pseudomonas* Genome Database, made most of the experimental GO annotations on
 *Pseudomonas aeruginosa* PAO1 (1,841 of 2,941 experimental rows in QuickGO).
-Some of those rows are used by PAINT curators as seeds for ancestral-node (IBD)
-annotations, which then reach thousands of bacterial proteins as IBAs. This
-project reviews PseudoCAP annotations, starting with the ones that seed IBDs,
-because an error there is copied to every descendant leaf. Of 471 PAO1
-proteins that seed an IBD, 398 have a PseudoCAP annotation that supports at
-least one of their seedings; those 522 node terms feed 51,455 leaf IBAs. For
-139 node terms (109 proteins, 4,772 leaf IBAs) the PAO1 protein is the only
-seed, so the IBD rests entirely on the PseudoCAP row. Of the first six sole-seeded node terms reviewed, two rest on an indirect
-mutant phenotype and are unsupported (estA: lipid biosynthesis on an esterase,
-960 leaf IBAs; ccmC: catalase activity on a heme exporter, 143), one rests on a
-sequence motif coded as IDA (fleN), and three seeds are sound, two of them on
-nodes that are too broad or too dependent on them (pvdE, pqsH).
+PAINT curators use some of those rows as seeds for ancestral-node (IBD)
+annotations, which reach many other proteins as IBAs, so an error in a seed is
+copied to every descendant. Of 471 PAO1 proteins that seed an IBD, 398 have a
+PseudoCAP annotation supporting at least one seeding; for 139 node terms (109
+proteins) the PAO1 protein is the only seed. We reviewed all 109 of those
+proteins; three review files (pvdE, pqsA, PA2403) are still to be written. For 21 genes the seed is wrong or
+is an indirect mutant phenotype, and the IBD it supports should be withdrawn or
+repointed. Examples are catalase activity on a heme exporter (ccmC), lipid
+biosynthesis on an esterase (estA), DNA endonuclease activity from a mistyped
+GO id (pilU), and signal transduction on a signal synthase (lasI). For 24 the
+seed is right for PAO1 but the node carries the term to proteins or lineages it
+does not fit. For 30 the claim is true but the PseudoCAP row misstates the
+evidence code, qualifier or reference, and 32 are sound. The reviews record 114
+defects for PseudoCAP and 74 for PAINT, written up in
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
 
 ## Why start with IBA seeds
 
@@ -111,7 +114,55 @@ wrong seed leaves the IBD unsupported, a second defect with
 `resource: GO_CENTRAL` names the PTN node, so `just export-source-defects`
 produces one report for PseudoCAP and one for PAINT.
 
-## Results so far
+## Results: tier 1 (sole seeds)
+
+All 109 tier 1 proteins have been assessed; the review files for pvdE, pqsA and
+PA2403 still need writing (see below). pvdE is classified from its committed
+notes and seed assessment. Each gene is classified by the outcome for
+its sole-seeded node terms. Leaf IBA counts are the worklist's
+reference-proteome counts for those terms, so they are lower bounds.
+
+| Outcome | Genes | Leaf IBAs |
+|---|---:|---:|
+| Seed wrong or indirect: the IBD should be withdrawn or repointed | 21 | 1,481 |
+| Seed right for PAO1, but the node term does not fit its clade | 24 | 804 |
+| Claim true, but the seed row's evidence code, qualifier or reference is wrong | 30 | 1,043 |
+| Sound | 32 | 1,433 |
+| Review not yet written (pqsA, PA2403) | 2 | 11 |
+| **Total** | **109** | **4,772** |
+
+- **Withdraw or repoint (21):** estA, ccmC, pilU, pilM, pilN, wbpD, PA0920,
+  liuC, PA5377, lasI, PA3697, cysB, ptrB, PA5208, PA1340, lhpL, znuC, phnB,
+  pslC, motB, nrdJa.
+- **Node does not fit the clade (24):** pvdE, PA5458, PA3760, mgtE, aruC, gbuA,
+  mucB, pchB, nirJ, fpr, fur, nmoA, tgpA, dctQ, PA4503, PA4504, pqsC, wzm,
+  phzC1, thiI, pelA, xcpV, braF, PA5359.
+- **Fix the seed row, keep the IBD (30):** fleN, hutI, hutF, hom, thrB, PA3891,
+  the six Sha subunits PA1054-PA1059, PA2280, phzS, lpxA, xcpX, xcpS, xcpW,
+  xcpQ, xcpR, PA0692, dgcB, PA4521, pilA, oprB, PA4505, gltA, arcD, PA2580,
+  fliD.
+- **Sound (32):** lap, pqsH, PA1024, pilB, phzM, hutH, braD, waaL, wbpY, cif,
+  pilD, pscC, relA, hfq, dksA, cifR, PA4079, PA4624, oprG, pilT, fimU, arcA,
+  lasB, PA1486, PA5085, PA0906, dctP, PA1341, mucD, pfeA, pvdH, eddB.
+
+The classification is by the worst outcome among a gene's sole-seeded nodes;
+several "sound" genes still have defects on other rows (for example lap and
+lasB, which are given secretion-system terms for being secretion cargo).
+
+### Upstream reports
+
+[`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
+`source_defects` recorded in all PAO1 reviews into one report per resource in
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 114 for PseudoCAP (44
+wrong term, 42 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 1
+wrong gene product), 74 for PAINT/GO Central (44 wrong term, 16 other, 7
+missing negation, 6 wrong qualifier, 1 wrong reference), 5 for UniProt and 5
+for other resources (InterPro2GO mappings). Most are `CHECK` requests at
+SUSPECTED or PROBABLE confidence, because many seed papers could only be read
+as abstracts. They include defects from PAO1 reviews made before this project.
+
+### Per-gene verdicts
+
 
 Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 `source_defects` recorded in the review (P = PseudoCAP, G = GO_CENTRAL/PAINT).
@@ -153,6 +204,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 33 | gbuA | PA1421 | L-arginine catabolic process (PTN004253691) | 34 | SOUND for GbuA | Over-reaches across a guanidino-acid hydrolase clade (AGMAT, GpuA); separate guanidinopropionase IBA contradicted by assay | G (x2) |
 | 34 | pilD | PA4528 | aspartic-type endopeptidase activity (PTN000766410) | 33 | SOUND (purified enzyme) | Sound | P (reference query on a plasma membrane row) |
 | 35 | dgcB | PA5399 | oxidoreductase activity (PTN000229983) | 33 | INDIRECT: transposon growth + NMR coded IDA; the chemistry probably belongs to DgcA | Generic node term defensible from domains | P (x2), G |
+| 36 | pqsC | PA0998 | secondary metabolite biosynthetic process (PTN002147059) | 30 | SOUND (own transposon mutant loses PQS) | Over-broad: node sits above ordinary fatty-acid FabH enzymes | G |
 | 37 | PA0920 | PA0920 | phospholipid homeostasis; aminoacyltransferase; PG alanyltransferase (PTN002162750, PTN005059806) | 28 | Activities SOUND; phospholipid homeostasis WRONG (the gene makes A-PG; homeostasis needs the PA0919 hydrolase) | Homeostasis IBD unsupported, and the node includes fungal ErgS sterol glycyltransferases | P, G, UniProt |
 | 38 | PA4079 | PA4079 | NAD(P) CH-OH oxidoreductase (PTN002388087) | 27 | SOUND (direct enzymology) | Sound; generic term suits a cross-kingdom SDR clade | none |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
@@ -164,36 +216,85 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 45 | PA4624 | PA4624 | transmembrane protein transporter activity (PTN002160772) | 25 | SOUND (secretion readout of CdrA) | Sound (TpsB subfamily) | P (biofilm row) |
 | 46 | xcpS | PA3102 | protein secretion by the T2SS (PTN000768597) | 25 | SOUND term; IDA on a review article (PMID:9818381) | Sound | P |
 | 47 | xcpW | PA3098 | T2SS process and complex (PTN002446812) | 24 | SOUND terms; process IDA on a review, complex IDA on a paper showing only membrane fractionation | Sound | P (x2) |
+| 48 | wzm | PA5451 | lipopolysaccharide transport (PTN002019107) | 24 | SOUND | Over-broad: reaches teichoic-acid and capsule exporters and Gram-positive/archaeal permeases; polysaccharide transport would fit | G |
 | 49 | dctQ | PA5168 | C4-dicarboxylate transport (PTN002169725) | 24 | SOUND for DctQ | OVER-SPECIFIC: YiaM-type clade (E. coli YiaM moves 2,3-diketo-L-gulonate) | G |
 | 50 | lpxA | PA3644 | lipopolysaccharide biosynthetic process (PTN000602377) | 24 | SOUND claim; reference is a lipid A structure paper that predates the gene | Sound; lipid A biosynthesis would be sharper | P |
 | 51 | xcpV | PA3099 | T2SS process and complex (PTN002446181) | 24 | SOUND terms; same seed problems as xcpW | Node may be too broad: 14 of 49 leaves named PilV/MshD/pilin | P (x2), G (x2) |
 | 52 | xcpQ | PA3105 | protein secretion by the T2SS (PTN000768388) | 23 | SOUND term; IDA on a review article | Sound | P |
 | 53 | relA | PA0934 | response to starvation (PTN001083175) | 23 | SOUND | Sound; a SpoT hydrolase IBA from the same node was removed from RelA | G |
+| 54 | arcA | PA5171 | arginine deiminase activity (PTN005338738) | 23 | SOUND (mutants defined by loss of ADI alone; locus shown to encode it) | Sound; a few short non-ADI leaves (YkgA, archaeal) to check | G |
+| 55 | nmoA | PA4202 | nitronate monooxygenase activity (PTN001284536) | 23 | SOUND (purified enzyme, structure) | Over-broad: sibling leaf PA0660 was purified and has no NMO activity (a quinone reductase) | G |
 | 56 | pilN | PA5043 | type IV pilus; motility; pilus assembly (PTN002220336) | 21 | Location WRONG (same IMP "no pili" row as pilM, on an inner-membrane protein); motility and assembly SOUND | Pilus CC IBD (added 2026-06-17) should be withdrawn | P, G |
+| 57 | lasB | PA3724 | proteolysis (PTN002138658) | 21 | SOUND | Sound | P (x2, cargo-as-machinery rows, as lap) |
+| 58 | thrB | PA5495 | L-threonine biosynthetic process; homoserine kinase activity (PTN001464661) | 20 | Process SOUND but evidence is genetic (IGI, not IDA); kinase activity UNVERIFIABLE (no assay visible) | Node includes B. subtilis AmiN, an amicoumacin kinase | P (x2), G |
 | 59 | hfq | PA4944 | regulation of RNA stability (PTN002164223) | 20 | SOUND (Hfq stabilises RsmY) | Sound; less certain for Firmicutes leaves | none on seed |
 | 60 | pilA | PA4525 | type IV pilus-dependent motility; type IV pilus (PTN002013003) | 20 | SOUND claims; evidence codes wrong (mutant assay as IDA, review as IMP) | Sound | P (x2) |
+| 61 | fliD | PA1094 | bacterial-type flagellum filament cap (PTN000767631) | 20 | SOUND claim; cited paper (mucin binding) shows no cap experiment | Sound | UniProt (subunit is hexamer, not pentamer) |
 | 62 | PA1059 | PA1059 | sodium:proton antiporter activity (PTN002162936) | 19 | INDIRECT: subunit never mutated (ShaG) | Should be contributes_to; node reaches archaeal hydrogenase subunits MbhC/MbxC | P (x2), G |
 | 63 | PA1058 | PA1058 | sodium:proton antiporter activity (PTN002162906) | 19 | INDIRECT: subunit never mutated (ShaF) | Should be contributes_to; node reaches MbhB/MbxB | P (x2), G |
+| 64 | tgpA | PA2873 | protein-glutamine gamma-glutamyltransferase activity (PTN002126683) | 17 | OVER-SPECIFIC: kit assay of amine incorporation on an isolated domain, not protein cross-linking | Node of papain-fold domains named by domain only; nearest characterised relative is a deamidase | G |
 | 65 | dksA | PA4723 | regulation of DNA-templated transcription (PTN002139169) | 17 | SOUND | Sound | P (wrong reference: paralog DksA2 paper) |
 | 66 | pchB | PA4230 | salicylic acid biosynthetic process (PTN002211012) | 17 | SOUND for PchB (isochorismate pyruvate lyase) | OVER-SPECIFIC: node is the AroQ chorismate mutase family root; the other 16 leaves are mutases with no lyase activity | G |
+| 67 | arcD | PA5170 | arginine:ornithine antiporter activity (PTN000208945) | 16 | SOUND; PseudoCAP IMP is really a proteoliposome assay (IDA) | Sound; Chlamydia AaxC (arginine:agmatine) under the node | P, G, UniProt |
 | 68 | PA1054 | PA1054 | sodium ion transmembrane transport (PTN000511949) | 16 | SOUND: the one subunit actually deleted (ShaAB) | Antiporter activity should be contributes_to | P, G |
 | 69 | PA1056 | PA1056 | sodium ion transmembrane transport (PTN001865541) | 16 | SOUND claim; IMP without a PA1056 mutant | Sound; two complex I-derived IEA rows removed | P (x2), G |
+| 70 | hutF | PA5106 | L-histidine catabolic process (PTN000138516) | 16 | UNVERIFIABLE (1967 paper, as hutI); activity seed SOUND | Re-anchor on PMID:16475788; three nematode leaves lack HutF signatures | P, G |
 | 71 | nirJ | PA0511 | heme biosynthetic process (PTN000132400) | 15 | SOUND for NirJ (heme d1) | OVER-SPECIFIC: archaeal SPASM radical SAM clade; one other leaf is a heme-pathway enzyme | G |
 | 72 | xcpR | PA3103 | T2SS process and complex (PTN002016240) | 14 | Complex SOUND; process IDA on a review article | Sound; node restricted to Gammaproteobacteria, keeping T2SS terms off PilB-type ATPases | P |
 | 73 | oprG | PA4067 | transmembrane transport (PTN005107949) | 13 | SOUND (channel in planar bilayers) | Sound | none |
 | 74 | fpr | PA3397 | heme catabolic process (PTN002500048) | 13 | SOUND for fpr as heme oxygenase electron donor | OVER-SPECIFIC: a partner-specific role on a family node that includes E. coli and Salmonella Fpr | G |
 | 75 | PA4504 | PA4504 | dipeptide transmembrane transporter activity (PTN000766696) | 12 | SOUND claim; operon deletion coded IDA | OVER-SPECIFIC: node holds NikC (nickel) and GsiD (glutathione) | P, G |
 | 76 | fur | PA4764 | negative regulation of siderophore biosynthetic process (PTN002112483) | 12 | SOUND for Fur | OVER-SPECIFIC: leaves include Fur of Neisseria, Helicobacter, Coxiella; a sibling secondary-metabolite IBD sits on the whole Fur superfamily (Zur, PerR, Irr) | G (x2) |
+| 77 | PA1486 | PA1486 | aminopeptidase activity (PTN002194605) | 12 | SOUND (purified BapF) | Sound | none |
+| 78 | pvdH | PA2413 | transaminase activity (PTN002461253) | 11 | SOUND (direct assay) | Sound | none |
+| 79 | PA5085 | PA5085 | sequence-specific DNA binding (PTN001576694) | 11 | SOUND (EMSA with purified DguR) | Sound | none |
+| 80 | cysB | PA1754 | L-cysteine biosynthetic process (PTN002824317) | 10 | INDIRECT: auxotrophy of a mutant of the pathway's transcriptional activator | Unsupported: all 10 leaves are CysB/Cbl regulators | P, G |
+| 81 | oprB | PA3186 | carbohydrate transport (PTN002209977) | 10 | SOUND claim; mutant uptake coded IDA | Sound | P |
+| 82 | PA0906 | PA0906 | regulation of DNA-templated transcription (PTN002221379) | 10 | SOUND (ChIP-seq, promoter fusions) | Sound | P (autolysis row) |
+| 83 | PA2280 | PA2280 | NAD(P)H quinone oxidoreductase (PTN008682975) | 10 | WRONG reference: the cited paper studies Synechocystis ArsH; activity true from a later P. aeruginosa assay | Sound content; re-cite the seed | P, G |
+| 84 | PA2580 | PA2580 | cellular response to oxidative stress (PTN002922793) | 9 | SOUND but weak (overexpression rescues only a katA mutant); quinone reductase row is a purified-enzyme assay coded IMP | Sound; H. pylori ortholog knockout would be a better seed | P |
+| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Not written (review YAML blocked): agent found the cited paper attributes the PA0996 result to another study | Node is the family root; a child node swaps terms between PqsA and FadD22 | pending |
+| 86 | lhpL | PA1255 | 4-hydroxyproline epimerase activity (PTN002433936) | 9 | WRONG: Swiss-Prot records experimentally that it has no 4-hydroxyproline epimerase activity; it is a trans-3-hydroxy-L-proline dehydratase; PAO1's real epimerase is PA1268 | Unsupported: repoint | P, G |
+| 87 | motB | PA4953 | bacterial-type flagellum-dependent swarming motility (PTN001251133) | 9 | OVER-SPECIFIC: motAB single mutant swarms normally; only the motAB motCD double fails | Swarming is a lifestyle phenotype, not propagable; repoint to flagellum-dependent motility | P (x2), G |
+| 88 | dctP | PA5167 | C4-dicarboxylate transport (PTN002121312) | 9 | SOUND | Sound: unlike the DctQ node this is a binding-protein clade | none |
 | 89 | pilT | PA0395 | ATP hydrolysis activity (PTN002020799) | 8 | SOUND (purified enzyme, motif mutants) | Sound | P (a non-seed located_in pilus row) |
+| 90 | ptrB | PA0612 | positive regulation of secondary metabolite biosynthetic process (PTN002215317) | 8 | WRONG: full text shows PtrB represses type III secretion; no secondary-metabolite phenotype | Unsupported: delete | P, G |
+| 91 | PA1341 | PA1341 | L-glutamate import (PTN004745596) | 7 | SOUND (partial growth defect, corroborated) | Sound | none |
+| 92 | znuC | PA5500 | response to zinc ion (PTN001952271) | 7 | INDIRECT: EDTA growth defect of the importer ATPase; zinc sensing is Zur's | Repoint to zinc import (~1,455 GOA rows) | P, G, UniProt |
+| 93 | pslC | PA2233 | single-species biofilm formation (PTN002463206) | 7 | INDIRECT: deletion phenotype coded IDA | Unsupported: other leaves are glycosyltransferases for O-antigen, ExoU, flagellin glycans | P, G |
+| 94 | PA4521 | PA4521 | response to antibiotic (PTN002214697) | 7 | UNVERIFIABLE (abstract reports only ampD complementation) | AmpE's role contested; E. coli leaf has no AmpR | G |
 | 95 | fimU | PA4550 | type IV pilus (PTN008624060) | 7 | SOUND | Sound | none on seed |
+| 96 | phnB | PA1002 | phenazine biosynthetic process (PTN000230115) | 7 | INDIRECT: anthranilate feeds PQS, which induces the phz operons; PhzE makes the phenazine anthranilate | Unsupported; a TrpGD fusion artefact also removed | G (x2) |
+| 97 | PA5359 | PA5359 | alkane catabolic process (PTN002217427) | 7 | UNVERIFIABLE; paper characterises AlkB/Rub genes and PA5359 is a 151-aa lipoprotein (likely wrong gene, perhaps PA5349) | Node is a lipoprotein-repeat family including a tomato protein | P, G |
+| 98 | mucB | PA0764 | regulation of polysaccharide biosynthetic process (PTN002215378) | 7 | SOUND for MucB (alginate via AlgU) | OVER-SPECIFIC: the other 6 leaves are RseB orthologs that regulate sigmaE, not polysaccharides | G |
+| 99 | pfeA | PA2688 | enterobactin transport and transporter activity (PTN000763909) | 6 | SOUND | Sound | G (colicin row) |
+| 100 | PA1340 | PA1340 | L-glutamine transport (PTN000764525) | 6 | WRONG: the seed paper is a P. putida study; PA1340 was not tested | Node is a GltK glutamate/aspartate clade | P, G |
+| 101 | PA4505 | PA4505 | dipeptide transmembrane transporter activity (PTN000656114) | 6 | SOUND claim; operon deletion coded IDA | Sound: node holds only DppD orthologs | P |
+| 102 | PA5208 | PA5208 | bacterial-type flagellum-dependent swarming motility (PTN002194937) | 5 | INDIRECT: transposon-screen hit with a growth defect; protein is PhoU-like | Delete: leaves include non-flagellated Haemophilus and Coxiella | P, G |
+| 103 | phzC1 | PA4212 | phenazine biosynthetic process (PTN000481936) | 5 | SOUND (phz-operon DAH7P synthase) | Node also holds housekeeping DAH7P synthases (incl. PAO1 PA2843), which now carry phenazine biosynthesis | G |
+| 104 | lasI | PA1432 | signal transduction (PTN002217335) | 5 | WRONG: a signal synthase is not part of signal transduction (receiver-side); quorum sensing fits; genetic evidence coded IDA | Repoint node to quorum sensing (all 5 leaves are LuxI-family synthases) | P, G |
+| 105 | PA3697 | PA3697 | regulation of nitric oxide metabolic process (PTN002422332) | 5 | INDIRECT: only fhp promoter induction was lost; NO metabolism not measured | Withdraw: ~175 GOA IBA rows cite this node | P, G |
+| 106 | mucD | PA0766 | periplasmic space (PTN002342204) | 5 | SOUND | Sound | P (signal transduction row) |
+| 107 | eddB | PA3909 | DNA catabolic process (PTN001684760) | 3 | SOUND (secreted DNase) | Sound | none |
+| 108 | pelA | PA3064 | deacetylase activity (PTN002441861) | 3 | SOUND (purified protein, active-site mutants) | Other two leaves look too short to contain the deacetylase domain | G |
+| 109 | PA2403 | PA2403 | siderophore biosynthetic process | 2 | Not written (agent stopped): gene is FpvG, which releases iron from ferripyoverdine, so pyoverdine biosynthesis looks wrong or indirect | pending | pending |
 
-pvdE's review file is still a stub: the research, notes and bioinformatics
-are done, but the agent's write of the review YAML was blocked and needs
-redoing.
+### Not completed
 
-Batch 6 (in progress): arcA, arcD, thrB, hutF, nmoA, lasB, tgpA, fliD.
+The review files for pvdE, pqsA and PA2403 were not written: the agent's write
+of each review YAML was blocked by a safety classifier (pvdE, pqsA), and the
+agent stopped before PA2403. pvdE's notes, seed assessment and node analysis
+are committed. The research findings for the other two:
 
-### Patterns emerging
+- **pqsA:** the cited paper (PMID:12426334) attributes the PA0996 result to a
+  different study; PMID:18728009 shows a pqsA mutant makes no quinolines. The
+  seeding node PTN002458530 is the family root, and the child node
+  PTN001186225 swaps terms between PqsA and FadD22.
+- **PA2403:** the gene is FpvG, which releases iron from ferripyoverdine
+  (PMID:28192658, PMID:31924850), so its pyoverdine biosynthesis seed
+  (PMID:12207696, an expression-profiling study) looks wrong or indirect.
+
+### Patterns
 
 - **Indirect phenotypes as functions** (ccmC, estA): a mutant lacking catalase
   activity because it cannot mature heme proteins was annotated as having
@@ -263,13 +364,17 @@ These are catalogued for PAINT as pattern 16 of [IBA_REVIEW](IBA_REVIEW.md).
 
 ## Plan
 
-1. Finish the pilot and record verdicts here.
-2. Work through the remaining tier 1 genes (103) in batches, in worklist order.
-3. Tier 2, starting with seedings whose only PAO1 support is IMP or IGI.
-4. Then the rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
+1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA, PA2403 and
+   pvdE review files.
+2. Reconcile small inconsistencies between reviews: xcpX's complex row
+   (PMID:9466253) has no reference defect, while the similar xcpW and xcpV rows
+   (PMID:8331069) do.
+3. Send the PseudoCAP and PAINT reports upstream, starting with the 21
+   withdraw-or-repoint cases.
+4. Tier 2 (289 proteins that share each node with other seeds), starting with
+   seedings whose only PAO1 support is IMP or IGI.
+5. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
    prioritising IMP rows on molecular-function terms.
-5. Export source defects for PseudoCAP and PAINT, and summarise the recurring
-   patterns for both groups.
 
 Re-run the builder when PAINT or QuickGO data change; it only re-downloads
 files missing from `.cache/paint/`, so delete that folder to refresh.
