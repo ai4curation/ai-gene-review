@@ -12,7 +12,8 @@ yeast *R. toruloides*, 370 genes are needed for growth on a specific carbon
 source but not on glucose, and 137 of them strongly (fitness ≤ −3 in at most
 six of 20 carbon conditions). These fall into recognisable catabolic modules:
 aromatic compounds (96 genes), branched-chain amino acids (22), pentoses and
-polyols (9), fatty acids and acetate (5) and galactose (1). The method
+polyols (9), fatty acids and acetate (5), lactate (3), galactose (1) and
+cellobiose (1). The method
 recovers expected enzymes, such as galactokinase on galactose and
 branched-chain keto acid dehydrogenase on leucine and valine. Of the 137
 strong genes, 30 have no GO annotation in UniProt, and 11 map to current
@@ -67,11 +68,11 @@ reference proteome (UP000199069, locus tags `BN2166_*`):
 |---|---|---|
 | active | 161 | 2023 accession still in UniProtKB |
 | same_gene | 146 | ≥ 90% identity over ≥ 80% of the query |
-| same_gene_partial_model | 41 | ≥ 95% identity over a shorter span; the two assemblies' gene models differ in length |
-| weak | 8 | lower identity; not used |
+| same_gene_partial_model | 39 | ≥ 95% identity over a shorter span of at least 100 residues (or half the query); the two assemblies' gene models differ in length |
+| weak | 10 | lower identity, or a near-identical span too short to call; not used |
 | no_hit | 14 | no significant match |
 
-So 348 of 370 genes can be reviewed against a current UniProt entry.
+So 346 of 370 genes can be reviewed against a current UniProt entry.
 
 ## Modules
 

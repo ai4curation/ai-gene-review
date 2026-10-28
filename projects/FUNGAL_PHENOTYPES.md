@@ -49,7 +49,7 @@ no-carbon plates. It is meant to sit beside JGI MycoCosm CAZyme annotations.
 
 ## Mutant phenotypes for reviewed yeast genes
 
-`scripts/phenotype_overlap.py` (in [FUNGAL_PHENOTYPES/](FUNGAL_PHENOTYPES/))
+`scripts/phenotype_overlap.py` (in the `FUNGAL_PHENOTYPES/` folder)
 joins every `genes/SCHPO` and `genes/yeast` review, by the PomBase or SGD
 cross-reference in its UniProt record, to the PomBase single-locus haploid
 phenotype file (FYPO terms) and SGD's `phenotype_data.tab` (APO terms). Output:

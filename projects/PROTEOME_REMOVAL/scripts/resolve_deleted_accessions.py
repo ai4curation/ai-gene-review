@@ -13,7 +13,8 @@ preference:
 3. ``same_gene`` / ``same_gene_partial_model`` / ``weak`` -- best phmmer hit
    of the archived sequence against the reference proteome(s) of its species:
    ``same_gene`` is >= 90% identity over >= 80% of the query; ``partial_model``
-   is >= 95% identity over a shorter span (gene models differ in length);
+   is >= 95% identity over a shorter span of at least 100 residues (or half
+   the query, if shorter), as when gene models differ in length;
    ``weak`` is anything lower and should not be used without inspection.
 4. ``no_hit`` / ``no_reference_proteome`` / ``no_sequence`` / ``not_found``.
 
@@ -43,6 +44,9 @@ from pathlib import Path
 import pyhmmer
 
 REST = "https://rest.uniprot.org"
+# A partial-model call needs a long enough near-identical span: a short shared
+# domain (e.g. in a recent paralog) must not pass as the same gene.
+MIN_PARTIAL_ALIGNED = 100
 FIELDS = [
     "accession", "uniprotkb_status", "upi", "length", "taxon",
     "replacement", "replacement_reviewed", "replacement_taxon", "target_proteome",
@@ -239,7 +243,9 @@ def main() -> None:
             ident, cov = hit["identity"], hit["coverage"]
             if ident >= 0.9 and cov >= 0.8:
                 call = "same_gene"
-            elif ident >= 0.95:
+            elif ident >= 0.95 and cov * len(entry["sequence"]) >= min(
+                MIN_PARTIAL_ALIGNED, 0.5 * len(entry["sequence"])
+            ):
                 call = "same_gene_partial_model"
             else:
                 call = "weak"

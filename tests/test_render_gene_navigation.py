@@ -13,6 +13,22 @@ TEMPLATE = (
 )
 
 
+GENE_MODEL_ISSUE = {
+    "issue_type": "FUSED_GENE_MODEL",
+    "status": "CONFIRMED",
+    "description": "Joins two neighbouring genes; named after the first part.",
+    "components": [
+        {"accession": "A0A2T0ACV7", "segment": "1-650", "description": "Part one"},
+        {"accession": "A0A2T0ACW0", "segment": "645-1419", "description": "Part two"},
+    ],
+    "reviewed_segment": "645-1419",
+    "evidence_types": ["TILING", "GENETIC_SEPARATION"],
+    "supported_by": [
+        {"reference_id": "file:TEST/TEST/RESULTS.md", "supporting_text": "tiled by two genes"}
+    ],
+}
+
+
 def test_navigation_counts_and_targets() -> None:
     """Count predictions across reports and link to distinct rendered sections."""
     prediction = {
@@ -90,11 +106,13 @@ def test_navigation_includes_additional_review_sections() -> None:
             "suggested_questions": [{"question": "Question"}],
             "suggested_experiments": [{"description": "Experiment"}],
             "tags": ["tag"],
+            "gene_model_issues": [GENE_MODEL_ISSUE],
         }
     )
     soup = BeautifulSoup(render_html(data, TEMPLATE), "html.parser")
     targets = {a["href"] for a in soup.select('nav[aria-label="Page sections"] a')}
     assert targets == {
+        "#review-gene-model",
         "#review-isoforms",
         "#review-proposed-terms",
         "#review-questions",
@@ -104,3 +122,28 @@ def test_navigation_includes_additional_review_sections() -> None:
     for target in targets:
         assert isinstance(target, str)
         assert len(soup.select(target)) == 1
+
+
+def test_gene_model_issues_section_renders_all_fields() -> None:
+    """The gene model section shows type, status, evidence, segments and quotes."""
+    data = enrich_gene_data(
+        {"gene_symbol": "TEST", "gene_model_issues": [GENE_MODEL_ISSUE]}
+    )
+    soup = BeautifulSoup(render_html(data, TEMPLATE), "html.parser")
+    nav = soup.select_one('nav[aria-label="Page sections"] a[href="#review-gene-model"]')
+    assert nav is not None
+    assert nav.get_text(" ", strip=True) == "1 Gene Model"
+    section = soup.select_one("#review-gene-model")
+    assert section is not None
+    badges = [b.get_text(strip=True) for b in section.select(".badge")]
+    assert badges == ["FUSED GENE MODEL", "CONFIRMED", "TILING", "GENETIC SEPARATION"]
+    text = section.get_text(" ", strip=True)
+    assert "Joins two neighbouring genes" in text
+    assert "residues 645-1419" in text
+    components = [li.get_text(" ", strip=True) for li in section.select("ul")[0].select("li")]
+    assert components == [
+        "residues 1-650 A0A2T0ACV7 : Part one",
+        "residues 645-1419 A0A2T0ACW0 : Part two",
+    ]
+    assert '"tiled by two genes"' in text
+    assert "file:TEST/TEST/RESULTS.md" in text

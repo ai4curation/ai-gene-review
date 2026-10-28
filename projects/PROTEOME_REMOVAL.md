@@ -145,7 +145,7 @@ on UniParc or be archived.
 
 - `projects/FUNGAL_PHENOTYPES/RHOTO.md` uses it to map 370
   *Rhodotorula toruloides* genes whose published accessions (IFO0880,
-  UP000239560) were removed in the cleanup; 348 resolve.
+  UP000239560) were removed in the cleanup; 346 resolve.
 - `projects/GENE_MODEL_ERRORS.md` uses its output to find fused gene models:
   a replacement much longer than the archived sequence is the typical
   signature.

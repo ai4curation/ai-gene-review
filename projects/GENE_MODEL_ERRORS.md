@@ -2,7 +2,7 @@
 title: "Gene model errors: fused UniProt entries"
 maturity: SCOPING
 tags: [PIPELINE]
-species: [RHOTO, 9POAL, ASPOR, WHEAT, HORSE]
+species: [RHOTO, 9POAL, ASPOR, WHEAT]
 genes: [NCGR_LOCUS27674, Q2U1U6, A0A3B6GK97, A0A0K3C4U4, A0A0K3C6G6, A0A0K3C6K4, A0A0K3C7C1, A0A0K3C9W7, A0A0K3CA73, A0A0K3CAZ0, A0A0K3CD57, A0A0K3CDC5, A0A0K3CH38, A0A0K3CI66, A0A0K3CIB4, A0A0K3CKJ7, A0A0K3CPN4, A0A0K3CPS8]
 autolink_gene_symbols: false
 ---
@@ -13,7 +13,7 @@ autolink_gene_symbols: false
 neighbouring genes joined by a faulty gene prediction. Such an entry takes
 its name, and often its GO terms, from one half, so the other gene's function
 is mislabelled or lost. Working on *Rhodotorula toruloides* fitness data
-([FUNGAL_PHENOTYPES/RHOTO](FUNGAL_PHENOTYPES/RHOTO.md)), we tested 59
+([FUNGAL_PHENOTYPES/RHOTO](FUNGAL_PHENOTYPES/RHOTO.md)), we tested 58
 reference-proteome entries that are at least 1.3 times longer than the
 matching protein of a second strain's assembly, and found 26 that are
 mostly covered by two to four separate genes of that assembly. In all 26 the
@@ -42,8 +42,10 @@ product. For a fused entry that assumption fails:
 
 ## Existing reviews with gene model problems
 
-A text search of all `*-ai-review.yaml` files found these, each recorded only
-in the description or review prose. All now carry `gene_model_issues`:
+A text search of all `*-ai-review.yaml` files for gene-model language
+("chimeric", "fused", "truncated gene model", "incomplete gene model" and
+similar phrases) found these, each recorded only in the description or review
+prose. All now carry `gene_model_issues`:
 
 | Review | Problem | Status |
 |---|---|---|
@@ -68,6 +70,15 @@ is a real biological fusion (the grass `SDH2-RPS14` locus), not an annotation
 error. That is the only gene-model tag in the corpus, and its meaning
 differs from the cases here, which is part of the case for a controlled
 field.
+
+**Scope.** Entries that UniProt itself marks as fragments (`DE   Flags:
+Fragment`, with `NON_TER` features; 23 reviewed entries, including
+<gene species="9AVES" symbol="TAS1R1">9AVES/TAS1R1</gene>, <gene species="9AVES" symbol="TAS1R3">9AVES/TAS1R3</gene> and <gene species="MONBE" symbol="MONBRDRAFT_1233">MONBE/MONBRDRAFT_1233</gene>) were deliberately not
+back-filled. UniProt already records that their sequence is incomplete, in a
+machine-readable form; `gene_model_issues` is for problems the source record
+does not flag, such as a mispredicted start, missing exons or fused
+neighbours. A fragment entry should get a `gene_model_issues` entry only when
+the review finds something beyond the flag.
 
 ## Method
 
@@ -100,7 +111,7 @@ shows that the parts act independently.
 |---|---|
 | FUSION | 26 |
 | SINGLE_GENE | 12 |
-| INCONCLUSIVE | 21 |
+| INCONCLUSIVE | 20 |
 
 All 26 fusions have adjacent component genes; 15 are also genetically
 separated. These 15 are listed in this page's metadata.
@@ -133,10 +144,10 @@ growth data, not an established assignment.
 
 ### Scope and caveats
 
-- Only entries linked to a carbon-source fitness defect were screened (59 of
+- Only entries linked to a carbon-source fitness defect were screened (58 of
   them), so 26 fusions is not an estimate of the rate in the whole
   reference proteome; a proteome-wide screen is the obvious next step.
-- `INCONCLUSIVE` (21) covers entries tiled by one protein over too little of
+- `INCONCLUSIVE` (20) covers entries tiled by one protein over too little of
   their length, or by segments below the identity threshold. Some will be
   fusions with a component missing from the IFO0880 annotation.
 - Genetic separation needs a condition where one part has a phenotype, so
@@ -180,6 +191,9 @@ gene_model_issues:
     description: MCC biotin-carboxylase subunit (IFO0880 RTO4_12867)
   reviewed_segment: 645-1419
   evidence_types: [TILING, ADJACENT_GENES, GENETIC_SEPARATION]
+  supported_by:
+  - reference_id: file:projects/GENE_MODEL_ERRORS/data/rhoto_fusion_genetics.tsv
+    supporting_text: "645-1419=RTO4_12867"
 ```
 
 `data/rhoto_fusion_genetics.tsv` remains the pipeline record for the 26

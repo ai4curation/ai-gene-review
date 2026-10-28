@@ -638,8 +638,9 @@ record it in the top-level `gene_model_issues` list rather than only in prose:
 `issue_type`, `status` (`SUSPECTED` or `CONFIRMED`), a `description` of how it
 affects the entry's name and annotations, optional `components` and
 `reviewed_segment` for fused models, `evidence_types`, and `supported_by` quotes.
-A genuine biological fusion is not a gene model issue. See
-`projects/GENE_MODEL_ERRORS.md`.
+A genuine biological fusion is not a gene model issue, and an entry UniProt
+already flags as a fragment (`DE   Flags: Fragment`) needs an entry only when the
+review finds more than the flag records. See `projects/GENE_MODEL_ERRORS.md`.
 
 ## Bioinformatics analyses
 

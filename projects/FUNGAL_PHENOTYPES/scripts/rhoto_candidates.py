@@ -55,9 +55,11 @@ def parse(conds: str) -> dict[str, float]:
 
 def module_of(defects: dict[str, float]) -> str:
     """Module holding the gene's strongest defect."""
-    worst = min(defects, key=defects.get)
+    worst = min(defects, key=defects.get).lower()
     for mod, keys in MODULES.items():
-        if any(worst.endswith(k) for k in keys):
+        # Condition names end in the carbon source after a space or underscore
+        # ("YNB_PO4_CSM_Leucine", "YNB Oleic Acid"); match that name exactly.
+        if any(worst.endswith((f" {k.lower()}", f"_{k.lower()}")) for k in keys):
             return mod
     return "other"
 
