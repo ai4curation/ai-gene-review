@@ -1,0 +1,7 @@
+# rps-5 notes
+
+- 2026-10-28: `just fetch-gene worm rps-5` (second attempt; first timed out on UniProt). Entry RS5_CAEEL P49041 (T05E11.1, WBGene00004474, GeneID 178012). 15 GOA rows, all IBA/IEA/ISS, no PMIDs; `fetch-gene-pmids` found none.
+- PMID:16247027 (Audhya 2005) full text read: RPS-5 RNAi used as translation-inhibition control; penetrant sterility, osmotically sensitive embryos, no cytokinesis defect [PMID:16247027 "Depletions of six different ribosomal subunits (RPS-1, -3, -5, -11, -18, and -23) each resulted in penetrant sterility (unpublished data)."]. Necessity evidence only; no NEW process term proposed.
+- PMID:39209556 (Sehgal 2024) C. elegans 80S cryo-EM; uS7 among modelled proteins [PMID:39209556 "We also modeled the ribosomal proteins, with the exceptions of those bound to the P- and L-stalks (uL10/P0, P1, P2, uL1, uL11), eL28, and RACK-1"].
+- PubMed search hit PMID:23698443 concerns mrps-5 (mitochondrial, E02A10.1), not rps-5; not cited in the review.
+- Decisions: ACCEPT structural constituent of ribosome (IBA, IEA) and cytosolic small ribosomal subunit (IBA). MODIFY translation (IBA, IEA) -> cytoplasmic translation; ribosome (IBA) and small ribosomal subunit (IEA) -> cytosolic small ribosomal subunit; cytoplasm (IEA, ISS) -> cytosol; RNA binding (IEA) -> rRNA binding + mRNA binding. KEEP_AS_NON_CORE rRNA binding, mRNA binding, nucleolus, SSU processome, ribosomal small subunit biogenesis.
