@@ -33,3 +33,7 @@
 
 - No NEW annotations proposed. FGF binding (GO:0017134) is plausible but the evidence is
   colocalization, not a direct binding assay.
+
+## 2026-10-28 review fixes
+
+Added a FlyBase WRONG_TERM source_defects entry on GO:0060438 trachea development (-> GO:0007424). GO:0007276 TOO_GENERAL reason now leads with the entailment via GO:0007298, oogenesis and female gamete generation.

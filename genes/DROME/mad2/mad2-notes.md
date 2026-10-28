@@ -29,3 +29,7 @@
 - NEW MF GO:1990948 ubiquitin ligase inhibitor activity (IC). It rests on Cdc20 binding
   [PMID:20421417] and the premature cyclin B degradation in the null [PMID:17417628], together with
   the conserved MAD2 mechanism. No NEW process terms are proposed.
+
+## 2026-10-28 review fixes
+
+GO:0007346 regulation of mitotic cell cycle (IMP, PMID:19273613) changed MODIFY -> TOO_GENERAL to match Mgtor (GO:0007094 already asserted); moved the &id010 anchor to the GO:0090266 row. Only one GO:0007346 row exists.

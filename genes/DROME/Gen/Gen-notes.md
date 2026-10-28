@@ -26,3 +26,7 @@
 - PMID:17660539 (DSB repair IMP): the paper tests mus324 (later shown = Gen, PMID:22022278) and finds a mild
   SSA reduction only with 32 C induction; weak, but DSB repair is corroborated by IR hypersensitivity
   (PMID:28369583). Accepted.
+
+## 2026-10-28 review fixes
+
+Trimmed the PMID:28369583 quote to end at a complete phrase. Cited the manual synthesis of the conflicting nucleus/cytoplasm reports on the two nucleus rows. Status set from update-status.

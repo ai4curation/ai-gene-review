@@ -2,7 +2,7 @@
 (X2JAM4) and with human supervillin (O95425).
 
 Reproducible: fetches sequences and InterPro features from UniProt REST at run time.
-Usage: python compare_isoforms.py
+Usage: uv run python compare_isoforms.py (dependencies in pyproject.toml)
 """
 import json
 import urllib.request

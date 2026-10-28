@@ -25,3 +25,7 @@
   UNDECIDED given later evidence that Mtor attenuates transcription.
 - Nuclear inclusion body and metaphase plate CC terms do not fit the observations.
 - No NEW annotations proposed. Bare protein binding rows removed per policy.
+
+## 2026-10-28 review fixes
+
+Added UniProt source_defects (A1Z8P9, CC:SUBCELLULAR LOCATION, DELETE_VALUE kinetochore citing PubMed:19273613) on the NOT kinetochore row. Removed the restating manual-file quote on the NEW adaptor row and replaced it with the manual orthology statement (TPR/Mlp1/Mlp2), which no PMID quote covers.

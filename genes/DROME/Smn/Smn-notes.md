@@ -50,3 +50,7 @@
   dependent on snRNP assembly?
 - Which snRNP-independent activities (alpha-actinin / sarcomere, FGF signalling) are
   real direct functions?
+
+## 2026-10-28 review fixes
+
+Removed the restating manual-file quote from the NEW GO:0140597 row (PMID:18621711 covers it); cited the manual's synthesis of the conflicting minor-intron splicing reports on the PMID:22813737 splicing row instead.

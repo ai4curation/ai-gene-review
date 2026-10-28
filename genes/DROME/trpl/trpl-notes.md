@@ -10,3 +10,7 @@
   - Bare protein binding rows removed per policy.
   - Hearing (IMP, PMID:22939627): UNDECIDED, abstract only.
   - NEW: detection of chemical stimulus involved in sensory perception of taste (PMID:24013593; TRPL is itself activated by camphor in S2 cells and confers camphor responses on misexpression, so it passes the participation test). NEW: axon (PMID:22952921 immunostaining). Did not add exocytosis/neurotransmitter release process terms: evidence is double-mutant necessity only.
+
+## 2026-10-28 review fixes
+
+GO:0046982 heterodimerization (IPI, PMID:9215637, With/From TRP P19334) changed MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (term true via TRPgamma); added a WRONG_WITH_FROM source_defects entry (UniProt-assigned row, CHECK, PROBABLE). No corrected_value: PMID:9215637 studies TRP-TRPL only; TRPgamma Q9VJJ7 verified at rest.uniprot.org but named only in the explanation. Cited the manual synthesis for the Ca2+ selectivity ratio on the calcium channel rows.

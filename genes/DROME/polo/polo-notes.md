@@ -29,3 +29,7 @@
 - No NEW annotations proposed. Cytokinesis (GO:0000281 mitotic cytokinesis) is well
   supported for fly cells (PMID:16412419 myosin recruitment) but the existing actomyosin
   ring assembly and male meiosis cytokinesis rows already capture Polo's cytokinesis role.
+
+## 2026-10-28 review fixes
+
+Status set from update-status (no PENDING rows, no warnings).

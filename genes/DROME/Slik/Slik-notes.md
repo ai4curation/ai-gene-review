@@ -29,3 +29,7 @@
 - NEW: apical cortex (PMID:26170449) and STRIPAK complex association (PMID:32960945,
   reciprocal co-IP of tagged proteins). No NEW process terms proposed (per NEW-term bar;
   cytoneme formation and JNK-apoptosis suppression left as questions).
+
+## 2026-10-28 review fixes
+
+STRIPAK NEW row: acknowledged co-IP cannot separate subunit from substrate; subunit status rests on the GCK-III precedent. IEA Ser/Thr kinase row now notes that all documented phosphoacceptors are threonines (manual synthesis cited). Status set from update-status.

@@ -51,3 +51,7 @@
   NINJ1's core MF and NijA's cell-killing activity requires surface localization and is
   nonapoptotic. No NEW process terms: the glial nerve-injury phenotype [PMID:41448502] is
   a mutant phenotype and does not identify the step NijA performs.
+
+## 2026-10-28 review fixes
+
+GO:0019835 cytolysis IDA (PMID:33472215) changed ACCEPT -> UNDECIDED; added a SUSPECTED UniProt source_defects CHECK on the evidence code (no mis-attribution asserted). Dropped GO:0012501 from core function directly_involved_in. NEW GO:0140912 row: added supporting_entities UniProtKB:Q92982 (human NINJ1, verified) and a clause on why the ISS is used while the adhesion IBA is rejected. Status DRAFT because the IBA (ACCEPT) and IDA (UNDECIDED) cytolysis rows now differ, which validation warns on.

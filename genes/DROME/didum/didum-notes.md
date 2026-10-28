@@ -16,3 +16,7 @@
 - ARBA developmental terms: imaginal disc morphogenesis, tissue development -> over-annotated; regionalization -> MODIFY to A/P axis specification, embryo (posterior group gene).
 - Calmodulin binding / myosin V complex IPI from PMID:15178316: abstract is about murine myosin-V IQ peptides; calmodulin is nonetheless a genuine Drosophila MyoV light chain (IPI from PMID:15980429 for light chain binding with Cam). ACCEPT, defer to curator; flagged for expert.
 - NEW: vesicle transport along actin filament (PMID:17517962), pigment granule transport (PMID:18585038), small GTPase binding (Rab11; PMID:17517962, PMID:25940004). In each, MyoV is the motor that does the work (passes the NEW bar: it performs the transport step / binds the GTPase directly).
+
+## 2026-10-28 review fixes
+
+Reworded the NEW GO:0030050 reason: it is the more specific is_a descendant of the ACCEPTed GO:0030048 row, not its parent.

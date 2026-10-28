@@ -45,3 +45,7 @@ paper must not be used as evidence for GstO1 function.
 - Not added: negative regulation of BMP signaling / synapse growth at NMJ. These are
   downstream consequences of Gbb degradation; raised as a suggested question.
 - Not added: response to ethanol, H2O2 response (mutant phenotypes, abstract-only).
+
+## 2026-10-28 review fixes
+
+Cited the manual note that no cell-free GstO1 glutathionylation assay was reported on the NEW protein glutathionylation row (negative result no PMID states).

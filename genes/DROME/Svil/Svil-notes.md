@@ -23,3 +23,7 @@
   cell migration. Phenotype-level; does not meet the NEW bar on its own.
 - Decision: keep both ND rows (ACCEPT). No NEW annotations. Raise the TM/tail-anchor
   question and the Mib2/border-cell question as suggested questions/experiments.
+
+## 2026-10-28 review fixes
+
+Added Svil-bioinformatics/pyproject.toml declaring biopython for compare_isoforms.py (stdlib urllib used, no requests). Status set from update-status.

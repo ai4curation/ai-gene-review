@@ -18,3 +18,7 @@
   3' RACE, so its olfactory phenotype is not attributable to fz2. No annotation proposed from it.
 - NEW: postsynaptic membrane (IDA, PMID:16311339 "We show that DFrizzled2 is endocytosed from the
   postsynaptic membrane and transported to the nucleus."). No NEW process terms proposed.
+
+## 2026-10-28 review fixes
+
+Cited the manual synthesis on the CRD being dispensable for Wg transduction in some assays on the IBA Wnt-protein binding row.
