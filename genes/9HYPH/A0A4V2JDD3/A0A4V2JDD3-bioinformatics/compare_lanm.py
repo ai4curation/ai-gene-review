@@ -4,7 +4,9 @@ Reads both sequences from the cached UniProt flat files in this repository,
 locates candidate 12-residue EF-hand loops by the canonical N/D-x-D/N-x-D/N/S
 start pattern, reports position-2 residues, and computes a global pairwise
 identity (Biopython PairwiseAligner, BLOSUM62, gap open -10, extend -0.5) over
-full-length and signal-peptide-free (24-133) sequences.
+full-length and mature-chain sequences. Each mature chain is taken from that
+entry's own `FT CHAIN` feature (Hans-LanM 24..133 from SignalP; Mex-LanM C5B164
+22..133, experimentally evidenced), not from a single shared boundary.
 
 Usage (from repository root):
   uv run python genes/9HYPH/A0A4V2JDD3/A0A4V2JDD3-bioinformatics/compare_lanm.py
@@ -27,6 +29,14 @@ def read_seq(path: Path) -> str:
     text = path.read_text()
     block = text.split("\nSQ   ", 1)[1].split("\n", 1)[1].split("//", 1)[0]
     return re.sub(r"\s", "", block)
+
+
+def read_chain(path: Path) -> tuple[int, int]:
+    """Return the (start, end) 1-based bounds of the entry's own FT CHAIN feature."""
+    m = re.search(r"^FT   CHAIN\s+(\d+)\.\.(\d+)", path.read_text(), re.MULTILINE)
+    if not m:
+        raise ValueError(f"no FT CHAIN feature in {path}")
+    return int(m.group(1)), int(m.group(2))
 
 
 def ef_loops(seq: str):
@@ -63,7 +73,13 @@ def main() -> int:
         for pos, w in ef_loops(s):
             print(f"  candidate EF loop start {pos}: {w}  position2={w[1]}")
     a, b = seqs["Hans-LanM A0A4V2JDD3"], seqs["Mex-LanM C5B164"]
-    for label, x, y in (("full-length", a, b), ("mature 24-133", a[23:], b[23:])):
+    (a_s, a_e) = read_chain(FILES["Hans-LanM A0A4V2JDD3"])
+    (b_s, b_e) = read_chain(FILES["Mex-LanM C5B164"])
+    mature_label = f"mature {a_s}-{a_e} vs {b_s}-{b_e}"
+    for label, x, y in (
+        ("full-length", a, b),
+        (mature_label, a[a_s - 1 : a_e], b[b_s - 1 : b_e]),
+    ):
         ident, aln = identity(x, y)
         print(f"\n## Global identity ({label}): {ident} identical residues; "
               f"{100*ident/len(x):.1f}% of Hans-LanM length, "

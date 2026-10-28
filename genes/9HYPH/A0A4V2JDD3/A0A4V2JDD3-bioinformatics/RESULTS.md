@@ -27,7 +27,9 @@ UniProt displays).
 
 - Full length (133 vs 133): 45 identical residues, 33.8% of Hans-LanM length (33.1% of
   alignment columns).
-- Mature chains (24-133 vs 24-133): 37 identical residues, 33.6% of Hans-LanM length.
+- Mature chains, each from its own UniProt `FT CHAIN` feature (Hans-LanM 24-133, SignalP;
+  Mex-LanM 22-133, experimentally evidenced): 38 identical residues, 34.5% of the Hans-LanM
+  mature chain (33.6% of alignment columns).
 
 This agrees with the 33% identity reported in PMID:37259003.
 

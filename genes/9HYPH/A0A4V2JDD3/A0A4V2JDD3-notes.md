@@ -47,7 +47,13 @@
 
 No experiment addresses expression, localization or function in H. quercus. Periplasmic
 localization is a reasonable expectation (signal peptide, analogy with Mex-LanM), but there is
-only one independent line for this protein, so no location term was added. No biological
+only one independent line for this protein, so no location term was added. The paper itself
+treats residues 1-23 as a signal peptide and omits them from the construct
+[PMID:37259003 "codon optimized for expression in E. coli without its native 23-residue signal
+peptide"], but its Methods also say signal peptides of LanM sequences were predicted with
+SignalP (v6.0) and then removed, i.e. this is the same SignalP call that UniProt records as
+FT SIGNAL 1..23. It corroborates the mature-chain boundary; it is not an independent second
+line of evidence for export or a periplasmic location. No biological
 process term was added: lanthanide uptake or homeostasis roles are inferred for Mex-LanM, not
 tested for Hans-LanM.
 
@@ -63,9 +69,10 @@ tested for Hans-LanM.
 - No source defects: the UniProt name is generic but not wrong, and the IEA row is literally
   true.
 
-## CMMMech record check (data/records/rare-earth-element-commodities.yaml)
+## CMMMech record check (CultureBotAI/CMMMech repository, `data/records/rare-earth-element-commodities.yaml`)
 
-The grounding to A0A4V2JDD3 is correct (same organism, ORF, PDB entries and paper). Points
+Paths in this section are relative to the root of the separate CMMMech repository
+(CultureBotAI/CMMMech), not to this repository. The grounding to A0A4V2JDD3 is correct (same organism, ORF, PDB entries and paper). Points
 where the record says more than the evidence:
 
 - The causal-graph node describes Hans-LanM as having "redox/dimer-sensitive LREE/HREE
