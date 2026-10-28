@@ -1,21 +1,30 @@
 """Superfamily-level synthesis for the RADICAL_SAM project (Phase 4).
 
-Computes, from the reviews themselves, the facts the project page's Phase 4
-summary cites: per-gene core molecular functions, whether each is an existing GO
+Computes, from the reviews themselves, the facts the project page's Synthesis
+section cites: per-gene core molecular functions, whether each is an existing GO
 term or a proposed one, the treatment-rule outcomes on the domain-derived generic
-rows, SAM-binding coverage, upstream defects, and the IBA rows whose node
-placement was argued.
+rows (including deviations from the rule), SAM-binding coverage, upstream
+defects, and the IBA rows whose node placement was argued.
 
-Nothing is hardcoded: the gene list comes from the project page's frontmatter and
-every number is derived from genes/<org>/<gene>/<gene>-ai-review.yaml.
+Nothing is hardcoded: the gene list and the organism directories both come from
+the project page's frontmatter, and every number is derived from
+genes/<org>/<gene>/<gene>-ai-review.yaml.
+
+A gene counts as REVIEWED when it has annotation rows and none of them is still
+`PENDING`. That deliberately does not consult `status:`, which can go stale
+(MOCS1 is fully reviewed but still reads `INITIALIZED`); status mismatches are
+reported separately under `data_quality`.
 
 Run from the repository root:
     uv run python projects/RADICAL_SAM/rsam_synthesis.py
+    uv run python projects/RADICAL_SAM/rsam_synthesis.py --check   # CI: fail if stale
+
 Writes projects/RADICAL_SAM/data/synthesis.yaml and prints a short report.
 """
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from collections import Counter, defaultdict
@@ -25,91 +34,118 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / "projects" / "RADICAL_SAM.md"
-ORGS = ("human", "ECOLI")
+DEST = Path(__file__).resolve().parent / "data" / "synthesis.yaml"
 
-# The rows the project's treatment rule governs.
-GENERIC_ROWS = {
-    "GO:0003824": "catalytic activity",
-    "GO:0051536": "iron-sulfur cluster binding",
-    "GO:0051539": "4 iron, 4 sulfur cluster binding",
-    "GO:0046872": "metal ion binding",
-    "GO:0005506": "iron ion binding",
-    "GO:1904047": "S-adenosyl-L-methionine binding",
-}
 SAM_BINDING = "GO:1904047"
+FE4S4 = "GO:0051539"
+
+# The rows the project's treatment rule governs, and what the rule expects.
+# "refine" => MODIFY to the specific term; "accept" => ACCEPT.
+# `no_catalysis_alt` is the action the rule's second branch permits for a member
+# whose catalysis is not established.
+RULE = {
+    "GO:0003824": ("catalytic activity", "refine", "KEEP_AS_NON_CORE"),
+    "GO:0051536": ("iron-sulfur cluster binding", "refine", None),
+    "GO:0046872": ("metal ion binding", "refine", None),
+    "GO:0005506": ("iron ion binding", "refine", None),
+    FE4S4: ("4 iron, 4 sulfur cluster binding", "accept", "KEEP_AS_NON_CORE"),
+    SAM_BINDING: ("S-adenosyl-L-methionine binding", "accept_or_new", None),
+}
+EXPECTED = {"refine": {"MODIFY"}, "accept": {"ACCEPT"}, "accept_or_new": {"ACCEPT", "NEW"}}
 
 
-def genes_from_page() -> list[str]:
-    """Read the project page frontmatter's `genes:` list."""
-    text = PAGE.read_text()
-    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+def frontmatter() -> dict:
+    m = re.match(r"^---\n(.*?)\n---\n", PAGE.read_text(), re.S)
     if not m:
         sys.exit(f"no frontmatter in {PAGE}")
-    return yaml.safe_load(m.group(1))["genes"]
+    return yaml.safe_load(m.group(1))
 
 
-def load(symbol: str):
-    for org in ORGS:
+def load(symbol: str, orgs: list[str]):
+    for org in orgs:
         p = ROOT / "genes" / org / symbol / f"{symbol}-ai-review.yaml"
         if p.exists():
-            return org, p, yaml.safe_load(p.read_text())
-    return None, None, None
+            return org, yaml.safe_load(p.read_text())
+    return None, None
 
 
 def core_function_terms(review: dict) -> list[dict]:
-    """Molecular functions a review asserts as core, existing or proposed."""
+    """Molecular functions a review asserts as core, existing or proposed.
+
+    Covers `contributes_to_molecular_function` as well, so a subunit that
+    contributes to a complex activity is not dropped from both buckets.
+    """
     out = []
     for cf in review.get("core_functions") or []:
-        mf = cf.get("molecular_function")
-        if mf and mf.get("id"):
-            out.append({"kind": "GO", "id": mf["id"], "label": mf.get("label")})
-        elif cf.get("proposed_molecular_function"):
+        for slot in ("molecular_function", "contributes_to_molecular_function"):
+            mf = cf.get(slot)
+            if mf and mf.get("id"):
+                out.append({"kind": "GO", "id": mf["id"], "label": mf.get("label"),
+                            "slot": slot})
+        if cf.get("proposed_molecular_function"):
             out.append({"kind": "PROPOSED", "name": cf["proposed_molecular_function"]})
     return out
 
 
-def main() -> int:
-    symbols = genes_from_page()
+def build() -> dict:
+    fm = frontmatter()
+    symbols = fm["genes"]
+    orgs = list(fm.get("species") or ["human"])
+
     genes: dict[str, dict] = {}
     missing: list[str] = []
+    status_mismatch: list[dict] = []
 
-    actions = Counter()
-    generic = defaultdict(Counter)        # term -> action -> n
+    actions = Counter()                   # reviewed genes only
+    generic = defaultdict(Counter)        # term -> action -> n (reviewed genes only)
+    deviations: list[dict] = []
+    rule_branch: list[dict] = []
     proposed_terms: list[dict] = []
     defects: list[dict] = []
     argued_ibas: list[dict] = []
-    sam_status: dict[str, str] = {}
 
     for sym in symbols:
-        org, path, review = load(sym)
+        org, review = load(sym, orgs)
         if review is None:
             missing.append(sym)
             continue
 
         rows = review.get("existing_annotations") or []
-        per_gene_actions = Counter()
-        sam_seen = None
+        pending = sum(1 for a in rows if ((a.get("review") or {}).get("action")) == "PENDING")
+        reviewed = bool(rows) and pending == 0
+        sam_actions = sorted({
+            (a.get("review") or {}).get("action")
+            for a in rows if (a.get("term") or {}).get("id") == SAM_BINDING
+        } - {None})
+        catalysis_established = bool(sam_actions)
 
+        per_gene = Counter()
         for a in rows:
             r = a.get("review") or {}
             act = r.get("action")
-            if act:
-                actions[act] += 1
-                per_gene_actions[act] += 1
             tid = (a.get("term") or {}).get("id")
-            if tid in GENERIC_ROWS and act:
-                generic[tid][act] += 1
-            if tid == SAM_BINDING and act:
-                # NEW means we added it; anything else means GOA already had it.
-                sam_seen = "added_as_NEW" if act == "NEW" else f"already_in_GOA ({act})"
+            if act:
+                per_gene[act] += 1
+                if reviewed:
+                    actions[act] += 1
+                    if tid in RULE:
+                        generic[tid][act] += 1
+                        _, mode, alt = RULE[tid]
+                        if act not in EXPECTED[mode]:
+                            entry = {"gene": sym, "organism": org, "term": tid,
+                                     "label": RULE[tid][0], "action": act,
+                                     "expected": sorted(EXPECTED[mode])}
+                            if alt and act == alt and not catalysis_established:
+                                entry["note"] = "rule branch: catalysis not established"
+                                rule_branch.append(entry)
+                            else:
+                                deviations.append(entry)
 
             for d in r.get("source_defects") or []:
                 defects.append({
                     "gene": sym, "organism": org,
-                    "defect_type": d.get("defect_type"),
-                    "resource": d.get("resource"),
-                    "record": d.get("record"),
-                    "requested_change": d.get("requested_change"),
+                    "defect_type": d.get("defect_type"), "resource": d.get("resource"),
+                    "record": d.get("record"), "requested_change": d.get("requested_change"),
                     "asserted_value": d.get("asserted_value"),
                     "corrected_value": d.get("corrected_value"),
                     "confidence": d.get("confidence"),
@@ -118,100 +154,152 @@ def main() -> int:
             pr = r.get("propagation_review")
             if pr and a.get("evidence_type") == "IBA":
                 argued_ibas.append({
-                    "gene": sym, "organism": org,
-                    "term": tid, "label": (a.get("term") or {}).get("label"),
-                    "action": act,
+                    "gene": sym, "organism": org, "term": tid,
+                    "label": (a.get("term") or {}).get("label"), "action": act,
                     "root_cause": pr.get("root_cause"),
                     "failure_modes": pr.get("failure_modes") or [],
-                    "sources": [
-                        {"id": s.get("source_id") or s.get("source"),
-                         "status": s.get("source_status")}
-                        for s in (pr.get("source_entities") or [])
-                    ],
+                    "sources": [{"id": s.get("source_id"), "status": s.get("source_status")}
+                                for s in (pr.get("source_entities") or [])],
                 })
 
         for pt in review.get("proposed_new_terms") or []:
-            proposed_terms.append({
-                "gene": sym, "organism": org,
-                "proposed_name": pt.get("proposed_name"),
-                "justification_head": (pt.get("justification") or "").split(".")[0][:200] or None,
-            })
+            proposed_terms.append({"gene": sym, "organism": org,
+                                   "proposed_name": pt.get("proposed_name")})
 
         cfs = core_function_terms(review)
+        declared = review.get("status")
+        if reviewed and declared != "COMPLETE":
+            status_mismatch.append({"gene": sym, "declared": declared,
+                                    "rows": len(rows), "pending": 0})
         genes[sym] = {
-            "organism": org,
-            "uniprot": review.get("id"),
-            "status": review.get("status"),
-            "n_rows": len(rows),
-            "actions": dict(sorted(per_gene_actions.items())),
+            "organism": org, "uniprot": review.get("id"), "declared_status": declared,
+            "reviewed": reviewed, "n_rows": len(rows), "pending_rows": pending,
+            "actions": dict(sorted(per_gene.items())),
             "core_functions": cfs,
             "n_core_proposed": sum(1 for c in cfs if c["kind"] == "PROPOSED"),
-            "sam_binding": sam_seen or "absent",
-            "pending_rows": sum(
-                1 for a in rows if ((a.get("review") or {}).get("action")) == "PENDING"
-            ),
+            "sam_binding_actions": sam_actions or None,
+            "catalysis_established": catalysis_established,
         }
-        sam_status[sym] = genes[sym]["sam_binding"]
 
-    reviewed = {k: v for k, v in genes.items() if v["status"] == "COMPLETE"}
-    unreviewed = {k: v for k, v in genes.items() if v["status"] != "COMPLETE"}
+    rev = {k: v for k, v in genes.items() if v["reviewed"]}
+    unrev = {k: v for k, v in genes.items() if not v["reviewed"]}
 
-    # Which core activities rest on a term GO does not have.
-    genes_with_proposed_core = sorted(
-        k for k, v in reviewed.items() if v["n_core_proposed"] > 0
-    )
-    core_go_ids = Counter()
-    for v in reviewed.values():
+    core_go = Counter()
+    for v in rev.values():
         for c in v["core_functions"]:
             if c["kind"] == "GO":
-                core_go_ids[c["id"]] += 1
+                core_go[c["id"]] += 1
 
-    out = {
+    sam_new = sorted(k for k, v in genes.items() if v["sam_binding_actions"] == ["NEW"])
+    sam_in_goa = sorted(k for k, v in genes.items()
+                        if v["sam_binding_actions"] and "ACCEPT" in v["sam_binding_actions"])
+    sam_absent = sorted(k for k, v in genes.items() if not v["sam_binding_actions"])
+
+    interpro = [d for d in defects if str(d["record"]).startswith("InterPro")]
+    # Defects whose asserted value pushes PflB/formate-C-acetyltransferase
+    # specificity onto a protein whose partner GRE is not PflB.
+    substrate_push = [d for d in defects
+                      if d["asserted_value"] in {"RHEA:19225", "EC:1.97.1.4", "GO:0043365"}]
+
+    return {
         "generated_by": "projects/RADICAL_SAM/rsam_synthesis.py",
+        "definitions": {
+            "reviewed": "gene has annotation rows and none is PENDING (ignores stale status:)",
+            "catalysis_established": f"gene carries a {SAM_BINDING} row, per the project's treatment rule",
+        },
         "totals": {
             "genes_in_scope": len(symbols),
             "resolved": len(genes),
             "missing_folder": missing,
-            "reviewed_complete": len(reviewed),
-            "not_complete": {k: v["status"] for k, v in unreviewed.items()},
-            "annotation_rows_reviewed": sum(v["n_rows"] for v in reviewed.values()),
+            "reviewed": len(rev),
+            "not_reviewed": {k: {"declared_status": v["declared_status"],
+                                 "pending_rows": v["pending_rows"]} for k, v in unrev.items()},
+            "annotation_rows_in_reviewed_genes": sum(v["n_rows"] for v in rev.values()),
         },
-        "actions_across_reviewed": dict(sorted(actions.items())),
+        "data_quality": {"reviewed_but_status_not_COMPLETE": status_mismatch},
+        "actions_in_reviewed_genes": dict(sorted(actions.items())),
         "generic_row_treatment": {
-            t: {"label": GENERIC_ROWS[t], "actions": dict(sorted(c.items()))}
+            t: {"label": RULE[t][0], "actions": dict(sorted(c.items()))}
             for t, c in sorted(generic.items())
         },
-        "sam_binding_coverage": dict(sorted(sam_status.items())),
-        "core_function_go_terms": dict(core_go_ids.most_common()),
-        "genes_whose_core_activity_has_no_go_term": genes_with_proposed_core,
+        "treatment_rule_deviations": deviations,
+        "treatment_rule_branch_uses": rule_branch,
+        "sam_binding": {
+            "new_rows_absent_from_goa": sam_new,
+            "already_in_goa": sam_in_goa,
+            "absent_catalysis_not_established": sam_absent,
+        },
+        "core_function_go_terms": dict(core_go.most_common()),
+        "genes_whose_core_activity_has_no_go_term": sorted(
+            k for k, v in rev.items() if v["n_core_proposed"] > 0),
+        "genes_with_no_core_function": sorted(k for k, v in rev.items() if not v["core_functions"]),
         "proposed_new_terms": proposed_terms,
         "source_defects": defects,
+        "source_defect_summary": {
+            "total": len(defects),
+            "by_resource": dict(sorted(Counter(d["resource"] for d in defects).items())),
+            "interpro_defects": len(interpro),
+            "distinct_interpro_entries": sorted({d["record"] for d in interpro}),
+            "pflb_substrate_pushes": [f"{d['gene']}:{d['asserted_value']}" for d in substrate_push],
+        },
         "ibas_whose_node_placement_was_argued": argued_ibas,
+        "iba_root_causes": dict(sorted(Counter(
+            i["root_cause"] for i in argued_ibas).items())),
         "genes": genes,
     }
 
-    dest = Path(__file__).resolve().parent / "data" / "synthesis.yaml"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(yaml.safe_dump(out, sort_keys=False, allow_unicode=True))
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--check", action="store_true",
+                    help="exit non-zero if data/synthesis.yaml is stale")
+    args = ap.parse_args()
+
+    out = build()
+    text = yaml.safe_dump(out, sort_keys=False, allow_unicode=True)
+
+    if args.check:
+        if not DEST.exists():
+            print(f"MISSING {DEST.relative_to(ROOT)} — run without --check", file=sys.stderr)
+            return 1
+        if DEST.read_text() != text:
+            print(f"STALE {DEST.relative_to(ROOT)} — re-run without --check", file=sys.stderr)
+            return 1
+        print(f"{DEST.relative_to(ROOT)} is up to date")
+        return 0
+
+    DEST.parent.mkdir(parents=True, exist_ok=True)
+    DEST.write_text(text)
 
     t = out["totals"]
-    print(f"genes in scope: {t['genes_in_scope']}  resolved: {t['resolved']}  "
-          f"complete: {t['reviewed_complete']}")
+    print(f"in scope {t['genes_in_scope']}  resolved {t['resolved']}  reviewed {t['reviewed']}  "
+          f"rows in reviewed genes {t['annotation_rows_in_reviewed_genes']}")
     if t["missing_folder"]:
         print("  MISSING FOLDERS:", t["missing_folder"])
-    if t["not_complete"]:
-        print("  not COMPLETE:", t["not_complete"])
-    print(f"annotation rows reviewed: {t['annotation_rows_reviewed']}")
-    print("actions:", out["actions_across_reviewed"])
+    if t["not_reviewed"]:
+        print("  not reviewed:", t["not_reviewed"])
+    for m in out["data_quality"]["reviewed_but_status_not_COMPLETE"]:
+        print(f"  DATA QUALITY: {m['gene']} reviewed but status={m['declared']}")
+    a = out["actions_in_reviewed_genes"]
+    print("actions:", a, "sum:", sum(a.values()))
     print("\ngeneric rows:")
     for term, info in out["generic_row_treatment"].items():
         print(f"  {term} {info['label']:<34} {info['actions']}")
-    print("\nSAM binding:", Counter(sam_status.values()))
-    print(f"proposed new terms: {len(proposed_terms)} "
-          f"(genes: {[p['gene'] for p in proposed_terms]})")
-    print(f"source defects: {len(defects)}")
-    print(f"argued IBAs: {len(argued_ibas)}")
-    print(f"\nwrote {dest.relative_to(ROOT)}")
+    print(f"\ntreatment-rule DEVIATIONS: {len(out['treatment_rule_deviations'])}")
+    for d in out["treatment_rule_deviations"]:
+        print(f"  {d['gene']:<8} {d['term']} {d['action']} (expected {'/'.join(d['expected'])})")
+    print(f"rule-branch uses (catalysis not established): {len(out['treatment_rule_branch_uses'])}")
+    s = out["sam_binding"]
+    print(f"\nSAM: NEW {len(s['new_rows_absent_from_goa'])}  "
+          f"in GOA {len(s['already_in_goa'])} {s['already_in_goa']}  "
+          f"absent {len(s['absent_catalysis_not_established'])}")
+    print("IBA root causes:", out["iba_root_causes"],
+          "total:", sum(out["iba_root_causes"].values()))
+    sd = out["source_defect_summary"]
+    print(f"defects {sd['total']} by resource {sd['by_resource']}; "
+          f"InterPro {sd['interpro_defects']} on {len(sd['distinct_interpro_entries'])} entries; "
+          f"PflB substrate pushes {len(sd['pflb_substrate_pushes'])}")
+    print(f"\nwrote {DEST.relative_to(ROOT)}")
     return 0
 
 

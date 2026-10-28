@@ -13,7 +13,7 @@ superfamily, the annotation problem is **resolution, not error** — 210 rows
 accepted against 49 removed, but 112 modified, almost all pulling a
 correct-but-generic term down to the actual reaction. Two findings are
 family-wide and machine-fixable. **`GO:1904047` S-adenosyl-L-methionine binding
-was missing from GOA for 18 of the 20 members whose catalysis is established**,
+is absent from GOA for 18 of the 20 members whose catalysis is established**,
 although the curated UniProt cofactor note already records SAM as an exchangeable
 ligand of the cluster. And **6 members' core activity has no GO term at all** —
 three of them for reactions described since 2018, where discovery has simply
@@ -202,9 +202,13 @@ re-run it after any review changes.
 
 ## What was covered
 
-29 proteins in scope, **28 reviewed** across 470 annotation rows in the 27 files
-marked `COMPLETE` (MOCS1 is fully reviewed but still carries a stale
-`status: INITIALIZED`; lipA is the one genuine gap). Actions across those 27:
+29 proteins in scope, **28 reviewed** across **500 annotation rows**. A gene
+counts as reviewed here when it has rows and none is still `PENDING`, which
+deliberately ignores `status:`: MOCS1 is fully reviewed but still carries a stale
+`status: INITIALIZED`, and the script reports that separately under
+`data_quality` rather than letting it skew the arithmetic. lipA is the one
+genuine gap, and its 18 `PENDING` rows are excluded throughout. Actions across
+the 500:
 
 | Action | n |
 |---|---:|
@@ -223,8 +227,8 @@ with unshared chemistry produces.
 
 ## The resolution gap: 6 core activities have no GO term
 
-24 of the reviewed genes assert at least one core function. Of those, **6 name an
-activity GO cannot express** and carry a `proposed_new_terms` entry instead:
+25 of the 28 reviewed genes assert at least one core function. Of those, **6 name
+an activity GO cannot express** and carry a `proposed_new_terms` entry instead:
 
 | Gene | Activity with no GO term | Why GO has none |
 |---|---|---|
@@ -246,15 +250,16 @@ request, not research. `RSAD2`, `ygiQ` and `yhcC` are **recent discoveries**
 question: GO has no vocabulary for a protein that carries a cofactor to an
 apo-enzyme without chemistry.
 
-The remaining breakdown: **17 genes' core activity does have a GO term**; RSAD1
-asserts only `GO:0020037` heme binding, with no reaction established; and TYW1B,
-aslB and ydeM assert **no core function at all**, deliberately.
+The remaining breakdown: **19 genes' core functions use existing GO terms**, one
+of which (RSAD1) is `GO:0020037` heme binding with no reaction established; and
+TYW1B, aslB and ydeM assert **no core function at all**, deliberately.
 
 ## The scaffold is universal; GOA records half of it
 
 `GO:0051539` (4Fe-4S binding) and `GO:1904047` (SAM binding) are each core in **19**
-of the reviewed genes — the superfamily's defining pair. But GOA carried the SAM
-row for only **moaA and queE**: this project added it as `NEW` to **18** genes.
+of the reviewed genes — the superfamily's defining pair. But `GO:1904047` appears
+as a `NEW` row, meaning absent from GOA, in **18** reviews, against only **2**
+(moaA and queE) where GOA already carried it.
 
 That is a systematic, machine-fixable gap, not 18 independent oversights. The
 curated PROSITE/HAMAP cofactor note on these records already says SAM is an
@@ -268,7 +273,8 @@ established. The rule's two branches partition the family cleanly.
 
 ## The treatment rule held
 
-Across all 29, the domain-derived generic rows came out as:
+Across the 28 reviewed genes (lipA's `PENDING` rows excluded), the
+domain-derived generic rows came out as:
 
 | Term | MODIFY | ACCEPT | KEEP_AS_NON_CORE | other |
 |---|---:|---:|---:|---|
@@ -283,11 +289,13 @@ The 5 `KEEP_AS_NON_CORE` on `GO:0003824` and the 12 on `GO:0051539` are the rule
 own "catalysis not established" branch (RSAD1, TYW1B, hemW, aslB, ydeM and the
 activase paralogs), not departures from it.
 
-**The only genuine deviations are MOCS1's three rows** —
-`GO:0003824 MARK_AS_OVER_ANNOTATED`, `GO:0046872` and `GO:0051536`
-`KEEP_AS_NON_CORE` — in the pre-existing review that predates the rule. That is
-the Phase 3 worklist in miniature, and it is measurable: re-running the script
-after Phase 3 should drive the deviation count to zero.
+The script encodes the rule and emits `treatment_rule_deviations`, so this is
+checked rather than asserted. It currently reports **exactly three, all MOCS1's**
+— `GO:0003824 MARK_AS_OVER_ANNOTATED`, `GO:0046872` and `GO:0051536`
+`KEEP_AS_NON_CORE` — in the pre-existing review that predates the rule. The other
+17 non-primary actions are recorded separately as `treatment_rule_branch_uses`.
+That makes the Phase 3 worklist measurable: re-running the script after Phase 3
+should drive the deviation count to zero.
 
 ## What the IBAs got right, and where they reach too deep
 
@@ -299,7 +307,7 @@ after Phase 3 should drive the deviation count to zero.
   experimentally to lack that chemistry. moaA's is `ROLE_CONFLATION` — MoaC's
   cPMP-synthase activity transferred from the MOCS1 fusion proteins, which have a
   MoaC domain that *E. coli* MoaA does not. CDK5RAP1's is a compartment mismatch.
-- **11 are scoping problems** (`TERM_SCOPING_PROBLEM`), mostly
+- **9 are scoping problems** (`TERM_SCOPING_PROBLEM`), mostly
   `GRANULARITY_MISMATCH`: the node is placed correctly and the term is simply
   more general than the gene warrants. These became `MODIFY`, not `REMOVE`.
 - **4 are no failure at all**, recorded to show the node was checked and holds.
@@ -318,9 +326,10 @@ to any subfamily that has lost its ancestral chemistry.
 The paralog-rich subfamilies otherwise behaved differently from each other, and
 not as expected:
 
-- **PFL activases** — the IBAs were sound. The damage came from InterPro2GO and
-  EC mappings pushing PflB-specific substrate terms onto the whole family
-  (2 of the 10 source defects).
+- **PFL activases** — the IBAs were sound. The damage came from UniProt RHEA/EC
+  assignments and an InterPro2GO mapping pushing PflB-specific substrate terms
+  onto proteins whose partner is not PflB — **5 of the 10 source defects**, on
+  pflC, ybiY and nrdG.
 - **MTTases** — the IBAs were sound at family level; the one failure was a
   compartment claim on CDK5RAP1 from a splice variant lacking its targeting
   sequence.
@@ -328,11 +337,13 @@ not as expected:
 
 ## Upstream, not ours: 10 source defects
 
-The reviews recorded 10 defects against three resources — 5 against UniProt
-(RHEA and EC assignments on pflC/ybiY, and a query on an *L. lactis* donor),
-4 against InterPro2GO mappings, and 1 against an EcoliWiki GOA row. Four of the
-InterPro mappings propagate to every member of their signature, so fixing those
-four entries corrects far more genes than the 29 here.
+The reviews recorded 10 defects — 5 against UniProt (RHEA and EC assignments on
+pflC/ybiY, and a query on an *L. lactis* donor), 4 against InterPro2GO mappings
+and 1 against an EcoliWiki GOA row. The InterPro defects sit on just **three
+distinct entries** (IPR004559 carries two wrong mappings), and each propagates to
+every member of its signature, so correcting three entries fixes far more genes
+than the 29 here. `SourceResourceEnum` has no `INTERPRO` value, so those four are
+filed as `resource: OTHER` with InterPro named in each explanation.
 
 `just export-source-defects` turns them into per-resource reports.
 
