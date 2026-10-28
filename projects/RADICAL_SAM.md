@@ -257,7 +257,7 @@ Reading it by pattern rather than by row:
 
 Two changes went beyond flipping an action:
 
-- **SACEN/eryCV no longer asserts a core molecular function.** It had
+- **SACEN/eryCV asserts no core molecular function and no core process.** It had
   `GO:0051539` as its only core MF, on a protein that is `PE 4: Predicted`,
   whose sole name is an unreviewed submitter annotation, whose GOA reaction row
   (`GO:0016841`) this review leaves `UNDECIDED`, and whose cluster is inferred
@@ -265,7 +265,13 @@ Two changes went beyond flipping an action:
   binding as *the* core function of such a protein overstates what is known; the
   project's other uncharacterised members (PSEPK/PP_1969, PSEPK/PP_2482, TYW1B,
   aslB, ydeM) assert none, and eryCV now matches them. Its `GO:0051539` row
-  moves the other way from the four above, to `KEEP_AS_NON_CORE`.
+  moves the other way from the four above, to `KEEP_AS_NON_CORE`. The entry's
+  `directly_involved_in: GO:1901115` erythromycin biosynthetic process went with
+  it, for the same reason one field up: the reviewed record has no `CC:PATHWAY`
+  line and no erythromycin keyword, so the only thing placing this protein in the
+  pathway is the submitter gene name `eryCV` — the annotation this review
+  discounts when it declines to name a molecular function. A review cannot
+  discount a source in one field and lean on it in the next.
 - **10 `NEW` `GO:1904047` rows.** Phase 4's headline finding is that GOA is
   missing SAM binding for 18 of the 20 members with established catalysis; the
   pre-existing reviews were missing it too. Coded `IC`, grounded in each entry's
