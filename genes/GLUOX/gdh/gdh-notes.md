@@ -18,7 +18,8 @@ literature survey (PubMed searches, cached publications, CMMMech record sources)
   For the E. coli ortholog the N-terminal hydrophobic segments form the membrane anchor
   (five helices). Whether residues 1..33 of P27175 are really cleaved, or form a first
   uncleaved TM helix, is not established in any paper I found. Recorded as a
-  suggested question, not as a source defect.
+  suggested question and, after PR review, also as a SUSPECTED UniProt source defect
+  on the plasma membrane row.
 - The sequence was first determined from strains P1/P2 by Cleton-Jansen et al.
   [PMID:1833618 "P1 can oxidize only D-glucose, whereas P2 is also capable of the
   oxidation of the disaccharide maltose"]; the P2 maltose-oxidizing form differs by a
@@ -101,7 +102,20 @@ spent-fluid-catalytic-cracking-catalyst, spent-nickel-metal-hydride-batteries) t
   specific terms already carried.
 - quinone binding -> MODIFY to pyrroloquinoline quinone binding (GO:0070968).
 - outer membrane-bounded periplasmic space (InterPro2GO from IPR001479, a signature
-  shared with soluble periplasmic PQQ dehydrogenases) -> MODIFY to periplasmic side of
-  plasma membrane (GO:0098567).
-- NEW: non-phosphorylated glucose catabolic process (GO:0019595); comparator E. coli
-  Gcd (P15877) carries this term (EXP, PMID:2228962) in the same role.
+  shared with soluble periplasmic PQQ dehydrogenases) -> ACCEPT the compartment term;
+  the error is the located_in relation (should be is_active_in for a membrane-integral
+  enzyme), filed as a SUSPECTED WRONG_QUALIFIER source defect. This matches the
+  ortholog review genes/PSEPK/gcd, which adds periplasmic space with is_active_in as
+  NEW. An earlier draft replaced it with GO:0098567 periplasmic side of plasma
+  membrane; dropped because leaflet terms do not fit a multi-pass protein.
+- NEW: non-phosphorylated glucose catabolic process (GO:0019595). Comparators:
+  genes/PSEPK/gcd makes the same NEW call; modules/pseudomonad_2_ketogluconate_loop.yaml
+  has GO:0019595 as its concept with Gcd (P15877) as the part-1 exemplar (that module
+  is restricted to Pseudomonas; G. oxydans is an Acetobacteraceae implementation of
+  the same step). QuickGO (checked 2026-10-28) shows P15877 carries GO:0019595 from
+  EcoCyc, EXP, PMID:2228962, with qualifier acts_upstream_of_or_within. The PMID:2228962
+  abstract is about cloning and sequencing gcd and does not itself describe the process,
+  so it is not quoted as support.
+- GO:0008876 label: GOA uses the newer name "glucose dehydrogenase (PQQ, quinone)
+  activity"; authored slots keep "quinoprotein glucose dehydrogenase activity", the
+  label in the validation ontology version.
