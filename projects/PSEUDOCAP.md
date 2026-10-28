@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [ccmC, estA, pqsH, lap, fleN, pvdE, PA5458, PA1024, hutI, hutH, phzS, phzM, pilB, pilU, xcpX, PA0692]
+genes: [braD, braF, ccmC, estA, fleN, hutH, hutI, lap, PA0692, PA1024, PA3760, PA5458, phzM, phzS, pilB, pilU, pqsH, pvdE, waaL, wbpD, wbpY, xcpX]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -125,16 +125,24 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 10 | phzS | PA4217 | monooxygenase activity (PTN002492679) | 104 | SOUND claim, wrong reference (a crystallization note) | Sound at family root; one misplaced leaf (Synechocystis ChlP) | P |
 | 11 | pilB | PA4526 | ATP hydrolysis activity (PTN001250205) | 90 | SOUND (purified ATPase, PMID:18174131) | Sound | P (x2, other rows: wrong reference / evidence code) |
 | 12 | phzM | PA4209 | S-adenosylmethionine-dependent methyltransferase activity (PTN002463933) | 80 | SOUND | Sound at family root | none on seed |
+| 13 | braF | PA1071 | L-valine/L-isoleucine import, L-alanine transport (PTN000656921) | 75 | SOUND via reconstitution (PMID:1400443); the growth screen alone is weak | Substrate terms stretch across a node of paralogous ATPases whose binding proteins set specificity | none |
+| 14 | wbpD | PA3156 | acetyltransferase activity (PTN001917401); UDP-glucuronate biosynthetic process (PTN001292385) | 67 + 8 | Acetyltransferase SOUND; UDP-glucuronate WRONG (WbpD acetylates UDP-GlcNAc3NA, not in UDP-GlcA synthesis) | Acetyltransferase sound; UDP-glucuronate IBD wrong | P, G |
 | 15 | xcpX | PA3097 | T2SS complex; protein secretion by T2SS (PTN000475915) | 35 | SOUND; process row is IDA on a review paper | Sound | P |
+| 16 | waaL | PA4999 | polysaccharide biosynthetic process (PTN008076295) | 64 | SOUND; seed term arguably the wrong step | Sound; ligase-activity row removed (WaaL is ATP-independent) | P (x6) |
+| 18 | wbpY | PA5448 | lipopolysaccharide biosynthetic process (PTN000749272) | 51 | SOUND | Sound; its shared glycosyltransferase node should be re-seeded from a 2022 direct assay | P, G |
 | 19 | PA0692 | PA0692 | type V secretion process and complex (PTN002160772) | 25 | SOUND; complex row is IMP, which cannot show membership | Sound | P |
+| 23 | PA3760 | PA3760 | N-acetylglucosamine transport (PTN000532509) | 43 | SOUND for PA3760 | OVER-SPECIFIC: node is general Enzyme I (PtsI, PtsP, FruB) | G |
 | 24 | hutH | PA5098 | histidine ammonia-lyase activity; L-histidine catabolic process (PTN000796665) | 42 | SOUND (direct assay of the partially purified enzyme), coded IMP instead of IDA | Sound; but PAO1 paralog PA5093, which lacks the catalytic Ala-Ser-Gly motif, inherits it | P, G (NOT on PA5093) |
+| 30 | braD | PA1073 | L-isoleucine import, L-alanine transport (PTN000765102) | 36 | SOUND (as braF) | Sound, same caveat; D-alanine transport seed is an indirect phenotype | none |
 | 39 | pilU | PA0396 | DNA endonuclease activity, producing 5'-phosphomonoesters (PTN000766390) | ~13 | WRONG: GO:0016888 typed for GO:0016887 ATP hydrolysis (same paper and date as pilB) | Unsupported: remove from node | P, G |
 
 pvdE's review file is still a stub: the research, notes and bioinformatics
 are done, but the agent's write of the review YAML was blocked and needs
 redoing.
 
-Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, PA3891, PA5377.
+Batch 3 (in progress): PA3891, PA5377.
+Batch 4 (in progress): mgtE, PA1055, PA1057, pilM, pilD, hom, aruC, gbuA,
+nrdJa, cif, dgcB.
 
 ### Patterns emerging
 
@@ -158,14 +166,17 @@ Batch 3 (in progress): braF, braD, PA3760, wbpD, wbpY, waaL, PA3891, PA5377.
 - **Old papers that predate the gene** (hutI): a 1967 pathway paper cannot tie
   an activity to PA5092. Here the term is right and the node reaches human
   AMDHD1, but its only anchor needs replacing.
+- **Wrong pathway** (wbpD): an acetyltransferase of the UDP-ManNAc3NAcA
+  pathway annotated to UDP-glucuronate biosynthesis, seeding an 8-leaf IBD.
 - **Cargo annotated as machinery** (lap): a secreted enzyme given secretion
   system process terms.
-- **Sound seeds on nodes that are too broad** (pvdE, pqsH, PA5458): the
+- **Sound seeds on nodes that are too broad** (pvdE, pqsH, PA5458, PA3760): the
   PseudoCAP row is right, but the node carries the term to proteins that are a
   different kind of thing (soluble ATPase subunits given a transmembrane
   transporter activity), to lineages without the process (LPS biosynthesis on
   Gram-positive peptidoglycan O-acetyltransferases), or rests a large clade on a
-  single seed.
+  single seed. PA3760's N-acetylglucosamine transport seed sits on a general
+  PTS Enzyme I node that also holds PtsI and the nitrogen-PTS PtsP.
 
 These are catalogued for PAINT as pattern 16 of [IBA_REVIEW](IBA_REVIEW.md).
 
