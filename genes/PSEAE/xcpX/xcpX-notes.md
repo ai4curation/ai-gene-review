@@ -45,7 +45,7 @@ T2SS secretion, but the necessity of XcpX for every substrate is open. Recorded 
   T2SS complex is independently shown by the tip-complex biochemistry (PMID:19828448) and the
   XcpVWX structure (PMID:30346996). The term is correct.
 - GO:0015628 IDA PMID:9818381: this paper is a review (Filloux, Michel & Bally 1998, FEMS
-  Microbiol Rev; PubMed type Review). An IDA cannot rest on a review. The term is correct, and the
+  Microbiol Rev; PubMed type Review). The IDA is unverified: we have only the abstract, and the review may contain original data. The term is correct, and the
   primary evidence is Bleves et al. 1998 (mutational loss of function, i.e. IMP). Source defect
   recorded as WRONG_EVIDENCE_CODE / CHECK.
 
@@ -54,4 +54,4 @@ T2SS secretion, but the necessity of XcpX for every substrate is open. Recorded 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
 | PTN000475915 | GO:0015627 type II protein secretion system complex | 1 (sole seed) | 35 (28 taxa) | GO:0015627, IDA, PMID:9466253 | SOUND | XcpX is a GspK pseudopilin and is part of the pseudopilus tip complex (PMID:19828448, PMID:30346996). The cited abstract alone only shows membrane location and PilD processing, but the claim is correct and GspK is a conserved T2SS component, so the node term suits the GspK clade. |
-| PTN000475915 | GO:0015628 protein secretion by the type II secretion system | 1 (sole seed) | 35 (28 taxa) | GO:0015628, IDA, PMID:9818381 | SOUND (term); evidence code WRONG | Term is correct for GspK proteins. PMID:9818381 is a review, so IDA is not valid; the primary support is PMID:9466253 (IMP, glycine mutant loses function). A 2018 transposon mutant still secreted protease (PMID:30346996), a caveat but not a refutation. The IBD conclusion is sound; the seed should be re-keyed to PMID:9466253 IMP (or TAS for the review). |
+| PTN000475915 | GO:0015628 protein secretion by the type II secretion system | 1 (sole seed) | 35 (28 taxa) | GO:0015628, IDA, PMID:9818381 | SOUND (term); evidence code UNVERIFIED (cited paper is a review; abstract only) | Term is correct for GspK proteins. PMID:9818381 is a review, so IDA is not valid; the primary support is PMID:9466253 (IMP, glycine mutant loses function). A 2018 transposon mutant still secreted protease (PMID:30346996), a caveat but not a refutation. The IBD conclusion is sound; the seed should be re-keyed to PMID:9466253 IMP (or TAS for the review). |

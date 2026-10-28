@@ -1273,7 +1273,7 @@ GO:0016757 glycosyltransferase activity for wbpY (PA5448) is annotated IMP to PM
 > NMR spectroscopic analysis of the WbpY reaction product showed that WbpY transferred one D-Rha residue in α1-3 linkage
 > — PMID:35166992
 
-## 106. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 106. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P35818 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1281,9 +1281,9 @@ GO:0016757 glycosyltransferase activity for wbpY (PA5448) is annotated IMP to PM
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpQ/xcpQ-ai-review.yaml`
 
-GO:0015628 for xcpQ (PA3105, P35818) is annotated IDA to PMID:9818381, which PubMed classifies as a Review (Filloux, Michel and Bally 1998, FEMS Microbiol Rev). A review cannot support IDA. Either change the evidence to TAS for this reference, or re-key the row to a primary paper (PMID:29042493, deletion-mutant secretome, as IMP). This row is the sole seed of the PAINT IBD at PTN000768388 for this term (23 leaf IBAs), so re-seeding should be coordinated with PAINT; the IBD conclusion itself is sound. The same reference is mis-keyed the same way on the xcpX row for this term.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
 
-## 107. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 107. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00512 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1291,9 +1291,9 @@ GO:0015628 for xcpQ (PA3105, P35818) is annotated IDA to PMID:9818381, which Pub
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpR/xcpR-ai-review.yaml`
 
-GO:0015628 for xcpR (PA3103, Q00512) is annotated IDA to PMID:9818381, which PubMed classifies as a Review (Filloux, Michel and Bally 1998, FEMS Microbiol Rev). A review cannot support IDA. The row should be re-keyed to PMID:8102361 (Turner et al. 1993, Walker A site mutants lose exotoxin A secretion) as IMP, or downgraded to TAS for the review. This row is the sole seed of the PAINT IBD at PTN002016240 for this term (7 leaf IBAs), so re-seeding should be coordinated with PAINT; the IBD conclusion itself is sound. The same reference is mis-keyed the same way on the xcpQ and xcpX rows for this term.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
 
-## 108. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 108. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00513 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1301,7 +1301,7 @@ GO:0015628 for xcpR (PA3103, Q00512) is annotated IDA to PMID:9818381, which Pub
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpS/xcpS-ai-review.yaml`
 
-GO:0015628 for XcpS (PA3102, Q00513) is annotated IDA to PMID:9818381, which PubMed classifies as a Review (Filloux et al. 1998, FEMS Microbiol Rev). A review cannot support IDA. Either change the evidence to TAS for this reference, or re-key the row to a primary paper such as PMID:17464073 (Arts et al. 2007). This row is the sole seed of the PAINT IBD for GO:0015628 at PTN000768597, so the change should be coordinated with PAINT re-seeding; the IBD conclusion itself is sound.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
@@ -1319,7 +1319,7 @@ GO:0015627 for XcpV (PA3099, Q00516) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 110. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 110. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00516 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1327,7 +1327,7 @@ GO:0015627 for XcpV (PA3099, Q00516) is annotated IDA to PMID:8331069 (Nunn and 
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpV/xcpV-ai-review.yaml`
 
-GO:0015628 for XcpV (PA3099, Q00516) is annotated IDA to PMID:9818381, which PubMed classifies as a Review (Filloux et al. 1998, FEMS Microbiol Rev). A review cannot support IDA. Either change the evidence to TAS for this reference, or re-key the row to a primary mutant paper as IMP (PMID:30346996, Zhang et al. 2018, xcpV mutant and complementation; or PMID:1309616, Nunn and Lory 1992, pddC site-specific mutants). This row is the sole seed of the PAINT IBD for GO:0015628 at PTN002446181, so the change should be coordinated with PAINT re-seeding.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
@@ -1345,7 +1345,7 @@ GO:0015627 for XcpW (PA3098, Q00517) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 112. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 112. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00517 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1353,12 +1353,12 @@ GO:0015627 for XcpW (PA3098, Q00517) is annotated IDA to PMID:8331069 (Nunn and 
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpW/xcpW-ai-review.yaml`
 
-GO:0015628 for XcpW (PA3098, Q00517) is annotated IDA to PMID:9818381, which PubMed classifies as a Review (Filloux et al. 1998, FEMS Microbiol Rev). A review cannot support IDA. Either change the evidence to TAS for this reference, or re-key the row to a primary mutant paper as IMP (PMID:30346996, Zhang et al. 2018, xcpW mutant and complementation; or PMID:1309616, Nunn and Lory 1992, pddD site-specific mutants). This row is the sole seed of the PAINT IBD at PTN002446812 (PTN002218419 in current GOA), so the change should be coordinated with PAINT re-seeding; the IBD conclusion itself is sound.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 113. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 113. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00518 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1366,7 +1366,7 @@ GO:0015628 for XcpW (PA3098, Q00517) is annotated IDA to PMID:9818381, which Pub
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpX/xcpX-ai-review.yaml`
 
-GO:0015628 for XcpX (PA3097, Q00518) is annotated IDA to PMID:9818381, which PubMed classifies as a Review (Filloux et al. 1998, FEMS Microbiol Rev). A review cannot support IDA. Either change the evidence to TAS for this reference, or re-key the row to the primary paper PMID:9466253 (Bleves et al. 1998) as IMP. This row is the sole seed of the PAINT IBD at PTN000475915 (35 leaf IBAs), so the change should be coordinated with PAINT re-seeding; the IBD conclusion itself is sound.
+GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev), which PubMed types as a Review and whose abstract describes it as one. We have only the abstract, so we cannot tell whether the article reports original Xcp data from the authors' laboratory that would justify IDA. Please check; if it presents no new experiment, TAS (or a re-key to a primary paper as IMP or IDA) would be more accurate. The term itself is correct, and this row is a PAINT IBD seed, so any change should be coordinated with PAINT re-seeding.
 
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381

@@ -1130,8 +1130,8 @@ terms, 51,455 leaf IBAs), and for 139 node terms (4,772 leaf IBAs) the PAO1
 protein is the sole seed. All 109 of those proteins have now been reviewed:
 for 21 the seed is wrong or an indirect phenotype and the IBD should be
 withdrawn or repointed, for 24 the seed is right but the node term does not fit
-the clade, for 30 the claim is true but the seed row misstates its evidence,
-qualifier or reference, and 32 are sound (see [PSEUDOCAP](PSEUDOCAP.md) for the
+the clade, for 25 the claim is true but the seed row looks to misstate its evidence,
+qualifier or reference, and 37 are sound (see [PSEUDOCAP](PSEUDOCAP.md) for the
 per-gene table and the upstream defect reports).
 
 **Examples:**

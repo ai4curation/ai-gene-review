@@ -29,7 +29,7 @@ returns an empty body through the PubMed MCP).
 
 ### PseudoCAP rows
 
-- GO:0015628 IDA PMID:9818381: review; IDA invalid. Same WRONG_EVIDENCE_CODE / CHECK defect as
+- GO:0015628 IDA PMID:9818381: review; IDA unverified (abstract only; the review may contain original data). Same WRONG_EVIDENCE_CODE / CHECK defect as
   xcpX, xcpS, xcpW. Term correct; primary IMP: PMID:30346996, PMID:1309616.
 - GO:0015627 IDA PMID:8331069: primary paper, but the abstract shows processing, methylation and
   inner-membrane fractionation only, not complex membership. Accepted (term true), SUSPECTED
