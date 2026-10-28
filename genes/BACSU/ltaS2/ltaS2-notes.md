@@ -36,3 +36,28 @@ The CMMMech record's overall biosorption claim is appropriately hedged (WT ~90%
 vs LTA-defective ~74% Tm(III) removal; residual non-LTA binding; no Tm-specific
 EXAFS/FTIR), so the mechanism framing is sound; only the per-protein identity
 fields above are in error.
+
+### The underlying biosorption paper
+The experimental grounding for that record is Moriwaki et al. 2013
+[PMID:22684329 "The maximum adsorption capacities for Tm(III) by WT and ∆LTA
+powders were 43 and 37 mg g(-1), respectively"], who compared freeze-dried cell
+powders of B. subtilis 168 wild type and an LTA-defective strain and concluded
+[PMID:22684329 "These results indicate that rare earth ions are adsorbed to
+functional groups, such as phosphate and carboxyl groups, of lipoteichoic
+acid"]. Two cautions for anyone reading the CMMMech record against this paper:
+
+- The cached record is **abstract only**. The abstract gives maximum capacities
+  (43 vs 37 mg/g for Tm(III)) and states only that [PMID:22684329 "Removal (in
+  percent) of Tm(III), La(III), and Eu(III) from aqueous solution by WT powder
+  was greater than by ∆LTA powder"]. The ~90% / ~74% removal figures that
+  CMMMech reports are not in the abstract; they presumably come from the full
+  text, and should be checked there before being repeated.
+- The abstract does not say which gene the LTA-defective strain is mutated in,
+  so this paper does not by itself attribute the lost adsorption to O34952
+  rather than to another of the four paralogues. The attribution to LtaS2 rests
+  on LtaS2 being the major vegetative synthase (PMID:21255105, PMID:19229300),
+  not on anything stated in PMID:22684329.
+
+The adsorption itself is a property of the LTA polymer, not an activity of this
+enzyme, so nothing from this paper is used as support for any annotation in the
+review; it is recorded here as the provenance of the CMMMech record.
