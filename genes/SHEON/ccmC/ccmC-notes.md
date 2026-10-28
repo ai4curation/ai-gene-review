@@ -168,7 +168,59 @@ Catalase (EC 1.11.1.6) is a soluble heme enzyme with a distinct fold; a six-TMS
 integral membrane protein of the WWD heme-handling superfamily has no catalase
 active site, and no CcmC homologue has ever been reported to dismutate hydrogen
 peroxide. Both rows are therefore `REMOVE`, with `source_defects` filed against
-GO_CENTRAL (the IBD node placement) and against the PseudoCAP donor row.
+GO_CENTRAL (the IBD row on `PTN001247822` — its *placement* is not what is faulted;
+the request is that the row be deleted) and against the PseudoCAP donor row.
+
+## Divergence from the sibling review, `genes/PSEPK/ccmC/ccmC-ai-review.yaml`
+
+`Q88EX7` (*Pseudomonas putida* KT2440) is reviewed in this repository as `ccmC` too,
+and it is a close comparator rather than a distant one: by its own UniProt
+`DR PANTHER` lines it sits in `PTHR30071` and in subfamily `PTHR30071:SF1`, the same
+family and subfamily as Q8EK42. Its GOA rows come from the same InterPro signatures,
+`IPR003557` and `IPR045062`, by `GO_REF:0000002`. Six terms are shared between the two
+reviews and four of them are called differently:
+
+| Term | `genes/PSEPK/ccmC` | this review (SHEON) |
+|------|--------------------|---------------------|
+| GO:0020037 heme binding | ACCEPT | ACCEPT |
+| GO:0005886 plasma membrane | ACCEPT | ACCEPT |
+| GO:0015232 heme transmembrane transporter activity | REMOVE | MARK_AS_OVER_ANNOTATED |
+| GO:0015886 heme transport | MARK_AS_OVER_ANNOTATED | ACCEPT |
+| GO:0016020 membrane | MARK_AS_OVER_ANNOTATED | MODIFY → GO:0005886 |
+| GO:0017004 cytochrome complex assembly | MODIFY → GO:1903607 | ACCEPT (both terms kept) |
+
+Reconciling the two is a follow-up, not part of this review, and the PSEPK file
+carries `status: DRAFT`, so this is a divergence against a draft rather than against
+a settled review — which bears on how urgent reconciliation is, though not on whether
+it is owed. Neither file should be read as having been checked against the other until
+that work is done.
+
+Where the divergence is weakest, and what I think is right:
+
+- **`GO:0015232`** is the one that cannot simply be left standing. Both reviews argue
+  from **family-level** biology and neither has an assay on its own protein: PSEPK says
+  "literal transmembrane transporter activity is not established"; this review says the
+  route to the WWD domain is explicitly open and that no heme site was found within the
+  membrane-spanning helices [PMID:20599545]. That is one argument, and one argument
+  cannot licence `REMOVE` in one file and `MARK_AS_OVER_ANNOTATED` in the other. I
+  think `MARK_AS_OVER_ANNOTATED` is the right call and the PSEPK `REMOVE` is the one to
+  change. "Not established" is not "refuted": the mechanism by which heme crosses to the
+  WWD domain is an open question in the primary literature, CcmC is genuinely the protein
+  at which heme appears on the periplasmic face, and `REMOVE` is reserved for functions
+  that are contradicted or for electronic mappings that are demonstrably wrong. Nothing
+  here contradicts heme crossing the membrane via CcmC; what is unsupported is the claim
+  that CcmC is the transporter that does the moving.
+- **`GO:0015886` heme transport** turns on whether holding heme at an external site and
+  attaching it to apoCcmE counts as doing some of the work of heme transport. This review
+  says yes and accepts it; PSEPK marks it over-annotated on the ground that the broad term
+  "can imply unsupported membrane translocation". Both readings are defensible, and this
+  one is at least internally consistent with marking the transporter MF over-annotated.
+- **`GO:0016020` membrane** and **`GO:0017004`** are the smaller two. For `GO:0016020`,
+  the repository rule is explicit that a correct-but-general non-organelle term is
+  `MODIFY` to the supported descendant, which `GO:0005886` is and which both genes
+  already carry; `MARK_AS_OVER_ANNOTATED` in PSEPK does not fit that rule. For
+  `GO:0017004`, `GO:1903607` is not an ancestor of it, so keeping both says two different
+  things, and replacing one with the other discards a claim.
 
 ## Suggested follow-up
 
