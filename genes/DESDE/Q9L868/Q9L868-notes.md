@@ -56,13 +56,20 @@ riding along with the signal-bearing small subunit.
   chemistry. Recorded as a `source_defect` against InterPro, with
   `GO:0033748 hydrogenase (acceptor) activity` proposed as the acceptor-agnostic
   replacement for a family-level signature.
-- Two `NEW` rows are added, both IC and both narrowly evidenced:
+- Three `NEW` rows are added, all IC and all narrowly evidenced:
   `GO:0044569 [Ni-Fe] hydrogenase complex` (the heterodimer, crystallised from this
-  strain, with this entry mapped to PDB chains B/D) and `GO:0005506 iron ion binding`
-  (the Fe of the bimetallic centre, with curated ligand-binding positions in the entry).
-  No new biological-process term is proposed: the large subunit's participation in
-  anaerobic respiration is real but is already captured on the operon partner, and
-  nothing in the available evidence is specific to this chain.
+  strain, with this entry mapped to PDB chains B/D), `GO:0005506 iron ion binding`
+  (the Fe of the bimetallic centre, with curated ligand-binding positions in the entry)
+  and `GO:0000287 magnesium ion binding` (the structural Mg(2+), whose ligand
+  positions 53/489/543 carry structure-derived evidence from PDB 1E3D as well as the
+  PIRSR rule).
+  No new biological-process term (e.g. `GO:0009061 anaerobic respiration`) is
+  proposed for this chain. The reason is evidential, not that the partner subunit
+  already carries it (annotations are per gene product): the available evidence
+  for this enzyme is structural and docking-based, and there is no chain-specific
+  experimental evidence (mutant, physiological or in vivo electron-flow data) for
+  this subunit's role in the respiratory process, so a `NEW` process row is withheld
+  under the conservative policy for process terms.
 
 ## Relation to the CMMMech record (`data/records/palladium.yaml`)
 
