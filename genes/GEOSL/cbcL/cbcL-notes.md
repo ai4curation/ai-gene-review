@@ -12,9 +12,12 @@ review (PubMed eutils search for "cbcL AND Geobacter" and "Zacharoff Bond Geobac
 
 - SignalP signal peptide 1-22; Phobius predicts six transmembrane helices
   (286-314, 351-373, 399-421, 476-495, 507-532, 589-614).
-- A simple regex scan of the sequence for CXXCH finds nine motifs starting at residues
+- A regex scan of the sequence for CXXCH finds nine motifs starting at residues
   35, 58, 83, 106, 130, 159, 187, 230 and 258, all N-terminal to the first TM helix,
-  which agrees with the nine c-type hemes reported for the periplasmic domain.
+  which agrees with the nine c-type hemes reported for the periplasmic domain. The scan
+  is reproducible: `cbcL-bioinformatics/cxxch_scan.py` reads the sequence out of
+  `cbcL-uniprot.txt` and prints the motif positions; see
+  `cbcL-bioinformatics/RESULTS.md`.
 - Pfam PF14537 (Cytochrom_c3_2, "Tetraheme cytochrome" domain 98-167), InterPro
   IPR036280 multiheme cytochrome superfamily, IPR012286 tetraheme cytochrome; Gene3D
   1.20.950.20 "Transmembrane di-heme cytochromes, Chain C" covers the membrane domain
@@ -22,6 +25,25 @@ review (PubMed eutils search for "cbcL AND Geobacter" and "Zacharoff Bond Geobac
 - PANTHER places it in PTHR35038 (Multiheme cytochrome electron transporters /
   "dissimilatory sulfite reductase SirA") subfamily SF6. Only the N-terminal multiheme c
   domain is shared with the family; the b-type membrane domain is not.
+- The SF6 name is misleading rather than a defect. UniProt records the assignment as
+  `DR   PANTHER; PTHR35038:SF6; SURFACE LOCALIZED DECAHEME CYTOCHROME C LIPOPROTEIN; 1.`,
+  which fits neither an inner-membrane protein nor a nonaheme one. PANTHER subfamily
+  names are routinely dominated by one characterised member, so this is most likely a
+  correctly-assigned id carrying another member's name, not a misplacement; the id is
+  therefore not flagged as a source defect. It does reinforce the
+  `FUNCTIONAL_DIVERGENCE` argument behind the GO:0016491 MODIFY: the family's naming
+  tracks neither CbcL's topology nor its heme count.
+- Comparator accessions used in the review reasons were verified directly (2026-10-28):
+  UniProtKB Q747K6 is IMCH_GEOSL, "Cytochrome c-type protein ImcH", Geobacter
+  sulfurreducens PCA; UniProtKB Q8E8S0 is CYMA_SHEON, "Tetraheme c-type cytochrome
+  CymA", Shewanella oneidensis MR-1. A QuickGO annotation query returns GO:0009055
+  (IBA, enables) and GO:0019645 (IBA, involved_in) for both, and GO:0005886 located_in
+  on experimental evidence for both, as the reasons state.
+- GO:0005887 integral component of plasma membrane, considered as a more specific
+  location than GO:0005886, is obsolete: OLS reports it replaced by GO:0005886, and
+  QuickGO resolves the id to plasma membrane with "integral component of plasma
+  membrane" as a narrow synonym. Plasma membrane is therefore the most specific
+  location term available here.
 
 ## Literature
 
