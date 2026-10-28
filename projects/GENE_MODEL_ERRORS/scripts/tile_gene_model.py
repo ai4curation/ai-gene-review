@@ -57,8 +57,9 @@ def get(url: str, retries: int = 4) -> str:
             with urllib.request.urlopen(url, timeout=900) as r:
                 return r.read().decode()
         except urllib.error.HTTPError as err:
-            # A client error (e.g. 404) will not change on retry.
-            if err.code < 500 or attempt == retries:
+            # A client error (e.g. 404) will not change on retry; 429 (rate
+            # limiting, used by EBI and UniProt) and server errors may.
+            if (err.code < 500 and err.code != 429) or attempt == retries:
                 raise
         except OSError:
             if attempt == retries:
