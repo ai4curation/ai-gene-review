@@ -1,0 +1,16 @@
+# FH source guide
+
+The [evidence audit](FH-source-evidence.md) gives the detailed source-to-decision mapping, exact interaction records and limitations for the 2026-10-28 follow-up. The [review YAML](FH-ai-review.yaml) is the current decision record; [notes](FH-notes.md) retain the earlier session and its dated correction.
+
+| Evidence | Source and reading scope | Decision supported |
+|---|---|---|
+| Quantitative human enzyme activity | [PMID:29456767](https://pmc.ncbi.nlm.nih.gov/articles/PMC5817394/), Results, Figures 5–6, Table 1 | Severe reduction and residual activity are distinguished; recombinant and patient-cell measurements are not conflated. |
+| Cytosolic metabolic coupling | [PMID:23643539](https://pmc.ncbi.nlm.nih.gov/articles/PMC3675675/), original full-text XML, Results, Figures 1–4 and construct/cell methods; [PMID:24280230](https://pubmed.ncbi.nlm.nih.gov/24280230/), Results, Figures 3–5 | FH controls a fumarate pool coupled to ASL. Engineered rescue and FH-deficient models do not establish universal physiological flux or natural isoform identity. |
+| Cold-challenge phenotype | [PMID:27554470](https://pubmed.ncbi.nlm.nih.gov/27554470/), Results and Figure 4 | Retain contextual mouse-derived thermogenesis inference as non-core. |
+| Protein interactions | Publication-filtered FH/P07954 IntAct records for PMID:25416956, PMID:32296183 and PMID:39251607; official UniProt PIM1 and LMNB2 entries | Eleven supported generic-binding rows remain non-core; two receive supported binding subtypes. Binary interaction and BioID proximity methods remain distinct. |
+| Nuclear mechanism and localization | [PMID:26237645](https://pubmed.ncbi.nlm.nih.gov/26237645/), scoped Results and Figures 1, 3, 5–6; [PMID:20231875](https://pubmed.ncbi.nlm.nih.gov/20231875/) | Local catalytic participation supports the retained positive NHEJ-regulation proposal; localization does not prove exclusive assignment to natural P07954-2. |
+| Published corrections | [PMID:29632342](https://www.nature.com/articles/s41556-018-0074-7), complete operative correction paragraph; [PMID:39468017](https://pubmed.ncbi.nlm.nih.gov/39468017/), affiliation correction | Record corrected duplicated Figure 2d images and scope of the affiliation notice. Corrected pixels and Figshare data were not examined. |
+| Ontology and contextual checks | Official QuickGO term definitions, typed ancestry and scoped FH/SETMAR/ACLY/KDM2B annotations; local GO-CAM index and two ACLY models | Remove duplicate active site-of-break coverage and distinguish broad lyase activity. Mixed comparators and model absence do not prove a universal convention. |
+| Unresolved exosome support | [PMID:20458337](https://pubmed.ncbi.nlm.nih.gov/20458337/); exact FH supplementary entry not recovered | UNDECIDED, without an unsupported contamination claim. |
+
+All new support in the review is reference-only. The 78 inherited quotation associations, imported source fields and natural products are unchanged. Existing normal publication caches and generated research files were preserved; the two newly added publication caches were genuinely retrieved. The follow-up did not independently repeat experiments, inspect original supplement pixels, or reconstruct PAINT's target tree. Positive curated IBA assertions are retained with their original source context and direct target support.
