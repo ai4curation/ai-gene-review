@@ -20,8 +20,9 @@ Q0QVM8 and Q0QVM7). Are the gene-model entries the same proteins, and what do th
   entries).
 - The absent segment contains a strongly hydrophobic stretch (Kyte-Doolittle 19-residue window
   maximum 2.17 for SIT1 and 2.27 for SIT2, starting at residue 33), i.e. a probable N-terminal
-  transmembrane helix that the gene-model entries lack. Phobius on B8C2V9/B5YNJ0 predicts only
-  8 transmembrane segments.
+  transmembrane helix that the gene-model entries lack. (Not from the script: the UniProt records
+  `SIT1-uniprot.txt` and `SIT2-uniprot.txt` carry only 8 `FT TRANSMEM` features, evidence
+  `ECO:0000256|SAM:Phobius`, for B8C2V9/B5YNJ0.)
 - The anti-TpEL4 antigen peptide `PANERGTSFFGRKTC`, described as residues 318-332 of TpSIT1 in
   PMID:17172435, is at residues 318-332 of Q0QVM8 and residues 265-279 of B8C2V9, confirming that
   the published TpSIT1 numbering is on the 517-residue sequence.
