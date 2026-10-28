@@ -42,5 +42,12 @@
 
 ## 2026-10-28 PR review fix: GO:0016239 row
 
-- The GO:0016239 positive regulation of macroautophagy IMP row (PMID:22952930) is still MODIFY to GO:0016242. Its only support was the non-significant p62 result, so it now also cites the PMID:18474623 (GFP-2xFYVE punctae) and PMID:24265594 (GFP-Atg8 in muscle) quotes, which show that Rheb negatively regulates macroautophagy. [Corrected 2026-10-28: the row is now REMOVE, matching its DELETE_ROW source defect, since the non-significant result cannot support either sign and GO:0016242 is already annotated from PMID:18474623.]
+- The GO:0016239 positive regulation of macroautophagy IMP row (PMID:22952930) is still MODIFY to GO:0016242. Its only support was the non-significant p62 result, so it now also cites the PMID:18474623 (GFP-2xFYVE punctae) and PMID:24265594 (GFP-Atg8 in muscle) quotes, which show that Rheb negatively regulates macroautophagy.
 - Its FlyBase source defect now asks for DELETE_ROW instead of REPOINT, and corrected_value/corrected_label were dropped. GO:0016242 is already annotated independently from PMID:18474623, and a non-significant result cannot support either sign. The explanation now says this.
+
+## 2026-10-28 correction: GO:0016239 row
+
+The GO:0016239 positive regulation of macroautophagy IMP row (PMID:22952930) is now REMOVE with no
+replacement term, matching its DELETE_ROW source defect. The non-significant p62 result cannot support
+either sign, and negative regulation of macroautophagy (GO:0016242) is already annotated from
+PMID:18474623.
