@@ -39,6 +39,20 @@ PMID:25380754); NEW GO:0015115 silicate transmembrane transporter activity (ISS,
 sensing/regulatory process and no cell-wall biogenesis process annotated (hypothesis only; substrate
 supply is not participation in silica polymerization).
 
+ISS With/From donors are the same two as for SIT1, verified against the UniProt REST API on
+2026-10-28: B7T1F4 (B7T1F4_PHATR, *P. tricornutum*, 512 aa, gene SIT1) and B8C4N0 (B8C4N0_THAPS,
+*T. pseudonana*, 437 aa, gene SIT3). The paralog identity of the TpSIT3 donor comes from
+[PMID:27305972 "TpSIT3, NaSIT and PtSIT1 were reconstituted into proteoliposomes preloaded with 6 mM Zn acetate"],
+and the same paper makes it the weaker donor
+[PMID:27305972 "PtSIT1 and NaSIT showed similar activity, but TpSIT3 gave a modest signal change that was only just discernible above background."].
+See SIT1-notes.md for the full donor note.
+
+The B5YNJ0 source defect is now `CONFIRMED` rather than `PROBABLE`: for this gene the exact
+C-terminal-suffix sequence comparison against the cDNA-derived Q0QVM7 plus the full-text cloning
+primer encoding MSSAEV [PMID:17172435] are primary data on their own, without leaning on the
+eleven-SIT length range (which covers TpSIT1, not TpSIT2). `requested_change` stays `CHECK`,
+because which start codon is used in vivo is untested.
+
 ## CMMMech claims (data/records/silicon.yaml)
 
 - functional_role for B5YNJ0: "Silicon transporter SIT2 (THAPSDRAFT_41392) co-mediating silicic acid

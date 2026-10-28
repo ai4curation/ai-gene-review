@@ -67,7 +67,31 @@ cached publications, the UniProt entries and a sequence comparison
   and by family-level Na+-coupled transport.
 - NEW GO:0005886 plasma membrane (IDA, PMID:25380754): direct eGFP-fusion localization of SIT1.
 - NEW GO:0015115 silicate transmembrane transporter activity (ISS, PMID:27305972): inferred from
-  directly assayed family members; no GO term exists for sodium-coupled silicic acid symport.
+  directly assayed family members; no GO term exists for silicic-acid-specific transporter activity
+  or for sodium-coupled silicic acid symport (GO:0015708 is the process, not the activity).
+
+## ISS With/From donors (verified)
+
+Both donor accessions were checked against the UniProt REST API on 2026-10-28, so a later reader
+need not re-check them:
+- **B7T1F4** = B7T1F4_PHATR, *Phaeodactylum tricornutum*, 512 aa, gene `SIT1`, protein name "SIT1".
+- **B8C4N0** = B8C4N0_THAPS, *Thalassiosira pseudonana*, 437 aa, gene `SIT3`, protein name
+  "SIT3, silicic acid transporter-like protein".
+
+The two donors are not equal. The paralog identity of the TpSIT3 donor is stated in
+[PMID:27305972 "TpSIT3, NaSIT and PtSIT1 were reconstituted into proteoliposomes preloaded with 6 mM Zn acetate"],
+and the same paper qualifies it:
+[PMID:27305972 "PtSIT1 and NaSIT showed similar activity, but TpSIT3 gave a modest signal change that was only just discernible above background."]
+and [PMID:27305972 "Given the lower activity of TpSIT3 we chose to focus on characterizing the transport kinetics of PtSIT1 and NaSIT."].
+So B7T1F4 carries the inference and B8C4N0 is a supporting conspecific donor. (The earlier
+PMID:22530967 citation for the paralog claim was wrong: that abstract names no paralog. It is
+retained only for the family-level sodium-dependence statement it does make.)
+
+Carry forward to a future THAPS SIT3 review: B8C4N0 is itself a third instance of the
+gene-model truncation reported here as a source defect - a 437-residue model that is an exact
+*internal* substring of the 565-residue TpSIT3 cDNA protein (GenBank ABB81827), i.e. shortened at
+both ends. Reporting it would make the UniProt report cover all three T. pseudonana SITs rather
+than two.
 - Not added: biomineral tissue/cell-wall biogenesis processes. SIT1 supplies substrate to
   silica-deposition vesicles but does not perform silica polymerization; knockdown lowering PDMPO
   incorporation is a necessity argument, not participation.
