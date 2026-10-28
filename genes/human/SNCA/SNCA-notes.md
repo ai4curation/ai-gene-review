@@ -33,3 +33,11 @@
 ## 2026-10-28: core function locations
 
 The self-association core function listed Lewy body as its location, while the Lewy body IDA row is KEEP_AS_NON_CORE as a disease aggregation state. The location was dropped from the core function so the two agree; the core function itself (homo-oligomerisation and fibril formation) is unchanged.
+
+## 2026-10-28: action corrections (PR #5693 review)
+
+- GO:0008017 microtubule binding (IEA) was marked over-annotated as if it were more general than tubulin binding. It is the child of GO:0015631, and microtubule binding is shown directly (PMID:27628239, PMID:11698390), so the row is now ACCEPT.
+- Membrane (two rows) and enzyme binding (two rows) were KEEP_AS_NON_CORE or MARK_AS_OVER_ANNOTATED with reasons saying they were true but generic. They are now TOO_GENERAL: plasma membrane and synaptic vesicle membrane, and phospholipase binding, are asserted descendants.
+- Protein domain specific binding has no asserted descendant, so TOO_GENERAL does not apply; it is UNDECIDED pending a look at the rat source row.
+- The caspase inhibitor activity reason now says the full text was not available.
+- Lipid binding (three EXP rows) stays ACCEPT: the cited assays include detergent micelles as well as lipid vesicles, so lipid binding is as specific as those papers support; phospholipid binding is carried on its own rows and in the core functions.
