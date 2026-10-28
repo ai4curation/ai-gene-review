@@ -13,9 +13,10 @@ encoded here deliberately and are the only constants: RULE (the treatment rule) 
 the asserted values that count as PflB-substrate pushes.
 
 A gene counts as REVIEWED when it has annotation rows and none of them is still
-`PENDING`. That deliberately does not consult `status:`, which can go stale
-(MOCS1 is fully reviewed but still reads `INITIALIZED`); status mismatches are
-reported separately under `data_quality`.
+`PENDING`. That deliberately does not consult `status:`, which can go stale: MOCS1
+was fully reviewed while still reading `INITIALIZED`, which this script reported
+under `data_quality` until Phase 3 corrected it. Status mismatches are still
+reported there rather than being allowed to skew the counts.
 
 The Phase 3 reviews -- the radical SAM genes that already existed when the project
 started -- are kept OUT of these totals, because Phase 4 reports what this project
@@ -49,6 +50,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / "projects" / "RADICAL_SAM.md"
 DEST = Path(__file__).resolve().parent / "data" / "synthesis.yaml"
 PHASE3_SCOPE = Path(__file__).resolve().parent / "data" / "phase3_scope.yaml"
+RULE_EXCEPTIONS = Path(__file__).resolve().parent / "data" / "rule_exceptions.yaml"
 
 SAM_BINDING = "GO:1904047"
 FE4S4 = "GO:0051539"
@@ -122,16 +124,47 @@ def sam_actions_of(rows: list) -> list[str]:
                    for a in rows if (a.get("term") or {}).get("id") == SAM_BINDING} - {None})
 
 
-def rule_check(sym: str, org: str, rows: list, catalysis_established: bool):
+def load_rule_exceptions() -> dict[tuple[str, str, str], dict]:
+    """Documented exceptions to the treatment rule, keyed by (organism, gene, term).
+
+    The rule table documents one branch its constant cannot express -- keep
+    `GO:0046872` where the protein binds a separate mononuclear metal ion -- and the
+    project's tests turn a deviation into a CI failure. Without a hatch, honouring
+    that branch would mean editing a test, so the hatch lives in curated data
+    instead (data/rule_exceptions.yaml), beside the scope file.
+    """
+    spec = yaml.safe_load(RULE_EXCEPTIONS.read_text()) or {}
+    out: dict[tuple[str, str, str], dict] = {}
+    for e in spec.get("exceptions") or []:
+        org, _, sym = str(e["gene"]).partition("/")
+        if not sym:
+            sys.exit(f"rule_exceptions: {e['gene']!r} is not organism-qualified")
+        actions = e["actions"]
+        out[(org, sym, e["term"])] = {
+            "actions": set(actions if isinstance(actions, list) else [actions]),
+            "reason": e["reason"],
+        }
+    return out
+
+
+def rule_check(sym: str, org: str, rows: list, catalysis_established: bool,
+               exceptions: dict[tuple[str, str, str], dict] | None = None):
     """Apply the treatment rule to one review's domain-derived generic rows.
 
-    Returns (generic_counts, deviations, branch_uses). Shared by the Phase 4 scope
-    and the Phase 3 scope so both are judged by exactly the same code: a rule that
-    is only enforced where it was written is not a rule.
+    Returns (generic_counts, deviations, branch_uses, exceptions_used). Shared by the
+    Phase 4 scope and the Phase 3 scope so both are judged by exactly the same code:
+    a rule that is only enforced where it was written is not a rule.
+
+    A row named in *exceptions* with a matching action is recorded as a documented
+    exception rather than a deviation. Callers report which entries were used, so an
+    entry that matches nothing is visible as stale instead of quietly widening the
+    rule.
     """
+    exceptions = exceptions or {}
     generic: dict = defaultdict(Counter)
     deviations: list[dict] = []
     branch: list[dict] = []
+    used: list[dict] = []
     for a in rows:
         r = a.get("review") or {}
         act = r.get("action")
@@ -144,12 +177,16 @@ def rule_check(sym: str, org: str, rows: list, catalysis_established: bool):
             continue
         entry = {"gene": sym, "organism": org, "term": tid, "label": label,
                  "action": act, "expected": sorted(EXPECTED[mode])}
-        if alt and act == alt and not catalysis_established:
+        allowed = exceptions.get((org, sym, tid))
+        if allowed and act in allowed["actions"]:
+            entry["documented_exception"] = allowed["reason"]
+            used.append(entry)
+        elif alt and act == alt and not catalysis_established:
             entry["note"] = "rule branch: catalysis not established"
             branch.append(entry)
         else:
             deviations.append(entry)
-    return generic, deviations, branch
+    return generic, deviations, branch, used
 
 
 def phase3_conformance() -> dict:
@@ -160,8 +197,10 @@ def phase3_conformance() -> dict:
     pick one of them.
     """
     spec = yaml.safe_load(PHASE3_SCOPE.read_text())
+    exceptions = load_rule_exceptions()
     deviations: list[dict] = []
     branch: list[dict] = []
+    used: list[dict] = []
     entries: list[dict] = []
     for qualified in spec["genes"]:
         org, _, sym = qualified.partition("/")
@@ -174,9 +213,10 @@ def phase3_conformance() -> dict:
                       if ((a.get("review") or {}).get("action")) == "PENDING")
         sam = sam_actions_of(rows)
         catalysis = bool({"ACCEPT", "NEW"} & set(sam))
-        generic, devs, brs = rule_check(sym, org, rows, catalysis)
+        generic, devs, brs, exc = rule_check(sym, org, rows, catalysis, exceptions)
         deviations += devs
         branch += brs
+        used += exc
         entries.append({
             "gene": qualified, "uniprot": review.get("id"),
             "declared_status": review.get("status"),
@@ -192,6 +232,7 @@ def phase3_conformance() -> dict:
         "genes_checked": len(entries),
         "deviations": deviations,
         "branch_uses": branch,
+        "documented_exceptions_used": used,
         "genes": entries,
     }
 
@@ -200,6 +241,9 @@ def build() -> dict:
     fm = frontmatter()
     symbols = fm["genes"]
     orgs = list(fm.get("species") or ["human"])
+
+    exceptions = load_rule_exceptions()
+    exceptions_used: list[dict] = []
 
     genes: dict[str, dict] = {}
     missing: list[str] = []
@@ -260,11 +304,13 @@ def build() -> dict:
                 })
 
         if reviewed:
-            g, devs, brs = rule_check(sym, org, rows, catalysis_established)
+            g, devs, brs, exc = rule_check(sym, org, rows, catalysis_established,
+                                           exceptions)
             for t, c in g.items():
                 generic[t].update(c)
             deviations += devs
             rule_branch += brs
+            exceptions_used += exc
 
         for pt in review.get("proposed_new_terms") or []:
             proposed_terms.append({"gene": sym, "organism": org,
@@ -326,6 +372,8 @@ def build() -> dict:
                 removes["asserted_row_rejected_on_biology"] += 1
                 removes_by_evidence[ev] += 1
 
+    p3 = phase3_conformance()
+
     interpro = [d for d in defects if str(d["record"]).startswith("InterPro")]
     # Defects whose asserted value pushes PflB/formate-C-acetyltransferase
     # specificity onto a protein whose partner GRE is not PflB.
@@ -355,7 +403,19 @@ def build() -> dict:
         },
         "treatment_rule_deviations": deviations,
         "treatment_rule_branch_uses": rule_branch,
-        "phase3_rule_conformance": phase3_conformance(),
+        "phase3_rule_conformance": p3,
+        "documented_rule_exceptions": {
+            "file": str(RULE_EXCEPTIONS.relative_to(ROOT)),
+            "declared": [{"gene": f"{o}/{g}", "term": t, "actions": sorted(v["actions"]),
+                          "reason": v["reason"]}
+                         for (o, g, t), v in sorted(exceptions.items())],
+            "used": exceptions_used + p3["documented_exceptions_used"],
+            "stale": sorted(
+                f"{o}/{g}:{t}" for (o, g, t) in exceptions
+                if not any(u["organism"] == o and u["gene"] == g and u["term"] == t
+                           for u in exceptions_used + p3["documented_exceptions_used"])
+            ),
+        },
         "sam_binding": {
             "scope": "reviewed genes only",
             "new_rows_absent_from_goa": sam_new,
@@ -426,6 +486,11 @@ def main() -> int:
     for d in out["treatment_rule_deviations"]:
         print(f"  {d['gene']:<8} {d['term']} {d['action']} (expected {'/'.join(d['expected'])})")
     print(f"rule-branch uses (catalysis not established): {len(out['treatment_rule_branch_uses'])}")
+    ex = out["documented_rule_exceptions"]
+    print(f"documented rule exceptions: {len(ex['declared'])} declared, "
+          f"{len(ex['used'])} used, {len(ex['stale'])} stale")
+    for stale in ex["stale"]:
+        print(f"  STALE EXCEPTION (matches no row): {stale}")
     p3 = out["phase3_rule_conformance"]
     print(f"phase 3 scope: {p3['genes_checked']} pre-existing reviews, "
           f"DEVIATIONS {len(p3['deviations'])}, branch uses {len(p3['branch_uses'])}")

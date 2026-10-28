@@ -91,3 +91,48 @@ def test_phase3_scope_is_covered_and_conformant():
     # and it is the review FILE that must not be counted twice.
     phase4 = {f"{v['organism']}/{k}" for k, v in d["genes"].items()}
     assert set(scope).isdisjoint(phase4), sorted(set(scope) & phase4)
+
+
+def test_documented_rule_exceptions_are_live():
+    """A documented exception that matches no row is stale, not a free pass.
+
+    The exception file exists so that honouring the rule table's "keep GO:0046872
+    if a separate metal ion is bound" branch never requires editing a test. An
+    allowlist nobody checks rots, so assert every declared entry is actually in
+    use.
+    """
+    d = yaml.safe_load(DATA.read_text())
+    ex = d["documented_rule_exceptions"]
+    assert ex["stale"] == [], ex["stale"]
+    assert len(ex["used"]) == len(ex["declared"])
+
+
+def test_rule_exception_suppresses_a_deviation():
+    """The escape hatch works, checked on synthetic rows rather than on the corpus.
+
+    Today no reviewed member binds a mononuclear metal beside its cluster, so the
+    declared list is empty and the corpus cannot exercise this path. Drive
+    rule_check() directly: the same row is a deviation without an exception and a
+    documented exception with one.
+    """
+    spec = importlib.util.spec_from_file_location("rsam_synthesis", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    rows = [{
+        "term": {"id": "GO:0046872", "label": "metal ion binding"},
+        "evidence_type": "IDA",
+        "review": {"action": "ACCEPT"},
+    }]
+
+    _, deviations, _, used = mod.rule_check("someGene", "SOMEORG", rows, True)
+    assert len(deviations) == 1 and not used
+    assert deviations[0]["term"] == "GO:0046872"
+
+    exceptions = {("SOMEORG", "someGene", "GO:0046872"):
+                  {"actions": {"ACCEPT"}, "reason": "binds a separate Zn site"}}
+    _, deviations, _, used = mod.rule_check("someGene", "SOMEORG", rows, True,
+                                           exceptions)
+    assert deviations == []
+    assert len(used) == 1
+    assert used[0]["documented_exception"] == "binds a separate Zn site"

@@ -108,7 +108,7 @@ is_a `GO:0051540` metal cluster binding; `GO:0046872` metal ion binding is
 | `GO:0051539` 4 iron, 4 sulfur cluster binding | `ACCEPT`, or `NEW` where GOA lacks the row | The radical SAM cluster is the catalytic cofactor, so it is core for every active member, and a core cofactor has to be proposable where it is missing (PSEPK/bioB carries `GO:0051537` but not `GO:0051539`). `KEEP_AS_NON_CORE` only where catalysis is not established. |
 | `GO:0005506` iron ion binding | `MODIFY` | Same as `GO:0046872`: the iron is bound as a cluster, so replace with `GO:0051539`. |
 | `GO:0046872` metal ion binding | `MODIFY` | `GO:0051539` (lateral correction: the iron is bound as a cluster). Keep only if the protein binds a separate metal ion. |
-| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT`, or `NEW` where GOA lacks the row | Cosubstrate binding, true for every active member. GOA lacks it far more often than not: 18 of the 20 members with established catalysis. |
+| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT`, or `NEW` where GOA lacks the row | Cosubstrate binding, true for every active member. GOA lacks it far more often than not: 18 of the 20 members with established catalysis. The absence is **patchy UniRule coverage, not a GO convention** — see below. |
 
 Never `MARK_AS_OVER_ANNOTATED` for these rows: none of them is false. The same
 principle carries to the adjacent generic MF rows that are not in the table
@@ -121,10 +121,23 @@ The rule is enforced in code rather than by reading, over both scopes: for the
 [`data/phase3_scope.yaml`](RADICAL_SAM/data/phase3_scope.yaml)
 (`phase3_rule_conformance.deviations`). Both are asserted empty by
 `tests/test_radical_sam_synthesis.py`, so a later edit that breaks the rule
-reddens CI instead of going unnoticed. The one sanctioned escape is the rule's
-own second branch, recorded as `branch_uses` rather than silently allowed: 17
-rows in Phase 4 and 6 in Phase 3, all on members whose catalysis is not
-established.
+reddens CI instead of going unnoticed. The rule's own second branch is recorded as
+`branch_uses` rather than silently allowed: 17 rows in Phase 4 and 6 in Phase 3,
+all on members whose catalysis is not established.
+
+Enforcing a rule written in prose needs one more thing: the `GO:0046872` line
+above ends "Keep only if the protein binds a separate metal ion", and the rule
+constant cannot express that, so a member with a genuine mononuclear metal site
+beside its cluster would score as a deviation and fail CI. Such a row goes in
+[`data/rule_exceptions.yaml`](RADICAL_SAM/data/rule_exceptions.yaml) with the
+metal site and its evidence named, and is reported under
+`documented_rule_exceptions` — so honouring the documented branch never means
+editing a test. An entry that matches no row is reported as `stale` and fails the
+test, so the hatch cannot rot into an unchecked allowlist. It is empty today: no
+reviewed member has a separate metal site. Deliberately **not** the schema's
+`review.consistency_exception`, which is scoped to the `action_consistency.yaml`
+rules and whose validator warns when a row declares one but is in no
+action-consistency conflict — that would trade one spurious failure for another.
 
 ---
 # STATUS
@@ -255,7 +268,7 @@ Reading it by pattern rather than by row:
   the same principle and the same precedent: human/LIAS already `MODIFY`s
   `GO:0016783` sulfurtransferase activity to `GO:0016992`.
 
-Two changes went beyond flipping an action:
+Three changes went beyond flipping an action:
 
 - **SACEN/eryCV asserts no core molecular function and no core process.** It had
   `GO:0051539` as its only core MF, on a protein that is `PE 4: Predicted`,
@@ -279,6 +292,30 @@ Two changes went beyond flipping an action:
   S-adenosyl-L-methionine") and its `4Fe-4S-S-AdoMet` binding features, not in an
   electronic GO line. The three uncharacterised members get no such row, which is
   what keeps them in the rule's second branch.
+
+  **Why the absence is a gap and not a convention.** The repository rule on `NEW`
+  warns that a systematic absence is usually a convention the reviewer has not yet
+  identified, and the comparator check is what settles which it is. The comparator
+  here is not this project's own proposals — citing those would be circular — but
+  GOA itself, where `GO:1904047` *is* annotated to radical SAM enzymes in exactly
+  this role, by UniRule: ECOLI/queE (`UR000100349`), ECOLI/moaA and PSEPK/moaA
+  (`UR000101305`), METEA/pqqE and PSEPK/pqqE (`UR000098303`). GO has no objection
+  to annotating a radical SAM enzyme's own cosubstrate; the coverage just follows
+  which UniRule systems happen to carry the term. That also explains, without
+  special pleading, why those five genes have an existing row to `ACCEPT` or
+  `MODIFY` while the other 18 need a `NEW` one, and it is the comparator each of
+  those 10 rows now cites.
+
+- **Canonical mechanism for a `GO:0051539` row GOA does not have.** Two were used
+  in this pass: PSEPK/bioB records it as an explicit `NEW` row, while SCHPO/bio2
+  and yeast/BIO2 record it only as a `proposed_replacement_terms` target of the
+  `GO:0051536` `MODIFY`, plus a core function. Both are defensible and the code
+  check cannot tell them apart, since it only judges rows that exist in GOA. For
+  future members the canonical mechanism is the **explicit `NEW` row**, as in
+  PSEPK/bioB: a replacement target states what the retired parent should become,
+  which is not the same assertion as "this protein binds a [4Fe-4S] cluster", and
+  only a row of its own is visible to the rule check and to anything else that
+  reads `existing_annotations`.
 
 ### Module cross-check
 
