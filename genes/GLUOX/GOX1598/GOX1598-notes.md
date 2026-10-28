@@ -43,9 +43,13 @@ The reason is mechanical rather than a judgement about this protein: **none of
 the three InterPro entries it matches has an interpro2go mapping.** Checked
 against the current GO external2go file
 (`https://ftp.ebi.ac.uk/pub/databases/GO/goa/external2go/interpro2go`, 30128
-lines): `IPR023210`, `IPR036812` and `IPR050523` are all absent. There is also no
-PANTHER-family GO mapping for `PTHR43364`, and no IBA, because PAINT placed no
-ancestral node annotation on the lineage this protein descends from (see §3).
+lines): `IPR023210`, `IPR036812` and `IPR050523` are all absent. Note that this
+is specific to the entries *this* protein matches, not to the superfamily: other
+AKR entries are mapped, and *E. coli* Tas (P0A9T4) does get `GO:0016491` by
+`IEA GO_REF:0000002` through `IPR020471`, which Q5FQK7 does not match. There is
+also no PANTHER-family GO mapping for `PTHR43364` (`go_terms: null` in
+`PTHR43364-metadata.yaml`), and no IBA row — indeed no GOA row at all — for
+Q5FQK7, so nothing was propagated to it (see §3).
 
 I have recorded the missing `IPR023210` → `GO:0016491` mapping as a
 `source_defects` entry (`requested_change: ADD`, `resource: OTHER` = InterPro /
@@ -66,18 +70,43 @@ different cofactors and substrates.
 | PTN000199659 | GO:0005737, GO:0008106 | IBD | plant/pombe/rat/human members | — |
 | PTN000199734 | GO:0005829 | IBD | UniProtKB:P0A9T4 (*E. coli* Tas) | taxon:1236 (Gammaproteobacteria) |
 
-The one node seeded by the protein's closest reviewed relative (Tas) carries only
-a **cytosol** cellular-component claim and is scoped to Gammaproteobacteria;
-*G. oxydans* is an alphaproteobacterium and sits outside it. Consistent with
-that, GOA gives Q5FQK7 no IBA row at all. There is therefore no propagation to
-argue with, and no `propagation_review` is needed anywhere in this review.
+The decisive fact is on the target's own side, and it is the only one this table
+can support: **GOA gives Q5FQK7 no IBA row — no row of any kind — so no
+PAINT-derived annotation reached it.** There is therefore no propagation to argue
+with, and no `propagation_review` is needed anywhere in this review.
+
+I am deliberately *not* making a claim about where this protein sits in the tree.
+This TSV carries nodes, GO ids, seeds and taxon scopes and **no tree topology**,
+so it cannot establish which of these nodes Q5FQK7 descends from; an earlier
+draft of this file said PAINT "placed no ancestral node annotation on the lineage
+this protein descends from", which the file cannot show and which is in any case
+misleading, since `PTN000199659` does carry `GO:0008106` (F, IBD). The two
+observations that *are* readable here are narrower: the node seeded by the
+protein's closest reviewed relative (Tas, `PTN000199734`) carries only a
+**cytosol** cellular-component claim and is scoped to Gammaproteobacteria, which
+does not include this alphaproteobacterium; and no node in the file is seeded by
+a *G. oxydans* or other alphaproteobacterial member. Neither of those is the
+reason Q5FQK7 has no IBA; the absence of any GOA row for it is.
 
 PTHR43364's official name is `NADH-SPECIFIC METHYLGLYOXAL REDUCTASE-RELATED` and
 the subfamily's is `NAD(P)-LINKED OXIDOREDUCTASE SUPERFAMILY PROTEIN`
 (from `interpro/panther/panther.obo`). The subfamily is a mixed bin: AKR7A2/A3
 (aflatoxin B1 aldehyde reductase), YdjG (methylglyoxal reductase), YajO, IolS,
-YhdN, YccK, Tas, Rv2298, plus fungal and uncharacterised bacterial members
-(`PTHR43364-entries.csv`). Nothing substrate-specific transfers from it.
+YhdN, YccK, Tas, Rv2298, plus fungal and uncharacterised bacterial members.
+Nothing substrate-specific transfers from it.
+
+Those names are read off `interpro/panther/PTHR43364/PTHR43364-entries.csv`, and
+that file is a **sample, not the membership list**: it has 55 rows (21 of them
+`:SF4`) against the family's own metadata counters of `proteins: 68362` in
+`subfamilies: 11`. So it is usable for "here are named members of this
+subfamily", which is all it is used for above, and it is **not** usable for any
+count or any "all members are X" claim. An earlier draft of this section and of
+`RESULTS.md` said the subfamily contains "a dozen uncharacterised bacterial
+members" on the strength of this file; no such number is supportable from it, and
+the substrate-heterogeneity conclusion does not need one — it follows from the
+named characterised members (AKR7A2/A3, YdjG, IolS, Tas) having unrelated
+substrates. If a membership number is ever needed, the metadata counters are the
+artifact to cite; a row count in an `*-entries.csv` never is.
 
 ## 4. My own sequence analysis
 

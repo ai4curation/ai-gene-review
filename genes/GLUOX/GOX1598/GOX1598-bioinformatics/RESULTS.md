@@ -78,10 +78,15 @@ be annotated:
 - **No substrate can be assigned.** The AKR7A2 substrate-binding residues other
   than His141 (Y260, R263, R359) map to non-identical residues or to a gap
   (Gly285, Asp288, gap), and AKR1B1's substrate residue C299 maps to Thr343.
-  PTHR43364:SF4 is itself substrate-heterogeneous — it contains aflatoxin B1
-  aldehyde reductases (AKR7A2/A3), a methylglyoxal reductase (YdjG), IolS, Tas
-  and a dozen uncharacterised bacterial members — so subfamily membership
-  transfers no substrate either.
+  PTHR43364:SF4 is itself substrate-heterogeneous — its characterised members
+  include aflatoxin B1 aldehyde reductases (AKR7A2/A3), a methylglyoxal
+  reductase (YdjG), IolS and Tas, beside uncharacterised bacterial members
+  (YccK, Rv2298/MT2355, Mb2320) — so subfamily membership
+  transfers no substrate either. No member count is asserted: the only
+  per-protein listing to hand, `interpro/panther/PTHR43364/PTHR43364-entries.csv`,
+  is a 55-row **sample** of a family whose own metadata counters give 68362
+  proteins in 11 subfamilies, so a row count in it is not a membership count and
+  is not used as one here.
 
 The closest reviewed relative, *E. coli* Tas at 50.4% identity, has a solved
 structure and is described as an NADP(H)-dependent aldo-keto reductase
