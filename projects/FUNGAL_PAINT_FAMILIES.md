@@ -43,6 +43,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
+| `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 
 ---
 
@@ -360,12 +361,13 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 
 ## Family 17: HMG-CoA Reductases
 
-`PTHR10572` contains class I HMG-CoA reductases. PAINT places
-`GO:0004420` HMG-CoA reductase activity, `GO:0008299` isoprenoid
-biosynthesis, and `GO:0016126` sterol biosynthesis at the family-root
-`PANTHER:PTN000060346`, a eukaryotic ER-membrane assertion plus an over-broad
-peroxisomal-membrane assertion at `PANTHER:PTN000060347`, and a fungal
-ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
+`PTHR10572` contains the conserved `PANTHER:PTN000060346` HMG-CoA reductase
+activity and broad isoprenoid-biosynthesis node, the eukaryotic
+`PANTHER:PTN000060347` membrane node that carries both ER and over-propagated
+peroxisomal localization, and the fungal `PANTHER:PTN000832055` ergosterol
+node seeded by a canonical sterol-pathway HMGR. The short AN1593 branch is an
+exception to the ER and ergosterol propagation, but retains the catalytic and
+broad isoprenoid-biosynthesis terms.
 
 - [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
   `COMPLETE`
@@ -373,12 +375,14 @@ ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
   already `COMPLETE`
 - [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
   exemplar
-- [x] `CANAL/HMG1` - CGD *Candida albicans* class I HMG-CoA reductase; drafted
-  in PR #5454
-- [x] `ASPFU/hmg1` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 1;
-  drafted in this branch
-- [ ] `ASPFU/hmg2` - *Aspergillus fumigatus* HMG-CoA reductase isozyme 2
-- [ ] `EMENI/AN1593` - *Aspergillus nidulans* short PTHR10572 member
+- [x] `CANAL/HMG1` - Candida albicans long sterol-pathway HMG-CoA reductase;
+  drafted in PR #5454
+- [x] `ASPFU/hmg1` - Aspergillus fumigatus long sterol-pathway HMG-CoA
+  reductase; drafted in PR #5456
+- [x] `ASPFU/hmg2` - Aspergillus fumigatus Hmg1-related HMG-CoA reductase;
+  drafted in PR #5458
+- [x] `EMENI/AN1593` - Aspergillus nidulans short pimaradiene-cluster
+  HMG-CoA reductase; drafted in this branch
 
 ---
 
@@ -414,6 +418,12 @@ ergosterol-biosynthesis assertion at `PANTHER:PTN000832055`.
   D-arabinono-1,4-lactone oxidase and D-erythroascorbate biosynthesis, records
   the anomalous deprecated `GO_REF:0000025` IGC citation as a source defect, and
   treats broad PAINT/ARBA parent rows as too general beside `GO:0016899`.
+- Started `PTHR10572`, separating long fungal sterol-pathway HMG-CoA
+  reductases from Aspergillus short cluster paralogs. `CANAL/HMG1`,
+  `ASPFU/hmg1`, and `ASPFU/hmg2` retain the fungal ergosterol node where
+  supported; `EMENI/AN1593` keeps exact HMGR catalysis but removes ergosterol
+  and precise ER localization because the direct literature places it in the
+  pimaradiene secondary-metabolite cluster.
 
 ## 2026-10-21
 
