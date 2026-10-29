@@ -440,7 +440,7 @@ CXCR3 calls transfer human-receptor experiments to a full-length, closely relate
 and 90.8% identical) rather than observing the horse protein. The SHLD2 call rests on a close
 SHLD2-family sequence match for a non-canonical alternative model that keeps the N-terminal SHLD3-MAD2L2
 recruitment segment but diverges after about residue 811; its downstream claims are UNC for that reason.
-The ftz-f1 call rests on a Drosophila experiment on the same isoform. Not every selected target has been reviewed yet; the cross-cohort results
+The ftz-f1 call rests on a Drosophila experiment on beta FTZ-F1; the selected product M9NFK2 is identical to UniProt isoform A (P33244-2), whose N terminus is associated with the beta isoform (PMID:8096644). Not every selected target has been reviewed yet; the cross-cohort results
 state how many have, and their per-cohort table should be read with the COR caveat in
 [Reference standard and novelty](#reference-standard-and-novelty).
 
