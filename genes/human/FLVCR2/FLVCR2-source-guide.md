@@ -1,14 +1,14 @@
 # FLVCR2 source guide
 
-The genuine repository fetch produced30 annotations and two natural products. Eight exact-main normal sources were hydrated before fetch and preserved; three qualified missing publications were fetched normally. Shared PMID:15369674 reuses the independently accepted FLVCR1 actual merge. [Evidence synthesis](FLVCR2-source-evidence.md) and [notes](FLVCR2-notes.md) provide the biological scope and chronological record.
+The genuine repository fetch produced 30 annotations and two natural products. Eight exact-main normal sources were hydrated before fetch and preserved; three qualified missing publications were fetched normally. Shared PMID:15369674 reuses the independently accepted FLVCR1 actual merge. [Evidence synthesis](FLVCR2-source-evidence.md) and [notes](FLVCR2-notes.md) provide the biological scope and chronological record.
 
 ## Identity and accepted scope
 
 Human FLVCR2 is UniProt Q9UPI3 / HGNC:20105. The official identity set includes C14orf58, CCT, FLJ20371, MFSD7C and SLC49A2. Preserve the official products Q9UPI3-1 (526 residues) and Q9UPI3-2 (321 residues). The latter has VSP_043048 replacing native residues 1–18 and VSP_043049 deleting 19–223. Existing exact FASTA reconstruction establishes identity only; it does not assign the full-length transport functions, heme-binding fragment results or a membrane location to the short product.
 
-The review preserves 30 original contexts: 16 ACCEPT, 10 KEEP_AS_NON_CORE, 3 TOO_GENERAL and 1 REMOVE. The genuine seed contains30 rows, with a bijection to all30 accepted original contexts and no collapse. No NEW annotation or publication quotation is proposed. The review has18 references: seven GO references, eight publications and three authored evidence/notes files. Computed status is recorded after validation in the notes.
+The review preserves 30 original contexts: 16 ACCEPT, 10 KEEP_AS_NON_CORE, 3 TOO_GENERAL and 1 REMOVE. The genuine seed contains 30 rows, with a bijection to all 30 accepted original contexts and no collapse. No NEW annotation or publication quotation is proposed. The review has 18 references: seven GO references, eight publications and three authored evidence/notes files. Computed status is recorded after validation in the notes.
 
-Two core proposals are retained: GO:0015220 choline transmembrane transporter activity with GO:0015871 choline transport, and GO:0034228 ethanolamine transmembrane transporter activity with GO:0034229 ethanolamine transport. Both use GO:0005886 plasma membrane. Human cell/yeast transport and human structural evidence are kept separate from mouse BBB physiology and from separately scoped purified mouse assays. The source-evidence draft records the assay and direction limits.
+Two cores are retained: GO:0015220 choline transmembrane transporter activity with GO:0015871 choline transport and the existing GO:0150104 blood–brain-barrier process, and GO:0034228 ethanolamine transmembrane transporter activity with GO:0034229 ethanolamine transport. Both use GO:0005886 plasma membrane. Human cell/yeast transport, human brain staining and human endothelial-cell uptake remain distinct from mouse in-vivo BBB physiology and purified mouse assays. The evidence synthesis records the measured directional contexts and the unresolved complete route across endothelial faces.
 
 ## Original extension and deterministic projection
 
@@ -24,7 +24,7 @@ extensions:
 
 The original expression has one disjunct containing one conjunct, so this singleton preserves its meaning without flattening an OR expression. The other 29 original contexts have no extension. The genuine seeded match is stored row6 (zero-based), joined by term, evidence, original reference and supporting entities to the original QuickGO ID. The original extension was restored to that row without changing its machine fields or review action. The private TSV annotation-extension column did not represent this structured expression and must not substitute for the original QuickGO object. Future multi-group expressions would require separate treatment.
 
-The compact table below identifies all30 original source contexts and review actions. The committed GOA and review retain imported identifiers, evidence, supporting entities and qualifiers; the original extension is restored as described above. Complete raw-source and projection records are retained as private audit provenance, not public evidence links.
+The compact table below identifies all 30 original source contexts and review actions. The committed GOA and review retain imported identifiers, evidence, supporting entities and qualifiers; the original extension is restored as described above. Complete raw-source and projection records are retained as private audit provenance, not public evidence links.
 
 Raw indices are zero-based. `NC` means KEEP_AS_NON_CORE; `TG` means TOO_GENERAL.
 
@@ -63,7 +63,7 @@ Raw indices are zero-based. `NC` means KEEP_AS_NON_CORE; `TG` means TOO_GENERAL.
 
 ## Source access and immutable normal dependencies
 
-All11 normal dependencies are present: eight publications and three PTHR10924 files. Eight reuse exact main2251f5c29ecb4479005a4e21f55d1c6e81dc7080 bytes; PMID:14729055, PMID:32973183 and PMID:38693257 were genuinely fetched after ownership qualification. All normal caches are immutable after acquisition, including the shared PMID:15369674 source.
+All 11 normal dependencies are present: eight publications and three PTHR10924 files. Eight reuse exact main 2251f5c29ecb4479005a4e21f55d1c6e81dc7080 bytes; PMID:14729055, PMID:32973183 and PMID:38693257 were genuinely fetched after ownership qualification. All normal caches are immutable after acquisition, including the shared PMID:15369674 source.
 
 | Normal publication | Consulted access and limitation |
 | --- | --- |
@@ -95,3 +95,9 @@ Retain `interpro/panther/PTHR10924/PTHR10924-entries.csv`, `PTHR10924-metadata.y
 | `publications/PMID_40972734.md` | 3454 | `aed5099079cd893498447e206987f18c3842e357acb4a330d5c38ce982643238` | False |
 
 External selected-primary access and normal-cache availability are distinct. The evidence synthesis records source-specific assay and access limits; no provider-generated research report or new publication quotations were manufactured. Known provider authentication/quota failures were not retried. The [published campaign instructions](https://github.com/ai4curation/ai-gene-review/blob/2251f5c29ecb4479005a4e21f55d1c6e81dc7080/projects/CLINGEN_MENDELIAN.md#curation-instructions) require reference-only support, taking precedence over conflicting local skill requests for quotations. Default validators are unchanged.
+
+## Review follow-up: BBB core and heme-evidence balance
+
+The existing BBB annotations remain ACCEPT and are now explicit in the choline core because the transporter performs choline movement. Heme uptake and binding remain non-core after weighing the unconfirmed-uptake statement and small-amine structural data in PMID:38778100 against the actual cellular uptake/knockdown results in PMID:20823265 and the purified human N-terminal binding in PMID:32973183. None of the inspected amine-site assays directly measures or excludes heme flux. The annotations therefore retain their experimental scope without elevating heme to the principal transport core.
+
+The export-IBA assessment continues to rely on the actually inspected [original article PDF, Figure 3C and accompanying Results](https://courses.washington.edu/conj514/readings/abkowitz_reading1.pdf) for PMID:15369674. Its abstract-only normal cache is unchanged. The full cached PMID:20823265 Results and Discussion independently identify hFLVCR14q as human FLVCR2 and corroborate that comparator result. Source-access judgments refer to actual inspected material, not only the cache availability flag.
