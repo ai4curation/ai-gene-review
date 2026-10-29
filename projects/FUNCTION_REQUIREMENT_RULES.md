@@ -66,7 +66,7 @@ known to carry it:
 | Rules | `rules/function_requirements/function-requirement-rules.yaml` |
 | Checker | `src/ai_gene_review/tools/function_requirements.py` (`just function-requirements acceptance` / `sweep`) |
 | Tests | `tests/test_function_requirements.py` |
-| Reports | `reports/function-requirements/acceptance.tsv`, `acceptance-summary.tsv`, `sweep.tsv` |
+| Reports | `reports/function-requirements/acceptance.tsv`, `acceptance-summary.tsv`, `sweep.tsv`: generated and git-ignored, never committed. They aggregate every review, so committing them makes parallel PRs conflict; regenerate with `just function-requirements acceptance` or `sweep`. The tables on this page are dated snapshots. |
 
 Features are InterPro entries (from UniProt cross-references) and UniProt TRANSMEM
 features. The acceptance test fetches experimental annotations from QuickGO and

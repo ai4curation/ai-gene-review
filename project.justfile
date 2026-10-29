@@ -293,7 +293,8 @@ export-source-defects *args="":
 
 # Evaluate function requirement (NOT) rules: `acceptance` tests them against
 # experimental GOA (QuickGO + UniProt); `sweep` flags local GOA rows.
-# Writes reports/function-requirements/. See projects/FUNCTION_REQUIREMENT_RULES.md
+# Writes reports/function-requirements/ (git-ignored; regenerate, never commit).
+# See projects/FUNCTION_REQUIREMENT_RULES.md
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
