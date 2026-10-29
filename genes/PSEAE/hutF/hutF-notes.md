@@ -22,18 +22,23 @@
   [PMID:17128965 "The mutation of Glu-235, His-269, or Asp-320 resulted in the diminution of catalytic activity by two to six orders of magnitude."].
 - Structure with inhibitors; single zinc in the active site
   [PMID:25559274 "The active site of Pa5106 contains a single zinc atom that is coordinated by His-56, His-58, His-232, and Asp-320."].
-- Lessie and Neidhardt 1967 (the PseudoCAP IMP reference) measured histidase,
+- Lessie and Neidhardt 1967 (the PseudoCAP IMP reference; abstract only here,
+  PMC276695 is a scanned article and could not be read, rechecked 2026-10-29)
+  reports measurements of histidase,
   urocanase and "the capacity to degrade formiminoglutamate" (step IV) in
   P. aeruginosa extracts, with urocanase-deficient, auxotrophic and repression
   mutants [PMID:4290562 "Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine"].
   Two enzymes degrade FIGLU in PAO1 (HutF and HutE), so the step IV activity of a
-  1967 extract cannot be attributed to PA5106, and no hutF mutant is described.
+  1967 extract cannot be attributed to PA5106, and no hutF mutant appears in the
+  abstract. Because that second point rests on the abstract's silence, the
+  WRONG_REFERENCE defect is recorded as SUSPECTED rather than PROBABLE.
 
 ## Consistency with completed reviews
 
 - genes/PSEAE/hutH: same 1967 paper judged SOUND for histidase (step I assayed
   directly and only one functional HAL in PAO1); IMP should be IDA.
-- genes/PSEAE/hutI: same paper judged UNVERIFIABLE (step III never mentioned).
+- genes/PSEAE/hutI: same paper judged UNVERIFIABLE (step III not mentioned in the
+  abstract); its reference defects are likewise SUSPECTED.
 - hutF: step IV is mentioned, but only as a pooled extract activity that two
   different PAO1 enzymes provide, and without a hutF mutant. The IMP cannot tie the
   process to PA5106, so the verdict is UNVERIFIABLE, as for hutI. The claim itself is

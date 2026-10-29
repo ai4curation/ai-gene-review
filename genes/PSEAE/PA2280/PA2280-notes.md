@@ -46,3 +46,11 @@ worklist says 10 leaves in 7 taxa.
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
 | PTN008682975 | GO:0016655 oxidoreductase activity, acting on NAD(P)H, quinone or similar compound as acceptor | 1 (sole) | 10 (7 taxa); 9 in QuickGO | GO:0016655, IDA, PMID:22304305 (PseudoCAP) | WRONG | The cited paper characterises Synechocystis ArsH, not PA2280 (stated in the abstract), so as recorded the seed is a homolog transfer labelled IDA. The term itself is true for PA2280 by PMID:26621870 (recombinant P. aeruginosa ArsH has NQO activity), and quinone reductase activity is shared by characterised ArsH proteins, so the IBD's content is sound for the clade; the seed should be re-cited to PMID:26621870. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:22304305 has no PMC copy and the ACS page was not retrievable, so it
+remains abstract-only. Both WRONG_REFERENCE defects stay PROBABLE: the
+abstract states outright that the purified, assayed protein is Synechocystis
+ArsH. Not upgraded without the full text. Reference correctness changed
+from MISCITED to UNVERIFIED. No action changes.

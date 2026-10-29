@@ -44,13 +44,16 @@
 
 All six PseudoCAP IMP rows (catalase activity, pyoverdine biosynthesis,
 glycolipid biosynthesis, type IV pilus motility, swimming, swarming; dated
-2019-03-11) cite PMID:16824107 (Feissner et al. 2006, Kranz lab), an E. coli
-biochemical study of the CcmABC complex whose abstract and MeSH contain no
-P. aeruginosa mutant and none of these phenotypes. The phenotypes match,
+2019-03-11) cite PMID:16824107 (Feissner et al. 2006, Kranz lab). Its
+abstract describes biochemistry of the CcmABC complex without naming the
+organism; MeSH indexes Escherichia coli and not Pseudomonas, and neither
+abstract nor MeSH contains a P. aeruginosa mutant or any of these phenotypes. The phenotypes match,
 one for one, the abstract of Baert et al. 2008 (PMID:18174132), the
 P. aeruginosa ccmC mutant paper (swimming is not in that abstract; it may be
 in the full text). Most likely the PseudoCAP rows were keyed to the wrong
-PMID. Neither paper's full text was available here (both abstract-only).
+PMID. Neither paper's full text was available here (both abstract-only,
+no PMC copy; rechecked 2026-10-29), so the WRONG_REFERENCE defects stay
+PROBABLE, not CONFIRMED.
 
 ## PseudoCAP IBA-seed assessment
 

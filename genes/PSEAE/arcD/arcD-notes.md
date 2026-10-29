@@ -33,7 +33,7 @@
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN008675589 | GO:0022857 transmembrane transporter activity | 7 | 70 (24 taxa) | GO:0043858 arginine:ornithine antiporter activity, IMP, PMID:1311296 (PseudoCAP); also UniProt EXP PMID:2158926, PMID:8449902 | SOUND | The PseudoCAP paper directly measures arginine/ornithine exchange by ArcD (vesicles, proteoliposomes). The generic term is right for an APC-superfamily node that also holds E. coli AdiC, CadB, PotE, PuuP and YjeH seeds. The IMP code should be IDA (direct assay, not a mutant), which does not affect the IBD. |
+| PTN008675589 | GO:0022857 transmembrane transporter activity | 7 | 70 (24 taxa) | GO:0043858 arginine:ornithine antiporter activity, IMP, PMID:1311296 (PseudoCAP); also UniProt EXP PMID:2158926, PMID:8449902 | SOUND | The PseudoCAP paper directly measures arginine/ornithine exchange by ArcD (vesicles, proteoliposomes). The generic term is right for an APC-superfamily node that also holds E. coli AdiC, CadB, PotE, PuuP and YjeH seeds. The IMP code is probably IDA (the abstract describes direct assays, not a mutant; full text not read), which does not affect the IBD. |
 | PTN000208945 | GO:0043858 arginine:ornithine antiporter activity | 1 (sole seed) | 16 (11 taxa) | GO:0043858 arginine:ornithine antiporter activity, IMP, PMID:1311296 (PseudoCAP); also UniProt EXP PMID:8449902 and PMID:2158926 | SOUND | The seed is well supported for ArcD itself by two direct studies (PMID:1311296 reconstitution; PMID:8449902 exchange activity in P. aeruginosa). Of the two UniProt EXP rows, PMID:2158926 only proposes the antiport from a mutant phenotype, so it is the weakest support, but the IBD does not depend on it. The node term mostly suits the clade (ArcD-type exchangers from ADI-pathway organisms: Clostridium, Bacillus, Staphylococcus, Vibrio, Bradyrhizobium). One leaf is doubtful: C. trachomatis AaxC (O84379), whose C. pneumoniae ortholog is an arginine:agmatine exchanger insensitive to ornithine (PMID:18790867). That IBA is probably an over-propagation, and a NOT (or GO:0043862 arginine:agmatine antiporter activity) should be considered for the chlamydial subclade. |
 
 ## Decisions summary
@@ -48,7 +48,7 @@
   precursor metabolites and energy (IMP): ArcD supplies substrate and removes
   product of the ADI pathway but performs no catabolic step.
 - NEW: L-ornithine transmembrane transport (IDA, PMID:1311296).
-- Source defects: PSEUDOCAP WRONG_EVIDENCE_CODE CHECK (IMP should be IDA);
+- Source defects: PSEUDOCAP WRONG_EVIDENCE_CODE CHECK (PROBABLE; IMP should probably be IDA);
   UNIPROT WRONG_REFERENCE CHECK (SUSPECTED) on the EXP MF row citing PMID:2158926,
   which proposes but does not measure antiport; GO_CENTRAL CHECK (SUSPECTED) for
   C. trachomatis AaxC under PTN000208945.

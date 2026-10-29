@@ -55,7 +55,7 @@ IMP.
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
 | PTN002922793 | GO:0034599 cellular response to oxidative stress | 1 (sole) | 9 (8 taxa) | GO:0034599, IMP, PMID:25085734 (PseudoCAP) | SOUND | Seed is weak (overexpression protects only a katA mutant; no wild-type or loss-of-function phenotype), but MdaB does the protective chemistry itself, and the term holds for the clade on independent knockout evidence from H. pylori HP_0630 (PMID:14977943), a leaf of the node and a better seed. |
-| PTN002922793 | GO:0003955 NAD(P)H dehydrogenase (quinone) activity | 2 | 9 (8 taxa) | GO:0003955, IMP, PMID:25085734 (PseudoCAP) | SOUND | Purified enzyme reduces quinones (two-electron); the right evidence code is IDA, not IMP. Second seed E. coli MdaB. |
+| PTN002922793 | GO:0003955 NAD(P)H dehydrogenase (quinone) activity | 2 | 9 (8 taxa) | GO:0003955, IMP, PMID:25085734 (PseudoCAP) | SOUND | Purified enzyme reduces quinones (two-electron); the abstract supports IDA and describes no mutant, so IMP looks wrong (full text not read). Second seed E. coli MdaB. |
 
 ## Decisions summary
 
@@ -65,3 +65,11 @@ IMP.
   the PA enzyme's NADPH preference is not in the abstract.
 - KEEP_AS_NON_CORE: cellular response to oxidative stress (IBA, IMP).
 - PSEUDOCAP defect: MF row evidence code IMP should be IDA.
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:25085734 has no PMC copy; the Springer page is paywalled (abstract
+only). The WRONG_EVIDENCE_CODE defect (IMP -> IDA) rests on the abstract
+describing no PA2580 mutant, so it is lowered from PROBABLE to SUSPECTED; the
+abstract does positively support IDA (in vitro assays of the purified
+enzyme). No action changes.

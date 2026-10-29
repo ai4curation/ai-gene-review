@@ -44,8 +44,9 @@
   describes urocanase-deficient mutants, a histidine auxotroph, and catabolite-repression
   mutants, but no step III mutant.
 - The paper predates gene cloning, so it cannot link any activity to PA5092. Nothing
-  visible in it supports "imidazolonepropionase activity" or an IMP for hutI in
-  "L-histidine catabolic process". The claims themselves are almost certainly true; the
+  visible in the abstract supports "imidazolonepropionase activity" or an IMP for hutI in
+  "L-histidine catabolic process", but because that rests on the abstract's silence the
+  reference defects are recorded as SUSPECTED. The claims themselves are almost certainly true; the
   reference is what fails to support them.
 
 ## PseudoCAP IBA-seed assessment

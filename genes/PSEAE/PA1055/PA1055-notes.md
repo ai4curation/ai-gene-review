@@ -30,10 +30,10 @@ scanned PDF with no text, and the PDF could not be retrieved.
   a deletion of PA1054, complemented a growth defect in the presence of 0.2 M
   NaCl and a defect in Na+/H+ antiport activity of the Escherichia coli TO114
   mutant lacking the three major Na+/H+ antiporters"].
-- Only PA1054 was disrupted in P. aeruginosa [PMID:16030218 "We disrupted
+- The abstract reports disruption of PA1054 only in P. aeruginosa [PMID:16030218 "We disrupted
   PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance
   during growth, Na+ efflux, and pathogenicity in mice."].
-- So the paper has no PA1055 mutant. The IMP rows on PA1055 rest on a PA1054
+- So the abstract describes no PA1055 mutant (full text not read). The IMP rows on PA1055 rest on a PA1054
   mutant plus whole-cluster complementation. The cluster data do show that
   the six gene products together make a Na+/H+ antiporter that is largely
   responsible for Na+ extrusion.
@@ -69,5 +69,17 @@ scanned PDF with no text, and the PDF could not be retrieved.
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002160376 | GO:0015385 sodium:proton antiporter activity | 1 (sole) | 24 | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | No PA1055 mutant was made. The row rests on a PA1054 (shaA) disruption and on complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. That shows the Sha complex is a Na+/H+ antiporter, not that PA1055 enables antiport alone. Biologically right as `contributes_to` (a subunit of the antiporter complex), wrong as `enables` + IMP. The node is the LUCA root of the subunit-C family and includes MBH/MBX hydrogenase subunits (TK2086, TK1221), for which a stand-alone antiporter MF is doubtful. |
-| PTN002160376 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 24 | GO:0035725, IMP, PMID:16030218 | SOUND | As a subunit of the complex responsible for Na+ extrusion, PA1055 takes part in Na+ transmembrane transport. Structural work places MrpC at the putative Na+ pathway. The process fits the whole clade, MBH Na+-translocating modules included. Caveat: the IMP code is not right for PA1055, since no PA1055 mutant exists; filed as a CHECK. |
+| PTN002160376 | GO:0015385 sodium:proton antiporter activity | 1 (sole) | 24 | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | The abstract describes no PA1055 mutant. The row rests on a PA1054 (shaA) disruption and on complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. That shows the Sha complex is a Na+/H+ antiporter, not that PA1055 enables antiport alone. Biologically right as `contributes_to` (a subunit of the antiporter complex), wrong as `enables` + IMP. The node is the LUCA root of the subunit-C family and includes MBH/MBX hydrogenase subunits (TK2086, TK1221), for which a stand-alone antiporter MF is doubtful. |
+| PTN002160376 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 24 | GO:0035725, IMP, PMID:16030218 | SOUND | As a subunit of the complex responsible for Na+ extrusion, PA1055 takes part in Na+ transmembrane transport. Structural work places MrpC at the putative Na+ pathway. The process fits the whole clade, MBH Na+-translocating modules included. Caveat: the IMP code looks wrong for PA1055, since the abstract describes no PA1055 mutant; filed as a CHECK. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:16030218 is still abstract-only here: the PubMed MCP returns no body
+text (the PMC copy, PMC1196046, is a scanned PDF the publisher does not
+release as XML), and the PMC, Europe PMC and ASM pages were not retrievable.
+The WRONG_EVIDENCE_CODE (IMP) defects on this gene rest on the abstract not
+describing a mutant of this gene, so they are lowered from PROBABLE to
+SUSPECTED. The WRONG_QUALIFIER defects (enables vs contributes_to) rest on
+positive statements in other Mrp papers and stay PROBABLE. The reference
+correctness for PMID:16030218 is changed from MISCITED to UNVERIFIED.
+Annotation actions are unchanged.

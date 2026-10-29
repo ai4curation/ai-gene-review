@@ -26,9 +26,9 @@ scanned PDF with no text. The same paper also seeds the subunit C IBD
   a deletion of PA1054, complemented a growth defect in the presence of 0.2 M
   NaCl and a defect in Na+/H+ antiport activity of the Escherichia coli TO114
   mutant lacking the three major Na+/H+ antiporters"].
-- Only PA1054 was disrupted [PMID:16030218 "We disrupted PA1054 (a shaA
+- The abstract reports disruption of PA1054 only [PMID:16030218 "We disrupted PA1054 (a shaA
   homologue gene) and determined its effect on Na+ tolerance during growth,
-  Na+ efflux, and pathogenicity in mice."]. There is no PA1057 mutant.
+  Na+ efflux, and pathogenicity in mice."]. The abstract describes no PA1057 mutant (full text not read).
 
 ### MrpE in the family
 
@@ -61,5 +61,17 @@ scanned PDF with no text. The same paper also seeds the subunit C IBD
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002160407 | GO:0015385 sodium:proton antiporter activity | 1 (sole) | 20 | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | No PA1057 mutant was made. The evidence is a PA1054 disruption plus whole-cluster complementation of E. coli TO114, which shows the Sha complex is an antiporter. MrpE is an accessory subunit needed for complex assembly in B. pseudofirmus but reported dispensable for transport in B. subtilis. Right as `contributes_to`, not as `enables` + IMP. The LUCA-root node also covers MBH/MBX hydrogenase subunit A proteins (TK2080, TK1226). |
-| PTN002160407 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 20 | GO:0035725, IMP, PMID:16030218 | SOUND | As a subunit of the Na+-extruding complex, PA1057 takes part in Na+ transmembrane transport, and MrpE is proposed as the Na+ entry route. The process fits the clade, MBH Na+ modules included. Caveat: IMP is the wrong code for PA1057 (no mutant); filed as a CHECK. |
+| PTN002160407 | GO:0015385 sodium:proton antiporter activity | 1 (sole) | 20 | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | The abstract describes no PA1057 mutant. The evidence is a PA1054 disruption plus whole-cluster complementation of E. coli TO114, which shows the Sha complex is an antiporter. MrpE is an accessory subunit needed for complex assembly in B. pseudofirmus but reported dispensable for transport in B. subtilis. Right as `contributes_to`, not as `enables` + IMP. The LUCA-root node also covers MBH/MBX hydrogenase subunit A proteins (TK2080, TK1226). |
+| PTN002160407 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 20 | GO:0035725, IMP, PMID:16030218 | SOUND | As a subunit of the Na+-extruding complex, PA1057 takes part in Na+ transmembrane transport, and MrpE is proposed as the Na+ entry route. The process fits the clade, MBH Na+ modules included. Caveat: IMP looks like the wrong code for PA1057 (no mutant in the abstract); filed as a CHECK. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:16030218 is still abstract-only here: the PubMed MCP returns no body
+text (the PMC copy, PMC1196046, is a scanned PDF the publisher does not
+release as XML), and the PMC, Europe PMC and ASM pages were not retrievable.
+The WRONG_EVIDENCE_CODE (IMP) defects on this gene rest on the abstract not
+describing a mutant of this gene, so they are lowered from PROBABLE to
+SUSPECTED. The WRONG_QUALIFIER defects (enables vs contributes_to) rest on
+positive statements in other Mrp papers and stay PROBABLE. The reference
+correctness for PMID:16030218 is changed from MISCITED to UNVERIFIED.
+Annotation actions are unchanged.

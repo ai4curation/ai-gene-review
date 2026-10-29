@@ -46,11 +46,13 @@
 
 - Webb, Claas & Downs 1997 J Bacteriol. The title and abstract are about
   Salmonella typhimurium: [PMID:9209060 "Thiamine pyrophosphate (TPP) is a required cofactor in Salmonella typhimurium"].
-  Full text is not in PMC text form (PMC179266 returned no body). The study is
-  genetic (thiI mutant, thiazole requirement, mapping, ORF sequence,
-  transcriptional regulation). Nothing in the abstract or title mentions
-  P. aeruginosa, and a 1997 Salmonella genetics paper cannot have assayed
-  PA5118 (PAO1 genome published 2000). The PseudoCAP IDA is therefore an
+  Full text is not in PMC text form (PMC179266 is scanned page images; not
+  read). From the abstract the study is genetic (thiI mutant, thiazole
+  requirement, mapping, ORF sequence, transcriptional regulation). The title
+  and abstract name Salmonella typhimurium as the organism and mention no
+  P. aeruginosa work, and the paper predates the PAO1 genome (2000), so it is
+  very unlikely to have assayed PA5118 (audit 2026-10-29: the evidence-code
+  defect stays CONFIRMED on the organism stated in the abstract). The PseudoCAP IDA is therefore an
   orthology transfer coded as direct evidence; the correct code would be ISS
   (with Salmonella ThiI), or the row should be dropped.
 - The term itself is plausible for PA5118, because PA5118 has the rhodanese

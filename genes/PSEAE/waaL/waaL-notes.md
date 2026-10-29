@@ -38,6 +38,13 @@ publications).
   in P. aeruginosa did not abrogate swimming motility nor ability of the bacteria to form
   biofilms"]. Annotations to pilus assembly, flagellum assembly and the two motility processes are
   indirect phenotypes.
+- Audit 2026-10-29: the full text of PMID:15838026 (PMC1082828, PMC HTML) was read. Its pilus,
+  flagellum and motility data are all mutant phenotypes (TEM counts of piliated/flagellated cells,
+  twitching and swimming assays, complementation), and the Discussion attributes them to outer
+  membrane disturbance and reduced surface wettability. The four PSEUDOCAP WRONG_TERM defects on
+  these rows are therefore raised to CONFIRMED. The ligase activity defect (PMID:17697256) is
+  lowered to PROBABLE: it rests on the later abstract (PMID:21983211) contradicting the 2007 ATP
+  hydrolysis claim, and neither full text was read.
 
 ## Process granularity
 

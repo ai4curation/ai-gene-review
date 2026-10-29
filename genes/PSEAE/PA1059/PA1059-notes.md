@@ -20,10 +20,9 @@ with the completed PA1055 (ShaC) and PA1057 (ShaE) reviews.
 ### What PMID:16030218 shows
 
 - Whole-cluster complementation of E. coli TO114, lost when PA1054 is
-  deleted; only PA1054 disrupted [PMID:16030218 "We disrupted PA1054 (a shaA
+  deleted; the abstract reports disruption of PA1054 only [PMID:16030218 "We disrupted PA1054 (a shaA
   homologue gene) and determined its effect on Na+ tolerance during growth,
-  Na+ efflux, and pathogenicity in mice."]. No PA1059 mutant, so IMP cannot
-  apply to PA1059.
+  Na+ efflux, and pathogenicity in mice."]. The abstract describes no PA1059 mutant, so IMP looks wrong for PA1059 (full text not read).
 
 ### MrpG biology (family)
 
@@ -60,4 +59,16 @@ IBA from this node. Includes Thermococcus MBH subunit C proteins TK2082
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002162936 | GO:0015385 sodium:proton antiporter activity | 1 (sole) | 19 (GO_Central; plus 263 TreeGrafter) | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | No PA1059 mutant was made. The evidence is a PA1054 disruption plus whole-cluster complementation of E. coli TO114. Right as `contributes_to` (MrpG Pro81 is needed for Mrp antiport), not as `enables` + IMP. The LUCA-root node also covers MBH/MBX hydrogenase subunit C proteins (TK2082, TK1224), for which a stand-alone antiporter MF is doubtful. |
+| PTN002162936 | GO:0015385 sodium:proton antiporter activity | 1 (sole) | 19 (GO_Central; plus 263 TreeGrafter) | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | The abstract describes no PA1059 mutant. The evidence is a PA1054 disruption plus whole-cluster complementation of E. coli TO114. Right as `contributes_to` (MrpG Pro81 is needed for Mrp antiport), not as `enables` + IMP. The LUCA-root node also covers MBH/MBX hydrogenase subunit C proteins (TK2082, TK1224), for which a stand-alone antiporter MF is doubtful. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:16030218 is still abstract-only here: the PubMed MCP returns no body
+text (the PMC copy, PMC1196046, is a scanned PDF the publisher does not
+release as XML), and the PMC, Europe PMC and ASM pages were not retrievable.
+The WRONG_EVIDENCE_CODE (IMP) defects on this gene rest on the abstract not
+describing a mutant of this gene, so they are lowered from PROBABLE to
+SUSPECTED. The WRONG_QUALIFIER defects (enables vs contributes_to) rest on
+positive statements in other Mrp papers and stay PROBABLE. The reference
+correctness for PMID:16030218 is changed from MISCITED to UNVERIFIED.
+Annotation actions are unchanged.

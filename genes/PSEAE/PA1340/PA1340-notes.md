@@ -65,7 +65,7 @@ glutamine evidence is the partial Biolog phenotype in PMID:18833300.
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
 | PTN000770157 | GO:0006865 amino acid transport | 5 | 84 (28 taxa) | GO:0006868 IMP PMID:18310026; GO:0042940 IMP PMID:25082951; GO:0051938 IMP PMID:18833300; GO:1903803 IMP PMID:18833300 (PseudoCAP) | SOUND | General term for a HisMQ-subfamily permease clade; it is supported by the sound PA1340 L-Glu rows and by E. coli seeds, whatever the status of the glutamine row. |
-| PTN000764525 | GO:0006868 L-glutamine transport | 1 (sole) | 6 (5 taxa) | GO:0006868, IMP, PMID:18310026 (PseudoCAP) | WRONG | The cited paper studies P. putida aatJ/aatP mutants, not PA1340 or any GltK-type permease, so the IMP does not apply. PA1340's own Gln phenotype (PMID:18833300) is partial, and Gln is at most a low-affinity secondary substrate. The node is a GltK clade of glutamate/aspartate importers; L-glutamate import (as on the sister GltJ node) would fit. |
+| PTN000764525 | GO:0006868 L-glutamine transport | 1 (sole) | 6 (5 taxa) | GO:0006868, IMP, PMID:18310026 (PseudoCAP) | WRONG | The cited paper's abstract describes P. putida aatJ/aatP mutants, not PA1340 or any GltK-type permease, so the IMP is unlikely to apply (full text not read). PA1340's own Gln phenotype (PMID:18833300) is partial, and Gln is at most a low-affinity secondary substrate. The node is a GltK clade of glutamate/aspartate importers; L-glutamate import (as on the sister GltJ node) would fit. |
 
 Defects filed: PSEUDOCAP WRONG_EVIDENCE_CODE (CHECK) on the GO:0006868 IMP
 row (P. putida paper); GO_CENTRAL WRONG_TERM (CHECK, suggested GO:0051938) for
@@ -84,3 +84,14 @@ import is kept as non-core.
   ATPase-coupled L-glutamate transmembrane transporter activity; membrane ->
   plasma membrane; ABC transporter complex -> substrate-binding
   subunit-containing ABC transporter complex.
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:18310026 has no PMC copy and the publisher page was not retrievable,
+so it remains abstract-only. Both defects stay PROBABLE: the abstract states
+outright that the system studied is P. putida KT2440 AatJMQP (PP1071-PP1068)
+with aatJ and aatP mutants. That would allow CONFIRMED under the protocol,
+but without reading the full text the call is not upgraded. Wording that
+PA1340 "was not tested" is now limited to what the abstract reports, and the
+reference correctness is changed from MISCITED to UNVERIFIED. No action
+changes.

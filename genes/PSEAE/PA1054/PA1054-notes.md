@@ -78,5 +78,14 @@ hydrogenase-named leaf (Sulfolobus SSO1021 "HycC").
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN000511949 | GO:0015385 sodium:proton antiporter activity | 2 | 16 | GO:0015385, IMP, PMID:16030218 | SOUND | PA1054 is the one sha gene the paper deleted: the cluster lacking PA1054 no longer restores antiport in E. coli TO114, and the P. aeruginosa disruptant loses Na+ tolerance and Na+ efflux. The node is the MrpA family root (no MBH members; one HycC-named Sulfolobus leaf). Caveat: activity is of the complex (no Mrp shows antiport with MrpA alone), so the qualifier should be `contributes_to`, for the seed and for the IBD. A second, independent seed (B. subtilis MrpA, IMP) supports the node. |
+| PTN000511949 | GO:0015385 sodium:proton antiporter activity | 2 | 16 | GO:0015385, IMP, PMID:16030218 | SOUND | PA1054 is the one sha gene the abstract reports deleting: the cluster lacking PA1054 no longer restores antiport in E. coli TO114, and the P. aeruginosa disruptant loses Na+ tolerance and Na+ efflux. The node is the MrpA family root (no MBH members; one HycC-named Sulfolobus leaf). Caveat: activity is of the complex (no Mrp shows antiport with MrpA alone), so the qualifier should be `contributes_to`, for the seed and for the IBD. A second, independent seed (B. subtilis MrpA, IMP) supports the node. |
 | PTN000511949 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 16 | GO:0035725, IMP, PMID:16030218 | SOUND | Direct mutant evidence: PA1054 disruption decreases Na+ efflux. MrpA carries putative ion translocation pathways, and the process fits all MrpA-family members. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:16030218 is still abstract-only (PubMed MCP returns no body text;
+PMC1196046 is a scanned PDF not released as XML; PMC, Europe PMC and ASM
+pages not retrievable). The two WRONG_QUALIFIER defects rest on positive
+statements in other Mrp papers (no antiport with MrpA alone; complex
+required) and stay PROBABLE. Wording that PA1054 is the only sha gene
+mutated is now limited to what the abstract reports. No action changes.

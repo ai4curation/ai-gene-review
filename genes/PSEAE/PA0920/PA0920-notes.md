@@ -55,7 +55,7 @@ MCP returned no PMC full text for PMC4553816 beyond the abstract and Significanc
 No. GO:0055091 is the maintenance of a steady-state phospholipid level. PA0920 performs one biosynthetic
 step: it transfers alanine from Ala-tRNA(Ala) to PG, making A-PG. The steady state (acid-dependent level of
 A-PG) emerges from the synthase together with acid-regulated transcription and the PA0919 hydrolase; the
-"lipid homeostasis" wording in the cited paper is framing, not a result. The gene's own process is A-PG
+"lipid homeostasis" wording in the cited paper's abstract is framing, not a reported result (full text not read). The gene's own process is A-PG
 synthesis, i.e. GO:0008654 phospholipid biosynthetic process (no aminoacyl-PG-specific GO term exists; an
 NTR could be requested). The homeostasis term is therefore a consequence-level over-annotation for PA0920.
 
@@ -84,6 +84,20 @@ upper-node terms.
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002162750 | GO:0055091 phospholipid homeostasis | 1 (sole) | 14 (12 taxa) in worklist; 26 in QuickGO | GO:0055091, IDA, PMID:26261323 (PseudoCAP) | WRONG | The paper is a crystal structure and in vitro substrate-recognition study; it shows no homeostasis. PA0920's own process is A-PG biosynthesis; homeostasis is a system-level consequence involving the PA0919 hydrolase. The node also contains ergosteryl-glycine synthases (ErgS) that do not modify phospholipids, so the term is wrong for part of the clade even if read loosely. |
+| PTN002162750 | GO:0055091 phospholipid homeostasis | 1 (sole) | 14 (12 taxa) in worklist; 26 in QuickGO | GO:0055091, IDA, PMID:26261323 (PseudoCAP) | WRONG | The abstract describes a crystal structure and in vitro substrate-recognition study and no homeostasis data (full text not read). PA0920's own process is A-PG biosynthesis; homeostasis is a system-level consequence involving the PA0919 hydrolase. The node also contains ergosteryl-glycine synthases (ErgS) that do not modify phospholipids, so the term is wrong for part of the clade even if read loosely. |
 | PTN002162750 | GO:0016755 aminoacyltransferase activity | 1 (sole) | 12 (10 taxa) in worklist; 24 in QuickGO | GO:0047637, IDA, PMID:26261323 (PseudoCAP) | SOUND | Direct in vitro tRNA-dependent alanylation of PG by the A-PGS catalytic domain (also PMID:19087229, PMID:21392131). The generic aminoacyl-transfer term fits every known member (A-PGS, L-PGS, ErgS all transfer an aminoacyl group from aminoacyl-tRNA to a lipid). |
 | PTN005059806 | GO:0047637 phosphatidylglycerol alanyltransferase activity | 1 (sole) | 2 (2 taxa) in worklist; 55 in QuickGO | GO:0047637, IDA, PMID:26261323 (PseudoCAP) | SOUND | Seed is direct biochemistry, and A-PGS sequences form a recognisable group (PMID:22267511). Caveat: Arendt et al. report that A-PG vs L-PG specificity is not marked by a sequence motif, so with one seed and now 55 leaves the alanyl-specific node term should be re-checked against the nine orthologs whose specificity that paper determined. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:26261323 is still abstract-only: the PubMed MCP returns abstract and
+Significance only for PMC4553816, and PMC/Europe PMC/PNAS full text was not
+retrievable. The PSEUDOCAP WRONG_TERM defect (homeostasis IDA -> phospholipid
+biosynthetic process) rests on the abstract describing no homeostasis assay,
+so it is lowered from PROBABLE to SUSPECTED. The GO_CENTRAL defect on
+PTN002162750 stays PROBABLE: besides the seed paper, it rests on positive
+facts (QuickGO leaves include sterol-modifying ErgS enzymes). The UNIPROT EC
+defect stays CONFIRMED: the PMID:19087229 abstract states the decisive fact
+outright (DeltaPA0920 loses A-PG; the protein was named A-PG synthase).
+PMID:26261323 reference correctness changed from MISCITED to UNVERIFIED.
+No action changes.

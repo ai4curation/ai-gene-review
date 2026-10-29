@@ -21,10 +21,9 @@ with the completed PA1055 (ShaC) and PA1057 (ShaE) reviews.
 ### What PMID:16030218 shows
 
 - Whole-cluster complementation of E. coli TO114, lost when PA1054 is
-  deleted; only PA1054 disrupted in P. aeruginosa [PMID:16030218 "We
+  deleted; the abstract reports disruption of PA1054 only in P. aeruginosa [PMID:16030218 "We
   disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+
-  tolerance during growth, Na+ efflux, and pathogenicity in mice."]. So
-  there is no PA1056 mutant: IMP cannot apply to PA1056.
+  tolerance during growth, Na+ efflux, and pathogenicity in mice."]. So the abstract describes no PA1056 mutant, and IMP looks wrong for PA1056 (full text not read).
 
 ### MrpD biology (family)
 
@@ -72,5 +71,17 @@ Thermotoga TM_1105/TM_1211, Rhodopirellula RB1430/RB1431.
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN001865541 | GO:0015385 sodium:proton antiporter activity | 2 | 16 | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | No PA1056 mutant was made; the evidence is a PA1054 disruption plus whole-cluster complementation of E. coli TO114. Right only as `contributes_to` (subunit of the antiporter complex). The IBD itself survives: an independent B. subtilis MrpD IMP seed supports it, and the bacterial node excludes the archaeal MBH subunits. The IBD qualifier should still be `contributes_to`. |
-| PTN001865541 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 16 | GO:0035725, IMP, PMID:16030218 | SOUND | As a subunit of the complex responsible for Na+ extrusion, PA1056 takes part in Na+ transmembrane transport; structural models couple MrpD protonation to Na+ transfer. The process fits the bacterial MrpD clade. Caveat: IMP is the wrong code for PA1056; filed as a CHECK. |
+| PTN001865541 | GO:0015385 sodium:proton antiporter activity | 2 | 16 | GO:0015385, IMP, PMID:16030218 | INDIRECT-PHENOTYPE | The abstract describes no PA1056 mutant; the evidence is a PA1054 disruption plus whole-cluster complementation of E. coli TO114. Right only as `contributes_to` (subunit of the antiporter complex). The IBD itself survives: an independent B. subtilis MrpD IMP seed supports it, and the bacterial node excludes the archaeal MBH subunits. The IBD qualifier should still be `contributes_to`. |
+| PTN001865541 | GO:0035725 sodium ion transmembrane transport | 1 (sole) | 16 | GO:0035725, IMP, PMID:16030218 | SOUND | As a subunit of the complex responsible for Na+ extrusion, PA1056 takes part in Na+ transmembrane transport; structural models couple MrpD protonation to Na+ transfer. The process fits the bacterial MrpD clade. Caveat: IMP looks like the wrong code for PA1056 (no mutant in the abstract); filed as a CHECK. |
+
+## Audit 2026-10-29: confidence matched to what was read
+
+PMID:16030218 is still abstract-only here: the PubMed MCP returns no body
+text (the PMC copy, PMC1196046, is a scanned PDF the publisher does not
+release as XML), and the PMC, Europe PMC and ASM pages were not retrievable.
+The WRONG_EVIDENCE_CODE (IMP) defects on this gene rest on the abstract not
+describing a mutant of this gene, so they are lowered from PROBABLE to
+SUSPECTED. The WRONG_QUALIFIER defects (enables vs contributes_to) rest on
+positive statements in other Mrp papers and stay PROBABLE. The reference
+correctness for PMID:16030218 is changed from MISCITED to UNVERIFIED.
+Annotation actions are unchanged.
