@@ -36,7 +36,7 @@ import json
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, NamedTuple, Set, Tuple
 
 import yaml
 
@@ -60,6 +60,7 @@ MOD_TO_TAXON: Dict[str, Tuple[str, str]] = {
     "RAP2022-09-01": ("39947", "Oryza sativa"),
 }
 
+# Only donor taxa without a local `genes/<ORG>/*/*-uniprot.txt` file need fallback OC lineages.
 FALLBACK_TAXON_LINEAGES: Dict[str, List[str]] = {
     "402676": [
         "Eukaryota",
@@ -85,58 +86,46 @@ FALLBACK_TAXON_LINEAGES: Dict[str, List[str]] = {
         "Pipidae",
         "Xenopus",
     ],
-    "8364": [
-        "Eukaryota",
-        "Metazoa",
-        "Chordata",
-        "Craniata",
-        "Vertebrata",
-        "Euteleostomi",
-        "Amphibia",
-        "Batrachia",
-        "Anura",
-        "Pipidae",
-        "Xenopus",
-    ],
-    "39947": [
-        "Eukaryota",
-        "Viridiplantae",
-        "Streptophyta",
-        "Embryophyta",
-        "Tracheophyta",
-        "Spermatophyta",
-        "Magnoliopsida",
-        "Liliopsida",
-        "Poales",
-        "Poaceae",
-        "BOP clade",
-        "Oryzoideae",
-        "Oryzeae",
-        "Oryzinae",
-        "Oryza",
-    ],
 }
 
 PAINT_TAXON_NAMES: Dict[str, str] = {
     "": "LUCA / Root",
+    "taxon:": "LUCA / Root",
     "taxon:131567": "cellular organisms",
     "taxon:2": "Bacteria",
     "taxon:2157": "Archaea",
     "taxon:2759": "Eukaryota",
     "taxon:33154": "Opisthokonta",
     "taxon:4751": "Fungi",
+    "taxon:451864": "Dikarya",
     "taxon:4890": "Ascomycota",
+    "taxon:147538": "Pezizomycotina",
+    "taxon:4892": "Saccharomycetales",
+    "taxon:2952368": "Saccharomyceta",
+    "taxon:4893": "Saccharomycetaceae",
+    "taxon:4895": "Schizosaccharomycetaceae",
+    "taxon:554915": "Amoebozoa",
+    "taxon:5782": "Dictyostelia",
+    "taxon:2698737": "Sar",
+    "taxon:4734": "Peronosporales",
+    "taxon:5654": "Trypanosomatidae",
     "taxon:33208": "Metazoa",
     "taxon:6072": "Eumetazoa",
     "taxon:33213": "Bilateria",
     "taxon:33317": "Protostomia",
     "taxon:1206794": "Ecdysozoa",
+    "taxon:6237": "Caenorhabditis",
+    "taxon:6656": "Arthropoda",
+    "taxon:33392": "Endopterygota",
+    "taxon:7147": "Diptera",
     "taxon:33511": "Deuterostomia",
     "taxon:7711": "Chordata",
     "taxon:7742": "Vertebrata",
     "taxon:7776": "Gnathostomata",
     "taxon:117570": "Teleostomi",
     "taxon:117571": "Euteleostomi",
+    "taxon:32443": "Teleostei",
+    "taxon:41665": "Clupeocephala",
     "taxon:8287": "Sarcopterygii",
     "taxon:32523": "Tetrapoda",
     "taxon:32524": "Amniota",
@@ -145,21 +134,41 @@ PAINT_TAXON_NAMES: Dict[str, str] = {
     "taxon:9347": "Eutheria",
     "taxon:1437010": "Boreoeutheria",
     "taxon:314146": "Euarchontoglires",
+    "taxon:9526": "Catarrhini",
+    "taxon:207598": "Homininae",
     "taxon:314147": "Glires",
     "taxon:9989": "Rodentia",
+    "taxon:39107": "Murinae",
     "taxon:33090": "Viridiplantae",
     "taxon:35493": "Streptophyta",
     "taxon:3193": "Embryophyta",
     "taxon:58023": "Tracheophyta",
     "taxon:3398": "Magnoliopsida",
+    "taxon:1437183": "Mesangiospermae",
+    "taxon:71240": "eudicotyledons",
+    "taxon:1437201": "Pentapetalae",
+    "taxon:71275": "rosids",
+    "taxon:91836": "malvids",
+    "taxon:3700": "Brassicaceae",
+    "taxon:4447": "Liliopsida",
+    "taxon:147369": "BOP clade",
+    "taxon:4479": "Poaceae",
     "taxon:1224": "Pseudomonadota",
     "taxon:1236": "Gammaproteobacteria",
+    "taxon:543": "Enterobacteriaceae",
+    "taxon:1783272": "Terrabacteria group",
+    "taxon:1239": "Bacillota",
+    "taxon:1385": "Bacillales",
+    "taxon:2037": "Actinomycetales",
+    "taxon:1117": "Cyanobacteriota",
+    "taxon:28890": "Methanobacteriota",
 }
 
 # Approximate clade depth on the vertebrate-calibrated UniProt OC scale.
 # Every taxon key in PAINT_TAXON_NAMES has a corresponding entry here.
 PAINT_TAXON_DEPTH: Dict[str, int] = {
     "": 0,
+    "taxon:": 0,
     "taxon:131567": 0,
     "taxon:2": 1,
     "taxon:2157": 1,
@@ -167,25 +176,58 @@ PAINT_TAXON_DEPTH: Dict[str, int] = {
     "taxon:33154": 1,
     "taxon:33090": 2,
     "taxon:4751": 2,
+    "taxon:554915": 2,
+    "taxon:2698737": 2,
     "taxon:33208": 2,
     "taxon:1224": 2,
+    "taxon:1783272": 2,
+    "taxon:1239": 2,
+    "taxon:1117": 2,
+    "taxon:28890": 2,
+    "taxon:451864": 3,
     "taxon:4890": 3,
+    "taxon:5782": 3,
     "taxon:6072": 3,
     "taxon:33213": 3,
     "taxon:35493": 3,
     "taxon:1236": 3,
+    "taxon:2037": 3,
+    "taxon:147538": 4,
+    "taxon:4892": 4,
+    "taxon:2952368": 4,
+    "taxon:4895": 4,
+    "taxon:4734": 4,
+    "taxon:5654": 4,
     "taxon:33511": 4,
     "taxon:33317": 4,
     "taxon:1206794": 4,
     "taxon:3193": 4,
+    "taxon:1385": 4,
+    "taxon:4893": 5,
+    "taxon:6656": 5,
     "taxon:7711": 5,
     "taxon:58023": 5,
+    "taxon:543": 5,
+    "taxon:6237": 6,
+    "taxon:33392": 6,
+    "taxon:7147": 6,
     "taxon:3398": 6,
+    "taxon:1437183": 6,
+    "taxon:71240": 6,
+    "taxon:1437201": 6,
+    "taxon:71275": 6,
+    "taxon:91836": 6,
+    "taxon:4447": 6,
+    "taxon:147369": 6,
     "taxon:7742": 6,
     "taxon:7776": 6,
     "taxon:117570": 6,
     "taxon:117571": 6,
     "taxon:8287": 6,
+    "taxon:32443": 7,
+    "taxon:41665": 7,
+    "taxon:3700": 7,
+    "taxon:4479": 7,
     "taxon:32523": 7,
     "taxon:32524": 8,
     "taxon:40674": 9,
@@ -193,8 +235,11 @@ PAINT_TAXON_DEPTH: Dict[str, int] = {
     "taxon:9347": 9,
     "taxon:1437010": 9,
     "taxon:314146": 9,
+    "taxon:9526": 10,
+    "taxon:207598": 10,
     "taxon:314147": 10,
     "taxon:9989": 10,
+    "taxon:39107": 10,
 }
 
 MOD_XREFS: Dict[str, Tuple[str, int]] = {
@@ -278,13 +323,14 @@ def classify_evolutionary_span(
         )
     if lca in (
         "Bacteria",
+        "Archaea",
         "Bacillati",
         "Gammaproteobacteria",
         "Enterobacteriaceae",
         "Actinomycetes",
     ):
-        if lca == "Bacteria":
-            return (5, "Tier 5: Deep Bacterial Split (Cross-Phylum Bacteria)")
+        if lca in ("Bacteria", "Archaea"):
+            return (5, f"Tier 5: Deep Prokaryotic Split ({lca})")
         return (3, f"Tier 3: Intra-Phylum Bacteria ({lca})")
     if lca == "Metazoa":
         return (
@@ -293,10 +339,11 @@ def classify_evolutionary_span(
         )
     if lca in ("Ecdysozoa", "Arthropoda"):
         return (3, f"Tier 3: Intra-Protostomia ({lca}: Worm <-> Fly / Insect)")
-    if lca in ("Ascomycota", "Saccharomycotina", "Pezizomycotina"):
+    if lca in ("Dikarya", "Ascomycota", "Saccharomycotina", "Pezizomycotina"):
+        is_tier3 = lca in ("Dikarya", "Ascomycota")
         return (
-            3 if lca == "Ascomycota" else 2,
-            f"Tier {'3' if lca == 'Ascomycota' else '2'}: Fungal Split ({lca})",
+            3 if is_tier3 else 2,
+            f"Tier {'3' if is_tier3 else '2'}: Fungal Split ({lca})",
         )
     if lca in (
         "Viridiplantae",
@@ -316,11 +363,33 @@ def classify_evolutionary_span(
         )
     if lca in (
         "Eutheria",
+        "Boreoeutheria",
         "Euarchontoglires",
-        "Murinae",
+        "Primates",
+        "Haplorrhini",
+        "Simiiformes",
+        "Catarrhini",
         "Hominidae",
+        "Homininae",
+        "Homo",
+        "Glires",
+        "Rodentia",
+        "Muroidea",
+        "Muridae",
+        "Murinae",
+        "Mus",
+        "Rattus",
         "Caenorhabditis",
+        "Drosophila",
+        "Saccharomyces",
+        "Schizosaccharomyces",
+        "Candida",
         "Aspergillus",
+        "Arabidopsis",
+        "Oryza",
+        "Bacillus",
+        "Mycobacterium",
+        "Escherichia",
     ):
         return (1, f"Tier 1: Close Clade ({lca}, e.g. Rodent <-> Primate)")
     return (2, f"Tier 2: Other ({lca})")
@@ -421,7 +490,6 @@ def build_taxon_lineages() -> Dict[str, List[str]]:
                 taxid, _, oc_list, _, _ = read_uniprot_lineage(up_path)
                 if taxid and oc_list and taxid not in tax_lineage:
                     tax_lineage[taxid] = oc_list
-                    break
     return tax_lineage
 
 
@@ -744,24 +812,35 @@ def scan_corpus() -> Tuple[
     )
 
 
-def _format_rate_cols(sub: List[Dict[str, Any]]) -> Tuple[int, int, int, int, float, float, float, float]:
+class RateStats(NamedTuple):
+    keep: int
+    fail: int
+    ref: int
+    rem: int
+    p_fail: float
+    p_ref: float
+    p_down: float
+    p_rem: float
+
+
+def _format_rate_cols(sub: List[Dict[str, Any]]) -> RateStats:
     n = len(sub)
     if n == 0:
-        return (0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0)
+        return RateStats(0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0)
     keep = sum(1 for r in sub if r["action"] in RETAIN_ACTIONS)
     fail = sum(1 for r in sub if r["action"] in FAILURE_ACTIONS)
     ref = sum(1 for r in sub if r["action"] in REFINEMENT_ACTIONS)
     rem = sum(1 for r in sub if r["action"] == "REMOVE")
     down = fail + ref
-    return (
-        keep,
-        fail,
-        ref,
-        rem,
-        100.0 * fail / n,
-        100.0 * ref / n,
-        100.0 * down / n,
-        100.0 * rem / n,
+    return RateStats(
+        keep=keep,
+        fail=fail,
+        ref=ref,
+        rem=rem,
+        p_fail=100.0 * fail / n,
+        p_ref=100.0 * ref / n,
+        p_down=100.0 * down / n,
+        p_rem=100.0 * rem / n,
     )
 
 
@@ -861,11 +940,15 @@ def print_summary(
     if unk_steps:
         print(f"Excluded (unknown donor lineage, total_tax_steps < 0): n={len(unk_steps)}")
 
-    print("\n2. EXCESS PAINT NODE DEPTH ON CLOSE VERTEBRATE PAIRS (d_LCA >= 6)")
+    close_pairs = [r for r in rated if r["lca_depth"] >= 6]
+    print(
+        f"\n2. EXCESS PAINT NODE DEPTH ON CLOSE TAXONOMIC PAIRS "
+        f"(d_LCA >= 6, total n={len(close_pairs):,})"
+    )
     print("-" * 116)
     for label, pred in [
         (
-            "Scoped within Vertebrata (d_PTN >= 6)",
+            "Scoped within clade / Vertebrata (d_PTN >= 6)",
             lambda r: r["lca_depth"] >= 6
             and r["paint_taxon"] is not None
             and PAINT_TAXON_DEPTH.get(r["paint_taxon"], -1) >= 6,
@@ -883,6 +966,12 @@ def print_summary(
             and 0 <= PAINT_TAXON_DEPTH.get(r["paint_taxon"], -1) <= 1,
         ),
         (
+            "Unmapped PAINT taxon (paint_taxon not in PAINT_TAXON_DEPTH)",
+            lambda r: r["lca_depth"] >= 6
+            and r["paint_taxon"] is not None
+            and PAINT_TAXON_DEPTH.get(r["paint_taxon"], -1) < 0,
+        ),
+        (
             "Uncached PAINT family (no local *-paint.tsv record)",
             lambda r: r["lca_depth"] >= 6 and r["paint_taxon"] is None,
         ),
@@ -892,7 +981,7 @@ def print_summary(
             continue
         _keep, fail, ref, rem, p_fail, p_ref, p_down, p_rem = _format_rate_cols(sub)
         print(
-            f"{label:<60} | n={len(sub):>4} | Fail: {fail:>3} ({p_fail:>5.1f}%) | "
+            f"{label:<66} | n={len(sub):>4} | Fail: {fail:>3} ({p_fail:>5.1f}%) | "
             f"Refn: {ref:>3} ({p_ref:>5.1f}%) | Down: {p_down:>5.1f}% | REM: {rem:>3} ({p_rem:>4.1f}%)"
         )
 
