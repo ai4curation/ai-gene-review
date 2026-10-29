@@ -89,8 +89,8 @@ FALLBACK_TAXON_LINEAGES: Dict[str, List[str]] = {
 }
 
 PAINT_TAXON_NAMES: Dict[str, str] = {
-    "": "LUCA / Root",
-    "taxon:": "LUCA / Root",
+    "": "Unrecorded PAINT taxon",
+    "taxon:": "Unrecorded PAINT taxon",
     "taxon:131567": "cellular organisms",
     "taxon:2": "Bacteria",
     "taxon:2157": "Archaea",
@@ -165,10 +165,10 @@ PAINT_TAXON_NAMES: Dict[str, str] = {
 }
 
 # Approximate clade depth on the vertebrate-calibrated UniProt OC scale.
-# Every taxon key in PAINT_TAXON_NAMES has a corresponding entry here.
+# Every explicit `taxon:<id>` key in PAINT_TAXON_NAMES has a corresponding entry here;
+# blank `""` / `"taxon:"` strings (where no taxon constraint was recorded in the PAINT GAF)
+# are intentionally omitted so they fall into the unrecorded/unmapped bucket.
 PAINT_TAXON_DEPTH: Dict[str, int] = {
-    "": 0,
-    "taxon:": 0,
     "taxon:131567": 0,
     "taxon:2": 1,
     "taxon:2157": 1,
@@ -260,7 +260,7 @@ MOD_XREFS: Dict[str, Tuple[str, int]] = {
 TIER_NAMES: Dict[int, str] = {
     0: "Tier 0: Unknown / Unresolved Donor Lineage",
     1: "Tier 1: Close Clade (e.g. Rodent <-> Primate, Murinae, Caenorhabditis)",
-    2: "Tier 2: Order / Subphylum Split (e.g. Saccharomycotina, Magnoliopsida)",
+    2: "Tier 2: Intermediate / Unenumerated Clade (e.g. Saccharomycotina, Magnoliopsida, Residual)",
     3: "Tier 3: Phylum / Subphylum Split (e.g. Euteleostomi, Ascomycota, Ecdysozoa)",
     4: "Tier 4: Deep Metazoa / Bilateria Split (Protostomia <-> Deuterostomia)",
     5: "Tier 5: Cross-Kingdom Opisthokonta / Amorphea / Deep Bacterial Split",
@@ -966,7 +966,7 @@ def print_summary(
             and 0 <= PAINT_TAXON_DEPTH.get(r["paint_taxon"], -1) <= 1,
         ),
         (
-            "Unmapped PAINT taxon (paint_taxon not in PAINT_TAXON_DEPTH)",
+            "Unrecorded / unmapped PAINT taxon (blank 'taxon:' in *-paint.tsv)",
             lambda r: r["lca_depth"] >= 6
             and r["paint_taxon"] is not None
             and PAINT_TAXON_DEPTH.get(r["paint_taxon"], -1) < 0,

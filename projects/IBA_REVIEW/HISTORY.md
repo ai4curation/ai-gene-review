@@ -155,14 +155,15 @@ complementary metrics and separated **Propagation Failure (`Fail` = `REMOVE` +
    (`REMOVE` **10.8%**, $n = 83$) at Eukaryota root (Tier 6), and **22.6%** (`REMOVE`
    **15.0%**, 31.6% total downgraded, $n = 133$) at `LUCA` (Tier 7).
 2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):**
-   Calibrated on close donor–target pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}538$ total; 1,011 in
-   cached PAINT families and 527 uncached), single-organism IBAs whose `IBD` was placed at
-   `LUCA`/`Eukaryota`/`Opisthokonta` or a bare family-root `taxon:` node ($d_{\text{PTN}} \le 1$,
-   $n = 347$: 121 with explicit root/kingdom taxids and 226 with bare `taxon:`) or intermediate
-   pre-vertebrate clades ($2 \le d_{\text{PTN}} \le 5$, $n = 252$) have a **7- to 9-fold
-   higher `REMOVE` rate** (**4.6%** and **3.6%**, with **8.4%** and **7.1%** Fail) than those
-   scoped within the clade/Vertebrata ($d_{\text{PTN}} \ge 6$, $n = 412$: **0.5%** `REMOVE`,
-   **6.6%** Fail, **13.6%** downgraded).
+   Calibrated on close donor–target pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}538$ total: 785 in
+   cached PAINT families with an explicit node taxid, 226 in cached families with an unrecorded
+   blank `taxon:` in `*-paint.tsv`, and 527 uncached), single-organism IBAs whose `IBD` was placed at
+   `LUCA`/`Eukaryota`/`Opisthokonta` ($d_{\text{PTN}} \le 1$, $n = 121$) or intermediate
+   pre-vertebrate clades ($2 \le d_{\text{PTN}} \le 5$, $n = 252$) have a **7- to 8-fold
+   higher `REMOVE` rate** (**4.1%** and **3.6%**, with **8.3%** and **7.1%** Fail, **14.9%** and
+   **13.9%** downgraded) than those scoped within the clade/Vertebrata ($d_{\text{PTN}} \ge 6$,
+   $n = 412$: **0.5%** `REMOVE`, **6.6%** Fail, **13.6%** downgraded). Rows with an unrecorded blank
+   `taxon:` string ($n = 226$) show **8.4%** Fail and **4.9%** `REMOVE` (**12.4%** downgraded).
 3. **PANTHER Subfamily Dilution (`CROSS_SF` vs `SAME_SF`):** Crossing a PANTHER subfamily
    boundary increases the propagation failure rate and nearly doubles the `REMOVE` rate
    (7.4% $\to$ 10.6% Fail, 2.3% $\to$ 4.2% `REMOVE` in close/moderate taxa, $n = 430$ vs
