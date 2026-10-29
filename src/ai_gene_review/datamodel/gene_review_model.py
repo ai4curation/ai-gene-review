@@ -1497,6 +1497,84 @@ class EntryRelationshipEnum(str, Enum):
     """
 
 
+class GeneModelIssueTypeEnum(str, Enum):
+    """
+    Kind of gene model problem affecting a UniProt entry.
+    """
+    FUSED_GENE_MODEL = "FUSED_GENE_MODEL"
+    """
+    The predicted protein joins two or more separate (usually neighbouring) genes into one entry. Not for genuine biological fusions such as real chimeric genes or polyproteins.
+    """
+    SPLIT_GENE_MODEL = "SPLIT_GENE_MODEL"
+    """
+    One real gene is predicted as two or more entries; this entry is one fragment.
+    """
+    TRUNCATED_GENE_MODEL = "TRUNCATED_GENE_MODEL"
+    """
+    The model lacks part of the real protein (missing exons, early stop, incomplete assembly), so features such as catalytic residues may be absent from the sequence but present in the gene.
+    """
+    WRONG_START_SITE = "WRONG_START_SITE"
+    """
+    The model starts at the wrong initiation codon, adding or removing an N-terminal segment (e.g. a spurious or missing targeting peptide).
+    """
+    OTHER = "OTHER"
+    """
+    Another gene model problem; explain in the description.
+    """
+
+
+class GeneModelIssueStatusEnum(str, Enum):
+    """
+    How well established a gene model issue is.
+    """
+    SUSPECTED = "SUSPECTED"
+    """
+    Indicated by one line of evidence (e.g. length or domain architecture compared with orthologs) but not demonstrated.
+    """
+    CONFIRMED = "CONFIRMED"
+    """
+    Demonstrated by independent lines of evidence, e.g. the entry is tiled by separate genes of another assembly and those genes have independent phenotypes.
+    """
+
+
+class GeneModelEvidenceEnum(str, Enum):
+    """
+    Kinds of evidence for a gene model issue.
+    """
+    TILING = "TILING"
+    """
+    Separate proteins from an independent assembly or annotation of the same species align at near-identity to different, non-overlapping segments of the entry.
+    """
+    ADJACENT_GENES = "ADJACENT_GENES"
+    """
+    The components are neighbouring genes in the independent annotation.
+    """
+    GENETIC_SEPARATION = "GENETIC_SEPARATION"
+    """
+    Mutants in different components have different phenotypes, showing that the components act independently.
+    """
+    DOMAIN_ARCHITECTURE = "DOMAIN_ARCHITECTURE"
+    """
+    The entry combines domains from unrelated families, or lacks domains or catalytic residues conserved in its orthologs.
+    """
+    ORTHOLOG_COMPARISON = "ORTHOLOG_COMPARISON"
+    """
+    The entry's length or sequence diverges from its orthologs in a way best explained by a model error.
+    """
+    TRANSCRIPT_EVIDENCE = "TRANSCRIPT_EVIDENCE"
+    """
+    cDNA, RNA-seq or proteomic evidence for a different gene structure.
+    """
+    GENOMIC_SEQUENCE = "GENOMIC_SEQUENCE"
+    """
+    Translation of the genomic sequence around the locus recovers the missing exons, or shows where neighbouring genes were joined.
+    """
+    OTHER = "OTHER"
+    """
+    Another kind of evidence; explain in the issue description.
+    """
+
+
 class FunctionalIsoformTypeEnum(str, Enum):
     """
     Type of functional isoform or product. Distinguishes between different mechanisms that produce functionally distinct forms of a gene product.
@@ -2036,6 +2114,7 @@ class GeneReview(ConfiguredBaseModel):
     tags: Optional[list[str]] = Field(default=None, description="""Tags associated with the gene for categorization and organization""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     status: Optional[GeneReviewStatusEnum] = Field(default=None, description="""Overall status of the gene review""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -2046,6 +2125,8 @@ class GeneReview(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2072,6 +2153,7 @@ class GeneReview(ConfiguredBaseModel):
                        'PredictionReview']} })
     alternative_products: Optional[list[AlternativeProduct]] = Field(default=None, description="""Alternative splicing products (isoforms) of the gene. Seeded from UniProt ALTERNATIVE PRODUCTS section. Only populated if there are multiple isoforms. Use this to document isoform-specific functions and biology. DEPRECATED: Use functional_isoforms instead for curated functional classes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     functional_isoforms: Optional[list[FunctionalIsoform]] = Field(default=None, description="""Curated functional isoform classes for the gene. Unlike alternative_products (which is seeded from UniProt), this field is purely curator/agent-defined to capture FUNCTIONALLY RELEVANT distinctions. Examples: - Splice classes that group multiple UniProt isoforms (e.g., WT1 +KTS vs -KTS) - Cleavage products from polyproteins (e.g., POMC peptides) - Modification states with distinct functions Only populate when there ARE functionally distinct forms worth documenting.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
+    gene_model_issues: Optional[list[GeneModelIssue]] = Field(default=None, description="""Problems with the predicted gene model behind this entry: the protein sequence does not correspond to a single real gene product, for example because two neighbouring genes were joined (fused), one gene was split, or the model is truncated or starts at the wrong codon. Record these when they change how the entry's name, sequence features or annotations should be read. A genuine biological fusion (a real chimeric gene or polyprotein) is not a gene model issue. An entry UniProt already flags as a fragment (DE Flags: Fragment) needs an entry here only when the review finds more than the flag records. See projects/GENE_MODEL_ERRORS.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     alternative_records: Optional[list[AlternativeRecord]] = Field(default=None, description="""Manually assessed relationships to alternative UniProt records. The review's primary id remains the preferred accession, normally Swiss-Prot. These are evidence-backed cross-record judgments, not aliases, automatic annotation transfers, or replacements for the primary record.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     reference_proteome_assessments: Optional[list[ReferenceProteomeAssessment]] = Field(default=None, description="""Manual assessments of searched reference proteomes when no supported counterpart was identified. Records the evidence and scope without inventing an alternative accession. A negative search is not proof of gene absence.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     references: Optional[list[Reference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
@@ -2100,6 +2182,7 @@ class ReferenceProteomeAssessment(ConfiguredBaseModel):
     reference_proteomes: list[str] = Field(default=..., min_length=1, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment']} })
     status: ReferenceProteomeAssessmentStatusEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -2230,6 +2313,8 @@ class AlternativeRecordEvidence(ConfiguredBaseModel):
     description: str = Field(default=..., description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2247,6 +2332,7 @@ class AlternativeRecordEvidence(ConfiguredBaseModel):
                        'PredictionReview'],
          'slot_uri': 'dcterms:description'} })
     supported_by: list[SupportingTextInReference] = Field(default=..., min_length=1, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -2316,6 +2402,8 @@ class AlternativeProduct(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Agent-populated description of the isoform's function. Document any isoform-specific functions, expression patterns, or biological activities that differ from other isoforms.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2333,6 +2421,118 @@ class AlternativeProduct(ConfiguredBaseModel):
                        'PredictionReview'],
          'recommended': True,
          'slot_uri': 'dcterms:description'} })
+
+
+class GeneModelIssue(ConfiguredBaseModel):
+    """
+    A problem with the predicted gene model of the reviewed entry, with the evidence for it. For a fused model, list each underlying gene as a component and give the segment of the entry that the review's functional statements apply to.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
+                       'SourceDefect',
+                       'FindingReview',
+                       'Review',
+                       'CoreFunction',
+                       'ProposedOntologyTerm',
+                       'RuleReview',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment',
+                       'PredictionAssessment'],
+         'recommended': True} })
+    issue_type: GeneModelIssueTypeEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelIssue']} })
+    status: GeneModelIssueStatusEnum = Field(default=..., description="""How well established the problem is.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
+                       'ModuleReview',
+                       'Conformance',
+                       'GoCamReview',
+                       'KnowledgeGap',
+                       'RuleReview',
+                       'PredictionReview']} })
+    description: str = Field(default=..., description="""What is wrong with the model and what it does to the entry's name and annotations (e.g. \"named after the Nup85-like half; the carboxylase half carries the phenotype\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'AlternativeRecordEvidence',
+                       'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Descriptor',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'GoCamAssociation',
+                       'GoCamReview',
+                       'ParticipantSelector',
+                       'ModuleConnection',
+                       'CoreFunction',
+                       'Experiment',
+                       'RuleReview',
+                       'PredictionReview']} })
+    components: Optional[list[GeneModelComponent]] = Field(default=None, description="""For fused (or split) models: the separate genes or proteins that make up the entry, each with the segment of the entry it covers.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelIssue']} })
+    reviewed_segment: Optional[str] = Field(default=None, description="""Residue range of this entry (start-end, 1-based) that the review's functional statements refer to, when only part of a fused or extended model is the gene product being reviewed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelIssue']} })
+    evidence_types: Optional[list[GeneModelEvidenceEnum]] = Field(default=None, description="""Kinds of evidence for the issue.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelIssue']} })
+
+    @field_validator('reviewed_segment')
+    def pattern_reviewed_segment(cls, v):
+        pattern=re.compile(r"^[0-9]+-[0-9]+$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid reviewed_segment format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid reviewed_segment format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class GeneModelComponent(ConfiguredBaseModel):
+    """
+    One underlying gene or protein of a fused (or split) gene model, identified in an independent annotation or assembly, with the segment of the reviewed entry it corresponds to.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    accession: Optional[str] = Field(default=None, description="""Identifier of the separate protein or gene in the other annotation, as a UniProtKB or UniParc accession or a locus tag (e.g. A0A2T0ACW0, RTO4_12867).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelComponent', 'ResiduePosition']} })
+    segment: Optional[str] = Field(default=None, description="""Residue range of the reviewed entry covered by this component (start-end, 1-based).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelComponent']} })
+    description: Optional[str] = Field(default=None, description="""What this component is (e.g. \"3-methylcrotonyl-CoA carboxylase biotin carboxylase subunit; carries the leucine-specific fitness defect\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+                       'AlternativeRecordEvidence',
+                       'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Descriptor',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'GoCamAssociation',
+                       'GoCamReview',
+                       'ParticipantSelector',
+                       'ModuleConnection',
+                       'CoreFunction',
+                       'Experiment',
+                       'RuleReview',
+                       'PredictionReview']} })
+
+    @field_validator('segment')
+    def pattern_segment(cls, v):
+        pattern=re.compile(r"^[0-9]+-[0-9]+$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid segment format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid segment format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class FunctionalIsoform(ConfiguredBaseModel):
@@ -2366,6 +2566,8 @@ class FunctionalIsoform(ConfiguredBaseModel):
     description: str = Field(default=..., description="""Detailed description of this functional class. Document the specific functions, how they differ from other classes, tissue specificity, and any antagonistic relationships (e.g., \"OREXIGENIC - opposite to alpha-MSH\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2440,6 +2642,8 @@ class Term(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2543,6 +2747,7 @@ class SourceDefect(ConfiguredBaseModel):
     confidence: SourceDefectConfidenceEnum = Field(default=..., description="""How firmly the defect is established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect', 'RuleReview']} })
     explanation: str = Field(default=..., description="""Self-contained explanation suitable for pasting into a report to the resource's curators.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Verbatim evidence for the defect (and for the corrected value).""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -2612,6 +2817,7 @@ class FindingReview(ConfiguredBaseModel):
     superseded_by: Optional[list[str]] = Field(default=None, description="""Reference(s) that dispute, correct, or overturn this finding. Used together with finding_status DISPUTED or OVERTURNED.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview']} })
     review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Evidence for this assessment, including exact snippets from the papers that contradict, overturn, or corroborate the original finding. Each snippet is attributed to its explicit reference_id, not the parent finding's publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -2715,6 +2921,8 @@ class Descriptor(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2783,6 +2991,8 @@ class ChemicalEntityDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2851,6 +3061,8 @@ class GeneDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2919,6 +3131,8 @@ class GeneProductDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -2990,6 +3204,8 @@ class FamilyDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3058,6 +3274,8 @@ class AncestralNodeDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3126,6 +3344,8 @@ class DomainDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3194,6 +3414,8 @@ class CellularComponentDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3263,6 +3485,8 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3407,6 +3631,8 @@ class CellTypeDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3475,6 +3701,8 @@ class AnatomicalEntityDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3543,6 +3771,8 @@ class DevelopmentalStageDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3611,6 +3841,8 @@ class TaxonDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3686,6 +3918,8 @@ class MolecularFunctionDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3759,6 +3993,8 @@ class BiologicalProcessDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3827,6 +4063,8 @@ class RelationDescriptor(Descriptor):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3917,6 +4155,8 @@ class ModuleReview(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -3945,6 +4185,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'CoreFunction']} })
     status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -4041,6 +4282,8 @@ class ExecutableModel(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -4133,6 +4376,8 @@ class ModelScenario(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -4233,6 +4478,8 @@ class ModuleNode(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -4310,6 +4557,7 @@ class Conformance(ConfiguredBaseModel):
     template: str = Field(default=..., description="""Reference to the template, as a module path relative to modules/ with an optional node id after a hash (e.g. \"mapk_relay\" or \"mapk_relay#map2k\"). The referenced template defines the required steps, function terms, and connection topology this node must contain.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Conformance']} })
     status: Optional[ConformanceStatusEnum] = Field(default=None, description="""Whether the node matches the template exactly, matches with the noted deviations, or matches the core motif while extending it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -4567,6 +4815,8 @@ class GoCamAssociation(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -4710,6 +4960,8 @@ class GoCamReview(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -4742,6 +4994,7 @@ class GoCamReview(ConfiguredBaseModel):
                        'PredictionAssessment']} })
     status: Optional[GoCamReviewStatusEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -4860,6 +5113,8 @@ class ParticipantSelector(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -4984,6 +5239,8 @@ class ModuleConnection(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -5091,6 +5348,7 @@ class Review(ConfiguredBaseModel):
     decomposed_into: Optional[Decomposition] = Field(default=None, description="""For a MODIFY that decomposes a precomposed \"X involved in Y\" term to X, where the context Y is now represented: production GO-CAM activities, module elements, this review's core_functions, or a deliberate decision not to carry it. There is intentionally no annotation-extension form: X plus part_of(Y) restates the retired class, whereas GO asks for the context to be captured in a model. See projects/INVOLVED_IN_PRECOMPOSITION.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     additional_reference_ids: Optional[list[str]] = Field(default=None, description="""IDs of the references""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5179,7 +5437,7 @@ class ResiduePosition(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    accession: str = Field(default=..., description="""UniProt CURIE, e.g. UniProtKB:Q96PD5.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResiduePosition']} })
+    accession: str = Field(default=..., description="""UniProt CURIE, e.g. UniProtKB:Q96PD5.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneModelComponent', 'ResiduePosition']} })
     position: int = Field(default=..., description="""1-based position in this protein's own sequence.""", ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['ResiduePosition']} })
     residue: str = Field(default=..., description="""Single-letter residue expected at that position. U and O are permitted for selenocysteine and pyrrolysine -- a catalytic position can legitimately be selenocysteine, as in SEPHS2.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResiduePosition']} })
     sequence_version: Optional[int] = Field(default=None, description="""UniProt sequence version (the SV in a P49903.2 style citation) the position was read against. Record it: an amino-acid sequence is not immutable. SEPHS2 is already on sequence version 3, and a corrected or re-chosen canonical sequence shifts every downstream position, so an unversioned claim can go silently wrong -- or worse, keep passing against a different residue that happens to match.
@@ -5237,6 +5495,8 @@ class CoreFunction(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Description of the core function""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -5254,6 +5514,7 @@ class CoreFunction(ConfiguredBaseModel):
                        'PredictionReview'],
          'recommended': True} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5328,6 +5589,7 @@ class ProposedOntologyTerm(ConfiguredBaseModel):
     proposed_parent: Optional[Term] = Field(default=None, description="""Proposed parent term in the ontology hierarchy""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     proposed_mappings: Optional[list[TermMapping]] = Field(default=None, description="""Proposed mappings to equivalent terms in other ontologies""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5354,6 +5616,7 @@ class KnowledgeGap(ConfiguredBaseModel):
     dark_aspect: Optional[KnowledgeGapAspectEnum] = Field(default=None, description="""Which GO aspect (or pattern) is dark for this gap. Most \"dark\" genes are not uniformly dark.""", json_schema_extra = { "linkml_meta": {'domain_of': ['KnowledgeGap']} })
     status: Optional[KnowledgeGapStatusEnum] = Field(default=None, description="""Lifecycle status of the gap, tracking progress toward resolution.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -5376,6 +5639,8 @@ class Experiment(ConfiguredBaseModel):
     description: str = Field(default=..., description="""Detailed description of the experiment to be performed""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -5432,6 +5697,8 @@ class RuleReview(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Description of the entity""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -5455,6 +5722,7 @@ class RuleReview(ConfiguredBaseModel):
                        'PredictionReview']} })
     status: Optional[RuleReviewStatusEnum] = Field(default=None, description="""Status of the rule review""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -5474,6 +5742,7 @@ class RuleReview(ConfiguredBaseModel):
     taxonomic_scope: Optional[TaxonomicScopeAssessment] = Field(default=None, description="""Assessment of taxonomic restriction appropriateness""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     confidence: Optional[float] = Field(default=None, description="""Overall confidence in the rule (0.0 to 1.0)""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect', 'RuleReview']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this review""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5718,6 +5987,7 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5769,6 +6039,7 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5820,6 +6091,7 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5871,6 +6143,7 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5922,6 +6195,7 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -5975,6 +6249,8 @@ class PredictionReview(ConfiguredBaseModel):
     description: Optional[str] = Field(default=None, description="""Summary of the prediction review findings""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
+                       'GeneModelIssue',
+                       'GeneModelComponent',
                        'FunctionalIsoform',
                        'Term',
                        'Descriptor',
@@ -5999,6 +6275,7 @@ class PredictionReview(ConfiguredBaseModel):
                        'PredictionReview']} })
     status: Optional[GeneReviewStatusEnum] = Field(default=None, description="""Overall status of the gene review""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
+                       'GeneModelIssue',
                        'ModuleReview',
                        'Conformance',
                        'GoCamReview',
@@ -6044,6 +6321,7 @@ class PredictionAssessment(ConfiguredBaseModel):
                        'InterPro2GORedundancy',
                        'PredictionAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting evidence for the assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
@@ -6065,6 +6343,8 @@ ReferenceProteomeAssessment.model_rebuild()
 AlternativeRecord.model_rebuild()
 AlternativeRecordEvidence.model_rebuild()
 AlternativeProduct.model_rebuild()
+GeneModelIssue.model_rebuild()
+GeneModelComponent.model_rebuild()
 FunctionalIsoform.model_rebuild()
 FunctionalIsoformMapping.model_rebuild()
 Term.model_rebuild()

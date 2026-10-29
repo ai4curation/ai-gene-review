@@ -28,6 +28,7 @@ from ai_gene_review.validation.folded_scalar import (
     check_folded_scalar_hyphens,
 )
 from ai_gene_review.validation.alternative_records import validate_alternative_records
+from ai_gene_review.validation.gene_model_issues import validate_gene_model_issues
 from ai_gene_review.validation.action_consistency import (
     check_action_consistency,
     go_ancestors,
@@ -492,6 +493,7 @@ def check_best_practices_rules(
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
     validate_alternative_records(data, report)
+    validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
     check_decomposition(
         data,
