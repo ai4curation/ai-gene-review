@@ -479,6 +479,13 @@ def test_packaged_remove_ancestor_rule_exempts_protein_binding():
     assert list(iter_conflicts(data, ancestors=lambda t: pb.get(t, frozenset()))) == []
 
 
+@pytest.mark.parametrize("root", ["GO:0003674", "GO:0008150", "GO:0005575"])
+def test_packaged_remove_ancestor_rule_exempts_nd_roots(root):
+    roots = {"GO:0099999": frozenset({root})}
+    data = hrows((root, "REMOVE", False), ("GO:0099999", "ACCEPT", False))
+    assert list(iter_conflicts(data, ancestors=lambda t: roots.get(t, frozenset()))) == []
+
+
 def test_hierarchical_rules_need_an_ancestor_lookup():
     data = hrows(("GO:A", "ACCEPT", True), ("GO:C", "ACCEPT", False))
     assert list(iter_conflicts(data)) == []
