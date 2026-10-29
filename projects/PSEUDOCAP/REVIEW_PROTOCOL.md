@@ -46,6 +46,24 @@ seeding.
      PTN node | node term | n_seeds | leaf IBAs | seed annotation (term,
      evidence, PMID) | verdict | rationale. Verdicts: `SOUND`,
      `OVER-SPECIFIC`, `INDIRECT-PHENOTYPE`, `WRONG`, `UNVERIFIABLE`.
+   - **Set `confidence` by what you actually read.** Many seed papers are
+     abstract-only. An abstract can show what a paper did; it cannot show what
+     the paper left out. Absence from an abstract ("only genetics is
+     reported", "no assay is described", "it is a review") is never enough for
+     PROBABLE: a review from the laboratory that did the work, or a
+     genetics-led abstract, can still report the experiment the curator coded.
+     - `CONFIRMED`: you read the full text, or the decisive fact is primary
+       data you checked yourself (the sequence, a live resource query, a
+       same-day sibling annotation showing an id slip), or the abstract states
+       the decisive fact outright (for example, it names a different organism
+       or gene).
+     - `PROBABLE`: the abstract (or another paper) positively states facts
+       that make the error likely, but the full text could change the call.
+     - `SUSPECTED`: the call rests on what the abstract does not say, or on
+       reasoning that the full text could overturn.
+     Write the explanation, `reason` and `reference_review` to match: never say
+     a paper "cannot support" a claim, or mark it `MISCITED`, unless you have
+     read it.
 6. `just validate PSEAE <GENE>` and
    `just backfill-record-sections genes/PSEAE/<GENE>`; fix all errors and the
    warnings you reasonably can.
