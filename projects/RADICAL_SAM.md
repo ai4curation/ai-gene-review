@@ -1,12 +1,23 @@
 ---
 title: "Radical SAM Enzymes: GO annotation across the superfamily"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI]
 genes: [LIAS, RSAD2, MOCS1, CDKAL1, CDK5RAP1, ELP3, TYW1, TYW1B, RSAD1, bioB, lipA, moaA, nrdG, pflA, rlmN, miaB, rimO, thiH, hemN, hemW, queE, epmB, pflC, ybiY, yjjW, aslB, ydeM, ygiQ, yhcC]
 ---
 
 # Radical SAM Enzymes
+
+**Bottom line:** across 28 reviewed members of the largest known enzyme
+superfamily, the annotation problem is **resolution, not error** — 210 rows
+accepted against 49 removed, but 112 modified, almost all pulling a
+correct-but-generic term down to the actual reaction. Two findings are
+family-wide and machine-fixable. **`GO:1904047` S-adenosyl-L-methionine binding
+is absent from GOA for 18 of the 20 members whose catalysis is established**,
+although the curated UniProt cofactor note already records SAM as an exchangeable
+ligand of the cluster. And **6 members' core activity has no GO term at all** —
+three of them for reactions described since 2018, where discovery has simply
+outrun the ontology. See [Synthesis](#synthesis).
 
 ## Overview
 
@@ -101,7 +112,7 @@ Never `MARK_AS_OVER_ANNOTATED` for these rows: none of them is false.
 ---
 # STATUS
 
-Last updated: 2026-10-18
+Last updated: 2026-10-28
 
 ## Phase 1: human (9)
 
@@ -176,10 +187,198 @@ Paralogs and uncharacterised, where the risk is over-annotation:
 
 ## Phase 4: synthesis
 
-- [ ] Superfamily-level summary: reaction classes, which have GO MF terms, which
-      need `proposed_new_terms`
-- [ ] Notes on IBA/PAINT node placement for the paralog-rich subfamilies
-      (PFL activases, MTTases, HemN/HemW)
+- [x] Superfamily-level summary: reaction classes, which have GO MF terms, which
+      need `proposed_new_terms` — see [Synthesis](#synthesis) below
+- [x] Notes on IBA/PAINT node placement for the paralog-rich subfamilies — see
+      [What the IBAs got right, and where they reach too deep](#what-the-ibas-got-right-and-where-they-reach-too-deep)
+
+Every figure below is computed from the reviews by
+[`rsam_synthesis.py`](RADICAL_SAM/rsam_synthesis.py), which takes its gene list
+from this page's own frontmatter and writes
+[`data/synthesis.yaml`](RADICAL_SAM/data/synthesis.yaml). No *result* is
+hardcoded; the project's own editorial choices are (the treatment rule itself,
+and which asserted values count as PflB-substrate pushes). Classifications are
+keyed on evidence codes rather than on lists of term ids wherever possible. Editing any of the 29
+reviews changes these figures, so re-run the script and commit the regenerated
+data in the same change — `tests/test_radical_sam_synthesis.py` fails until you
+do, and also checks that the totals quoted here actually partition.
+
+# Synthesis
+
+## What was covered
+
+29 proteins in scope, **28 reviewed** across **500 annotation rows**. A gene
+counts as reviewed here when it has rows and none is still `PENDING`, which
+deliberately ignores `status:`: MOCS1 is fully reviewed but still carries a stale
+`status: INITIALIZED`, and the script reports that separately under
+`data_quality` rather than letting it skew the arithmetic. lipA is the one
+genuine gap, and its 18 `PENDING` rows are excluded throughout. Actions across
+the 500:
+
+| Action | n |
+|---|---:|
+| ACCEPT | 210 |
+| MODIFY | 112 |
+| KEEP_AS_NON_CORE | 67 |
+| REMOVE | 49 |
+| NEW | 28 |
+| MARK_AS_OVER_ANNOTATED | 21 |
+| UNDECIDED | 10 |
+| TOO_GENERAL | 3 |
+
+`MODIFY` at 112 is the signature of this family: a quarter of all rows were true
+but pitched at the wrong level, which is exactly what a shared catalytic domain
+with unshared chemistry produces.
+
+## The resolution gap: 6 core activities have no GO term
+
+25 of the 28 reviewed genes assert at least one core function. Of those, **6 name
+an activity GO cannot express** and carry a `proposed_new_terms` entry instead:
+
+| Gene | Activity with no GO term | Why GO has none |
+|---|---|---|
+| RSAD2 | SAM-dependent CTP dehydratase (ddhCTP) | reaction described in 2018; no EC, no term |
+| queE | 7-carboxy-7-deazaguanine synthase | EC 4.3.99.3 and RHEA:27974 exist, term does not |
+| epmB | L-lysine 2,3-aminomutase, (R)-β-lysine-forming | GO:0050066 is defined as the (3S) clostridial product |
+| hemW | heme chaperone activity | `GO:0016530` covers metal *ions*; no heme-carrier term |
+| ygiQ | 23S rRNA ribose-5'-C-methyltransferase | every GO ribose-MTase term is 2'-O |
+| yhcC | tRNA cmnm5s2U(34) demodifying activity | no SAM-dependent RHEA for the demodification |
+
+A seventh proposal is additive rather than a gap-filler: nrdG keeps the existing
+`GO:0043364` and proposes a substrate-specific child for the anaerobic-RNR
+activase, which would give the uncharacterised activases an obvious pattern.
+
+Two things are worth separating here. `queE` and `epmB` are **ontology lag** —
+the chemistry is settled and even has an EC or RHEA identifier, so the term is a
+request, not research. `RSAD2`, `ygiQ` and `yhcC` are **recent discoveries**
+(2018, 2026, 2026), where GO has not had time. Only `hemW` is a genuine modelling
+question: GO has no vocabulary for a protein that carries a cofactor to an
+apo-enzyme without chemistry.
+
+The remaining breakdown: **19 genes' core functions use existing GO terms**, one
+of which (RSAD1) is `GO:0020037` heme binding with no reaction established; and
+TYW1B, aslB and ydeM assert **no core function at all**, deliberately.
+
+## The scaffold is universal; GOA records half of it
+
+`GO:0051539` (4Fe-4S binding) and `GO:1904047` (SAM binding) are each core in **20**
+of the reviewed genes — the superfamily's defining pair. But `GO:1904047` appears
+as a `NEW` row, meaning absent from GOA, in **18** of those, against only **2**
+(moaA and queE) where GOA already carried it.
+
+That is a systematic, machine-fixable gap, not 18 independent oversights. The
+curated PROSITE/HAMAP cofactor note on these records already says SAM is an
+exchangeable ligand of the cluster, so the assertion is sitting in UniProt
+unexploited. It is the single highest-leverage item this project found and is
+worth raising with GO/UniProt as a rule rather than gene by gene.
+
+The **eight** reviewed genes that did not get it — RSAD1, TYW1B, aslB, hemW, pflC,
+ybiY, ydeM and yjjW — are exactly the set whose catalysis the reviews did not
+establish. That partition was read off the reviews one gene at a time, not asserted:
+each of the eight was independently judged to lack a demonstrated reaction, and the
+script simply reports the result. lipA is **excluded, not unestablished** — it is
+lipoyl synthase (EC 2.8.1.8), the same enzyme as human LIAS, and lacks a row only
+because it is unreviewed; it is reported under `not_reviewed_so_not_classified`.
+
+## The treatment rule held
+
+Across the 28 reviewed genes (lipA's `PENDING` rows excluded), the
+domain-derived generic rows came out as:
+
+| Term | MODIFY | ACCEPT | KEEP_AS_NON_CORE | other |
+|---|---:|---:|---:|---|
+| `GO:0003824` catalytic activity | 22 | – | 5 | 1 |
+| `GO:0051536` iron-sulfur cluster binding | 28 | – | 1 | – |
+| `GO:0051539` 4Fe-4S binding | – | 31 | 12 | – |
+| `GO:0046872` metal ion binding | 1 | – | 1 | – |
+| `GO:0005506` iron ion binding | 3 | – | – | – |
+| `GO:1904047` SAM binding | – | 2 | – | 18 NEW |
+
+The 5 `KEEP_AS_NON_CORE` on `GO:0003824` and the 12 on `GO:0051539` are the rule's
+own "catalysis not established" branch (RSAD1, TYW1B, hemW, aslB, ydeM and the
+activase paralogs), not departures from it.
+
+The script encodes the rule and emits `treatment_rule_deviations`, so this is
+checked rather than asserted. It currently reports **exactly three, all MOCS1's**
+— `GO:0003824 MARK_AS_OVER_ANNOTATED`, `GO:0046872` and `GO:0051536`
+`KEEP_AS_NON_CORE` — in the pre-existing review that predates the rule. The other
+17 non-primary actions are recorded separately as `treatment_rule_branch_uses`.
+That makes the Phase 3 worklist measurable: re-running the script after Phase 3
+should drive the deviation count to zero.
+
+## What the IBAs got right, and where they reach too deep
+
+18 IBA rows carry a `propagation_review`. Sorted by what the review concluded:
+
+- **4 are propagation failures** (`PROPAGATION_BAD`). Two are the same node:
+  `PANTHER:PTN000358281` places porphyrin biosynthesis deep enough to reach both
+  *E. coli* hemW and human RSAD1, although the HemW subfamily was shown
+  experimentally to lack that chemistry. moaA's is `ROLE_CONFLATION` — MoaC's
+  cPMP-synthase activity transferred from the MOCS1 fusion proteins, which have a
+  MoaC domain that *E. coli* MoaA does not. CDK5RAP1's is a compartment mismatch.
+- **9 are scoping problems** (`TERM_SCOPING_PROBLEM`), mostly
+  `GRANULARITY_MISMATCH`: the node is placed correctly and the term is simply
+  more general than the gene warrants. These became `MODIFY`, not `REMOVE`.
+- **4 are no failure at all**, recorded to show the node was checked and holds.
+- **1 is unresolved** (TYW1B), where the sequence argues against the inherited
+  activity but nothing has been tested.
+
+The generalisable lesson is the HemN/HemW case, and it is a precise one: **when a
+subfamily loses an activity, the molecular function is usually re-placed correctly
+and the biological process is not.** PAINT put coproporphyrinogen dehydrogenase on
+the HemN-only node `PTN000358335`, but left porphyrin biosynthesis on the parent
+`PTN000358281` that both subfamilies descend from. So the MF stops at HemN while
+the BP leaks onto HemW. Checking whether a family's MF and BP sit on the *same*
+node is a cheap, mechanical test that would have caught this, and it generalises
+to any subfamily that has lost its ancestral chemistry.
+
+The paralog-rich subfamilies otherwise behaved differently from each other, and
+not as expected:
+
+- **PFL activases** — the IBAs were sound. The damage came from UniProt RHEA/EC
+  assignments and an InterPro2GO mapping pushing PflB-specific substrate terms
+  onto proteins whose partner is not PflB — **5 of the 10 source defects**, on
+  pflC, ybiY and nrdG.
+- **MTTases** — the IBAs were sound at family level; the one failure was a
+  compartment claim on CDK5RAP1 from a splice variant lacking its targeting
+  sequence.
+- **HemN/HemW** — the only subfamily where node *placement* itself was wrong.
+
+## Upstream, not ours: 10 source defects
+
+The reviews recorded 10 defects — 5 against UniProt (RHEA and EC assignments on
+pflC/ybiY, and a query on an *L. lactis* donor), 4 against InterPro2GO mappings
+and 1 against an EcoliWiki GOA row. The InterPro defects sit on just **three
+distinct entries** (IPR004559 carries two wrong mappings), and each propagates to
+every member of its signature, so correcting three entries fixes far more genes
+than the 29 here. `SourceResourceEnum` has no `INTERPRO` value, so those four are
+filed as `resource: OTHER` with InterPro named in each explanation.
+
+`just export-source-defects` turns them into per-resource reports.
+
+## What this says about the superfamily
+
+Three claims the data supports, and one it does not.
+
+1. **The family's annotation problem is resolution, not error.** 210 ACCEPT
+   against 49 REMOVE — and only **3 of those 49** overturned a claim anyone had
+   actually asserted about the gene. The rest were uninformative `protein
+   binding` (**34**) or terms that had propagated in rather than been asserted
+   (**12**: 8 `IEA` signature/EC mappings, 3 `IBA`, 1 `ISS`). The 3 are nrdG's
+   `IMP` ribonucleoside-diphosphate reductase row, removed because the activase
+   is necessary for the reaction without performing it, and two `NAS` rows on
+   CDK5RAP1 projecting CDK5 neuronal biology onto a mitochondrial tRNA enzyme.
+   The split is computed from each row's **evidence code** — how the row arose,
+   not which term it carries (`remove_breakdown`).
+2. **The shared domain is an attractor for over-general annotation.** 112 MODIFY,
+   almost all pulling a correct-but-generic term down to the specific reaction.
+3. **Discovery is outrunning the ontology.** Three of the six missing terms are
+   for reactions described in 2018 or later, two of them in 2026.
+4. **What the data does *not* support** is the intuition that IBA is the main
+   culprit for paralog over-annotation in this family. Only 4 of 18 reviewed IBAs
+   were propagation failures, while signature-based IEA mappings produced more
+   wrong claims and reached further. PAINT curators had generally made the harder
+   judgement correctly.
 
 # NOTES
 

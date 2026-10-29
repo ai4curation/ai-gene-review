@@ -253,3 +253,19 @@ The six FANCD2 `record_section` additions from PR #5481 (head `7e400719ad96920b9
 ## 2026-10-25 — Canonical validation
 
 All six canonical checks pass, including term labels, ontology components, source matching and rendering of all 110 narratives. Computed status is DRAFT with six advisories: four supported generic-binding rows retained as non-core under the standing campaign instruction; the unused inherited Affinage file; and the broad DNA-binding core term lacking an exact annotation row. The latter summarizes the supported DNA-binding activities without proposing a redundant ancestor annotation. All 31 original quotation paths, four natural products and prior histories are preserved. Nine genuinely fetched publication caches are added; existing sources remain unchanged. For the donor paper already present on main, the existing cache is reused: its body and bibliographic identity agree with the private fetch, which differs only in optional publication-type metadata and trailing spaces.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Row: GO:0005739 ISO (NEW, from mouse PMID:28378742); GOA has no mitochondrion row for human
+FANCD2. No sub-compartment rows.
+
+Checks (PMID:28378742, full text cached):
+- [PMID:28378742 "Cytoplasmic Fancd2 exhibited co-localization with the mitochondrial maker Mito tracker RED (Fig. 4A), suggesting that Fancd2 is also localized to the mitochondria."]
+- [PMID:28378742 "Importantly, a significant amount of Fancd2 was co-fractionated with Atp5a1 in the mitochondria fraction, adding further support to mitochondrial localization of Fancd2."]
+  Fraction markers were Atp5a1, GAPDH and Histone2B; no ER marker.
+- Nucleoid association is by co-IP only: [PMID:28378742 "Collectively, these results suggest that Fancd2 is part of the mitochondrion nucleoid complex"]
+- Atad3 knockdown removes mitochondrial Fancd2 (Fig. 4I).
+- Not in MitoCarta3.0; no presequence or TM in UniProt.
+
+Outcome: NEW ISO row kept (non-core), reason records the check. Stay at root: one study,
+co-IP-only nucleoid association, no protease protection or sub-mitochondrial fractionation.

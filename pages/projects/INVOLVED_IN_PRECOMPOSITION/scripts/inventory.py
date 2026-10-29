@@ -33,6 +33,7 @@ import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -275,6 +276,132 @@ def module_hits(accession: str, symbol: str, modules: dict[str, str]) -> list[st
     )
 
 
+def authored_uses(doc: dict, gene: str, inv: dict[str, GoTerm]) -> list[dict]:
+    """Precomposed terms a reviewer authored, rather than inherited from GOA.
+
+    Covers MODIFY replacement terms, core-function terms and isoform-specific
+    terms. These are the places a review can introduce a precomposed term, as
+    opposed to the GOA rows it reviews.
+
+    >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
+    >>> doc = {"existing_annotations": [{"term": {"id": "GO:2"},
+    ...   "review": {"action": "MODIFY",
+    ...              "proposed_replacement_terms": [{"id": "GO:1", "label": "x involved in y"}]}}],
+    ...   "core_functions": [{"molecular_function": {"id": "GO:1", "label": "x involved in y"}}],
+    ...   "functional_isoforms": [{"id": "X-1", "isoform_specific_terms": [{"id": "GO:1"}]}]}
+    >>> [u["slot"] for u in authored_uses(doc, "human/X", t)]
+    ['proposed_replacement_terms', 'core_functions.molecular_function', 'functional_isoforms.isoform_specific_terms']
+    """
+
+    def precomposed(term: dict) -> bool:
+        return term.get("id") in inv or INVOLVED_IN in str(term.get("label", ""))
+
+    out = []
+    for ea in doc.get("existing_annotations") or []:
+        review = ea.get("review") or {}
+        for t in review.get("proposed_replacement_terms") or []:
+            if precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": "proposed_replacement_terms",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                        "from": (ea.get("term") or {}).get("id"),
+                    }
+                )
+    for cf in doc.get("core_functions") or []:
+        for slot in ("molecular_function", "contributes_to_molecular_function"):
+            t = cf.get(slot) or {}
+            if precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": f"core_functions.{slot}",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                    }
+                )
+        for t in cf.get("directly_involved_in") or []:
+            if precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": "core_functions.directly_involved_in",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                    }
+                )
+    for iso in doc.get("functional_isoforms") or []:
+        for t in iso.get("isoform_specific_terms") or []:
+            if isinstance(t, dict) and precomposed(t):
+                out.append(
+                    {
+                        "gene": gene,
+                        "slot": "functional_isoforms.isoform_specific_terms",
+                        "term": f"{t.get('id')} {t.get('label', '')}".strip(),
+                        "isoform": iso.get("id"),
+                    }
+                )
+    return out
+
+
+#: descriptor slots that mark a mapping as a module annoton
+ANNOTON_SLOTS = {"function", "processes", "locations"}
+
+
+def _term_dicts(node: Any) -> list[dict]:
+    """Every ``term`` mapping in a nested YAML structure."""
+    if isinstance(node, dict):
+        found = [node["term"]] if isinstance(node.get("term"), dict) else []
+        return found + [t for v in node.values() for t in _term_dicts(v)]
+    if isinstance(node, list):
+        return [t for item in node for t in _term_dicts(item)]
+    return []
+
+
+def module_annoton_uses(node: Any, module: str, inv: dict[str, GoTerm]) -> list[dict]:
+    """Precomposed terms used anywhere in a module annoton.
+
+    An annoton is a mapping with an ``id`` and at least one descriptor slot
+    (``function``, ``processes`` or ``locations``), so function-less annotons
+    are scanned too. Every GO term inside it is checked (function, processes,
+    targets, inputs, locations), and the slot is the annoton key it sits under.
+    The label fallback applies to GO ids only, so a participant's protein name
+    is never mistaken for a precomposed term.
+
+    >>> t = {"GO:1": GoTerm(id="GO:1", name="x involved in y")}
+    >>> doc = {"parts": [{"node": {"annotons": [
+    ...     {"id": "a1", "function": {"term": {"id": "GO:1"}}},
+    ...     {"id": "a2", "function": {"term": {"id": "GO:3"}},
+    ...      "processes": [{"term": {"id": "GO:1"}}]},
+    ...     {"id": "a3", "processes": [{"term": {"id": "GO:1"}}],
+    ...      "participant": {"gene_product": {"term": {"id": "UniProtKB:P1",
+    ...                                                "label": "protein involved in y"}}}}]}}]}
+    >>> [(u["annoton"], u["slot"]) for u in module_annoton_uses(doc, "m", t)]
+    [('a1', 'module.annoton.function'), ('a2', 'module.annoton.processes'), ('a3', 'module.annoton.processes')]
+    """
+    if isinstance(node, list):
+        return [u for item in node for u in module_annoton_uses(item, module, inv)]
+    if not isinstance(node, dict):
+        return []
+    if "id" not in node or not ANNOTON_SLOTS & node.keys():
+        return [u for v in node.values() for u in module_annoton_uses(v, module, inv)]
+    out = []
+    for key, value in node.items():
+        for term in _term_dicts(value):
+            tid = str(term.get("id", ""))
+            if tid in inv or (
+                tid.startswith("GO:") and INVOLVED_IN in str(term.get("label", ""))
+            ):
+                out.append(
+                    {
+                        "module": module,
+                        "slot": f"module.annoton.{key}",
+                        "term": f"{term.get('id')} {term.get('label', '')}".strip(),
+                        "annoton": node.get("id"),
+                    }
+                )
+    return out
+
+
 def main() -> None:
     """Build the inventory."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -320,6 +447,15 @@ def main() -> None:
     modules = {p.name: p.read_text() for p in sorted((REPO / "modules").glob("*.yaml"))}
 
     ann_rows = []
+    authored = []
+    for name, text in modules.items():
+        authored.extend(
+            module_annoton_uses(
+                yaml.load(text, Loader=yaml.CSafeLoader),
+                name.removesuffix(".yaml"),
+                inv,
+            )
+        )
     for path in sorted((REPO / "genes").glob("*/*/*-ai-review.yaml")):
         doc = yaml.load(path.read_text(), Loader=yaml.CSafeLoader)
         if not isinstance(doc, dict):
@@ -327,6 +463,7 @@ def main() -> None:
         org = path.parts[-3]
         acc = str(doc.get("id", ""))
         sym = str(doc.get("gene_symbol", ""))
+        authored.extend(authored_uses(doc, f"{org}/{path.parts[-2]}", inv))
         for ea in doc.get("existing_annotations") or []:
             term = ea.get("term") or {}
             tid, tlabel = term.get("id", ""), term.get("label", "")
@@ -409,6 +546,10 @@ def main() -> None:
             "by_pattern": count(ann_rows, "pattern"),
             "by_action": count(ann_rows, "action"),
             "by_evidence": count(ann_rows, "evidence_type"),
+            "species_folders": len({r["gene"].split("/")[0] for r in ann_rows}),
+            "by_organism": dict(
+                Counter(r["gene"].split("/")[0] for r in ann_rows).most_common()
+            ),
             "rows_nested": sum(
                 bool((r.get("decomposition") or {}).get("nested")) for r in ann_rows
             ),
@@ -463,10 +604,20 @@ def main() -> None:
         ),
     }
 
+    summary["authored_precomposed"] = {
+        "uses": len(authored),
+        "genes": len({a["gene"] for a in authored if "gene" in a}),
+        "modules": len({a["module"] for a in authored if "module" in a}),
+        "by_slot": dict(Counter(a["slot"] for a in authored).most_common()),
+    }
+
     dump = dict(sort_keys=False, allow_unicode=True, width=100)
     (args.out / "go_terms.yaml").write_text(yaml.safe_dump(go_rows, **dump))
     (args.out / "annotations.yaml").write_text(yaml.safe_dump(ann_rows, **dump))
     (args.out / "module_candidates.yaml").write_text(yaml.safe_dump(candidates, **dump))
+    (args.out / "authored_precomposed.yaml").write_text(
+        yaml.safe_dump(authored, **dump)
+    )
     (args.out / "summary.yaml").write_text(yaml.safe_dump(summary, **dump))
     print(yaml.safe_dump(summary, **dump))
 
