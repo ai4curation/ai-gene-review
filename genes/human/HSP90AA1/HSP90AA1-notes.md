@@ -25,3 +25,13 @@ The 522-row review retains ATP-dependent folding, kinase client maturation, loca
 Reassessed all 26 generic transferred-claim UNDECIDED rows against traced rat/chicken donor publications. Four non-ATP nucleotide-binding claims and three migration/lamellipodium/negative-apoptosis claims are retained as peripheral conserved capabilities; primary nucleotide PDF includes explicit alpha/beta specificity comparison but is purified rat Hsp90, not a human assay. Cardiac apoptosis is refined to negative regulation. Muscle contraction and positive cardiac contraction are over-specific for overload-expression/cardioprotection evidence. Remaining 16 claims have individual uncertainty rationales about regulatory context, isoform resolution, stimulus definition or unavailable experiment details, not a demand for proof of falsity. Donor expression findings are not dismissed just because their evidence code is IEP. Normal publication fetches and a normal author-hosted PDF URL cache preserve the supporting source text.
 
 All original annotation payloads were compared before/after and preserved; only reviewer assessments, source evidence, and the specified core-function location were changed.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 mitochondrion, IDA PMID:25609812 and IEA GO_REF:0000044 (SL-0173). No sub-compartment rows; qualifier located_in.
+
+Checks:
+- UniProt "Mitochondrion {ECO:0000269|PubMed:25609812}" [file:human/HSP90AA1/HSP90AA1-uniprot.txt], so the IEA mapping rests on the same paper as the IDA.
+- PMID:25609812 (full text cached): "The clamp domain (R192) of Tom70 interacts with the C-terminal motif (EEVD) of Hsp90, thereby recruiting Hsp90/IRF3/Bax to mitochondria." Recruited pool on Sendai virus infection; no protease protection or sub-mitochondrial fractionation.
+
+Outcome: both rows stay KEEP_AS_NON_CORE with the check recorded. Stays at root (TRAF3/BRAF precedent): no anchor, no outer-membrane assay.

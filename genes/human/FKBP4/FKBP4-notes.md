@@ -75,3 +75,35 @@ Reviewed the complete existing annotation inventory while retaining the imported
 The 69 imported rows are preserved. Human prostate cancer cells show FKBP52 contributions to AR dimerization/chromatin binding without an import defect [PMID:34057812]. Mouse Fkbp4 knockout selectively impairs androgen-dependent reproductive tissues but preserves AR ligand binding/nuclear entry [PMID:17142810]; this is comparative mouse evidence. Removed the claim that FKBP5 antagonizes all the same receptors. Preserve the NR3C1/dynein adaptor role without making it an obligatory AR mechanism. PPIase core support now quotes direct human comparative enzymology [PMID:11350175], not a UniProt protein name. Folding is a core process in which the protein performs work; HSP90 binding and cytosol refine broader terms. Current UniProt Q02790 and PTHR46512 entries place FKBP4 in PTHR46512:SF9. PTHR10516 and PTHR46512 PAINT caches share PTN002471265 IBD records; no mechanical repointing or circular-donor claim is warranted.
 
 PANTHER19.0 release classification independently resolves this target to PTHR10516:SF25, whereas current UniProt resolves it to PTHR46512:SF9. Both are source-supported; retain explicit source provenance rather than mechanically replacing one with the other.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000044, SL-0173) and GO:0005739 EXP (PMID:21730050, UniProt).
+No sub-compartment rows.
+
+Checks:
+- UniProt Q02790: [file:human/FKBP4/FKBP4-uniprot.txt "Mitochondrion {ECO:0000269|PubMed:21730050}"],
+  plus the notes "Shuttles from mitochondria to nucleus; co-localizes in mitochondria with the
+  glucocorticoid receptor (PubMed:21730050)" and "The TPR repeats mediate mitochondrial
+  localization". The SL-0173 IEA row derives from this curated location.
+- PMID:21730050 (Gallo et al. 2011 JBC) is titled and abstracted for FKBP51 only:
+  [PMID:21730050 "FKBP51 is a major mitochondrial factor that undergoes nuclear-mitochondrial"].
+  The cached copy is abstract-only. The PMC full text (PMC3191054, pmc.ncbi.nlm.nih.gov,
+  read 2026-10-25) mentions FKBP52 only in the Introduction (background on FKBP52 and
+  steroid receptors) and Methods ("The UPJ56 rabbit antiserum against FKBP52 was a kind gift
+  from Dr. William Pratt"; "Plasmids encoding for the PPIase domain of FKBP52"). Results,
+  figure legends and Discussion report localization, TPR dependence and H2O2-induced nuclear
+  shuttling for FKBP51 only; the PPIase-domain experiment tests whether FKBP51 localization
+  is affected.
+- QuickGO: PMID:21730050 is attached only to Q02790 (FKBP4); FKBP5 (Q13451) UniProt gives
+  Cytoplasm and Nucleus (by similarity) only.
+- MitoCarta3.0: FKBP4 not listed (MS/MS "0-25crude", 2 tissues).
+
+Outcome: both rows KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED; source_defect
+WRONG_GENE_PRODUCT (UNIPROT, CHECK, PROBABLE) on the EXP row, suggesting Q13451. The
+PMID:21730050 finding statement and the description sentence on mitochondria were corrected.
+Still to revisit (outside the mitochondrion rows): the nucleus and other rows that quote
+"Shuttles from mitochondria to nucleus" as support, and the suggested question on the
+mitochondria-to-nucleus translocation of FKBP4, rest on the same mis-attributed paper.
+
+- Update (2026-10-25, review of PR #5539): the items listed above as still to revisit are done. The nucleus and four nucleoplasm rows now cite UniProt's dynein-dependent NR3C1 nuclear transport and its by-similarity Nucleus location instead of "Shuttles from mitochondria to nucleus"; the nucleus summary, UniProt finding statement, suggested question and experiment no longer presuppose an FKBP4 mitochondrial pool.
