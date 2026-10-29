@@ -6,7 +6,7 @@ autolink_gene_symbols: false
 ---
 # Pombe ProtNLM evaluation
 
-**Most pombe GO predictions recover established biology at reduced specificity: 26 are LSP, two CNN, three UNC and one COR.** The cohort covers all 20 GO/function-bearing entries among 28 original-export accessions matched to current fission-yeast records: 32 GO claims and 11 function paragraphs. All 28 entries are currently reviewed/Swiss-Prot, providing a well-curated comparison to the predominantly TrEMBL horse and fly cohorts.
+**Most pombe GO predictions recover established biology at reduced specificity: 25 are LSP, three CNN, three UNC and one COR.** The cohort covers all 20 GO/function-bearing entries among 28 original-export accessions matched to current fission-yeast records: 32 GO claims and 11 function paragraphs. All 28 entries are currently reviewed/Swiss-Prot, providing a well-curated comparison to the predominantly TrEMBL horse and fly cohorts.
 
 [20-gene cohort](pombe-benchmark/functional-cohort.csv) · [Original GO/function statements](pombe-benchmark/functional-predictions.csv) · [Claim provenance](pombe-benchmark/claim-provenance.csv) · [Full 28-record inventory](pombe-benchmark/inventory.csv) · [Coverage audit](pombe-benchmark/review-inventory.json) · [Snapshot provenance](pombe-benchmark/manifest.json) · [Parent project](../PROTNLM_EVALUATION.md)
 
@@ -30,15 +30,15 @@ The GO claims mostly recover established functions at reduced specificity. The f
 
 | Assessment | GO claims | Interpretation |
 |---|---:|---|
-| LSP | 26 | Supported, but an established annotation is more specific |
-| CNN | 2 | Supported equivalent biology already known |
+| LSP | 25 | Supported, but an established annotation is more specific |
+| CNN | 3 | Supported equivalent biology already known |
 | UNC | 3 | Available evidence neither validates nor refutes the exact claim |
 | COR | 1 | Supported, and absent from the gene's existing annotations |
 | **Total** | **32** | **GO predictions only** |
 
-Counts are as of the 2026-10-24 review snapshot (commit `1ca4af83c6`); see the [cross-cohort results](benchmark-results.md).
+Counts are as of the 2026-10-29 review snapshot (commit `ac95c69686`); see the [cross-cohort results](benchmark-results.md).
 
-The single COR call is Asr1 metal ion binding. Its PHD finger retains the full Cys4-His-Cys3 zinc-ligand pattern, and the gene's GOA carries no metal- or zinc-binding term; no direct binding assay exists for the fission-yeast protein. The two CNN calls are Lsm6 membership of an Sm-like protein family complex, a term already annotated to the gene, and Sws2 RNA binding. The unresolved GO predictions are Crt10 membership in a Cul4-RING E3 complex, Crt10 response to UV-B, and Wss1 membrane association. No GO claim is classified as PLI, NPI or REP in this cohort. This result concerns these available predictions on well-curated genes; it does not estimate general model accuracy.
+The single COR call is Asr1 metal ion binding. Its PHD finger retains the full Cys4-His-Cys3 zinc-ligand pattern, and the gene's GOA carries no metal- or zinc-binding term; no direct binding assay exists for the fission-yeast protein. The three CNN calls are Lsm6 membership of an Sm-like protein family complex, a term already annotated to the gene, Sws2 RNA binding, and Rfc3 DNA replication, which GOA carries for the gene. The unresolved GO predictions are Crt10 membership in a Cul4-RING E3 complex, Crt10 response to UV-B, and Wss1 membrane association. No GO claim is classified as PLI, NPI or REP in this cohort. This result concerns these available predictions on well-curated genes; it does not estimate general model accuracy.
 
 All **20 main reviews cover 366 existing GOA annotations**, with no pending actions. All 20 genes have inspected Falcon research reports, with consequential claims checked against primary evidence. The 18 GO sidecars pass schema and source-evidence validation, including 27 title checks and 68 excerpt checks. The 11 original function paragraphs are assessed claim by claim in ten separate reports; their mixed judgments are kept separate from the GO totals. [Validation summary](pombe-benchmark/validation-summary.json) and [per-file prediction evidence checks](pombe-benchmark/prediction-evidence-validation.json) accompany the coverage audit.
 

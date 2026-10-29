@@ -477,6 +477,29 @@ def test_no_curated_module_is_satisfied_by_an_empty_context(curated_corpus):
     )
 
 
+@pytest.mark.parametrize("principal_executioners,expected", [
+    (set(), False),
+    ({"casp3_executioner"}, True),
+    ({"casp7_executioner"}, True),
+    ({"casp3_executioner", "casp7_executioner"}, True),
+])
+@pytest.mark.parametrize("optional_branches_present", [False, True])
+def test_apoptotic_execution_requires_a_principal_executioner(
+    curated_corpus, principal_executioners, expected, optional_branches_present,
+):
+    """Either principal caspase contributes; contextual branches cannot replace both."""
+    circuit = curated_corpus[MODULES_DIR / "apoptotic_execution_phase.yaml"]
+    principal_ids = {"casp3_executioner", "casp7_executioner"}
+
+    def holds(atom):
+        aid = atom.node_id.rsplit("#", 1)[-1]
+        if aid in principal_ids:
+            return aid in principal_executioners
+        return optional_branches_present
+
+    assert is_satisfied(circuit, holds) is expected
+
+
 # --------------------------------------------------------------------------- #
 # Grounding: an ungrounded atom is satisfiable by nothing                     #
 # --------------------------------------------------------------------------- #

@@ -31,8 +31,8 @@ model benchmark most correct predictions were already known: as of the review
 snapshot (2026-09-27, commit `c7551cb3db`), 682 of 955 BioReason-Pro SFT terms
 were correct but not novel and 23 were correct and novel. ProtNLM2's purposive
 cohorts, selected for likely-novel targets, have a much larger novel share: as of
-its own snapshot (2026-10-24, commit `1ca4af83c6`), 35 of 288 GO terms were correct
-and novel and 46 correct but not novel.
+its own snapshot (2026-10-29, commit `ac95c69686`), 35 of 288 GO terms were correct
+and novel and 48 correct but not novel.
 Affinage's GO layer rarely reached the specific curated function, and reviewers
 accepted uncorroborated TreeGrafter inferences much less often than curated
 PAINT/IBA ones. Each project below has its own cohorts, methods and denominators.
