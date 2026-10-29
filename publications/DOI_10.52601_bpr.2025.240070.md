@@ -1,6 +1,5 @@
 ---
 reference_id: DOI:10.52601/bpr.2025.240070
-extractor_version: 1
 title: "Bacterial restriction-modification systems: mechanisms of defense against phage infection"
 authors:
 - Haoyang Kang
@@ -10,14 +9,12 @@ journal: Biophysics Reports
 year: '2025'
 doi: 10.52601/bpr.2025.240070
 content_type: full_text_pdf
-is_preprint: false
 full_text_attempted: true
 full_text_provider: openalex
 full_text_url: "https://www.biophysics-reports.org/en/article/pdf/preview/10.52601/bpr.2025.240070.pdf"
 oa_status: diamond
 license: cc-by
 local_pdf_path: files/DOI_10.52601_bpr.2025.240070.pdf
-full_text_access_type: open
 ---
 
 # Bacterial restriction-modification systems: mechanisms of defense against phage infection
