@@ -74,6 +74,9 @@ Each prediction has a model score (0–1, threshold 0.05) and post-hoc corrobora
   a DARS2/GPAM/HSPA4 note.
 - **GO claims.** Two sidecars move LSP→CNN (NCU04637 cytoplasm, rfc3 DNA replication), because GOA
   carries the exact term: CNN 46→48 and LSP 85→83 over the same 288 claims.
+- **Deferred.** DROME/ftz-f1's narrative (line 17) states beta-isoform identity more firmly than its
+  own isoform note (line 34) supports. A narrative edit changes the hash checked against the snapshot,
+  so it waits for the next narrative change and snapshot refresh.
 
 ### 2026-10-24 — separate review snapshot and full rescore
 

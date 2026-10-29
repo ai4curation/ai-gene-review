@@ -435,9 +435,12 @@ browser gives the same breakdowns as facet counts over the current reviews:
 [contradicted claims](../app/predictions/index.html?dataset=claims&source_method=ProtNLM2&assessment=NPI&assessment=PLI).
 Narrative records can hold several judgments each and are counted separately from
 GO terms. The 57 indexed function narratives contain 4 COR records: HORSE/SHLD2 shieldin-complex
-membership, HORSE/GHSR and HORSE/CXCR3 calcium signalling, and DROME/ftz-f1 autorepression. Three of the
-four are transfers from human-receptor or human-protein experiments to a full-length, closely related
-horse product, not observations on the horse protein. Not every selected target has been reviewed yet; the cross-cohort results
+membership, HORSE/GHSR and HORSE/CXCR3 calcium signaling, and DROME/ftz-f1 autorepression. The GHSR and
+CXCR3 calls transfer human-receptor experiments to a full-length, closely related horse product (95.1%
+and 90.8% identical) rather than observing the horse protein. The SHLD2 call rests on a close
+SHLD2-family sequence match for a non-canonical alternative model that keeps the N-terminal SHLD3-MAD2L2
+recruitment segment but diverges after about residue 811; its downstream claims are UNC for that reason.
+The ftz-f1 call rests on a Drosophila experiment on the same isoform. Not every selected target has been reviewed yet; the cross-cohort results
 state how many have, and their per-cohort table should be read with the COR caveat in
 [Reference standard and novelty](#reference-standard-and-novelty).
 
