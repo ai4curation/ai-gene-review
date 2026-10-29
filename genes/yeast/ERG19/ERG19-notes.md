@@ -92,16 +92,16 @@ UniPathway: UPA00057 / UER00100 (IPP from (R)-mevalonate, step 3/3).
 - **carboxy-lyase activity (GO:0016831)** — correct parent of GO:0004163, but a
   generalization; MODIFY/redundant relative to the specific term.
 - **BP terms**: isopentenyl diphosphate biosynthetic process, mevalonate pathway
-  (GO:0019287) is the most precise direct-process term → core. Ergosterol
+  (GO:0019287) is the most precise direct-process term -> core. Ergosterol
   biosynthetic process (GO:0006696), sterol biosynthetic process (GO:0016126),
-  isoprenoid biosynthetic process (GO:0008299), FPP biosynthetic process,
-  mevalonate pathway (GO:0010142) are broader / downstream pathway memberships —
-  keep but assess core vs non-core (the enzyme's *direct* product is IPP, not FPP
-  or ergosterol; downstream-process terms are pathway-context, candidates for
-  KEEP_AS_NON_CORE rather than as the molecular role).
+  and isoprenoid biosynthetic process (GO:0008299) are broader pathway-context
+  terms. FPP biosynthetic process, mevalonate pathway (GO:0010142) is a
+  downstream process to remove: the enzyme's *direct* product is IPP, not FPP.
 - **CC**: cytosol/cytoplasm well supported; vacuole is weak (NAS from a review).
-- ATP binding (GO:0005524, UniProtKB-KW) is correct biochemically (ATP is a
-  co-substrate) though not in the GOA stub list — present in UniProt DR lines.
+- ATP binding (GO:0005524) is correct biochemically (ATP is a co-substrate),
+  but current UniProt v203 dropped the GO:0005524 cross-reference present in
+  v202. The current entry still carries the broad `KW   ATP-binding` keyword;
+  its FT BINDING features are all for (R)-5-diphosphomevalonate rather than ATP.
 
 ## Provenance note
 
@@ -122,17 +122,21 @@ The falcon report independently confirms the core review and contradicts nothing
 - **Reaction / cofactors:** confirms the ATP-dependent decarboxylation of
   mevalonate-5-diphosphate to IPP, and additionally states the reaction **requires
   Mg2+** and is coupled to ATP hydrolysis (products IPP + CO2 + ADP)
-  [Cordier 1999, doi:10.1023/a:1006181720100; Garay 2026 preprint,
-  doi:10.20944/preprints202605.0182.v1]. This reinforces the added ATP-binding
+  [Cordier 1999, doi:10.1023/a:1006181720100; PMID:42506259 "In the lower
+  segment of the pathway, mevalonate undergoes sequential phosphorylation
+  reactions catalyzed by mevalonate kinase and phosphomevalonate kinase, followed
+  by an ATP-dependent decarboxylation step mediated by mevalonate diphosphate
+  decarboxylase"]. This reinforces the added ATP-binding
   molecular function; Mg2+ dependence is family/review-level here (flagged as inferred
   by the report) and is not annotated as metal binding in UniProt P32377, so no
   metal-ion GO term was added.
 - **Mechanism:** GHMP-kinase-superfamily mechanism via ATP-dependent phosphorylation of
   the substrate C3-hydroxyl (transient 3-phospho-MVAPP) then decarboxylation/elimination
-  — consistent with the Asp302/Lys18 active-site biochemistry [Garay 2026].
+  is consistent with the Asp302/Lys18 active-site biochemistry.
 - **Localization:** independently described as a **cytosolic homodimer** / cytoplasmic
-  precursor-module enzyme [Johnston 2020 Yeast, doi:10.1002/yea.3452; Garay 2026]. This
-  further supports flagging the NAS vacuole annotation (GO:0005773) as over-annotated.
+  precursor-module enzyme [Johnston 2020 Yeast, doi:10.1002/yea.3452;
+  PMID:42506259]. This further supports flagging the NAS vacuole annotation
+  (GO:0005773) as over-annotated.
 - **Essentiality:** an Arabidopsis MVD cDNA complements a yeast thermosensitive
   MVD-deficient strain and rescues the lethal **ERG19 deletion** [Cordier 1999] —
   additional support for essentiality alongside PMID:9244250.
@@ -147,3 +151,47 @@ The falcon report independently confirms the core review and contradicts nothing
 
 None of these change the annotation actions; they corroborate the core MF/BP/CC calls
 and the vacuole over-annotation flag.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Refreshed ERG19 from current UniProt/GOA before editing. Current GOA has 24
+  live rows after the header; the refresh materialized the current
+  `PANTHER:PTN000104601` IBA rows for `GO:0004163` and `GO:0019287`, plus
+  separate `SGD_PWY:IPPSYN-PWY` and `SGD_PWY:PWY-922` RCA source rows for
+  decarboxylase activity and cytosolic site of action.
+- Checked `interpro/panther/PTHR10977/PTHR10977-paint.tsv` and the current
+  `.cache/panther/IBD.gaf`; `PANTHER:PTN000104601` carries all three ERG19
+  IBA assertions (`GO:0005829`, `GO:0004163`, `GO:0019287`). The node is a
+  direct fit for the diphosphomevalonate decarboxylase clade, so the three IBA
+  rows remain core `ACCEPT`s with `NO_FAILURE_CORE` propagation reviews.
+- Preserved the existing `NEW` ATP-binding proposal. The refreshed GOA still
+  lacks an ATP-binding row despite the direct TNP-ATP and ATP K_m data in
+  PMID:15169949 and the ATP-dependent GHMP fold described by PMID:11698677.
+  The refresh also moved the UniProt entry from v202 to v203 and removed the
+  old `DR   GO; GO:0005524; F:ATP binding; IEA:UniProtKB-KW.` cross-reference;
+  only the broader `ATP-binding` keyword remains.
+- Rechecked newer literature. The 2024 isopentenol-utilization paper replaces
+  the native mevalonate pathway in an engineered yeast chassis, and the 2026
+  J. Fungi review updates the Garay preprint mentioned in the falcon report;
+  both are pathway/engineering context and neither changes the direct GO
+  annotation set for yeast ERG19.
+
+## 2026-10-24 merge with main (PR Shepherd)
+
+- Merged `origin/main` into the review branch to clear a `CONFLICTING` state.
+  `taxon.label` now reads `Saccharomyces cerevisiae S288C`, the normalized
+  `NCBITaxon:559292` label introduced by the taxon dynamic-enum binding; the
+  conflicting `description` text was identical on both sides apart from line
+  reflowing.
+- Re-quoted the falcon support on the `GO:0005773` vacuole row, whose
+  `supporting_text` was a paraphrase grandfathered in
+  `conf/local_quote_baseline.yaml`. It now quotes the report's localization
+  row verbatim: [file:yeast/ERG19/ERG19-deep-research-falcon.md "One
+  review/preprint describes MDD/Mvd1 as a cytosolic homodimer and a 2020
+  cell-factory review states the MVA-pathway proteins are mostly cytosolic.
+  ... direct ERG19-specific localization experiment in *S. cerevisiae* was not
+  found in retrieved texts."] That states the argument for
+  `MARK_AS_OVER_ANNOTATED` more directly than the paraphrase did: the vacuolar
+  placement comes from a review pathway figure, not from an ERG19 localization
+  assay. The now-passing baseline entry was dropped. No term, action, evidence
+  code or reason changed.
