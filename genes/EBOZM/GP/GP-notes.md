@@ -214,3 +214,24 @@ into a component annotation.
   requirement.
 - Is the ER accumulation of PMID:21223600 a feature of infection or of plasmid
   overexpression?
+
+## Final disposition (all 31 GOA rows + 2 proposals)
+
+ACCEPT 22, KEEP_AS_NON_CORE 4 (GO:0039587 tetherin suppression, GO:0042802 identical
+protein binding, GO:0044165 host cell ER, GO:0046761 budding), TOO_GENERAL 5
+(GO:0019062, GO:0030430, GO:0039663, GO:0052031, GO:0075509 — each a strict ancestor of
+a term kept in this review), plus 2 `NEW` molecular functions: `GO:0046789 host cell
+surface receptor binding` and `GO:0035662 Toll-like receptor 4 binding`. GOA gives GP no
+molecular function at all apart from `lipid binding` and `identical protein binding`,
+which is a real gap for the protein whose entire job is binding host receptors.
+
+Three source defects are recorded: the `ChEBI:8984` (SDS) WITH/FROM on the DisProt
+lipid-binding IPI row; `IMP` where the assay is `IDA` on the CACAO host-cell-ER row; and
+`WRONG_REFERENCE` (confidence CONFIRMED) on the CACAO host-cell-cytoplasm row, whose
+cited paper contains no GP-localisation experiment.
+
+Note for the schema: `core_functions.locations` cannot take `GO:0055036` virion membrane
+or `GO:0019031` viral envelope, because `GOCellularLocationEnum` is reachable only from
+`GO:0110165` cellular anatomical structure and virion components sit outside it. For a
+virion surface protein that is where the core activity happens, so the virion membrane is
+stated in the core-function descriptions instead.
