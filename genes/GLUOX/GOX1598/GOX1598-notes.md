@@ -46,7 +46,23 @@ against the current GO external2go file
 lines): `IPR023210`, `IPR036812` and `IPR050523` are all absent. Note that this
 is specific to the entries *this* protein matches, not to the superfamily: other
 AKR entries are mapped, and *E. coli* Tas (P0A9T4) does get `GO:0016491` by
-`IEA GO_REF:0000002` through `IPR020471`, which Q5FQK7 does not match. There is
+`IEA GO_REF:0000002` through `IPR020471`, which Q5FQK7 does not match. That
+contrast is load-bearing for the scoping of the source defect, so here is the
+query it was read from (2026-10-29):
+
+```
+https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB:P0A9T4
+-> 5 rows, including
+   GO:0016491 | IEA | GO_REF:0000002 | withFrom InterPro:IPR020471 | assignedBy InterPro
+   GO:0008106 | NAS | PMID:14517983  | withFrom none                | assignedBy EcoCyc
+   GO:0034198 | IMP | PMID:9560382   | EcoliWiki
+   GO:0005829 | IBA | GO_REF:0000033 | withFrom PANTHER:PTN000199734, UniProtKB:P0A9T4
+   GO:0005829 | IDA | PMID:18304323  | EcoCyc
+```
+
+The same query is the source of the statement, used in the annotation `reason`,
+that Tas's `GO:0008106` rests **only** on `NAS:EcoCyc`: that term appears on
+exactly one row. There is
 also no PANTHER-family GO mapping for `PTHR43364` (`go_terms: null` in
 `PTHR43364-metadata.yaml`), and no IBA row — indeed no GOA row at all — for
 Q5FQK7, so nothing was propagated to it (see §3).
@@ -55,8 +71,30 @@ I have recorded the missing `IPR023210` → `GO:0016491` mapping as a
 `source_defects` entry (`requested_change: ADD`, `resource: OTHER` = InterPro /
 GO external2go) on the one annotation row in this review. IPR023210 *is* the AKR
 catalytic domain, so a safe oxidoreductase-activity mapping is defensible; I did
-not propose anything more specific, because the domain occurs in members with
-different cofactors and substrates.
+not propose anything more specific, because the **oxidised donor group** is not
+uniform across the entry's matches. IPR023210 also matches human AKR1D1
+(P51857), a Delta(4)-3-oxosteroid 5-beta-reductase of EC 1.3.1.3
+(`ECO:0000269`), whose donor is a CH-CH group — `GO:0016628` — while `GO:0016616`
+and `GO:0008106` both sit under `GO:0016614` (CH-OH group of donors). QuickGO's
+is_a ancestor sets confirm `GO:0016616` and `GO:0016628` share no ancestor below
+`GO:0016491`, so `GO:0016491` is the most specific term that holds for every
+match.
+
+An earlier draft of this section, and of the `source_defects` `explanation` that
+ships to the InterPro/GO external2go maintainers, gave **cofactor** heterogeneity
+("members with different cofactors (NAD and NADP)") as the reason to stop above
+`GO:0016616`. That rationale is withdrawn: `GO:0016616` is itself *"...NAD **or**
+NADP as acceptor"*, so it already accommodates both the NADP(+)- and the
+NAD(+)-dependent members and cofactor heterogeneity is no obstacle to it. The
+conclusion — `GO:0016491` and nothing narrower — is unchanged; only its reason
+is. A second, weaker point in the same direction: IPR023210 also matches the
+voltage-gated potassium channel beta subunits (e.g. Q13303/KCNAB2), whose
+experimentally supported function is Kv channel regulation and whose aldo-keto
+reductase activity is annotated only *by similarity*, with no physiological
+substrate identified. (Note that these subunits are **not** non-catalytic, as is
+sometimes said: UniProt does credit them with NADPH-dependent aldoketoreductase
+activity on an in-vitro substrate range, just without a physiological substrate
+and without direct experimental support in the human entry.)
 
 ## 3. PAINT / PTHR43364 — nothing propagates here
 
@@ -81,8 +119,9 @@ so it cannot establish which of these nodes Q5FQK7 descends from; an earlier
 draft of this file said PAINT "placed no ancestral node annotation on the lineage
 this protein descends from", which the file cannot show and which is in any case
 misleading, since `PTN000199659` does carry `GO:0008106` (F, IBD). The two
-observations that *are* readable here are narrower: the node seeded by the
-protein's closest reviewed relative (Tas, `PTN000199734`) carries only a
+observations that *are* readable here are narrower: the node seeded by Tas
+(`PTN000199734`), the characterised protein that names the `AKR_Tas-like` CDD
+branch (`cd19094`) this protein matches, carries only a
 **cytosol** cellular-component claim and is scoped to Gammaproteobacteria, which
 does not include this alphaproteobacterium; and no node in the file is seeded by
 a *G. oxydans* or other alphaproteobacterial member. Neither of those is the
@@ -117,10 +156,27 @@ no hard-coded residue numbers.
 - The **AKR catalytic tetrad is complete and unmutated**: Asp62, Tyr67, Lys101,
   His147 of Q5FQK7 are identical to the curated catalytic residues of all five
   references, which agree with each other on those positions.
-- The closest reviewed relative is ***E. coli* Tas (P0A9T4) at 50.4% identity** —
-  a solved-structure NADP(H)-dependent aldo-keto reductase
+- **The characterised protein to reason from is *E. coli* Tas (P0A9T4)**, and the
+  evidence that designates it is the entry's own `CDD cd19094 AKR_Tas-like`
+  cross-reference, which names the Tas-like branch of the superfamily
+  independently of any identity figure. Tas is *also* the most similar of the five
+  references aligned here, at **50.4% identity** — but that ranks those five
+  proteins only. It is a solved-structure NADP(H)-dependent aldo-keto reductase
   [PMID:14517983 "Crystal structure of the Escherichia coli Tas protein, an NADP(H)-dependent aldo-keto reductase."].
   Tas's own physiological substrate is not established either.
+
+  **Withdrawn wording.** Earlier drafts of this file, of `RESULTS.md`, of the
+  top-level `description`, of a `findings[].statement` and of a `knowledge_gaps`
+  entry called Tas the protein's *"closest reviewed relative"* / *"closest
+  characterised relative"*. That is a superlative over reviewed UniProt, and
+  `map_akr_catalytic_sites.py` cannot establish it: it aligns five hand-picked
+  references (`REFERENCES` at lines 44-50) and runs **no database search**, so the
+  identity column ranks those five and nothing else. The superlative is withdrawn
+  everywhere and is no longer asserted anywhere in this review; the claim it was
+  carrying — that Tas is the right characterised relative to reason from — now
+  rests on `CDD cd19094`, which designates the subgroup directly. The 50.4% figure
+  itself stands: it is a real number from a real alignment, now stated with its
+  bound.
 - **Cofactor preference is not resolvable.** The conserved pocket positions are
   shared by NADP(+)-using references (Tas, IolS, AKR7A2, AKR1B1) and the
   NAD(+)-using one (YdjG), and the AKR1B1 residues that read the 2'-phosphate

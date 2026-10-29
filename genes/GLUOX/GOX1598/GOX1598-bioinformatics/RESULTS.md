@@ -27,7 +27,10 @@ that fall in a gap are reported as gaps.
 
 References used (the first four are PANTHER PTHR43364:SF4, the same subfamily as
 Q5FQK7; AKR1B1 is the superfamily structural archetype, included as an
-out-of-subfamily control):
+out-of-subfamily control). These five are hand-picked for their curated
+active-site features; the script runs **no database search**, so the identity
+column below ranks these five proteins and says nothing about reviewed UniProt as
+a whole:
 
 | Accession | Protein | Length | % identity to Q5FQK7 |
 |---|---|---|---|
@@ -88,9 +91,12 @@ be annotated:
   proteins in 11 subfamilies, so a row count in it is not a membership count and
   is not used as one here.
 
-The closest reviewed relative, *E. coli* Tas at 50.4% identity, has a solved
-structure and is described as an NADP(H)-dependent aldo-keto reductase
-[PMID:14517983], but its own physiological substrate is likewise not established.
+The protein that designates this branch of the superfamily independently of any
+identity figure is *E. coli* Tas: Q5FQK7's CDD assignment is `cd19094`
+(AKR_Tas-like). Tas is also the most similar of the five references aligned here,
+at 50.4% identity. It has a solved structure and is described as an
+NADP(H)-dependent aldo-keto reductase [PMID:14517983], but its own physiological
+substrate is likewise not established.
 
 ## Conclusion
 
