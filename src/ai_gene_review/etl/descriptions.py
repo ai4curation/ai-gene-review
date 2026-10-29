@@ -424,7 +424,15 @@ def extract_uniprot_xref(uniprot_data: str, db: str) -> Optional[str]:
         >>> extract_uniprot_xref(data, "GeneID")
         '854965'
         >>> extract_uniprot_xref(data, "HGNC")
+
+        WormBase lines lead with the transcript; the gene id is the WBGene field:
+
+        >>> extract_uniprot_xref("DR   WormBase; B0207.4; CE24761; WBGene00000099; air-2.", "WormBase")
+        'WBGene00000099'
     """
+    if db == "WormBase":
+        match = re.search(r"^DR\s+WormBase;.*?\b(WBGene\d+)\b", uniprot_data, re.MULTILINE)
+        return match.group(1) if match else None
     pattern = rf"^DR\s+{re.escape(db)};\s+([^;]+?);\s"
     match = re.search(pattern, uniprot_data, re.MULTILINE)
     if match:
@@ -469,14 +477,66 @@ def fetch_alliance_description(mod_id: str) -> Dict[str, Any]:
     url = f"{ALLIANCE_API_BASE}/gene/{mod_id}"
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
-    data = resp.json()
+    return parse_alliance_gene(resp.json())
+
+
+def parse_alliance_gene(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract synopses from an Alliance ``/api/gene`` response.
+
+    Handles the current response shape (``{"gene": {"relatedNotes": [...]}}``,
+    notes typed by ``noteType.name``) and the legacy flat shape
+    (``geneSynopsis`` / ``automatedGeneSynopsis``).
+
+    Examples:
+        >>> data = {"gene": {
+        ...     "geneSymbol": {"displayText": "rab-11.1"},
+        ...     "geneFullName": {"displayText": "RAB family"},
+        ...     "dataProviderCrossReference": {"referencedCurie": "WB:WBGene00004274",
+        ...         "displayName": "WBGene00004274",
+        ...         "resourceDescriptorPage": {"urlTemplate": "https://www.wormbase.org/db/get?name=[%s];class=Gene"}},
+        ...     "relatedNotes": [
+        ...         {"freeText": "rab-11.1 encodes a small GTPase", "noteType": {"name": "MOD_provided_gene_description"}},
+        ...         {"freeText": "Predicted to enable GTP binding", "noteType": {"name": "automated_gene_description"}},
+        ...     ]}}
+        >>> r = parse_alliance_gene(data)
+        >>> r["curated_synopsis"]
+        'rab-11.1 encodes a small GTPase'
+        >>> r["automated_synopsis"]
+        'Predicted to enable GTP binding'
+        >>> r["url"]
+        'https://www.wormbase.org/db/get?name=WBGene00004274;class=Gene'
+        >>> parse_alliance_gene({"geneSynopsis": "x", "automatedGeneSynopsis": "y"})["curated_synopsis"]
+        'x'
+    """
+    gene = data.get("gene")
+    if not isinstance(gene, dict):
+        return {
+            "curated_synopsis": data.get("geneSynopsis"),
+            "automated_synopsis": data.get("automatedGeneSynopsis"),
+            "name": data.get("name"),
+            "symbol": data.get("symbol"),
+            "url": data.get("modCrossRefCompleteUrl"),
+        }
+
+    notes: Dict[str, str] = {}
+    for note in gene.get("relatedNotes") or []:
+        note_type = (note.get("noteType") or {}).get("name")
+        if note_type and note.get("freeText") and note_type not in notes:
+            notes[note_type] = note["freeText"]
+
+    url = None
+    xref = gene.get("dataProviderCrossReference") or {}
+    template = (xref.get("resourceDescriptorPage") or {}).get("urlTemplate")
+    if template and xref.get("displayName"):
+        url = template.replace("[%s]", xref["displayName"])
 
     return {
-        "curated_synopsis": data.get("geneSynopsis"),
-        "automated_synopsis": data.get("automatedGeneSynopsis"),
-        "name": data.get("name"),
-        "symbol": data.get("symbol"),
-        "url": data.get("modCrossRefCompleteUrl"),
+        "curated_synopsis": notes.get("MOD_provided_gene_description"),
+        "automated_synopsis": notes.get("automated_gene_description")
+        or notes.get("MOD_provided_automated_gene_description"),
+        "name": (gene.get("geneFullName") or {}).get("displayText"),
+        "symbol": (gene.get("geneSymbol") or {}).get("displayText"),
+        "url": url,
     }
 
 
