@@ -140,41 +140,62 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 Built [`single_organism_distance.py`](single_organism_distance.py) and
 [`single-organism-distance.md`](single-organism-distance.md) to quantify how far up and
 down the tree single-organism IBAs travel across all 25,298 positive GOA `IBA` rows
-(3,517 non-self single-organism IBAs across 2,165 genes; 3,433 rated). Defined four
-complementary metrics:
+(6,382 GOA genes, 6,379 reviewed; 3,517 non-self single-organism IBAs across 2,165 genes;
+3,433 rated: 3,426 with resolved donor lineage and 7 in `Tier 0`). Defined four
+complementary metrics and separated **Propagation Failure (`Fail` = `REMOVE` +
+`MARK_AS_OVER_ANNOTATED`)** from **Term Granularity Refinement (`Refn` = `MODIFY` +
+`TOO_GENERAL`)**:
 
 1. **Taxonomic LCA Clade Depth ($d_{\text{LCA}}$) & Branch Steps ($s_{\text{up}} + s_{\text{down}}$):**
-   Downgrade rates climb from **14.0%** (`REMOVE` **2.6%**) in close clades (Tier 1) and
-   **17.5%–19.4%** in order/phylum/Bilateria splits (Tiers 2–4) to **21.5%** across
-   Opisthokonta/Amorphea (Tier 5), **20.5%** (`REMOVE` **10.8%**) at Eukaryota root (Tier 6),
-   and **31.6%** (`REMOVE` **15.0%**) at `LUCA` (Tier 7).
+   Propagation failure (`% Fail`) rates climb from **8.0%** (`REMOVE` **2.6%**, 14.0% total
+   downgraded, $n = 1{,}346$) in close clades (Tier 1) and **12.2%–13.6%** (`REMOVE`
+   **4.6%–5.9%**) in phylum/Bilateria splits (Tiers 3–4; small-$n$ Tier 2 has $n = 73$ with
+   1.4% Fail, 0.0% `REMOVE`, and 16.4% `MODIFY`/`TOO_GENERAL` refinement) to **13.7%**
+   (`REMOVE` **5.4%**, $n = 735$) across Opisthokonta/Amorphea (Tier 5), **19.3%**
+   (`REMOVE` **10.8%**, $n = 83$) at Eukaryota root (Tier 6), and **22.6%** (`REMOVE`
+   **15.0%**, 31.6% total downgraded, $n = 133$) at `LUCA` (Tier 7).
 2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):**
-   Within close vertebrate pairs ($d_{\text{LCA}} \ge 6$), single-organism IBAs whose `IBD`
-   was placed at `LUCA`/`Eukaryota` ($d_{\text{PTN}} \le 1$) have an **8-fold higher `REMOVE`
-   rate** (**4.1%**, 14.9% downgraded) than those scoped within Vertebrata ($d_{\text{PTN}} \ge 6$:
-   **0.5%** `REMOVE`, 13.4% downgraded).
+   Calibrated on close vertebrate pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}311$ total; 784 in
+   cached PAINT families), single-organism IBAs whose `IBD` was placed at
+   `LUCA`/`Eukaryota`/`Opisthokonta` ($d_{\text{PTN}} \le 1$, $n = 121$) have an **8-fold
+   higher `REMOVE` rate** (**4.1%**, 8.3% Fail, 14.9% downgraded) than those scoped within
+   Vertebrata ($d_{\text{PTN}} \ge 6$, $n = 411$: **0.5%** `REMOVE`, 6.6% Fail, 13.6%
+   downgraded).
 3. **PANTHER Subfamily Dilution (`CROSS_SF` vs `SAME_SF`):** Crossing a PANTHER subfamily
-   boundary adds +5 to +8 percentage points to the downgrade rate and nearly doubles the
-   `REMOVE` rate (13.7% $\to$ 21.7% downgraded, 2.3% $\to$ 4.2% `REMOVE` in close/moderate taxa;
-   19.8% $\to$ 24.8% downgraded, 5.7% $\to$ 8.9% `REMOVE` in distant taxa).
+   boundary increases the propagation failure rate and nearly doubles the `REMOVE` rate
+   (7.4% $\to$ 10.6% Fail, 2.3% $\to$ 4.2% `REMOVE` in close/moderate taxa, $n = 430$ vs
+   $n = 189$; 12.3% $\to$ 19.1% Fail, 5.8% $\to$ 8.7% `REMOVE` in distant taxa, $n = 260$
+   vs $n = 277$).
 4. **Exact TreeGrafter Tree Steps & Duplications (`steps_from_ibd`, `duplication_on_path`):**
-   Short orthologous paths ($< 10$ tree steps without duplication) show 0.0% `REMOVE` rate in
-   the matched GOA IBA subset, whereas $\ge 10$ steps with duplication on path concentrate
-   cross-paralog over-propagations.
+   Across all 383 rated single-taxon `IBD` paths in `projects/TREEGRAFTER/graft_paths_all.tsv`,
+   crossing a duplication node on `< 10` step paths raises the failure rate from **12.9%**
+   (`REMOVE` **4.8%**, $n = 209$) to **17.3%** (`REMOVE` **8.0%**, $n = 162$), and to
+   **20.0%** (`REMOVE` **10.0%**, $n = 10$) on paths of $\ge 10$ tree steps with duplication.
 
-Used the Tier 4–7 + `CROSS_SF` filter to identify and re-review 15 genes where high-distance
+*Note on circularity*: Because existing review actions were generated under `IBA_REVIEW.md`
+guidelines that already instruct reviewers to scrutinize cross-kingdom and deep-node
+propagations, these rates partly reflect reviewer policy rather than an independent ground
+truth. However, auditing the retained rows with `--candidates` reveals inconsistencies where
+earlier reviews left high-distance over-propagations at `ACCEPT` or `KEEP_AS_NON_CORE`.
+
+Used the Tier 4–7 + `CROSS_SF` filter (`--candidates`) to **identify 15 candidate genes for
+re-review** (submitted in partitioned follow-up PRs
+[#5703](https://github.com/ai4curation/ai-gene-review/pull/5703) and
+[#5704](https://github.com/ai4curation/ai-gene-review/pull/5704)) where high-distance
 single-organism IBAs had been left at `ACCEPT` or `KEEP_AS_NON_CORE` despite biological or
 ortholog-review evidence of over-propagation:
-- **Tier 7 / Tier 6 batch (8 genes):** `human/MDH1` (`GO:0006099` TCA cycle from *M. tuberculosis* `mdh`),
-  `BACSU/sigF` (`GO:0000976` cis-regulatory binding from *Arabidopsis* plastid `SIG2`),
-  `human/IDI1` & `human/IDI2` (`GO:0009240` IPP biosynthesis from *Arabidopsis* `IPP1`),
+- **Tier 7 / Tier 6 batch (8 genes, [PR #5703](https://github.com/ai4curation/ai-gene-review/pull/5703)):**
+  `human/MDH1` (`GO:0006099` TCA cycle from *M. tuberculosis* `mdh`),
+  `BACSU/sigF` (`GO:0000428` DNA-directed RNA polymerase complex from *Arabidopsis* plastid `SIG6` `TAIR:locus:2084420`),
+  `human/IDI1` & `human/IDI2` (`GO:0009240` IPP biosynthesis from *Arabidopsis* `IPP1` via `PTN000000756`),
   `SCHPO/SPAC11D3.09` & `SCHPO/SPAPB24D3.03` (`GO:0009446` putrescine biosynthesis from *Arabidopsis* agmatinases),
   and `SCHPO/SPAC17G8.02` & `SCHPO/SPBC1683.06c` (`GO:0006152` / `GO:0008477` purine nucleosidase from *Arabidopsis* `NRH1`/`NRH2`).
-- **Tier 5 / Tier 4 batch (7 genes):** `human/ATG4D`, `human/ATG2B`, & `DICDI/atg1` (`GO:0034727`
+- **Tier 5 / Tier 4 batch (7 genes, [PR #5704](https://github.com/ai4curation/ai-gene-review/pull/5704)):**
+  `human/ATG4D`, `human/ATG2B`, & `DICDI/atg1` (`GO:0034727`
   piecemeal microautophagy of the nucleus from *S. cerevisiae* `ATG4`/`ATG2`/`ATG1`),
   `SCHPO/cit1` (`GO:0005975` carbohydrate metabolic process from human `CS`),
   `SCHPO/lsb6` (`GO:0005802`, `GO:0007030`, `GO:0007032` from *Drosophila* `Pi4KIIalpha`),
-  `SCHPO/oar2` (`GO:0048038` quinone binding from human `CBR4`), and
+  `SCHPO/oar2` (`GO:0048038` quinone binding from human `CBR4` via `PTN000249501`), and
   `human/HSPB2` (`GO:0042026` protein refolding from *Drosophila* sHSPs).
 
 ---
