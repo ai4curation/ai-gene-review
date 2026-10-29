@@ -1,5 +1,6 @@
 ---
 title: "SPKW Bacteriophage T4 (BPT4) Subproject"
+autolink_gene_symbols: false
 ---
 
 # SPKW Bacteriophage T4 (BPT4) Subproject
@@ -54,7 +55,7 @@ For this section, `VZ-primary` means the UniProt keyword is the primary keyword 
 | VZ-3938 / KW-1235 and VZ-3940 / KW-1236 Host envelope / peptidoglycan disruption during entry | GO:0098994 host envelope disruption; GO:0098932 peptidoglycan disruption | 1 / 1 | `5/P16009` | ACCEPT/MODIFY. gp5 is the baseplate central spike with lysozyme activity that locally digests peptidoglycan so the tail tube can penetrate. This is the correct phage-entry framing; the non-VZ `defense response to bacterium` and `killing of cells` rows on gp5 are over-annotations. |
 | VZ-3966 / KW-1258 Restriction-modification system evasion by virus | GO:0099018 symbiont-mediated evasion of host restriction-modification system | 5 | <gene species="BPT4" symbol="DAM">DAM/P04392</gene>; `agt/P04519`; `bgt/P04547`; `arn/P39510`; `stp/P62765` | ACCEPT for the antirestriction mechanism. This VZ-primary term is the right replacement target for broad non-VZ `innate immune suppression` on phage DNA-modification and restriction-evasion proteins. |
 | VZ-3963 / KW-1256 DNA end degradation evasion by virus | GO:0099016 symbiont-mediated evasion of DNA end degradation by host | 1 | `2/P15076` | ACCEPT. gp2 binds T4 DNA ends and protects them against RecBCD-mediated degradation. The coexisting broad non-VZ `GO:0052170` should be removed or replaced. |
-| VZ-3962 / KW-1257 CRISPR-cas system evasion by virus | GO:0098672 symbiont-mediated suppression of host CRISPR-cas system | 1 | `agt/P04519` | ACCEPT when the CRISPR protection evidence is present. For agt, UniProt states glucosyl-HMC protects against CRISPR-Cas9 as well as restriction systems, so both CRISPR-cas evasion and R-M evasion can be justified. |
+| VZ-3962 / KW-1257 CRISPR-cas system evasion by virus | GO:0098672 symbiont-mediated suppression of host CRISPR-cas system | 1 | `agt/P04519` | ACCEPT when the CRISPR protection evidence is present. For agt, UniProt states glucosyl-HMC protects against `CRISPR-Cas9` as well as restriction systems, so both CRISPR-cas evasion and R-M evasion can be justified. |
 | VZ-3947 / KW-1247 Degradation of host chromosome by virus | GO:0099015 degradation of host chromosome by virus | 3 | `46/P04522`; `47/P04521`; `denA/P07059` | Usually ACCEPT for the host-DNA degradation proteins. gp46/gp47 and DenA have direct host DNA degradation roles, but broad coannotations such as `suppression of host gene expression` should not be treated as the primary function. |
 | VZ-260 / KW-1146 T=13 icosahedral capsid protein and VZ-4398 / KW-1232 Capsid decoration protein | GO:0039621 T=13 icosahedral viral capsid; GO:0098021 viral capsid, decoration | 1 / 1 | `gp23/P04535`; `soc/P03715` | ACCEPT. gp23 is the major T=13 capsid protein; Soc is a capsid decoration/stabilization protein. These are good VZ-primary structural rows. |
 
@@ -131,10 +132,10 @@ All 49 BPT4 genes explicitly highlighted in the VZ/non-VZ tables and case summar
 
 ## Status
 
-- [x] Initial exploration complete (2026-01-31)
-- [x] Deep research for all 3 genes (2026-01-31)
-- [x] Annotation review complete for all 3 genes (2026-01-31)
-- [x] Write-up complete (2026-01-31)
+- Complete: Initial exploration (2026-01-31)
+- Complete: Deep research for all 3 genes (2026-01-31)
+- Complete: Annotation review for all 3 genes (2026-01-31)
+- Complete: Write-up (2026-01-31)
 
 ---
 

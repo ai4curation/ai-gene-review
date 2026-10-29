@@ -28,7 +28,7 @@ style: |
 
 GO:0045550 → GO:0102067 geranylgeranyl diphosphate reductase activity
 
-<span class="small">AI Gene Review · projects/GERANYLGERANYL_REDUCTASE_OBSOLETION · 2026</span>
+<span class="small">AI Gene Review · projects/GERANYLGERANYL_REDUCTASE_OBSOLETION · reviewed 2026-10-04</span>
 
 ---
 
@@ -36,9 +36,9 @@ GO:0045550 → GO:0102067 geranylgeranyl diphosphate reductase activity
 
 ## Bottom line
 
-- GO **obsoleted GO:0045550**, which lacked an enzyme cross-reference, and merged it into **GO:0102067** (EC 1.3.1.83).
-- Of **4 experimental rows**, the two **plant CHLP** rows fit; the two **human AKR** rows (AKR1C3, AKR1B10) need a substrate check before moving.
-- **Scoped, not yet started:** none of the four genes has a review in this repo.
+- GO **obsoleted GO:0045550**, which lacked an enzyme cross-reference, and replaced it with **GO:0102067** (EC 1.3.1.83).
+- Of **4 experimental rows**, Arabidopsis **CHLP** fits cleanly; tobacco CHLP has weaker NAS evidence; the two **human AKR** rows need a substrate check before moving.
+- **Still queued:** no AKR1C3, AKR1B10, or CHLP review exists here; #363 tracks the open curation.
 
 ---
 
@@ -68,7 +68,7 @@ GO:0045550 → GO:0102067 geranylgeranyl diphosphate reductase activity
 1. Review **AKR1C3** (human, P42330) first, reading PMID:21187079 for the substrate actually tested.
 2. Then **AKR1B10** (same paper).
 3. Arabidopsis **CHLP** as the positive control for GO:0102067; treat the tobacco NAS row separately.
-4. Raise the IPR023590 fit on go-annotation#6394.
+4. Verify the CHLP-family mappings; raise the IPR023590 fit on go-annotation#6394.
 
-**Upstream:** go-annotation#6394 · go-ontology#31963
+**Upstream:** go-annotation#6394 open · go-ontology#31963 closed
 **Read more:** `projects/GERANYLGERANYL_REDUCTASE_OBSOLETION.md`

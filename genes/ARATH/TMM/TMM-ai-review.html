@@ -1,0 +1,5061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TMM</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9SSD1" target="_blank" class="term-link">
+                        Q9SSD1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TMM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">33</span> Annotations</a>
+
+
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">19</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">2</span> Questions</a>
+
+
+
+        <a href="#review-experiments" title="Suggested experiments"><span class="nav-count">1</span> Experiments</a>
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9SSD1" data-a="DESCRIPTION: TOO MANY MOUTHS (TMM; RLP17) is a plasma-membrane ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TOO MANY MOUTHS (TMM; RLP17) is a plasma-membrane leucine-rich-repeat receptor-like protein (RLP) with an extracellular LRR domain and a single transmembrane segment but no cytoplasmic kinase domain. It is expressed in proliferating stomatal-lineage (postprotodermal) cells and functions as a co-receptor for the ERECTA-family receptor kinases (ERECTA, ERL1, ERL2). TMM forms constitutive heteromeric complexes with ERECTA and ERL1 (and associates with SERK co-receptor kinases), and the TMM-ERf complex creates the binding pocket that recognizes the inhibitory EPF1 and EPF2 peptides and the competing positive peptide stomagen/EPFL9, while excluding the stem-growth EPFL4/EPFL6 peptides. TMM therefore acts as a specificity switch that directs ERECTA-family signalling, via the YODA-MKK4/5-MPK3/6 cascade, toward inhibition of stomatal development and the orientation of spacing divisions. Loss of TMM randomizes the orientation of asymmetric spacing divisions and permits entry divisions next to existing stomata, producing stomatal clusters in leaves, whereas stomata are absent from some organs such as inflorescence stems, reflecting region-specific positive and negative effects mediated through different EPF/EPFL ligands.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19452453" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19452453
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic profiling of tandem affinity purified 14-3-3 prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0005515" data-r="PMID:19452453" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding from a 14-3-3 (GRF2/AT1G78300) tandem-affinity-purification proteomics study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is uninformative. The interaction derives from a high-throughput 14-3-3 complex profiling study and has no established functional relevance for TMM, which has no cytoplasmic domain of substance; removal does not imply the reported co-purification is false.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26083750" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26083750
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Competitive binding of antagonistic peptides fine-tunes stom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0005515" data-r="PMID:26083750" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM binds the stomagen/EPFL9 peptide (Q9SV72).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction is direct binding of a secreted peptide ligand to the TMM ectodomain; peptide binding is the informative term (and is also annotated separately from the same paper).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042277" target="_blank" class="term-link">
+                                    peptide binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26083750" target="_blank" class="term-link">
+                                        PMID:26083750
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both EPF2 and Stomagen directly bind to ER and its co-receptor TOO MANY MOUTHS.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22241782
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Direct interaction of ligand-receptor pairs specifying stoma...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0005886" data-r="PMID:22241782" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional epitope-tagged TMM detected in membrane (microsomal) fractions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TMM is a single-pass transmembrane RLP that associates with ERECTA-family receptors and binds apoplastic peptides; plasma membrane localization is well supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link">
+                                        PMID:22241782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The epitope-tagged TMM, ERECTA, and ERL1 were detected in membrane (microsomal) fractions, consistent with their predicted subcellular localizations</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT inference of plasma membrane localization for LRR RLPs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with TMM structure and its function as a cell-surface co-receptor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12040198" target="_blank" class="term-link">
+                                        PMID:12040198
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TMM encodes a leucine-rich repeat-containing receptor-like protein expressed in proliferative postprotodermal cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping to plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct for a cell-surface LRR receptor-like protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12040198" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12040198
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of stomatal distribution on the Arabidopsis leaf sur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0005886" data-r="PMID:12040198" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization stated on the basis of TMM&#39;s predicted receptor-like protein structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by later biochemical data (membrane fractions, association with ERECTA-family receptors).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12040198" target="_blank" class="term-link">
+                                        PMID:12040198
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TMM encodes a leucine-rich repeat-containing receptor-like protein expressed in proliferative postprotodermal cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11751054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11751054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The leucine-rich repeat as a protein recognition motif.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0007165" data-r="PMID:11751054" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference of signal transduction from LRR protein-recognition function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TMM is a co-receptor that shapes ERECTA-family signalling in response to EPF peptides; involvement in signal transduction is correct though general. The specific output is captured by stomatal complex patterning.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link">
+                                        PMID:22241782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TMM modulates the signal transduction via association with the ERECTA family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008356" target="_blank" class="term-link">
+                                    GO:0008356
+                                </a>
+                            </span>
+                            <span class="term-label">asymmetric cell division</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11090210
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Oriented asymmetric divisions that generate the stomatal spa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0008356" data-r="PMID:11090210" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm randomizes the orientation of asymmetric spacing divisions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TMM signalling orients, and restricts the location of, asymmetric divisions in stomatal-lineage cells; the protein does not execute the division but regulates its placement. Retained as a valid but non-core process; the core process is stomatal complex patterning.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link">
+                                        PMID:11090210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the orientation of asymmetric divisions that pattern stomata, and the control of which cells will enter the stomatal pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008356" target="_blank" class="term-link">
+                                    GO:0008356
+                                </a>
+                            </span>
+                            <span class="term-label">asymmetric cell division</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9684356
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Divergent regulation of stomatal initiation and patterning i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0008356" data-r="PMID:9684356" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm affects asymmetric (stomatal initiation) divisions in a region-specific way.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above; regulatory involvement in asymmetric entry/spacing divisions, non-core relative to stomatal patterning.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link">
+                                        PMID:9684356
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This suggests that TMM represents an unusual type of gene regulating plant cell development in that it can either influence stomatal initiation in a positive or negative fashion depending on region.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009737" target="_blank" class="term-link">
+                                    GO:0009737
+                                </a>
+                            </span>
+                            <span class="term-label">response to abscisic acid</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18434605" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18434605
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A genome-wide functional investigation into the roles of rec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0009737" data-r="PMID:18434605" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm-1 and Atrlp17-1 show decreased ABA sensitivity in a genome-wide RLP mutant screen.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A secondary phenotype from a large-scale screen; no mechanism links TMM to ABA perception, and the effect may be indirect (e.g. via altered epidermal/stomatal development). Kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18434605" target="_blank" class="term-link">
+                                        PMID:18434605
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In addition to the previously described stomatal clustering phenotype, tmm-1 and Atrlp17-1 that both carry a mutation in the AtRLP gene TMM displayed decreased sensitivity to ABA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010090" target="_blank" class="term-link">
+                                    GO:0010090
+                                </a>
+                            </span>
+                            <span class="term-label">trichome morphogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24553751" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24553751
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    New phenotypic characteristics of three tmm alleles in Arabi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0010090" data-r="PMID:24553751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM overexpression reduced leaf trichome number and branching.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Based on an overexpression phenotype reported in an abstract-only paper; plausibly an indirect effect of altered epidermal patterning. Retained as non-core pending mechanistic support.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24553751" target="_blank" class="term-link">
+                                        PMID:24553751
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Interestingly, overexpression of TMM resulted in the reduction of leaf trichomes and their branches, and this might reveal a new function of TMM in trichome development.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010375" target="_blank" class="term-link">
+                                    GO:0010375
+                                </a>
+                            </span>
+                            <span class="term-label">stomatal complex patterning</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11090210
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Oriented asymmetric divisions that generate the stomatal spa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0010375" data-r="PMID:11090210" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm mutants violate the one-cell spacing rule, producing stomatal clusters.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological role. TMM-containing receptor complexes perceive EPF signals that orient spacing divisions and prevent stomata from forming in contact.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link">
+                                        PMID:11090210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">tmm randomizes this orientation and releases a prohibition on asymmetric division in cells at specific locations, resulting in stomatal clusters.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010375" target="_blank" class="term-link">
+                                    GO:0010375
+                                </a>
+                            </span>
+                            <span class="term-label">stomatal complex patterning</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11536724" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11536724
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The too many mouths and four lips mutations affect stomatal ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0010375" data-r="PMID:11536724" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Original isolation of tmm with clustered stomata.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Founding genetic evidence for TMM&#39;s role in stomatal patterning/production.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11536724" target="_blank" class="term-link">
+                                        PMID:11536724
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The tmm mutation results in stomatal clustering and increased precursor cell formation in cotyledons and a virtual absence of stomata in the inflorescence stem.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010375" target="_blank" class="term-link">
+                                    GO:0010375
+                                </a>
+                            </span>
+                            <span class="term-label">stomatal complex patterning</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9684356
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Divergent regulation of stomatal initiation and patterning i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0010375" data-r="PMID:9684356" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Organ-specific quantification of stomatal clustering in tmm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core patterning role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link">
+                                        PMID:9684356
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This patterning is violated in the too many mouths (tmm) and four lips (flp) mutations</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010376" target="_blank" class="term-link">
+                                    GO:0010376
+                                </a>
+                            </span>
+                            <span class="term-label">stomatal complex formation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11090210
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Oriented asymmetric divisions that generate the stomatal spa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0010376" data-r="PMID:11090210" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm alters whether cells enter the stomatal pathway (stomatal formation).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TMM controls which cells enter the stomatal pathway and, in some organs (e.g. stems), is required for stomata to form at all; an accurate description of its regulatory role in stomatal formation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link">
+                                        PMID:11090210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the control of which cells will enter the stomatal pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010376" target="_blank" class="term-link">
+                                    GO:0010376
+                                </a>
+                            </span>
+                            <span class="term-label">stomatal complex formation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9684356
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Divergent regulation of stomatal initiation and patterning i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0010376" data-r="PMID:9684356" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm lacks stomata in some regions and has excess in others.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Region-specific positive and negative effects of TMM on stomatal initiation; consistent with TMM acting as a ligand-specificity switch for ERECTA-family receptors.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link">
+                                        PMID:9684356
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The tmm mutation has a more complex region-specific phenotype in that some regions lack stomata entirely, other regions have excess stomata</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22241782
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Direct interaction of ligand-receptor pairs specifying stoma...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0016020" data-r="PMID:22241782" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM detected in microsomal membrane fractions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; the more specific plasma membrane term is also annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link">
+                                        PMID:22241782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The epitope-tagged TMM, ERECTA, and ERL1 were detected in membrane (microsomal) fractions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0016020" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA prediction of membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, though less specific than plasma membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12068095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12068095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Prediction of glycosylphosphatidylinositol-anchored proteins...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0016020" data-r="PMID:12068095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization stated in a genome-wide GPI-anchored protein prediction study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TMM is membrane-associated (it has a transmembrane segment); the membrane term is correct regardless of whether a GPI anchor is used, and the more specific plasma membrane term is annotated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12805588" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12805588
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of glycosylphosphatidylinositol-anchored prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0016020" data-r="PMID:12805588" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization stated in a proteomic GPI-anchored protein identification study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above; membrane localization is correct.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033612" target="_blank" class="term-link">
+                                    GO:0033612
+                                </a>
+                            </span>
+                            <span class="term-label">receptor serine/threonine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26320950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential Function of Arabidopsis SERK Family Receptor-li...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0033612" data-r="PMID:26320950" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM associates with SERK-family co-receptor kinases (SERK1, SERK2, BAK1/SERK3, SERK4) in a ligand-independent manner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Informative binding term describing TMM&#39;s role as a non-catalytic subunit of a stomatal receptor complex (&#39;receptorsome&#39;) containing ERECTA-family and SERK receptor kinases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link">
+                                        PMID:26320950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SERKs associate with the receptor-like protein (RLP) TMM, a signal modulator of stomata development, in a ligand-independent manner, suggesting that ERECTA, SERKs, and TMM form a multiprotein receptorsome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033612" target="_blank" class="term-link">
+                                    GO:0033612
+                                </a>
+                            </span>
+                            <span class="term-label">receptor serine/threonine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26320950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential Function of Arabidopsis SERK Family Receptor-li...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0033612" data-r="PMID:26320950" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM associates with SERK-family co-receptor kinases (SERK1, SERK2, BAK1/SERK3, SERK4) in a ligand-independent manner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Informative binding term describing TMM&#39;s role as a non-catalytic subunit of a stomatal receptor complex (&#39;receptorsome&#39;) containing ERECTA-family and SERK receptor kinases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link">
+                                        PMID:26320950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SERKs associate with the receptor-like protein (RLP) TMM, a signal modulator of stomata development, in a ligand-independent manner, suggesting that ERECTA, SERKs, and TMM form a multiprotein receptorsome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033612" target="_blank" class="term-link">
+                                    GO:0033612
+                                </a>
+                            </span>
+                            <span class="term-label">receptor serine/threonine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26320950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential Function of Arabidopsis SERK Family Receptor-li...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0033612" data-r="PMID:26320950" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM associates with SERK-family co-receptor kinases (SERK1, SERK2, BAK1/SERK3, SERK4) in a ligand-independent manner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Informative binding term describing TMM&#39;s role as a non-catalytic subunit of a stomatal receptor complex (&#39;receptorsome&#39;) containing ERECTA-family and SERK receptor kinases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link">
+                                        PMID:26320950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SERKs associate with the receptor-like protein (RLP) TMM, a signal modulator of stomata development, in a ligand-independent manner, suggesting that ERECTA, SERKs, and TMM form a multiprotein receptorsome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033612" target="_blank" class="term-link">
+                                    GO:0033612
+                                </a>
+                            </span>
+                            <span class="term-label">receptor serine/threonine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26320950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential Function of Arabidopsis SERK Family Receptor-li...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0033612" data-r="PMID:26320950" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM associates with SERK-family co-receptor kinases (SERK1, SERK2, BAK1/SERK3, SERK4) in a ligand-independent manner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Informative binding term describing TMM&#39;s role as a non-catalytic subunit of a stomatal receptor complex (&#39;receptorsome&#39;) containing ERECTA-family and SERK receptor kinases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link">
+                                        PMID:26320950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SERKs associate with the receptor-like protein (RLP) TMM, a signal modulator of stomata development, in a ligand-independent manner, suggesting that ERECTA, SERKs, and TMM form a multiprotein receptorsome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033612" target="_blank" class="term-link">
+                                    GO:0033612
+                                </a>
+                            </span>
+                            <span class="term-label">receptor serine/threonine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28536146
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A receptor-like protein acts as a specificity switch for the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0033612" data-r="PMID:28536146" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM forms constitutive complexes with ERECTA and ERL1 (structural and biochemical study).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct interaction with the ERECTA-family receptor kinases is the mechanistic basis of TMM&#39;s co-receptor function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link">
+                                        PMID:28536146
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we show that TMM and ER or ER-LIKE1 (ERL1) form constitutive complexes, which recognize EPF1 and EPF2, but the single ERfs do not.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033612" target="_blank" class="term-link">
+                                    GO:0033612
+                                </a>
+                            </span>
+                            <span class="term-label">receptor serine/threonine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28536146
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A receptor-like protein acts as a specificity switch for the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0033612" data-r="PMID:28536146" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM forms constitutive complexes with ERECTA and ERL1 (structural and biochemical study).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct interaction with the ERECTA-family receptor kinases is the mechanistic basis of TMM&#39;s co-receptor function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link">
+                                        PMID:28536146
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we show that TMM and ER or ER-LIKE1 (ERL1) form constitutive complexes, which recognize EPF1 and EPF2, but the single ERfs do not.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038023" target="_blank" class="term-link">
+                                    GO:0038023
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0038023" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT inference of signaling receptor activity for the LRR RLP node.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct at this general level. TMM lacks an intracellular signalling domain and acts as a co-receptor that, together with an ERECTA-family kinase, forms the binding site for EPF1/EPF2; the more specific coreceptor activity (a child of signaling receptor activity) is used in core functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link">
+                                        PMID:28536146
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and EPF2, indicating that the constitutive TMM-ERf complexes function as the receptors of EPF1 and EPF2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042277" target="_blank" class="term-link">
+                                    GO:0042277
+                                </a>
+                            </span>
+                            <span class="term-label">peptide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26083750" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26083750
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Competitive binding of antagonistic peptides fine-tunes stom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0042277" data-r="PMID:26083750" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM binds the stomagen (EPFL9) peptide.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct binding of EPF-family peptides (stomagen and EPF2) to TMM is documented; peptide binding reflects its ligand-recognition role as a co-receptor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26083750" target="_blank" class="term-link">
+                                        PMID:26083750
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both EPF2 and Stomagen directly bind to ER and its co-receptor TOO MANY MOUTHS.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27446127" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27446127
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ERECTA and BAK1 Receptor Like Kinases Interact to Regulate I...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0050832" data-r="PMID:27446127" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tmm mutants show altered resistance to the necrotrophic fungus Plectosphaerella cucumerina.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TMM contributes with ERECTA-family receptors to resistance to this fungus; genuine but a secondary role relative to stomatal development.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27446127" target="_blank" class="term-link">
+                                        PMID:27446127
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we report that the developmental-associated ER partners, ERL1 and ERL2 and TMM, play overlapping functions in Arabidopsis defense responses against PcBMM</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071215" target="_blank" class="term-link">
+                                    GO:0071215
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to abscisic acid stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18434605" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18434605
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A genome-wide functional investigation into the roles of rec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0071215" data-r="PMID:18434605" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reduced ABA sensitivity of tmm mutants.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Secondary phenotype from a genome-wide RLP mutant screen; not a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18434605" target="_blank" class="term-link">
+                                        PMID:18434605
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In addition to the previously described stomatal clustering phenotype, tmm-1 and Atrlp17-1 that both carry a mutation in the AtRLP gene TMM displayed decreased sensitivity to ABA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071215" target="_blank" class="term-link">
+                                    GO:0071215
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to abscisic acid stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24553751" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24553751
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    New phenotypic characteristics of three tmm alleles in Arabi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0071215" data-r="PMID:24553751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Altered ABA responses of new tmm alleles in germination and seedling growth.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Allele-dependent ABA phenotypes reported in an abstract-only paper; mechanism unknown, likely indirect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24553751" target="_blank" class="term-link">
+                                        PMID:24553751
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">tmm-5 and tmm-6 were hypersensitive to abscisic acid (ABA) in seedling growth and seed germination</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905034" target="_blank" class="term-link">
+                                    GO:1905034
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of antifungal innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27446127" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27446127
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ERECTA and BAK1 Receptor Like Kinases Interact to Regulate I...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:1905034" data-r="PMID:27446127" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM genetically regulates antifungal immune responses together with ERECTA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As for defense response to fungus; secondary role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27446127" target="_blank" class="term-link">
+                                        PMID:27446127
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Genetic analyses demonstrated that ER acts in a combinatorial specific manner with ERL1, ERL2, and TMM to control PcBMM resistance.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015026" target="_blank" class="term-link">
+                                    GO:0015026
+                                </a>
+                            </span>
+                            <span class="term-label">coreceptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28536146
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A receptor-like protein acts as a specificity switch for the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SSD1" data-a="GO:0015026" data-r="PMID:28536146" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TMM acts as a co-receptor with ERECTA-family receptor kinases; the TMM-ERL1/ER complex, not the kinase alone, forms the EPF1/EPF2 binding pocket.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical and structural evidence that TMM, which lacks a kinase domain, cooperates with a nearby primary receptor kinase to bind the peptide ligand and initiate signalling, matching the definition of coreceptor activity and more informative than the IBA signaling receptor activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link">
+                                        PMID:28536146
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and EPF2, indicating that the constitutive TMM-ERf complexes function as the receptors of EPF1 and EPF2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26083750" target="_blank" class="term-link">
+                                        PMID:26083750
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both EPF2 and Stomagen directly bind to ER and its co-receptor TOO MANY MOUTHS.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic LRR receptor-like co-receptor that forms constitutive complexes with ERECTA-family receptor kinases at the plasma membrane and, together with them, creates the binding site for the inhibitory EPF1/EPF2 peptides (and the competing stomagen), conferring ligand specificity on ERECTA-family signalling that orients spacing divisions and prevents stomatal clustering.</h3>
+                <span class="vote-buttons" data-g="Q9SSD1" data-a="FUNCTION: Non-catalytic LRR receptor-like co-receptor that f..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015026" target="_blank" class="term-link">
+                            coreceptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010375" target="_blank" class="term-link">
+                                stomatal complex patterning
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link">
+                                PMID:28536146
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and EPF2, indicating that the constitutive TMM-ERf complexes function as the receptors of EPF1 and EPF2.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link">
+                                PMID:22241782
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our results place the ERECTA family as the primary receptors for EPFs with TMM as a signal modulator</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link">
+                                PMID:11090210
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">tmm randomizes this orientation and releases a prohibition on asymmetric division in cells at specific locations, resulting in stomatal clusters.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11090210" target="_blank" class="term-link">
+                            PMID:11090210
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Oriented asymmetric divisions that generate the stomatal spacing pattern in arabidopsis are disrupted by the too many mouths mutation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11536724" target="_blank" class="term-link">
+                            PMID:11536724
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The too many mouths and four lips mutations affect stomatal production in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11751054" target="_blank" class="term-link">
+                            PMID:11751054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The leucine-rich repeat as a protein recognition motif.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12040198" target="_blank" class="term-link">
+                            PMID:12040198
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Control of stomatal distribution on the Arabidopsis leaf surface.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12068095" target="_blank" class="term-link">
+                            PMID:12068095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Prediction of glycosylphosphatidylinositol-anchored proteins in Arabidopsis. A genomic analysis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12805588" target="_blank" class="term-link">
+                            PMID:12805588
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of glycosylphosphatidylinositol-anchored proteins in Arabidopsis. A proteomic and genomic analysis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18434605" target="_blank" class="term-link">
+                            PMID:18434605
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A genome-wide functional investigation into the roles of receptor-like proteins in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19452453" target="_blank" class="term-link">
+                            PMID:19452453
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic profiling of tandem affinity purified 14-3-3 protein complexes in Arabidopsis thaliana.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" target="_blank" class="term-link">
+                            PMID:22241782
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Direct interaction of ligand-receptor pairs specifying stomatal patterning.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24553751" target="_blank" class="term-link">
+                            PMID:24553751
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">New phenotypic characteristics of three tmm alleles in Arabidopsis thaliana.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26083750" target="_blank" class="term-link">
+                            PMID:26083750
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Competitive binding of antagonistic peptides fine-tunes stomatal patterning.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26320950" target="_blank" class="term-link">
+                            PMID:26320950
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Differential Function of Arabidopsis SERK Family Receptor-like Kinases in Stomatal Patterning.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27446127" target="_blank" class="term-link">
+                            PMID:27446127
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ERECTA and BAK1 Receptor Like Kinases Interact to Regulate Immune Responses in Arabidopsis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" target="_blank" class="term-link">
+                            PMID:28536146
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A receptor-like protein acts as a specificity switch for the regulation of stomatal development.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9684356" target="_blank" class="term-link">
+                            PMID:9684356
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Divergent regulation of stomatal initiation and patterning in organ and suborgan regions of the Arabidopsis mutants too many mouths and four lips.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16002616" target="_blank" class="term-link">
+                            PMID:16002616
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Stomatal patterning and differentiation by synergistic interactions of receptor kinases.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does a single co-receptor produce opposite, organ-specific effects on stomatal initiation (clusters in leaves, no stomata in stems), and is this fully explained by TMM&#39;s exclusion of EPFL4/EPFL6 from ERECTA-family receptors?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9SSD1" data-a="Q: How does a single co-receptor produce opposite, or..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is TMM localization or abundance itself regulated during stomatal lineage progression (e.g. by SPCH-dependent transcription or endocytosis), providing feedback on EPF sensitivity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9SSD1" data-a="Q: Is TMM localization or abundance itself regulated ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-experiments">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided TMM interface mutants that abolish ERf binding but preserve folding, tested for complementation of tmm leaf clustering and stem stomatal absence, to separate ligand-pocket formation from EPFL4/6 exclusion in vivo.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: structure-function genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9SSD1" data-a="EXPERIMENT: Structure-guided TMM interface mutants that abolis..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TMM-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9SSD1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tmm-at1g80080-q9ssd1-curation-notes">TMM (At1g80080, Q9SSD1) curation notes</h1>
+<p>Session 2026-10-06 (stomatal_lineage_development module). Falcon deep research failed (HTTP 402); notes from cached literature.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt Q9SSD1 TMM_ARATH (RLP17), 496 aa LRR receptor-like protein, single TM, no kinase domain <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" title="Unlike ERECTA family RKs, TMM lacks a cytoplasmic effector domain">PMID:22241782</a>.</li>
+</ul>
+<h2 id="key-findings">Key findings</h2>
+<ul>
+<li>tmm randomizes orientation of spacing divisions and allows divisions next to stomata -&gt; clusters <a href="https://pubmed.ncbi.nlm.nih.gov/11090210">PMID:11090210</a>; organ-specific: excess stomata in leaves, none in stems [PMID:11536724; PMID:9684356].</li>
+<li>TMM associates with ERECTA and ERL1 in vivo, not with itself <a href="https://pubmed.ncbi.nlm.nih.gov/22241782" title="TMM-YFP and ERECTA-Flag as well as TMM-YFP and ERL1-Flag associate with each other in vivo">PMID:22241782</a>.</li>
+<li>TMM-ERf constitutive complexes are the EPF1/EPF2 receptors; TMM creates the ligand pocket and excludes EPFL4/6 <a href="https://pubmed.ncbi.nlm.nih.gov/28536146" title="TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and EPF2...">PMID:28536146</a>.</li>
+<li>EPF2 and stomagen bind ER and TMM <a href="https://pubmed.ncbi.nlm.nih.gov/26083750">PMID:26083750</a>; SERKs associate with TMM ligand-independently <a href="https://pubmed.ncbi.nlm.nih.gov/26320950">PMID:26320950</a>.</li>
+<li>Secondary: ABA sensitivity phenotypes [PMID:18434605; PMID:24553751], antifungal immunity with ERf <a href="https://pubmed.ncbi.nlm.nih.gov/27446127">PMID:27446127</a>, trichome overexpression phenotype <a href="https://pubmed.ncbi.nlm.nih.gov/24553751">PMID:24553751</a>.</li>
+</ul>
+<h2 id="curation-decisions">Curation decisions</h2>
+<ul>
+<li>Core MF: coreceptor activity GO:0015026 (added NEW, IDA PMID:28536146); IBA signaling receptor activity accepted as the correct parent.</li>
+<li>Core BP: stomatal complex patterning GO:0010375 (IMP, accepted).</li>
+<li>Generic protein binding: 14-3-3 TAP row REMOVED; stomagen row MODIFIED to peptide binding.</li>
+<li>No GO-CAM models contain TMM.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9SSD1
+gene_symbol: TMM
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: TOO MANY MOUTHS (TMM; RLP17) is a plasma-membrane leucine-rich-repeat receptor-like protein
+  (RLP) with an extracellular LRR domain and a single transmembrane segment but no cytoplasmic kinase
+  domain. It is expressed in proliferating stomatal-lineage (postprotodermal) cells and functions as a
+  co-receptor for the ERECTA-family receptor kinases (ERECTA, ERL1, ERL2). TMM forms constitutive heteromeric
+  complexes with ERECTA and ERL1 (and associates with SERK co-receptor kinases), and the TMM-ERf complex
+  creates the binding pocket that recognizes the inhibitory EPF1 and EPF2 peptides and the competing positive
+  peptide stomagen/EPFL9, while excluding the stem-growth EPFL4/EPFL6 peptides. TMM therefore acts as
+  a specificity switch that directs ERECTA-family signalling, via the YODA-MKK4/5-MPK3/6 cascade, toward
+  inhibition of stomatal development and the orientation of spacing divisions. Loss of TMM randomizes
+  the orientation of asymmetric spacing divisions and permits entry divisions next to existing stomata,
+  producing stomatal clusters in leaves, whereas stomata are absent from some organs such as inflorescence
+  stems, reflecting region-specific positive and negative effects mediated through different EPF/EPFL
+  ligands.
+existing_annotations:
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19452453
+  qualifier: enables
+  supporting_entities:
+  - AGI_LocusCode:AT1G78300
+  review:
+    summary: Generic protein binding from a 14-3-3 (GRF2/AT1G78300) tandem-affinity-purification proteomics
+      study.
+    action: REMOVE
+    reason: Generic protein binding is uninformative. The interaction derives from a high-throughput 14-3-3
+      complex profiling study and has no established functional relevance for TMM, which has no cytoplasmic
+      domain of substance; removal does not imply the reported co-purification is false.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26083750
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q9SV72
+  review:
+    summary: TMM binds the stomagen/EPFL9 peptide (Q9SV72).
+    action: MODIFY
+    reason: The interaction is direct binding of a secreted peptide ligand to the TMM ectodomain; peptide
+      binding is the informative term (and is also annotated separately from the same paper).
+    proposed_replacement_terms:
+    - id: GO:0042277
+      label: peptide binding
+    supported_by:
+    - reference_id: PMID:26083750
+      supporting_text: Both EPF2 and Stomagen directly bind to ER and its co-receptor TOO MANY MOUTHS.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: EXP
+  original_reference_id: PMID:22241782
+  qualifier: located_in
+  review:
+    summary: Functional epitope-tagged TMM detected in membrane (microsomal) fractions.
+    action: ACCEPT
+    reason: TMM is a single-pass transmembrane RLP that associates with ERECTA-family receptors and binds
+      apoplastic peptides; plasma membrane localization is well supported.
+    supported_by:
+    - reference_id: PMID:22241782
+      supporting_text: The epitope-tagged TMM, ERECTA, and ERL1 were detected in membrane (microsomal)
+        fractions, consistent with their predicted subcellular localizations
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - AGI_LocusCode:AT1G13230
+  - AGI_LocusCode:AT1G65380
+  - AGI_LocusCode:AT1G80080
+  - AGI_LocusCode:AT4G28560
+  - PANTHER:PTN008274137
+  review:
+    summary: PAINT inference of plasma membrane localization for LRR RLPs.
+    action: ACCEPT
+    reason: Consistent with TMM structure and its function as a cell-surface co-receptor.
+    supported_by:
+    - reference_id: PMID:12040198
+      supporting_text: TMM encodes a leucine-rich repeat-containing receptor-like protein expressed in
+        proliferative postprotodermal cells.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0039
+  review:
+    summary: UniProt subcellular-location mapping to plasma membrane.
+    action: ACCEPT
+    reason: Correct for a cell-surface LRR receptor-like protein.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: NAS
+  original_reference_id: PMID:12040198
+  qualifier: located_in
+  review:
+    summary: Plasma membrane localization stated on the basis of TMM&#39;s predicted receptor-like protein
+      structure.
+    action: ACCEPT
+    reason: Supported by later biochemical data (membrane fractions, association with ERECTA-family receptors).
+    supported_by:
+    - reference_id: PMID:12040198
+      supporting_text: TMM encodes a leucine-rich repeat-containing receptor-like protein expressed in
+        proliferative postprotodermal cells.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IC
+  original_reference_id: PMID:11751054
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - GO:0005515
+  review:
+    summary: Curator inference of signal transduction from LRR protein-recognition function.
+    action: ACCEPT
+    reason: TMM is a co-receptor that shapes ERECTA-family signalling in response to EPF peptides; involvement
+      in signal transduction is correct though general. The specific output is captured by stomatal complex
+      patterning.
+    supported_by:
+    - reference_id: PMID:22241782
+      supporting_text: TMM modulates the signal transduction via association with the ERECTA family
+- term:
+    id: GO:0008356
+    label: asymmetric cell division
+  evidence_type: IMP
+  original_reference_id: PMID:11090210
+  qualifier: involved_in
+  review:
+    summary: tmm randomizes the orientation of asymmetric spacing divisions.
+    action: KEEP_AS_NON_CORE
+    reason: TMM signalling orients, and restricts the location of, asymmetric divisions in stomatal-lineage
+      cells; the protein does not execute the division but regulates its placement. Retained as a valid
+      but non-core process; the core process is stomatal complex patterning.
+    supported_by:
+    - reference_id: PMID:11090210
+      supporting_text: the orientation of asymmetric divisions that pattern stomata, and the control of
+        which cells will enter the stomatal pathway.
+- term:
+    id: GO:0008356
+    label: asymmetric cell division
+  evidence_type: IMP
+  original_reference_id: PMID:9684356
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: tmm affects asymmetric (stomatal initiation) divisions in a region-specific way.
+    action: KEEP_AS_NON_CORE
+    reason: As above; regulatory involvement in asymmetric entry/spacing divisions, non-core relative
+      to stomatal patterning.
+    supported_by:
+    - reference_id: PMID:9684356
+      supporting_text: This suggests that TMM represents an unusual type of gene regulating plant cell
+        development in that it can either influence stomatal initiation in a positive or negative fashion
+        depending on region.
+- term:
+    id: GO:0009737
+    label: response to abscisic acid
+  evidence_type: IMP
+  original_reference_id: PMID:18434605
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: tmm-1 and Atrlp17-1 show decreased ABA sensitivity in a genome-wide RLP mutant screen.
+    action: KEEP_AS_NON_CORE
+    reason: A secondary phenotype from a large-scale screen; no mechanism links TMM to ABA perception,
+      and the effect may be indirect (e.g. via altered epidermal/stomatal development). Kept as non-core.
+    supported_by:
+    - reference_id: PMID:18434605
+      supporting_text: In addition to the previously described stomatal clustering phenotype, tmm-1 and
+        Atrlp17-1 that both carry a mutation in the AtRLP gene TMM displayed decreased sensitivity to
+        ABA.
+- term:
+    id: GO:0010090
+    label: trichome morphogenesis
+  evidence_type: IMP
+  original_reference_id: PMID:24553751
+  qualifier: involved_in
+  review:
+    summary: TMM overexpression reduced leaf trichome number and branching.
+    action: KEEP_AS_NON_CORE
+    reason: Based on an overexpression phenotype reported in an abstract-only paper; plausibly an indirect
+      effect of altered epidermal patterning. Retained as non-core pending mechanistic support.
+    supported_by:
+    - reference_id: PMID:24553751
+      supporting_text: Interestingly, overexpression of TMM resulted in the reduction of leaf trichomes
+        and their branches, and this might reveal a new function of TMM in trichome development.
+- term:
+    id: GO:0010375
+    label: stomatal complex patterning
+  evidence_type: IMP
+  original_reference_id: PMID:11090210
+  qualifier: involved_in
+  review:
+    summary: tmm mutants violate the one-cell spacing rule, producing stomatal clusters.
+    action: ACCEPT
+    reason: Core biological role. TMM-containing receptor complexes perceive EPF signals that orient spacing
+      divisions and prevent stomata from forming in contact.
+    supported_by:
+    - reference_id: PMID:11090210
+      supporting_text: tmm randomizes this orientation and releases a prohibition on asymmetric division
+        in cells at specific locations, resulting in stomatal clusters.
+- term:
+    id: GO:0010375
+    label: stomatal complex patterning
+  evidence_type: IMP
+  original_reference_id: PMID:11536724
+  qualifier: involved_in
+  review:
+    summary: Original isolation of tmm with clustered stomata.
+    action: ACCEPT
+    reason: Founding genetic evidence for TMM&#39;s role in stomatal patterning/production.
+    supported_by:
+    - reference_id: PMID:11536724
+      supporting_text: The tmm mutation results in stomatal clustering and increased precursor cell formation
+        in cotyledons and a virtual absence of stomata in the inflorescence stem.
+- term:
+    id: GO:0010375
+    label: stomatal complex patterning
+  evidence_type: IMP
+  original_reference_id: PMID:9684356
+  qualifier: involved_in
+  review:
+    summary: Organ-specific quantification of stomatal clustering in tmm.
+    action: ACCEPT
+    reason: Supports the core patterning role.
+    supported_by:
+    - reference_id: PMID:9684356
+      supporting_text: This patterning is violated in the too many mouths (tmm) and four lips (flp) mutations
+- term:
+    id: GO:0010376
+    label: stomatal complex formation
+  evidence_type: IMP
+  original_reference_id: PMID:11090210
+  qualifier: involved_in
+  review:
+    summary: tmm alters whether cells enter the stomatal pathway (stomatal formation).
+    action: ACCEPT
+    reason: TMM controls which cells enter the stomatal pathway and, in some organs (e.g. stems), is required
+      for stomata to form at all; an accurate description of its regulatory role in stomatal formation.
+    supported_by:
+    - reference_id: PMID:11090210
+      supporting_text: the control of which cells will enter the stomatal pathway
+- term:
+    id: GO:0010376
+    label: stomatal complex formation
+  evidence_type: IMP
+  original_reference_id: PMID:9684356
+  qualifier: involved_in
+  review:
+    summary: tmm lacks stomata in some regions and has excess in others.
+    action: ACCEPT
+    reason: Region-specific positive and negative effects of TMM on stomatal initiation; consistent with
+      TMM acting as a ligand-specificity switch for ERECTA-family receptors.
+    supported_by:
+    - reference_id: PMID:9684356
+      supporting_text: The tmm mutation has a more complex region-specific phenotype in that some regions
+        lack stomata entirely, other regions have excess stomata
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:22241782
+  qualifier: located_in
+  review:
+    summary: TMM detected in microsomal membrane fractions.
+    action: ACCEPT
+    reason: Correct; the more specific plasma membrane term is also annotated.
+    supported_by:
+    - reference_id: PMID:22241782
+      supporting_text: The epitope-tagged TMM, ERECTA, and ERL1 were detected in membrane (microsomal)
+        fractions
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  supporting_entities:
+  - ARBA:ARBA00028763
+  review:
+    summary: ARBA prediction of membrane localization.
+    action: ACCEPT
+    reason: Correct, though less specific than plasma membrane.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:12068095
+  qualifier: located_in
+  review:
+    summary: Membrane localization stated in a genome-wide GPI-anchored protein prediction study.
+    action: ACCEPT
+    reason: TMM is membrane-associated (it has a transmembrane segment); the membrane term is correct
+      regardless of whether a GPI anchor is used, and the more specific plasma membrane term is annotated.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:12805588
+  qualifier: located_in
+  review:
+    summary: Membrane localization stated in a proteomic GPI-anchored protein identification study.
+    action: ACCEPT
+    reason: As above; membrane localization is correct.
+- term:
+    id: GO:0033612
+    label: receptor serine/threonine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:26320950
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q94AG2
+  review: &amp;id001
+    summary: TMM associates with SERK-family co-receptor kinases (SERK1, SERK2, BAK1/SERK3, SERK4) in
+      a ligand-independent manner.
+    action: ACCEPT
+    reason: Informative binding term describing TMM&#39;s role as a non-catalytic subunit of a stomatal receptor
+      complex (&#39;receptorsome&#39;) containing ERECTA-family and SERK receptor kinases.
+    supported_by:
+    - reference_id: PMID:26320950
+      supporting_text: SERKs associate with the receptor-like protein (RLP) TMM, a signal modulator of
+        stomata development, in a ligand-independent manner, suggesting that ERECTA, SERKs, and TMM form
+        a multiprotein receptorsome
+- term:
+    id: GO:0033612
+    label: receptor serine/threonine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:26320950
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q94F62
+  review: *id001
+- term:
+    id: GO:0033612
+    label: receptor serine/threonine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:26320950
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q9SKG5
+  review: *id001
+- term:
+    id: GO:0033612
+    label: receptor serine/threonine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:26320950
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q9XIC7
+  review: *id001
+- term:
+    id: GO:0033612
+    label: receptor serine/threonine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:28536146
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:C0LGW6
+  review: &amp;id002
+    summary: TMM forms constitutive complexes with ERECTA and ERL1 (structural and biochemical study).
+    action: ACCEPT
+    reason: Direct interaction with the ERECTA-family receptor kinases is the mechanistic basis of TMM&#39;s
+      co-receptor function.
+    supported_by:
+    - reference_id: PMID:28536146
+      supporting_text: Here we show that TMM and ER or ER-LIKE1 (ERL1) form constitutive complexes, which
+        recognize EPF1 and EPF2, but the single ERfs do not.
+- term:
+    id: GO:0033612
+    label: receptor serine/threonine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:28536146
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q42371
+  review: *id002
+- term:
+    id: GO:0038023
+    label: signaling receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - AGI_LocusCode:AT1G65380
+  - PANTHER:PTN008274137
+  review:
+    summary: PAINT inference of signaling receptor activity for the LRR RLP node.
+    action: ACCEPT
+    reason: Correct at this general level. TMM lacks an intracellular signalling domain and acts as a
+      co-receptor that, together with an ERECTA-family kinase, forms the binding site for EPF1/EPF2; the
+      more specific coreceptor activity (a child of signaling receptor activity) is used in core functions.
+    supported_by:
+    - reference_id: PMID:28536146
+      supporting_text: TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and
+        EPF2, indicating that the constitutive TMM-ERf complexes function as the receptors of EPF1 and
+        EPF2.
+- term:
+    id: GO:0042277
+    label: peptide binding
+  evidence_type: IPI
+  original_reference_id: PMID:26083750
+  qualifier: enables
+  supporting_entities:
+  - AGI_LocusCode:AT4G12970
+  review:
+    summary: TMM binds the stomagen (EPFL9) peptide.
+    action: ACCEPT
+    reason: Direct binding of EPF-family peptides (stomagen and EPF2) to TMM is documented; peptide binding
+      reflects its ligand-recognition role as a co-receptor.
+    supported_by:
+    - reference_id: PMID:26083750
+      supporting_text: Both EPF2 and Stomagen directly bind to ER and its co-receptor TOO MANY MOUTHS.
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IMP
+  original_reference_id: PMID:27446127
+  qualifier: involved_in
+  review:
+    summary: tmm mutants show altered resistance to the necrotrophic fungus Plectosphaerella cucumerina.
+    action: KEEP_AS_NON_CORE
+    reason: TMM contributes with ERECTA-family receptors to resistance to this fungus; genuine but a secondary
+      role relative to stomatal development.
+    supported_by:
+    - reference_id: PMID:27446127
+      supporting_text: Here, we report that the developmental-associated ER partners, ERL1 and ERL2 and
+        TMM, play overlapping functions in Arabidopsis defense responses against PcBMM
+- term:
+    id: GO:0071215
+    label: cellular response to abscisic acid stimulus
+  evidence_type: IMP
+  original_reference_id: PMID:18434605
+  qualifier: involved_in
+  review:
+    summary: Reduced ABA sensitivity of tmm mutants.
+    action: KEEP_AS_NON_CORE
+    reason: Secondary phenotype from a genome-wide RLP mutant screen; not a core function.
+    supported_by:
+    - reference_id: PMID:18434605
+      supporting_text: In addition to the previously described stomatal clustering phenotype, tmm-1 and
+        Atrlp17-1 that both carry a mutation in the AtRLP gene TMM displayed decreased sensitivity to
+        ABA.
+- term:
+    id: GO:0071215
+    label: cellular response to abscisic acid stimulus
+  evidence_type: IMP
+  original_reference_id: PMID:24553751
+  qualifier: involved_in
+  review:
+    summary: Altered ABA responses of new tmm alleles in germination and seedling growth.
+    action: KEEP_AS_NON_CORE
+    reason: Allele-dependent ABA phenotypes reported in an abstract-only paper; mechanism unknown, likely
+      indirect.
+    supported_by:
+    - reference_id: PMID:24553751
+      supporting_text: tmm-5 and tmm-6 were hypersensitive to abscisic acid (ABA) in seedling growth and
+        seed germination
+- term:
+    id: GO:1905034
+    label: regulation of antifungal innate immune response
+  evidence_type: IMP
+  original_reference_id: PMID:27446127
+  qualifier: involved_in
+  review:
+    summary: TMM genetically regulates antifungal immune responses together with ERECTA.
+    action: KEEP_AS_NON_CORE
+    reason: As for defense response to fungus; secondary role.
+    supported_by:
+    - reference_id: PMID:27446127
+      supporting_text: Genetic analyses demonstrated that ER acts in a combinatorial specific manner with
+        ERL1, ERL2, and TMM to control PcBMM resistance.
+- term:
+    id: GO:0015026
+    label: coreceptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:28536146
+  qualifier: enables
+  review:
+    summary: TMM acts as a co-receptor with ERECTA-family receptor kinases; the TMM-ERL1/ER complex, not
+      the kinase alone, forms the EPF1/EPF2 binding pocket.
+    action: NEW
+    reason: Direct biochemical and structural evidence that TMM, which lacks a kinase domain, cooperates
+      with a nearby primary receptor kinase to bind the peptide ligand and initiate signalling, matching
+      the definition of coreceptor activity and more informative than the IBA signaling receptor activity.
+    supported_by:
+    - reference_id: PMID:28536146
+      supporting_text: TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and
+        EPF2, indicating that the constitutive TMM-ERf complexes function as the receptors of EPF1 and
+        EPF2.
+    - reference_id: PMID:26083750
+      supporting_text: Both EPF2 and Stomagen directly bind to ER and its co-receptor TOO MANY MOUTHS.
+core_functions:
+- description: Non-catalytic LRR receptor-like co-receptor that forms constitutive complexes with ERECTA-family
+    receptor kinases at the plasma membrane and, together with them, creates the binding site for the
+    inhibitory EPF1/EPF2 peptides (and the competing stomagen), conferring ligand specificity on ERECTA-family
+    signalling that orients spacing divisions and prevents stomatal clustering.
+  molecular_function:
+    id: GO:0015026
+    label: coreceptor activity
+  directly_involved_in:
+  - id: GO:0010375
+    label: stomatal complex patterning
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:28536146
+    supporting_text: TMM interaction with ERL1 creates a binding pocket for recognition of EPF1 and EPF2,
+      indicating that the constitutive TMM-ERf complexes function as the receptors of EPF1 and EPF2.
+  - reference_id: PMID:22241782
+    supporting_text: Our results place the ERECTA family as the primary receptors for EPFs with TMM as
+      a signal modulator
+  - reference_id: PMID:11090210
+    supporting_text: tmm randomizes this orientation and releases a prohibition on asymmetric division
+      in cells at specific locations, resulting in stomatal clusters.
+suggested_questions:
+- question: How does a single co-receptor produce opposite, organ-specific effects on stomatal initiation
+    (clusters in leaves, no stomata in stems), and is this fully explained by TMM&#39;s exclusion of EPFL4/EPFL6
+    from ERECTA-family receptors?
+- question: Is TMM localization or abundance itself regulated during stomatal lineage progression (e.g.
+    by SPCH-dependent transcription or endocytosis), providing feedback on EPF sensitivity?
+suggested_experiments:
+- description: Structure-guided TMM interface mutants that abolish ERf binding but preserve folding, tested
+    for complementation of tmm leaf clustering and stem stomatal absence, to separate ligand-pocket formation
+    from EPFL4/6 exclusion in vivo.
+  experiment_type: structure-function genetics
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:11090210
+  title: Oriented asymmetric divisions that generate the stomatal spacing pattern in arabidopsis are disrupted
+    by the too many mouths mutation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract; defines TMM role in orienting spacing divisions.
+- id: PMID:11536724
+  title: The too many mouths and four lips mutations affect stomatal production in Arabidopsis.
+  findings: []
+- id: PMID:11751054
+  title: The leucine-rich repeat as a protein recognition motif.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: General review of LRR protein-recognition motifs; background only.
+- id: PMID:12040198
+  title: Control of stomatal distribution on the Arabidopsis leaf surface.
+  findings: []
+- id: PMID:12068095
+  title: Prediction of glycosylphosphatidylinositol-anchored proteins in Arabidopsis. A genomic analysis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Genome-wide GPI-anchor prediction; TMM only incidentally covered.
+- id: PMID:12805588
+  title: Identification of glycosylphosphatidylinositol-anchored proteins in Arabidopsis. A proteomic
+    and genomic analysis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: GPI-anchored protein proteomics; TMM only incidentally covered.
+- id: PMID:18434605
+  title: A genome-wide functional investigation into the roles of receptor-like proteins in Arabidopsis.
+  findings: []
+- id: PMID:19452453
+  title: Proteomic profiling of tandem affinity purified 14-3-3 protein complexes in Arabidopsis thaliana.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: 14-3-3 TAP proteomics; TMM co-purification of unclear functional significance.
+- id: PMID:22241782
+  title: Direct interaction of ligand-receptor pairs specifying stomatal patterning.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text; TMM membrane localization and in vivo association with ERECTA/ERL1.
+- id: PMID:24553751
+  title: New phenotypic characteristics of three tmm alleles in Arabidopsis thaliana.
+  findings: []
+- id: PMID:26083750
+  title: Competitive binding of antagonistic peptides fine-tunes stomatal patterning.
+  findings: []
+- id: PMID:26320950
+  title: Differential Function of Arabidopsis SERK Family Receptor-like Kinases in Stomatal Patterning.
+  findings: []
+- id: PMID:27446127
+  title: ERECTA and BAK1 Receptor Like Kinases Interact to Regulate Immune Responses in Arabidopsis.
+  findings: []
+- id: PMID:28536146
+  title: A receptor-like protein acts as a specificity switch for the regulation of stomatal development.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text; crystal structures/biochemistry showing TMM-ERf complexes are the EPF1/2
+      receptor.
+- id: PMID:9684356
+  title: Divergent regulation of stomatal initiation and patterning in organ and suborgan regions of the
+    Arabidopsis mutants too many mouths and four lips.
+  findings: []
+- id: PMID:16002616
+  title: Stomatal patterning and differentiation by synergistic interactions of receptor kinases.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

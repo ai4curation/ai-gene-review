@@ -1,0 +1,15 @@
+| Regulatory factor | Effect on FGF23 | Mechanism | Citations |
+|---|---|---|---|
+| Phosphate | Increases intact FGF23 | Osteocyte phosphate sensing involves PiT2 and ligand-independent FGFR1 signaling. Phosphate also increases **GALNT3**, promoting protective O-glycosylation and reducing intracellular cleavage of FGF23. | (pqac-00000058, pqac-00000059, pqac-00000061) |
+| Calcium | Increases FGF23; permits the phosphate response | Calcium can stimulate **FGF23** transcription and may be required for phosphate- or PTH-induced increases. Calcium–phosphate calciprotein particles can also stimulate osteocyte FGF23 expression and secretion. | (pqac-00000058, pqac-00000061) |
+| 1,25-dihydroxyvitamin D (calcitriol) | Increases FGF23 | Activates vitamin-D-receptor-dependent transcription in osteoblast-lineage cells, forming a feedback loop in which FGF23 subsequently suppresses renal calcitriol synthesis. Phosphate may enhance this transcriptional response. | (pqac-00000040, pqac-00000057, pqac-00000060) |
+| Parathyroid hormone (PTH) | Generally increases FGF23 chronically; acute effects can be biphasic | Signals through PTH1R and Nurr1 and suppresses sclerostin, thereby activating Wnt-associated FGF23 expression. Acute PTH can lower intact FGF23 through phosphaturia or increased cleavage, whereas sustained exposure generally increases production. | (pqac-00000056, pqac-00000057, pqac-00000060) |
+| GALNT3 (GalNAc-T3) | Increases intact, bioactive FGF23 | O-glycosylates FGF23—especially Thr178 after modification at Thr171—protecting the furin-recognition region from cleavage and stabilizing the full-length hormone. | (pqac-00000055, pqac-00000079, pqac-00000083) |
+| FAM20C | Decreases intact FGF23; increases cleavage fragments | Phosphorylates Ser180, antagonizing GALNT3-mediated glycosylation and permitting furin-like proteolysis into N- and C-terminal fragments. | (pqac-00000055, pqac-00000079, pqac-00000081) |
+| Erythropoietin (EPO) | Increases FGF23 production, often with increased cleavage | Kidney-derived or therapeutic EPO stimulates FGF23 production in osteoblast/osteocyte-lineage and erythroid or marrow stromal cells, particularly during anemia and hypoxia. | (pqac-00000016, pqac-00000055, pqac-00000062) |
+| Lipocalin-2 (LCN2) | Increases FGF23 | In CKD, renal EGF–EGFR–HIF1α signaling induces LCN2; circulating LCN2 then activates osteocyte LCN2R–cAMP–PKA–CREB signaling to stimulate FGF23 transcription. | (pqac-00000060, pqac-00000062) |
+| PHEX | Decreases FGF23 | Acts locally in bone with DMP1 to restrain FGF23 expression and may facilitate its cleavage. Loss-of-function causes excess intact FGF23, renal phosphate wasting, and hypophosphatemia. | (pqac-00000056, pqac-00000057) |
+| DMP1 | Decreases FGF23 | Osteocyte-derived matrix protein that suppresses FGF23 through a local pathway shared with PHEX. DMP1 deficiency—or its suppression in CKD—derepresses FGF23 production. | (pqac-00000056, pqac-00000057, pqac-00000075) |
+
+
+*Table: Major mineral, endocrine, post-translational, kidney-derived, and bone-local regulatory factors governing FGF23 transcription, processing, and bioactive hormone abundance.*
