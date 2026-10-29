@@ -31,7 +31,7 @@ Crystal structures of substrate and product complexes show single-stranded DNA
 > [PMID:27273516 "They reveal single-stranded DNA threading through a hole in the enzyme, which is enclosed by an inverted V-shaped helical arch straddling the active site."]
 
 The same paper confirms the gene identity of the protein it crystallised:
-> [PMID:27273516 "Site-directed mutagenesis of the T5Fen (also known as the gene D15 product, accession number NC_005859.1, nucleotides 80,134-80,968)"]
+> [PMID:27273516 "also known as the gene D15 product, accession number NC_005859.1"]
 
 ## Catalysis
 
@@ -51,7 +51,7 @@ The two are mechanistically separable:
 
 Metals are obligatory cofactors and their stoichiometry selects the reaction:
 > [PMID:15077103 "Structure-specific endonuclease activity requires binding of a single metal ion in the high-affinity site, whereas exonuclease activity requires that both the high- and low-affinity sites be occupied by divalent cofactor."]
-> [PMID:27273516 "In wild type (wt) T5Fen, two Mg2+ ions (M1 and M2) separated by 3.6 A were bound through conserved residues in the Cat1 site of the helical arch form"]
+> [PMID:27273516 "A third magnesium ion (M3) was bound in Cat2."]
 > [PMID:27273516 "A potassium ion was bound via backbone carbonyl oxygens within this motif."]
 
 UniProt records the same, with the caveat that the endo/exo switching by metal
@@ -120,6 +120,16 @@ and is hedged even in UniProt
 and the habit of describing the enzyme generically as a "dsDNA exonuclease/endonuclease"
 as the datasheets do, which loses the structure specificity that the mutagenesis and
 structural work establish.
+
+## Review tally
+
+All 38 GOA rows reviewed: 16 ACCEPT (the six `GO:0017108` rows, the eight `GO:0051908`
+rows, `GO:0035312` and `GO:0039693`), 13 MODIFY, 6 TOO_GENERAL (the `catalytic activity`
+/ `nuclease` / `endonuclease` / `exonuclease` / `hydrolase` /
+`catalytic activity, acting on DNA` ancestors), 2 MARK_AS_OVER_ANNOTATED
+(`GO:0019086`, `GO:0033567`), 1 KEEP_AS_NON_CORE (`GO:0019034`). No REMOVE and no NEW
+rows: nothing in the set is false, and nothing the literature supports is missing from it
+once the generic terms are refined.
 
 ## CACAO rows (ASSIGNED BY = CACAO in the GOA file)
 
