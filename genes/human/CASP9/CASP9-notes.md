@@ -63,3 +63,30 @@ Cancer cells often shift this ratio towards 9S to evade apoptosis.
 ## Key References
 
 - PMID:10070954 - Caspase-9S dominant-negative function
+
+## 2026-09-30 APOPTOSIS review
+
+- Re-reviewed the pre-existing CASP9 YAML without using the provider deep-research
+  files as assertion support. Primary rows now cite cached PubMed, Reactome, GOA,
+  and GO-CAM evidence directly.
+- Tightened inherited top-level `GO:0006915 apoptotic process` rows to
+  `GO:0097193 intrinsic apoptotic signaling pathway`, and tightened broad
+  apoptosis-regulation assertions to `GO:1900119 positive regulation of execution
+  phase of apoptosis` where the evidence is full-length CASP9 maturing
+  executioner procaspases.
+- Retained `GO:0051604 protein maturation` for the direct CASP9 step of
+  proteolytically activating CASP3/CASP7; CASP9 is upstream of the execution
+  phase rather than itself being an executioner-caspase component.
+- Replaced APaf-1/procaspase-9 generic `GO:0005515` rows with
+  `GO:0050700 CARD domain binding` or the apoptotic cysteine-endopeptidase
+  activator term as appropriate, and removed uninformative high-throughput or
+  inhibitor/interactor `GO:0005515` edges.
+- Made the endogenous Caspase-9S negative-regulator proposal isoform-specific
+  to `P55211-2` and more precise as `GO:2001243 negative regulation of intrinsic
+  apoptotic signaling pathway`; removed a broad `GO:0030234 enzyme regulator
+  activity` placeholder that had only been present to satisfy the core-function
+  shape.
+- Deferred abstract-only rows where the visible record did not expose the
+  CASP9 assay behind the GOA annotation, and marked the DNA-damage/c-Abl Tyr-153
+  rows as unresolved because PMID:29066624 challenged the original activating
+  phosphorylation model from PMID:15657060.

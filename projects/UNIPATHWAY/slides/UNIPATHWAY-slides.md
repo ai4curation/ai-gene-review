@@ -36,8 +36,8 @@ Auditing GO_REF:0000041, a legacy pathway-vocabulary mapping, where it is the on
 
 ## Bottom line
 
-- **Closure filtering** removes rows already supported at the same or a more specific term: human UniPathway rows drop from **1,129 to 247** truly unique.
-- **32 exemplar rows** across 9 organisms reviewed: **24 ACCEPT**. UniPathway is a net positive pathway gap filler, strongest in microbes.
+- In a frozen local GOA snapshot with an unrecorded build date, **closure filtering** removed redundant rows: human UniPathway drops from **1,129 to 247** truly unique.
+- **31 TRUE-unique exemplar rows + ELOC comparator** across 9 organisms reviewed: **24 ACCEPT**. UniPathway is a net positive pathway gap filler, strongest in microbes.
 - Errors are specific, not systemic: **UBA7** (ISG15, not ubiquitin) MODIFY; **nrfA** (not nitrate assimilation) REMOVE; **NorR** regulators over-annotated to denitrification.
 
 ---
@@ -87,16 +87,16 @@ Auditing GO_REF:0000041, a legacy pathway-vocabulary mapping, where it is the on
 ## Patterns
 
 1. **Metabolic enzyme in its pathway → ACCEPT** (COX5B, catA, algE, Brachypodium PAL and UXS).
-2. **Modification buckets need the mechanism**: E3s and substrate adaptors yes; UBL enzymes and DUBs no.
+2. **Modification buckets need the mechanism**: E3s and substrate adaptors yes; non-ubiquitin UBL enzymes need modifier-specific terms; DUBs and cargo handlers need transfer evidence.
 3. **Broad lipid parents** are correct but not core (GK5, PM20D1 non-core; LPCAT1 over-annotated).
 4. **Regulators are not pathway enzymes** (norR1, norR2).
-5. **Microbial signal dwarfs vertebrate**: 165,344 TRUE-unique bacterial rows vs 247 in human.
+5. **Microbial signal dwarfs vertebrate** in the frozen scan: 165,344 TRUE-unique bacterial rows vs 247 in human.
 
 ---
 
 ## Status and next steps
 
-- Scans done: 13 single-species databases + 6 clade aggregates; **32 exemplar reviews** in `genes/`.
+- Frozen local scans: 13 single-species databases + 6 clade aggregates; **31 TRUE-unique exemplar rows + ELOC comparator** in `genes/`.
 - Not yet done: full human `UPA00143` audit (124 genes), retinol/cholesterol CYP subset, bacterial denitrification set (615 rows, 530 taxa), nrfA nitrate-assimilation tail (14 rows).
 - Recommendation: keep closure filtering as default; review microbial rows by term group.
 

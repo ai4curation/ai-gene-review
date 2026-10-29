@@ -28,7 +28,7 @@ Annotation databases face a practical deployment question — *when is a new fun
 
 ## Evidence base
 
-- **ARGO139/ARGO95 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): a 139-export ARGO139 collected cohort with a 138-gene RL performance set, plus the 95-gene ARGO95 HF-catalogue subset for SFT GO-term review. Audited RL means are 4.0/5 correctness and 2.9/5 completeness, with eight recurrent model-output failure modes, blinded second-rater agreement, and regenerated SFT term assessments.
+- **ARGO139/ARGO95 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): a 139-export ARGO139 collected cohort with a 138-gene RL performance set, plus the 95-gene ARGO95 HF-catalogue subset for SFT GO-term review. Audited RL means are 4.0/5 correctness and 2.9/5 completeness, with eight recurrent model-output failure modes (the project page's ninth heading, wrong input data, is a pipeline issue), blinded second-rater agreement, and regenerated SFT term assessments.
 - **`ESR-ECOLI-DET-Mini` 7-gene *E. coli* positive control and recap** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md` and `../recapitulation-experiment/claude-expt-1/`; dataset ID `10.5281/zenodo.20751016`): AI-AUGR reproduces all 7 classes when labels/rationales are present as a positive control. An answer-key-withheld, literature/bioinformatics-assisted recapitulation recovers 4/7 exact labels, enough for useful triage but not expert-equivalent.
 - **Supplemental SFT source checks** on the public HuggingFace `wanglab/protein_catalogue` dataset: retained for reproducibility in `supplemental-benchmark-details.md`.
 
@@ -54,3 +54,15 @@ just pdf
 
 The recipe runs `latexmk` in `article/` and writes `article/manuscript.pdf`.
 The manuscript PDF is committed as a publication artifact; intermediate LaTeX build files are ignored.
+
+**PDF drift warning (2026-09-27).** `manuscript.pdf` is tracked in git, yet `article/.gitignore` excludes `*.pdf`. Tracked files are unaffected by `.gitignore`, so the committed PDF stays in the repository but is never refreshed automatically. It was last committed together with `manuscript.tex` on 2026-09-19.
+
+On 2026-09-27, `manuscript.tex` was edited:
+
+- The failure-mode count now states eight model-output modes and explains that the ninth heading, wrong input, is excluded.
+- The aprE row in Table 6 was replaced, because its coagulation terms come from GO-GPT and SFT, not the RL narrative.
+- The wording on the independence of the correctness and completeness axes was corrected.
+
+No LaTeX toolchain was available in that session, so the PDF was **not** rebuilt and is now stale relative to the `.tex`. Run `just pdf` and commit the result before linking the PDF as current. Do not delete the tracked PDF without deciding whether it should stay a committed artifact; if it should, add a `!manuscript.pdf` exception to `article/.gitignore`.
+
+`slides.html` was not re-rendered either, although `slides.md` changed on 2026-09-27. Run `just slides` to refresh it.

@@ -88,3 +88,23 @@ nucleoplasm IBA row). Rendered to `BUB3-ai-review.html`.
 - Whether PMID:23267104 really reports the yeast Bub1-Bub3 pair (supplementary control?) could
   not be checked from the cache.
 - The Bub3 panel of PMID:21070969 (ubiquitin binding) is not in the cached text.
+
+## 2026-10-01 update: IBA project alignment
+
+- Force-refreshed BUB3 against current QuickGO and UniProt data. The live GOA
+  snapshot still has 49 rows, all already represented in the review, so no
+  newly seeded annotations or stale source rows needed resolution.
+- Fetched the missing `interpro/panther/PTHR10971/PTHR10971-paint.tsv` cache.
+  Current PAINT places kinetochore, nucleoplasm, mitotic spindle assembly
+  checkpoint signaling, and Bub1-Bub3 complex membership on `PTN000103865`;
+  ubiquitin binding is still on the broader `PTN000103837` Bub3/Rae1 WD40
+  node.
+- Added structured `propagation_review` metadata and PAINT file citations to
+  the four accepted `PTN000103865` IBA rows, and cited the new PAINT slice from
+  the non-core `PTN000103837` ubiquitin-binding row. The existing action calls
+  remain supported.
+- Searched again for newer BUB3 literature. The 2025 full-text BIR paper is
+  already represented and remains best interpreted as SAC checkpoint delay
+  required for BIR completion rather than Bub3 doing DNA-repair chemistry. The
+  2024 meiosis and GCR-correction papers remain pathway-level context, not new
+  Bub3 activities.

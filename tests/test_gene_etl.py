@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+import yaml
 from ai_gene_review.etl.gene import fetch_gene_data
 
 
@@ -284,3 +285,34 @@ def test_dead_review_accession_falls_back_to_symbol_resolution(
         "P12345",
     ]
     mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+def test_accession_fetch_records_uniprot_gene_name(mock_fetch_uniprot, mock_fetch_goa, tmp_path):
+    """Fetching an alt-ORF peptide by accession records its host gene symbol.
+
+    Alternative-ORF peptides live in ``<HOST>__<ACC>`` folders; the stub's
+    gene_symbol should be UniProt's gene name, not the accession or folder name.
+    """
+    mock_fetch_uniprot.return_value = (
+        "ID   ALTMF_HUMAN Reviewed; 70 AA.\n"
+        "AC   L0R8F8;\n"
+        "GN   Name=MIEF1 {ECO:0000312|HGNC:HGNC:25979};\n"
+        "OS   Homo sapiens (Human).\n"
+    )
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("human", "L0R8F8"),
+        uniprot_id="L0R8F8",
+        base_path=tmp_path,
+        alias="MIEF1__L0R8F8",
+        fetch_titles=False,
+    )
+
+    review = yaml.safe_load(
+        (tmp_path / "genes" / "human" / "MIEF1__L0R8F8" / "MIEF1__L0R8F8-ai-review.yaml").read_text()
+    )
+    assert review["id"] == "L0R8F8"
+    assert review["gene_symbol"] == "MIEF1"

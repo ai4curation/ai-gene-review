@@ -112,5 +112,19 @@ PRM5's own localization directly and do NOT imply any molecular function.
    (the ND root annotation accurately records "no data").
 5. `GO:0008150 biological_process` (ND) — likewise the honest placeholder; BP unknown. **ACCEPT.**
 
+## 2026-10-01 current GOA refresh
+
+- Force-refreshed PRM5 GOA and UniProt. The live GOA row set is unchanged except
+  for the UniProt SubCell `GO:0016020` annotation date moving from 2026-06-16 to
+  2026-07-27, and current UniProt adds the InterPro `SCY_4732_TM` member entry.
+- Rechecked the two PTHR36089 IBA localizations against a fresh PAINT pull. Current
+  local PAINT still exposes only `PTN002188658` for `GO:0000324`; the GOA-provided
+  bud-neck `PTN002188659` remains absent from the local PAINT slice, so the existing
+  lower-confidence wording for `GO:0005935` still stands.
+- Searched for newer direct PRM5/YIL117C functional papers and found no publication
+  that establishes a molecular function or biological process for PRM5. The ND MF/BP
+  rows, membrane localization row, and two non-core IBA component rows remain the
+  appropriate conservative review.
+
 `core_functions`: at most a minimal localization statement (integral membrane component); no MF can
 be responsibly asserted. `knowledge_gaps` carries the substance.
