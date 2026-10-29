@@ -1,6 +1,6 @@
 ---
 title: "CACAO community annotations review"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [EVALUATION]
 species: [STRP1, EBOZM, yeast, RVFVZ, BUNYW, BPPRD, PSEAE, BPP22, SHIFL, ECOLI, BPPH2, BACSU, BPT4, LAMBD, human, mouse, rat, ARATH, DROME]
 genes: [pppL, VP35, VP40, GP, WHI3, NSS, N, XV, fabY, sieA, ipaH4.5, clpX, "6"]
@@ -20,6 +20,14 @@ reviews accepted 263, kept 150 as non-core, modified 47, marked 20
 over-annotated, removed 9, left 7 undecided, and called 2 too general; 5 rows
 are absent from the review files, which predate them.
 
+**Batch 1 result (12 microbial genes, 71 CACAO rows).** 30 ACCEPT, 21 MODIFY,
+11 KEEP_AS_NON_CORE, 7 MARK_AS_OVER_ANNOTATED, 1 TOO_GENERAL, 1 REMOVE: 58%
+kept as written, 41% kept with a correction, and one row removed. The single
+removal is contradicted by the cited abstract itself. Read as a quality
+judgment, CACAO holds up: nearly every row is on the right protein, from a
+paper that assays it, with an evidence code that fits the assay. What fails is
+the choice of term, and it fails in ways no mechanical check sees.
+
 **Microbes first.** Microbial proteins (bacteria, archaea, viruses and phages,
 fungi and protists) carry 2,166 CACAO rows on 1,617 gene products, half the
 corpus, but only 116 of them are reviewed, against 151 of 1,107 animal
@@ -33,27 +41,73 @@ order is therefore microbes first, ranked by CACAO row count; the animal and
 plant genes follow.
 
 The question for this project is whether CACAO rows fail in a characteristic
-way that differs from professional curation, and how often. The 503 rows
-already judged suggest they mostly hold (82% kept), with the failures in
-three recurring shapes:
+way that differs from professional curation, and how often. After batch 1 the failure taxonomy has eight shapes. Only the first was
+expected; the rest were found by reading papers against term definitions.
 
-- **Phenotype read as process.** An IMP effect several steps downstream of the
-  gene's activity, annotated as a regulation term: GO:0031281 *positive
-  regulation of cyclase activity* on MAPK3, MAPK8 and MAPK14 from one paper
-  (PMID:22027397); `regulation of gene expression` on YAP1, SIRT1 and P2RX7;
-  `apoptotic process` on BAX.
-- **One paper applied to genes it does not assay.** PMID:25313396 lists the
-  minimal FlgM secretion components and omits fliH, fliY and swrD, yet carries
-  CACAO rows for all three (see [BACSU](BACSU.md)).
-- **Single-assay localization.** A CC from one IDA image (SNAP23 mitochondrion,
-  KRT19 plasma membrane) that the rest of the literature does not support.
+- **Phenotype read as process.** An effect several steps downstream of the
+  gene's activity, annotated as the process itself: `positive regulation of
+  cyclase activity` on MAPK3, MAPK8 and MAPK14 from one paper
+  (PMID:22027397); WHI3 `positive regulation of translation` from a
+  protein-level change; clpX `cell division` from a genetic interaction the
+  authors read as modulation.
+- **Precursor supply read as pathway participation.** The variant a
+  pleiotropic metabolic knockout produces: fabY starves many pathways of
+  acyl-ACP, and each downstream product became its own process term (quorum
+  sensing, siderophore biosynthesis, lipid A biosynthesis), none of them a
+  step FabY performs.
+- **Sign inverted.** The term asserts the opposite of the result. pppL
+  `positive regulation by symbiont of entry into host` rests on an adherence
+  proxy while the invasion data show the mutant is sixfold *more* invasive;
+  Bunyamwera NSs carries both `viral gene expression` and `negative
+  regulation of viral genome replication` from one figure showing ~10x *more*
+  viral protein, so the two rows contradict each other.
+- **Wrong arm of a bidirectional pathway.** Virus rows on `suppression of
+  type I interferon signalling` whose papers assay interferon *production*:
+  VP35 (whose companion paper explicitly shows VP35 cannot block receptor
+  signalling, which is VP24's job), RVFV NSs twice, Bunyamwera NSs twice.
+  This one is not a CACAO defect. GO has no symbiont-mediated counterpart of
+  GO:0032480 *interferon production*, so UniProt IDA rows and KW-1114 IEA
+  rows land on the same wrong term; influenza NS1 carries it the same way.
+  The RVFV NSs review files the missing term as `proposed_new_terms`.
+- **Right pathway, wrong molecular step.** ipaH4.5 `symbiont-mediated
+  suppression of host translation` where the readout is an NF-kB reporter and
+  cytokine output: host gene expression, not translation. The term is a
+  sibling inside the correct neighbourhood, the paper is the right paper and
+  the evidence code fits, so only the term definition catches it.
+- **Own-process term for a host-directed activity.** PRD1 endolysin
+  `cell wall disassembly`, which is an organism disassembling *its own* wall;
+  a phage has none. The interspecies branch (GO:0052009) is where it belongs.
+  Likely systematic across phage and effector annotations.
+- **Parent-level restatement.** The same experiment annotated twice, once at
+  the specific term and once at its ancestor: sieA `regulation of viral entry`
+  beside `superinfection exclusion`; VP40 `host cell membrane` three times
+  where every assay is plasma-membrane specific. True, redundant, and
+  `MODIFY` rather than a failure.
+- **Mechanism paper read as a localization.** The mirror image of
+  phenotype-as-process, found on Ebola GP: an IDA cellular-component row
+  whose paper images only host machinery (clathrin, transferrin, Eps15) and
+  never localizes the viral protein at all.
+
+Two shapes catalogued before batch 1 did not recur in it: **one paper applied
+to genes it does not assay** (PMID:25313396 for fliH, fliY and swrD; see
+[BACSU](BACSU.md)) and **single-assay localization** (SNAP23 mitochondrion,
+KRT19 plasma membrane). Every batch-1 paper was about its gene.
+
+**A CACAO error does not stay put.** VP40's `intracellular transport of virus`
+row, which has no transport assay behind it, has already seeded an inter-ontology
+IEA (GO_REF:0000108). Error rates counted on CACAO rows alone understate the
+footprint.
 
 CACAO annotations are experimental, so the
 [curator-deference rule](../CLAUDE.md) applies: the student read the full
 text, and a `REMOVE` needs the paper itself, not its abstract. The GONUTS wiki
 (`gowiki.tamu.edu`) keeps a page per paper and per protein for CACAO
 annotations (the ALDH4A1 review used both), and is the first thing to check
-when the cached publication is abstract-only.
+when the cached publication is abstract-only. **As of 2026-10-29 that check
+is unavailable**: gowiki.tamu.edu serves only "This site is temporarily
+offline while we perform upgrades", and the Internet Archive has no snapshot
+of the relevant pages. Every batch-1 row was therefore judged from the paper
+alone. Re-check the abstract-only rows when GONUTS returns.
 
 ## Project files
 
@@ -117,26 +171,49 @@ Top taxa:
 ---
 # STATUS
 
-Snapshot 2026-10-28: 281/2,987 CACAO gene products reviewed; 503/4,373 rows
-judged. Microbial: 116/1,617 reviewed.
+Snapshot 2026-10-29: 293/2,987 CACAO gene products reviewed; 574/4,373 rows
+judged. Microbial: 128/1,617 reviewed.
 
 ## Batch 1: microbes, at least five CACAO rows
 
 Organism codes are UniProt mnemonics, for `just fetch-gene <CODE> <gene>`.
+Counts are total review rows / CACAO rows.
 
-- [ ] STRP1 pppL (Q99YM9), *Streptococcus pyogenes* M1, 8 CACAO rows
-- [ ] EBOZM VP35 (Q05127), Zaire ebolavirus, 8
-- [ ] EBOZM VP40 (Q05128), Zaire ebolavirus, 6
-- [ ] yeast WHI3 (P34761), 6
-- [ ] RVFVZ NSS (P21698), Rift Valley fever virus, 6
-- [ ] BUNYW N (P16494, entry NSS_BUNYW), Bunyamwera virus, 6
-- [ ] BPPRD XV (P13559), phage PRD1 endolysin, 6
-- [ ] PSEAE fabY (Q9HU15), *Pseudomonas aeruginosa* PAO1, 5
-- [ ] BPP22 sieA (Q38674), phage P22 superinfection exclusion, 5
-- [ ] EBOZM GP (Q05320), Zaire ebolavirus glycoprotein, 5
-- [ ] SHIFL ipaH4.5 (P18009), *Shigella flexneri*, 5
-- [ ] ECOLI clpX (P0A6H1), 5
-- [ ] BPPH2 6 (P03685), phage phi29 nucleoid protein p6, 5
+- [x] STRP1 pppL (Q99YM9), *Streptococcus pyogenes* M1 SP-STP, 13/8
+- [x] EBOZM VP35 (Q05127), Zaire ebolavirus, 32/8
+- [x] EBOZM VP40 (Q05128), Zaire ebolavirus, 34/6
+- [x] yeast WHI3 (P34761), 33/6
+- [x] RVFVZ NSS (P21698), Rift Valley fever virus, 24/6
+- [x] BUNYW N (P16494, entry NSS_BUNYW), Bunyamwera virus, 9/6
+- [x] BPPRD XV (P13559), phage PRD1 endolysin P15, 15/6
+- [x] PSEAE fabY (Q9HU15), *Pseudomonas aeruginosa* PAO1, 11/5
+- [x] BPP22 sieA (Q38674), phage P22 superinfection exclusion, 7/5
+- [x] EBOZM GP (Q05320), Zaire ebolavirus glycoprotein, 33/5
+- [x] SHIFL ipaH4.5 (P18009), *Shigella flexneri*, 13/5
+- [x] ECOLI clpX (P0A6H1), 36/5
+- [ ] BPPH2 6 (P03685), phage phi29 nucleoid protein p6, 5 CACAO rows —
+  **blocked**. Notes are written (`genes/BPPH2/6/6-notes.md`) but
+  two attempts to write the review YAML were stopped by a safety classifier.
+  Needs a human to look at the notes and finish or drop the gene.
+
+## Upstream reports from batch 1
+
+Recorded as `source_defects` / `proposed_new_terms`; run
+`just export-source-defects` for the per-resource reports.
+
+- [ ] GO: no symbiont-mediated counterpart of GO:0032480 *interferon
+  production* (proposed in the RVFV NSs review; four rows across three
+  viruses land on the signalling term for want of it).
+- [ ] GO: `GOCellularLocationEnum` cannot express GO:0055036 virion membrane
+  or GO:0019031 viral envelope in `core_functions.locations`, which is where
+  a virion surface protein's activity happens (found on GP).
+- [ ] GO/EBI: UniProt keyword KW-0081 maps phage endolysins to GO:0042742
+  *defense response to bacterium*, inverting the interaction direction (XV).
+- [ ] UniProt: P18009 AltName "Probable RING-type E3 ubiquitin transferase"
+  contradicts its own NEL domain and Cys379 active site (ipaH4.5).
+- [ ] CAFA: ClpX assigned to GO:0009376 HslUV complex from an SspB/ClpXP
+  paper; an IBA rests on that row (clpX).
+- [ ] RVFV NSs GO:0039689 row contradicted by its own cited abstract.
 
 ## Batch 2: microbes, four CACAO rows (from `cacao-inventory.yaml`)
 
@@ -159,6 +236,26 @@ mouse Reln (20), Shank3 (18), Sirt6 (14), Nlgn3 (13), Wnt5a (11), Pafah1b1
   and fliH x2) using the GONUTS records.
 
 # NOTES
+
+## 2026-10-29
+
+Batch 1 reviewed: 12 of 13 genes complete and validating with 0 errors, 260
+review rows, 71 CACAO rows judged. One gene (phage phi29 p6) is blocked as
+above. Results and the eight-shape failure taxonomy are in the summary.
+
+Method notes for later batches:
+
+- **GONUTS is offline**, so the student-evidence check that the plan relies on
+  is unavailable. Revisit the abstract-only rows when it returns.
+- **No deep-research provider keys in this container**, so reviews were done
+  from cached publications plus PubMed/PMC and web search. Recorded in each
+  notes file; no `-deep-research-*.md` files were created.
+- **Re-fetching upgrades the cache.** Two pppL papers went from abstract-only
+  to full text on a forced re-fetch; worth doing routinely before judging.
+- **Do not run corpus-wide cache scripts.** `scripts/warm_reference_cache.py`
+  ignores `--help` and starts warming everything; a run during batch 1
+  rewrote 20 unrelated `publications/` files, stripping cached full text.
+  They were restored, but the damage was briefly committed.
 
 ## 2026-10-28
 
