@@ -149,3 +149,43 @@ Private original-data and consultation records are retained locally. These hashe
 - FLVCR1-PDZ-specificity-peer-tracker642-20261028-v1/peer-review.json: `b87226fa46997d278a759eaa3ef9a4137ee4f6f91c2eae243ff40e235a6f5fd1`
 - FLVCR1-review-20261028-v1/FLVCR1-ai-review.yaml.seed: `6197210b6f2f3140c66444efd3b52a45a3999ba9e9356e4412973ccaf83c58d6`
 - FLVCR1-review-20261028-v1/context-projection-proof.json: `e36868e2a8267eeb70c090b58a614c0e9fe82332fd6db5c93886bdb1467570a7`
+
+## PR5716 review clarification
+
+Thirteen existing source-pair uncertainties are now recorded as OTHER / INTACT / SUSPECTED / CHECK, with no proposed correction or deletion and no upstream-report claim. Their original UNDECIDED actions and source contexts remain intact.
+
+The phospholipid-pathway rationale distinguishes FLVCR1-mediated precursor entry, experimentally coupled to downstream precursor labeling and represented by original part_of extensions, from export or redistribution of already completed heme. It does not claim phospholipid catalysis, mature-lipid tracing, a universally committed transport step or a unique precursor route. Both mitochondrial-membrane replacements explicitly acknowledge the two pre-existing GO:0031966 assertions.
+
+PMID:37100056 found no heme/iron effect on choline uptake or incorporation and no heme-accumulation transcriptional/genetic signature in its tested system; its authors explicitly leave other physiological substrates and erythroid-specific contexts open. In PMID:38693265, the size of an observed co-purified endogenous ligand density excludes heme as that density's identity, rather than excluding every possible heme substrate or mechanism. These observations bound the interpretation of the older cellular heme results; they do not establish that those context-specific measurements are false or require blanket DISPUTED reference states.
+
+## Auditable PDZ measurement split
+
+This table is a derived extract of [PMID:36115835 Supplementary Dataset1](https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-022-33018-0/MediaObjects/41467_2022_33018_MOESM4_ESM.xlsx), original workbook SHA256 `ada912921164f0a79630c6a714b9ff264a7217ad3e646153ef498eb456206795`. It includes every tested domain row for the 21 original GOA partner accessions. The retained complete FLVCR1 export contains 133 rows; this partner-specific selection contains 68 rows. Excel row locators are one-based and include the workbook header rows. All Excel row locators below refer to the workbook sheet PDZ-PBM interactome. Partner aliases below are the names in the original dataset, joined to the immutable GOA accessions.
+
+All selected measurements use the FLVCR1 C-terminal peptide MLSKQSESAI, DAPF singlicates (`n=1`), and an estimated peptide concentration of 18 µM for affinity conversion; no pair-specific fluorescence-polarization measurement is present. The original DAPF Methods define a BI threshold of 0.05 (2σ, σ=0.025). The split uses normalized DAPF BI ≥0.05 in at least one tested domain. Composite pKd=0 is the dataset code on the below-threshold rows, not a measured zero affinity. LNX1_1 is only slightly above threshold; the table does not turn this into robust or high-affinity binding.
+
+| Raw / stored | Partner / dataset alias | Tested / above threshold | Domain: normalized BI; composite pKd; Excel row | Action |
+| --- | --- | --- | --- | --- |
+| 4 / 1 | A4D2P6 / GRID2IP | 2 / 0 | GRID2IP_2: -0.00543856; 0.00000000; row 48877; GRID2IP_1: 0.00540490; 0.00000000; row 53187 | UNDECIDED |
+| 5 / 2 | O75970 / MPDZ | 3 / 0 | MPDZ_10: -0.00568999; 0.00000000; row 48767; MPDZ_5: 0.01819104; 0.00000000; row 57809; MPDZ_12: 0.04130598; 0.00000000; row 63725 | UNDECIDED |
+| 6 / 3 | P78352 / DLG4 | 3 / 1 | DLG4_2: 0.10857815; 3.84099400; row 11634; DLG4_1: -0.06998567; 0.00000000; row 36230; DLG4_3: 0.03646020; 0.00000000; row 62812 | MODIFY |
+| 7 / 4 | Q02410 / APBA1 | 2 / 0 | APBA1_1: 0.00227827; 0.00000000; row 51952; APBA1_2: 0.00471480; 0.00000000; row 52911 | UNDECIDED |
+| 8 / 5 | Q07157 / TJP1 | 2 / 0 | TJP1_3: -0.00798629; 0.00000000; row 47850; TJP1_2: 0.03632779; 0.00000000; row 62787 | UNDECIDED |
+| 9 / 6 | Q14005 / IL16 | 3 / 0 | IL16_4: 0.01435211; 0.00000000; row 56502; IL16_3: 0.02697970; 0.00000000; row 60410; IL16_1: 0.04247018; 0.00000000; row 63920 | UNDECIDED |
+| 10 / 7 | Q14160 / SCRIB | 3 / 3 | SCRIB_3: 0.40150376; 4.61194366; row 3713; SCRIB_1: 0.12521623; 3.91274333; row 10596; SCRIB_2: 0.05921213; 3.54939895; row 16633 | MODIFY |
+| 11 / 8 | Q15700 / DLG2 | 2 / 0 | DLG2_3: 0.02816102; 0.00000000; row 60754; DLG2_2: 0.04432872; 0.00000000; row 64215 | UNDECIDED |
+| 12 / 9 | Q5T2W1 / NHERF3 | 3 / 1 | NHERF3_1: 0.10244406; 3.81215387; row 12070; NHERF3_3: 0.00998088; 0.00000000; row 54942; NHERF3_4: 0.03430271; 0.00000000; row 62330 | MODIFY |
+| 13 / 10 | Q68DX3 / FRMPD2 | 3 / 0 | FRMPD2_1: -0.01184627; 0.00000000; row 46400; FRMPD2_2: 0.00662011; 0.00000000; row 53640; FRMPD2_3: 0.03235218; 0.00000000; row 61863 | UNDECIDED |
+| 14 / 11 | Q86UL8 / MAGI2 | 5 / 2 | MAGI2_2: 0.09935395; 3.79705456; row 12291; MAGI2_4: 0.05750038; 3.53570213; row 16902; MAGI2_5: -0.00492078; 0.00000000; row 49095; MAGI2_6: -0.00473185; 0.00000000; row 49171; MAGI2_3: 0.04034137; 0.00000000; row 63563 | MODIFY |
+| 15 / 12 | Q86UT5 / NHERF4 | 3 / 2 | NHERF4_4: 0.12730031; 3.92115500; row 10482; NHERF4_1: 0.06574312; 3.59850318; row 15653; NHERF4_2: -0.02680831; 0.00000000; row 41546 | MODIFY |
+| 16 / 13 | Q8N448 / LNX2 | 2 / 0 | LNX2_3: -0.00746177; 0.00000000; row 48061; LNX2_2: 0.00560608; 0.00000000; row 53265 | UNDECIDED |
+| 17 / 14 | Q8NI35 / INADL | 9 / 0 | Inadl_2: -0.01960264; 0.00000000; row 43684; Inadl_1: -0.01170000; 0.00000000; row 46468; Inadl_6: -0.00762139; 0.00000000; row 47985; Inadl_3: -0.00561491; 0.00000000; row 48795; Inadl_4: -0.00469593; 0.00000000; row 49190; Inadl_9: 0.00131268; 0.00000000; row 51568; Inadl_10: 0.01333431; 0.00000000; row 56134; Inadl_5: 0.02112839; 0.00000000; row 58776; Inadl_8: 0.02807916; 0.00000000; row 60723 | UNDECIDED |
+| 18 / 15 | Q8TBB1 / LNX1 | 3 / 1 | LNX1_1: 0.05565566; 3.52051124; row 17226; LNX1_2: -0.01089871; 0.00000000; row 46750; LNX1_3: -0.01001789; 0.00000000; row 47097 | MODIFY |
+| 19 / 16 | Q92796 / DLG3 | 3 / 1 | DLG3_2: 0.07809329; 3.68025717; row 14181; DLG3_3: -0.00508573; 0.00000000; row 49027; DLG3_1: 0.01742691; 0.00000000; row 57532 | MODIFY |
+| 20 / 17 | Q96QZ7 / MAGI1 | 2 / 0 | MAGI1_2: 0.02893391; 0.00000000; row 60970; MAGI1_1: 0.04514768; 0.00000000; row 64355 | UNDECIDED |
+| 21 / 18 | Q99767 / APBA2 | 2 / 0 | APBA2_2: -0.01387088; 0.00000000; row 45615; APBA2_1: 0.02733613; 0.00000000; row 60519 | UNDECIDED |
+| 22 / 19 | Q9C0E4 / GRIP2 | 5 / 0 | GRIP2_6: -0.00570373; 0.00000000; row 48753; GRIP2_3: -0.00044687; 0.00000000; row 50850; GRIP2_4: 0.01022129; 0.00000000; row 55037; GRIP2_5: 0.01054103; 0.00000000; row 55163; GRIP2_7: 0.02200554; 0.00000000; row 59022 | UNDECIDED |
+| 23 / 20 | Q9P202 / DFNB31 | 3 / 1 | DFNB31_1: 0.53587468; 4.86222061; row 2360; DFNB31_2: -0.00552728; 0.00000000; row 48839; DFNB31_3: 0.01608469; 0.00000000; row 57094 | MODIFY |
+| 24 / 21 | Q9Y3R0 / GRIP1 | 5 / 0 | GRIP1_2: -0.11892624; 0.00000000; row 34903; GRIP1_4: -0.00691835; 0.00000000; row 48277; GRIP1_3: -0.00346795; 0.00000000; row 49669; GRIP1_7: 0.00284319; 0.00000000; row 52186; GRIP1_5: 0.01230053; 0.00000000; row 55758 | UNDECIDED |
+
+The eight above-threshold source pairs retain their PDZ-domain-binding refinements. The thirteen remaining assertions stay UNDECIDED with suspected source-record checks for IntAct; these flags do not establish nonbinding, an incorrect IPI code or a missing NOT qualifier. No upstream report has been filed. The table reproduces the original measurement split without transferring isolated peptide/domain behavior to full-length cellular complexes.
