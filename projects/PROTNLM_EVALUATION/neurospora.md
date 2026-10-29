@@ -29,16 +29,16 @@ This is a focused evaluation of the available outputs, not a random proteome sam
 
 | Assessment | GO claims | Interpretation |
 |---|---:|---|
-| LSP | 15 | Supported, with a more specific established annotation |
-| CNN | 5 | Supported equivalent biology already annotated: NCU01245 transcription by RNA polymerase III, NCU02539 nuclear DNA replication and DNA replication initiation, NCU03033 nucleus, NCU09880 spliceosomal complex |
+| LSP | 14 | Supported, with a more specific established annotation |
+| CNN | 6 | Supported equivalent biology already annotated: NCU01245 transcription by RNA polymerase III, NCU02539 nuclear DNA replication and DNA replication initiation, NCU03033 nucleus, NCU04637 cytoplasm, NCU09880 spliceosomal complex |
 | UNC | 1 | NCU04937 DNA binding lacks decisive supporting or contrary evidence |
 | **Total** | **21** | **GO predictions only** |
 
-Counts are as of the 2026-10-24 review snapshot (commit `1ca4af83c6`); see the [cross-cohort results](benchmark-results.md).
+Counts are as of the 2026-10-29 review snapshot (commit `ac95c69686`); see the [cross-cohort results](benchmark-results.md).
 
 No GO claim is classified as COR, PLI, NPI or REP. The incorrect claims occur in the function paragraphs, demonstrating why those paragraphs require their own assessment. Across the three paragraphs, ubiquitin transfer and neuronal context are contradicted, glycerol phosphorylation and metabolism are supported, and a strong claim about regulating glycerol uptake remains uncertain. Fragment counts depend on how sentences are divided and are not pooled with GO terms.
 
-The ten localization claims have separate assessments: **four LSP, two COR and four UNC**. The two supported additions are cytoplasmic-vesicle and clathrin-coated-vesicle-membrane association of NCU09721, grounded in conserved fungal AP-1 biology. The uncertain claims are NCU04937 nucleus, NCU06296 ER membrane, NCU12035 nucleus and NCU06005 cytoplasm. For the last case, classical Neurospora literature establishes cytosolic glycerokinase, but an explicit mapping of that historical glp-4 gene to NCU06005 is unresolved. The enzyme-family assignment alone does not settle compartmental targeting.
+The ten localization claims have separate assessments: **five LSP, two CNN and three UNC**. All three NCU09721 claims are LSP: its cytoplasmic-vesicle, clathrin-coated-vesicle-membrane and Golgi-membrane associations are all less specific than the AP-1 adaptor complex the gene already carries. NCU06005 cytoplasm is LSP against the cytosol term in the curated gene review, and NCU08990 cytoplasm is LSP against the cytosolic large ribosomal subunit. mek-1 and NCU04637 cytoplasm are CNN, because GOA carries that exact term. The uncertain claims are NCU04937 nucleus, NCU06296 ER membrane and NCU12035 nucleus.
 
 ## Review coverage
 

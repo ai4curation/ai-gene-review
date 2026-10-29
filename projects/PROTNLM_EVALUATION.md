@@ -398,10 +398,10 @@ writes protein names, GO terms and function paragraphs straight from sequence,
 and UniProt ships its output on unreviewed entries. We assessed it the way a
 curator would, protein by protein, using the COR/CNN/LSP/UNC/NPI/PLI/REP
 categories of de Crécy-Lagard et al. 2025 (PMID:40703034). As of the review
-snapshot (2026-10-24, commit `1ca4af83c6`), the assessment covers 242 prediction
+snapshot (2026-10-29, commit `ac95c69686`), the assessment covers 242 prediction
 targets and 288 GO-term assessments, plus separate reviews of the narrative
 function text.
-Of the 288 GO claims, 35 are correct and novel (COR) and 46 correct but already
+Of the 288 GO claims, 35 are correct and novel (COR) and 48 correct but already
 annotated to the gene (CNN). Novelty is judged against the gene's GOA on any of its
 products, and many targets are alternative models of well-annotated genes. Contradicted
 predictions (NPI or PLI) are 44 of 288. Narrative text behaves differently from GO
@@ -414,7 +414,7 @@ catalytic region (wheat patatin A0A3B6GK97, Arabidopsis LRR F4JLB7), or a
 localization that cannot exist in the organism (neuron projection in wheat
 F6LAX4). Correctness is judged for the deposited sequence, so a claim true of the
 gene but needing a region the selected model lacks is refuted. The most common
-verdicts are less precise (LSP, 85) and uncertain (UNC, 78); uncertainty is the honest
+verdicts are less precise (LSP, 83) and uncertain (UNC, 78); uncertainty is the honest
 result for TrEMBL proteins with no direct characterization.
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
@@ -434,7 +434,10 @@ browser gives the same breakdowns as facet counts over the current reviews:
 [MOD_EVOLUTION20](../app/predictions/index.html?dataset=claims&cohorts=MOD_EVOLUTION20)), or only the
 [contradicted claims](../app/predictions/index.html?dataset=claims&source_method=ProtNLM2&assessment=NPI&assessment=PLI).
 Narrative records can hold several judgments each and are counted separately from
-GO terms. Not every selected target has been reviewed yet; the cross-cohort results
+GO terms. The 57 indexed function narratives contain 4 COR records: HORSE/SHLD2 shieldin-complex
+membership, HORSE/GHSR and HORSE/CXCR3 calcium signalling, and DROME/ftz-f1 autorepression. Three of the
+four are transfers from human-receptor or human-protein experiments to a full-length, closely related
+horse product, not observations on the horse protein. Not every selected target has been reviewed yet; the cross-cohort results
 state how many have, and their per-cohort table should be read with the COR caveat in
 [Reference standard and novelty](#reference-standard-and-novelty).
 
@@ -568,7 +571,7 @@ COR and CNN distinguish absence versus presence of an equivalent annotation in G
 - human/UBE2F (F8WDQ9) ubiquitin-protein transferase activity is NPI. Its rationale combines the missing catalytic Cys116 in the 101-residue record with NEDD8-not-ubiquitin specificity.
 - NEUCR/NCU04302, a SUMO E2, has its ubiquitin-specific narrative claims scored PLI.
 
-Under the rule above, UBE2F stays NPI on architecture grounds. Its NEDD8 argument is a PLI-type reason, and the review does not separate the two. At the 2026-10-24 review snapshot there are 2 PLI among the 288 GO claims: ORYSI/B8BAB0 pollen maturation (ARGO-50) and HORSE/WEE1 female pronucleus assembly (HORSE40, a WEE2 oocyte process). There are 13 narrative records with a PLI judgment, so the boundary has so far mostly been applied to narrative text.
+Under the rule above, UBE2F stays NPI on architecture grounds. Its NEDD8 argument is a PLI-type reason, and the review does not separate the two. At the 2026-10-29 review snapshot there are 2 PLI among the 288 GO claims: ORYSI/B8BAB0 pollen maturation (ARGO-50) and HORSE/WEE1 female pronucleus assembly (HORSE40, a WEE2 oocyte process). There are 13 narrative records with a PLI judgment, so the boundary has so far mostly been applied to narrative text.
 
 **Scoring unit: the product, not the gene.** Correctness is judged for the exact sequence ProtNLM2 was given. Many benchmark accessions are truncated or alternative gene models. When an activity, location or complex-membership prediction depends on a feature the accession demonstrably lacks relative to the canonical product, it is NPI (`DOMAIN_ARCHITECTURE_MISMATCH`), even if the term is true of the gene. Such features include a signal peptide, transmembrane segment, targeting signal, catalytic residues, or the region that mediates a binding. The absence must be established by analysis (hydropathy or signal-peptide test, residue or domain mapping), not assumed. For **process** terms, the rule above that absence of intrinsic activity does not exclude participation still applies. A process prediction is NPI only when the gene's known mechanism of participation is shown to require the missing feature. If the accession could still contribute another way (a regulatory, scaffolding or binding role that is neither shown nor excluded), the call is UNC. When the accession retains what the function needs, gene-level and family evidence apply as usual, and where it cannot be determined the call is UNC. Novelty is still judged at gene level, as above.
 
