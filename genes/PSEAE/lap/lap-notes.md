@@ -87,9 +87,12 @@ record (`lap-uniprot.txt`).
   PseudoCAP, PMID:9642203): PaAP is the cargo, not a component of either
   machine. Under GO practice, cargo is not annotated as participating in its own
   transport process (the transporter does the work). MARK_AS_OVER_ANNOTATED, with
-  a PROBABLE PseudoCAP source defect. The Sec row additionally rests only on
-  signal-peptide removal (N-terminal sequencing), which does not identify the Sec
-  translocon. Full text of PMID:9642203 was not available.
+  a PROBABLE PseudoCAP source defect (the cargo role is the positive basis).
+  The only evidence we could see for the Sec row is signal-peptide removal
+  (N-terminal sequencing), which does not by itself identify the Sec
+  translocon. Full text of PMID:9642203 was not available (PubMed MCP and
+  Europe PMC returned no body text, 2026-10-29), so whether it holds
+  Sec-specific evidence is unchecked.
 
 ## PseudoCAP IBA-seed assessment
 

@@ -32,8 +32,10 @@ provider was used.
   1988, PMID:2450582) and biophysical characterisation (PMID:8132494), neither
   cached.
 
-Evidence type: whole-cell initial uptake in mutant and overexpression strains.
-This is IMP, not IDA, though the claim (OprB conducts sugars across the outer
+Evidence type (from the abstract only; no PMC body text, 2026-10-29):
+whole-cell initial uptake in mutant and overexpression strains. That reads as
+IMP rather than IDA, but the full text could hold a direct assay, so the
+defect is SUSPECTED, not PROBABLE (2026-10-29 audit). The claim (OprB conducts sugars across the outer
 membrane) is sound and OprB does the transport work as the channel.
 
 ### Clade check for PTN002209977 (cached PAINT leaf GAF; QuickGO 2026-10-28)

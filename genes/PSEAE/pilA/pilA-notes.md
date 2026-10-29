@@ -43,9 +43,11 @@
   pilin gene; abstract-only, says nothing about location assay. PAK pilin is a
   different-strain orthologue (both group II pilins). The location claim is
   nevertheless certain for PAO1 PilA (PMID:39666767).
-- PMID:9224878 (Alm and Mattick 1997, Gene) is a review of type 4 fimbrial
-  genes [PMID:9224878 "Thus far over 30 genes have been characterized"]; an
-  IMP from it is an evidence-code error (TAS would be correct).
+- PMID:9224878 (Alm and Mattick 1997, Gene) reads, from its abstract, as a
+  review of type 4 fimbrial genes [PMID:9224878 "Thus far over 30 genes have
+  been characterized"]; if so, an IMP from it is an evidence-code error (TAS).
+  Only the abstract was read and the authors' lab made many of the mutants,
+  so the defect is SUSPECTED (downgraded from PROBABLE, 2026-10-29 audit).
 - PMID:25049409 (Chung et al. 2014, Tip phage protein inhibits PilB): CACAO
   rows for cell surface and cytosol. Full text not available via PMC tool
   (PMC4128137 returned no body). Surface PilA (sheared pili) is fine; the
@@ -69,7 +71,7 @@
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002013003 | GO:0043107 type IV pilus-dependent motility | 1 (sole) | 10 (9 taxa) | GO:0043107, IDA, PMID:12933890; GO:0043107, IMP, PMID:9224878 (PseudoCAP) | SOUND | PilA is the fibre subunit whose extension/retraction drives twitching; pilA mutants are non-piliated and non-twitching. Evidence codes are off (12933890 is a mutant assay, so IMP; 9224878 is a review, so TAS), recorded as PSEUDOCAP defects; the claim stands. Motility at the node is a mild over-reach for PpdD of E. coli K-12 and H. influenzae, which do not twitch. |
+| PTN002013003 | GO:0043107 type IV pilus-dependent motility | 1 (sole) | 10 (9 taxa) | GO:0043107, IDA, PMID:12933890; GO:0043107, IMP, PMID:9224878 (PseudoCAP) | SOUND | PilA is the fibre subunit whose extension/retraction drives twitching; pilA mutants are non-piliated and non-twitching. Evidence codes are off (12933890 is a mutant assay, so IMP, checked in the full text; 9224878 reads as a review from its abstract, so possibly TAS), recorded as PSEUDOCAP defects; the claim stands. Motility at the node is a mild over-reach for PpdD of E. coli K-12 and H. influenzae, which do not twitch. |
 | PTN002013003 | GO:0044096 type IV pilus | 1 (sole) | 10 (9 taxa) | GO:0044096, IDA, PMID:2985436 (PseudoCAP) | SOUND | PilA is the major structural subunit of the fibre (cryo-EM, PMID:39666767). The cited paper is a strain PAK gene-sequencing paper whose abstract shows no location assay, so the reference is weak, but the claim is correct and appropriate for a clade of major pilins. |
 
 ## Decisions summary

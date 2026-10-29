@@ -59,8 +59,10 @@ cobalamin-dependent RNR without committing to NDP or NTP; the two available
 terms are GO:0004748 (NDP, thioredoxin acceptor) and GO:0008998 (NTP,
 thioredoxin acceptor).
 
-The physiological electron donor was not identified in either paper: both used
-DTT (or TCEP) in vitro, so the "thioredoxin disulfide as acceptor" clause of
+The physiological electron donor was not identified in the purified-enzyme
+study, which used DTT (or TCEP) in vitro; for PMID:15722359 only the abstract
+was read (no PMC copy, 2026-10-29), so its reductant is unchecked. The
+"thioredoxin disulfide as acceptor" clause of
 GO:0004748/GO:0008998 is an assumption from class I/II RNR precedent, not a
 measurement in *P. aeruginosa*. *P. aeruginosa* does encode thioredoxins and
 glutaredoxins, so the assumption is reasonable but untested here.
@@ -78,7 +80,7 @@ glutaredoxins, so the assumption is reasonable but untested here.
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN000171476 | GO:0004748 ribonucleoside-diphosphate reductase activity, thioredoxin disulfide as acceptor | 1 (sole seed) | 39 (33 taxa) | GO:0004748 \| IDA \| PMID:15722359 \| PseudoCAP | OVER-SPECIFIC | PMID:15722359 demonstrates class II RNR activity for the NrdJa+NrdJb pair in *P. aeruginosa*, so a cobalamin-dependent RNR activity claim is sound and the gene is squarely inside the clade. Both sub-specifications in the term are unsupported for this gene, however: (i) substrate — the purified enzyme prefers ribonucleoside *tri*phosphates by >60-fold over CDP [PMID:26225432], so GO:0008998 describes the main reaction better; (ii) acceptor — only DTT/TCEP were used in vitro, thioredoxin was never tested. PTHR43371 itself mixes NDP- and NTP-specific members (its own member list includes several `rtpR` adenosylcobalamin-dependent ribonucleoside-*tri*phosphate reductases), so propagating only the NDP term to 39 leaves across 33 taxa asserts a substrate specificity the node cannot support. The node needs either both terms or a parent that does not fix the phosphorylation state (GO has none below GO:0016728). |
+| PTN000171476 | GO:0004748 ribonucleoside-diphosphate reductase activity, thioredoxin disulfide as acceptor | 1 (sole seed) | 39 (33 taxa) | GO:0004748 \| IDA \| PMID:15722359 \| PseudoCAP | OVER-SPECIFIC | PMID:15722359 demonstrates class II RNR activity for the NrdJa+NrdJb pair in *P. aeruginosa*, so a cobalamin-dependent RNR activity claim is sound and the gene is squarely inside the clade. Both sub-specifications in the term are unsupported for this gene, however: (i) substrate — the purified enzyme prefers ribonucleoside *tri*phosphates by >60-fold over CDP [PMID:26225432], so GO:0008998 describes the main reaction better; (ii) acceptor — the purified-enzyme study used only DTT/TCEP (the 2005 paper is abstract-only here, so its reductant is unchecked). PTHR43371 itself mixes NDP- and NTP-specific members (its own member list includes several `rtpR` adenosylcobalamin-dependent ribonucleoside-*tri*phosphate reductases), so propagating only the NDP term to 39 leaves across 33 taxa asserts a substrate specificity the node cannot support. The node needs either both terms or a parent that does not fix the phosphorylation state (GO has none below GO:0016728). |
 
 Consequences recorded in the review: a `PSEUDOCAP` defect (`WRONG_TERM`,
 `CHECK`) asking that the row be re-pointed to, or accompanied by, GO:0008998;

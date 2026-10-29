@@ -74,7 +74,15 @@ cluster are not yet reviewed.
   induction effect of l-Hyp remained unchanged"]. That shows the two genes
   together are needed for D-Hyp-dependent promoter induction; it does not show
   which reaction either protein catalyses, and it cannot distinguish the 4- from
-  the 3-hydroxy isomer.
+  the 3-hydroxy isomer. (Only the abstract was read; no PMC copy was found on
+  2026-10-29, so other data in the full text are unchecked.)
+- The term error itself does not depend on that paper: the full text of
+  PMID:17849014 lists Q9I489 as the Ser-Cys (SC) variant in Table 1 and shows
+  in Figure 1 that it has neither racemase nor hydroxyproline epimerase
+  activity [PMID:17849014 "P. aeruginosa (SC) and B. cenocepacia (CT)
+  recombinant proteins whose sequences lack one of the two Cys catalytic
+  residues do not display any PRAC or HyPRE activities."]. The two lhpL
+  defects are therefore CONFIRMED (2026-10-29 audit).
 - So the seed annotation is a phenotype-to-molecular-function step onto a term
   (GO:0047580: trans-4-hydroxy-L-proline = cis-4-hydroxy-D-proline) whose
   reaction has been directly tested on this protein and found absent.

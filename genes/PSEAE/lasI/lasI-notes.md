@@ -21,8 +21,10 @@ abstract-only.
   autoinducer (PAI)" [PMID:8493556 "Experiments with gene fusions show that gene
   lasl is essential for high expression of elastase. The lasl gene is involved in
   the synthesis of a diffusible molecule termed Pseudomonas autoinducer (PAI)."].
-  The evidence is genetic (mutant/fusion phenotype), not a direct assay; the
-  abstract foregrounds production of a signal, not transduction of one.
+  The evidence the abstract describes is genetic (mutant/fusion phenotype);
+  the full text was not read, so whether it also has a direct assay is
+  unchecked. The abstract foregrounds production of a signal, not transduction
+  of one.
 - Pearson et al. 1994 (PMID:8278364): PAI purified from P. aeruginosa or from
   E. coli carrying lasI is 3-oxo-C12-HSL [PMID:8278364 "Chemical analyses
   indicated the purified material was

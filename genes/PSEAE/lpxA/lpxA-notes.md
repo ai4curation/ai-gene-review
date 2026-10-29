@@ -34,10 +34,12 @@
   characterisation of P. aeruginosa lipid A from two wild-type strains and the
   rough mutant PAC 605
   [PMID:1904818 "was investigated using chemical analysis, methylation analysis"]
-- The organism is right, but the paper does not mention lpxA, assay any
-  enzyme, or use any lpxA mutant: it is an analysis of the purified
-  glycolipid, published before the gene was cloned (1991 vs 1998) and before
-  the PAO1 genome. It cannot be a direct assay of PA3644.
+- The organism is right, but the abstract mentions no lpxA, enzyme assay or
+  lpxA mutant: it describes an analysis of the purified glycolipid, published
+  before the gene was cloned (1991 vs 1998) and before the PAO1 genome. Only
+  the abstract was read (no PMC copy, 2026-10-29), so it is probably, not
+  certainly, not a direct assay of PA3644; the WRONG_REFERENCE defect was
+  downgraded from CONFIRMED to PROBABLE in the 2026-10-29 audit.
 - The claim is nevertheless correct: LpxA catalyses the first step of lipid A
   synthesis, lipid A is the LPS anchor, and the Pseudomonas enzyme's C10
   specificity was demonstrated directly in PMID:9440522. So the right fix is
@@ -70,7 +72,7 @@
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN000602377 | GO:0009103 lipopolysaccharide biosynthetic process | 1 (sole seed) | 24 (22 taxa) | GO:0009103, IDA, PMID:1904818 (PseudoCAP) | SOUND (term and node); reference WRONG | The term is correct for LpxA and for the whole node: PTHR43480 is the LpxA family of Gram-negative bacteria, every member catalyses the first step of lipid A synthesis, and lipid A is the LPS anchor, so an LPS-biosynthesis IBD suits the clade. The cited paper, however, is a 1991 structural study of P. aeruginosa lipid A that assays no enzyme and does not mention lpxA; it predates the cloning of the gene, so the IDA is not direct evidence for PA3644. The direct evidence exists in PMID:9440522, where the cloned PAO1 lpxA is assayed as a 10-carbon-specific UDP-GlcNAc acyltransferase and complements an E. coli lpxA mutant. Recorded as a WRONG_REFERENCE PseudoCAP defect; the IBD itself stands, and would be sharper as GO:0009245 lipid A biosynthetic process, for which E. coli LpxA already has an IDA. |
+| PTN000602377 | GO:0009103 lipopolysaccharide biosynthetic process | 1 (sole seed) | 24 (22 taxa) | GO:0009103, IDA, PMID:1904818 (PseudoCAP) | SOUND (term and node); reference WRONG | The term is correct for LpxA and for the whole node: PTHR43480 is the LpxA family of Gram-negative bacteria, every member catalyses the first step of lipid A synthesis, and lipid A is the LPS anchor, so an LPS-biosynthesis IBD suits the clade. The cited paper, however, is a 1991 structural study of P. aeruginosa lipid A whose abstract mentions no enzyme assay and no lpxA; it predates the cloning of the gene, so the IDA is probably not direct evidence for PA3644 (abstract only read). The direct evidence exists in PMID:9440522, where the cloned PAO1 lpxA is assayed as a 10-carbon-specific UDP-GlcNAc acyltransferase and complements an E. coli lpxA mutant. Recorded as a PROBABLE WRONG_REFERENCE PseudoCAP defect; the IBD itself stands, and would be sharper as GO:0009245 lipid A biosynthetic process, for which E. coli LpxA already has an IDA. |
 
 ## Decisions summary
 
