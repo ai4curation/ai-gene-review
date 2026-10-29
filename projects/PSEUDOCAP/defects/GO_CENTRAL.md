@@ -10,7 +10,7 @@
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA0920/PA0920-ai-review.yaml`
 
-The IBD of GO:0055091 phospholipid homeostasis at PTN002162750 rests on one seed, the PseudoCAP IDA of P. aeruginosa PA0920 (Q9I537) to PMID:26261323, a crystal-structure and in vitro substrate-recognition study of the A-PGS catalytic domain that does not assay homeostasis. PA0920's own process is A-PG biosynthesis. The node's leaves (about 26 in QuickGO, 2026-10-28) also include fungal ergosteryl-3beta-O-glycine synthases (ErgS; A. fumigatus Q4WB70, Y. lipolytica Q6C7J3), which aminoacylate a sterol rather than a phospholipid. Please withdraw the IBD, or replace it with a biosynthetic term on a node confined to aminoacyl-phosphatidylglycerol synthases.
+The IBD of GO:0055091 phospholipid homeostasis at PTN002162750 rests on one seed, the PseudoCAP IDA of P. aeruginosa PA0920 (Q9I537) to PMID:26261323, a crystal-structure and in vitro substrate-recognition study of the A-PGS catalytic domain whose abstract describes no homeostasis assay (full text not read). PA0920's own process is A-PG biosynthesis. The node's leaves (about 26 in QuickGO, 2026-10-28) also include fungal ergosteryl-3beta-O-glycine synthases (ErgS; A. fumigatus Q4WB70, Y. lipolytica Q6C7J3), which aminoacylate a sterol rather than a phospholipid. Please withdraw the IBD, or replace it with a biosynthetic term on a node confined to aminoacyl-phosphatidylglycerol synthases.
 
 > Both proteins reveal a continuous tunnel that allows the hydrophobic lipid substrate PG and the polar aminoacyl-tRNA substrate to access the catalytic site from opposite directions.
 > — PMID:26261323
@@ -41,7 +41,7 @@ PTN000511949 (PTHR43373 root, MrpA family, 16 leaf IBAs in 15 taxa) carries an I
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA1055/PA1055-ai-review.yaml`
 
-PTN002160376 (PTHR34583 root, Mrp/Mnh/Pha subunit C family, 24 leaf IBAs in 19 taxa) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1055 (ShaC) from PMID:16030218. That paper disrupted only PA1054 (shaA) and showed antiport for the whole six-gene cluster. Mrp antiport needs the hetero-oligomeric complex of all subunits (PMID:20624916), so the subunit-C family contributes to the activity: contributes_to GO:0015385 is the right assertion. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2086 and TK1221, whose complexes are not stand-alone Na+/H+ antiporters. Possible experimental seeds are B. pseudofirmus MrpC site mutants (PMID:20624916), but that species is not a tree leaf.
+PTN002160376 (PTHR34583 root, Mrp/Mnh/Pha subunit C family, 24 leaf IBAs in 19 taxa) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1055 (ShaC) from PMID:16030218. Its abstract reports a disruption of PA1054 (shaA) only and shows antiport for the whole six-gene cluster. Mrp antiport needs the hetero-oligomeric complex of all subunits (PMID:20624916), so the subunit-C family contributes to the activity: contributes_to GO:0015385 is the right assertion. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2086 and TK1221, whose complexes are not stand-alone Na+/H+ antiporters. Possible experimental seeds are B. pseudofirmus MrpC site mutants (PMID:20624916), but that species is not a tree leaf.
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -58,7 +58,7 @@ PTN002160376 (PTHR34583 root, Mrp/Mnh/Pha subunit C family, 24 leaf IBAs in 19 t
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA1056/PA1056-ai-review.yaml`
 
-PTN001865541 (PTHR42703 Eubacteria node, MrpD clade, 16 leaf IBAs in 13 taxa) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Seeds: IMP on B. subtilis MrpD (PMID:20509166) and a PseudoCAP IMP on P. aeruginosa PA1056 (PMID:16030218), the latter resting on a PA1054 disruption and whole-cluster complementation, not on a PA1056 mutant. No Mrp antiporter shows activity with MrpD alone, and antiport requires the hetero-oligomeric complex, so contributes_to GO:0015385 is the right assertion for the clade.
+PTN001865541 (PTHR42703 Eubacteria node, MrpD clade, 16 leaf IBAs in 13 taxa) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Seeds: IMP on B. subtilis MrpD (PMID:20509166) and a PseudoCAP IMP on P. aeruginosa PA1056 (PMID:16030218), the latter resting on a PA1054 disruption and whole-cluster complementation, with no PA1056 mutant in the abstract. No Mrp antiporter shows activity with MrpD alone, and antiport requires the hetero-oligomeric complex, so contributes_to GO:0015385 is the right assertion for the clade.
 
 > In previous studies, none of the Mrp antiporters exhibited antiport activity with MrpA or MrpD alone.
 > — PMID:29218041
@@ -75,7 +75,7 @@ PTN001865541 (PTHR42703 Eubacteria node, MrpD clade, 16 leaf IBAs in 13 taxa) ca
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA1057/PA1057-ai-review.yaml`
 
-PTN002160407 (PTHR34584 root, Mrp/Mnh/Pha subunit E family, 20 leaf IBAs in 17 taxa) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1057 (ShaE) from PMID:16030218. That paper disrupted only PA1054 (shaA) and showed antiport for the whole six-gene cluster. MrpE is an accessory subunit required for complex formation (PMID:20624916) and is reported dispensable for transport in B. subtilis, so contributes_to GO:0015385 is the right assertion for the family. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2080 and TK1226.
+PTN002160407 (PTHR34584 root, Mrp/Mnh/Pha subunit E family, 20 leaf IBAs in 17 taxa) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1057 (ShaE) from PMID:16030218. Its abstract reports a disruption of PA1054 (shaA) only and shows antiport for the whole six-gene cluster. MrpE is an accessory subunit required for complex formation (PMID:20624916) and is reported dispensable for transport in B. subtilis, so contributes_to GO:0015385 is the right assertion for the family. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2080 and TK1226.
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -92,7 +92,7 @@ PTN002160407 (PTHR34584 root, Mrp/Mnh/Pha subunit E family, 20 leaf IBAs in 17 t
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA1058/PA1058-ai-review.yaml`
 
-PTN002162906 (PTHR34702 root, Mrp/Mnh/Pha subunit F family, 19 GO_Central leaf IBAs in 16 taxa, plus TreeGrafter propagations) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1058 (ShaF) from PMID:16030218. That paper disrupted only PA1054 (shaA) and showed antiport for the whole six-gene cluster. Mrp antiport requires the hetero-oligomeric complex (PMID:20624916), so contributes_to GO:0015385 is the right assertion for the family. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2081 and TK1225, whose complexes are not stand-alone Na+/H+ antiporters.
+PTN002162906 (PTHR34702 root, Mrp/Mnh/Pha subunit F family, 19 GO_Central leaf IBAs in 16 taxa, plus TreeGrafter propagations) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1058 (ShaF) from PMID:16030218. Its abstract reports a disruption of PA1054 (shaA) only and shows antiport for the whole six-gene cluster. Mrp antiport requires the hetero-oligomeric complex (PMID:20624916), so contributes_to GO:0015385 is the right assertion for the family. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2081 and TK1225, whose complexes are not stand-alone Na+/H+ antiporters.
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -109,7 +109,7 @@ PTN002162906 (PTHR34702 root, Mrp/Mnh/Pha subunit F family, 19 GO_Central leaf I
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA1059/PA1059-ai-review.yaml`
 
-PTN002162936 (PTHR34703 root, Mrp/Mnh/Pha subunit G family, 19 GO_Central leaf IBAs in 16 taxa, plus TreeGrafter propagations) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1059 (ShaG) from PMID:16030218. That paper disrupted only PA1054 (shaA) and showed antiport for the whole six-gene cluster. Mrp antiport requires the hetero-oligomeric complex (PMID:20624916), so contributes_to GO:0015385 is the right assertion for the family. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2082 and TK1224, whose complexes are not stand-alone Na+/H+ antiporters.
+PTN002162936 (PTHR34703 root, Mrp/Mnh/Pha subunit G family, 19 GO_Central leaf IBAs in 16 taxa, plus TreeGrafter propagations) carries an IBD of GO:0015385 sodium:proton antiporter activity with qualifier enables. Its sole seed is a PseudoCAP IMP row on P. aeruginosa PA1059 (ShaG) from PMID:16030218. Its abstract reports a disruption of PA1054 (shaA) only and shows antiport for the whole six-gene cluster. Mrp antiport requires the hetero-oligomeric complex (PMID:20624916), so contributes_to GO:0015385 is the right assertion for the family. Please also check whether the IBD should reach the MBH/MBX hydrogenase subunits TK2082 and TK1224, whose complexes are not stand-alone Na+/H+ antiporters.
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -124,7 +124,7 @@ PTN002162936 (PTHR34703 root, Mrp/Mnh/Pha subunit G family, 19 GO_Central leaf I
 - **Change:** check GO:0006868 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/PA1340/PA1340-ai-review.yaml`
 
-The IBD of GO:0006868 L-glutamine transport at PTN000764525 has one seed, the PseudoCAP IMP of P. aeruginosa PA1340 to PMID:18310026. That paper characterises the P. putida KT2440 AatJMQP system using mutants of the binding protein (aatJ) and ATPase (aatP); it reports high-affinity Glu/Asp binding and uptake and only weak Gln binding, and does not test PA1340 or any GltK-type permease. The node is a GltK-type permease clade (E. coli, Salmonella and Yersinia GltK, Bradyrhizobium bll7598/blr3098, PA1340) of glutamate/aspartate importers, and the sister GltJ node PTN004745596 carries GO:0051938 L-glutamate import. Please replace the glutamine IBD by L-glutamate import (or rely on the GO:0006865 IBD at PTN000770157). About 6 leaf IBAs are affected.
+The IBD of GO:0006868 L-glutamine transport at PTN000764525 has one seed, the PseudoCAP IMP of P. aeruginosa PA1340 to PMID:18310026. That paper characterises the P. putida KT2440 AatJMQP system using mutants of the binding protein (aatJ) and ATPase (aatP); it reports high-affinity Glu/Asp binding and uptake and only weak Gln binding, and its abstract reports no test of PA1340 or of any GltK-type permease (full text not read). The node is a GltK-type permease clade (E. coli, Salmonella and Yersinia GltK, Bradyrhizobium bll7598/blr3098, PA1340) of glutamate/aspartate importers, and the sister GltJ node PTN004745596 carries GO:0051938 L-glutamate import. Please replace the glutamine IBD by L-glutamate import (or rely on the GO:0006865 IBD at PTN000770157). About 6 leaf IBAs are affected.
 
 > We describe an ATP-binding cassette (ABC) transporter in Pseudomonas putida KT2440 that mediates the uptake of glutamate and aspartate.
 > — PMID:18310026
@@ -444,7 +444,7 @@ The PAINT IBD of GO:0008610 lipid biosynthetic process at PTN005219546 (PTHR4564
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/fleN/fleN-ai-review.yaml`
 
-The IBD for GO:0005524 ATP binding at PTN000344128 (PTHR43384, MinD/ParA/FlhG clade; about 149 leaf IBAs in 75 taxa) has a single seed, the PseudoCAP IDA row for P. aeruginosa FleN (G3XD64) citing PMID:10629180. That paper identified a putative ATP-binding motif by sequence and did not assay nucleotide binding (the same authors still called FleN a putative ATP/GTP binding protein in 2001, PMID:11673434). The conclusion that the clade binds ATP is correct, but the node rests on a non-experimental seed. Please re-seed the IBD with genuine experimental evidence, e.g. FleN ATP-analog co-crystal structures (PMID:28065505, PDB 5J1J) or experimental ATP binding of E. coli MinD (P0AEZ3), so that the propagation survives correction of the PseudoCAP row.
+The IBD for GO:0005524 ATP binding at PTN000344128 (PTHR43384, MinD/ParA/FlhG clade; about 149 leaf IBAs in 75 taxa) has a single seed, the PseudoCAP IDA row for P. aeruginosa FleN (G3XD64) citing PMID:10629180. The abstract of that paper reports a putative ATP-binding motif found by sequence analysis, and the same authors still called FleN a putative ATP/GTP binding protein in 2001 (PMID:11673434), so no nucleotide-binding assay appears to underlie the seed; the full text was not available here (rechecked 2026-10-29). The conclusion that the clade binds ATP is correct, but the node rests on a non-experimental seed. Please re-seed the IBD with genuine experimental evidence, e.g. FleN ATP-analog co-crystal structures (PMID:28065505, PDB 5J1J) or experimental ATP binding of E. coli MinD (P0AEZ3), so that the propagation survives correction of the PseudoCAP row.
 
 > Flagellar number in Pseudomonas aeruginosa is controlled by FleN, a putative ATP/GTP binding protein
 > — PMID:11673434
@@ -572,7 +572,7 @@ The GO:0007165 signal transduction IBD at PTN002217335 (LuxI-family AHL synthase
 > The lasl gene is involved in the synthesis of a diffusible molecule termed Pseudomonas autoinducer (PAI).
 > — PMID:8493556
 
-## 43. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 43. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002433936
 - **Subject:** UniProtKB:Q9I489
@@ -580,7 +580,10 @@ The GO:0007165 signal transduction IBD at PTN002217335 (LuxI-family AHL synthase
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/lhpL/lhpL-ai-review.yaml`
 
-PTN002433936 (PTHR33442, 9 reference leaves in 7 organisms; 35 GOA rows in with/from) carries an IBD of GO:0047580 4-hydroxyproline epimerase activity whose single seed is the PseudoCAP IMP row on P. aeruginosa lhpL (UniProtKB:Q9I489, PMID:27145750). Swiss-Prot records for that same protein, with experimental evidence (ECO:0000269|PubMed:17849014), that it displays neither t4LHyp epimerase nor proline racemase activity, and assigns it instead the trans-3-hydroxy-L-proline reactions (EC 4.2.1.77 and a 2-epimerization to cis-3-hydroxy-D-proline, ECO:0000269|PubMed:27929065). PAO1's genuine 4-hydroxyproline 2-epimerase is the separate gene PA1268 (UniProtKB:Q9I476). Two leaves under the node are already named trans-3-hydroxy-L-proline dehydratases, so the clade looks right and only the term needs re-pointing to GO:0050346.
+PTN002433936 (PTHR33442, 9 reference leaves in 7 organisms; 35 GOA rows in with/from) carries an IBD of GO:0047580 4-hydroxyproline epimerase activity whose single seed is the PseudoCAP IMP row on P. aeruginosa lhpL (UniProtKB:Q9I489, PMID:27145750). Swiss-Prot records for that same protein, with experimental evidence (ECO:0000269|PubMed:17849014), that it displays neither t4LHyp epimerase nor proline racemase activity, and assigns it instead the trans-3-hydroxy-L-proline reactions (EC 4.2.1.77 and a 2-epimerization to cis-3-hydroxy-D-proline, ECO:0000269|PubMed:27929065). PAO1's genuine 4-hydroxyproline 2-epimerase is the separate gene PA1268 (UniProtKB:Q9I476). Two leaves under the node are already named trans-3-hydroxy-L-proline dehydratases, so the clade looks right and only the term needs re-pointing to GO:0050346. The absence of the 4-hydroxy reaction was checked in the full text of PMID:17849014, whose Table 1 lists Q9I489 as the Ser-Cys variant and whose Figure 1 shows it has neither activity.
+
+> P. aeruginosa (SC) and B. cenocepacia (CT) recombinant proteins whose sequences lack one of the two Cys catalytic residues do not display any PRAC or HyPRE activities.
+> — PMID:17849014
 
 > We herein demonstrated that PaLhpL gene (PA1255; Fig. 1d) in the L-hydroxyproline gene cluster encodes a bifunctional dehydratase and 2-epimerase toward trans-3-hydroxy-L-proline as the leading candidate
 > — PMID:27929065
@@ -696,7 +699,7 @@ The IBD of GO:0018580 nitronate monooxygenase activity at PTN001284536 rests on 
 - **Change:** add GO:0008998 (ribonucleoside-triphosphate reductase (thioredoxin) activity) to GO:0004748
 - **Recorded in:** `genes/PSEAE/nrdJa/nrdJa-ai-review.yaml`
 
-PTN000171476 (PTHR43371, class II / vitamin B12-dependent ribonucleotide reductases) carries an IBD of GO:0004748 ribonucleoside-diphosphate reductase activity, thioredoxin disulfide as acceptor, seeded solely by the PseudoCAP IDA row on P. aeruginosa PA5497 (nrdJa), and propagates it as 39 IBAs across 33 taxa. Biochemical characterisation of the seed organism's own enzyme (purified NrdJa plus NrdJb, PMID:26225432) shows that ribonucleoside triphosphates are the preferred substrate by more than 60-fold over the diphosphate, and PTHR43371 contains both NDP-specific and NTP-specific members (several are annotated as adenosylcobalamin-dependent ribonucleoside-triphosphate reductases, rtpR). Please consider adding GO:0008998 at this node, or moving the IBD to a term that does not commit to the phosphorylation state of the substrate; the current single term asserts a substrate specificity that is wrong for the seed and not uniform across the clade. The thioredoxin-acceptor clause is likewise untested in P. aeruginosa: both published assays used DTT or TCEP as reductant.
+PTN000171476 (PTHR43371, class II / vitamin B12-dependent ribonucleotide reductases) carries an IBD of GO:0004748 ribonucleoside-diphosphate reductase activity, thioredoxin disulfide as acceptor, seeded solely by the PseudoCAP IDA row on P. aeruginosa PA5497 (nrdJa), and propagates it as 39 IBAs across 33 taxa. Biochemical characterisation of the seed organism's own enzyme (purified NrdJa plus NrdJb, PMID:26225432) shows that ribonucleoside triphosphates are the preferred substrate by more than 60-fold over the diphosphate, and PTHR43371 contains both NDP-specific and NTP-specific members (several are annotated as adenosylcobalamin-dependent ribonucleoside-triphosphate reductases, rtpR). Please consider adding GO:0008998 at this node, or moving the IBD to a term that does not commit to the phosphorylation state of the substrate; the current single term asserts a substrate specificity that is wrong for the seed and not uniform across the clade. The thioredoxin-acceptor clause is likewise untested in the purified-enzyme study, which used DTT or TCEP as reductant (only the abstract of PMID:15722359 was read).
 
 > The results revealed that CTP is the preferred substrate with a >60-fold higher activity compared to CDP
 > — PMID:26225432
@@ -821,7 +824,7 @@ The IBD of GO:0044096 type IV pilus at PTN002220336 (dated 2026-06-17) rests onl
 - **Likely cause:** IDENTIFIER_TRANSPOSITION
 - **Recorded in:** `genes/PSEAE/pilU/pilU-ai-review.yaml`
 
-The IBD of GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters" at PTN000766390 (PilU clade of PTHR30486) has a single seed, the PseudoCAP IDA on P. aeruginosa PilU (G3XCX3, PA0396) citing Chiang et al. 2008 (PMID:18174131). That paper measures ATPase activity of purified PilB, PilT and PilU; it reports no nuclease activity, and PilU is a PilT-like retraction ATPase with no nuclease domain. The seed is a keying error for the adjacent id GO:0016887 ATP hydrolysis activity. Please remove the DNA endonuclease IBD from this node (withdrawing about 13 leaf IBAs); if an MF is wanted at this node, ATP hydrolysis activity is the term the seed paper supports. The node's type IV pilus-dependent motility IBD is unaffected.
+The IBD of GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters" at PTN000766390 (PilU clade of PTHR30486) has a single seed, the PseudoCAP IDA on P. aeruginosa PilU (G3XCX3, PA0396) citing Chiang et al. 2008 (PMID:18174131). That paper measures ATPase activity of purified PilB, PilT and PilU; its abstract reports no nuclease activity, and PilU is a PilT-like retraction ATPase with no nuclease domain. The seed is a keying error for the adjacent id GO:0016887 ATP hydrolysis activity. Please remove the DNA endonuclease IBD from this node (withdrawing about 13 leaf IBAs); if an MF is wanted at this node, ATP hydrolysis activity is the term the seed paper supports. The node's type IV pilus-dependent motility IBD is unaffected.
 
 > Assay of purified 6xHis-tagged PilB, PilT and PilU from P. aeruginosa showed that all three proteins have ATPase activities in vitro.
 > — PMID:18174131
@@ -895,7 +898,7 @@ The IBD of GO:0003810 protein-glutamine gamma-glutamyltransferase activity at PT
 - **Change:** remove GO:0052837
 - **Recorded in:** `genes/PSEAE/thiI/thiI-ai-review.yaml`
 
-The IBD of GO:0052837 thiazole biosynthetic process at PTN001804941, the root of the ThiI family PTHR43209, has a single seed: the PseudoCAP IDA on P. aeruginosa PA5118 citing PMID:9209060, which is a Salmonella typhimurium genetics paper and contains no P. aeruginosa experiment. The root node also covers short ThiI proteins (most Firmicutes and archaea) that lack the C-terminal rhodanese domain; in B. subtilis (PMID:22773787) and Methanococcus maripaludis (PMID:22904325) ThiI is needed for 4-thiouridine but not for thiamine, and Salmonella work shows the rhodanese domain is what thiazole synthesis requires (PMID:21724998). Please remove the thiazole IBD from the family root; if wanted, place it at the rhodanese-domain (proteobacterial) subclade, seeded by experimental annotations of E. coli or Salmonella ThiI.
+The IBD of GO:0052837 thiazole biosynthetic process at PTN001804941, the root of the ThiI family PTHR43209, has a single seed: the PseudoCAP IDA on P. aeruginosa PA5118 citing PMID:9209060, which its abstract states is a Salmonella typhimurium gene characterisation, with no P. aeruginosa work described. The root node also covers short ThiI proteins (most Firmicutes and archaea) that lack the C-terminal rhodanese domain; in B. subtilis (PMID:22773787) and Methanococcus maripaludis (PMID:22904325) ThiI is needed for 4-thiouridine but not for thiamine, and Salmonella work shows the rhodanese domain is what thiazole synthesis requires (PMID:21724998). Please remove the thiazole IBD from the family root; if wanted, place it at the rhodanese-domain (proteobacterial) subclade, seeded by experimental annotations of E. coli or Salmonella ThiI.
 
 > proteins annotated as ThiI based on containing only the AANH and THUMP domains are unlikely to be involved in thiazole synthesis and would be better annotated as 4-thiouridine sulfurtransferases
 > — PMID:21724998
@@ -935,7 +938,7 @@ The IBD for GO:0006065 UDP-glucuronate biosynthetic process at PTN001292385 (PTH
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/wbpY/wbpY-ai-review.yaml`
 
-The IBD for GO:0016757 glycosyltransferase activity at PTN005302544 (PTHR46401, GT4; 60 leaf IBAs in 22 taxa) is seeded only by PseudoCAP IMP rows for P. aeruginosa WbpY (Q9HTB9) and WbpX (G3XCU3) citing PMID:9680202, a mutant LPS-phenotype study. The conclusion is correct, but please re-seed with the direct in vitro D-rhamnosyltransferase evidence for both enzymes in PMID:35166992 so the node does not depend on a phenotype-based MF annotation.
+The IBD for GO:0016757 glycosyltransferase activity at PTN005302544 (PTHR46401, GT4; 60 leaf IBAs in 22 taxa) is seeded only by PseudoCAP IMP rows for P. aeruginosa WbpY (Q9HTB9) and WbpX (G3XCU3) citing PMID:9680202, whose abstract reports mutant LPS phenotypes and hedged (probable/predicted) transferase assignments; full text not read. The conclusion is correct, but please re-seed with the direct in vitro D-rhamnosyltransferase evidence for both enzymes in PMID:35166992 so the node does not depend on a phenotype-based MF annotation.
 
 > We demonstrated that these GTs are indeed D-RhaTs and catalyze the transfer of D-Rha from GDP-D-Rha to the reaction product of WbpZ.
 > — PMID:35166992

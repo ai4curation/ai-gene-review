@@ -157,9 +157,22 @@ lasB, which are given secretion-system terms for being secretion cargo).
 wrong term, 42 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 1
 wrong gene product), 74 for PAINT/GO Central (44 wrong term, 16 other, 7
 missing negation, 6 wrong qualifier, 1 wrong reference), 5 for UniProt and 5
-for other resources (InterPro2GO mappings). Most are `CHECK` requests at
-SUSPECTED or PROBABLE confidence, because many seed papers could only be read
-as abstracts. They include defects from PAO1 reviews made before this project.
+for other resources (InterPro2GO mappings). They include defects from PAO1
+reviews made before this project.
+
+Confidence follows the rule in [REVIEW_PROTOCOL](PSEUDOCAP/REVIEW_PROTOCOL.md):
+CONFIRMED needs the full text, primary data we checked, or an abstract that
+states the decisive fact outright; a call that rests on what an abstract does
+not say is SUSPECTED. On 2026-10-29 we audited the 66 PseudoCAP defects at
+PROBABLE or CONFIRMED whose papers we hold only as abstracts, after the xcp
+review-as-IDA call turned out to have been made from an abstract (the full
+text, supplied by the user, later confirmed it). Of the 66, 18 dropped to
+SUSPECTED, 2 dropped from CONFIRMED to PROBABLE, 7 rose to CONFIRMED on a
+full-text read (lhpL, pilA, waaL), and 39 were unchanged; none was removed and
+no annotation action changed. The PseudoCAP report now stands at 16 CONFIRMED,
+59 PROBABLE and 39 SUSPECTED; the PAINT report at 4, 57 and 13. Full texts of
+PMID:16030218 (Sha cluster), PMID:4290562 (hut genes), PMID:9224878 (pilA) and
+PMID:7768797 (oprB) would settle most of the SUSPECTED calls.
 
 ### Per-gene verdicts
 
