@@ -88,3 +88,7 @@ The function narrative (`RHOJ-protnlm-function-review.md`) now scores "binds GTP
 the G4 (TQID) and G5 (CSAL) motifs, and G3V4H1 keeps only the P-loop, switch I and switch II before
 diverging after residue 103. "Lacks intrinsic GTPase activity and is resistant to Rho-specific GAPs"
 stays UNC. This supersedes the single UNC given under "Exact non-GO claims" above.
+The GO row for GTP binding (GO:0005525) stays MARK_AS_OVER_ANNOTATED, not REMOVE. The two calls rest
+on different grounds and are consistent: the narrative score judges whether this exact product can do
+what the text says, and the missing G4/G5 motifs refute that; the GO action judges an annotation that
+is correct for the gene, and no assay of G3V4H1 exists to justify removing it.
