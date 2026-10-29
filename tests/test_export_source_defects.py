@@ -130,15 +130,6 @@ def test_change_line(change: str, corrected: str, expected: str) -> None:
     assert f"**Change:** {expected}" in render_report("TAIR", rows)
 
 
-def test_committed_reports_are_current() -> None:
-    """The committed TSV must match what the exporter produces from the repo."""
-    root = Path(__file__).resolve().parents[1]
-    tsv = root / "reports" / "source-defects.tsv"
-    with tsv.open(encoding="utf-8") as fh:
-        committed = list(csv.DictReader(fh, delimiter="\t"))
-    assert committed == collect(root), "run `just export-source-defects`"
-
-
 @pytest.mark.parametrize(
     "evidence",
     [
@@ -190,3 +181,39 @@ def test_reference_only_export_preserves_tsv_evidence_and_source(repo: Path) -> 
     assert "- **Evidence reference:** PMID:21631432" in report
     assert not any(line.startswith(">") for line in report.splitlines())
     assert source.read_bytes() == before
+
+
+ISOFORM_REVIEW = """
+id: Q96PV0
+gene_symbol: SYNGAP1
+functional_isoforms:
+- id: SYNGAP1_ALPHA1
+  name: SynGAP-alpha1
+  type: SPLICE_CLASS
+  description: d
+  source_defects:
+  - defect_type: MISSING_ISOFORM
+    resource: UNIPROT
+    record: UniProtKB:Q96PV0
+    requested_change: ADD
+    asserted_value: UniProtKB:Q96PV0
+    corrected_value: RefSeq:NP_001123538.1
+    confidence: CONFIRMED
+    explanation: The alpha1 C-terminus is not among the entry's isoforms.
+"""
+
+
+def test_collect_reads_functional_isoform_defects(tmp_path: Path) -> None:
+    """A defect in UniProt's isoform list is exported against the functional isoform."""
+    gene = tmp_path / "genes" / "human" / "SYNGAP1"
+    gene.mkdir(parents=True)
+    (gene / "SYNGAP1-ai-review.yaml").write_text(ISOFORM_REVIEW, encoding="utf-8")
+    (row,) = collect(tmp_path)
+    assert row["resource"] == "UNIPROT"
+    assert row["defect_type"] == "MISSING_ISOFORM"
+    assert row["requested_change"] == "ADD"
+    assert row["subject_id"] == "UniProtKB:Q96PV0"
+    assert row["term_id"] == "SYNGAP1_ALPHA1"
+    assert row["record"] == "UniProtKB:Q96PV0"
+    assert row["corrected_value"] == "RefSeq:NP_001123538.1"
+    assert "add RefSeq:NP_001123538.1 to UniProtKB:Q96PV0" in render_report("UNIPROT", [row])

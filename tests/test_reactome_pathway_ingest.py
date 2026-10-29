@@ -272,6 +272,63 @@ def test_reactome_only_family_verdict_requires_set_catalyst() -> None:
     )
 
 
+def test_write_alignment_report_renders_reactome_event_names_as_code(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "report.md"
+    imported = {
+        "events": {
+            "R-HSA-1": {
+                "schema_class": "Reaction",
+                "display_name": "arginine + H2O => ornithine + urea [ARG2]",
+                "catalysts": [],
+            }
+        }
+    }
+    alignment = {
+        "matches": [
+            {
+                "module_node": "step1",
+                "module_annoton": "activity1",
+                "reactome_event": "R-HSA-1",
+                "verdict": "same_reaction_missing_executor",
+                "match_basis": ["cited_reactome_id"],
+            }
+        ],
+        "reactome_only_events": [],
+        "module_only_events": [],
+    }
+    module_sources = [
+        {
+            "scope": "activity_evidence",
+            "reactome_id": "R-HSA-1",
+            "node_id": "step1",
+            "annoton_id": "activity1",
+            "function_id": "GO:1",
+            "function_label": "",
+        }
+    ]
+
+    ingest.write_alignment_report(
+        output_path,
+        {
+            "id": "example",
+            "module": "example",
+            "organism": "Homo sapiens",
+            "reactome_root": "R-HSA-ROOT",
+            "scope": "curated_slice",
+        },
+        imported,
+        alignment,
+        module_sources,
+    )
+
+    assert (
+        "| R-HSA-1 | same_reaction_missing_executor | cited_reactome_id | "
+        "step1 | activity1 | `arginine + H2O => ornithine + urea [ARG2]` |"
+    ) in output_path.read_text()
+
+
 def test_select_pathways_filters_by_id() -> None:
     config = {
         "pathways": [
