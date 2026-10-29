@@ -82,8 +82,7 @@ an inline quote from a cached publication under `publications/`.
 - `GO:0019333 denitrification pathway` (IEA from InterPro IPR024717) is wrong for this
   protein and, as a blanket family mapping, for the family. Denitrification is defined
   as reduction of nitrate all the way to dinitrogen; *S. oneidensis* performs
-  respiratory ammonification (nitrate to nitrite to ammonium) and has no NO or N2O
-  reductase in this pathway [PMID:19387485 "we present evidence that reduction of nitrate to ammonium in S. oneidensis is carried out by these atypical systems in a two-step manner"].
+  respiratory ammonification (nitrate to nitrite to ammonium) [PMID:19387485 "we present evidence that reduction of nitrate to ammonium in S. oneidensis is carried out by these atypical systems in a two-step manner"].
   InterPro's own entry name is "Denitrification system component NapC/NirT/NrfH", but the
   family includes NrfH, a subunit of the ammonium-forming nitrite reductase complex.
   Recorded as a `source_defects` entry against the interpro2go mapping (DELETE_VALUE).
