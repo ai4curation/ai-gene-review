@@ -1,6 +1,6 @@
 # ftz-f1: ProtNLM function-text review
 
-**PLI (score 0) for high-affinity thyroid-hormone receptor specificity.** The nuclear-receptor family and transcriptional activation/repression clauses are correct and already carried for the ftz-f1 gene (CNN). The 803-aa target is exactly identical to the reviewed FTZ-F1 isoform P33244-2; this is not an anonymous receptor fragment.
+**PLI (score 0) for high-affinity thyroid-hormone receptor specificity.** The nuclear-receptor family and transcriptional activation clauses are correct and already carried for the ftz-f1 gene (CNN); the repression clause is correct and more specific than existing annotation (COR). The 803-aa target is exactly identical to the reviewed FTZ-F1 isoform P33244-2; this is not an anonymous receptor fragment.
 
 ## Original prediction
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | Nuclear hormone receptor | CNN as protein-family terminology | The target is the FTZ-F1 NR5A protein, with shared DNA-binding and regulatory domains; the reviewed same-gene record P33244 already places it in the nuclear hormone receptor family, NR5 subfamily. The phrase does not itself establish hormone binding. |
 | Activates transcription | CNN | Regulatory-site mutagenesis, target transcription, and FTZ-F1/cofactor studies establish activation. GOA already carries DNA-binding transcription activator activity and positive regulation of transcription by RNA polymerase II on the same-gene product P33244. |
-| Represses transcription | CNN at the beta FTZ-F1 product level | The developmental isoform represses its own transcription; this need not be direct repression at every target. GOA carries regulation of DNA-templated transcription on M9NFK2 and P33244, and the curated gene reviews record betaFTZ-F1 autorepression (PMID:7954827). |
+| Represses transcription | COR | The developmental beta FTZ-F1 isoform, which this product is, represses its own transcription ([PMID:7954827](https://pubmed.ncbi.nlm.nih.gov/7954827/)); this need not be direct repression at every target. GOA carries only the parent term, regulation of DNA-templated transcription, on M9NFK2 and P33244, and neither curated review assigns a negative-regulation term, so the clause is novel for the gene. |
 | High-affinity receptor for triiodothyronine and thyroxine | **PLI; PARALOG_OVERANNOTATION** | FTZ-F1 belongs to NR5A, whereas the recorded function-text phmmer match is an NR1A thyroid receptor. FTZ-F1-specific structural and functional studies support a distinct regulatory mechanism, not T3/T4 receptor specificity. |
 
 ## A traceable receptor-subfamily mismatch

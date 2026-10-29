@@ -12,9 +12,13 @@ Selected horse accession: [A0A9L0T1D1](https://www.uniprot.org/uniprotkb/A0A9L0T
 
 **PLI.** The human CXCR3-B study explicitly reports that these CC chemokines did not compete for radiolabeled CXCL10 binding. Its positive ligands were CXCL9/10/11 and CXCL4. The selected horse receptor is 90.8% identical across the full human CXCR3-A sequence with seven membrane helices retained. The stated ligand set is characteristic of a different chemokine-receptor specificity, not validated by the broad family label. [PMID:12782716](https://pubmed.ncbi.nlm.nih.gov/12782716/); [DOI:10.1084/jem.20021897](https://doi.org/10.1084/jem.20021897).
 
-### Calcium signaling and T-lymphocyte chemotaxis
+### Calcium signaling
 
-**CNN.** These broad properties fit CXCR3 ligand-induced signaling and activated-lymphocyte migration: human CXCR3 "mediates Ca2+ mobilization and chemotaxis in response to IP10 and Mig" ([PMID:9064356](https://pubmed.ncbi.nlm.nih.gov/9064356/)), and CXCR3-A transfectants mediate calcium flux in response to CXCL9, CXCL10 and CXCL11 ([PMID:12782716](https://pubmed.ncbi.nlm.nih.gov/12782716/); [DOI:10.1084/jem.20021897](https://doi.org/10.1084/jem.20021897)). They do not validate the incorrect ligand list in the preceding sentence. The selected horse product retains the full receptor architecture, with seven membrane helices, so no feature needed for this signaling is missing. Neither claim is novel for horse CXCR3: GOA already carries chemokine-mediated signaling pathway and chemotaxis for this accession, and the curated gene review carries T cell chemotaxis and describes the chemokine signal as Gi-coupled Ca2+ mobilisation. This is inference from human receptor experiments, supplemented by horse expression evidence, rather than direct horse ligand-binding data.
+**COR.** Human CXCR3 "mediates Ca2+ mobilization and chemotaxis in response to IP10 and Mig" ([PMID:9064356](https://pubmed.ncbi.nlm.nih.gov/9064356/)), and CXCR3-A transfectants mediate calcium flux in response to CXCL9, CXCL10 and CXCL11 ([PMID:12782716](https://pubmed.ncbi.nlm.nih.gov/12782716/); [DOI:10.1084/jem.20021897](https://doi.org/10.1084/jem.20021897)). These results do not validate the incorrect ligand list in the preceding sentence. The selected horse product is 90.8% identical to human CXCR3-A and keeps the full receptor architecture, with seven membrane helices, so the calcium response transfers to it as a family inference rather than a horse assay. Horse CXCR3 GOA carries chemokine-mediated signaling pathway but no calcium-mediated signaling term, so this more specific clause is novel for the gene.
+
+### T-lymphocyte chemotaxis
+
+**CNN.** CXCR3 directs activated-lymphocyte migration, as the same human studies show. GOA already carries chemotaxis for this accession, and the curated gene review carries T cell chemotaxis, so the claim is not novel. The horse product keeps the full receptor architecture.
 
 ### Granulocytic lineage proliferation/differentiation
 
