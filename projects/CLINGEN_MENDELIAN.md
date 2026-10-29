@@ -2999,9 +2999,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**652 of 2,876 genes are complete; 2,224 remain.**
-This checkpoint adds FLNA and FLT4 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-652-2026-10-28-222718-utc) records the evidence and retained uncertainties.
+**654 of 2,876 genes are complete; 2,222 remain.**
+This checkpoint adds FLNC and FLNB after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-654-2026-10-28-235245-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3790,8 +3790,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FLAD1** — HGNC:24671; [myopathy with abnormal lipid metabolism](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_769764bf-09c5-4a7d-8501-5fcf154fcdda-2020-12-16T181902.981Z) (MONDO:0009703; AR; Definitive).
 - [x] **FLCN** — HGNC:27310; [obsolete Birt-Hogg-Dube syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c96620e8-f9c9-41a0-a979-31fb9928abb6-2019-04-19T160000.000Z) (MONDO:0007607; AD; Definitive).
 - [x] **FLNA** — HGNC:3754; [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8274) (MONDO:0019625; XL; Limited); [periventricular nodular heterotopia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_80bc6280-7c21-4168-8a98-93c31fead5d7-2020-12-27T231155.213Z) (MONDO:0020341; XL; Definitive).
-- [ ] **FLNB** — HGNC:3755; [FLNB-associated autosomal dominant filamin related bone disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_543fbfa2-1036-4ef5-94fb-9b7c2d2e3fe6-2025-09-03T160000.000Z) (MONDO:1060173; AD; Definitive).
-- [ ] **FLNC** — HGNC:3756; [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_edb5197f-05dc-42a4-a497-fff472985c6b-2025-05-30T160000.000Z) (MONDO:0005021; AD; Definitive); [myofibrillar myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d61672a0-06f2-4df4-845b-57566075fdb1-2023-10-26T010000.000Z) (MONDO:0018943; AD; Definitive).
+- [x] **FLNB** — HGNC:3755; [FLNB-associated autosomal dominant filamin related bone disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_543fbfa2-1036-4ef5-94fb-9b7c2d2e3fe6-2025-09-03T160000.000Z) (MONDO:1060173; AD; Definitive).
+- [x] **FLNC** — HGNC:3756; [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_edb5197f-05dc-42a4-a497-fff472985c6b-2025-05-30T160000.000Z) (MONDO:0005021; AD; Definitive); [myofibrillar myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d61672a0-06f2-4df4-845b-57566075fdb1-2023-10-26T010000.000Z) (MONDO:0018943; AD; Definitive).
 - [x] **FLT4** — HGNC:3767; [congenital heart defects, multiple types, 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03e5cbf0-2888-4416-bb0f-85909fc297ce-2023-03-08T170000.000Z) (MONDO:0032913; AD; Definitive); [lymphatic malformation 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_623ef8f5-43ba-43e2-9c2d-fd44e87d6946-2022-12-19T170000.000Z) (MONDO:0007919; AD; Definitive).
 - [ ] **FLVCR1** — HGNC:24682; [FLVCR1-related retinopathy with or without ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e53e1a9-b1b9-4617-be3a-012399a06ef6-2021-08-05T160000.000Z) (MONDO:0100449; AR; Definitive).
 - [ ] **FLVCR2** — HGNC:20105; [Fowler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bab38ab3-42d3-452d-97d1-5859eafa3d1b-2024-10-22T040000.000Z) (MONDO:0009168; AR; Definitive).
