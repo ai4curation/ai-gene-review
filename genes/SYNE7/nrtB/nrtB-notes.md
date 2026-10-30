@@ -29,3 +29,8 @@ Annotation decisions:
 - GO:0016020 membrane: MODIFY. The evidence localizes the transporter to the cytoplasmic membrane. The parent membrane term is biologically true but can be refined to plasma membrane, already represented in this review.
 - GO:0042918 alkanesulfonate transmembrane transport: REMOVE. The proximate source is ARBA:ARBA00034185. PCC 7942 NrtB is genetically assigned to the NrtABCD nitrate/nitrite transporter; the associated NrtA substrate-binding component recognizes nitrate and nitrite (PMID:8437564, PMID:9006953, PMID:9341163). The broad PANTHER family has an alkanesulfonate-related name, but the verified target subfamily is NITRATE IMPORT PERMEASE PROTEIN NRTB. Neither a shared ABC membrane fold nor that broad family name justifies transferring the alkanesulfonate pathway. This rejects the electronic substrate assignment, not an experimental annotation.
 - GO:0055085 transmembrane transport: MODIFY. NrtB is the membrane component of the experimentally characterized nitrate/nitrite uptake system. Both substrates are supported by native transport studies; the general transmembrane transport term is refined to the two supported processes (PMID:9341163, PMID:9006953).
+
+
+## 2026-10-29 PR5740 completion status
+
+The completed primary-source review and independent six-gene QA are reflected by `status: COMPLETE`. All original annotation payloads and review decisions remain unchanged. The follow-up added specific participation-supported proposals to NrtA/NarB/NirA; it does not mechanically copy core functions into new rows for every transporter partner. This record was revalidated and rendered with the current panel.

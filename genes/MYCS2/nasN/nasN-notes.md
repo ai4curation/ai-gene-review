@@ -11,3 +11,10 @@ The full PMID32111737 article is cached under its normal PMC URL, not in the abs
 The enzyme is oxygen-sensitive despite greater tolerance than the Amycolatopsis comparator. Do not transfer its kinetics or donor preference to the Pseudomonas fusion. Native activity in cytoplasmic fractions supports the cytoplasm correction. [same full article "NasN was shown to be oxygen-sensitive"]
 
 No NEW rows were added. Direct native evidence supports nitrate assimilation in the core summary. A preliminary exact-term comparator query for SYNE7 NarB P39458 and BACSU NasC P42434 returned no GO:0042128 rows; their seeded GOA instead includes a denitrification mapping under review. This absence is not treated as evidence that curators missed a pathway-completeness annotation. The term definition/ancestors were read and no A4ZHT3 match occurs in the cached GO-CAM index. Query results are retained in the ignored resume audit log.
+
+
+## 2026-10-29: PR #5740 follow-up
+
+The initial no-NEW decision is superseded for nitrate assimilation. It over-weighted two sparse negative comparators; absence on SYNE7 NarB and BACSU NasC does not identify a convention excluding nitrate catalysts. Live exact-term checks identify Arabidopsis NIA1 P11832 and NIA2 P11035 with experimental GO:0042128 annotations (PMID:8510658), and BACSU NasB P42433 with the process. Those annotations are comparator state, not evidence for NasN. NasN's own purified nitrate-reductase chemistry, native deletion, cytoplasmic activity loss and complementation establish actual catalytic participation, so an IMP NEW proposal is justified. The current GO:0050464 and GO:0009703 ancestor sets do not contain GO:0042128, and no redundant process row or A4ZHT3 GO-CAM index hit occurs.
+
+The secondary NADH molecular reaction is retained. The relevant experiment used purified recombinant NasN, unlike the unattributed minor NADPH signal in BACSU crude extracts. Its lower rate does not negate directly demonstrated chemistry, but neither does that chemistry establish a second physiologically important NADH pathway. The core/module continue to represent the preferred NADPH reaction.

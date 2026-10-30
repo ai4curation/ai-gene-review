@@ -27,3 +27,10 @@ PMID:7868621 was read in the publisher PDF, although its canonical cache remains
 - GO:0106316 nitrite reductase (NADH) activity: **ACCEPT**. Native cell-extract assays and controlled subunit deletions demonstrate NasD involvement in the NADH-driven enzyme. The same enzyme serves assimilatory and anaerobic nitrite reduction.
 
 No isolated-subunit catalytic claim is inferred from the ordinary machine relationship value. The native complex contribution is assessed on biology. All seeded rows and machine payloads remain intact; no redundant NEW row was introduced. Nitrogen-regulator induction is regulation of these enzymes, not a transcription-factor function of the enzymes. Provider authentication failures are recorded in the foundation; no provider report was invented.
+
+
+## 2026-10-30 PR5740 follow-up: donor attribution
+
+The earlier two-donor replacement rationale is superseded. PMID:9765565 reports: “Activity with NADPH was less than 10% of that with NADH.” This was a crude-extract signal, unlike a purified enzyme donor comparison. The assay does not separate direct NasDE NADPH turnover from possible transhydrogenase-mediated electron transfer or other extract activities; these are unresolved alternatives, not demonstrated mechanisms. Every affected MODIFY now proposes only GO:0106316, the established main NADH activity. The minor observation is preserved verbatim and raised as a question requiring purified-enzyme attribution. No primary quote, machine annotation field or raw record is changed.
+
+The previous NADP-binding ACCEPT rationale also relied on the minor signal. Its target ligand prediction remains suggestive, but the row is now UNDECIDED pending independent donor-specific binding or turnover evidence.
