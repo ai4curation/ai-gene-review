@@ -30,7 +30,7 @@ The gene pages contain primary citations, source excerpts, sequence analyses and
 
 The initial pass covers all **40 horse–human pairs**, **89 GO predictions** and **17 original function paragraphs**. Every human target has deep research: 35 Edison reports and five substantive manual reports where external research was unavailable. Three horse-specific Edison reports returned; the SIRT5 request failed and its direct horse evidence is documented in notes.
 
-As of the 2026-10-24 review snapshot (commit `1ca4af83c6`), the GO assessments are **16 COR, 21 CNN, 10 LSP, 28 UNC, 13 NPI and 1 PLI**. Narrative claims include additional specificity and family-transfer errors and are scored separately. The main reviews assess 2,784 original human GOA rows and 309 horse rows, plus two proposed human annotations. Unresolved source details remain explicit, including numerous high-throughput interaction records.
+As of the 2026-10-29 review snapshot (commit `ac95c69686`), the GO assessments are **16 COR, 21 CNN, 10 LSP, 28 UNC, 13 NPI and 1 PLI**. Narrative claims include additional specificity and family-transfer errors and are scored separately. The main reviews assess 2,784 original human GOA rows and 309 horse rows, plus two proposed human annotations. Unresolved source details remain explicit, including numerous high-throughput interaction records.
 
 ## What the review establishes
 

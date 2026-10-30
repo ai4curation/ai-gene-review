@@ -195,6 +195,16 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+**Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
+went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
+model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
+was itself the over-annotation). Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
+retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
+not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
+`replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
+`replaced_by` upstream.
+See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
+
 ### Root organelle terms: keep the organelle, add the sub-compartment
 
 Cellular-component rows on a root organelle term (`GO:0005739` mitochondrion,
@@ -696,6 +706,18 @@ gene's symbol (for example, L0R8F8 AltMIEF1 is gene `MIEF1`). Such a peptide get
 - It has no gene symbol at all: use the accession as the folder name.
 
 Never model such a peptide as a `functional_isoform` of its host. See `projects/MICROPROTEINS.md`.
+
+### Gene model problems
+
+When the entry's sequence is not a single real gene product (two neighbouring
+genes fused into one model, a split or truncated model, a wrong start site),
+record it in the top-level `gene_model_issues` list rather than only in prose:
+`issue_type`, `status` (`SUSPECTED` or `CONFIRMED`), a `description` of how it
+affects the entry's name and annotations, optional `components` and
+`reviewed_segment` for fused models, `evidence_types`, and `supported_by` quotes.
+A genuine biological fusion is not a gene model issue, and an entry UniProt
+already flags as a fragment (`DE   Flags: Fragment`) needs an entry only when the
+review finds more than the flag records. See `projects/GENE_MODEL_ERRORS.md`.
 
 ## Bioinformatics analyses
 
