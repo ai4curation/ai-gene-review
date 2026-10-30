@@ -24,6 +24,24 @@ from ai_gene_review.validation.validation_report import ValidationReport, Valida
 SCORES = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
 
 
+EXTERNAL_SOURCE = re.compile(r"^(?:[a-z][a-z0-9+.-]*://|[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/)")
+
+
+def is_external_source(source: str) -> bool:
+    """Whether a ``source_documents`` entry names a remote resource, not a repo file.
+
+    >>> is_external_source("huggingface.co/datasets/wanglab/protein_catalogue")
+    True
+    >>> is_external_source("https://example.org/data.tsv")
+    True
+    >>> is_external_source("genes/SCHPO/pmp20/pmp20-goa.tsv")
+    False
+    >>> is_external_source("pmp20-bioreason-rl-predictions.md")
+    False
+    """
+    return bool(EXTERNAL_SOURCE.match(source))
+
+
 def source_path(reference_id: str, root: Path) -> Path | None:
     """Resolve supported reference identifiers without network access."""
     if reference_id.startswith("file:"):
@@ -93,7 +111,7 @@ def validate_prediction_evidence(
                 report.metadata["verified_titles"] += 1
 
     for source in data.get("source_documents", []):
-        if not (root / source).is_file():
+        if not is_external_source(source) and not (root / source).is_file():
             error(f"Source document unavailable: {source}", "source_documents")
 
     for i, prediction in enumerate(data.get("predictions", [])):

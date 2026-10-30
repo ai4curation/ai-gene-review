@@ -156,16 +156,25 @@ jobs:
           uv run python -m ai_gene_review.validation.schema_batch --schema src/ai_gene_review/schema/gene_review.yaml
           --target-class GeneReview genes/*/*/*-ai-review.yaml
 
-      - name: Validate changed prediction reviews and source evidence
-        if: steps.changes.outputs.predictions == 'true'
-        run: just validate-predictions ${{ steps.changes.outputs.predictions_files }}
-
-      - name: Validate changed BioReason/GO-GPT prediction files
-        if: steps.changes.outputs.bioreason_predictions == 'true'
-        run: just validate-prediction-terms ${{ steps.changes.outputs.bioreason_predictions_files }}
+      # Same scoping as gene reviews: everything on the weekly/manual run or a
+      # validation-infrastructure change, otherwise only the changed files.
+      - name: Validate prediction reviews and source evidence
+        id: predictions
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ steps.changes.outputs.infra }}" = "true" ]; then
+            echo "::notice::Validating ALL prediction reviews."
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+            just validate-predictions-all
+          elif [ "${{ steps.changes.outputs.predictions }}" = "true" ]; then
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+            just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+          else
+            echo "No prediction-review or validation-infrastructure changes; skipping."
+          fi
 
       - name: Upload prediction evidence validation
-        if: always() && steps.changes.outputs.predictions == 'true'
+        if: always() && steps.predictions.outputs.ran == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: prediction-evidence-validation

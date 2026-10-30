@@ -120,3 +120,22 @@ def test_publication_titles_quotes_and_missing_cache(tmp_path: Path, fault: str 
     path.write_text(yaml.safe_dump(data))
     report = validate_prediction_evidence(path, tmp_path)
     assert report.is_valid == (fault is None)
+
+
+@pytest.mark.parametrize(
+    ("source", "valid"),
+    [
+        ("huggingface.co/datasets/wanglab/protein_catalogue", True),
+        ("https://example.org/data.tsv", True),
+        ("genes/missing.txt", False),
+        ("missing.md", False),
+    ],
+)
+def test_source_documents_external_ids_pass_missing_files_fail(
+    tmp_path: Path, source: str, valid: bool
+) -> None:
+    path = write_case(tmp_path)
+    data = yaml.safe_load(path.read_text())
+    data["source_documents"].append(source)
+    path.write_text(yaml.safe_dump(data))
+    assert validate_prediction_evidence(path, tmp_path).is_valid is valid

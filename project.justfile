@@ -999,14 +999,18 @@ validate-predictions +files:
     just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
+# Every prediction review, including the BioReason/GO-GPT sidecars. Run by the
+# weekly/manual CI pass and on validation-infrastructure changes.
+[group('QC')]
+validate-predictions-all:
+    just validate-predictions genes/*/*/*predictions*.yaml
+
 # Schema and term validation for prediction files. In a PredictionReview the only
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;
 # predicted GO terms are deliberately unbound (a model may predict an obsolete or
-# nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
-# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which follow
-# other conventions than validate-predictions' source-evidence check expects.
-# The one evidence rule they share, that a GOA file is never support
-# (supporting_text_goa_file), is checked here too. Same blocking policy as
+# nonexistent id, and the file must record it faithfully). It also rejects GOA
+# files cited as support (supporting_text_goa_file), so it can run on its own;
+# validate-predictions adds the source-evidence check. Same blocking policy as
 # validate-all.
 [group('QC')]
 validate-prediction-terms +files:
