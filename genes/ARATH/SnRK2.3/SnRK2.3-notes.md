@@ -117,3 +117,19 @@
   SnRK2.2/2.3 mediate ABA inhibition of germination.
 - NEW: protein autophosphorylation (GO:0046777), PMID:22160701 + UniProt PTM; matches
   OST1 accepted IDA row.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+- Core function 1 now names FREE1 phosphorylation (curated UniProt line, PMID:30962512) and TOPP1/AtI-2 negative regulation [PMID:26943172 "TOPP1 and AtI-2 negatively regulated the SnRK2.2/3/6-mediated activation of the ABA responsive reporter gene RD29B"].
+- The eight GO:0005515 rows with clade A PP2C partners changed from REMOVE to MODIFY to GO:0019903, as for SnRK2.2 and matching the OST1 GO:0019903 IPI row. The bHLH122 row stays REMOVE.
+- GO:0009737 rows: reason explains why the term is kept alongside GO:0009738.
+- The NOT located_in cytosol RCA row (PMID:21166475) stays REMOVE: it is contradicted by BiFC and IDA cytoplasm evidence. It is not recorded as a source defect, because it is a computational prediction rather than a curation error.
+
+
+## 2026-10-25 — ABA module member audit
+
+Assessed all 37 existing annotation decisions and core synthesis. The redundant seed/seedling ABA kinase role remains supported by cited primary studies. Description, core function and proposed autophosphorylation annotation are qualified with PMID:33911084: "transphosphorylation by RAFs is required for the reactivation of SnRK2.2/2.3/2.6." Its direct SnRK2.3 analog-sensitive assays distinguish RAF initiation from amplification; PMID:31896774 corroborates the upstream MAP3K requirement. These findings do not invalidate the recombinant-kinase/structure paper PMID:22160701, but limit the self-reactivation interpretation.
+
+The plastid HDA call from PMID:28887381 is now UNDECIDED. Failure to find SnRK2.3 in article running text does not refute supplementary proteomics evidence; a nuclear/cytoplasmic function does not exclude a second pool. The gene-specific fractionation assignment remains to be checked. The negated cytosol RCA assertion remains rejected against independent cytosolic interaction evidence. PP2C-binding rationales no longer depend on deduplication.
+
+Research used existing provider reports/manual notes and cached primary literature. All rows retain explicit decisions; unresolved findings are UNDECIDED rather than inferred from missing text. Record-section backfill and targeted validation were run for this session.
