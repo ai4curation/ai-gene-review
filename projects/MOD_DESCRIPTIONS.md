@@ -3,7 +3,7 @@ title: "MOD gene descriptions as review input"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [worm]
-autolink_exclude: [MOD, MODS]
+autolink_exclude: [MOD, MODS, GET3]
 ---
 
 # MOD gene descriptions as review input
@@ -193,6 +193,48 @@ worklist. Recurring patterns:
   secretion phenotypes, ddb-1 in LET-23 vulval signaling, lys-1 regulators,
   gsk-3 axon guidance, and the let-60 phenotypes.
 
+## Follow-up: acting on the findings
+
+The 244 gap and discrepancy findings (216 genes) were each checked against the
+literature, and acted on under the CLAUDE.md curation rules. Parallel agents did
+the work; each edited gene was validated and given a history record. Batch
+results were spot-checked (pek-1, lrx-1, sem-5).
+
+- **Upstream defects:** 100 errors in description text across 93 genes (73
+  WormBase, 27 UniProt) are now recorded as `source_defects` on the cited
+  reference: 31 WRONG_STATEMENT, 28 OUTDATED_STATEMENT, 40 MISSING_STATEMENT and 1
+  WRONG_REFERENCE. Of these, 28 are CONFIRMED by a quoted paper and the rest are
+  PROBABLE. `just export-source-defects` writes them to
+  `reports/source-defects/WORMBASE.md` and `UNIPROT.md` for filing. Examples:
+  - UniProt says IRE-1 retains unspliced mRNAs, but its cited paper says the opposite.
+  - UniProt names nlp-29 as its own receptor; the receptor is NPR-12.
+  - UniProt's sma-9 FUNCTION text cites an unrelated paper.
+  - WormBase says the GPR-2 GoLoco motif is a GEF feature.
+  - WormBase says SOD-2 promotes lifespan, but sod-2 mutants are long-lived.
+  - WormBase calls ASNA-1 a membrane transporter, but it is the GET3 targeting ATPase.
+- **Our reviews:**
+  - About 60 descriptions gained sentences for verified gaps. Examples include
+    the let-60 phenotypes, the BBS dense-core-vesicle secretion phenotypes and
+    the sem-5 PLC-gamma/PI3K outputs.
+  - No NEW annotation rows were added. Every gap was an indirect or
+    pleiotropic phenotype that does not meet the NEW bar.
+  - Four reviews were corrected where they, not the source, were wrong:
+    - pek-1: pek-1;atf-6 silencing has no phenotype (PMID:16184190).
+    - lrx-1: its own analysis wrongly rejected the LDL-A repeats that Pfam,
+      SMART and CDD detect.
+    - lys-1: it is a screened candidate, not an established DAF-16 target.
+    - gcy-8: GCY-18 also contributes to the role.
+- **Unverified:** about 30 claims could not be traced to a paper (for example
+  gcy-23 lifespan and rps-23 vulval morphogenesis). They are noted in the
+  reference's `review_notes`, with no annotation change.
+- **Alliance:** nine automated descriptions lost content that the RefSeq copy
+  of an earlier release still has; see
+  [alliance-automated-regressions.md](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
+- **Open:** the apa-2 review removes "GTPase activating protein binding" because
+  RME-6 is a GEF, but RME-6 also has a RasGAP-related domain (PMID:15895077).
+  The lrx-1 suggested questions look as if they belong to another gene. Both need
+  a human look.
+
 ## Recommendations
 
 1. **Use the curated MOD description as an input, not as an authority.** This
@@ -217,6 +259,7 @@ worklist. Recurring patterns:
 - [x] Write `-deep-research-wormbase.md` for the worm genes
 - [x] Follow up the fshr-1 synaptic role (PMID:39561202) in its review
 - [x] Rubric reviews of all description sources for all 432 worm genes, with a findings worklist
-- [ ] Work through the gap and discrepancy findings in `worm-findings.yaml`
-- [ ] Report the automated-text regressions and contradicted MOD statements upstream
+- [x] Work through the gap and discrepancy findings in `worm-findings.yaml`
+- [x] Record the contradicted MOD and UniProt statements as `source_defects`
+- [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [ ] Generate for fly, mouse, rat, zebrafish and yeast
