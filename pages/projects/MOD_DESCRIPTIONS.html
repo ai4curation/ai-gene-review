@@ -362,7 +362,7 @@
 
 
         <p class="project-meta">
-            <span class="badge m-SCOPING">SCOPING</span>
+            <span class="badge m-IN_PROGRESS">IN_PROGRESS</span>
             <span class="badge tag t-PIPELINE">PIPELINE</span><span class="badge tag t-EVALUATION">EVALUATION</span>
         </p>
 
@@ -394,6 +394,13 @@ usually more mechanistic and more current. The WormBase text is still worth<br /
 reading as a <strong>recall checklist</strong>, though: in 7 of the 16 pairs it<br />
 names a phenotype, process or regulator that our review leaves out, and in one<br />
 case (<a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">fshr-1</a>) a whole functional role that our review never mentions.</p>
+<p><strong>Decision (2026-10-30): treat the curated description as a deep-research<br />
+source</strong>, the same way as Affinage. It is written verbatim to<br />
+<code>&lt;gene&gt;-deep-research-&lt;mod&gt;.md</code> (<code>wormbase</code>, <code>flybase</code>, <code>sgd</code>, <code>mgi</code>, <code>rgd</code>,<br />
+<code>zfin</code>, <code>xenbase</code>). It is cited as a <code>file:</code> reference, and the reviewer's<br />
+judgment goes in <code>references[].reference_review</code>. The source is sparse,<br />
+uncited, undated and only partly trusted, but no new data structures or<br />
+processes are needed for it. See <a href="#deep-research-integration">Deep-research integration</a>.</p>
 <h2 id="data-and-method">Data and method</h2>
 <ul>
 <li>Fetch: <code>uv run ai-gene-review fetch-descriptions-bulk worm</code>. This writes<br />
@@ -480,13 +487,50 @@ different emphasis, not error.</p>
 <li>Several WormBase texts contain formatting damage (words run together, such as<br />
   "PUFA-basedsignal"), which suggests they were not cleaned when imported.</li>
 </ul>
+<h2 id="deep-research-integration">Deep-research integration</h2>
+<ul>
+<li><strong>Emit:</strong> <code>just mod-description-deep-research &lt;org&gt; [genes...]</code><br />
+  (<code>src/ai_gene_review/etl/mod_description_deep_research.py</code>). The file holds<br />
+  the curated note exactly as served, including WormBase's run-together words,<br />
+  with frontmatter recording provider, <code>authorship</code> (MOD curators),<br />
+<code>source_url</code>, MOD gene id, UniProt accession, fetch date, and<br />
+<code>citations_provided: false</code> / <code>authoring_date_provided: false</code>. As with the<br />
+  Affinage emitter, it contains no AIGR judgment.</li>
+<li><strong>Only the curated note is used.</strong> The Alliance automated description is<br />
+  generated from GO annotations, so citing it would cite the annotations under<br />
+  review as evidence for themselves.</li>
+<li><strong>Wrong-gene check:</strong> the MOD id comes from the UniProt cross-reference.<br />
+  Writing is refused (unless <code>--force</code>) when the symbol or systematic name of<br />
+  the Alliance record matches neither the folder nor any UniProt gene name.<br />
+  Human is out of scope.</li>
+<li><strong>Reviewer guidance</strong> (review and annotation-reviewer skills): run the<br />
+  emitter for every non-human review, check each claim, and record a verdict in<br />
+<code>reference_review</code>. A claim found only in the MOD text is a lead for a<br />
+  literature search.</li>
+<li>The <code>DEEP_RESEARCH</code> publication type now covers external narrative sources<br />
+  in general, not only AI reports. The frontmatter records authorship.</li>
+<li><code>&lt;gene&gt;-descriptions.yaml</code> stays as the input for the description comparison<br />
+  (<a href="MOD_DESCRIPTIONS/compare_descriptions.py">compare_descriptions.py</a>). It is<br />
+  not a review source, because it stores the source text together with our AI's<br />
+  rubric scores.</li>
+</ul>
+<p><strong>Worked example: <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">fshr-1</a>.</strong> The WormBase text led to Buckley et al. 2024<br />
+(PMID:39561202). That paper shows that intestinal <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">FSHR-1</a> is necessary and<br />
+sufficient for acetylcholine release at the neuromuscular junction, with<br />
+GSA-1/Gas and ACY-1 acting downstream and the glycoprotein hormone subunits<br />
+GPLA-1 and GPLB-1 upstream. The review now has a NEW<br />
+<code>GO:1900075 positive regulation of neuromuscular synaptic transmission</code> (IMP)<br />
+row, a corrected description (which had wrongly said <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">FSHR-1</a> had been<br />
+"repurposed" away from hormone signaling), stronger support for the IBA<br />
+adenylate-cyclase row, and updated open questions. The WormBase reference's<br />
+<code>reference_review</code> records which claims were traced (synaptic role) and which<br />
+were judged stale (FLP-1 and NLP-12 as candidate ligands).</p>
 <h2 id="recommendations">Recommendations</h2>
 <ol>
-<li><strong>Use the curated MOD description as an input, not as an authority.</strong> Add<br />
-<code>fetch-descriptions</code> to <code>just fetch-gene</code> and have the review and<br />
-   annotation-reviewer skills read <code>&lt;gene&gt;-descriptions.yaml</code>. Each claim in<br />
-   the curated text should be either covered by the review or dismissed in the<br />
-   notes (for example, "stale: <a href="../../genes/worm/ced-4/ced-4-ai-review.html">CED-4</a> is the Apaf-1-like apoptosome adaptor").</li>
+<li><strong>Use the curated MOD description as an input, not as an authority.</strong> This<br />
+   is done through the deep-research file above. Each claim in the curated text<br />
+   should be either covered by the review or set aside in <code>reference_review</code><br />
+   (for example, "stale: <a href="../../genes/worm/ced-4/ced-4-ai-review.html">CED-4</a> is the Apaf-1-like apoptosome adaptor").</li>
 <li><strong>Treat a claim that appears only in the MOD text as a literature lead.</strong><br />
 <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">fshr-1</a> is the model case: the gap is a missed role, not wording.</li>
 <li><strong>Re-audit existing reviews</strong> with the comparison script, starting with the<br />
@@ -500,9 +544,12 @@ different emphasis, not error.</p>
 <li>[x] Fix the Alliance parser and the WormBase gene-id extraction</li>
 <li>[x] Fetch worm descriptions (432 genes) and write the comparison table</li>
 <li>[x] Hand-compare 16 genes</li>
-<li>[ ] Decide whether to wire the sidecar into <code>fetch-gene</code> and the review skills</li>
-<li>[ ] Follow up the <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">fshr-1</a> synaptic role and <a href="../../genes/worm/gst-4/gst-4-ai-review.html">gst-4</a> sperm guidance in their reviews</li>
-<li>[ ] Repeat for fly and mouse</li>
+<li>[x] Decide how to feed the text to reviews: as a deep-research file (2026-10-30)</li>
+<li>[x] Emitter, tests, <code>just</code> recipe and skill guidance</li>
+<li>[x] Write <code>-deep-research-wormbase.md</code> for the worm genes</li>
+<li>[x] Follow up the <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">fshr-1</a> synaptic role (PMID:39561202) in its review</li>
+<li>[ ] Follow up <a href="../../genes/worm/gst-4/gst-4-ai-review.html">gst-4</a> sperm guidance, <a href="../../genes/worm/let-60/let-60-ai-review.html">let-60</a> phenotypes and the other gaps listed above</li>
+<li>[ ] Generate for fly, mouse, rat, zebrafish and yeast</li>
 </ul>
     </div>
 
@@ -510,7 +557,12 @@ different emphasis, not error.</p>
         <small>Generated from MOD_DESCRIPTIONS.md</small>
 
 <small class="source-provenance">
-    <strong>Local changes</strong>
+    <strong>Local changes</strong> ·
+
+    Last committed source:
+    <time datetime="2026-10-29T22:39:22Z">29 Oct 2026, 22:39 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/055a5621236cb18dc29377e40ebef7802839825b" aria-label="View source change 055a5621236cb18dc29377e40ebef7802839825b">055a5621236c</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/055a5621236cb18dc29377e40ebef7802839825b/projects/MOD_DESCRIPTIONS.md">View committed source</a>
 
 </small>
 

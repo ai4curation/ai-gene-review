@@ -324,6 +324,14 @@ litscan-module-member *args="":
 deep-research organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
 
+# Curated MOD gene description (WormBase, FlyBase, SGD, MGI, RGD, ZFIN, Xenbase)
+# written verbatim as GENE-deep-research-<mod>.md; no genes = every gene folder.
+# Examples:
+#   just mod-description-deep-research worm fshr-1
+#   just mod-description-deep-research worm
+mod-description-deep-research organism *genes:
+    uv run ai-gene-review mod-description-deep-research {{organism}} {{genes}}
+
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
 # Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS

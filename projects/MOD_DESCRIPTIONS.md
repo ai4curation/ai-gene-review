@@ -1,6 +1,6 @@
 ---
 title: "MOD gene descriptions as review input"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [worm]
 autolink_exclude: [MOD, MODS]
@@ -24,6 +24,14 @@ usually more mechanistic and more current. The WormBase text is still worth
 reading as a **recall checklist**, though: in 7 of the 16 pairs it
 names a phenotype, process or regulator that our review leaves out, and in one
 case (fshr-1) a whole functional role that our review never mentions.
+
+**Decision (2026-10-30): treat the curated description as a deep-research
+source**, the same way as Affinage. It is written verbatim to
+`<gene>-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, `rgd`,
+`zfin`, `xenbase`). It is cited as a `file:` reference, and the reviewer's
+judgment goes in `references[].reference_review`. The source is sparse,
+uncited, undated and only partly trusted, but no new data structures or
+processes are needed for it. See [Deep-research integration](#deep-research-integration).
 
 ## Data and method
 
@@ -91,13 +99,51 @@ different emphasis, not error.
 - Several WormBase texts contain formatting damage (words run together, such as
   "PUFA-basedsignal"), which suggests they were not cleaned when imported.
 
+## Deep-research integration
+
+- **Emit:** `just mod-description-deep-research <org> [genes...]`
+  (`src/ai_gene_review/etl/mod_description_deep_research.py`). The file holds
+  the curated note exactly as served, including WormBase's run-together words,
+  with frontmatter recording provider, `authorship` (MOD curators),
+  `source_url`, MOD gene id, UniProt accession, fetch date, and
+  `citations_provided: false` / `authoring_date_provided: false`. As with the
+  Affinage emitter, it contains no AIGR judgment.
+- **Only the curated note is used.** The Alliance automated description is
+  generated from GO annotations, so citing it would cite the annotations under
+  review as evidence for themselves.
+- **Wrong-gene check:** the MOD id comes from the UniProt cross-reference.
+  Writing is refused (unless `--force`) when the symbol or systematic name of
+  the Alliance record matches neither the folder nor any UniProt gene name.
+  Human is out of scope.
+- **Reviewer guidance** (review and annotation-reviewer skills): run the
+  emitter for every non-human review, check each claim, and record a verdict in
+  `reference_review`. A claim found only in the MOD text is a lead for a
+  literature search.
+- The `DEEP_RESEARCH` publication type now covers external narrative sources
+  in general, not only AI reports. The frontmatter records authorship.
+- `<gene>-descriptions.yaml` stays as the input for the description comparison
+  ([compare_descriptions.py](MOD_DESCRIPTIONS/compare_descriptions.py)). It is
+  not a review source, because it stores the source text together with our AI's
+  rubric scores.
+
+**Worked example: fshr-1.** The WormBase text led to Buckley et al. 2024
+(PMID:39561202). That paper shows that intestinal FSHR-1 is necessary and
+sufficient for acetylcholine release at the neuromuscular junction, with
+GSA-1/Gas and ACY-1 acting downstream and the glycoprotein hormone subunits
+GPLA-1 and GPLB-1 upstream. The review now has a NEW
+`GO:1900075 positive regulation of neuromuscular synaptic transmission` (IMP)
+row, a corrected description (which had wrongly said FSHR-1 had been
+"repurposed" away from hormone signaling), stronger support for the IBA
+adenylate-cyclase row, and updated open questions. The WormBase reference's
+`reference_review` records which claims were traced (synaptic role) and which
+were judged stale (FLP-1 and NLP-12 as candidate ligands).
+
 ## Recommendations
 
-1. **Use the curated MOD description as an input, not as an authority.** Add
-   `fetch-descriptions` to `just fetch-gene` and have the review and
-   annotation-reviewer skills read `<gene>-descriptions.yaml`. Each claim in
-   the curated text should be either covered by the review or dismissed in the
-   notes (for example, "stale: CED-4 is the Apaf-1-like apoptosome adaptor").
+1. **Use the curated MOD description as an input, not as an authority.** This
+   is done through the deep-research file above. Each claim in the curated text
+   should be either covered by the review or set aside in `reference_review`
+   (for example, "stale: CED-4 is the Apaf-1-like apoptosome adaptor").
 2. **Treat a claim that appears only in the MOD text as a literature lead.**
    fshr-1 is the model case: the gap is a missed role, not wording.
 3. **Re-audit existing reviews** with the comparison script, starting with the
@@ -111,6 +157,9 @@ different emphasis, not error.
 - [x] Fix the Alliance parser and the WormBase gene-id extraction
 - [x] Fetch worm descriptions (432 genes) and write the comparison table
 - [x] Hand-compare 16 genes
-- [ ] Decide whether to wire the sidecar into `fetch-gene` and the review skills
-- [ ] Follow up the fshr-1 synaptic role and gst-4 sperm guidance in their reviews
-- [ ] Repeat for fly and mouse
+- [x] Decide how to feed the text to reviews: as a deep-research file (2026-10-30)
+- [x] Emitter, tests, `just` recipe and skill guidance
+- [x] Write `-deep-research-wormbase.md` for the worm genes
+- [x] Follow up the fshr-1 synaptic role (PMID:39561202) in its review
+- [ ] Follow up gst-4 sperm guidance, let-60 phenotypes and the other gaps listed above
+- [ ] Generate for fly, mouse, rat, zebrafish and yeast

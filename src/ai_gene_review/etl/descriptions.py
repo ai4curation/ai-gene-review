@@ -536,6 +536,9 @@ def parse_alliance_gene(data: Dict[str, Any]) -> Dict[str, Any]:
         or notes.get("MOD_provided_automated_gene_description"),
         "name": (gene.get("geneFullName") or {}).get("displayText"),
         "symbol": (gene.get("geneSymbol") or {}).get("displayText"),
+        "systematic_name": (gene.get("geneSystematicName") or {}).get("displayText"),
+        "primary_id": gene.get("primaryExternalId"),
+        "data_provider": (gene.get("dataProvider") or {}).get("fullName"),
         "url": url,
     }
 

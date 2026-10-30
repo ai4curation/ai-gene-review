@@ -25,6 +25,14 @@ concurrently with deep research. Launch both at the same time:
   provider times out, it automatically retries with perplexity-lite.
   E.g. `just deep-research-falcon ORGANISM GENE_SYMBOL --fallback perplexity-lite`
 - **Publication caching**: `just fetch-gene-pmids ORGANISM GENE_SYMBOL`
+- **MOD gene description** (non-human model organisms): `just mod-description-deep-research
+  ORGANISM GENE_SYMBOL`. This is quick and should always be run. It writes the MOD's
+  hand-written description (WormBase, FlyBase, SGD, MGI, ...) as
+  `GENE-deep-research-<mod>.md`. Treat that file as a sparse, partly trusted deep-research
+  source: it has no citations and no date, and it is often years old. Use it as a recall
+  checklist. Each claim should be either covered in the review (traced to a publication)
+  or set aside in `reference_review.review_notes` (for example "stale: superseded by
+  PMID:..."). A claim found only in the MOD text is a lead for a literature search.
 
 Run these two steps **in parallel** (e.g. as concurrent background agents or shell jobs).
 Do NOT wait for deep research to finish before starting publication caching.

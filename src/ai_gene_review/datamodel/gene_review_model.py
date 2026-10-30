@@ -1953,7 +1953,7 @@ class PublicationTypeEnum(str, Enum):
     """
     DEEP_RESEARCH = "DEEP_RESEARCH"
     """
-    An AI/LLM deep-research report generated for this review, referenced via a 'file:' identifier (e.g. GENE-deep-research-PROVIDER.md).
+    An external narrative source reproduced verbatim in the gene folder and referenced via a 'file:' identifier (GENE-deep-research-PROVIDER.md). Usually an AI/LLM deep-research report (falcon, perplexity, affinage), but also a MOD's hand-written gene description (wormbase, flybase, sgd, ...); the file's frontmatter records its authorship.
     """
     OTHER = "OTHER"
     """
