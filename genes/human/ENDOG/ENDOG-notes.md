@@ -378,3 +378,15 @@ argues that cleaving mtDNA needs matrix access. So `located_in` fits the support
 `WRONG_QUALIFIER` source defect against GO_CENTRAL with `confidence: PROBABLE`, raised as
 a query rather than a correction, since the PAINT node may rest on evidence not visible
 from here.
+
+## 2026-10-30 — review round 4 (approved, three prose suggestions taken)
+
+Round 4 approved the review and raised three suggestions, all prose inside a `reason`, none touching an action, term, replacement list or quote. All three are taken.
+
+The `GO:0051880` row's stated motivation had gone stale and made the two rows read in a small circle. Its reason opened by saying the gene carried no DNA-binding molecular function once `GO:0003676` was narrowed "to the two catalytic terms" — but round 2 made that replacement list three terms, `GO:0051880` among them. So the MODIFY pointed here for its binding descendant while this row said binding was needed because the MODIFY had left none, and the premise named a state of the file round 2 had removed. The reason now follows the `GO:0006308`→`GO:0006309` pattern already used elsewhere in this review: the MODIFY names the term, and this row is what establishes it by IDA on the primary assays. The caveat about qualitative selectivity is unchanged, and the sentence duplicating the new opening was dropped.
+
+The `GO:0003676` reason said "all three are terms the gene carries elsewhere in this review", which blurred two different statuses: `GO:0004520` and `GO:0004521` are existing GOA rows, while `GO:0051880` is proposed as NEW here. Both are now stated separately, since a reader checking the replacement list against GOA will find only two of the three.
+
+The `source_defects` entry used `slot: qualifier`; the repository's convention is the GAF column name, `Qualifier`, which 49 other entries use and which `just export-source-defects` groups on. Corrected.
+
+The reviewer recorded that it could not re-run the QuickGO donor queries or re-query the GO ancestor paths from its sandbox, and that both now sit in the file itself rather than only in a review thread. That is the intent of the round-3 rewording and is left as is.
