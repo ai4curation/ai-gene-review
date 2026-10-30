@@ -390,3 +390,13 @@ The `GO:0003676` reason said "all three are terms the gene carries elsewhere in 
 The `source_defects` entry used `slot: qualifier`; the repository's convention is the GAF column name, `Qualifier`, which 49 other entries use and which `just export-source-defects` groups on. Corrected.
 
 The reviewer recorded that it could not re-run the QuickGO donor queries or re-query the GO ancestor paths from its sandbox, and that both now sit in the file itself rather than only in a review thread. That is the intent of the round-3 rewording and is left as is.
+
+## 2026-10-30 — round 5 approved; one rewrap, and why the branch was touched again
+
+Round 5 approved the review and left one trivial nit: the round-4 rewrite of the `GO:0051880` reason left a 124-character source line where the file wraps near 78. My tidy-up pass had rewrapped the line I was looking at and pushed the overflow onto the next one, which is how that survived a reread of my own diff. The reviewer's disposition was to fold it in only if the branch were touched again for another reason, and not to spend an approval on it. That other reason then arrived.
+
+The deterministic auto-merge controller skipped the PR with `checks not passing: claude-review=cancelled, suite (3.12)=cancelled, test (3.12)=failure, validation (3.12)=cancelled`. None of those is a content failure. They belong to a duplicate `pull_request` run created one second before the surviving run on the identical commit and cancelled by the concurrency group; its gate job read `cancelled` from its own upstream jobs and exited 1. Both runs post check runs under the same four names, so the commit ends up carrying a good and a bad copy of each. Branch protection reads the latest per name and reported the PR clean, which is why this stayed invisible; the controller's rollup reads all of them and requires that nothing be failing or cancelled.
+
+The consequence is worth recording, because it is not specific to this gene: a duplicate-run race can park cancelled check runs on a head commit and block that PR from auto-merging indefinitely, while every human-visible signal — branch protection, the PR's own merge state, the review verdict — says the PR is ready. The shepherd's own `retry-reviews` job cannot clear it either, since it looks for a missing current-commit verdict and this commit has one. Re-running the cancelled run returns HTTP 403 for this agent, so the only remedy available here was a new head commit, which is what this one is.
+
+So the rewrap is the content of a commit whose purpose is to mint a clean head. Parsing the file before and after yields an identical document, so nothing semantic moved: no annotation, action, term, replacement list, quote, qualifier or rendered page.
