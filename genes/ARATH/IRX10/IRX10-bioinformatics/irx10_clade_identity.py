@@ -40,7 +40,8 @@ REFERENCES = {
     "Q9ZUV3": "Arabidopsis IRX7/FRA8 (GT47, other clade)",
     "Q16394": "human EXT1 (GT47 outgroup)",
 }
-TAXA = {"105231": "Klebsormidium nitens", "3055": "Chlamydomonas reinhardtii"}
+TAXA = {"105231": "Klebsormidium nitens", "3055": "Chlamydomonas reinhardtii",
+        "3218": "Physcomitrium patens"}
 
 
 def get(url, **kw):
@@ -127,7 +128,7 @@ def main():
 
     rows.sort(key=lambda r: (r["group"], -r["identity_vs_AtIRX10L"]))
     with OUT.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
     print(f"wrote {OUT} ({len(rows)} proteins)")

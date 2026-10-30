@@ -2,7 +2,7 @@
 
 Script: `irx10_clade_identity.py` (run from the repository root with
 `uv run python genes/ARATH/IRX10/IRX10-bioinformatics/irx10_clade_identity.py`).
-Output: `identity.tsv` (74 proteins). Sequences and PANTHER subfamilies come
+Output: `identity.tsv` (154 proteins). Sequences and PANTHER subfamilies come
 from the EBI Proteins API, and Pfam PF03016 (Exostosin_GT47) members per taxon from
 the InterPro API. Identity is identical positions in a global BLOSUM62 alignment
 divided by the length of the shorter sequence. Generated 2026-10-30.
@@ -55,6 +55,22 @@ A0A1Y1IIS5 is therefore the KfXYS1 locus (K. flaccidum NIES-2285 is now
 K. nitens). The paper's construct ends at residue 445, while the UniProt model
 has 470 residues with the same ends, so the two gene models differ internally by
 about 25 residues (not resolved here).
+
+## Physcomitrium patens (moss): 80 GT47 proteins, top 6
+
+| Accession | Name | Length | Id. vs AtIRX10 | Id. vs AtIRX10L | PANTHER |
+|---|---|---|---|---|---|
+| A9RGD8 | PHYPADRAFT_202121 | 449 | 0.767 | 0.773 | PTHR11062:SF200, PTHR11062 |
+| A0A2K1KUZ6 |  | 491 | 0.388 | 0.388 | PTHR11062, PTHR11062:SF229 |
+| A0A2K1KNT5 |  | 489 | 0.391 | 0.386 | PTHR11062, PTHR11062:SF229 |
+| A0A2K1ICB1 |  | 490 | 0.386 | 0.383 | PTHR11062, PTHR11062:SF229 |
+| A9TVZ0 |  | 212 | 0.354 | 0.344 | PTHR11062, PTHR11062:SF229 |
+| A0A7I4DLY3 |  | 711 | 0.333 | 0.33 | PTHR11062, PTHR11062:SF268 |
+
+Only A9RGD8 (GT47A, PHYPADRAFT_202121) is in the IRX10 range; the next best is at
+0.388. This matches Hornblad et al. 2013 (PMID:23286876), who found a single IRX10
+homolog (PpGT47A) in the moss genome, and identifies the moss protein that Jensen et
+al. 2014 (PMID:25139408) assayed as PpGT47A.
 
 ## Chlamydomonas reinhardtii (chlorophyte alga): 42 GT47 proteins, top 6
 
