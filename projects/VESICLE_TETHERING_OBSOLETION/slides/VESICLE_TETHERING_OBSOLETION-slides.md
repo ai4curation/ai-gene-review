@@ -53,7 +53,7 @@ GO:0099022 and 4 children → MF GO:7770062 vesicle membrane tethering activity
 - Upstream: the terms **represent a molecular function**, the bridging of vesicle and target membranes.
 - Obsoleted: GO:0099022, **GO:0099041** to Golgi, GO:0099044 to ER, GO:0090522 exocytosis, GO:0099069 synaptic exocytosis.
 - Pattern (ValWood): **MF part_of the transport BP**, e.g. GO:7770062 part_of GO:0006888.
-- InterPro removed the exocyst mappings (IPR007225, IPR039682) and 2 UniRules to GO:0090522; IPR028280 → GO:0099041 was flagged too.
+- InterPro2GO flagged IPR007225, IPR039682 and IPR028280; recheck those plus 2 UniRule mappings before new reviews.
 
 ---
 
@@ -72,8 +72,8 @@ GO:0099022 and 4 children → MF GO:7770062 vesicle membrane tethering activity
 ## Next steps
 
 1. **#3237** merged (TMF1 and USO1 → **GO:7770062**).
-2. New reviews: **EXOC4, EXOC6** (exocyst; InterPro-flagged), then golgins **TRIP11, GOLGA5, GORAB**.
-3. Keep wording consistent with the docking trackers; EXOC4 is shared, host it once.
+2. New reviews: **EXOC4, EXOC6, C17orf75/Njmu-R1**, then **TRIP11, GOLGA5, GORAB, RAB6A**.
+3. Keep wording consistent with docking; EXOC4/EXOC6 are shared, host each once.
 
 **Siblings:** `VESICLE_DOCKING_OBSOLETION` (#6379) · `SYNAPTIC_VESICLE_DOCKING_OBSOLETION` (#6415) · `VESICLE_TARGETING_OBSOLETION` (#6424)
 **Upstream:** go-annotation#6375 · go-ontology#31868, #31871, #31872, #31881

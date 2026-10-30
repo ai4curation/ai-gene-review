@@ -99,8 +99,8 @@ class SequenceCache:
     coming from the checkout -- on a cold key the first run still resolves every
     sequence over the network.
 
-    No try/except around the fetch: a network failure should surface, not be silently
-    converted into an UNRESOLVED result that looks like curation uncertainty.
+    Retrieval failures retain accession/URL context and propagate with their cause;
+    they are never converted into UNRESOLVED curation results.
     """
 
     cache_dir: Path
@@ -111,8 +111,13 @@ class SequenceCache:
         req = urllib.request.Request(
             UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
         )
-        with urllib.request.urlopen(req, timeout=60) as fh:
-            return json.load(fh)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as fh:
+                return json.load(fh)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise RuntimeError(
+                f"Could not retrieve UniProt record {acc} from {req.full_url}"
+            ) from exc
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
@@ -292,7 +297,7 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
 @lru_cache(maxsize=None)
 def _panther_index(
     panther_dir: Path,
-) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps]":
+) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps, dict[str, str]]":
     """Load the PANTHER artifacts once per directory.
 
     Reuses ``etl.panther_families`` rather than reimplementing: those loaders are
@@ -307,14 +312,20 @@ def _panther_index(
     """
     from ai_gene_review.etl.panther_families import (
         load_member_index,
+        load_member_index_alternates,
         load_member_index_gaps,
         load_obo_names,
+        member_index_path,
     )
 
+    # panther_dir is <repo>/interpro/panther; the member index is a build
+    # artifact in <repo>/.cache/panther.
+    members = member_index_path(Path(panther_dir).parents[1])
     return (
         load_obo_names(panther_dir / "panther.obo"),
-        load_member_index(panther_dir / "panther-members.tsv"),
-        load_member_index_gaps(panther_dir / "panther-members.tsv"),
+        load_member_index(members),
+        load_member_index_gaps(members),
+        load_member_index_alternates(members),
     )
 
 
@@ -368,6 +379,7 @@ def check_panther_ids(
     labels: dict[str, str],
     members: dict[str, str],
     gaps: "MemberIndexGaps | None" = None,
+    alternates: "dict[str, str] | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
 
@@ -378,10 +390,13 @@ def check_panther_ids(
     PTN node ids are skipped -- they are not in panther.obo and are checked separately
     against PAINT.
 
-    Membership is checked where ``panther-members.tsv`` covers the protein. Coverage is
+    Membership is checked where the PANTHER member index covers the protein. Coverage is
     partial (it indexes cited proteins), so an absent accession is UNRESOLVED rather than
-    a failure, matching the convention documented in CLAUDE.md.
+    a failure, matching the convention documented in CLAUDE.md. Where PANTHER's
+    classification files and UniProt disagree (``alternates``), a member matching
+    either is accepted, and the disagreement is reported as UNRESOLVED.
     """
+    alternates = alternates or {}
     family = review.get("family_id", "?")
     results: list[ResidueCheck] = []
 
@@ -485,6 +500,16 @@ def check_panther_ids(
                         kind="PANTHER_MEMBERSHIP",
                     )
                 )
+            elif members[acc] != bare and alternates.get(acc) == bare:
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        f"sources disagree: PANTHER's classification files put it in "
+                        f"{members[acc]}, UniProt's cross-reference in the declared "
+                        f"{bare}; both are accepted",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
             elif members[acc] != bare:
                 results.append(
                     ResidueCheck(
@@ -502,6 +527,62 @@ def check_panther_ids(
                     )
                 )
     return results
+
+
+GAIN_VERDICTS = frozenset({"SOUND", "TOO_DEEP", "WRONG_NODE", "NEEDS_PRUNING"})
+LOSS_VERDICTS = frozenset({"LOSS_SUPPORTED", "LOSS_CONTRADICTED", "LOSS_TOO_BROAD", "LOSS_STALE"})
+
+
+def node_polarity_problem(assessment: dict, term_rows: list) -> str | None:
+    """Return why a node assessment's evidence/negation/verdict disagree with PAINT, or None.
+
+    ``term_rows`` are the family's PAINT rows for this node and term. A PAINT loss (IRD,
+    IKR or a rare NOT|IBD) must be declared ``negated: true`` with its evidence code and
+    judged with a LOSS_* verdict; a gain must not be. Without this an IRD can be assessed
+    as though it were an IBD, and a "WRONG_NODE" on a loss reads, to the family/gene
+    cross-check, as the opposite of what the reviewer meant.
+
+    >>> class Row:
+    ...     def __init__(self, evidence, negated):
+    ...         self.evidence, self.negated = evidence, negated
+    >>> ird = [Row("IRD", True)]
+    >>> node_polarity_problem({"assessment": "LOSS_SUPPORTED", "negated": True,
+    ...                        "evidence": "IRD"}, ird) is None
+    True
+    >>> node_polarity_problem({"assessment": "WRONG_NODE"}, ird)
+    'PAINT records this as a loss (IRD); declare negated: true and evidence: IRD'
+    >>> node_polarity_problem({"assessment": "SOUND", "negated": True, "evidence": "IRD"}, ird)
+    "verdict SOUND is for gain rows; a loss row needs one of ['LOSS_CONTRADICTED', 'LOSS_STALE', 'LOSS_SUPPORTED', 'LOSS_TOO_BROAD'] or UNRESOLVED"
+    >>> node_polarity_problem({"assessment": "SOUND"}, [Row("IBD", False)]) is None
+    True
+    >>> node_polarity_problem({"assessment": "SOUND", "evidence": "IKR"}, [Row("IBD", False)])
+    "declared evidence IKR, but PAINT records ['IBD'] for this node and term"
+    """
+    paint_negated = {bool(getattr(r, "negated", False)) for r in term_rows}
+    paint_evidence = sorted({getattr(r, "evidence", "") for r in term_rows} - {""})
+    declared_negated = bool(assessment.get("negated", False))
+    declared_evidence = assessment.get("evidence")
+    verdict = assessment.get("assessment", "")
+
+    if declared_evidence and paint_evidence and declared_evidence not in paint_evidence:
+        return (
+            f"declared evidence {declared_evidence}, but PAINT records {paint_evidence} "
+            "for this node and term"
+        )
+    if True in paint_negated and False not in paint_negated:
+        if not declared_negated or not declared_evidence:
+            ev = "/".join(paint_evidence) or "IRD/IKR"
+            return f"PAINT records this as a loss ({ev}); declare negated: true and evidence: {ev}"
+    elif declared_negated and paint_negated == {False}:
+        return "declared negated: true, but PAINT records a gain (not a NOT) here"
+    if declared_negated and verdict in GAIN_VERDICTS:
+        return (
+            f"verdict {verdict} is for gain rows; a loss row needs one of "
+            f"{sorted(LOSS_VERDICTS)} or UNRESOLVED"
+        )
+    if not declared_negated and verdict in LOSS_VERDICTS:
+        return f"verdict {verdict} is for loss rows; declare negated: true and evidence"
+    return None
 
 
 def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck]:
@@ -597,6 +678,16 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
                     family_id, node, term, 0, [], None, Outcome.PASS,
                     f"PAINT records {term} at this node in {bare_family}",
                     kind="NODE_ASSERTION",
+                )
+            )
+            term_rows = [r for r in family_rows if getattr(r, "go_id", "") == term]
+            problem = node_polarity_problem(assessment, term_rows)
+            results.append(
+                ResidueCheck(
+                    family_id, node, term, 0, [], None,
+                    Outcome.FAIL if problem else Outcome.PASS,
+                    problem or "evidence, negation and verdict agree with PAINT",
+                    kind="NODE_POLARITY",
                 )
             )
         else:
@@ -785,13 +876,13 @@ def validate_family_review(
     review = yaml.safe_load(path.read_text())
     cache = SequenceCache(cache_dir)
     paint_index = load_paint_index(panther_dir)
-    labels, members, gaps = _panther_index(panther_dir)
+    labels, members, gaps, alternates = _panther_index(panther_dir)
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
         + check_term_assessment_site_refs(review)
-        + check_panther_ids(review, labels, members, gaps)
+        + check_panther_ids(review, labels, members, gaps, alternates)
     )
 
 

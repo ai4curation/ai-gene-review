@@ -29,3 +29,23 @@ The target's ARBA cuticle keyword and this review's own prose are not biological
 Final checks: all three GOA rows reviewed with no PENDING entries; main validation passes with one advisory that the available research report is not cited in annotation support; exact local supporting excerpts checked; sequence comparison and distinct Lcp4 control reproduced; history schema validates and HTML rendered.
 
 The research-citation advisory is retained deliberately: primary sequence provenance, exact accession identity, and experimental FlyBase curation already ground the decisions. The provider report adds context but no decisive independent result; it is discussed above rather than cited as redundant support. The main review status is DRAFT because this advisory remains, despite all seeded annotations being reviewed.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+No ProtNLM2 files or prediction-evidence folders were consulted for this pass.
+
+**Identity.** A0A0B4KEF3 is the unreviewed TrEMBL record labelled "Larval cuticle protein 3, isoform B" (EMBL AGB93336.1). It is 112 aa and identical over its full length to the reviewed canonical Lcp3 entry P07188 (FlyBase FBgn0002534) per the existing comparison in `Lcp3-bioinformatics/RESULTS.md`. It is therefore an alternative UniProt record of a second transcript model that encodes the same polypeptide, not a fragment: it lacks no residues, retains the signal peptide (1-16) and the R&R chitin-binding type-4 domain (31-92 in P07188). Function evidence for P07188 applies directly. P07188 itself (with its FlyBase IDA/IC/ISM rows: GO:0008010, GO:0062129, GO:0008363 larval chitin-based cuticle development, GO:0040003) has no separate review in the repo.
+
+**Evolutionary placement.** PANTHER PTHR10380 (CUTICLE PROTEIN) subfamily SF237 (CUTICULAR PROTEIN 65AU, ISOFORM A-RELATED). SF237 members in the family entries table: D. melanogaster Lcp1, Lcp2, Lcp3, Lcp4 and pupal Pcp; D. miranda Lcp1/Lcp2/Lcp4; D. pseudoobscura Pcp; Homarus AMP2-5. The subfamily therefore spans larval, pupal and crustacean exoskeletal cuticle proteins, so the larval qualifier is gene-specific (direct sequencing from larval cuticle), not a subfamily property. The family review `interpro/panther/PTHR10380/PTHR10380-review.yaml` says the same (broad cuticle structural role coherent for SF237, larval term not universal); no disagreement about subfamily placement. No IBA rows exist on this accession.
+
+**Annotation decisions (unchanged in substance).** GO:0005214 and GO:0042302 (IEA): MODIFY to GO:0008010; OLS confirms GO:0008010 is_a GO:0005214 is_a GO:0042302. GO:0062129 (IEA): ACCEPT. Added PMID:6817923 (protein sequencing of major third-instar cuticle proteins) and PMID:6441593 (urea extraction of larval cuticle proteins) as direct support; added PMID:6168386 (44D cluster, epidermal late third-instar expression) as a reference.
+
+**Not added.** Chitin binding (GO:0008061) is family-level inference from the R&R domain; no Lcp3-specific assay, so raised as a suggested question instead. Larval chitin-based cuticle development (GO:0008363) is on P07188 by FlyBase IC; under the participation bar, a structural constituent of the cuticle is the material assembled rather than demonstrably doing the developmental work, and there is no Lcp3 loss-of-function phenotype (the Beagle TATA-box insertion abolishes protein but no phenotype was reported), so no NEW BP was proposed here; this belongs to the canonical P07188 review.
+
+**Discrepancy noted.** The Falcon report says Lcp3 transcripts accumulate early in third instar (citing Fristrom 1986), while Snyder 1981 describes the cluster as abundant in late third-instar epidermis. Not resolved; description says "third-instar" only.
+
+**Modules.** No module in `modules/` covers larval cuticle or PTHR10380 (only incidental matches in unrelated deep-research artifacts).
+
+**Next relative.** Canonical same-gene product P07188 (Lcp3), unreviewed in repo; would live at `genes/DROME/Lcp3__P07188`.
+
+Validation: `just validate DROME Lcp3` passes; status set to COMPLETE.

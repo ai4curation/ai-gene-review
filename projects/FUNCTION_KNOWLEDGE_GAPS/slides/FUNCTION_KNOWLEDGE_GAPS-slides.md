@@ -38,7 +38,7 @@ Curating what biology does *not* know about a gene, with sources
 
 - About **a fifth** of proteins in well-studied organisms still have no informative description; we record each unknown as a **sourced, curated statement**.
 - A darkness **metric failed**: most flagged genes were structural subunits or curation gaps. A gap is now a **judgement made by reading**.
-- `KnowledgeGap` is a schema class; the YAMLs now hold **1,461 gaps** in **535** gene and module files.
+- `KnowledgeGap` is a schema class; the YAMLs now hold **1,620 gaps** in **638** gene and module files.
 
 ---
 
@@ -92,10 +92,10 @@ Curating what biology does *not* know about a gene, with sources
 
 ## Status and next steps
 
-- ✅ Taxonomy, schema class, 23 worked entries, contested-function survey.
-- ✅ Register generator: `just aggregate-knowledge-gaps` → `structured-gaps.md` (last run lists 1,073; YAMLs now hold 1,461).
-- ⬜ `validate-deep-research`: PMID resolution + title match.
-- ⬜ Read-list batch 4 (PUS3, CFAP418, SOCS4/5, RFT1, pef-1, fshr-1, alo1).
-- ⬜ Curate contested candidates: TMEM175; TMEM65 + SLC8B1; MEFV.
+- [done] Taxonomy, schema class, 23 worked entries, contested-function survey.
+- [done] Register generator: `just aggregate-knowledge-gaps` -> `structured-gaps.md` now lists 1,620 gaps.
+- [todo] `validate-deep-research`: PMID resolution + title match.
+- [todo] Read-list batch 4 (PUS3, CFAP418, SOCS4/5, RFT1, pef-1, fshr-1, alo1).
+- [todo] Curate contested candidates: TMEM175; TMEM65 + SLC8B1; MEFV.
 
 **Read more:** `projects/FUNCTION_KNOWLEDGE_GAPS.md`
