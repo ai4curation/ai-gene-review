@@ -241,3 +241,55 @@ not to a sequence analysis that never opened the paper.
 What would settle it is unchanged from the organelle-policy note above and is cheap: mitoplast
 protease protection, where intermembrane-space proteins are degraded on swelling and matrix
 proteins are protected.
+
+## 2026-10-30 — review round 1 on PR #5618
+
+Four blocking items. All addressed; the first changed a curation judgement, the rest
+were corrections to how evidence was cited.
+
+**`GO:0005743` had no positive support for its own term.** The reviewer was right: the
+two quotes I attached asserted the intermembrane space and the matrix, which contradict
+each other and neither of which names the inner membrane, and my `reason` argued about
+whether to *add* a sub-compartment row rather than whether *this* row should stand. So I
+ran the donor check the organelle policy prescribes, and it settles the row in the
+keep direction. Both PAINT donors carry `GO:0005743`: yeast Nuc1, where the purification
+of the major yeast mitochondrial nuclease places the activity in the inner membrane
+[PMID:3286639 "in the mitochondrial inner membrane"], and human EXOG, by IDA from
+PMID:18187503. That EXOG paper turns out to carry the decisive evidence for ENDOG itself,
+not just for the donor [PMID:18187503 "Following mitochondrial subfractionation EXOG and
+EndoG were both found in membrane fractions, co-localizing with CYTC, COX-IV and TOM20"],
+and it explicitly [PMID:18187503 "exclude their presence as soluble proteins of the
+intermembrane space or the mitochondrial matrix"]. Two limits recorded on the row: the
+assay used tagged expressed protein, and the membrane fractions co-stained for inner
+(COX-IV) and outer (TOM20) markers together, so it supports membrane association without
+separating inner from outer. The row stays `KEEP_AS_NON_CORE`, now for a stated reason.
+
+That result also tidies the sub-compartment conflict rather than deepening it: a protein
+in neither soluble compartment is consistent with fractionation studies disagreeing about
+which soluble compartment it is in.
+
+**`GO:0051880` G-quadruplex DNA binding is now a `NEW` IDA row.** My reason for declining
+it was wrong, and the reviewer identified exactly why: I justified it as "should come from
+a curator reading the primary assays", but I had read PMID:36394256, cached its full text,
+and was already quoting it for a core function. That reason correctly rejects run 1's
+inference about the breakpoint landscape; it says nothing about the binding activity. The
+paper shows selectivity in cells [PMID:36394256 "The findings from mito IP studies suggest
+that Endonuclease G only binds to the G-quadruplex forming regions and not to the other
+areas of mtDNA"] plus BG4 colocalisation and in vitro structure work. The gene otherwise
+carries no DNA-binding molecular function once `GO:0003676` is narrowed to the catalytic
+terms. The substantive caveat is recorded on the row: selectivity is shown by
+immunoprecipitation and imaging, not by a measured affinity comparison against
+unstructured duplex DNA.
+
+**Two citation corrections.** The `GO:0004521` quote stopped one clause short, at "could be
+cleaved by EndoG" — a speculation — while the `reason` asserted a demonstration; it now
+runs on into the result. And both `KEEP_AS_NON_CORE` rows carried
+`root_cause: NO_FAILURE_CORE`, which asserts the propagated annotation is core for the
+target and contradicts the action; both are now `NO_FAILURE_NON_CORE`. The three
+`NO_FAILURE_CORE` rows that remain are all `ACCEPT`.
+
+**`GO:0042645` mitochondrial nucleoid stays declined, for the reviewer's sharper reason.**
+Mine was procedural. The real objection is that adding a nucleoid component term would
+quietly resolve the matrix side of the intermembrane-space-versus-matrix conflict that this
+same review says is unresolved — it would assert by annotation what the evidence does not
+settle.
