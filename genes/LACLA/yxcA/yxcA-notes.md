@@ -18,6 +18,38 @@
   identity
   [file:LACLA/yxcA/yxcA-bioinformatics/RESULTS.md].
 
+## KBase Dark Protein Atlas verdict
+
+Item: https://gene-annotate-dashboard.kbase.us/review/NZ_VXKC01000008.1_19
+(Lactococcus lactis, 1441 aa; part of the LBNL hackathon set, see
+`projects/LBNL_HACKATHON.md`).
+
+Dashboard call (tier A): "PlsA plasmalogen biosynthesis protein combining
+activation and reduction/dehydration functions for anaerobic plasmalogen
+production", with GO:0016491 oxidoreductase activity, GO:0016836 hydro-lyase
+activity and GO:0008611 ether lipid biosynthetic process. Prior annotations:
+eggNOG "hgdC", Pfam PF09989 (DUF2229).
+
+**Dashboard verdict: supported.** The identification is right, and the call
+correctly sets aside the eggNOG "hgdC" name, which describes the stand-alone
+activator of 2-hydroxyglutaryl-CoA dehydratase (about 260 aa). The evidence is
+stronger than the call knew: the 96.6%-identical L. cremoris PlsA is
+sufficient for plasmalogen synthesis in E. coli (PMID:41427725). Three caveats:
+
+- GO:0016836 hydro-lyase is an overreach. The dehydration step is only
+  proposed by analogy with BCR/HAD enzymes. Not added in this review.
+- GO:0016491 oxidoreductase is correct but generic. GO has no specific term,
+  so I proposed one (see Annotation decisions).
+- The description names the pathway and the domains, not the reaction. A
+  better description: "Anaerobic plasmalogen synthase (single-chain PlsAR):
+  converts the sn-1 acyl chain of diacyl glycerophospholipids into the
+  1-alk-1'-enyl ether of the corresponding plasmalogen; iron-sulfur enzyme of
+  the BCR/HAD family."
+
+Do not map this protein to GO:0047159 "plasmalogen synthase activity". That
+term is an acyltransferase on lysoplasmalogen (RHEA:10344), and it took the
+EC 2.3.1.25 name in 2024 (go-ontology#27588).
+
 ## Function: plasmalogen synthase PlsA
 
 - Plasmalogens are vinyl-ether (1-alk-1'-enyl, 2-acyl) glycerophospholipids.
