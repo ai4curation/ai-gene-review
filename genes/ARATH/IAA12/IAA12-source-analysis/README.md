@@ -1,0 +1,11 @@
+# Aux/IAA source and annotation audit
+
+PMID:25533953 publisher Supplementary Table 2, Sheet1, row 445 contains transcription factor AT1G04550 (IAA12), promoter AT5G12870 (MYB46), expression fields `ppp, x`, and one reporter activated. The table header defines the last value as the number of LacZ and/or HIS reporters activated, not an affinity. Supplementary Table 5 independently lists At1g04550 as AUX-IAA.
+
+`extract_promoter_hit.py` downloads the public publisher supplement archive, scans workbook cells and exports exact matching rows and SHA256 hashes to `promoter-hit.json`. It does not edit cached publication text. The ZIP remains in the ignored source cache. Run the script from the repository root with `uv run python genes/ARATH/IAA12/IAA12-source-analysis/extract_promoter_hit.py`.
+
+The main Methods describe repeated screens and sequence-confirmed clones. This supports regulatory-DNA association in yeast. It does not establish a purified-protein DNA-contact mechanism or native MYB46 regulation. The previous confident explanation that Aux/IAA hits must arise through an ARF bridge was not demonstrated in this assay. Direct contact and an unidentified bridging component remain distinguishable possibilities. The three Arabidopsis reviews retain PAINT inheritance as non-core without inventing a defective node or target loss.
+
+`export_panel_audit.py` deterministically exports all 287 reviewed rows of IAA12, IAA17, IAA19 and MpIAA into each gene's `annotation-audit.yaml`, together with access flags and hashes of the primary caches supporting those rows. It reads the review YAML, not GOA. Run `uv run python genes/ARATH/IAA12/IAA12-source-analysis/export_panel_audit.py` after curation changes. These are source traces, not independent functional evidence for the claims they summarize.
+
+The three historically existing NEW rows remain inherited proposals; this audit adds no rows. Bare protein-binding removal is the explicit policy exception, not a judgment that a measured pair is false. Protein-specific functional binding refinements retain their primary or independently curated pair evidence. MpIAA clone KP877968 (828 aa) is distinguished from the independently studied 825-aa construct, and PMID:26020649 is read with its correction PMID:26901620.

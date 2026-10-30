@@ -33,7 +33,6 @@ PROJECT_DIR = REPO_ROOT / "projects" / "BIOREASON_COMPARISON"
 AS_OF_PROSE_SITES = (
     "projects/BIOREASON_COMPARISON/article/supplemental-benchmark-details.md",
     "projects/BIOREASON_COMPARISON.md",
-    "projects/PROTNLM_EVALUATION.md",
     "projects/BIOREASON_COMPARISON/article/slides.md",
     "projects/BIOREASON_COMPARISON/article/slides.html",
     "pages/projects/BIOREASON_COMPARISON/article/slides.html",
@@ -242,11 +241,7 @@ def test_review_snapshot_is_dated_and_recorded_in_derived_reports() -> None:
     assert snapshot.date == commit_date(REPO_ROOT, snapshot.commit)
     recorded = {"commit": snapshot.commit, "date": snapshot.date}
     metrics = json.loads((PROJECT_DIR / "benchmark-metrics.json").read_text())
-    protnlm = json.loads(
-        (REPO_ROOT / "projects/PROTNLM_EVALUATION/benchmark-summary.json").read_text()
-    )
     assert metrics["review_snapshot"] == recorded
-    assert protnlm["review_snapshot"] == recorded
     for frozen in ("second-review-agreement.json", "cafa-style/review-snapshot.json"):
         assert json.loads((PROJECT_DIR / frozen).read_text())["review_snapshot"] == recorded, (
             f"{frozen} was not generated at the declared review snapshot"
@@ -272,7 +267,7 @@ def test_headline_cli_lists_the_snapshot_numbers() -> None:
     lines = result.stdout.splitlines()
     assert "bioreason.supplement_gogpt_overlap_300.n_genes: 296" in lines
     assert "bioreason.supplement_gogpt_overlap_300.core.n_overlap: 355" in lines
-    assert "protnlm.go_counts.COR: 52" in lines
+    assert "protnlm.go_counts.COR: 35" in lines
     assert "cafa.hf_incorrect.n: 147" in lines
     assert "second_review.correctness.quadratic_weighted_kappa: 0.95" in lines
     assert not any("review_snapshot" in line for line in lines)
