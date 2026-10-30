@@ -161,6 +161,35 @@
             align-items: start;
         }
 
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .model-card {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .model-open {
+            align-self: flex-start;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 6px;
+            padding: 4px 11px;
+            font-size: 0.88rem;
+        }
+
+        .model-open:hover {
+            text-decoration: none;
+            filter: brightness(1.1);
+        }
+
         .panel {
             background: var(--bg-panel);
             border: 1px solid var(--border);
@@ -827,6 +856,10 @@
         {%- if node.get('description') %}
             <p class="node-description">{{ node.get('description') }}</p>
         {%- endif -%}
+        {%- if node.get('module_ref') %}
+            <p class="node-module-ref">Realized by module
+                <a href="{{ module_ref_hrefs.get(node.get('module_ref'), '#') }}"><code>{{ node.get('module_ref') }}</code></a></p>
+        {%- endif -%}
         {{ descriptor_list(node.get('concepts')) }}
         {{ context_block(node.get('context')) }}
         {{ evidence_list(node.get('evidence')) }}
@@ -917,6 +950,36 @@
         <div class="stat"><span class="stat-value">{{ stats.connections }}</span><span class="stat-label">Connections</span></div>
     </section>
 
+    {%- if executable_models %}
+    <section class="panel models-panel" aria-label="Executable models">
+        <div class="panel-header">
+            <h2>Executable models <span class="muted small"><a href="{{ models_index_href }}">all models</a></span></h2>
+        </div>
+        <div class="panel-body models-grid">
+            {%- for m in executable_models %}
+            <div class="model-card">
+                <div>
+                    <span class="pill type">{{ m.type_label }}</span>
+                    <span class="pill">{{ 'derived from this module' if m.derivation == 'DERIVED_FROM_MODULE' else 'external' }}</span>
+                </div>
+                <strong>{% if m.page_href %}<a href="{{ m.page_href }}">{{ m.title }}</a>{% else %}{{ m.title }}{% endif %}</strong>
+                {%- if m.scenarios %}
+                <div class="small">
+                    {%- for s in m.scenarios %}
+                        {%- if s.passed is defined %}<span class="{{ 'ok' if s.passed else 'warn' }}">{{ '&#10003;' | safe if s.passed else '&#10007;' | safe }}</span> {% endif %}{{ s.label }}{% if s.kinds %} <span class="muted">({{ s.kinds | map('lower') | map('replace', '_', ' ') | join(', ') }})</span>{% endif %}{% if not loop.last %}<br>{% endif %}
+                    {%- endfor %}
+                </div>
+                {%- endif %}
+                {%- if m.files %}
+                <div class="small muted">{% for f in m.files %}<a href="{{ f.url }}">{{ f.path.split('/')[-1] }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}</div>
+                {%- endif %}
+                {%- if m.page_href %}<a class="model-open" href="{{ m.page_href }}">Run in browser &rarr;</a>{% endif %}
+            </div>
+            {%- endfor %}
+        </div>
+    </section>
+    {%- endif %}
+
     {%- if qc %}
     <section class="qc-panel panel" aria-label="Derived QC">
         <div class="panel-header">
@@ -994,6 +1057,18 @@
                     </ul>
                 {%- else %}
                     <p><span class="ok">&#10003;</span> <span class="small">every declared <code>conforms_to</code> bundle matches its template motif.</span></p>
+                {%- endif %}
+                {%- if qc.module_ref_violations %}
+                    <p class="small">{{ qc.module_ref_violations | length }} module reference issue(s):</p>
+                    <ul class="qc-list small">
+                        {%- for v in qc.module_ref_violations %}
+                            <li>
+                                <a href="#node-{{ anchor_id(v.node_id) }}">{{ v.node_id }}</a>
+                                <span class="muted">&rarr; {{ v.module_ref }}</span> <span class="warn">[error]</span>
+                                <br><span class="small">{{ v.message }}</span>
+                            </li>
+                        {%- endfor %}
+                    </ul>
                 {%- endif %}
             </div>
 

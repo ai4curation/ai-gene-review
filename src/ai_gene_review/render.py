@@ -16,6 +16,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+from ai_gene_review.validation.local_source_text import resolve_local_source
 
 
 _RELATIVE_URL_ATTR_PATTERN = re.compile(
@@ -832,6 +833,20 @@ def render_gene_review(
             )
         else:
             output_path = yaml_path.with_suffix(".html")
+
+    # Link cited record snapshots relative to the rendered page, including when
+    # rendering outside the source tree. Use the same resolution as quote checks.
+    data["alternative_reference_hrefs"] = {}
+    project_root = gene_dir.parent.parent.parent
+    for record in (data.get("alternative_records") or []) + (data.get("reference_proteome_assessments") or []):
+        for evidence in record.get("evidence") or []:
+            for support in evidence.get("supported_by") or []:
+                reference_id = support["reference_id"]
+                source = resolve_local_source(reference_id, project_root)
+                if source is not None:
+                    data["alternative_reference_hrefs"][reference_id] = os.path.relpath(
+                        source.resolve(), output_path.parent.resolve()
+                    )
 
     # Find and process markdown files
     markdown_files = find_markdown_files(gene_dir)

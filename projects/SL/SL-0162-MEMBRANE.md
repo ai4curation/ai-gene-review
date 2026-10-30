@@ -8,10 +8,10 @@ autolink_gene_symbols: false
 
 # SL-0162 Membrane → GO:0016020
 
-The largest under-specified subcellular location in the corpus, and the cleanest example of
-the SL project's [core finding](../SL.md). 61 SL-unique annotations reviewed; **17 carry a
-hard issue (28%)** — the highest rate of any location with a substantial sample. Only
-SL-0171 Mitochondrion membrane rates higher (31%), on a sample a fifth the size (4/13).
+The canonical under-specified subcellular location in the corpus, and the cleanest example of
+the SL project's [core finding](../SL.md). The 2026-10-05 scan has 103 reviewed SL-unique
+`membrane` annotations; **22 carry a hard issue (21%)**. The focused 2026-08 snapshot used for
+this subproject had 61 reviewed rows and 17 hard issues (28%).
 
 ## What the reviewers actually objected to
 

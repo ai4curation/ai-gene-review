@@ -6,7 +6,8 @@ Gene files are read at the declared benchmark ``review_snapshot_commit``, not fr
 the working tree, so ordinary curation cannot stale the report. The curator-edited
 config (cohort scope, narrative index) is read from ``config`` -- the working tree
 in production -- so editing it takes effect, and an index hash that no longer
-matches the snapshot review fails loudly. Refresh with ``just refresh-benchmark-snapshot``.
+matches the snapshot review fails loudly. The snapshot is declared in ``review-snapshot.yaml``
+next to this script, independently of the BioReason benchmark; refresh with ``just refresh-protnlm-snapshot``.
 Run from any directory with ``uv run python path/to/build_benchmark_summary.py``.
 """
 
@@ -19,15 +20,15 @@ import statistics
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from ai_gene_review.source_tree import (
     ReviewSnapshot,
     SourceTree,
     WorkingTree,
+    PROTNLM_SNAPSHOT,
     declared_review_snapshot,
     review_snapshot_tree,
 )
+from ai_gene_review.yaml_utils import safe_load
 
 CODES = ("COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP")
 PUBLIC = "https://github.com/ai4curation/ai-gene-review/blob/main/"
@@ -78,7 +79,7 @@ def collect(tree: SourceTree, config: SourceTree) -> dict[str, Any]:
     goa_rows: dict[str, int | None] = {}
     goa_latest: dict[str, str | None] = {}
     for path in tree.glob("genes/*/*/*-protnlm-predictions-review.yaml"):
-        doc = yaml.safe_load(tree.read_text(path))
+        doc = safe_load(tree.read_text(path))
         if doc["id"] not in targets:
             continue
         assert doc["id"] not in by_accession, f"Duplicate prediction review: {path}"
@@ -111,7 +112,7 @@ def collect(tree: SourceTree, config: SourceTree) -> dict[str, Any]:
             counts[category] += 1
         by_accession[doc["id"]] = counts
         go_counts.update(counts)
-    registry = yaml.safe_load(config.read_text(f"{base}/narrative-review-index.yaml"))
+    registry = safe_load(config.read_text(f"{base}/narrative-review-index.yaml"))
     narratives = []
     seen: set[str] = set()
     for entry in registry["reviews"]:
@@ -405,8 +406,8 @@ def write_report(root: Path, data: dict[str, Any], snapshot: ReviewSnapshot) -> 
 
 if __name__ == "__main__":
     repository = Path(__file__).resolve().parents[2]
-    result = collect(review_snapshot_tree(repository), WorkingTree(repository))
-    write_report(repository, result, declared_review_snapshot(repository))
+    result = collect(review_snapshot_tree(repository, PROTNLM_SNAPSHOT), WorkingTree(repository))
+    write_report(repository, result, declared_review_snapshot(repository, PROTNLM_SNAPSHOT))
     print(
         json.dumps(
             {

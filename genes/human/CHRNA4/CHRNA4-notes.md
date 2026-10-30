@@ -1,0 +1,70 @@
+# CHRNA4 review notes
+
+## 2026-10-10 — source-preserving whole review
+
+The authenticated catalog identified CHRNA4 immediately after CHRNA1. HGNC:1958 and reviewed UniProt P43681 were checked against live identity sources, aliases, the publication queue and every open PR’s complete file inventory. Initial main was 7a7eb51bc085268d3a68022e074f6cc1575a1eb3. This is a new gene folder: there is no inherited notes prefix. Source ownership is refreshed before publication.
+
+Normal fetch produced 101 raw GOA records projected by the normal loader into 100 distinct assertions, two alternative products and 30 original reference identities. The exact raw source remains intact; the date-only duplicate and its literal rows are recorded in the evidence inventory. All 100 original assertion objects, original product objects and original reference ID/title pairs are preserved. Manual assessment yields 57 ACCEPT, 21 KEEP_AS_NON_CORE, 18 MODIFY and four UNDECIDED decisions, with no NEW assertion.
+
+The genuine default Falcon research attempt timed out at 90 seconds. Its explicit perplexity-lite fallback failed with HTTP401 insufficient_quota. No provider report was invented. Manual source work below, actual normal caches and separate external access receipts provide the review evidence. The exact main PMID:32814053 abstract remains unchanged despite recovered external full text.
+
+### Performed receptor function and construct scope
+
+Human alpha4-containing heteropentamers perform ligand-gated cation conduction; alpha4 supplies ligand-recognition and pore/gating elements rather than acting as an autonomous homomeric channel. The single core uses contributes_to_molecular_function. Calcium permeability and agonist sensitivity depend on stoichiometry and accessory subunits. PMID:20881005 directly measures human alpha4beta2alpha5 currents and calcium permeability; its risk variant is in alpha5, not alpha4. PMID:17132685’s authentic abstract independently reports human concatamer/charge experiments, but its full Methods were not recovered.
+
+PMID:27698419 and PMID:29720657 resolve engineered human receptor assemblies and compare function. Intracellular-loop deletion, tags and Fab preparation are not hidden; nicotine-bound structures are desensitized rather than direct images of an open conducting pore. PMID:38454578 tests human receptors and resolves calcium-dependent allostery; its structural full-length chains contain Bril insertions and its high-potassium single-channel currents are not calcium-only permeability measurements. Neither current splice product is assigned every assay merely by gene identity. UniProt -2 has an altered N terminus and missing58–128 segment; both original product objects are preserved.
+
+### Source-specific process decisions
+
+PMID:12189247 explicitly contains alpha4/beta2 endothelial nicotine/hypoxia expression findings, reported as data not shown. Those positive observations are retained non-core; its dominant alpha7 angiogenesis mechanism is not transferred. PMID:16332175 remains genuinely abstract-limited after bounded recovery attempts. Its lymphocyte polymorphism/stress associations leave DNA-repair and oxidative-stress IMP assertions UNDECIDED, rather than proving a direct repair step or justifying removal.
+
+PMID:17955458 is also abstract-limited: a genotype-by-prenatal-smoking ADHD association leaves its behavioral nicotine assertion UNDECIDED. PMID:20881005 was actually read in full selected sections and measures receptor pharmacology, so its separate behavioral nicotine assertion is refined to response to nicotine. Independent alpha4 behavioral biology is not denied.
+
+Mouse PMID:17146052 shows nicotine-enhanced GABAergic inhibitory currents in cortical pyramidal cells downstream of alpha4-containing receptors on interneurons/terminals. The original mouse-derived assertion is refined to modulation of inhibitory postsynaptic potential. This preserves positive inhibitory circuit effects without making the cationic alpha4 pore an anion channel. Genuine external full Methods/Results were read although its normal cache remains abstract-only.
+
+The neuromuscular IBA remains UNDECIDED at its exact target/node scope. Official identity records resolve MGI:87887 to mouse Chrna3, human P32297 to CHRNA3, P02708 to CHRNA1 and the ZFIN source to zebrafish chrna1. Current experimental sources are not confused with a reconstructed PAINT node. Donor count, target self-inclusion and neuronal predominance do not disprove the ancestral assertion. Historical IBD placement and target-specific neuron-to-muscle evidence remain unresolved.
+
+Mouse PMID:12944511 supplies direct presynaptic receptor/release evidence. Rat PMID:22593584 tests tagged alpha4 and neurexin-dependent targeting; human host cells do not change construct species. Pain and B-cell contexts are retained with their authentic mouse abstracts and exact current donor records. Human cognitive/attention/epilepsy findings remain phenotype or network contexts without a new molecular activity.
+
+New PMID:42149943 adds ventricular context: selected main Methods/Results describe rat cardiomyocyte currents, mouse cardiomyocyte-specific knockout, and pharmacological conduction effects in explanted failing human hearts. Detailed construct protocols in its supplement were not inspected. This extends tissue context, not clinical efficacy or neuromuscular-synapse proof, and creates no NEW process or second core.
+
+### Binding, compartments and external records
+
+Twenty-four literal IntAct records resolve eight original partner tuples. The CRELD2 -1/-3 positives use alpha4 loop fragments and preserve their engineered assay/topology limits. Human cortex LYPD6 pull-down independently supports alpha4-containing receptor association despite no exact IntAct hit. Six PMID:32814053 screen pairs have equal native-evidence limits. EIF2S2 receives the definition-supported translation-initiation-factor-binding refinement; this does not assign translation work to CHRNA4. APP’s curated mutation feature and ADAMTSL4-3’s sufficient-binding fragment remain explicit. General DULIP validation is not target-specific mammalian validation.
+
+Official Reactome chains were followed from all six events to P43681 physical entity507836 in the plasma membrane. The existing assertions are locations; mixed receptor sets and alternative subunit entries are not adopted as physiological assemblies. Current donor joins corroborate several locations/functions but do not reconstruct historical Ensembl or PAINT records. The authenticated GO-CAM index has no target match; no absence-based NEW proposal follows.
+
+The evidence JSON contains literal external records, hashes, source paths and clearly labeled reviewer interpretations. Bare file references point to this audit trail. Its authored interpretations are not self-quoted as independent supporting evidence or marked as a verified primary source. Short verbatim publication anchors are used only where load-bearing; the cumulative authored quotation audit includes every repeated YAML occurrence, and these notes add no publication quotations.
+
+### Final applicability and checks
+
+Fresh main d646e1c47761f8109ac3eae33d7e69526ab910c9 and 226 complete open-PR file inventories remain clear for the target, aliases and accession; the publication queue also has no reservation. Four Reactome files shared with published CHRNA1 PR4611 are byte-identical. The finite proposal contains 33 additions with six existing source paths protected. Normal validation, status and render pass; nine advisories are eight intentional generic-binding retains plus the independently justified source-specific nicotine-behavior U/MOD split. Earlier isolated-tool runs failed because package README metadata and the candidate GOA copy were not yet staged; genuine authenticated metadata and unchanged GOA bytes fixed those mechanical issues. No schema or validator behavior was changed.
+
+The conservative quotation audit totals PMID:12189247=7, PMID:20881005=15, PMID:17146052=7 and PMID:27698419=10 words across all authored occurrences. Notes contain no primary quotations, and the source inventory adds no authored quotation. Raw external records retain their original content as auditable source receipts.
+
+
+## Review follow-up, 2026-10-11
+
+The published ClinGen project curation instruction retains experimentally supported generic protein binding as non-core when a more informative replacement is not established. This task-specific instruction takes precedence over the general informational-exclusion advisory; it does not claim a repository-wide policy change. The eight supported generic rows therefore remain KEEP_AS_NON_CORE. All 100 original source objects and actions remain unchanged.
+
+For the CHRNA4–EIF2S2 pair, PMID:32814053 has three positive IntAct records: array, pooling and validated two-hybrid. Actual Methods describe exclusion of autoactivating baits, selective reporters and pairwise retesting of pooled candidates. General mammalian DULIP validation does not prove validation of this particular pair. GO:0031369 names binding to an initiation factor; official P20042 identifies the eIF2 beta subunit. The refinement reports this assay-supported class of binding without assigning the partner’s translation function, native neuronal contact or equal confidence in every biological context. Generic partners lack an equally established replacement for the tested products.
+
+Each of the 12 PAINT comments now identifies its term, node and available corroboration. The source-status field remains UNRESOLVED where the historical IBD placement was not inspected; independent target-function support is not a reconstruction of the ancestor. This does not imply donor-count weakness, circular target self-inclusion, or an erroneous node. The neuromuscular row additionally leaves the alpha4 target application unresolved and identifies its mixed muscle-type and neuronal descendant scope for a future node/experimental-premise audit.
+
+Four reference assessments now use UNVERIFIED for incomplete source-specific evaluation while retaining authenticated citation identities and positive accessible findings. PMID:20438829 remains a real CHRNA5-focused expression paper whose exact CHRNA4 TAS linkage is unresolved; the channel decisions independently use the full human receptor experiments in PMID:20881005 and PMID:27698419. Short Results clauses now anchor the nicotine-response and channel refinements. Their aggregate quotations remain within 25 words per source, including repeated material elsewhere.
+
+The core retains the specific synaptic-membrane location; its redundant plasma-membrane parent is omitted only from the synthesis, not from any original annotation. Subunit contribution and construct limits remain explicit in the detailed evidence. Current splice products are not assumed experimentally interchangeable. The standalone description now emphasizes established receptor biology. PMID:42149943 remains recorded as contextual cardiac evidence: rodent cardiomyocyte/heart experiments and pharmacological responses in explanted failing human hearts. It does not establish clinical efficacy or a new core cardiac process. All prior notes, source caches, provider artifacts and existing histories remain unchanged.
+
+
+## 2026-10-26 acetylcholine module audit
+
+Reassessed the complete existing review and its source-specific donor/interaction provenance. The grounded human channel core, two alpha4beta2 stoichiometries, accessory subunit effects and explicit physiological/compartment uncertainties are retained. Full human structural studies PMID:27698419 / PMID:29720657 / PMID:38454578 and functional PMID:20881005 support receptor chemistry; the pore is a heteropentamer contribution, not an independent alpha4 or beta2 channel. Native circuit outcomes are not deduced from a single reconstituted stoichiometry. The third alpha4/alpha4 binding interface means that two alpha/beta agonist sites are not a universal description of every heteromer.
+
+Migrated all remaining bare GO:0005515 ACCEPT/non-core rows under the current project policy. Exact measured interactions and assay/partner limitations remain in each reason and historical source artifacts. Supported specific binding refinements remain unchanged; generic retention is superseded, not the original experiment. Existing source-specific unresolved disease, behavioral, B-cell and subcellular claims are not blanket-flipped or replaced by a channel-function quote. The prior dedicated provenance records remain append-only. No original assertion, flag, isoform or inherited proposal was deleted or added; no new process annotation was manufactured. Actual provider/publication attempts are in the shared acetylcholine-foundation-fetch logs.
+
+Same-term consistency follow-up: both human behavioral-response-to-nicotine rows remain UNDECIDED. The receptor-biophysics paper does not assay behavior, while association-source detail remains unavailable; neither limitation establishes a false biological claim. Independently represented molecular nicotine responsiveness remains supported.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. Removed 8 blanket reference-review templates; source-specific assessments and the underlying references/evidence remain available. All annotation actions remain unchanged for this gene.
