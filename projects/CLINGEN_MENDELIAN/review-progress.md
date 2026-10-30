@@ -5568,3 +5568,1735 @@ pages and validated the appended history record. The catalogue render reports
 1,617 missing-review warnings; the progress render reports none.
 
 [Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker553-20261021/history/projects/CLINGEN_MENDELIAN/2026-10-21T232923Z-codex-8fec8a.yaml)
+
+## Completion checkpoint 557 — 2026-10-24 06:14:02 UTC
+
+**557 complete; 2,319 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds four accepted merges to [checkpoint 553, tracker #5326](https://github.com/ai4curation/ai-gene-review/pull/5326).
+The coordinating AI agent accepted the exact-head reviews and merge audits;
+this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [ELP2 #5325](https://github.com/ai4curation/ai-gene-review/pull/5325) | [`21343d5f60e3`](https://github.com/ai4curation/ai-gene-review/commit/21343d5f60e3e9b1838d351339aa7793e838172c) | [`1a193ad5a9a8`](https://github.com/ai4curation/ai-gene-review/commit/1a193ad5a9a87357491e981d5abc3f615e39a139) | `eb83fa701eb9` | 20/20 |
+| [ELOVL4 #5323](https://github.com/ai4curation/ai-gene-review/pull/5323) | [`9ed941653b45`](https://github.com/ai4curation/ai-gene-review/commit/9ed941653b4501e0bb98c1e51b52eab6318e7ab3) | [`f96d2abc07b1`](https://github.com/ai4curation/ai-gene-review/commit/f96d2abc07b18943f7c239622eff90a33dcfb3bc) | `1a193ad5a9a8` | 20/20 |
+| [EML1 #5327](https://github.com/ai4curation/ai-gene-review/pull/5327) | [`b28e213dbe95`](https://github.com/ai4curation/ai-gene-review/commit/b28e213dbe95cb5c4638256e67c4ad94c43a8b5f) | [`02a780ad3cef`](https://github.com/ai4curation/ai-gene-review/commit/02a780ad3cef37a9ed984620990ee33b2650e4bc) | `f96d2abc07b1` | 19/19 |
+| [EMILIN1 #5329](https://github.com/ai4curation/ai-gene-review/pull/5329) | [`3e2b4f91315b`](https://github.com/ai4curation/ai-gene-review/commit/3e2b4f91315b390e8c0ee73e93cf96137313362f) | [`83dcbe1d939d`](https://github.com/ai4curation/ai-gene-review/commit/83dcbe1d939d3a29daecb0e16145bdd29c339d3a) | `02a780ad3cef` | 29/29 |
+
+All 88 approved path modes and Git objects match at the actual merges and
+pinned main, including source caches, supporting material and histories.
+The full gene directories also match. The reviews retain their imported
+annotations and natural products; no new publication quotations were added.
+ELOVL4's 32 inherited quotations remain preserved.
+
+| Gene | Sources | Products | Cores | Decisions | Computed status |
+| --- | ---: | ---: | ---: | --- | --- |
+| ELP2 | 20 | 7 | 1 | 7 ACCEPT, 7 KEEP_AS_NON_CORE, 6 MODIFY | COMPLETE |
+| ELOVL4 | 37 | 1 | 1 | 19 ACCEPT, 5 KEEP_AS_NON_CORE, 7 MODIFY, 2 REMOVE, 4 UNDECIDED | DRAFT |
+| EML1 | 39 | 2 | 1 | 11 ACCEPT, 23 KEEP_AS_NON_CORE, 4 MODIFY, 1 UNDECIDED | DRAFT |
+| EMILIN1 | 99 | 2 | 2 | 29 ACCEPT, 48 KEEP_AS_NON_CORE, 17 MODIFY, 1 REMOVE, 4 UNDECIDED | DRAFT |
+
+Product counts include the displayed canonical protein when no alternative-product
+list is present; ELOVL4 has one source-described 314-aa product.
+
+ELOVL4 retains four unresolved annotations and two binding advisories; EML1
+retains one unresolved annotation and eight binding advisories. EMILIN1 retains
+four unresolved annotations and 24 advisories (22 binding, two propagation).
+ELP2 has no gene-validation warnings. Accepted campaign completion does not
+convert DRAFT files to COMPLETE or remove uncertainty.
+
+Each accepted merge-group build executed 4,214 Python tests (one skipped,
+84 deselected, nine warnings), 270 doctests (37 skipped, eight warnings),
+12 examples, typing across 284 files, lint, 438 additional Python automation
+tests and 19 JavaScript tests. The additional automation tests overlap the
+broad suite and are not additive unique coverage. Validation executed 42 history
+tests, scoped gene validation, all-gene schema checks, modules and families.
+The all-gene check is schema-only; aggregate jobs report job conclusions.
+
+Builds: [ELP2](https://github.com/ai4curation/ai-gene-review/actions/runs/40066991538), [ELOVL4](https://github.com/ai4curation/ai-gene-review/actions/runs/40066992452), [EML1](https://github.com/ai4curation/ai-gene-review/actions/runs/40066993531), [EMILIN1](https://github.com/ai4curation/ai-gene-review/actions/runs/40067208919).
+
+The inventory at main `83dcbe1d939d3a29daecb0e16145bdd29c339d3a` contains 8,868 reviews,
+including 3,196 human reviews. Of the 2,876 catalogue genes, 1,277
+have review files and 1,599 lack them; 720 available reviews remain
+uncredited. All 235 queue objects, 110 earlier completion updates and earlier
+progress bytes are preserved. This is update 111; only four checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. ENG, ENPP1, ENTPD1 and EOGT
+remain uncredited by this checkpoint. This checkpoint does not claim an
+independent documentation build or live-page inspection for the four merges.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker557-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T061743Z-codex-2fc9e5.yaml)
+
+## Completion checkpoint 559 — 2026-10-24 07:08:59 UTC
+
+**559 complete; 2,317 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds ENG and ENPP1 to [merged checkpoint 557, tracker #5379](https://github.com/ai4curation/ai-gene-review/pull/5379).
+The coordinating AI agent accepted the exact-head reviews and actual-merge audits;
+this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [ENG #5374](https://github.com/ai4curation/ai-gene-review/pull/5374) | [`ca7bef2fb4fe`](https://github.com/ai4curation/ai-gene-review/commit/ca7bef2fb4feb301b2c20b8b951a5d9d6ff92db0) | [`eeb6b2ea3fe4`](https://github.com/ai4curation/ai-gene-review/commit/eeb6b2ea3fe4415887d3d7ff5fa358b0d922f6c9) | `83dcbe1d939d` | 41/41 |
+| [ENPP1 #5377](https://github.com/ai4curation/ai-gene-review/pull/5377) | [`a3d10688e084`](https://github.com/ai4curation/ai-gene-review/commit/a3d10688e084920f2bec5c61e157332c6f9d0a44) | [`ec0663817767`](https://github.com/ai4curation/ai-gene-review/commit/ec0663817767fc39466497bdb2ebe9fd21391e21) | `eeb6b2ea3fe4` | 32/32 |
+
+All 73 approved file objects and modes, including normal caches and histories,
+match the actual merges and pinned main. Complete gene directories also match.
+Imported annotation contexts and source-described natural products are preserved;
+no new publication quotations were added. ENPP1 has one displayed canonical
+product because the source does not enumerate alternative products; this is not
+a claim that no other transcript exists.
+
+| Gene | Sources | Products | Cores | Decisions | Computed status | Advisories |
+| --- | ---: | ---: | ---: | --- | --- | ---: |
+| ENG | 104 | 2 | 2 | 29 ACCEPT, 59 KEEP_AS_NON_CORE, 2 MARK_AS_OVER_ANNOTATED, 4 MODIFY, 10 UNDECIDED | DRAFT | 13 |
+| ENPP1 | 97 | 1 | 2 | 39 ACCEPT, 20 KEEP_AS_NON_CORE, 6 MARK_AS_OVER_ANNOTATED, 11 MODIFY, 21 UNDECIDED | DRAFT | 6 |
+
+ENG retains ten unresolved annotations and 13 advisories: eleven generic binding,
+one source-action split and one CI ontology-label lag. ENPP1 retains 21 unresolved
+annotations and six advisories: one generic binding, three propagation-metadata
+and two source-action splits. Accepted campaign completion does not convert
+DRAFT files to COMPLETE or remove uncertainty.
+
+Each actual merge-group suite ran 4,214 Python tests (one skipped, 84 deselected,
+nine warnings), 270 doctests (37 skipped, eight warnings), 12 examples, mypy on 284
+files, Ruff, 438 overlapping Python automation tests and 19 JavaScript tests.
+Validation included scoped gene checks, all-gene schema checks, 703 modules,
+718 families and 42 history tests. History-record totals were 15,627 for ENG and
+15,629 for ENPP1. Global advisories and skipped steps remain documented; the
+ignored post-pytest SQLAlchemy destructor diagnostic did not fail either job.
+The all-gene check is schema-only; aggregate jobs report job conclusions.
+
+Builds: [ENG](https://github.com/ai4curation/ai-gene-review/actions/runs/40068917287), [ENPP1](https://github.com/ai4curation/ai-gene-review/actions/runs/40070735296).
+
+At main `04f1f31db8f36ff1bed22c0e5ff8220567c219ce`, the inventory contains 8,870 reviews,
+including 3,198 human reviews. Of 2,876 catalogue genes, 1,279 have
+review files and 1,597 lack them; 720 available reviews remain uncredited.
+All 235 queue objects, 111 earlier completion updates and earlier progress bytes
+are preserved. This is update 112; only the ENG and ENPP1 checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. EOGT, ENTPD1 and EP300 remain
+uncredited by this checkpoint. No independent documentation build or live-page
+inspection for these gene merges is claimed.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker559-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T071001Z-codex-768730.yaml)
+
+## Completion checkpoint 561 — 2026-10-24 07:51:14 UTC
+
+**561 complete; 2,315 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds EOGT and ENTPD1 to [merged checkpoint 559, tracker #5382](https://github.com/ai4curation/ai-gene-review/pull/5382).
+The coordinating AI agent accepted the exact-head reviews and actual-merge audits;
+this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [EOGT #5381](https://github.com/ai4curation/ai-gene-review/pull/5381) | [`70677246ec7e`](https://github.com/ai4curation/ai-gene-review/commit/70677246ec7e7ccc176372dd9ba4bab69200bc98) | [`bc777faa7a96`](https://github.com/ai4curation/ai-gene-review/commit/bc777faa7a968fa182d20c6ff4264cf398a18f33) | `04f1f31db8f3` | 22/22 |
+| [ENTPD1 #5380](https://github.com/ai4curation/ai-gene-review/pull/5380) | [`536ec2d369d3`](https://github.com/ai4curation/ai-gene-review/commit/536ec2d369d34706376b50ceed13a4435f48127e) | [`9ba348f4516c`](https://github.com/ai4curation/ai-gene-review/commit/9ba348f4516cf6f675880116ac3060f7a54a8b59) | `bc777faa7a96` | 33/33 |
+
+All 55 approved file objects and modes, including normal caches and histories,
+match the actual merges and pinned main. Complete gene directories also match.
+Imported annotation contexts and source-described natural products are preserved;
+no new publication quotations were added.
+
+| Gene | Annotation rows | Products | Cores | Decisions | Computed status | Advisories |
+| --- | ---: | ---: | ---: | --- | --- | ---: |
+| EOGT | 8 | 3 | 1 | 7 ACCEPT, 1 MODIFY | COMPLETE | 0 |
+| ENTPD1 | 70 | 6 | 1 | 53 ACCEPT, 3 KEEP_AS_NON_CORE, 8 MODIFY, 1 REMOVE, 5 UNDECIDED | DRAFT | 4 |
+
+EOGT retains eight reviewed annotation rows, three source-described products and
+one core function, with COMPLETE status and no validation warnings. ENTPD1 retains
+70 reviewed annotation rows, six products, one core function and five unresolved
+annotations. Its four actual CI advisories comprise one generic-binding warning,
+one UDP-annotation action split and two stale-exception warnings. The latter reflect
+the validator's exception matching; they were not erased by the approving review.
+Accepted campaign completion does not convert ENTPD1 from DRAFT to COMPLETE.
+
+Each actual merge-group suite ran 4,214 Python tests (one skipped, 84 deselected,
+nine warnings), 270 doctests (37 skipped, eight warnings), 12 examples, mypy on 284
+files, Ruff, 438 overlapping Python automation tests and 19 JavaScript tests.
+Validation included scoped gene checks, all-gene schema checks, 703 modules,
+718 families and 42 history tests. History-record totals were 15,632 for EOGT and
+15,634 for ENTPD1. Global advisories and skipped steps remain documented; the
+ignored post-pytest SQLAlchemy destructor diagnostic did not fail either job.
+The all-gene check is schema-only; aggregate jobs report job conclusions.
+
+Builds: [EOGT](https://github.com/ai4curation/ai-gene-review/actions/runs/40072822896), [ENTPD1](https://github.com/ai4curation/ai-gene-review/actions/runs/40073130021).
+
+At main `273712aad3cb515aa95f60294a37dff884258011`, the inventory contains 8,872 reviews,
+including 3,200 human reviews. Of 2,876 catalogue genes, 1,281 have
+review files and 1,595 lack them; 720 available reviews remain uncredited.
+All 235 queue objects, 112 earlier completion updates and earlier progress bytes
+are preserved. This is update 113; only the EOGT and ENTPD1 checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+Publication scope is three project sources, their queue mirror, two rendered
+pages and a scaffolded append-only history record. EP300 and EPCAM remain
+uncredited by this checkpoint. No independent documentation build or live-page
+inspection for these gene merges is claimed.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker561-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T075154Z-codex-6ed544.yaml)
+
+## Completion checkpoint 563 — 2026-10-24 09:38:44 UTC
+
+**563 complete; 2,313 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only EP300 and EPCAM to [merged checkpoint 561, tracker #5383](https://github.com/ai4curation/ai-gene-review/pull/5383).
+The coordinating AI agent accepted both exact-head reviews and independent actual-merge
+audits; this is not a human maintainer sign-off. Products, follow-ups, private drafts
+and tracker publications add no credit. EP300 was accepted as gene 562 and EPCAM
+as gene 563; both are recorded together in this publication update.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [EP300 #5384](https://github.com/ai4curation/ai-gene-review/pull/5384) | [`7b5643c079a0`](https://github.com/ai4curation/ai-gene-review/commit/7b5643c079a0e391193da1e2a3d1dcd5971f604a) | [`cb6bb5ec57f8`](https://github.com/ai4curation/ai-gene-review/commit/cb6bb5ec57f815572bee8e519c8101ad91b0070e) | `7293c5a1c39e` | 90/90 |
+| [EPCAM #5385](https://github.com/ai4curation/ai-gene-review/pull/5385) | [`fe9ed9ed05ca`](https://github.com/ai4curation/ai-gene-review/commit/fe9ed9ed05ca1dfbedaaf2cd3ee1eb3c8aeff6be) | [`5cc22e30227e`](https://github.com/ai4curation/ai-gene-review/commit/5cc22e30227e8948cc5f800b9e91213750e533ea) | `cb6bb5ec57f8` | 24/24 |
+
+All approved paths match in mode, object type and blob ID at their approved heads,
+actual merges and pinned main. Each complete five-file gene directory also matches.
+Imported annotation contexts, normal source caches and displayed protein products
+are preserved. No new publication quotations were added.
+
+EP300 retains 471 reviewed annotations: 218 ACCEPT, 115 MODIFY,
+115 KEEP_AS_NON_CORE and 23 UNDECIDED. Its two core functions are distinct from
+its one displayed canonical protein product, Q09472 (2,414 residues). EPCAM retains
+40 reviewed annotations: 15 ACCEPT, 16 KEEP_AS_NON_CORE, four MODIFY and five
+UNDECIDED. It has one core function and one displayed canonical product, P16422
+(314 residues). Neither committed review or UniProt record lists alternative
+products. EPCAM's released EpEX/EpICD fragments are not counted as splice products.
+Accepted completion preserves both DRAFT statuses and unresolved questions.
+
+[EP300 merge-group Build and test run 40079507159](https://github.com/ai4curation/ai-gene-review/actions/runs/40079507159)
+and [EPCAM run 40081006893](https://github.com/ai4curation/ai-gene-review/actions/runs/40081006893)
+each completed all three jobs successfully before their respective merges at
+2026-10-24T09:09:21Z and 2026-10-24T09:31:30Z. Each suite executed 4,239 Python
+tests (one skipped, 84 deselected, nine warnings), 275 doctests (37 skipped, eight
+warnings), 12 examples, mypy on 285 files, Ruff, 438 overlapping Python automation
+tests and 19 JavaScript tests. Aggregate dependency gates did not execute additional
+suites. Counts overlap and are not summed as unique tests.
+
+Changed-gene validation actually ran in each run. EP300 passed with 48 advisories:
+42 generic-binding policy warnings and six source-specific action-consistency
+warnings. EPCAM passed with four generic-binding policy advisories. The separate
+all-gene batches were schema-only. Both runs also checked 703 modules and 718
+families; EP300 checked 15,640 history records and EPCAM checked 15,643, each followed
+by 42 history tests. Ignored post-pytest oaklib/SQLAlchemy destructor diagnostics
+did not fail the jobs. Prediction-review, BioReason/GO-GPT, prediction-upload,
+curation-history-coverage, sequence-save and full-run upstream PAINT checks were
+skipped; the captured job steps distinguish these from executed checks. No
+independent actual-main scientific validation or documentation build is claimed.
+
+At fixed main `5cc22e30227e8948cc5f800b9e91213750e533ea`, there are 8,874 reviews,
+including 3,202 human reviews. Of 2,876 catalogue genes, 1,283 have review
+files and 1,593 lack them; 720 available reviews remain uncredited.
+All 235 queue objects, 113 earlier completion updates and earlier progress bytes
+are preserved. This is update 114; only EP300 and EPCAM checkboxes change, and all
+2,876 catalogue identities and association texts remain exact.
+
+This checkpoint updates three project sources, their queue mirror and two rendered
+pages. The append-only curation history is linked below.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker563-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T094406Z-codex-ddcd2b.yaml)
+
+## Completion checkpoint 566 — 2026-10-24 10:52:05 UTC
+
+**566 complete; 2,310 remaining out of 2,876 primary catalogue genes.**
+This checkpoint adds only EPHB4, EPG5 and EPM2A to [merged checkpoint 563, tracker #5389](https://github.com/ai4curation/ai-gene-review/pull/5389).
+The coordinating AI agent accepted all three exact-head reviews and independent
+actual-merge audits; this is not a human maintainer sign-off. EPHB4 was accepted
+as gene 564, EPG5 as gene 565 and EPM2A as gene 566. Products, follow-ups, private
+drafts, queued work and tracker publications add no credit. ERCC2 is not included.
+
+| Gene / PR | Approved head | Actual merge | Actual parent | Exact approved paths |
+| --- | --- | --- | --- | --- |
+| [EPHB4 #5387](https://github.com/ai4curation/ai-gene-review/pull/5387) | [`8545c5a11968`](https://github.com/ai4curation/ai-gene-review/commit/8545c5a11968bfc066943ddd1fc5a1871dd00efd) | [`cbc176846687`](https://github.com/ai4curation/ai-gene-review/commit/cbc17684668719d61014b39606d5a54f858e6a77) | `5cc22e30227e` | 19/19 |
+| [EPG5 #5386](https://github.com/ai4curation/ai-gene-review/pull/5386) | [`f7a58aaa3629`](https://github.com/ai4curation/ai-gene-review/commit/f7a58aaa3629f9b909696a1f5af95581ce39e8cf) | [`775e51508889`](https://github.com/ai4curation/ai-gene-review/commit/775e515088898ce6a5d947e856e1c5fedcc51a6a) | `cbc176846687` | 9/9 |
+| [EPM2A #5388](https://github.com/ai4curation/ai-gene-review/pull/5388) | [`cf1b24450a65`](https://github.com/ai4curation/ai-gene-review/commit/cf1b24450a65162be6a4ef7c27873c0b993d7f80) | [`671b48213218`](https://github.com/ai4curation/ai-gene-review/commit/671b48213218d1c94a959a01e7dbf768ee4d8bfc) | `775e51508889` | 46/46 |
+
+All approved paths match in mode, object type and blob ID at their approved heads,
+actual merges and pinned main. Complete gene directories also match: five EPHB4,
+six EPG5 and five EPM2A files. The accepted audits verify 53, eight and 46 published
+normal-source dependencies, respectively. Imported annotation contexts, historical
+records, normal caches and distinct source-described products are preserved.
+No new publication quotations were added.
+
+EPHB4 retains 76 imported annotation records: 46 ACCEPT, 22 MODIFY and eight
+UNDECIDED. It has one core function and COMPLETE status with no CI advisories;
+COMPLETE does not erase its eight unresolved records. Its four source-described
+products remain distinct: P54760-1 (987 residues), P54760-2 (516), P54760-3 (306)
+and P54760-4 (414). Their shared activity is not assumed.
+
+EPG5 retains 16 total records, comprising 12 imported contexts, three historical
+proposal contexts and one newly proposed record. Fifteen are active and one
+historical UNDECIDED record remains retired. Total actions are three ACCEPT,
+four MODIFY, four KEEP_AS_NON_CORE, two UNDECIDED and three NEW; active actions
+exclude the one retired UNDECIDED. All 33 inherited publication quotation values
+and their paths remain exact. The two distinct products, Q9HCE0-1 (2,579 residues)
+and Q9HCE0-2 (2,481), and two core functions remain explicit. The review is DRAFT
+with one generic-binding CI advisory.
+
+EPM2A retains 81 imported O95278 annotation contexts: 31 ACCEPT,
+17 KEEP_AS_NON_CORE, 19 MODIFY, 11 UNDECIDED, two MARK_AS_OVER_ANNOTATED and one
+REMOVE. It has 48 references, two core functions and DRAFT status. Three CI
+advisories concern action consistency for nucleus, endoplasmic-reticulum membrane
+and protein dephosphorylation. Seven O95278 products retain lengths 331, 317,
+152, 224, 88, 177 and 193 residues (products 1, 2, 4, 5, 6, 7 and 8). The eighth,
+external B3EWF7-1, is independently sourced at 344 residues; its four GO assertions
+remain separate from the 81 O95278 contexts. No activity equivalence is inferred.
+The accepted audit also preserves all 50 private normal-publication cache
+preimages; only the 33 cited publication caches are public dependencies. There
+are no new annotations or publication quotations in this EPM2A review.
+
+[EPHB4 merge-group Build and test run 40082869200](https://github.com/ai4curation/ai-gene-review/actions/runs/40082869200),
+[EPG5 run 40084288443](https://github.com/ai4curation/ai-gene-review/actions/runs/40084288443)
+and [EPM2A run 40084842231](https://github.com/ai4curation/ai-gene-review/actions/runs/40084842231)
+each completed all three jobs successfully before their respective actual merges
+at 2026-10-24T10:02:23Z, 2026-10-24T10:21:55Z and 2026-10-24T10:37:48Z.
+Each suite executed 4,239 Python tests (one skipped, 84 deselected, nine warnings),
+275 doctests (37 skipped, eight warnings), 12 examples, mypy on 285 files, Ruff,
+438 overlapping Python automation tests and 19 JavaScript tests. Aggregate
+dependency gates did not execute additional suites. Counts overlap and are not
+summed as unique tests.
+
+Changed-gene validation actually ran in all three runs. EPHB4 passed with no
+advisories, EPG5 with one and EPM2A with three. The separate all-gene batches were
+schema-only. Each run also checked 703 modules, 718 families and 42 history tests;
+the history-record counts were 15,645, 15,648 and 15,650, respectively. Ignored
+post-pytest oaklib/SQLAlchemy destructor diagnostics did not fail the jobs.
+Prediction-review, BioReason/GO-GPT, prediction-upload, curation-history-coverage,
+sequence-save and full-run upstream PAINT checks were skipped; captured job steps
+distinguish these from executed checks. No independent actual-main scientific
+validation or documentation build is claimed.
+
+At fixed main `fcbef68494c3bd156a9c3625ae37de0a9f5df27c`, there are 8,876 reviews,
+including 3,204 human reviews. Of 2,876 catalogue genes, 1,285 have review
+files and 1,591 lack them; 719 available reviews remain uncredited.
+All 235 queue objects, 114 earlier completion updates and earlier progress bytes
+are preserved. This is update 115; only EPHB4, EPG5 and EPM2A checkboxes change,
+and all 2,876 catalogue identities and association texts remain exact.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker566-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T105619Z-codex-5b4d98.yaml)
+
+## Completion checkpoint 570 — 2026-10-24 14:30:02 UTC
+
+**570 complete; 2,306 remaining out of 2,876 primary catalogue genes.**
+This adds only ERCC2, ERCC3, ERCC4 and ERCC5 to the
+[merged 566 tracker, PR #5391](https://github.com/ai4curation/ai-gene-review/pull/5391).
+Each has an exact-head approval and an independently accepted actual-merge audit.
+Acceptance by the coordinating AI agent is not a human maintainer sign-off.
+Products, follow-ups and tracker publications do not add gene credit. ERCC6 and
+ERCC6L2 remain uncredited here.
+
+| Gene / PR | Approved head | Actual merge | Merged at (UTC) | Approved paths |
+| --- | --- | --- | --- | --- |
+| [ERCC2 #5390](https://github.com/ai4curation/ai-gene-review/pull/5390) | [`965e844b78cb`](https://github.com/ai4curation/ai-gene-review/commit/965e844b78cbb86685a1586c46b7fb10e443b0e0) | [`41adae91d2e7`](https://github.com/ai4curation/ai-gene-review/commit/41adae91d2e786e57182400041738a653db90c26) | 2026-10-24T11:04:03Z | 24 |
+| [ERCC3 #5392](https://github.com/ai4curation/ai-gene-review/pull/5392) | [`6b2d97d944ad`](https://github.com/ai4curation/ai-gene-review/commit/6b2d97d944ad38fead65429bcc695270fab44f26) | [`b60f053738c4`](https://github.com/ai4curation/ai-gene-review/commit/b60f053738c48d7fcaa0e2f651a5ee8f73149611) | 2026-10-24T12:17:42Z | 23 |
+| [ERCC4 #5393](https://github.com/ai4curation/ai-gene-review/pull/5393) | [`451ee1dc76a7`](https://github.com/ai4curation/ai-gene-review/commit/451ee1dc76a7de97bc7043933911a0c6984eaef5) | [`d6debbce31dd`](https://github.com/ai4curation/ai-gene-review/commit/d6debbce31ddd59d0bd5931218389d821e33641a) | 2026-10-24T13:38:28Z | 10 |
+| [ERCC5 #5396](https://github.com/ai4curation/ai-gene-review/pull/5396) | [`a038096b703e`](https://github.com/ai4curation/ai-gene-review/commit/a038096b703e4a33aa0ae23b498f86ffbd84efb9) | [`e7236877cf14`](https://github.com/ai4curation/ai-gene-review/commit/e7236877cf14aa3343182f032eb225f15ed4efe4) | 2026-10-24T14:00:39Z | 25 |
+
+All 82 approved paths match in mode, type and blob at approved head, actual merge
+and pinned main `e7236877cf14aa3343182f032eb225f15ed4efe4`. The complete ERCC2/3/4/5 gene
+directories also match (six, six, seven and six files), with 102, 112, 48 and 35
+normal-source dependencies verified in the accepted audits. ERCC4 has ten PR paths
+but nine net merge changes because PMID:22323595 was already present on its parent.
+Actual merge times come from GitHub merge metadata, not queue-commit timestamps.
+
+ERCC2 retains 151 contexts, 109 references, two products (760 and 405 residues)
+and two cores. Its actions are 97 ACCEPT, 22 MODIFY, 21 KEEP_AS_NON_CORE,
+ten UNDECIDED and one MARK_AS_OVER_ANNOTATED. Measured ATP hydrolysis remains
+separate from directional helicase activity; the scaffold role does not imply
+an additional catalytic activity.
+
+ERCC3 retains 162 contexts, 118 references, one displayed 782-residue product and
+two cores. Actions are 93 ACCEPT, 14 MODIFY, 45 KEEP_AS_NON_CORE, eight UNDECIDED
+and two MARK_AS_OVER_ANNOTATED. The principal DNA-translocation role and measured
+ATP hydrolysis remain explicit; historical unwinding assays retain their bounded
+non-core interpretation.
+
+ERCC4 retains 97 records: 96 active imported contexts plus one retired historical
+proposal. Its 100 genuine refreshed GOA rows reconcile to those 96 imported
+contexts; the legacy UniProt and provider files remain unchanged. Actions are
+45 ACCEPT, 32 KEEP_AS_NON_CORE, 12 MODIFY, six UNDECIDED, one REMOVE and one retired
+TOO_GENERAL. The 55 references, two products (916 and 372 residues), two contextual
+nuclease core units, negated source assertion and all 52 inherited quotation paths
+remain preserved. The two core units describe contexts of the same enzyme.
+
+ERCC5 retains 77 contexts, 41 references, three products (1,186, 419 and 232
+residues) and one core. Actions are 35 ACCEPT, 20 MODIFY, 13 KEEP_AS_NON_CORE,
+eight UNDECIDED and one TOO_GENERAL. No shared activity is assumed among the
+natural products. None of these four publications adds a new annotation or a new
+publication quotation.
+
+All four reviews remain DRAFT. Their successful changed-gene validations retain
+18, 34, 22 and five advisories: respectively 17, 33, 21 and four supported
+generic-binding warnings, plus one research/provider-citation advisory per gene.
+These warnings and unresolved annotations are not erased by completion credit.
+
+| Actual merge-group run | Broad Python tests passed | Doctests passed | Gene advisories | History records |
+| --- | --- | --- | --- | --- |
+| [ERCC2 run 40087008874](https://github.com/ai4curation/ai-gene-review/actions/runs/40087008874) | 4,239 | 275 | 18 | 15,653 |
+| [ERCC3 run 40092038098](https://github.com/ai4curation/ai-gene-review/actions/runs/40092038098) | 4,239 | 275 | 34 | 15,656 |
+| [ERCC4 run 40097532447](https://github.com/ai4curation/ai-gene-review/actions/runs/40097532447) | 4,245 | 276 | 22 | 15,667 |
+| [ERCC5 run 40099095412](https://github.com/ai4curation/ai-gene-review/actions/runs/40099095412) | 4,245 | 276 | 5 | 15,669 |
+
+All three jobs in each merge-group run completed successfully. Each run also
+executed 12 examples, 438 overlapping automation tests, 19 JavaScript tests,
+mypy on 285 source files and two Ruff commands. Broad pytest had one skipped,
+84 deselected and nine warnings; doctests had 37 skipped and eight warnings.
+Counts overlap and are not summed. Changed-gene validation ran; the separate
+all-gene batch was schema-only. Each run checked 703 module schemas, 718 family
+schemas and 42 history tests. The aggregate dependency gate added no suite.
+An ignored destructor diagnostic did not fail the runs.
+
+The PR broad suites were skipped by path filtering; their success labels alone
+are not broad-test evidence. Prediction/BioReason checks, prediction evidence
+upload, curation-history coverage, sequence-save and full-run upstream PAINT
+steps were skipped in the captured merge workflows. No independent actual-main
+scientific validation or documentation build is claimed by this update.
+
+All 2,876 catalogue identities and association text, 235 queue objects, 115 earlier
+completion updates and preceding progress bytes remain exact. This is update 116;
+only the four named checkboxes change. Source inventories and dated availability
+snapshots are preserved without a fresh availability recount. The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker570-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T144924Z-codex-9e8160.yaml)
+
+## Completion checkpoint 574 — 2026-10-24 17:14:26 UTC
+
+**574 complete; 2,302 remaining out of 2,876 primary catalogue genes.**
+This adds only ERCC6, ERCC6L2, ERCC8 and ERF to the
+[merged 570 tracker, PR #5409](https://github.com/ai4curation/ai-gene-review/pull/5409).
+Each has an exact-head approval and an independently accepted actual-merge audit.
+Acceptance by the coordinating AI agent is not a human maintainer sign-off.
+Products, fusion siblings, follow-ups and tracker publications do not add gene
+credit. ERLIN1 and ERLIN2 remain uncredited here.
+
+| Gene / PR | Approved head | Actual merge | Merged at (UTC) | Approved path entries |
+| --- | --- | --- | --- | --- |
+| [ERCC6 #5401](https://github.com/ai4curation/ai-gene-review/pull/5401) | [`698d023e16e8`](https://github.com/ai4curation/ai-gene-review/commit/698d023e16e81509a69159c5b5845b844002ad2a) | [`8dd02fff434c`](https://github.com/ai4curation/ai-gene-review/commit/8dd02fff434c025d5b6e02b35e030e0e0c8e6ea5) | 2026-10-24T15:16:17Z | 51 |
+| [ERCC6L2 #5405](https://github.com/ai4curation/ai-gene-review/pull/5405) | [`97d48ec2383b`](https://github.com/ai4curation/ai-gene-review/commit/97d48ec2383b3c86d26b8229c4d0355b8408041c) | [`b28805f7842b`](https://github.com/ai4curation/ai-gene-review/commit/b28805f7842b33a261c3aa2be33168b1ead3c084) | 2026-10-24T16:48:20Z | 14 |
+| [ERCC8 #5408](https://github.com/ai4curation/ai-gene-review/pull/5408) | [`0d421ad2bf24`](https://github.com/ai4curation/ai-gene-review/commit/0d421ad2bf243988b071896f15a8afbd4e3ca846) | [`e5a60e057d21`](https://github.com/ai4curation/ai-gene-review/commit/e5a60e057d21c19eb0b92e4e93993f57df609790) | 2026-10-24T16:51:32Z | 17 |
+| [ERF #5411](https://github.com/ai4curation/ai-gene-review/pull/5411) | [`243b49524eda`](https://github.com/ai4curation/ai-gene-review/commit/243b49524eda63cce0159451616a09193098b855) | [`a98198438715`](https://github.com/ai4curation/ai-gene-review/commit/a9819843871530062eb4b2878778b5bdd778e6b9) | 2026-10-24T16:59:30Z | 13 |
+
+Approved-head and actual-merge payloads match for all 95 path entries across the
+four PRs. Complete gene directories (11 ERCC6/cognate fusion files, five ERCC6L2,
+five ERCC8 and six ERF) retain exact mode/type/blob parity at fixed main
+`a9819843871530062eb4b2878778b5bdd778e6b9`. Normal-dependency comparisons cover 70, ten,
+39 and nine external paths respectively. These counts overlap across genes.
+ERCC6 has 51 PR paths but 50 net merge changes because PMID:16246722 was already
+present on its parent; ERCC6L2 has 14 PR paths but 12 net changes because the two
+PTHR45629 files already matched its parent. ERCC8 has 17 net changes, including
+one accepted publication refresh; ERF has 13 additions.
+
+One historical source blob is deliberately superseded on this fixed main:
+ERCC6's abstract-only PMID:26620705 was replaced by the accepted ERCC8 genuine
+full-text record. The original body remains an exact prefix, with only the
+availability/extraction metadata changed and the original text appended.
+The current blob exactly matches the ERCC8 approved head and actual merge;
+every other selected gene/dependency blob retains its prior accepted content.
+The later remote-main observation `a5be4091f08c69c7238275dd2200e4aaf474e1a8` is recorded as an
+observation, not as a second payload-parity cut.
+
+ERCC6 retains 139 primary contexts (53 ACCEPT, 21 MODIFY, 61 KEEP_AS_NON_CORE,
+four UNDECIDED), 62 references and four core activity units. The 1,493-residue
+CSB and external 1,061-residue CSB-PGBD3 product remain distinct. The validated
+ERCC6__P0DP91 sibling separately retains all 11 fusion contexts, including literal
+extension groups/partner identifiers, four references and no core. Its three
+ACCEPT, five KEEP_AS_NON_CORE and three UNDECIDED assessments do not imply that
+the fusion inherits the CSB motor. Its three product records include external
+cross-references to CSB and PGBD3, not three extra ERCC6 gene credits. Both reviews
+remain DRAFT, with 44 and three advisories respectively.
+
+ERCC6L2 retains 24 imported contexts plus one accepted NEW DNA-helicase activity
+annotation specifically on the experimentally tested Q5T890-1 product. Its 25
+assessments are nine ACCEPT, two MODIFY, eight KEEP_AS_NON_CORE, five UNDECIDED
+and one NEW, with 13 references and one core. The source-described 1,561-, 1,550-
+and 712-residue products remain distinct. The ATP-dependent unwinding component
+is bounded to the tested short-overhang/substrate and SSB conditions; residual
+melting and the unresolved link to repair contexts remain explicit. DRAFT retains
+four binding advisories; the NEW assertion was justified by the measured activity,
+not by warning removal.
+
+ERCC8 retains 77 source contexts, 43 references, distinct 396- and 205-residue
+products and one substrate-adaptor core. Actions are 45 ACCEPT, 12 MODIFY,
+17 KEEP_AS_NON_CORE and three UNDECIDED. Ligase substrate recruitment is separated
+from RBX1 catalytic machinery and the CSB motor, with species and experimental
+assembly boundaries retained. It remains DRAFT with five generic-binding
+advisories.
+
+ERF retains 24 source contexts, 15 references, distinct 548- and 473-residue
+products and one chromatin-localized transcriptional-repression core. Actions
+are eight ACCEPT, 11 MODIFY and five KEEP_AS_NON_CORE. Promoter-specific DNA
+recognition remains distinct from the HT-SELEX naked-DNA motif assay; bounded
+TLE5/AES-2 binding does not imply an assayed recruitment mechanism. DRAFT retains
+five advisories: three generic-binding, one deliberate source-specific action
+split, and one unused manual-research-reference warning.
+
+None of these publications adds a supporting-text quotation. Source contexts,
+natural product boundaries and unresolved judgments remain part of the accepted
+records; completion credit does not imply every annotation is resolved.
+
+| Actual merge-group run | Broad Python tests passed | Doctests passed | Gene advisories | History records |
+| --- | --- | --- | --- | --- |
+| [ERCC6 run 40104791174](https://github.com/ai4curation/ai-gene-review/actions/runs/40104791174) | 4,245 | 276 | 44 + 3 fusion | 15,675 |
+| [ERCC6L2 run 40110584409](https://github.com/ai4curation/ai-gene-review/actions/runs/40110584409) | 4,245 | 276 | 4 | 15,683 |
+| [ERCC8 run 40110626350](https://github.com/ai4curation/ai-gene-review/actions/runs/40110626350) | 4,245 | 276 | 5 | 15,688 |
+| [ERF run 40112161497](https://github.com/ai4curation/ai-gene-review/actions/runs/40112161497) | 4,245 | 276 | 5 | 15,691 |
+
+All three jobs in each actual merge-group run completed successfully. Each run
+executed 12 examples, 438 overlapping automation tests, 19 JavaScript tests,
+mypy on 285 source files and two Ruff commands. Broad pytest had one skipped,
+84 deselected and nine warnings; doctests had 37 skipped and eight warnings.
+Counts overlap and are not summed. Changed-gene validation ran (two reviews for
+ERCC6); the separate all-gene batch was schema-only. Each run checked 703 module
+schemas, 718 family schemas and 42 history tests. The aggregate gate added no
+suite. The PR broad suites were skipped by path filtering, so their successful
+labels alone are not broad-test evidence. Prediction and upstream PAINT checks
+were skipped in these captured merge workflows.
+
+ERF's saved API response reports completed/SUCCESS jobs while five nested suite
+steps still have pending/in-progress states and the gate has no step array.
+A bounded direct-job recheck resolved the validation steps but retained these
+metadata limits. Full terminal logs establish the successful commands and counts;
+no terminal nested-step metadata was invented. No independent all-main biological
+validation or documentation build is claimed by this update.
+
+All 2,876 catalogue identities and association text, 235 queue objects, 116 earlier
+completion updates and preceding progress bytes remain exact. This is update 117;
+only the four named checkboxes change. Source inventories and dated availability
+snapshots are preserved without a fresh availability recount. The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker574-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T172508Z-codex-7cbb12.yaml)
+
+## Completion checkpoint 579 — 2026-10-24 20:10:52 UTC
+
+**579 complete; 2,297 remaining out of 2,876 primary catalogue genes.**
+This adds only the five accepted actual merges below to
+[tracker 574, PR #5438](https://github.com/ai4curation/ai-gene-review/pull/5438).
+Each exact-head approval and actual-merge audit was checked independently;
+acceptance by the coordinating AI agent is not a human maintainer sign-off.
+ESRRB, ETFB and ETFDH remain uncredited.
+
+| Gene / PR | Approved head | Actual merge | Active + retired contexts | References / cores | DRAFT advisories |
+| --- | --- | --- | --- | --- | --- |
+| [ERLIN1 #5429](https://github.com/ai4curation/ai-gene-review/pull/5429) | [`38e73810a2a8`](https://github.com/ai4curation/ai-gene-review/commit/38e73810a2a82b9d025a87bfb92c5b52f54133c2) | [`46463aea153a`](https://github.com/ai4curation/ai-gene-review/commit/46463aea153a62d821a88f970f71ef5e2ab14a41) | 53 + 5 | 33 / 2 | 25 |
+| [ERLIN2 #5441](https://github.com/ai4curation/ai-gene-review/pull/5441) | [`8aa9bf645000`](https://github.com/ai4curation/ai-gene-review/commit/8aa9bf64500012bf13709f323cdb826b008ef588) | [`7d2955f3f04f`](https://github.com/ai4curation/ai-gene-review/commit/7d2955f3f04f0dcbd25b2c6fc1ff478959bdf778) | 59 + 5 | 49 / 3 | 16 |
+| [ESCO2 #5443](https://github.com/ai4curation/ai-gene-review/pull/5443) | [`884b57b4e82f`](https://github.com/ai4curation/ai-gene-review/commit/884b57b4e82f43c9dc4a43d2add7823532dd8ed2) | [`625ad38e3a3b`](https://github.com/ai4curation/ai-gene-review/commit/625ad38e3a3bc5eaf7821e242d9976f84b7f7ffc) | 29 + 0 | 15 / 1 | 4 |
+| [ESPN #5446](https://github.com/ai4curation/ai-gene-review/pull/5446) | [`1519f7b56246`](https://github.com/ai4curation/ai-gene-review/commit/1519f7b56246bfa2ac14613d75990bc1a6253c33) | [`f93a466f6e7a`](https://github.com/ai4curation/ai-gene-review/commit/f93a466f6e7a8854069ba774a4ecdfc9a7e93737) | 18 + 0 | 12 / 1 | 1 |
+| [ETFA #5452](https://github.com/ai4curation/ai-gene-review/pull/5452) | [`d2e21e55a62e`](https://github.com/ai4curation/ai-gene-review/commit/d2e21e55a62e9db549e291056c717a23c156e423) | [`0974627b3c89`](https://github.com/ai4curation/ai-gene-review/commit/0974627b3c895ff1e5701f6c6013c4b98de29d5c) | 36 + 1 | 26 / 4 | 2 |
+
+All 82 approved PR path entries, 36 complete gene-directory files and 178
+external dependency entries match their approved head, actual merge and fixed
+main `0974627b3c895ff1e5701f6c6013c4b98de29d5c` in mode, type and blob. Dependency counts overlap across genes.
+ERLIN2 has 18 PR paths but 17 net changes because PMID:19751772 already matched
+its merge parent; the other PR path sets equal their net changes. The read-only
+remote-main observation was `0974627b3c895ff1e5701f6c6013c4b98de29d5c`; it is recorded
+separately from the fixed parity cut. The five records preserve 132 inherited
+quotation anchors in total and introduce no new quotation or NEW annotation.
+
+ERLIN1 and ERLIN2 retain distinct protein and substrate scopes. Their structural
+units contribute to the erlin complex's scaffold activity; neither is assigned
+ubiquitin-transfer chemistry. ERLIN1 cholesterol binding is distinguished from
+unresolved ERLIN2-specific native-cholesterol binding. Activated receptor turnover
+and misfolded-protein quality control remain separate experimental contexts.
+ERLIN1's 348-residue product and ERLIN2's 339-, 152- and 206-residue products are
+not treated as functionally equivalent.
+
+ESCO2 retains acetyl-CoA-dependent protein-lysine acetylation coupled to cohesion
+and replication-fork regulation. Human ESCO2-fragment, combined ESCO1/2-depletion
+and mouse-loss evidence remain distinct; no purified full-length human
+ESCO2–SMC3 assay is implied. ESPN retains direct actin cross-linking and
+microvillar assembly, with human espin 3A assays distinguished from rodent
+localization and the two source products.
+
+ETFA retains direct alpha-subunit FAD contacts alongside its contribution to the
+assembled ETFA–ETFB carrier. MCAD/GCDH-to-DCIP assays do not establish isolated
+alpha activity, ETFDH's separate ubiquinone reaction or complete metabolic flux.
+The 333-residue precursor, its processed mature chain and the alternative
+284-residue product remain distinct. Five ETFA judgments are UNDECIDED; retired
+historical contexts in ETFA and the erlins remain visible. Completion is not a
+claim that every annotation or product mechanism is resolved.
+
+All three jobs in each actual merge-group run succeeded: [ERLIN1](https://github.com/ai4curation/ai-gene-review/actions/runs/40118864897), [ERLIN2](https://github.com/ai4curation/ai-gene-review/actions/runs/40122236875), [ESCO2](https://github.com/ai4curation/ai-gene-review/actions/runs/40124476015), [ESPN](https://github.com/ai4curation/ai-gene-review/actions/runs/40124578712), [ETFA](https://github.com/ai4curation/ai-gene-review/actions/runs/40125951462).
+Each broad suite ran 4,245 Python tests (one skipped, 84 deselected), 276 doctests
+(37 skipped), 12 examples, 438 overlapping automation tests and 19 JavaScript
+tests, plus mypy and Ruff. Counts overlap and are not summed. Changed-gene
+validation ran with the advisories above; the separate all-gene batch was
+schema-only. The corresponding PR broad suites were path-filtered and skipped.
+Prediction and upstream PAINT checks were skipped in the recorded merge jobs;
+the aggregate gates added no tests. Recorded warnings and an ignored SQL
+finalizer diagnostic are not hidden by the successful terminal conclusions.
+
+All 2,876 catalogue identities and association text, 235 queue objects, 117
+earlier completion updates and preceding progress bytes are preserved. This is
+update 118; only the five named checkboxes change. Dated source inventories
+remain historical and are not refreshed by this completion update.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker579-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T201537Z-codex-48a79e.yaml)
+
+## Completion checkpoint 582 — 2026-10-24 22:42:53 UTC
+
+**582 complete; 2,294 remaining out of 2,876 primary catalogue genes.**
+This adds only the three accepted actual merges below to
+[tracker 579, PR #5467](https://github.com/ai4curation/ai-gene-review/pull/5467).
+Independent audit acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [ESRRB #5461](https://github.com/ai4curation/ai-gene-review/pull/5461) | [`2dc84ba6ac5b`](https://github.com/ai4curation/ai-gene-review/commit/2dc84ba6ac5beafa6ad3e0bf74256ea21b719d72) | [`2cb3afa8a856`](https://github.com/ai4curation/ai-gene-review/commit/2cb3afa8a856b1faab7217c00b212f8b2bdcb55b) | 53 | 31 / 1 | COMPLETE / 0 |
+| [ETFDH #5468](https://github.com/ai4curation/ai-gene-review/pull/5468) | [`246dc94621f1`](https://github.com/ai4curation/ai-gene-review/commit/246dc94621f1cf938b6bd118cdd19ce0ad8eeb0e) | [`9cb3fe3a3e21`](https://github.com/ai4curation/ai-gene-review/commit/9cb3fe3a3e2161a86c5bebc6d9a295233cb7c200) | 37 | 19 / 5 | DRAFT / 7 |
+| [ETHE1 #5470](https://github.com/ai4curation/ai-gene-review/pull/5470) | [`8cf5cbe3040e`](https://github.com/ai4curation/ai-gene-review/commit/8cf5cbe3040efbae4295c15ecb0446a5bfdd9781) | [`5cffa2f757b5`](https://github.com/ai4curation/ai-gene-review/commit/5cffa2f757b5ae147f0f128177b0ffd0dbe0d096) | 27 | 16 / 1 | DRAFT / 5 |
+
+All 46 approved PR paths, 16 complete gene-directory files and 49 external
+dependency entries match approved head, actual merge and fixed main
+`5cffa2f757b5ae147f0f128177b0ffd0dbe0d096` in mode, type and blob. Dependency counts can overlap.
+The separate remote-main observation was `5cffa2f757b5ae147f0f128177b0ffd0dbe0d096`.
+All 42 inherited quotation anchors belong to ETFDH and remain exact; ESRRB and
+ETHE1 have none. No new quotation or NEW annotation is introduced.
+
+ESRRB retains human DNA-binding and transcription-activation evidence, with
+long and short constructs corresponding to current 508- and 433-residue
+accession sequences, without verifying historical plasmid sequences or the
+untested 500-residue product. Mouse developmental contexts remain separate. Its computed COMPLETE
+status leaves six UNDECIDED judgments visible.
+
+ETFDH retains the ETF-to-ubiquinone reaction with FAD and a 4Fe–4S cluster,
+separate from the soluble ETFA–ETFB carrier. Human enzyme assays and the native
+porcine structure remain distinct; neither establishes full respiratory flux or
+functional equivalence of the 617- and 570-residue products. Two stress-process
+judgments remain UNDECIDED.
+
+ETHE1 retains iron-dependent glutathione-persulfide oxidation to sulfite and
+glutathione in the matrix. Historical cytoplasmic observations remain non-core;
+independent matrix evidence and the unresolved two-zinc source-model query are
+preserved. Engineered truncations, native processing and separate shorter
+RefSeq products are not treated as functionally equivalent.
+
+All three jobs succeeded in each actual merge-group run: [ESRRB](https://github.com/ai4curation/ai-gene-review/actions/runs/40136643412), [ETFDH](https://github.com/ai4curation/ai-gene-review/actions/runs/40136974831), [ETHE1](https://github.com/ai4curation/ai-gene-review/actions/runs/40136976805).
+Each broad suite executed 4,268 Python tests (one skipped, 84 deselected),
+277 doctests (37 skipped), 12 examples, 438 overlapping automation tests and
+19 JavaScript tests, plus mypy over 285 source files and Ruff. Counts overlap
+and are not summed. Changed-gene validation retained the advisories above;
+the separate all-gene batch was schema-only. The PR broad suites, prediction
+checks and upstream PAINT checks were skipped in their recorded scopes.
+Global warnings and unresolved residue claims remain; aggregate gates add no tests.
+
+This is update 119. All 2,876 identities and association text, 235 queue objects,
+118 earlier updates and preceding progress bytes remain exact; only the three
+named checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker582-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-24T225256Z-codex-c6114a.yaml)
+
+## Completion checkpoint 585 — 2026-10-24 23:50:50 UTC
+
+**585 complete; 2,291 remaining out of 2,876 primary catalogue genes.**
+This adds only the three accepted actual merges below to
+[tracker 582, PR #5479](https://github.com/ai4curation/ai-gene-review/pull/5479).
+Independent audit acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [ETFB #5466](https://github.com/ai4curation/ai-gene-review/pull/5466) | [`4ac38fb32d36`](https://github.com/ai4curation/ai-gene-review/commit/4ac38fb32d36ccdfec36992029483b669d073dfa) | [`d0388f87fd10`](https://github.com/ai4curation/ai-gene-review/commit/d0388f87fd10973d0bfd5db1d0b01cff97b8a3c4) | 28 | 22 / 2 | DRAFT / 4 |
+| [ETV6 #5472](https://github.com/ai4curation/ai-gene-review/pull/5472) | [`75ee95de50ee`](https://github.com/ai4curation/ai-gene-review/commit/75ee95de50ee421755637c4457de9bfd6d042b53) | [`e4ed1ee4b2ab`](https://github.com/ai4curation/ai-gene-review/commit/e4ed1ee4b2abb67d0293a263367896abf42b5ce1) | 43 | 32 / 1 | DRAFT / 7 |
+| [EVC #5476](https://github.com/ai4curation/ai-gene-review/pull/5476) | [`61dc504b83df`](https://github.com/ai4curation/ai-gene-review/commit/61dc504b83df6f796cb5d206060ca4b3e02111fb) | [`1ca4af83c61f`](https://github.com/ai4curation/ai-gene-review/commit/1ca4af83c61fd140120fe91b379ce15ff6db087e) | 19 | 15 / 1 | COMPLETE / 0 |
+
+All 36 approved PR paths, 16 complete gene-directory files and 54 external
+dependency entries match approved head, actual merge and fixed main
+`5e62db5cf9887be68578d786c36f0e647a90cf7b` in mode, type and blob. Dependency counts can overlap.
+The separate remote-main observation was `5e62db5cf9887be68578d786c36f0e647a90cf7b`.
+All 41 inherited quotation anchors belong to ETFB and remain exact; ETV6 and
+EVC have none. No new quotation or NEW annotation is introduced.
+
+ETFB contributes to the assembled mitochondrial ETFA–ETFB electron carrier,
+with a distinct AMP-binding facet. Its fatty-acid and amino-acid oxidation roles
+are kept separate from ETFDH-mediated quinone reduction. Human heterodimer
+assays do not establish isolated beta-subunit turnover or equivalence of the
+255- and 346-residue products; the S1P-stabilized assembly remains model-bounded.
+
+ETV6 retains native ETS-site recognition and transcriptional repression with
+functional corepressor associations, alongside contextual activation evidence.
+Ten pathological fusion-protein projections are removed from native ETV6
+annotations. M1/M43 experimental constructs and separately documented natural
+transcripts remain distinct; no universal product equivalence or native kinase
+activity is asserted.
+
+EVC retains ciliary Smoothened-pathway participation and positive regulation,
+with basal-body and ciliary-membrane localization bounds. Mouse mechanistic
+experiments remain distinct from human imaging and gene-level inference. Its
+individual molecular function remains unspecified, and one judgment is
+UNDECIDED despite computed COMPLETE status and zero advisories.
+
+All three jobs succeeded in each actual merge-group run: [ETFB](https://github.com/ai4curation/ai-gene-review/actions/runs/40139334008), [ETV6](https://github.com/ai4curation/ai-gene-review/actions/runs/40140515525), [EVC](https://github.com/ai4curation/ai-gene-review/actions/runs/40141323927).
+Each broad suite executed 4,293 Python tests (one skipped, 84 deselected),
+278 doctests (37 skipped), 12 examples, 438 overlapping automation tests and
+19 JavaScript tests, plus mypy over 287 source files and Ruff. Counts overlap
+and are not summed. Changed-gene validation retained the advisories above;
+the separate all-gene batch was schema-only. The PR broad suites, prediction
+checks and upstream PAINT checks were skipped in their recorded scopes.
+Global warnings and unresolved residue claims remain; aggregate gates add no tests.
+
+This is update 120. All 2,876 identities and association text, 235 queue objects,
+119 earlier updates and preceding progress bytes remain exact; only the three
+named checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+[Curation session](https://github.com/ai4curation/ai-gene-review/blob/cmungall/clingen-tracker585-20261024/history/projects/CLINGEN_MENDELIAN/2026-10-25T000127Z-codex-1c9b39.yaml)
+
+## Completion checkpoint 587 — 2026-10-25 02:14:40 UTC
+
+**587 complete; 2,289 remaining out of 2,876 primary catalogue genes.**
+This adds only EVC2 and EXOC6B to
+[tracker 585, PR #5489](https://github.com/ai4curation/ai-gene-review/pull/5489).
+Independent audit acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [EVC2 #5477](https://github.com/ai4curation/ai-gene-review/pull/5477) | [`9909a981c35d`](https://github.com/ai4curation/ai-gene-review/commit/9909a981c35d7fcafb37b1e3f25ce1150f9170bf) | [`60c2825da3e3`](https://github.com/ai4curation/ai-gene-review/commit/60c2825da3e3ed6b694e469d4cf6ec34b0621e1a) | 14 | 10 / 1 | DRAFT / 1 |
+| [EXOC6B #5480](https://github.com/ai4curation/ai-gene-review/pull/5480) | [`3acaf58e2071`](https://github.com/ai4curation/ai-gene-review/commit/3acaf58e2071e85a66edf28c5006120b7bcde64f) | [`0fcfcd6ce63d`](https://github.com/ai4curation/ai-gene-review/commit/0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43) | 11 | 17 / 1 | DRAFT / 4 |
+
+All 28 approved PR path entries, 10 complete gene-directory files and 24
+external dependency entries match approved head, actual merge and fixed main
+`0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43` in mode, type and blob. There are 26 net merge paths:
+two EVC2 publication caches already existed identically on its merge parent.
+Dependency counts can overlap. The separate remote-main observation was
+`0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43`. Both reviews contain zero quotations and zero
+NEW assertions. Three EVC2 products and two EXOC6B products remain distinct.
+
+EVC2 retains seven ACCEPT, four MODIFY and three KEEP_AS_NON_CORE decisions.
+EXOC6B retains five ACCEPT, four KEEP_AS_NON_CORE and two UNDECIDED decisions.
+Both remain DRAFT, with one core-coverage advisory and four generic-binding
+advisories respectively. No biological uncertainty is silently resolved by
+recording the merges.
+
+All three jobs succeeded in each actual merge-group run: [EVC2](https://github.com/ai4curation/ai-gene-review/actions/runs/40150759238), [EXOC6B](https://github.com/ai4curation/ai-gene-review/actions/runs/40151238545).
+Each broad suite executed 4,293 Python tests (one skipped, 84 deselected),
+278 doctests (37 skipped), 12 examples, 438 overlapping automation tests and
+19 JavaScript tests, plus mypy over 287 source files and Ruff. Counts overlap
+and are not summed. Strict target validation retained the advisories above;
+the separate all-gene batch was schema-only. History validation covered
+16,471 and 16,474 records respectively, with 42 history tests in each run.
+The earlier PR broad suites and conditional prediction/upstream PAINT checks
+were skipped in their recorded scopes. Global warnings, unresolved residue
+claims and the nonfatal SQL cleanup exception remain recorded; aggregate
+gates add no tests.
+
+The accepted gene histories use immutable merge-commit links:
+
+- [EVC2 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/60c2825da3e3ed6b694e469d4cf6ec34b0621e1a/history/genes/human/EVC2/2026-10-24T233603Z-codex-7aae6b.yaml)
+- [EXOC6B accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/0fcfcd6ce63d58c6f9ee4830337d5cce9454eb43/history/genes/human/EXOC6B/2026-10-24T234753Z-codex-017055.yaml)
+
+This is update 121. All 2,876 identities and association text, 235 queue objects,
+120 earlier updates and preceding progress bytes remain exact; only the two
+named checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: `history/projects/CLINGEN_MENDELIAN/2026-10-25T021558Z-codex-69f821.yaml`.
+
+## Completion checkpoint 591 — 2026-10-25 03:26:01 UTC
+
+**591 complete; 2,285 remaining out of 2,876 primary catalogue genes.**
+This adds only EXT2, EXT1, EYA1 and EYS to
+[tracker 587, PR #5494](https://github.com/ai4curation/ai-gene-review/pull/5494).
+Independent actual-merge acceptance is by the coordinating AI agent, not a
+human maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [EXT2 #5490](https://github.com/ai4curation/ai-gene-review/pull/5490) | [`f3299defabac`](https://github.com/ai4curation/ai-gene-review/commit/f3299defabacbb021ca0c28f13d12a2f4e8c4f33) | [`212f56f04101`](https://github.com/ai4curation/ai-gene-review/commit/212f56f041010b01c80ce8a2a680e6fc3a03bf45) | 60 | 33 / 1 | DRAFT / 6 |
+| [EXT1 #5488](https://github.com/ai4curation/ai-gene-review/pull/5488) | [`0621827756fb`](https://github.com/ai4curation/ai-gene-review/commit/0621827756fb4ca0301d89f669acbcb0caf2b778) | [`ab72d4752747`](https://github.com/ai4curation/ai-gene-review/commit/ab72d475274707f696b6823c251115b8af50c9d6) | 61 | 30 / 2 | DRAFT / 1 |
+| [EYA1 #5491](https://github.com/ai4curation/ai-gene-review/pull/5491) | [`62fe39ec04f1`](https://github.com/ai4curation/ai-gene-review/commit/62fe39ec04f1789232ce9dc79bd3a80dd6b3bc8d) | [`980ac0e0a2f1`](https://github.com/ai4curation/ai-gene-review/commit/980ac0e0a2f14e779f6cc588d8d4260a7e5b0093) | 33 | 28 / 2 | COMPLETE / 0 |
+| [EYS #5493](https://github.com/ai4curation/ai-gene-review/pull/5493) | [`3367c5a7fbbe`](https://github.com/ai4curation/ai-gene-review/commit/3367c5a7fbbe108e409ca806bd4ca1f2b65e4e33) | [`501b51748c62`](https://github.com/ai4curation/ai-gene-review/commit/501b51748c62be09a902b9b7272cf325a2dadea4) | 21 | 15 / 1 | COMPLETE / 0 |
+
+All 56 approved PR path entries, 21 complete gene-directory files and 89
+external dependency entries match approved heads, actual merges and fixed main
+`b2b10f56fdd7e6996d24885376d9ff6b10f19377` in mode, type and blob. The 51 net merge paths
+exclude five EXT1 publication paths already present identically on its parent.
+The dependency ledger distinguishes 25 entries introduced by their gene merge
+from 64 reused entries; shared dependencies can appear more than once.
+EYA1 retains all 60 inherited quotation anchors and its two inherited NEW
+annotations. No quotations, source bytes or gene decisions change here.
+
+**EXT2.** EXT2 supplies the principal GlcNAc-transfer step of the Golgi EXT1–EXT2 heparan-sulfate elongation complex. Its assembled contribution to GlcA transfer is distinct from low activity in older separately expressed preparations.
+
+**EXT1.** EXT1 supplies the principal GlcA-transfer step and has measured secondary GlcNAc-transfer capacity. Its quantitative GlcNAc contribution in the native complex remains unresolved; the review retains preparation and protein-stability limits.
+
+**EYA1.** EYA1 combines conserved SIX-associated transcriptional coactivation with protein-tyrosine dephosphorylation, including H2AX-dependent regulation of the DNA-damage response. It is not assigned DNA strand-restoration chemistry, and intrinsic Ser/Thr catalysis remains unresolved.
+
+**EYS.** EYS provides conserved extracellular structural support associated with photoreceptor maintenance. The precise human interphotoreceptor topology and the functions of the four natural products remain unresolved; observed intracellular pools are not assumed to perform the same structural role.
+
+EXT2 and EXT1 retain one and two UNDECIDED judgments, respectively; EYA1 and
+EYS retain three and four despite their computed COMPLETE status. Source and
+product limits remain part of the accepted reviews.
+
+All three jobs passed in each actual merge-group run: [EXT2](https://github.com/ai4curation/ai-gene-review/actions/runs/40152868921), [EXT1](https://github.com/ai4curation/ai-gene-review/actions/runs/40153258542), [EYA1](https://github.com/ai4curation/ai-gene-review/actions/runs/40153641652), [EYS](https://github.com/ai4curation/ai-gene-review/actions/runs/40154709309).
+Each broad suite ran 4,293 Python tests (one skipped, 84 deselected),
+278 doctests (37 skipped), 12 examples, 438 overlapping automation tests,
+19 JavaScript tests, mypy over 287 files and Ruff. Counts overlap and are not
+summed. Target strict checks retained the advisories shown above; the separate
+all-gene batch was schema-only. Conditional prediction and upstream PAINT
+checks were skipped. Global warnings, unresolved checks and the nonfatal SQL
+cleanup exception remain recorded in the accepted audits; aggregate gates
+add no tests. The queue update preserves the per-run evidence and skip lists.
+
+- [EXT2 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/212f56f041010b01c80ce8a2a680e6fc3a03bf45/history/genes/human/EXT2/2026-10-25T014149Z-codex-6225f1.yaml)
+- [EXT1 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/ab72d475274707f696b6823c251115b8af50c9d6/history/genes/human/EXT1/2026-10-25T015241Z-codex-2325ba.yaml)
+- [EYA1 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/980ac0e0a2f14e779f6cc588d8d4260a7e5b0093/history/genes/human/EYA1/2026-10-25T020022Z-codex-0af32f.yaml)
+- [EYS accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/501b51748c62be09a902b9b7272cf325a2dadea4/history/genes/human/EYS/2026-10-25T020807Z-codex-7df027.yaml)
+
+Update 122 preserves all 2,876 identities and association text, 235 queue
+objects, 121 earlier updates and preceding progress bytes. Only the four named
+checkboxes change. The separate remote-main observation at 2026-10-25T03:26:01.626618+00:00
+was `b2b10f56fdd7e6996d24885376d9ff6b10f19377`; source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/8c7ae8004be4e7855e189a3475bb67ae0f21afb3/history/projects/CLINGEN_MENDELIAN/2026-10-25T033732Z-codex-767415.yaml).
+
+## Completion checkpoint 595 — 2026-10-25 04:57:30 UTC
+
+**595 complete; 2,281 remaining out of 2,876 primary catalogue genes.**
+This adds only EYA4, EZH2, F10 and F11 to
+[tracker 591, PR #5498](https://github.com/ai4curation/ai-gene-review/pull/5498).
+Actual-merge acceptance is by the coordinating AI agent, not a human
+maintainer sign-off. Other pending genes receive no credit.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [EYA4 #5492](https://github.com/ai4curation/ai-gene-review/pull/5492) | [`bdadf273c590`](https://github.com/ai4curation/ai-gene-review/commit/bdadf273c590b952d320e6f6b120c749ee638092) | [`a47ce8ba01b1`](https://github.com/ai4curation/ai-gene-review/commit/a47ce8ba01b18294a8361b9e81366affed61237e) | 19 | 14 / 2 | COMPLETE / 0 |
+| [EZH2 #5496](https://github.com/ai4curation/ai-gene-review/pull/5496) | [`cc0254df56f8`](https://github.com/ai4curation/ai-gene-review/commit/cc0254df56f8c7a3c3b3ef0bd74d1254e1396278) | [`f477bb7bd7f4`](https://github.com/ai4curation/ai-gene-review/commit/f477bb7bd7f4bee62db4a950c62dc5a9ca1bddf6) | 186 | 108 / 2 | DRAFT / 54 |
+| [F10 #5497](https://github.com/ai4curation/ai-gene-review/pull/5497) | [`4486ba7bcb42`](https://github.com/ai4curation/ai-gene-review/commit/4486ba7bcb4219cc3f8697ca61269a6a9829e020) | [`df37cff6f3ba`](https://github.com/ai4curation/ai-gene-review/commit/df37cff6f3bacd6900da5e0eec3dcf34fb2ed675) | 58 | 42 / 1 | DRAFT / 4 |
+| [F11 #5500](https://github.com/ai4curation/ai-gene-review/pull/5500) | [`d5255b7e6464`](https://github.com/ai4curation/ai-gene-review/commit/d5255b7e64643c9397e506cb784f5686b47247a8) | [`db8135f603bf`](https://github.com/ai4curation/ai-gene-review/commit/db8135f603bf131e28c36950b3162c2610e55b64) | 38 | 28 / 1 | DRAFT / 1 |
+
+All 140 approved PR paths are also the 140 net merge paths. The 20 complete
+gene-directory files and 177 external dependency entries match approved heads,
+actual merges and fixed main `db8135f603bf131e28c36950b3162c2610e55b64` in mode,
+type and blob. Of those dependency entries, 108 were introduced by the
+corresponding gene merge and 69 reused from its parent; there are 177 unique
+external paths in this four-gene closure. These counts describe overlapping
+payload and dependency sets and are not added together. EYA4 retains its three
+explicitly authorized NEW rows. No gene decisions, source bytes or quotations
+change in this tracker update.
+
+**EYA4.** EYA4 combines protein-tyrosine phosphatase activity with SIX-associated transcriptional coactivation. Human PLK1 regulation and peptide chemistry remain distinct from conserved DNA-repair inference; historical construct and five-product boundaries remain explicit.
+
+**EZH2.** EZH2 supplies the H3K27 methyltransferase site in PRC2 and binds tested long noncoding RNAs. EED reader activity and accessory targeting are kept separate from EZH2 catalysis; RNA binding does not impose a universal recruitment or regulatory outcome.
+
+**F10.** Activated factor Xa converts prothrombin to thrombin and acts on additional coagulation substrates. The same protease activity also cleaves PAR2 with barrier protection in a defined endothelial-cell model; that result is not generalized to all signaling contexts or mTOR regulation.
+
+**F11.** Activated factor XIa performs sequential factor IX cleavage in the intrinsic coagulation pathway. Its A3 recognition region and platelet-surface association support this catalytic unit; untested shorter-product equivalence and contextual fibrinolysis evidence remain bounded.
+
+Local status computation and validation recorded EYA4 as COMPLETE with zero
+advisories, while one UNDECIDED judgment remains. EZH2, F10 and F11 remain DRAFT
+with 54, four and one advisories, and 16, three and one UNDECIDED judgments,
+respectively. The advisories concern supported generic-binding contexts;
+completion does not erase these source and biological limits.
+
+All three jobs passed in each actual merge-group run: [EYA4](https://github.com/ai4curation/ai-gene-review/actions/runs/40157854148), [EZH2](https://github.com/ai4curation/ai-gene-review/actions/runs/40161582748), [F10](https://github.com/ai4curation/ai-gene-review/actions/runs/40161661337), [F11](https://github.com/ai4curation/ai-gene-review/actions/runs/40161878292).
+The accepted operative CI reads record 4,293 Python test passes (one skipped,
+84 deselected), 278 doctest passes (37 skipped), 12 examples, 438 overlapping
+automation tests, 19 JavaScript tests, mypy over 287 files and Ruff. Counts
+overlap and are not summed. Target strict checks retained the advisories above;
+the separate all-gene batch was schema-only. Module, history and family checks
+ran, while conditional prediction checks, history-coverage checks and full-run
+upstream PAINT verification were skipped. Global snippet skips, unresolved
+identifiers and the nonfatal SQL cleanup exception remain in the accepted
+receipts. Aggregate gates add no tests. The queue update retains per-run job
+links and exact skipped-step lists. No new workflow or validator ran for this
+private tracker proposal.
+
+- [EYA4 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/a47ce8ba01b18294a8361b9e81366affed61237e/history/genes/human/EYA4/2026-10-25T030619Z-codex-348d64.yaml)
+- [EZH2 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/f477bb7bd7f4bee62db4a950c62dc5a9ca1bddf6/history/genes/human/EZH2/2026-10-25T040727Z-codex-ab5d34.yaml)
+- [F10 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/df37cff6f3bacd6900da5e0eec3dcf34fb2ed675/history/genes/human/F10/2026-10-25T041001Z-codex-bd9a5e.yaml)
+- [F11 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/db8135f603bf131e28c36950b3162c2610e55b64/history/genes/human/F11/2026-10-25T041342Z-codex-ccb3cd.yaml)
+
+Update 123 preserves all 2,876 identities and association text, 235 queue
+objects, 122 earlier updates and preceding progress bytes. Only the four named
+checkboxes change. The separate remote-main observation at 2026-10-25T04:57:30.932556+00:00
+was `db8135f603bf131e28c36950b3162c2610e55b64`; source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/5ab2f723c88e861c08f6095f17dcb005db096262/history/projects/CLINGEN_MENDELIAN/2026-10-25T051225Z-codex-a3d1af.yaml).
+
+## Completion checkpoint 597 — 2026-10-25 06:51:14 UTC
+
+**597 complete; 2,279 remaining out of 2,876 primary catalogue genes.**
+Only F12 and F13A1 are added to [tracker 595, PR #5504](https://github.com/ai4curation/ai-gene-review/pull/5504).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F12 #5501](https://github.com/ai4curation/ai-gene-review/pull/5501) | [`abe1ca5de2c0`](https://github.com/ai4curation/ai-gene-review/commit/abe1ca5de2c08a06df2959f3adb9fcef87c30be1) | [`cb90c6f3df01`](https://github.com/ai4curation/ai-gene-review/commit/cb90c6f3df010204fd74fc52a8d42057164045e5) | 63 | 38 / 1 | DRAFT / 10 |
+| [F13A1 #5502](https://github.com/ai4curation/ai-gene-review/pull/5502) | [`3b34fd96c0f4`](https://github.com/ai4curation/ai-gene-review/commit/3b34fd96c0f45ab374f131a1d28be2ad6b2d4a49) | [`5e597e6e08e8`](https://github.com/ai4curation/ai-gene-review/commit/5e597e6e08e8006c81764e88155a19a826b63dee) | 48 | 26 / 1 | DRAFT / 22 |
+
+The accepted F12 and F13A1 closures contain 45 and 31 files, respectively,
+including their complete gene directories, histories and selected sources.
+Every file matches the accepted head and actual merge evidence and fixed main
+`5e597e6e08e8006c81764e88155a19a826b63dee`. These overlapping sets are not summed.
+F12 has 31 approved PR paths and 30 net merge paths: the identical
+R-HSA-9936430 cache was already present on its actual merge parent. F13A1 has
+23 approved PR paths and 23 net merge paths. No gene decision or source byte
+changes in this tracker update. The accepted F13A1 review retains its one NEW
+calcium-binding annotation, and neither review adds publication quotations.
+
+**F12.** Activated factor XII supplies serine endopeptidase activity in contact-system and coagulation reactions. Source-specific signaling, surface and product boundaries remain explicit; two contexts remain undecided.
+
+**F13A1.** Activated factor XIII A catalyzes protein cross-linking that stabilizes fibrin. The added calcium-binding annotation is supported by a human A-subunit structure and corroborating evidence, while precursor versus active-complex and inaccessible-original limits remain explicit.
+
+F12 remains DRAFT with 10 advisories (eight supported non-core binding and two
+context-consistency advisories) and two UNDECIDED contexts. F13A1 remains DRAFT
+with 22 supported non-core binding advisories and one UNDECIDED context.
+Original-access and assay limits remain visible in the gene reviews.
+
+The three Build and test jobs passed on each actual merge in
+[F12 run 40165165689](https://github.com/ai4curation/ai-gene-review/actions/runs/40165165689)
+and [F13A1 run 40168349716](https://github.com/ai4curation/ai-gene-review/actions/runs/40168349716).
+Accepted operative log reads cover the executed test, strict-target, schema,
+history and family checks. Global skipped snippets, unresolved family/gene
+claims and the nonfatal post-test SQL cleanup exception remain disclosed in
+the accepted evidence. Aggregate gates add no tests. This tracker proposal
+does not rerun gene validators or claim those global uncertainties are resolved.
+
+- [F12 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/cb90c6f3df010204fd74fc52a8d42057164045e5/history/genes/human/F12/2026-10-25T045958Z-codex-6867ca.yaml)
+- [F13A1 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/5e597e6e08e8006c81764e88155a19a826b63dee/history/genes/human/F13A1/2026-10-25T053201Z-codex-0423ae.yaml)
+
+Update 124 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 123 earlier updates and all preceding progress bytes.
+Only the F12 and F13A1 checkboxes change. Dated source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/ad3d4b87db7ef790c7418a16f8c072694bb6c04b/history/projects/CLINGEN_MENDELIAN/2026-10-25T070241Z-codex-cecf61.yaml).
+
+## Completion checkpoint 599 — 2026-10-25 07:46:49 UTC
+
+**599 complete; 2,277 remaining out of 2,876 primary catalogue genes.**
+Only F13B and F5 are added to [tracker 597, PR #5507](https://github.com/ai4curation/ai-gene-review/pull/5507).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F13B #5503](https://github.com/ai4curation/ai-gene-review/pull/5503) | [`82a9b4b2d9f8`](https://github.com/ai4curation/ai-gene-review/commit/82a9b4b2d9f8bb36a6a4518f1aaa6b37354cf20b) | [`f877133cb49b`](https://github.com/ai4curation/ai-gene-review/commit/f877133cb49b46405f798e83357db16c226d4dc5) | 12 | 11 / 1 | COMPLETE / 0 |
+| [F5 #5505](https://github.com/ai4curation/ai-gene-review/pull/5505) | [`e19cdce4c81b`](https://github.com/ai4curation/ai-gene-review/commit/e19cdce4c81bca98d98f4a40d341ec36b25e8edf) | [`98a7416f5cc6`](https://github.com/ai4curation/ai-gene-review/commit/98a7416f5cc6ca2e2f5a672527c936287f42b70e) | 55 | 54 / 2 | DRAFT / 2 |
+
+The accepted F13B and F5 closures contain 18 and 57 files, respectively,
+including their complete gene directories, histories and selected sources.
+Every file matches the accepted head and actual merge evidence and fixed main
+`82d5cc827a695fa875ab377fe3262865cbe5f413`. These overlapping sets are not summed.
+F13B has 15 approved PR paths and 10 net merge paths: five identical shared
+source files were already present on its actual merge parent. F5 has 27
+approved PR paths and 27 net merge paths. The queue records the exact shared
+paths and hashes. No gene decision or source byte changes in this tracker update.
+F13B retains one NEW structural-molecule annotation and F5 retains two NEW
+cofactor annotations. Neither review adds publication quotations.
+
+**F13B.** The factor XIII B subunit organizes and stabilizes the circulating A2B2 zymogen. It is released during activation, before A-subunit cross-linking; the accepted structural-molecule annotation does not assign A-subunit catalysis or a clearance mechanism to B.
+
+**F5.** Activated Va enhances Xa-mediated prothrombin activation. In a distinct state, FV-short and protein S support TFPIalpha inhibition of Xa, with TFPIalpha providing the direct inhibitory contact. Two accepted NEW annotations capture demonstrated cofactor work; five source-specific contexts remain undecided.
+
+F13B is COMPLETE with no validation advisories. F5 remains DRAFT with two
+supported non-core binding advisories and five UNDECIDED contexts.
+Original-access and assay limits remain visible in the gene reviews.
+
+The three Build and test jobs passed on each actual merge in
+[F13B run 40170451404](https://github.com/ai4curation/ai-gene-review/actions/runs/40170451404)
+and [F5 run 40172434424](https://github.com/ai4curation/ai-gene-review/actions/runs/40172434424).
+Accepted operative log reads cover the executed test, strict-target, schema,
+history and family checks. Global skipped snippets, unresolved family/gene
+claims and the nonfatal post-test SQL cleanup exception remain disclosed in
+the accepted evidence. Aggregate gates add no tests. This tracker proposal
+does not rerun gene validators or claim those global uncertainties are resolved.
+
+- [F13B accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/f877133cb49b46405f798e83357db16c226d4dc5/history/genes/human/F13B/2026-10-25T062816Z-codex-ced303.yaml)
+- [F5 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/98a7416f5cc6ca2e2f5a672527c936287f42b70e/history/genes/human/F5/2026-10-25T064922Z-codex-950746.yaml)
+
+Update 125 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 124 earlier updates and all preceding progress bytes.
+Only the F13B and F5 checkboxes change. Dated source inventories remain historical.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/7ada2e1aa38e8f4de29b777ab75db3757b455d36/history/projects/CLINGEN_MENDELIAN/2026-10-25T075339Z-codex-a15907.yaml).
+
+## Completion checkpoint 600 — 2026-10-25 09:12:43 UTC
+
+**600 complete; 2,276 remaining out of 2,876 primary catalogue genes.**
+Only F7 is added to [tracker 599, PR #5510](https://github.com/ai4curation/ai-gene-review/pull/5510).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F7 #5506](https://github.com/ai4curation/ai-gene-review/pull/5506) | [`6daec8360043`](https://github.com/ai4curation/ai-gene-review/commit/6daec8360043eb3efa11afd8caf4c8509492ec20) | [`305207f43d2d`](https://github.com/ai4curation/ai-gene-review/commit/305207f43d2d8c1add6219c550d1dc651ca1fdc4) | 76 | 56 / 1 | COMPLETE / 0 |
+
+The accepted F7 closure contains 61 files: its five-file gene directory,
+three curation histories and 53 external normal dependencies. Its 47 approved
+PR paths and 47 net merge paths, including the relevant source additions,
+match the accepted head, actual merge and fixed main `305207f43d2d8c1add6219c550d1dc651ca1fdc4`.
+Of those external dependencies, 39 were introduced by the F7 merge and 14
+were reused byte-for-byte from its parent; the queue distinguishes both sets.
+The queue records the exact paths and source hashes. This update changes no
+gene decision, product, quotation or source byte. F7 has no publication quotation
+anchors and receives no new annotations here.
+
+**F7.** Activated FVIIa cleaves factors IX and X in the tissue-factor-dependent extrinsic coagulation pathway. Tissue factor binding and calcium-supported membrane assembly support this same catalytic unit. This performed cleavage is distinct from activation of FVII itself. The two literal precursor products, A (466 residues) and B (444 residues), remain separate; their processing and functional equivalence are not assumed.
+
+F7 is COMPLETE with zero validation advisories while retaining 20 UNDECIDED
+source contexts. Its original-access, preparation and organism limits remain
+explicit in the gene review and source guide.
+
+All three Build and test jobs succeeded on the actual merge in
+[run 40177853365](https://github.com/ai4curation/ai-gene-review/actions/runs/40177853365).
+Accepted operative reads cover strict F7 validation, all-gene schema checks,
+704 module schemas, 16,546 histories and 42 history tests, and 718 family checks.
+The suite actually ran 12 examples, 4,293 tests, 278 doctests, mypy on 287 files,
+Ruff, 438 workflow tests and 19 JavaScript tests. The saved logs retain skipped
+tests and snippets, unresolved family/gene records, module advisories and a
+nonfatal SQL cleanup exception after successful tests. Aggregate gating adds
+no tests. This proposal neither reruns those validators nor resolves their
+unrelated scientific uncertainties.
+
+[F7 accepted curation history](https://github.com/ai4curation/ai-gene-review/blob/305207f43d2d8c1add6219c550d1dc651ca1fdc4/history/genes/human/F7/2026-10-25T082207Z-codex-e2532c.yaml).
+
+Update 126 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 125 earlier updates and all preceding progress bytes.
+Only the F7 checkbox changes. Dated source inventories remain historical.
+The campaign instructions now also identify authored source guides as evidence
+and locator records, distinct from generated provider deep-research outputs.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/7299f061c916cbf80c0e0ca11d6d6fe2942052fd/history/projects/CLINGEN_MENDELIAN/2026-10-25T092541Z-codex-cc9bbf.yaml).
+
+## Completion checkpoint 602 — 2026-10-25 10:35:39 UTC
+
+**602 complete; 2,274 remaining out of 2,876 primary catalogue genes.**
+Only F8 and F9 are added to [tracker 600, PR #5512](https://github.com/ai4curation/ai-gene-review/pull/5512).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head | Actual merge | Contexts | References / cores | Status / advisories |
+| --- | --- | --- | --- | --- | --- |
+| [F8 #5508](https://github.com/ai4curation/ai-gene-review/pull/5508) | [`54dd62a301f9`](https://github.com/ai4curation/ai-gene-review/commit/54dd62a301f9eab4558bed698c73c22feaa00114) | [`84279f79ce1c`](https://github.com/ai4curation/ai-gene-review/commit/84279f79ce1c3463c960ce8c16ebbded87682af3) | 53 | 51 / 1 | DRAFT / 3 |
+| [F9 #5509](https://github.com/ai4curation/ai-gene-review/pull/5509) | [`1fa8926a132a`](https://github.com/ai4curation/ai-gene-review/commit/1fa8926a132aad5b436c2693e0b917c049762ea7) | [`a2300ffcb10c`](https://github.com/ai4curation/ai-gene-review/commit/a2300ffcb10cba1966804d3cb56813eabb60ba59) | 64 | 46 / 1 | DRAFT / 1 |
+
+F8's accepted closure has 58 files: five gene files, four histories and 49
+external normal dependencies (21 introduced by its merge, 28 reused from its
+parent). F9's closure has 50 files: five gene files, three histories and 42
+external normal dependencies (21 introduced, 21 reused). These are 108 closure
+entries across the two genes, representing 101 unique paths, including 84
+unique external dependencies. The complete closures match approved heads,
+actual merges and fixed main `a2300ffcb10cba1966804d3cb56813eabb60ba59`. The preceding tracker600 closure of
+682 paths and its 209 project histories also remain unchanged at this cut.
+
+The F8 PR has 30 paths and 30 net merge changes. The F9 PR has 35 paths and
+29 net merge changes: six approved PR paths were already identical, including
+mode, on its actual merge parent. In the queue, `already_present_on_parent`
+names those no-op PR paths; it does not count all reused closure dependencies.
+Reuse of an uncited or cited dependency from a parent is not itself a PR no-op.
+The two PRs have 65 path entries (63 unique paths), while their net changes
+cover 59 unique paths. The queue records every path, hash and classification.
+
+**F8.** Activated FVIIIa is a nonenzymatic cofactor that enhances FIXa cleavage of factor X in intrinsic tenase on extracellular phospholipid surfaces. FIXa supplies the catalysis. VWF carrier binding and the separate unactivated-FVIII/ADAMTS13 assays remain distinguished; copper coordination is a supporting structural facet. The natural 216-residue F8B product remains distinct from activated FVIIIa and engineered B-domain deletions.
+
+**F9.** Activated FIXa performs the serine-endopeptidase step that converts factor X to Xa in intrinsic tenase; FVIIIa enhances that reaction as a cofactor. Calcium binding and membrane association support the same catalytic unit. The natural 461- and 423-residue precursor products remain separate from activation-generated light and heavy chains, without assuming equivalent secretion, processing or activity.
+
+F8 retains two UNDECIDED contexts and three supported generic-binding
+advisories; F9 retains one supported generic-binding advisory. Both remain
+DRAFT. Their accepted source and product limits remain explicit. The F8 review
+contains 52 imported contexts and one previously accepted NEW cofactor row;
+F9 contains 64 imported contexts and no NEW rows. This tracker update adds no
+annotation, gene edit or publication quotation. Both reviews have zero
+publication quotation anchors.
+
+For clarity about the unchanged preceding F7 checkpoint: A (466 residues)
+and B (444 residues) are natural splice isoforms, both represented as precursor
+products. They are not the proteolytic activation products of one another.
+Their processing and functional equivalence are not assumed. This clarification
+is appended here; the earlier F7 progress record remains byte-for-byte intact.
+
+All three Build and test jobs succeeded on each actual merge:
+[F8 run 40180125540](https://github.com/ai4curation/ai-gene-review/actions/runs/40180125540)
+and [F9 run 40183249079](https://github.com/ai4curation/ai-gene-review/actions/runs/40183249079).
+Accepted operative reads cover strict changed-gene validation and all-gene
+schema validation, which are distinct checks. Both suites actually ran 12
+examples, 4,293 tests (one skipped and 84 deselected), 278 doctests (37 skipped),
+mypy on 287 files, Ruff, 438 workflow tests and 19 JavaScript tests. Saved logs
+retain existing module advisories, unresolved family/gene cases and the
+nonfatal SQL cleanup exception after passing tests. Aggregate gating adds no
+tests. This proposal reuses those accepted reads; it runs no validators and
+claims no new original-source reading.
+
+[F8 final curation history](https://github.com/ai4curation/ai-gene-review/blob/a2300ffcb10cba1966804d3cb56813eabb60ba59/history/genes/human/F8/2026-10-25T090357Z-codex-450dd0.yaml) and
+[F9 final curation history](https://github.com/ai4curation/ai-gene-review/blob/a2300ffcb10cba1966804d3cb56813eabb60ba59/history/genes/human/F9/2026-10-25T090908Z-codex-c0c39d.yaml).
+
+Update 127 preserves all 2,876 catalogue identities and association text,
+235 queue objects, 126 earlier updates and all preceding progress bytes.
+Only the F8 and F9 checkboxes change. Existing source-guide instructions and
+dated source inventories remain exact.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/ca957c681d950c7354c241a2917ecefac033c5a7/history/projects/CLINGEN_MENDELIAN/2026-10-25T104648Z-codex-56a4d6.yaml).
+
+## Completion checkpoint 605 — 2026-10-25 12:14:40 UTC
+
+**605 complete; 2,271 remaining out of 2,876 primary catalogue genes.**
+Only FAM111A, FA2H and FAM111B are added to
+[tracker 602, PR #5515](https://github.com/ai4curation/ai-gene-review/pull/5515).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure / external (introduced + reused) | Contexts; refs / cores; status / advisories | Merge-group Build |
+| --- | --- | --- | --- | --- | --- |
+| [FAM111A #5513](https://github.com/ai4curation/ai-gene-review/pull/5513) | [`f8cce69f8514`](https://github.com/ai4curation/ai-gene-review/commit/f8cce69f851412b8e68d930dc0dd96a2b50a6146) → [`188ffae23080`](https://github.com/ai4curation/ai-gene-review/commit/188ffae230806a6c652be526ec3b9643d2b8cbad) | 10 / 10 | 16 / 9 (3 + 6) | 25; 8 / 2; DRAFT 2 | [40185677456](https://github.com/ai4curation/ai-gene-review/actions/runs/40185677456) |
+| [FA2H #5511](https://github.com/ai4curation/ai-gene-review/pull/5511) | [`b3f037d162d3`](https://github.com/ai4curation/ai-gene-review/commit/b3f037d162d325e6473f80240ea58507f3c4a224) → [`5570083290e2`](https://github.com/ai4curation/ai-gene-review/commit/5570083290e261b8ed759f1b5a23fe848aa30ac5) | 28 / 28 | 34 / 19 (13 + 6) | 60; 24 / 1; DRAFT 28 | [40186388342](https://github.com/ai4curation/ai-gene-review/actions/runs/40186388342) |
+| [FAM111B #5514](https://github.com/ai4curation/ai-gene-review/pull/5514) | [`40503049cf7c`](https://github.com/ai4curation/ai-gene-review/commit/40503049cf7c1fb314bbda536ed86d5c5a133d91) → [`30b2d8c689e0`](https://github.com/ai4curation/ai-gene-review/commit/30b2d8c689e0b0984bd9c707bb30a8ae0ade7349) | 10 / 9 | 19 / 12 (2 + 10) | 19; 10 / 1; DRAFT 7 | [40188806293](https://github.com/ai4curation/ai-gene-review/actions/runs/40188806293) |
+
+The three closures contain 69 entries across 61 unique paths, including
+40 external dependency entries across 32 unique paths. Complete gene directories,
+all seven gene histories and selected dependencies match the approved heads, actual
+merges and fixed main `30b2d8c689e0b0984bd9c707bb30a8ae0ade7349`. The preceding tracker602 closure of 761 paths and
+all 210 project histories also remain unchanged at this cut. The three PRs contain
+48 path entries and 47 net changes. FAM111B's `publications/PMID_32776417.md` was
+already identical, including mode, on its actual merge parent; that PR entry is a
+no-op. The queue separately records all dependency reuse from each merge parent.
+
+For precision about the unchanged preceding checkpoint, the shared F8/F9 PR paths
+`reactome/R-HSA-158278.md` and `reactome/R-HSA-9669959.md` are both F9
+`already_present_on_parent` entries. Both were byte- and mode-identical on F9's
+actual merge parent, so neither is an F9 net change. This term counts no-op PR
+entries, not every reused dependency in a gene's closure. This clarification is
+appended here; all earlier progress and queue records remain exact.
+
+**FAM111A.** FAM111A combines serine endopeptidase activity and single-stranded DNA binding in replication-associated nuclear work. Controlled autocleavage is directly measured; repair of TOP1–DNA complexes and fork progression do not establish TOP1 or PARP1 as purified cleavage substrates. Its context-dependent antiviral role remains distinct from direct cleavage of viral I3. No natural alternative-product field is asserted.
+
+**FA2H.** FA2H hydroxylates free fatty acids at carbon 2 in the ER membrane, supplying hydroxylated acyl precursors for sphingolipids. Rodent lipid and myelin experiments support downstream pathway participation; human disease evidence is complementary and is not a direct human myelin-maintenance assay. Direct hydroxylation of ceramide-bound acyl chains and activity of the natural 159-residue product remain unresolved.
+
+**FAM111B.** FAM111B is a predominantly nuclear serine endopeptidase with directly measured self-cleavage. Its physiological trans-substrates and the reactions connecting proteolysis to nuclear architecture and telomere phenotypes remain unresolved. Nuclear-peripheral localization does not establish lamin-complex membership. The natural 734- and 704-residue products are not assumed functionally equivalent.
+
+FAM111A, FA2H and FAM111B retain two, 28 and seven supported-binding advisories,
+respectively, and remain DRAFT. FA2H retains one UNDECIDED context; FAM111B retains
+three. FAM111B's 19 contexts comprise 18 imported annotations and one previously
+accepted NEW autoprocessing annotation. The other two genes contain only imported
+contexts. All three have zero publication quotation anchors. This tracker update
+adds no annotation, gene edit or publication quotation.
+
+All three Build jobs succeeded on each actual merge. Accepted ROOT operative
+reads distinguish strict changed-gene validation from all-gene schema validation.
+All three broad suites executed 12 examples, 4,293 tests (one skipped and 84
+deselected), 278 doctests (37 skipped), mypy on 287 files, Ruff, 438 workflow tests
+and 19 JavaScript tests. Their history checks covered 16,556, 16,559 and 16,562
+records, respectively, with 42 history tests each. Existing module advisories,
+unresolved family/gene cases and the nonfatal SQL cleanup exception after passing
+tests remain documented. Aggregate gating adds no tests. This proposal reuses
+the accepted operative reads; it runs no validators and claims no new original
+source reading.
+
+Update 128 preserves all 2,876 catalogue identities and association text, 235
+queue objects, 127 earlier updates and every preceding progress byte. Only the
+FAM111A, FA2H and FAM111B checkboxes change. Existing curation instructions and
+dated source inventories remain exact.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/92d8df6951df41b2e2c9df753581790ed42dd392/history/projects/CLINGEN_MENDELIAN/2026-10-25T122502Z-codex-da920e.yaml).
+
+## Completion checkpoint 608 — 2026-10-25 14:29:02 UTC
+
+**608 complete; 2,268 remaining out of 2,876 primary catalogue genes.**
+Only FAM149B1, FAM20C and FAN1 are added to [tracker 605, PR #5517](https://github.com/ai4curation/ai-gene-review/pull/5517).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure paths | Contexts; refs / cores | Merge-group Build |
+| --- | --- | --- | --- | --- | --- |
+| [FAM149B1 #5516](https://github.com/ai4curation/ai-gene-review/pull/5516) | [`bb4891f80b94`](https://github.com/ai4curation/ai-gene-review/commit/bb4891f80b94667fcab127e05fce8c16488551d5) → [`e66137d23a68`](https://github.com/ai4curation/ai-gene-review/commit/e66137d23a68b9fe9a87036d006fc8cdc634578b) | 14 / 14 | 14 | 6; 4 / 1 | [40196661463](https://github.com/ai4curation/ai-gene-review/actions/runs/40196661463) |
+| [FAM20C #5518](https://github.com/ai4curation/ai-gene-review/pull/5518) | [`6e6e5f210468`](https://github.com/ai4curation/ai-gene-review/commit/6e6e5f210468a71c09b55c4986f156d7fab24c6f) → [`fe796a54bcf2`](https://github.com/ai4curation/ai-gene-review/commit/fe796a54bcf2a8bc92c0c7471850ca8704cb72f2) | 11 / 11 | 24 | 62; 22 / 1 | [40199680527](https://github.com/ai4curation/ai-gene-review/actions/runs/40199680527) |
+| [FAN1 #5519](https://github.com/ai4curation/ai-gene-review/pull/5519) | [`a9d14408071f`](https://github.com/ai4curation/ai-gene-review/commit/a9d14408071f2b6a6566be5383291ac0b93ca19f) → [`6987a3bd0ad7`](https://github.com/ai4curation/ai-gene-review/commit/6987a3bd0ad703b71e385a800f02f05875107597) | 10 / 10 | 21 | 51; 16 / 2 | [40199887007](https://github.com/ai4curation/ai-gene-review/actions/runs/40199887007) |
+
+The 59 closure entries comprise 16 gene-directory files, eight gene histories and 35 external source entries.
+The approved revisions, actual merges and fixed main `6987a3bd0ad703b71e385a800f02f05875107597` match in paths,
+blob contents and modes across each complete gene/history tree and selected source
+dependency. All 35 PR paths contribute net changes; none is a parent-relative no-op.
+The queue records introduced sources separately from unchanged dependencies reused
+from each merge parent. The preceding checkpoint 605 content and all earlier progress
+remain intact. No gene annotation or publication quotation is changed by this update.
+
+FAM149B1 retains its source-bounded ciliary function assessment and one supported
+generic-binding advisory. FAM20C is a secretory-pathway serine/threonine kinase;
+its core keeps supported biomineral tissue breadth and distinguishes calcium binding
+from kinase activation. FAN1 combines structure-selective endonuclease and exonuclease
+activities in cross-link repair and repeat maintenance; its substrate and fork-response
+claims remain bounded to the measured experiments. FAM149B1 retains one UNDECIDED
+context, FAM20C two and FAN1 four. The reviews remain DRAFT with one, 19 and 13 advisories, respectively;
+accepted completion does not erase those limitations.
+
+All three Build jobs passed on each actual merge. The exact merge SHAs equal the
+inspected merge-group SHAs, permitting reuse of those actual operative log reads.
+Strict changed-gene validation and all-gene schema validation both ran. Each broad
+suite executed 12 examples, 4,293 tests (one skipped, 84 deselected), 278 doctests
+(37 skipped), mypy on 287 files, Ruff, 438 workflow tests and 19 JavaScript tests.
+History validation covered 16,568, 16,570 and 16,572 records, with 42 history tests
+each. Existing module advisories, unresolved family/gene cases and the nonfatal SQL
+cleanup exception after passing tests remain explicit. Aggregate gating adds no tests.
+
+Update 129 preserves all 2,876 catalogue identities and association text, 235 queue
+objects, 128 earlier updates and every preceding progress byte. Only the three
+completed genes' checkboxes change. Dated availability inventories are unchanged.
+
+The append-only history was scaffolded and validated through the normal repository commands; both project pages were regenerated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/30aeb87d98dc102002b93c9545be10d8fd887e3d/history/projects/CLINGEN_MENDELIAN/2026-10-25T143018Z-codex-806f1f.yaml).
+
+## Completion checkpoint 610 — 2026-10-25 17:19:58 UTC
+
+**610 complete; 2,266 remaining out of 2,876 primary catalogue genes.**
+Only FANCA, FANCB are added to [tracker 608, PR #5522](https://github.com/ai4curation/ai-gene-review/pull/5522).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure paths | Contexts; refs / cores | Merge-group Build |
+| --- | --- | --- | --- | --- | --- |
+| [FANCA #5521](https://github.com/ai4curation/ai-gene-review/pull/5521) | [`6d8229275c4b`](https://github.com/ai4curation/ai-gene-review/commit/6d8229275c4b1aab4cb625099b27bd9624d2890b) → [`2de34762844b`](https://github.com/ai4curation/ai-gene-review/commit/2de34762844bd64065447f0fbd76f44361ddc7d1) | 8 / 8 | 53 | 52; 42 / 2 | [40207731845](https://github.com/ai4curation/ai-gene-review/actions/runs/40207731845) |
+| [FANCB #5523](https://github.com/ai4curation/ai-gene-review/pull/5523) | [`0ef38f207cf5`](https://github.com/ai4curation/ai-gene-review/commit/0ef38f207cf5afce6ad83da75fa17dcbd8a8b77e) → [`571674a8fdce`](https://github.com/ai4curation/ai-gene-review/commit/571674a8fdcef44aa071005ab30c36f786808ea0) | 6 / 6 | 36 | 23; 27 / 1 | [40209792239](https://github.com/ai4curation/ai-gene-review/actions/runs/40209792239) |
+
+The complete gene/history trees and selected source dependencies match the approved
+heads, actual merges and fixed main `571674a8fdcef44aa071005ab30c36f786808ea0` in contents and modes.
+The queue retains the complete path/blob evidence and distinguishes introduced
+sources from dependencies reused unchanged from each merge parent. All three Build
+jobs passed on each actual merge; the recorded operative reads retain the limits,
+skips, advisories and unresolved cases of those runs. No post-merge deployment is
+claimed. The biological reviews remain DRAFT, and their unresolved assessments
+remain intact. This update changes no gene annotation or publication quotation.
+
+All 235 queue objects, 129 earlier completion updates, catalogue identities, association
+text and preceding progress bytes remain preserved. Only the listed genes'
+checkboxes change; pending reviews remain unchecked. Dated source inventories are
+unchanged. The project pages are regenerated and the session history is validated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/96b68184c7909b10e250e3dfec5be0e19f8e0fe3/history/projects/CLINGEN_MENDELIAN/2026-10-25T172107Z-codex-b7a974.yaml).
+
+## Completion checkpoint 613 — 2026-10-25 18:05:07 UTC
+
+**613 complete; 2,263 remaining out of 2,876 primary catalogue genes.**
+Only FANCC, FANCD2 and FANCE are added to [tracker 610, PR #5530](https://github.com/ai4curation/ai-gene-review/pull/5530).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure: gene+history / dependencies | Contexts; refs / cores | DRAFT warnings / active UNDECIDED | Merge-group Build |
+| --- | --- | --- | --- | --- | --- | --- |
+| [FANCC #5526](https://github.com/ai4curation/ai-gene-review/pull/5526) | [`ddd5b943ebcb`](https://github.com/ai4curation/ai-gene-review/commit/ddd5b943ebcb3a8624d14a2265b1c19654608176) → [`c61100c42961`](https://github.com/ai4curation/ai-gene-review/commit/c61100c42961a8aed0bb34ae4bd498cfeffadc71) | 11 / 11 | 11 / 39 (50 total) | 40; 40 / 1 | 4 / 5 | [40215803538](https://github.com/ai4curation/ai-gene-review/actions/runs/40215803538) |
+| [FANCD2 #5529](https://github.com/ai4curation/ai-gene-review/pull/5529) | [`2a2d408bcc59`](https://github.com/ai4curation/ai-gene-review/commit/2a2d408bcc59df47bbc8043191cb65353f3b20b9) → [`85f750e7c513`](https://github.com/ai4curation/ai-gene-review/commit/85f750e7c5139b1b8d7e30088f771e32661ad4c0) | 14 / 14 | 8 / 43 (51 total) | 51; 50 / 1 | 6 / 1 | [40217084225](https://github.com/ai4curation/ai-gene-review/actions/runs/40217084225) |
+| [FANCE #5528](https://github.com/ai4curation/ai-gene-review/pull/5528) | [`96be4d204154`](https://github.com/ai4curation/ai-gene-review/commit/96be4d204154342804fedd110416a221009a1352) → [`6b6a7f038abc`](https://github.com/ai4curation/ai-gene-review/commit/6b6a7f038abcab899f4e2ec67bbc44579776168d) | 7 / 7 | 9 / 29 (38 total) | 27; 31 / 1 | 3 / 0 | [40217424810](https://github.com/ai4curation/ai-gene-review/actions/runs/40217424810) |
+
+The complete gene/history trees and selected source dependencies match the approved
+heads, actual merges and fixed main `4589b35c1162dd5956356ff482dfdfaf7a044639` in contents and modes.
+The queue retains the complete path/blob evidence and distinguishes introduced
+sources from dependencies reused unchanged from each merge parent. The validation, suite and aggregate test jobs passed on each actual merge; the recorded operative reads retain the limits,
+skips, advisories and unresolved cases of those runs. No post-merge deployment is
+claimed. The biological reviews remain DRAFT, and their unresolved assessments
+remain intact. This update changes no gene annotation or publication quotation.
+
+All 235 queue objects, 130 earlier completion updates, catalogue identities, association
+text and preceding progress bytes remain preserved. Only the listed genes'
+checkboxes change; pending reviews remain unchecked. Dated source inventories are
+unchanged. The project pages are regenerated and the session history is validated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/95d2eb9ce19350184086101fdde78948271ebd48/history/projects/CLINGEN_MENDELIAN/2026-10-25T180611Z-codex-f8a28c.yaml).
+
+
+## Completion checkpoint 614 — 2026-10-26 01:50:51 UTC
+
+**614 complete; 2,262 remaining out of 2,876 primary catalogue genes.**
+Only FANCF is added to [tracker 613, PR #5533](https://github.com/ai4curation/ai-gene-review/pull/5533).
+Acceptance is by the coordinating AI agent, not a human maintainer sign-off.
+
+| Gene / PR | Approved head → actual merge | PR / net paths | Closure: gene+history / dependencies | Contexts; refs / cores | DRAFT warnings / active UNDECIDED | Merge-group Build |
+| --- | --- | --- | --- | --- | --- | --- |
+| [FANCF #5531](https://github.com/ai4curation/ai-gene-review/pull/5531) | [`4d6d2dd1b2c5`](https://github.com/ai4curation/ai-gene-review/commit/4d6d2dd1b2c574604d42cc394a6dd458cd136c8a) → [`23a88e84c365`](https://github.com/ai4curation/ai-gene-review/commit/23a88e84c365ef68e497809408a53284cf51df63) | 8 / 8 | 11 / 24 (35 total) | 27; 26 / 1 | 3 / 0 | [40220975572](https://github.com/ai4curation/ai-gene-review/actions/runs/40220975572) |
+
+The complete gene/history tree and selected source dependencies match the approved
+head, actual merge and fixed main `dd6e9ba2bd94ac4f513cb106bca7c984339f1985` in contents and modes.
+The queue retains all 35 path/blob/hash records; all 24 external source dependencies
+were reused unchanged from the merge parent. The validation, suite and aggregate
+test jobs passed on the actual merge; the coordinating agent's accepted operative
+reads retain the limits, skips, advisories and unresolved cases of that run.
+No post-merge deployment is claimed. The biological review remains DRAFT with three
+validation advisories. This update changes no gene annotation or publication quotation.
+
+All 235 queue objects, 131 earlier completion updates, catalogue identities,
+association text and preceding progress bytes remain preserved. Only FANCF's
+checkbox changes; pending reviews, including FANCG and FANCI, remain unchecked.
+Dated source inventories are unchanged. Both project pages are regenerated and the append-only session history is validated.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/481e17fe3f806a6e81060088f4876f78f7707b25/history/projects/CLINGEN_MENDELIAN/2026-10-26T015740Z-codex-050413.yaml).
+
+
+## Completion checkpoint 617 — 2026-10-26 03:52:08 UTC
+
+**617 complete; 2,259 remaining out of 2,876 catalogue genes.**
+This update adds FANCI, FANCG and FANCL to [tracker 614](https://github.com/ai4curation/ai-gene-review/pull/5551).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FANCI #5548](https://github.com/ai4curation/ai-gene-review/pull/5548) | 32 / 32 | DRAFT; 1 UNDECIDED; 4 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/6589ea9b3bc5b1737159b68f5a93e9cee7e398b5) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40262903072) |
+| [FANCG #5549](https://github.com/ai4curation/ai-gene-review/pull/5549) | 74 / 76 | DRAFT; 1 UNDECIDED; 27 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/acf7dc38e29a0f44983c013ee1685572b14b0431) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40263364785) |
+| [FANCL #5553](https://github.com/ai4curation/ai-gene-review/pull/5553) | 92 / 92 | DRAFT; 3 UNDECIDED; 46 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/bc4ace036adfab796710286e16b97ce7961edfc7) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40263994695) |
+
+The approved gene files, complete histories and source dependencies match their
+actual merges and the recorded main snapshot. Merge-group validation and tests
+passed; the coordinating AI agent accepted the operative results. The reviews
+retain their documented biological uncertainty and DRAFT status.
+
+Earlier progress, catalogue associations, queue records and dated source inventories
+remain preserved. Acceptance records the campaign review and is not a human
+maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/2a73e6825753cb82b5f1894b16b59c54c76ea282/history/projects/CLINGEN_MENDELIAN/2026-10-26T040115Z-codex-3109f2.yaml).
+
+
+## Completion checkpoint 619 — 2026-10-26 08:38:26 UTC
+
+**619 complete; 2,257 remaining out of 2,876 catalogue genes.**
+This update adds FANCM and FARS2 to [tracker 617](https://github.com/ai4curation/ai-gene-review/pull/5557).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FANCM #5556](https://github.com/ai4curation/ai-gene-review/pull/5556) | 53 / 55 | DRAFT; 1 active UNDECIDED; 9 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/e7588011a84ed7fd928d4ff991ac5b8041e2abe0) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40285395762) |
+| [FARS2 #5559](https://github.com/ai4curation/ai-gene-review/pull/5559) | 107 / 107 | DRAFT; 0 active UNDECIDED; 81 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/10fd59941fcea227d9d157251e61a9b54f039aed) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40286078084) |
+
+Active counts exclude retired records retained for provenance. FANCM has one active
+UNDECIDED among 53 active annotations; its 55 stored records include two UNDECIDED.
+FANCG was already credited at checkpoint 617: its current review has 74 active
+annotations and one active UNDECIDED, versus 76 stored records and two stored
+UNDECIDED. This clarification adds no completion and changes no gene review.
+
+The accepted gene files, complete histories and source dependencies match their
+actual merges and the recorded main snapshot. The coordinating AI agent accepted the actual merge-group
+validation, full suite and gate results. The reviews retain DRAFT status and their
+documented biological uncertainty.
+
+All prior progress, catalogue associations, dated queue objects and source inventories
+remain preserved. Acceptance records the coordinating AI agent’s campaign audit;
+it is not a human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/5bfff3399773d6395d82f8a2a353659cb4a76d82/history/projects/CLINGEN_MENDELIAN/2026-10-26T085031Z-codex-49663f.yaml).
+
+
+## Completion checkpoint 622 — 2026-10-26 11:57:37 UTC
+
+**622 complete; 2,254 remaining out of 2,876 catalogue genes.**
+This update adds FAT4, FAS and FASTKD2 to [tracker 619](https://github.com/ai4curation/ai-gene-review/pull/5575).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FAT4 #5573](https://github.com/ai4curation/ai-gene-review/pull/5573) | 21 / 21 | DRAFT; 1 active UNDECIDED; 1 binding advisory | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/ab132cafb81e79e66834afaf84f0206ff5f9e81c) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40311447908) |
+| [FAS #5567](https://github.com/ai4curation/ai-gene-review/pull/5567) | 111 / 117 | DRAFT; 6 active UNDECIDED; 37 binding advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/86be5a1126d5f0ce5ca081f7373afda0ed201fdc) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40311810521) |
+| [FASTKD2 #5570](https://github.com/ai4curation/ai-gene-review/pull/5570) | 31 / 31 | DRAFT; 1 active UNDECIDED; 4 binding advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/6fb9e79b44d53f248675021c9a25f2183a9ec757) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40313083066) |
+
+FAT4 retains 20 inherited source contexts and one proposed molecular-function
+annotation. FAS retains all 117 stored contexts, including six retired historical
+contexts; its active projection is 111. FASTKD2 retains all 31 source contexts.
+The reviews retain three, seven and two natural product objects respectively.
+DRAFT status and source-specific uncertainty remain explicit; completion records
+accepted campaign reviews rather than certainty in every biological claim.
+
+Their accepted source closures contain 30, 94 and 32 paths respectively
+(156 distinct paths in the union), including all 9, 21 and 11 gene/history
+paths. These objects match each actual merge and the captured main snapshot.
+The coordinating AI agent accepted the complete actual merge-group validation,
+suite and gate logs. This tracker proposal reuses those acceptances and does not
+claim another complete log reading.
+
+All 235 dated queue objects, 134 preceding completion updates, catalogue associations,
+source inventories and earlier progress remain preserved. Only FAT4, FAS and FASTKD2
+receive new completion credit. Acceptance is the coordinating AI agent's campaign
+audit, not a human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/3dc698edd025552a6d03ce4755b1f62f199a2344/history/projects/CLINGEN_MENDELIAN/2026-10-26T120127Z-codex-1d0155.yaml).
+
+
+## Completion checkpoint 624 — 2026-10-26 17:13:06 UTC
+
+**624 complete; 2,252 remaining out of 2,876 catalogue genes.**
+This update adds the original FBN1 review and FBN2 directly to
+[tracker 622](https://github.com/ai4curation/ai-gene-review/pull/5580).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FBN1 #5577](https://github.com/ai4curation/ai-gene-review/pull/5577) | 154 / 154 | DRAFT; 18 active UNDECIDED; 34 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/24979f933650dd98fe17d1c1e6895eeaf75a6bb4) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40318839090) |
+| [FBN2 #5583](https://github.com/ai4curation/ai-gene-review/pull/5583) | 60 / 60 | DRAFT; 1 active UNDECIDED; 9 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/157216709d671e757496912521bcf35788f72bbe) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40360845547) |
+
+The original FBN1 review retains all 154 source contexts, 81 references, two
+cleavage-product objects and five core functions. It has no splice-product
+objects or quotations. It remains DRAFT with 18 UNDECIDED decisions; its other
+actions are 59 ACCEPT, 46 KEEP_AS_NON_CORE, 14 MARK_AS_OVER_ANNOTATED, 11 MODIFY
+and six TOO_GENERAL. Its 34 merge-validation advisories comprise 28 conditional
+generic-binding and six source/product/claim consistency advisories.
+
+FBN2 retains all 60 source contexts, 32 references, two splice products and two
+curated cleavage products, three core functions and no quotations. It remains
+DRAFT with 22 ACCEPT, 29 KEEP_AS_NON_CORE, seven MODIFY, one TOO_GENERAL and one
+UNDECIDED decision. Its nine merge-validation advisories comprise eight permitted
+generic-binding cases and one source-specific extracellular-matrix consistency
+warning. Completion records accepted campaign reviews rather than certainty in
+every biological claim.
+
+The accepted FBN1 and FBN2 source closures contain 93 and 43 paths, including
+all 16 and 15 gene/history paths respectively. Their union has 112 distinct
+paths; each matches its actual merge and the captured main snapshot. The
+coordinating AI agent accepted all three operative merge-group logs for each
+review. This tracker proposal reuses those acceptances without claiming another
+independent full log reading.
+
+All 235 dated queue objects, 135 preceding completion updates, catalogue associations,
+source inventories and earlier progress remain preserved. FBN1 and FBN2 are the
+only newly credited distinct genes. FBN1 follow-up PR #5589 receives no additional
+completion credit. Acceptance is the coordinating AI agent's campaign audit, not
+a human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/64fc149d18202985f07aae37539ebd31a3f1f687/history/projects/CLINGEN_MENDELIAN/2026-10-26T172026Z-codex-2fa578.yaml).
+
+
+## Completion checkpoint 627 — 2026-10-26 19:04:30 UTC
+
+**627 complete; 2,249 remaining out of 2,876 catalogue genes.**
+This update adds FBXL4, FCHO1 and FDXR to the accepted [public checkpoint 624](https://github.com/ai4curation/ai-gene-review/pull/5592).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FBXL4 #5585](https://github.com/ai4curation/ai-gene-review/pull/5585) | 29 / 29 | DRAFT; 1 active UNDECIDED; 1 advisory | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/33ee3d1fdf9c1c5e830b9dc43345f615d0720e9e) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40363563232) |
+| [FCHO1 #5587](https://github.com/ai4curation/ai-gene-review/pull/5587) | 38 / 38 | DRAFT; 1 active UNDECIDED; 4 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/0a5c0cea3dd1c37cf29f4cd44aeb2d6f5fb50c4d) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40365669149) |
+| [FDXR #5590](https://github.com/ai4curation/ai-gene-review/pull/5590) | 27 / 27 | COMPLETE; 0 active UNDECIDED; 0 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/4cf9a117a288c6b355fff873b6ca3d51659f0026) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40376969928) |
+
+FBXL4 retains 29 source contexts, 29 references, one core function and all 60
+inherited quotation associations (54 annotation and six core). No product objects
+were added. Its DRAFT actions are eight ACCEPT, five TOO_GENERAL, four MODIFY,
+ten MARK_AS_OVER_ANNOTATED, one KEEP_AS_NON_CORE and one UNDECIDED. One inherited
+provider-citation advisory remains; the historical submitochondrial localization
+conflict remains explicit.
+
+FCHO1 contains 37 imported source contexts and one separately proposed NEW
+annotation, 25 references, three natural splice products, one core and no
+quotations. Its DRAFT actions are 24 ACCEPT, eight KEEP_AS_NON_CORE, three MODIFY,
+one TOO_GENERAL, one UNDECIDED and one NEW. Four permitted generic-binding
+advisories and the source-specific uncertainty remain explicit. Completion does
+not mean all biological uncertainty is resolved.
+
+FDXR retains 27 source contexts, 23 references, seven natural splice products,
+one activity-centered core and no quotations. Its computed status is COMPLETE,
+with 25 ACCEPT, one KEEP_AS_NON_CORE and one TOO_GENERAL decision, and zero target
+validation advisories. The splice-product identities and context-specific
+localization distinctions remain part of the accepted review.
+
+The accepted source closures contain 55 FBXL4, 48 FCHO1 and 47 FDXR paths, including
+all 22, 18 and 16 gene/history paths respectively. Their union contains
+144 distinct paths, with no conflicting shared bytes or modes. Each
+matches the actual merge and the captured main snapshot. ROOT accepted all three
+operative merge-group logs for each review; this tracker proposal reuses those
+acceptances without claiming another independent full-log reading.
+
+[FBN1 follow-up #5589](https://github.com/ai4curation/ai-gene-review/pull/5589)
+merged as [fcc63846](https://github.com/ai4curation/ai-gene-review/commit/fcc638463778de3f75470a294d11261871cf67b9).
+It receives **no additional gene credit**. Its six accepted file successors and
+three appended history records are preserved in the actual public624 baseline;
+earlier expected hashes and the reconciliation record remain unchanged.
+
+For clarity, FBN2's two natural splice products **P35556-1 and P35556-2** are in
+`alternative_products` in [FBN2-ai-review.yaml](https://github.com/ai4curation/ai-gene-review/blob/157216709d671e757496912521bcf35788f72bbe/genes/human/FBN2/FBN2-ai-review.yaml).
+[Product evidence](https://github.com/ai4curation/ai-gene-review/blob/157216709d671e757496912521bcf35788f72bbe/genes/human/FBN2/FBN2-product-evidence.yaml) records the
+sequence/provenance detail. Those splice products are separate from the two
+curated cleavage products. This is an appended clarification, not another completion.
+
+All 235 dated queue objects, 136 preceding completion updates, 220 project
+histories, catalogue identities/associations, source inventories and earlier
+progress remain exact. Only FBXL4, FCHO1 and FDXR are newly credited. The unpublished tracker626 draft
+is preserved separately; this update goes directly from public checkpoint 624 to 627.
+Acceptance denotes the coordinating AI agent's campaign audit, not a human
+maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/cc4fe8238b1cc52ff0c2fbfdf05027582d4fd7b0/history/projects/CLINGEN_MENDELIAN/2026-10-26T192506Z-codex-b29a42.yaml).
+
+
+## Completion checkpoint 630 — 2026-10-26 22:45:32 UTC
+
+**630 complete; 2,246 remaining out of 2,876 catalogue genes.**
+This update adds FERMT1, FERMT3 and FGA to [public checkpoint 627](https://github.com/ai4curation/ai-gene-review/pull/5597).
+
+| Review | Active / stored annotations | Review limits | Merge and validation |
+| --- | --- | --- | --- |
+| [FERMT1 #5594](https://github.com/ai4curation/ai-gene-review/pull/5594) | 31 / 31 | COMPLETE; 2 UNDECIDED; 0 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/839a6c90c30218dadfa2da81c24d5cc576607823) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40382715052) |
+| [FERMT3 #5596](https://github.com/ai4curation/ai-gene-review/pull/5596) | 31 / 31 | COMPLETE; 3 UNDECIDED; 0 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/3441a741e394eba9ff39250c4054b7dfe8f61d96) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40393461687) |
+| [FGA #5598](https://github.com/ai4curation/ai-gene-review/pull/5598) | 131 / 131 | DRAFT; 10 UNDECIDED; 7 advisories | [Accepted merge](https://github.com/ai4curation/ai-gene-review/commit/3f5a8f71b969e4c2f1fa36defd651056c5532196) · [Checks](https://github.com/ai4curation/ai-gene-review/actions/runs/40408743501) |
+
+FERMT1 retains 31 source contexts, 13 references, four natural splice products,
+one integrin-binding core and no quotations. Its computed status is COMPLETE,
+with nine ACCEPT, 16 KEEP_AS_NON_CORE, three MODIFY, one TOO_GENERAL and two
+UNDECIDED decisions. The nuclear-import and actin-binding questions remain
+source-specific uncertainties; zero target validation advisories do not resolve them.
+
+FERMT3 retains 31 source contexts, 20 references, two natural splice products,
+one core and no quotations. Its computed status is COMPLETE, with ten ACCEPT,
+16 KEEP_AS_NON_CORE, two MODIFY and three UNDECIDED decisions. Two functional
+splice-product records map to those same two natural products, rather than adding
+two more products. Platelet-granule and exosome source uncertainties remain explicit.
+No target validation advisories remain.
+
+FGA retains 131 source contexts, 90 references, two natural splice products and
+two distinct cleavage-product records, with 2 cores and no quotations.
+Its computed status is DRAFT, with 76 ACCEPT, 36 KEEP_AS_NON_CORE, three MODIFY,
+six TOO_GENERAL and ten UNDECIDED decisions. Seven previously adjudicated target
+advisories remain. The source map preserves processed-product contexts omitted
+from the seed; free fibrinopeptide A is not assigned the mature fibrin chain's
+functions. Completion records an accepted evidence review, not resolution of every
+source-specific uncertainty.
+
+The accepted source closures contain 37 FERMT1, 44 FERMT3 and 105 FGA paths,
+including 16, 15 and 18 complete gene/history paths respectively. Their union
+contains 175 distinct paths, all matching the actual merges and this
+captured main snapshot. FERMT3's 29 published payload paths yield 27 actual merge
+deltas because two shared sources were already byte-identical in the parent;
+those two files remain in its full closure. ROOT accepted all three operative
+merge-group jobs for each review. This proposal reuses those acceptances and
+makes no independent full-log or global zero-warning claim.
+
+All 235 dated queue objects, 137 preceding completion updates, 221 project
+histories, catalogue identities, source inventories and earlier progress remain
+unchanged. Only these three distinct genes are newly credited, taking the public
+checkpoint directly from 627 to 630. No further review or private proposal receives
+credit. Acceptance denotes the coordinating AI agent's campaign audit, not a human
+maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T020454Z-codex-48c864.yaml).
+
+## Completion checkpoint 631 — 2026-10-27 01:52:57 UTC
+
+**631 complete; 2,245 remaining out of 2,876 catalogue genes.**
+The preceding checkpoint records FERMT1, FERMT3 and FGA; this adds only
+[FGD1 #5600](https://github.com/ai4curation/ai-gene-review/pull/5600), merged at
+2026-10-27 01:40:27 UTC as
+[51dbf45991](https://github.com/ai4curation/ai-gene-review/commit/51dbf459911e2231686d5781076f67c27f27b3bf).
+Together these four accepted merges reconcile the public count from 627 to 631.
+
+FGD1 preserves 34 imported annotation contexts and 15 references, with one core
+function. Its computed status is COMPLETE: 11 ACCEPT, 14 KEEP_AS_NON_CORE, six
+TOO_GENERAL, two MODIFY and one UNDECIDED. Completion does not resolve that
+source-specific uncertainty. All 27 source-closure objects matched the accepted
+commit, including the complete 17-file gene/history namespace and 23-file merge
+delta.
+
+[Merge-group validation and tests](https://github.com/ai4curation/ai-gene-review/actions/runs/40432149151)
+passed. The suite actually executed: 4,400 pytest tests, 282 doctests, 444 agent
+tests and 19 JavaScript tests passed. Changed-gene validation, all-gene schema
+checks and 17,990 history records passed. This records the accepted actual merge
+and its checks, not a new independent full-log audit or a site-deployment claim.
+
+All earlier progress, 138 preceding completion updates, 235 dated queue objects,
+catalogue identities and availability inventories are preserved. Pending PRs and
+private work receive no completion credit.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T020454Z-codex-48c864.yaml).
+
+## Completion checkpoint 637 — 2026-10-27 03:13:47 UTC
+
+**637 complete; 2,239 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds six distinct genes to the accepted public checkpoint 631. Each has an accepted actual merge and successful merge-group validation and tests.
+
+| Gene / accepted PR | Actual merge | Merge-group run | Stored / active rows | References | Splice / functional products | Core / inherited quotations | Status / UNDECIDED |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [DNM1 #5165](https://github.com/ai4curation/ai-gene-review/pull/5165) | [003959e40f](https://github.com/ai4curation/ai-gene-review/commit/003959e40f22f231933769882e1305f52a9c4977) | [40435442289](https://github.com/ai4curation/ai-gene-review/actions/runs/40435442289) | 79 / 79 | 53 | 4 / 0 | 1 / 6 | DRAFT / 2 |
+| [EIF2B1 #5263](https://github.com/ai4curation/ai-gene-review/pull/5263) | [55e14dbbbd](https://github.com/ai4curation/ai-gene-review/commit/55e14dbbbd569d25b17c8d5a75f581c3936f0e0d) | [40435444970](https://github.com/ai4curation/ai-gene-review/actions/runs/40435444970) | 53 / 53 | 36 | 2 / 0 | 1 / 0 | DRAFT / 3 |
+| [FGB #5602](https://github.com/ai4curation/ai-gene-review/pull/5602) | [c007674672](https://github.com/ai4curation/ai-gene-review/commit/c007674672eb2d86f8b38173034a5f3b6c358762) | [40437006493](https://github.com/ai4curation/ai-gene-review/actions/runs/40437006493) | 113 / 113 | 82 | 0 / 2 | 1 / 0 | DRAFT / 14 |
+| [EIF2B5 #5302](https://github.com/ai4curation/ai-gene-review/pull/5302) | [53b5f5de89](https://github.com/ai4curation/ai-gene-review/commit/53b5f5de8957e55b2c5554aa9ee8df081b941f61) | [40438681445](https://github.com/ai4curation/ai-gene-review/actions/runs/40438681445) | 58 / 58 | 46 | 0 / 0 | 1 / 0 | DRAFT / 3 |
+| [FGD4 #5604](https://github.com/ai4curation/ai-gene-review/pull/5604) | [58dd1e3474](https://github.com/ai4curation/ai-gene-review/commit/58dd1e3474af3b21afef119dbf4a8efc7b34c61d) | [40439675014](https://github.com/ai4curation/ai-gene-review/actions/runs/40439675014) | 25 / 25 | 18 | 3 / 0 | 1 / 0 | DRAFT / 3 |
+| [EIF2AK4 #5259](https://github.com/ai4curation/ai-gene-review/pull/5259) | [35e316d166](https://github.com/ai4curation/ai-gene-review/commit/35e316d166e1d1d05fae437df66d397628ab01e1) | [40440792703](https://github.com/ai4curation/ai-gene-review/actions/runs/40440792703) | 52 / 52 | 24 | 3 / 0 | 2 / 0 | COMPLETE / 2 |
+
+Five reviews remain DRAFT; EIF2AK4 is COMPLETE. Completion records accepted merged reviews, not resolution of every annotation. DNM1 retains two source-specific uncertainties; EIF2B1 retains three and its source-defect assessments. FGB retains 14 unresolved contexts, including beta-chain attribution and inaccessible target identifications; its two functional records describe cleavage products, not splice isoforms. EIF2B5 retains three uncertainties and a PROBABLE/CHECK ovarian-source query, without asserting a corrected citation. FGD4 retains three source-specific uncertainties. EIF2AK4 retains two unresolved contexts, cold response and transfer of fungal checkpoint participation to human, despite its computed COMPLETE status. The six inherited DNM1 quotations remain unchanged; no new publication quotations are added.
+
+Actual merge-group suites executed for all six merges: each passed 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests. ROOT accepted the full operative logs, including the nonfatal ignored SQLAlchemy destructor diagnostic; this tracker reuses that acceptance and makes no global zero-warning or independent full-log-audit claim.
+
+The accepted PR payloads contain 41, 16, 23, 35, 17 and 30 paths respectively. Their complete gene/history namespaces contain 17, 13, 17, 17, 14 and 18 paths. DNM1 has three and EIF2B5 five parent-byte-identical source no-ops, yielding actual deltas of 38 and 30 paths; the other deltas equal their payload counts. The new machine-readable completion entry records exact Git blobs, modes and SHA-256 values for these accepted payloads. This is not a new audit of all normal source dependencies.
+
+All 235 dated queue objects, 139 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only these six accepted merges receive credit; pending work remains unchecked. Acceptance is the coordinating AI agent’s campaign audit, not human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T030530Z-codex-435862.yaml).
+
+## Completion checkpoint 638 — 2026-10-27 04:24:18 UTC
+
+**638 complete; 2,238 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FGF12 after verification of its actual merge from [PR #5606](https://github.com/ai4curation/ai-gene-review/pull/5606).
+
+The [merged review](https://github.com/ai4curation/ai-gene-review/commit/e29871c6ac3eb80bcb45ea353565cdb5c59e85d2) remains DRAFT, with 49 stored/active annotation contexts, 19 references, two natural splice products, no functional-product records, one core function and no quotations.
+
+FGF12 retains 7 ACCEPT, 25 KEEP_AS_NON_CORE, 1 MODIFY, 3 MARK_AS_OVER_ANNOTATED and 13 UNDECIDED decisions. Its two natural splice products, 15 isoform-bearing contexts and two historical NOT contexts remain distinct; no NEW annotation or publication quotation is added. The core describes sodium-channel regulation. Unresolved contexts preserve inaccessible-source limits, construct- and assay-dependent receptor/release findings, and uncertainty about productive ribosome-biogenesis participation. PAINT loss judgments are retained without counting their unidentified underlying publications as independent experiments. Completion does not resolve every annotation or change its DRAFT status.
+
+The actual [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/40446970705) passed validation, suite and aggregate checks. The suite executed 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests successfully. Changed-gene validation, all-gene schema checks and 18,009 history records passed. The accepted log review retained the nonfatal ignored SQLAlchemy destructor diagnostic; this records that verification without a global zero-warning or site-deployment claim.
+
+All 28 accepted payload files match the actual merge, including the complete 19-file FGF12 gene/history namespace and its two history records. The parent comparison also contains 28 changed paths; no accepted payload files were already identical in the parent commit. Exact Git blobs, modes and SHA-256 values are recorded in the completion entry. This is not a new audit of all normal source dependencies.
+
+All 235 dated queue objects, 140 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FGF12 receives additional credit. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T042242Z-codex-0640ee.yaml).
+
+## Completion checkpoint 640 — 2026-10-27 09:14:21 UTC
+
+**640 complete; 2,236 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FGF3 from [PR #5610](https://github.com/ai4curation/ai-gene-review/pull/5610) and FGF9 from [PR #5611](https://github.com/ai4curation/ai-gene-review/pull/5611) after verification of their actual merges.
+
+The [FGF3 merge](https://github.com/ai4curation/ai-gene-review/commit/892815b342735616a8dc0d575a68dbbcf7f70a08) retains 99 stored/active annotation contexts, 86 references, no natural or functional product records, one core function and no quotations. Its computed status remains DRAFT, with six UNDECIDED contexts. Its actual [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/40472936749) supplies the CI evidence below.
+
+The [FGF9 merge](https://github.com/ai4curation/ai-gene-review/commit/cf504822937f42a617651d50dd8945bbfa4e334e) retains 179 stored/active contexts, 180 references, no natural or functional product records, one core function and no quotations. Its computed status is COMPLETE, with two explicitly UNDECIDED contexts. Its actual [merge-group run](https://github.com/ai4curation/ai-gene-review/actions/runs/40474223385) supplies the separate CI evidence below.
+
+FGF3 retains 85 ACCEPT, 8 KEEP_AS_NON_CORE and 6 UNDECIDED decisions. FGF9 retains 166 ACCEPT, 10 KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED and 2 UNDECIDED decisions. Each has one FGF receptor ligand core; neither review adds a NEW annotation or publication quotation. Missing original evidence remains explicit: FGF3 retains five PMID2470007 contexts and an RPS2 interaction context as unresolved, while FGF9 retains the two PMID8575785 contexts as unresolved. Cytoplasm annotations remain bounded positive ancestral inferences; neither review claims an independently demonstrated endogenous human soluble-cytoplasmic mechanism. Completion does not resolve every annotation or require every review to have the same status.
+
+Both actual merge-group runs passed validation, suite and aggregate checks. Each executed 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests successfully; 86 pytest cases were deselected and 37 doctests skipped. The runs retained 9 pytest warnings and 8 doctest warnings each. FGF3 validation passed with three documented source-specific advisories and 18,020 history records; FGF9 validation passed and checked 18,022 history records. Both logs retained a nonfatal ignored SQLAlchemy cleanup exception after successful pytest; subsequent checks and aggregate jobs succeeded. Existing repository advisories and explicitly skipped checks remain recorded in the accepted evidence; this is not a claim of warning-free validation or site deployment.
+
+The accepted heads contain 15 FGF3 and 24 FGF9 payload files, with complete gene/history namespaces of 8 and 9 files, respectively. Their retained source closures contain 93 and 186 files. FGF3 added all 15 payload files. FGF9 added 23 files; its accepted publications/PMID_20094046.md was already byte-identical in the actual parent from the FGF3 merge. Exact payload objects, modes and actual parent comparisons are recorded in the completion entry; shared source files already identical in the parent commit are counted separately from changed paths.
+
+All 235 dated queue objects, 141 preceding completion updates, catalogue identities, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FGF3 and FGF9 receive additional credit. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off or a site-deployment claim.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T091421Z-codex-264abb.yaml).
+## Completion checkpoint 642 — 2026-10-27 12:07:41 UTC
+
+**642 complete; 2,234 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FGG from [PR #5614](https://github.com/ai4curation/ai-gene-review/pull/5614) and FGFR2 from [PR #5613](https://github.com/ai4curation/ai-gene-review/pull/5613) after verification of their actual merges.
+
+The [FGG merge](https://github.com/ai4curation/ai-gene-review/commit/999cfdae911a58d3f8d3dc77803f3e58fa7953c9) retains 121 active annotation contexts: 68 ACCEPT, 33 KEEP_AS_NON_CORE, 16 UNDECIDED, 2 MODIFY and 2 TOO_GENERAL. It has 83 references, two natural products, one structural-molecule core function and no publication quotations. Five genuine source extensions retain their specimen-specific uncertainty. Its two adhesion-related binding refinements do not assign the partner's activity to FGG. Its computed status remains DRAFT.
+
+The [FGFR2 merge](https://github.com/ai4curation/ai-gene-review/commit/46d71eb5cd1b628c3edd69c37d776bb9c6768d4b) retains all 229 source contexts: 147 ACCEPT, 68 KEEP_AS_NON_CORE, 7 MODIFY and 7 UNDECIDED. It has 95 references, 17 natural products, one receptor core function and all 65 inherited quotation associations. Seven ligand-binding refinements retain tested ligand and fragment limits; current cell/tissue alternatives are documented without flattening them into a conjunction or presenting current records as identical to the historical seed. Its computed status remains DRAFT. Neither review adds a NEW annotation or a new publication quotation.
+
+Both actual merge-group runs passed their executed validation, suite and aggregate jobs: [FGG run 40494967182](https://github.com/ai4curation/ai-gene-review/actions/runs/40494967182) and [FGFR2 run 40497991566](https://github.com/ai4curation/ai-gene-review/actions/runs/40497991566). Each executed 12 example checks, 4,400 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests successfully. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception appeared after successful pytest; subsequent checks succeeded. FGG retained four target advisories and validated 18,025 histories; FGFR2 retained three target binding advisories and validated 18,028 histories. Prediction/BioReason and upstream PAINT checks were skipped by scope. This is not a claim of warning-free validation or site deployment.
+
+The accepted payloads contain 64 FGG and seven FGFR2 files. All are changes relative to their actual parents, with no parent-identical payload files. Complete gene/history namespaces contain eight and eleven files; qualified source closures contain 143 and 103 files, respectively. The completion entry records exact payload objects, modes, sizes and hashes; ROOT independently compared both complete closures against the accepted heads and actual merges. FGFR2's three histories preserve both earlier branch sessions, and all qualified normal source bytes remain intact.
+
+All 235 dated queue objects, 142 preceding completion updates, catalogue identities and association text, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FGG and FGFR2 receive additional credit. Completion records accepted merged work while retaining evidence uncertainty; it does not require changing either computed DRAFT status. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-27T120741Z-codex-5e4c5a.yaml).
+
+## Completion checkpoint 644 — 2026-10-28 13:53:07 UTC
+
+**644 complete; 2,232 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FH from [PR #5658](https://github.com/ai4curation/ai-gene-review/pull/5658) and FHOD3 from [PR #5661](https://github.com/ai4curation/ai-gene-review/pull/5661) after ROOT independently accepted both actual merges.
+
+The [FH merge](https://github.com/ai4curation/ai-gene-review/commit/6c3b1d132a913f112286c7eee3eb15cc13cbd7cb) stores 61 annotation rows: 60 active contexts and one retired authored duplicate. Its active decisions are 34 ACCEPT, 15 KEEP_AS_NON_CORE, 5 MODIFY, 2 TOO_GENERAL, 2 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED and 1 NEW. The retired NEW row remains visible for provenance and is excluded from this active histogram. The review retains 35 references, two natural products, three core functions and all 78 inherited quotation associations. No new publication quotation was added. Its computed status remains DRAFT.
+
+The [FHOD3 merge](https://github.com/ai4curation/ai-gene-review/commit/27f524219b21100fb7a25345ca592eaa075cc5fc) retains all ten source contexts: 5 ACCEPT, 3 KEEP_AS_NON_CORE, 1 MODIFY and 1 UNDECIDED. It has ten references, four natural products, one core function, no NEW annotations and no publication quotations. Its computed status remains DRAFT. Neither review asserts a functional-isoform block or an isoform-specific or negated annotation context.
+
+Both actual merge-group runs passed their executed validation, suite and aggregate jobs: [FH run 40637089658](https://github.com/ai4curation/ai-gene-review/actions/runs/40637089658) and [FHOD3 run 40641064222](https://github.com/ai4curation/ai-gene-review/actions/runs/40641064222). Each executed 12 example checks, 4,408 pytest tests, 282 doctests, 444 agent tests and 19 JavaScript tests successfully, with mypy covering 292 source files and Ruff passing. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception appeared after successful pytest; subsequent checks succeeded. FH retained 13 target advisories and validated 18,182 histories; FHOD3 retained two target advisories and validated 18,184 histories. Each passed 42 history tests and validation of 717 modules and 734 families. Prediction/BioReason and upstream PAINT checks were skipped by scope. These results do not imply warning-free validation or site deployment.
+
+The accepted payloads contain eight FH and thirteen FHOD3 files, all different from their actual parents, with no parent-identical payload files. Complete gene/history namespaces contain thirteen and seven files; qualified source closures contain 43 and 22 files, including 30 and 15 normal source files, respectively. The completion entry records all 21 payload objects with exact modes, sizes and hashes. ROOT independently compared both complete closures against the approved heads and actual merges; the tracker writer also verified their objects against the current tracker base. Earlier gene histories and normal source bytes remain preserved.
+
+All 235 dated queue objects, 143 preceding completion updates, catalogue identities and association text, prior histories, dated source inventories and the exact earlier progress prefix are preserved. Only FH and FHOD3 receive additional tracker credit. The existing open project-page audit PR #4518 owns generated pages, slide assets and an older project history; this checkpoint does not modify those paths. Completion records accepted merged work while retaining evidence uncertainty and both computed DRAFT statuses. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-28T135307Z-codex-6ddb22.yaml).
+
+## Completion checkpoint 646 — 2026-10-28 17:05:03 UTC
+
+**646 complete; 2,230 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FIG4 from [PR #5689](https://github.com/ai4curation/ai-gene-review/pull/5689) and FITM2 from [PR #5692](https://github.com/ai4curation/ai-gene-review/pull/5692) after ROOT independently accepted both actual merges.
+
+The [FIG4 merge](https://github.com/ai4curation/ai-gene-review/commit/7120b823f95a5fdaeae28942f0a19338b1207b06) retains all 45 source contexts: 20 ACCEPT, 16 KEEP_AS_NON_CORE, 4 MODIFY, 3 MARK_AS_OVER_ANNOTATED and 2 TOO_GENERAL. It has 38 references and two core functions. The [FITM2 merge](https://github.com/ai4curation/ai-gene-review/commit/91af78860aef06faa31976510491e3c69d4f7fcf) retains all 35 source contexts: 26 ACCEPT, 6 KEEP_AS_NON_CORE, 2 MARK_AS_OVER_ANNOTATED and 1 UNDECIDED. It has 24 references and two core functions. Both computed statuses remain DRAFT. Neither review contains NEW annotations, publication quotations, recorded natural alternative products, functional-isoform blocks, isoform-specific contexts or negated contexts. FITM2's unresolved context remains visible.
+
+Both actual merge-group runs passed their executed validation, suite and aggregate jobs: [FIG4 run 40722595580](https://github.com/ai4curation/ai-gene-review/actions/runs/40722595580) and [FITM2 run 40726403726](https://github.com/ai4curation/ai-gene-review/actions/runs/40726403726). Each executed 12 example checks, 4,431 pytest tests, 283 doctests, 444 agent tests and 19 JavaScript tests successfully, with mypy covering 295 source files and Ruff passing. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception appeared after successful pytest; subsequent checks succeeded.
+
+FIG4 retained five target generic-binding advisories and validated 18,222 histories; FITM2 retained four target generic-binding advisories and validated 18,224 histories. Each passed 42 history tests and validation of 717 modules and 734 families. Module validation reported 2,187 advisories for FIG4 and 2,217 for FITM2. The 30 additional FITM2-run warnings occurred in ten unchanged modules and included unavailable CHEBI ontology-label checks; the successful run does not establish that every ontology label resolved. Each family run checked 2,163 snippets and skipped 4,255, with no reference issues; residue checks reported 12,955 validated, zero errors and 24 skipped. Family cross-checks retained zero conflicts, nine requiring adjudication, 177 with missing information and 339 consistent. Gene residue checks reported 668 validated, zero errors and two skipped; finding residue checks reported eight validated with no errors or skips. Prediction/BioReason, history-coverage, downloaded-sequence-save and upstream PAINT verification steps were skipped by scope. The full merge-group suites and global schema validation executed. These results do not imply warning-free validation or site deployment.
+
+The accepted payloads contain 22 FIG4 and 18 FITM2 files, all different from their actual parents, with no parent-identical payload files. Complete gene/history namespaces contain eight and seven files; qualified closures contain 39 and 26 files, including 31 and 19 normal source files, respectively. The completion entry records all 40 payload objects with exact modes, sizes and hashes. ROOT independently compared both complete closures against the approved heads and actual merges. The tracker writer also verified all 65 per-gene closure objects, representing 61 distinct paths, against the qualified tracker base. Earlier gene histories and normal source bytes remain preserved.
+
+All 235 dated queue objects, 144 preceding completion updates, catalogue identities and association text, 227 earlier project histories, dated source inventories and the exact earlier progress prefix are preserved. Only FIG4 and FITM2 receive additional tracker credit. Fresh ownership checks covered complete current and former open-PR paths; PR #4518 still owns generated project pages, slide assets and an older project history, with no overlap with this checkpoint's five-file delta. Completion records accepted merged work while retaining evidence uncertainty and both computed DRAFT statuses. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-28T170503Z-codex-942a7f.yaml).
+
+## Completion checkpoint 648 — 2026-10-28 19:23:02 UTC
+
+**648 complete; 2,228 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FKRP from [PR #5694](https://github.com/ai4curation/ai-gene-review/pull/5694) and FLAD1 from [PR #5697](https://github.com/ai4curation/ai-gene-review/pull/5697) after ROOT independently accepted both actual merges.
+
+The [FKRP merge](https://github.com/ai4curation/ai-gene-review/commit/d50d8c566c7a9ddc56c56e226483608c0717faef) preserves 36 original source contexts in 35 stored annotation rows: 25 ACCEPT, 8 KEEP_AS_NON_CORE and 2 TOO_GENERAL. One shared source key combines UniProt and ComplexPortal assignment contexts, so the original-context counts are 26 ACCEPT, 8 KEEP_AS_NON_CORE and 2 TOO_GENERAL. It has 21 references, one core function, no recorded natural alternative products and no publication quotations. The two broad cytoplasm rows retain the ontology-supported TOO_GENERAL correction. Source-specific organism, construct, localization and sequential-enzyme limits remain documented.
+
+The [FLAD1 merge](https://github.com/ai4curation/ai-gene-review/commit/e732fbcf73c5c971642d3dc300d061da3dcffb77) preserves 43 current contexts plus two retired contexts, for 45 stored rows. Current actions are 26 ACCEPT, 15 KEEP_AS_NON_CORE and 2 MODIFY. It retains 34 references, two catalytic core functions, five natural products and all 38 inherited quote/reference occurrences across 24 distinct pairs. Two inherited NADH excerpts were relocated unchanged into their truthful source findings; no new quotation was authored. Product-specific localization and catalytic scope remain explicit, and experimental transcript or construct names are not equated with unverified natural products. Both reviews retain computed DRAFT status, no NEW annotations, no functional-isoform block and no isoform-specific or negated annotation contexts.
+
+Both actual merge-group runs passed their executed validation, suite and aggregate jobs: [FKRP run 40742629833](https://github.com/ai4curation/ai-gene-review/actions/runs/40742629833) and [FLAD1 run 40748200991](https://github.com/ai4curation/ai-gene-review/actions/runs/40748200991). Each executed 12 example checks, 4,431 pytest tests, 283 doctests, 444 agent tests and 19 JavaScript tests successfully; mypy covered 295 source files and Ruff passed. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception followed successful pytest; subsequent checks succeeded. FLAD1's earlier speculative run is not credited.
+
+FKRP retained two target generic-binding advisories and validated 18,227 histories; FLAD1 retained six target generic-binding advisories and validated 18,229 histories. Each passed 42 history tests and validation of 717 modules and 734 families. Repository-wide module diagnostics remain disclosed; FLAD1's run reported 2,187 module advisories, while no separate aggregate was captured for FKRP. Each family run checked 2,163 snippets and skipped 4,255, with no reference issues; residue checks reported 12,955 passing, zero errors and 24 unresolved. Family cross-checks retained zero conflicts, nine requiring adjudication, 177 with missing information and 339 consistent. Gene residue checks reported 668 passing, zero errors and two unresolved; finding residue checks reported eight passing with no errors or unresolved cases. Prediction/BioReason, history-coverage, downloaded-sequence-save and full upstream PAINT verification steps were skipped by scope. The full merge-group suites and global schema validation executed. The Markdown citation helper matched no pathway files and does not establish validation of all notes or evidence prose. These results do not imply warning-free validation or site deployment.
+
+The accepted payloads contain 17 FKRP and 12 FLAD1 files, all different from their actual parents, with no parent-identical payload files. Each complete gene/history namespace contains eight files; qualified closures contain 27 and 42 files, including 19 and 34 normal source files, respectively. The completion entry records all 29 payload objects with exact modes, sizes and hashes. ROOT independently accepted both complete closures, actual parent deltas and executed checks. The tracker writer verified all 69 distinct closure objects at the approved heads, actual merges and qualified tracker base, without rerunning accepted gene tests. Existing gene histories and normal source bytes remain preserved.
+
+All 235 dated queue objects, 145 preceding completion updates, catalogue identities and association text, 228 earlier project histories, dated source inventories and the exact earlier progress prefix are preserved. Only FKRP and FLAD1 receive additional tracker credit. Fresh ownership checks covered complete current and former open-PR paths; PR #4518 still owns generated project pages, slide assets and an older project history, with no overlap with this checkpoint's five-file delta. Completion records accepted merged work while retaining evidence limitations and both DRAFT statuses. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-28T192302Z-codex-5e3c3d.yaml).
+
+## Completion checkpoint 650 — 2026-10-28 20:59:41 UTC
+
+**650 complete; 2,226 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FKTN from [PR #5705](https://github.com/ai4curation/ai-gene-review/pull/5705) and FLCN from [PR #5707](https://github.com/ai4curation/ai-gene-review/pull/5707) after ROOT independently accepted both actual merges.
+
+The [FKTN merge](https://github.com/ai4curation/ai-gene-review/commit/c94bde0b568df9c00c30549b1a8697d5272497d5) preserves 44 original source contexts in 43 stored annotation rows: 26 ACCEPT, 13 KEEP_AS_NON_CORE, 2 TOO_GENERAL, 1 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED. The genuine seed combines one shared source key, so the original-context action counts contain 27 ACCEPT with the other counts unchanged. The review retains 24 references, one core function, two natural products and no publication quotations. The endoplasmic-reticulum uncertainty, source-specific cell-type effects, JNK over-annotation decision and limits on transferring assays between products remain explicit.
+
+The [FLCN merge](https://github.com/ai4curation/ai-gene-review/commit/c33fa36aa8eff7c1df9eb1f548a21da8eeeafecc) preserves all 121 inherited review rows: 36 ACCEPT, 63 KEEP_AS_NON_CORE, 19 MODIFY and 3 TOO_GENERAL. Its separately preserved GOA TSV contains 124 data rows; these action totals describe the inherited review rows, without asserting an unverified 124-row action projection. It retains 38 references, two core functions, three natural products and all 244 inherited quotation/reference occurrences across 46 distinct pairs. Twenty-six inherited occurrences were relocated without changing their text, including six negative-TOR excerpts moved to source findings during review follow-up; four Finding groups were consolidated without quotation loss. Contextual biological-process rationales retain organism, construct, partner and pathway-output limits. Both reviews remain DRAFT, with no NEW annotations, newly authored quotations, functional-isoform block, isoform-specific annotation contexts or negated contexts.
+
+The actual merge-group runs for [FKTN, 40756560414](https://github.com/ai4curation/ai-gene-review/actions/runs/40756560414) and [FLCN, 40763660683](https://github.com/ai4curation/ai-gene-review/actions/runs/40763660683) each passed their executed validation, full-suite and aggregate jobs. Each ran 12 example checks, 4,431 pytest tests, 283 doctests, 444 agent tests and 19 JavaScript tests successfully; mypy covered 295 source files and Ruff passed. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception followed passing pytest; subsequent checks and the aggregate gate succeeded.
+
+FKTN retained six target generic-binding advisories and validated 18,289 histories; FLCN retained twenty target advisories and validated 18,292 histories. Each passed 42 history tests, global gene schema validation, and validation of 717 modules and 734 families. Each run reported 2,192 module advisories, an aggregate of per-module summaries rather than a count of every job warning. Repository-wide family/reference diagnostics and unresolved checks remain disclosed in the durable records. Prediction/BioReason validation, history-coverage, downloaded-sequence-save and full upstream PAINT verification steps were skipped by scope; the full merge-group suites executed. The Markdown citation helper found no pathway files and does not establish validation of all notes or evidence prose. These results do not imply warning-free validation or site deployment.
+
+The accepted payloads contain 12 FKTN and 6 FLCN files, all changed from their actual parents, with no parent-identical payload files. Each complete gene/history namespace contains eight files. Their qualified closures contain 29 and 40 files, including 21 and 32 normal source files, respectively. The completion entry records all 18 payload objects with exact modes, sizes and hashes. ROOT independently accepted both complete closures, actual parent deltas and executed checks; tracker preparation verified all 69 distinct closure objects at the approved heads, actual merges and qualified tracker base without rerunning accepted gene tests. Earlier histories and unchanged normal sources remain preserved.
+
+All 235 dated queue objects, 146 prior completion updates, 2,876 catalogue identities and association text, 229 earlier project histories, dated source inventories and the exact earlier progress prefix are preserved. Only FKTN and FLCN receive additional tracker credit. Fresh ownership checks covered complete current and former paths of all 268 open PRs. PR #4518 still owns generated project pages, slide assets and an older project history, without overlap with this checkpoint's five-file delta. Completion records accepted merged work while retaining evidence limitations and DRAFT statuses. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-28T205941Z-codex-5e8a2b.yaml).
+
+## Completion checkpoint 652 — 2026-10-28 22:27:18 UTC
+
+**652 complete; 2,224 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FLNA from [PR #5708](https://github.com/ai4curation/ai-gene-review/pull/5708) and FLT4 from [PR #5711](https://github.com/ai4curation/ai-gene-review/pull/5711) after ROOT independently accepted both actual merges.
+
+The [FLNA merge](https://github.com/ai4curation/ai-gene-review/commit/bee9d6d85030e073bee04762b040894fe54ab508) preserves 152 original QuickGO contexts through 151 unchanged TSV data rows and 150 genuine seeded review rows. The stored decisions are 25 ACCEPT, 102 KEEP_AS_NON_CORE, 9 MODIFY, 7 UNDECIDED, 2 MARK_AS_OVER_ANNOTATED and 5 TOO_GENERAL. The separately replayed original-context counts contain 26 ACCEPT and 103 KEEP_AS_NON_CORE, with the other counts unchanged. The review retains 78 references, two core functions and three natural products. Nine binding refinements use supported partner classes; source-specific uncertainty, contextual transcription and deacetylation evidence, and limits on transferring assays between species, constructs and products remain explicit. The additional core describes the supported actin-network/integrin-tail adaptor role without adding a NEW annotation.
+
+The [FLT4 merge](https://github.com/ai4curation/ai-gene-review/commit/38dca73a6b33270bb6227472df48c8e00310bcbc) preserves all 89 original contexts one-to-one: 43 ACCEPT, 21 KEEP_AS_NON_CORE, 13 TOO_GENERAL, 10 MODIFY and 2 UNDECIDED. It retains 39 references, one receptor-signaling core and three natural products. Supported specific binding refinements, contextual process and cytoplasm decisions, ten source-traced IBA assertions and the unchanged 159-row PTHR24416 source slice remain recorded. Both nuclear assertions remain UNDECIDED; original primary access, ligand, chimera, species and natural-product limits are preserved. Both reviews remain DRAFT, with no NEW annotations, publication quotations, functional-isoform blocks, isoform-specific annotation contexts or negated contexts.
+
+The actual merge-group runs for [FLNA, 40774238869](https://github.com/ai4curation/ai-gene-review/actions/runs/40774238869) and [FLT4, 40776951319](https://github.com/ai4curation/ai-gene-review/actions/runs/40776951319) each passed their executed validation, full-suite and aggregate jobs. Each ran 12 example checks, 4,431 pytest tests, 283 doctests, 444 agent tests and 19 JavaScript tests successfully; mypy covered 295 source files and Ruff passed. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception followed passing pytest; subsequent checks and the aggregate gate succeeded.
+
+FLNA retained 40 target advisories, including 39 generic-binding advisories and the disclosed unmirrored-adaptor-core advisory; FLT4 retained two generic-binding advisories. Their runs validated 9,387 and 9,388 gene-review schemas, respectively, and 18,296 and 18,300 histories. Each passed 42 history tests and validation of 717 modules and 734 families. Each run reported 2,192 module advisories, an aggregate of per-module summaries rather than a count of every job warning. Repository-wide family/reference diagnostics and unresolved checks remain disclosed in the accepted source evidence. Prediction/BioReason validation, history-coverage, downloaded-sequence-save and full upstream PAINT verification steps were skipped by scope; the full merge-group suites executed. These results do not imply warning-free validation or site deployment.
+
+The accepted payloads contain 44 FLNA and 32 FLT4 files, all changed from their actual parents, with no parent-identical payload files. Each complete gene/history namespace contains nine files. Their qualified closures contain 82 and 41 files, including 73 and 32 normal source files, respectively. The completion entry records all 76 payload objects with exact modes, sizes and hashes. ROOT independently accepted both complete closures, actual parent deltas and executed checks; tracker preparation verified all 123 distinct closure objects at the approved heads, actual merges and qualified tracker base without rerunning accepted gene tests. Earlier histories and unchanged normal sources remain preserved.
+
+All 235 dated queue objects, 147 prior completion updates, 2,876 catalogue identities and association text, 230 earlier project histories, dated source inventories and the exact earlier progress prefix are preserved. Only FLNA and FLT4 receive additional tracker credit; pending FLNC work is not counted. Fresh ownership checks covered complete current and former paths of all 269 open PRs, including FLNC #5712. PR #4518 still owns generated project pages, slide assets and an older project history, without overlap with this checkpoint's five-file delta. Completion records accepted merged work while retaining evidence limitations and DRAFT statuses. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-28T222718Z-codex-5357ef.yaml).
+
+## Completion checkpoint 654 — 2026-10-28 23:52:45 UTC
+
+**654 complete; 2,222 remaining out of 2,876 catalogue genes.**
+
+This checkpoint adds FLNC from [PR #5712](https://github.com/ai4curation/ai-gene-review/pull/5712) and FLNB from [PR #5714](https://github.com/ai4curation/ai-gene-review/pull/5714) after ROOT independently accepted both actual merges.
+
+The [FLNC merge](https://github.com/ai4curation/ai-gene-review/commit/9f409567118b46dc3fa684fd24a56c3b05e1a752) preserves all 32 original contexts one-to-one: 10 ACCEPT, 8 KEEP_AS_NON_CORE, 10 MODIFY and 4 TOO_GENERAL. It retains 20 references, one integrated actin-filament/sarcomere structural core and two natural products. Specific binding refinements retain the original partners and assay context. Muscle structural contacts are described without transferring an untested FLNA adaptor mechanism or assuming that every interaction supplies a separate core. Two original singleton extensions are explicitly restored without changing their meaning.
+
+The [FLNB merge](https://github.com/ai4curation/ai-gene-review/commit/43cf0d2942cd3587ad87b888cc884c0f6d557b79) preserves all 37 original contexts one-to-one: 13 ACCEPT, 6 KEEP_AS_NON_CORE, 8 MODIFY, 3 TOO_GENERAL and 7 UNDECIDED. It retains 27 references, one integrated actin-cytoskeleton structural core and nine natural products. The core describes supported dimerization and receptor-tail contacts with construct and assay limits; it does not assign every variant to focal contacts. The original ISG15 binding assertion remains unresolved because documented covalent conjugation does not independently establish noncovalent binding. The source-specific GRB2 SH2-bait complex is distinguished from separately tested SH3 interfaces. Confirmed wrong-reference and suspected partner-identifier defects remain recorded without guessing a correction or claiming they have been reported upstream. Three original singleton extensions are explicitly restored. Both reviews remain DRAFT, with no NEW annotations, publication quotations, functional-isoform blocks, isoform-specific annotation contexts or negated contexts.
+
+The actual merge-group runs for [FLNC, 40784576746](https://github.com/ai4curation/ai-gene-review/actions/runs/40784576746) and [FLNB, 40787294351](https://github.com/ai4curation/ai-gene-review/actions/runs/40787294351) each passed their executed validation, full-suite and aggregate jobs. Each ran 12 example checks, 4,431 pytest tests, 283 doctests, 444 agent tests and 19 JavaScript tests successfully; mypy covered 295 source files and Ruff passed. Each retained 86 deselected pytest cases, 37 skipped doctests, nine pytest warnings and eight doctest warnings. An ignored oaklib/SQLAlchemy destructor exception followed passing pytest; subsequent checks and the aggregate gate succeeded.
+
+FLNC retained two target advisories and FLNB retained one generic-binding advisory under the explicit campaign policy. Their runs validated 9,389 and 9,390 gene-review schemas, respectively, and 18,303 and 18,306 histories. Each passed 42 history tests and validation of 717 modules and 734 families. Each run reported 2,192 module advisories, with unresolved repository-wide family/reference checks retained in the source evidence. Prediction/BioReason validation, history-coverage, downloaded-sequence-save and full upstream PAINT verification steps were skipped by scope; the full merge-group suites executed. These results do not imply warning-free validation or site deployment.
+
+The accepted payloads contain 14 FLNC and 12 FLNB files, all changed from their actual parents, with no parent-identical payload files. Each complete gene/history namespace contains eight files. Their qualified closures contain 25 and 31 files, including 17 and 23 normal source files, respectively. The completion entry records all 26 payload objects with exact modes, sizes and hashes. ROOT independently accepted both complete closures, actual parent deltas and executed checks; tracker preparation verified 56 per-gene closure objects representing 49 distinct paths at the approved heads, actual merges and qualified tracker base without rerunning accepted gene tests. Earlier histories and unchanged normal sources remain preserved.
+
+All 235 dated queue objects, 148 prior completion updates, 2,876 catalogue identities and association text, 231 earlier project histories, dated source inventories and the exact 830,798-byte earlier progress prefix are preserved. Only FLNC and FLNB receive additional tracker credit. The FLNA follow-up #5715 adds no distinct gene; pending FLVCR1 work is not counted. Fresh ownership checks covered complete current and former paths of 269 open PRs, followed by ROOT's complete check of newly published FLVCR1 #5716, bringing the release cut to 270. PR #4518 still owns generated project pages, slide assets and an older project history, without overlap with this checkpoint's five-file delta. Completion records accepted merged work while retaining evidence limitations and DRAFT statuses. Acceptance is the coordinating AI agent's campaign audit, not human maintainer sign-off.
+
+Curation session: [history record](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-28T235245Z-codex-12d0ef.yaml).
