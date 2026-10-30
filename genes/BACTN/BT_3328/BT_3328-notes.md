@@ -42,8 +42,13 @@ domain-containing protein") and GOA has no annotations at all.
   hyaluronate lyase activity is added as well, because HA is the
   physiologically relevant substrate. Neither EC-style definition captures the
   endo-acting mode exactly; that is a limitation of the terms.
-- **BP.** GO:0030214 hyaluronan catabolic process, supported by enzyme activity
-  plus HA-specific fitness. GO has no "chondroitin sulfate catabolic process"
+- **BP.** GO:0030214 hyaluronan catabolic process, supported by the enzyme's own
+  catalysis of HA at the cell surface (IDA), not by a growth requirement. The
+  pooled RB-TnSeq HA signal [PMID:33657378] conflicts with the clean deletion
+  strain, which grows normally on HA in pure culture [PMID:30262663, and
+  PMID:32005816 "no impact on growth was observed, consistent with Δbt3328
+  mutant growth data"]; PMID:32005816 assigns the required HA lyase role to
+  BT4410. Recorded as an open question; it does not affect participation. GO has no "chondroitin sulfate catabolic process"
   (only the proteoglycan term GO:0030207, which is wrong for dietary free CS
   chains), and GO:0006027 glycosaminoglycan catabolic process is an ancestor of
   the HA term, so I did not add it. Raised as a question.
@@ -51,3 +56,23 @@ domain-containing protein") and GOA has no annotations at all.
   a lipoprotein with a surface-exposure signal that proteinase K can reach
   from outside, which in Bacteroidetes means anchored in the outer leaflet of
   the outer membrane.
+
+## 2026-10-30 correction
+
+An earlier draft of this review said the gene is "required for growth on
+hyaluronan" and annotated GO:0030214 by IMP from the RB-TnSeq fitness data. That
+overstated the genetics: both Ndeh papers report that the clean ΔBtCDH strain
+grows like wild type on HA, CS-A, CS-C and DS in pure culture. The term is kept,
+now by IDA on the enzyme's own catalysis, and the discrepancy with the pooled
+fitness screen is recorded as an open question.
+
+## DUFMech
+
+PF16315 (DUF4955) and PF16378 (DUF4988) were both SEEDED/UNSCORED stubs in
+DUFMech with no curation overlay. Contributed an overlay for PF16315:
+https://github.com/CultureBotAI/DUFMech/pull/385. One MECHANISTIC causal graph
+for BtCDH, with no edge assigning the chemistry to the DUF4955 interval, because
+the assayed construct is the mature full-length protein and residues 200-715
+carry no Pfam match. PF16378 got no edge: it also matches the non-enzymatic
+surface glycan-binding protein BT3329 (Q8A2H6, 25-207, 3.7e-92), so it reads as
+a shared surface module.
