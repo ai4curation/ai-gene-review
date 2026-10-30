@@ -277,7 +277,9 @@ validators.
   receptors*, `GO:0008625`). Upgraded all steps from single-gene `ENTITY` selectors to `FAMILY`
   selectors. Ligand: Fas ligand subfamily (`PANTHER:PTHR11471:SF33`, within `PANTHER:PTHR11471`
   `TUMOR NECROSIS FACTOR FAMILY MEMBER`, PAINT node `PTN000895255`), *cytokine activity*
-  (`GO:0005125`). Receptor: FAS (`PANTHER:PTHR46874:SF1`) and DISC adaptor FADD (`PANTHER:PTHR15077:SF10`).
+  (`GO:0005125`). Receptor: FAS (`PANTHER:PTHR46874:SF1`); DISC adaptor: FADD
+  (`PANTHER:PTHR15077:SF10`); initiator protease: CASP8 (`PANTHER:PTHR10454`, PAINT node
+  `PTN000047947`).
   GOA Category A gap resolved in the human `FASLG` gene review: `FASLG` carried `GO:0008625`
   (*extrinsic apoptotic signaling pathway via death domain receptors*) and `GO:0005125` (*cytokine
   activity*) but lacked `GO:0036337` (*Fas signaling pathway*), added as `NEW` (`PMID:7826947`).
@@ -297,7 +299,7 @@ validators.
 - **[Complement component C5a signaling](../modules/c5a_signaling.yaml)** (*complement component
   C5a signaling pathway*, `GO:0038178`). Three-step pan-species module. Ligand: Complement C5
   subfamily (`PANTHER:PTHR11412:SF83`, within `PANTHER:PTHR11412` `MACROGLOBULIN / COMPLEMENT`,
-  PAINT node `PTN002605305`), *signaling receptor binding* (`GO:0005102`). Receptors: C5AR1
+  PAINT node `PTN002605305`), *G protein-coupled receptor binding* (`GO:0001664`). Receptors: C5AR1
   (`PANTHER:PTHR24225:SF29`) and C5AR2 (`PANTHER:PTHR24225:SF1`), *complement receptor activity*
   (`GO:0004875`). GOA Category A gap resolved in the new human `C5` gene review: `C5` lacked
   `GO:0038178` in GOA (added via `NEW` with `PMID:36806352` and `MODIFY` on `GO:0007166`
