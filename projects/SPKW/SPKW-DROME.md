@@ -1,5 +1,6 @@
 ---
 title: "SPKW D. melanogaster (Drosophila) Subproject"
+autolink_gene_symbols: false
 ---
 
 # SPKW D. melanogaster (Drosophila) Subproject
@@ -54,7 +55,7 @@ These are legitimate annotations for antimicrobial effectors.
 
 Unlike S. pombe where ATG genes were wrongly annotated, D. mel meiotic annotations include:
 - **GATOR1 complex** (Nprl2, Nprl3, Iml1) - These have EXPERIMENTAL evidence for germline/meiotic functions (PMID:25512509) alongside their TOR-regulation role
-- **Cell division genes** (Bub3, Cdc37, cnn) - Potentially legitimate
+- **Cell division genes** (Bub3, `Cdc37`, cnn) - Potentially legitimate
 - Some may still be over-annotations requiring case-by-case review
 
 ### 3. Apoptotic Process (GO:0006915) - NEEDS REVIEW

@@ -16,7 +16,7 @@ Curation decisions:
 - Modify regulation of mRNA processing to negative regulation of mRNA splicing via spliceosome, based on UniProt/ASAP-complex evidence that the complex can inhibit in vitro splicing reactions.
 - Keep erythrocyte and monocyte differentiation as non-core hematopoietic/caspase contexts.
 - Remove ATP hydrolysis activity; ACIN1 is an RRM/SAP-domain RNA-processing factor, and neither UniProt function nor cached primary evidence supports an ACIN1 ATPase activity.
-- Mark generic protein binding and enzyme binding as over-annotated; specific interactions are better represented by ASAP complex membership, EJC context, or regulatory evidence.
+- Remove generic protein binding and enzyme binding rows; specific interactions are better represented by ASAP complex membership, EJC context, RNA-binding/splicing functions, or regulatory evidence, and being a CASP3 substrate does not establish a separate enzyme-binding activity.
 - Keep the Drosophila Acinus basal-autophagy PN signal as a suggested question/experiment for human ACIN1 rather than a new human annotation.
 
 ## Description cleanup note
@@ -35,3 +35,44 @@ Synthesis of the Falcon (Edison) report, emphasizing what is NEW relative to the
 - NEW complex context (review-level, Deka & Singh 2017): structural description of ASAP as an RNPS1(RRM)–SAP18(UBL)–Acinus(RSB motif) heterotrimer, and an alternative PSAP complex where RNPS1/SAP18 pair with Pinin (PNN); SAP18 links the complex to Sin3/HDAC, and the Acinus-L SAP motif targets AT-rich SAR/MAR chromatin [PMID:28539829 "RNPS1, Acinus and SAP18...ASAP complex"; the PSAP/Pinin alternative is also described]. Consistent with, and enriching, the existing ASAP-complex annotation; PSAP/PNN is a genuinely new partner relationship noted here for context.
 - NEW disease/association context (provisional, association-grade — NOT used to change annotations): ACIN1/Acin1 is reported upregulated in hepatocellular carcinoma with a spliceosome/EJC PPI neighborhood and predicted miR-674-5p/ceRNA regulation [PMID:39128105 (Tang 2024)], and positioned downstream of a METTL3→IGF2BP3 m6A axis stabilizing ACIN1 mRNA in cervical cancer [PMID:35255776 (Su 2022)]. These are network/expression-association studies, not causal mechanism, so they remain notes-only.
 - A 2025 "Acinus in plant programmed cell death" item (doi:10.1007/s44372-025-00406-x, 0 citations) and a 2024 A549/strophanthidin proteomics item (doi:10.3390/molecules29040877) appear in the Falcon corpus but are tangential/provisional for human ACIN1 function and are not incorporated.
+
+## APOPTOSIS refresh (2026-09-30)
+
+Fresh GOA added five partner-specific `GO:0005515 protein binding` rows: RNPS1
+from a spliceosome Y2H/co-IP matrix, RNPS1 and PNN from BioPlex AP-MS, and
+RNPS1 and PNN from the U2OS multimodal cell map. All five were removed as
+generic interaction rows. RNPS1 is already represented by accepted ASAP complex
+membership, PNN is PSAP/EJC-neighborhood context, and the high-throughput
+network sources do not establish a more specific ACIN1 molecular function.
+
+The pre-existing generic protein-binding rows were migrated from the legacy
+`MARK_AS_OVER_ANNOTATED` action to `REMOVE` under the current policy for
+uninformative `protein binding`. SF3A2, PCBD1, SRPK2, PNN, and RBM5 edges were
+not treated as false; they just do not add to ACIN1's reviewed RNA-binding,
+ASAP/EJC splicing, and apoptotic chromosome-condensation activities. The
+`GO:0019899 enzyme binding` NAS row was also changed to `REMOVE`: the Acinus
+paper supports CASP3 cleavage and downstream apoptotic chromatin condensation,
+but being a caspase substrate is not an enzyme-binding function.
+
+The ACIN1 review now covers all 46 refreshed GOA rows. Core biology remains
+unchanged: ACIN1 acts as a nuclear RNA-binding ASAP/EJC-associated splicing
+factor and as a caspase-activated apoptotic chromatin-condensation factor, while
+Drosophila Acinus autophagy evidence remains a human follow-up question rather
+than a new human GO annotation.
+
+## Completion status (2026-09-30)
+
+Marked the refreshed APOPTOSIS review `COMPLETE`. The remaining validation
+warning is advisory-only: `ACIN1-deep-research-falcon.md` is available and was
+summarized in these notes, but the curated YAML intentionally cites the primary
+papers and UniProt snippets that directly support each retained annotation.
+
+## 2026-10-26: comparative execution-phase source audit
+
+The established nuclear RNA-binding/ASAP/EJC role remains the core. Condensation is retained as a contextual process: the original PMID:10490026 abstract and publisher previews report reconstitution, immunodepletion and antisense support, while full PMID:16177823 shows phosphorylation/cleavage-dependent effects in HEK293 and PC12 experiments. PMID:16537548 reports opposing inducible-RNAi results in its abstract: condensation persisted while oligonucleosomal DNA fragmentation was impaired. The original1999 and2006 full papers remain inaccessible. This is not a basis for blanket removal of the experimental condensation annotation or a claim of universal requirement. The RNA-binding MF was removed from the separate condensation core: no experiment establishes RNA binding as the condensation mechanism.
+
+The ATP-hydrolysis NAS and enzyme-binding NAS claims now remain UNDECIDED. Live QuickGO confirms actual ATP-hydrolysis chemistry and the broad enzyme-binding definition. Accessible Acinus source text does not resolve these assays, and absence from later summaries was insufficient grounds for the previous REMOVE. The special protein-binding removal rule does not automatically apply to enzyme binding. The Reactome cytosol claim is likewise unresolved: its cached cleavage-reaction summary does not resolve localization, and nuclear predominance does not prove a transient cytosolic pool absent. Nuclear lumen is refined to nucleoplasm and nuclear speckles. Differentiation contexts and existing generic-binding decisions were reviewed without assigning the functions of caspases or interaction partners to Acinus.
+
+PMID:27365209 supports Acinus-dependent DFFA transcript splicing. Its legacy cache says full_text_xml but the currently accessible content is the abstract; no full-body claim is made from that metadata. Existing Falcon research was consulted; primary sources remain the evidence for decisions.
+
+Review/annotation-reviewer workflows were applied, with independent annotation-reviewer consultation on claim consistency and the distinctions among Acinus condensation, ICAD folding/inhibition, and AIF death pathways. Row count: 46; actions: ACCEPT=20, KEEP_AS_NON_CORE=4, MODIFY=4, REMOVE=15, UNDECIDED=3. No imported annotation payload was edited and no new row was added in this session.

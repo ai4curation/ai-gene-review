@@ -3,7 +3,7 @@ title: "C. elegans P Granule/Germ Granule Dynamics Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
-genes: [pgl-1, pgl-2, pgl-3, glh-1, glh-4, meg-3, meg-4, prg-1, csr-1, deps-1, wago-1, znfx-1, mut-16, meg-1, meg-2, mbk-2, mex-5, car-1, cgh-1]
+genes: [pgl-1, pgl-2, pgl-3, glh-1, glh-4, meg-3, meg-4, prg-1, csr-1, deps-1, wago-1, znfx-1, mut-16, meg-1, meg-2, mbk-2, mex-5, car-1, cgh-1, pptr-1, hrde-1, nrde-2, mut-7, mut-14, mut-15, rde-3, rde-8, rrf-1, ego-1]
 manifest:
   slides:
     - href: CAEEL_P_GRANULES/slides/CAEEL_P_GRANULES-slides.html
@@ -183,6 +183,27 @@ While *C. elegans* specific, P granule biology informs:
 - **Infertility** - Germ cell development defects
 - **ALS/FTD** - Stress granule dysfunction parallels
 - **Cancer** - Germline tumor biology
+
+## Modules
+
+Three modules build on these reviews:
+
+- [P granule assembly and asymmetric segregation in *C. elegans*](../modules/c_elegans_p_granule_assembly_segregation.html)
+  (`MODULE:c_elegans_p_granule_assembly_segregation`): PGL, GLH and MEG
+  scaffolds, perinuclear anchoring, and MBK-2/PP2A(PPTR-1) control of embryonic
+  granule dissolution and assembly.
+- [Mutator foci 22G-RNA amplification in *C. elegans*](../modules/c_elegans_mutator_22g_rna_amplification.html)
+  (`MODULE:c_elegans_mutator_22g_rna_amplification`): MUT-16 foci, MUT-7,
+  MUT-14, MUT-15, RDE-8 cleavage, RDE-3 pUGylation, RRF-1 22G-RNA synthesis,
+  and the WAGO and EGO-1/CSR-1 effector branches. The nuclear HRDE-1/NRDE-2
+  silencing step is described in the module notes but not modeled as an annoton.
+- [piRNA-mediated germline silencing](../modules/pirna_mediated_germline_silencing.html)
+  (`MODULE:pirna_mediated_germline_silencing`): the PIWI/piRNA pathway, with
+  PRG-1 as the worm member.
+
+These later reviews (pptr-1, hrde-1, nrde-2, mut-7, mut-14, mut-15, rde-3,
+rde-8, rrf-1, ego-1) were added for the modules. They are not part of the
+19-gene tally above.
 
 ## Project Status
 

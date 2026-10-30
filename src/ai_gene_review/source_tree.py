@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import subprocess
 import weakref
+from bisect import bisect_left
 from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from functools import cached_property, lru_cache
@@ -34,7 +35,10 @@ from typing import IO, Protocol
 import yaml
 
 BENCHMARK_POLICY = Path("projects/BIOREASON_COMPARISON/benchmark-policy.yaml")
-"""Declares ``review_snapshot_commit`` / ``review_snapshot_date`` for the benchmark reports."""
+"""Declares ``review_snapshot_commit`` / ``review_snapshot_date`` for the BioReason/GO-GPT benchmark reports."""
+
+PROTNLM_SNAPSHOT = Path("projects/PROTNLM_EVALUATION/review-snapshot.yaml")
+"""Declares the review snapshot for the ProtNLM2 evaluation, refreshed independently of the BioReason one."""
 
 
 class SourceTree(Protocol):
@@ -116,6 +120,7 @@ class GitSnapshot:
     repo_root: Path
     commit: str
     _cache: dict[str, bytes] = field(default_factory=dict, repr=False)
+    _glob_cache: dict[str, tuple[str, ...]] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         result = subprocess.run(
@@ -179,8 +184,28 @@ class GitSnapshot:
     def is_file(self, path: str) -> bool:
         return path in self._blobs
 
+    @cached_property
+    def _paths(self) -> tuple[str, ...]:
+        return tuple(sorted(self._blobs))
+
     def glob(self, pattern: str) -> list[str]:
-        return sorted(path for path in self._blobs if match_path(path, pattern))
+        # A snapshot is immutable. Reuse each result, and narrow first-time
+        # searches to the literal prefix before applying the existing matcher.
+        # For per-gene GOA searches this avoids scanning the whole repository.
+        if pattern not in self._glob_cache:
+            end = next((i for i, char in enumerate(pattern) if char in "*?["), len(pattern))
+            prefix = pattern[:end]
+            start = bisect_left(self._paths, prefix)
+            matches = []
+            for index in range(start, len(self._paths)):
+                path = self._paths[index]
+                if not path.startswith(prefix):
+                    break
+                if match_path(path, pattern):
+                    matches.append(path)
+            self._glob_cache[pattern] = tuple(matches)
+        # Callers may edit their result without changing later searches.
+        return list(self._glob_cache[pattern])
 
 
 @lru_cache(maxsize=None)
@@ -206,23 +231,25 @@ class ReviewSnapshot:
         return self.commit[:10]
 
 
-def declared_review_snapshot(repo_root: Path) -> ReviewSnapshot:
-    """Read the review snapshot declared in the benchmark policy.
+def declared_review_snapshot(repo_root: Path, policy_path: Path = BENCHMARK_POLICY) -> ReviewSnapshot:
+    """Read the review snapshot declared in a snapshot policy file (the BioReason benchmark's by default).
 
     >>> snapshot = declared_review_snapshot(Path("."))
     >>> len(snapshot.commit), len(snapshot.date)
     (40, 10)
+    >>> len(declared_review_snapshot(Path("."), PROTNLM_SNAPSHOT).commit)
+    40
     """
-    policy = yaml.safe_load((repo_root / BENCHMARK_POLICY).read_text(encoding="utf-8"))
+    policy = yaml.safe_load((repo_root / policy_path).read_text(encoding="utf-8"))
     return ReviewSnapshot(
         commit=str(policy["review_snapshot_commit"]),
         date=str(policy["review_snapshot_date"]),
     )
 
 
-def review_snapshot_tree(repo_root: Path) -> GitSnapshot:
+def review_snapshot_tree(repo_root: Path, policy_path: Path = BENCHMARK_POLICY) -> GitSnapshot:
     """Reader for the repository as it was at the declared review snapshot."""
-    return git_snapshot(repo_root, declared_review_snapshot(repo_root).commit)
+    return git_snapshot(repo_root, declared_review_snapshot(repo_root, policy_path).commit)
 
 
 def commit_date(repo_root: Path, commit: str) -> str:

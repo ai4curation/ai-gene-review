@@ -41,7 +41,7 @@ EPEC EscN.
 - IBA rows (GO_REF:0000033, GO:0046933 and GO:0045259) come from PANTHER node PTN008558586. In the cached
   PAINT table (`interpro/panther/PTHR15184/PTHR15184-paint.tsv`) that node carries both IBDs, seeded only by
   F1-beta proteins (E. coli AtpD P0ABB4, human ATP5F1B P06576, yeast ATP2, S. pombe atp2, plant/rat beta).
-  `projects/TREEGRAFTER/rotary_atpase/node_placement.tsv` shows PTN008558586 is a DUPLICATION node with two
+  `projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv` shows PTN008558586 is a DUPLICATION node with two
   children: PTN008558588 (the ATP synthase beta subfamilies, SF51/74/75/76/80/82/83/85) and PTN000390097
   (the bacterial export ATPases, PTHR15184:SF62 SPI-2 T3SS ATPase = this protein, SF9 SPI-1, SF81 flagellar).
   So the IBD sits *on* the duplication node that separated F1-beta from the export ATPases; every seed

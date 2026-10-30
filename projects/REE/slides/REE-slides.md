@@ -20,7 +20,7 @@ Engineered biological pathways to **sense, mobilize, capture, concentrate, and r
 
 Chris Mungall | AI-Assisted Gene Review
 
-2026-06-22
+2026-10-05
 
 ---
 
@@ -82,7 +82,7 @@ Sensing → [TF/Riboswitch] → Leaching agents → Solubilized ions
 - Redox shuttles: phenazine operon phzA–G [PMID:8586283; PMID:28871340]
 - Fe(II) oxidation bioleaching: rus operon (cyc2, cyc1, coxBACD, rus)
 
-**METEA lanthanophore loci:** mll cluster `MexAM1_META1p4132–4138`, regulators mluA/R/I `META1p4129–4131`, PQQ `META1p1748/1751` → methylolanthanin secretion
+**METEA mapped loci:** mll/mlu `META1p4129–4138` for methylolanthanin; PQQ `META1p1748/1751` for XoxF/Mxa cofactor supply
 
 ---
 
@@ -91,7 +91,7 @@ Sensing → [TF/Riboswitch] → Leaching agents → Solubilized ions
 **Capture solubilized metals with high selectivity, transfer into the cell**
 
 - Lanthanide-binding protein: **lanM** (lanmodulin)
-- Lanthanide uptake cluster: **lutH** (TonB receptor) + lut genes (`META1_1778–1787`, includes lanM and lutD)
+- Lanthanide uptake cluster: **lutH** (TonB receptor) + lut genes (`META1p1778–1787`, includes lanM and lutD)
 - Ln-dependent MDH module: xoxF + xoxG + xoxJ [PMID:31017712]
 - Ni uptake: nikABCDE + NikR [PMID:9882686]; Mn uptake: mntH [PMID:21908668]
 
@@ -171,7 +171,7 @@ Weights: REE selectivity 0.45, leaching strength 0.35, metal tolerance 0.20
 
 ## Conclusions & future directions
 
-**Status:** IN_PROGRESS — modular conceptual blueprint with chassis-mapped candidate genes
+**Status:** SCOPING — modular conceptual blueprint with METEA anchors and unmapped engineering modules
 
 **Next steps**
 - Map candidate genes to chassis species and annotate GO terms

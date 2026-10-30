@@ -28,7 +28,7 @@ style: |
 
 GO:0002148, GO:0002149, GO:0002150: all three now obsolete
 
-<span class="small">AI Gene Review · projects/HYPOCHLOROUS_ACID_OBSOLETION · 2026</span>
+<span class="small">AI Gene Review · projects/HYPOCHLOROUS_ACID_OBSOLETION · reviewed 2026-10-04</span>
 
 ---
 
@@ -38,7 +38,7 @@ GO:0002148, GO:0002149, GO:0002150: all three now obsolete
 
 - GO **obsoleted all three HOCl process terms**; the two children because each "represents a MF term".
 - Only **one experimental row** is affected: mouse **Mpo** IMP (PMID:10085024), plus a rat ISO copy.
-- **Scoped, not yet started:** Mpo is not reviewed here, and the MF anchor an earlier draft proposed (**GO:0140825**) is *lactoperoxidase activity* in OLS, so it must not be used; the right MF is still to be found.
+- **Tracked in #4098:** Mpo is not reviewed here, and the MF anchor an earlier draft proposed (**GO:0140825**) is *lactoperoxidase activity* in OLS, so the HOCl-forming MF still needs to be found.
 
 ---
 
@@ -59,15 +59,16 @@ GO:0002148, GO:0002149, GO:0002150: all three now obsolete
 - **GO:0002148** sat under *organic acid metabolic process*; HOCl has no carbon (go-ontology#22891).
 - HOCl formation is **one reaction** by one enzyme, so a process term only restates the activity.
 - The catabolic term had **no direct protein annotations**.
-- No replacement term is named; the Mpo row needs an **MF** decision.
+- The annotation ticket is still open; the Mpo row needs an **MF** decision.
 
 ---
 
 ## Next steps
 
-1. `just fetch-gene mouse Mpo` and a full review (peroxidase MF, granule CC, defense BP).
+1. Watch go-annotation#6404 until the mouse Mpo target settles.
 2. Find the GO MF term for HOCl-forming peroxidase activity (RHEA:43232) with OLS; do not reuse GO:0140825 without checking.
-3. The rat ISO row follows the mouse row; human MPO is optional.
+3. Then `just fetch-gene mouse Mpo`; the rat ISO row follows the mouse row, and human MPO is optional.
 
+**Local:** ai-gene-review#4098
 **Upstream:** go-annotation#6404 · go-ontology#22891 · go-ontology#30524
 **Read more:** `projects/HYPOCHLOROUS_ACID_OBSOLETION.md`

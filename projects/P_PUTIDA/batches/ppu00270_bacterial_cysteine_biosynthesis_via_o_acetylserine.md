@@ -73,9 +73,13 @@ gap for future gene-level review.
 
 ## Ontology Note
 
-GO:0006535 is the live, route-specific term for L-cysteine biosynthesis from
-L-serine. The three broad GO:0019344 annotations remain correct, while authored
-core functions and the module concept use GO:0006535 for greater precision.
+GO:0006535 (L-cysteine biosynthetic process from L-serine) was the route-specific
+term, but GO retired it (obsolete since at least release 2026-03-25, replaced_by
+GO:0019344); UniProt's cross-reference to it is stale. The three broad GO:0019344
+annotations remain correct, and authored core functions and the module concept
+now use GO:0019344, with the O-acetylserine route carried by the module structure.
+(Corrected 2026-09-26; the original note, written when the term was believed live,
+stood from 2026-08-11.)
 
 Generated UTC: 2026-08-11
 

@@ -633,6 +633,8 @@ class GOAValidator:
         goa_file: Optional[Path] = None,
         output_file: Optional[Path] = None,
         fetch_titles: bool = False,
+        publications_dir: Optional[Path] = None,
+        reactome_dir: Optional[Path] = None,
     ) -> Tuple[int, Path, int, int, int]:
         """Seed missing annotations from GOA file into YAML.
 
@@ -645,6 +647,10 @@ class GOAValidator:
             goa_file: Path to GOA file (if None, derives from yaml_file path)
             output_file: Output path (if None, overwrites input file)
             fetch_titles: If True, fetch actual titles from PubMed (may be slow)
+            publications_dir: Publication cache read and written when fetching
+                titles (default: ``publications`` relative to the working directory)
+            reactome_dir: Reactome cache read and written when fetching titles
+                (default: ``reactome`` relative to the working directory)
 
         Returns:
             Tuple of (annotations added, output file path, references added,
@@ -894,8 +900,11 @@ class GOAValidator:
                     if pmid.startswith("PMID:"):
                         pmid_num = pmid[5:]  # Remove 'PMID:' prefix
                         try:
-                            # Use publications directory for cache
-                            cache_dir = Path("publications")
+                            cache_dir = (
+                                publications_dir
+                                if publications_dir is not None
+                                else Path("publications")
+                            )
 
                             # First try to get just the title from cache (fast)
                             cached_title = get_cached_title(pmid_num, cache_dir)
@@ -918,7 +927,13 @@ class GOAValidator:
                         title = self._get_go_ref_title(pmid, go_ref_titles)
                     elif pmid.startswith("Reactome:"):
                         # Fetch Reactome pathway title
-                        title = self._get_reactome_title(pmid, reactome_titles)
+                        title = self._get_reactome_title(
+                            pmid,
+                            reactome_titles,
+                            reactome_dir
+                            if reactome_dir is not None
+                            else Path("reactome"),
+                        )
 
                 new_ref = {
                     "id": pmid,
@@ -1113,12 +1128,15 @@ class GOAValidator:
         base = qualifier.replace("NOT|", "").replace("NOT", "").strip("|").strip()
         return base == "contributes_to"
 
-    def _get_reactome_title(self, reactome_id: str, cache: Dict[str, str]) -> str:
+    def _get_reactome_title(
+        self, reactome_id: str, cache: Dict[str, str], cache_dir: Path
+    ) -> str:
         """Fetch Reactome pathway title from Reactome API or cache.
 
         Args:
             reactome_id: The Reactome identifier (e.g., 'Reactome:R-HSA-6785807')
             cache: Dictionary to cache fetched titles
+            cache_dir: Reactome cache directory read and written for the title
 
         Returns:
             The title of the Reactome pathway, or a TODO placeholder if not found
@@ -1136,9 +1154,6 @@ class GOAValidator:
             clean_id = clean_id.split(":", 1)[1].strip()
 
         try:
-            # Use reactome directory for cache
-            cache_dir = Path("reactome")
-
             # First try to get just the title from cache (fast)
             cached_title = get_cached_title(clean_id, cache_dir)
             if cached_title:
