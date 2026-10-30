@@ -10,9 +10,14 @@ Reads genes/<org>/<gene>/<gene>-descriptions.yaml (from
   AI description: a crude, recall-oriented pointer to facts worth checking.
   It is a lexical heuristic, not a judgment of correctness.
 
+With ``--findings-output`` it also collects the reviewer ``findings`` (gap,
+discrepancy, insight) recorded in the descriptions files into one worklist,
+grouped by category.
+
 Usage:
     uv run python projects/MOD_DESCRIPTIONS/compare_descriptions.py worm \
-        -o projects/MOD_DESCRIPTIONS/worm-comparison.yaml
+        -o projects/MOD_DESCRIPTIONS/worm-comparison.yaml \
+        --findings-output projects/MOD_DESCRIPTIONS/worm-findings.yaml
 """
 
 import argparse
@@ -75,11 +80,24 @@ def compare(org: str, genes_dir: Path) -> list[dict]:
     return rows
 
 
+def collect_findings(org: str, genes_dir: Path) -> dict[str, list[dict]]:
+    """Gather reviewer findings from every descriptions file, grouped by category."""
+    out: dict[str, list[dict]] = {}
+    for dfile in sorted((genes_dir / org).glob("*/*-descriptions.yaml")):
+        d = yaml.safe_load(dfile.read_text()) or {}
+        for f in d.get("findings") or []:
+            out.setdefault(f["category"], []).append(
+                {"gene": dfile.parent.name, "text": f["text"], "sources": f.get("sources") or []}
+            )
+    return dict(sorted(out.items()))
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("organism")
     p.add_argument("--genes-dir", type=Path, default=Path("genes"))
     p.add_argument("-o", "--output", type=Path)
+    p.add_argument("--findings-output", type=Path)
     a = p.parse_args()
     rows = compare(a.organism, a.genes_dir)
     with_mod = [r for r in rows if r["has_mod_curated"]]
@@ -95,6 +113,10 @@ def main() -> None:
     out = yaml.safe_dump({"summary": summary, "genes": rows}, sort_keys=False, width=100)
     if a.output:
         a.output.write_text(out)
+    if a.findings_output:
+        findings = collect_findings(a.organism, a.genes_dir)
+        summary["findings"] = {k: len(v) for k, v in findings.items()}
+        a.findings_output.write_text(yaml.safe_dump(findings, sort_keys=False, width=100))
     print(yaml.safe_dump(summary, sort_keys=False))
 
 

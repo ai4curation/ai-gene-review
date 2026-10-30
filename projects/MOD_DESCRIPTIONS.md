@@ -138,32 +138,60 @@ adenylate-cyclase row, and updated open questions. The WormBase reference's
 `reference_review` records which claims were traced (synaptic role) and which
 were judged stale (FLP-1 and NLP-12 as candidate ligands).
 
-## Description reviews (16 worm genes)
+## Description reviews (all 432 worm genes)
 
 The review of each text is stored in the gene's `<gene>-descriptions.yaml`,
 separate from both the gene review and the deep-research file. Every source
 (UniProt FUNCTION, WormBase curated, Alliance automated, RefSeq) gets a 1–5
 score on correctness, utility, compactness, completeness and specificity, with a
 note. The file also gets an `overall_concordance` score across sources and
-`findings` (gap, discrepancy, insight). The 16 hand-compared genes are now
-`COMPLETE` (`ai-gene-review descriptions-status worm`). Scores are AI
-judgments made against each gene's review and the literature it cites.
+`findings` (gap, discrepancy, insight). All 432 worm files are `COMPLETE`
+(`ai-gene-review descriptions-status worm`). Scores are AI judgments made
+against each gene's review and the literature it cites. 16 genes were scored by
+hand, and parallel agents scored the other 416, calibrated on those 16. Their
+output was schema-checked, and several of their
+discrepancy calls (sem-5, spg-7, met-2) were spot-checked against the reviews.
 
-| Source (n) | Correctness | Utility | Compactness | Completeness | Specificity |
+| Source (genes) | Correctness | Utility | Compactness | Completeness | Specificity |
 |---|---|---|---|---|---|
-| UniProt FUNCTION (14) | 4.8 | 4.4 | 3.4 | 4.1 | 4.2 |
-| WormBase curated (16) | 4.1 | 3.2 | 3.4 | 3.0 | 3.1 |
-| Alliance automated (16) | 4.2 | 2.5 | 4.0 | 2.4 | 2.5 |
+| UniProt FUNCTION (315) | 4.5 | 3.7 | 3.7 | 3.5 | 3.7 |
+| WormBase curated (374) | 4.2 | 3.4 | 3.6 | 3.1 | 3.3 |
+| Alliance automated (432) | 3.9 | 2.7 | 4.0 | 2.6 | 2.7 |
 
-RefSeq is left out of the table: for worm it is a re-dated copy of the
-Alliance automated text, and it is scored the same. fshr-1 and hsp-16.41 have
-no UniProt FUNCTION text. On correctness the WormBase text scores lowest of the
-three because it goes stale (lgg-2 2, ced-4 3). It is more useful than the
-automated text, which is accurate but picks peripheral GO terms (Hsp70 binding
-for skn-1, dauer maintenance for lag-2). Where UniProt has a reviewed FUNCTION
-text, it is the best single source. Concordance was lowest for fshr-1 (2: the
-WormBase and automated texts describe different roles) and lgg-2 (2: WormBase
-contradicts the rest).
+Concordance across sources: mean 4.25 (5: 187 genes, 4: 177, 3: 57, 2: 10, 1: 1).
+RefSeq is left out of the table. It is usually a copy of the Alliance automated
+text, but for about a third of genes it comes from an older or newer Alliance
+release and was scored separately.
+
+The 312 findings (142 gaps, 104 discrepancies, 66 insights) are collected in
+[worm-findings.yaml](MOD_DESCRIPTIONS/worm-findings.yaml), which is a curator
+worklist. Recurring patterns:
+
+- **Stale WormBase "no obvious function" texts.** Twelve WormBase texts score 2
+  or less on correctness. Most say "no obvious function in mass RNAi assays"
+  for genes with established mutant phenotypes: atg-2, atg-3, atg-5,
+  atg-16.2, lgg-2, gst-44 and pef-1. meg-3 is described as a somatic protein,
+  but it is the germline P-granule scaffold.
+- **WormBase or UniProt contradicting the review.** Examples: SEM-5 "negatively"
+  regulating vulval induction (both sources); spg-7 called the paraplegin
+  ortholog (it is AFG3L2; ppgn-1 is SPG7); MET-2 as an H3K36 methyltransferase
+  (it is H3K9); SDF-9 as an active phosphatase (it is a pseudophosphatase);
+  akt-2 single mutants as dauer-constitutive.
+- **Mammalian text carried over in UniProt.** Examples: "motile cilium" for
+  the non-motile worm sensory cilia (dyf and osm genes, ift-20); myelin and
+  sebaceous-gland roles for fath-1; SHH signaling for ift-81.
+- **Automated texts that lead with removed or over-annotated terms.** Examples:
+  slicer (RNA endonuclease) activity for WAGO Argonautes that lack the catalytic
+  residues (wago-1, wago-4, hrde-1); kinase activity for the vps-15 pseudokinase;
+  protein tyrosine phosphatase rather than PIP3 phosphatase for daf-18.
+- **Regressions in the current automated text.** For ced-5, che-2, daf-15,
+  nud-1, ppgn-1 and nsy-1, the current Alliance text has lost function
+  sentences (and, for nsy-1, its core MAP3K activity) that the older RefSeq copy
+  still carries. This is worth reporting to the Alliance.
+- **Gaps in our reviews.** Some MOD claims appear nowhere in the review and
+  are leads for follow-up. Examples: bbs-1/2/5/7/8/9 dense-core-vesicle
+  secretion phenotypes, ddb-1 in LET-23 vulval signaling, lys-1 regulators,
+  gsk-3 axon guidance, and the let-60 phenotypes.
 
 ## Recommendations
 
@@ -188,6 +216,7 @@ contradicts the rest).
 - [x] Emitter, tests, `just` recipe and skill guidance
 - [x] Write `-deep-research-wormbase.md` for the worm genes
 - [x] Follow up the fshr-1 synaptic role (PMID:39561202) in its review
-- [x] Rubric reviews of all description sources for the 16 hand-compared genes
-- [ ] Follow up gst-4 sperm guidance, let-60 phenotypes and the other gaps listed above
+- [x] Rubric reviews of all description sources for all 432 worm genes, with a findings worklist
+- [ ] Work through the gap and discrepancy findings in `worm-findings.yaml`
+- [ ] Report the automated-text regressions and contradicted MOD statements upstream
 - [ ] Generate for fly, mouse, rat, zebrafish and yeast
