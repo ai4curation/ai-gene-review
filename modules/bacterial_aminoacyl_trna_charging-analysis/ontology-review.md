@@ -99,3 +99,13 @@ Row numbers are one-based positions in existing_annotations; repeated terms reta
 | genes/PSEAE/gltX/gltX-ai-review.yaml | 11 | GO:0006424 | MODIFY → GO:0006418 |
 | genes/THET8/glyQS/glyQS-ai-review.yaml | 11 | GO:0006426 | MODIFY → GO:0006418 |
 | genes/THET8/glyQS/glyQS-ai-review.yaml | 12 | GO:0006426 | MODIFY → GO:0006418 |
+
+## Repository-wide dependent migrations
+
+Pruning the stale BP enum exposed four out-of-panel core processes. AARS1 and Populus ALARS now use GO:0006418 while retaining alanine specificity in GO:0004813; their obsolete-term reviews and authored replacement suggestions are reconciled. Populus GATC now uses GO:0019988 while retaining its supported organellar Gln-forming complex contribution. The generic GO enum is pruned alongside the BP enum.
+
+The METTP GatC review required biological correction as well as migration. A0B5K3 is Methanothrix thermoacetophila PT; its old manual report had applied Methanothermobacter thermautotrophicus findings. The corrected review uses target HAMAP family/complex evidence and explicitly comparative archaeal pathway evidence. It retains eight original annotation payloads and archives two unsupported inherited NEW proposals. The core records a GatCAB Asn-forming contribution with GO:0019988, while target Gln-forming capacity and a separate regulatory role remain undecided. These four dependencies are not added to the 42-member bacterial module panel.
+
+## Upstream issue provenance
+
+The GO:0070681 source stanza's reference to issue15375 is supported by the issue discussion, despite its broader title. The [2026-09-02 closure summary](https://github.com/geneontology/go-ontology/issues/15375#issuecomment-5505778750) explicitly discusses GO:0070681, its consider-only migration, and the related pathway-variant work in issue31932. The source stanza is preserved exactly; the issue title alone is not evidence of a wrong reference.

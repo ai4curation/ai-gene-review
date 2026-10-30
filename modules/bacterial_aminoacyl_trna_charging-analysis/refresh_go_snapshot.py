@@ -78,10 +78,14 @@ def refresh_caches():
         writer = csv.DictWriter(stream, fieldnames=fields, delimiter="\t", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
-    path = ROOT / "cache/enums/gobiologicalprocessenum_769282d9de2a.csv"
-    lines = path.read_text().splitlines()
-    path.write_text("\n".join(line for line in lines if line not in OBSOLETE_IDS) + "\n")
-    print("Verified 22 obsolete terms; refreshed their label/metadata caches and excluded them from the BP enum.")
+    for filename in (
+        "gobiologicalprocessenum_769282d9de2a.csv",
+        "gotermenum_44393af1d52e.csv",
+    ):
+        path = ROOT / "cache/enums" / filename
+        lines = path.read_text().splitlines()
+        path.write_text("\n".join(line for line in lines if line not in OBSOLETE_IDS) + "\n")
+    print("Verified 22 obsolete terms; refreshed their caches and excluded them from the BP and GO enums.")
 
 
 if __name__ == "__main__":

@@ -44,3 +44,8 @@ Checked the integrated 42-member program and its comparative source boundaries a
 ## 2026-10-29 — PR #5616 follow-up
 
 The original source snapshot omitted the obsolete terms named in the review. The expanded normal QuickGO response and unedited term stanzas from a pinned GO commit now make the claim reproducible. All 56 affected rows across 40 reviews were checked: 45 direct-charging rows follow explicit GO:0006418 replacements; 11 GatCAB rows retain the independently justified GO:0019988 modification process. No machine annotation payload or action is changed. The three GatA localization reviews now quote native Bacillus S100 evidence, with Pseudomonas localization explicitly inferred by conserved function. GatA broad-activity refinement and the PSEPK glutaminase summary are corrected without removing supported complex contributions.
+
+
+## Dependent-review migration follow-up
+
+The refreshed BP enum exposed four pre-existing authored core terms outside the module panel: human AARS1, POPTR ALARS, POPTR GATC and METTP gatC. Their dependent processes and adjacent obsolete replacement suggestions are migrated with separate gene histories. METTP also required correcting a wrong-organism manual-report attribution and unsupported subunit-based rejections; eight machine rows are preserved and two inherited authored proposals are archived. These dependency repairs do not expand the 42-member module. Both BP and generic GO enum caches now exclude the 22 verified obsolete terms.
