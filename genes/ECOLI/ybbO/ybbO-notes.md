@@ -45,6 +45,16 @@
 
 - GO:0008106 IDA x2: ACCEPT.
 - GO:0016491 IBA: MODIFY -> GO:0008106 (same as Salmonella review).
-- NEW GO:0052650 all-trans-retinol dehydrogenase (NADP+) activity, IMP, from PMID:25726762
-  and PMID:34361955; non-physiological substrate in E. coli, kept out of core function
-  label but mentioned.
+- NEW GO:0052650 all-trans-retinol dehydrogenase (NADP+) activity was proposed and then
+  withdrawn (see below); recorded as a suggested question instead.
+
+## Revision after OpenScientist (2026-10-30)
+
+The blinded OpenScientist run on the Salmonella orthologue
+(file:SALTY/ybbO/ybbO-hypotheses/seq-only-blinded-activity/openscientist.md) judged retinal
+reduction promiscuous and non-core, citing [PMID:34850377 "Expression of human RDH10 and
+Escherichia coli ybbO led to increase in retinol production, but retinal remained as a major
+product"]. Together with the lack of any purified-enzyme retinal assay, no measured
+cofactor, and a substrate absent from E. coli, this does not clear the bar for a NEW
+annotation. The retinal evidence stays in the description, references and a suggested
+question.
