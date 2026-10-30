@@ -56,15 +56,21 @@ GO issues still pending are new ones: relabel the term, and add an MF term
 for the anaerobic activity.
 
 PANTHER supports the same point. Q9CDI2 is in PTHR32329:SF4, named "ACTIVATOR
-OF 2-HYDROXYACYL-COA DEHYDRATASE", in family PTHR32329 ("Dehydratase
-Activator and Reductase Protein"). All nine reviewed members of PTHR32329
+OF 2-HYDROXYACYL-COA DEHYDRATASE". The family PTHR32329 is named "BIFUNCTIONAL
+PROTEIN [INCLUDES 2-HYDROXYACYL-COA DEHYDRATASE (N-TER) AND ITS ACTIVATOR
+DOMAIN (C_TERM)-RELATED" in PANTHER (panther.obo; yxcA-uniprot.txt). The
+"Dehydratase Activator and Reductase Protein" name belongs to the integrated
+InterPro entry IPR051805, and it is machine-generated and unchecked
+(llm: true, checked: false in PTHR32329-metadata.yaml). All nine reviewed members of PTHR32329
 (interpro/panther/PTHR32329/PTHR32329-entries.csv) are 243-438 aa proteins in
 subfamily SF2. They are 2-hydroxyacyl-CoA dehydratase activators (HgdC, LcdC,
 HadI, FldI), benzoyl-CoA reductase subunits (BcrA, BcrD) and three
 uncharacterized proteins (E. coli YjiL, M. jannaschii MJ0004 and MJ0800).
-None is in SF4. The characterized single-chain
-plasmalogen synthases (S. mutans SMU_438c, E. faecalis EF1327, M. elsdenii
-MeHAD, L. lactis yxcA) all fall in SF4. So the family names, like the eggNOG
+None is in SF4. By their UniProt PANTHER cross-references (fetched in
+yxcA-bioinformatics/RESULTS.md), the characterized single-chain plasmalogen
+synthases S. mutans SMU_438c (Q8DVN8), E. faecalis EF1327 (Q835P9) and
+M. elsdenii MeHAD (G0VRE7) are all in SF4, as are L. cremoris A2RP33 and
+L. lactis yxcA. So the family names, like the eggNOG
 "hgdC", describe a family relationship, not this protein's function.
 
 ## Function: plasmalogen synthase PlsA
@@ -155,8 +161,9 @@ MeHAD, L. lactis yxcA) all fall in SF4. So the family names, like the eggNOG
   four predicted ligand cysteines is inactive [PMID:37348645 "The
   four-cysteine (Cys125, Cys164, Cys445 and Cys484) site-mutant of MeHAD,
   which were predicted binding to the [4Fe-4S] cluster, was unable to
-  synthesize plasmalogens"]. By pairwise alignment (48.7% identity) these
-  are Q9CDI2 C126, C165, C445 and C484. The cluster itself has not been
+  synthesize plasmalogens"]. In the global alignment computed in
+  yxcA-bioinformatics/RESULTS.md (48.7% identity) these are Q9CDI2 C126,
+  C165, C445 and C484. The PMID:37348645 record is abstract-only. The cluster itself has not been
   observed on any PlsA.
 - Proposed MF term: renamed "plasmalogen-forming diacylglycerophospholipid
   reductase activity" to match the drafted GO new-term request. Its

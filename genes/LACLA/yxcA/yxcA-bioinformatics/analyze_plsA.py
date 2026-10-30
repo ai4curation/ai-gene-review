@@ -32,6 +32,21 @@ SEQUENCES = {
                    "C. perfringens str. 13 CPE1195 PlsA (Act1-Act2-Red1)"),
     "BAB80900.1": ("ncbi", "BAB80900.1",
                    "C. perfringens str. 13 CPE1194 PlsR (Red2)"),
+    "G0VRE7": ("uniprot", "G0VRE7",
+               "M. elsdenii DSM 20460 MeHAD (MELS_0169), Cys mutants in PMID:37348645"),
+}
+
+# MeHAD residues whose combined mutation abolishes plasmalogen synthesis
+# (PMID:37348645, numbered on the MeHAD sequence)
+MEHAD_MUTATED_CYS = [125, 164, 445, 484]
+
+# UniProt accessions whose PANTHER subfamily assignment is reported
+PANTHER_LOOKUP = {
+    "Q9CDI2": "L. lactis IL1403 yxcA (this review)",
+    "A2RP33": "L. cremoris MG1363 llmg_2516",
+    "Q8DVN8": "S. mutans UA159 SMU_438c (PMID:38456674)",
+    "Q835P9": "E. faecalis V583 EF1327 (PMID:33350306)",
+    "G0VRE7": "M. elsdenii MeHAD (PMID:37348645)",
 }
 
 PFAM_MODELS = ["PF01869", "PF09989", "PF06050"]
@@ -72,6 +87,19 @@ def identity(a, b, mode="global"):
         "aligned_columns": int(cols),
         "query_span": f"{qs + 1}-{qe}",
     }, aln
+
+
+def panther_xrefs(acc):
+    url = f"https://rest.uniprot.org/uniprotkb/{acc}?format=json&fields=xref_panther"
+    for attempt in range(4):
+        r = requests.get(url, timeout=60)
+        if r.ok:
+            break
+        time.sleep(2 ** attempt)
+    r.raise_for_status()
+    time.sleep(0.4)
+    return sorted(x["id"] for x in r.json().get("uniProtKBCrossReferences", [])
+                  if x.get("database") == "PANTHER")
 
 
 def residue_map(aln):
@@ -127,7 +155,7 @@ def main():
 
     # Global identity of Q9CDI2 to each full-length single-chain homolog
     alns = {}
-    for k in ["UPI00072AC48C", "ABJ73971.1", "A2RP33", "AAO81118.1"]:
+    for k in ["UPI00072AC48C", "ABJ73971.1", "A2RP33", "AAO81118.1", "G0VRE7"]:
         res["pairwise"][k], alns[k] = identity(q, seqs[k], "global")
     # C. perfringens split operon: local alignments of PlsA and PlsR
     for k in ["BAB80901.1", "BAB80900.1"]:
@@ -143,6 +171,21 @@ def main():
             row[k] = seqs[k][j] if j is not None else "-"
         cons[f"C{i + 1}"] = row
     res["act_region_cysteines"] = cons
+
+    # Where the MeHAD mutated cysteines fall in Q9CDI2 (inverse of the
+    # Q9CDI2 -> MeHAD residue map from the global alignment)
+    inv = {j: i for i, j in residue_map(alns["G0VRE7"]).items()}
+    m = seqs["G0VRE7"]
+    mapping = {}
+    for pos in MEHAD_MUTATED_CYS:
+        i = inv.get(pos - 1)
+        mapping[f"{m[pos - 1]}{pos}"] = f"{q[i]}{i + 1}" if i is not None else "-"
+    res["mehad_mutated_cys_in_Q9CDI2"] = mapping
+
+    res["panther_subfamilies"] = {
+        acc: {"note": note, "panther": panther_xrefs(acc)}
+        for acc, note in PANTHER_LOOKUP.items()
+    }
 
     # Pfam HMMs on the full chain and on the C-terminal segment (Red2 candidate)
     hmms = [fetch_hmm(a) for a in PFAM_MODELS]

@@ -35,6 +35,7 @@ here is hard-coded.
 | ABJ73971.1 (1436 aa) | *L. cremoris* ATCC BAA-493 LACR_2543, the PlsA expressed in PMID:41427725 | 96.6% | 1-1436 |
 | A2RP33 (1436 aa) | *L. cremoris* MG1363 llmg_2516 | 96.7% | 1-1436 |
 | AAO81118.1 (1415 aa) | *E. faecalis* EF1327 PlsA (PMID:33350306) | 67.3% | 1-1436 |
+| G0VRE7 (1431 aa) | *M. elsdenii* MeHAD, MELS_0169 (PMID:37348645) | 48.7% | 1-1436 |
 | BAB80901.1 (1004 aa) | *C. perfringens* CPE1195 PlsA (Act1-Act2-Red1) | 51.1% | 1-989 |
 | BAB80900.1 (420 aa) | *C. perfringens* CPE1194 PlsR (Red2) | 41.3% | 1011-1411 |
 
@@ -66,6 +67,31 @@ C609, C613). C572 is Ala in EF1327. PMID:33350306 reports that Act1 and Act2
 share conserved cysteines for iron-sulfur cluster ligation with HAD and BCR
 activators. This analysis shows only that the cysteines are conserved among
 PlsA proteins. It does not map them onto HgdC cluster ligands.
+
+### MeHAD cysteine mutant mapped onto Q9CDI2
+
+PMID:37348645 reports that a combined mutant of MeHAD Cys125, Cys164, Cys445
+and Cys484, the predicted [4Fe-4S] ligands numbered on the MeHAD sequence
+G0VRE7, cannot make plasmalogens. In the global alignment of Q9CDI2 with
+G0VRE7 (48.7% identity), these residues align to:
+
+| MeHAD (G0VRE7) | Q9CDI2 |
+|---|---|
+| C125 | C126 |
+| C164 | C165 |
+| C445 | C445 |
+| C484 | C484 |
+
+All four Q9CDI2 positions are among the eight Act-region cysteines conserved
+in EF1327 and *C. perfringens* PlsA (above). The mutant result is known only
+from the abstract (the cached record has no full text), so it is unknown
+whether the four mutations were also tested singly.
+
+### PANTHER subfamily of the characterized PlsA proteins
+
+The UniProt PANTHER cross-references, fetched by the script, place Q9CDI2,
+A2RP33 (L. cremoris MG1363), Q8DVN8 (S. mutans SMU_438c), Q835P9 (E. faecalis
+EF1327) and G0VRE7 (M. elsdenii MeHAD) all in PTHR32329:SF4.
 
 ## Conclusions
 
