@@ -138,6 +138,33 @@ adenylate-cyclase row, and updated open questions. The WormBase reference's
 `reference_review` records which claims were traced (synaptic role) and which
 were judged stale (FLP-1 and NLP-12 as candidate ligands).
 
+## Description reviews (16 worm genes)
+
+The review of each text is stored in the gene's `<gene>-descriptions.yaml`,
+separate from both the gene review and the deep-research file. Every source
+(UniProt FUNCTION, WormBase curated, Alliance automated, RefSeq) gets a 1–5
+score on correctness, utility, compactness, completeness and specificity, with a
+note. The file also gets an `overall_concordance` score across sources and
+`findings` (gap, discrepancy, insight). The 16 hand-compared genes are now
+`COMPLETE` (`ai-gene-review descriptions-status worm`). Scores are AI
+judgments made against each gene's review and the literature it cites.
+
+| Source (n) | Correctness | Utility | Compactness | Completeness | Specificity |
+|---|---|---|---|---|---|
+| UniProt FUNCTION (14) | 4.8 | 4.4 | 3.4 | 4.1 | 4.2 |
+| WormBase curated (16) | 4.1 | 3.2 | 3.4 | 3.0 | 3.1 |
+| Alliance automated (16) | 4.2 | 2.5 | 4.0 | 2.4 | 2.5 |
+
+RefSeq is left out of the table: for worm it is a re-dated copy of the
+Alliance automated text, and it is scored the same. fshr-1 and hsp-16.41 have
+no UniProt FUNCTION text. On correctness the WormBase text scores lowest of the
+three because it goes stale (lgg-2 2, ced-4 3). It is more useful than the
+automated text, which is accurate but picks peripheral GO terms (Hsp70 binding
+for skn-1, dauer maintenance for lag-2). Where UniProt has a reviewed FUNCTION
+text, it is the best single source. Concordance was lowest for fshr-1 (2: the
+WormBase and automated texts describe different roles) and lgg-2 (2: WormBase
+contradicts the rest).
+
 ## Recommendations
 
 1. **Use the curated MOD description as an input, not as an authority.** This
@@ -161,5 +188,6 @@ were judged stale (FLP-1 and NLP-12 as candidate ligands).
 - [x] Emitter, tests, `just` recipe and skill guidance
 - [x] Write `-deep-research-wormbase.md` for the worm genes
 - [x] Follow up the fshr-1 synaptic role (PMID:39561202) in its review
+- [x] Rubric reviews of all description sources for the 16 hand-compared genes
 - [ ] Follow up gst-4 sperm guidance, let-60 phenotypes and the other gaps listed above
 - [ ] Generate for fly, mouse, rat, zebrafish and yeast
