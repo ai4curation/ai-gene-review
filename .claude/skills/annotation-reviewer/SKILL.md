@@ -153,7 +153,10 @@ Always make use of the `original_reference_id`. If this refers to a PMID, then r
 
 You should make use of:
 
-- pre-existing literature deep research review (GENE-deep-research.md)
+- pre-existing literature deep research review (GENE-deep-research-PROVIDER.md), including any
+  MOD curated gene description (GENE-deep-research-wormbase.md, -flybase.md, -sgd.md, ...).
+  The MOD text is hand-written but uncited and often stale: check each of its claims and record
+  the verdict in that reference's `reference_review`.
 - existing UniProt annotations (.uniprot.txt), in particular text annotations and features and domains
 - holistic but critical gestalt of existing GO annotations in the gene review YAML file (priortizing IBA annotations)
 

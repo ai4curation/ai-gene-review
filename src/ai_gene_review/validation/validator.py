@@ -55,6 +55,7 @@ from ai_gene_review.validation.uniprot_quote_source import (
     validate_uniprot_quote_sources,
 )
 from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.source_statement_defects import validate_statement_defects
 from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
@@ -407,6 +408,7 @@ def validate_gene_review(
         validate_uniprot_quote_sources(data, report)
         validate_record_sections(data, report)
         validate_goa_support(data, report, yaml_file_path)
+        validate_statement_defects(data, report)
 
     return report
 
@@ -866,7 +868,14 @@ def check_best_practices_rules(
 
         if not has_research_support:
             if yaml_file is not None:
-                research_files = list(yaml_file.parent.glob("*research*.md"))
+                # MOD gene descriptions are curator-written source text, not AI deep
+                # research, so leaving one uncited is not what this check is about.
+                from ai_gene_review.etl.mod_description_deep_research import is_mod_description_file
+
+                research_files = [
+                    f for f in yaml_file.parent.glob("*research*.md")
+                    if not is_mod_description_file(f.name)
+                ]
                 if research_files:
                     research_file_names = [
                         f.name for f in research_files[:3]

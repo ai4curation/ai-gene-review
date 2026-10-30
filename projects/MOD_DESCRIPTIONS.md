@@ -1,0 +1,265 @@
+---
+title: "MOD gene descriptions as review input"
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
+species: [worm]
+autolink_exclude: [MOD, MODS, GET3]
+---
+
+# MOD gene descriptions as review input
+
+**Bottom line:** model organism databases (MODs) publish hand-written gene
+descriptions, for example WormBase's paragraph for
+[rab-11.1](https://www.alliancegenome.org/gene/WB:WBGene00004274). Until this
+pilot the review workflow did not use them. A fetcher and sidecar format
+existed (`ai-gene-review fetch-descriptions`, `<gene>-descriptions.yaml`), but
+they had only been run on 118 yeast genes, and nothing in `fetch-gene` or the
+reviewer skills read the files. The fetcher had also stopped working: the
+Alliance API changed its response shape, and the worm cross-reference was
+parsed wrongly. Both are now fixed.
+
+A pilot on all 432 worm genes found that **374 (87%) have a curated WormBase
+description**. In the 16 genes read by hand, our review `description` is
+usually more mechanistic and more current. The WormBase text is still worth
+reading as a **recall checklist**, though: in 7 of the 16 pairs it
+names a phenotype, process or regulator that our review leaves out, and in one
+case (fshr-1) a whole functional role that our review never mentions.
+
+**Decision (2026-10-30): treat the curated description as a deep-research
+source**, the same way as Affinage. It is written verbatim to
+`<gene>-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, `rgd`,
+`zfin`, `xenbase`). It is cited as a `file:` reference, and the reviewer's
+judgment goes in `references[].reference_review`. The source is sparse,
+uncited, undated and only partly trusted, but no new data structures or
+processes are needed for it. See [Deep-research integration](#deep-research-integration).
+
+## Data and method
+
+- Fetch: `uv run ai-gene-review fetch-descriptions-bulk worm`. This writes
+  `genes/worm/<gene>/<gene>-descriptions.yaml` with UniProt FUNCTION, Alliance
+  curated (`Alliance_Imported`, the MOD's own hand-written text), Alliance
+  automated, and NCBI RefSeq summaries.
+- Alliance now returns synopses as `gene.relatedNotes` with
+  `noteType.name` set to `MOD_provided_gene_description` (curated) or
+  `automated_gene_description`. The old `geneSynopsis` keys are gone, so the
+  previous code returned nothing without raising an error.
+- Compare: [compare_descriptions.py](MOD_DESCRIPTIONS/compare_descriptions.py)
+  writes [worm-comparison.yaml](MOD_DESCRIPTIONS/worm-comparison.yaml), which
+  lists, per gene, the WormBase content words that do not appear in our
+  `description`. This is a lexical pointer for choosing genes to read, not a
+  quality score.
+
+| Measure (worm) | Value |
+|---|---|
+| Genes fetched | 432 |
+| With curated WormBase description | 374 |
+| Median words, WormBase curated | 75 |
+| Median words, our `description` | 139 |
+| Median share of WormBase content words found in ours | 0.35 |
+
+## Hand comparison (16 genes)
+
+There were eight lowest-overlap genes (cep-1, let-60, fshr-1, lgg-2, gst-4,
+mpk-1, ced-4, atg-18) and eight random ones (skn-1, sup-17, fasn-1,
+hsp-16.41, rsks-1, lag-2, gpr-1, lipl-4). Low lexical overlap mostly reflects
+different emphasis, not error.
+
+**Gaps in our reviews that WormBase points to**
+
+- fshr-1: WormBase describes a role in acetylcholine release at neuromuscular
+  synapses (a large-scale synaptic screen; FLP-1 and NLP-12 are possible
+  ligands). Our review is entirely about intestinal innate immunity and stress,
+  and neither the review YAML nor the notes mention synapses or acetylcholine.
+  This needs a follow-up literature check.
+- gst-4: WormBase describes a putative prostaglandin D synthase needed for
+  sperm guidance towards an oocyte PUFA signal. Our description frames GST-4
+  only as a SKN-1-induced detoxifying GST. The review raises the prostaglandin
+  question only in a suggested question.
+- cep-1: WormBase mentions meiotic chromosome segregation and hypoxia
+  sensitivity. The review YAML covers them, but the description does not.
+- let-60 and mpk-1: WormBase lists phenotypes our short descriptions omit (male
+  spicule, sex myoblast migration, chemotaxis, pachytene progression,
+  NOS-3/TRA-1 regulation in the germline). For let-60 none of these appear
+  anywhere in the review. For mpk-1 they appear in the annotations but not in
+  the description.
+- lag-2 and skn-1: WormBase gives detailed expression patterns and their
+  regulation (LET-23/SUR-2 regulation of lag-2 in the vulval precursor cells),
+  which our descriptions largely leave out.
+
+**Where WormBase is stale or weaker**
+
+- ced-4 is still a "novel protein" with sequestration by CED-9 to membranes. It
+  has no apoptosome and no Apaf-1 homology.
+- lgg-2 is said to have "no obvious function" and a speculative MAP1
+  microtubule role. Our review describes its established autophagosome
+  maturation role through VPS-39/HOPS.
+- rsks-1 is a "putative" S6K, and hsp-16.41 is a "passive ligand". The
+  WormBase texts were written years ago and, like UniProt FUNCTION text for
+  yeast SAN1 in the earlier pilot, are not updated as the field moves.
+- Several WormBase texts contain formatting damage (words run together, such as
+  "PUFA-basedsignal"), which suggests they were not cleaned when imported.
+
+## Deep-research integration
+
+- **Emit:** `just mod-description-deep-research <org> [genes...]`
+  (`src/ai_gene_review/etl/mod_description_deep_research.py`). The file holds
+  the curated note exactly as served, including WormBase's run-together words,
+  with frontmatter recording provider, `authorship` (MOD curators),
+  `source_url`, MOD gene id, UniProt accession, fetch date, and
+  `citations_provided: false` / `authoring_date_provided: false`. As with the
+  Affinage emitter, it contains no AIGR judgment.
+- **Only the curated note is used.** The Alliance automated description is
+  generated from GO annotations, so citing it would cite the annotations under
+  review as evidence for themselves.
+- **Wrong-gene check:** the MOD id comes from the UniProt cross-reference.
+  Writing is refused (unless `--force`) when the symbol or systematic name of
+  the Alliance record matches neither the folder nor any UniProt gene name.
+  Human is out of scope.
+- **Reviewer guidance** (review and annotation-reviewer skills): run the
+  emitter for every non-human review, check each claim, and record a verdict in
+  `reference_review`. A claim found only in the MOD text is a lead for a
+  literature search.
+- The `DEEP_RESEARCH` publication type now covers external narrative sources
+  in general, not only AI reports. The frontmatter records authorship.
+- `<gene>-descriptions.yaml` stays as the input for the description comparison
+  ([compare_descriptions.py](MOD_DESCRIPTIONS/compare_descriptions.py)). It is
+  not a review source, because it stores the source text together with our AI's
+  rubric scores.
+
+**Worked example: fshr-1.** The WormBase text led to Buckley et al. 2024
+(PMID:39561202). That paper shows that intestinal FSHR-1 is necessary and
+sufficient for acetylcholine release at the neuromuscular junction, with
+GSA-1/Gas and ACY-1 acting downstream and the glycoprotein hormone subunits
+GPLA-1 and GPLB-1 upstream. The review now has a NEW
+`GO:1900075 positive regulation of neuromuscular synaptic transmission` (IMP)
+row, a corrected description (which had wrongly said FSHR-1 had been
+"repurposed" away from hormone signaling), stronger support for the IBA
+adenylate-cyclase row, and updated open questions. The WormBase reference's
+`reference_review` records which claims were traced (synaptic role) and which
+were judged stale (FLP-1 and NLP-12 as candidate ligands).
+
+## Description reviews (all 432 worm genes)
+
+The review of each text is stored in the gene's `<gene>-descriptions.yaml`,
+separate from both the gene review and the deep-research file. Every source
+(UniProt FUNCTION, WormBase curated, Alliance automated, RefSeq) gets a 1–5
+score on correctness, utility, compactness, completeness and specificity, with a
+note. The file also gets an `overall_concordance` score across sources and
+`findings` (gap, discrepancy, insight). All 432 worm files are `COMPLETE`
+(`ai-gene-review descriptions-status worm`). Scores are AI judgments made
+against each gene's review and the literature it cites. 16 genes were scored by
+hand, and parallel agents scored the other 416, calibrated on those 16. Their
+output was schema-checked, and several of their
+discrepancy calls (sem-5, spg-7, met-2) were spot-checked against the reviews.
+
+| Source (genes) | Correctness | Utility | Compactness | Completeness | Specificity |
+|---|---|---|---|---|---|
+| UniProt FUNCTION (315) | 4.5 | 3.7 | 3.7 | 3.5 | 3.7 |
+| WormBase curated (374) | 4.2 | 3.4 | 3.6 | 3.1 | 3.3 |
+| Alliance automated (432) | 3.9 | 2.7 | 4.0 | 2.6 | 2.7 |
+
+Concordance across sources: mean 4.25 (5: 187 genes, 4: 177, 3: 57, 2: 10, 1: 1).
+RefSeq is left out of the table. It is usually a copy of the Alliance automated
+text, but for about a third of genes it comes from an older or newer Alliance
+release and was scored separately.
+
+The 312 findings (142 gaps, 104 discrepancies, 66 insights) are collected in
+[worm-findings.yaml](MOD_DESCRIPTIONS/worm-findings.yaml), which is a curator
+worklist. Recurring patterns:
+
+- **Stale WormBase "no obvious function" texts.** Twelve WormBase texts score 2
+  or less on correctness. Most say "no obvious function in mass RNAi assays"
+  for genes with established mutant phenotypes: atg-2, atg-3, atg-5,
+  atg-16.2, lgg-2, gst-44 and pef-1. meg-3 is described as a somatic protein,
+  but it is the germline P-granule scaffold.
+- **WormBase or UniProt contradicting the review.** Examples: SEM-5 "negatively"
+  regulating vulval induction (both sources); spg-7 called the paraplegin
+  ortholog (it is AFG3L2; ppgn-1 is SPG7); MET-2 as an H3K36 methyltransferase
+  (it is H3K9); SDF-9 as an active phosphatase (it is a pseudophosphatase);
+  akt-2 single mutants as dauer-constitutive.
+- **Mammalian text carried over in UniProt.** Examples: "motile cilium" for
+  the non-motile worm sensory cilia (dyf and osm genes, ift-20); myelin and
+  sebaceous-gland roles for fath-1; SHH signaling for ift-81.
+- **Automated texts that lead with removed or over-annotated terms.** Examples:
+  slicer (RNA endonuclease) activity for WAGO Argonautes that lack the catalytic
+  residues (wago-1, wago-4, hrde-1); kinase activity for the vps-15 pseudokinase;
+  protein tyrosine phosphatase rather than PIP3 phosphatase for daf-18.
+- **Regressions in the current automated text.** For ced-5, che-2, daf-15,
+  nud-1, ppgn-1 and nsy-1, the current Alliance text has lost function
+  sentences (and, for nsy-1, its core MAP3K activity) that the older RefSeq copy
+  still carries. This is worth reporting to the Alliance.
+- **Gaps in our reviews.** Some MOD claims appear nowhere in the review and
+  are leads for follow-up. Examples: bbs-1/2/5/7/8/9 dense-core-vesicle
+  secretion phenotypes, ddb-1 in LET-23 vulval signaling, lys-1 regulators,
+  gsk-3 axon guidance, and the let-60 phenotypes.
+
+## Follow-up: acting on the findings
+
+The 244 gap and discrepancy findings (216 genes) were each checked against the
+literature, and acted on under the CLAUDE.md curation rules. Parallel agents did
+the work; each edited gene was validated and given a history record. Batch
+results were spot-checked (pek-1, lrx-1, sem-5).
+
+- **Upstream defects:** 100 errors in description text across 93 genes (73
+  WormBase, 27 UniProt) are now recorded as `source_defects` on the cited
+  reference: 31 WRONG_STATEMENT, 28 OUTDATED_STATEMENT, 40 MISSING_STATEMENT and 1
+  WRONG_REFERENCE. Of these, 28 are CONFIRMED by a quoted paper and the rest are
+  PROBABLE. `just export-source-defects` writes them to
+  `reports/source-defects/WORMBASE.md` and `UNIPROT.md` for filing. Examples:
+  - UniProt says IRE-1 retains unspliced mRNAs, but its cited paper says the opposite.
+  - UniProt names nlp-29 as its own receptor; the receptor is NPR-12.
+  - UniProt's sma-9 FUNCTION text cites an unrelated paper.
+  - WormBase says the GPR-2 GoLoco motif is a GEF feature.
+  - WormBase says SOD-2 promotes lifespan, but sod-2 mutants are long-lived.
+  - WormBase calls ASNA-1 a membrane transporter, but it is the GET3 targeting ATPase.
+- **Our reviews:**
+  - About 60 descriptions gained sentences for verified gaps. Examples include
+    the let-60 phenotypes, the BBS dense-core-vesicle secretion phenotypes and
+    the sem-5 PLC-gamma/PI3K outputs.
+  - No NEW annotation rows were added. Every gap was an indirect or
+    pleiotropic phenotype that does not meet the NEW bar.
+  - Four reviews were corrected where they, not the source, were wrong:
+    - pek-1: pek-1;atf-6 silencing has no phenotype (PMID:16184190).
+    - lrx-1: its own analysis wrongly rejected the LDL-A repeats that Pfam,
+      SMART and CDD detect.
+    - lys-1: it is a screened candidate, not an established DAF-16 target.
+    - gcy-8: GCY-18 also contributes to the role.
+- **Unverified:** about 30 claims could not be traced to a paper (for example
+  gcy-23 lifespan and rps-23 vulval morphogenesis). They are noted in the
+  reference's `review_notes`, with no annotation change.
+- **Alliance:** nine automated descriptions lost content that the RefSeq copy
+  of an earlier release still has; see
+  [alliance-automated-regressions.md](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
+- **Open:** the apa-2 review removes "GTPase activating protein binding" because
+  RME-6 is a GEF, but RME-6 also has a RasGAP-related domain (PMID:15895077).
+  The lrx-1 suggested questions look as if they belong to another gene. Both need
+  a human look.
+
+## Recommendations
+
+1. **Use the curated MOD description as an input, not as an authority.** This
+   is done through the deep-research file above. Each claim in the curated text
+   should be either covered by the review or set aside in `reference_review`
+   (for example, "stale: CED-4 is the Apaf-1-like apoptosome adaptor").
+2. **Treat a claim that appears only in the MOD text as a literature lead.**
+   fshr-1 is the model case: the gap is a missed role, not wording.
+3. **Re-audit existing reviews** with the comparison script, starting with the
+   lowest-overlap genes, then repeat for fly (FlyBase), mouse (MGI) and zebrafish
+   (ZFIN), whose Alliance records carry the same note type.
+4. The NCBI step hits rate limits (HTTP 429) on bulk runs. It should honour an
+   `NCBI_API_KEY`, or back off and retry.
+
+## Status and next steps
+
+- [x] Fix the Alliance parser and the WormBase gene-id extraction
+- [x] Fetch worm descriptions (432 genes) and write the comparison table
+- [x] Hand-compare 16 genes
+- [x] Decide how to feed the text to reviews: as a deep-research file (2026-10-30)
+- [x] Emitter, tests, `just` recipe and skill guidance
+- [x] Write `-deep-research-wormbase.md` for the worm genes
+- [x] Follow up the fshr-1 synaptic role (PMID:39561202) in its review
+- [x] Rubric reviews of all description sources for all 432 worm genes, with a findings worklist
+- [x] Work through the gap and discrepancy findings in `worm-findings.yaml`
+- [x] Record the contradicted MOD and UniProt statements as `source_defects`
+- [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
+- [ ] Generate for fly, mouse, rat, zebrafish and yeast
