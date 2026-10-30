@@ -48,7 +48,24 @@ sufficient for plasmalogen synthesis in E. coli (PMID:41427725). Three caveats:
 
 Do not map this protein to GO:0047159 "plasmalogen synthase activity". That
 term is an acyltransferase on lysoplasmalogen (RHEA:10344), and it took the
-EC 2.3.1.25 name in 2024 (go-ontology#27588).
+EC 2.3.1.25 name in 2024 (go-ontology#27588). I checked all three against the
+sources on 2026-10-30: the Rhea entry; the closed GO issue; and the term,
+labelled "1-alkenylglycerophosphocholine O-acyltransferase activity" in GO
+release 2024-01-17 and "plasmalogen synthase activity" in 2024-06-17. The
+GO issues still pending are new ones: relabel the term, and add an MF term
+for the anaerobic activity.
+
+PANTHER supports the same point. Q9CDI2 is in PTHR32329:SF4, named "ACTIVATOR
+OF 2-HYDROXYACYL-COA DEHYDRATASE", in family PTHR32329 ("Dehydratase
+Activator and Reductase Protein"). All nine reviewed members of PTHR32329
+(interpro/panther/PTHR32329/PTHR32329-entries.csv) are 243-438 aa proteins in
+subfamily SF2. They are 2-hydroxyacyl-CoA dehydratase activators (HgdC, LcdC,
+HadI, FldI), benzoyl-CoA reductase subunits (BcrA, BcrD) and three
+uncharacterized proteins (E. coli YjiL, M. jannaschii MJ0004 and MJ0800).
+None is in SF4. The characterized single-chain
+plasmalogen synthases (S. mutans SMU_438c, E. faecalis EF1327, M. elsdenii
+MeHAD, L. lactis yxcA) all fall in SF4. So the family names, like the eggNOG
+"hgdC", describe a family relationship, not this protein's function.
 
 ## Function: plasmalogen synthase PlsA
 
@@ -67,8 +84,8 @@ EC 2.3.1.25 name in 2024 (go-ontology#27588).
   reduction/dehydration domains as a single polypeptide (PlsA)"]. EF1327
   alone is sufficient in E. coli [PMID:33350306 "we observed plasmalogen
   production in E. coli harboring the pPlsEF plasmid"].
-- **Lactococcus, directly:** PMID:41427725 found plasmalogens in
-  L. cremoris strains [PMID:41427725 "Out of the 38 facultative anaerobic
+- **Lactococcus, directly:** PMID:41427725 found plasmalogens in 4 of the
+  5 L. cremoris strains tested [PMID:41427725 "Out of the 38 facultative anaerobic
   Lactobacillales strains tested, 11 were identified as plasmalogen
   producers"]. The authors cloned plsA from L. cremoris ATCC BAA-493
   (LACR_2543, 4,311 bp) [PMID:41427725 "These were named plsAK4 (4,248 bp),
@@ -77,6 +94,17 @@ EC 2.3.1.25 name in 2024 (go-ontology#27588).
   anaerobic conditions [PMID:41427725 "Both PlsLc and PlsBs produced
   plasmalogens, as evidenced by the detection of aldehydes in the lipid
   extracts after acid hydrolysis"]. The empty vector gave none.
+- **Caveat:** the type strain JCM16167T makes no plasmalogen although it
+  carries a plsA homolog, RU89_GL001778 [PMID:41427725 "Notably, of the five
+  L. cremoris strains tested, only the type strain JCM16167T did not produce
+  plasmalogen."]. No L. lactis subsp. lactis strain was among the 38
+  tested. Non-production by one strain is most likely regulatory: a
+  TetR/AcrR-like regulator sits directly upstream of pls in facultative
+  anaerobes [PMID:33350306 "a TetR/AcrR-like transcriptional regulator
+  (EF1326) directly upstream of the pls gene (EF1327)"]. That the enzyme
+  works is shown directly by heterologous expression, so the caveat bears
+  on whether L. lactis IL1403 makes plasmalogens in vivo. It does not bear
+  on the function of the protein.
 - Q9CDI2 is 96.6% identical over its full length to LACR_2543 (ABJ73971.1)
   and 67.3% identical to EF1327
   [file:LACLA/yxcA/yxcA-bioinformatics/RESULTS.md].
@@ -121,9 +149,19 @@ EC 2.3.1.25 name in 2024 (go-ontology#27588).
   I did not add generic GO:0016491 (oxidoreductase) or GO:0016836
   (hydro-lyase): the redox chemistry is inferred from family analogy, and the
   dehydration step is only a mechanistic proposal.
-- MF: GO:0051539 4 iron, 4 sulfur cluster binding (NEW, ISS, non-core). It is
-  based on the conserved cysteines plus the BCR/HAD family property. It is
-  not observed on any PlsA.
+- MF: GO:0051539 4 iron, 4 sulfur cluster binding (NEW, ISS; supporting,
+  not in core_functions). It is based on the conserved cysteines and the
+  BCR/HAD family property. In M. elsdenii MeHAD, a combined mutant of the
+  four predicted ligand cysteines is inactive [PMID:37348645 "The
+  four-cysteine (Cys125, Cys164, Cys445 and Cys484) site-mutant of MeHAD,
+  which were predicted binding to the [4Fe-4S] cluster, was unable to
+  synthesize plasmalogens"]. By pairwise alignment (48.7% identity) these
+  are Q9CDI2 C126, C165, C445 and C484. The cluster itself has not been
+  observed on any PlsA.
+- Proposed MF term: renamed "plasmalogen-forming diacylglycerophospholipid
+  reductase activity" to match the drafted GO new-term request. Its
+  definition now states only the overall conversion. The ATP-dependent
+  radical mechanism, which is proposed by analogy, is in the justification.
 - CC: no annotation. DeepTMHMM (KBase run on UPI00072AC48C) predicts a
   globular, cytoplasmic protein, yet the substrate is a membrane
   phospholipid. Whether PlsA associates with the membrane is unknown, so I
