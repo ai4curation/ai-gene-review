@@ -208,7 +208,7 @@ send to the resource that owns them:
 | 3 (ESCRT-III vacuolar transport) | `projects/INTERPRO/interpro2go.sssom.yaml`, IPR005024 to GO:0007034 | broadMatch | CR-0001 (Eukaryota), CR-0002 (archaeal Cdv cytokinesis) |
 | 6 (default NAD binding) | same file, IPR000534 to GO:0051287 | broadMatch, narrow | none yet |
 | 8 (catalytic activity on proteasome alpha) | same file, IPR019982 to GO:0004298 | REMOVE | not needed |
-| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (module context; DRAFT) |
+| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (module context, evaluated per proteome) |
 | 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE | not needed |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).

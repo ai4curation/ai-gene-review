@@ -9,7 +9,7 @@ auditable record, and names the external source it replaces.
 |---|---|---|---|---|
 | [CR-0001](CR-0001.yaml) | GO:0007034 vacuolar transport | IPR005024 AND Eukaryota | interpro2go IPR005024 | PROPOSED |
 | [CR-0002](CR-0002.yaml) | GO:0061639 Cdv-dependent cytokinesis | IPR053654 OR IPR053492 | (new coverage) | PROPOSED |
-| [CR-0003](CR-0003.yaml) | GO:0006511 ubiquitin-dependent protein catabolic process | IPR000426 AND ubiquitin relay module not absent | interpro2go IPR000426 | DRAFT |
+| [CR-0003](CR-0003.yaml) | GO:0006511 ubiquitin-dependent protein catabolic process | IPR000426 AND ubiquitin relay module not absent | interpro2go IPR000426 | PROPOSED |
 | [CR-0004](CR-0004.yaml) | EC 1.2.1.75 name, RHEA:26446 | FunFam 3.40.50.720:FF:000411 AND MCR-type CDD AND Archaea | ARBA00067001, ARBA00052213 | PROPOSED |
 
 ## Semantics
@@ -50,11 +50,22 @@ removal in `projects/INTERPRO/interpro2go.sssom.yaml` or the ARBA rule review.
 - Modules provide the context layer. Rules whose components are detected by
   other rules must not depend, through a module, on themselves.
 
+## Module-context oracle
+
+`src/ai_gene_review/context_oracle.py` evaluates a `MODULE_CONTEXT` condition for a
+UniProt proteome. A detector file in `context/` maps each module step to InterPro
+signatures (sensitive on purpose, since the oracle only excludes); the module is
+then evaluated with `module_logic`. It returns satisfiable, unsatisfiable (only for
+a complete proteome: reference proteome, full assembly, BUSCO at least 95) or not
+evaluated. Results are cached in `context/cache/` and summarised in
+[context/RESULTS.md](context/RESULTS.md).
+
 ## Commands
 
 ```bash
 just validate-curated-rules           # schema + semantic checks
 just count-curated-rules              # UniProtKB match counts (network)
+just evaluate-module-context rules/curated/context/ubiquitin_transfer_relay.yaml UP000008243 --rule rules/curated/CR-0003.yaml
 ```
 
 `count-curated-rules` turns each rule into a UniProt query (module conditions

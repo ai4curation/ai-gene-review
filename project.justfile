@@ -2342,6 +2342,11 @@ validate-curated-rules:
 count-curated-rules *files="rules/curated/CR-*.yaml":
     uv run python -m ai_gene_review.curated_rules check {{files}} --count
 
+# Evaluate a module-context detector on UniProt proteomes (cached; network for new ones).
+# Example: just evaluate-module-context rules/curated/context/ubiquitin_transfer_relay.yaml UP000008243 --rule rules/curated/CR-0003.yaml
+evaluate-module-context detector *args="":
+    uv run python -m ai_gene_review.context_oracle {{detector}} {{args}}
+
 # Sync a single rule review YAML file with analysis data (automatically analyzes first if needed)
 # This populates the `entries` field in the review YAML with pairwise overlap data
 # DEPENDENCIES:
