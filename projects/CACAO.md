@@ -98,14 +98,23 @@ students, so the taxonomy classifies *annotation* failures, not CACAO ones.
   Bunyamwera NSs carries both `viral gene expression` and `negative
   regulation of viral genome replication` from one figure showing ~10x *more*
   viral protein, so the two rows contradict each other.
-- **Wrong arm of a bidirectional pathway.** Virus rows on `suppression of
-  type I interferon signalling` whose papers assay interferon *production*:
-  VP35 (whose companion paper explicitly shows VP35 cannot block receptor
-  signalling, which is VP24's job), RVFV NSs twice, Bunyamwera NSs twice.
-  This one is not a CACAO defect. GO has no symbiont-mediated counterpart of
-  GO:0032480 *interferon production*, so UniProt IDA rows and KW-1114 IEA
-  rows land on the same wrong term; influenza NS1 carries it the same way.
-  The RVFV NSs review files the missing term as `proposed_new_terms`.
+- **Wrong arm of a bidirectional pathway.** Five rows on `GO:0039502
+  suppression of type I interferon signalling` whose papers assay interferon
+  *production*: VP35 once (its companion paper explicitly shows VP35 cannot
+  block receptor signalling, which is VP24's job), RVFV NSs twice, Bunyamwera
+  NSs twice. **The shape is not uniformly an ontology gap**, and the three
+  reviews resolve it three ways for good reasons. For VP35 the right terms
+  already existed (`GO:0039540` RIG-I and `GO:0039548` IRF3, the
+  mechanism-specific induction-side terms), so that row is an ordinary
+  term-choice error. The two NSs proteins antagonise no sensor or IRF at all
+  — IRF-3, NF-kappaB and AP-1 all activate normally and the lesion is a
+  global block on host RNA polymerase II — so no existing term fits them, and
+  the gap is specifically the absence of a **mechanism-agnostic production
+  term**, a symbiont-mediated counterpart of `GO:0032480`. The RVFV NSs review
+  files that term as `proposed_new_terms`; the Bunyamwera rows go to
+  `GO:0052170` for now and say they should move to the new term if GO creates
+  it. The gap is also not CACAO's fault: UniProt IDA rows and KW-1114 IEA
+  rows land on `GO:0039502` the same way.
 - **Right pathway, wrong molecular step.** ipaH4.5 `symbiont-mediated
   suppression of host translation` where the readout is an NF-kB reporter and
   cytokine output: host gene expression, not translation. The term is a
@@ -304,9 +313,10 @@ Counts are total review rows / CACAO rows.
 - [x] SHIFL ipaH4.5 (P18009), *Shigella flexneri*, 13/5
 - [x] ECOLI clpX (P0A6H1), 36/5
 - [ ] BPPH2 6 (P03685), phage phi29 nucleoid protein p6, 5 CACAO rows —
-  **blocked**. Notes are written (`genes/BPPH2/6/6-notes.md`) but
-  two attempts to write the review YAML were stopped by a safety classifier.
-  Needs a human to look at the notes and finish or drop the gene.
+  **blocked** — tracked in issue #5733. Notes are written
+  (`genes/BPPH2/6/6-notes.md`) but two attempts to write the review YAML were
+  stopped by a safety classifier, in two sessions. Needs a human to look at
+  the notes and finish or drop the gene.
 
 ## Upstream reports from batches 1 and 2
 
@@ -314,17 +324,29 @@ Recorded as `source_defects` / `proposed_new_terms`; run
 `just export-source-defects` for the per-resource reports.
 
 - [ ] GO: no symbiont-mediated counterpart of GO:0032480 *interferon
-  production* (proposed in the RVFV NSs review; four rows across three
-  viruses land on the signalling term for want of it).
-- [ ] GO: `GOCellularLocationEnum` cannot express GO:0055036 virion membrane
-  or GO:0019031 viral envelope in `core_functions.locations`, which is where
-  a virion surface protein's activity happens (found on GP).
+  production* (proposed in the RVFV NSs review; of the five rows across three
+  viruses that land on the signalling term, the four on RVFV and Bunyamwera
+  NSs need it, while VP35's is covered by existing induction-side terms).
+- [ ] **This repo, not GO:** `GOCellularLocationEnum` cannot express
+  GO:0055036 virion membrane or GO:0019031 viral envelope in
+  `core_functions.locations`, which is where a virion surface protein's
+  activity happens (found on GP). Checked against OLS: both sit under
+  GO:0044423 *virion component*, a direct child of GO:0005575 outside the
+  GO:0110165 *cellular anatomical entity* branch the enum materialises from
+  (`src/ai_gene_review/schema/gene_review.yaml`), so GO is self-consistent
+  and the fix is to add GO:0044423 as a second source node here. The GP review
+  now states the omission in its core-function description rather than
+  substituting a host-cell term.
 - [ ] GO/EBI: UniProt keyword KW-0081 maps phage endolysins to GO:0042742
   *defense response to bacterium*, inverting the interaction direction (XV).
 - [ ] UniProt: P18009 AltName "Probable RING-type E3 ubiquitin transferase"
   contradicts its own NEL domain and Cys379 active site (ipaH4.5).
 - [ ] CAFA: ClpX assigned to GO:0009376 HslUV complex from an SspB/ClpXP
   paper; an IBA rests on that row (clpX).
+- [ ] GO Central: the IBD on PANTHER node PTN000137358 asserts GO:0051301
+  *cell division*, but its donor evidence is FtsZ modulation, so the node
+  term should be GO:0051302 *regulation of cell division* — correcting every
+  IBA inherited from it, not just clpX's row.
 - [ ] RVFV NSs GO:0039689 row contradicted by its own cited abstract.
 - [ ] UniProt: KW-1114 maps to type I interferon suppression, but the keyword
   is interferon-class neutral; KSHV K3 and K5 both target the type II
@@ -397,6 +419,11 @@ mouse Reln (20), Shank3 (18), Sirt6 (14), Nlgn3 (13), Wnt5a (11), Pafah1b1
   11 and 18, lambda stf, phi6 P9); four have no evidence code in GOA.
 - [ ] Resolve the 7 `UNDECIDED` CACAO rows (DNM1L, CASK, APC, Gpdh1, Sirt5,
   and fliH x2) using the GONUTS records.
+- [ ] Re-check batch 1's "paper not about the gene" judgments against full
+  text where it exists. Two batch-2 near-misses (AcrIIA5, whose cited paper's
+  title is about a different anti-CRISPR, and VPS74, whose mammalian GOLPH3
+  paper contains a real yeast panel) would both have been recorded as
+  wrong-gene errors from the abstract alone.
 
 # NOTES
 
