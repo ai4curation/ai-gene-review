@@ -217,3 +217,38 @@ def test_collect_reads_functional_isoform_defects(tmp_path: Path) -> None:
     assert row["record"] == "UniProtKB:Q96PV0"
     assert row["corrected_value"] == "RefSeq:NP_001123538.1"
     assert "add RefSeq:NP_001123538.1 to UniProtKB:Q96PV0" in render_report("UNIPROT", [row])
+
+
+REFERENCE_DEFECT_REVIEW = """
+id: G5EDF7
+gene_symbol: lgg-2
+references:
+- id: file:worm/lgg-2/lgg-2-deep-research-wormbase.md
+  title: WormBase gene description for lgg-2 (worm)
+  reference_review:
+    relevance: MEDIUM
+    correctness: DISPUTED
+    source_defects:
+    - defect_type: OUTDATED_STATEMENT
+      resource: WORMBASE
+      record: WB:WBGene00002981
+      slot: MOD_provided_gene_description
+      requested_change: CHECK
+      asserted_value: WB:WBGene00002981
+      confidence: CONFIRMED
+      explanation: The description says LGG-2 has no obvious function in RNAi assays.
+"""
+
+
+def test_collect_reads_reference_review_defects(tmp_path: Path) -> None:
+    """A defect in a cited source's free text is exported against that reference."""
+    gene = tmp_path / "genes" / "worm" / "lgg-2"
+    gene.mkdir(parents=True)
+    (gene / "lgg-2-ai-review.yaml").write_text(REFERENCE_DEFECT_REVIEW, encoding="utf-8")
+    (row,) = collect(tmp_path)
+    assert row["resource"] == "WORMBASE"
+    assert row["defect_type"] == "OUTDATED_STATEMENT"
+    assert row["slot"] == "MOD_provided_gene_description"
+    assert row["subject_id"] == "UniProtKB:G5EDF7"
+    assert row["original_reference_id"] == "file:worm/lgg-2/lgg-2-deep-research-wormbase.md"
+    assert row["record"] == "WB:WBGene00002981"
