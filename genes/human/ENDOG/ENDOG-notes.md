@@ -293,3 +293,49 @@ Mine was procedural. The real objection is that adding a nucleoid component term
 quietly resolve the matrix side of the intermembrane-space-versus-matrix conflict that this
 same review says is unresolved — it would assert by annotation what the evidence does not
 settle.
+
+## 2026-10-30 — review round 2 on PR #5618
+
+One blocking item and four suggestions, all taken.
+
+**`PMID:3286639` was cited but never declared.** The yeast half of the `GO:0005743` donor
+check rested on it, yet it appeared only in a `reason` and a `supported_by`, never in
+`references:`. That is a real gap and not a cosmetic one: an undeclared reference gets no
+title cross-check against the fetched record and no `reference_review`, so a 1988
+abstract-only paper was doing load-bearing work with no recorded adjudication. Declared,
+with the abstract-only state stated, and its quote extended from the bare fragment to the
+clause that carries its subject [PMID:3286639 "The enzyme is located in the mitochondrial
+inner membrane"]. Worth noting that local validation passes either way — nothing in the
+tooling catches a cited-but-undeclared reference, which is why a reader caught it.
+
+**Figure 3B removes the limit the row was conceding.** I had recorded that
+subfractionation cannot separate inner from outer membrane, which is true of panel A. The
+reviewer pointed at panel B, immunogold electron microscopy, whose legend does separate
+them [PMID:18187503 "Both proteins are often found delineating the cristae, pointing
+towards an association with the inner mitochondrial membrane"]. Cristae are inner
+membrane, so this speaks to the row's own term. Taken, with the discrepancy inside that
+paper recorded rather than smoothed over: the running text describes the EM for EXOG and
+cites earlier work for mammalian EndoG, so the legend's statement about both proteins is
+the stronger of the two, and the experiment used tagged expressed protein throughout.
+
+A further detail from the same paper, not used for an annotation but worth knowing: its
+summary table lists mammalian EndoG's localization as [PMID:18187503 "IMS, IMM, MM"] —
+intermembrane space, inner membrane and matrix together. The paper that established the
+EndoG/EXOG split already recorded the multi-compartment picture this review has been
+circling.
+
+**The `GO:0006309` argument was leaning on a result from the paper it discounts.** My
+closing clause said the cleaner allele "still leaves the reduced fragmentation reported in
+heterozygous cells" — but that is PMID:14663139's result, and PMID:15601850 names the
+heterozygote finding specifically as the suspect one. Discounting a paper and then relying
+on its weakest datum is incoherent, and the conclusion never needed it: the purified human
+enzyme on isolated nuclei (PMID:11606588) and fragmentation in CAD-deficient cells
+(PMID:11452314) already carry "the activity is real". Clause replaced with those.
+
+**`GO:0051880` now also sits on the `GO:0003676` MODIFY.** The reviewer noted that row's
+reason had gone stale — it argued for replacing the binding ancestor with catalytic terms
+only, which was written when the review held that no binding function was supported. That
+stopped being true this round. Adding the term to the replacement list makes the narrowing
+a real refinement of binding rather than narrowing all binding away while re-adding a
+binding term elsewhere in the same file. The `NEW` IDA row stays, as the thing that
+establishes the term; this mirrors `GO:0006308` pointing at `GO:0006309`.
