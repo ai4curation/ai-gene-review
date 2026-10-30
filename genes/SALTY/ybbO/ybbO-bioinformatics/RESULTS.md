@@ -80,6 +80,44 @@ Caveat: the orthologue set is UniProt entries whose gene name is ybbO; names on
 unreviewed entries are themselves propagated, but all 49 retain the tetrad and share
 61.6% or more identity with Q7CR11.
 
+### Which Salmonella/E. coli substitutions could matter?
+
+Each substitution was scored by the minimum side-chain distance to the catalytic
+Ser133/Tyr146 midpoint in the AlphaFold model, its BLOSUM62 score, the conservation of the
+Salmonella residue across the 49 orthologues, and how many orthologues carry the E. coli
+residue. The nearest ten:
+
+  sub	dist_A	pLDDT	BLOSUM62	%orth_query_res	#orth_with_ecoli_res	other residues at position
+  Y84F	8.5	95	3	31%	34/49	-
+  V86M	11.1	97	1	39%	15/49	ILT
+  S104A	12.9	97	1	16%	20/49	T
+  R207L	13.4	87	-2	6%	46/49	-
+  D208G	14.7	87	-1	6%	21/49	KMPST
+  L250M	15.7	93	2	41%	27/49	FI
+  D17E	16.1	97	2	6%	19/49	AILV
+  D210E	16.4	90	2	8%	43/49	Q
+  S256G	16.6	61	0	35%	25/49	AHNT
+  L227M	17.1	98	2	59%	16/49	IV
+
+(full table in `orthology_and_residues.out`)
+
+- None of the 24 is at a conserved position: the Salmonella residue is found in at most
+  63% of orthologues, and the E. coli residue occurs in at least 11 other orthologues at
+  every position. Nothing points to a functional change specific to either species.
+- The most plausible modulators of substrate preference are:
+  - **Y84F** (8.5 A, the only one in the pocket): loss of one hydroxyl beside the NNAG
+    motif. Phe is the majority residue (34/49), so Salmonella Tyr84 is the less common state.
+  - **S104A** (12.9 A): immediately before the catalytic N105 on helix alpha-E; Salmonella
+    Ser is a minority residue (16%).
+  - **R207L / D208G / D210E**: a cluster in a lower-confidence segment (pLDDT 87-90) that
+    probably corresponds to the flexible SDR substrate-binding loop. The apo model may
+    show it open, so these distances may overstate how far it is from a bound substrate.
+    R207L and D208G each remove a charge, and Salmonella R207 and D208 are rare among
+    orthologues (6% each).
+- The most radical change, R74C (BLOSUM62 -3), is 30 A away on the surface.
+- These are prioritised hypotheses for comparative kinetics or swap mutants, not
+  established functional differences.
+
 ## Interpretation
 
 Q7CR11 is the one-to-one Salmonella orthologue of E. coli YbbO, a characterised

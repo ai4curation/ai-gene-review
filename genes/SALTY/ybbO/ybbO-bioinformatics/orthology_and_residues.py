@@ -223,6 +223,20 @@ def main():
         if flag:
             spec.append(p)
         print(f"  {q[p - 1]}{p}\t{100 * cons[p]:.0f}%\t{' '.join(rel)}\t{'*' if flag else ''}\tpLDDT {plddt[p]:.0f}")
+    # Rank Salmonella -> E. coli substitutions by likely functional impact
+    blosum = substitution_matrices.load("BLOSUM62")
+    dist = {}
+    for res in chain:
+        side = [a for a in res if a.get_id() not in ("N", "C", "O")]
+        dist[res.id[1]] = min(float(np.linalg.norm(a.coord - centre)) for a in side)
+    print(f"\n### Substitutions {QUERY} -> {ECOLI}, sorted by distance to the catalytic centre")
+    print("  sub\tdist_A\tpLDDT\tBLOSUM62\t%orth_query_res\t#orth_with_ecoli_res\tother residues at position")
+    for p in sorted(subs, key=lambda x: dist[x]):
+        e = m_eco[p]
+        n_e = sum(m.get(p) == e for m in maps)
+        others = sorted({m.get(p) for m in maps if m.get(p)} - {q[p - 1], e})
+        print(f"  {q[p - 1]}{p}{e}\t{dist[p]:.1f}\t{plddt[p]:.0f}\t{blosum[q[p - 1]][e]:.0f}\t"
+              f"{100 * cons[p]:.0f}%\t{n_e}/{len(maps)}\t{''.join(others) or '-'}")
     print(f"\nCandidate YbbO-specific pocket residues (invariant in YbbO orthologues, differ from all "
           f"four vertebrate SDR9C relatives): {' '.join(f'{q[p - 1]}{p}' for p in spec) or 'none'}")
 
