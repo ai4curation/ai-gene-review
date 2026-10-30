@@ -113,7 +113,10 @@ class DescriptionReview:
     rubrics: List[DescriptionReviewRubric] = field(default_factory=list)
     overall_notes: Optional[str] = None
 
-    # Standard rubric names for convenience
+    # Rubric for the cross-source review on GeneDescriptions.review (1-5).
+    CONCORDANCE_RUBRIC = "overall_concordance"
+
+    # Standard per-source rubric names for convenience
     RUBRIC_NAMES = [
         "correctness",
         "utility",
@@ -527,8 +530,10 @@ def parse_alliance_gene(data: Dict[str, Any]) -> Dict[str, Any]:
     url = None
     xref = gene.get("dataProviderCrossReference") or {}
     template = (xref.get("resourceDescriptorPage") or {}).get("urlTemplate")
-    if template and xref.get("displayName"):
+    if template and xref.get("displayName") and "[%s]" in template:
         url = template.replace("[%s]", xref["displayName"])
+    elif template:
+        logger.warning("Unrecognised Alliance URL template %r; no MOD page URL recorded", template)
 
     return {
         "curated_synopsis": notes.get("MOD_provided_gene_description"),
@@ -696,6 +701,42 @@ def fetch_gene_descriptions(
     return gd
 
 
+def save_preserving_reviews(gd: GeneDescriptions, path: Path) -> Path:
+    """Save freshly fetched descriptions without discarding reviews in an existing file.
+
+    A source keeps its review when its text is unchanged; a source whose text
+    changed loses it, because the review judged the old text. The cross-source
+    review and the findings are kept only when every source text is unchanged.
+    Status is recomputed.
+
+    Args:
+        gd: Freshly fetched descriptions (normally without reviews).
+        path: Sidecar file to write; may already hold reviews.
+
+    Returns:
+        The path written to.
+    """
+    if path.exists():
+        old = load_gene_descriptions(path)
+        old_by_source = {d.source: d for d in old.descriptions}
+        unchanged = {d.source for d in old.descriptions} == {d.source for d in gd.descriptions}
+        for d in gd.descriptions:
+            prev = old_by_source.get(d.source)
+            if prev is not None and prev.text == d.text:
+                d.review = d.review or prev.review
+            else:
+                unchanged = False
+                if prev is not None and prev.review is not None:
+                    logger.warning("%s %s: text changed; its review was dropped", path.name, d.source)
+        if unchanged:
+            gd.review = gd.review or old.review
+            gd.findings = gd.findings or old.findings
+        elif old.review is not None or old.findings:
+            logger.warning("%s: source texts changed; cross-source review and findings dropped", path.name)
+    gd.status = compute_description_status(gd)
+    return save_gene_descriptions(gd, path)
+
+
 def fetch_and_save_gene_descriptions(
     organism: str,
     gene_symbol: str,
@@ -714,7 +755,7 @@ def fetch_and_save_gene_descriptions(
     base = base_path or Path.cwd()
     gd = fetch_gene_descriptions(organism, gene_symbol, base_path=base)
     out_path = base / "genes" / organism / gene_symbol / f"{gene_symbol}-descriptions.yaml"
-    return save_gene_descriptions(gd, out_path)
+    return save_preserving_reviews(gd, out_path)
 
 
 # -------------------------------------------------------------------
@@ -765,7 +806,7 @@ def fetch_organism_descriptions(
 
             # Save per-gene file
             per_gene_path = gene_dir / f"{gene_symbol}-descriptions.yaml"
-            save_gene_descriptions(gd, per_gene_path)
+            save_preserving_reviews(gd, per_gene_path)
 
             count += 1
 

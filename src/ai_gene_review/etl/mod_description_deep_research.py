@@ -58,6 +58,17 @@ MOD_PROVIDER: Dict[str, Tuple[str, str]] = {
 }
 
 
+def is_mod_description_file(name: str) -> bool:
+    """True for a ``GENE-deep-research-<mod>.md`` file written by this module.
+
+    >>> is_mod_description_file("fshr-1-deep-research-wormbase.md")
+    True
+    >>> is_mod_description_file("fshr-1-deep-research-falcon.md")
+    False
+    """
+    return any(name.endswith(f"-deep-research-{slug}.md") for slug, _ in MOD_PROVIDER.values())
+
+
 def uniprot_gene_names(uniprot_data: str) -> set[str]:
     """All names on the UniProt GN lines (Name, Synonyms, OrderedLocusNames, ORFNames).
 
@@ -85,15 +96,17 @@ def identity_gate(
     True
     >>> identity_gate("rab-11.1", "GN   Name=rab-11.1;", "rab-10", "T23H2.5")
     'Alliance record names rab-10/T23H2.5, but neither matches the folder (rab-11.1) or the UniProt gene names (rab-11.1).'
+    >>> identity_gate("J7SF87", "", "lin-4", None)
+    'Alliance record names lin-4, but neither matches the folder (J7SF87) or the UniProt gene names (none).'
     """
-    known = uniprot_gene_names(uniprot_data) | {gene}
+    uniprot = uniprot_gene_names(uniprot_data)
     found = {n for n in (alliance_symbol, alliance_systematic) if n}
-    if not found or found & known:
+    if not found or found & (uniprot | {gene}):
         return None
+    uniprot_names = ", ".join(sorted(uniprot)) or "none"
     return (
         f"Alliance record names {'/'.join(n for n in (alliance_symbol, alliance_systematic) if n)}, "
-        f"but neither matches the folder ({gene}) or the UniProt gene names "
-        f"({', '.join(sorted(known - {gene}) or [gene])})."
+        f"but neither matches the folder ({gene}) or the UniProt gene names ({uniprot_names})."
     )
 
 
@@ -208,5 +221,8 @@ def emit_organism(
         results.setdefault(status, []).append(gene)
         if status in ("blocked", "error", "skipped"):
             logger.warning("%s %s: %s", gene, status, msg)
-        time.sleep(delay)
+        elif status == "written" and msg != "ok":
+            logger.warning("%s written despite identity check (--force): %s", gene, msg)
+        if status != "skipped":
+            time.sleep(delay)
     return results

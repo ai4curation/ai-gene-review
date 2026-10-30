@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_gene_review.tools.export_source_defects import COLUMNS, collect, render_report, write_outputs
+from ai_gene_review.tools.export_source_defects import _describe_change, COLUMNS, collect, render_report, write_outputs
 
 GENE_REVIEW = """
 id: P42760
@@ -234,7 +234,7 @@ references:
       record: WB:WBGene00002981
       slot: MOD_provided_gene_description
       requested_change: CHECK
-      asserted_value: WB:WBGene00002981
+      asserted_value: LGG-2 has no obvious function in RNAi assays
       confidence: CONFIRMED
       explanation: The description says LGG-2 has no obvious function in RNAi assays.
 """
@@ -252,3 +252,16 @@ def test_collect_reads_reference_review_defects(tmp_path: Path) -> None:
     assert row["subject_id"] == "UniProtKB:G5EDF7"
     assert row["original_reference_id"] == "file:worm/lgg-2/lgg-2-deep-research-wormbase.md"
     assert row["record"] == "WB:WBGene00002981"
+    assert row["asserted_value"] == "LGG-2 has no obvious function in RNAi assays"
+    report = render_report("WORMBASE", [row])
+    assert 'revise "LGG-2 has no obvious function in RNAi assays" in MOD_provided_gene_description' in report
+
+
+def test_missing_statement_add_renders_without_corrected_value() -> None:
+    """An ADD for missing free text has no corrected value; the explanation carries it."""
+    row = {"asserted_value": "WB:WBGene1", "corrected_value": "", "corrected_label": "",
+           "slot": "MOD_provided_gene_description", "requested_change": "ADD",
+           "defect_type": "MISSING_STATEMENT"}
+    assert _describe_change(row) == (
+        "add the content described in the explanation to WB:WBGene1 (MOD_provided_gene_description)"
+    )

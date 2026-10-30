@@ -187,7 +187,12 @@ def _describe_change(r: dict[str, str]) -> str:
         return f"delete the record asserting {asserted}"
     if action == "ADD":
         where = f" ({r['slot']})" if r["slot"] else ""
+        if not corrected:
+            return f"add the content described in the explanation to {asserted}{where}"
         return f"add {corrected}{label} to {asserted}{where}"
+    if action == "CHECK" and r.get("defect_type", "").endswith("_STATEMENT"):
+        where = f" in {r['slot']}" if r["slot"] else ""
+        return f'revise "{asserted}"{where} (see explanation)'
     if action == "CHECK":
         return f"check {asserted} (alternatives in the explanation)"
     if corrected:

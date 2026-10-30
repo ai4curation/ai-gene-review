@@ -192,15 +192,15 @@ class SourceDefectTypeEnum(str, Enum):
     """
     WRONG_STATEMENT = "WRONG_STATEMENT"
     """
-    A curated free-text statement in the source (a MOD gene description, a UniProt FUNCTION or other comment) is contradicted by the literature. Recorded on the reference_review of the reference that cites the source text; slot names the field (e.g. CC:FUNCTION, MOD_provided_gene_description).
+    A curated free-text statement in the source (a MOD gene description, a UniProt FUNCTION or other comment) is contradicted by the literature. Recorded on the reference_review of the reference that cites the source text; slot names the field (e.g. CC:FUNCTION, MOD_provided_gene_description), record the source record, and asserted_value the offending sentence copied verbatim from the cited text. requested_change is CHECK: the explanation says what the text should say, and the resource rewrites it.
     """
     OUTDATED_STATEMENT = "OUTDATED_STATEMENT"
     """
-    A curated free-text statement was true to the knowledge of its time but has been superseded (e.g. "novel protein", "no obvious function in RNAi assays" for a gene with established mutant phenotypes).
+    A curated free-text statement was true to the knowledge of its time but has been superseded (e.g. "novel protein", "no obvious function in RNAi assays" for a gene with established mutant phenotypes). Recorded like WRONG_STATEMENT: asserted_value is the superseded sentence verbatim, requested_change is CHECK.
     """
     MISSING_STATEMENT = "MISSING_STATEMENT"
     """
-    A curated description or annotation set omits or has lost content that the source itself previously carried or that is central to the gene (e.g. an automated description that dropped its function sentences between releases).
+    A curated description or annotation set omits or has lost content that the source itself previously carried or that is central to the gene (e.g. an automated description that dropped its function sentences between releases). Nothing wrong is asserted, so, as for MISSING_ISOFORM, asserted_value names the record that lacks the content (same as record) and requested_change is ADD; the explanation states the content to add.
     """
     MISSING_ISOFORM = "MISSING_ISOFORM"
     """
@@ -2724,13 +2724,28 @@ class ReferenceReview(ConfiguredBaseModel):
     """
     Manual reviewer assessment of a reference - how relevant it is to the gene's function, and whether it is correctly cited and scientifically sound. Distinct from the machine-fetched id/title fields; all fields are optional and reviewer-supplied.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
+         'slot_usage': {'source_defects': {'description': 'Errors in the cited '
+                                                          "source's own curated text "
+                                                          '(a MOD gene description '
+                                                          'cited as its '
+                                                          '-deep-research-<mod>.md '
+                                                          'file, or a UniProt FUNCTION '
+                                                          'or other comment cited as '
+                                                          'the -uniprot.txt file), in '
+                                                          'reportable form. Use '
+                                                          'WRONG_STATEMENT, '
+                                                          'OUTDATED_STATEMENT or '
+                                                          'MISSING_STATEMENT. See '
+                                                          'docs/source_defects.md, '
+                                                          '"Cited source text".',
+                                           'name': 'source_defects'}}})
 
     relevance: Optional[ReferenceRelevanceEnum] = Field(default=None, description="""Reviewer judgment of how relevant the reference is to the gene's function and this review.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
     correctness: Optional[ReferenceCorrectnessEnum] = Field(default=None, description="""Reviewer's overall assessment of a reference's trustworthiness - both citation correctness (the identifier resolves to the intended paper that supports its use) and scientific soundness of that paper's claim.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
     review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
     replacement: Optional[ReferenceReplacement] = Field(default=None, description="""Manually established replacement for this reference identifier. This records identifier provenance, not a biological contradiction or retraction, and does not implicitly redirect supporting_text to another publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Errors in the cited source's own curated text (a MOD gene description cited as its -deep-research-<mod>.md file, or a UniProt FUNCTION or other comment cited as the -uniprot.txt file), in reportable form. Use WRONG_STATEMENT, OUTDATED_STATEMENT or MISSING_STATEMENT. See docs/source_defects.md, \"Cited source text\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
                        'Review']} })
