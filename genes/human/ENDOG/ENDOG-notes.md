@@ -339,3 +339,42 @@ stopped being true this round. Adding the term to the replacement list makes the
 a real refinement of binding rather than narrowing all binding away while re-adding a
 binding term elsewhere in the same file. The `NEW` IDA row stays, as the thing that
 establishes the term; this mirrors `GO:0006308` pointing at `GO:0006309`.
+
+## 2026-10-30 — review round 3 on PR #5618
+
+Two blocking items, both prose in a `reason` asserting more than the source does, in a
+review whose whole point is not doing that. Both verified independently before editing.
+
+**The `PMID:18187503` EndoG construct is bovine, not human.** The reviewer corrected
+credit it had given me in round 2, and it is right. That paper's methods say
+[PMID:18187503 "we expressed 3 × FLAG fusion proteins of human EXOG, and, for comparison,
+of bovine EndoG in mammalian cell lines"], and its Table 1 lists the organisms as
+[PMID:18187503 "OrganismS. cerevisiaeB. taurusH. sapiens"] — yeast Nuc1, bovine EndoG,
+human EXOG. I had read that sentence while pulling the membrane quotes and missed what it
+meant for the claim I then wrote, which was that this is "direct evidence for membrane
+association of ENDOG itself". The mitochondria are human; the EndoG is not. Reworded to
+name the bovine ortholog expressed in human cells, and the species added as a third stated
+limit beside the tagged-protein and marker limits. The action does not change: bovine
+EndoG is not one of the PAINT donors, so the evidence is still independent of the
+annotations the row inherits rather than a restatement of them.
+
+**`GO:0004520` and `GO:0004521` are not descendants of `GO:0003676`.** My rewritten
+`GO:0003676` reason closed by calling all three replacements descendants of it. Checked
+against the local GO build: the two endonuclease terms have `GO:0004518` nuclease activity
+and `GO:0003824` catalytic activity among their ancestors and neither `GO:0003676` nor
+`GO:0005488`; only `GO:0051880` has `GO:0003677` and `GO:0003676`. Binding and catalytic
+activity are separate children of molecular_function. The reviewer flagged that it could
+not reach OLS and asked for confirmation before I edited, which was the right instinct on
+a claim of that shape. The reason now says what is true and is a better argument anyway:
+the two catalytic terms are a lateral correction, which CLAUDE.md explicitly sanctions for
+a MODIFY whose replacement is not a descendant, and `GO:0051880` is the one genuine
+descendant, kept so that narrowing a binding proxy does not discard binding altogether.
+
+**The qualifier suggestion, taken as a source defect.** `GO:0005743` is inherited as
+`is_active_in`, but everything now supporting it is localization — immunogold at the
+cristae, exclusion from both soluble fractions, the yeast purification — and the same row
+argues that cleaving mtDNA needs matrix access. So `located_in` fits the support and
+`is_active_in` asserts more. No review action changes a qualifier, so this is recorded as a
+`WRONG_QUALIFIER` source defect against GO_CENTRAL with `confidence: PROBABLE`, raised as
+a query rather than a correction, since the PAINT node may rest on evidence not visible
+from here.
