@@ -350,33 +350,37 @@ validators.
   receptor signaling pathway*, `GO:0086100`, and *phospholipase C-activating endothelin receptor
   signaling pathway*, `GO:0160135`). Two-step pan-species module. Ligands: EDN1
   (`PANTHER:PTHR13874:SF10`), EDN2 (`PANTHER:PTHR13874:SF9`), and EDN3 (`PANTHER:PTHR13874:SF11`,
-  within `PANTHER:PTHR13874` `ENDOTHELIN`, PAINT node `PTN000605525`), *hormone activity*
+  within `PANTHER:PTHR13874` `ENDOTHELIN`, PAINT node `PTN000356323`), *hormone activity*
   (`GO:0005179`) and *endothelin receptor binding* (`GO:0031708`). Receptors: EDNRA
-  (`PANTHER:PTHR10803:SF77`) and EDNRB (`PANTHER:PTHR10803:SF92`), *endothelin receptor activity*
-  (`GO:0004962`). GOA Category A gap resolved in the new human `EDN1` and `EDN3` gene reviews (`NEW`
-  `GO:0086100` and `GO:0160135` on both genes, `MODIFY` on `GO:0007186` and `GO:0007200` →
-  `GO:0160135`, plus `MODIFY` on `GO:0005102` → `GO:0005179` and `GO:0031708` on `EDN1` and
-  `MODIFY` on `GO:0001664` → `GO:0031708` on `EDN3`).
+  (`PANTHER:PTHR46099:SF2`) and EDNRB (`PANTHER:PTHR46099:SF3`), *endothelin receptor activity*
+  (`GO:0004962`). GOA Category A gap resolved in the new human `EDN1` and `EDN3` gene reviews
+  (`EDN1` accepts existing `GO:0086100`, `GO:0005179`, `GO:0031707`, and `GO:0031708`, adds `NEW`
+  `IC` `GO:0160135`, modifies `GO:0007165`, `GO:0007186`, and `GO:0007200` → `GO:0160135`, and
+  modifies `GO:0005102` → `GO:0031707` and `GO:0031708`; `EDN3` adds `NEW` `IDA` `GO:0086100`,
+  `GO:0160135`, and `GO:0031707`, accepts `GO:0005179` and `GO:0031708`, modifies `GO:0007165`,
+  `GO:0007186`, and `GO:0007200` → `GO:0160135`, and modifies `GO:0001664` → `GO:0031708`).
 - **[Galanin-activated signaling](../modules/galanin_signaling.yaml)** (*galanin-activated
   signaling pathway*, `GO:0090663`). Two-step pan-species module. Ligands: GAL
-  (`PANTHER:PTHR16839:SF1`, PAINT node `PTN001655290`) and GALP (`PANTHER:PTHR20950:SF1`, PAINT node
-  `PTN000467360`), *neuropeptide hormone activity* (`GO:0005184`) and *galanin receptor binding*
-  (`GO:0031765`). Receptors: GALR1 (`PANTHER:PTHR24240:SF2`), GALR2 (`PANTHER:PTHR24240:SF18`), and
-  GALR3 (`PANTHER:PTHR24240:SF19`), *galanin receptor activity* (`GO:0004966`). GOA Category A gap
-  resolved in the new human `GAL` and `GALP` gene reviews (`NEW` `GO:0090663` and `GO:0031765` on
-  both genes, retaining complementary `GO:0007218` *neuropeptide signaling pathway* as `ACCEPT`, plus
-  `MODIFY` on `GO:0007186` → `GO:0090663` and `MODIFY` on `GO:0001664` → `GO:0031765` on `GALP`).
+  (`PANTHER:PTHR16839:SF1`, PAINT node `PTN008359337`) and GALP (`PANTHER:PTHR20950:SF1`, PAINT node
+  `PTN001463568`), *neuropeptide hormone activity* (`GO:0005184`) and *G protein-coupled receptor
+  binding* (`GO:0001664`). Receptors: GALR1 (`PANTHER:PTHR24230:SF31`), GALR2
+  (`PANTHER:PTHR24230:SF13`), and GALR3 (`PANTHER:PTHR24230:SF17`), *galanin receptor activity*
+  (`GO:0004966`). GOA Category A gap resolved in the new human `GAL` and `GALP` gene reviews (`GAL`
+  adds `NEW` `IDA` `GO:0090663` and retains `GO:0005184` and `GO:0007218` *neuropeptide signaling
+  pathway* as `ACCEPT`; `GALP` adds `NEW` `IDA` `GO:0090663` and `GO:0005184`, modifies `GO:0007186`
+  → `GO:0090663` and `GO:0005179` → `GO:0005184`, and retains `GO:0001664` as `ACCEPT`).
 - **[Opioid receptor signaling](../modules/opioid_receptor_signaling.yaml)** (*G protein-coupled
   opioid receptor signaling pathway*, `GO:0038003`, and *adenylate cyclase-inhibiting opioid receptor
   signaling pathway*, `GO:0031635`). Two-step pan-species module. Ligands: PENK
-  (`PANTHER:PTHR11438:SF3`) and PDYN (`PANTHER:PTHR11438:SF4`, within `PANTHER:PTHR11438`
-  `PROENKEPHALIN`, PAINT node `PTN002607119`), *opioid peptide activity* (`GO:0001515`). Receptors:
-  OPRM1 (`PANTHER:PTHR24234:SF28`), OPRD1 (`PANTHER:PTHR24234:SF26`), and OPRK1
-  (`PANTHER:PTHR24234:SF1`), *G protein-coupled opioid receptor activity* (`GO:0004985`). GOA
-  Category A gap resolved in the new human `PENK` and `PDYN` gene reviews (`NEW` `GO:0038003` and
-  `GO:0031635` on both genes, retaining `GO:0007218` *neuropeptide signaling pathway* as `ACCEPT`,
-  plus `MODIFY` on `GO:0007186` → `GO:0038003` on both genes and `MODIFY` on `GO:0005184` →
-  `GO:0001515` on `PDYN`).
+  (`PANTHER:PTHR11438:SF3`), PDYN (`PANTHER:PTHR11438:SF4`), and PNOC (`PANTHER:PTHR11438:SF2`,
+  within `PANTHER:PTHR11438` `PROENKEPHALIN`, PAINT node `PTN000153716`), *opioid peptide activity*
+  (`GO:0001515`). Receptors: OPRM1 (`PANTHER:PTHR24229:SF7`), OPRD1 (`PANTHER:PTHR24229:SF2`),
+  OPRK1 (`PANTHER:PTHR24229:SF1`), and OPRL1 (`PANTHER:PTHR24229:SF11`), *G protein-coupled opioid
+  receptor activity* (`GO:0004985`). GOA Category A gap resolved in the new human `PENK` and `PDYN`
+  gene reviews (`PENK` accepts existing `GO:0038003`, `GO:0001515`, `GO:0031630`, `GO:0031632`, and
+  `GO:0007218`, adds `NEW` `IC` `GO:0031635`, and modifies `GO:0007186` → `GO:0038003` and
+  `GO:0007193` → `GO:0031635`; `PDYN` adds `NEW` `IDA` `GO:0038003` and `NEW` `IC` `GO:0031635` and
+  accepts existing `GO:0001515`, `GO:0031631`, and `GO:0007218`).
 
 ## 5. Other curator work in this branch
 
@@ -439,15 +443,17 @@ validators.
 - **EDN1, EDN3, GAL, GALP, PENK, and PDYN gene reviews (Tranche 4C):** created the full human `EDN1`
   (`genes/human/EDN1/EDN1-ai-review.yaml`) and `EDN3` (`genes/human/EDN3/EDN3-ai-review.yaml`)
   reviews for `GO:0086100` (*endothelin receptor signaling pathway*) and `GO:0160135` (*phospholipase
-  C-activating endothelin receptor signaling pathway*), adding `NEW` rows for both pathway terms and
-  refining `GO:0007186` and `GO:0007200` via `MODIFY` to `GO:0160135`; created the full human `GAL`
-  (`genes/human/GAL/GAL-ai-review.yaml`) and `GALP` (`genes/human/GALP/GALP-ai-review.yaml`) reviews
-  for `GO:0090663` (*galanin-activated signaling pathway*) and `GO:0031765` (*galanin receptor
-  binding*); and created the full human `PENK` (`genes/human/PENK/PENK-ai-review.yaml`) and `PDYN`
-  (`genes/human/PDYN/PDYN-ai-review.yaml`) reviews for `GO:0038003` (*G protein-coupled opioid
-  receptor signaling pathway*) and `GO:0031635` (*adenylate cyclase-inhibiting opioid receptor
-  signaling pathway*), modifying `GO:0007186` to `GO:0038003` on both genes and `GO:0005184`
-  (*neuropeptide hormone activity*) to `GO:0001515` (*opioid peptide activity*) on `PDYN`.
+  C-activating endothelin receptor signaling pathway*), accepting existing `GO:0086100` on `EDN1`,
+  adding `NEW` `IC` `GO:0160135` on `EDN1` and `NEW` `IDA` `GO:0086100`, `GO:0160135`, and `GO:0031707`
+  on `EDN3`, and refining `GO:0007165`, `GO:0007186`, and `GO:0007200` via `MODIFY` to `GO:0160135`;
+  created the full human `GAL` (`genes/human/GAL/GAL-ai-review.yaml`) and `GALP`
+  (`genes/human/GALP/GALP-ai-review.yaml`) reviews for `GO:0090663` (*galanin-activated signaling
+  pathway*) and `GO:0005184` (*neuropeptide hormone activity*); and created the full human `PENK`
+  (`genes/human/PENK/PENK-ai-review.yaml`) and `PDYN` (`genes/human/PDYN/PDYN-ai-review.yaml`) reviews
+  for `GO:0038003` (*G protein-coupled opioid receptor signaling pathway*) and `GO:0031635` (*adenylate
+  cyclase-inhibiting opioid receptor signaling pathway*), accepting existing `GO:0038003` on `PENK`,
+  adding `NEW` `IC` `GO:0031635` on `PENK` and `NEW` `IDA` `GO:0038003` and `NEW` `IC` `GO:0031635` on
+  `PDYN`, and modifying `GO:0007186` to `GO:0038003` and `GO:0007193` to `GO:0031635` on `PENK`.
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
   `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`, `PTHR11515`, `PTHR11509`,
   `PTHR16866`, `PTHR24023`, `PTHR13874`, `PTHR16839`, `PTHR20950`, `PTHR11438`):
@@ -533,25 +539,31 @@ validators.
     `SUBFAMILY_ONLY` term assessments for `GO:0048018` (*receptor ligand activity*) and
     `GO:0038063` (*collagen-activated tyrosine kinase receptor signaling pathway*) across `COL1A1`
     (`SF1082`), `COL1A2` (`SF568`), `COL2A1` (`SF58`), and `COL3A1` (`SF604`).
-  - `interpro/panther/PTHR13874/PTHR13874-review.yaml`: `SOUND` node assessments on `PTN000605525`
-    (`GO:0005179` *hormone activity*, `GO:0005576` *extracellular region*, `GO:0006874`
-    *intracellular calcium ion homeostasis*, `GO:0007267` *cell-cell signaling*, `GO:0042310`
-    *vasoconstriction*), `PTN000605528` (`EDN1`), `PTN000605532` (`EDN2`), and `PTN000605535`
-    (`EDN3`), plus `FAMILY_WIDE` term assessments including `GO:0031708` (*endothelin receptor
-    binding*), `GO:0086100` (*endothelin receptor signaling pathway*), and `GO:0160135`
-    (*phospholipase C-activating endothelin receptor signaling pathway*).
+  - `interpro/panther/PTHR13874/PTHR13874-review.yaml`: `SOUND` node assessments on `PTN000356323`
+    (`GO:0005576` *extracellular region*, `GO:0005179` *hormone activity*, `GO:0031708` *endothelin B
+    receptor binding*, `GO:0003100` *regulation of systemic arterial blood pressure by endothelin*,
+    `GO:0006874` *intracellular calcium ion homeostasis*, `GO:0014826` *vein smooth muscle
+    contraction*, `GO:0045987` *positive regulation of smooth muscle contraction*) and `PTN002676936`
+    (`GO:0031707` *endothelin A receptor binding* on the `EDN1` clade), `FAMILY_WIDE` term
+    assessments for `GO:0005179` and `GO:0005576`, and `SUBFAMILY_ONLY` term assessments for
+    `GO:0086100` (*endothelin receptor signaling pathway*) and `GO:0160135` (*phospholipase
+    C-activating endothelin receptor signaling pathway*) across `EDN1` (`SF10`), `EDN2` (`SF9`), and
+    `EDN3` (`SF11`).
   - `interpro/panther/PTHR16839/PTHR16839-review.yaml` and
-    `interpro/panther/PTHR20950/PTHR20950-review.yaml`: `SOUND` node assessments on `PTN001655290`
-    (`GAL`) and `PTN000467360` (`GALP`), plus `FAMILY_WIDE` term assessments for `GO:0005184`
-    (*neuropeptide hormone activity*), `GO:0031765` (*galanin receptor binding*), `GO:0007218`
-    (*neuropeptide signaling pathway*), and `GO:0090663` (*galanin-activated signaling pathway*).
-  - `interpro/panther/PTHR11438/PTHR11438-review.yaml`: `SOUND` node assessments on `PTN002607119`
-    (`GO:0001515` *opioid peptide activity*, `GO:0005576` *extracellular region*, `GO:0007218`
-    *neuropeptide signaling pathway*), `PTN000156422` (`PENK`/`PDYN` clade), and `PTN000156424`
-    (`PNOC`), plus `SUBFAMILY_ONLY` term assessments for `GO:0001515` (*opioid peptide activity*),
-    `GO:0038003` (*G protein-coupled opioid receptor signaling pathway*), and `GO:0031635`
-    (*adenylate cyclase-inhibiting opioid receptor signaling pathway*) on `PENK` (`PTHR11438:SF3`)
-    and `PDYN` (`PTHR11438:SF4`).
+    `interpro/panther/PTHR20950/PTHR20950-review.yaml`: `SOUND` node assessments on `PTN008359337`
+    (`GAL`: `GO:0005576`, `GO:0030141`, `GO:0043025`, `GO:0005184`, `GO:0007189`, `GO:0007218`) and
+    `PTN001463568` (`GALP`: `GO:0042595`), plus `FAMILY_WIDE` term assessments for `GO:0005184`
+    (*neuropeptide hormone activity*), `GO:0090663` (*galanin-activated signaling pathway*), and
+    `GO:0005576` (*extracellular region*).
+  - `interpro/panther/PTHR11438/PTHR11438-review.yaml`: `SOUND` node assessments on `PTN000153716`
+    (`GO:0043025` *neuronal cell body*, `GO:0001515` *opioid peptide activity*, `GO:0031628` *opioid
+    receptor binding*, `GO:0007218` *neuropeptide signaling pathway*, `GO:0019233` *sensory perception
+    of pain*), `PTN002605991` (`PNOC`: `GO:0099013`), `PTN002606001` (`PENK`: `GO:0099013`), and
+    `PTN002606008` (`PDYN`: `GO:0097060`, `GO:0007270`), plus `FAMILY_WIDE` term assessments for
+    `GO:0001515` (*opioid peptide activity*), `GO:0038003` (*G protein-coupled opioid receptor
+    signaling pathway*), `GO:0031635` (*adenylate cyclase-inhibiting opioid receptor signaling
+    pathway*), and `GO:0005576` (*extracellular region*) across `PENK` (`SF3`), `PDYN` (`SF4`), and
+    `PNOC` (`SF2`).
 - **Corpus count of receptor-specific binding terms** in gene reviews: 820 annotation rows in
   353 reviews (489 ACCEPT, 221 KEEP_AS_NON_CORE, 13 MODIFY), plus 162 core functions. Most common:
   Notch binding (73), integrin binding (67), EGF receptor binding (36), ephrin receptor binding
