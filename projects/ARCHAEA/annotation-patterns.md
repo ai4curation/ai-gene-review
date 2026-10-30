@@ -202,14 +202,19 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
 The upstream-fixable patterns are recorded in machine-readable form, ready to
 send to the resource that owns them:
 
-| Pattern | Record | Verdict |
-|---|---|---|
-| 1 (ARBA naming) | `rules/arba/ARBA00067001/ARBA00067001-review.yaml`, `rules/arba/ARBA00052213/ARBA00052213-review.yaml` | MODIFY: require MCR-type CDD models |
-| 3 (ESCRT-III vacuolar transport) | `projects/INTERPRO/interpro2go.sssom.yaml`, IPR005024 to GO:0007034 | broadMatch, restrict to Eukaryota |
-| 6 (default NAD binding) | same file, IPR000534 to GO:0051287 | broadMatch, narrow |
-| 8 (catalytic activity on proteasome alpha) | same file, IPR019982 to GO:0004298 | REMOVE |
-| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch, restrict to Eukaryota |
-| 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE |
+| Pattern | Record | Verdict | Replacement rule |
+|---|---|---|---|
+| 1 (ARBA naming) | `rules/arba/ARBA00067001/ARBA00067001-review.yaml`, `rules/arba/ARBA00052213/ARBA00052213-review.yaml` | MODIFY: require MCR-type CDD models | CR-0004 |
+| 3 (ESCRT-III vacuolar transport) | `projects/INTERPRO/interpro2go.sssom.yaml`, IPR005024 to GO:0007034 | broadMatch | CR-0001 (Eukaryota), CR-0002 (archaeal Cdv cytokinesis) |
+| 6 (default NAD binding) | same file, IPR000534 to GO:0051287 | broadMatch, narrow | none yet |
+| 8 (catalytic activity on proteasome alpha) | same file, IPR019982 to GO:0004298 | REMOVE | not needed |
+| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (module context; DRAFT) |
+| 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE | not needed |
+
+The replacement rules live in [rules/curated](../../rules/curated/README.md).
+A taxon or module condition is used only where the lineage or the missing
+component is what separates right from wrong members; where the term is wrong
+for every member, the record is a removal and no rule is needed.
 
 Patterns 2 (plant-seeded PAINT node on lacS) and 4 (SubCell nucleoid
 mapping) are not yet in a structured record: the first belongs with PANTHER

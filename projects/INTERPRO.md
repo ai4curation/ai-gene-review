@@ -98,8 +98,9 @@ archaeal proteasome alpha subunits), IPR018229 to ion channel activity and
 IPR017402 to light-activated ion channel activity (rhodopsin pumps); a proposed
 Eukaryota restriction for IPR000426 to ubiquitin-dependent protein catabolic
 process and IPR005024 to vacuolar transport; and narrowing IPR000534 to NAD
-binding. SSSOM has no taxon field, so the restrictions are written at the start
-of each row's comment as `TAXON RESTRICTION (NCBITaxon:2759)`.
+binding. interpro2go has no conditions, so the two restriction rows each name a
+curated replacement rule in [rules/curated](../rules/curated/README.md) (CR-0001,
+CR-0003) that couples the InterPro condition with a taxon or module condition.
 
 ## What curators can act on
 
