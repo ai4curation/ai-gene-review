@@ -54,7 +54,9 @@ retinol dehydrogenase as named alternatives).
   NADPH dependence rests on the E. coli assay, not the motif.
 - **Retinal:** it judges retinal reduction promiscuous and non-core, citing
   [PMID:34850377 "Expression of human RDH10 and Escherichia coli ybbO led to increase in
-  retinol production, but retinal remained as a major product"]. As a result I withdrew the
+  retinol production, but retinal remained as a major product"]. PMID:39307776 reports the
+  opposite in another yeast system (ybbO the most active of three screened ADHs, 95.6%
+  conversion), so yeast efficiency is disputed. I nevertheless withdrew the
   NEW GO:0052650 proposal from the E. coli review (see the ECOLI notes).
 - It did not do a reciprocal-best-hit, synteny or pocket analysis, so those local results
   have no counterpart in the run.

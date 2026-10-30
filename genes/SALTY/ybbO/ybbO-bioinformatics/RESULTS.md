@@ -118,6 +118,19 @@ residue. The nearest ten:
 - These are prioritised hypotheses for comparative kinetics or swap mutants, not
   established functional differences.
 
+## N-terminal start site of E. coli YbbO
+
+Number of residues each YbbO entry carries before the position aligned to Salmonella Met1
+(the conserved MQKSVLITG start):
+
+  0 aa: 34, 13 aa: 16
+  P0AFP4 extension: 13 aa (P0AFP4 in the orthologue set)
+
+The 13-residue extension (MTHKATEILTGKV in P0AFP4) is present in the 269-aa models of
+Escherichia, Shigella and Klebsiella entries and absent from the other 34. Annotated starts
+are often propagated within a clade, so this suggests, but does not show, that the
+upstream start is a gene-model artefact. N-terminal proteomics would settle it.
+
 ## Interpretation
 
 Q7CR11 is the one-to-one Salmonella orthologue of E. coli YbbO, a characterised

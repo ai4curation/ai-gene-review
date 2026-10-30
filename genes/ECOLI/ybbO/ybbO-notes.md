@@ -58,3 +58,15 @@ product"]. Together with the lack of any purified-enzyme retinal assay, no measu
 cofactor, and a substrate absent from E. coli, this does not clear the bar for a NEW
 annotation. The retinal evidence stays in the description, references and a suggested
 question.
+
+## Correction after PR review (2026-10-30)
+
+The retinal evidence was one-sided. [PMID:39307776 "It was determined that ybbO from
+Escherichia coli exhibited the highest catalytic activity"] (95.6% retinal-to-retinol
+conversion among three alcohol dehydrogenases screened in yeast) contradicts the
+PMID:34850377 result. Yeast efficiency is therefore disputed, not established as low.
+The decision to withhold GO:0052650 rests on the other grounds: no purified-enzyme assay,
+no measured cofactor, and a substrate absent from E. coli. The reference, the conflict, a
+SUSPECTED WRONG_START_SITE gene_model_issues entry, and description fixes (dropped the
+unsupported "cytoplasmic" and the CDD-derived "17beta-HSD-like" family gloss) are now in
+the review.

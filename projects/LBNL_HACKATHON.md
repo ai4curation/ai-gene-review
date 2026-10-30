@@ -45,5 +45,6 @@ on the dashboard's call in the gene notes file.
   therefore does not blind a sequence test; this matters for any dashboard-style
   evaluation that relies on that kind of blinding.
 - For ECOLI/ybbO, a proposed retinol dehydrogenase annotation was withdrawn. Retinal
-  reduction is seen only in engineered strains, is inefficient in yeast, and has not
-  been assayed with purified enzyme.
+  reduction is seen only in engineered strains, has not been assayed with purified
+  enzyme or a defined cofactor, and uses a substrate E. coli does not make. Studies in yeast
+  disagree on how efficient it is.

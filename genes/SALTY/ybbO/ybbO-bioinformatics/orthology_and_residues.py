@@ -237,6 +237,20 @@ def main():
         others = sorted({m.get(p) for m in maps if m.get(p)} - {q[p - 1], e})
         print(f"  {q[p - 1]}{p}{e}\t{dist[p]:.1f}\t{plddt[p]:.0f}\t{blosum[q[p - 1]][e]:.0f}\t"
               f"{100 * cons[p]:.0f}%\t{n_e}/{len(maps)}\t{''.join(others) or '-'}")
+    # N-terminal extension: residues an orthologue carries before the position aligned
+    # to query Met1 (tests whether P0AFP4's 13-residue extension is typical)
+    ext = {}
+    for acc, s_ in list(orth.items()) + [(QUERY, q)]:
+        aln = GLOBAL.align(q, s_)[0]
+        ext[acc] = int(aln.aligned[1][0][0]) if aln.aligned[0][0][0] == 0 else None
+    counts = {}
+    for acc, e in ext.items():
+        counts[e] = counts.get(e, 0) + 1
+    print(f"\n### N-terminal residues preceding the query Met1 position, across "
+          f"{len(ext)} YbbO entries (query included)")
+    print("  " + ", ".join(f"{k} aa: {v}" for k, v in sorted(counts.items(), key=lambda kv: (kv[0] is None, kv[0]))))
+    print(f"  {ECOLI} extension: {ext.get(ECOLI, 'n/a')} aa "
+          f"({ECOLI} {'in' if ECOLI in orth else 'not in'} the orthologue set)")
     print(f"\nCandidate YbbO-specific pocket residues (invariant in YbbO orthologues, differ from all "
           f"four vertebrate SDR9C relatives): {' '.join(f'{q[p - 1]}{p}' for p in spec) or 'none'}")
 
