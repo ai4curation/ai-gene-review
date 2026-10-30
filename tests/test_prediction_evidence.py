@@ -129,6 +129,8 @@ def test_publication_titles_quotes_and_missing_cache(tmp_path: Path, fault: str 
         ("https://example.org/data.tsv", True),
         ("genes/missing.txt", False),
         ("missing.md", False),
+        ("SPAC8E11.10-hypotheses/x/openscientist.md", False),
+        ("SPCC16C4.02c-notes/x.md", False),
     ],
 )
 def test_source_documents_external_ids_pass_missing_files_fail(

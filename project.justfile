@@ -1000,10 +1000,16 @@ validate-predictions +files:
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Every prediction review, including the BioReason/GO-GPT sidecars. Run by the
-# weekly/manual CI pass and on validation-infrastructure changes.
+# weekly/manual CI pass, the merge queue and on validation-infrastructure
+# changes. No --fetch: publication caches are committed, so a missing one is an
+# error to fix, not something a scheduled run should download.
 [group('QC')]
 validate-predictions-all:
-    just validate-predictions genes/*/*/*predictions*.yaml
+    #!/usr/bin/env bash
+    set -euo pipefail
+    files=(genes/*/*/*predictions*.yaml)
+    just validate-prediction-terms "${files[@]}"
+    uv run python -m ai_gene_review.validation.prediction_evidence --require-excerpts --report reports/prediction-evidence.json "${files[@]}"
 
 # Schema and term validation for prediction files. In a PredictionReview the only
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;

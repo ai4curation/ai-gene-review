@@ -24,7 +24,9 @@ from ai_gene_review.validation.validation_report import ValidationReport, Valida
 SCORES = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
 
 
-EXTERNAL_SOURCE = re.compile(r"^(?:[a-z][a-z0-9+.-]*://|[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/)")
+EXTERNAL_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*://")
+# Bare hosts written without a scheme; scripts/hf_to_sft_predictions.py writes the only one.
+EXTERNAL_HOSTS = ("huggingface.co/",)
 
 
 def is_external_source(source: str) -> bool:
@@ -38,8 +40,10 @@ def is_external_source(source: str) -> bool:
     False
     >>> is_external_source("pmp20-bioreason-rl-predictions.md")
     False
+    >>> is_external_source("SPAC8E11.10-hypotheses/x/openscientist.md")
+    False
     """
-    return bool(EXTERNAL_SOURCE.match(source))
+    return bool(EXTERNAL_SCHEME.match(source)) or source.startswith(EXTERNAL_HOSTS)
 
 
 def source_path(reference_id: str, root: Path) -> Path | None:
