@@ -1,10 +1,36 @@
 # sufB (A2RMK5, llmg_1969) bioinformatics results
 
+Reproduce with:
+
+```bash
+uv run --no-project --with pyhmmer --with biopython python identity_and_family.py
+uv run --project ../../../.. python map_ecoli_residues.py
+bash fetch_neighborhood.sh
+```
+
 ## Query identity
 
-The KBase Dark Protein Atlas protein NZ_LKLC01000161.1_58 (Lactococcus lactis,
-470 aa) is 100% identical over its full length to UniProtKB A2RMK5 (llmg_1969,
-L. lactis subsp. cremoris MG1363), which is reviewed here.
+`identity_and_family.py` (`identity_and_family_output.txt`) aligns the KBase Dark
+Protein Atlas protein NZ_LKLC01000161.1_58 (`kbase_NZ_LKLC01000161.1_58.fasta`,
+saved from the dashboard's sequence panel on 2026-10-30) with UniProtKB A2RMK5
+(llmg_1969, L. lactis subsp. cremoris MG1363):
+
+- KBase length 470; A2RMK5 length 470
+- aligned columns: 470; identical: 470; identity: 100.0%
+- sequences exactly equal: True
+
+So the KBase protein is reviewed here as A2RMK5.
+
+## SufB family model
+
+The same script runs hmmsearch (pyhmmer) with NCBIfam TIGR01980 (sufB, model
+length 448, downloaded from the InterPro API) against A2RMK5:
+
+- full-sequence E-value 1.6e-224, score 731.5
+- domain envelope 14-461 (query coverage 95.3%), HMM 2-448 of 448 (HMM coverage 99.8%), i-Evalue 1.8e-224
+
+This agrees with the dashboard's InterProScan hit (15-461, E=1.1e-216); the
+E-values differ because of database size.
 
 ## Essential E. coli SufB residues are conserved
 

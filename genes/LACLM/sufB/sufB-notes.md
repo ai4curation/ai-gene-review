@@ -21,9 +21,11 @@ come from the SufC ATPase partner, and the desulfurase labels belong to SufS.
 
 ## Evidence
 
-- Full-length TIGR01980 (SufB-specific) match, 95% query coverage, E=1.1e-216;
-  SufBD N-terminal (PF19295) and core (PF01458) domains (UniProt A2RMK5; dashboard
-  InterProScan).
+- Identity: the dashboard sequence is exactly equal to A2RMK5 (470/470;
+  `sufB-bioinformatics/identity_and_family.py`).
+- Full-length TIGR01980 (SufB-specific) match: residues 14-461, 95.3% coverage,
+  E=1.6e-224 by local hmmsearch (dashboard InterProScan: 15-461, E=1.1e-216);
+  SufBD N-terminal (PF19295) and core (PF01458) domains (UniProt A2RMK5).
 - E. coli SufB residues conserved: C254→C236 (sulfur acceptor), C405→C380 and
   E434→E409 (cluster site) [PMID:28839209 "Cys254 of SufB (SufBC254) is essential
   for sulfur-transfer from SufE"]; see `sufB-bioinformatics/RESULTS.md`.
@@ -40,7 +42,12 @@ come from the SufC ATPase partner, and the desulfurase labels belong to SufS.
 ## Caveats
 
 - No direct experimental work on the lactococcal protein.
-- The cluster type built on the Firmicute SufBC2D complex is not established, so
-  the MF stays at the generic GO:0051536.
+- The MF stays at the generic GO:0051536 because the cluster species on the
+  donor E. coli SufB is not settled: E. coli SufB has IDA rows for both
+  [4Fe-4S] (PMID:17350958) and [2Fe-2S] (PMID:25485887) binding, and the
+  anaerobically isolated SufBCD cluster differs spectroscopically from the
+  in vitro [4Fe-4S] one [PMID:28839209 "anaerobically isolated SufBCD complex
+  from E. coli was demonstrated to possess Fe-S cluster with distinct
+  spectroscopic features from that of [4Fe-4S] cluster reconstituted in vitro"].
 - The dashboard's fitness homologs (37-39% identity, Enterobacterales) are too
   distant to add anything specific.
