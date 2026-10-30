@@ -34,19 +34,20 @@ of the annotated ATG in frame:
 - S. meliloti 1021: open frame upstream of annotated start: RDMMESVQTDGKRGENRYFKAPVFAVAP (28 codons)
 - E. meliloti USDA1810: open frame upstream of annotated start: KMVQQAEKDRQNVTQANGHKELNFYAKARKSGLPIFAVAP (40 codons)
 
-In both strains the reading frame stays open upstream of MIDWTD, and the residues
-just before it (FAVAP) align to the E. coli DusA FMN-binding segment
-(E. coli residues 32-34, SVAPMLDWTD). With the 359-residue start, E. coli P32 has no
-counterpart (`alignment_output.txt`: "E. coli P32: gap in Q92P85"); with either
-longer start it does:
+In both strains the reading frame stays open upstream of MIDWTD. The HAMAP
+MF_02041 FMN-binding feature on E. coli DusA covers residues 32-34 (P-M-L in
+SVAPMLDWTD). Q92P85 begins at the equivalent of M33, and L34 is present but
+substituted (`alignment_output.txt`: "E. coli L34 -> Q92P85 I2"), so only P32 of
+that feature is missing: "E. coli P32: gap in Q92P85". The preceding codon (the P
+of FAVAP) supplies it with either longer start:
 
 - E. coli P32 -> P26 (RefSeq WP_015241224.1, ATG at -78 nt in 1021)
 - E. coli P32 -> P39 (KBase model, ATG at -117 nt in USDA1810)
 
 This accounts for the UniProt Q92P85 caution "Lacks conserved residue(s) required
 for the propagation of feature annotation": the HAMAP MF_02041 FMN-binding feature
-at E. coli 32-34 cannot be placed on the truncated sequence (Q92P85 carries every
-other MF_02041 FMN-binding feature). The 359-residue model is most likely an
+at E. coli 32-34 cannot be placed on the truncated sequence, because its first
+residue (P32) is absent (Q92P85 carries every other MF_02041 FMN-binding feature). The 359-residue model is most likely an
 N-terminally truncated gene call; the longer RefSeq model (WP_015241224.1) restores
 the motif. Which upstream codon is used in vivo is not known.
 

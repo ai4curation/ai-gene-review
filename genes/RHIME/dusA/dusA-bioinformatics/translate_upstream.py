@@ -1,7 +1,8 @@
 """Translate 300 nt upstream of each annotated dusA start in frame and list start codons.
 
 Shows that the annotated 359-aa start (MIDWTD..., UniProt Q92P85 and RefSeq
-WP_010969552.1) sits just after the conserved FMN-binding VAPM motif, and that
+WP_010969552.1) begins at the equivalent of E. coli DusA M33, so the FMN-binding
+P32 is missing from it, and that
 the open reading frame continues upstream in both strains with different
 sequence. Run after fetch_gene_models.sh:
   uv run python translate_upstream.py

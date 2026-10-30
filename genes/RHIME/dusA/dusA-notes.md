@@ -48,15 +48,17 @@ data into a stress role. Two refinements:
 - In E. coli, DusA is the most active Dus in vivo and in vitro and uses NADPH
   [PMID:39460624 "revealing DusA as the most active enzyme, followed by DusB"]. It
   binds tRNA in two steps and enhances translation at specific codons [PMID:42080256].
-- Brucella ovis DusA (BOV_RS04255, 56% identity, same order Hyphomicrobiales) is
+- Brucella ovis DusA (BOV_RS04255, 56.4% identity per the dashboard's PaperBLAST
+  panel; same order Hyphomicrobiales) is
   listed in that organism's flavoproteome as a tRNA dihydrouridine20/20a synthase
   (PMID:35315701; a comparative assignment, not an assay).
 
 ## Gene model
 
 - Q92P85 (and RefSeq WP_010969552.1, also used on the USDA1810 contig) starts at
-  MIDWTD, which aligns to E. coli DusA M33. The conserved FMN-binding VAP motif
-  (E. coli 30-32) lies just upstream in an open frame in both strains. The truncation
+  MIDWTD, which aligns to E. coli DusA M33. Of the HAMAP FMN-binding feature at
+  E. coli 32-34 (P-M-L), only P32 is missing (L34 is present as I2); the codon for
+  it lies just upstream in an open frame in both strains. The truncation
   explains the UniProt caution "Lacks conserved residue(s) required for the
   propagation of feature annotation".
 - Current RefSeq for the 1021 locus (SM_RS09780, WP_015241224.1, 385 aa) starts 26
