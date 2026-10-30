@@ -2,8 +2,8 @@
 title: "LBNL Hackathon: Dark Protein Atlas genes"
 maturity: SCOPING
 tags: [EVALUATION]
-species: [LACLM]
-genes: [sufB]
+species: [LACLM, RHIME]
+genes: [sufB, dusA]
 ---
 
 # LBNL Hackathon: Dark Protein Atlas genes
@@ -23,8 +23,13 @@ on the dashboard's call in the gene notes file.
 | Gene | Organism | UniProt | Dashboard item | Dashboard call | Verdict |
 |---|---|---|---|---|---|
 | LACLM/sufB | *Lactococcus lactis* subsp. *cremoris* MG1363 | A2RMK5 | [NZ_LKLC01000161.1_58](https://gene-annotate-dashboard.kbase.us/review/NZ_LKLC01000161.1_58) | SufB Fe-S cluster assembly scaffold protein of the SUF system | supported |
+| RHIME/dusA | *Sinorhizobium meliloti* 1021 | Q92P85 | [NZ_RPHN01000062.1_55](https://gene-annotate-dashboard.kbase.us/review/NZ_RPHN01000062.1_55) | FMN-binding tRNA-dihydrouridine(20/20a) synthase DusA (EC 1.3.1.91) | supported |
 
 ## Notes
 
 - The dashboard sequence for NZ_LKLC01000161.1_58 is 100% identical to A2RMK5
   (llmg_1969), so the review is filed under the MG1363 reference proteome.
+- The dashboard sequence for NZ_RPHN01000062.1_55 (*E. meliloti* USDA1810) contains
+  Q92P85 (SMc04235) exactly as residues 40-398; the 39 extra N-terminal residues
+  come from an upstream start codon. The review is filed under the 1021 reference
+  proteome, and the truncated UniProt start is recorded as a gene model issue.
