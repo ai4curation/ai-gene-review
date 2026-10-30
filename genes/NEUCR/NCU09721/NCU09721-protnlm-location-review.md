@@ -34,11 +34,11 @@ Original evidence:
 ]
 ```
 
-Assessment: **COR** (confidence score 2).
+Assessment: **LSP** (confidence score 2).
 
-Curated AP1 membership places this beta-adaptin in the Golgi/endosomal cargo-adaptor machinery. Aspergillus AP1 is experimentally involved in sorting secretory vesicles and recycling endosomes (PMID:29925567), grounding conserved recruitment to cytoplasmic carriers. This broad location is supported by AP1 family transfer; no particular N. crassa vesicle cargo or native imaging experiment is asserted.
+Curated AP1 membership places this beta-adaptin in the Golgi/endosomal cargo-adaptor machinery. Aspergillus AP1 is experimentally involved in sorting secretory vesicles and recycling endosomes (PMID:29925567), grounding conserved recruitment to cytoplasmic carriers. Q7S2Q5 is the single full-length 749-residue product of the gene and retains the adaptin N-terminal trunk (residues 16–532) that carries AP1 complex assembly; like other Dikarya beta1 subunits it has no beta-appendage, so it lacks no feature relative to the gene's canonical product. No particular N. crassa vesicle cargo or native imaging experiment is asserted.
 
-The frozen target annotations specify AP1 membership, TGN, and membrane coat, but not this carrier-membrane location. COR records the supported added localization relative to that target snapshot.
+The gene already carries AP-1 adaptor complex (GO:0030121, part_of, IBA, accepted as core in the gene review). In GO that complex is part of the clathrin-coated trans-Golgi network vesicle coat and so falls under cytoplasmic vesicle. The broad Cytoplasmic vesicle prediction is therefore correct but less precise than an existing annotation.
 
 Evidence:
 
@@ -80,7 +80,7 @@ Original evidence:
 
 Assessment: **LSP** (confidence score 2).
 
-Fusarium graminearum AP1 beta-GFP colocalizes with the Golgi marker FgKex2-mCherry (PMID:36836259). The target AP1 IBA, supported beta-adaptin architecture, and conservation within filamentous fungi ground peripheral Golgi-membrane recruitment. The existing target trans-Golgi-network annotation is more precise than Golgi apparatus membrane, making this LSP. ProtNLM donor Q22498 is a worm coatomer gamma subunit, so that donor alone would not establish beta-adaptin localization; the independent AP1 experiment supports the emitted location.
+Fusarium graminearum AP1 beta-GFP colocalizes with the Golgi marker FgKex2-mCherry (PMID:36836259). The target AP1 IBA, supported beta-adaptin architecture, and conservation within filamentous fungi ground peripheral Golgi-membrane recruitment. The gene already carries trans-Golgi network (GO:0005802) and AP-1 adaptor complex (GO:0030121), a membrane coat that GO places in the Golgi apparatus on trans-Golgi network vesicle membranes. Together these specify the peripheral Golgi-membrane association more precisely than Golgi apparatus membrane, making this LSP. ProtNLM donor Q22498 is a worm coatomer gamma subunit, so that donor alone would not establish beta-adaptin localization; the independent AP1 experiment supports the emitted location.
 
 Evidence:
 
@@ -117,11 +117,11 @@ Original evidence:
 ]
 ```
 
-Assessment: **COR** (confidence score 2).
+Assessment: **LSP** (confidence score 2).
 
-Aspergillus AP1 supports clathrin-dependent secretory and recycling traffic (PMID:29925567), providing independent fungal experimental support for conserved clathrin-coated-carrier association of the target AP1 complex. Loss of the canonical beta appendage does not refute this complex location: fungal AP1 remains associated with clathrin and can use alternative tail motifs. The location concerns peripheral coat association, not membrane insertion or proof of direct NCU09721-clathrin binding.
+Aspergillus AP1 supports clathrin-dependent secretory and recycling traffic (PMID:29925567), providing independent fungal experimental support for conserved clathrin-coated-carrier association of the target AP1 complex. Loss of the canonical beta appendage does not refute this complex location: fungal AP1 remains associated with clathrin and can use alternative tail motifs, and the appendage is absent from the whole Dikarya beta1 lineage rather than from this product alone. The location concerns peripheral coat association, not membrane insertion or proof of direct NCU09721-clathrin binding.
 
-The frozen target annotations specify AP1 membership, TGN, and membrane coat, but not this carrier-membrane location. COR records the supported added localization relative to that target snapshot.
+The gene's existing AP-1 adaptor complex annotation (GO:0030121) is, in GO, part of clathrin coat of trans-Golgi network vesicle and hence of clathrin-coated vesicle membrane. The emitted location is therefore entailed by a more specific annotation the gene already carries, which makes it LSP rather than a new localization.
 
 Evidence:
 
@@ -130,4 +130,4 @@ specific membrane cargoes toward the apex of growing hyphae. We provide evidence
 that AP-1 is involved in both anterograde sorting of RabERab11-labeled SVs and
 RabA/BRab5-dependent endosome recycling.”
 
-COR denotes a biologically supported location newly specified relative to the frozen target annotation snapshot. LSP denotes a less precise location than an established target annotation. Neither category establishes model training-set membership.
+LSP denotes a biologically supported location that is less precise than, or entailed by, a location the gene already carries in GOA or the curated gene review. It does not establish model training-set membership.
