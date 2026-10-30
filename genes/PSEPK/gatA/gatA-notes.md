@@ -32,3 +32,8 @@ The inherited reviewer-authored NEW GO:0043039 charging proposal is retired: Gat
 ### Final independent-QA correction
 
 Retired the inherited authored NEW GO:0050566 after the broad catalytic-activity replacement was expanded to include the same supported Asn-forming contribution. The activity remains in the replacement and core. This is the fourth explicit authored-row exception across the panel: 107 final rows, four retained NEW; all 103 machine rows remain unchanged. GatB GO:0050566 is a machine IEA and GatC has no redundant broad MF replacement, so neither was removed.
+
+
+## 2026-10-29 — PR #5616 evidence follow-up
+
+Cytoplasm remains ACCEPT with native B. subtilis S100 activity and immunoblot evidence from PMID:9342321. The native Bacillus lane is explicitly distinguished from recombinant E. coli lanes. For Pseudomonas, the compartment is a conserved-machinery inference supported by target HAMAP GatA membership, not a native localization experiment. Generic catalytic activity now refines to GatA glutaminase chemistry; existing whole-complex contribution claims are retained. Original annotation payloads and row counts are unchanged.

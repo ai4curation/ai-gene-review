@@ -9,3 +9,8 @@ PMID:14729703 purified overproduced PAO1 enzymes in their homologous host, demon
 GO:0070681 is currently obsolete; its explicit ontology comment warns against automatic reassignment to initial tRNA charging. GatCAB modifies an already esterified amino acid, so GO:0019988 is used for direct participation. GO:0006450 is not restricted to ribosomal factors: PMID:34225495 provides independent mechanistic evidence connecting GatCAB stability to fidelity in mycobacteria. Target-species extrapolation is qualified, not labeled as a native assay.
 
 All original payloads and flags are preserved; no NEW annotations added. Actual Falcon/fallback and FEBA attempts failed; no source report or negative fitness phenotype fabricated. Normal publication caching succeeded.
+
+
+## 2026-10-29 — PR #5616 evidence follow-up
+
+Cytoplasm remains ACCEPT with native B. subtilis S100 activity and immunoblot evidence from PMID:9342321. The native Bacillus lane is explicitly distinguished from recombinant E. coli lanes. For Pseudomonas, the compartment is a conserved-machinery inference supported by target HAMAP GatA membership, not a native localization experiment. Generic catalytic activity now refines to GatA glutaminase chemistry; existing whole-complex contribution claims are retained. Original annotation payloads and row counts are unchanged.
