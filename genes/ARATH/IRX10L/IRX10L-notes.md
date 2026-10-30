@@ -9,8 +9,12 @@ rests on the cached primary literature listed below, read directly.
 ## The IRX10 clade (GT47)
 
 Arabidopsis has two members, IRX10 (At1g27440, Q9FZJ1) and IRX10-L (At5g61840,
-Q940Q8), PANTHER PTHR11062:SF370 within the exostosin-related GT47 family. Both
-are xylan backbone beta-1,4-xylosyltransferases (xylan synthases).
+Q940Q8), in the exostosin-related GT47 family PTHR11062. PANTHER puts them in
+different subfamilies: IRX10 in SF370 ("BETA-1,4-XYLOSYLTRANSFERASE IRX10-RELATED")
+and IRX10L in SF200 ("BETA-1,4-XYLOSYLTRANSFERASE IRX10L-RELATED"), which in the
+local PTHR11062 entries table also holds rice Os01g0926700 (Q8S1X7) and moss
+GT47A (A9RGD8). Both are xylan backbone beta-1,4-xylosyltransferases (xylan
+synthases).
 
 - Biochemistry: purified IRX10-L polymerises beta-1,4-xylan from UDP-Xyl
   [PMID:25141999 "These data unambiguously establish that IRX10-L is a polymerizing
