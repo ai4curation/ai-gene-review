@@ -2,7 +2,7 @@
 
 Script: `irx10_clade_identity.py` (run from the repository root with
 `uv run python genes/ARATH/IRX10/IRX10-bioinformatics/irx10_clade_identity.py`).
-Output: `identity.tsv` (71 proteins). Sequences and PANTHER subfamilies come
+Output: `identity.tsv` (74 proteins). Sequences and PANTHER subfamilies come
 from the EBI Proteins API, and Pfam PF03016 (Exostosin_GT47) members per taxon from
 the InterPro API. Identity is identical positions in a global BLOSUM62 alignment
 divided by the length of the shorter sequence. Generated 2026-10-30.
@@ -14,15 +14,24 @@ divided by the length of the shorter sequence. Generated 2026-10-30.
 | A0A2K2BTI7 | poplar POPTR_001G068100 | 412 | 0.908 | 0.854 | PTHR11062:SF370, PTHR11062 |
 | A0A2K2B808 | poplar POPTR_003G162000 | 413 | 0.891 | 0.85 | PTHR11062:SF339, PTHR11062 |
 | Q8S1X7 | rice IRX10 (LOC_Os01g70200) | 417 | 0.85 | 0.834 | PTHR11062:SF200, PTHR11062 |
+| Q8S1X8 | rice Os01g0926600 | 415 | 0.825 | 0.817 | PTHR11062, PTHR11062:SF399 |
 | A9RGD8 | Physcomitrium GT47A | 449 | 0.767 | 0.773 | PTHR11062:SF200, PTHR11062 |
+| Q8S1X9 | rice Os01g0926400 | 422 | 0.735 | 0.74 | PTHR11062, PTHR11062:SF125 |
+| Q33AH8 | rice GUT1 | 417 | 0.752 | 0.735 | PTHR11062, PTHR11062:SF399 |
 | Q9ZUV3 | Arabidopsis IRX7/FRA8 (GT47, other clade) | 448 | 0.388 | 0.402 | PTHR11062, PTHR11062:SF229 |
 | Q16394 | human EXT1 (GT47 outgroup) | 746 | 0.308 | 0.299 | PTHR48261, PTHR48261:SF3 |
 
-Land-plant IRX10-clade members are 77-91% identical to Arabidopsis IRX10/IRX10L.
+Land-plant IRX10-clade members are 74-91% identical to Arabidopsis IRX10/IRX10L.
 Other GT47 proteins (IRX7/FRA8, human EXT1) sit at 30-40%, the background for the
 shared GT47 fold. Poplar POPTR_001G068100 shares PANTHER subfamily SF370 with
 AtIRX10; its paralog POPTR_003G162000 is in SF339. Rice IRX10 and moss GT47A are
 in SF200 with AtIRX10L.
+
+Rice has three more IRX10-clade proteins (Os01g0926600, Os01g0926400 and GUT1,
+0.74-0.82 identical to AtIRX10L), which PANTHER places in SF399 ("GLUCURONOSYLTRANSFERASE
+OS01G0926600-RELATED") and SF125 ("GLUCURONOSYLTRANSFERASE OS01G0926400-RELATED").
+PANTHER subfamilies therefore split the IRX10 clade into at least five subfamilies
+(SF370, SF200, SF339, SF399, SF125).
 
 ## Klebsormidium nitens (charophyte alga): 23 GT47 proteins, top 6
 

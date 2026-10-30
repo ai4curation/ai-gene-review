@@ -31,6 +31,9 @@ OUT = Path(__file__).parent / "identity.tsv"
 QUERIES = {"AtIRX10": "Q9FZJ1", "AtIRX10L": "Q940Q8"}
 REFERENCES = {
     "Q8S1X7": "rice IRX10 (LOC_Os01g70200)",
+    "Q8S1X8": "rice Os01g0926600",
+    "Q8S1X9": "rice Os01g0926400",
+    "Q33AH8": "rice GUT1",
     "A0A2K2BTI7": "poplar POPTR_001G068100",
     "A0A2K2B808": "poplar POPTR_003G162000",
     "A9RGD8": "Physcomitrium GT47A",
