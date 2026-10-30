@@ -53,9 +53,37 @@ argument against the inherited "alpha-glucosidase II" name.
 ## Curation decisions
 
 - Both GO:0004553 rows (IBA from PTHR22762/PTN000509739, IEA from InterPro
-  IPR000322) are sound but family-level; MODIFY to GO:0033904 dextranase activity.
-  The IBA node's seeds are eukaryotic GH31 α-glucosidases, which is why it stops at
-  the family property — a granularity issue, not a bad propagation.
+  IPR000322) are sound but family-level; MODIFY. The IBA node's seeds are eukaryotic
+  GH31 alpha-glucosidases, which is why it stops at the family property - a granularity
+  issue, not a bad propagation.
+- **The MODIFY target is a proposed term, not GO:0033904.** The first draft of this
+  review used GO:0033904 dextranase activity, which is wrong in a way worth recording:
+  that term is defined as the *endo*hydrolysis of 1,6-alpha-D-glucosidic linkages, so
+  asserting it commits to a cleavage mode that the same review's `reason` called
+  unresolved. The alternative, GO:0043896 glucan 1,6-alpha-glucosidase activity, has a
+  mechanism-neutral definition text but is the name of exo-acting EC 3.2.1.70, so it
+  commits the other way. GO has no common parent that asserts only the linkage and the
+  substrate, so this review proposes `alpha-1,6-glucan hydrolase activity` (see
+  `proposed_new_terms`) and uses `proposed_molecular_function` with
+  `molecular_function` unset, per the repo convention for an activity with no GO term.
+  The previously drafted NEW GO:0033904 (ISS) row was dropped for the same reason.
+- **Why the cleavage mode is genuinely open.** The six conserved FjDex31A residues
+  include the subsite -2 pair (G273/Y524 in FjDex31A numbering). A productive subsite
+  -2 excludes a classic single-glucose alpha-glucosidase pocket, which is what kills the
+  "alpha-glucosidase II" name - but it does not discriminate endo from exo, because an
+  exo enzyme releasing the *disaccharide* isomaltose also needs -2/-1 (cf. beta-amylase
+  releasing maltose). BT_3086's reported products are glucose **and isomaltose**.
+  Further, Wong's product data is an overnight endpoint digest ("dextran medium treated
+  overnight"), and an endo enzyme run to completion also arrives at small products; and
+  FjDex31A "produced glucose from the initial stage of the reaction when
+  isomaltooligosaccharides were used as substrates" while also transglycosylating, so
+  product spectra are a weak mechanistic readout for this enzyme class. Note Wong et al.
+  are themselves internally inconsistent: their introduction lists GH31 among the
+  *endo*dextranase families ("GH families 31, 49, and 66") and omits it from the exo
+  list ("13, 15, 27, and 49"), then calls BT3086's products "consistent with products
+  formed by exodextranases (GH31)". Pathway position (periplasmic, downstream of
+  BT3087, "liberating glucose from dextran-oligosaccharides") argues exo; the ortholog's
+  structure argues endo. Neither is assertable yet.
 - GO:0005975 carbohydrate metabolic process → MODIFY to GO:0000272 polysaccharide
   catabolic process. GO has **no dextran catabolic process term** (checked via OLS);
   that gap is noted here rather than as a `proposed_new_terms` entry, since
@@ -64,19 +92,17 @@ argument against the inherited "alpha-glucosidase II" name.
   the N-terminal β-sandwich of the GH31 catalytic unit (part of the four-domain fold
   seen in the FjDex31A structures), not a CBM; catalytic-site substrate binding is
   part of the hydrolase activity.
-- NEW rows: GO:0033904 (ISS from FjDex31A), GO:0042597 periplasmic space (IC from the
-  SignalP type I signal peptide 1-22 with no TM helix or lipobox, plus the PUL
-  convention), GO:0000272 (IC, the MODIFY target).
+- NEW rows: GO:0042597 periplasmic space (IC from the SignalP type I signal peptide
+  1-22 with no TM helix or lipobox, plus the PUL convention that GHs with type I
+  signal peptides act in the periplasm), GO:0000272 (IC, the MODIFY target). No NEW
+  molecular-function row: the activity is carried by the proposed term above.
 
 ## Open points
 
-- **Endo versus exo is unresolved for BT_3086.** The dashboard call and the FjDex31A
-  literature say endo-dextranase; Wong et al. read BT3086's glucose+isomaltose
-  products as exodextranase-like, and the mBio text explicitly labels GH31 the
-  "exodextranase" of the locus. But FjDex31A also releases glucose from IG3/IG4, so
-  the product profile does not settle it. GO:0043896 glucan 1,6-α-glucosidase
-  activity would be the exo-type term if that reading wins. Recorded in
-  `suggested_questions` and `suggested_experiments` rather than resolved.
+- **Endo versus exo is unresolved**, as set out under Curation decisions. Resolving it
+  is what the first `suggested_experiment` is for (time-course kinetics plus
+  reducing-end assays, which separate the two where endpoint products do not), and it
+  is also what would let the proposed term be replaced by GO:0033904 or GO:0043896.
 - **Transglycosylation (GO:0016757) was not asserted.** FjDex31A has high
   transglucosylation activity [PMID:27170214, PMID:37269952], but no transglycosylation
   assay has been reported for BT_3086, and glycosyltransferase activity for a GH31
