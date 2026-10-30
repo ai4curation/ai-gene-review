@@ -48,7 +48,8 @@ domain-containing protein") and GOA has no annotations at all.
   strain, which grows normally on HA in pure culture [PMID:30262663, and
   PMID:32005816 "no impact on growth was observed, consistent with Δbt3328
   mutant growth data"]; PMID:32005816 assigns the required HA lyase role to
-  BT4410. Recorded as an open question; it does not affect participation. GO has no "chondroitin sulfate catabolic process"
+  BT4410. Recorded as an open question; it does not affect participation.
+  GO has no "chondroitin sulfate catabolic process"
   (only the proteoglycan term GO:0030207, which is wrong for dietary free CS
   chains), and GO:0006027 glycosaminoglycan catabolic process is an ancestor of
   the HA term, so I did not add it. Raised as a question.
