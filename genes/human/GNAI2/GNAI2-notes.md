@@ -1,115 +1,212 @@
-# GNAI2 (Gαi2) review notes
+# GNAI2: signaling-regulator evidence review
 
-## Provenance / process
+All original annotation payloads, evidence codes, references and qualifiers were preserved. No new annotations were manufactured to populate a module. Actual Falcon and fallback research attempts failed authentication/quota; this is manual literature research, not provider-generated prose.
 
-- 2026-10-23: `just fetch-gene human GNAI2` had already been run. `just fetch-gene-pmids human GNAI2`
-  cached all 24 GOA-cited PMIDs.
-- Deep research (`just deep-research-falcon human GNAI2 --fallback perplexity-lite`) FAILED twice:
-  falcon/Edison returned "Failed to authenticate" and the fallback provider `perplexity` was "not
-  available" in this environment. No deep-research file exists; these notes and the review are built
-  from the UniProt record, the cached publications, and a small number of additional primary papers
-  fetched with `just fetch-pmid` (PMIDs 7663509, 8119955, 8327893, 20508603, 22459149, 22966200,
-  25617475, 26976957, 27787898, 27912212, 39249692).
-- Background paper PMID:42870023 (Deutsch et al. 2026, smFRET of Gαi α-helical domain opening in
-  μOR–Gi complexes) was checked: the construct is human **Gαi1**, not Gαi2
-  ("a previously published minimal cysteine background ... of human Gαi1"), and the WT heterotrimer
-  is Gαi1β1γ2. GNAI2 is not assayed, so it is NOT cited in the GNAI2 review.
+The whole record was reviewed, including secondary physiology and localization. Existing assertion specificity is judged independently of evidence code. Native, heterologous, mutant and orthology-based results are distinguished below.
 
-## Identity
+## GO:0003924 GTPase activity — ACCEPT
+GNAI2 is a guanine-nucleotide-binding G alpha subunit that switches between GDP- and GTP-bound states and hydrolyzes bound GTP. Receptor/effector biochemistry and nucleotide-state experiments support the intrinsic molecular switch. This is distinct from the GAP activity of RGS proteins; activated or nucleotide-defective mutants are controls, not substitutes for the wild-type function.
+Sources: PMID:8119955, PMID:9637720
 
-- UniProt P04899, GNAI2_HUMAN, 355 aa, G-alpha family, G(i/o/t/z) subfamily; PANTHER PTHR10218:SF73.
-- N-terminal myristoylation (Gly2) + palmitoylation anchor it to the cytoplasmic leaflet of the plasma
-  membrane. Myristoylation is required for function: "Thus, myristoylation is required both for the
-  function of constitutively active Q205L Gi alpha-2 and for receptor-mediated activation of wild type
-  Gi alpha-2." [PMID:7961880]
-- Isoform sGi2 (P04899-4) is an intracellular short form reported to sequester DRD2 (UniProt).
+## GO:0003925 G protein activity — ACCEPT
+GNAI2 is a guanine-nucleotide-binding G alpha subunit that switches between GDP- and GTP-bound states and hydrolyzes bound GTP. Receptor/effector biochemistry and nucleotide-state experiments support the intrinsic molecular switch. This is distinct from the GAP activity of RGS proteins; activated or nucleotide-defective mutants are controls, not substitutes for the wild-type function.
+Sources: PMID:8119955, PMID:9637720
 
-## Core biochemistry
+## GO:0005525 GTP binding — ACCEPT
+GNAI2 is a guanine-nucleotide-binding G alpha subunit that switches between GDP- and GTP-bound states and hydrolyzes bound GTP. Receptor/effector biochemistry and nucleotide-state experiments support the intrinsic molecular switch. This is distinct from the GAP activity of RGS proteins; activated or nucleotide-defective mutants are controls, not substitutes for the wild-type function.
+Sources: PMID:8119955, PMID:9637720
 
-- GTPase switch: "The transduction of signal depends on the ability of the alpha subunit to cycle
-  between a GDP bound and an active GTP bound state capable of interacting with intracellular enzymes."
-  [PMID:12359238]
-- UniProt: "The alpha subunit has a low GTPase activity that converts bound GTP to GDP, thereby
-  terminating the signal." [file:human/GNAI2/GNAI2-uniprot.txt]
-- Heterotrimer with Gβγ (GNB1/GNG2 in structures); Gα-GDP reassociates with Gβγ (Reactome
-  R-HSA-751001: "The inactive G alpha (i):GDP complex has much higher affinity for the G beta:gamma
-  complex and consequently reassociates.").
-- Activated by liganded Gi-coupled GPCRs acting as GEFs (Reactome R-HSA-380073). Deactivated by RGS
-  GAPs (Reactome R-HSA-8982020) and by effector GAP activity of adenylate cyclase (R-HSA-170686).
+## GO:0005515 protein binding — REMOVE
+The physical interactions are not denied. Remove bare protein binding under the project policy while retaining specific receptor, beta/gamma and effector functions supported independently.
+Source handling: original payload retained; no fabricated supporting quote.
 
-## Effector: direct adenylyl cyclase inhibition
+## GO:0005737 cytoplasm — ACCEPT
+The G alpha protein is an intracellular peripheral-membrane signaling component with a cytoplasmic pool. Cytoplasm is compatible with membrane association and, where demonstrated, other intracellular pools; no exclusive localization is inferred.
+Sources: PMID:8119955, PMID:9637720
 
-- Purified Gi alpha subunits inhibit AC directly: "Concentration-dependent inhibition of adenylyl
-  cyclases by purified Gi alpha subunits is described." [PMID:8327893]
-- Isoform-specific: "Types V and VI adenylyl cyclase are most sensitive to inhibition by Gi alpha 1,
-  Gi alpha 2, and Gi alpha 3" [PMID:8119955]. Human GNAI1 carries GO:0010855 adenylate cyclase
-  inhibitor activity IDA from this paper, GNAI2 does not -> NEW proposal (comparator: GNAI1 IDA, GNAZ
-  mouse IMP both carry it).
-- Cellular: "Expression in JEG-3 cells of a mutationally activated Gi alpha-2 in which glutamine 205
-  is replaced with leucine (Q205L) decreased forskolin-stimulated expression from the CRE-luciferase
-  gene by up to 75%." [PMID:7961880]
-- Human somatic F200L mutation in RVOT tachycardia: "This mutation was shown to increase intracellular
-  cAMP concentration and inhibit suppression of cAMP by adenosine." [PMID:9637720]
-- UNC5H2 (UNC5B) sequesters GTP-Gαi2: "The interaction of G(ialpha(2)) and UNC5H2 liberated adenylyl
-  cyclase from G(ialpha(2)) inhibition." [PMID:12359238]
-- Rat in vivo antisense: "antisense oligodeoxynucleotide treatment with Giα-2 but not Giα-3 restored
-  enhanced inhibition of adenylyl cyclase by oxotremorine to WKY levels" [PMID:27912212] -- note this
-  paper is the rat source of the GO:0007189 (adenylate cyclase-ACTIVATING pathway) IMP that is
-  projected to human; the abstract describes AC inhibition, so the human IEA is a sign error.
+## GO:0005834 heterotrimeric G-protein complex — ACCEPT
+The GDP-state G alpha subunit associates with a G beta/gamma dimer to form a functional heterotrimer. Receptor-coupling and structural/reconstitution experiments support this assembly and beta/gamma binding as integral functions. A particular experimental beta/gamma combination does not imply universal interchangeability.
+Sources: PMID:8119955, PMID:9637720
 
-## Receptor coupling (GPCR binding)
+## GO:0031683 G-protein beta/gamma-subunit complex binding — ACCEPT
+The GDP-state G alpha subunit associates with a G beta/gamma dimer to form a functional heterotrimer. Receptor-coupling and structural/reconstitution experiments support this assembly and beta/gamma binding as integral functions. A particular experimental beta/gamma combination does not imply universal interchangeability.
+Sources: PMID:8119955, PMID:9637720
 
-- μ-opioid receptor: "The etorphine-induced MOR translocation required the dissociation of the
-  receptor from Galphai2 first and then the binding of beta-arrestin." [PMID:18599439]
-- CXCR5: "Gαq/11/Gβ3/Gγ9 in LNCaP and Gαi2/Gβ3/Gγ9 in C4-2B and PC3 cell lines, were coupled to CXCR5
-  and disassociated following CXCL13 stimulation." [PMID:23773523]
-- UniProt also lists ADORA1, CNR1, FPR2, CXCR1/2 (cryo-EM structures for ADORA1–Gi2, CNR1–Gi2,
-  FPR2–Gi2).
+## GO:0005886 plasma membrane — MODIFY
+The independently supported plasma-membrane signaling pool lies on the cytoplasmic side, already represented separately in this record. Refine this general membrane location while retaining other independently supported intracellular locations; the refinement does not assert exclusive residence.
+Sources: PMID:8119955, PMID:9637720
 
-## Physiology (mostly mouse/rat; non-core, downstream of the switch)
+## GO:0009898 cytoplasmic side of plasma membrane — ACCEPT
+The intracellular G alpha–beta/gamma complex contacts the cytoplasmic receptor surface and intracellular effectors. Receptor-complex structures, membrane targeting and signaling experiments support the cytoplasmic plasma-membrane face.
+Sources: PMID:8119955, PMID:9637720
 
-- Immune: Gnai2-/- mice: "G alpha i2-deficient mice display growth retardation and develop a lethal
-  diffuse colitis with clinical and histopathological features closely resembling ulcerative colitis
-  in humans" [PMID:7663509]. B-cell chemokine responses: "Loss of a single allele of either Gnai2 or
-  Rgs1 affected CCL19 triggered chemotaxis" [PMID:20508603]; RGS-insensitive G184S: "B cells carrying a
-  Gαi2 (G184S/G184S) mutation that disables all RGS protein/Gαi2 interactions exhibit an unexpectedly
-  severe reduction in chemokine receptor signaling" [PMID:25617475]; neutrophils: "We conclude that Gαi2
-  controls arrest and Gαi3 controls transmigration and chemotaxis in response to chemokine stimulation
-  of neutrophils." [PMID:26976957]; [PMID:22966200].
-- Phagocyte NADPH oxidase: "The interaction between Gαi2 and p67 phox is direct and depends on the Gα
-  activation state." [PMID:16782902] (preference for inactive Gαi).
-- Endothelium/angiogenesis: "In various endothelial cell types, shRNA-induced silencing and
-  CRISPR/Cas9-mediated knockout (KO) of Gαi2 resulted in substantial reductions in cell proliferation,
-  migration, invasion, and capillary tube formation." [PMID:38505600]; NFAT activation.
-- Metabolism: "G ialpha2 deficiency in adipose tissue and liver produces hyperinsulinaemia, impaired
-  glucose tolerance and resistance to insulin in vivo." [PMID:8587610]
-- Brain: cortical radial migration "Acute knockdown of the α-subunit (Gαi2) with in utero
-  electroporation caused delayed radial migration of excitatory neurons during corticogenesis"
-  [PMID:27787898]; human variants reported in periventricular nodular heterotopia [PMID:39249692,
-  abstract not available in cache].
-- Rat PVN: "brain Gαi(2)-subunit protein pathways mediate the natriuretic response to
-  α(2)-adrenoreceptor activation in vivo" [PMID:22459149] (source of urine volume IEA).
-- Cell proliferation (TSCC, miR-138 target): "we knocked-down GNAI2 in UM1 cells using specific
-  siRNA, and demonstrated that the reduced GNAI2 level is associated with reduced cell proliferation"
-  [PMID:21079996].
+## GO:0019001 guanyl nucleotide binding — MODIFY
+The conserved guanine-nucleotide pocket binds GTP during activation and GDP in the inactive state. Refine the generic nucleotide-binding term to these two chemically defined ligands, preserving both halves of the switch.
+Sources: PMID:8119955, PMID:9637720
 
-## Non-plasma-membrane pools
+## GO:0007165 signal transduction — MODIFY
+The protein directly transduces signals through heterotrimeric G protein-coupled receptor signaling. Refine generic signal transduction to the established receptor pathway without excluding additional receptor-independent functions.
+Sources: PMID:8119955, PMID:9637720
 
-- Centrosome/midbody: "We show expression of G(ialpha1), G(ialpha2), and G(ialpha3) in the centrosomes
-  and at the midbody." and "Giα1 and Giα2 localized in the centrosomes of interphase and mitotic cells,
-  but Giα3 did not" [PMID:17635935]. Knockdown phenotype only with triple Gi1-3 siRNA: "Cells with
-  reduced expression of all three Giα isoforms exhibited mainly cytokinesis defects." Overexpressed
-  Gαi2 (WT or QL) had little effect.
-- Exosome/EV proteomics (HDA) and NK membrane proteome: abundance-driven detections.
+## GO:0007186 G protein-coupled receptor signaling pathway — ACCEPT
+Receptor-dependent nucleotide exchange and effector coupling establish direct participation in GPCR signaling. Individual receptor preferences and physiological contexts must be established separately rather than inferred from the whole G protein family.
+Sources: PMID:8119955, PMID:9637720
 
-## Decisions summary
+## GO:0001525 angiogenesis — KEEP_AS_NON_CORE
+Human endothelial GNAI2 perturbation and complementary mouse vascular experiments support a signaling requirement in angiogenesis. Retain this defined physiological role without assigning Gi2 direct extracellular matrix or vessel structural activity.
+Sources: PMID:38505600
 
-- Core: G protein activity / GTPase activity; adenylate cyclase inhibitor activity (NEW);
-  adenylate cyclase-inhibiting GPCR signaling pathway; heterotrimeric G-protein complex at the
-  cytoplasmic side of the plasma membrane; GPCR binding and Gβγ binding.
-- Protein binding IPI rows: GPCR partners (OPRM1, CXCR5) -> MODIFY to GPCR binding; Gβ partners
-  (GNB1, GNB2) -> MODIFY to G-protein beta/gamma-subunit complex binding; Y2H/other -> REMOVE
-  (uninformative; not a statement that the interaction is false).
-- Signal transduction / GPCR signaling / AC-modulating -> MODIFY to GO:0007193.
-- GO:0007189 (AC-activating) -> MODIFY to GO:0007193 (sign correction).
-- response to nutrient (TAS, insulin-action paper) -> REMOVE.
+## GO:0001973 G protein-coupled adenosine receptor signaling pathway — KEEP_AS_NON_CORE
+The traced native-neuron study uses PTX-insensitive alpha-subunit replacement to establish adenosine and GABAB receptor-dependent presynaptic inhibition. Retain these conserved receptor-context capabilities with engineered rescue scope; the experiments do not mean every inhibitory receptor selects Gi2.
+Sources: PMID:11923410
+
+## GO:0007214 gamma-aminobutyric acid signaling pathway — KEEP_AS_NON_CORE
+The traced native-neuron study uses PTX-insensitive alpha-subunit replacement to establish adenosine and GABAB receptor-dependent presynaptic inhibition. Retain these conserved receptor-context capabilities with engineered rescue scope; the experiments do not mean every inhibitory receptor selects Gi2.
+Sources: PMID:11923410
+
+## GO:0050805 negative regulation of synaptic transmission — KEEP_AS_NON_CORE
+The traced native-neuron study uses PTX-insensitive alpha-subunit replacement to establish adenosine and GABAB receptor-dependent presynaptic inhibition. Retain these conserved receptor-context capabilities with engineered rescue scope; the experiments do not mean every inhibitory receptor selects Gi2.
+Sources: PMID:11923410
+
+## GO:0005813 centrosome — KEEP_AS_NON_CORE
+Cell imaging directly identifies Gi2 at centrosomes and the midbody during division. Retain these cell-cycle-specific locations independently of its plasma-membrane pool.
+Sources: PMID:17635935
+
+## GO:0030496 midbody — KEEP_AS_NON_CORE
+Cell imaging directly identifies Gi2 at centrosomes and the midbody during division. Retain these cell-cycle-specific locations independently of its plasma-membrane pool.
+Sources: PMID:17635935
+
+## GO:0005829 cytosol — ACCEPT
+The intracellular soluble pool is compatible with direct localization experiments and the dynamic membrane/mitotic distributions of Gi2. Retain the cytosolic assignment without implying exclusive solubility.
+Sources: PMID:17635935
+
+## GO:0007188 adenylate cyclase-modulating G protein-coupled receptor signaling pathway — ACCEPT
+Gi2 modulates cyclase output with enzyme-isoform and concentration dependence. Purified inhibition is strong for selected isoforms, while high-concentration activation of others is reported; the unsigned pathway term preserves this documented context dependence.
+Sources: PMID:8119955
+
+## GO:0007189 adenylate cyclase-activating G protein-coupled receptor signaling pathway — MODIFY
+The traced rat source PMID:27912212 directly measures oxotremorine-dependent inhibition of adenylyl cyclase; Gi2 knockdown attenuates that inhibition. Its activating-pathway transfer reverses the measured sign. Refine to the independently supported inhibitory pathway while acknowledging that high-concentration stimulation of other purified cyclases is a different biochemical context.
+Sources: PMID:27912212, PMID:8119955
+
+## GO:0007193 adenylate cyclase-inhibiting G protein-coupled receptor signaling pathway — ACCEPT
+Native receptor signaling, human Gi2 mutation studies and purified cyclase reconstitution establish inhibitory regulation of cAMP production. This is direct effector regulation with cyclase-isoform dependence, not a blanket claim that every Gi2 output is inhibitory.
+Sources: PMID:8119955, PMID:9637720, PMID:27912212
+
+## GO:0007194 negative regulation of adenylate cyclase activity — ACCEPT
+Native receptor signaling, human Gi2 mutation studies and purified cyclase reconstitution establish inhibitory regulation of cAMP production. This is direct effector regulation with cyclase-isoform dependence, not a blanket claim that every Gi2 output is inhibitory.
+Sources: PMID:8119955, PMID:9637720, PMID:27912212
+
+## GO:0007584 response to nutrient — KEEP_AS_NON_CORE
+Mouse Gi2-targeted antisense produces insulin resistance and altered metabolic responses, supporting a conserved nutrient-response role. This is endocrine signaling participation rather than direct nutrient transport or catalysis.
+Sources: PMID:8587610
+
+## GO:0008284 positive regulation of cell population proliferation — KEEP_AS_NON_CORE
+GNAI2-specific perturbation in human tongue-cancer cells supports positive regulation of proliferation, with separate vascular and neural models providing contextual corroboration. Retain the phenotype as secondary signaling activity, not universal promotion of growth.
+Sources: PMID:21079996, PMID:27912212
+
+## GO:0016020 membrane — MODIFY
+Independent membrane targeting identifies a cytoplasmic plasma-membrane pool. Refine the generic membrane assertion to that directly supported membrane surface, while retaining the separately asserted neuronal dense-core-vesicle pool; this is not exclusive localization.
+Sources: PMID:17635935, PMID:21321602
+
+## GO:0030335 positive regulation of cell migration — KEEP_AS_NON_CORE
+Human prostate cancer cell Gi2 knockdown, PTX-resistant rescue and siRNA-resistant rescue directly support oxytocin/EGF-induced migration. Retain this specific signaling contribution rather than infer migration from expression alone.
+Sources: PMID:22936789
+
+## GO:0030425 dendrite — KEEP_AS_NON_CORE
+Native mouse cerebellar immunolocalization places Gi2 in neuronal somata and transiently in developing Purkinje dendrites. Retain the conserved locations with developmental-stage limits; this is not constitutive localization in all adult neurons.
+Sources: PMID:11685543
+
+## GO:0044297 cell body — KEEP_AS_NON_CORE
+Native mouse cerebellar immunolocalization places Gi2 in neuronal somata and transiently in developing Purkinje dendrites. Retain the conserved locations with developmental-stage limits; this is not constitutive localization in all adult neurons.
+Sources: PMID:11685543
+
+## GO:0032930 positive regulation of superoxide anion generation — KEEP_AS_NON_CORE
+Gi2 antisense in hypertensive rats reduces enhanced superoxide/NADPH-oxidase outputs and vascular smooth-muscle hyperproliferation. Retain the positive regulatory functions in that disease-model context, not direct oxidase catalysis or universal vascular growth promotion.
+Sources: PMID:27912212
+
+## GO:1904707 positive regulation of vascular associated smooth muscle cell proliferation — KEEP_AS_NON_CORE
+Gi2 antisense in hypertensive rats reduces enhanced superoxide/NADPH-oxidase outputs and vascular smooth-muscle hyperproliferation. Retain the positive regulatory functions in that disease-model context, not direct oxidase catalysis or universal vascular growth promotion.
+Sources: PMID:27912212
+
+## GO:0035810 positive regulation of urine volume — KEEP_AS_NON_CORE
+Brain Gi2 downregulation disrupts volume-expansion renal responses in rats, supporting a conserved central signaling contribution to fluid excretion. The mechanism is sympathoinhibitory control, not direct renal water transport by Gi2.
+Sources: PMID:22459149
+
+## GO:0045955 negative regulation of calcium ion-dependent exocytosis — KEEP_AS_NON_CORE
+Rat alpha-cell capacitance assays and Gi2-directed antisense demonstrate somatostatin-dependent inhibition of calcium-triggered exocytosis via calcineurin/depriming. Retain this defined endocrine context without attributing vesicle fusion catalysis to Gi2.
+Sources: PMID:11533141
+
+## GO:0050804 modulation of chemical synaptic transmission — KEEP_AS_NON_CORE
+Mouse expression of constitutively active Gi2 modifies mGluR2-dependent transmission and plasticity at mossy-fiber–CA3 synapses. Retain the contextual signaling/site inference with the activated-transgene limitation; it is not proof that unmodified Gi2 alone mediates every mGluR2 response.
+Sources: PMID:16606834
+
+## GO:0098686 hippocampal mossy fiber to CA3 synapse — KEEP_AS_NON_CORE
+Mouse expression of constitutively active Gi2 modifies mGluR2-dependent transmission and plasticity at mossy-fiber–CA3 synapses. Retain the contextual signaling/site inference with the activated-transgene limitation; it is not proof that unmodified Gi2 alone mediates every mGluR2 response.
+Sources: PMID:16606834
+
+## GO:0051301 cell division — KEEP_AS_NON_CORE
+Direct cell-cycle localization and perturbation implicate Gi2 in cytokinetic regulation. This secondary division role is distinct from its receptor-transducer mechanism.
+Sources: PMID:17635935
+
+## GO:0051924 regulation of calcium ion transport — KEEP_AS_NON_CORE
+Defined PTX-resistant Gi2 heterotrimers restore receptor-dependent N-type calcium-current inhibition in rat sympathetic neurons. Retain channel-regulatory participation with heterologous replacement and receptor-specific efficiency limits.
+Sources: PMID:10639178
+
+## GO:0070062 extracellular exosome — KEEP_AS_NON_CORE
+The B-cell exosome study explicitly detects Gi2 among vesicular signaling proteins, independently supporting extracellular-vesicle localization. Retain this secondary cargo pool across the broader proteomics rows without claiming that every individual survey resolves vesicle topology or a functional extracellular Gi2 signal.
+Sources: PMID:12519789
+
+## GO:1903561 extracellular vesicle — KEEP_AS_NON_CORE
+The B-cell exosome study explicitly detects Gi2 among vesicular signaling proteins, independently supporting extracellular-vesicle localization. Retain this secondary cargo pool across the broader proteomics rows without claiming that every individual survey resolves vesicle topology or a functional extracellular Gi2 signal.
+Sources: PMID:12519789
+
+## GO:0070374 positive regulation of ERK1 and ERK2 cascade — KEEP_AS_NON_CORE
+A Gi2-specific ribozyme reduces PGF2alpha-induced ERK activation in hepatocytes with specificity controls. Retain this positive signaling contribution rather than assign Gi2 direct MAP kinase activity.
+Sources: PMID:11495629
+
+## GO:0071878 negative regulation of adenylate cyclase-activating adrenergic receptor signaling pathway — KEEP_AS_NON_CORE
+The transferred study supports Gi2-dependent restraint of adrenergic cAMP signaling. Retain this receptor-context regulatory sign as consistent with independently demonstrated inhibitory cyclase activity, without assuming all adrenergic pathways are Gi2 substrates.
+Sources: PMID:12631586, PMID:8119955
+
+## GO:0098992 neuronal dense core vesicle — KEEP_AS_NON_CORE
+The target-specific primary explicitly localizes Gi2 to substance-P-positive large dense-core vesicles and shows DOR1/Gi2 interaction-dependent recruitment and surface delivery. Retain this transport pool rather than infer membrane exclusivity from plasma-membrane function.
+Sources: PMID:21321602
+
+## GO:2000179 positive regulation of neural precursor cell proliferation — KEEP_AS_NON_CORE
+The comparative developmental study combines Gi2 localization, PTX-sensitive neural-progenitor mitogenic signaling and endothelin stimulation. Retain the conserved proliferation role while noting that PTX is not Gi2-selective and the target assignment is less direct than a Gi2-specific knockout/rescue.
+Sources: PMID:15272018
+
+## GO:2001234 negative regulation of apoptotic signaling pathway — KEEP_AS_NON_CORE
+LPA protection of marrow stromal cells implicates Gi2/Gi3-dependent ERK and PI3K signaling in suppression of peroxide-induced apoptosis. Retain this conditional conserved survival response without assigning an intrinsic anti-apoptotic function in every cell.
+Sources: PMID:25633408
+
+## Research and access
+Normal publication fetches and targeted refreshes are logged under `.cache/module-audit-logs/acetylcholine-*`. Canonical abstract-only caches were not manually rewritten. Full publisher recovery for cone localization is cited separately. PAINT assertions are treated as ancestral-node judgments, not pairwise transfers; target appearance among descendant evidence is not circular.
+
+## Validation
+Focused strict/schema, source/quote and ontology checks, record-section backfill, rendering and helper-generated history are recorded in the final panel proof.
+
+## Final source and propagation audit
+
+Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
+
+UniProt/PANTHER placement inspected: `PTHR10218:SF73`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of GNAI2 was made in PR #5350. This review is kept as the
+base. Ported from #5350:
+
+- Seven `protein binding` IPI rows changed from REMOVE to MODIFY: three with GPCR
+  partners (OPRM1, CXCR5 ×2) → GO:0001664 G protein-coupled receptor binding, and four
+  with Gβ or Gγ partners → GO:0031683 G-protein beta/gamma-subunit complex binding.
+- NEW GO:0010855 adenylate cyclase inhibitor activity (IDA, PMID:8119955), whose
+  abstract names Gi alpha 2 among the inhibitors of adenylyl cyclase types V and VI.
+  Human GNAI1 carries the same term by IDA from the same paper.
+
+PMID:42870023 (Deutsch et al. 2026) used only human Gαi1, so it is not cited here.

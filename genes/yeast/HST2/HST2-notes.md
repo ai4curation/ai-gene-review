@@ -39,3 +39,24 @@
   for short-range chromosome compaction and no newer HST2-specific *S.
   cerevisiae* paper that changes the core deacetylase, nuclear/cytoplasmic
   shuttling, rDNA, or mitotic-recombination assessment.
+
+## 2026-10-16: GO:0045950 rows resolved (issue #4027)
+
+The three `GO:0045950 negative regulation of mitotic recombination` rows from
+PMID:16051752 (IMP; IGI with SIR2, SGD:S000002200; IGI with FOB1,
+SGD:S000002517) were UNDECIDED because the paper is abstract-only. SGD's GO
+detail for this reference (`https://www.yeastgenome.org/backend/reference/16051752/go_details`,
+retrieved 2026-10-16) confirms the three HST2 rows and the With partners, and
+shows the same term was also given to HST1 from this paper. The abstract states
+the claim directly [PMID:16051752 "Sir2-independent life-span extension is
+mediated by Hst2, a Sir2 homolog that promotes the stability of repetitive
+ribosomal DNA"]: instability of the tandem rDNA array is recombination between
+repeats, so "promotes rDNA stability" and "negatively regulates mitotic
+recombination" are the same claim. GO has no regulation child of
+`GO:0045458 recombination within rDNA repeats`, so GO:0045950 is as precise as
+the ontology allows.
+
+Decision: all three rows `KEEP_AS_NON_CORE`, matching the sibling
+`GO:0000183 rDNA heterochromatin formation` IMP row from the same paper. The
+rDNA effect is calorie-restriction-dependent; the core HST2 function remains
+NAD-dependent H4K16 deacetylation in mitotic chromatin compaction.

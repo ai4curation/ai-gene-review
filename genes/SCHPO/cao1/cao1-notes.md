@@ -42,3 +42,38 @@ Copper is experimentally required. TPQ is supported by conserved cofactor chemis
 ## Research provenance
 
 The genuine [Falcon report](cao1-deep-research-falcon.md) is retained with its provider metadata and artifact. Its conclusions were checked against the target record, exact accession and primary sources described above. Scientific uncertainties are recorded as UNC/UNDECIDED findings rather than a request for another reviewer to perform this assessment.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: Q9P7F2 is the canonical, Swiss-Prot reviewed 712-aa product of cao1 (SPAC2E1P3.04); not a
+fragment, isoform or alternative gene model. All catalytic features are present (TPQ precursor Tyr407,
+catalytic Asp321, Cu-ligand His456/458/460/621/627 region, disulfide 340-366).
+
+Evolutionary placement: PANTHER PTHR10638 (copper amine oxidase), subfamily SF86 "COPPER AMINE OXIDASE
+1-RELATED". SF86 also contains Hansenula polymorpha (Pichia angusta) AMO/HPAO P12807, Arthrobacter
+phenylethylamine oxidase P46881, histamine oxidase Q59118, Arthrobacter maoI/maoII, and the pombe paralog
+cao2 (O42890). PAINT IBDs for GO:0008131, GO:0005507 and GO:0009308 sit at the family root PTN000067313,
+so Cao1 legitimately inherits them; Cao1's own PomBase IDA is among the node's descendant evidence. The
+full text of PMID:18723604 states that Cao1 is 57% identical to HPAO, its closest characterised relative
+[PMID:18723604 "The amino acid sequences of Cao1 and Cao2 are 57% and 40% identical, respectively, to that
+of the Hansenula polymorpha methylamine oxidase HPAO"]. The PANTHER family review
+(interpro/panther/PTHR10638/PTHR10638-review.yaml) also places Cao1 in SF86; no disagreement.
+
+Changes vs previous version:
+- GO:0006878 intracellular copper ion homeostasis (IMP): KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. Full
+  text shows the cao1 deletion only loses amine oxidase activity; Cao1 is the copper client whose activity
+  is used as a bioavailability readout, a necessity relationship, not participation in homeostasis.
+- GO:0048038 quinone binding (IEA): ACCEPT -> KEEP_AS_NON_CORE. TPQ is a covalently modified residue of
+  Cao1, not an exogenous bound quinone; consistent with rat Aoc1 handling.
+- Strengthened supporting quotes (His mutagenesis, cao1-deletion loss of activity, Cao1-GFP cytosol, meiotic
+  activity in PMID:21828039), added reference_review entries, propagation_review for the MODIFY IBA,
+  questions and experiments; description rewritten to include substrate range and the inactive paralog Cao2.
+- GO:1990748 cellular detoxification (TAS, PMID:28572514) stays UNDECIDED: full text not retrievable
+  (Europe PMC / PMC BioC returned no body); abstract does not mention Cao1.
+
+No NEW terms proposed. Nitrogen-source use of ethylamine in S. pombe itself is only "unpublished" in
+PMID:18723604, so no nitrogen-utilization process term is added beyond amine catabolic process.
+
+Relative to review next: Hansenula polymorpha AMO (P12807, AMO_PICAN), same PANTHER subfamily SF86, the
+best-characterised fungal copper amine oxidase (structure, TPQ biogenesis). No review exists in the repo.
+No modules in modules/ include cao1.

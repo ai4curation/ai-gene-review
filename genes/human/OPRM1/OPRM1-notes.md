@@ -1,90 +1,137 @@
-# OPRM1 (mu-opioid receptor, MOR, µOR) - curation notes
+# OPRM1 (mu-type opioid receptor, MOR, P35372) — curation notes
 
-UniProt: P35372 (human). Class A (rhodopsin-like) GPCR, opioid receptor family.
+## Deep research status (2026-10-15)
 
-## Deep research status
+Automated deep research could not be generated for this review:
 
-- 2026-10-23: `just deep-research-falcon human OPRM1 --fallback perplexity-lite` was run twice and
-  failed both times: falcon returned `403 Forbidden` ("Edison API request failed: Failed to authenticate")
-  and the perplexity-lite fallback was unavailable ("Provider 'perplexity' not available"). No
-  deep-research file exists. This review is based on the UniProt record, the cached publications
-  for the GOA references, the Reactome entries and the Deutsch et al. 2026 paper (PMID:42870023).
+- `just deep-research-falcon human OPRM1 --fallback openai`: the Edison/Falcon
+  auth endpoint returned `503 Service Unavailable` ("Failed to authenticate"),
+  and the OpenAI fallback returned `401 invalid_api_key`. A second Falcon attempt
+  failed the same way.
+- `just deep-research human OPRM1 --provider perplexity`: provider not available
+  in this environment (`Provider 'perplexity' not available. Available: openai,
+  falcon, openscientist`).
 
-## Core biology
+No `-deep-research-*.md` file exists. The literature synthesis below was done
+manually from the GOA-cited publications (cached by `just fetch-gene`) plus a
+small set of additional key papers fetched with `just fetch-pmid` and checked
+against their cached titles: PMID:8893006 (Oprm1 knockout), PMID:10617462
+(beta-arrestin 2 knockout), PMID:22437502, PMID:26245379, PMID:29899455
+(receptor structures) and PMID:27533032 (PZM21, G protein-biased agonist).
 
-- Receptor for endogenous opioid peptides and opiate drugs. UniProt: "Receptor for endogenous opioids
-  such as beta-endorphin and endomorphin" and "Receptor for natural and synthetic opioids including
-  morphine, heroin, DAMGO, fentanyl" [file:human/OPRM1/OPRM1-uniprot.txt].
-- Primary drug target: "The mu opioid receptor is the primary site of action for the most commonly used
-  opioids, including morphine, heroin, fentanyl, and methadone." [PMID:9689128]
-- Cloning of human MOR: "The expressed mu OR1 recognized tested opiate drugs and opioid peptides in a
-  sodium- and GTP-sensitive fashion" and "Effects on cyclic AMP are similar to those noted for the rat
-  mu opiate receptor." [PMID:7905839]. Mestek et al.: "This receptor displays functional coupling to a
-  recently cloned G-protein-activated K+ channel." [PMID:7891175]
-- G protein coupling: UniProt says the activity is "predominantly coupled to pertussis toxin-sensitive
-  G(i) and G(o) G alpha proteins" [file:human/OPRM1/OPRM1-uniprot.txt]. Downstream: inhibition of
-  adenylate cyclase, inhibition of N- and L-type Ca channels, activation of GIRK channels, MAPK/ERK,
-  PLC (mostly By similarity in UniProt).
-- beta-endorphin: A118G (N40D) variant binds beta-endorphin ~3x more tightly and "β-endorphin is
-  approximately three times more potent at the A118G variant receptor than at the most common allelic
-  form in agonist-induced activation of G protein-coupled potassium channels" [PMID:9689128].
-  This is the IMP basis for GO:0004979.
+## Identity and family
 
-## New mechanism paper: Deutsch et al. 2026 (PMID:42870023)
+- Class A (rhodopsin-like) GPCR; UniProt: "Belongs to the G protein-coupled
+  receptor 1 family." InterPro: Mu_opioid_rcpt (IPR000105), Opioid_rcpt
+  (IPR001418). Paralogs OPRD1, OPRK1, OPRL1.
+- Many splice isoforms (18 named in UniProt), including 6TM MOR1K (isoform 12)
+  and binding-incompetent SV1/SV2 (isoforms 16, 17).
 
-- smFRET of the Gαi alpha-helical domain (AHD) in µOR–Gi complexes (note: mouse µOR with human
-  Gαi1β1γ2; "Mouse μOR was expressed in Sf9 insect cells").
-- "The μ-opioid receptors (μORs) are G-protein-coupled receptors (GPCRs) that mediate analgesia and
-  reward responses to common opioid drugs by catalyzing guanine nucleotide exchange in heterotrimeric
-  Gi proteins" [PMID:42870023].
-- Efficacy encoded in G protein dynamics: "This ligand-induced low-FRET occupancy was strongly
-  correlated with in vitro GTP turnover activity (a direct measure of efficacy)"; "the apparent rate of
-  AHD opening being approximately 2.25-fold faster for LFT-occupied compared to apo-occupied complexes";
-  "Full agonists promote AHD opening, facilitating GDP release and, therefore, efficient GTP binding."
-  "In contrast, partial agonists restrict open-state occupancy, favoring GDP retention or rebinding"
-  [PMID:42870023].
-- Significance for GO: directly supports the GEF-like core activity captured by GO:0004930/GO:0004985
-  (GPCR activity = activating an associated heterotrimeric G protein by promoting GDP/GTP exchange),
-  and G-protein alpha-subunit binding. Does not need a new term. Interesting question: whether GO
-  should represent agonist efficacy (partial vs full) - no; that's a ligand property.
+## Molecular function: opioid receptor activity
 
-## Isoforms
+- Human MOR was cloned and shown to bind opiates and opioid peptides in a
+  G protein-sensitive way [PMID:7905839 "The expressed mu OR1 recognized tested
+  opiate drugs and opioid peptides in a sodium- and GTP-sensitive fashion"].
+- Mu-selective high-affinity binding [PMID:7891175 "Transient expression of this
+  cDNA in COS-7 cells produced high-affinity binding sites to mu-selective
+  agonists and antagonists"]; splice variants hMOR-1O/1X keep mu selectivity
+  [PMID:12589820 "both variants showed high selectivity for mu opioids in binding
+  assays"].
+- Endogenous ligand beta-endorphin: the A118G (N40D) variant changes
+  beta-endorphin binding and potency [PMID:9689128 "the A118G variant receptor
+  binds beta-endorphin, an endogenous opioid that activates the mu opioid
+  receptor, approximately three times more tightly than the most common allelic
+  form of the receptor"].
+- UniProt FUNCTION: "Receptor for endogenous opioids such as beta-endorphin and
+  endomorphin" and "Receptor for natural and synthetic opioids including morphine,
+  heroin, DAMGO, fentanyl, etorphine, buprenorphin and methadone"; enkephalins
+  "By similarity".
+- In vivo, MOR is the mandatory target of morphine [PMID:8893006 "a lack of mu
+  receptors abolishes the analgesic effect of morphine, as well as
+  place-preference activity and physical dependence"; "the mu-opioid-receptor
+  gene product is the molecular target of morphine in vivo"].
+- Structures (mouse receptor): antagonist-bound crystal [PMID:22437502],
+  agonist + G protein mimetic nanobody [PMID:26245379], DAMGO-MOR-Gi cryo-EM
+  [PMID:29899455 "mediated by μOR signalling through the adenylyl
+  cyclase-inhibiting heterotrimeric G protein Gi"].
 
-- MOR1K (isoform 12, 6TM): "this 6TM receptor is not expressed at the cell membrane, but instead is
-  retained in the intracellular compartment"; "unlike MOR1, which couples to the inhibitory Galphai/o
-  complex, MOR1K couples to the stimulatory Galphas complex." [PMID:20525224]. Basis of the cytoplasm
-  EXP annotation.
-- SV1/SV2 (isoforms 16/17) do not bind [3H]diprenorphine and reduce MOR binding via heterodimers
-  [PMID:16580639].
-- hMOR-1O/1X: "When transfected into CHO cells, both variants showed high selectivity for mu opioids in
-  binding assays." [PMID:12589820]
+## Signaling (Gi/o arm)
 
-## Interactors (protein binding IPI rows)
+- Adenylyl cyclase inhibition by human MOR in heterologous cells
+  [PMID:14573758 "DAMGO inhibition of forskolin-stimulated adenylyl cyclase"]
+  [PMID:19788913 "RanBPM had no effect on MOP-mediated inhibition of adenylyl
+  cyclase"] [PMID:7957926 "Both receptors show similar ligand binding and coupling
+  to cAMP in CHO-K1 cells"].
+- G beta-gamma effectors: GIRK activation [PMID:7891175 "This receptor displays
+  functional coupling to a recently cloned G-protein-activated K+ channel"];
+  UniProt also lists inhibition of N- and L-type Ca channels, PLC, MAPK (mostly By
+  similarity). MOR does not itself have channel activity; the ISS "voltage-gated
+  calcium channel activity" row confuses an effector with the receptor.
+- Canonical MOR1 couples to Gi/o, whereas the 6TM MOR1K isoform couples to Gs
+  and is retained intracellularly [PMID:20525224 "unlike MOR1, which couples to
+  the inhibitory Galphai/o complex, MOR1K couples to the stimulatory Galphas
+  complex"].
 
-- FLNA: "The carboxyl tail of the human mu opioid receptor was shown to bind the carboxyl terminal region
-  of human filamin A" - needed for agonist-induced downregulation/trafficking [PMID:14573758].
-- RANBP9 (RanBPM): "RanBPM constitutively associates with MOP"; reduces internalization [PMID:19788913].
-- WLS/GPR177: interacts; morphine blocks Wnt2 secretion from MOR-expressing HEK293 [PMID:20214800].
-  I could not find Gα binding data in this full text, though UniProt cites it for G-protein
-  alpha-subunit binding IDA; the claim itself is correct (structures, IBA).
-- Y2H/MYTH screens: SIAH1/2, COPS5, VAPA, AUP1, DOK4, ZYX, GJA4 [PMID:23840749]; Sokolina 2017
-  MYTH [PMID:28298427]; RAMP1/2/3 bead array screen [PMID:39083597].
-- PENK Met-enkephalin peptide (PRO_0000008243) from PMID:23597562 (FGFR inhibitor paper, likely a
-  selectivity panel) - this is a ligand-receptor interaction; maps to neuropeptide binding.
+## Regulation: GRK / beta-arrestin, desensitization, bias
 
-## Decisions summary
+- Kinase-modulated desensitization of human MOR [PMID:7891175 "The extent of
+  desensitization was potentiated by both the multifunctional
+  calcium/calmodulin-dependent protein kinase and protein kinase C"].
+- beta-arrestin 2 limits morphine analgesia in vivo [PMID:10617462 "Functional
+  deletion of the beta-arrestin 2 gene in mice resulted in remarkable
+  potentiation and prolongation of the analgesic effect of morphine"].
+- Biased ligands: [PMID:27533032 "PZM21-a potent Gi activator with exceptional
+  selectivity for μOR and minimal β-arrestin-2 recruitment"]. Whether arrestin
+  vs G protein signaling separates analgesia from respiratory depression is
+  contested in later literature (not cached here); GO currently has no way to
+  distinguish G protein-biased from arrestin-dependent MOR signaling.
+- Interactors modulating trafficking: filamin A [PMID:14573758
+  "agonist-induced receptor down-regulation and functional desensitization were
+  virtually abolished in cells lacking filamin A"], RanBPM [PMID:19788913],
+  WLS/GPR177 [PMID:20214800 "morphine treatment promotes formation of MOR/GPR177
+  complexes. This in turn results in sequestration of GPR177 and inhibition of
+  Wnt protein secretion."].
 
-- Core MF: G protein-coupled opioid receptor activity (incl. beta-endorphin and morphine receptor
-  activities); core BP: opioid receptor signaling pathway / adenylate cyclase-inhibiting GPCR signaling;
-  location: plasma membrane (plus neuronal compartments, endosomes after internalization).
-- REMOVE: voltage-gated calcium channel activity (MOR inhibits VGCCs via Gβγ, it is not a channel) and
-  the derived calcium ion transmembrane transport IEA; protein binding rows (uninformative).
-- MODIFY: GPCR activity -> opioid receptor activity; GPCR signaling -> opioid receptor signaling;
-  acetylcholine-specific AC-inhibiting pathway and "cyclic nucleotide second messenger" ->
-  adenylate cyclase-inhibiting GPCR signaling pathway (GO:0007193); sensory perception -> sensory
-  perception of pain; membrane -> plasma membrane.
-- Over-annotation: lung cancer cell proliferation; "regulation of cellular response to stress" (the
-  Ray 2011 study found OPRM1 Asp40 associated with cue-induced, not stress-induced craving:
-  "The Asp40 allele of the OPRM1 was associated with greater cue-induced alcohol craving following
-  the neutral imagery condition." [PMID:21039637]); ER/Golgi from Sf9 overexpression; transmission of
-  nerve impulse; positive regulation of neurogenesis.
+## Location
+
+- Plasma membrane (multiple EXP papers; UniProt "Cell membrane"); neuronal
+  axon, dendrite, perikaryon, endosome by similarity to guinea pig OPRM1 (P97266; the rodent ISS donor is guinea pig, while the GO_REF:0000107 IEA donor P42866 is mouse); "Is rapidly
+  internalized after agonist binding".
+
+## Annotation-review judgements (summary)
+
+- GO:0004930 GPCR activity -> MODIFY to morphine receptor activity
+  (GO:0038047) and beta-endorphin receptor activity (GO:0004979).
+- Generic GPCR signaling / cyclic-nucleotide / ACh-pathway rows -> MODIFY to
+  GO:0031635 adenylate cyclase-inhibiting opioid receptor signaling pathway
+  (is_a GO:0007193 and GO:0038003, checked in OLS).
+- voltage-gated calcium channel activity (ISS from rat P33535) and the derived
+  IEA calcium ion transmembrane transport -> REMOVE (receptor inhibits channels;
+  it is not a channel).
+- 21 protein binding IPI rows -> REMOVE as uninformative (interactions not
+  disputed).
+- PMID:21039637 (human craving genetics, abstract-only): stress-induced craving
+  result in the abstract is for CRH-BP, OPRM1 is associated with cue-induced
+  craving; "regulation of cellular response to stress" left UNDECIDED.
+- ER/Golgi TAS rows from PMID:9242668 (insect-cell overexpression, abstract
+  only, abstract does not mention these compartments) left UNDECIDED.
+
+## Review round 2 (PR #5042) additions
+
+- PENK peptide (P01210-PRO_0000008243) IPI row: UniProt "P35372; PRO_0000008243
+  [P01210]: PENK; NbExp=3"; MODIFY to GO:0004985 (endogenous opioid peptide
+  ligand), not REMOVE.
+- Mouse sources traced via QuickGO for P42866: GO:0050769 IMP
+  [PMID:16682964 "implicating a role for receptor-receptor interactions in
+  modulating neuritogenesis"]; GO:0098982 SynGO [PMID:31818459 "this release was
+  attenuated by presynaptic mu opioid receptors (MORs) activation"].
+- Ethanol: [PMID:10869404 "In no case did knockout mice show evidence of
+  ethanol self-administration"].
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of OPRM1 was made in PR #5350. This review (#5042) is kept
+as the base. Ported from #5350: PMID:42870023 (Deutsch et al. 2026, Nat Struct Mol
+Biol), which used mouse μOR coupled to human Gαi1β1γ2 and shows that agonist efficacy
+is encoded in how fast the Gi α-helical domain opens for GDP release [PMID:42870023 "Mean dwell times in this high-FRET state (τhigh) depended strongly on ligand efficacy"]. Added as a reference, with two suggested questions and one suggested
+experiment on whether this holds for human OPRM1 and its N40D variant.

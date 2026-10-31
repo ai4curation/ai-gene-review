@@ -58,7 +58,11 @@ separate axis with a separate failure mode:
    itself reports Gαi2 mediating cyclase *inhibition*.
 4. **Wrong donor entirely.** GNAI1's `GO:0007189` ISS was transferred from an adenylyl
    cyclase (ADCY6), not a Gα ortholog — a sign error manufactured by a mis-matched
-   similarity source (REMOVE rather than MODIFY).
+   similarity source. Two independent reviews of this row disagree on the action
+   (REMOVE in PR #5350; UNDECIDED in the merged #5582 review, which notes that
+   high-concentration Gαi can stimulate type I/II cyclases in vitro, PMID:8119955).
+   That disagreement is itself a data point: an in-vitro activity of the opposite sign
+   can keep a physiologically wrong sign alive.
 5. **Family-level sign defaults.** Gα proteins split into activating (Gs) and inhibiting
    (Gi/o) branches of the same pathway; a propagation that ignores the split imports
    the wrong half.
@@ -68,7 +72,7 @@ separate axis with a separate failure mode:
 | Gene | Original → replacement | Evidence | Origin hypothesis (tentative) |
 |---|---|---|---|
 | human/GNAI2 | GO:0007189 AC-activating → GO:0007193 AC-inhibiting GPCR signaling | IEA (GO_REF:0000107) | 3, 5 |
-| human/GNAI1 | GO:0007189 AC-activating → REMOVE | ISS (donor ADCY6) | 4 |
+| human/GNAI1 | GO:0007189 AC-activating → UNDECIDED (REMOVE in a parallel review) | ISS (donor ADCY6) | 4 |
 | human/NTSR1 | GO:0040017 positive regulation of locomotion → GO:0040012 | IEA (GO_REF:0000107) | 2 |
 | human/NTSR1 | GO:0043065 positive regulation of apoptotic process → UNDECIDED | IEA (GO_REF:0000107) | 3 |
 | human/NLRP3 | GO:0050728 negative → GO:0050729 positive regulation of inflammatory response (×3) | IMP | 1 |
@@ -115,4 +119,4 @@ canonical inhibitory Gα. The flip census matches term labels that differ only b
 sign word (positive/negative regulation, activating/inhibiting, activator/inhibitor,
 agonist/antagonist, up/down-regulation, stimulation/inhibition), so it misses
 corrections to a sign-neutral parent (NTSR1 locomotion) and sign problems resolved by
-REMOVE (GNAI1); those are listed by hand above.
+REMOVE or UNDECIDED (GNAI1); those are listed by hand above.

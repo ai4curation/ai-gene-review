@@ -1469,3 +1469,27 @@ artifacts:
     assert 'href="final_report.pdf"' not in text
     assert 'href="archived.pdf"' in text
     assert 'href="typo.pdf"' in text
+
+
+def test_batch_symbol_index_preserves_individual_page_output(tmp_path):
+    """Sharing the index must preserve links and species disambiguation per page."""
+    from ai_gene_review.render_projects import render_all_projects, render_project
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    genes = tmp_path / "genes"
+    for species in ("human", "mouse"):
+        gene = genes / species / "TP53"
+        gene.mkdir(parents=True)
+        (gene / "TP53-ai-review.yaml").write_text("gene_symbol: TP53\n")
+        (projects / f"{species}.md").write_text(
+            f"---\nspecies: [{species}]\n---\n# {species}\n\nTP53 activity.\n"
+        )
+    render_all_projects(projects, tmp_path / "batch", genes)
+    for source in projects.glob("*.md"):
+        individual, _ = render_project(
+            source, tmp_path / "individual", genes_dir=genes, projects_dir=projects,
+        )
+        batch = (tmp_path / "batch" / individual.name).read_text()
+        assert batch == individual.read_text()
+        assert f"genes/{source.stem}/TP53/TP53-ai-review.html" in batch

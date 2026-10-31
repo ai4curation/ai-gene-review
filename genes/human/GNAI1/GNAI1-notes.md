@@ -1,100 +1,237 @@
-# GNAI1 (human, P63096) curation notes
+# GNAI1: signaling-regulator evidence review
 
-## Session 2026-10-23
+All original annotation payloads, evidence codes, references and qualifiers were preserved. No new annotations were manufactured to populate a module. Actual Falcon and fallback research attempts failed authentication/quota; this is manual literature research, not provider-generated prose.
 
-### Process notes
+The whole record was reviewed, including secondary physiology and localization. Existing assertion specificity is judged independently of evidence code. Native, heterologous, mutant and orthology-based results are distinguished below.
 
-- `just fetch-gene human GNAI1` had already been run (uniprot, goa, stub with 146 PENDING rows).
-- `just fetch-gene-pmids human GNAI1`: all 44 GOA-cited PMIDs cached.
-- Deep research: `just deep-research-falcon human GNAI1 --fallback perplexity-lite` FAILED.
-  Falcon failed with `Exception: Failed to authenticate`; the perplexity-lite fallback
-  failed with `Provider 'perplexity' not available. Available: openai, falcon, openscientist`
-  (the fallback command line in the log also named GNAI2 rather than GNAI1, which looks
-  like a wrapper bug). No deep-research file exists for this gene; the review below is
-  built from UniProt, the GOA-cited publications and the newly cached Deutsch et al. 2026
-  paper (PMID:42870023). No `-deep-research-*.md` was written by hand.
+## GO:0003924 GTPase activity — ACCEPT
+GNAI1 is a guanine-nucleotide-binding G alpha subunit that switches between GDP- and GTP-bound states and hydrolyzes bound GTP. Receptor/effector biochemistry and nucleotide-state experiments support the intrinsic molecular switch. This is distinct from the GAP activity of RGS proteins; activated or nucleotide-defective mutants are controls, not substitutes for the wild-type function.
+Sources: PMID:8119955, PMID:33762731
 
-### Identity and family
+## GO:0003925 G protein activity — ACCEPT
+GNAI1 is a guanine-nucleotide-binding G alpha subunit that switches between GDP- and GTP-bound states and hydrolyzes bound GTP. Receptor/effector biochemistry and nucleotide-state experiments support the intrinsic molecular switch. This is distinct from the GAP activity of RGS proteins; activated or nucleotide-defective mutants are controls, not substitutes for the wild-type function.
+Sources: PMID:8119955, PMID:33762731
 
-- Guanine nucleotide-binding protein G(i) subunit alpha-1, 354 aa; G-alpha family,
-  G(i/o/t/z) subfamily [file:human/GNAI1/GNAI1-uniprot.txt "Belongs to the G-alpha family. G(i/o/t/z) subfamily."].
-- N-myristoylated at Gly-2 and palmitoylated at Cys-3, giving peripheral attachment to the
-  cytoplasmic face of the plasma membrane [file:human/GNAI1/GNAI1-uniprot.txt "Myristoylation at Gly-2 is required for membrane anchoring before palmitoylation."].
-- Human Gi1 alpha gene cloned alongside Gi2/Gi3 [PMID:2834384 "clones encoding human Gi1 alpha, Gi2 alpha, and Gi3 alpha were isolated"].
-- Disease: de novo dominant variants cause NEDHISB (MIM:619854); Gln52Pro/Arg mutants lose
-  GTP binding/hydrolysis [PMID:34685729 "At the biochemical level, the three mutant proteins are deficient in binding and hydrolyzing GTP, which is the fundamental function of the healthy G proteins."].
+## GO:0005525 GTP binding — ACCEPT
+GNAI1 is a guanine-nucleotide-binding G alpha subunit that switches between GDP- and GTP-bound states and hydrolyzes bound GTP. Receptor/effector biochemistry and nucleotide-state experiments support the intrinsic molecular switch. This is distinct from the GAP activity of RGS proteins; activated or nucleotide-defective mutants are controls, not substitutes for the wild-type function.
+Sources: PMID:8119955, PMID:33762731
 
-### Core biochemistry: GTPase switch, heterotrimer, receptor coupling
+## GO:0005515 protein binding — REMOVE
+The physical interactions are not denied. Remove bare protein binding under the project policy while retaining specific receptor, beta/gamma and effector functions supported independently.
+Source handling: original payload retained; no fabricated supporting quote.
 
-- Gαi1 is the nucleotide-binding subunit of Gi heterotrimers (Gαi1-Gβγ). Coimmunoprecipitation
-  of 120 combinations showed Gαi1 assembles with essentially all Gβγ dimers except those
-  containing β5 [PMID:25733868 "capability of 120 different G-protein combinations consisting of αi1 or αsL and all possible βγ-dimers to form a heterotrimeric complex"].
-- Many cryo-EM structures of Gi1 heterotrimers bound to Gi-coupled receptors (5-HT1A/1D/1E,
-  5-HT1F, D2R, D3R, all five dopamine receptors, apelin receptor, GPR88, MRGPRX2, CCR2/CCR3,
-  CaSR, GPR146 pathway) [PMID:34239069 "which allows the α5 helix of Gα i1 to insert into the intracellular cavity formed by the receptor TMD bundle"]
-  [PMID:35501348 "Here we present cryo-EM structures of the human GPR88-Gi1 signaling complex"].
-- RGS proteins act as GAPs on Gαi [PMID:18434541 "RGS domain binding consequently accelerates Galpha-mediated GTP hydrolysis"]
-  [PMID:8774883 "RGS10 increases potently and selectively the GTP hydrolytic activity of several members of the G alphai family"].
-- GoLoco proteins (RGS14, GPSM2/LGN, GPSM3, PCP2) bind Gαi1-GDP and act as GDIs
-  [PMID:11976690 "crystal structure of Galpha(i1) GDP bound to the GoLoco region of the 'regulator of G-protein signalling' protein RGS14"]
-  [PMID:22952234 "the C-terminal GL domain of LGN binds four molecules of Gα(i)·GDP"].
+## GO:0005737 cytoplasm — ACCEPT
+The G alpha protein is an intracellular peripheral-membrane signaling component with a cytoplasmic pool. Cytoplasm is compatible with membrane association and, where demonstrated, other intracellular pools; no exclusive localization is inferred.
+Sources: PMID:8119955, PMID:33762731
 
-### Mechanism of receptor-catalysed nucleotide exchange (Deutsch et al. 2026)
+## GO:0005834 heterotrimeric G-protein complex — ACCEPT
+The GDP-state G alpha subunit associates with a G beta/gamma dimer to form a functional heterotrimer. Receptor-coupling and structural/reconstitution experiments support this assembly and beta/gamma binding as integral functions. A particular experimental beta/gamma combination does not imply universal interchangeability.
+Sources: PMID:8119955, PMID:33762731
 
-- PMID:42870023 (Nat Struct Mol Biol 2026, full text). Isoform confirmed from Methods: the
-  smFRET construct is built on **human Gαi1** [PMID:42870023 "previously published minimal cysteine background (C3S;C66A;C214S;C350S;C325A;C351I) of human Gαi1"].
-  The construct (Gαi1Δ6-90C/238C; donor on AHD R90C, acceptor on Ras-like domain E238C) had
-  WT-like ligand-dependent GTP turnover.
-- AHD opening is needed for exchange [PMID:42870023 "Activation of heterotrimeric G proteins by G-protein-coupled receptors (GPCRs) requires large-scale opening of the Gα α-helical domain (AHD) to expose the nucleotide-binding site and facilitate GDP-GTP exchange"].
-- Efficacy is encoded in the rate of AHD opening (destabilised closed state), not in the
-  stability of the open state [PMID:42870023 "Mean dwell times in this high-FRET state (τhigh) depended strongly on ligand efficacy"]
-  [PMID:42870023 "Thus, ligand-dependent shifts in the AHD’s conformational equilibrium (Fig. 2a) stem from the destabilization of its closed state, rather than stabilization of the open, domain-separated conformation."].
-- An intermediate (mid-FRET, partly open) state lies on the exchange path
-  [PMID:42870023 "suggesting that a partially open AHD could mediate transitions between the GDP-bound and fully open conformations"].
-- Generalises to NTSR1-Gi complexes [PMID:42870023 "Parallel smFRET imaging of NTSR1–Gi ternary complexes (Methods), which couple promiscuously in vitro, yielded a correlation between agonist-induced low-FRET occupancy and GTP turnover similar to that of μOR"].
-- Relevance to GO: supports GTPase / G protein activity, heterotrimeric G-protein complex,
-  GPCR binding (receptor-catalysed GDP release on the receptor-bound heterotrimer). The
-  μOR used is a mouse sequence; Gβ1γ2 human.
+## GO:0031683 G-protein beta/gamma-subunit complex binding — ACCEPT
+The GDP-state G alpha subunit associates with a G beta/gamma dimer to form a functional heterotrimer. Receptor-coupling and structural/reconstitution experiments support this assembly and beta/gamma binding as integral functions. A particular experimental beta/gamma combination does not imply universal interchangeability.
+Sources: PMID:8119955, PMID:33762731
 
-### Effector: adenylyl cyclase inhibition
+## GO:0005886 plasma membrane — MODIFY
+The independently supported plasma-membrane signaling pool lies on the cytoplasmic side, already represented separately in this record. Refine this general membrane location while retaining other independently supported intracellular locations; the refinement does not assert exclusive residence.
+Sources: PMID:8119955, PMID:33762731
 
-- Purified Gi alpha 1 inhibits AC types V and VI most strongly, and type I
-  [PMID:8119955 "Types V and VI adenylyl cyclase are most sensitive to inhibition by Gi alpha 1, Gi alpha 2, and Gi alpha 3"].
-- Direct, receptor-stimulated Gαi1-AC5 interaction in cells (FRET)
-  [PMID:23841650 "This led us to the conclusion that AC5, by binding active Gαi1, interferes with G-protein deactivation and reassembly"].
-- Note: [PMID:8119955 "High concentrations of Gi alpha can interact with site 1 on types I and II adenylyl cyclase and activate the enzymes."] -- non-physiological; does not support an AC-activating pathway annotation. The GOA row GO:0007189 (ISS) was transferred from dog ADCY6 (P30804), an adenylyl cyclase, not a Gα ortholog.
+## GO:0009898 cytoplasmic side of plasma membrane — ACCEPT
+The intracellular G alpha–beta/gamma complex contacts the cytoplasmic receptor surface and intracellular effectors. Receptor-complex structures, membrane targeting and signaling experiments support the cytoplasmic plasma-membrane face.
+Sources: PMID:8119955, PMID:33762731
 
-### Non-canonical: mitosis, spindle positioning
+## GO:0019001 guanyl nucleotide binding — MODIFY
+The conserved guanine-nucleotide pocket binds GTP during activation and GDP in the inactive state. Refine the generic nucleotide-binding term to these two chemically defined ligands, preserving both halves of the switch.
+Sources: PMID:8119955, PMID:33762731
 
-- Gαi1 at centrosomes and midbody; GTPase-deficient Gαi1 causes cytokinesis defects
-  [PMID:17635935 "We show expression of G(ialpha1), G(ialpha2), and G(ialpha3) in the centrosomes and at the midbody."]
-  [PMID:17635935 "Expression of GTPase-deficient G(ialpha1) results in defective cytokinesis"].
-- Gαi-LGN-NuMA anchors dynein-dynactin at the metaphase cortex
-  [PMID:22327364 "we found that the LGN binding proteins Gαi and NuMA were required for LGN and dynein localization to the cell cortex"]
-  [PMID:23870127 "Depletion of LGN or Gαi eliminated the cortical localization of dynein (DHC-GFP), the dynactin subunit p150, and NuMA during metaphase"]
-  [PMID:26766442 "Proper spatiotemporal localization of the evolutionarily conserved Gαi-LGN-NuMA protein complex is critical for mitotic spindle orientation"].
-- Overexpressed Gαi1 mispositions spindles; non-myristoylated Gαi1 is cytoplasmic
-  [PMID:23027904 "overexpression of Gαi1-YFP or YFP-LGN leads to defective spindle positioning on uniform fibronectin-coated coverslips"].
-- In this context Gαi1-GDP acts as a membrane anchor for LGN rather than as a signal
-  transducer (no receptor or GTP needed in the model). Evidence is mostly pan-Gαi
-  (triple knockdown), so GNAI1-specific necessity is not established.
+## GO:0007165 signal transduction — MODIFY
+The protein directly transduces signals through heterotrimeric G protein-coupled receptor signaling. Refine generic signal transduction to the established receptor pathway without excluding additional receptor-independent functions.
+Sources: PMID:8119955, PMID:33762731
 
-### Physiological pathway contexts (all via Gi coupling; non-core)
+## GO:0007186 G protein-coupled receptor signaling pathway — ACCEPT
+Receptor-dependent nucleotide exchange and effector coupling establish direct participation in GPCR signaling. Individual receptor preferences and physiological contexts must be established separately rather than inferred from the whole G protein family.
+Sources: PMID:8119955, PMID:33762731
 
-- NmU receptors (PTX-sensitive AC inhibition) [PMID:15331768 "a pertussis toxin-sensitive inhibition of adenylyl cyclase with subnanomolar potency for each"].
-- EP4 receptor [PMID:16204467 "couples to a PTX-sensitive inhibitory G-protein (Galpha(i)) that can inhibit cAMP-dependent signaling"].
-- Lactate/GPR81 anti-lipolysis [PMID:19047060].
-- Naive CD4 T-cell chemotaxis [PMID:20829352 "and Gα(i1) in naive (but not memory) CD4(+) T cells inhibited chemokine-dependent migration"].
-- Smooth muscle NPR-C -> Gi1/Gi2 -> eNOS -> relaxation (rabbit) [PMID:9843699 "activation of eNOS via Gi1 and Gi2, stimulation of cGMP formation, and muscle relaxation"].
+## GO:0000287 magnesium ion binding — ACCEPT
+Magnesium coordination is integral to guanine-nucleotide binding/hydrolysis in the G alpha catalytic pocket, supported by nucleotide-state structural and biochemical studies. It is a core cofactor interaction, not peripheral simply because it is binding.
+Sources: PMID:33762731, PMID:34685729
 
-### Decisions summary
+## GO:0001664 G protein-coupled receptor binding — ACCEPT
+Direct serotonin-receptor/Gi1 complexes and coupling assays establish receptor binding, including the PAINT-supported serotonin receptor class. Preserve exact receptor and construct contexts rather than infer binding to every GPCR.
+Sources: PMID:33762731, PMID:34239069
 
-- Core: G protein activity / GTPase activity, GTP/GDP binding, Gβγ binding / heterotrimer,
-  GPCR binding, adenylate cyclase inhibitor activity, AC-inhibiting GPCR signaling, plasma
-  membrane (cytoplasmic side).
-- Generic `protein binding` rows: GNB1/GNGT1 partners MODIFIED to G-protein beta/gamma-subunit
-  complex binding; other partners (GoLoco proteins, RGS, RIC8A, NuMA) REMOVED as uninformative.
-- `adenylate cyclase-modulating GPCR signaling` MODIFIED to the inhibiting child.
-- AC-activating pathway (ISS from ADCY6) REMOVED.
-- IL-8 signaling IDA from an NmU-receptor paper: UNDECIDED (abstract does not mention IL-8;
-  full text unavailable).
+## GO:0031821 G protein-coupled serotonin receptor binding — ACCEPT
+Direct serotonin-receptor/Gi1 complexes and coupling assays establish receptor binding, including the PAINT-supported serotonin receptor class. Preserve exact receptor and construct contexts rather than infer binding to every GPCR.
+Sources: PMID:33762731, PMID:34239069
+
+## GO:0000132 establishment of mitotic spindle orientation — KEEP_AS_NON_CORE
+Gi1 participates in the cortical LGN–NuMA/dynein machinery that positions the spindle; gain/loss and localization experiments support spindle organization and cortical recruitment. These are direct secondary cellular functions rather than generic proliferation associations.
+Sources: PMID:15537540, PMID:22327364, PMID:23027904, PMID:23870127
+
+## GO:0060236 regulation of mitotic spindle organization — KEEP_AS_NON_CORE
+Gi1 participates in the cortical LGN–NuMA/dynein machinery that positions the spindle; gain/loss and localization experiments support spindle organization and cortical recruitment. These are direct secondary cellular functions rather than generic proliferation associations.
+Sources: PMID:15537540, PMID:22327364, PMID:23027904, PMID:23870127
+
+## GO:1904778 positive regulation of protein localization to cell cortex — KEEP_AS_NON_CORE
+Gi1 participates in the cortical LGN–NuMA/dynein machinery that positions the spindle; gain/loss and localization experiments support spindle organization and cortical recruitment. These are direct secondary cellular functions rather than generic proliferation associations.
+Sources: PMID:15537540, PMID:22327364, PMID:23027904, PMID:23870127
+
+## GO:0000922 spindle pole — KEEP_AS_NON_CORE
+Imaging and biochemical studies identify Gi1 at spindle poles/centrosomes and the midbody during division. Retain these demonstrated cell-cycle-specific pools without treating plasma-membrane localization as exclusive.
+Sources: PMID:15537540, PMID:17635935
+
+## GO:0005813 centrosome — KEEP_AS_NON_CORE
+Imaging and biochemical studies identify Gi1 at spindle poles/centrosomes and the midbody during division. Retain these demonstrated cell-cycle-specific pools without treating plasma-membrane localization as exclusive.
+Sources: PMID:15537540, PMID:17635935
+
+## GO:0030496 midbody — KEEP_AS_NON_CORE
+Imaging and biochemical studies identify Gi1 at spindle poles/centrosomes and the midbody during division. Retain these demonstrated cell-cycle-specific pools without treating plasma-membrane localization as exclusive.
+Sources: PMID:15537540, PMID:17635935
+
+## GO:0005634 nucleus — UNDECIDED
+The inherited nuclear assignment remains plausible but was not resolved to a target-specific Gi1 nuclear-localization experiment in the accessible source chain. Spindle-pole and cortical localization do not independently prove nuclear residence, and no categorical exclusion is asserted.
+Source handling: original payload retained; no fabricated supporting quote.
+
+## GO:0005765 lysosomal membrane — UNDECIDED
+The placental lysosome-proteomics source has not been independently resolved to Gi1-specific enrichment or membrane topology. Other locations do not negate the curator assertion, but the precise HDA claim remains uncertain.
+Sources: PMID:17897319
+
+## GO:0005829 cytosol — ACCEPT
+Gi1 has a soluble cytosolic pool in addition to its peripheral-membrane and mitotic pools. Cellular localization and cell-cycle experiments independently support this intracellular distribution.
+Sources: PMID:17635935
+
+## GO:0005938 cell cortex — KEEP_AS_NON_CORE
+Gi1 participates directly in the cortical machinery positioning NuMA/LGN and spindle forces. The cortex location is supported independently of generic membrane annotation.
+Sources: PMID:15537540, PMID:22327364, PMID:23870127
+
+## GO:0007188 adenylate cyclase-modulating G protein-coupled receptor signaling pathway — ACCEPT
+Gi1 modulates cyclase output in an isoform-dependent manner: purified Gi1 inhibits several cyclases, while high concentrations can stimulate certain isoforms in reconstituted assays. Retain the unsigned process because this documented biochemical breadth is not adequately represented by an unconditional inhibitory-only statement.
+Sources: PMID:8119955
+
+## GO:0007189 adenylate cyclase-activating G protein-coupled receptor signaling pathway — UNDECIDED
+The ISS donor P30804 resolves in the source chain to an adenylyl-cyclase family protein, not a Gi1 ortholog. Independently, high-concentration Gi alpha can stimulate some purified cyclases (PMID:8119955), so activation is not biochemically impossible. However, that conditional effect does not establish a native Gi1-mediated cyclase-activating GPCR pathway; the precise pathway claim remains unresolved.
+Sources: PMID:8119955
+
+## GO:0007193 adenylate cyclase-inhibiting G protein-coupled receptor signaling pathway — ACCEPT
+Purified reconstitution directly establishes Gi1 inhibition of selected cyclases, and receptor-dependent assays show Gi1-mediated suppression of cAMP. The inhibitory MF is isoform/context dependent, not inhibition of every adenylyl cyclase under every condition.
+Sources: PMID:8119955, PMID:23841650, PMID:34239069
+
+## GO:0010855 adenylate cyclase inhibitor activity — ACCEPT
+Purified reconstitution directly establishes Gi1 inhibition of selected cyclases, and receptor-dependent assays show Gi1-mediated suppression of cAMP. The inhibitory MF is isoform/context dependent, not inhibition of every adenylyl cyclase under every condition.
+Sources: PMID:8119955, PMID:23841650, PMID:34239069
+
+## GO:0007195 adenylate cyclase-inhibiting dopamine receptor signaling pathway — KEEP_AS_NON_CORE
+D2-family receptor structural/coupling studies demonstrate Gi1 receptor binding and inhibitory cAMP signaling in the tested complexes. Retain this specific neurotransmitter implementation with the experimental construct scope.
+Sources: PMID:33571431, PMID:37221270
+
+## GO:0031749 D2 dopamine receptor binding — KEEP_AS_NON_CORE
+D2-family receptor structural/coupling studies demonstrate Gi1 receptor binding and inhibitory cAMP signaling in the tested complexes. Retain this specific neurotransmitter implementation with the experimental construct scope.
+Sources: PMID:33571431, PMID:37221270
+
+## GO:0007198 adenylate cyclase-inhibiting serotonin receptor signaling pathway — KEEP_AS_NON_CORE
+Serotonin-receptor/Gi1 structures and coupling assays establish a specific cyclase-inhibitory signaling implementation. Receptor subtype specificity is retained; this does not apply to every serotonin receptor.
+Sources: PMID:33762731, PMID:34239069
+
+## GO:0007218 neuropeptide signaling pathway — KEEP_AS_NON_CORE
+Neuromedin receptor assays establish Gi1-mediated neuropeptide signaling as one receptor context. The G protein transduces the response rather than binding the extracellular peptide as its primary receptor.
+Sources: PMID:15331768
+
+## GO:0008277 regulation of G protein-coupled receptor signaling pathway — KEEP_AS_NON_CORE
+Gi1 interactions with regulatory proteins can alter receptor signaling alongside its direct transducer function. Retain the demonstrated regulatory process without calling Gi1 an RGS-like GAP for another alpha subunit.
+Sources: PMID:11976690
+
+## GO:0016020 membrane — MODIFY
+The conserved membrane-associated pool is specifically on the cytoplasmic plasma-membrane surface, independently annotated here. Refine the generic membrane assertion without excluding centrosomal, cortical or soluble pools.
+Sources: PMID:17635935
+
+## GO:0019003 GDP binding — ACCEPT
+GDP is the physiological ligand of the inactive G alpha nucleotide pocket. Structural and nucleotide-exchange experiments support GDP binding as an integral part of the switch.
+Sources: PMID:33762731, PMID:34685729
+
+## GO:0034695 response to prostaglandin E — KEEP_AS_NON_CORE
+The prostaglandin receptor-coupling study directly tests Gi1 signaling, supporting a contextual response to prostaglandin E rather than prostaglandin metabolism.
+Sources: PMID:16204467
+
+## GO:0038112 interleukin-8-mediated signaling pathway — UNDECIDED
+The accessible original PMID:15331768 source foregrounds neuromedin U receptor coupling. That alone cannot establish or refute additional IL-8 receptor experiments in uninspected full text. No independently verified Gi1-specific IL-8 signaling result was recovered, so retain uncertainty rather than assert a wrong-gene or wrong-receptor error.
+Sources: PMID:15331768
+
+## GO:0043303 mast cell degranulation — KEEP_AS_NON_CORE
+The receptor–Gi signaling study supports a mast-cell degranulation implementation. Retain the specific downstream response while distinguishing receptor-transducer participation from direct vesicle-fusion activity.
+Sources: PMID:34789875
+
+## GO:0043434 response to peptide hormone — KEEP_AS_NON_CORE
+Gi1 responds to peptide-receptor activation in direct coupling experiments, supporting the conserved peptide-hormone response annotation independently of the unresolved details of the transferred donor.
+Sources: PMID:15331768, PMID:38503280
+
+## GO:0045542 positive regulation of cholesterol biosynthetic process — UNDECIDED
+The cholesin–GPR146 paper describes suppression of cholesterol synthesis through Gi signaling in its accessible abstract, whereas this row asserts a positive sign. The complete target-specific experiment was not recovered here; whether another context supports a positive role remains unresolved. Do not silently invert the experimental annotation from its abstract.
+Sources: PMID:38503280
+
+## GO:0046888 negative regulation of hormone secretion — KEEP_AS_NON_CORE
+CaSR–Gi coupling supports signaling that suppresses endocrine secretion in the receptor physiological context. The structure establishes receptor–transducer compatibility; it is not itself an assay of hormone output or proof that Gi1 is uniquely required.
+Sources: PMID:38632411
+
+## GO:0051301 cell division — KEEP_AS_NON_CORE
+Gi1 localization and perturbation during cytokinesis support direct regulatory participation in division. This secondary role is supported by cell-cycle machinery experiments, not inferred solely from cancer proliferation.
+Sources: PMID:17635935
+
+## GO:0070062 extracellular exosome — UNDECIDED
+The urinary exosome-proteomics citation is retained, but the Gi1-specific peptide/enrichment result could not be independently inspected. Membrane association alone is insufficient evidence for released-vesicle localization and does not disprove it.
+Sources: PMID:19056867
+
+## GO:0070098 chemokine-mediated signaling pathway — KEEP_AS_NON_CORE
+Chemokine-receptor/Gi1 structures and coupling establish a chemokine-transduction implementation. This is distinct from asserting a particular native tissue response solely from structural occupancy.
+Sources: PMID:35570218
+
+## GO:0072678 T cell migration — KEEP_AS_NON_CORE
+Native human CD4 T-cell experiments identify a Gi1 contribution to naive-cell migration, distinct from the Go-dominant memory-cell context. Retain that cell-state-specific migration function.
+Sources: PMID:20829352
+
+## GO:1901082 positive regulation of relaxation of smooth muscle — KEEP_AS_NON_CORE
+The comparative gastric smooth-muscle study implicates Gi1/Gi2-dependent signaling in nitric-oxide-linked relaxation. Retain this contextual conserved regulatory role, not direct contractile structural activity.
+Sources: PMID:9843699
+
+## GO:1903998 regulation of eating behavior — KEEP_AS_NON_CORE
+The traced mouse source connects Gi1-dependent signaling with feeding regulation. Retain the comparative behavioral role with native-mouse rather than direct human behavioral evidence.
+Sources: PMID:25620129
+
+## GO:1904322 cellular response to forskolin — KEEP_AS_NON_CORE
+The source tests the Gi1 T329A GDP-release mutant and reports decreased forskolin-stimulated cAMP accumulation. Retain the contextual response inference with the mutant limitation, corroborated by wild-type Gi1 cyclase inhibition; forskolin is not asserted to bind Gi1.
+Sources: PMID:19703466, PMID:8119955
+
+## Research and access
+Normal publication fetches and targeted refreshes are logged under `.cache/module-audit-logs/acetylcholine-*`. Canonical abstract-only caches were not manually rewritten. Full publisher recovery for cone localization is cited separately. PAINT assertions are treated as ancestral-node judgments, not pairwise transfers; target appearance among descendant evidence is not circular.
+
+## Validation
+Focused strict/schema, source/quote and ontology checks, record-section backfill, rendering and helper-generated history are recorded in the final panel proof.
+
+## Final source and propagation audit
+
+Original machine payloads and all qualifiers were compared with the authoritative baseline. There are no NOT assertions or new annotation rows in this 15-target panel. Full sources were inspected where a source-specific sign/mechanism challenge required them; unresolved fine-localization/source claims are retained as UNDECIDED rather than inferred absent. Bare binding removals apply the project policy and do not dispute experimental interactions.
+
+UniProt/PANTHER placement inspected: `PTHR10218:SF359`. Broad G-alpha family PTHR10218 is GTP-BINDING PROTEIN ALPHA SUBUNIT; GRK PTHR24355 is G PROTEIN-COUPLED RECEPTOR KINASE/RIBOSOMAL PROTEIN S6 KINASE. Surprising official family names were not mechanically repointed. RGS6 current PTHR45746 placement does not invalidate a historical PAINT PTHR10845 assertion by itself.
+
+
+## PR #5582 follow-up, 2026-10-26
+
+Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of GNAI1 was made in PR #5350 while this one (#5582) was
+merging. This review is kept as the base. Ported from #5350:
+
+- PMID:42870023 (Deutsch et al. 2026, Nat Struct Mol Biol), whose smFRET construct is
+  human Gαi1 [PMID:42870023 "previously published minimal cysteine background
+  (C3S;C66A;C214S;C350S;C325A;C351I) of human Gαi1"]. It shows receptor-catalysed GDP
+  release requires opening of the α-helical domain, through a partly open intermediate,
+  with agonist efficacy encoded in the rate of opening. Added as a reference and as
+  support for the G protein activity core function.
+- Five `protein binding` IPI rows whose partner is a Gβ or Gγ subunit (PMID:25733868 ×2,
+  PMID:28514442, PMID:35501348, PMID:40205054) changed from REMOVE to MODIFY →
+  GO:0031683 G-protein beta/gamma-subunit complex binding, per the protein-binding
+  policy (MODIFY when the paper supports a more informative MF).
+
+The two reviews disagree on `GO:0007189` (ISS from an adenylyl-cyclase donor): REMOVE
+in #5350, UNDECIDED here. UNDECIDED is kept; see `projects/REGULATION_SIGN.md`.
