@@ -210,8 +210,8 @@ KRT19 plasma membrane). Every batch-1 paper was about its gene.
 
 **A CACAO error does not stay put.** VP40's `intracellular transport of virus`
 row, which has no transport assay behind it, has already seeded an
-inter-ontology IEA (GO_REF:0000108), and K5's removed viral-entry row is now
-restated by an ARBA rule. Two of 143 rows examined have been amplified
+inter-ontology IEA (GO_REF:0000108), and K5's repointed viral-entry row is also
+restated by an ARBA rule, so the correction has to reach two rows. Two of 143 rows examined have been amplified
 downstream, so error rates counted on CACAO rows alone understate the
 footprint.
 
@@ -435,7 +435,8 @@ mouse Reln (20), Shank3 (18), Sirt6 (14), Nlgn3 (13), Wnt5a (11), Pafah1b1
 
 All 18 batch-2 genes reviewed, validating with 0 errors; 349 review rows, 72
 CACAO rows judged (48 ACCEPT, 11 MODIFY, 6 non-core, 4 over-annotated, 3
-REMOVE). Acceptance rose from 42% to 67%, and the taxonomy grew from 8 shapes
+REMOVE; revised on PR review to 12 MODIFY / 2 REMOVE, see the summary
+table). Acceptance rose from 42% to 67%, and the taxonomy grew from 8 shapes
 to 18, now grouped by what is actually wrong: the claim, the term, or the
 provenance. See the summary for the two conclusions that matter — most
 defective rows on these genes come from automated pipelines rather than
