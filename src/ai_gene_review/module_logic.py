@@ -126,6 +126,11 @@ class And:
     children: list["Circuit"]
 
 
+#: The two layers a variant set can belong to (schema ``VariantKindEnum``).
+VariantKind = Literal["REALIZER", "ROUTE"]
+_VARIANT_KINDS: tuple[VariantKind, ...] = ("REALIZER", "ROUTE")
+
+
 @dataclass
 class Or:
     """Disjunction over variant branches (at-least-one for satisfiability)."""
@@ -135,7 +140,7 @@ class Or:
     children: list["Circuit"]
     #: Rule layer of the alternatives (``REALIZER`` or ``ROUTE``, see
     #: :data:`VariantKind`), or None when unclassified or an optional part.
-    kind: Optional[str] = None
+    kind: Optional[VariantKind] = None
     #: Whether ``kind`` was declared in the module or inferred by the compiler.
     kind_inferred: bool = False
 
@@ -218,11 +223,7 @@ def _term_ids(terms: list[Optional[dict]]) -> tuple[str, ...]:
     return tuple(dict.fromkeys(tid for term in terms if (tid := (term or {}).get("id"))))
 
 
-#: The two layers a variant set can belong to (schema ``VariantKindEnum``).
-VariantKind = Literal["REALIZER", "ROUTE"]
-
-
-def _variant_kind(variant_set: dict, branches: list[Circuit]) -> tuple[Optional[str], bool]:
+def _variant_kind(variant_set: dict, branches: list[Circuit]) -> tuple[Optional[VariantKind], bool]:
     """Return a variant set's layer and whether it was inferred.
 
     A declared ``variant_kind`` wins. Otherwise the set is a REALIZER choice
@@ -242,7 +243,10 @@ def _variant_kind(variant_set: dict, branches: list[Circuit]) -> tuple[Optional[
     """
     declared = variant_set.get("variant_kind")
     if declared:
-        return str(declared), False
+        kind = next((k for k in _VARIANT_KINDS if k == declared), None)
+        if kind is None:
+            raise ValueError(f"variant set {variant_set.get('id')!r}: unknown variant_kind {declared!r}")
+        return kind, False
     functions = [{f for atom in iter_atoms(b) for f in atom.function_ids} for b in branches]
     if len(functions) > 1 and all(len(f) == 1 for f in functions) and len(set.union(*functions)) == 1:
         return "REALIZER", True
@@ -477,9 +481,10 @@ class Abduction:
     gaps: list["Gap"] = field(default_factory=list)  # innermost gaps, labelled by layer
 
 
-#: The layer a gap is reported at: no carrier for a required activity
-#: (``REALIZER``), no modelled route present (``ROUTE``), or a variant set whose
-#: layer is neither declared nor inferable (``UNCLASSIFIED``).
+#: The layer a gap is reported at: a realizer variant set with no carrier present
+#: (``REALIZER``), a route variant set with no route present (``ROUTE``), or a
+#: gap whose layer the structure cannot tell (``UNCLASSIFIED``): a single-carrier
+#: step, or a variant set with no declared or inferable kind.
 GapLayer = Literal["REALIZER", "ROUTE", "UNCLASSIFIED"]
 
 
@@ -490,7 +495,10 @@ class Gap:
     ``path`` runs from the top-level step down to the gap, through any
     ``module_ref`` nodes and referenced modules, so a gap inside a composed
     module is located where it actually is. ``absent`` holds the atoms under
-    the gap that do not hold in the context.
+    the gap that do not hold in the context; ``candidates`` lists their gene
+    symbols and can be empty when an absent atom is a family selector whose
+    members yield no unambiguous symbol, so read ``absent`` to tell whether
+    anything is missing.
     """
 
     path: tuple[str, ...]
@@ -498,6 +506,9 @@ class Gap:
     absent: tuple[Atom, ...]
     #: True when ``layer`` came from compiler inference, not a declared ``variant_kind``.
     layer_inferred: bool = False
+    #: True when some atom under a failed variant set holds, i.e. at least one
+    #: alternative is partly present (for example a complex missing one subunit).
+    partial: bool = False
 
     @property
     def step(self) -> str:
@@ -527,12 +538,6 @@ GENERAL_HYPOTHESES = [
 #: Every explanation emitted for a gap in a context where the pathway is known active.
 GAP_HYPOTHESES = REALIZER_HYPOTHESES + ROUTE_HYPOTHESES + GENERAL_HYPOTHESES
 
-_LAYER_HYPOTHESES: dict[str, list[str]] = {
-    "REALIZER": REALIZER_HYPOTHESES,
-    "ROUTE": ROUTE_HYPOTHESES,
-    "UNCLASSIFIED": REALIZER_HYPOTHESES + ROUTE_HYPOTHESES,
-}
-
 
 def gap_report(circuit: Circuit, holds: Predicate) -> list[Gap]:
     """Return the innermost gaps under each unsatisfied step, labelled by layer.
@@ -541,8 +546,8 @@ def gap_report(circuit: Circuit, holds: Predicate) -> list[Gap]:
     nodes and the modules they reference) and stops at the element that
     actually fails:
 
-    * an atom, the only listed carrier of a required activity, which is a
-      ``REALIZER`` gap;
+    * an atom, a step with a single listed carrier. Its gap is ``UNCLASSIFIED``:
+      the structure cannot tell an undetected carrier from an unmodelled route;
     * a variant set none of whose alternatives holds, labelled by its kind
       (declared or inferred), or ``UNCLASSIFIED``.
 
@@ -555,7 +560,7 @@ def gap_report(circuit: Circuit, holds: Predicate) -> list[Gap]:
     ...                   {"id": "c", "annotons": [{"id": "c",
     ...                     "participant": {"gene": {"preferred_term": "C"}}}]}]}]}}]}}
     >>> [(g.path, g.layer, g.candidates) for g in gap_report(compile_module(doc), lambda a: False)]
-    [(('s1', 'a'), 'REALIZER', ['A']), (('s2', 'vs'), 'ROUTE', ['B', 'C'])]
+    [(('s1', 'a'), 'UNCLASSIFIED', ['A']), (('s2', 'vs'), 'ROUTE', ['B', 'C'])]
     """
     gaps: list[Gap] = []
     for step in unsatisfied_steps(circuit, holds):
@@ -567,13 +572,12 @@ def _gaps(circuit: Circuit, holds: Predicate, path: tuple[str, ...]) -> list[Gap
     """Return the innermost gaps under an unsatisfied ``circuit`` (see :func:`gap_report`)."""
     here = (*path, step_id(circuit))
     if isinstance(circuit, Atom):
-        return [Gap(here, "REALIZER", (circuit,))]
+        return [Gap(here, "UNCLASSIFIED", (circuit,))]
     if isinstance(circuit, Or):
-        absent = tuple(dict.fromkeys(a for a in iter_atoms(circuit) if not holds(a)))
-        layer: GapLayer = (
-            "REALIZER" if circuit.kind == "REALIZER" else "ROUTE" if circuit.kind == "ROUTE" else "UNCLASSIFIED"
-        )
-        return [Gap(here, layer, absent, circuit.kind_inferred)]
+        atoms = list(dict.fromkeys(iter_atoms(circuit)))
+        absent = tuple(a for a in atoms if not holds(a))
+        layer: GapLayer = circuit.kind or "UNCLASSIFIED"
+        return [Gap(here, layer, absent, circuit.kind_inferred, partial=len(absent) < len(atoms))]
     found: list[Gap] = []
     for child in circuit.children:
         if not is_satisfied(child, holds):
@@ -581,10 +585,38 @@ def _gaps(circuit: Circuit, holds: Predicate, path: tuple[str, ...]) -> list[Gap
     return found
 
 
+def _gap_hypotheses(gap: Gap) -> list[str]:
+    """Return the layer-specific explanations for one gap.
+
+    Only a declared layer narrows the explanations. A single-carrier step, an
+    unclassified set or an inferred REALIZER set keeps both readings (inference
+    from the modelled alternatives says nothing about unmodelled routes), and a
+    declared ROUTE set with a partly present alternative also keeps the
+    undetected-carrier reading.
+    """
+    if gap.layer == "UNCLASSIFIED" or gap.layer_inferred:
+        return REALIZER_HYPOTHESES + ROUTE_HYPOTHESES
+    if gap.layer == "REALIZER":
+        return REALIZER_HYPOTHESES
+    return ROUTE_HYPOTHESES + (REALIZER_HYPOTHESES if gap.partial else [])
+
+
 def _hypotheses(gaps: list[Gap]) -> list[str]:
-    """Return the explanations that fit the layers of ``gaps``, in a stable order."""
-    wanted = {h for gap in gaps for h in _LAYER_HYPOTHESES[gap.layer]}
-    return [h for h in GAP_HYPOTHESES if h in wanted or h in GENERAL_HYPOTHESES]
+    """Return the explanations that fit ``gaps``, in the order of :data:`GAP_HYPOTHESES`."""
+    wanted = {h for gap in gaps for h in _gap_hypotheses(gap)} | set(GENERAL_HYPOTHESES)
+    return [h for h in GAP_HYPOTHESES if h in wanted]
+
+
+def _memoized(holds: Predicate) -> Predicate:
+    """Wrap ``holds`` so each atom is evaluated once (oracles may be expensive)."""
+    cache: dict[Atom, bool] = {}
+
+    def cached(atom: Atom) -> bool:
+        if atom not in cache:
+            cache[atom] = holds(atom)
+        return cache[atom]
+
+    return cached
 
 
 def abduce(circuit: Circuit, holds: Predicate, asserted_active: bool) -> Abduction:
@@ -609,6 +641,7 @@ def abduce(circuit: Circuit, holds: Predicate, asserted_active: bool) -> Abducti
     >>> abduce(circ, lambda atom: False, asserted_active=False).classification
     'CONSISTENT_INACTIVE'
     """
+    holds = _memoized(holds)
     sat = is_satisfied(circuit, holds)
     steps = unsatisfied_steps(circuit, holds)
     gap_ids = [step_id(s) for s in steps]

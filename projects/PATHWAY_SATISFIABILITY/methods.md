@@ -12,7 +12,7 @@ Companion to [Pathway satisfiability](../PATHWAY_SATISFIABILITY.md) and
 API, the module-YAML shape, the oracle interface, and the commands to reproduce every result.
 Nothing here is needed to read the main page — start there for the bottom line.
 
-The whole thing is ~330 lines of pure-logic Python (`module_logic.py`, doctested and mypy-clean)
+The whole thing is ~680 lines of pure-logic Python (`module_logic.py`, doctested and mypy-clean)
 plus a handful of per-context oracle/resolver scripts. The logic core carries **no biological
 data**; only the oracle changes between contexts. That separation is the whole design.
 
@@ -34,6 +34,9 @@ boolean circuit and evaluated against a *context oracle*:
 @dataclass(frozen=True)
 class Atom:                 # a leaf step: a participant gene, truth value from an oracle
     node_id: str; label: str; gene_symbol: Optional[str]; uniprot: Optional[str]
+    representative_gene_symbols: tuple[str, ...]; representative_uniprots: tuple[str, ...]
+    function_ids: tuple[str, ...]   # GO MF ids the step requires
+    family_ids: tuple[str, ...]; domain_ids: tuple[str, ...]  # selectors, for proteome oracles
 
 @dataclass
 class And:                  # satisfied iff every child is satisfied
@@ -42,6 +45,7 @@ class And:                  # satisfied iff every child is satisfied
 @dataclass
 class Or:                   # disjunction over variant branches (>=1 for satisfiability)
     set_id: str; selection: str; children: list["Circuit"]
+    kind: Optional[VariantKind]; kind_inferred: bool  # REALIZER / ROUTE, declared or inferred
 
 Circuit   = Union[Atom, And, Or]
 Predicate = Callable[[Atom], bool]     # the oracle: does this atom hold?
@@ -170,10 +174,12 @@ four `Classification` values:
 | `OVERPREDICTION` | yes | no | encoded yet not realised (regulation off, or the claim is wrong) |
 
 For an `ABDUCTION_TARGET` the engine attaches `gap_candidates` (the absent genes per gap step),
-the layered `gaps` from `gap_report`, and the `GAP_HYPOTHESES` that fit those layers. A
-realizer gap (activity required, no known carrier) gets non-orthologous/unannotated enzyme;
-a route gap (no modelled route present) gets unmodelled alternative route; an unclassified gap
-gets both. Every gap also gets **not cell-autonomous** (intermediate supplied by another
+the layered `gaps` from `gap_report`, and the `GAP_HYPOTHESES` that fit those layers. Only a
+declared layer narrows them: a declared realizer gap (activity required, no known carrier) gets
+non-orthologous/unannotated enzyme; a declared route gap (no modelled route present) gets
+unmodelled alternative route, plus the enzyme one when an alternative is partly present. A
+single-carrier step, an unclassified set or an inferred realizer set gets both, because nothing
+in the structure rules either out. Every gap also gets **not cell-autonomous** (intermediate supplied by another
 cell/organ — the metazoan-only explanation) and the activity assertion itself is wrong. See
 `variant_kind` in `modules/README.md`. The activity column is independent of the
 oracle, so a scored gap is a genuine prediction, not a circular restatement.

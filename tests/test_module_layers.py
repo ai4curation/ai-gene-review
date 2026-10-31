@@ -90,11 +90,14 @@ def test_failed_choice_is_labelled_by_layer(kind, mfs, layer):
     assert gap.candidates == ["X", "Y"]
 
 
-def test_single_carrier_step_is_a_realizer_gap():
+def test_single_carrier_step_is_unclassified_and_keeps_both_readings():
+    """One named gene absent: an undetected carrier and an unmodelled route both fit."""
     doc = {"module": {"id": "m", "parts": [
         {"node": {"id": "s", "annotons": [_annoton("a", "A", "GO:1")]}}]}}
     gap, = gap_report(compile_module(doc), lambda atom: False)
-    assert (gap.path, gap.layer, gap.step) == (("s", "a"), "REALIZER", "a")
+    assert (gap.path, gap.layer, gap.step) == (("s", "a"), "UNCLASSIFIED", "a")
+    result = abduce(compile_module(doc), lambda atom: False, asserted_active=True)
+    assert set(REALIZER_HYPOTHESES + ROUTE_HYPOTHESES) <= set(result.hypotheses)
 
 
 def test_gap_candidates_list_only_absent_atoms():
@@ -110,10 +113,10 @@ def test_gap_candidates_list_only_absent_atoms():
     ("kind", "mfs", "excluded"),
     [
         ("ROUTE", ("GO:1", "GO:2"), REALIZER_HYPOTHESES),
-        (None, ("GO:1", "GO:1"), ROUTE_HYPOTHESES),
+        ("REALIZER", ("GO:1", "GO:1"), ROUTE_HYPOTHESES),
     ],
 )
-def test_hypotheses_follow_the_gap_layer(kind, mfs, excluded):
+def test_declared_layer_narrows_the_hypotheses(kind, mfs, excluded):
     doc = _choice(kind, ("x", "X", mfs[0]), ("y", "Y", mfs[1]))
     result = abduce(compile_module(doc), lambda atom: False, asserted_active=True)
     assert result.classification == "ABDUCTION_TARGET"
@@ -121,10 +124,47 @@ def test_hypotheses_follow_the_gap_layer(kind, mfs, excluded):
     assert set(GENERAL_HYPOTHESES) <= set(result.hypotheses)
 
 
-def test_unclassified_gap_keeps_both_layer_hypotheses():
-    doc = _choice(None, ("x", "X", "GO:1"), ("y", "Y", "GO:2"))
+@pytest.mark.parametrize(
+    "mfs",
+    [
+        ("GO:1", "GO:2"),  # unclassified
+        ("GO:1", "GO:1"),  # inferred REALIZER: says nothing about unmodelled routes
+    ],
+)
+def test_undeclared_layer_keeps_both_hypotheses(mfs):
+    doc = _choice(None, ("x", "X", mfs[0]), ("y", "Y", mfs[1]))
     result = abduce(compile_module(doc), lambda atom: False, asserted_active=True)
     assert set(REALIZER_HYPOTHESES + ROUTE_HYPOTHESES) <= set(result.hypotheses)
+
+
+def test_partly_present_route_keeps_the_carrier_reading():
+    """A route whose complex lacks one subunit may have a divergent subunit, not a missing route."""
+    complex_route = {"id": "complex", "annotons": [
+        _annoton("s1", "S1", "GO:1"), _annoton("s2", "S2", "GO:1")]}
+    single_route = {"id": "single", "annotons": [_annoton("e", "E", "GO:2")]}
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "variant_sets": [
+        {"id": "choice", "variant_kind": "ROUTE", "variants": [complex_route, single_route]}]}}]}}
+    result = abduce(compile_module(doc), lambda atom: atom.gene_symbol == "S1", asserted_active=True)
+    gap, = result.gaps
+    assert (gap.layer, gap.partial, gap.candidates) == ("ROUTE", True, ["E", "S2"])
+    assert set(REALIZER_HYPOTHESES + ROUTE_HYPOTHESES) <= set(result.hypotheses)
+
+
+def test_unknown_declared_kind_fails_fast():
+    with pytest.raises(ValueError, match="unknown variant_kind"):
+        compile_module(_choice("PATHWAY", ("x", "X", "GO:1"), ("y", "Y", "GO:2")))
+
+
+def test_abduce_evaluates_each_atom_once():
+    calls: list[str] = []
+
+    def holds(atom):
+        calls.append(atom.node_id)
+        return False
+
+    doc = _choice(None, ("x", "X", "GO:1"), ("y", "Y", "GO:2"))
+    abduce(compile_module(doc), holds, asserted_active=True)
+    assert sorted(calls) == ["x", "y"]
 
 
 def test_gap_report_descends_into_referenced_modules(tmp_path: Path):
@@ -167,7 +207,7 @@ def test_mitochondrion_import_gap_is_located_inside_the_import_module():
     assert result.gap_steps == ["protein_import"]
     assert result.gap_candidates == {"protein_import": ["TIMM22", "TIMM23"]}
     assert sorted(g.step for g in result.gaps) == sorted(missing)
-    assert all(g.layer == "REALIZER" for g in result.gaps)
+    assert all(g.layer == "UNCLASSIFIED" for g in result.gaps)  # single-carrier steps
     assert all(g.path[:2] == ("protein_import", "mitochondrial_protein_import") for g in result.gaps)
 
 

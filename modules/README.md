@@ -281,7 +281,7 @@ one of the two layers, recorded in the optional `variant_kind`:
 ```yaml
 variant_sets:
   - id: acetoacetate_activation_route
-    axis: CoA-transfer chemistry   # free text, unchanged
+    axis: acetoacetate activation chemistry   # free text
     variant_kind: ROUTE
     selection: EXACTLY_ONE
 ```
@@ -294,12 +294,19 @@ element, with its path from the top-level step, its layer and the absent atoms:
 
 | layer | what failed | reading |
 |---|---|---|
-| `REALIZER` | an atom, or a realizer variant set | the activity is required but no known carrier was found |
+| `REALIZER` | a realizer variant set | the activity is required but no known carrier was found |
 | `ROUTE` | a route variant set | none of the modelled routes is present |
-| `UNCLASSIFIED` | a variant set with no declared or inferable kind | either reading |
+| `UNCLASSIFIED` | a single-carrier step, or a variant set with no declared or inferable kind | either reading |
 
-`abduce` attaches only the hypotheses that fit the layers of the gaps, and its
-`gap_candidates` list only the atoms that do not hold. Compiled atoms also
+A single-carrier step is unclassified because its structure cannot tell an
+undetected carrier from an unmodelled route. `abduce` narrows its hypotheses
+only for declared layers: a declared `REALIZER` gap gets the
+undetected-carrier explanation, a declared `ROUTE` gap the unmodelled-route
+one (plus the undetected-carrier one when an alternative is partly present,
+as in a complex missing one subunit). Unclassified and inferred gaps keep
+both, since inference from the modelled alternatives says nothing about
+routes the module does not model. `gap_candidates` list only the atoms that
+do not hold, and `abduce` evaluates each atom once. Compiled atoms also
 carry the participant's family and domain ids (`family_ids`, `domain_ids`),
 for oracles that scan a proteome with family models. The design is explained
 in `projects/ORGANELLE_LIFECYCLES/two-layer-model.md`.

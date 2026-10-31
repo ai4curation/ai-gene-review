@@ -87,13 +87,24 @@ problems. Each is now addressed:
 | The gap was reported only at the umbrella stage (`protein_import`); the failing steps showed only when the import module was run on its own. | `gap_report` descends through failed steps, `module_ref` nodes and referenced modules, and returns each gap at its innermost failing element with its full path, e.g. `protein_import → mitochondrial_protein_import → tim23_translocation → mitochondrial_protein_import#tim23_channel`. |
 | `gap_candidates` listed every atom under the failed step: 16 import symbols, 14 of them present. | `gap_candidates` lists only atoms that do not hold: `TIMM22`, `TIMM23`. |
 | Atoms carried MF ids and gene identifiers but no family or domain selector, so a proteome oracle had nothing to scan for. | Atoms carry `family_ids` and `domain_ids` from the participant selector. |
-| Variant-set `axis` is free text, and the engine kept only the set id and selection rule, so a gap could not be labelled by layer. | A variant set may declare `variant_kind: REALIZER` or `ROUTE`. When it is omitted, the compiler infers `REALIZER` if every variant carries the same single MF. Each gap is labelled `REALIZER`, `ROUTE` or `UNCLASSIFIED`, and `abduce` attaches only the hypotheses that fit. |
+| Variant-set `axis` is free text, and the engine kept only the set id and selection rule, so a gap could not be labelled by layer. | A variant set may declare `variant_kind: REALIZER` or `ROUTE`. When it is omitted, the compiler infers `REALIZER` if every variant carries the same single MF. Each gap is labelled `REALIZER`, `ROUTE` or `UNCLASSIFIED`, and `abduce` narrows its hypotheses for declared layers. |
 
 Across the 448 variant sets in the 717 modules that do not use `module_ref`,
 the compiler infers 165 as realizer choices. One, the acetoacetate activation
 choice in `ketone_body_oxidation` (SCOT versus AACS, two different
 activities), is declared `ROUTE`. The other 282 stay unclassified until a
 curator declares them; their gaps get both layers' hypotheses, as before.
+
+A step with a single listed carrier, like each step of the import module, is
+reported `UNCLASSIFIED`. Its structure cannot tell an undetected carrier from
+an unmodelled route: for a GTEx expression gap such as G6PC1 in intestinal
+gluconeogenesis, "a route the module does not model" is the live explanation,
+and "a divergent homolog went undetected" barely applies. Inferred labels
+likewise keep both explanations, because inference from the modelled
+alternatives says nothing about routes the module does not model. Only a
+declared `variant_kind` narrows them. So the TIM23 and TIM22 gaps are located
+precisely, but their layer becomes explicit only once those steps are written
+as declared realizer choices, as the kinetoplastid plan item will do.
 
 ## Options
 
