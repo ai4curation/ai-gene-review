@@ -25,8 +25,8 @@ are absent from the review files, which predate them.
 | | rows | ACCEPT | MODIFY | NON_CORE | OVER_ANN | TOO_GEN | REMOVE |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Batch 1 (12 genes) | 71 | 30 | 21 | 11 | 7 | 1 | 1 |
-| Batch 2 (18 genes) | 72 | 48 | 11 | 6 | 4 | 0 | 3 |
-| Total | 143 | 78 | 32 | 17 | 11 | 1 | 4 |
+| Batch 2 (18 genes) | 72 | 48 | 12 | 6 | 4 | 0 | 2 |
+| Total | 143 | 78 | 33 | 17 | 11 | 1 | 3 |
 
 Batch 1 accepted 42% of rows as written, batch 2 **67%**. The likeliest cause
 is literature depth rather than student quality: batch-1 genes (Ebola, RVFV,
@@ -137,8 +137,12 @@ students, so the taxonomy classifies *annotation* failures, not CACAO ones.
   both carry `endocytosis involved in viral entry` from the same paper: what
   is endocytosed is the *host* lectin the ligase destroys, and the entry
   effect is the lectin's. The mirror of the own-process shape above. (The two
-  reviews treated it differently — K5 removed the row, K3 repointed it under
-  curator deference; a reviewer should settle which is right.)
+  reviews first treated it differently — K5 removed the row, K3 repointed it —
+  and the split was resolved in K3's favour on review: K5's own paper shows it
+  drives DC-SIGN endocytosis in the dynasore-washout assay, with the RING-CH
+  mutant as comparator, so both genes now MODIFY to GO:0044077 and both file
+  the CACAO defect. Removing would have dropped a real claim, since neither of
+  K5's remaining rows from that paper carries it.)
 - **Overexpression-only phenotype on a mutant-phenotype code.** YbjN
   `negative regulation of cell growth`, where ~20x overexpression slows
   growth and the deletion grows like wild type. Distinct from
