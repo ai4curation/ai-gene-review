@@ -77,3 +77,43 @@ the assayed construct is the mature full-length protein and residues 200-715
 carry no Pfam match. PF16378 got no edge: it also matches the non-enzymatic
 surface glycan-binding protein BT3329 (Q8A2H6, 25-207, 3.7e-92), so it reads as
 a shared surface module.
+
+## 2026-10-31 review response (ai4c-reviewer, CHANGES_REQUESTED x2)
+
+The reviewer's three blocking items were all real.
+
+1. **Half-applied correction.** The first correction fixed the BP row and the
+   description but left the GO:0030340 row asserting that HA is "the substrate on
+   which the gene is required for growth" and "the physiologically decisive
+   substrate", contradicting the BP row 15 lines below. Both are now rewritten to
+   rest on the two direct assays.
+2. **The all-strains claim.** "All tested hyaluronan-degrading gut Bacteroides
+   strains carry it" is true only of the 17-strain panel in PMID:36523841, which
+   scores *B. eggerthii* a CS-only degrader. PMID:32005816 reports *B. eggerthii*
+   among the best HA utilisers ("B. ovatus and B. eggerthii out performed all
+   other strains") while having "completely lost" BT3328-BT3330. Now attributed
+   to its panel, with the discrepancy recorded as a DISPUTED finding_review.
+3. **Missing history record.** The record scaffolded for the correction session was
+   never committed: `git commit -a` does not stage an untracked file, so the
+   commit titled "Add history record..." contained only a notes reflow. Committed
+   now, with its own record for this review-response session.
+
+Also taken from the reviewer:
+
+- The RB-TnSeq finding now carries `finding_status: DISPUTED` with the two
+  targeted-deletion quotes, per `docs/reference_curation.md`, rather than the
+  conflict living only in prose.
+- `core_functions[1]` no longer says "Hyaluronan-specific" — PMID:32005816
+  reserves that phrase for BT4410, "reinforcing the critical role of BT4410PL33
+  as a hyaluronan specific lyase" — and is described as a second EC descriptor of
+  the same active site. GO:0009279 added to its `locations`.
+- Dropped "its contribution is detectable under competition rather than essential
+  for growth". The paper's competition reading is explicitly speculative ("may be
+  important in a multi-organism, competitive, environment"), and its one in vivo
+  competition result goes the other way: "bt3328 mutants showed increased
+  bacterial numbers, compared with monocolonized mice". The description now states
+  both observations and leaves the explanation to suggested_questions.
+- The chondroitin sulfate catabolic process gap moved from suggested_questions to
+  `proposed_new_terms`, parented on GO:0006027.
+- Removed curation framing ("which is why sequence-based pipelines...", "the first
+  study ... a later one") from the standalone description.
