@@ -28,7 +28,7 @@ style: |
 
 GO annotation review of the 12 genes that rescue stalled and colliding ribosomes in human
 
-<span class="small">AI Gene Review · projects/RIBOSOME_QUALITY_CONTROL · IN_PROGRESS · 2026</span>
+<span class="small">AI Gene Review · projects/RIBOSOME_QUALITY_CONTROL · IN_PROGRESS · 2026-10-05</span>
 
 ---
 
@@ -85,7 +85,7 @@ GO annotation review of the 12 genes that rescue stalled and colliding ribosomes
 ## Status and next steps
 
 - ✅ 13/13 candidate genes have complete reviews (no PENDING rows).
-- ⬜ Build an **RQC module**; six production GO-CAMs already model ZNF598 activation, GIGYF2–EIF4E2 repression, the RQC complex, NEMF CAT-tailing and ANKZF1 tRNA recycling.
-- ⬜ Update the stale "Stub" status line on the project page.
+- ⬜ Build an **RQC module** (#3952).
+- ⬜ Cross-check six production GO-CAMs that already model ZNF598 activation, GIGYF2–EIF4E2 repression, the RQC complex, NEMF CAT-tailing and ANKZF1 tRNA recycling (#3952).
 
 **Read more:** `projects/RIBOSOME_QUALITY_CONTROL.md` · `genes/human/LTN1/` · `projects/PROTEOSTASIS/batch6_selection_notes.md`

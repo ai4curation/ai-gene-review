@@ -37,8 +37,8 @@ Reviewing GO annotations for 20 genes that set how many times a yeast cell can d
 ## Bottom line
 
 - Replicative lifespan in budding yeast depends on **sirtuins and NAD+**, **respiration and ROS defence**, **mRNA fate and translation**, **nutrient signalling** and **proteostasis**.
-- We reviewed **every GO annotation** on **20 genes** across those five areas: **720 rows**, **480 ACCEPT (67%)**.
-- None of the **97 `protein binding`** rows was accepted; wrong electronic terms were **removed** or **redirected** to the gene's actual mechanism.
+- We reviewed **every GO annotation** on **20 genes** across those five areas: **732 existing rows** plus 4 proposed NEW rows, **483 ACCEPT**.
+- None of the **98 `protein binding`** rows was accepted; wrong electronic terms were **removed** and valid conditional terms were moved out of the core set.
 
 ---
 
@@ -80,17 +80,17 @@ Reviewing GO annotations for 20 genes that set how many times a yeast cell can d
 | DBP5 | GO:0015031 protein transport (IEA) | REMOVE |
 | LSM1 | GO:0006397 mRNA processing (IEA) | REMOVE |
 | HAP4 | GO:0003677 DNA binding (IEA); GO:0098803 respiratory chain complex (IMP) | REMOVE |
-| RIM15 | GO:1901992 positive regulation of mitotic cell cycle phase transition | MODIFY → G1 to G0 transition |
+| RIM15 | GO:1901992 positive regulation of mitotic cell cycle phase transition | KEEP_AS_NON_CORE |
 | ATG7 | GO:0006501 C-terminal protein lipidation (6 rows) | MODIFY → Atg8 conjugation to PE |
 
-<span class="small">Plus 97 `protein binding` (GO:0005515) rows across 15 genes: 59 over-annotated, 26 removed, 7 modified, 5 non-core.</span>
+<span class="small">Plus 98 `protein binding` (GO:0005515) rows across 15 genes: 86 removed, 7 modified, 5 over-annotated.</span>
 
 ---
 
 ## Status and next steps
 
 - ✅ **20/20 gene reviews** complete (`genes/yeast/<GENE>/<GENE>-ai-review.yaml`).
-- The phase tallies in the project page (842 rows, 510 ACCEPT) were recorded in Dec 2025 and **differ from the current files**; the counts here come from the YAMLs.
-- Open: 4 UNDECIDED rows (SIR3, HST2 ×2, RAS2); no module or pathway summary yet.
+- The December 2025 notes retain older 842-row/510-ACCEPT tallies; the active page and this deck are recounted from the YAMLs.
+- Open: 5 UNDECIDED rows (SIR3, HST2 ×3, RAS2) and no module or pathway summary yet; tracked in #4027.
 
 **Read more:** `projects/YEAST_REPLICATIVE_AGING.md` · `genes/yeast/`

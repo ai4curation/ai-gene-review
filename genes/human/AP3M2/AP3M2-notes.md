@@ -652,3 +652,11 @@ in PMID:9151686 supports a cytoplasmic coat-adaptor role. The delta redistributi
 experiment is complex-level evidence from nonneuronal cells, not a direct AP3M2 assay.
 The original ARBA condition-set analysis is preserved as a historical, version-limited
 provenance concern and no longer confused with the biological action.
+
+## OpenScientist clathrin report follow-up (2026-10-05)
+
+Attached the focused OpenScientist clathrin/Golgi report as a disputed high-relevance
+source. Its clathrin objection is now visible on all three AP3M2 clathrin-specific rows:
+`GO:0030131` and `GO:0035654` retain AP-3/clathrin interaction evidence only as
+`KEEP_AS_NON_CORE`, while `GO:0035615` remains `UNDECIDED` because the term's exact
+clathrin-mediated endocytic-coupling scope still needs curator review.

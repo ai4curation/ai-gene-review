@@ -152,3 +152,16 @@ All 15 cited PMIDs are cached under publications/. A Falcon deep-research report
 is now available (`AUX1-deep-research-falcon.md` + `..._artifacts/artifact-00.md`).
 Recent cryo-EM structures of AUX1 exist (PDB 9JDR, 9M2H) per the UniProt entry but
 the structure papers were not in the cached set, so not cited.
+
+
+## Polar auxin transport source audit — 2026-10-26
+
+This dated audit supersedes conflicting earlier shorthand. All 23 original annotation payloads, including qualifiers and inherited NEW rows, were retained exactly. Every row was reconsidered against the target biology and cited sources. Actual Falcon and fallback provider attempts failed; the orchestration logs are preserved in `.cache/module-audit-logs/auxin-polar-fetch/provider-publication-results.json`. Existing provider reports, where present, served only as discovery aids. Manual primary-source inspection and normally fetched caches support the decisions below. No provider report was fabricated.
+
+The directly supported core remains auxin influx, with pH-dependent uptake and proton-coupling mechanism separated from a measured integer stoichiometry. PMID:16677815 reports “saturable, pH-dependent uptake of 3H-IAA”. New target structural studies PMID:40378849 and PMID:40579814 were available as abstracts; PMID:40720658 was read in full. The latter states “These results confirm AUX1 as a direct mediator of active auxin influx.” His249 protonation/deprotonation supports a coupling model, not an experimentally determined H+:IAA ratio. Structural constructs and their assays are distinguished from native root physiology; no family-wide stoichiometry is asserted.
+
+Amino-acid transport MF/BP remain UNDECIDED: AAAP membership is not enough to assign a substrate, but positive IAA assays do not exclude an additional amino-acid capacity. The recovered sources did not provide an exact-target amino-acid negative assay. This corrects the prior categorical overpropagation rationale without fabricating an ancestral loss.
+
+The nematode response is a contextual, redundant transport contribution supported independently by PMID:21156858: “We observed no decrease in H. schachtii infectivity in aux1 and lax3 single mutants.” The double and quadruple carrier mutants are affected. The effector-binding experiment in that source concerns LAX3, not AUX1. Golgi residence is retained separately from plasma-membrane transport; root-organelle claims were not narrowed merely to the dominant membrane location. The inherited proton-symport NEW is retained, not newly manufactured by this audit.
+
+Final actions: 8 ACCEPT, 10 KEEP_AS_NON_CORE, 1 MODIFY, 1 NEW, 1 REMOVE, 2 UNDECIDED. This panel contains no negated source rows; there are no manufactured NOT assertions. Exact-row payload proof and focused validation are recorded in `.cache/module-audit-logs/auxin-polar-six-*`. Reciprocal scientific consultation with the parallel annotation reviewer confirmed source-specific localization, integral binding and substrate-assay distinctions.

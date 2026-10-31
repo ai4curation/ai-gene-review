@@ -118,3 +118,12 @@ donor/NAD(P) acceptor oxidoreductase chemistry but not the Ayr1-specific
 acyl-DHAP substrate. The other Ayr1 lipid activity, location and process rows
 remain non-core or over-annotated rather than reverting to the earlier REMOVE
 decisions because the source Ayr1 annotations are experimentally supported.
+
+## Re-review 2026-10-01 (GOA refresh)
+
+- GO:0044550 secondary metabolite biosynthetic process (IEA, GO_REF:0000117 ARBA) is no
+  longer present in the current GOA snapshot and is marked `retired: true`; its ACCEPT
+  review is kept as a historical judgment (the biology still holds; core_functions uses
+  the more specific GO:0030639 polyketide biosynthetic process).
+- The six TreeGrafter (GO_REF:0000118, PTN001211783) rows are unchanged in GOA; prior
+  judgments re-audited and left as is. No PENDING rows.
