@@ -117,7 +117,9 @@ def new_row_reason(label: str, evidence: str, old_reason: str, inherit: bool) ->
 the ND row for the aspect therefore stays (projects/NO_DATA.md). Known in S. pombe (Apc2).'
     """
     kept = [
-        s for s in SENTENCE_END.split(" ".join(old_reason.split()))
+        # On a NEW row the term is no longer a replacement for anything.
+        re.sub(r"\b([Tt])he replacement\b", lambda m: f"{m.group(1)}he term", s)
+        for s in SENTENCE_END.split(" ".join(old_reason.split()))
         if inherit and s and not ND_CLAUSE.search(s)
     ]
     head = (
