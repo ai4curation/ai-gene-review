@@ -232,11 +232,10 @@ a handful of `MARK_AS_OVER_ANNOTATED`.
    exists, no regulation child), so the row is `MODIFY` to the lateral
    `GO:0070328 triglyceride homeostasis` the entry already carries, and the gap
    is filed in `proposed_new_terms`.
-2. **`GO:0032740` could not be settled** — left `UNDECIDED`. IL-17 appears
-   nowhere in the cached abstract, the direction contradicts the study's own
-   conclusion, and the full text is not in this repository. The study did run
-   ELISA cytokine panels on several human immune cell types, so the curator may
-   well have read it. Not challenged.
+2. **`GO:0032740` could not be settled** — left `UNDECIDED`, with a
+   `source_defects` entry asking UniProt to check the sign. See
+   "The IL-17 row" below; this turned out to be the most interesting row in the
+   set.
 3. **The urea-cycle pair is better than it looks** — `KEEP_AS_NON_CORE`, not
    over-annotated. PMID:21757002 maps an FXRE in the human and mouse *NAGS*
    promoters by EMSA, ChIP and reporter assay, and N-acetylglutamate is the
@@ -272,6 +271,54 @@ a handful of `MARK_AS_OVER_ANNOTATED`.
   marked over-annotated: FXR induces ABCB11, ABCC2 and ABCB4 and represses
   SLC10A1, so `involved_in` on a transport term asserts a participation it does
   not have, and there is no regulation child to modify to.
+
+## The IL-17 row
+
+`GO:0032740 positive regulation of interleukin-17 production`, IDA from
+PMID:21242261. The direction is wrong-looking, and the reason it is worth
+writing down is that **the contradiction is internal to UniProt**, not a
+disagreement between us and a curator.
+
+- UniProt's curated `CC FUNCTION` block cites this exact paper for the opposite
+  claim: *"Down-regulates inflammatory cytokine expression in several types of
+  immune cells including macrophages and mononuclear cells (PubMed:21242261)."*
+- The two sibling GOA rows UniProt created from this paper in the **same
+  curation session** (2016-01-19) are both negative: `GO:0032689` type II
+  interferon, `GO:0032720` TNF. One row out of three carries the opposite sign.
+- The paper's own conclusion is that FXR activation *inhibits* proinflammatory
+  cytokine production.
+- IL-17 appears nowhere in its abstract, nowhere in its MeSH terms, and nowhere
+  in the 16-citation deep-research report for this gene.
+
+What could not be checked: the full text. The paper is not in PMC, and Europe
+PMC and BMJ both refuse access. So the one scenario that would make the row
+correct — an IL-17 panel in one of the four assayed human immune populations
+(PBMCs, CD14 monocytes, dendritic cells, IBD lamina propria mononuclear cells)
+showing a genuine positive effect against the anti-inflammatory trend — cannot
+be excluded from outside.
+
+Hence `UNDECIDED` plus a `source_defects` entry: `WRONG_TERM`, resource
+`UNIPROT`, `requested_change: CHECK`, `confidence: SUSPECTED`, proposing
+`GO:0032703 negative regulation of interleukin-17 production` as the expected
+term if IL-17 was measured at all. `just export-source-defects` now carries it
+in the UniProt report. This keeps the action honest — the rule against
+overruling an experimental annotation from an unread full text applies — while
+not losing the finding, which bare `UNDECIDED` would have done.
+
+**On the term class itself.** `GO:0032740` is coarse but not broken, and the
+coarseness is worth knowing about. Its definition covers "any member of the
+interleukin-17 family", which lumps IL-17A/F (Th17 effectors) with IL-17E/IL-25
+(a Th2 alarmin) and IL-17B/C/D, cytokines with substantially different biology.
+And "production" conflates transcription, translation and secretion, so the term
+does not say which step a regulator acts on. For a transcription factor it is
+also a downstream-output term of the kind this repository treats as
+over-annotation when the gene is not itself part of the axis.
+
+The corpus already applies that distinction consistently: of the eight human
+genes carrying `GO:0032740` here, the three reviews that `ACCEPT` it are IL15,
+IL21 and IL23R — genes that *are* IL-17-axis components — while every regulator
+(MYD88, OPA1, PRKCQ, SPHK1) has it as `KEEP_AS_NON_CORE`. So had the direction
+been right, `KEEP_AS_NON_CORE` would have been the action here, not `ACCEPT`.
 
 ## The deep-research run
 
