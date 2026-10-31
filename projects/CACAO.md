@@ -3,7 +3,7 @@ title: "CACAO community annotations review"
 maturity: IN_PROGRESS
 tags: [EVALUATION]
 species: [STRP1, EBOZM, yeast, RVFVZ, BUNYW, BPPRD, PSEAE, BPP22, SHIFL, ECOLI, BPPH2, BPT4, BPT5, BPP1, BPPGK, 9CAUD, HHV8P, SENDZ, SINDV, SFVCP, SALTY, TRYCR, NOSB1, BACSU, LAMBD, human, mouse, rat, ARATH, DROME]
-genes: [pppL, VP35, VP40, GP, WHI3, NSS, N, XV, fabY, sieA, ipaH4.5, clpX, cha, STM3697, doc, acrIIA5, K3, K5, VPS74, APN1, lysK, gag, SWP7, acs, ybjN, D15, "3", "5.4"]
+genes: [pppL, VP35, VP40, GP, WHI3, NSS, N, XV, fabY, sieA, ipaH4.5, clpX, cha, STM3697, doc, acrIIA5, K3, K5, V__P69282, VPS74, APN1, lysK, gag, SWP7, acs, ybjN, D15, P03316, "3", "5.4"]
 ---
 
 # CACAO community annotations review
@@ -329,9 +329,13 @@ Recorded as `source_defects` / `proposed_new_terms`; run
 `just export-source-defects` for the per-resource reports.
 
 - [ ] GO: no symbiont-mediated counterpart of GO:0032480 *interferon
-  production* (proposed in the RVFV NSs review; of the five rows across three
-  viruses that land on the signalling term, the four on RVFV and Bunyamwera
-  NSs need it, while VP35's is covered by existing induction-side terms).
+  production*. Filed once, in the RVFV NSs review, with three cases: RVFV NSs
+  and Bunyamwera NSs, whose four `GO:0039502` rows need it, and Sendai virus
+  V, which needs it with no mis-annotated row at all, since nothing was put on
+  `GO:0039502` there. VP35's fifth row is covered by existing induction-side
+  terms. Sendai V is sensor-directed, so the request now also asks the editors
+  whether a production term should coexist with the sensor-specific terms on
+  one gene.
 - [ ] **This repo, not GO:** `GOCellularLocationEnum` cannot express
   GO:0055036 virion membrane or GO:0019031 viral envelope in
   `core_functions.locations`, which is where a virion surface protein's
@@ -368,9 +372,15 @@ Recorded as `source_defects` / `proposed_new_terms`; run
   2025 row has the wrong qualifier; SWP7 and D15 each have a wrong evidence
   code; Gag's four rows need ISS, not IDA/IMP.
 - [ ] GO: no envelope-spike CC term (Sindbis); no pilus-assembly regulation
-  terms outside type IV (YbjN); no threonine sibling of GO:0106310 (Doc);
-  no host-cell-nucleoid term (phi29 p3); no microsporidian exospore or
-  endospore terms (SWP7); no term for SieA's activity (batch 1).
+  terms outside type IV (YbjN); no host-cell-nucleoid term (phi29 p3); no
+  microsporidian exospore or endospore terms (SWP7); no term for SieA's
+  activity (batch 1).
+- [ ] GO, lower priority: should `GO:0106310` *protein serine kinase activity*
+  carry a usage comment pointing at `GO:0004674`, or be merged into it as
+  `GO:0106311` *protein threonine kinase activity* already was? A serine child
+  with no threonine sibling is what led `GO_REF:0000116` to project the seryl
+  half of EC 2.7.11.1 onto P1 Doc, whose only demonstrated acceptor is a
+  threonine (Doc; the CSNK2A1 review raises the same question).
 
 ## Batch 2: microbes, four CACAO rows — all 18 complete
 

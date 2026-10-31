@@ -194,34 +194,38 @@ the same category error the repository's `NEW`-action guidance warns about (nece
 for an outcome mistaken for performing a step of it), applied to a term for an activity
 that NSs demonstrably does not carry out.
 
-## Why no third case is offered for the proposed production term
+## The third case for the proposed production term, and a correction
 
 The proposed symbiont-mediated interferon-production term (a counterpart of GO:0032480,
-filed in `proposed_new_terms`) rests on two cases, RVFV NSs and Bunyamwera NSs. Both are
-viruses that shut down host RNA polymerase II globally, which is a narrow basis for a
-term meant to be mechanism-agnostic: an ontology editor can reasonably ask whether the
-existing transcription-suppression terms already cover every case that would use it.
+filed in `proposed_new_terms`) originally rested on two cases, RVFV NSs and Bunyamwera
+NSs. Both shut down host RNA polymerase II globally, which is a narrow basis for a term
+meant to be mechanism-agnostic, and an earlier draft of the justification recorded that
+as an unresolved limitation.
 
-A third case of a different mechanistic shape would settle that — a virus whose
-interferon-beta induction block leaves host transcription intact and is not directed at a
-pattern-recognition receptor or an IRF. The nearest candidates were examined and are
-deliberately **not** offered in the justification:
+**The third case was in the same pull request all along.** Sendai virus V (P69282) was
+reviewed in the same batch and proposed the identical term independently. It is
+mechanistically unlike the two NSs proteins: it does not shut down host transcription,
+and every measured readout for it is an interferon-production readout. Its case is also
+the cleanest demonstration of the gap, because no curator mis-annotated anything — the
+absence of a production term shows up as nothing being recorded, rather than as a wrong
+row to correct. The request now names all three cases and the duplicate proposal has been
+removed from the Sendai review, so the term is counted and justified once.
 
-- **KSHV vIRF1** blocks IRF3 activity after IRF3 is activated, by impairing recruitment
-  of the CBP/p300 coactivators to the IRF3 complex and by binding p300 directly.
-- **HSV-1 ICP0** recruits activated IRF-3 and CBP/p300 to nuclear foci, which is proposed
-  to block IFN-beta induction by sequestration.
+**A correction to the earlier reasoning.** That draft declined to offer KSHV vIRF1 and
+HSV-1 ICP0 as candidate third cases on the ground that both act on activated IRF3 and its
+CBP/p300 coactivators, and so plausibly belong to GO:0039548 instead. That test does not
+survive contact with the Sendai case: Sendai V carries GO:0039540 and GO:0039548 by direct
+assay, both accepted in this project and both in its core functions, and it still needs a
+term for its production phenotype. Applying the IRF3 test to vIRF1 and ICP0 while not
+applying it to Sendai V was inconsistent. The honest reason for not citing those two is
+simply that neither paper was read in full for this review.
 
-Both act on activated IRF3 and its coactivators, which on a natural reading is
-suppression of host IRF3 activity — GO:0039548, the term the VP35 review in this same
-project uses. Offering either would invite the same rejection as the influenza A NS1
-example, which was withdrawn from the justification for the parallel reason that NS1 acts
-through RIG-I and TRIM25 and so may already be covered by GO:0039540.
-
-Neither candidate's papers are cached here and neither was checked against full text, so
-these are reasons for not citing them rather than conclusions about those viruses. The
-open question is recorded in `suggested_questions`; answering it needs a literature
-survey rather than one experiment, and it should be answered before the term is filed.
+What that change exposes is a scoping question rather than a weakness: if the production
+term is warranted wherever interferon output is separately measured, it will layer over
+much of the induction branch, coexisting with whichever sensor term describes the
+mechanism. The request puts that question to the ontology editors explicitly, with the
+criterion this review would apply — output measured in its own right, not inferred from a
+mechanism term the gene already carries.
 
 ## References consulted but not cached separately
 
