@@ -115,5 +115,8 @@ has been replicated.
   activity, which a competitive binder satisfies, and HAK5 is a different target reached
   through a kinase. So the GO:0005515 MODIFY to GO:0070320 stays, with a single-source
   caveat added to its reason.
+- The report would also keep the BP row as GO:0043266 regulation of potassium ion transport.
+  The review keeps its MODIFY to GO:0043267 negative regulation: whatever the mechanism, the
+  measured effect of CBL10 on AKT1 currents is a decrease, so the sign is known.
 - Change made: the AKT1-inhibition core function was removed. Single-lab, overexpression-only
   in planta, and peripheral to the Ca2+-sensor role with CIPK24.

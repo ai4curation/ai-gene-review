@@ -684,7 +684,8 @@ expression only; no ggat2 mutant has been described.
   has been independently replicated. For CBL10/AKT1 the in-planta data are overexpression-only,
   so AKT1 inhibition was dropped from CBL10's core functions. For SLAC1/KAT1, slac1
   loss-of-function shows reduced rather than increased inward K+ current (PMID:23126621). Both
-  keep their MODIFY rows with caveats; SLAC1's replacement moves to GO:0070320 (inward rectifier
-  potassium channel inhibitor activity), matching CBL10. Reports are in each gene's
-  `-hypotheses/` folder.
+  keep their MODIFY rows with caveats. SLAC1's KAT1 row uses GO:0070320 (inward rectifier
+  potassium channel inhibitor activity), matching CBL10's AKT1 row; its AKT2 row stays on
+  GO:0019870 because AKT2 also has non-rectifying gating modes (PMID:16316977). Reports are in
+  each gene's `-hypotheses/` folder.
 
