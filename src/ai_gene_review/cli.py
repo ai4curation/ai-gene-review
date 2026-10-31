@@ -1,5 +1,6 @@
 """CLI interface for ai-gene-review."""
 
+import json
 import re
 import shlex
 import shutil
@@ -41,6 +42,7 @@ from ai_gene_review.validation.validator import get_project_root, get_schema_pat
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
 from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
+from ai_gene_review.validation import cleanup_issues
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
@@ -5165,6 +5167,46 @@ def panther_report_stats(
         "| cited accessions resolved to a PANTHER family | "
         f"{len(index):,} / {collected:,} |"
     )
+
+
+@app.command("validation-cleanup-issues")
+def validation_cleanup_issues(
+    tsv: Annotated[Path, typer.Argument(help="validation-all.tsv from `just validate-all`.")],
+    output: Annotated[Path, typer.Option("--output", "-o", help="JSON Lines of {title, body}.")],
+    open_titles: Annotated[
+        Optional[Path],
+        typer.Option(help="File of open validation-cleanup issue titles, one per line."),
+    ] = None,
+    closed_titles: Annotated[
+        Optional[Path],
+        typer.Option(help="File of recently closed cleanup issue titles; not re-filed."),
+    ] = None,
+    max_new: Annotated[int, typer.Option(help="Most issues to create this run.")] = 5,
+    max_open: Annotated[int, typer.Option(help="Cap on the open cleanup backlog.")] = 15,
+    max_warnings: Annotated[
+        int, typer.Option(help="Skip files with more warnings than this.")
+    ] = 10,
+) -> None:
+    """Select mechanical validation warnings and write one cleanup issue per review file.
+
+    The output feeds `gh issue create` in the validation-cleanup-scan workflow; the
+    issues carry the `low_effort` label so the curation scanner's low tier fixes them.
+    """
+    def _titles(path: Optional[Path]) -> set[str]:
+        return set(path.read_text().splitlines()) - {""} if path else set()
+
+    selected = cleanup_issues.select_issues(
+        cleanup_issues.collect_issues(tsv),
+        _titles(open_titles),
+        _titles(closed_titles),
+        max_new,
+        max_open,
+        max_warnings,
+    )
+    with output.open("w", encoding="utf-8") as f:
+        for issue in selected:
+            f.write(json.dumps({"title": issue.title, "body": issue.body}) + "\n")
+    typer.echo(f"{len(selected)} cleanup issue(s) written to {output}")
 
 
 def main():
