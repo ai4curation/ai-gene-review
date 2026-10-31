@@ -376,6 +376,17 @@ slots:
       Use only on very rare occasions: records why this annotation's action is
       deliberately allowed to contradict another row's action under the
       action-consistency rules. See docs/action_consistency.md.
+  nd_case:
+    range: NoDataCaseEnum
+    description: >-
+      For an ND (No biological Data available) row only: why there is no data
+      for this gene product in this aspect. It records which case of the ND
+      taxonomy applies (projects/NO_DATA.md) and determines the expected
+      action. An ND row that follows the evidence-code guideline (no literature
+      on this gene product, in this species, identifies a function in that
+      aspect) is ACCEPT; STALE and ONTOLOGY_BLOCKED are the cases where it is
+      not. TRUE_GAP and EXISTENCE rows should be paired with a BIOLOGY
+      knowledge gap whose dark_aspect matches the ND aspect.
   source_defects:
     range: SourceDefect
     multivalued: true
@@ -1921,6 +1932,7 @@ classes:
       - propagation_review
       - consistency_exception
       - source_defects
+      - nd_case
     rules:
       - preconditions:
           slot_conditions:
@@ -3572,7 +3584,10 @@ enums:
   ActionEnum:
     permissible_values:
       ACCEPT:
-        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene.
+          For an ND (No biological Data available) root-term row, ACCEPT means the annotation follows the evidence-code
+          guideline (no literature on this gene product, in this species, identifies a function in that aspect); it does
+          not make the root term a core function.
       KEEP_AS_NON_CORE:
         description: Keep the existing annotation as-is, but mark it as non-core. For pleiotropic genes, this may be the developmental
           processes, or other processes that are not the core function of the gene.
@@ -4423,6 +4438,46 @@ enums:
           mechanistic hole remains (e.g. an unidentified GEF/GAP, a
           catalysis-independent scaffolding mechanism, an unidentified recruit).
           Easy to miss because the gene looks finished.
+
+  NoDataCaseEnum:
+    description: >-
+      Why an ND (No biological Data available) annotation has no data. See
+      projects/NO_DATA.md for the taxonomy and worked examples. Bookkeeping
+      artifacts (bulk dates, paralog asymmetry) are not a case of their own:
+      re-check them and assign one of these values.
+    permissible_values:
+      STALE:
+        description: >-
+          N1. Literature on this gene product, in this species, now identifies a
+          function in this aspect (published after the ND, or missed by the
+          search). The ND no longer holds: REMOVE it and add the supported term.
+      INFERABLE:
+        description: >-
+          N2. Nothing has been published on this gene product in this species,
+          but the function is clear from well-characterized orthologs (usually
+          carried by IBA/ISO/ISS rows). The ND is correct: ACCEPT. Not a
+          knowledge gap.
+      EXISTENCE:
+        description: >-
+          N3. Whether a functional gene product exists at all is the open
+          question (sORF/uORF/alternative-frame peptides, dubious ORFs,
+          lineage-restricted ORFs). The ND is correct: ACCEPT, with a BIOLOGY
+          knowledge gap that states the existence question.
+      TRUE_GAP:
+        description: >-
+          N4. Nobody knows: no experiment and no defensible inference assigns a
+          term in this aspect. The ND is correct: ACCEPT, with a BIOLOGY
+          knowledge gap whose dark_aspect matches the ND aspect.
+      ONTOLOGY_BLOCKED:
+        description: >-
+          N5. Literature on this gene identifies its role but no fitting GO term
+          was available (typically structural or accessory subunits). MODIFY to
+          the expressible term, or to an NTR with a proposed_new_terms entry.
+      NEGATIVE:
+        description: >-
+          N6. The expected function was tested and ruled out (usually alongside
+          a NOT row). A negative result identifies no function, so the ND is
+          correct: ACCEPT.
 
   KnowledgeGapStatusEnum:
     description: Lifecycle status of a knowledge gap, tracking progress toward resolution.

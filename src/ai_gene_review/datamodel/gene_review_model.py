@@ -884,7 +884,7 @@ class PropagationSourceStatusEnum(str, Enum):
 class ActionEnum(str, Enum):
     ACCEPT = "ACCEPT"
     """
-    Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+    Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene. For an ND (No biological Data available) root-term row, ACCEPT means the annotation follows the evidence-code guideline (no literature on this gene product, in this species, identifies a function in that aspect); it does not make the root term a core function.
     """
     KEEP_AS_NON_CORE = "KEEP_AS_NON_CORE"
     """
@@ -1886,6 +1886,36 @@ class KnowledgeGapAspectEnum(str, Enum):
     RESIDUAL_SUBGAP = "RESIDUAL_SUBGAP"
     """
     The core function is textbook-solid, but one sharp, load-bearing mechanistic hole remains (e.g. an unidentified GEF/GAP, a catalysis-independent scaffolding mechanism, an unidentified recruit). Easy to miss because the gene looks finished.
+    """
+
+
+class NoDataCaseEnum(str, Enum):
+    """
+    Why an ND (No biological Data available) annotation has no data. See projects/NO_DATA.md for the taxonomy and worked examples. Bookkeeping artifacts (bulk dates, paralog asymmetry) are not a case of their own: re-check them and assign one of these values.
+    """
+    STALE = "STALE"
+    """
+    N1. Literature on this gene product, in this species, now identifies a function in this aspect (published after the ND, or missed by the search). The ND no longer holds: REMOVE it and add the supported term.
+    """
+    INFERABLE = "INFERABLE"
+    """
+    N2. Nothing has been published on this gene product in this species, but the function is clear from well-characterized orthologs (usually carried by IBA/ISO/ISS rows). The ND is correct: ACCEPT. Not a knowledge gap.
+    """
+    EXISTENCE = "EXISTENCE"
+    """
+    N3. Whether a functional gene product exists at all is the open question (sORF/uORF/alternative-frame peptides, dubious ORFs, lineage-restricted ORFs). The ND is correct: ACCEPT, with a BIOLOGY knowledge gap that states the existence question.
+    """
+    TRUE_GAP = "TRUE_GAP"
+    """
+    N4. Nobody knows: no experiment and no defensible inference assigns a term in this aspect. The ND is correct: ACCEPT, with a BIOLOGY knowledge gap whose dark_aspect matches the ND aspect.
+    """
+    ONTOLOGY_BLOCKED = "ONTOLOGY_BLOCKED"
+    """
+    N5. Literature on this gene identifies its role but no fitting GO term was available (typically structural or accessory subunits). MODIFY to the expressible term, or to an NTR with a proposed_new_terms entry.
+    """
+    NEGATIVE = "NEGATIVE"
+    """
+    N6. The expected function was tested and ruled out (usually alongside a NOT row). A negative result identifies no function, so the ND is correct: ACCEPT.
     """
 
 
@@ -5370,6 +5400,7 @@ class Review(ConfiguredBaseModel):
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
+    nd_case: Optional[NoDataCaseEnum] = Field(default=None, description="""For an ND (No biological Data available) row only: why there is no data for this gene product in this aspect. It records which case of the ND taxonomy applies (projects/NO_DATA.md) and determines the expected action. An ND row that follows the evidence-code guideline (no literature on this gene product, in this species, identifies a function in that aspect) is ACCEPT; STALE and ONTOLOGY_BLOCKED are the cases where it is not. TRUE_GAP and EXISTENCE rows should be paired with a BIOLOGY knowledge gap whose dark_aspect matches the ND aspect.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
 
 
 class ConsistencyException(ConfiguredBaseModel):
