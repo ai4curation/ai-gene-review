@@ -82,6 +82,9 @@ def clean_engine(src: str) -> str:
     engine = "\n\n".join([as_list, symbol_rule(), module_ref_stand_ins, "\n".join(keep).strip()]) + "\n"
     if "ai_gene_review" in engine:
         raise SystemExit("generated engine still references ai_gene_review; extend clean_engine")
+    # A multi-line import stripped line by line would leave orphaned names that
+    # pass the check above; compiling catches that and any other breakage.
+    compile(engine, "<standalone engine>", "exec")
     return engine
 
 
