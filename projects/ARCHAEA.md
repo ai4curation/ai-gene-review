@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406]
 ---
 
 # Archaea
@@ -22,12 +22,13 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, nine new archaeal reviews are complete (a five-gene pilot and a
-second round of four), METAC mcrA has been revised, and the duplicate
-amoA reviews have been merged. Most archaeal annotation turns out to be
+So far, thirteen new archaeal reviews are complete (a five-gene pilot, a
+second round of four, and the remaining four enzymes of the *M. sedula*
+CO2-fixation cycle), METAC mcrA has been revised, and the duplicate amoA
+reviews have been merged. Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
-thin, old experimental coverage. Ten recurring error patterns are
+thin, old experimental coverage. Fourteen recurring error patterns are
 collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
 largest affect hundreds of archaeal proteins each: InterPro2GO mappings
 that put catalytic activity on non-catalytic proteasome alpha subunits
@@ -151,6 +152,26 @@ experimental rows are correct but come from one or two old papers each,
 and decades of later work never reached GO. So the archaeal deficit is
 not only in poorly studied organisms.
 
+## Round 3 results: the M. sedula 3HP/4HB cycle (October 2026)
+
+With Msed_0709 from the pilot, all five reviewed enzymes of the cycle are
+now done.
+
+| Code | Gene | UniProt | GOA rows | Actions | Main finding |
+|---|---|---|---|---|---|
+| METS5 | Msed_1456 | A4YGR1 | 7 | 2 ACCEPT, 2 MODIFY, 1 MARK_AS_OVER_ANNOTATED, 1 REMOVE, 1 KEEP_AS_NON_CORE, 1 NEW | The IDA pathway row uses the Chloroflexus cycle term GO:0043427; modified to the proposed 3HP/4HB term. Acetyl-CoA synthetase and biosynthesis terms come from the acyl-CoA synthetase family; M. sedula's acetate-CoA synthetase is a different paralog (Msed_1353) |
+| METS5 | Msed_2001 | A4YI89 | 4 | 2 ACCEPT, 1 MODIFY, 1 MARK_AS_OVER_ANNOTATED, 2 NEW | Also the cell's main crotonyl-CoA hydratase (86% of the activity), so it serves both halves of the cycle; fatty acid beta-oxidation comes from the ECHS1-named crotonase subfamily |
+| METS5 | Msed_1424 | A4YGN0 | 2 | 1 ACCEPT, 1 MODIFY, 1 NEW | Purified and identified as the NADPH succinic semialdehyde reductase (PMID:19684143), the step after succinyl-CoA reduction; Swiss-Prot names it for the upstream step (EC 1.2.1.76), which Msed_0709 performs |
+| METS5 | Msed_0406 | A4YDT1 | 11 | 5 KEEP_AS_NON_CORE, 3 MODIFY, 3 REMOVE, 1 NEW | The physiological 4-hydroxybutyrate-CoA ligase, though 4HB is its poorest in-vitro substrate; GO holds only the non-physiological acetate, propionate and butyrate activities, and has no 4HB-CoA ligase term |
+
+Answer to the A1 question: GO records every substrate measured in vitro and
+not the physiological one. The reviews keep the measured activities as
+non-core and propose the missing physiological terms. Across the cycle the
+reviews now propose five GO terms: malonyl-CoA reductase (NADP+),
+succinyl-CoA reductase (NADP+), succinate-semialdehyde reductase (NADPH) and
+4-hydroxybutyrate-CoA ligase activities, and carbon fixation by the
+3HP/4HB cycle.
+
 ## Anchor organisms
 
 Chosen on 2026-10-14 for relevance to DOE missions (bioenergy, critical
@@ -180,14 +201,15 @@ folder name.
 | METS5 | Msed_0709 | A4YEN2 | Malonyl-CoA reductase (NADP) |
 | METS5 | Msed_1456 | A4YGR1 | 3-hydroxypropionyl-CoA synthetase |
 | METS5 | Msed_2001 | A4YI89 | 3-hydroxypropionyl-CoA dehydratase |
-| METS5 | Msed_1424 | A4YGN0 | Succinate-semialdehyde dehydrogenase (acetylating) |
+| METS5 | Msed_1424 | A4YGN0 | Succinic semialdehyde reductase (UniProt: succinate-semialdehyde dehydrogenase (acetylating); see Round 3) |
 | METS5 | Msed_0406 | A4YDT1 | 4-hydroxybutyrate--CoA ligase 1 |
 
 The cycle has no GO-CAM model in the repo, and its enzymes are
 multifunctional. The two 4-hydroxybutyrate--CoA ligase paralogs (Msed_0406
 and Msed_0394) also accept acetate, butyrate and propionate. That makes them
 a test of whether GO records the physiological substrate or every substrate
-seen in vitro. The cycle is a natural first archaeal module.
+seen in vitro. All five are now reviewed (Round 3), so the cycle is ready
+to be built as the first archaeal module.
 
 #### A2. Sulfur oxidation and bioleaching
 

@@ -185,6 +185,53 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
 - **Possible fix:** remove the channel mapping from IPR018229 (it is a
   retinal-binding-site signature shared by pumps, sensors and channels).
 
+## 11. The Chloroflexus 3-hydroxypropionate cycle term on the archaeal 3HP/4HB cycle
+
+- **Pipelines:** UniProt ARBA (GO_REF:0000117), plus one IDA row.
+- **Problem:** GO:0043427 carbon fixation by 3-hydroxypropionate cycle is
+  defined as the pathway "by which two molecules of carbon dioxide are fixed
+  to form glyoxylate", with malyl-CoA cleaved to acetyl-CoA and glyoxylate.
+  That is the Chloroflexus bicycle. The crenarchaeal 3HP/4HB cycle regenerates
+  acetyl-CoA through 4-hydroxybutyrate and has no malyl-CoA lyase.
+- **Scale:** 729 of the 766 GO:0043427 annotations in QuickGO (2026-10-31) are
+  on archaeal proteins, 727 of them from ARBA.
+- **Examples:** METS5/Msed_1456 (IDA and ARBA rows modified); Msed_0709,
+  Msed_2001, Msed_1424 and Msed_0406 use GO:0015977 carbon fixation instead.
+- **Possible fix:** create the proposed term "carbon fixation by
+  3-hydroxypropionate/4-hydroxybutyrate cycle" and repoint the ARBA rules to it.
+
+## 12. A Swiss-Prot name and EC number for the wrong step of a pathway
+
+- **Example:** METS5/Msed_1424 (A4YGN0) is named succinate-semialdehyde
+  dehydrogenase (acetylating), EC 1.2.1.76, with RHEA:26450. The purified
+  native enzyme is the NADPH succinic semialdehyde reductase, the next step
+  (PMID:19684143), and EC 1.2.1.76 belongs to Msed_0709 from the same paper.
+  The protein is a zinc alcohol dehydrogenase (IPR002328), not an aldehyde
+  dehydrogenase.
+- **Risk:** no GO row derives from it yet, but a succinyl-CoA reductase GO
+  term mapped from RHEA:26450 would carry the error into GO.
+
+## 13. EC-to-GO chain-length mismatch
+
+- **Example:** METS5/Msed_0406. EC 6.2.1.2 (butanoate--CoA ligase) maps to
+  GO:0031956 medium-chain fatty acid-CoA ligase activity, which GO defines for
+  C6 to C12; the enzyme acts on C2 to C5 acids. Modified to GO:0031955
+  short-chain fatty acid-CoA ligase activity, including the IDA row.
+
+## 14. TreeGrafter and SubCell terms from the wrong reaction or a weak prediction
+
+- **Synthase for synthetase:** PANTHER node PTN008683229 (PTHR43605) gives
+  Msed_0406, an AMP-forming acyl-CoA ligase, GO:0004321 fatty-acyl-CoA
+  synthase activity (the fatty acid synthase reaction) and fatty acid
+  biosynthesis, in an archaeon whose membrane lipids are isoprenoid ethers.
+- **Membrane from one predicted helix:** Msed_0406 has a UniProt
+  transmembrane prediction (ECO:0000255) inside its N-terminal domain, but was
+  purified from the soluble fraction and has crystal structures. This is a
+  sub-pattern of pattern 4.
+- **Family-founder process terms:** Msed_2001 inherits fatty acid
+  beta-oxidation from the ECHS1-named crotonase subfamily, and Msed_1456
+  acetyl-CoA biosynthesis from the acetyl-CoA synthetase family (pattern 1).
+
 ## Related findings from round 2
 
 - **Under-annotation reaches the best-studied archaeal proteins too.**
