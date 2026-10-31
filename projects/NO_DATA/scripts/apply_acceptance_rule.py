@@ -64,7 +64,7 @@ GENERATED_NEW_ROW = ("proposed during the NO_DATA re-action pass",
 #: Sentences of an earlier MODIFY reason that argue about the ND row or name the
 #: earlier action; they are not carried into the NEW row's reason.
 ND_CLAUSE = re.compile(
-    r"\bND\b|placeholder|superseded|out of date|outdated|replace|\bearlier\b"
+    r"\bND\b|placeholder|superseded|out of date|outdated|\bearlier\b"
     r"|\b(?:MODIFY|REMOVE|KEEP_AS_NON_CORE|TOO_GENERAL|UNDECIDED|MARK_AS_OVER_ANNOTATED)\b",
     re.I,
 )
@@ -199,6 +199,32 @@ def move_dangling_anchors(text: str, original: str) -> str:
     return "".join(lines)
 
 
+def core_function_report(decisions: list[dict], aspect_of) -> list[str]:
+    """ACCEPT decisions whose review's core functions cite a PMID in the same aspect.
+
+    Same-species experimental evidence often sits in ``core_functions`` rather
+    than in the annotation rows, so each such decision needs a reading: a
+    ``note`` records that it was checked (2026-10-31) and why the paper does not
+    make the ND stale.
+    """
+    out = []
+    for d in decisions:
+        if d["decision"] != "ACCEPT" or d.get("note"):
+            continue
+        organism, gene = d["gene"].split("/")
+        doc = yaml.safe_load((ROOT / f"genes/{organism}/{gene}/{gene}-ai-review.yaml").read_text())
+        for cf in doc.get("core_functions") or []:
+            terms = [cf.get(k) for k in ("molecular_function", "contributes_to_molecular_function")]
+            for k in ("directly_involved_in", "locations", "in_complex"):
+                terms += list(cf.get(k) or [])
+            pmids = sorted({str(s.get("reference_id")) for s in cf.get("supported_by") or []
+                            if str(s.get("reference_id", "")).startswith(("PMID:", "DOI:"))})
+            if pmids and any(isinstance(t, dict) and aspect_of(t.get("id")) == d["aspect"] for t in terms):
+                out.append(f"{d['gene']} {d['aspect']}: core function cites {', '.join(pmids)}")
+                break
+    return out
+
+
 def main() -> None:
     from ai_gene_review.validation.action_consistency import go_ancestors
 
@@ -268,7 +294,19 @@ def main() -> None:
             block = o_block[term]
             o_review = o_parsed[term].get("review") or {}
             if d["decision"] == "STALE":
-                out.append("".join(rewrite_review(block, set(), {}, "STALE")))
+                child = " " * (block[0].index("-") + 4)
+                replace: dict[str, list[str]] = {}
+                if d.get("action"):
+                    replace["action"] = [f"{child}action: {d['action']}\n"]
+                if d.get("note"):
+                    earlier = " ".join(str(o_review.get("reason") or "").split())
+                    replace["reason"] = folded("reason", f"{earlier} NO_DATA re-check: {d['note']}".strip(), child)
+                if d.get("quotes"):
+                    quotes = list(o_review.get("supported_by") or []) + d["quotes"]
+                    buf = io.StringIO()
+                    rt.dump({"supported_by": quotes}, buf)
+                    replace["supported_by"] = [f"{child}{ln.rstrip()}\n" for ln in buf.getvalue().splitlines()]
+                out.append("".join(rewrite_review(block, set(), replace, "STALE")))
                 continue
             aspect = d["aspect"]
             ind = block[0].index("-") + 4
@@ -333,6 +371,8 @@ def main() -> None:
         new_text = "".join(lines[:starts[0]]) + "".join(out) + "".join(lines[starts[-1]:])
         path.write_text(move_dangling_anchors(new_text, original))
     print(f"{len(by_file)} reviews processed")
+    for line in core_function_report(decisions, aspect_of):
+        print("CHECK", line)
     for p in problems:
         print("PROBLEM", p)
 

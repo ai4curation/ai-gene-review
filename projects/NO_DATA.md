@@ -77,7 +77,10 @@ A bare protein-binding IPI does not count either: it identifies no function,
 which is why the protein-binding policy removes it. Papers on orthologs do not
 count, however strong. Per CLAUDE.md, an accepted ND needs evidence that the literature was searched:
 cite the deep-research file or the reviewer's own search, not the UniProt
-`PE` line.
+`PE` line. The rows converted by the re-action pass below carry no such source
+yet, because the pass searched nothing, so they do not earn the
+`nd_search_support` credit; the metric therefore counts the searches still to
+be recorded.
 
 `ACCEPT` here endorses the annotation as made. It does not make a root term a
 core function: `core_functions` never cite an ND row, and the function of an
@@ -285,7 +288,8 @@ search, so we cannot meaningfully propose one. These rows should become
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites
    a source for the literature search (e.g. the deep-research file). The pass
-   adds no such citation itself: the credit is for a search a reviewer records.
+   adds no such citation itself: the credit is for a search a reviewer records,
+   so the rows the pass converted score 0 until one is.
    `nd_stale_support` credits a `REMOVE`d or `MODIFY`d ND only for a PMID/DOI
    quote from the literature that makes it stale.
 4. **Upstream (to do).** N1 rows where the MOD has already annotated the aspect
@@ -306,15 +310,15 @@ row's review block, so it can be re-run. The pre-pass rows are read from git,
 so re-running needs those commits to be reachable; after a squash merge it can
 no longer restore them.
 
-- **62 rows keep `REMOVE`/`MODIFY` with `nd_case: STALE`**: the review cites
+- **66 rows keep `REMOVE`/`MODIFY` with `nd_case: STALE`**: the review cites
   literature on this gene product in this species (e.g. yeast/MDM10,
   mouse/Capsl, ARATH/MLO2, DANRE/elna, human/ARL15, mouse/Rtl5).
-- **112 rows changed to `ACCEPT`**: 51 `REMOVE` (mostly "superseded by the
+- **108 rows changed to `ACCEPT`**: 48 `REMOVE` (mostly "superseded by the
   IBA"), 30 `KEEP_AS_NON_CORE`, 25 `MODIFY` to an inferred term, 4
-  `TOO_GENERAL` and 2 `MARK_AS_OVER_ANNOTATED`. Each gets a reason that names
+  `TOO_GENERAL` and 1 `MARK_AS_OVER_ANNOTATED`. Each gets a reason that names
   the earlier action and says the judgement came from the review's own
   content. The earlier summary is kept unless it argued for the replacement
-  (every converted `MODIFY`) or said the ND was obsolete; those 73 summaries
+  (every converted `MODIFY`) or said the ND was obsolete; those 69 summaries
   are replaced with a neutral one. `nd_case` is `TRUE_GAP` where the review has a
   matching `BIOLOGY` gap, `INFERABLE` where a retained inferred row covers the
   aspect, and unset otherwise.
@@ -344,7 +348,14 @@ no longer restore them.
 - **Re-check on 2026-10-31.** Three earlier `ACCEPT` calls were reversed to
   `STALE`: human/ASNSD1 MF (the review refines the human IPIs to PDZ domain
   binding) and yeast/THI11 and THI12 MF (PMID:12777485 shows in yeast that each
-  paralog alone supports HMP formation).
+  paralog alone supports HMP formation). The pass then also read each review's
+  `core_functions`, where same-species evidence often sits: four more rows
+  became `STALE` (yeast/FSH3 MF, activity-based proteomics; yeast/KDX1 BP and
+  CC, Mlp1 at the FKS2 promoter; yeast/PTM1 CC, Golgi immunoisolation), and
+  each of the other 50 accepted rows whose core functions cite a paper has a
+  `note` saying why that paper does not make the ND stale (another species,
+  another aspect, or background). The script reports any accepted row with
+  such a citation and no `note`.
 - **Left alone:** 4 `UNDECIDED` rows, and 4 `NEW` ND rows (SCHPO/tam10 ×2,
   MYCTU/Rv0898c, human/P3R3URF), which need knowledge gaps written by
   reading before the row can go.

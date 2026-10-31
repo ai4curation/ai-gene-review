@@ -39,9 +39,9 @@ Signals are provisional triage, not curated case assignments.
 
 | action | ND rows |
 |---|---:|
-| ACCEPT | 315 |
+| ACCEPT | 311 |
 | MODIFY | 67 |
-| REMOVE | 37 |
+| REMOVE | 41 |
 | UNDECIDED | 4 |
 | NEW | 4 |
 
@@ -50,18 +50,18 @@ Signals are provisional triage, not curated case assignments.
 | nd_case | ND rows |
 |---|---:|
 | None | 267 |
-| INFERABLE | 67 |
-| STALE | 62 |
-| TRUE_GAP | 31 |
+| STALE | 66 |
+| INFERABLE | 65 |
+| TRUE_GAP | 29 |
 
 ## nd_case x action
 
 | nd_case \ action | ACCEPT | MODIFY | NEW | REMOVE | UNDECIDED |
 |---|---:|---:|---:|---:|---:|
-| INFERABLE | 67 | 0 | 0 | 0 | 0 |
+| INFERABLE | 65 | 0 | 0 | 0 | 0 |
 | None | 217 | 39 | 4 | 3 | 4 |
-| STALE | 0 | 28 | 0 | 34 | 0 |
-| TRUE_GAP | 31 | 0 | 0 | 0 | 0 |
+| STALE | 0 | 28 | 0 | 38 | 0 |
+| TRUE_GAP | 29 | 0 | 0 | 0 | 0 |
 
 ## By provisional signal
 
@@ -83,7 +83,7 @@ Signals are provisional triage, not curated case assignments.
 | aspect_empty | 173 | 33 | 0 | 8 | 2 |
 | coexists_with_experimental | 0 | 2 | 0 | 5 | 0 |
 | electronic_or_author_only | 30 | 10 | 0 | 10 | 2 |
-| inferable_by_homology | 99 | 5 | 2 | 12 | 0 |
+| inferable_by_homology | 95 | 5 | 2 | 16 | 0 |
 | short_orf/aspect_empty | 10 | 10 | 2 | 1 | 0 |
 | short_orf/coexists_with_experimental | 0 | 1 | 0 | 0 | 0 |
 | short_orf/electronic_or_author_only | 2 | 4 | 0 | 0 | 0 |
