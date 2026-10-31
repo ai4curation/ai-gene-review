@@ -186,7 +186,9 @@ records. Notes fields may carry review-process context where appropriate.
 Validate sidecars with `just validate-predictions <file> [<file> ...]`. This checks
 the PredictionReview schema, score/category agreement, source paths, publication
 titles, and supporting excerpts, fetching missing PMID caches. CI runs the same
-check for changed sidecars and publishes `prediction-evidence-validation` results.
+check for changed sidecars and publishes `prediction-evidence-validation` results;
+`just validate-predictions-all` checks every prediction file, as the weekly, merge-queue
+and validation-infrastructure CI runs do.
 The recipe requires excerpts for every supporting-source entry, and local-file
 excerpt segments must follow source order without reusing the same passage.
 Missing source text cannot be certified as verified. The check tests citation
@@ -221,6 +223,7 @@ Use these categories for `review.assessment`.
 - Prefer `UNC` over confident correctness when the prediction is absent from curated annotations and only weakly suggested by domains.
 - Once correctness is supported, prefer `CNN` over `COR` when the prediction is already in GOA/UniProt. Agreement with an unsupported existing assertion is not sufficient for either category.
 - Prefer `LSP` over `CNN` when the prediction is correct but materially less specific than the curated annotation.
+- Never cite a `-goa.tsv` file in `supported_by` (a blocking error). Say in `summary` that the term is already in GOA; quote the evidence for or against the term itself.
 - Use `PLI` only when the error is specifically homolog/paralog/subfamily confusion.
 - Use `NPI` for pathway absence, wrong organismal context, wrong compartment/process, or contradiction by curated function.
 - Use `REP` only when the best explanation is a generic high-frequency label rather than a specific biological confusion.

@@ -2,7 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR]
 ---
 
 # Organelles
@@ -145,8 +145,9 @@ plastids come later.
    resolve the sub-compartment (organelle proteomics, whole-organelle
    co-staining, GFP fusion), the row is `ACCEPT` (or `KEEP_AS_NON_CORE` if
    the location is peripheral to the gene's function). It says what the
-   experiment showed. Use `MODIFY` only if the paper itself resolved a
-   sub-compartment and the curator stopped short.
+   experiment showed. If the paper itself resolved a sub-compartment and
+   the curator stopped short, keep the row and add the sub-compartment as a
+   `NEW` row under rules 4-5.
 3. **Synthesis (IBA, IC, IEA, ISS, ISO, ISA, ISM, RCA, ...): a red flag.**
    Examine the row rather than accepting it by default. A propagation or an
    inference has no assay limit to excuse the coarse term. Either the source
@@ -180,9 +181,11 @@ plastids come later.
    of PR #5208.) For the IEA rows, the lasting fix is upstream: a UniProt
    location keyword of `SL-0170` (Mitochondrion matrix) instead of `SL-0173`
    (Mitochondrion) maps to the matrix term directly.
-6. **`core_functions.locations`** should name the sub-compartment where it is
-   known, and may also carry the root if the organelle-level claim is
-   independently supported.
+6. **`core_functions.locations`** should name the sub-compartment where the
+   core activity is shown to happen, and may also carry the root if the
+   organelle-level claim is independently supported. A well-supported
+   sub-compartment location is not by itself where the function acts (MMADHC,
+   2026-10-18).
 
 ## Survey under this policy
 
@@ -251,7 +254,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Work through the root-only mitochondrial synthesis rows (285 in the
       2026-10-20 run), starting with human; apply rules 3 and 4
   - [x] Batch 1: 20 human genes (2026-10-20)
-  - [x] Batch 2: 20 human genes (2026-10-24); 44 human genes remain
+  - [x] Batch 2: 20 human genes (2026-10-24)
+  - [x] Batch 3: 20 human genes (2026-10-25); 24 human genes remain
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Revise to "add, don't substitute" after PR #5208 review: synthesis
       root rows ACCEPT, sub-compartment as a NEW row; validator exemption
@@ -260,12 +264,66 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
       candidates
 - [ ] Look up GO consortium CC annotation guidance on granularity and sidedness
 - [ ] Decide on a validation warning
-- [ ] Add the policy to CLAUDE.md / the annotation-reviewer guidance once it
-      has been tried on a batch of genes
+- [x] Add the policy to CLAUDE.md (2026-10-25, after batches 1 and 2); the
+      annotation-reviewer guidance still to do
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-10-25 (batch 3: 20 human genes)
+
+The next 20 alphabetically (CFAP91 to LDHA). One gained a compartment term,
+DGAT2 at the mitochondria-associated ER membrane; 19 stay at the root. Six
+changed action (CKB, DTYMK, FKBP4, FOXO1, GLUL, KYNU). The brief now carried the batch 2 lessons (check crude
+fractions for ER, note `is_active_in`, YAML pitfalls).
+
+| gene | outcome | evidence |
+|---|---|---|
+| CFAP91 | root; rows stay MARK_AS_OVER_ANNOTATED | only short isoforms were mitochondrial; canonical AAT-1L is diffusely cytoplasmic, endogenous protein axonemal |
+| CKB | root; IEA and 2 ISS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | mouse BAT: ~10% of CKB protease-protected while ER marker CANX is degraded; import needs an internal MTS (PMID:33597756) |
+| CRYAB | root | crude stress-induced fraction without ER marker behind the projection; kept as a stress pool |
+| CYP1B1 | root | fractionation controlled with an ER-only CYP1A1 mouse; inner membrane only by CYP1A1 analogy |
+| DGAT2 | NEW GO:0044233 MAM (IC) | enriched in Percoll-purified MAM with calnexin; DGAT activity in mito+MAM fraction (PMID:19049983); multi-pass ER membrane |
+| DTYMK | root; IBA and HTP MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | MitoCoP and MitoCarta3.0 list it; 1979 rat activity assay cannot tell it from CMPK2 |
+| ERN1 | root; IEA stays MARK_AS_OVER_ANNOTATED | type I ER membrane protein; mouse source paper does not mention IRE1 in its abstract |
+| FANCD2 | root | mouse co-staining and fractionation without ER marker; nucleoid by co-IP alone |
+| FBXO7 | root | CCCP-induced recruitment; surface (PINK1/Parkin) and "into mitochondria" readings disagree |
+| FKBP4 | root; EXP and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED; source defect | PMID:21730050 is about FKBP51; FKBP52 appears only in its introduction and methods (full text checked) |
+| FOXO1 | root; ISS UNDECIDED to KEEP_AS_NON_CORE; source defect | ISS WITH/FROM is FCoR, a Foxo1-binding corepressor, not a homologue; claim stands on PMID:30974111 |
+| GLUL | root; IEA REMOVE to MARK_AS_OVER_ANNOTATED | rests on a curator inference for rat GS from a 1978 purification; consistent with the ISS row |
+| GLYCTK | root | GFP study shows only the truncated isoform 2 mitochondrial; MitoCoP row |
+| HSP90AA1 | root | recruited via Tom70 with IRF3/Bax on infection |
+| IFIH1 | root | crude 10,000 g pellet with MAVS only; kept for the established MAVS platform |
+| IFIT3 | root | curated UniProt mitochondrion (PMID:21813773); soluble TPR adaptor bridging TBK1 to MAVS |
+| IRF3 | root | Tom70-dependent recruitment; fractions without ER marker |
+| KIF5B | root | cargo association via TRAK/Miro; projection from one mouse IDA |
+| KYNU | root; IBA and IDA to UNDECIDED | PAINT node seeded only by KYNU's own 1984 fractionation; UniProt and HPA say cytosol (PTS precedent) |
+| LDHA | root; IBA stays MARK_AS_OVER_ANNOTATED | seed paper: gold-labelled LDHA not seen in mitochondria, unlike LDHB |
+
+What batch 3 showed:
+
+- **Source defects are a distinct class.** FKBP4's experimental row comes
+  from a paper about its paralog, and FOXO1's ISS row takes its WITH/FROM
+  from a binding partner. Both are recorded as `source_defects` for UniProt
+  rather than argued only in the reason.
+- **Proteome datasets rescue minor pools.** DTYMK and CKB went back to
+  non-core on MitoCoP/MitoCarta or a controlled protease-protection assay,
+  as ADO did in batch 2.
+- **A contact site is a compartment too.** DGAT2's evidence names the MAM
+  directly (Percoll MAM fraction with calnexin), so the bold call is
+  GO:0044233 rather than a mitochondrial sub-compartment. STOM did not
+  qualify because it had no MAM marker.
+- **`is_active_in`:** five GO:0005739 rows in batch 3 carry it (CKB ISS;
+  CYP1B1, DTYMK, KYNU and LDHA IBA). CKB's activity is shown in mouse
+  mitochondria, and KYNU's seed measured activity in a mitochondrial
+  fraction whose reality is unresolved. CYP1B1, DTYMK and LDHA have no
+  activity shown in the organelle and join the open-question worklist.
+- **To follow up:** GLYCTK's full-length N-terminus looks like a
+  presequence (arginine-rich, acid-free) that UniProt does not annotate; a
+  targeting predictor would say whether it is a matrix candidate. (FKBP4's
+  nucleus rows, which quoted the same FKBP51 paper, were re-supported in
+  review of PR #5539.)
 
 ## 2026-10-24 (batch 2: 20 human genes)
 
