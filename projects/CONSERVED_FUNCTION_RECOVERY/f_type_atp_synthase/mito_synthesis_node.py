@@ -27,6 +27,16 @@ def kids(n):
     return [ch] if isinstance(ch, dict) else ch
 
 
+def leaf_class(definition):
+    """Classify a leaf by its UniProt definition; one rule for every count in the outputs."""
+    d = definition.lower()
+    if "chloroplast" in d or "plastid" in d:
+        return "plastid"
+    if "mitochondri" in d:
+        return "mitochondrial"
+    return "unspecified"
+
+
 def main():
     root = requests.get(TREE, params={"family": "PTHR15184"}, timeout=300).json()
     root = root["search"]["tree_topology"]["annotation_node"]
@@ -62,22 +72,14 @@ def main():
         acc = next((x.split("=")[1] for x in name.split("|") if x.startswith("UniProtKB=")), "")
         defin = lf.get("definition", "")
         org = lf.get("organism", "")
-        if "chloroplast" in defin.lower() or "plastid" in defin.lower():
-            cls = "plastid"
-        elif "mitochondri" in defin.lower():
-            cls = "mitochondrial"
-        else:
-            cls = "unspecified"
+        cls = leaf_class(defin)
         counts[cls] += 1
         rows.append((lf["persistent_id"], org, acc, lf.get("gene_symbol", ""), defin,
                      lf.get("prop_sf_id", ""), cls, IRD in chain(lf["persistent_id"])))
     # Ancestors of the IRD leaf up to the IBD node, with the class make-up of each clade,
     # and the two children of each, to find the lowest node holding the plastid clade.
     def make_up(n):
-        c = collections.Counter()
-        for m in leaves(n):
-            d = m.get("definition", "").lower()
-            c["plastid" if "chloroplast" in d else "mitochondrial" if "mitochondri" in d else "unspecified"] += 1
+        c = collections.Counter(leaf_class(m.get("definition", "")) for m in leaves(n))
         sf = collections.Counter(m.get("prop_sf_id", "") for m in leaves(n))
         return {"leaves": len(leaves(n)), "classes": dict(c), "subfamilies": dict(sf)}
 
