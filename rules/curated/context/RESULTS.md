@@ -139,6 +139,30 @@ keeping GO:0006511 on the one *Methanoplasma* alpha subunit is not supported. Th
 weakness of the detector: it finds a conjugation relay, not one coupled to proteasomal
 degradation.
 
+**Can a sequence feature separate *Methanoplasma* from the Asgard E2s? No.**
+`ubc_features/ubc_features.py` aligns every archaeal UBC-domain protein (IPR000608) and
+two eukaryotic controls to human UBE2D1 (P51668) and reads the residues at UBE2D1's HPN
+oxyanion-hole motif (H75-P76-N77, the eukaryote-type E2 feature noted in PMID:21547297)
+and active-site Cys85. Output (2026-10-31): `ubc_features/ubc_features.tsv`.
+
+| E2 | Organism | Identity to UBE2D1 | HPN | Cys85 |
+|---|---|---|---|---|
+| P15731 | yeast UBC4 (control) | 0.79 | HPN | C |
+| A0A5B9D7T8 | *Promethearchaeum syntrophicum* | 0.34 | HPN | C |
+| A0ABY6HW80, A0ABY6HXC4 | *Lokiarchaeum ossiferum* | 0.31, 0.35 | HPN | C |
+| A0A0A7LA35 | *Methanoplasma termitum* | 0.26 | HPN | C |
+| A0A133VR40 | MSBL1 archaeon | 0.37 | NPN | C |
+| A0AAJ4UUM9 | *Halosegnis longus* | 0.27 | NPN | C |
+| A0A0P7GUT2 | *Halolamina pelagica* | 0.17 | SDD | P |
+
+The *Methanoplasma* E2 has the eukaryote-type HPN motif and the catalytic cysteine, like
+the Asgard E2s, and its identity to UBE2D1 is only slightly lower. The features do flag
+the *Halolamina* protein as non-catalytic (no cysteine at the active site), but that
+proteome is already not evaluated. Adding the check to the detector would therefore
+change no verdict, so the detector is unchanged. Separating the two kinds of system would
+need a phylogeny of the E1 and E2 against eukaryotic and bacterial defence-system
+homologues; the *Methanoplasma* case affects one protein.
+
 **Haloarchaea with a lone UBC protein.** Nothing published was found. Both are
 compact: *Halosegnis longus* has a UBC protein next to a ubiquitin-like protein
 (Nmn1133_13640/13645) and *Halolamina pelagica* has a UBC protein four loci from a
