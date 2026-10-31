@@ -2999,9 +2999,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**654 of 2,876 genes are complete; 2,222 remain.**
-This checkpoint adds FLNC and FLNB after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-654-2026-10-28-235245-utc) records the evidence and retained uncertainties.
+**656 of 2,876 genes are complete; 2,220 remain.**
+This checkpoint adds FLVCR1 and FLVCR2 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-656-2026-10-31-044130-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3793,8 +3793,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FLNB** — HGNC:3755; [FLNB-associated autosomal dominant filamin related bone disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_543fbfa2-1036-4ef5-94fb-9b7c2d2e3fe6-2025-09-03T160000.000Z) (MONDO:1060173; AD; Definitive).
 - [x] **FLNC** — HGNC:3756; [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_edb5197f-05dc-42a4-a497-fff472985c6b-2025-05-30T160000.000Z) (MONDO:0005021; AD; Definitive); [myofibrillar myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d61672a0-06f2-4df4-845b-57566075fdb1-2023-10-26T010000.000Z) (MONDO:0018943; AD; Definitive).
 - [x] **FLT4** — HGNC:3767; [congenital heart defects, multiple types, 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03e5cbf0-2888-4416-bb0f-85909fc297ce-2023-03-08T170000.000Z) (MONDO:0032913; AD; Definitive); [lymphatic malformation 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_623ef8f5-43ba-43e2-9c2d-fd44e87d6946-2022-12-19T170000.000Z) (MONDO:0007919; AD; Definitive).
-- [ ] **FLVCR1** — HGNC:24682; [FLVCR1-related retinopathy with or without ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e53e1a9-b1b9-4617-be3a-012399a06ef6-2021-08-05T160000.000Z) (MONDO:0100449; AR; Definitive).
-- [ ] **FLVCR2** — HGNC:20105; [Fowler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bab38ab3-42d3-452d-97d1-5859eafa3d1b-2024-10-22T040000.000Z) (MONDO:0009168; AR; Definitive).
+- [x] **FLVCR1** — HGNC:24682; [FLVCR1-related retinopathy with or without ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e53e1a9-b1b9-4617-be3a-012399a06ef6-2021-08-05T160000.000Z) (MONDO:0100449; AR; Definitive).
+- [x] **FLVCR2** — HGNC:20105; [Fowler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bab38ab3-42d3-452d-97d1-5859eafa3d1b-2024-10-22T040000.000Z) (MONDO:0009168; AR; Definitive).
 - [ ] **FMO3** — HGNC:3771; [trimethylaminuria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_18ed3960-c745-46f1-aecc-155e713d6ef5-2020-08-14T184718.502Z) (MONDO:0011182; AR; Definitive).
 - [ ] **FMR1** — HGNC:3775; [fragile X syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e491d278-7123-434c-8de3-46e16afb4037-2019-06-03T100000.000Z) (MONDO:0010383; XL; Definitive).
 - [ ] **FN1** — HGNC:3778; [glomerulopathy with fibronectin deposits 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3ffbb09f-bf2d-4d76-9176-4961ce8862e9-2023-10-04T160000.000Z) (MONDO:0011165; AD; Moderate); [spondylometaphyseal dysplasia, 'corner fracture' type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_33f71829-1d1a-4d34-b2ff-1df63ec5d0b5-2024-03-06T170000.000Z) (MONDO:0008479; AD; Definitive).
