@@ -216,3 +216,22 @@ UniProt/PANTHER placement inspected: `PTHR10218:SF359`. Broad G-alpha family PTH
 ## PR #5582 follow-up, 2026-10-26
 
 Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of GNAI1 was made in PR #5350 while this one (#5582) was
+merging. This review is kept as the base. Ported from #5350:
+
+- PMID:42870023 (Deutsch et al. 2026, Nat Struct Mol Biol), whose smFRET construct is
+  human Gαi1 [PMID:42870023 "previously published minimal cysteine background
+  (C3S;C66A;C214S;C350S;C325A;C351I) of human Gαi1"]. It shows receptor-catalysed GDP
+  release requires opening of the α-helical domain, through a partly open intermediate,
+  with agonist efficacy encoded in the rate of opening. Added as a reference and as
+  support for the G protein activity core function.
+- Five `protein binding` IPI rows whose partner is a Gβ or Gγ subunit (PMID:25733868 ×2,
+  PMID:28514442, PMID:35501348, PMID:40205054) changed from REMOVE to MODIFY →
+  GO:0031683 G-protein beta/gamma-subunit complex binding, per the protein-binding
+  policy (MODIFY when the paper supports a more informative MF).
+
+The two reviews disagree on `GO:0007189` (ISS from an adenylyl-cyclase donor): REMOVE
+in #5350, UNDECIDED here. UNDECIDED is kept; see `projects/REGULATION_SIGN.md`.
