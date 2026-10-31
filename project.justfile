@@ -385,6 +385,14 @@ deep-research-openscientist organism gene_id *args="":
 deep-research-asta organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} asta {{args}}
 
+# Deep research using Claude Code (deep-research-client claude_code provider).
+# Reuses the local Claude Code login; no extra API key.
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-claude-code human TP53
+deep-research-claude-code organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} claude-code {{args}}
+
 # Deep research using Codex via agentapi (yolo mode)
 # Uses cyberian provider with agent_type=codex for autonomous research
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -835,6 +843,9 @@ module-deep-research-cyberian module *args="":
 module-deep-research-openscientist module *args="":
     uv run python scripts/module_deep_research_wrapper.py "{{module}}" openscientist {{args}}
 
+module-deep-research-claude-code module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" claude-code {{args}}
+
 module-deep-research-codex module *args="":
     uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
 
@@ -999,14 +1010,24 @@ validate-predictions +files:
     just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
+# Every prediction review, including the BioReason/GO-GPT sidecars. Run by the
+# weekly/manual CI pass, the merge queue and on validation-infrastructure
+# changes. No --fetch: publication caches are committed, so a missing one is an
+# error to fix, not something a scheduled run should download.
+[group('QC')]
+validate-predictions-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    files=(genes/*/*/*predictions*.yaml)
+    just validate-prediction-terms "${files[@]}"
+    uv run python -m ai_gene_review.validation.prediction_evidence --require-excerpts --report reports/prediction-evidence.json "${files[@]}"
+
 # Schema and term validation for prediction files. In a PredictionReview the only
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;
 # predicted GO terms are deliberately unbound (a model may predict an obsolete or
-# nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
-# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which follow
-# other conventions than validate-predictions' source-evidence check expects.
-# The one evidence rule they share, that a GOA file is never support
-# (supporting_text_goa_file), is checked here too. Same blocking policy as
+# nonexistent id, and the file must record it faithfully). It also rejects GOA
+# files cited as support (supporting_text_goa_file), so it can run on its own;
+# validate-predictions adds the source-evidence check. Same blocking policy as
 # validate-all.
 [group('QC')]
 validate-prediction-terms +files:
@@ -1193,8 +1214,9 @@ validate-tag tag:
 # Validate ONLY the given changed gene-review files (full strict per-gene stack:
 # schema + terms + references + best practices, plus PMID-markdown checks).
 # Term/label-mismatch warnings are advisory; enum/not-found errors block.
-# Deleted files and non gene-review paths are skipped. Used by CI to validate
-# only the genes a PR touched instead of the whole corpus.
+# Source manifests and TSV paths select existing sibling reviews, even if the
+# changed source was deleted. Other paths and deleted reviews are skipped.
+# Used by CI to validate only the genes a PR touched instead of the whole corpus.
 # Example: just validate-changed genes/human/TP53/TP53-ai-review.yaml genes/worm/lrx-1/lrx-1-ai-review.yaml
 [group('QC')]
 validate-changed *files:
@@ -1204,6 +1226,13 @@ validate-changed *files:
     for f in {{files}}; do
         if [[ "$f" == genes/*/*/*-ai-review.yaml && -f "$f" ]]; then
             existing+=("$f")
+        elif [[ "$f" == genes/*/*/*-goa-snapshots.yaml || "$f" == genes/*/*/*.tsv ]]; then
+            # Select before testing source existence: deletion must validate the
+            # surviving review and report any missing mandatory/pinned source.
+            # Do not parse a manifest here; malformed manifests must not evade CI.
+            for review in "$(dirname "$f")"/*-ai-review.yaml; do
+                [[ -f "$review" ]] && existing+=("$review")
+            done
         elif [[ ! -f "$f" ]]; then
             echo "Skipping deleted/missing file: $f"
         else
@@ -1214,6 +1243,11 @@ validate-changed *files:
         echo "No existing changed gene-review files to validate."
         exit 0
     fi
+    unique=()
+    while IFS= read -r review; do
+        unique+=("$review")
+    done < <(printf '%s\n' "${existing[@]}" | sort -u)
+    existing=("${unique[@]}")
     echo "Validating ${#existing[@]} changed gene-review file(s) (strict)..."
     rc=0
     uv run ai-gene-review validate --verbose --terms "${existing[@]}" || rc=1

@@ -12,6 +12,12 @@ genes:
   - kitlga
   - EFNB1
   - MIF
+  - IL34
+  - IL21
+  - IL22
+  - FASLG
+  - CXCL8
+  - C5
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ
@@ -190,7 +196,7 @@ place genes in pathways.
 
 ## 4. Curated modules
 
-All eight modules have family-grounded pan-species ligand steps and pass the schema and module
+All eleven modules have family-grounded pan-species ligand steps and pass the schema and module
 validators.
 
 - **[Netrin signaling](../modules/netrin_signaling.yaml)** (*netrin-activated signaling
@@ -266,6 +272,42 @@ validators.
   `GO:0007259` *cell surface receptor signaling pathway via JAK-STAT* retained alongside it), and
   `GO:0045518` (*interleukin-22 receptor binding*, `NAS`) is modified to `GO:0005125` (*cytokine
   activity*).
+- **[Death receptor / Fas signaling](../modules/death_receptor_apoptotic_signaling.yaml)** (*Fas
+  signaling pathway*, `GO:0036337`, and *extrinsic apoptotic signaling pathway via death domain
+  receptors*, `GO:0008625`). Upgraded all steps from single-gene `ENTITY` selectors to `FAMILY`
+  selectors. Ligand: Fas ligand subfamily (`PANTHER:PTHR11471:SF33`, within `PANTHER:PTHR11471`
+  `TUMOR NECROSIS FACTOR FAMILY MEMBER`, PAINT node `PTN000895255`), *cytokine activity*
+  (`GO:0005125`). Receptor: FAS (`PANTHER:PTHR46874:SF1`); DISC adaptor: FADD
+  (`PANTHER:PTHR15077:SF10`); initiator protease: CASP8 (`PANTHER:PTHR10454`, PAINT node
+  `PTN000047947`).
+  GOA Category A gap resolved in the human `FASLG` gene review: `FASLG` carried `GO:0008625`
+  (*extrinsic apoptotic signaling pathway via death domain receptors*) and `GO:0005125` (*cytokine
+  activity*) but lacked `GO:0036337` (*Fas signaling pathway*), added as `NEW` (`PMID:7826947`).
+- **[Chemokine / Interleukin-8 signaling](../modules/chemokine_signaling.yaml)**
+  (*chemokine-mediated signaling pathway*, `GO:0070098`, and *interleukin-8-mediated signaling
+  pathway*, `GO:0038112`). Upgraded all steps from single-gene `ENTITY` selectors to `FAMILY`
+  selectors. Ligand: Interleukin-8 subfamily (`PANTHER:PTHR12015:SF200`, within `PANTHER:PTHR12015`
+  `SMALL INDUCIBLE CYTOKINE A`, PAINT node `PTN002564680`), *chemokine activity* (`GO:0008009`).
+  Receptor: CXCR2 (`PANTHER:PTHR10489:SF689`, PAINT nodes `PTN001628461` and `PTN002573743`) and
+  CCR5 (`PANTHER:PTHR10489:SF686`, PAINT node `PTN001628461`). In the new human `CXCL8` gene
+  review, `CXCL8` already carries `GO:0038112` (*interleukin-8-mediated signaling pathway*, `IDA`,
+  `PMID:8399143`) and `GO:0008009` (*chemokine activity*) in GOA, both of which are `ACCEPT`ed;
+  broader or sibling signaling rows (`GO:0007165`, `GO:0007186`, `GO:0035556`, `GO:0019722`) are
+  refined via `MODIFY` to `GO:0038112`, `GO:0005125` (*cytokine activity*) is modified to
+  `GO:0008009` (*chemokine activity*), and `GO:0005153` (*interleukin-8 receptor binding*) is
+  `ACCEPT`ed (with `GO:0045236` *CXCR chemokine receptor binding* modified to `GO:0005153`).
+- **[Complement component C5a signaling](../modules/c5a_signaling.yaml)** (*complement component
+  C5a signaling pathway*, `GO:0038178`). Three-step pan-species module. Ligand: Complement C5
+  subfamily (`PANTHER:PTHR11412:SF83`, within `PANTHER:PTHR11412` `MACROGLOBULIN / COMPLEMENT`,
+  PAINT node `PTN002605305`), *G protein-coupled receptor binding* (`GO:0001664`). Receptors: C5AR1
+  (`PANTHER:PTHR24225:SF29`) and C5AR2 (`PANTHER:PTHR24225:SF1`), *complement receptor activity*
+  (`GO:0004875`). GOA Category A gap resolved in the new human `C5` gene review: `C5` lacked
+  `GO:0038178` in GOA (added via `NEW` with `PMID:36806352` and `MODIFY` on `GO:0007166`
+  `PMID:10820279` and `GO:0007186` `PMID:8898085`), `GO:0001664` (*G protein-coupled receptor
+  binding*) is `ACCEPT`ed as the core MF (with `GO:0005102` modified to `GO:0001664`), while the
+  mis-curated `PINC` `TAS` `GO:0008009` (*chemokine activity*, `PMID:10820279`) and InterPro2GO
+  `IEA` `GO:0004866` (*endopeptidase inhibitor activity*, also over-propagated at PAINT node
+  `PTN000892454`) are removed (`REMOVE`, with `source_defects` on `GO:0008009`).
 
 ## 5. Other curator work in this branch
 
@@ -295,8 +337,25 @@ validators.
   (*signal transduction*) to `GO:0140865` (*interleukin-22-mediated signaling pathway*), retain
   `NEW` `GO:0007259` (*cell surface receptor signaling pathway via JAK-STAT*), and modify
   `GO:0045518` (*interleukin-22 receptor binding*) to `GO:0005125` (*cytokine activity*).
+- **FASLG, CXCL8, and C5 gene reviews:** updated `genes/human/FASLG/FASLG-ai-review.yaml` to add
+  `NEW` `GO:0036337` (*Fas signaling pathway*, `PMID:7826947`) alongside existing `GO:0008625`
+  (*extrinsic apoptotic signaling pathway via death domain receptors*), `GO:0005125` (*cytokine
+  activity*), and `GO:0005123` (*death receptor binding*); created the full human `CXCL8` review
+  (`genes/human/CXCL8/CXCL8-ai-review.yaml`), accepting `GO:0038112` (*interleukin-8-mediated
+  signaling pathway*, `IDA`, `PMID:8399143`), `GO:0008009` (*chemokine activity*), and `GO:0005153`
+  (*interleukin-8 receptor binding*), modifying broader/sibling signaling terms (`GO:0007165`,
+  `GO:0007186`, `GO:0035556`, `GO:0019722`) to `GO:0038112`, modifying `GO:0005125` (*cytokine
+  activity*) to `GO:0008009`, modifying `GO:0045236` (*CXCR chemokine receptor binding*) to
+  `GO:0005153`, and removing mis-keyed `GO:0016020` (*membrane*, `PMID:25411203`, with
+  `source_defects`); and created the full human `C5` review (`genes/human/C5/C5-ai-review.yaml`),
+  adding `NEW` `GO:0038178` (*complement component C5a signaling pathway*, `PMID:36806352`),
+  modifying `GO:0007166` (`PMID:10820279`) and `GO:0007186` (`PMID:8898085`) to `GO:0038178`,
+  accepting `GO:0001664` (*G protein-coupled receptor binding*) as core MF (and modifying
+  `GO:0005102` to `GO:0001664`), and removing (`REMOVE`) both the mis-curated `PINC` `TAS`
+  `GO:0008009` (*chemokine activity*, `PMID:10820279`, with `source_defects`) and the InterPro2GO
+  `IEA` `GO:0004866` (*endopeptidase inhibitor activity*).
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
-  `PTHR14356`, `PTHR48488`):
+  `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
     its IBD should use the ligand-activity term; a new `SUBFAMILY_ONLY` assessment of
     *chemorepellent activity* covers the four Slit subfamilies.
@@ -338,6 +397,29 @@ validators.
     `SCOPE_MISMATCH` on `GO:0050728` (*negative regulation of inflammatory response*), plus a
     `FAMILY_WIDE` term assessment recommending `GO:0140865` (*interleukin-22-mediated signaling
     pathway*) at `PTN009232695`.
+  - `interpro/panther/PTHR11471/PTHR11471-review.yaml`: `SOUND` node assessments on
+    `PTN000895255` (`GO:0005125` *cytokine activity*, `GO:0005615` *extracellular space*,
+    `GO:0005886` *plasma membrane*, `GO:0043123` *positive regulation of canonical NF-kappaB
+    signal transduction*), `SCOPE_MISMATCH` on `PTN000895255` `GO:2001238` (*positive regulation
+    of extrinsic apoptotic signaling pathway*) and `PTN007549844` `GO:0010811` (*positive
+    regulation of cell-substrate adhesion*), and `SUBFAMILY_ONLY` term assessments for
+    `GO:0036337` (*Fas signaling pathway* on `PANTHER:PTHR11471:SF33`) and `GO:0008625`
+    (*extrinsic apoptotic signaling pathway via death domain receptors* on `SF33`, `SF35`,
+    `SF36`, `SF41`).
+  - `interpro/panther/PTHR12015/PTHR12015-review.yaml`: `SOUND` node assessments on
+    `PTN002564680` (ELR+ CXC chemokines including CXCL8), `PTN000245709` (CC/XC chemokines),
+    `PTN000428508` (CXCL12), and `PTN008302571` (CXCL9/10/11), `NEEDS_PRUNING` on `PTN008532501`
+    `GO:0048245` (*eosinophil chemotaxis* for `SF103` CCL4), `FAMILY_WIDE` term assessments for
+    `GO:0008009` (*chemokine activity*) and `GO:0070098` (*chemokine-mediated signaling pathway*),
+    and a `SUBFAMILY_ONLY` term assessment for `GO:0038112` (*interleukin-8-mediated signaling
+    pathway* on `PANTHER:PTHR12015:SF200`).
+  - `interpro/panther/PTHR11412/PTHR11412-review.yaml`: `TOO_DEEP` assessment on `PTN000892454`
+    `GO:0004866` (*endopeptidase inhibitor activity*, over-propagated into complement C3/C4/C5),
+    `WRONG_NODE` assessment on `PTN008967461` `GO:0008009` (*chemokine activity*, conflating
+    anaphylatoxins C3a/C5a with chemokines), `SOUND` assessments on `PTN002605305` (C5) and
+    `PTN002605320` (C3), and `SUBFAMILY_ONLY` term assessments for `GO:0038178` (*complement
+    component C5a signaling pathway* on `PANTHER:PTHR11412:SF83`) and `GO:0004866` (*endopeptidase
+    inhibitor activity* on `SF165`, `SF182`, `SF92`, `SF116`, `SF133`, `SF170`, `SF174`).
 - **Corpus count of receptor-specific binding terms** in gene reviews: 820 annotation rows in
   353 reviews (489 ACCEPT, 221 KEEP_AS_NON_CORE, 13 MODIFY), plus 162 core functions. Most common:
   Notch binding (73), integrin binding (67), EGF receptor binding (36), ephrin receptor binding
@@ -352,9 +434,11 @@ validators.
 - Research on GO policy (sections 1 and 2) and the decisions in section 2.
 - Modules: `netrin_signaling`, `slit_robo_signaling`, `kit_signaling` (upgraded),
   `ephrin_receptor_signaling` (upgraded), `mif_signaling`, `il34_signaling`, `il21_signaling`,
-  `il22_signaling`.
-- Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22.
-- Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488.
+  `il22_signaling`, `death_receptor_apoptotic_signaling` (upgraded), `chemokine_signaling`
+  (upgraded), `c5a_signaling`.
+- Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22, FASLG, CXCL8, C5.
+- Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
+  PTHR11471, PTHR12015, PTHR11412.
 - Report page: [report/ligand-gap-report.html](LIGANDS_IN_SIGNALING/report/ligand-gap-report.html)
   (human, fly and fission yeast snapshot; also published as the Ligand gap report artifact).
   It predates the GPCR scope and the other species, so its counts are lower than section 3.
@@ -382,6 +466,11 @@ validators.
    *vascular endothelial growth factor signaling pathway*, which is part_of that response.
    Decide alongside #15477; no edit was made.
 6. Check the fly over-annotation (O) calls against data before acting on them.
+7. **Human `C3` (`genes/human/C3/C3-ai-review.yaml`) follow-up:** update the four UniProt `IDA`
+   `GO:0008009` (*chemokine activity*) rows on human `C3` (`PMID:342601`, `PMID:5778786`,
+   `PMID:37169960`, `PMID:37852260`, which seeded the `WRONG_NODE` PAINT IBD at `PTN008967461` in
+   `PTHR11412`) from `ACCEPT` to `REMOVE` with `source_defects` (`WRONG_TERM` → `GO:0001664`),
+   matching `C5-ai-review.yaml` and `PTHR11412-review.yaml`.
 
 ### How to rerun
 
