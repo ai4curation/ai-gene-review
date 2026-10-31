@@ -37,6 +37,16 @@ ECOLI_DUSB_SITES = {
     "FMN binding 224-225": [224, 225],
 }
 
+# UniProt Q9CE84 features (PIRSR006621): ACT_SITE 111; FMN binding 26-28, 80, 150, 180, 237-238
+YUDI_SITES = {
+    "ACT_SITE proton donor": [111],
+    "FMN binding 26-28": [26, 27, 28],
+    "FMN binding 80": [80],
+    "FMN binding 150": [150],
+    "FMN binding 180": [180],
+    "FMN binding 237-238": [237, 238],
+}
+
 
 def load(acc: str) -> str:
     return str(next(SeqIO.parse(DATA / f"{acc}.fasta", "fasta")).seq)
@@ -104,6 +114,16 @@ def main() -> None:
             q = pmap.get(p)
             qres = target[q - 1] if q else "-"
             parts.append(f"{ecoli[p - 1]}{p}->{qres}{q if q else ''}")
+        print(f"  {label:24s} " + ", ".join(parts))
+    print()
+    print("## 3b. Q9CE84's own PIRSR006621 sites mapped back onto E. coli DusB (P0ABT5)")
+    rmap = {v: k for k, v in pmap.items()}
+    for label, positions in YUDI_SITES.items():
+        parts = []
+        for q in positions:
+            p = rmap.get(q)
+            eres = ecoli[p - 1] if p else "-"
+            parts.append(f"{target[q - 1]}{q}->{eres}{p if p else ''}")
         print(f"  {label:24s} " + ", ".join(parts))
     print()
     print("Alignment Q9CE84 (top) vs E. coli DusB P0ABT5 (bottom):")

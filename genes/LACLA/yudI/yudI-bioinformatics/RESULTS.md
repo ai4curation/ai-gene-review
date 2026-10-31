@@ -69,12 +69,21 @@ UniProt P0ABT5 features mapped through the pairwise alignment:
 The catalytic cysteine and every FMN-binding residue annotated on E. coli DusB are
 conserved, so the protein is an intact Dus enzyme rather than a degenerate paralog.
 
+Mapped the other way, Q9CE84's own PIRSR006621 FMN sites (26-28, 80, 150, 180,
+237-238) all fall on identical E. coli DusB residues. One of them, H180, aligns to
+E. coli H169, which UniProt does not annotate as FMN-binding on P0ABT5. Conversely,
+E. coli 200-202 (Q9CE84 213-215) is not in Q9CE84's PIRSR set. The two annotation
+sets differ only in which residues they list; no listed residue is substituted in
+either direction.
+
 ## Unresolved
 
 - Which uridines the lactococcal enzyme modifies. The DusB1 placement and its being
   the only Dus in the genome suggest it could, like M. capricolum DusB, act on U17
   and U20/U20a, but this has not been tested in any Lactococcus or Streptococcus.
-- Whether DusB1 vs DusB2 placement holds on a proper phylogeny with the Faivre et al.
-  sequence set.
+- Whether the DusB1 placement holds on a proper phylogeny with the Faivre et al.
+  sequence set. Faivre et al. define three DusB subgroups (DusB1, DusB2 and DusB3);
+  this pairwise-identity comparison did not include any DusB3 sequence, so DusB3 is
+  not ruled out.
 - No RB-TnSeq fitness data exist for L. lactis (`just fetch-fitness LACLA yudI`
   found no FEBA organism).

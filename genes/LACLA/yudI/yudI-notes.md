@@ -46,8 +46,9 @@ GO:0002943 tRNA dihydrouridine synthesis. Scored in `yudI-dashboard-predictions-
 - Dus cofactor is FMN [PMID:22123979 "Dihydrouridine synthase (Dus) catalyzes the D
   formation of tRNA through reduction of uracil base with flavin mononucleotide (FMN) as a
   cofactor."], so the GOA FAD-binding row (InterPro2GO) is removed and FMN binding added.
-- Stress links are indirect: KF147 LLKF_2139 (yudI) expression correlates positively with
-  heat-stress robustness [PMID:27973578, table row "LLKF_2139yudItRNA-dihydrouridine
+- Stress links are indirect: within strain KF147 only, LLKF_2139 (yudI) expression
+  correlates positively with heat-stress robustness across culture conditions (Table 2A,
+  per-strain; 8.4 is the slope; absent from the cross-strain Table 3) [PMID:27973578, table row "LLKF_2139yudItRNA-dihydrouridine
   synthasepositive8.4"]; an L. paracasei transposon mutant in LSEI_2533 was a heat-stress
   hit [PMID:29662477].
 
