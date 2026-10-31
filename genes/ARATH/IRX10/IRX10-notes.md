@@ -31,7 +31,19 @@ synthases).
 - Complex: in asparagus, IRX9, IRX10 and IRX14A are all needed for activity in
   planta and form a Golgi complex [PMID:26951434].
 
-## Curation issues found
+## IRX10-specific
+
+- Main secondary-wall gene of the pair (xylem vessels and fibres); irx10 alone gives
+  a mild irregular-xylem phenotype [PMID:18980662].
+- Weak but reproducible in vitro activity [PMID:25139408 "We also find lower but
+  reproducible xylan xylosyltransferase activity with A. thaliana IRX10"]; the cause
+  (missing IRX9/IRX14 partners, folding) is open.
+- Not needed for primary-wall xylan, though it can substitute for IRX10L when
+  expressed in the same cells [PMID:26043357].
+- PANTHER SF370; its PAINT IBAs (PTN000869123) give processes only, no MF, because the
+  xylan synthase IBD sits on a Pentapetalae IRX10L node (see the PTHR11062 review).
+
+## Curation issues found (shared with the paralog)
 
 1. GO:0080116 glucuronoxylan glucuronosyltransferase activity (IMP, PMID:18980662,
    on both genes; IBA on IRX10L from PTN001667002) is the wrong MF. The paper
@@ -45,7 +57,7 @@ synthases).
 3. IRX10L rows citing PMID:25141999 as IMP (cell wall biogenesis) and IDA (Golgi
    apparatus): the paper is in vitro biochemistry only and cites Sogaard et al.
    2012 for topology. Terms kept/refined, evidence-code defects recorded.
-4. UniProt naming: both Q9FZJ1 and Q940Q8 carry the alt names "Glucuronoxylan
+4. UniProt naming (now recorded as UNIPROT source_defects on the GO:0080116 IMP row): both Q9FZJ1 and Q940Q8 carry the alt names "Glucuronoxylan
    glucuronosyltransferase 1/2" (AtGUT1/AtGUT2), and the IRX10 FUNCTION text says
    "especially in the formation of GlcUA side chain of xylans". Both are legacy and
    conflict with the direct biochemistry. Worth reporting to UniProt.
