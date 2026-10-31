@@ -17,3 +17,10 @@
 
 CysD belongs to the sulfate-to-sulfide pathway module. Sulfate import is
 upstream, and cysteine synthesis from sulfide is downstream.
+
+
+## Comparative sulfate-assimilation audit — 2026-10-26
+
+Re-reviewed all four rows. Primary [PMID:16387658] characterizes P. syringae CysD/CysN, not a native KT2440 preparation. Conserved CysD sulfurylase chemistry supports ATP-dependent sulfate activation. The broad catalytic parent is refined, not treated as false. No universal holoenzyme stoichiometry is inferred from the interacting CysD/CysN unit.
+
+Research provenance: parent already attempted Falcon (403) and Perplexity-lite (401 quota) for this batch; no generated report was fabricated. Existing PSEPK OpenScientist reports were used only as discovery. Source caches were fetched normally and never hand-edited. All original annotation payloads were preserved, with a retirement marker only for the existing CysI donor-specific NEW proposal.

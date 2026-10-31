@@ -156,16 +156,26 @@ jobs:
           uv run python -m ai_gene_review.validation.schema_batch --schema src/ai_gene_review/schema/gene_review.yaml
           --target-class GeneReview genes/*/*/*-ai-review.yaml
 
-      - name: Validate changed prediction reviews and source evidence
-        if: steps.changes.outputs.predictions == 'true'
-        run: just validate-predictions ${{ steps.changes.outputs.predictions_files }}
-
-      - name: Validate changed BioReason/GO-GPT prediction files
-        if: steps.changes.outputs.bioreason_predictions == 'true'
-        run: just validate-prediction-terms ${{ steps.changes.outputs.bioreason_predictions_files }}
+      # Everything on the weekly/manual run, in the merge queue (a full pass
+      # takes about a minute) or on a validation-infrastructure change,
+      # otherwise only the changed files.
+      - name: Validate prediction reviews and source evidence
+        id: predictions
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "merge_group" ] || [ "${{ steps.changes.outputs.infra }}" = "true" ]; then
+            echo "::notice::Validating ALL prediction reviews."
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+            just validate-predictions-all
+          elif [ "${{ steps.changes.outputs.predictions }}" = "true" ]; then
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+            just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+          else
+            echo "No prediction-review or validation-infrastructure changes; skipping."
+          fi
 
       - name: Upload prediction evidence validation
-        if: always() && steps.changes.outputs.predictions == 'true'
+        if: always() && steps.predictions.outputs.ran == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: prediction-evidence-validation
@@ -323,23 +333,27 @@ jobs:
         id: scope
         run: echo "run=${{ github.event_name == 'merge_group' || steps.changes.outputs.src == 'true' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.agents == 'true' }}" >> "$GITHUB_OUTPUT"
 
-      # The benchmark tests read frozen inputs with `git cat-file` at two declared
-      # commits: baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit
-      # (reviews/GOA behind the GO-GPT, BioReason sidecar and ProtNLM reports).
+      # The benchmark tests read frozen inputs with `git cat-file` at declared commits:
+      # baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit (reviews/GOA
+      # behind the GO-GPT and BioReason sidecar reports), plus the ProtNLM2
+      # evaluation's own review_snapshot_commit.
       - name: Fetch benchmark baseline and review snapshot commits
         if: github.event_name == 'merge_group' || steps.changes.outputs.src == 'true'
         shell: bash
         run: |
-          policy=projects/BIOREASON_COMPARISON/benchmark-policy.yaml
-          for field in baseline_commit review_snapshot_commit; do
+          fetch_field() {
+            local policy="$1" field="$2" commit
             commit="$(sed -n "s/^${field}: //p" "$policy")"
             if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "Invalid BioReason benchmark ${field}: $commit" >&2
+              echo "Invalid ${field} in ${policy}: $commit" >&2
               exit 1
             fi
             # persist-credentials is disabled; this targeted fetch uses public read access.
             git fetch --no-tags --depth=1 origin "$commit"
-          done
+          }
+          fetch_field projects/BIOREASON_COMPARISON/benchmark-policy.yaml baseline_commit
+          fetch_field projects/BIOREASON_COMPARISON/benchmark-policy.yaml review_snapshot_commit
+          fetch_field projects/PROTNLM_EVALUATION/review-snapshot.yaml review_snapshot_commit
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv

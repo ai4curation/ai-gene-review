@@ -215,6 +215,7 @@ def humanize_provider(value: Optional[str]) -> Optional[str]:
         "bioreason": "BioReason",
         "bioreason-rl": "BioReason RL",
         "bioreason-sft": "BioReason SFT",
+        "claude-code": "Claude Code",
         "codex": "Codex",
         "cyberian": "Cyberian",
         "falcon": "Falcon",
