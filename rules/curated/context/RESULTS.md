@@ -87,9 +87,72 @@ carry a single UBC-domain protein but lack a RING or ubiquitin-like protein
 respectively, so the relay is not satisfied; being below the completeness threshold,
 they are not evaluated and keep the term.
 
+## What the literature says about the unusual cases (2026-10-31)
+
+PubMed searched through NCBI E-utilities; cited papers cached in `publications/`.
+
+**Asgard archaea (*Promethearchaeum syntrophicum*, *Lokiarchaeum ossiferum*).**
+Keeping GO:0006511 here is consistent with the literature. Asgard genomes encode a
+eukaryote-like ubiquitin system, and parts of it have been shown to work.
+- In the cultured *P. syntrophicum* (strain MK-D1), ubiquitin is among the most highly
+  expressed eukaryotic signature genes: "Among eukaryotic signature proteins, 23 fall in
+  the 500 most highly expressed genes, including hypothetical proteins related to actin,
+  gelsolin, ubiquitin" [PMID:31942073].
+- Asgard ESCRT proteins are recruited through ubiquitin: "We provide evidence for the
+  ESCRT-I and ESCRT-II subcomplexes being involved in ubiquitin-directed recruitment of
+  ESCRT-III, as it is in eukaryotes." [PMID:35697693]
+- An Asgard cascade modifies a protein in vitro: "A steadiness box in the Vps23 domain
+  undergoes ubiquitination through an Asgard E1, E2, and RING E3 cascade."
+  [PMID:38358888]
+- None of these papers shows that Asgard proteasomes degrade ubiquitinated substrates,
+  which is what GO:0006511 asserts. The term is plausible for these organisms, not shown.
+
+**The first functional archaeal ubiquitin system is outside this rule's reach.** The
+system reconstructed in vitro came from *Candidatus* Caldiarchaeum subterraneum
+(Aigarchaeota, now Caldarchaeales), where the components sit in operons: "Encoded in
+operons, these components are likely representative of the progenitor apparatus that
+founded the modern eukaryotic ubiquitin modification systems." [PMID:29066714; genome
+in PMID:21169198, which found the system "unprecedented in prokaryotes"]. No
+Caldarchaeales entry in UniProtKB matches IPR000426, so CR-0003 neither keeps nor
+removes anything there.
+
+***Candidatus* Methanoplasma termitum.** No paper describes a ubiquitin system in this
+organism; its genome paper [PMID:25501486] is about energy metabolism and does not
+mention one. Its genome has a compact gene cluster, Mpt1_c00340 to Mpt1_c00370:
+UbaA-type E1 (A0A0A7LC91), ubiquitin-like protein (A0A0A7LA92), UBC E2 (A0A0A7LA35) and
+a JAB/MPN (Mov34) protein (A0A0A7L9W5); the RING protein (A0A0A7LF26, Mpt1_c10590) is
+elsewhere. Two kinds of described system share that make-up:
+- the eukaryote-like operons of Caldiarchaeum and Asgard archaea (above);
+- prokaryotic conjugation systems that are not linked to proteasomal degradation. A
+  bacterial anti-phage defence system comprises "a ubiquitin-like protein,
+  ubiquitin-conjugating enzymes E1 and E2, and a deubiquitinase" and attaches the
+  ubiquitin-like protein to a phage tail protein [PMID:39020165]. Comparative genomics
+  finds prokaryotic Ub-like systems "ranging from those catalyzing cofactor and amino
+  acid biosynthesis, with only adenylating E1-like enzymes and ubiquitin-like proteins
+  (Ubls), to those that are closer to eukaryotic systems by virtue of possessing E2
+  enzymes" [PMID:21547297], including in methanogenic euryarchaea and in
+  *Aciduliprofundum*, a Thermoplasmata relative of *Methanoplasma*.
+
+Which kind the *Methanoplasma* cluster is was not determined (that needs a phylogeny
+of the E1 and E2). In either case nothing links it to the proteasome, so CR-0003
+keeping GO:0006511 on the one *Methanoplasma* alpha subunit is not supported. This is a
+weakness of the detector: it finds a conjugation relay, not one coupled to proteasomal
+degradation.
+
+**Haloarchaea with a lone UBC protein.** Nothing published was found. Both are
+compact: *Halosegnis longus* has a UBC protein next to a ubiquitin-like protein
+(Nmn1133_13640/13645) and *Halolamina pelagica* has a UBC protein four loci from a
+large ThiF-family E1 (SY89_03484/03488). Their SAMP-system E1 (MoeB) and JAB protease
+sit elsewhere. They look like the same kind of small prokaryotic cluster. Neither
+proteome satisfies the relay, and both are below the completeness threshold, so the rule
+keeps the term; that is an artefact of incompleteness, not evidence for ubiquitin.
+
 ## Limits
 
 - Detection is by InterPro signature presence only; a matching domain is not proof
   of a working enzyme.
+- A detected relay is not a proteasome-coupled one. Compact prokaryotic E1-E2-Ubl
+  systems can serve other purposes (for example phage defence, PMID:39020165), so a
+  satisfiable verdict can keep GO:0006511 where it does not belong (*Methanoplasma*).
 - Bacterial and other non-eukaryotic, non-archaeal IPR000426 entries (74) were not
   resolved; run the bulk mode with `--taxon 2` to add bacteria.
