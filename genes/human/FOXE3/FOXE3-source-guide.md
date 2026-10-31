@@ -6,7 +6,7 @@ This guide records the selected primary-source readings, biological scope and so
 
 [HGNC FOXE3](https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:3808) and [reviewed UniProt Q13461](https://www.uniprot.org/uniprotkb/Q13461/entry) establish human FOXE3, also named FKHL12/FREAC8. The displayed protein has 319 residues and no current alternative-products comment. Historical mouse constructs and disease variants are not extra human natural products.
 
-All 42 original QuickGO objects, qualifiers, references, evidence codes and WITH/FROM groups are embedded in the source evidence. The genuine export and seed both retain 42 distinct contexts, with zero source collisions, NOT assertions or extensions. Indices below are zero-based original raw indices; the evidence supplies their actual stored-index joins. The review totals are 12 ACCEPT, 16 KEEP_AS_NON_CORE, 3 UNDECIDED and 11 TOO_GENERAL.
+All 42 original QuickGO objects, qualifiers, references, evidence codes and WITH/FROM groups are embedded in the source evidence. The genuine export and seed both retain 42 distinct contexts, with zero source collisions, NOT assertions or extensions. Indices below are zero-based original raw indices; the evidence supplies their actual stored-index joins. The review totals are 15 ACCEPT, 12 KEEP_AS_NON_CORE, 2 UNDECIDED, 11 TOO_GENERAL and 2 MODIFY.
 
 ## Original publication evidence
 
@@ -37,7 +37,7 @@ Identifier and selected original mouse Methods/Results/Discussion were verified.
 
 **Inspected scope:** Original journal pp1351–1354; browser lines148–177,188–203,279–300,352–360,379–404.
 
-Authenticated original PDF-extracted Methods/Results were read. Mouse forkhead fragments in reticulocyte lysate bind a FOXC1 consensus probe; the corresponding human R90L fragment is reported to bind in data not shown. Human 319-aa lens cDNA, mouse fragment versus full-length scope and uncertain R90L disease causality remain distinct. Direct PDF download failed and figure pixels/supplements were not read.
+Selected original Methods/Results were read through the browser’s extraction of the linked journal PDF, including journal pages 1351–1354. Mouse forkhead fragments in reticulocyte lysate bind a FOXC1 consensus probe; the corresponding human R90L fragment is reported to bind in data not shown. Human 319-aa lens cDNA, mouse fragment versus full-length scope and uncertain R90L disease causality remain distinct. The separate direct binary PDF download failed; original text extraction succeeded. Figure pixels and supplements were not read.
 
 ### PMID:16199865 — Severe defects in proliferation and differentiation of lens cells in Foxe3 null mice.
 
@@ -105,7 +105,7 @@ The three existing PTHR11829 family files were reused byte-for-byte from main af
 
 The specific Pol II TF, regulatory DNA-recognition and Pol II regulation terms are supported by is_a-only ancestry checks. Lens development reaches organ and system development through mixed part_of/is_a paths: the first step is part_of camera-type eye development, and the route to system development additionally passes through visual/sensory-system development. The broad electronic rows are treated as general developmental coverage; lens development is not called their pure subclass.
 
-One core describes GO:0000981 Pol II DNA-binding transcription-factor activity in nucleus/chromatin, with Pol II transcriptional regulation and lens development. It does not assign polymerase catalysis, a stable isolated transcription complex, autophagy or cochaperone chemistry to FOXE3. Three contexts remain UNDECIDED. Source-assay uncertainty also remains explicit in gene-level positive or TOO_GENERAL judgments; independent evidence does not authenticate inaccessible original experiments. There are no NEW annotations or added quotations.
+One core describes GO:0000981 Pol II DNA-binding transcription-factor activity in nucleus/chromatin, with the experimentally supported positive DNAJB1 regulatory response and the lens epithelial proliferation and early fiber-differentiation restraint program. Broad lens development remains accepted in the original rows but is not repeated among the more specific structured core processes. The general molecular-function class remains direction-neutral; the positive process claim is bounded to the tested target response. Two contexts remain UNDECIDED: apoptosis and transcription regulator complex. No stable isolated transcription complex, autophagy or cochaperone chemistry is assigned to FOXE3. Source-assay uncertainty also remains explicit in gene-level positive or TOO_GENERAL judgments; independent evidence does not authenticate inaccessible original experiments. There are no NEW annotations or added quotations.
 
 ## Source acquisition and validation
 
@@ -116,6 +116,17 @@ No FOXE3 provider job was attempted because the shared Falcon/perplexity credent
 [Notes](FOXE3-notes.md) · [Structured source evidence](FOXE3-source-evidence.yaml)
 
 
-## Version 3 consistency scope
+## Context consistency
 
-The six broad DNA-binding/TF/transcription rows at original raw indices 0, 4, 6, 7, 8 and 10 are TOO_GENERAL relative to retained is_a descendants. Raw 0 keeps its broader acts_upstream_of_or_within relation. Raw 40 accepts the shared nuclear-location claim using independent human localization; raw 36 retains the shared lens epithelial proliferation role as non-core. These decisions do not upgrade the original PMID10652278 human assay attribution, PMID25504734 inaccessible assay/supplement or PMID8825632 body to verified. PMID22527307 controls and proliferation-versus-survival limits remain explicit. Original raw 22, 25 and 41 remain undecided.
+The original broad DNA-binding/TF contexts remain TOO_GENERAL relative to retained specific functions. The nuclear-location claim remains accepted with the inaccessible original localization assay explicitly unverified. The revised transcription, lens and cell-cycle decisions below preserve all original sources and qualifiers. Apoptosis and transcription regulator complex remain UNDECIDED because their relevant source assertions are unresolved.
+
+
+## Review clarification and more specific functional scope
+
+The two original transcription-process rows at stored indices 21 and 24 are refined to [GO:0045944](https://www.ebi.ac.uk/QuickGO/term/GO:0045944), based on the selected human DNAJB1 ChIP, reporter and target-RNA Results/Methods in PMID:27218149 (sections 10–11 and 27–29, Figure 3 caption). A transcription factor can contribute work to transcription; this refinement does not rely on restricting the process to catalytic polymerase subunits. GO:0045944 positively_regulates GO:0006366, so that relation is not used as an is_a subsumption argument. The original qualifiers, citations and evidence codes remain intact. GO:0006357 is TOO_GENERAL relative to its actual is_a child GO:0045944; the positive direction comes from the human experiment, not a revised PAINT ancestor claim.
+
+The five original GO:2001111/GO:1902747 rows now represent the developmental core consistently. The mouse loss-of-function observations support lens epithelial maintenance and restraint of premature fiber differentiation, not uniform inhibition of every maturation step. Human growth evidence and congenital phenotypes remain distinct from the mouse perturbations and do not identify a complete set of direct human targets. The cultured human G1-arrest observation in the authentic PMID:22527307 abstract is retained as non-core cell-cycle regulation. Its original full Methods/Results and rescue controls remain uninspected; neither independent proliferation evidence nor a retained annotation upgrades that access status. An exclusively downstream mechanism has not been established and is not used to label the row over-annotated.
+
+[The campaign’s explicit reference-only evidence policy](https://github.com/ai4curation/ai-gene-review/blob/492b68bf224b0554128d6affa21793aaa5a979f1/projects/CLINGEN_MENDELIAN.md#L2980-L2987) requires no new publication quotations and preserves immutable caches. The absence of supporting_text is therefore intentional and does not claim that the verbatim-quote validator checked excerpts. Reference correctness records source-to-claim verification, not whether the normal cache has full text: selected original browser-extracted Methods/Results/captions support PMID:11980846 and PMID:17064680, whereas the exact imported human assay link for the inspected mouse paper PMID:10652278 remains unresolved. The selected original URLs and locators above allow those scopes to be checked. No provider retry was made under the unresolved credentials.
+
+For PMID:8825632, retained official PubMed metadata gives [DOI 10.1006/geno.1995.1266](https://doi.org/10.1006/geno.1995.1266) and PII S0888-7543(85)71266-9. The existing publisher URL retains that identifier; it is not replaced by a guessed year-based PII.
