@@ -11,8 +11,9 @@ autolink_exclude: [ftsZ, FtsZ]
 eukaryotes. Each one composes existing modules by reference
 (`module_ref`), and each is written so it can be evaluated as a
 satisfiability rule when annotating a new genome. The first pilot is
-`MODULE:mitochondrion_lifecycle`, whose only required stage is the new
-eukaryote-wide `MODULE:mitochondrial_protein_import`.
+`MODULE:mitochondrion_lifecycle`, whose required stages are the
+eukaryote-wide `MODULE:mitochondrial_protein_import` and
+`MODULE:mitochondrial_iron_sulfur_cluster_assembly`.
 
 ## Scope
 
@@ -105,9 +106,10 @@ The organelle-by-stage matrix lives in
 - [ ] Add the kinetoplastid Tim17-lineage realizer to the TIM23 and TIM22 activity steps of `mitochondrial_protein_import` (layer 2, see the [two-layer note](ORGANELLE_LIFECYCLES/two-layer-model.md)), after confirming its PANTHER placement; then mark it `RULE_READY`
 - [x] Engine: label gaps by layer (`variant_kind`, declared or inferred), report gaps inside referenced modules, filter gap candidates to absent atoms, and carry family/domain selectors on atoms for proteome oracles
 - [ ] Revisit a realizer list on each annoton (option 2 in the two-layer note) once proteome runs show how often realizer choices are written as variant sets
-- [x] `mitochondrion_lifecycle` umbrella (import required; other stages optional)
+- [x] `mitochondrion_lifecycle` umbrella (import and iron-sulfur cluster assembly required; other stages optional)
 - [ ] Make mitochondrial division rule-ready (Mff / Mdv1-Fis1 / FtsZ variants), then make it required
-- [ ] Mitochondrial iron-sulfur cluster assembly module (universal to mitochondrion-related organelles; start from the Drosophila-only `dmel_iron_sulfur_cluster_assembly`)
+- [x] `mitochondrial_iron_sulfur_cluster_assembly`: core ISC machinery (NFS1-ISD11, ISCU with frataxin, HSCB-mtHsp70, GLRX5), eukaryote-wide and PAINT-grounded; `RULE_CANDIDATE` (Entamoeba uses a NIF system)
+- [ ] Extend the Fe-S module: Entamoeba NIF realizers for the desulfurase and scaffold steps, the ferredoxin electron supply, and the late [4Fe-4S] machinery
 - [ ] Extract a shared receptor-to-Atg8 capture module from `mitophagy`
 - [ ] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus referenced modules; add pexophagy
 - [ ] Lysosome/endosome, ER, Golgi, nucleus, lipid droplet, autophagosome
