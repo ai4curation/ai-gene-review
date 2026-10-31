@@ -15,7 +15,8 @@ applies, and the checks here keep action, case and knowledge gaps consistent:
   the right action for an ND row (it is either correct or stale);
 - ``REMOVE``/``MODIFY`` need ``nd_case`` ``STALE`` or ``ONTOLOGY_BLOCKED``, the two
   cases where literature on the gene exists;
-- ``ACCEPT`` contradicts those two cases;
+- ``ACCEPT`` contradicts those two cases, and contradicts a proposed
+  replacement term;
 - ``NEW`` proposes an ND, which only the contributing group can assert about
   its own search; a ``knowledge_gaps`` entry is the way to record the gap;
 - ``TRUE_GAP`` and ``EXISTENCE`` need a ``BIOLOGY`` knowledge gap whose
@@ -167,6 +168,16 @@ def iter_nd_policy_violations(
                 "nd_case",
                 f"ND row is ACCEPTed but nd_case {nd_case} says literature exists",
                 "Use REMOVE (STALE) or MODIFY (ONTOLOGY_BLOCKED), or correct nd_case",
+            )
+
+        if action == "ACCEPT" and review.get("proposed_replacement_terms"):
+            yield (
+                index,
+                "proposed_replacement_terms",
+                "ND row is ACCEPTed but still proposes replacement terms",
+                "An accepted ND keeps the root term. Put an inferred term on its own NEW "
+                "row, or REMOVE/MODIFY the ND with nd_case STALE if literature on this "
+                "gene product identifies it",
             )
 
         if nd_case in GAP_CASES and not _has_matching_gap(_gaps(data, review), aspect):

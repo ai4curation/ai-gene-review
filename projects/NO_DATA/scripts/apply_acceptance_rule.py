@@ -1,20 +1,26 @@
-"""One-off migration of reviewed ND rows to the NO_DATA acceptance rule.
+"""Apply the NO_DATA acceptance rule to reviewed ND rows from a decision table.
 
 The rule (projects/NO_DATA.md): an ND row is ACCEPT unless literature on this
-gene product, in this species, identifies a function in that aspect. This
-script applies decisions made by reading each non-ACCEPT ND row's review
-reason and the review's other rows in the same aspect (2026-10-24, extended on
-2026-10-26 to reviews merged from main after the first pass):
+gene product, in this species, identifies a function in that aspect. The
+decisions live in ``projects/NO_DATA/data/nd-decisions.yaml``; they were made
+by reading each ND row and the review's other rows in the same aspect, not by
+a new literature search, and the generated text says so.
 
-- rows in ``STALE`` keep their REMOVE/MODIFY and gain ``nd_case: STALE``;
-- every other ND row with action KEEP_AS_NON_CORE, MARK_AS_OVER_ANNOTATED,
-  TOO_GENERAL, REMOVE or MODIFY becomes ACCEPT. Its ``nd_case`` is TRUE_GAP if
-  the review has a matching BIOLOGY knowledge gap, INFERABLE if a retained
-  inferred row covers the aspect, and is left unset otherwise;
-- where a converted MODIFY proposed a term the review does not carry elsewhere,
-  the term moves to a NEW row with the original reasoning (``NEW_ROWS``).
+For each decision the script restores the ND row as it was before the pass
+(``ORIGINAL_COMMITS``), drops any NEW row an earlier run generated, and then
+edits only that row's review block:
 
-UNDECIDED and NEW ND rows are left alone. Run from the repository root:
+- ``STALE``: the earlier REMOVE/MODIFY stays; ``nd_case: STALE`` is added.
+- ``ACCEPT``: action becomes ACCEPT, summary and reason are rewritten,
+  ``proposed_replacement_terms`` is dropped, and so is ``supported_by`` when
+  the earlier action was MODIFY (those quotes supported the replacement term).
+  ``nd_case`` is TRUE_GAP when the review has a BIOLOGY gap for the aspect,
+  INFERABLE when a retained inferred row or a new row covers it, and is left
+  unset otherwise. With ``new_row``, the replacement term becomes its own NEW
+  row carrying the earlier quotes.
+
+Run from the repository root, then ``just backfill-record-sections`` on the
+changed reviews to restore ``record_section`` on restored UniProt quotes:
     uv run python projects/NO_DATA/scripts/apply_acceptance_rule.py
 """
 
@@ -23,124 +29,100 @@ from __future__ import annotations
 import copy
 import io
 import re
+import subprocess
 import textwrap
+from collections import defaultdict
 from pathlib import Path
 
+import yaml
 from ruamel.yaml import YAML
 
 ROOT = Path(__file__).resolve().parents[3]
+DECISIONS = ROOT / "projects" / "NO_DATA" / "data" / "nd-decisions.yaml"
+
+#: The commit before each pass touched a review: the first pass (2026-10-24)
+#: and the follow-up over reviews merged from main (2026-10-26).
+ORIGINAL_COMMITS = ("589ca34bd", "d2fa590c5")
+
 ROOT_ASPECT = {"GO:0003674": "MF", "GO:0008150": "BP", "GO:0005575": "CC"}
+ASPECT_NAME = {"MF": "molecular function", "BP": "biological process", "CC": "cellular component"}
 MATCHING_DARK = {
     "MF": {"MF_DARK", "WHOLLY_DARK"},
     "BP": {"BP_DARK", "WHOLLY_DARK"},
     "CC": {"CC_DARK", "WHOLLY_DARK"},
 }
-CONVERT = {"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL", "REMOVE", "MODIFY"}
 INFERRED = {"IBA", "IBD", "IKR", "IRD", "ISS", "ISO", "ISA", "ISM", "IGC", "RCA", "IEA"}
 RETAINED = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW", "MODIFY", "TOO_GENERAL"}
-
-#: (organism/gene, ND root term) whose ND is stale: literature on this gene product
-#: in this species identifies a function in the aspect.
-STALE = {
-    ("ARATH/MLO2", "GO:0003674"), ("ARATH/PLGG1", "GO:0003674"),
-    ("ARATH/PGLP1", "GO:0008150"), ("ARATH/Q1G3K8", "GO:0003674"),
-    ("DANRE/elna", "GO:0003674"), ("DANRE/elna", "GO:0008150"),
-    ("DANRE/elnb", "GO:0003674"), ("DANRE/elnb", "GO:0008150"),
-    ("DROME/Tcs6", "GO:0008150"), ("DROME/Tcs6", "GO:0005575"),
-    ("DROME/unc79", "GO:0003674"), ("DROME/Kpc1", "GO:0008150"),
-    ("DROME/Kpc2", "GO:0008150"), ("DROME/Mo25", "GO:0003674"),
-    ("DROME/hbt", "GO:0008150"), ("SCHPO/knh4", "GO:0008150"),
-    ("human/AMTN", "GO:0003674"), ("human/ANKRD40", "GO:0003674"),
-    ("human/ANKRD40", "GO:0005575"), ("human/ARL15", "GO:0003674"),
-    ("human/ARL15", "GO:0008150"), ("human/BBS9", "GO:0003674"),
-    ("human/CHCHD10", "GO:0003674"), ("human/HSCB", "GO:0003674"),
-    ("human/AARSD1", "GO:0003674"), ("human/AARSD1", "GO:0008150"),
-    ("human/CCDC40", "GO:0003674"), ("human/TAT", "GO:0005575"),
-    ("mouse/Capsl", "GO:0008150"), ("rat/Aga", "GO:0008150"),
-    ("worm/mut-16", "GO:0003674"), ("worm/nlp-29", "GO:0003674"),
-    ("yeast/APS1", "GO:0003674"), ("yeast/CAF120", "GO:0008150"),
-    ("yeast/DPH1", "GO:0003674"), ("yeast/DPH2", "GO:0003674"),
-    ("yeast/MAD2", "GO:0003674"), ("yeast/MAD3", "GO:0003674"),
-    ("yeast/MDM10", "GO:0003674"), ("yeast/MNN14", "GO:0003674"),
-    ("yeast/MPS3", "GO:0003674"), ("yeast/NIP7", "GO:0003674"),
-    ("yeast/SMX2", "GO:0003674"), ("yeast/SMX2", "GO:0008150"),
-    ("yeast/TDA5", "GO:0003674"), ("yeast/THI5", "GO:0003674"),
-    ("yeast/ZDS2", "GO:0003674"), ("yeast/CRT10", "GO:0005575"),
-    ("yeast/SPH1", "GO:0003674"),
-    # Reviews merged from main after the first pass (2026-10-26).
-    ("mouse/Rtl1", "GO:0003674"), ("mouse/Rtl3", "GO:0008150"),
-    ("mouse/Rtl4", "GO:0005575"), ("mouse/Rtl5", "GO:0005575"),
-    ("mouse/Rtl5", "GO:0008150"), ("mouse/Rtl6", "GO:0005575"),
-    ("mouse/Rtl6", "GO:0008150"), ("mouse/Rtl9", "GO:0005575"),
-    ("mouse/Rtl9", "GO:0008150"), ("mouse/Scgb3a2", "GO:0008150"),
-}
-
-#: (organism/gene, ND root term) -> (evidence_type, qualifier) for a NEW row carrying
-#: the term a converted MODIFY proposed, where the review has no row for it.
-NEW_ROWS = {
-    ("DROME/CG14662", "GO:0005575"): ("ISM", "located_in"),
-    ("DROME/CG31606", "GO:0005575"): ("ISM", "located_in"),
-    ("DROME/CG42763", "GO:0005575"): ("ISM", "located_in"),
-    ("DROME/Tango5", "GO:0003674"): ("ISS", "enables"),
-    ("DROME/Vps50", "GO:0003674"): ("ISS", "contributes_to"),
-    ("DROME/Vps51", "GO:0003674"): ("ISS", "contributes_to"),
-    ("DROME/Vps53", "GO:0003674"): ("ISS", "contributes_to"),
-    ("SCHPO/apc2", "GO:0003674"): ("ISS", "enables"),
-    ("SCHPO/vms1", "GO:0003674"): ("ISS", "enables"),
-    ("mouse/Sdhaf2__Q8C6I2", "GO:0003674"): ("ISO", "enables"),
-    ("mouse/Shld2", "GO:0003674"): ("ISS", "enables"),
-    ("mouse/Rtl8c", "GO:0003674"): ("ISO", "enables"),
-    ("mouse/Rtl8c", "GO:0008150"): ("ISO", "involved_in"),
-}
-
-ACCEPT_REASON = (
-    "No literature on this gene product, in this species, identifies a function in "
-    "this aspect, so the ND follows the evidence-code guideline and is accepted "
-    "(projects/NO_DATA.md). Inferred rows in the same aspect do not make it stale."
-)
+#: Summaries of NEW rows this script generates (current and earlier wording).
+GENERATED_NEW_ROW = ("proposed during the NO_DATA re-action pass",
+                     "moved from the ND row it was proposed to replace")
+ND_CLAUSE = re.compile(r"\bND\b|placeholder|superseded|out of date|outdated|replace", re.I)
 
 
-def gaps(doc) -> list:
-    """BIOLOGY knowledge gaps on the gene and its core functions."""
-    found = list(doc.get("knowledge_gaps") or [])
-    for cf in doc.get("core_functions") or []:
-        found += list(cf.get("knowledge_gaps") or [])
-    return [g for g in found if "BIOLOGY" in (g.get("gap_kind") or [])]
+def summary_text(aspect: str) -> str:
+    return (
+        f"Root {ASPECT_NAME[aspect]} ND annotation: when it was made, no "
+        f"{ASPECT_NAME[aspect]} had been curated for this gene product from literature."
+    )
 
 
-DROPPED = ("proposed_replacement_terms", "supported_by")
+def reason_text(aspect: str, earlier: str, note: str | None, new_label: str | None) -> str:
+    parts = [
+        "ACCEPT under the ND acceptance rule (projects/NO_DATA.md). The evidence this "
+        f"review cites for the {ASPECT_NAME[aspect]} is inferred (from orthologs, family "
+        "membership or sequence features) or comes from other species; none of it is "
+        "literature on this gene product in this species. This was judged from the "
+        "review's own content during the NO_DATA re-action pass, not from a new "
+        f"literature search. Earlier action: {earlier}."
+    ]
+    if note:
+        parts.append(note)
+    if new_label:
+        parts.append(f"The term the earlier MODIFY proposed, {new_label}, is kept as its own NEW row.")
+    return " ".join(parts)
 
 
-def rewrite_review(
-    block: list[str], reason: str | None, nd_case: str | None, aliases: str = ""
-):
-    """Edit one annotation's text lines in place, leaving all other lines untouched.
+def new_row_reason(label: str, evidence: str, old_reason: str) -> str:
+    kept = [
+        s for s in re.split(r"(?<=[.!?])\s+", " ".join(old_reason.split()))
+        if s and not ND_CLAUSE.search(s)
+    ]
+    head = (
+        f"{label[:1].upper()}{label[1:]} is inferred for this gene product ({evidence}), not shown for it "
+        "experimentally; the ND row for the aspect therefore stays (projects/NO_DATA.md)."
+    )
+    return " ".join([head, *kept])
 
-    With ``reason`` set: action becomes ACCEPT, the reason is replaced and the
-    replacement-term and support sections are dropped, unless they define a YAML
-    anchor that ``aliases`` (the file text) refers to elsewhere. ``nd_case`` is added at the
-    end of the review. Works for either list indentation used in the repo
-    (``- term:`` or ``  - term:``). Returns None if the block has no review.
-    """
+
+def folded(key: str, text: str, pad: str) -> list[str]:
+    width = 88 - len(pad) - 2
+    return [f"{pad}{key}: >-\n"] + [
+        f"{pad}  {w}\n" for w in textwrap.wrap(text, width, break_on_hyphens=False)
+    ]
+
+
+def blocks(text: str, rt: YAML) -> tuple[list[str], list[int], list]:
+    """Lines, the start line of each annotation plus the list end, and the annotations."""
+    doc = rt.load(text)
+    anns = doc["existing_annotations"]
+    keys = list(doc.keys())
+    after = keys[keys.index("existing_annotations") + 1:]
+    lines = text.splitlines(keepends=True)
+    end = doc.lc.key(after[0])[0] if after else len(lines)
+    return lines, [a.lc.line for a in anns] + [end], list(anns)
+
+
+def rewrite_review(block: list[str], drop: set[str], replace: dict[str, list[str]],
+                   nd_case: str | None) -> list[str]:
+    """Edit one annotation's review section; all other lines are left untouched."""
     ind = block[0].index("-") + 2
     pad, child = " " * ind, " " * (ind + 2)
     key = re.compile(rf"^{child}([a-z_]+):")
-    start = next((i for i, line in enumerate(block) if line.startswith(f"{pad}review:")), None)
-    if start is None:
-        return None
-    end = next(
-        (i for i in range(start + 1, len(block))
-         if block[i].strip() and len(block[i]) - len(block[i].lstrip()) <= ind),
-        len(block),
-    )
+    start = next(i for i, line in enumerate(block) if line.startswith(f"{pad}review:"))
+    end = next((i for i in range(start + 1, len(block))
+                if block[i].strip() and len(block[i]) - len(block[i].lstrip()) <= ind), len(block))
     while end > start + 1 and not block[end - 1].strip():
         end -= 1
-
-    def folded(text: str) -> list[str]:
-        return [f"{child}reason: >-\n"] + [
-            f"{child}  {w}\n" for w in textwrap.wrap(text, 84 - ind, break_on_hyphens=False)
-        ]
-
     sections: list[tuple[str, list[str]]] = []
     for line in block[start + 1:end]:
         m = key.match(line)
@@ -148,25 +130,40 @@ def rewrite_review(
             sections.append((m.group(1), [line]))
         else:
             sections[-1][1].append(line)
-    out: list[tuple[str, list[str]]] = []
+    out = []
     for name, body in sections:
-        if name == "nd_case":
+        if name in drop or name == "nd_case":
             continue
-        if reason is not None:
-            if name in DROPPED:
-                anchors = re.findall(r"&(id\d+)", "".join(body))
-                if not any(f"*{a}" in aliases for a in anchors):
-                    continue
-            if name == "action":
-                body = [f"{child}action: ACCEPT\n"]
-            elif name == "reason":
-                body = folded(reason)
-        out.append((name, body))
-    if reason is not None and not any(n == "reason" for n, _ in out):
-        out.append(("reason", folded(reason)))
+        out.append(replace.pop(name, body))
+    out.extend(replace.values())
     if nd_case:
-        out.append(("nd_case", [f"{child}nd_case: {nd_case}\n"]))
-    return block[:start + 1] + [line for _, body in out for line in body] + block[end:]
+        out.append([f"{child}nd_case: {nd_case}\n"])
+    return block[:start + 1] + [line for body in out for line in body] + block[end:]
+
+
+def move_dangling_anchors(text: str, original: str) -> str:
+    """Re-home anchors defined in dropped sections at their first remaining alias.
+
+    The anchored node is copied from ``original`` and placed, re-indented, where
+    the first alias stood, so the rest of the file still resolves.
+    """
+    defined = set(re.findall(r"&(id\d+)", text))
+    dangling = sorted({a for a in re.findall(r"\*(id\d+)", text) if a not in defined})
+    lines = text.splitlines(keepends=True)
+    o_lines = original.splitlines(keepends=True)
+    for anchor in dangling:
+        i = next(k for k, ln in enumerate(o_lines) if re.search(rf"- &{anchor}\s*$", ln))
+        base = len(o_lines[i]) - len(o_lines[i].lstrip()) + 2
+        body = []
+        for ln in o_lines[i + 1:]:
+            if ln.strip() and len(ln) - len(ln.lstrip()) < base:
+                break
+            body.append(ln[base:])
+        j = next(k for k, ln in enumerate(lines) if re.search(rf"\*{anchor}\s*$", ln))
+        ind = len(lines[j]) - len(lines[j].lstrip()) + 2
+        lines[j] = lines[j].replace(f"*{anchor}", f"&{anchor}")
+        lines[j + 1:j + 1] = [(" " * ind + b) if b.strip() else b for b in body]
+    return "".join(lines)
 
 
 def main() -> None:
@@ -174,120 +171,131 @@ def main() -> None:
 
     ancestors = go_ancestors()
 
-    def aspect(term_id: str) -> str | None:
+    def aspect_of(term_id: str) -> str | None:
         if term_id in ROOT_ASPECT:
             return ROOT_ASPECT[term_id]
         anc = ancestors(term_id)
         return next((v for k, v in ROOT_ASPECT.items() if k in anc), None)
 
-    yaml = YAML()
-    yaml.preserve_quotes = True
-    yaml.width = 88
-    yaml.indent(mapping=2, sequence=2, offset=0)
-    changed, skipped = [], []
-    for path in sorted(ROOT.glob("genes/*/*/*-ai-review.yaml")):
-        text = path.read_text()
-        if "evidence_type: ND" not in text:
+    decisions = yaml.safe_load(DECISIONS.read_text())["decisions"]
+    by_file: dict[str, dict[str, dict]] = defaultdict(dict)
+    for d in decisions:
+        organism, gene = d["gene"].split("/")
+        by_file[f"genes/{organism}/{gene}/{gene}-ai-review.yaml"][d["term"]] = d
+
+    rt = YAML()
+    rt.indent(mapping=2, sequence=2, offset=0)
+    rt.width = 88
+    problems = []
+    for rel, terms in sorted(by_file.items()):
+        path = ROOT / rel
+        original = None
+        for commit in ORIGINAL_COMMITS:
+            shown = subprocess.run(["git", "show", f"{commit}:{rel}"], capture_output=True,
+                                   text=True, cwd=ROOT)
+            doc = yaml.safe_load(shown.stdout) if shown.returncode == 0 else None
+            if doc and any(
+                a.get("evidence_type") == "ND" and a["term"]["id"] in terms
+                and (a.get("review") or {}).get("action") == terms[a["term"]["id"]]["earlier_action"]
+                for a in doc.get("existing_annotations") or []
+            ):
+                original = shown.stdout
+                break
+        if original is None:
+            problems.append(f"{rel}: no pre-pass version found")
             continue
-        key = f"{path.parent.parent.name}/{path.parent.name}"
-        doc = yaml.load(text)
-        anns = doc.get("existing_annotations") or []
-        lines = text.splitlines(keepends=True)
-        keys = list(doc.keys())
-        after = keys[keys.index("existing_annotations") + 1:]
-        list_end = doc.lc.key(after[0])[0] if after else len(lines)
-        starts = [a.lc.line for a in anns] + [list_end]
-        edits: dict[int, list] = {}
+
+        text = path.read_text()
+        lines, starts, anns = blocks(text, rt)
+        o_lines, o_starts, o_anns = blocks(original, rt)
+        o_block = {
+            a["term"]["id"]: o_lines[o_starts[i]:o_starts[i + 1]]
+            for i, a in enumerate(o_anns) if a.get("evidence_type") == "ND"
+        }
+        o_parsed = {a["term"]["id"]: a for a in yaml.safe_load(original)["existing_annotations"]
+                    if a.get("evidence_type") == "ND"}
+        parsed = yaml.safe_load(text)
+        doc_gaps = list(parsed.get("knowledge_gaps") or [])
+        for cf in parsed.get("core_functions") or []:
+            doc_gaps += list(cf.get("knowledge_gaps") or [])
+        biology = [g for g in doc_gaps if "BIOLOGY" in (g.get("gap_kind") or [])]
+
+        out: list[str] = []
         additions = []
         for i, ann in enumerate(anns):
-            if ann.get("evidence_type") != "ND":
+            block = lines[starts[i]:starts[i + 1]]
+            summary = str((ann.get("review") or {}).get("summary") or "")
+            if any(m in summary for m in GENERATED_NEW_ROW):
                 continue
-            review = ann.get("review") or {}
-            action = review.get("action")
             term = ann["term"]["id"]
-            asp = ROOT_ASPECT.get(term)
-            if action not in CONVERT:
+            d = terms.get(term) if ann.get("evidence_type") == "ND" else None
+            if d is None:
+                out.append("".join(block))
                 continue
-            if (key, term) in STALE:
-                if review.get("nd_case") != "STALE":
-                    block = rewrite_review(lines[starts[i]:starts[i + 1]], None, "STALE")
-                    if block is None:
-                        skipped.append(f"{key} {term}: unexpected layout")
-                    else:
-                        edits[i] = block
+            block = o_block[term]
+            o_review = o_parsed[term].get("review") or {}
+            if d["decision"] == "STALE":
+                out.append("".join(rewrite_review(block, set(), {}, "STALE")))
                 continue
+            aspect = d["aspect"]
+            ind = block[0].index("-") + 4
+            child = " " * ind
+            drop = {"proposed_replacement_terms"}
+            if d["earlier_action"] == "MODIFY":
+                drop.add("supported_by")
             new_rows = []
-            if (key, term) in NEW_ROWS:
-                evidence, qualifier = NEW_ROWS[(key, term)]
-                for rep in review.get("proposed_replacement_terms") or []:
+            if "new_row" in d:
+                for rep in o_review.get("proposed_replacement_terms") or []:
                     row = {
                         "term": {"id": rep["id"], "label": rep.get("label")},
-                        "evidence_type": evidence,
-                        "original_reference_id": (review.get("supported_by") or [{}])[0].get(
-                            "reference_id", "GO_REF:0000024"
-                        ),
-                        "qualifier": qualifier,
+                        "evidence_type": d["new_row"]["evidence_type"],
+                        "original_reference_id": (o_review.get("supported_by") or [{}])[0].get(
+                            "reference_id", "GO_REF:0000024"),
+                        "qualifier": d["new_row"]["qualifier"],
                         "review": {
-                            "summary": f"Inferred {rep.get('label')}, moved from the ND row "
-                            "it was proposed to replace.",
+                            "summary": f"Inferred {rep.get('label')} for this gene product, "
+                                       "proposed during the NO_DATA re-action pass.",
                             "action": "NEW",
-                            "reason": str(review.get("reason")),
+                            "reason": new_row_reason(rep.get("label"), d["new_row"]["evidence_type"],
+                                                     str(o_review.get("reason") or "")),
                         },
                     }
-                    if review.get("supported_by"):
-                        row["review"]["supported_by"] = copy.deepcopy(
-                            list(review["supported_by"])
-                        )
+                    if o_review.get("supported_by"):
+                        row["review"]["supported_by"] = copy.deepcopy(o_review["supported_by"])
                     new_rows.append(row)
-            others = [
-                b for b in anns
-                if b is not ann and b.get("evidence_type") != "ND"
-                and (b.get("term") or {}).get("id")
-                and aspect(b["term"]["id"]) == asp
-            ]
-            if any(g.get("dark_aspect") in MATCHING_DARK[asp] for g in gaps(doc)):
+            others = [b for b in parsed["existing_annotations"]
+                      if b.get("evidence_type") != "ND" and (b.get("term") or {}).get("id")
+                      and not any(m in str((b.get("review") or {}).get("summary")) for m in GENERATED_NEW_ROW)
+                      and aspect_of(b["term"]["id"]) == aspect]
+            if any(g.get("dark_aspect") in MATCHING_DARK[aspect] for g in biology):
                 nd_case = "TRUE_GAP"
-            elif new_rows or any(
-                b.get("evidence_type") in INFERRED
-                and (b.get("review") or {}).get("action") in RETAINED
-                for b in others
-            ):
+            elif new_rows or any(b.get("evidence_type") in INFERRED
+                                 and (b.get("review") or {}).get("action") in RETAINED
+                                 for b in others):
                 nd_case = "INFERABLE"
             else:
                 nd_case = None
-            old = " ".join(str(review.get("reason") or "no reason given").split())
-            reason = f"{ACCEPT_REASON} Earlier action {action}, because: {old}"
-            if new_rows:
-                reason += " The proposed term now sits on its own NEW row."
-            new_block = rewrite_review(
-                lines[starts[i]:starts[i + 1]], reason, nd_case, text
-            )
-            if new_block is None:
-                skipped.append(f"{key} {term}: unexpected layout")
-                continue
-            edits[i] = new_block
+            labels = ", ".join(r["term"]["label"] for r in new_rows) or None
+            replace = {
+                "summary": folded("summary", summary_text(aspect), child),
+                "action": [f"{child}action: ACCEPT\n"],
+                "reason": folded("reason", reason_text(aspect, d["earlier_action"],
+                                                       d.get("note"), labels), child),
+            }
+            out.append("".join(rewrite_review(block, drop, replace, nd_case)))
             additions.extend(new_rows)
-        if not edits and not additions:
-            continue
-        out = []
-        starts_pad = lines[starts[0]].index("-")
-        for i in range(len(anns)):
-            chunk = lines[starts[i]:starts[i + 1]]
-            if i in edits:
-                out.append("".join(edits[i]))
-            else:
-                out.append("".join(chunk))
-            if i == len(anns) - 1 and additions:
-                buf = io.StringIO()
-                yaml.indent(mapping=2, sequence=starts_pad + 2, offset=starts_pad)
-                yaml.dump(additions, buf)
-                out.append("".join(line.rstrip() + "\n" for line in buf.getvalue().splitlines()))
-        text = "".join(lines[:starts[0]]) + "".join(out) + "".join(lines[list_end:])
-        path.write_text(text)
-        changed.append(key)
-    print("\n".join(changed))
-    print(f"{len(changed)} files changed")
-    print("\n".join(f"SKIPPED {s}" for s in skipped))
+        if additions:
+            buf = io.StringIO()
+            seq_pad = lines[starts[0]].index("-")
+            rt.indent(mapping=2, sequence=seq_pad + 2, offset=seq_pad)
+            rt.dump(additions, buf)
+            rt.indent(mapping=2, sequence=2, offset=0)
+            out.append("".join(line.rstrip() + "\n" for line in buf.getvalue().splitlines()))
+        new_text = "".join(lines[:starts[0]]) + "".join(out) + "".join(lines[starts[-1]:])
+        path.write_text(move_dangling_anchors(new_text, original))
+    print(f"{len(by_file)} reviews processed")
+    for p in problems:
+        print("PROBLEM", p)
 
 
 if __name__ == "__main__":

@@ -10,12 +10,14 @@ species: [yeast, SCHPO, DROME, CANAL, worm, DANRE, ARATH, human, mouse]
 **Bottom line:** an ND annotation says that a curator searched the literature
 for one GO aspect and found nothing to annotate. That is a statement about
 **evidence for this gene product**, not about **knowledge**. The two diverge in
-predictable ways. In our corpus, 361 ND rows sit in 237 gene reviews, and the
-same situation receives different actions in different reviews: for an ND
-whose aspect also carries an IBA or ISO, we chose `ACCEPT` 36 times,
+predictable ways. When this project started (2026-10-24), 361 ND rows sat in
+237 gene reviews, and the same situation received different actions in different
+reviews: for an ND
+whose aspect also carried an IBA or ISO, reviews chose `ACCEPT` 36 times,
 `REMOVE` 37 times and `KEEP_AS_NON_CORE` 13 times. Only 90 of the 237 genes
-have any `knowledge_gaps`, and 62 accepted ND rows (51 genes) have nothing else in
-their aspect and still no `BIOLOGY` gap. This project sorts ND rows into a
+had any `knowledge_gaps`, and 62 accepted ND rows (51 genes) had nothing else in
+their aspect and still no `BIOLOGY` gap. Current counts are in
+[the inventory](NO_DATA/data/nd-summary.md). This project sorts ND rows into a
 small set of cases. One rule fixes the action: **an ND that follows the
 evidence-code guideline is `ACCEPT`**. It follows the guideline when no
 literature on this gene product, in this species, identifies a function in that
@@ -197,8 +199,10 @@ Structural or accessory subunits whose function is "be part of machine X" often
 get an MF ND because no MF term fits, even though literature on the gene
 identifies its role. Under the acceptance rule that literature makes the ND
 incorrect. That accounted for about 64% of the conserved
-"MF-dark" genes in the Function Knowledge Gaps triage. Examples: DROME/Vps53 (contributes
-to GARP/EARP tethering) and human/POLE4.
+"MF-dark" genes in the Function Knowledge Gaps triage (worked example:
+human/POLE4). No ND row in the corpus is classified N5 yet. DROME/Vps53 looks
+like one, but the tethering literature behind it is on human EARP, so under the
+rule its ND is N2 and the tethering activity sits on its own inferred row.
 
 **Action:** `MODIFY` to the expressible term (a `contributes_to` complex
 activity or a `structural constituent` term). If none exists, MODIFY to an
@@ -239,15 +243,17 @@ into N1–N6, then record the provenance issue in the notes.
 ## Current state of the corpus
 
 From [the inventory](NO_DATA/data/nd-summary.md)
-(`uv run python projects/NO_DATA/scripts/nd_inventory.py`):
+(`uv run python projects/NO_DATA/scripts/nd_inventory.py`), as of commit
+`04e2ffa3e` (2026-10-31): 427 ND rows in 268 reviews. A bare protein-binding
+IPI is not counted as experimental (it identifies no function).
 
 | Provisional signal | ND rows | Likely case(s) |
 |---|---:|---|
-| `aspect_empty` (nothing else in the aspect) | 180 | N4, N3, some N1 (missed) |
-| `inferable_by_homology` (IBA/ISO/ISS present, no experimental) | 106 | N2, N2b→N4 |
-| `coexists_with_experimental` | 30 | N1 |
-| `electronic_or_author_only` | 27 | N2 or N4, needs reading |
-| `short_orf/*` (≤100 aa) | 18 | N3, or canonical short proteins |
+| `aspect_empty` (nothing else in the aspect) | 216 | N4, N3, some N1 (missed) |
+| `inferable_by_homology` (IBA/ISO/ISS present, no experimental) | 118 | N2, N2b→N4 |
+| `electronic_or_author_only` (incl. bare protein-binding IPIs) | 52 | N2 or N4, needs reading |
+| `short_orf/*` (≤100 aa) | 34 | N3, or canonical short proteins |
+| `coexists_with_experimental` | 7 | N1 |
 
 The signals come from GOA alone and are only for triage. As in Function
 Knowledge Gaps, the case is decided by reading the literature, not by a pattern
@@ -269,7 +275,8 @@ search, so we cannot meaningfully propose one. These rows should become
    - `KEEP_AS_NON_CORE`, `MARK_AS_OVER_ANNOTATED` or `TOO_GENERAL` on an ND;
    - `REMOVE` or `MODIFY` on an ND without `nd_case` `STALE` or
      `ONTOLOGY_BLOCKED`, which catches removal "because an IBA exists";
-   - `ACCEPT` with `nd_case` `STALE` or `ONTOLOGY_BLOCKED`;
+   - `ACCEPT` with `nd_case` `STALE` or `ONTOLOGY_BLOCKED`, or with
+     `proposed_replacement_terms`;
    - `NEW` on an ND row (record a `knowledge_gaps` entry instead);
    - `nd_case` `TRUE_GAP` or `EXISTENCE` without a `BIOLOGY` gap whose
      `dark_aspect` matches the ND aspect (`MF_DARK`, `BP_DARK` or `CC_DARK`,
@@ -277,7 +284,8 @@ search, so we cannot meaningfully propose one. These rows should become
    - `nd_case` on a non-ND row.
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites
-   a source for the literature search (e.g. the deep-research file).
+   a source for the literature search (e.g. the deep-research file). The pass
+   adds no such citation itself: the credit is for a search a reviewer records.
    `nd_stale_support` credits a `REMOVE`d or `MODIFY`d ND only for a PMID/DOI
    quote from the literature that makes it stale.
 4. **Upstream (to do).** N1 rows where the MOD has already annotated the aspect
@@ -285,45 +293,60 @@ search, so we cannot meaningfully propose one. These rows should become
    per-resource reports. N7 bulk-date clusters are a question for the MOD,
    not a defect.
 
-## Re-action pass (2026-10-24)
+## Re-action pass
 
-`scripts/apply_acceptance_rule.py` applied decisions made by reading each
-non-`ACCEPT` ND row's reason and the review's other rows in the same aspect.
-It edits only the affected review blocks.
+The decisions are in [`data/nd-decisions.yaml`](NO_DATA/data/nd-decisions.yaml),
+one entry per ND row the pass changed, and
+`scripts/apply_acceptance_rule.py` applies them. They were made by reading each
+row and the review's other rows in the same aspect (2026-10-24, extended on
+2026-10-26 to reviews merged from main, and re-checked on 2026-10-31 after
+review), **not by a new literature search**, and the generated text says so.
+The script restores each row as it was before the pass, then edits only that
+row's review block, so it can be re-run.
 
-- **49 rows kept `REMOVE`/`MODIFY` with `nd_case: STALE`**: the review cites
-  literature on this gene in this species (e.g. yeast/MDM10, mouse/Capsl,
-  ARATH/MLO2, DANRE/elna, human/ARL15).
-- **109 rows changed to `ACCEPT`**: 51 `REMOVE` (mostly "superseded by the
-  IBA"), 30 `KEEP_AS_NON_CORE`, 22 `MODIFY` to an inferred term, 4
-  `TOO_GENERAL` and 2 `MARK_AS_OVER_ANNOTATED`. The earlier reason is kept inside
-  the new one. `nd_case` was set to `TRUE_GAP` where the review already has a
-  matching `BIOLOGY` gap and to `INFERABLE` where a retained inferred row
-  covers the aspect; it was left unset otherwise.
-- **12 `NEW` rows added**: where a converted `MODIFY` proposed an inferred
-  term the review did not carry (e.g. DROME/Vps50, Vps51, Vps53 `contributes_to`
-  vesicle membrane tethering; mouse/Sdhaf2 protein folding chaperone), the term
-  moved to its own `NEW` row with the original reasoning and quotes.
-- **Judgement calls (agreed 2026-10-24, now in CLAUDE.md).** Bare protein-binding IPIs were not counted as
-  literature that identifies a function (yeast/CRT10, human/TIMM21 stay
-  `ACCEPT`). Papers on orthologs were not counted either (yeast/COQ4, whose
-  decarboxylase paper is not on yeast; DROME/Tango5, from human VMP1).
-  `NAS` and Reactome `TAS` rows on the gene were counted (DROME/Kpc1,
-  human/TAT).
+- **62 rows keep `REMOVE`/`MODIFY` with `nd_case: STALE`**: the review cites
+  literature on this gene product in this species (e.g. yeast/MDM10,
+  mouse/Capsl, ARATH/MLO2, DANRE/elna, human/ARL15, mouse/Rtl5).
+- **112 rows changed to `ACCEPT`**: 51 `REMOVE` (mostly "superseded by the
+  IBA"), 30 `KEEP_AS_NON_CORE`, 25 `MODIFY` to an inferred term, 4
+  `TOO_GENERAL` and 2 `MARK_AS_OVER_ANNOTATED`. Each gets a neutral summary and
+  a reason that names the earlier action and says the judgement came from the
+  review's own content. `nd_case` is `TRUE_GAP` where the review has a
+  matching `BIOLOGY` gap, `INFERABLE` where a retained inferred row covers the
+  aspect, and unset otherwise.
+- **Quotes.** A converted `REMOVE`, `KEEP_AS_NON_CORE`, `TOO_GENERAL` or
+  `MARK_AS_OVER_ANNOTATED` row keeps its earlier `supported_by`. A converted
+  `MODIFY` row loses its `proposed_replacement_terms` and the quotes that
+  supported them: if the review already has a row for the replacement term,
+  those quotes are dropped here; if not (`new_row` in the table), the term
+  becomes its own `NEW` row carrying them. 14 `NEW` rows were made this way,
+  e.g. DROME/Vps50, Vps51, Vps53 `contributes_to` vesicle membrane tethering
+  and mouse/Sdhaf2 protein folding chaperone.
+- **Judgement calls (agreed 2026-10-24, now in CLAUDE.md).** Bare
+  protein-binding IPIs do not count as literature that identifies a function
+  (yeast/CRT10, human/TIMM21 stay `ACCEPT`), and neither do papers on orthologs
+  (yeast/COQ4, whose decarboxylase paper is not on yeast; DROME/Tango5, from
+  human VMP1). `NAS` and Reactome `TAS` rows on the gene count (DROME/Kpc1,
+  human/TAT). Background statements in a same-species paper do not count
+  (SCHPO/apc2, mouse/Rtl3), nor does necessity without an activity
+  (DANRE/lhfpl5b).
+- **Same-species data that cannot be assigned to a paralog** (mouse/Rtl8c:
+  the mouse UBQLN2-RTL8 interaction does not resolve Rtl8a, Rtl8b or Rtl8c) is
+  not literature on this gene product. The ND stays and the inferred terms rest
+  on the human ortholog (`ISO`).
+- **Re-check on 2026-10-31.** Three earlier `ACCEPT` calls were reversed to
+  `STALE`: human/ASNSD1 MF (the review refines the human IPIs to PDZ domain
+  binding) and yeast/THI11 and THI12 MF (PMID:12777485 shows in yeast that each
+  paralog alone supports HMP formation).
 - **Left alone:** 4 `UNDECIDED` rows, and 4 `NEW` ND rows (SCHPO/tam10 ×2,
   MYCTU/Rv0898c, human/P3R3URF), which need knowledge gaps written by
   reading before the row can go.
 
-After the pass: 304 `ACCEPT` (32 `TRUE_GAP`, 63 `INFERABLE`, 209 not yet
-classified), 31 `REMOVE` and 18 `MODIFY` (all `STALE`).
-
-**Follow-up (2026-10-26).** Merging `main` brought in 16 ND rows from reviews
-written before the rule (mouse Rtl1, Rtl3, Rtl4, Rtl5, Rtl6, Rtl8c, Rtl9,
-Scgb3a2; CANAL/LYS1), all `REMOVE` or `MODIFY`. The same script and the same
-reading applied: 10 rows rest on mouse literature (e.g. Rtl5/Rtl6/Rtl9
-knock-in and knockout studies) and stay as `STALE`; 6 rest on domains or on
-human orthologs and became `ACCEPT`, with mouse/Rtl8c's two inferred terms
-moved to `NEW` (`ISO`) rows.
+**Not yet swept (as of `04e2ffa3e`).** Reviews merged from main after the last
+pass carry 42 ND rows that `nd_policy` flags: 37 `MODIFY` rows in 13 mouse
+keratin-associated protein reviews (Krtap3-2 to Krtap29-1), whose reasons rest
+on family-level literature; human/CDKAL1 BP; ARATH/PGR3; and rat Actl7a, Aph1a
+and Pik3c2a. They are waiting for a decision.
 
 ## Plan
 
@@ -331,16 +354,19 @@ moved to `NEW` (`ISO`) rows.
 - [x] Agree on the action per case: guideline-conformant ND is `ACCEPT`
 - [x] Add `nd_case` to the schema, `nd_policy` warnings, ND compliance rules
 - [x] Re-action pass (above)
-- [ ] Classify the 209 unclassified `ACCEPT` rows by reading; the 62 gap-less
-      `aspect_empty` rows are expected to be N4 and gain `BIOLOGY` gaps
+- [ ] Decide the 42 unswept rows from main (above)
+- [ ] Classify the 217 `ACCEPT` rows with no `nd_case` by reading (counted in
+      the inventory's `nd_case` table); gap-less `aspect_empty` rows are
+      expected to be N4 and gain `BIOLOGY` gaps
 - [ ] Replace the 4 `NEW` ND rows with `knowledge_gaps` entries
 - [ ] N1 upstream report from `source_defects`
 
 ## Open questions
 
-- **N2 against GORULE:0000054.** The rule reports an ND next to an IBA. We
-  accept both, because the ND correctly says that no literature exists for this
-  species. Is that worth raising with GO as a clarification of the rule?
+- **N2 against GORULE:0000054.** The rule reports an ND next to an IBA. This
+  project accepts both, by decision (2026-10-24), because the ND correctly says
+  that no literature exists for this species. Raising it with GO as a
+  clarification of the rule is still to do.
 - **Is N3 a kind of knowledge gap or its own kind?** An existence question
   could justify a new `KnowledgeGapAspectEnum` value (e.g. `EXISTENCE_DARK`)
   rather than overloading `WHOLLY_DARK`.

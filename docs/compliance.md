@@ -31,6 +31,7 @@ when no literature on the gene product in that species identifies a function
 in the aspect, whatever IBA, ISO or IEA rows exist. Removing one needs the
 paper that makes it stale. `KEEP_AS_NON_CORE` and other actions on ND rows earn
 no credit and are flagged by the `nd_policy` validation check.
+
 See the YAML for the exact evidence-code and action lists. PENDING and UNDECIDED
 are excluded from these metrics; an IEA ACCEPT needs no quotation. Multiple
 quotes on one annotation earn no additional credit. An inference's

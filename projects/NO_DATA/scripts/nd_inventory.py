@@ -5,8 +5,10 @@ join the row to the gene's GOA file and UniProt record and record:
 
 - the ND aspect, assigning group and date (from ``<GENE>-goa.tsv``);
 - what else GOA asserts *in the same aspect*, by evidence class
-  (experimental, phylogenetic, sequence/orthology, electronic);
-- the review's action on the ND row;
+  (experimental, phylogenetic, sequence/orthology, electronic). A bare
+  ``GO:0005515`` protein-binding IPI is counted separately, not as
+  experimental: per the NO_DATA rule it identifies no function;
+- the review's action and ``nd_case`` on the ND row;
 - protein length and UniProt protein-existence level;
 - whether the review carries ``knowledge_gaps`` (and their kinds/aspects).
 
@@ -56,8 +58,17 @@ SQ_RE = re.compile(r"^SQ\s+SEQUENCE\s+(\d+) AA", re.M)
 PE_RE = re.compile(r"^PE\s+(\d):\s*([^;]+);", re.M)
 
 
-def evidence_class(code: str) -> str:
-    """Bucket a GO evidence code."""
+PROTEIN_BINDING = "GO:0005515"
+
+
+def evidence_class(code: str, term: str = "") -> str:
+    """Bucket a GO evidence code.
+
+    >>> evidence_class("IDA"), evidence_class("IPI", PROTEIN_BINDING)
+    ('experimental', 'protein_binding')
+    """
+    if term == PROTEIN_BINDING:
+        return "protein_binding"
     if code in EXPERIMENTAL:
         return "experimental"
     if code in PHYLO:
@@ -102,7 +113,7 @@ def signal(other: Counter, length: int | None) -> str:
         return prefix + "coexists_with_experimental"
     if other["phylogenetic"] or other["sequence"]:
         return prefix + "inferable_by_homology"
-    if other["electronic"] or other["author"] or other["other"]:
+    if other["electronic"] or other["author"] or other["other"] or other["protein_binding"]:
         return prefix + "electronic_or_author_only"
     return prefix + "aspect_empty"
 
@@ -132,7 +143,7 @@ def main() -> None:
                     "date": g.get("DATE"),
                 }
             else:
-                by_aspect[aspect][evidence_class(code)] += 1
+                by_aspect[aspect][evidence_class(code, g.get("GO TERM", ""))] += 1
 
         gaps = doc.get("knowledge_gaps") or []
         for cf in doc.get("core_functions") or []:
@@ -154,6 +165,7 @@ def main() -> None:
                 "aspect": aspect,
                 "term": term,
                 "action": review.get("action"),
+                "nd_case": review.get("nd_case"),
                 "assigned_by": nd_meta.get(aspect, {}).get("assigned_by"),
                 "nd_date": nd_meta.get(aspect, {}).get("date"),
                 "same_aspect_annotations": dict(sorted(other.items())),
@@ -212,6 +224,12 @@ def write_summary(rows: list[dict]) -> None:
         "## By review action",
         "",
         *table(Counter(str(r["action"]) for r in rows), "action"),
+        "## By nd_case",
+        "",
+        *table(Counter(str(r["nd_case"]) for r in rows), "nd_case"),
+        "## nd_case x action",
+        "",
+        *crosstab(rows, "nd_case", "action"),
         "## By provisional signal",
         "",
         *table(Counter(r["signal"] for r in rows), "signal"),

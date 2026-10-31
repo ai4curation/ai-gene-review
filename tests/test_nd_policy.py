@@ -70,3 +70,10 @@ def test_ontology_only_gap_does_not_count():
 
 def test_nd_case_on_non_nd_row_is_reported():
     assert fields(nd("ACCEPT", "INFERABLE", term="GO:0016787", evidence="IBA")) == [(0, "nd_case")]
+
+
+def test_accept_with_replacement_terms_is_reported():
+    """An accepted ND keeps the root term, so proposing a replacement contradicts it."""
+    row = nd("ACCEPT", "INFERABLE")
+    row["review"]["proposed_replacement_terms"] = [{"id": "GO:0016787", "label": "hydrolase activity"}]
+    assert fields(row) == [(0, "proposed_replacement_terms")]
