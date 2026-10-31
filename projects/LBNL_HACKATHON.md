@@ -24,7 +24,7 @@ on the dashboard's call in the gene notes file.
 |---|---|---|---|---|---|
 | LACLM/sufB | *Lactococcus lactis* subsp. *cremoris* MG1363 | A2RMK5 | [NZ_LKLC01000161.1_58](https://gene-annotate-dashboard.kbase.us/review/NZ_LKLC01000161.1_58) | SufB Fe-S cluster assembly scaffold protein of the SUF system | supported |
 | LACLA/yxcA | *Lactococcus lactis* subsp. *lactis* IL1403 | Q9CDI2 | [NZ_VXKC01000008.1_19](https://gene-annotate-dashboard.kbase.us/review/NZ_VXKC01000008.1_19) | PlsA plasmalogen biosynthesis protein combining activation and reduction/dehydration functions for anaerobic plasmalogen production | supported (GO:0016836 hydro-lyase is an overreach) |
-| SALTY/ybbO | *Salmonella enterica* serovar Typhimurium LT2 | Q7CR11 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), by 1:1 orthology to E. coli YbbO |
+| SALTY/ybbO | *Salmonella enterica* serovar Typhimurium LT2 | Q7CR11 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), by 1:1 orthology to ECOLI/ybbO |
 | ECOLI/ybbO | *Escherichia coli* K-12 | P0AFP4 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), direct assays |
 | SYNE7/Synpcc7942_0873 | *Synechococcus elongatus* PCC 7942 (dashboard protein from PCC 6311, identical) | Q31PW6 | [CP088958.1_900](https://gene-annotate-dashboard.kbase.us/review/CP088958.1_900) | DUF4062 domain-containing protein, putative NACHT-family NTPase | wrong: GO:0017111 NTPase is NPI (no P-loop domain); probable DUF4062 TIR-like NAD+ nucleosidase (GO:0003953) |
 
@@ -49,7 +49,7 @@ on the dashboard's call in the gene notes file.
   during the hackathon on request rather than picked from the queue, so they have no
   dashboard item or dashboard call yet. (The dashboard sits behind a Cloudflare bot
   check, so it could not be searched from the review session.) The Salmonella
-  protein has no experiments of its own; its function rests on E. coli YbbO, whose
+  protein has no experiments of its own; its function rests on ECOLI/ybbO, whose
   purified enzyme reduces C2-C18 aldehydes with NADPH. The transfer is supported by
   reciprocal best hits across both proteomes, conserved gene order (ybbN-ybbO-tesA-ybbA),
   90.6% identity and an invariant catalytic tetrad (N105-S133-Y146-K150), with only one
