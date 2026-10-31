@@ -54,7 +54,7 @@ Auxiliary source: independent human functional evidence or original mouse donor 
 
 **Access and locators.** Original publisher PDF selected Materials and Methods, B-cell intrinsic Results, NF-kappaB/IL6 Results, Figures 5–6 captions and Discussion. No figure pixels or full supplementary inspection.
 
-**Interpretation and limits.** Selected original publisher PDF Methods/Results/Figures 5–6 captions/Discussion support mouse B-cell intrinsic immune-response restraint, I-kappaB-beta/NF-kappaB and IL6 effects. The authors distinguish amplification of existing responses from breaking B-cell tolerance. These experiments do not establish central B-cell tolerance or the NIK/p100 non-canonical branch, nor human direct immune assays.
+**Interpretation and limits.** Selected original publisher PDF Methods/Results/Figures 5–6 captions/Discussion support mouse B-cell intrinsic immune-response restraint, I-kappaB-beta/NF-kappaB and IL6 effects. The authors distinguish amplification of existing responses from breaking B-cell tolerance. These experiments do not establish central B-cell tolerance or the NIK/p100 non-canonical branch, nor human direct immune assays. The repository publication cache remains abstract-only, but selected original publisher full-text sections were accessible and read; therefore the review does not mark the full text as unavailable. The cached source bytes are unchanged.
 
 ## PMID:16339515 — Cutting edge: Foxj1 protects against autoimmunity and inhibits thymocyte egress.
 
@@ -84,7 +84,7 @@ Auxiliary source: independent human functional evidence or original mouse donor 
 
 **Access and locators.** Original Results: A role for Foxj1 in RhoA-mediated ciliogenesis, Figure 5 caption; Discussion on Foxj1/RhoA; Methods Cell culture, GTPase activation assays and Adenovirus vector transfection. No pixels/SI inspected.
 
-**Interpretation and limits.** Selected original publisher Results/Methods/Discussion/captions support mouse Foxj1-null mTEC apical actin and docking defects plus AdFoxj1-associated RhoA/B activation. The mechanistic route is unresolved; no FOXJ1 actin-binding or GEF activity is inferred. Exact adenoviral coding sequence is deferred in the paper to an earlier source, so host species does not identify the construct.
+**Interpretation and limits.** Selected original publisher Results/Methods/Discussion/captions support mouse Foxj1-null mTEC apical actin and docking defects plus AdFoxj1-associated RhoA/B activation. The mechanistic route is unresolved; no FOXJ1 actin-binding or GEF activity is inferred. Exact adenoviral coding sequence is deferred in the paper to an earlier source, so host species does not identify the construct. The repository publication cache remains abstract-only, but selected original publisher full-text sections were accessible and read; therefore the review does not mark the full text as unavailable. The cached source bytes are unchanged.
 
 ## PMID:20539013 — Goblet cells are derived from a FOXJ1-expressing progenitor in a human airway epithelium.
 
@@ -198,3 +198,10 @@ Normal-cache availability and the selected original reading scope are separate. 
 | 31630787 | true |
 | 32296183 | true |
 | 33961781 | true |
+
+
+## Core-function and access clarification
+
+The single nuclear activator core also represents the existing accepted motile-cilium assembly and positive regulation of lung ciliated-cell differentiation terms. The first names organelle formation; the second names promotion of a lung epithelial cell fate. They are not an is_a ancestor/descendant pair. Human ciliary-gene induction and promoter activation in [study 23822649](https://pubmed.ncbi.nlm.nih.gov/23822649/) and patient respiratory-cell ciliogenesis/differentiation defects in [study 31630787](https://pubmed.ncbi.nlm.nih.gov/31630787/) jointly support these scopes. The original study 20539013 remains a partially inspected promoter-lineage-tracing source; it is not retroactively described as a FOXJ1 coding perturbation.
+
+The brain-development judgments remain unresolved because choroid-plexus expression and hydrocephalus do not settle a primary developmental role in the original cell-type context. The clinical left/right randomization is itself a developmental patterning outcome; its non-core judgment retains the limits of the human respiratory-cell assays. Both raw 55/56 source observations have the same explicit TOO_GENERAL judgment in the evidence and join one stored annotation.
