@@ -73,15 +73,16 @@ def test_benchmark_summary_keeps_output_types_and_scopes_separate(
     assert data["prediction_targets"] == 242
     assert sum(data["go_counts"].values()) == 288
     assert data["go_counts"] == {
-        "COR": 35, "CNN": 46, "LSP": 85, "UNC": 78, "NPI": 42, "PLI": 2, "REP": 0
+        "COR": 35, "CNN": 48, "LSP": 83, "UNC": 78, "NPI": 42, "PLI": 2, "REP": 0
     }
     narratives = {r["gene"]: r["categories"] for r in data["narrative_reviews"]}
     assert narratives["human/NARF"] == ["PLI"]
     assert narratives["DANRE/dcxr"] == ["PLI"]
     assert "rat/Mtmr12" not in narratives
-    assert narratives["DROME/dati"] == ["CNN"]
+    assert narratives["DROME/dati"] == ["LSP"]
     assert narratives["NEUCR/NCU04637"] == ["NPI"]
     assert data["narrative_counts"]["PLI"] == 13
+    assert data["narrative_counts"]["COR"] == 4
     assert len(narratives) == 57
     assert data["cohort_memberships"] > data["distinct_records"]
 
