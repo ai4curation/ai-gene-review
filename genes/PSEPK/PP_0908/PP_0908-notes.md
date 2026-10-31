@@ -87,3 +87,7 @@ GO terms (`PP_0908-dashboard-predictions-review.yaml`):
 - `just fetch-gene` timed out at the EBI OLS step (www.ebi.ac.uk read timeout, twice). The UniProt and GOA files were written; the review YAML was written by hand.
 - `just fetch-fitness` failed with 403.
 - Deep research used the claude-code provider.
+
+## Status: DRAFT
+
+What would close it out: KT2440 RB-TnSeq data for PP_0908 and its cluster partners PP_0913-PP_0909 under iron limitation, from the BERDL Fitness Browser copy (fit.genomics.lbl.gov returned 403 here). Cofitness with the imelysin and di-haem peroxidase genes, or an iron-limitation phenotype, would decide whether the hedged iron-acquisition role can enter `core_functions` as a process term. Until then the core function stays without GO terms. (Added after PR #5755 review.)

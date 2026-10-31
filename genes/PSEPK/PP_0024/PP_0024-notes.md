@@ -37,9 +37,9 @@ PP_0024 is a catalytically intact inner-membrane phosphoethanolamine (PEA) trans
 | Term | Action |
 |---|---|
 | GO:0005886 plasma membrane | ACCEPT |
-| GO:0016020 membrane | ACCEPT |
+| GO:0016020 membrane | MODIFY → GO:0005886 |
 | GO:0009244 LPS core region biosynthesis | MARK_AS_OVER_ANNOTATED |
-| GO:0016772 | TOO_GENERAL → GO:0016780 |
+| GO:0016772 | MODIFY → GO:0016780 |
 | GO:0016776 phosphate-as-acceptor | MODIFY → GO:0016780 (wrong EC class; GO:0043838 sits under GO:0016780) |
 | GO:0016780 | NEW (ISS) |
 

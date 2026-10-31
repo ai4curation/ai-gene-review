@@ -63,3 +63,10 @@ Dashboard source: https://gene-annotate-dashboard.kbase.us/review/NZ_KZ987399.1_
   step, via BERDL `kescience.fitnessbrowser` or the browser.
 - `core_functions` is left empty on purpose because the molecular function is unknown. This
   gives the expected validator warning.
+
+## Open curation task
+
+- Retrieve Fitness Browser data for Pf6N2E2_2210, AO356_01705 and Pf1N1B4_5071 (not reachable
+  from this environment, HTTP 403) and check for condition-specific phenotypes and cofitness
+  partners. This was listed under `suggested_experiments` in the first version. It was moved
+  here after PR #5755 review because it is unfinished curation, not an experiment.

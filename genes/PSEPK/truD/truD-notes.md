@@ -24,8 +24,8 @@ PP_1619 is the TruD-family tRNA pseudouridine(13) synthase (EC 5.4.99.27). This 
 ## Existing GOA for Q88MF2 (9 IEA, no experimental)
 
 - **ACCEPT:** GO:0160150, GO:0031119 and GO:0005829.
-- **KEEP_AS_NON_CORE:** GO:0009982, GO:0001522 and GO:0009451.
-- **MARK_AS_OVER_ANNOTATED:** GO:0003723 RNA binding, GO:0006396 RNA processing and GO:0140098 catalytic activity, acting on RNA.
+- **TOO_GENERAL:** GO:0009982, GO:0001522, GO:0009451, GO:0006396 RNA processing and GO:0140098 catalytic activity, acting on RNA. All are true but entailed by the accepted GO:0160150 or GO:0031119. (Changed from KEEP_AS_NON_CORE / MARK_AS_OVER_ANNOTATED after PR #5755 review.)
+- **MARK_AS_OVER_ANNOTATED:** GO:0003723 RNA binding, which restates the substrate binding of an RNA enzyme.
 
 ## Caveats
 

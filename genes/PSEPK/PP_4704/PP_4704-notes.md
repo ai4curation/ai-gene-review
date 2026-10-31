@@ -85,7 +85,14 @@ an OmpA peptidoglycan-binding domain.
   family-wide propagation from the historical E. coli AsmA/OmpF phenotype.
 - NEW, ISS from PMID:38305166:
   - GO:0043165
-  - GO:0120010 intermembrane phospholipid transfer. This one is flagged as indirect.
+- GO:0120010 intermembrane phospholipid transfer was proposed as NEW (ISS) in the first
+  version and **dropped** after PR #5755 review. Comparator check (QuickGO, 2026-10-31,
+  `PP_4704-bioinformatics/ecoli_asma_comparator_goa.tsv`): none of E. coli TamB, YhdP or
+  YdbH carries GO:0120010. YhdP has GO:0015914 phospholipid transport (EXP PMID:33046656,
+  IBA), YdbH has it at IGI (PMID:34781743), TamB has none. The chain to PP_4704
+  (proposed transporters -> EpaF sufficient when overexpressed -> orthology) shows
+  sufficiency, not lipid movement, so the mechanism is now a suggested question and
+  GO:0043165 carries the claim.
 
 ## Caveats
 

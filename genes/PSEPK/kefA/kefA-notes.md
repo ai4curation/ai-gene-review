@@ -45,3 +45,7 @@ GO terms (PredictionReview `kefA-dashboard-predictions-review.yaml`):
 - The dashboard's PaperBLAST "MscL-like" KT2440 summary is a loose label. The protein is MscS-family, as the call itself noted.
 - No KT2440 fitness data was available: `just fetch-fitness` failed, and fit.genomics.lbl.gov returned 403.
 - `validate-predictions` writes `reports/prediction-evidence.json`, a shared report file outside this folder.
+
+## Status: DRAFT
+
+What would close it out: KT2440 RB-TnSeq data for PP_5067 across conditions (from the BERDL copy of the Fitness Browser, `kescience.fitnessbrowser`, since fit.genomics.lbl.gov returned 403 here). It would show whether the polymyxin B phenotype seen in the *P. simiae* orthologue is specific or one of many envelope-stress phenotypes, which decides whether a process term beyond the channel activity is warranted. (Added after PR #5755 review.)

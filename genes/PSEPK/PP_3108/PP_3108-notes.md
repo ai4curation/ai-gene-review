@@ -47,3 +47,7 @@ The STRING partners PP_3107/PP_3106/PP_4084 were transferred from PP_3108. PP_31
 - There is no Tke2-specific competition phenotype. Killing was shown for the T6SS as a whole, so GO:0031640 is IC.
 - Fitness: `just fetch-fitness` failed, because no FEBA source was reachable. The dashboard evidence holds no fitness data for this protein; its only FB homolog is a P. syringae YD-repeat protein with no measurements.
 - PMID:33693029 (Rsm RAP-seq) lists PP_3108 among Rsm-bound RNAs only in its supplement. It bears on regulation, not function, and is not cited.
+
+## Status: DRAFT
+
+What would close it out: (1) a decision on whether the KB3 toxin-swapped allele seen by the dashboard should be reviewed as a separate entry, since the review describes KT2440 Tke2 and the KB3 C-terminal toxin cassette and immunity gene differ; (2) KT2440 fitness data for PP_3108 from the BERDL Fitness Browser copy, which could not be fetched here. Neither is expected to change the GO terms for KT2440 Tke2. (Added after PR #5755 review.)
