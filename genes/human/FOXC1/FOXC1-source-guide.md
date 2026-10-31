@@ -1,6 +1,6 @@
 # FOXC1 source guide
 
-The review covers 143 original QuickGO contexts represented by 141 stored annotations: 37 ACCEPT, 47 KEEP_AS_NON_CORE, 38 TOO_GENERAL, 4 MODIFY and 15 UNDECIDED. It contains one core function, no NEW annotations and no publication quotations. All 40 normal source files are preserved unchanged after acquisition.
+The review covers 143 original QuickGO contexts represented by 141 stored annotations: 37 ACCEPT, 46 KEEP_AS_NON_CORE, 38 TOO_GENERAL, 5 MODIFY and 15 UNDECIDED. It contains one core function, no NEW annotations and no publication quotations. All 40 normal source files are preserved unchanged after acquisition.
 
 The core is selective regulatory DNA binding and positive RNA polymerase II transcription in the nucleus. Developmental, growth, migration and differentiation effects retain their tissue and experimental context. The binding refinements describe supported partner classes; co-complex evidence is not silently promoted to purified binary binding.
 
@@ -175,3 +175,15 @@ All six PAINT origins were replayed against the actual tree, MSA and original IB
 | 142 | 72 | UniProtKB:Q12948!28906963 | GO:0005654 | IDA | GO_REF:0000052 | HPA |
 
 The JSON archive retains the complete original WITH/FROM and extension objects; this table is only an index.
+
+## Review follow-up scope
+
+The source-specific decisions distinguish an established biological function from an independently unresolved source assay. The P297S-letter and PMID:14506133 bending rows retain that uncertainty while explicitly acknowledging UniProt's curated attribution. This does not negate nuclear localization, transcriptional activation or DNA bending supported elsewhere.
+
+The original [PMID:11782474 author-uploaded paper](https://www.researchgate.net/publication/11576656_FOXC1_Transcriptional_Regulation_Is_Mediated_by_N-_and_C-terminal_Activation_Domains_and_Contains_a_Phosphorylated_Transcriptional_Inhibitory_Domain), Results and Figure 5E plus the inhibitory-domain Discussion, distinguishes activation-domain-dependent attenuation from basal SV40 repression. The latter was not observed for the tested GAL4 DNA-binding-domain/inhibitory-region fusion. This narrows the interpretation of UniProt's activator-or-repressor summary without rejecting the experimentally supported inhibitory segment.
+
+For NFIA (raw 39, stored 47), the positive nuclear-extract/probe-array association and the [reviewed NFIA identity/class](https://www.uniprot.org/uniprotkb/Q12857/entry) support GO:0061629. This is a partner-class refinement; the array is not a purified binary assay or the PBX1 co-immunoprecipitation experiment, and it did not establish NFIA-mediated inhibition. The other two supported generic associations remain non-core under the campaign policy where no evidence-backed functional subtype is established.
+
+The two lens-transparency transfers (raw 84/85, stored 97/96) now carry probable WRONG_TERM queries, and stored 97 also records the exact UniProt mouse donor row Q61572!327843743. All request CHECK and remain NOT_REPORTED; no upstream report was sent and no corrected term was guessed. The Ensembl-assigned human IEA row uses resource OTHER with Ensembl named explicitly because the current schema has no ENSEMBL enum. The human ISS and original donor are assigned by UniProt. These queries concern corneal-versus-lens scope, not gene identity or a denial of the positive corneal experiments.
+
+The original GO:1904798 row is a mouse Q61572 similarity transfer traced to PMID:25808752. It is not an experimental human PMID:26565916 row. The separate human evidence does not automatically establish the precise core-promoter scope. Official is_a ancestor queries for GO:0045944 and GO:0045893 exclude GO:0010628, preserving the existing distinction between positive gene expression and those specific transcription terms.

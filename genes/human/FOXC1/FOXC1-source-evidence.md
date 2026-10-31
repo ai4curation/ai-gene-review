@@ -335,3 +335,11 @@ The official PAINT family tree and MSA contain 1,182 nodes. The target sequence 
 Current [Human Protein Atlas text](https://www.proteinatlas.org/ENSG00000054598-FOXC1/subcellular) corroborates nucleoplasm localization with antibody HPA040670: A-431 and U2OS show nucleoplasm, and U-251MG lists nucleoplasm and cytosol. Image pixels, antibody specificity and the historical GOA version were not replayed. The existing nucleoplasm row remains non-core; no cytosol row was added.
 
 Official ontology paths establish GO:0001228 is_a GO:0000981 is_a GO:0003700 and GO:0000978 is_a GO:0000977 is_a GO:0000976. DNA bending remains a distinct assertion. GO:0010628 is not an ancestor of GO:0045944 in the inspected hierarchy, so that pair is not treated as a formal redundancy. GO:0036438 refers to lens transparency and cannot be equated with corneal transparency.
+
+## Additional reading and clarification after review
+
+For PMID:11782474, the original author-uploaded Results/Figure 5E and Discussion were inspected for the inhibitory mechanism. The paper tests residues 215–366 coupled to GAL4 DNA-binding and activation domains: the segment attenuates activation-domain-driven output but did not lower the constitutive SV40 baseline with the GAL4 DNA-binding domain alone. The conclusion is modular attenuation, not a demonstrated independent full-length DNA-binding repressor mode. The original URL and section locators are in the source guide; the normal cache remains abstract-only and unchanged.
+
+For PMID:15684392, the original TF–TF array Methods, Results and Figures 5/7 captions identify the NFIA-associated signal and explicitly separate the PBX1 co-immunoprecipitation/inhibition follow-up. The specific binding replacement uses NFIA's established transcription-factor class while preserving the extract/probe-complex limitation and absence of an NFIA inhibitory effect in the reported assay.
+
+For PMID:22171010, the previously read corneal Results/Discussion and the official lens-specific GO definition now support structured probable source-defect queries. The original donor is UniProt-assigned, not MGI-assigned. No supplementary experiments, replacement term or upstream reporting action is newly claimed.
