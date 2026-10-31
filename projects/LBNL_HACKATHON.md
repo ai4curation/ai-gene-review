@@ -2,8 +2,8 @@
 title: "LBNL Hackathon: Dark Protein Atlas genes"
 maturity: SCOPING
 tags: [EVALUATION]
-species: [LACLM, LACLA, SALTY, ECOLI]
-genes: [sufB, ybbO, yxcA]
+species: [LACLM, LACLA, SALTY, ECOLI, RHIME]
+genes: [sufB, ybbO, yxcA, dusA]
 ---
 
 # LBNL Hackathon: Dark Protein Atlas genes
@@ -26,6 +26,7 @@ on the dashboard's call in the gene notes file.
 | LACLA/yxcA | *Lactococcus lactis* subsp. *lactis* IL1403 | Q9CDI2 | [NZ_VXKC01000008.1_19](https://gene-annotate-dashboard.kbase.us/review/NZ_VXKC01000008.1_19) | PlsA plasmalogen biosynthesis protein combining activation and reduction/dehydration functions for anaerobic plasmalogen production | supported (GO:0016836 hydro-lyase is an overreach) |
 | SALTY/ybbO | *Salmonella enterica* serovar Typhimurium LT2 | Q7CR11 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), by 1:1 orthology to ECOLI/ybbO |
 | ECOLI/ybbO | *Escherichia coli* K-12 | P0AFP4 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), direct assays |
+| RHIME/dusA | *Sinorhizobium meliloti* 1021 | Q92P85 | [NZ_RPHN01000062.1_55](https://gene-annotate-dashboard.kbase.us/review/NZ_RPHN01000062.1_55) | FMN-binding tRNA-dihydrouridine(20/20a) synthase DusA (EC 1.3.1.91) | supported |
 
 ## Notes
 
@@ -59,3 +60,7 @@ on the dashboard's call in the gene notes file.
   reduction is seen only in engineered strains, has not been assayed with purified
   enzyme or a defined cofactor, and uses a substrate E. coli does not make. Studies in yeast
   disagree on how efficient it is.
+- The dashboard sequence for NZ_RPHN01000062.1_55 (*E. meliloti* USDA1810) contains
+  Q92P85 (SMc04235) exactly as residues 40-398; the 39 extra N-terminal residues
+  come from an upstream start codon. The review is filed under the 1021 reference
+  proteome, and the truncated UniProt start is recorded as a gene model issue.
