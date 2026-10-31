@@ -1,0 +1,70 @@
+# FOXN1 source and assay guide
+
+All 40 original human FOXN1 annotation contexts were reconciled with the genuine fetched seed and all 16 exported columns before applying the reviewed judgments. The [source evidence](FOXN1-source-evidence.yaml) preserves the complete original objects and mapping. No new annotation, quotation or alternative product was added. The source-specific follow-up questions remain separate from the biological questions in the review.
+
+## Human protein, rodent protein and host cells
+
+[PMID:31914405](https://pmc.ncbi.nlm.nih.gov/articles/PMC7062188/) provides direct human FOXN1 DNA-binding evidence. The original sections **Structure of human FOXN1**, **Recognition of FHL DNA by FOXN1**, the C-terminal binding and specificity Results, and **Cloning, overexpression, and purification** through the DNA-binding assay Methods were read. The crystallized human forkhead fragment was residues 270–366; its DNA contained a mouse Psmb11 promoter motif. The intended human 1–648 bacterial preparation was measured by mass spectrometry as a protein ending at residue 614. That preparation is not a natural isoform. EMSA and fluorescence polarization used mouse Psma7-derived probes. C-terminal inclusion improved binding, while multiple shifted species and ambiguous gel-filtration behavior did not establish a native oligomeric state. Mouse ChIP/ATAC and mm10 analyses must not be described as direct human genomic occupancy. The specified original text sections were read; all article sections, figure pixels and supplements were not independently inspected.
+
+[PMID:10767081](https://pubmed.ncbi.nlm.nih.gov/10767081/) was read in original publisher PDF text, selected Results on pages 369–372 and Experimental Procedures on pages 374–375, including the **Expression Constructs**, **Inducible Whn Expression** and **Electrophoretic Shift Assays** sections and Figures 1, 3 and 4 captions. The expressed protein was mouse Whn, sequence CAA57279, in human HeLa Tet-On cells. Its induction of human hair-keratin transcripts and its binding to a human Ha3-II intronic element do not make it a human-protein construct. Tagged full-length mouse Whn and the R320C variant showed nuclear staining; added-NLS FKBP fragments are a separate engineered system. Chemically induced complementation does not establish a natural product or intrinsic self-dimerization.
+
+[PMID:9108066](https://pmc.ncbi.nlm.nih.gov/articles/PMC20529/) was read in the original Methods, Results and Discussion, including Figures 1–4 captions. Mouse, zebrafish and amphioxus DNA-binding domains were expressed in bacteria. Mouse Whn binding-site reporters were tested in BHK cells. Human homolog sequencing and comparative sequence analysis are not human-protein functional assays. These direct donor experiments support the exact mouse activator and sequence-specific binding annotations used in the human orthology transfer.
+
+[PMID:8790387](https://pmc.ncbi.nlm.nih.gov/articles/PMC38485/) was read visually on all four original scanned pages, 9661–9664, including Methods, Results, Discussion and Figures 1–5. Rat nude genetics identified a truncation removing 175 C-terminal residues while retaining the DNA-binding domain. Functional GAL4 fusion experiments used mouse and pufferfish sequences in BHK and yeast reporter systems. The activation-domain result is distinct from the rat phenotype and from a direct human FOXN1 assay. The original PDF route failed, while the authentic scanned-page images were available; both access records are retained privately.
+
+[PMID:31566583](https://www.jci.org/articles/view/127565) supplies human clinical genotype/phenotype evidence. Selected original Results, Figure 6 and Methods were independently reviewed. Functional reporter experiments used murine Foxn1 cDNA carrying patient-associated changes in HEK293T cells. These are not human FOXN1 protein assays. Lack of interference during coexpression does not directly establish native monomeric stoichiometry.
+
+## Epithelial differentiation and development
+
+[PMID:24383669](https://pubmed.ncbi.nlm.nih.gov/24383669/) is available in authentic PubMed and publisher abstracts; the exact FOXN1 perturbation construct and full endpoint Methods were not recovered. The reported human NT2/D1 and H9 epithelial-marker responses support the gene-level epithelial differentiation capacity alongside independent developmental evidence. The FOXN1 3-prime-UTR luciferase assay measures upstream miRNA targeting, not FOXN1 DNA recognition or transcriptional activation. Keeping the process annotation does not certify unseen Methods.
+
+[PMID:7969402](https://pubmed.ncbi.nlm.nih.gov/7969402/) remains an authentic abstract-only source in this reading. Nude rodent hair and thymus phenotypes support a developmental role. The precise defense-response context is unresolved because the GO term concerns a response to a foreign body or injury, rather than constitutive organ development alone. The original TAS identifier is retained; absence of accessible full text is not evidence of wrong-gene attribution.
+
+[PMID:21109991](https://pmc.ncbi.nlm.nih.gov/articles/PMC3060403/) was independently read in Methods 133–158, Results 160–260 and Figures 1–6 captions, plus Discussion 261–272. Conditional deletion of mouse Foxn1 exons 5/6 affects hair follicles and thymic medullary epithelial architecture. Prenatal and postnatal recombination, mature epithelial markers, cyst formation and thymocyte numbers are distinct endpoints. The human K14 promoter drives a mouse experiment; it is not a human FOXN1 construct. Figure pixels and supplementary images were not inspected.
+
+The rat donor has both **involved_in IMP** records from PMID:8790387 and separate **acts_upstream_of_or_within ISO** records for keratinocyte differentiation and thymus development. Both original relations remain in the donor evidence. The broader ISO relation is not silently converted into an experimental participation claim.
+
+## Marrow niche and thymic vascular context
+
+[PMID:24184560](https://pmc.ncbi.nlm.nih.gov/articles/PMC4081451/) was independently read in original Methods 117–186, Results 188–281 with Figures 1–7 captions and opening Discussion. Results 210–283 were also checked directly against the retained original response. Foxn1-transgenic hosts increased the donor MPP/HSC ratio; the donor CIP/CTP difference was a trend at p=0.06. Sorted HSC and MPP did not express Foxn1. A distinct CD45-positive EpCAM-positive CD138-negative niche population expressed Foxn1 and Dll4. Dll4 coexpression is not direct FOXN1 targeting evidence.
+
+Figure 7 concerns CLP and B-lineage abundance, Flt3 and Dll4/Dll1 expression in marrow cells. It does **not** show a CD5 or single-positive thymocyte selection assay. The exact T-cell lineage commitment, mature T-cell homeostasis and positive-selection assertions remain unresolved separately from the supported niche and progenitor findings.
+
+[PMID:19853842](https://pubmed.ncbi.nlm.nih.gov/19853842/) remains abstract-only after the authentic publisher link returned HTTP 403. It reports thymic endothelial invasion and VEGF-positive mesenchymal differences in nude mice. No direct endothelial FOXN1 activity, direct VEGF-target claim or unseen lymphoid migration assay is inferred.
+
+[PMID:23750244](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0065196) is a distinct auxiliary study, not a replacement reference. Selected original Results 251–263, Discussion 337–347 and 357–362, and authentic PubMed Figures 1–8 captions were independently read. A mouse hypomorph has delayed vascular entry but normal initial lymphoid progenitor immigration at E11.5; later cell abundance is another endpoint. The paper explicitly allows non-cell-autonomous epithelial signals or indirect organ-size effects. Different alleles and developmental stages prevent using this result to refute the original null-model annotation.
+
+## The twelve exact HuRI interactions
+
+[PMID:32296183](https://pubmed.ncbi.nlm.nih.gov/32296183/) was assessed using selected original Results and 37 exact IntAct records for the twelve original FOXN1 partner contexts. The source retains pooling, array and validation yeast two-hybrid records; linked stages are not counted as three independent physiological experiments. Only the TSSK1B pair also has a distinct MAPPIT record in HEK293T cells, EBI-25292441 / IM-25472-162516.
+
+| Original partner | Bounded interpretation |
+| --- | --- |
+| O60336, MAPKBP1 | Association with a scaffold; no FOXN1 signaling-scaffold activity inferred. |
+| O75865-2, TRAPPC6A isoform 2 | Exact partner isoform retained; no vesicle-tethering role inferred. |
+| P32320, CDA | Association retained; no catalytic or substrate role assigned to FOXN1. |
+| P49639, HOXA1 | Explicit RNA polymerase II transcription-factor classification supports GO:0061629; HOXA1 also has an activator IDA classification. |
+| Q08117-2, TLE5 isoform 2 | Reviewed corepressor class supports corepressor binding; no functional repression recruitment claimed. |
+| Q12933, TRAF2 | Association retained; no FOXN1 ubiquitination or signaling-adaptor role established. |
+| Q13526, PIN1 | Association retained; no FOXN1 phosphosite, isomerized bond or catalytic consequence established. |
+| Q68G74, LHX8 | Homeobox and explicit RNA polymerase II transcription-factor classification support GO:0061629. |
+| Q9BXA7, TSSK1B | Y2H plus MAPPIT supports association; no phosphorylation or kinase-regulatory role inferred. |
+| Q9H0A9-2, SPATC1L isoform 2 | Exact interaction retained; an informative molecular class was not established. |
+| Q9NQL9, DMRT3 | DM DNA-binding domain and explicit RNA polymerase II transcription-factor classification support GO:0061629, with similarity-based functional limits retained. |
+| Q9UJX2, CDC23 | APC/C component association does not make isolated CDC23 the catalytic enzyme or establish FOXN1 regulation of APC/C. |
+
+The three RNA polymerase II transcription-factor binding refinements use the explicit GO:0000981 classifications in the retained official partner records; GO:0061629 is an is_a descendant of GO:0140297. Together with TLE5 corepressor binding, these four refinements describe verified partner classes. They do not establish shared targets, native complexes, regulatory direction or cofactor activity. The other positive interactions are retained as non-core. A generic enzyme-binding replacement would not explain FOXN1's role in those pairs; this does not impose catalytic regulation as a requirement in the definition of enzyme binding. No ORF-sequence equivalence, native affinity or endogenous co-occupancy was inferred.
+
+## Phylogeny, ontology and source preservation
+
+The authentic PANTHER19 PTHR46721 tree and alignment contain 55 matching nodes and 28 leaves. Human PTN002483676 / AN22 exactly matches the current 648-residue O15353 sequence. All four incoming IBAs join literal positive IBD records at ancestral PTN000930751 on the human lineage; no family negative record was found. The current API failure and the dated official family sources are both recorded. This is phylogenetic grounding, not an assertion that every IBA is the best level of term specificity.
+
+Official GO term definitions and typed paths were retrieved privately. The specific activator term reaches the broader transcription-factor terms by **is_a**, and positive RNA polymerase II transcriptional regulation reaches broader transcription-regulation terms by **is_a**. Keratinocyte differentiation reaches epidermis development through **is_a epidermal cell differentiation**, then **part_of epidermis development**. Thymus epithelial morphogenesis is **part_of thymus development**. The checked thymus epithelial morphogenesis path does not reach animal organ morphogenesis, so the latter is not declared redundant on an invented ancestry chain.
+
+All 40 genuine raw extension fields are null. The private legacy typed parser exposes the TSV GENE NAME value as an `annotation_extension` field; that is a parser-column artifact, not a biological extension. The review preserves the genuine raw objects and exact raw-to-stored joins and adds no extension.
+
+All 15 normal source files are present. The existing PANTHER entries and metadata and PMID:32296183 were reused unchanged; the PANTHER annotation slice and eleven publication caches were genuinely acquired. The caches contain full text for PMID:21109991, PMID:23750244, PMID:24184560, PMID:31914405, PMID:32296183 and PMID:9108066. The remaining six publication caches contain abstracts. These immutable cache flags describe the cache, while review reference flags and reading notes describe actual original-text access. Selected original material was separately available for PMID:10767081, PMID:31566583 and PMID:8790387 despite their abstract-only caches; no full-paper coverage is inferred from selected passages.
+
+The genuine normal PANTHER fetch separately reports 56 resolved nodes and preserves eight IBD rows. Its four rows at PTN000930751 match all four incoming FOXN1 assertions exactly. Four additional rows at PTN000216159 are retained in that normal slice without inferring their placement on the human lineage from the separately retained 55-node tree. Both source versions and their distinct scopes are preserved.
+
+No provider call was made under the existing credential limitation. Manual source reading supplied the research record. Validation and rendering outcomes are recorded in the [notes](FOXN1-notes.md).
