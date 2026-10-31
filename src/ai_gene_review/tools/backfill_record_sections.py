@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
 import yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 
 from ai_gene_review.validation.local_source_text import (
     PROJECT_ROOT,
@@ -34,12 +36,16 @@ from ai_gene_review.validation.local_source_text import (
 from ai_gene_review.validation.uniprot_quote_source import (
     AMBIGUOUS,
     UNLOCATED,
+    UNSEARCHABLE,
     is_uniprot_source,
     locate_sections,
 )
 
 KEY = "record_section"
-_PLAIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9 :/_.()-]*")
+#: Items safe to write unquoted in a flow sequence. A ``:`` is not: PyYAML accepts
+#: ``[CC:CAUTION]``, but YAML 1.2 loaders such as ruamel's safe loader (which the
+#: reference validator uses) reject a colon inside a plain scalar in flow context.
+_PLAIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9 /_.()-]*")
 
 
 class MarkedDict(dict):
@@ -86,7 +92,8 @@ class BackfillResult:
     ``text`` is the updated document. ``added`` and ``fixed`` count values
     written; ``mismatched`` counts existing values that disagree with the
     cited file and were left alone; ``unlocated`` counts quotes that could not
-    be found in the cited file; ``ambiguous`` counts quotes found in more than
+    be found in the cited file; ``unsearchable`` counts quotes with nothing
+    searchable in them (a bare number); ``ambiguous`` counts quotes found in more than
     one section, which are left without a value; ``unplaceable`` counts quotes
     whose layout (e.g. a flow mapping) leaves no line to insert the key on.
     """
@@ -96,6 +103,7 @@ class BackfillResult:
     fixed: int = 0
     mismatched: int = 0
     unlocated: int = 0
+    unsearchable: int = 0
     ambiguous: int = 0
     unplaceable: int = 0
     paths: List[str] = field(default_factory=list)
@@ -108,10 +116,8 @@ class BackfillResult:
 def flow_value(sections: Iterable[str]) -> str:
     """Render sections as a one-line YAML flow sequence.
 
-    >>> flow_value(["CC:CAUTION", "CC:SUBCELLULAR LOCATION"])
-    '[CC:CAUTION, CC:SUBCELLULAR LOCATION]'
-    >>> flow_value(["FT:a,b"])
-    '["FT:a,b"]'
+    >>> flow_value(["CC:CAUTION", "CC:SUBCELLULAR LOCATION", "DE"])
+    '["CC:CAUTION", "CC:SUBCELLULAR LOCATION", DE]'
     """
     return (
         "["
@@ -151,10 +157,17 @@ def backfill_text(
     lines = text.splitlines(keepends=True)
     # line index -> (replacement for that line or None, lines to insert before it)
     edits: Dict[int, Tuple[Optional[str], List[str]]] = {}
+    seen: set[int] = set()
     for path, item, source in _record_items(data, project_root):
+        if id(item) in seen:  # a YAML alias: the anchored item is already counted
+            continue
+        seen.add(id(item))
         status, sections = locate_sections(item["supporting_text"], source)
         if status == UNLOCATED:
             result.unlocated += 1
+            continue
+        if status == UNSEARCHABLE:
+            result.unsearchable += 1
             continue
         if status == AMBIGUOUS:
             result.ambiguous += 1
@@ -218,6 +231,19 @@ def _eol(line: str) -> str:
     return line[len(line.rstrip("\r\n")) :] or "\n"
 
 
+def _loads_strictly(text: str) -> bool:
+    """True when ruamel's YAML 1.2 safe loader can read *text*.
+
+    >>> _loads_strictly('a: ["CC:CAUTION"]'), _loads_strictly("a: [CC:CAUTION]")
+    (True, False)
+    """
+    try:
+        YAML(typ="safe").load(text)
+    except YAMLError:  # an external parser's verdict, not a bug here
+        return False
+    return True
+
+
 def _check_only_sections_changed(original: str, result: BackfillResult) -> None:
     """Fail unless the new text differs from the original only in ``record_section`` values."""
     try:
@@ -226,6 +252,13 @@ def _check_only_sections_changed(original: str, result: BackfillResult) -> None:
         raise ValueError(
             f"record_section backfill produced invalid YAML; refusing to write: {e}"
         ) from e
+    # The reference validator reads reviews with ruamel's YAML 1.2 safe loader,
+    # which is stricter than PyYAML: the result must load there too.
+    if _loads_strictly(original) and not _loads_strictly(result.text):
+        raise ValueError(
+            "record_section backfill produced YAML that ruamel's safe loader rejects; "
+            "refusing to write"
+        )
     changed = set(result.paths)
     for doc in (before, after):
         for path, _, item in iter_local_quote_items(doc):

@@ -105,7 +105,19 @@ Hypothesis: SLAC1 directly inhibits KAT1 and AKT2, but not KAT2, and this has be
   Laanemets 2013 abstract confirms that slac1 lowers inward K+ channel activity through
   raised cytosolic Ca2+ [PMID:23126621 "this is caused by the severely reduced activity of inward K(+) (K(+)(in)) channels in slac1 guard cells"].
   The report calls this "later work"; it is from 2013, three years before Zhang 2016.
-- No action changes. The KAT1 and AKT2 rows stay MODIFY, with a caveat added to their
-  reasons. Their replacement moves from GO:0019870 to its child GO:0070320 (inward rectifier
-  potassium channel inhibitor activity), since both channels are inward rectifiers and the
-  CBL10 review uses GO:0070320 for AKT1. The term was already absent from core_functions.
+- No action changes. The KAT1 and AKT2 rows stay MODIFY with a caveat. KAT1 moves to
+  GO:0070320 (inward rectifier potassium channel inhibitor activity), matching CBL10's AKT1
+  row; AKT2 stays on GO:0019870 because it also has non-rectifying gating modes
+  (PMID:16316977), as decided in the 2026-10-25 ABA module audit below. The report itself only
+  went as far as GO:0019870, so the KAT1 refinement is a curator decision. The term was
+  already absent from core_functions.
+
+## 2026-10-25 — ABA module member audit
+
+Assessed all 44 annotation decisions and channel-centered core functions. Foundational genetics, plasma-membrane localization, heterologous electrophysiology and structure support SLAC1 as an ABA guard-cell anion effector. This does not make guard-cell output universal across land-plant ABA signaling. Core functions remain anion transport and stomatal closure.
+
+Inspected open PR #5402 before editing secondary potassium-channel inhibition rows. KAT1 refinement to GO:0070320 is independently supported by PMID:27002025 and the QuickGO definition (checked 2026-10-25). AKT2 retains broader GO:0019870: primary PMID:16316977 establishes inward-rectifying and nonrectifying gating modes, and available SLAC1 evidence does not resolve which mode was inhibited. This is an intentional evidence-based difference from PR #5402's uniform inward-rectifier replacement. Neither activity is added to core_functions.
+
+PMID:23126621 full text shows that "reducing [Ca(2+)](cyt) to < 10 nM rapidly restored the activity of K(+)(in) channels in slac1 closer to wild-type levels." Loss-of-function physiology involves calcium-dependent compensatory feedback and cannot be treated as a simple direct-inhibition phenotype. Existing heterologous/overexpression inhibitory activity is retained with this limitation; no exhaustive claim about absence of replication is made. PMID:31896774 additionally establishes RAF-SnRK2 input needed for SLAC1 activation after PP2C inactivation.
+
+Research used existing provider reports/manual notes and cached primary literature. All rows retain explicit decisions; unresolved findings are UNDECIDED rather than inferred from missing text. Record-section backfill and targeted validation were run for this session.
