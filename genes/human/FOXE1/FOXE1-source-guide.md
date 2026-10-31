@@ -175,3 +175,15 @@ The review uses 17 publications and three PTHR11829 family files. Fresh ownershi
 | [PMID:9287345](https://pubmed.ncbi.nlm.nih.gov/9287345/) | Abstract only |
 | [PMID:9697704](https://pubmed.ncbi.nlm.nih.gov/9697704/) | Abstract only |
 | [PMID:9697705](https://pubmed.ncbi.nlm.nih.gov/9697705/) | Abstract only |
+
+## Review follow-up: term granularity and source verification
+
+All eight original GO:0043565 rows now share the gene-level TOO_GENERAL judgment because retained [GO:0000978](https://www.ebi.ac.uk/QuickGO/term/GO:0000978) entails sequence-specific DNA binding. The six directly inspected binding experiments retain their source-specific findings and assay limits. The F137S paper remains unverified beyond its authentic abstract; its granularity judgment does not claim inspection of the original probe, constructs or controls.
+
+The original F137S Pol II transcription-factor and regulation rows are accepted as established gene-level capacities, with independent reference-only support from the inspected human studies listed above. The original cloning-paper morphogenesis row is retained as non-core using independent human and mouse developmental evidence. PMID:20484477 and PMID:9169137 keep their UNVERIFIED reference assessments and disclosed access limits. No unseen experiment is certified.
+
+The directional transcription rows are refined to [GO:0045944](https://www.ebi.ac.uk/QuickGO/term/GO:0045944) and [GO:0000122](https://www.ebi.ac.uk/QuickGO/term/GO:0000122). The former rests on human WT FOXE1 activation of the rat-TPO-site/TK reporter in PMID:9697705; the latter retains the rat-insert/human-host distinction and promoter-specific repression in PMID:9214635. Their original source identifiers and evidence codes remain unchanged. The selected Methods/Results and caption locators above remain the basis for these interpretations.
+
+The insulin-response row remains undecided: the exact historical transfer and alternate Ensembl source are unresolved, and transcript induction alone does not settle FOXE1’s functional role in that response. Broader donor relations are reported as context limits; their difference from a human transfer does not by itself establish a source error or a corrected relation. No new source-defect record or thyroid-hormone-generation annotation is added.
+
+Evidence continues to use reference-only citations under the [campaign’s explicit no-new-quotations instruction](https://github.com/ai4curation/ai-gene-review/blob/main/projects/CLINGEN_MENDELIAN.md#curation-instructions). The source guide provides public primary URLs, selected locators and access limits. This does not claim verbatim-quote validation or full-text access beyond the declared scope.
