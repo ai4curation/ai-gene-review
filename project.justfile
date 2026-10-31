@@ -2016,6 +2016,7 @@ deploy-browser target=env_var_or_default("BROWSER_TARGET", "git"): export-annota
         --description "Browse and filter gene annotation reviews" \
         --force
     uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
+    uv run python -m ai_gene_review.tools.build_browser_hierarchies --data exports/exported_annotations.json --schema "$tmp_dir/schema.js"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
@@ -2061,6 +2062,7 @@ update-browser-data target=env_var_or_default("BROWSER_TARGET", "git"): export-a
         --description "Browse and filter gene annotation reviews" \
         --force
     uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
+    uv run python -m ai_gene_review.tools.build_browser_hierarchies --data exports/exported_annotations.json --schema "$tmp_dir/schema.js"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
