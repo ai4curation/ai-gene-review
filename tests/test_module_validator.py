@@ -753,6 +753,45 @@ def test_nicotine_module_terms_resolve_for_real():
     assert result.errors == [], "\n".join(result.errors)
 
 
+@pytest.mark.integration
+def test_ols_backed_taxon_label_is_checked_not_unavailable():
+    """The OLS adapter has no alias map; that must not mark NCBITaxon unavailable."""
+    from ai_gene_review.validation.module_validator import _build_oak_resolver
+
+    resolve = _build_oak_resolver({"NCBITaxon": "ols:ncbitaxon"})
+    status, label, _aliases = resolve("NCBITaxon:7227")
+    assert (status, label) == ("ok_no_aliases", "Drosophila melanogaster")
+
+
+def _no_alias_resolver(curie):
+    """Resolver for a source that returns a primary label but no synonyms."""
+    return ("ok_no_aliases", "ATP(4-)", set())
+
+
+def test_validate_terms_no_alias_source_accepts_primary_label():
+    errors, warnings = validate_terms(
+        [("CHEBI:30616", "ATP(4-)")], {"CHEBI": "ols:chebi"}, _no_alias_resolver
+    )
+    assert (errors, warnings) == ([], [])
+
+
+def test_validate_terms_no_alias_source_downgrades_mismatch_to_warning():
+    # 'ATP' may be a synonym the source cannot list, so it must not be an error.
+    errors, warnings = validate_terms(
+        [("CHEBI:30616", "ATP")], {"CHEBI": "ols:chebi"}, _no_alias_resolver
+    )
+    assert errors == []
+    assert len(warnings) == 1 and "synonyms unavailable" in warnings[0]
+
+
+def test_validate_terms_no_alias_source_still_errors_on_obsolete():
+    def resolver(curie):
+        return ("ok_no_aliases", "obsolete something", set())
+
+    errors, _ = validate_terms([("CHEBI:1", "something")], {"CHEBI": "ols:chebi"}, resolver)
+    assert len(errors) == 1
+
+
 # --------------------------------------------------------------------------- #
 # Conformance is enforced through validate_module_file (offline, injected resolver)
 # --------------------------------------------------------------------------- #
@@ -823,6 +862,42 @@ def test_validate_module_file_flags_bad_conformance(tmp_path):
     assert any(
         "conformance" in e.lower() and "template" in e.lower() for e in result.errors
     )
+
+
+def _umbrella_doc(module_ref: str) -> dict:
+    return {
+        "id": "MODULE:umbrella",
+        "title": "umbrella",
+        "module": {
+            "id": "umbrella",
+            "label": "umbrella",
+            "parts": [{"node": {"id": "stage", "label": "stage", "module_ref": module_ref}}],
+        },
+    }
+
+
+def test_validate_module_file_accepts_resolvable_module_ref(tmp_path):
+    (tmp_path / "leaf.yaml").write_text(
+        yaml.safe_dump({"id": "MODULE:leaf", "title": "leaf",
+                        "module": {"id": "leaf", "label": "leaf"}}),
+        encoding="utf-8",
+    )
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc("leaf")), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not [e for e in result.errors if "module_ref" in e], result.errors
+
+
+@pytest.mark.parametrize(
+    ("module_ref", "message"),
+    [("no_such_module", "not found"), ("umbrella", "cycle: umbrella -> umbrella")],
+)
+def test_validate_module_file_flags_bad_module_ref(tmp_path, module_ref, message):
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc(module_ref)), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not result.is_valid
+    assert any("module_ref [stage" in e and message in e for e in result.errors), result.errors
 
 
 # --------------------------------------------------------------------------- #
@@ -1639,3 +1714,31 @@ def test_compare_label_diagnoses_a_placeholder_under_any_prefix(curie):
     assert "asserts nothing about the entity" in message
     assert "usually means the ID is wrong" not in message
     assert "fix-panther-labels" not in message
+
+
+def test_validate_family_members_accepts_uniprot_alternate_with_warning():
+    """When PANTHER's files and UniProt disagree, either family is accepted."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, warnings = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR11375:SF2"},
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "UniProt" in warnings[0]
+    assert "PTHR11375:SF2" in warnings[0]
+
+
+def test_validate_family_members_alternate_for_other_family_still_fails():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR99999"},
+    )
+
+    assert len(errors) == 1

@@ -25,3 +25,12 @@ Falcon deep research was run for RUBCN on 2026-06-02 but timed out after 600 sec
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the prior wording framed RUBCN in the Proteostasis Network context as a negative PI3KC3-C2/autophagosome maturation regulator rather than an autophagy activator, with UniProt pathogen/innate-immune interaction biology treated as non-core for the GOA rows.
+
+## 2026-10-10 GOA refresh update (PTHR45971 family pass)
+
+- GOA refresh added 25 GO:0005515 IPI rows. Policy: protein binding is never MARK_AS_OVER_ANNOTATED. Rows from the mechanistic papers (PMID:19270696, PMID:21062745) with PI3KC3-C2 subunits (BECN1, PIK3C3, PIK3R4, UVRAG) are now MODIFY to GO:0141039 phosphatidylinositol 3-kinase inhibitor activity [PMID:21062745 "inhibition of PI3KC3 lipid kinase activity by Rubicon"; PMID:19270693 "Rubicon reduces Vps34 activity and downregulates autophagy"]. All other protein-binding rows (interactome screens HuRI/BioPlex/OpenCell, EGFR, ORF3a, Beclin 2, Slamf1 studies) are REMOVE; removal does not imply the interactions are false.
+- NEW GO:0031267 small GTPase binding (IDA, PMID:32632011): [PMID:32632011 "Rubicon-mediated inhibition of autophagy requires the interaction of the C-terminal Rubicon homology (RH) domain of Rubicon with Rab7-GTP"]; added as a second core function.
+- GO:1901981 IBA (PTN002915557, Eukaryota root, seeded only by RUBCNL/Pacer) changed from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED: [PMID:19270693 "Rubicon-EGFP was not pulled down by PtdIns(3)P-conjugated sepharose beads"]; [PMID:32632011 "Rubicon has not been reported to bind specifically to phospholipids"].
+- A 2026 bioRxiv preprint (PMID:42845427) reports that the Rubicon PIKBD binds PI3KC3-C2 only via the BECN1 BARA domain [PMID:42845427 "Rubicon binds directly to PI3KC3-C2 only via the BARA domain of the BECN1 subunit"]; context only (preprint).
+- Martinez et al. 2015 (PMID:26098576, LAP/NOX2) and 2016 (PMID:27096368, lupus-like disease) are retracted (PMID:38438803, PMID:36045298); not used as evidence. LAP/NOX2 involvement rests on other work (e.g. [PMID:22423966 "Rubicon is also an essential, positive regulator of the NADPH oxidase complex"]) and is treated as non-core; no NEW annotation proposed.
+- Mouse ortholog reviewed in genes/mouse/Rubcn/.

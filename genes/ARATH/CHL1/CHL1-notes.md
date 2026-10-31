@@ -1,3 +1,5 @@
+> Q05085 review consolidated on 2026-10-26: [canonical NRT1.1 review](../NRT1.1/NRT1.1-ai-review.yaml). The notes below are historical; current reconciled conclusions and source limits are in [NRT1.1 notes](../NRT1.1/NRT1.1-notes.md).
+
 # CHL1 (At1g12110) - NPF6.3 / NRT1.1 Nitrate Transporter
 
 ## Identity
@@ -84,3 +86,7 @@ x2 (one MODIFY to protein kinase binding for CIPK23; one REMOVE for generic
 AT2G45820 interaction). Non-core developmental/pleiotropic: GO:0010540 basipetal
 auxin transport, GO:0048527 lateral root development, GO:0048573 photoperiodism
 flowering, GO:0009414 response to water deprivation.
+
+## 2026-10-14 — UNDECIDED rows resolved
+
+Photoperiodism, flowering (IMP, PMID:30972097) is now MARK_AS_OVER_ANNOTATED rather than UNDECIDED. A search of the cached full text found no flowering experiment, so the PMID is probably mis-attributed. The intended source could not be identified, so the row is flagged rather than removed. It should be reported to TAIR.

@@ -1,7 +1,7 @@
 ---
 # Normal publication workflow: rebuild main and deploy the validated site daily
-# or on manual dispatch. The generated-files PR also updates tracked HTML, but
-# its merge is not required for publication. To publish a completed build again
+# or on manual dispatch. With artifact deployment enabled, no generated-files
+# commit, App credentials, review or merge is needed. To publish a completed build again
 # without rendering, use deploy-existing-pages.yaml.
 name: Build and deploy site
 
@@ -19,6 +19,8 @@ jobs:
   generate-pages:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      BROWSER_TARGET: ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' && 'pages' || 'git' }}
     outputs:
       deployable: ${{ steps.pages-upload.outcome == 'success' && steps.archive-check.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true' }}
     permissions:
@@ -73,6 +75,9 @@ jobs:
       - name: Render ProtNLM prediction evaluations from all review sidecars
         run: just render-prediction-eval
 
+      - name: Render BioReason-Pro and DeepECTransformer prediction evaluations
+        run: just render-bioreason-eval
+
       # Biological validation runs independently in main.yaml (PRs and weekly).
       # Publication renders the accepted contents of main without revalidating GO.
 
@@ -86,20 +91,21 @@ jobs:
         run: just render-rule-pages
 
       - name: Deploy browser app (data.js + index.html)
-        run: just deploy-browser
+        run: just deploy-browser "$BROWSER_TARGET"
 
       - name: Build shared predictions browser
-        run: just deploy-predictions-browser
+        run: just deploy-predictions-browser "$BROWSER_TARGET"
 
       - name: Build homology propagation browser
         id: propagation-build
         continue-on-error: true
-        run: just deploy-propagation-browser
+        run: just deploy-propagation-browser "$BROWSER_TARGET"
 
-      # Build the candidate artifact for inspection. Publication remains opt-in
-      # and separately gated on completeness and the supported size budget.
-      # Keep every artifact step non-blocking so failures cannot skip the legacy
-      # regeneration lane. Only summarize/upload a successfully staged tree.
+      # Build the artifact for publication (or inspection when disabled).
+      # Staging compresses the intermediate browser payload before size checks.
+      # Non-blocking steps preserve legacy regeneration when artifact publishing
+      # is disabled. When enabled, publication-status makes any failed deployment
+      # fail the workflow. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
         id: pages-stage
         if: steps.propagation-build.outcome == 'success'
@@ -140,8 +146,14 @@ jobs:
             echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
             echo "| Archive budget (bytes) | $(jq -r .archive_size_budget_bytes _site-manifest.json) |"
             echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
+            echo "| Officially supported site size (bytes) | $(jq -r .supported_size_budget_bytes _site-manifest.json) |"
+            echo "| Within supported hosting capacity | $(jq -r .within_supported_size _site-manifest.json) |"
             echo
             echo "Link-quality findings above are advisory; they do not block publication."
+            if jq -e '.within_supported_size == false' _site-manifest.json > /dev/null; then
+              echo
+              echo "**Capacity warning:** this site exceeds GitHub Pages' supported 1 GB. The existing 10 GB policy permits deployment attempts; it does not guarantee reliable hosting."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
           if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
             echo "deployable=true" >> "$GITHUB_OUTPUT"
@@ -194,10 +206,13 @@ jobs:
                steps.pages-summary.outcome == 'failure' ||
                steps.pages-upload.outcome == 'failure' ||
                steps.archive-check.outcome == 'failure') }}
-        run: echo "::warning title=Pages artifact build failed::Inspect the propagation build, staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
+        run: echo "::warning title=Pages artifact build failed::Inspect the propagation build, staging, summary, upload, and archive checksum steps. The previous deployment remains live. Legacy regeneration runs only when artifact publication is disabled."
 
       - name: Check for changes
         id: check-changes
+        # Only the legacy branch-based mode commits generated files. In artifact
+        # mode these may exceed Git's blob cap and must never enter the PR lane.
+        if: vars.PAGES_ARTIFACT_DEPLOY_ENABLED != 'true'
         run: |
           if [ -z "$(git status --porcelain --untracked-files=all -- \
             genes/ \
@@ -256,6 +271,7 @@ jobs:
       # does.
       - name: Generate ai4c-agent token
         id: ai4c-token
+        if: steps.check-changes.outputs.has_changes == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.AI4C_AGENT_APP_ID }}

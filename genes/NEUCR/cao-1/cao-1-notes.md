@@ -58,3 +58,14 @@ This gene is a textbook example of a **misnamed/over-propagated family annotatio
 cleavage oxygenase" family name and IBA propagation generated a carotenoid MF + process that
 experimental work explicitly disproved. The curated GOA already carries the corrective NOT annotation,
 and there is no dedicated GO MF term for stilbene/resveratrol dioxygenase activity (candidate new term).
+
+## 2026-10-01 Re-review after GOA refresh
+
+- Two GOA rows vanished from the current GOA snapshot and were marked `retired: true` (reviews kept):
+  - GO:0016702 IEA GO_REF:0000002 (InterPro2GO) - superseded by the current combined-IEA row
+    GO:0016702 IEA GO_REF:0000120 (ARBA + IPR004294), reviewed as ACCEPT.
+  - GO:1905594 resveratrol binding IDA PMID:28493664 - GO:1905594 is being obsoleted; GOA replaced it
+    with GO:7770086 resveratrol dioxygenase activity IDA PMID:28493664 (exactly the replacement this
+    review had proposed), reviewed as ACCEPT.
+- GO:7770086 is now in the local ontology snapshot, so core_functions MF and the GO:1905594 MODIFY
+  replacement were switched from the GO:0016702 placeholder to GO:7770086.

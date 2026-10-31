@@ -28,7 +28,7 @@ style: |
 
 What reaction-level annotation adds beyond EC numbers, and 132 curated new mappings
 
-<span class="small">AI Gene Review · projects/RHEA · 2026</span>
+<span class="small">AI Gene Review · projects/RHEA · 2026-10-05</span>
 
 ---
 
@@ -38,7 +38,7 @@ What reaction-level annotation adds beyond EC numbers, and 132 curated new mappi
 
 - RHEA reaches GO via `rhea2go` (GO_REF:0000116), but **88%** of reactions that also have an EC map to the **same GO term `ec2go` already gives**.
 - Its real value: **772 RHEA-only GO terms**, **462** reactions whose EC has no `ec2go` line; meanwhile **36%** of enzymatic reactions have no GO target.
-- We curated **132 new mappings** backed by reviewed enzymes: **42** new Swiss-Prot annotations. The residual gap is missing GO terms, not missing mappings.
+- We curated **132 new mappings** backed by reviewed enzymes: **36** new Swiss-Prot annotations. The residual gap is missing GO terms, not missing mappings.
 
 ---
 
@@ -68,11 +68,11 @@ What reaction-level annotation adds beyond EC numbers, and 132 curated new mappi
 
 | Class | Rows | Meaning |
 |---|---:|---|
-| exactMatch | 110 | ready-to-add; most EC-bridge supported (BTD, TPMT, VKORC1L1, PYCR1, RNGTT) |
+| exactMatch | 109 | ready-to-add; most EC-bridge supported (BTD, TPMT, VKORC1L1, PYCR1, RNGTT) |
 | broadMatch | 4 | only a class term exists (PHYKPL → lyase activity; B3GALNT2) |
-| NoTermFound | 18 | new GO term needed (e.g. hppE fosfomycin epoxidase) |
+| NoTermFound | 19 | new GO term needed (e.g. hppE fosfomycin epoxidase, SAMD8/SMSr) |
 
-<span class="small">Every row backed by a reviewed enzyme (RHEA-MAPPING-REVIEWS.md); passes `just validate-rhea-mappings`. Gain: 42 new reviewed-entry annotations.</span>
+<span class="small">Every row backed by a reviewed enzyme (RHEA-MAPPING-REVIEWS.md); passes `just validate-rhea-mappings`. Gain: 36 new reviewed-entry annotations.</span>
 
 ---
 
@@ -80,8 +80,8 @@ What reaction-level annotation adds beyond EC numbers, and 132 curated new mappi
 
 - ✅ EC-masking and specificity measured; reverse-gap pilot; gap case reviews (PHYKPL, B3GALNT2, SAMD8, SULT6B1)
 - ✅ 132-row SSSOM set validates; EC-bridge reviewed residual gain is 0
-- ⬜ Forward closure-filtered cross-organism scan (needs go-db)
-- ⬜ Closure-aware reverse gap on RHEA:21248 and RHEA:10596
-- ⬜ Batch new-term requests for reactions with no GO target
+- ⬜ Forward closure-filtered cross-organism scan (#4013; needs go-db)
+- ⬜ Closure-aware reverse gap on RHEA:21248 and RHEA:10596 (#4013)
+- ⬜ Batch new-term requests for 18 reactions with no GO target (#4013)
 
 **Read more:** `projects/RHEA.md` · `projects/RHEA/rhea2go.sssom.yaml` · `projects/RHEA/RHEA-ANNOTATION-GAIN.md`

@@ -36,9 +36,9 @@ GO:0061753 → the cargo adaptor MF plus one selective-autophagy process per pap
 
 ## Bottom line
 
-- GO plans to obsolete **GO:0061753** because it restates a molecular function (**GO:0160247** cargo adaptor activity); there is **no single replacement**.
-- We traced **5 direct experimental rows**, **5 MF extension rows** and **10 ISS/ISO rows**, mapped each to a cargo-specific process, and found **2 errors** in the upstream table.
-- **Scoped, not landed:** GO:0061753 is still active; **RETREG2 and STBD1** reviews here ACCEPT it and use it in `core_functions`.
+- GO has obsoleted **GO:0061753** because it restated a molecular function (**GO:0160247** cargo adaptor activity); there is **no single replacement**.
+- We traced **5 direct experimental rows**, **1 direct ISO row**, **5 MF extension rows** and **10 further ISS/ISO rows**, mapping each toward a cargo-specific process.
+- **Landed upstream:** GO:0061753 is obsolete; **RETREG2 and STBD1** reviews here still ACCEPT it and use it in `core_functions`.
 
 ---
 
@@ -70,17 +70,18 @@ GO:0061753 → the cargo adaptor MF plus one selective-autophagy process per pap
 | `human/RETREG2` | 1 IEA, ACCEPT | yes | GO:0061709 reticulophagy |
 | `human/STBD1` | 1 IEA, ACCEPT | yes | GO:0061723 glycophagy |
 
-- `core_functions` ids are strictly validated, so both reviews will **fail validation** once the validator's GO release includes the obsoletion.
-- The page's impact section predates the STBD1 review and lists RETREG2 only.
-- Not yet reviewed here: TOM1, IRGQ, SMURF1, GABARAPL1.
+- `core_functions` ids are strictly validated, so both reviews are local cache lag away from blocking.
+- The repo impact section now lists both stale human reviews.
+- Not yet reviewed here: TOM1, IRGQ, SMURF1, mouse Stbd1 and mouse Gabarapl1.
 
 ---
 
 ## Next steps
 
 1. Drop GO:0061753 from `core_functions` in **RETREG2** and **STBD1**; revisit their IEA rows; `just validate human <gene>`.
-2. Review **IRGQ** and draft a `proposed_new_terms` entry for MHC-I quality-control autophagy.
-3. Then **SMURF1**, **TOM1**, **GABARAPL1**; report the two table corrections to go-annotation#6497.
+2. Review mouse **Stbd1**, the clean direct-transfer case for glycophagy.
+3. Review **IRGQ** and draft a `proposed_new_terms` entry for MHC-I quality-control autophagy.
+4. Then **SMURF1**, **TOM1**, **Gabarapl1**; report the two table corrections to go-annotation#6497.
 
 **Siblings:** `VESICLE_TARGETING_OBSOLETION`, `SYNAPTIC_VESICLE_DOCKING_OBSOLETION`, `ER_EXIT_SITE_LOCALIZATION_OBSOLETION` (same MF_in_BP rationale)
-**Upstream:** go-annotation#6497 · go-ontology#32304 (open)
+**Tracker:** #2385 · **Upstream:** go-annotation#6497 open · go-ontology#32304 closed

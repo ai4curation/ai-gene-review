@@ -119,11 +119,10 @@ def hotspots(all_rows):
     """Aggregate down-grade rates per family / subfamily / graft node.
 
     Proteins are counted by review *file*, never by gene symbol: the corpus has
-    510 distinct review files but only 493 distinct symbols (``mdh`` in METEA
-    and PSEPK, ``ALB`` in CANLF and FELCA, the two PSEPK ``dapF`` paralogs, and
-    six more), so a symbol-keyed count collapses distinct proteins and
-    understates exactly the multi-organism cases the hotspot table exists to
-    surface.
+    more review files than distinct symbols (``mdh`` in METEA and PSEPK, ``ALB``
+    in CANLF and FELCA, the two PSEPK ``dapF`` paralogs, and others), so a
+    symbol-keyed count collapses distinct proteins and understates exactly the
+    multi-organism cases the hotspot table exists to surface.
     """
     from collections import Counter, defaultdict
     groups = defaultdict(list)
@@ -150,8 +149,12 @@ def hotspots(all_rows):
         def label(r):
             if len(files_per_symbol[r["gene"]]) < 2:
                 return r["gene"]
+            # ``<species>/<review dir>``: the directory name, not the symbol, so
+            # same-species paralogs (PSEPK ``dapF__Q88CF3`` / ``dapF__Q88GD4``)
+            # stay distinct instead of collapsing to one ``PSEPK/dapF`` label.
             species = _species_of(r["file"])
-            return f"{species}/{r['gene']}" if species else r["gene"]
+            gene_dir = os.path.basename(os.path.dirname(r["file"]))
+            return f"{species}/{gene_dir}" if species else gene_dir
 
         out.append({
             "level": level,

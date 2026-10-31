@@ -2,6 +2,8 @@
 title: "Substrate Localization to Autophagosome (GO:0061753) — Obsoletion & Transfer"
 maturity: SCOPING
 tags: [OBSOLETION]
+last_reviewed: 2026-10-05
+autolink_gene_symbols: false
 species:
   - human
   - mouse
@@ -10,42 +12,39 @@ genes:
   - IRGQ
   - SMURF1
   - STBD1
-  - GABARAPL1
+  - Gabarapl1
   - RETREG2
 manifest:
   slides:
     - href: SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/SeXepPvtBDmbHEuqka23aE
-      title: Project brief
 ---
 
 # Substrate Localization to Autophagosome (GO:0061753) — Obsoletion & Transfer
 
 **Bottom line:** In selective autophagy, cargo receptors link a substrate
 (glycogen, mitochondria, ER, bacteria, misfolded proteins) to ATG8-family
-proteins on the forming autophagosome. GO plans to obsolete the process
+proteins on the forming autophagosome. GO has obsoleted the process
 term GO:0061753 *substrate localization to autophagosome* because it
 restates the receptor's molecular function (GO:0160247 *autophagy cargo
-adaptor activity*), and it has no single replacement: each annotation must
+adaptor activity*), and it has no single replacement: each annotation should
 move to the selective-autophagy process its paper supports. We pulled
 every affected row from QuickGO (5 direct experimental annotations on
-TOM1, Stbd1, IRGQ and SMURF1, 5 MF rows that use the term in an
-extension, and 10 ISS/ISO ortholog rows), mapped each to a destination
-term, and found two errors in the upstream table. The obsoletion has not
-landed: GO:0061753 is still active in OLS, and go-ontology#32304 is open.
-Scoped, no review refreshed yet. Two reviews here will go stale, not one
-as the impact section below says: `human/RETREG2` and `human/STBD1`
-(reviewed since this page was written) each ACCEPT an IEA row for
-GO:0061753 and list it in the strictly validated `core_functions`.
+TOM1, Stbd1, IRGQ and SMURF1, 1 direct ISO row on Gabarapl1, 5 MF rows
+that use the term in an extension, and 10 further ISS/ISO ortholog rows),
+mapped each to a destination term, and found two errors in the upstream table.
+The GO ontology ticket closed on 2026-08-10, QuickGO reports GO:0061753 as
+obsolete as of 2026-10-04, and the annotation tracker is still open. Two
+existing reviews here are now stale: `human/RETREG2` and `human/STBD1` each
+ACCEPT an IEA row for GO:0061753 and list it in the strictly validated
+`core_functions`, though both still pass against the repo's older ontology
+cache.
 
 The IRGQ case is the one open scientific question: no GO term covers
 autophagy of misfolded MHC-I, so it is a candidate new-term request.
 
 ## Overview
 
-A GO obsoletion proposal will retire the biological-process term
+A GO obsoletion proposal retired the biological-process term
 **GO:0061753 substrate localization to autophagosome** — *"The localization
 process by which an autophagic substrate is delivered to a forming
 autophagosome."*
@@ -59,10 +58,10 @@ paper actually supports (glycophagy, mitophagy, aggrephagy, xenophagy,
 autophagosome-lysosome fusion, …), which makes this a per-annotation curation
 job rather than a mechanical relabel.
 
-Unlike most obsoletion trackers in this repo, **one affected review already
-exists here** — `genes/human/RETREG2` carries a GO:0061753 row *and* uses the
-term in `core_functions`, where term ids are strictly validated. That review
-breaks the moment the obsoletion lands.
+Unlike the pure queueing obsoletion trackers, **two local reviews already carry
+the obsolete term**: `genes/human/RETREG2` and `genes/human/STBD1` each have a
+GO:0061753 row and a `core_functions` use, where term ids are strictly
+validated once the local ontology cache catches up.
 
 ## Upstream tickets
 
@@ -70,16 +69,20 @@ breaks the moment the obsoletion lands.
   — *"Review annotations to GO:0061753 substrate localization to autophagosome"*
 - Ontology ticket: [geneontology/go-ontology#32304](https://github.com/geneontology/go-ontology/issues/32304)
   — *"Obsoletion request: GO:0061753 substrate localization to autophagosome"*
-  (OPEN, labels: `obsoletion`, `ready`, `MF_in_BP`, `vesicle-mediated-transport`)
+  (CLOSED 2026-08-10; labels: `obsoletion`, `ready`, `MF_in_BP`,
+  `vesicle-mediated-transport`)
 - MF adaptor re-parenting: [geneontology/go-ontology#31866](https://github.com/geneontology/go-ontology/issues/31866)
   — *"Migrate terms under protein membrane adaptor to correct parent"* (**CLOSED**)
 
-**Replacement-term status.** No new term needs minting. Every proposed
-destination already exists and resolves in OLS (verified 2026-08-08):
+**Replacement-term status.** GO did not mint a blanket replacement for this
+obsoletion. GO:0061753 now resolves as obsolete in QuickGO, and the concrete
+transfer destinations below already exist; IRGQ still exposes a narrower NTR
+opportunity because no MHC-I-selective-autophagy term exists (verified
+2026-08-08; GO:0061753 rechecked 2026-10-04):
 
 | GO id | Label | Aspect |
 |---|---|---|
-| GO:0061753 | substrate localization to autophagosome (**to be obsoleted**; still active) | BP |
+| GO:0061753 | substrate localization to autophagosome (**obsolete**) | BP |
 | GO:0061723 | glycophagy | BP |
 | GO:0061909 | autophagosome-lysosome fusion | BP |
 | GO:0061734 | type 2 mitophagy | BP |
@@ -110,7 +113,7 @@ upstream issue text.
 | **IRGQ** | human | Q8WZA9 | IDA | PMID:39481378 | — | → **GO:0006515** + **GO:0016236** (no MHC-I-selective-autophagy term exists) |
 | **SMURF1** | human | Q9HCE7 | IMP | PMID:22020285 | `has_target_start_location(GO:0005739)`, `part_of(GO:0061734)` | → **GO:0061734** type 2 mitophagy, plus **GO:0098792** xenophagy from the same paper |
 
-### (B) Experimental MF annotations carrying GO:0061753 in an extension
+### (B) MF annotations carrying GO:0061753 in an extension
 
 | Gene product | Species | UniProt | MF term | Ev | Reference | Recommendation |
 |---|---|---|---|---|---|---|
@@ -145,10 +148,9 @@ scope, per the upstream issue.
 
 ## Impact on this repo
 
-### Tier 1 — an existing review goes stale
+### Tier 1 — existing reviews go stale
 
-**`genes/human/RETREG2/RETREG2-ai-review.yaml`** is the only review in the repo
-touching GO:0061753, and it is affected twice:
+**`genes/human/RETREG2/RETREG2-ai-review.yaml`** is affected twice:
 
 - an `existing_annotations` row — GO:0061753, **IEA**, `GO_REF:0000108`,
   `involved_in`, currently `action: ACCEPT`;
@@ -164,6 +166,18 @@ receptor, so the reticulophagy BP (GO:0061709, already present) plus the MF
 **GO:0140506 endoplasmic reticulum-autophagosome adaptor activity** (also already
 on that review) carry the content; the GO:0061753 entry is redundant rather than
 wrong and should simply be dropped.
+
+**`genes/human/STBD1/STBD1-ai-review.yaml`** has the same pattern for the
+glycogen cargo receptor:
+
+- an `existing_annotations` row — GO:0061753, **IEA**, `GO_REF:0000107`,
+  `involved_in`, currently `action: ACCEPT`;
+- a `core_functions[].directly_involved_in` entry listing GO:0061753 alongside
+  GO:0061723 glycophagy.
+
+The biology is similarly clear: STBD1's receptor activity is already captured
+as GO:0160247 *autophagy cargo adaptor activity*, and the selective-autophagy
+process is GO:0061723 *glycophagy*. The obsolete generic BP is redundant.
 
 ### Tier 2 — related MF adaptor annotations, no action expected
 
@@ -189,9 +203,10 @@ how these BPs are used in this repo: **GO:0061723 glycophagy** —
 (the Stbd1/GAA double-knockout paper behind transfer A3) is the same
 experimental system.
 
-**None of the five directly affected gene products has a review in this repo**
-(`genes/human/TOM1`, `genes/human/IRGQ`, `genes/human/SMURF1`,
-`genes/mouse/Stbd1`, `genes/mouse/Gabarapl1` all absent).
+None of the five directly affected upstream accessions has a review in this
+repo (`genes/human/TOM1`, `genes/human/IRGQ`, `genes/human/SMURF1`,
+`genes/mouse/Stbd1`, `genes/mouse/Gabarapl1` all absent). Human `STBD1` is
+the reviewed orthologous glycophagy receptor and now a local stale row.
 
 ## Scope
 
@@ -217,48 +232,48 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
    reviewed; both the GO:0061753 `existing_annotations` row and the
    `core_functions` entry need revisiting. Highest priority: an existing review
    goes stale, and `core_functions` validation is strict.
+2. **STBD1** (human, UniProt O95210) — `genes/human/STBD1/`. Already reviewed;
+   the GO:0061753 IEA row and the `core_functions` entry should be reduced to
+   the existing GO:0061723 glycophagy coverage.
 
 ### Tier 2 — directly affected, not yet in repo
 
-2. **STBD1** (mouse Q8C7E7; human ortholog **O95210**) — the cleanest case: two
+3. **STBD1** (mouse Q8C7E7; human ortholog **O95210**) — the cleanest case: two
    independent IMP papers, an unambiguous destination (GO:0061723 glycophagy),
-   and an MF cargo-receptor annotation whose extension needs the same swap.
-   Pairs naturally with the existing `human/GAA` review.
-3. **IRGQ** (human Q8WZA9) — the hard case. PMID:39481378 shows IRGQ routing
+   and an MF cargo-receptor annotation whose extension needs the same swap. Its
+   human ortholog is now reviewed, and the mouse review still pairs naturally
+   with the existing `human/GAA` review.
+4. **IRGQ** (human Q8WZA9) — the hard case. PMID:39481378 shows IRGQ routing
    misfolded MHC-I to lysosomal degradation via GABARAPL2/LC3B. No suitable
    selective-autophagy child exists, so this is a genuine
    `proposed_new_terms` opportunity rather than a transfer.
-4. **SMURF1** (human Q9HCE7) — PMID:22020285 supports *two* destinations from
+5. **SMURF1** (human Q9HCE7) — PMID:22020285 supports *two* destinations from
    one paper (GO:0061734 type 2 mitophagy and GO:0098792 xenophagy); a good test
    of one-annotation-splits-into-two.
-5. **TOM1** (human O60784) — PMID:23023224; the recommendation moves the
+6. **TOM1** (human O60784) — PMID:23023224; the recommendation moves the
    annotation from a cargo-sequestration BP to a *fusion* BP (GO:0061909), a
    different step of the pathway. Worth checking whether the myosin VI/TOM1
    evidence really supports fusion rather than delivery.
-6. **GABARAPL1** (mouse Q8R3R8; human ortholog **Q9H0R8**) — an ATG8-family
+7. **Gabarapl1** (mouse Q8R3R8; human ortholog **Q9H0R8**) — an ATG8-family
    protein annotated as a `GO:0043495` adaptor. Both its direct ISO row and its
    MF extension point at GO:0061753. Lower priority (ISO, not experimental) but
    it is the only ATG8-family member in the affected set.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land.** As of 2026-08-08 GO:0061753 is still
-   active in OLS (`is_obsolete: false`), though go-ontology#32304 is labelled
-   `ready`, so this could move soon.
-2. **Refresh RETREG2 first**, ideally *before* the obsoletion, since the fix
-   (dropping a redundant `core_functions` entry) does not depend on the final
-   destination chosen upstream. Regenerate with
-   `just fetch-gene human RETREG2`, re-review the GO:0061753 row, then
-   `just validate human RETREG2`.
-3. **Then STBD1** as the clean transfer case, cross-checking against the
-   existing `human/GAA` review.
-4. **Then IRGQ**, and use it to draft a `proposed_new_terms` entry for MHC-I
+1. **Refresh RETREG2 and human STBD1 first.** The obsoletion has landed
+   upstream, and both reviews already carry redundant GO:0061753 rows in
+   `existing_annotations` and `core_functions`. Drop the obsolete generic BP in
+   favor of their existing reticulophagy and glycophagy terms.
+2. **Then mouse Stbd1** as the clean direct transfer case, cross-checking
+   against the existing human `STBD1` and `GAA` reviews.
+3. **Then IRGQ**, and use it to draft a `proposed_new_terms` entry for MHC-I
    quality-control autophagy — the concrete deliverable this project can send
    back upstream.
-5. **Then SMURF1 and TOM1**; **GABARAPL1** last.
-6. **Report the two table corrections** (missing direct Gabarapl1 row; its ISO/MGI
+4. **Then SMURF1 and TOM1**; **Gabarapl1** last.
+5. **Report the two table corrections** (missing direct Gabarapl1 row; its ISO/MGI
    provenance) back to go-annotation#6497.
-7. **Cross-reference** the sibling obsoletion trackers in this repo — the
+6. **Cross-reference** the sibling obsoletion trackers in this repo — the
    [ER exit site](ER_EXIT_SITE_LOCALIZATION_OBSOLETION.md),
    [vesicle targeting](VESICLE_TARGETING_OBSOLETION.md) and
    [synaptic vesicle docking](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md) pages —
@@ -267,12 +282,10 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
 
 ## Priority
 
-**Medium.** Only five experimental annotations are in play and none of those
-gene products is reviewed here yet, so the immediate blast radius is small. It
-ranks above the pure queueing trackers because (a) `RETREG2` is an existing
-review that breaks on obsoletion, in the strictly-validated `core_functions`
-slot, and (b) the IRGQ term gap is an actionable new-term contribution.
-Nothing is broken until the obsoletion is applied.
+**Medium.** Only five experimental upstream annotations are in play, but the
+obsoletion has landed and two local human reviews now carry obsolete
+GO:0061753 in the strictly validated `core_functions` slot. The IRGQ term gap
+is also an actionable new-term contribution.
 
 ## Status
 
@@ -281,8 +294,15 @@ Nothing is broken until the obsoletion is applied.
   (opened 2026-08-08) and
   [go-ontology#32304](https://github.com/geneontology/go-ontology/issues/32304)
   (OPEN, labelled `ready`). Obsoletion **not yet applied**; GO:0061753 still
-  active in OLS. All five direct experimental annotations, all five MF-extension
-  rows, and ten downstream ISS/ISO rows independently verified against QuickGO;
+  active in OLS. All five direct experimental annotations, the extra direct
+  Gabarapl1 ISO row, all five MF-extension rows, and ten downstream ISS/ISO rows
+  independently verified against QuickGO;
   all UniProt accessions verified against the UniProt REST API; all fourteen GO
   ids verified in OLS. Two discrepancies found in the upstream table (see above).
   Repo impact: `human/RETREG2` only. No gene reviews started or refreshed yet.
+- **2026-10-04** — Re-audited after the ontology obsoletion landed:
+  go-ontology#32304 closed on 2026-08-10, QuickGO now reports GO:0061753 as
+  obsolete, and go-annotation#6497 remains open. Local impact is now two
+  reviewed human genes, `RETREG2` and `STBD1`, each with an obsolete IEA row
+  and an obsolete `core_functions` process entry. TOM1, IRGQ, SMURF1, mouse
+  Stbd1 and mouse Gabarapl1 remain absent.

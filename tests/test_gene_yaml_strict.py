@@ -32,3 +32,24 @@ def test_all_gene_reviews_parse_under_strict_yaml() -> None:
         "used by linkml-reference-validator (quote flow-list CURIEs, remove duplicate keys):\n"
         + "\n".join(failures[:25])
     )
+
+
+def test_all_family_reviews_parse_under_strict_yaml() -> None:
+    """Family reviews are reference-validated by ``just validate-families`` too.
+
+    A strict-parser failure there aborts the whole multi-file reference-validator call,
+    so one unquoted flow-mapping CURIE (``{id: UniProtKB:P12345}``) would silently stop
+    quote checking for every family review.
+    """
+    yaml = YAML(typ="safe")
+    failures = []
+    for fp in sorted((REPO_ROOT / "interpro" / "panther").glob("*/PTHR*-review.yaml")):
+        try:
+            yaml.load(fp.read_text())
+        except Exception as exc:  # noqa: BLE001 - any parse failure is a failure
+            failures.append(f"{fp.relative_to(REPO_ROOT)}: {type(exc).__name__}: {exc}")
+    assert not failures, (
+        f"{len(failures)} family-review file(s) are not valid under the strict YAML parser "
+        "used by linkml-reference-validator (quote flow-mapping CURIEs, remove duplicate keys):\n"
+        + "\n".join(failures[:25])
+    )

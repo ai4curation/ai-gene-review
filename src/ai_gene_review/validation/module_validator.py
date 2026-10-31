@@ -25,7 +25,9 @@ It also enforces **bundle-scoped conformance**: any node declaring
 ``conforms_to`` a template motif is checked (via ``module_qc``) so that an
 ``error``-severity mismatch -- a wrong/missing tier, a broken relay topology,
 or an unresolvable template -- blocks validation, while declared
-``WITH_DEVIATIONS`` deviations surface as advisory warnings.
+``WITH_DEVIATIONS`` deviations surface as advisory warnings. Likewise every
+``module_ref`` must resolve, must not form a cycle, and its node must not carry
+its own annotons, parts or variant sets.
 
 For direct terms in slots whose GO aspect is known, this validator also checks
 the expected GO branch: molecular-function slots (``function`` and
@@ -48,7 +50,8 @@ sufficient:
   machine-fetched ``*-goa.tsv``), since IRD/IKR nodes are legitimate provenance.
 * **Family membership**: a descriptor's declared family must actually contain the
   protein it names in ``representative_members``, per PANTHER's sequence
-  classification (``interpro/panther/panther-members.tsv``). This is the only
+  classification (the member index built into ``.cache/panther/panther-members-<release>.tsv``
+  by ``just refresh-panther-members``). This is the only
   check that separates a *mis-grounded* family from a merely *mislabelled* one --
   label checking alone cannot tell an invented label on the right family from a
   plausible label on the wrong one.
@@ -91,7 +94,9 @@ from ai_gene_review.etl.panther_families import (
     is_placeholder_label,
     label_drift,
     load_member_index,
+    load_member_index_alternates,
     load_subfamily_counts,
+    member_index_path,
 )
 from ai_gene_review.validation.supporting_text import (
     LITERATURE_PREFIXES,
@@ -100,7 +105,9 @@ from ai_gene_review.validation.supporting_text import (
 )
 
 # A resolver answers: given a CURIE, return (status, primary_label, aliases).
-# status is "ok" when the id resolved, "not_found" when the ontology was
+# status is "ok" when the id resolved, "ok_no_aliases" when it resolved but the
+# ontology source cannot list synonyms (e.g. the OLS adapter), so only the
+# primary label is known, "not_found" when the ontology was
 # consulted but the id is absent, and "unavailable" when the ontology itself
 # could not be loaded/queried (e.g. transient download failure) - the latter is
 # advisory so CI does not go red on flaky ontology fetches. Implemented as a
@@ -1073,7 +1080,7 @@ def subfamily_precision_case(
     member_subfamilies = set(subfamilied.values())
     if not member_subfamilies:
         # No member has a subfamily recorded, so there is nothing to narrow to
-        # -- 20 rows in panther-members.tsv carry a bare family.
+        # -- 20 rows in the member index carry a bare family.
         return verdict(SubfamilyPrecision.NO_SUBFAMILY_RECORDED)
     if len(member_subfamilies) > 1:
         # Tested before the unplaced check so a descriptor whose placeable
@@ -1117,6 +1124,7 @@ def validate_family_members(
     member_index: Dict[str, str],
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
+    alternates: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1130,9 +1138,14 @@ def validate_family_members(
 
     Accessions absent from the (pruned) index are not checkable and degrade to a
     warning, so a newly cited protein never fails the build spuriously.
+
+    ``alternates`` holds UniProt's family for accessions where it disagrees with
+    PANTHER's classification files. Either source is accepted: a declared family
+    that matches only the UniProt value is reported as a warning, not an error.
     """
     errors: List[str] = []
     warnings: List[str] = []
+    alternates = alternates or {}
 
     for use in uses:
         declared_bases = {
@@ -1149,12 +1162,34 @@ def validate_family_members(
             warnings.append(
                 f"{use.path}: none of the representative members "
                 f"({_format_limited(set(use.representative_accessions))}) are in "
-                "interpro/panther/panther-members.tsv, so family membership was "
+                "the PANTHER member index (.cache/panther/panther-members-<release>.tsv), so "
+                "family membership was "
                 "not checked; refresh with `just refresh-panther-members`"
             )
             continue
 
         member_bases = {family_sf.split(":", 1)[0] for family_sf in known.values()}
+        alternate_bases = {
+            accession: alternates[accession].split(":", 1)[0]
+            for accession in known
+            if accession in alternates
+        }
+        if not declared_bases & member_bases and declared_bases & set(
+            alternate_bases.values()
+        ):
+            disagreeing = ", ".join(
+                f"{accession} is in PANTHER:{known[accession]} per PANTHER's "
+                f"classification files but PANTHER:{alternates[accession]} per UniProt"
+                for accession in sorted(alternate_bases)
+                if alternate_bases[accession] in declared_bases
+            )
+            warnings.append(
+                f"{use.path}: the declared family matches UniProt's PANTHER "
+                f"cross-reference but not PANTHER's own classification files -- "
+                f"{disagreeing}. The two sources disagree for this protein; both "
+                "are accepted."
+            )
+            continue
         if declared_bases & member_bases:
             # Precision advisory: the id is right, but if every member resolves
             # to one subfamily of a large family, the subfamily is the sharper
@@ -1179,6 +1214,7 @@ def validate_family_members(
                 accession: family_sf
                 for accession, family_sf in known.items()
                 if family_sf.split(":", 1)[0] not in declared_bases
+                and alternate_bases.get(accession) not in declared_bases
             }
             if outside:
                 listed = ", ".join(
@@ -1455,6 +1491,14 @@ def validate_terms(
                 f"the {where} quotes the retired label verbatim, which is "
                 f"allowed when the entry documents the retirement"
             )
+        if err and status == "ok_no_aliases":
+            # The ontology source cannot list synonyms, so a non-primary label
+            # may be a synonym: advisory, as it was before ids resolved here.
+            warnings.append(
+                f"{err} (synonyms unavailable from this ontology source; "
+                f"label not validated against synonyms)"
+            )
+            continue
         if err:
             errors.append(err)
 
@@ -1654,7 +1698,10 @@ def _get_cached_adapter(adapter_string: str):
     return _ADAPTER_CACHE[adapter_string]
 
 
-def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
+def _build_oak_resolver(
+    adapter_map: Dict[str, Optional[str]],
+    term_cache: Optional[Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]]] = None,
+) -> Resolver:
     """Build a resolver backed by real OAK adapters (lazily created, cached).
 
     Adapter creation and lookups touch external ontology databases, so failures
@@ -1666,7 +1713,8 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     def get(adapter_string: str):
         return _get_cached_adapter(adapter_string)
 
-    lookups: Dict[str, Tuple[str, Optional[str], Set[str]]] = {}
+    lookups = {} if term_cache is None else term_cache
+    unavailable: Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]] = {}
 
     def lookup(curie: str) -> Tuple[str, Optional[str], Set[str]]:
         prefix = curie.split(":", 1)[0]
@@ -1683,19 +1731,35 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
             # entity_aliases includes synonyms; tolerate adapters lacking it.
             alias_fn = getattr(adapter, "entity_aliases", None)
             if callable(alias_fn):
-                aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                try:
+                    aliases = {a for a in alias_fn(curie) if isinstance(a, str)}
+                except NotImplementedError:
+                    # e.g. the OLS adapter has no alias map. The id and its
+                    # primary label did resolve, so do not report the ontology
+                    # as unavailable; but synonyms are unknown, so a label that
+                    # differs from the primary may still be a valid synonym.
+                    return ("ok_no_aliases", primary, set())
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())
 
     def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
-        # One lookup per CURIE per resolver (i.e. per validated file, since
-        # validate_module_file builds one): a term cited as evidence and
-        # asserted as a grounding would otherwise hit the adapter twice and
-        # double any "ontology unavailable" warning.
-        if curie not in lookups:
-            lookups[curie] = lookup(curie)
-        return lookups[curie]
+        # The CLI shares successful lookups within one batch. Include the
+        # configured adapter in the key so different ontology sources cannot
+        # contaminate each other. Remember failures only within this file so
+        # outages do not multiply calls; the next file can retry the lookup.
+        adapter = adapter_map[curie.split(":", 1)[0]]
+        assert adapter is not None
+        key = (adapter, curie)
+        if key in unavailable:
+            return unavailable[key]
+        if key not in lookups:
+            result = lookup(curie)
+            if result[0] == "unavailable":
+                unavailable[key] = result
+                return result
+            lookups[key] = result
+        return lookups[key]
 
     return resolve
 
@@ -1768,10 +1832,12 @@ def validate_module_file(
     paint_index: Optional[PaintIndex] = None,
     panther_dir: Optional[Path] = None,
     member_index: Optional[Dict[str, str]] = None,
+    member_alternates: Optional[Dict[str, str]] = None,
     gene_index: Optional[Dict[str, Path]] = None,
     genes_dir: Optional[Path] = None,
     family_reviews_dir: Optional[Path] = None,
     pfam_reviews_dir: Optional[Path] = None,
+    term_cache: Optional[Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]]] = None,
 ) -> ModuleValidationResult:
     """Validate module grounding, structure, evidence, and functional agreement.
 
@@ -1783,6 +1849,8 @@ def validate_module_file(
     ``gene_index`` and review directories select the local curation corpus for
     function compliance. Missing coverage warns; applicable retained gene NOTs
     and explicit family exclusions block. Results include structured findings.
+    ``term_cache`` can share ontology lookups across one immutable batch; it
+    does not cache document validation or persist across CLI runs.
     """
     path = Path(path)
     project_root = Path(__file__).resolve().parents[3]
@@ -1797,12 +1865,15 @@ def validate_module_file(
     typed_go_terms = list(iter_typed_go_terms(doc))
     resolver_was_injected = resolver is not None
     if resolver is None:
-        resolver = _build_oak_resolver(adapter_map)
+        resolver = _build_oak_resolver(adapter_map, term_cache)
 
     if member_index is None:
-        member_index = load_member_index(
-            project_root / "interpro" / "panther" / "panther-members.tsv"
-        )
+        member_index = load_member_index(member_index_path(project_root))
+        if member_alternates is None:
+            member_alternates = load_member_index_alternates(
+                member_index_path(project_root)
+            )
+    alternates = member_alternates or {}
     if paint_index is None:
         if panther_dir is None:
             panther_dir = project_root / "interpro" / "panther"
@@ -1812,6 +1883,7 @@ def validate_module_file(
         list(iter_family_member_uses(doc)),
         member_index,
         paint_index,
+        alternates=alternates,
         subfamily_counts=load_subfamily_counts(
             project_root / "interpro" / "panther" / "panther.obo"
         ),
@@ -1866,6 +1938,7 @@ def validate_module_file(
     conformance_errors, conformance_warnings = validate_conformance(doc, path.parent)
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
+    errors.extend(validate_module_refs(doc, path.parent, path.stem))
 
     # Reaction chaining: advisory only (never blocks). A `chaining_status`
     # override on a connection acknowledges a known gap and suppresses its
@@ -1873,6 +1946,9 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
     warnings.extend(validate_feedback_loops(doc))
+    model_errors, model_warnings = validate_executable_models(doc, project_root)
+    errors.extend(model_errors)
+    warnings.extend(model_warnings)
     warnings.extend(symbol_label_warnings(doc))
 
     # Compare actual role assertions, not just protein/family membership.
@@ -2182,6 +2258,53 @@ def validate_feedback_loops(doc: object) -> List[str]:
     ]
 
 
+def validate_executable_models(
+    doc: object, repo_root: Path
+) -> Tuple[List[str], List[str]]:
+    """Check ``activation_logic`` and the ``executable_models`` a module declares.
+
+    Returns ``(errors, warnings)``. Errors (blocking): ``activation_logic`` that
+    disagrees with the declared connections (see
+    :func:`ai_gene_review.module_boolean.activation_logic_findings`), a scenario
+    of a module-derived Boolean model that does not reach the attractors it
+    states or cannot be checked, and a model file that does not exist under
+    ``repo_root``. These are curator-authored claims, so a mismatch is an error,
+    like a wrong term id. Warnings: scenarios on a model this check cannot run
+    (external or non-Boolean), which are recorded but never verified.
+    """
+    from ai_gene_review.module_boolean import activation_logic_findings
+    from ai_gene_review.module_dynamics import (
+        run_declared_scenarios,
+        unchecked_scenario_models,
+    )
+
+    if not isinstance(doc, dict) or not isinstance(doc.get("module"), dict):
+        return [], []  # schema validation reports a missing module mapping
+    errors: List[str] = []
+    for model in doc.get("executable_models") or []:
+        if not isinstance(model, dict):
+            continue
+        for path in model.get("files") or []:
+            if not (repo_root / str(path)).is_file():
+                errors.append(
+                    f"Executable model {model.get('id')}: file {path} does not exist"
+                )
+    warnings = [
+        f"Executable model {model_id}: its scenarios are not checked "
+        "(only module-derived Boolean and agent-based models are simulated)"
+        for model_id in unchecked_scenario_models(doc)
+    ]
+    logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
+    if logic_errors:
+        return errors + logic_errors, warnings
+    for result in run_declared_scenarios(doc):
+        errors.extend(
+            f"Executable model {result.model_id}, scenario {result.scenario_id}: {f}"
+            for f in result.failures
+        )
+    return errors, warnings
+
+
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:
     """Check every ``conforms_to`` bundle against its template motif.
 
@@ -2210,6 +2333,23 @@ def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], Lis
     return errors, warnings
 
 
+def validate_module_refs(doc: object, modules_dir: Path, self_stem: str) -> List[str]:
+    """Return blocking errors for unresolved, cyclic or impure ``module_ref`` nodes.
+
+    References are resolved, like conformance templates, from the document's
+    own directory; ``self_stem`` lets a reference back to it count as a cycle.
+    """
+    from ai_gene_review.module_qc import module_ref_violations
+
+    if not isinstance(doc, dict):
+        return []
+    return [
+        f"module_ref [{violation['node_id']} -> {violation['module_ref']}]: "
+        f"{violation['message']}"
+        for violation in module_ref_violations(doc, modules_dir, self_stem)
+    ]
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """CLI entry point: validate one or more module files. Returns exit code."""
     import argparse
@@ -2232,8 +2372,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     from ai_gene_review.module_qc import index_gene_reviews
 
     gene_index = index_gene_reviews(Path(__file__).resolve().parents[3] / "genes")
+    term_cache: Dict[Tuple[str, str], Tuple[str, Optional[str], Set[str]]] = {}
     for path in args.files:
-        result = validate_module_file(path, config_path=args.config, gene_index=gene_index)
+        result = validate_module_file(
+            path, config_path=args.config, gene_index=gene_index, term_cache=term_cache
+        )
         ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")

@@ -3,7 +3,7 @@ title: "Miscitation Review Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, ARATH]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1, ITGB1]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1, ITGB1, FAS, GADD45A, TNFRSF1A, MAP3K1, MAP3K2, MAP2K4, MAPK8, MAPK3, MAP2K1, CALR, CANX, DCN]
 manifest:
   slides:
     - href: MISCITATIONS/slides/MISCITATIONS-slides.html
@@ -25,9 +25,10 @@ were buried one gene at a time. The register covers 14,559 adjudicated reference
 2,074 of 4,513 reviews and flags 559 (3.8%, an enriched sample rather than an error
 rate); all six seed cases stand. The main finding is structural: four of the six are
 defects in how a source database attached a correct paper (a wrong `WITH/FROM`
-interactor, an experimental code on a meeting report, a missing `NOT`), and the schema
-has no field for that yet. Most defects live in GOA, IntAct or UniProt rather than in
-this repo, and nothing has been reported upstream.
+interactor, an experimental code on a meeting report, a missing `NOT`). The schema
+records these as `review.source_defects` (see [Source defects](../docs/source_defects.md));
+the six seed cases have not yet been migrated into it. Most defects live in GOA, IntAct
+or UniProt rather than in this repo, and nothing has been reported upstream.
 
 The sibling [Miscitation Audit](MISCITATION_AUDIT.md) keys the same flags on the
 citation to find bad PMIDs copied across genes. Both count one flag per (gene,
@@ -88,6 +89,12 @@ There is a third blind spot. The validator's `skip_prefixes`
 checking entirely. **127 of the 559 currently flagged references carry one of those
 prefixes** (72 `file:`, 28 `GO_REF:`, 27 `Reactome:`), i.e. they were found by a
 human reading them, because no automated check was ever going to look.
+(Since 2026-10-06 `file:` and `Reactome:` quotes are checked against the local
+file and the `reactome/` cache by `validation/local_source_text.py`; quotes that
+already failed are listed in `conf/local_quote_baseline.yaml` and reported as
+warnings, new failures as errors. This covers gene reviews only: `GO_REF` and the
+other prefixes remain unchecked, as do `file:`/`Reactome:` quotes in module and
+GO-CAM evidence.)
 
 So the flag is, and has to be, a **manual** judgment. `reference_review` is where it
 goes.
@@ -139,7 +146,8 @@ defect is fixed by reporting it upstream.
 Six cases surfaced during the contested-functions review. Each was re-verified here
 against the local GOA/UniProt files and, where possible, a live query (QuickGO,
 NCBI E-utilities, EuropePMC, UniProt REST). **All six are confirmed**, in the sense
-that the factual claim in the last column was checked, not taken on report.
+that the factual claim in the last column was checked, not taken on report. The last two rows are batch cases found later, during the
+[MAPK cascades](MAPK_CASCADES.md) review, and were checked the same way.
 
 | Gene | What is cited | Defect | Kind | Where the error lives |
 |---|---|---|---|---|
@@ -149,6 +157,8 @@ that the factual claim in the last column was checked, not taken on report.
 | PEX39 | UniProt `FUNCTION` for Q5I0X4 cites `PMID:37160800` with `ECO:0000269` | that PMID is a 2023 multi-author **meeting report**, not primary evidence | attachment | UniProt |
 | SULT1B1 | `PMID:23207770` IDA for `GO:0006068` ethanol catabolic process | the paper names four ethanol-sulfating SULTs and **SULT1B1 is not one of them** | `MISCITED` | GOA |
 | PNPLA3 | `PMID:21878620` as `EXP` for `GO:0003841`, no `NOT` | that paper reports **no detectable** LPAAT activity for purified PNPLA3 | attachment | GOA |
+| 36 human genes (FAS, MAPK8, MAP2K4, TLR4, CASP8, ...) | `PMID:19593445` as IEP for `GO:0071260` cellular response to mechanical stimulus | a paper on **BAD in prostate cancer**; no mechanical-stimulation experiment, none of the 36 genes mentioned | `MISCITED` (batch) | UniProt |
+| MAP2K1, CALR, CANX (+ VRK1/2/3, KSR1, DUSP3, GOLGB1) | `PMID:22572157` for 31 MGI IDA/ISO rows (ER, membrane, protein/kinase binding) | resolves to a **platelet-alloantibody biosensor** paper; `PMID:22752157` (VRK2 anchors KSR1-MEK1 to the ER) matches every row | `WRONG_IDENTIFIER` (batch, 57/75 transposition) | MGI |
 
 ### NLRP3 — a dropped digit
 
@@ -334,6 +344,124 @@ LPAAT activity that `PMID:21878620` could not find. The PNPLA3 review grades tha
 `DISPUTED`. The `EXP`/`21878620` row is a miscitation *regardless* of how the dispute
 resolves.)
 
+### TFAP2A, TFAP2B — one name, three proteins ("AP-2")
+
+Found on 2026-10-05 and 2026-10-08 during the
+[Origins of the Neural Crest](NEURAL_CREST_ORIGINS.md) reviews, and checked
+against live QuickGO on 2026-10-08. "AP-2" names two unrelated things: the
+AP-2 *transcription factor* family (TFAP2A–E) and the AP-2 *clathrin adaptor
+complex* (AP2A1, AP2B1, AP2M1, AP2S1). Within the transcription-factor family,
+the early literature also named an alternatively spliced, dominant-negative
+AP-2α product "AP-2B" [PMID:8321221]. That name is one letter from AP-2β
+(TFAP2B). Both collisions have reached GOA.
+
+- **Adaptor read as transcription factor.** `PMID:11447109`, *"Myosin VI
+  isoform localized to clathrin-coated vesicles with a role in
+  clathrin-mediated endocytosis"*, supports a reciprocal `GO:0005515` IPI pair
+  (UniProt): TFAP2A (P05549) with MYO6 (Q9UM54), and MYO6 with TFAP2A. The
+  cached full text describes myosin VI in "a protein complex containing adaptor
+  protein (AP)-2 and clathrin". The partner is the clathrin adaptor, not
+  TFAP2A. The paper is right for MYO6. The *interactor* is wrong, which is the
+  ZBP1/GRID1 pattern above. TFAP2A's review records `correctness: MISCITED`
+  and removes the row. The reciprocal MYO6 row is unreviewed here.
+- **Splice isoform read as paralog.** `PMID:7559606`, *"Transcription factor
+  AP-2 regulates human insulin-like growth factor binding protein-5 gene
+  expression"*, uses AP-2 (AP-2α) and "AP-2B, a dominant-negative inhibitor of
+  AP-2". GOA carries two IDA rows on TFAP2B (Q92481) from it:
+  `GO:0001228` (GO_Central) and `GO:0000122` (UniProt). AP-2β was never
+  tested. TFAP2B's review records `correctness: MISCITED` and removes both
+  rows. TFAP2A's review records the same paper as `VERIFIED`, because it is
+  correct for AP-2α.
+
+Both are evidence-attachment defects: the reference is genuine and supports
+*something*, but the annotation is attached to the wrong gene product.
+
+A third, unconfirmed case from the same project: `PMID:15242799`, *"Cardiac
+neural crest ablation alters Id2 gene expression in the developing heart"*.
+AgBase uses it for IEP rows on chick Id2 (O73933), the paper's subject, and as
+the only TAS source for `GO:0014029` neural crest formation on *Xenopus*
+twist1, snai1 and snai2. The abstract mentions none of the three. The full text
+is not open access and not in PMC, so the three reviews record `UNVERIFIED`
+with a "suspected miscitation" note rather than `MISCITED`. A TAS may rest on an
+introductory statement this repo cannot see.
+
+### PMID:19593445 — one wrong PMID, thirty-six genes
+
+Found while reviewing the human JNK relay (MAP3K1, MAP2K4, MAPK8) for the
+[MAPK cascades project](MAPK_CASCADES.md). A live QuickGO query for
+`reference=PMID:19593445` returns 37 annotations, all `assignedBy: UniProt`, all dated
+2011-03-15. Thirty-six are the same row, `GO:0071260` cellular response to mechanical
+stimulus with evidence `IEP`, spread across 36 human genes that read like an
+apoptosis/inflammation expression panel:
+
+> TLR3, TLR4, TLR5, TLR7, TLR8, MYD88, IRF1, NFKB1, CD40, IL1B, TNFRSF1A, TNFRSF8,
+> TNFRSF10A, TNFRSF10B, TNFSF14, LTBR, FAS, FADD, CRADD, CASP1, CASP2, CASP5, CASP8,
+> CASP8AP2, BAK1, BAD, BNIP3, BCL10, GADD45A, CHEK1, MAP3K1, MAP3K2, MAP3K14, MAP2K4,
+> MAPK3, MAPK8
+
+The paper is *"Expression of the Bcl-2 protein BAD promotes prostate cancer growth"*.
+Its cached full text contains no mechanical-stimulation experiment and mentions none
+of these genes except BAD (total ERK appears only as a western-blot loading control). The one annotation that does match its content is the
+37th: BAD, `GO:0050679` positive regulation of epithelial cell proliferation, `IMP`.
+The pattern points to a batch import in which a mechanical-stretch expression dataset
+was filed under the wrong PMID. The intended paper has not been identified.
+
+This case also shows how a miscitation spreads inside the repo. Three earlier reviews
+(FAS, GADD45A, TNFRSF1A) kept the row as non-core and wrote summaries that described
+the paper as showing a mechanical-stimulus response, quoting only its title. On
+2026-09-26 those rows were changed to `UNDECIDED` and the reference was flagged
+`MISCITED` in all seven reviewed genes that carry it (FAS, GADD45A, TNFRSF1A, MAP3K1,
+MAP3K2, MAP2K4, MAPK8; MAPK3 followed on 2026-09-27). `UNDECIDED` rather than `REMOVE`, because an expression
+change under stretch is plausible and the real source may exist. The other 28 genes
+should be flagged the same way when they are reviewed; the row is a candidate for a
+report to UniProt.
+
+### PMID:22572157 — a transposed digit pair, thirty-one annotations
+
+Found while reviewing MAP2K1 for the [MAPK cascades project](MAPK_CASCADES.md). MGI
+cites `PMID:22572157` for two MAP2K1 IDA rows (protein binding, endoplasmic reticulum).
+That PMID is *"Sensitive detection of idiotypic platelet-reactive alloantibodies by an
+electrical protein chip"*. A live QuickGO query returns 31 annotations on it, all MGI,
+dated 2014-11-10 (four `GO:0032991` rows 2018-02-19): VRK1, VRK2, VRK3, KSR1, MAP2K1,
+DUSP3, CALR, CANX and GOLGB1, plus their mouse ISO projections, with terms for ER,
+membrane, Golgi, protein-containing complex and kinase/phosphatase binding.
+
+That is the content of `PMID:22752157`, *"VRK2 anchors KSR1-MEK1 to endoplasmic
+reticulum forming a macromolecular complex that compartmentalizes MAPK signaling"*,
+which differs by swapping the 5 and 7 in the middle. Calnexin, calreticulin and golgin
+fit as the compartment markers of such a study, and its abstract names VHR (DUSP3).
+The mapping is inferred, not confirmed with MGI.
+
+Flagged `WRONG_IDENTIFIER` with `replacement: PMID:22752157` in the MAP2K1, CALR and
+CANX reviews (2026-09-27). The annotation actions were left as they were: calnexin in
+the ER is right on independent grounds, and the CALR membrane row was already marked
+over-annotated. VRK1/2/3, KSR1, DUSP3 and GOLGB1 should get the same flag when reviewed.
+
+### DCN — a transposed digit pair, one row of a curation batch
+
+Found on 2026-10-16 while finalizing human DCN for the [ECM project](ECM.md). MGI
+cites `PMID:23978385` for a DCN `GO:0016525` negative regulation of angiogenesis IDA
+row assigned on 2015-12-28. PubMed resolves `23978385` to *"The paradox of paclitaxel
+neurotoxicity: Mechanisms and unanswered questions"* (Neuropharmacology, 2014). A live
+QuickGO query on 2026-10-18 returns that one row and nothing else for the PMID.
+
+The intended paper is almost certainly **`PMID:23798385`**, *"Decorin causes autophagy
+in endothelial cells via Peg3"* (PNAS, 2013). The two numbers differ by swapping the
+third and fourth digits (23**97**8385 versus 23**79**8385). Two checks point the same
+way:
+
+- The paper's abstract reports that decorin-evoked autophagy leads to "suppression
+  of angiogenesis".
+- Six other MGI rows for DCN from the **same date**, 2015-12-28, cite `PMID:23798385`
+  correctly. They cover endothelial cell migration, VEGF signalling, transcription,
+  PI3K/AKT signalling, mitochondrial depolarization and mitochondrial fission.
+
+DCN's review records `correctness: WRONG_IDENTIFIER` with
+`replacement: {reference_id: PMID:23798385, reason: WRONG_IDENTIFIER}`. The row stays
+`KEEP_AS_NON_CORE` and its `supported_by` already quotes the right paper. Like
+ITGB1/FLNB, this is a single mistyped row in a batch whose other rows cite correctly,
+so it has not spread. The upstream fix is a single MGI correction.
+
 ## Current state of the evidence
 
 From the [register](MISCITATIONS/miscitation-register.md), regenerated from the YAML
@@ -458,18 +586,54 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 - [x] ARATH/WIP1 `PMID:20579133` (dental paper) on the WIP1-RANGAP1 IntAct pair
       recorded; the intended paper is probably `PMID:17600715`, but that is
       unconfirmed (IMEx IM-19345)
+- [x] "AP-2" name collisions recorded (2026-10-08): TFAP2A–MYO6 IPI pair from
+      `PMID:11447109` (clathrin adaptor read as TFAP2A) and two TFAP2B IDA rows
+      from `PMID:7559606` (AP-2α splice isoform "AP-2B" read as AP-2β); both
+      `MISCITED`
+- [ ] Review the reciprocal MYO6 (Q9UM54) `GO:0005515` row from `PMID:11447109`
+- [ ] Obtain the full text of `PMID:15242799` to settle the AgBase TAS rows on
+      *Xenopus* twist1, snai1 and snai2 (currently `UNVERIFIED`, suspected)
 - [x] ITGB1/FLNB `PMID:10676904` (bovine oocyte paper) → `PMID:16076904` (digit
       transposition) recorded with a `replacement`; the same-date ITGB1–FLNC row
       cites the right paper. FLNB has no review yet; record the O75369 row when it
       is reviewed
+- [x] DCN `PMID:23978385` (paclitaxel review) → `PMID:23798385` (digit
+      transposition) recorded with a `replacement`; the six other same-date MGI DCN
+      rows cite the right paper, and it is the only annotation on the wrong PMID
 - [ ] Decide what, if anything, to report upstream to GOA / UniProt / IntAct, and in
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
 
-Last updated: 2026-10-01
+Last updated: 2026-10-18
 
 # NOTES
+
+## 2026-10-18
+
+**DCN transposed digit.** Flagged by the agent finalizing DCN for the ECM project
+(PR #5071). `PMID:23978385` (a 2014 paclitaxel neurotoxicity review) stands in for
+`PMID:23798385` (decorin-induced endothelial autophagy, 2013) on one MGI
+`GO:0016525` IDA row dated 2015-12-28. Checked at NCBI E-utilities and live QuickGO
+(1 row on the wrong PMID). The decisive evidence is that the other six MGI DCN rows
+from the same date and paper are cited correctly. This is the second transposition
+case after ITGB1/FLNB, and the second from a curation batch whose other rows are
+right.
+
+## 2026-10-08
+
+**"AP-2" collisions from the Origins of the Neural Crest project.** Two
+evidence-attachment defects on the AP-2 transcription factors, both checked
+against live QuickGO and the cached papers. See the worked case above. A third
+suspected case, the Id2 paper used as a TAS source on three *Xenopus* crest
+genes, stays `UNVERIFIED` until the full text can be read. For consistency the
+snai1 and snai2 reviews were moved from `MISCITED` to `UNVERIFIED`, matching
+twist1. Other references flagged during that project:
+- hes4-a `PMID:17724611` is `DISPUTED`: its NOT `GO:0014029` row is contested
+  by `PMID:25997789`.
+- sox3-a `PMID:17950579` and `PMID:17875931` are `UNVERIFIED`: their
+  abstracts do not mention Sox3.
+- PAX7 `PMID:10871843` is `UNVERIFIED`: its abstract covers PAX3 only.
 
 ## 2026-10-01
 

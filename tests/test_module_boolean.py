@@ -167,7 +167,16 @@ def test_erk_cascade_translation():
     # the two calibration feedbacks
     assert SignedEdge("erk_mapk", "raf_map3k", "-") in bn.edges
     assert SignedEdge("erk_output", "ras_gef_step", "-") in bn.edges
-    assert bn.rules["raf_map3k"] == "ras_active & !erk_mapk"
+    # Sprouty/SPRED feedback: induced by ERK output, inhibiting the SOS (GEF) tier
+    # and the RAF tier, so this loop is closed too and adds no free input
+    assert bn.rules["sprouty_spred_feedback"] == "erk_output"
+    assert SignedEdge("sprouty_spred_feedback", "ras_gef_step", "-") in bn.edges
+    assert SignedEdge("sprouty_spred_feedback", "raf_map3k", "-") in bn.edges
+    assert bn.rules["raf_map3k"] == "ras_active & !(erk_mapk | sprouty_spred_feedback)"
+    assert (
+        bn.rules["ras_gef_step"]
+        == "adaptor_recruitment & !(erk_mapk | erk_output | sprouty_spred_feedback)"
+    )
 
 
 def test_feedback_edge_does_not_hide_relay_exit():

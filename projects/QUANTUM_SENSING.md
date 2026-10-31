@@ -1,15 +1,13 @@
 ---
 title: "Quantum Sensing Proteins and Engineering Chassis"
 maturity: SCOPING
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [DROME, ARATH, human]
 manifest:
   slides:
     - href: QUANTUM_SENSING/slides/QUANTUM_SENSING-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/3fc47yN65n3ZEWC5BEAdBH
-      title: Project brief
 ---
 
 # Quantum Sensing Proteins and Engineering Chassis
@@ -20,18 +18,21 @@ creates spin-correlated flavin-tryptophan radical pairs in cryptochromes
 whose chemistry is sensitive to weak magnetic fields. From one deep-research
 report (January 2026) we summarized the three proposed magnetoreception
 mechanisms (radical pair, magnetite, induction), shortlisted five candidate
-proteins (robin CRY4, monarch CRY1, human CRY2, fly CRY and the engineered
-MagLOV proteins) and five engineering chassis, and listed contested areas
-such as fly behavioural assays and vibrational olfaction. We did this to
-scope whether an AI Gene Review project could usefully cover quantum-sensitive
-proteins, or support engineering them. Scoped, not yet started: no gene has
-been reviewed for this project, and the triage pipeline the page describes
-under `projects/quantum-sensing-bioinformatics/` is not in the repo. Existing
-reviews made for other projects already carry magnetoreception rows: fly CRY
-(4 rows across those two terms, plus 1 for GO:0050980 *detection of light
-stimulus involved in magnetoreception*) and Arabidopsis CRY1 (2 rows) keep
-`magnetoreception` or `response to magnetism` as `KEEP_AS_NON_CORE`, and human CRY2 has none. The page also
-holds an unrelated side note on open light-source datasets
+proteins (robin CRY4, monarch DpCRY1, human <gene species="human" symbol="CRY2">CRY2</gene>, fly CRY and the engineered
+MagLOV proteins) and five engineering chassis, and listed contested areas such
+as fly behavioural assays and vibrational olfaction. We did this to scope
+whether an AI Gene Review project could usefully cover quantum-sensitive
+proteins, or support engineering them. Scoped, not yet started as a dedicated
+native-robin/monarch/MagLOV review set:
+[#3971](https://github.com/ai4curation/ai-gene-review/issues/3971) tracks
+accession triage and the absent `projects/quantum-sensing-bioinformatics/`
+workflow. Existing reviews made for other projects already carry
+magnetoreception rows: fly DROME/CRY has four `magnetoreception` /
+`response to magnetism` rows plus `GO:0050980 detection of light stimulus
+involved in magnetoreception`; Arabidopsis ARATH/CRY1 has two `response to
+magnetism` rows; all are `KEEP_AS_NON_CORE`. Human <gene species="human" symbol="CRY2">CRY2</gene> is reviewed as
+a mammalian circadian repressor and has no magnetoreception row.
+The page also holds an unrelated side note on open light-source datasets
 ([LIGHT_SOURCE_OPEN_DATASETS.md](QUANTUM_SENSING/LIGHT_SOURCE_OPEN_DATASETS.md)).
 
 ## Scope
@@ -61,14 +62,14 @@ Mechanism hypothesis: blue-light excitation of FAD in cryptochrome triggers elec
 Key evidence and notes:
 - Avian CRY4: European robin CRY4 shows magnetic field effects on radical pair yields in vitro; site-specific mutations implicate multiple FAD-Trp radical pairs in the magnetic response. This is one of the most direct biochemical demonstrations of magnetically sensitive cryptochrome photochemistry. (Nature 2021)
 - Broad review: The radical-pair mechanism of magnetoreception is comprehensively reviewed with spin-chemistry and biological context. (Annual Review of Biophysics 2016)
-- Monarch butterfly CRY1: Light-dependent inclination sensing requires CRY1 (not CRY2), with antennae and eyes implicated as magnetosensory organs. (Nature Communications 2021)
-- Human CRY2: Human cryptochrome 2 can function as a light-dependent magnetosensor in a Drosophila transgenic system, suggesting the photochemistry is conserved even if a human magnetosense is not established. (Nature Communications 2011)
-- Drosophila CRY: Initial behavioral reports of light-dependent magnetosensitivity (Nature 2008) are now contested by a large-scale replication study reporting no magnetic behavioral effect (Nature 2023) and ongoing debate (Nature 2024). Treat Drosophila as a contested model.
+- Monarch butterfly DpCRY1: light-dependent inclination sensing requires `CRY1`, not `CRY2`, with antennae and eyes implicated as magnetosensory organs; the accession and local evidence still need triage under #3971 before a review is seeded. (Nature Communications 2021)
+- Human <gene species="human" symbol="CRY2">CRY2</gene>: Human cryptochrome 2 can function as a light-dependent magnetosensor in a Drosophila transgenic system, suggesting the photochemistry is conserved even if a human magnetosense is not established. (Nature Communications 2011)
+- Drosophila CRY: GOA still has pre-replication magnetism rows on fly CRY; this project treats them as non-core and contested pending the replication-dispute review tracked in #3971.
 
 Implication: cryptochromes are the leading protein family for quantum-sensitive sensing via spin chemistry.
 
 ### Engineered LOV-domain proteins (MagLOV; ODMR in living cells)
-- A Nature paper published 21 January 2026 reports optically detected magnetic resonance (ODMR) in living bacterial cells using engineered LOV2-domain magneto-sensitive fluorescent proteins (MagLOV variants). The ODMR and magnetic-field effects are explained by a radical-pair mechanism involving the protein backbone and a bound flavin cofactor, with signal-to-noise sufficient for single-cell detection at room temperature. (Nature 2026)
+- A 2026 Nature paper reports optically detected magnetic resonance (ODMR) in living bacterial cells using engineered LOV2-domain magneto-sensitive fluorescent proteins (MagLOV variants). The ODMR and magnetic-field effects are explained by a radical-pair mechanism involving the protein backbone and a bound flavin cofactor, with signal-to-noise sufficient for single-cell detection at room temperature.
 - The study uses directed evolution to tune magnetic and radio-frequency responses and demonstrates applications including spatial localization with gradient fields (fluorescence MRI-like), microenvironment sensing, multiplexing/lock-in detection, and mitigation of scattering/autofluorescence. (Nature 2026)
 
 ### Magnetite-based systems (classical magnetic sensing, not quantum)
@@ -79,7 +80,7 @@ Implication: cryptochromes are the leading protein family for quantum-sensitive 
 
 ### Priority protein candidates (mechanistic evidence strongest)
 - ErCRY4 (European robin cryptochrome 4): in vitro magnetic sensitivity with radical-pair signatures and mutational mapping of Trp radical pairs; strong biochemical anchor for magnetoreception. (Nature 2021)
-- DpCRY1 (monarch butterfly cryptochrome 1): required for light-dependent inclination sensing in vivo; CRY2 dispensable in that system. (Nature Communications 2021)
+- DpCRY1 (monarch butterfly cryptochrome 1): reported in light-dependent inclination-sensing work, but the native accession and local evidence still need triage.
 - hCRY2 (human cryptochrome 2): supports light-dependent magnetosensing when expressed in Drosophila; good for readily available human sequence and protein tools. (Nature Communications 2011)
 - DmCRY (Drosophila cryptochrome): historically used in magnetosensing assays, but behavioral evidence is contested by large-scale replication; still useful as a biochemically tractable CRY. (Nature 2023; Nature 2024)
 - MagLOV (engineered LOV2 magneto-sensitive fluorescent proteins): ODMR and magnetic-field effects in living cells at room temperature; directed-evolution variants enable tunable responses and practical imaging/sensing. (Nature 2026)
@@ -91,12 +92,12 @@ Implication: cryptochromes are the leading protein family for quantum-sensitive 
 
 ## UniProt snapshot (cursory)
 Examples of cryptochrome entries and accessions linked from UniProt-connected resources:
-- Homo sapiens CRY1: UniProt Q16526 (CRY1_HUMAN). (iPTMnet)
-- Homo sapiens CRY2: UniProt Q49AN0. (Human Protein Atlas)
+- Homo sapiens <gene species="human" symbol="CRY1">CRY1</gene>: UniProt Q16526 (CRY1_HUMAN). (iPTMnet)
+- Homo sapiens <gene species="human" symbol="CRY2">CRY2</gene>: UniProt Q49AN0. (Human Protein Atlas)
 - Arabidopsis thaliana CRY1: UniProt Q43125 (CRY1_ARATH). (iPTMnet; Swiss-Model)
-- Arabidopsis thaliana CRY2: UniProt Q96524. (InParanoid)
+- Arabidopsis thaliana <gene species="ARATH" symbol="CRY2">CRY2</gene>: UniProt Q96524. (InParanoid)
 - Drosophila melanogaster CRY: UniProt O77059. (RCSB PDB/AlphaFold entry)
-UniProt-linked annotations for CRY2 include FAD as a ligand/cofactor, consistent with flavoprotein photochemistry. (Human Protein Atlas)
+UniProt-linked annotations for <gene species="human" symbol="CRY2">CRY2</gene> include FAD as a ligand/cofactor, consistent with flavoprotein photochemistry. (Human Protein Atlas)
 
 ## Reproducible pipeline (draft)
 I sketched a minimal, reproducible pipeline for candidate triage in `projects/quantum-sensing-bioinformatics/`:
@@ -132,7 +133,7 @@ Implication: potential quantum-tunneling or inelastic electron transfer mechanis
 
 ### 3) Insect systems (Drosophila S2 cells, insect cell lines, monarch)
 - Useful for expressing insect CRY1s and leveraging existing genetic tools for sensory assays.
-- Caution: behavioral magnetosensitivity in Drosophila is contested; monarch CRY1 has stronger evidence but is a more specialized chassis.
+- Caution: behavioral magnetosensitivity in Drosophila is contested; monarch DpCRY1 has stronger evidence but is a more specialized chassis.
 
 ### 4) Plant systems (Arabidopsis, Nicotiana)
 - Plants already use cryptochromes as blue-light photoreceptors; robust expression and optical readouts.
@@ -160,18 +161,20 @@ Implication: potential quantum-tunneling or inelastic electron transfer mechanis
 - Foley LE et al. Human cryptochrome exhibits light-dependent magnetosensitivity. Nat Commun. 2011. doi:10.1038/ncomms1364.
 - Gegear RJ et al. Cryptochrome mediates light-dependent magnetosensitivity in Drosophila. Nature. 2008. doi:10.1038/nature07183.
 - Bassetto M et al. No evidence for magnetic field effects on the behaviour of Drosophila. Nature. 2023. doi:10.1038/s41586-023-06397-7.
+- Reppert SM. Magnetic field effects on behaviour in Drosophila. Nature. 2024. doi:10.1038/s41586-024-07319-x.
+- Kyriacou CP. Magnetic field responses in Drosophila. Nature. 2024. doi:10.1038/s41586-024-07320-4.
+- Bassetto M et al. Bassetto et al. reply. Nature. 2024. doi:10.1038/s41586-024-07321-3.
 - Engel GS et al. Evidence for wavelike energy transfer through quantum coherence in photosynthetic systems. Nature. 2007. doi:10.1038/nature05678.
 - Ishizaki A, Fleming GR. On the interpretation of quantum coherent beats observed in two-dimensional electronic spectra of photosynthetic light harvesting complexes. J Phys Chem B. 2011. doi:10.1021/jp112406h.
 - Franco MI et al. Molecular vibration-sensing component in Drosophila melanogaster olfaction. PNAS. 2011. doi:10.1073/pnas.1012293108.
 - Block E et al. Implausibility of the vibrational theory of olfaction. PNAS. 2015. doi:10.1073/pnas.1503054112.
 - Peigneux A et al. Learning from magnetotactic bacteria: synthesis of biomimetic nanoparticles mediated by magnetosome-associated proteins. J Struct Biol. 2016. doi:10.1016/j.jsb.2016.06.026.
-- Bassetto M et al. Magnetic field effects on behaviour in Drosophila: Matters Arising. Nature. 2024. doi:10.1038/s41586-024-08209-0.
 - Abrahams G et al. Quantum spin resonance in engineered proteins for multimodal sensing. Nature. 2026. doi:10.1038/s41586-025-09971-3.
 - Kennedy MJ et al. Rapid blue-light-mediated induction of protein interactions in living cells. Nat Methods. 2010. doi:10.1038/nmeth.1524.
 - iPTMnet Report for Q16526 (CRY1_HUMAN). University of Delaware.
 - iPTMnet Report for Q43125 (CRY1_ARATH). University of Delaware.
-- Human Protein Atlas: CRY2 (UniProt Q49AN0).
+- Human Protein Atlas: <gene species="human" symbol="CRY2">CRY2</gene> (UniProt Q49AN0).
 - Swiss-Model Repository: Q43125 (CRY1_ARATH) structures (PDB 1u3d/1u3c).
-- InParanoid: CRY1_ARATH ortholog group lists Q96524 (CRY2).
+- InParanoid: CRY1_ARATH ortholog group lists Q96524 (ARATH/CRY2).
 - RCSB PDB/AlphaFold: UniProt O77059 (Drosophila cryptochrome).
 - Deep research report: file:projects/QUANTUM_SENSING/QUANTUM_SENSING-deep-research-openai.md

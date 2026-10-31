@@ -51,3 +51,31 @@ chromosomal instability [PMID:10615118, de Winter 2000 Nat Genet, FANCF cloning]
 - FA nuclear complex (GO:0043240) part_of, ICL repair (GO:0036297), nucleoplasm/nucleus/chromatin, DNA damage response: ACCEPT (well supported, on-target).
 - protein binding (GO:0005515): FANCA/FANCG (PMID:11063725, 12649160) MODIFY → molecular adaptor activity (GO:0060090), the informative MF. TCP11/HTT large-scale hits: KEEP_AS_NON_CORE (real IPI, uninformative, no functional relevance).
 - cytosol (GO:0005829, Reactome PKR): KEEP_AS_NON_CORE (predominantly nuclear; peripheral).
+
+
+## 2026-10-25: integrated assembly-function review
+
+Human FANCF assembly and complementation evidence supports an integral protein-complex scaffold (GO:0140378), refining the historical adaptor terminology without assigning FANCL/UBE2T chemistry or FANCE substrate recognition to FANCF. The more specific ubiquitin ligase complex scaffold term requires an organization not established by these assays. The core keeps one ICL-repair process facet, with independently measured hydroxyurea response described as additional breadth. Nuclear location encompasses the nucleoplasmic and chromatin-associated complex pools; the smaller cytosolic pool remains contextual and does not establish a FANCF-specific PKR mechanism.
+
+The final current source version has 27 imported contexts: 20 ACCEPT, four MODIFY and three KEEP_AS_NON_CORE decisions. All 25 inherited reviews and all 42 inherited quotation paths/texts/reference associations remain exact, including five core supporting objects. No authored NEW annotation or publication quotation is introduced. All 26 reference identities/findings remain; shared historical notes appear once with both current reading scopes labeled. Availability flags follow actual selected cache metadata and are separated from externally recovered originals and the passages/figures actually inspected.
+
+The independently fetched GOA is adopted through genuine seeding: nine supporting-entity lists are backfilled exactly, and the two grouped binding records resolve into FANCA/FANCG partner contexts. The deterministic first match, FANCG, remains at each old position (5 and 6); FANCA contexts are appended at 25 and 26 with their accepted partner-specific reviews and bare reference IDs. Every inherited quote stays at its old index and association. The genuine refreshed GOA replaces its older machine source version; the inherited UniProt bytes remain exact. The inherited COMPLETE status here is historical and has not been recomputed.
+
+See [the FANCF source guide](FANCF-source-guide.md) for public paper, figure, database and PAINT locators, assay species/construct limits, and the distinction between available originals and actual reading. The 374-residue displayed product has no UniProt ALTPROD record; engineered deletions are not natural splice products.
+
+## 2026-10-25 — Canonical validation
+
+All six canonical checks pass, including term labels, ontology components, current source matching and rendering of all 60 narratives. Computed status is DRAFT with three advisories: two supported generic-binding screen associations retained as non-core under the standing campaign instruction, and the unused inherited Affinage file. The final 27 imported contexts have 20 ACCEPT, four MODIFY and three KEEP_AS_NON_CORE decisions, with no UNDECIDED or authored NEW entries. All 42 inherited quotation paths, 26 reference identities and one scaffold core are retained. The genuine refreshed GOA is adopted; existing UniProt and all normal sources remain unchanged. External original-paper access remains distinct from abstract-only cache metadata.
+
+
+## 2026-10-25: source-specific evidence links and public figure
+
+The 11 Reactome location contexts now cite their own event records, with direct FANCF participant links and complete representative routes in the [source guide](FANCF-source-guide.md). The two ICL-repair rows explicitly cite FANCF-specific PMID:15262960 and PMID:17082180; FA-complex rows also expose the existing curated UniProt SUBUNIT provenance. Nuclear-localization text is not used as direct evidence for cytosol.
+
+The independently inspected mouse HU result remains supported by the genuine Bakker author-dissertation chapter: [Figure 5.2, printed page 84 / PDF page 85](evidence/Bakker-2011-Figure-5.2-page-84.png), with a compact provenance record and the complete dissertation linked in the guide. The measured output is FANCD2 monoubiquitination in Fancf-null versus wild-type MEFs, not FANCF ubiquitin-transfer chemistry. The abstract-only normal cache is unchanged.
+
+FANCG-specific binding reasons no longer repeat the separate FANCA paragraphs; inherited quotations remain exactly where they were. PMID:21915857's former MEDIUM sentence is explicitly historical and superseded by the current HIGH assessment. PMID:17082180 is HIGH relevance because it directly addresses human FANCF, while its independently checked scope remains the original abstract rather than newly recovered full Methods or figures.
+
+All 27 imported source objects, actions (20 ACCEPT, four MODIFY, three KEEP_AS_NON_CORE), 26 reference identities/findings, the core, product boundary and 42 quotation paths/text/reference associations are retained. No new quotation or annotation is added.
+
+Canonical validation of this evidence-link successor passed all six checks and all 60 rendered narratives. DRAFT and the three existing advisories remain: two supported generic-binding screen associations and the unused inherited research file. The public page and provenance are additional evidence artifacts; normal sources and all inherited quotations remain exact.
