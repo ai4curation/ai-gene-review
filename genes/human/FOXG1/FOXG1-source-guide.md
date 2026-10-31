@@ -1,6 +1,6 @@
 # FOXG1 source guide
 
-This guide distinguishes the material actually inspected from the scientific inference drawn from it. Article access below describes selected original material and is separate from the actual normal-cache availability listed below. No new supporting-text quotations are added. The accompanying [evidence record](FOXG1-source-evidence.yaml) retains the original source objects, reviewed judgments and input identities.
+This guide distinguishes the material actually inspected from the scientific inference drawn from it. Article access below describes selected original material and is separate from the actual normal-cache availability listed below. Under the user’s explicit instruction for this ClinGen campaign, no new supporting-text quotations are added. Reference-only support and the original source locators remain available for manual verification; the substring validator does not independently verify paraphrased scientific claims. The accompanying [evidence record](FOXG1-source-evidence.yaml) retains the original source objects, reviewed judgments and input identities.
 
 ## Direct human functional evidence
 
@@ -18,7 +18,7 @@ The [original PMC article](https://pmc.ncbi.nlm.nih.gov/articles/PMC3984242/) is
 
 Locators: Results describing FOXG1/TLE association, TLE silencing and GRG6 antagonism; Figures 6e–g, 7 and 8; Methods on cell culture, co-immunoprecipitation, lentiviral knockdown and ChIP. The retained zero-based body-paragraph extraction locates these at Results 11–16 and Methods 29, 36, 38 and 39.
 
-Human patient-derived BT048 cells provide reciprocal endogenous FOXG1/TLE1 co-immunoprecipitation and sequential ChIP at the p21 promoter. FOXG1/TLE perturbations and GRG6 antagonism supply functional context. Cross-linked chromatin fragments were 300–500 bp, so co-occupancy is not base-resolution contact. Complex recovery is not purified binary affinity or stoichiometry. Tagged GRG6/FOXG1 assays in U87MG cells are separate. Human tumor-cell experiments and mouse xenografts remain distinct, and tumor propagation is not converted into a new general developmental annotation.
+Human patient-derived BT048 cells provide reciprocal endogenous FOXG1/TLE1 co-immunoprecipitation and sequential ChIP at the p21 promoter. FOXG1/TLE perturbations and GRG6 antagonism supply functional context. Cross-linked chromatin fragments were 300–500 bp, so co-occupancy is not base-resolution contact. Complex recovery is not purified binary affinity or stoichiometry. Tagged GRG6/FOXG1 assays in U87MG cells are separate. Human tumor-cell experiments and mouse xenografts remain distinct, and tumor propagation is not converted into a new general developmental annotation. The selected Results sections on BTIC proliferation and astroglial gene expression (retained paragraphs 6–9; Figures 3–4) additionally show reduced sphere formation/proliferation after FOXG1 silencing, increased CDKN1A and astroglial markers, and reduced SOX2/BMI1 expression. These human tumor-derived progenitor findings supply the context-specific propagation synthesis; they are not normal-human neural stem-cell assays.
 
 ### PMID:28473536 — target-specific HT-SELEX construct and motifs
 
@@ -46,7 +46,7 @@ The [publisher record](https://www.sciencedirect.com/science/article/pii/S088875
 
 ### PMID:7599184
 
-The [authentic PubMed abstract](https://pubmed.ncbi.nlm.nih.gov/7599184/) reports human fetal-brain expression and historical HBF1/HBF2 sequence/gene interpretations. Original full Methods/Results were not recovered. Expression alone is not developmental participation, and unseen perturbation assays are not certified. The existing broad brain-development assertion remains non-core in light of independent FOXG1 clinical and functional evidence, with its original TAS identifier preserved.
+The [authentic PubMed abstract](https://pubmed.ncbi.nlm.nih.gov/7599184/) reports human fetal-brain expression and historical HBF1/HBF2 sequence/gene interpretations. Original full Methods/Results were not recovered. Expression alone is not developmental participation, and unseen perturbation assays are not certified. The original TAS identifier remains preserved while the gene-level developmental assertion is refined to telencephalon development using independent clinical and developmental evidence; the older paper is not presented as a newly verified perturbation assay.
 
 ### PMID:17260156
 
@@ -54,7 +54,9 @@ Only the authentic indexed and [publisher abstract](https://link.springer.com/ar
 
 ## Curated model and phylogenetic provenance
 
-The official [Reactome R-HSA-9618021 event](https://reactome.org/content/detail/R-HSA-9618021) includes human [FOXG1 entity R-HSA-9022629](https://reactome.org/content/detail/R-HSA-9022629), explicitly mapped to P55316 chain 1–489 in nucleoplasm. This supports the retained curated location. Its PMID:15084259 bibliography was not independently reread or added as newly inspected evidence. The model does not establish exclusive localization or purified FOXO binding.
+The official [Reactome R-HSA-9618021 event](https://reactome.org/content/detail/R-HSA-9618021) includes human [FOXG1 entity R-HSA-9022629](https://reactome.org/content/detail/R-HSA-9022629), explicitly mapped to P55316 chain 1–489 in nucleoplasm. This supports the retained curated location and FOXO–SMAD complex context.
+
+The model bibliography, [PMID:15084259](https://pubmed.ncbi.nlm.nih.gov/15084259/) ([original DOI](https://doi.org/10.1016/S0092-8674(04)00298-3)), was subsequently inspected through publisher-indexed original Results, Figures 5–6 captions and Discussion. Locators are “FoxG1 Is a FoxO Antagonist that Suppresses p21Cip1 Induction” and “FoxG1 and PI3K Mediate Glioblastoma Resistance to TGF-β Cytostasis,” especially Figure 6C–F. Endogenous U87MG FOXG1–FOXO3 complex recovery and conditional p21/cytostasis responses support the mechanism. Human HaCaT/DU145 expression assays, COS-1 tagged co-immunoprecipitation and mouse telencephalon experiments remain distinct. The deposited [Addgene 14935 human insert](https://www.addgene.org/14935/) does not establish every assay construct. Direct publisher/PDF requests returned 403; complete Experimental Procedures, supplementary material and figure pixels were not inspected. This is a selected bibliography consultation, not a newly acquired normal publication cache or a purified-binding claim.
 
 The actual PTHR46617 tree and MSA contain 65 matching nodes. Human leaf PTN002483625 matches all 489 residues of official P55316 and descends from PTN000216104. All three incoming IBAs—GO:1990837, GO:0006357 and GO:0005634—join literal positive IBDs on that lineage, with original donors unchanged and no family negative records. The DNA-binding IBD explicitly includes P55316 experimental evidence. This is valid descendant grounding, not circularity; phylogenetic grounding and the biological action judgment remain separate.
 
@@ -69,3 +71,9 @@ The unresolved source tasks are recovery of the precise historical TAS assay pas
 All 12 planned source files are present. Existing PMID:28473536, PMID:7957066 and Reactome:R-HSA-9618021 bytes were preserved. The publication caches contain full text for PMID:24356439 and PMID:28473536; the other six publication caches are abstract-only. Separately inspected original passages remain documented above. Cache flags do not upgrade any source-specific correctness assessment.
 
 The normal PANTHER fetch reports 66 resolved nodes and preserves nine annotation rows. Three rows at PTN000216104 exactly match the incoming FOXG1 IBD assertions. Six additional rows at PTN000930906 remain in the normal slice; their placement is not inferred from the separately retained 65-node tree/MSA proof. Both source versions are retained without rewriting either.
+
+## Specificity decisions after review
+
+The three original brain-development rows are refined to [GO:0021537 telencephalon development](https://www.ebi.ac.uk/QuickGO/term/GO:0021537). The typed path is `part_of GO:0030900` forebrain development, then `part_of GO:0007420` brain development. Human clinical Results and the Figure 1 caption in PMID:21280142 describe frontal cortical abnormalities and a thin corpus callosum. Combined with developmental context, these support the gene-level refinement while the older TAS assay-access limits remain explicit.
+
+The five TOO_GENERAL rows represent four checked parent/child redundancies, with DNA binding present twice; all retain their source fields. The normal PAINT union also contains PTN000930906, which is absent from the retained 65-node topology. The fetcher collects ancestral references across family members, so presence in that union does not establish ancestry of the human target. [GO:0000978](https://www.ebi.ac.uk/QuickGO/term/GO:0000978) requires sequence-specific cis-regulatory DNA binding; atomic base-contact resolution is unnecessary, but regional occupancy alone does not establish sequence specificity. As the term is an is_a descendant of retained GO:1990837, no redundant NEW assertion is added. Target placement and any evidence-backed refinement remain explicit source follow-up questions.
