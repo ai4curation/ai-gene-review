@@ -108,8 +108,8 @@ The organelle-by-stage matrix lives in
 - [ ] Revisit a realizer list on each annoton (option 2 in the two-layer note) once proteome runs show how often realizer choices are written as variant sets
 - [x] `mitochondrion_lifecycle` umbrella (import and iron-sulfur cluster assembly required; other stages optional)
 - [ ] Make mitochondrial division rule-ready (Mff / Mdv1-Fis1 / FtsZ variants), then make it required
-- [x] `mitochondrial_iron_sulfur_cluster_assembly`: core ISC machinery (NFS1-ISD11, ISCU with frataxin, HSCB-mtHsp70, GLRX5), eukaryote-wide and PAINT-grounded; `RULE_CANDIDATE` (Entamoeba uses a NIF system)
-- [ ] Extend the Fe-S module: Entamoeba NIF realizers for the desulfurase and scaffold steps, the ferredoxin electron supply, and the late [4Fe-4S] machinery
+- [x] `mitochondrial_iron_sulfur_cluster_assembly`: core ISC machinery (NFS1-ISD11, ISCU with frataxin, HSCB-mtHsp70, GLRX5), eukaryote-wide and PAINT-grounded; `RULE_CANDIDATE` (Archamoebae use a NIF system)
+- [ ] Extend the Fe-S module: Archamoebae NIF (and any SUF) realizers for the desulfurase and scaffold steps, the ferredoxin electron supply, and the late [4Fe-4S] machinery; check the frataxin/HSCB/GLRX5 arm against reduced mitosomal proteomes
 - [ ] Extract a shared receptor-to-Atg8 capture module from `mitophagy`
 - [ ] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus referenced modules; add pexophagy
 - [ ] Lysosome/endosome, ER, Golgi, nucleus, lipid droplet, autophagosome
