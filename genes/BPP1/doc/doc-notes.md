@@ -145,7 +145,7 @@ host responses, not activities of Doc, and neither was annotated as such — cor
 |---|---|---|---|
 | GO:0004674 protein Ser/Thr kinase activity | IDA | CACAO (PMID:24448800) | ACCEPT (core) |
 | GO:0004674 | IEA EC:2.7.11.1 | UniProt | ACCEPT |
-| GO:0106310 protein serine kinase activity | IEA RHEA:17989 | RHEA | MODIFY → NTR protein threonine kinase activity |
+| GO:0106310 protein serine kinase activity | IEA RHEA:17989 | RHEA | MODIFY → GO:0004674 (GO:0106311 protein threonine kinase activity was merged into GO:0004674) |
 | GO:0005524 ATP binding | IEA KW | UniProt | ACCEPT |
 | GO:0000166 nucleotide binding | IEA KW | UniProt | TOO_GENERAL |
 | GO:0016301 kinase activity | IEA InterPro+KW | UniProt | TOO_GENERAL |
