@@ -291,6 +291,15 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Collect proposed ontology changes (top-level proposed_ontology_changes on gene
+# and module reviews) into reports/ontology-changes.tsv plus one Markdown report
+# per ontology in reports/ontology-changes/. These are changes an ONTOLOGY should
+# make to a term that already exists (obsoletion, merge, definition fix,
+# reparenting, mapping removal), modelled on KGCL; the source-defect exporter
+# above covers defects in annotation records instead. See docs/ontology_changes.md.
+export-ontology-changes *args="":
+    uv run python -m ai_gene_review.tools.export_ontology_changes {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":

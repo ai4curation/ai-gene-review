@@ -21,6 +21,9 @@ prefixes:
   ECO: http://purl.obolibrary.org/obo/ECO_
   IAO: http://purl.obolibrary.org/obo/IAO_
   SO: http://purl.obolibrary.org/obo/SO_
+  # Knowledge Graph Change Language: the vocabulary ProposedOntologyChange's
+  # change_type values bind to, so a proposal can be emitted as KGCL.
+  kgcl: http://w3id.org/kgcl/
 
 imports:
   - linkml:types
@@ -336,6 +339,17 @@ slots:
     range: ProposedOntologyTerm
     multivalued: true
     description: Proposed new ontology terms that should exist but don't
+  proposed_ontology_changes:
+    range: ProposedOntologyChange
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Proposed changes to ontology terms that already exist - obsoletion,
+      merge, definition or label fix, reparenting, mapping removal. The
+      counterpart of `proposed_new_terms`, which covers only creation. Use this
+      rather than prose when a review concludes that a term itself is wrong, and
+      keep it distinct from `source_defects`, which fix an annotation record
+      that used the wrong term.
   suggested_questions:
     range: Question
     multivalued: true
@@ -447,6 +461,7 @@ classes:
      - existing_annotations
      - core_functions
      - proposed_new_terms
+     - proposed_ontology_changes
      - suggested_questions
      - suggested_experiments
      - knowledge_gaps
@@ -773,6 +788,158 @@ classes:
         range: ReferenceReplacementReasonEnum
         required: true
         description: Why the source identifier should resolve to the target reference.
+
+  ProposedOntologyChange:
+    description: >-
+      A proposed change to an *existing* ontology term, stated precisely enough
+      that a term-tracker request can be generated from it and, where the change
+      is mechanical, applied with KGCL tooling.
+
+      This is the counterpart of `proposed_new_terms`, which covers only
+      creation. Everything else a review might want to ask of an ontology -
+      obsolete this term, merge these two, fix this definition, move this term
+      under a different parent, drop this mapping - has no other structured
+      home, and has historically been written as prose in a `projects/*.md`
+      page with hand-maintained tables of term ids.
+
+      It is also distinct from `SourceDefect`, which fixes an *annotation
+      record* (a GOA row, a UniProt entry, a GO-CAM activity). A source defect
+      says the annotation used the wrong term; a proposed ontology change says
+      the term itself is wrong. The same review can carry both, and often
+      should: obsoleting a term does not by itself repoint the rows that use it.
+
+      `change_type` names a KGCL (Knowledge Graph Change Language) class, and
+      the structured slots below carry that class's own fields, so an entry can
+      be emitted as KGCL for `oaklib apply` or as its controlled-English DSL.
+      What KGCL does not model is the argument for a change: `justification`,
+      `supported_by`, `confidence` and `report_status` are this repository's
+      additions, following the pattern `SourceDefect` already uses, and are the
+      point of recording a proposal here rather than only in a tracker.
+    attributes:
+      change_type:
+        range: OntologyChangeTypeEnum
+        required: true
+        description: >-
+          The kind of change, named after the KGCL class that models it. Each
+          permissible value carries that class's URI as its `meaning`.
+      ontology:
+        range: string
+        required: true
+        description: >-
+          Prefix of the ontology that owns the term and would make the change
+          (GO, UBERON, CL, CHEBI, PR, SO). Free text rather than an enum because
+          a review may touch an ontology no enum here anticipated.
+      about_node:
+        range: Term
+        inlined: true
+        required: true
+        description: >-
+          The existing term the change is about, with its current label copied
+          from the ontology. For a merge this is the term that would be
+          obsoleted, not the one that survives.
+      change_dsl:
+        range: string
+        description: >-
+          The change in KGCL's controlled-English DSL, e.g.
+          `obsolete GO:0099022 with replacement GO:7770062`. Redundant with the
+          structured slots by design: it is what a curator reads and what
+          round-trips through KGCL's parser, so a mismatch between the two is a
+          detectable error rather than a silent one.
+      has_direct_replacement:
+        range: Term
+        inlined: true
+        description: >-
+          The term that replaces `about_node` outright, where one exists
+          (KGCL `has_direct_replacement`; becomes `term replaced by`). Annotations
+          on the obsoleted term can be repointed here mechanically.
+      has_nondirect_replacement:
+        range: Term
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Terms offered as alternatives without being equivalent (KGCL
+          `has_nondirect_replacement`; becomes `consider`). A curator must choose
+          per annotation, so these are advice and never a mechanical repoint.
+          More than one is normal, and is the usual case when a term is obsoleted
+          because it conflated two things.
+      old_value:
+        range: string
+        description: >-
+          The current value being changed, for a change that replaces a value
+          rather than a term: the existing definition text, label, synonym, or
+          mapping predicate. Copy it from the ontology verbatim.
+      new_value:
+        range: string
+        description: The proposed replacement for `old_value`.
+      subject:
+        range: Term
+        inlined: true
+        description: >-
+          For an edge change (`EDGE_CREATION`, `EDGE_DELETION`, `NODE_MOVE`,
+          `NODE_DEEPENING`, `NODE_SHALLOWING`), the other end of the edge: the
+          parent to add, remove, or move under. `about_node` stays the term the
+          change is about.
+      predicate:
+        range: string
+        description: >-
+          For an edge change, the relation as a CURIE (`rdfs:subClassOf`,
+          `BFO:0000050` part_of, `RO:0002211` regulates). Needed because moving a
+          term under a new parent and adding a `part_of` link to it are different
+          changes.
+      justification:
+        range: string
+        required: true
+        description: >-
+          Why the ontology should make this change, self-contained enough to
+          paste into a term tracker. State what is wrong with the current term,
+          not merely what this repository would prefer.
+      confidence:
+        range: SourceDefectConfidenceEnum
+        required: true
+        description: >-
+          How firmly the case for the change is established. Reuses the
+          source-defect enum deliberately: the three levels mean the same thing
+          here, and a parallel enum would drift from it.
+      affected_annotations:
+        range: string
+        multivalued: true
+        description: >-
+          Paths or term references in this repository that depend on the term and
+          would need revisiting if the change landed, e.g.
+          `genes/human/TMF1/TMF1-ai-review.yaml`. What makes a proposal
+          actionable rather than abstract, and what the obsoletion project pages
+          currently track as hand-maintained markdown tables.
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Verbatim evidence for the change, held to the same exact-quote standard
+          as any other supporting text. An obsoletion argued from nothing but a
+          reviewer's judgement should say so by carrying no quotes, rather than
+          by paraphrasing a source.
+      report_status:
+        range: SourceDefectReportStatusEnum
+        ifabsent: string(NOT_REPORTED)
+        description: >-
+          Where the upstream request stands. Reuses the source-defect enum, whose
+          values carry over unchanged; FIXED means the ontology made the change,
+          so the term should be re-fetched and the dependent annotations
+          revisited.
+      term_tracker_issue:
+        range: uri
+        description: >-
+          The ontology's own tracker issue, once filed (KGCL
+          `term_tracker_issue`). For GO this is a geneontology/go-ontology issue.
+      pull_request:
+        range: uri
+        description: The pull request implementing the change, once opened (KGCL `pull_request`).
+      see_also:
+        range: uri
+        multivalued: true
+        description: >-
+          Related material: a `projects/*.md` page carrying the full argument, a
+          prior tracker discussion, an upstream design document.
 
   SourceDefect:
     description: >-
@@ -1147,6 +1314,7 @@ classes:
       - description
       - references
       - knowledge_gaps
+      - proposed_ontology_changes
     attributes:
       status:
         range: string
@@ -3066,6 +3234,93 @@ enums:
     permissible_values:
       NO_SUPPORTED_COUNTERPART:
         description: No counterpart sufficiently supported for a relationship was identified in the documented search; not proof of genomic absence.
+
+  OntologyChangeTypeEnum:
+    description: >-
+      Kind of change proposed to an existing ontology term. Each value names a
+      KGCL (Knowledge Graph Change Language) class and carries its URI as
+      `meaning`, so a proposal can be emitted as KGCL and applied with
+      `oaklib apply`. This is a subset of KGCL chosen to cover the changes that
+      actually arise in curation here; add a value when a review needs one
+      rather than forcing a change into OTHER.
+    permissible_values:
+      NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT:
+        meaning: kgcl:NodeObsoletionWithDirectReplacement
+        description: >-
+          Obsolete the term and name the term that replaces it outright
+          (`term replaced by`). Annotations can be repointed mechanically.
+      NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT:
+        meaning: kgcl:NodeObsoletionWithNoDirectReplacement
+        description: >-
+          Obsolete the term with no single equivalent, optionally offering
+          alternatives (`consider`) in `has_nondirect_replacement`. Each
+          annotation must then be re-curated individually. This is the usual
+          shape when a term conflated two things.
+      NODE_DIRECT_MERGE:
+        meaning: kgcl:NodeDirectMerge
+        description: >-
+          Merge the term into another, which survives. Use when the two terms
+          denote the same thing, rather than when one is simply preferable.
+      NODE_TEXT_DEFINITION_CHANGE:
+        meaning: kgcl:NodeTextDefinitionChange
+        description: >-
+          Change the term's textual definition. `old_value` and `new_value`
+          carry the definitions. Use this where the term is wanted but its
+          definition admits or excludes the wrong things.
+      NODE_RENAME:
+        meaning: kgcl:NodeRename
+        description: Change the term's label, leaving its meaning alone.
+      NEW_SYNONYM:
+        meaning: kgcl:NewSynonym
+        description: >-
+          Add a synonym, so that literature usage finds the term. `new_value`
+          carries the synonym.
+      NODE_MOVE:
+        meaning: kgcl:NodeMove
+        description: >-
+          Move the term under a different parent, where the new parent is
+          neither an ancestor nor a descendant of the old one.
+      NODE_DEEPENING:
+        meaning: kgcl:NodeDeepening
+        description: Move the term to a more specific parent (down the hierarchy).
+      NODE_SHALLOWING:
+        meaning: kgcl:NodeShallowing
+        description: >-
+          Move the term to a more general parent (up the hierarchy), e.g. when a
+          placement asserts a commitment the evidence does not support.
+      EDGE_CREATION:
+        meaning: kgcl:EdgeCreation
+        description: >-
+          Add a relation from the term to another, without removing an existing
+          one; `predicate` and `subject` carry the relation and its other end.
+          The usual way to ask for a `part_of` link from a molecular function to
+          the process it serves.
+      EDGE_DELETION:
+        meaning: kgcl:EdgeDeletion
+        description: Remove a relation that asserts something unsupported.
+      MAPPING_PREDICATE_CHANGE:
+        meaning: kgcl:MappingPredicateChange
+        description: >-
+          Change the predicate of a cross-reference, e.g. an `exactMatch` that
+          should be a `broadMatch`. `old_value` and `new_value` carry the
+          predicates.
+      REMOVE_MAPPING:
+        meaning: kgcl:RemoveMapping
+        description: >-
+          Remove a cross-reference or an external-resource mapping that sends
+          annotations to the wrong term, including an InterPro2GO or UniRule
+          mapping onto a term being obsoleted.
+      COMPLEX_CHANGE:
+        meaning: kgcl:ComplexChange
+        description: >-
+          A change that KGCL has no single class for, most often a class split -
+          KGCL models merges but not splits, so a split is an obsoletion plus
+          several creations and must be described in the justification. Also for
+          any multi-step change that only makes sense applied together.
+      OTHER:
+        description: >-
+          Any other ontology change; describe it in the justification. Carries no
+          `meaning`, so it cannot be emitted as KGCL.
 
   SourceDefectTypeEnum:
     description: Kind of defect in a source database record.

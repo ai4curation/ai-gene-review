@@ -93,7 +93,17 @@ full tethering→docking→fusion pathway.
 At project creation, all five BP terms were still **active** in OLS on
 2026-05-25 and the replacement MF **GO:7770062** was not yet resolvable. By
 the 2026-09-26 audit, GO:0099022 and GO:0099041 were obsolete and GO:7770062
-had been minted.
+had been minted. A QuickGO recheck on 2026-10-31 found **all five** BP terms
+obsolete and GO:7770062 live, so the ontology side of this project is complete.
+
+None of the five carries a `term replaced by`: GO records GO:7770062 only as
+`consider`, which is correct — a biological process cannot be replaced outright
+by a molecular function, so each annotation needs a curator rather than a
+mechanical repoint. The exocyst-scoped subset of this plan is now recorded
+structurally in `modules/dmel_exocyst.yaml` under `proposed_ontology_changes`
+(see [Ontology Changes](../docs/ontology_changes.md)), which is what
+`just export-ontology-changes` reports upstream. The four mapping removals below
+are still open there; the obsoletion itself is recorded as `FIXED`.
 
 ### Affected upstream groups (from issue body, 2026-04-15)
 
