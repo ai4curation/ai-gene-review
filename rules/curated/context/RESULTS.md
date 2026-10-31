@@ -45,9 +45,51 @@ at least 95); otherwise the verdict is "not evaluated" and the rule still fires.
 - *M. tuberculosis* proteasome subunits do not match IPR000426, so the InterPro
   mapping never reached them; bacterial proteasomes are outside this rule.
 
+## All archaeal proteomes with IPR000426 (2026-10-31)
+
+Run with `just evaluate-module-context rules/curated/context/ubiquitin_transfer_relay.yaml
+--rule rules/curated/CR-0003.yaml --taxon 2157`. The bulk mode streams one UniProt query
+per signature across Archaea instead of one count per proteome; for the seven
+archaeal proteomes resolved individually above it gave identical counts.
+
+888 archaeal UniProtKB entries match IPR000426. 873 of them belong to 610 proteomes,
+all of them reference proteomes; 15 belong to no proteome and cannot be evaluated, so
+the rule still fires on them.
+
+| Verdict | Proteomes | IPR000426 proteins | CR-0003 |
+|---|---|---|---|
+| unsatisfiable (complete proteome, relay absent) | 501 | 733 | blocks GO:0006511 |
+| satisfiable | 3 | 6 | keeps GO:0006511 |
+| not evaluated (BUSCO below 95) | 106 | 134 | keeps GO:0006511 |
+| no proteome | - | 15 | keeps GO:0006511 |
+
+So CR-0003 removes 733 of the 888 archaeal GO:0006511 annotations the InterPro2GO
+mapping produces (83%). The other 155 keep it: 6 because the relay is detected, 149
+because the evidence is not good enough to call it absent.
+
+Every not-evaluated proteome failed on BUSCO alone (type and assembly level passed).
+The cut-off of 95 is a policy choice: lowering it would block more proteins at more
+risk of calling a detection gap an absence.
+
+The three satisfiable proteomes:
+
+| Proteome | Organism | UBC E2 | Ubiquitin-like | RING | Notes |
+|---|---|---|---|---|---|
+| UP000321408 | *Promethearchaeum syntrophicum* (Asgard) | A0A5B9D7T8 | A0A5B9D6M8 | A0A5B9DAL9, A0A5B9DG89 | BUSCO 89; satisfiable regardless of completeness |
+| UP001208689 | *Candidatus* Lokiarchaeum ossiferum (Asgard) | 2 | 2 | 1 | BUSCO 87 |
+| UP000030787 | *Candidatus* Methanoplasma termitum | A0A0A7LA35 (161 aa) | A0A0A7LA92 (80 aa) | A0A0A7LF26 (175 aa) | BUSCO 98; a termite-gut Thermoplasmata methanogen, not an Asgard archaeon |
+
+The *Methanoplasma* hit was not expected. It carries one small UBC E2, one
+ubiquitin-like protein and one RING protein, which may be a minimal ubiquitin-like
+operon or a horizontal acquisition; this was not assessed. Two incomplete haloarchaeal
+proteomes, *Halolamina pelagica* (UP000050535) and *Halosegnis longus* (UP000270581), each
+carry a single UBC-domain protein but lack a RING or ubiquitin-like protein
+respectively, so the relay is not satisfied; being below the completeness threshold,
+they are not evaluated and keep the term.
+
 ## Limits
 
 - Detection is by InterPro signature presence only; a matching domain is not proof
   of a working enzyme.
-- The cache covers eight proteomes. Applying CR-0003 at scale means resolving every
-  proteome that has an IPR000426 member (about 900 archaeal entries).
+- Bacterial and other non-eukaryotic, non-archaeal IPR000426 entries (74) were not
+  resolved; run the bulk mode with `--taxon 2` to add bacteria.

@@ -28,12 +28,15 @@ CLI: ``python -m ai_gene_review.context_oracle DETECTOR UPID... [--rule RULE] [-
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime
+import io
 import json
 import sys
 import time
 import urllib.parse
 import urllib.request
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Optional
@@ -169,7 +172,11 @@ def _count(query: str, attempts: int = 4) -> int:
 
 def fetch_proteome(upid: str) -> ProteomeInfo:
     """Fetch completeness fields for a UniProt proteome (network)."""
-    d = _get_json(f"{UNIPROT}/proteomes/{upid}.json")
+    return _proteome_from_json(_get_json(f"{UNIPROT}/proteomes/{upid}.json"))
+
+
+def _proteome_from_json(d: dict) -> ProteomeInfo:
+    """Completeness fields from a UniProt proteome JSON record."""
     busco = (d.get("proteomeCompletenessReport") or {}).get("buscoReport") or {}
     return ProteomeInfo(
         upid=d["id"],
@@ -184,6 +191,102 @@ def fetch_proteome(upid: str) -> ProteomeInfo:
 def fetch_presence(upid: str, signatures: list[str]) -> dict[str, int]:
     """Number of proteome members matching each InterPro signature (network)."""
     return {s: _count(f"proteome:{upid} AND xref:interpro-{s}") for s in signatures}
+
+
+def _stream(url: str, attempts: int = 4) -> str:
+    """GET a UniProt stream endpoint, retrying transient network failures."""
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(url, timeout=600) as resp:
+                return resp.read().decode()
+        except (TimeoutError, OSError):
+            if attempt == attempts - 1:
+                raise
+            time.sleep(2 ** (attempt + 1))
+    raise AssertionError("unreachable")
+
+
+def proteome_counts(tsv: str) -> tuple[Counter[str], int]:
+    r"""Count entries per proteome in a UniProt TSV with a ``Proteomes`` column.
+
+    Returns the per-proteome counts and the number of entries in no proteome.
+
+    >>> tsv = "Entry\tProteomes\nA\tUP1: Chromosome\nB\tUP1: Chromosome\nC\t\n"
+    >>> counts, unassigned = proteome_counts(tsv)
+    >>> dict(counts), unassigned
+    ({'UP1': 2}, 1)
+    """
+    counts: Counter[str] = Counter()
+    unassigned = 0
+    for row in csv.DictReader(io.StringIO(tsv), delimiter="\t"):
+        upids = [x.split(":")[0].strip() for x in (row.get("Proteomes") or "").split(";") if x.strip()]
+        if not upids:
+            unassigned += 1
+        counts.update(upids)
+    return counts, unassigned
+
+
+def _entry_proteome_counts(query: str) -> tuple[Counter[str], int]:
+    """Per-proteome entry counts for a UniProtKB query (network)."""
+    params = urllib.parse.urlencode({"query": query, "fields": "accession,xref_proteomes", "format": "tsv"})
+    return proteome_counts(_stream(f"{UNIPROT}/uniprotkb/stream?{params}"))
+
+
+def fetch_proteomes(upids: list[str], batch: int = 100) -> dict[str, ProteomeInfo]:
+    """Completeness fields for many proteomes, fetched in batches (network)."""
+    out: dict[str, ProteomeInfo] = {}
+    for i in range(0, len(upids), batch):
+        query = " OR ".join(f"upid:{u}" for u in upids[i:i + batch])
+        params = urllib.parse.urlencode({"query": query, "format": "json"})
+        for d in json.loads(_stream(f"{UNIPROT}/proteomes/stream?{params}"))["results"]:
+            info = _proteome_from_json(d)
+            out[info.upid] = info
+    return out
+
+
+def bulk_resolve(detector_path: Path, rule_path: Path, taxon_id: int) -> dict:
+    """Resolve every proteome of ``taxon_id`` that has a protein matching the rule.
+
+    Signature counts are taken from entries of ``taxon_id`` only, which is exact
+    for proteomes of that taxon. Uses one streamed query per signature instead of
+    one count query per (proteome, signature). Returns a summary including the
+    number of rule matches that belong to no proteome (these cannot be evaluated).
+    """
+    det = load_detector(detector_path)
+    rule = yaml.safe_load(rule_path.read_text())
+    rule_counts, unassigned = _entry_proteome_counts(f"({to_uniprot_query(rule)}) AND taxonomy_id:{taxon_id}")
+    sig_counts = {
+        s: _entry_proteome_counts(f"xref:interpro-{s} AND taxonomy_id:{taxon_id}")[0] for s in det.signatures
+    }
+    infos = fetch_proteomes(sorted(rule_counts))
+    cache = load_cache(detector_path)
+    today = datetime.date.today().isoformat()
+    for upid, info in infos.items():
+        cache[upid] = {
+            "fetched": today,
+            "proteome": info.__dict__,
+            "signature_counts": {s: sig_counts[s][upid] for s in det.signatures},
+            "rule_matches": {rule["id"]: rule_counts[upid]},
+        }
+    save_cache(detector_path, cache)
+    return {
+        "rule": rule["id"],
+        "taxon_id": taxon_id,
+        "proteomes": sorted(infos),
+        "missing_proteome_records": sorted(set(rule_counts) - set(infos)),
+        "entries_without_proteome": unassigned,
+    }
+
+
+def summarise(det: Detector, cache: dict, upids: list[str], rule_id: str, circuit: Optional[Circuit] = None) -> dict:
+    """Count proteomes and rule-matched proteins by module verdict."""
+    out = {v: {"proteomes": 0, "proteins": 0} for v in ("satisfiable", "unsatisfiable", "not_evaluated")}
+    names = {True: "satisfiable", False: "unsatisfiable", None: "not_evaluated"}
+    for upid in upids:
+        verdict = names[evaluate_cached(det, cache[upid], circuit)]
+        out[verdict]["proteomes"] += 1
+        out[verdict]["proteins"] += cache[upid]["rule_matches"][rule_id]
+    return out
 
 
 def cache_path(detector_path: Path) -> Path:
@@ -246,6 +349,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("upids", nargs="*", help="UniProt proteome ids (default: all cached)")
     parser.add_argument("--rule", type=Path, help="curated rule to report match counts for")
     parser.add_argument("--refresh", action="store_true", help="re-fetch cached proteomes")
+    parser.add_argument("--taxon", type=int,
+                        help="with --rule: resolve every proteome of this NCBI taxon id that the rule matches")
     args = parser.parse_args(argv)
 
     det = load_detector(args.detector)
@@ -254,6 +359,20 @@ def main(argv: Optional[list[str]] = None) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
+    if args.taxon is not None:
+        if args.rule is None:
+            parser.error("--taxon requires --rule")
+        result = bulk_resolve(args.detector, args.rule, args.taxon)
+        cache = load_cache(args.detector)
+        print(yaml.safe_dump({
+            "rule": result["rule"],
+            "taxon_id": result["taxon_id"],
+            "proteomes_resolved": len(result["proteomes"]),
+            "missing_proteome_records": result["missing_proteome_records"],
+            "entries_without_proteome": result["entries_without_proteome"],
+            "by_verdict": summarise(det, cache, result["proteomes"], result["rule"], circuit),
+        }, sort_keys=False))
+        return 0
     upids = args.upids or sorted(load_cache(args.detector))
     cache = resolve(args.detector, upids, args.refresh, args.rule)
     rule_id = yaml.safe_load(args.rule.read_text())["id"] if args.rule else None

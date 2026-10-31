@@ -14,6 +14,7 @@ from ai_gene_review.context_oracle import (
     evaluate_module,
     load_cache,
     load_detector,
+    summarise,
 )
 from ai_gene_review.module_logic import compile_module_file
 
@@ -99,3 +100,19 @@ def test_cached_verdicts_are_consistent(detector, circuit, upid) -> None:
     verdict = evaluate_cached(detector, entry, circuit)
     if verdict is False:
         assert ProteomeInfo(**entry["proteome"]).is_complete(detector.completeness)
+
+
+ARCHAEAL_RUN = [
+    u for u, e in CACHE.items()
+    if "CR-0003" in e.get("rule_matches", {}) and e["proteome"]["taxon_id"] not in (9606, 559292, 83332)
+]
+
+
+def test_bulk_archaeal_run_is_complete_and_adds_up(detector, circuit) -> None:
+    """The cached archaeal run covers every proteome and its totals reconcile."""
+    assert len(ARCHAEAL_RUN) >= 600
+    summary = summarise(detector, CACHE, ARCHAEAL_RUN, "CR-0003", circuit)
+    proteins = sum(v["proteins"] for v in summary.values())
+    assert proteins == sum(CACHE[u]["rule_matches"]["CR-0003"] for u in ARCHAEAL_RUN)
+    # most archaea lack the relay, so the rule blocks most of the mapping
+    assert summary["unsatisfiable"]["proteins"] > summary["satisfiable"]["proteins"]

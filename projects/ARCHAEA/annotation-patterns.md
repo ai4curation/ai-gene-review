@@ -163,6 +163,13 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
 - **Scale:** about 888 of the 910 archaeal GO:0006511 rows in QuickGO come
   from this mapping.
 - **Possible fix:** add a Eukaryota taxon restriction to the mapping.
+- **Implemented as CR-0003 (2026-10-31).** Evaluated on all 610 archaeal
+  proteomes with an IPR000426 member: the ubiquitin relay is absent from 501
+  complete proteomes, so the rule removes 733 of the 888 archaeal rows (83%).
+  It keeps the term in two Asgard archaea and *Candidatus* Methanoplasma
+  termitum, which encode a UBC E2, a ubiquitin-like protein and a RING
+  protein, and in 106 proteomes too incomplete to call the relay absent
+  (`rules/curated/context/RESULTS.md`).
 
 ## 10. Microbial rhodopsin pumps annotated as channels
 
