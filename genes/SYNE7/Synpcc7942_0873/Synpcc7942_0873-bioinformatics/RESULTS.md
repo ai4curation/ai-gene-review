@@ -65,6 +65,22 @@ putative catalytic glutamate" for the related Evangelion protein Eva01 (E87; bio
 family conservation. The KpSwz sequence was not available here (it is in the
 preprint's supplement), so it was not aligned directly.
 
+## 4. Independent structural checks (not run here)
+
+Two dashboard reviewers independently assessed the same protein by structure, and their
+results are consistent with sections 1-3. Summarised, not re-run: MorganP reports no
+CDD or InterPro link to NTPase domains and reads the predicted structure as a TIR domain
+plus a winged helix. JMC-Claude-SCOP reports a SCOPe 2.08 comparison of AF-Q31PW6-F1 in
+which residues ~1-168 give TIR (c.23.2) as the strongest superfamily over-representation
+of 524 tested, residues ~206-348 return ten hits that are all winged-helix DNA-binding
+domains (a.4.5), the P-loop signal looks like generic alpha/beta similarity, and a
+TIR-like domain plus a winged helix leaves no room for NACHT in 362 residues. Both sets
+of hits are individually weak, so these are fold-level candidates.
+
+This adds a domain to the architecture in section 3: the C-terminal region called
+unassigned there is a predicted winged helix, which matches the helix-turn-helix/winged
+fold of the Swarozyc auxiliary domain.
+
 ## Conclusions
 
 - The protein lacks the P-loop NTPase machinery that GO:0017111 requires. The NTPase
@@ -72,7 +88,8 @@ preprint's supplement), so it was not aligned directly.
   (for NTP hydrolysis) DUF4062 domain.
 - The protein has the architecture of the short bacterial DUF4062 proteins: an
   N-terminal TIR-like DUF4062 domain with the conserved putative catalytic Glu (Glu83),
-  a coiled-coil stalk and an unassigned C-terminal region. This matches the Swarozyc
-  layout of TIR-like domain, helical stalk and auxiliary domain. Its likely activity is
+  a coiled-coil stalk and a C-terminal region that structural review predicts to be a
+  winged helix (section 4). This matches the Swarozyc layout of TIR-like domain, helical
+  stalk and auxiliary domain, down to that domain's winged fold. Its likely activity is
   NAD+ hydrolysis (NAD+ nucleosidase). This has not been tested for this protein, and
   some DUF4062 proteins are inactive (human NWD1, NWD2 and NPHP3 did not hydrolyse NAD+).

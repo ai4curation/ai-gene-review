@@ -50,6 +50,38 @@ hydrolysed NAD+, so the family is not uniformly catalytic, and nothing has been 
 for this protein. The review therefore records GO:0003953 as ISS and withholds any
 phage-defence process term.
 
+## Independent structure-based reviews converge, and add a domain
+
+Two other reviewers on the dashboard reached the same verdict independently, and between
+them supplied a domain this review had left unassigned. Their reasoning is recorded on
+the dashboard page for `CP088958.1_900`, not in this repository, so it is summarised here
+rather than cited as verified evidence.
+
+- **MorganP**: neither CDD nor InterPro links the protein to NTPase domains; the
+  predicted structure has two domains, a TIR domain and a winged helix. They suggested a
+  transcriptional regulator, noting it as speculative.
+- **JMC-Claude-SCOP**: a SCOPe 2.08 comparison of the AlphaFold model AF-Q31PW6-F1.
+  Residues ~1-168 (median pLDDT 94) give TIR (c.23.2) as the strongest superfamily
+  over-representation of 524 tested, with all three SCOPe TIR representatives in the top
+  1% of 3,910 alignments, while individual hits stay weak. Residues ~206-348 return ten
+  hits, all winged-helix DNA-binding domains (a.4.5), likewise weak. They record that the
+  P-loop signal looks like generic alpha/beta similarity, that there is no Walker A or B
+  motif, and that a TIR-like domain plus a winged helix leaves no room for a NACHT domain
+  in 362 residues.
+
+Three points follow. First, the TIR reading of DUF4062 is now supported structurally and
+independently of the preprint. Second, the absence of Walker motifs was found twice, by
+regular-expression scan here and by structural comparison there. Third, the winged helix
+matters: Osinski et al. describe the KpSwz portal-recognition auxiliary domain as adopting
+a "helix-turn-helix (HTH)/winged fold", so the predicted architecture completes the
+Swarożyc layout of TIR-like domain, stalk and winged-helix sensor.
+
+That last point is also where the readings diverge. A winged helix often binds DNA, which
+is why MorganP suggested a regulator; in this family, however, the equivalent fold is a
+phage sensor. The defence reading is better supported for a DUF4062 protein, but a
+regulatory role is not excluded, and the discriminator is whether a phage protein
+activates it rather than a DNA-binding assay alone.
+
 ## Family-level contribution to DUFMech
 
 The family finding was contributed to [DUFMech](https://github.com/CultureBotAI/DUFMech),
