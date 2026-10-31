@@ -2999,9 +2999,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**658 of 2,876 genes are complete; 2,218 remain.**
-This checkpoint adds FMO3 and FMR1 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-658-2026-10-31-071824-utc) records the evidence and retained uncertainties.
+**661 of 2,876 genes are complete; 2,215 remain.**
+This checkpoint adds FNIP1, FN1 and FOXC1 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-661-2026-10-31-170331-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3797,10 +3797,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FLVCR2** — HGNC:20105; [Fowler syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bab38ab3-42d3-452d-97d1-5859eafa3d1b-2024-10-22T040000.000Z) (MONDO:0009168; AR; Definitive).
 - [x] **FMO3** — HGNC:3771; [trimethylaminuria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_18ed3960-c745-46f1-aecc-155e713d6ef5-2020-08-14T184718.502Z) (MONDO:0011182; AR; Definitive).
 - [x] **FMR1** — HGNC:3775; [fragile X syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e491d278-7123-434c-8de3-46e16afb4037-2019-06-03T100000.000Z) (MONDO:0010383; XL; Definitive).
-- [ ] **FN1** — HGNC:3778; [glomerulopathy with fibronectin deposits 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3ffbb09f-bf2d-4d76-9176-4961ce8862e9-2023-10-04T160000.000Z) (MONDO:0011165; AD; Moderate); [spondylometaphyseal dysplasia, 'corner fracture' type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_33f71829-1d1a-4d34-b2ff-1df63ec5d0b5-2024-03-06T170000.000Z) (MONDO:0008479; AD; Definitive).
-- [ ] **FNIP1** — HGNC:29418; [FNIP1-associated syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25c930ed-965b-47ae-b9c2-7157b06cb868-2024-11-26T170000.000Z) (MONDO:0100432; AR; Definitive).
+- [x] **FN1** — HGNC:3778; [glomerulopathy with fibronectin deposits 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3ffbb09f-bf2d-4d76-9176-4961ce8862e9-2023-10-04T160000.000Z) (MONDO:0011165; AD; Moderate); [spondylometaphyseal dysplasia, 'corner fracture' type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_33f71829-1d1a-4d34-b2ff-1df63ec5d0b5-2024-03-06T170000.000Z) (MONDO:0008479; AD; Definitive).
+- [x] **FNIP1** — HGNC:29418; [FNIP1-associated syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25c930ed-965b-47ae-b9c2-7157b06cb868-2024-11-26T170000.000Z) (MONDO:0100432; AR; Definitive).
 - [ ] **FOLR1** — HGNC:3791; [neurodegenerative syndrome due to cerebral folate transport deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_22c12588-dc55-4e90-827a-d7a6349e38a9-2017-10-20T100000.000Z) (MONDO:0013110; AR; Definitive).
-- [ ] **FOXC1** — HGNC:3800; [FOXC1-related anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b2271229-84ea-4aff-81b4-3428c173ed7b-2021-11-18T170000.000Z) (MONDO:0100235; AD; Definitive).
+- [x] **FOXC1** — HGNC:3800; [FOXC1-related anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b2271229-84ea-4aff-81b4-3428c173ed7b-2021-11-18T170000.000Z) (MONDO:0100235; AD; Definitive).
 - [ ] **FOXC2** — HGNC:3801; [lymphedema-distichiasis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_757840b2-8b39-44d0-aff9-dd9983e77d0f-2024-01-24T170000.000Z) (MONDO:0007922; AD; Definitive).
 - [ ] **FOXE1** — HGNC:3806; [Bamforth-Lazarus syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0a00a763-90dc-4d36-8b34-54cf4f477269-2024-05-16T160000.000Z) (MONDO:0009437; AR; Definitive).
 - [ ] **FOXE3** — HGNC:3808; [anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d9cf89fb-ebb9-4c38-8b8c-97d9ce5af270-2023-07-20T160000.000Z) (MONDO:0019503; SD; Definitive); [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_982f5f02-596f-4dfa-a019-147934f6509b-2026-06-19T160000.000Z) (MONDO:0019625; AD; Limited); [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8261) (MONDO:0019625; AD; Moderate).
