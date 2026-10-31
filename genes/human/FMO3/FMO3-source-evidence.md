@@ -33,3 +33,9 @@ The complete 1488-node PTHR23023 tree/MSA includes the exact 532-residue P31513 
 ## Research and review boundaries
 
 This is manual primary-source and database research, with independent enzyme/binding consultation and a ROOT check of ER/PAINT provenance. No provider-named research file was fabricated. Source access and normal-cache completeness are separate properties. The published [campaign instructions](https://github.com/ai4curation/ai-gene-review/blob/38dca73a6b33270bb6227472df48c8e00310bcbc/projects/CLINGEN_MENDELIAN.md#curation-instructions) govern reference-only support without new quotations; informative binding refinements are used where supported. The single TMA core does not add a new GO biological-process assertion or a second generic monooxygenase core.
+
+## Follow-up clarification
+
+The CLEC10A refinement describes the receptor class of the measured binding partner. The official [GO:0005102 term](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0005102) distinguishes receptor binding from the additional agonist activity that may be appropriate in other cases. Exact positive yeast two-hybrid records establish the reported interaction capacity, while native encounter between hepatic/ER FMO3 and myeloid cell-surface/endolysosomal CLEC10A remains unestablished. Distinct reported contexts do not alone prove that the experimental interaction is false.
+
+The TMA and hypotaurine terms have no is_a path to GO:0004499 in the checked official hierarchy. The dimethylaniline rows therefore remain contextual specific activity assertions; common historical FMO terminology does not justify treating them as redundant ancestors. FAD/NADP binding supports the already stated FAD-containing, NADPH-dependent catalytic core. The nicotine reaction in reviewed P31513 is recorded as a question for later primary-assay assessment, without adding a source or annotation.
