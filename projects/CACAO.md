@@ -74,7 +74,8 @@ order is therefore microbes first, ranked by CACAO row count; the animal and
 plant genes follow.
 
 The question for this project is whether CACAO rows fail in a characteristic
-way that differs from professional curation, and how often. After two batches the taxonomy has eighteen shapes, grouped below. Only the
+way that differs from professional curation, and how often. After two batches
+the taxonomy has eighteen shapes, grouped below. Only the
 first was expected; the rest were found by reading papers against term
 definitions. Several arrive from automated pipelines as often as from
 students, so the taxonomy classifies *annotation* failures, not CACAO ones.
@@ -210,10 +211,10 @@ KRT19 plasma membrane). Every batch-1 paper was about its gene.
 
 **A CACAO error does not stay put.** VP40's `intracellular transport of virus`
 row, which has no transport assay behind it, has already seeded an
-inter-ontology IEA (GO_REF:0000108), and K5's repointed viral-entry row is also
-restated by an ARBA rule, so the correction has to reach two rows. Two of 143 rows examined have been amplified
-downstream, so error rates counted on CACAO rows alone understate the
-footprint.
+inter-ontology IEA (GO_REF:0000108), and K5's repointed viral-entry row is
+also restated by an ARBA rule, so the correction has to reach two rows. Two of
+143 rows examined have been amplified downstream, so error rates counted on
+CACAO rows alone understate the footprint.
 
 **Two near-misses on the curator-deference rule.** AcrIIA5 cites a paper whose
 title and abstract are about a different anti-CRISPR protein (AcrIIA6); only
