@@ -95,6 +95,9 @@ Suggested correction text:
      - The thesis concludes that the earlier ΔtreS deletion was polar on cg2530.
      - Caveats: the thesis is not peer reviewed; the evidence is genetic only; and "treX" here
        is not the GH13 TreX debranching enzyme.
+     - The thesis name "treX" is deliberately not carried as an alias in the review YAML.
+       TreX/GlgX is the established name of the GH13 glycogen debranching enzyme in this same
+       trehalose/alpha-glucan pathway, and aliases are machine-readable (PR #5763 review).
    - Wolf et al. 2003 (PMID:12890033) and Tzvetkov et al. 2003 (PMID:12855718) characterise
      treS and the trehalose and glycogen routes but do not study cg2530.
 
