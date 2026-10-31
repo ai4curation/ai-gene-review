@@ -11,13 +11,18 @@ For each decision the script restores the ND row as it was before the pass
 edits only that row's review block:
 
 - ``STALE``: the earlier REMOVE/MODIFY stays; ``nd_case: STALE`` is added.
-- ``ACCEPT``: action becomes ACCEPT, summary and reason are rewritten,
-  ``proposed_replacement_terms`` is dropped, and so is ``supported_by`` when
-  the earlier action was MODIFY (those quotes supported the replacement term).
+- ``ACCEPT``: action becomes ACCEPT and the reason is rewritten. The summary
+  is rewritten when the earlier action was MODIFY (it argued for the
+  replacement) or it says the ND is obsolete (``SUMMARY_CONFLICT``), or as
+  ``rewrite_summary`` in the table says; otherwise it is kept. ``proposed_replacement_terms`` and
+  ``supported_by`` are dropped: those quotes argued for the earlier action.
   ``nd_case`` is TRUE_GAP when the review has a BIOLOGY gap for the aspect,
   INFERABLE when a retained inferred row or a new row covers it, and is left
   unset otherwise. With ``new_row``, the replacement term becomes its own NEW
   row carrying the earlier quotes.
+
+The restore step reads the pre-pass rows from git, so re-running needs those
+commits to be reachable (it is not possible after a squash merge).
 
 Run from the repository root, then ``just backfill-record-sections`` on the
 changed reviews to restore ``record_section`` on restored UniProt quotes:
@@ -56,7 +61,26 @@ RETAINED = {"ACCEPT", "KEEP_AS_NON_CORE", "NEW", "MODIFY", "TOO_GENERAL"}
 #: Summaries of NEW rows this script generates (current and earlier wording).
 GENERATED_NEW_ROW = ("proposed during the NO_DATA re-action pass",
                      "moved from the ND row it was proposed to replace")
-ND_CLAUSE = re.compile(r"\bND\b|placeholder|superseded|out of date|outdated|replace", re.I)
+#: Sentences of an earlier MODIFY reason that argue about the ND row or name the
+#: earlier action; they are not carried into the NEW row's reason.
+ND_CLAUSE = re.compile(
+    r"\bND\b|placeholder|superseded|out of date|outdated|replace|\bearlier\b"
+    r"|\b(?:MODIFY|REMOVE|KEEP_AS_NON_CORE|TOO_GENERAL|UNDECIDED|MARK_AS_OVER_ANNOTATED)\b",
+    re.I,
+)
+#: Sentence boundary that does not split abbreviations such as "S. pombe",
+#: "e.g." or "et al.".
+SENTENCE_END = re.compile(r"(?<=[.!?])(?<! [A-Z]\.)(?<!\([A-Z]\.)(?<!e\.g\.)(?<!i\.e\.)(?<!al\.)\s+")
+#: An earlier summary that says the ND is obsolete conflicts with ACCEPT and is
+#: rewritten; any other earlier summary is kept.
+SUMMARY_CONFLICT = re.compile(
+    r"supersed|stale|outdated|out of date|obsolete|no longer|redundant|removed|"
+    r"should not be retained|should be removed|be replaced|is replaced|uninformative|"
+    r"carries no|understates|\bremove|entailed|more specifically than|now known|"
+    r"now contains|now carries|GOA now|now has|can now|should be replaced|retire|"
+    r"now characteri[sz]ed|well-documented|well characteri[sz]ed",
+    re.I,
+)
 
 
 def summary_text(aspect: str) -> str:
@@ -82,10 +106,19 @@ def reason_text(aspect: str, earlier: str, note: str | None, new_label: str | No
     return " ".join(parts)
 
 
-def new_row_reason(label: str, evidence: str, old_reason: str) -> str:
+def new_row_reason(label: str, evidence: str, old_reason: str, inherit: bool) -> str:
+    """Reason for a generated NEW row.
+
+    Sentences of the earlier reason are inherited only when it argued for this one
+    term (``inherit``), and never those about the ND row or the earlier action.
+
+    >>> new_row_reason("x activity", "ISS", "Known in S. pombe (Apc2). The ND is stale.", True)
+    'X activity is inferred for this gene product (ISS), not shown for it experimentally; \
+the ND row for the aspect therefore stays (projects/NO_DATA.md). Known in S. pombe (Apc2).'
+    """
     kept = [
-        s for s in re.split(r"(?<=[.!?])\s+", " ".join(old_reason.split()))
-        if s and not ND_CLAUSE.search(s)
+        s for s in SENTENCE_END.split(" ".join(old_reason.split()))
+        if inherit and s and not ND_CLAUSE.search(s)
     ]
     head = (
         f"{label[:1].upper()}{label[1:]} is inferred for this gene product ({evidence}), not shown for it "
@@ -240,9 +273,9 @@ def main() -> None:
             aspect = d["aspect"]
             ind = block[0].index("-") + 4
             child = " " * ind
-            drop = {"proposed_replacement_terms"}
-            if d["earlier_action"] == "MODIFY":
-                drop.add("supported_by")
+            # The earlier quotes argued for the earlier action (a replacement term, or
+            # that the ND was obsolete), so none of them supports the ACCEPT.
+            drop = {"proposed_replacement_terms", "supported_by"}
             new_rows = []
             if "new_row" in d:
                 for rep in o_review.get("proposed_replacement_terms") or []:
@@ -256,8 +289,10 @@ def main() -> None:
                             "summary": f"Inferred {rep.get('label')} for this gene product, "
                                        "proposed during the NO_DATA re-action pass.",
                             "action": "NEW",
-                            "reason": new_row_reason(rep.get("label"), d["new_row"]["evidence_type"],
-                                                     str(o_review.get("reason") or "")),
+                            "reason": new_row_reason(
+                                rep.get("label"), d["new_row"]["evidence_type"],
+                                str(o_review.get("reason") or ""),
+                                inherit=len(o_review.get("proposed_replacement_terms") or []) == 1),
                         },
                     }
                     if o_review.get("supported_by"):
@@ -276,12 +311,16 @@ def main() -> None:
             else:
                 nd_case = None
             labels = ", ".join(r["term"]["label"] for r in new_rows) or None
+            # A MODIFY summary argued for the replacement term, so it is always rewritten.
+            rewrite = d.get("rewrite_summary", d["earlier_action"] == "MODIFY" or bool(
+                SUMMARY_CONFLICT.search(str(o_review.get("summary") or ""))))
             replace = {
-                "summary": folded("summary", summary_text(aspect), child),
                 "action": [f"{child}action: ACCEPT\n"],
                 "reason": folded("reason", reason_text(aspect, d["earlier_action"],
                                                        d.get("note"), labels), child),
             }
+            if rewrite:
+                replace["summary"] = folded("summary", summary_text(aspect), child)
             out.append("".join(rewrite_review(block, drop, replace, nd_case)))
             additions.extend(new_rows)
         if additions:

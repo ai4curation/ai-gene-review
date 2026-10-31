@@ -243,8 +243,8 @@ into N1–N6, then record the provenance issue in the notes.
 ## Current state of the corpus
 
 From [the inventory](NO_DATA/data/nd-summary.md)
-(`uv run python projects/NO_DATA/scripts/nd_inventory.py`), as of commit
-`04e2ffa3e` (2026-10-31): 427 ND rows in 268 reviews. A bare protein-binding
+(`uv run python projects/NO_DATA/scripts/nd_inventory.py`), regenerated with
+each change to this project; on 2026-10-31 it counted 427 ND rows in 268 reviews. A bare protein-binding
 IPI is not counted as experimental (it identifies no function).
 
 | Provisional signal | ND rows | Likely case(s) |
@@ -302,24 +302,31 @@ row and the review's other rows in the same aspect (2026-10-24, extended on
 2026-10-26 to reviews merged from main, and re-checked on 2026-10-31 after
 review), **not by a new literature search**, and the generated text says so.
 The script restores each row as it was before the pass, then edits only that
-row's review block, so it can be re-run.
+row's review block, so it can be re-run. The pre-pass rows are read from git,
+so re-running needs those commits to be reachable; after a squash merge it can
+no longer restore them.
 
 - **62 rows keep `REMOVE`/`MODIFY` with `nd_case: STALE`**: the review cites
   literature on this gene product in this species (e.g. yeast/MDM10,
   mouse/Capsl, ARATH/MLO2, DANRE/elna, human/ARL15, mouse/Rtl5).
 - **112 rows changed to `ACCEPT`**: 51 `REMOVE` (mostly "superseded by the
   IBA"), 30 `KEEP_AS_NON_CORE`, 25 `MODIFY` to an inferred term, 4
-  `TOO_GENERAL` and 2 `MARK_AS_OVER_ANNOTATED`. Each gets a neutral summary and
-  a reason that names the earlier action and says the judgement came from the
-  review's own content. `nd_case` is `TRUE_GAP` where the review has a
+  `TOO_GENERAL` and 2 `MARK_AS_OVER_ANNOTATED`. Each gets a reason that names
+  the earlier action and says the judgement came from the review's own
+  content. The earlier summary is kept unless it argued for the replacement
+  (every converted `MODIFY`) or said the ND was obsolete; those 73 summaries
+  are replaced with a neutral one. `nd_case` is `TRUE_GAP` where the review has a
   matching `BIOLOGY` gap, `INFERABLE` where a retained inferred row covers the
   aspect, and unset otherwise.
-- **Quotes.** A converted `REMOVE`, `KEEP_AS_NON_CORE`, `TOO_GENERAL` or
-  `MARK_AS_OVER_ANNOTATED` row keeps its earlier `supported_by`. A converted
-  `MODIFY` row loses its `proposed_replacement_terms` and the quotes that
-  supported them: if the review already has a row for the replacement term,
-  those quotes are dropped here; if not (`new_row` in the table), the term
-  becomes its own `NEW` row carrying them. 14 `NEW` rows were made this way,
+- **Quotes.** A converted row loses its earlier `supported_by`: those quotes
+  argued for the earlier action (a replacement term, or that the ND was
+  obsolete), so none of them supports the `ACCEPT`, and none should earn the
+  `nd_search_support` credit. A converted `MODIFY` also loses its
+  `proposed_replacement_terms`: if the review already has a row for the term,
+  nothing more is needed; if not (`new_row` in the table), the term becomes its
+  own `NEW` row carrying the earlier quotes. A `NEW` row inherits the earlier
+  reasoning only when the `MODIFY` proposed that one term, and never its
+  sentences about the ND row or the earlier action. 14 `NEW` rows were made this way,
   e.g. DROME/Vps50, Vps51, Vps53 `contributes_to` vesicle membrane tethering
   and mouse/Sdhaf2 protein folding chaperone.
 - **Judgement calls (agreed 2026-10-24, now in CLAUDE.md).** Bare
