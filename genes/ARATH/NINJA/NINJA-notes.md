@@ -1,0 +1,32 @@
+# NINJA (At4g28910; UniProt Q9SV55, UniProt gene name AFPH2) curation notes
+
+## 2026-10-06 — initial review (jasmonate_coi1_jaz_signaling module)
+
+- UniProt gene name is AFPH2 (synonym NINJA). Folder and gene_symbol use the standard Arabidopsis/TAIR symbol NINJA. Fetched by accession: `just fetch-gene ARATH Q9SV55 --alias NINJA`; UniProt record checked (NINJA_ARATH, At4g28910).
+- `just deep-research-falcon ARATH NINJA` failed (HTTP 429); review based on cached publications.
+
+### Key evidence (Pauwels et al. 2010, PMID:20360743, full text)
+- Adaptor linking JAZ to TPL/TPRs [PMID:20360743 "Here we show that the Arabidopsis JAZ proteins recruit the Groucho/Tup1-type co-repressor TOPLESS (TPL) and TPL-related proteins (TPRs) through a previously uncharacterized adaptor protein, designated Novel Interactor of JAZ (NINJA)."].
+- EAR motif needed and sufficient for repression [PMID:20360743 "Second, a NINJA fragment containing the EAR motif, but lacking a JAZ interaction domain, was sufficient for repression."].
+- Binds TIFY motif of most JAZs (not JAZ7/JAZ8) and group-II TIFY proteins PPD1/PPD2/TIFY8.
+- Nuclear [PMID:20360743 "Analysis of seedlings producing a C-terminal GFP fusion with NINJA revealed a clear nuclear localization for NINJA"].
+- OE reduces, KD enhances JA responses.
+- Leaf flatness with PPD2 via CYCD3;2 [PMID:29991485]; root stem cell niche via PAT1H1 [PMID:26956135, abstract only].
+
+### Decisions
+- 41 protein-binding IPI rows resolved by supporting_entities: JAZ, PPD/TIFY8, TPL/TPR2/TPR3 partners -> MODIFY to GO:0001222 transcription corepressor binding; PAT1H1 and GID1A partners -> REMOVE (uninformative, not a rejection of the interaction).
+- NEW: GO:0003714 transcription corepressor activity (IDA, PMID:20360743) as the core MF. GO has no "corepressor adaptor" MF; raised as a suggested question.
+- signal transduction (IEA) marked over-annotated (uninformative parent).
+
+## 2026-10-06 — PR review follow-up (JAZ partner rows vs. published exclusions)
+
+- The TAIR IPI protein-binding row with partner AGI_LocusCode:AT1G30135 is JAZ8/TIFY5A. PMID:20360743 reports Y2H interactions "with most JAZ proteins, except JAZ7 and JAZ8" [PMID:20360743 "Systematic Y2H analysis of the specificity of NINJA for JAZ proteins revealed interactions with most JAZ proteins, except JAZ7 and JAZ8"], and UniProt's curated NINJA interactors omit TIFY5A. The earlier MODIFY to GO:0001222 quoted that very sentence, so the quote refuted the row.
+- The pull-down exceptions in the same paper are different: [PMID:20360743 "NINJA was pulled-down by all JAZ-MBP fusion proteins, except JAZ7, JAZ11 and JAZ12"]. Taken literally, JAZ8 was Y2H-negative but pull-down-positive, so the curator may have based the IPI on the in vitro pull-down (Supplementary Fig. 3b), or read Supplementary Fig. 3a differently. The supplement is not cached. The row is now UNDECIDED, not REMOVE.
+- Every other JAZ partner row was checked against the exclusion list. No row names JAZ7 (AT2G34600). The rows for JAZ12 (UniProtKB:Q9C5K8 and AGI_LocusCode:AT5G20900) are Y2H-positive but pull-down-negative. They stay as MODIFY because the Y2H result and the TAP of NINJA, which recovered JAZ12 ("the group-II TIFY proteins JAZ12 and PPD2 and MYC3 were identified as well"), support them. No row names JAZ11.
+
+## 2026-10-06 — JAZ8 (AT1G30135) IPI row resolved
+
+- The row was UNDECIDED: PMID:20360743 reports a positive MBP pull-down for JAZ8 ["NINJA was pulled-down by all JAZ-MBP fusion proteins, except JAZ7, JAZ11 and JAZ12"] but a negative Y2H ["revealed interactions with most JAZ proteins, except JAZ7 and JAZ8"].
+- PMID:22327740 (Shyu et al. 2012) shows that JAZ8 represses through its own N-terminal EAR motif binding TOPLESS ["JAZ8-mediated repression does not require the ZIM domain, which, in other JAZ proteins, recruits TOPLESS through the EAR motif-containing adaptor protein NINJA."].
+- Decision: MARK_AS_OVER_ANNOTATED. The binding is kept as the curator's observation, but it is not converted to transcription corepressor binding because NINJA's adaptor role does not apply to JAZ8.
+- 2026-10-06 (later): changed MARK_AS_OVER_ANNOTATED to REMOVE. The repo's protein-binding policy (src/ai_gene_review/validation/protein_binding_policy.py) does not allow MARK_AS_OVER_ANNOTATED on GO:0005515. The problem is that the term carries no functional information, not that the claim exceeds the evidence. No informative term applies to JAZ8, so the generic term is removed. Removal concerns only the term, not the interaction.

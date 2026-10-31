@@ -45,7 +45,7 @@ The term "clearance of foreign intracellular nucleic acids" does not fit SNIPE b
 - **"Clearance"** implies something is present and then removed; SNIPE *prevents* entry
 - **"Intracellular"** implies the nucleic acid is already inside the cell; SNIPE acts at the membrane during translocation
 
-Yet SNIPE is clearly in the same functional class as CRISPR-Cas and R-M — it is a nucleic acid-targeting anti-phage defense system. SNIPE homologues (InterPro [IPR025280](https://www.ebi.ac.uk/interpro/entry/InterPro/IPR025280/), Pfam [PF13250](https://www.ebi.ac.uk/interpro/entry/pfam/PF13250/)) are found in ~33% of well-sequenced bacterial clades, with 1,612 protein members across 2,466 taxa ([PMID:41741653](https://pubmed.ncbi.nlm.nih.gov/41741653/)).
+Yet SNIPE is clearly in the same functional class as CRISPR-Cas and R-M — it is a nucleic acid-targeting anti-phage defense system. SNIPE homologues (InterPro [IPR025280](https://www.ebi.ac.uk/interpro/entry/InterPro/IPR025280/), Pfam [PF13250](https://www.ebi.ac.uk/interpro/entry/pfam/PF13250/)) are found in ~33% of well-sequenced bacterial clades, with a curated set of ~500 homologues distributed across many bacterial phyla ([PMID:41741653](https://pubmed.ncbi.nlm.nih.gov/41741653/)). A local InterPro architecture run examined 1,612 `IPR025280` proteins across 17 architectures.
 
 ### 3. "Defense response to symbiont" is an awkward parent for anti-phage systems
 
@@ -125,7 +125,7 @@ Prefer architecture-aware rules (e.g. IPR025280 + GIY-YIG nuclease + membrane ta
 Then map the full architecture to GO:NNNNNNN ; SNIPE defense system [new BP term]
 ```
 
-This reduces false-positive propagation across the 1,612 proteins in the SNIPE-associated domain family (2,466 taxa) that may not all share the same full mechanism.
+This reduces false-positive propagation across the 1,612 proteins in the SNIPE-associated domain family that may not all share the same full mechanism.
 
 ### Bioinformatics note
 

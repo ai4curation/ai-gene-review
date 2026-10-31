@@ -40,3 +40,23 @@ Budding-yeast Gpi16 co-purifies with Gaa1 and Gpi8; depletion accumulates comple
 > The PIGK subunit 
 > functions as the catalytic component
 
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: every existing annotation, the description and core functions were re-examined against the cached primary literature, the UniProt record, the PANTHER/PAINT data and the Falcon report. No ProtNLM2 file or prediction output was consulted.
+
+**Identity.** O94380 is the reviewed Swiss-Prot canonical entry for gpi16/SPBC1604.15, 545 aa, full length. It has a signal peptide (1-22), a lumenal PIG-T domain (23-493), one TM helix (494-514) and a cytosolic tail (515-545). It is not an isoform, fragment or alternative gene model.
+
+**Evolutionary grounding.** PANTHER PTHR12959:SF11 (GPI TRANSAMIDASE COMPONENT PIG-T), the same subfamily as S. cerevisiae GPI16 (P38875), mouse Pigt and human PIGT (Q969N2) (`interpro/panther/PTHR12959/PTHR12959-entries.csv`). The PAINT IBD node PTN000311103 sits at taxon Eukaryota and carries only GO:0042765 (complex) and GO:0016255 (attachment of GPI anchor to protein), with SGD, FB, MGI and human donors (`PTHR12959-paint.tsv`). It carries no MF, and human PIGT has no contributes_to transamidase-activity row, so the ND MF is kept and no MF is proposed. The family review `interpro/panther/PTHR12959/PTHR12959-review.yaml` puts O94380 in SF11, which agrees with UniProt. No disagreement over subfamily placement.
+
+**Changes from the previous review.**
+- GO:0031505 fungal-type cell wall organization (ComplexPortal NAS): KEEP_AS_NON_CORE changed to MARK_AS_OVER_ANNOTATED. The cell wall depends on GPI-anchored proteins downstream of the transamidase, but Gpi16 does none of the work of organising it. That is necessity, not participation. No fission-yeast gpi16 cell-wall phenotype has been reported (Falcon report).
+- GO:0006506 MODIFY to GO:0016255 kept, now with the GO structure stated: GO:0016255 sits under GO:0180046 GPI anchored protein biosynthesis, not under GO:0006506 (checked with OLS hierarchicalAncestors). Budding-yeast Gpi16 depletion accumulates the complete GPI lipid CP2 [PMID:11598210 "Depletion of Gpi16p results in the accumulation of the complete GPI lipid CP2 and of unprocessed GPI precursor proteins."].
+- Added ortholog topology support [PMID:11598210 "Its bulk resides on the lumenal side of the ER, and it has a single C-terminal transmembrane domain"] for the ER membrane and lumenal-side rows, and pan-eukaryotic conservation [PMID:11598210 "Homologues of Gpi16p are found in all eucaryotes."].
+- Added PMID:12582175 (mammalian GPI8-PIG-T disulfide) as background only. It is not transferred, because budding-yeast Gpi16 reportedly lacks the disulfide (Falcon report).
+- Description rewritten to name the full complex and the type-I topology; reference_review added for PMID:15003443 and PMID:16823372; suggested questions and experiments added.
+- All other actions are unchanged (ACCEPT on complex, process, ER membrane, lumenal side, ND MF; MODIFY of HDA ER to ER membrane).
+
+**Relative for next review.** S. cerevisiae GPI16 (P38875, SGD:S000001231): the same PANTHER subfamily SF11, a PAINT donor at PTN000311103, and the experimentally characterised fungal ortholog (affinity purification, depletion). There is no `genes/yeast/GPI16` folder in the repo. Human PIGT (`genes/human/PIGT`) exists but has status INITIALIZED.
+
+**Modules.** `modules/gpi_anchor_transamidase.yaml` (models the human PIGK/PIGS/PIGT/PIGU/GPAA1 complex; no fission-yeast member listed). The upstream GPI-assembly modules (`gpi_anchor_glcnac_transferase.yaml`, `gpi_anchor_core_glycan_assembly.yaml`, `gpi_anchor_ethanolamine_phosphate.yaml`) and the downstream `gpi_anchor_remodeling.yaml` give pathway context.

@@ -1,5 +1,6 @@
 ---
 title: "SPKW Viral Clades Subproject"
+autolink_gene_symbols: false
 ---
 
 # SPKW Viral Clades Subproject
@@ -147,7 +148,7 @@ Taxon labels and higher-level clades were resolved from NCBI Taxonomy.
 | Vaccinia virus Copenhagen | Varidnaviria / Pokkesviricetes | Poxviridae | 337 | 120 | 65 |
 | Acanthamoeba polyphaga moumouvirus | Varidnaviria / Megaviricetes | Mimiviridae | 336 | 181 | 57 |
 | Monkeypox virus | Varidnaviria / Pokkesviricetes | Poxviridae | 325 | 117 | 64 |
-| Variola virus human/India/Ind3/1967 | Varidnaviria / Pokkesviricetes | Poxviridae | 322 | 110 | 59 |
+| Variola virus `human/India/Ind3/1967` | Varidnaviria / Pokkesviricetes | Poxviridae | 322 | 110 | 59 |
 | Moumouvirus goulette | Varidnaviria / Megaviricetes | Mimiviridae | 308 | 164 | 52 |
 | Cafeteria roenbergensis virus BV-PW1 | Varidnaviria / Megaviricetes | Mimiviridae | 292 | 129 | 53 |
 | Fowlpox virus strain NVSL | Varidnaviria / Pokkesviricetes | Poxviridae | 253 | 102 | 53 |
@@ -169,11 +170,11 @@ Taxon labels and higher-level clades were resolved from NCBI Taxonomy.
 
 | Gene | Taxon | SPKW term | Action | Finding |
 |------|-------|-----------|--------|---------|
-| DAM | Enterobacteria phage T4 | symbiont-mediated suppression of host innate immune response | REMOVE | Phage methyltransferase evades restriction-modification, not innate immunity |
+| DAM | Enterobacteria phage T4 | symbiont-mediated suppression of host innate immune response | MODIFY | Phage methyltransferase evades restriction-modification, not broad innate immunity |
 | E | Enterobacteria phage T4 | defense response to bacterium | REMOVE | Phage lysozyme lyses host for viral release; not defense |
 | AcrF8 | Pectobacterium phage ZF40 | symbiont-mediated suppression of host innate immune response | MODIFY | Anti-CRISPR activity should use CRISPR-Cas-specific suppression |
-| darB | Tequatrovirus | methyltransferase activity | MODIFY | Use DNA-methyltransferase activity; biological role is antirestriction |
-| g022 | Tequatrovirus | transferase/nucleotidyltransferase activity | REMOVE | Too broad for a DNA polymerase with viral replication role |
+| darB | Punavirus P1 | methyltransferase activity | MODIFY | Use DNA-methyltransferase activity; biological role is antirestriction |
+| g022 | Yersinia phage phiR8-01 | transferase/nucleotidyltransferase activity | REMOVE | Too broad for a DNA polymerase with viral replication role |
 
 **Recommended replacements where supported:**
 
@@ -246,13 +247,12 @@ Existing viral gene reviews in this repo include 11 genes and 31 SPKW-derived an
 
 | Action | Count |
 |--------|------:|
-| ACCEPT | 13 |
-| KEEP_AS_NON_CORE | 1 |
-| MARK_AS_OVER_ANNOTATED | 1 |
-| MODIFY | 6 |
-| REMOVE | 10 |
+| ACCEPT | 6 |
+| KEEP_AS_NON_CORE | 8 |
+| MODIFY | 9 |
+| REMOVE | 8 |
 
-If MODIFY, REMOVE, and MARK_AS_OVER_ANNOTATED are counted as annotations requiring curation changes, the current viral pilot issue rate is **17/31 (55%)**.
+If MODIFY and REMOVE are counted as annotations requiring curation changes, the current viral pilot issue rate is **17/31 (55%)**.
 
 ### Reviewed Genes
 
@@ -261,8 +261,8 @@ If MODIFY, REMOVE, and MARK_AS_OVER_ANNOTATED are counted as annotations requiri
 | DAM | Enterobacteria phage T4 | `genes/BPT4/DAM/DAM-ai-review.yaml` | Phage antirestriction miscast as host innate immune suppression |
 | E | Enterobacteria phage T4 | `genes/BPT4/E/E-ai-review.yaml` | Phage lysis miscast as defense response to bacterium |
 | frd | Enterobacteria phage T4 | `genes/BPT4/frd/frd-ai-review.yaml` | Drug target miscast as antibiotic/methotrexate response |
-| darB | Tequatrovirus | `genes/9CAUD/darB/darB-ai-review.yaml` | DNA methyltransferase/antirestriction specificity |
-| g022 | Tequatrovirus | `genes/9CAUD/g022/g022-ai-review.yaml` | DNA polymerase broad transferase terms removed |
+| darB | Punavirus P1 | `genes/9CAUD/darB/darB-ai-review.yaml` | DNA methyltransferase/antirestriction specificity |
+| g022 | Yersinia phage phiR8-01 | `genes/9CAUD/g022/g022-ai-review.yaml` | DNA polymerase broad transferase terms removed |
 | dfrP | Bacillus phage phiNIT1 | `genes/9CAUD/dfrP/dfrP-ai-review.yaml` | DHFR function mostly accepted; generic oxidoreductase removed |
 | AcrF8 | Pectobacterium phage ZF40 | `genes/BPZF4/AcrF8/AcrF8-ai-review.yaml` | Anti-CRISPR should use CRISPR-Cas-specific host defense term |
 | ACA2 | Pectobacterium phage ZF40 | `genes/BPZF4/ACA2/ACA2-ai-review.yaml` | RNA binding accepted; generic metal ion binding removed |
@@ -429,7 +429,7 @@ This pass deliberately sampled lower-level VZ-primary terms where the term name 
 | VZ-3940 / KW-1236, VZ-3939 / KW-1237, VZ-3896 / KW-1238 host-envelope substrate degradation during entry | GO:0098932 peptidoglycan disruption; GO:0098995 lipopolysaccharide disruption; GO:0098996 glycocalyx disruption | 97, 8, and 133 annotations | `5/P16009`; `9/P12528`; `GP90/P49714`; `37/D1L2X0` | `5/P16009` is T4 baseplate spike gp5 with lysozyme activity for local peptidoglycan hydrolysis; `9/P12528` is P22 tail spike with O-antigen LPS endorhamnosidase activity; `GP90/P49714` is a K1 capsule depolymerase/endosialidase. The VZ terms preserve the substrate distinction that generic entry and generic hydrolase terms lose | ACCEPT the substrate-specific entry-disruption terms on enzymatic tail/spike/depolymerase proteins. MODIFY broad MF terms to specific lysozyme, endorhamnosidase, or endosialidase activities when available. REMOVE broad `killing of cells` and `defense response to bacterium` rows on these phage entry proteins |
 | VZ-3964 / KW-1252 Latency-replication decision | GO:0098689 latency-replication decision | 6 annotations on 6 proteins | `aimR/O64094`; `aimP/O64095`; `cI/P03034`; `cro/P03040` | `aimR/O64094` and `aimP/O64095` are the arbitrium switch regulator/peptide pair; `cI/P03034` maintains lambda latency; `cro/P03040` promotes the lytic transition. The rows are specific switch components rather than generic latency-associated proteins | ACCEPT on switch regulators, anti-repressors, and arbitrium peptides with direct switch biology. Do not use VZ-primary status to annotate all latency proteins with the decision term |
 | VZ-3963 / KW-1256 DNA end degradation evasion by virus | GO:0099016 symbiont-mediated evasion of DNA end degradation by host | 6 annotations on 6 proteins; all Swiss-Prot | `gam/P03702`; `2/P15076`; `N/P08557`; `206/Q853W0` | `gam/P03702` inhibits host RecBCD and protects viral DNA; `2/P15076` binds T4 DNA ends and protects against RecBCD degradation. These are mechanistically sharper than the broad phage innate-immune row that coexists on both examples | ACCEPT DNA-end evasion on nuclease inhibitors and DNA-end protection proteins. REMOVE or MODIFY the broad non-VZ `GO:0052170 symbiont-mediated suppression of host innate immune response` on these phage proteins |
-| VZ-3962 / KW-1257 CRISPR-cas system evasion by virus | GO:0098672 symbiont-mediated suppression of host CRISPR-cas system | 3 annotations on 3 proteins; all Swiss-Prot | `orf30/Q6TM72`; `orf31/Q6TM71`; `agt/P04519` | `orf30/Q6TM72` and `orf31/Q6TM71` are named anti-CRISPR proteins; `agt/P04519` modifies T4 DNA and UniProt states the modification protects against host CRISPR-Cas9 as well as restriction systems. This is a good example where a VZ-primary term can coexist with a second precise VZ-primary antirestriction term | ACCEPT for bona fide anti-CRISPR proteins and supported DNA-modification evasion proteins. Prefer the specific CRISPR and restriction-modification evasion terms over broad adaptive/innate immune parents |
+| VZ-3962 / KW-1257 CRISPR-cas system evasion by virus | GO:0098672 symbiont-mediated suppression of host CRISPR-cas system | 3 annotations on 3 proteins; all Swiss-Prot | `orf30/Q6TM72`; `orf31/Q6TM71`; `agt/P04519` | `orf30/Q6TM72` and `orf31/Q6TM71` are named anti-CRISPR proteins; `agt/P04519` modifies T4 DNA and UniProt states the modification protects against host `CRISPR-Cas9` as well as restriction systems. This is a good example where a VZ-primary term can coexist with a second precise VZ-primary antirestriction term | ACCEPT for bona fide anti-CRISPR proteins and supported DNA-modification evasion proteins. Prefer the specific CRISPR and restriction-modification evasion terms over broad adaptive/innate immune parents |
 | VZ-1536 / KW-1187 Viral budding via the host ESCRT complexes | GO:0039702 viral budding via host ESCRT complex | 101 annotations on 101 proteins | `M/P08325`; `M/P03519`; `M/P16629`; `M/P08671` | `M/P08325` is a VSV matrix protein; UniProt says it recruits cellular ESCRT partners for release of budding particles. The sampled rows are mainly matrix proteins from negative-strand RNA viruses and overlap with generic viral budding and virion-component rows | ACCEPT ESCRT budding on matrix/late-domain proteins with ESCRT recruitment. Keep generic `viral budding` as a parent/non-core term when the ESCRT child is present; do not treat `virion component` as functional evidence |
 
 ### Round 4 Granularity Takeaways
