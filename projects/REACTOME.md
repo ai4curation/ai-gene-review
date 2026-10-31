@@ -172,9 +172,10 @@ template for a concise pathway-level reconciliation.
   and
   [glycosphingolipid lysosomal](REACTOME/pathway-alignments/glycosphingolipid_lysosomal_degradation.md)
   alignment reports.
-- [ ] Resolve the four high-priority repeated MF events by deciding whether the
-  Reactome family grouping is over-broad, the GO MF mapping is too general, or
-  one paralog-specific gene review needs curation follow-up.
+- [x] 2026-10-24: Resolve the four high-priority repeated MF events by
+  deciding whether the Reactome family grouping is over-broad, the GO MF
+  mapping is too general, or one paralog-specific gene review needs curation
+  follow-up.
 
 ## Notes
 
@@ -196,6 +197,14 @@ that deliberately reuses ARSA's sulfatide reaction is now visible as a
 complex in the imported event while ARSA is the catalytic executor. The two
 GLB1 GM1/LacCer reactions remain `module_only_event` rows until that curated
 slice is widened past the five initially selected unique catalytic events.
+
+Resolved the four high-priority repeated molecular-function stable IDs in
+event-level YAML and surfaced their decisions in the repeated-event report
+without widening the derived TSV. RHOA GAP collapses to GAP-dead ARHGAP11B
+over-inclusion, the ABCC organic-anion event over-bundles CFTR and ABCC9 with
+ABCC6, the 2-acyl-LPG case combines LPCAT4 over-inclusion with an
+LPA-specific GO molecular function on an LPG reaction, and the AGPAT/LPAAT case
+only needs LPCAT4 removed from the Reactome executor set.
 
 ### 2026-10-21
 

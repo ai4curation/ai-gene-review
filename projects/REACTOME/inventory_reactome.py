@@ -119,6 +119,14 @@ REPEATED_MF_EVENT_FIELDS = [
     "row_details",
 ]
 
+REPEATED_MF_RESOLUTION_FIELDS = [
+    "reactome_id",
+    "resolution_status",
+    "resolution_bucket",
+    "resolution_summary",
+    "resolution_follow_up",
+]
+
 MANUAL_MF_VERDICT_FIELDS = [
     "organism",
     "gene",
@@ -477,6 +485,12 @@ def write_tsv(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> 
         writer.writerows(rows)
 
 
+def select_fields(
+    rows: list[dict[str, str]], fieldnames: list[str]
+) -> list[dict[str, str]]:
+    return [{field: row[field] for field in fieldnames} for row in rows]
+
+
 def markdown_table(headers: list[str], rows: list[list[str | int]]) -> str:
     lines = [
         "| " + " | ".join(headers) + " |",
@@ -533,7 +547,38 @@ def repeated_event_priority(audit_bucket: str) -> str:
     return "LOW"
 
 
-def summarize_repeated_mf_events(mf_rows: list[dict[str, str]]) -> list[dict[str, str]]:
+def load_repeated_mf_resolutions(path: Path) -> dict[str, dict[str, str]]:
+    if not path.exists():
+        return {}
+
+    rows = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.CSafeLoader) or []
+    if not isinstance(rows, list):
+        raise ValueError(f"{path} must contain a list of repeated MF resolutions")
+
+    resolutions: dict[str, dict[str, str]] = {}
+    for index, row in enumerate(rows, start=1):
+        if not isinstance(row, dict):
+            raise ValueError(f"{path} row {index} is not a mapping")
+
+        missing_fields = set(REPEATED_MF_RESOLUTION_FIELDS) - set(row)
+        if missing_fields:
+            fields = ", ".join(sorted(missing_fields))
+            raise ValueError(f"{path} row {index} is missing fields: {fields}")
+
+        reactome_id = compact(row["reactome_id"])
+        if reactome_id in resolutions:
+            raise ValueError(f"duplicate repeated MF resolution: {reactome_id}")
+        resolutions[reactome_id] = {
+            field: compact(row[field]) for field in REPEATED_MF_RESOLUTION_FIELDS
+        }
+    return resolutions
+
+
+def summarize_repeated_mf_events(
+    mf_rows: list[dict[str, str]],
+    repeated_mf_resolutions: dict[str, dict[str, str]] | None = None,
+) -> list[dict[str, str]]:
+    repeated_mf_resolutions = repeated_mf_resolutions or {}
     rows_by_reactome: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in mf_rows:
         rows_by_reactome[row["reactome_id"]].append(row)
@@ -545,6 +590,7 @@ def summarize_repeated_mf_events(mf_rows: list[dict[str, str]]) -> list[dict[str
             continue
 
         bucket = repeated_event_bucket(rows)
+        resolution = repeated_mf_resolutions.get(reactome_id, {})
         title = next(
             (
                 row["reactome_display_name"] or row["reactome_title"]
@@ -609,8 +655,20 @@ def summarize_repeated_mf_events(mf_rows: list[dict[str, str]]) -> list[dict[str
                         for row in rows
                     )
                 ).lower(),
+                "resolution_status": resolution.get("resolution_status", ""),
+                "resolution_bucket": resolution.get("resolution_bucket", ""),
+                "resolution_summary": resolution.get("resolution_summary", ""),
+                "resolution_follow_up": resolution.get("resolution_follow_up", ""),
                 "row_details": "|".join(row_details),
             }
+        )
+
+    unused_resolutions = set(repeated_mf_resolutions) - {
+        row["reactome_id"] for row in repeated_events
+    }
+    if unused_resolutions:
+        raise ValueError(
+            "unused repeated MF resolutions: " + ", ".join(sorted(unused_resolutions))
         )
 
     priority_order = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
@@ -842,6 +900,11 @@ def write_repeated_mf_results(path: Path, repeated_rows: list[dict[str, str]]) -
     medium_priority = [
         row for row in repeated_rows if row["audit_priority"] == "MEDIUM"
     ][:10]
+    high_priority_resolved = [
+        row
+        for row in repeated_rows
+        if row["audit_priority"] == "HIGH" and row["resolution_status"] == "resolved"
+    ]
 
     path.write_text(
         "\n\n".join(
@@ -881,6 +944,10 @@ def write_repeated_mf_results(path: Path, repeated_rows: list[dict[str, str]]) -
                                 for row in repeated_rows
                             ),
                         ],
+                        [
+                            "Resolved high-priority events",
+                            len(high_priority_resolved),
+                        ],
                     ],
                 ),
                 "## Audit Buckets\n\n"
@@ -895,6 +962,7 @@ def write_repeated_mf_results(path: Path, repeated_rows: list[dict[str, str]]) -
                         "Rows",
                         "Genes",
                         "Verdicts",
+                        "Resolution",
                         "Event",
                     ],
                     [
@@ -903,9 +971,26 @@ def write_repeated_mf_results(path: Path, repeated_rows: list[dict[str, str]]) -
                             row["row_count"],
                             row["genes"],
                             row["candidate_verdicts"],
+                            row["resolution_bucket"],
                             row["reactome_display_name"],
                         ]
                         for row in high_priority
+                    ],
+                ),
+                "## High-Priority Resolutions\n\n"
+                + markdown_table(
+                    [
+                        "Reactome ID",
+                        "Resolution",
+                        "Follow-up",
+                    ],
+                    [
+                        [
+                            row["reactome_id"],
+                            row["resolution_summary"],
+                            row["resolution_follow_up"],
+                        ]
+                        for row in high_priority_resolved
                     ],
                 ),
                 "## Medium-Priority Refinement Events\n\n"
@@ -1062,6 +1147,12 @@ def parse_args() -> argparse.Namespace:
         help="Manual verdict table for MF rows that cannot be inferred from review action.",
     )
     parser.add_argument(
+        "--repeated-mf-resolutions",
+        type=Path,
+        default=here / "repeated_mf_resolutions.yaml",
+        help="Manual event-level resolutions for high-priority repeated MF rows.",
+    )
+    parser.add_argument(
         "--repeated-mf-results",
         type=Path,
         default=here / "REPEATED_MF_EVENTS.md",
@@ -1082,7 +1173,13 @@ def main() -> None:
     gocam_rows = inventory_gocams(root, module_rows)
     manual_mf_verdicts = load_manual_mf_verdicts(args.mf_manual_verdicts.resolve())
     mf_slice_rows = classify_mf_slice(gene_rows, module_rows, manual_mf_verdicts)
-    repeated_mf_rows = summarize_repeated_mf_events(mf_slice_rows)
+    repeated_mf_resolutions = load_repeated_mf_resolutions(
+        args.repeated_mf_resolutions.resolve()
+    )
+    repeated_mf_rows = summarize_repeated_mf_events(
+        mf_slice_rows,
+        repeated_mf_resolutions,
+    )
 
     write_tsv(out_dir / "gene_reactome_annotations.tsv", GENE_FIELDS, gene_rows)
     write_tsv(out_dir / "module_reactome_sources.tsv", MODULE_FIELDS, module_rows)
@@ -1091,7 +1188,7 @@ def main() -> None:
     write_tsv(
         out_dir / "repeated_mf_events.tsv",
         REPEATED_MF_EVENT_FIELDS,
-        repeated_mf_rows,
+        select_fields(repeated_mf_rows, REPEATED_MF_EVENT_FIELDS),
     )
     write_results(args.results.resolve(), gene_rows, module_rows, gocam_rows)
     write_mf_slice_results(args.mf_slice_results.resolve(), mf_slice_rows)
