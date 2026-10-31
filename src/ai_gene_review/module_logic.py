@@ -592,7 +592,8 @@ def _gap_hypotheses(gap: Gap) -> list[str]:
     unclassified set or an inferred REALIZER set keeps both readings (inference
     from the modelled alternatives says nothing about unmodelled routes), and a
     declared ROUTE set with a partly present alternative also keeps the
-    undetected-carrier reading.
+    undetected-carrier reading. A declared REALIZER set needs no such case: its
+    one reading already is an undetected carrier, partly present or not.
     """
     if gap.layer == "UNCLASSIFIED" or gap.layer_inferred:
         return REALIZER_HYPOTHESES + ROUTE_HYPOTHESES

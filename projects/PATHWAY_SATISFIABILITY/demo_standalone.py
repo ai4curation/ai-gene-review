@@ -41,13 +41,49 @@ def _():
             return value
         return [value]
 
+
+    import re
+    from typing import Any
+
+    _SYMBOL_TOKEN = r"[A-Za-z0-9][A-Za-z0-9_.:/-]*"
+    _SYMBOL_LABEL = re.compile(
+        rf"({_SYMBOL_TOKEN})(?:\s+/\s+{_SYMBOL_TOKEN})*(?:\s+\(.*\)(?:,\s+.+)?)?",
+        re.DOTALL,
+    )
+
+
+    def descriptor_symbol(descriptor: dict) -> str | None:
+        """Read the primary symbol, allowing explicit aliases and parenthetical qualifiers.
+
+        >>> descriptor_symbol({"preferred_term": "MetXS (PSEPK)"})
+        'MetXS'
+        >>> descriptor_symbol({"preferred_term": "SLC25A4 / ANT1 (human)"})
+        'SLC25A4'
+        >>> descriptor_symbol({"preferred_term": "PSEPK MetXS"}) is None
+        True
+        """
+        label = descriptor.get("preferred_term")
+        if not isinstance(label, str):
+            return None
+        match = _SYMBOL_LABEL.fullmatch(label.strip())
+        return match[1].rstrip(":") if match else None
+
+
+    from pathlib import Path
+
+    DEFAULT_MODULES_DIR = Path("modules")
+
+
+    def resolve_template_node(module_ref, modules_dir):
+        """module_ref is not supported in the standalone demo."""
+        raise ValueError(f"module_ref {module_ref!r} is not supported in the standalone demo")
+
+
     from dataclasses import dataclass, field
     from pathlib import Path
     from typing import Callable, Iterator, Literal, Optional, Union
 
 
-    from ai_gene_review.module_gene_symbols import descriptor_symbol
-    from ai_gene_review.module_qc import DEFAULT_MODULES_DIR, resolve_template_node
 
 
     @dataclass(frozen=True)
@@ -573,7 +609,8 @@ def _():
         unclassified set or an inferred REALIZER set keeps both readings (inference
         from the modelled alternatives says nothing about unmodelled routes), and a
         declared ROUTE set with a partly present alternative also keeps the
-        undetected-carrier reading.
+        undetected-carrier reading. A declared REALIZER set needs no such case: its
+        one reading already is an undetected carrier, partly present or not.
         """
         if gap.layer == "UNCLASSIFIED" or gap.layer_inferred:
             return REALIZER_HYPOTHESES + ROUTE_HYPOTHESES
