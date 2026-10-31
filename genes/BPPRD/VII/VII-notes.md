@@ -1,0 +1,38 @@
+# Enterobacteria phage PRD1 Gene VII (Transglycosylase P7 / Protein P14, UniProt: P27380) - Curation Notes
+
+## Overview
+- **Gene symbol**: `VII` (also includes nested in-frame gene `XIV` encoding isoform Protein P14)
+- **UniProt Accession**: `P27380` (`EXLYS_BPPRD`, Isoform 1: `P27380-1` Transglycosylase P7, 265 aa; Isoform 2: `P27380-2` Protein P14, 150 aa, `VSP_022588` missing residues 1–115; EC `4.2.2.n1`)
+- **Organism**: Enterobacteria phage PRD1 (`NCBITaxon:10658`)
+- **Genomic / Structural Context**: Part of Cluster 2 (PRD1 DNA delivery / membrane tube apparatus). Gene `VII` encodes two structural inner-membrane proteins via nested in-frame translational initiation: full-length **Transglycosylase P7** (265 aa; initial methionine removed to yield a 264 aa mature chain, residues 2–265) and **Protein P14** (150 aa, corresponding to the C-terminal region of P7, residues 116–265) [PMID:10931330, file:BPPRD/VII/VII-uniprot.txt].
+
+## Literature & Functional Evidence
+1. **Rydman & Bamford (2000) [PMID:10931330] — *Bacteriophage PRD1 DNA entry uses a viral membrane-associated transglycosylase activity***:
+   - Sequence analysis showed that the N-terminal part of structural protein P7 (residues 19–98) carries a conserved soluble lytic transglycosylase (`SLT`) domain (`Pfam:PF01464`, `InterPro:IPR008258`, `InterPro:IPR000189`, `PROSITE:PS00922`) with a catalytic glutamate at residue 32 (`ACT_SITE 32`) [PMID:10931330, file:BPPRD/VII/VII-uniprot.txt].
+   - Zymogram analysis of wild-type PRD1 and mutant particles demonstrated a peptidoglycan-degrading glycolytic (lytic transglycosylase) activity associated with protein P7 — the first experimental demonstration of enzymatic activity for a putative bacteriophage or plasmid lytic transglycosylase [PMID:10931330].
+   - In the absence of protein P7 (`sus471` mutant), initiation of phage DNA replication and subsequent host cell lysis are delayed and asynchronous, demonstrating an accessory muralytic role facilitating DNA entry across the host peptidoglycan sacculus without being strictly essential for viability [PMID:10931330, PMID:11741849].
+   - The open reading frame coding for protein P14 was mapped to the 3' end of gene `VII` (nested internal start site lacking residues 1–115, thus lacking the N-terminal SLT catalytic domain while retaining the C-terminal transmembrane segment at residues 219–239). Proteins P7 and P14 form a vertex-associated heteromultimeric complex in the viral inner membrane involved in the early DNA delivery steps of the PRD1 life cycle [PMID:10931330, file:BPPRD/VII/VII-uniprot.txt].
+2. **Rydman & Bamford (2002) [PMID:11741849] — *The lytic enzyme of bacteriophage PRD1 is associated with the viral membrane***:
+   - Confirmed by zymogram analysis of isolated PRD1-specific membranes (`sus636` procapsid-less vesicles and GuHCl-isolated DNA-filled/empty virion membranes) that P7 is localized in the viral inner membrane (~20 copies per virion, single-pass membrane protein with transmembrane helix at residues 219–239) [PMID:11741849, file:BPPRD/VII/VII-uniprot.txt].
+   - Showed that P7 degrades Gram-negative (*E. coli*) peptidoglycan sacculi in zymograms but is inactive against Gram-positive *Micrococcus lysodeikticus* peptidoglycan (unlike endolysin P15) [PMID:11741849].
+   - Demonstrated that P7 is the principal muralytic enzyme involved in PRD1 DNA entry into *Salmonella enterica* cells, whereas P14 lacks enzymatic activity (`VSP_022588` lacks the N-terminal SLT domain) but is essential for viral infectivity and required for DNA injection during the membrane-to-tail-tube transformation event [PMID:11741849, file:BPPRD/VII/VII-uniprot.txt].
+
+## Domain Architecture & Bioinformatics
+- **Transglycosylase P7 (`P27380-1`)**:
+  - N-terminal SLT-type catalytic domain (`REGION 19..98`, `Pfam:PF01464`, `InterPro:IPR008258`, `InterPro:IPR000189`, `InterPro:IPR023346`, `PROSITE:PS00922`, `CDD:cd00254`, `SUPFAM:SSF53955`, `PANTHER:PTHR37423:SF2`) with active-site proton donor Glu32 (`ACT_SITE 32`).
+  - Catalyzes the non-hydrolytic exolytic cleavage of the beta-(1->4)-glycosidic bond between N-acetylmuramic acid (MurNAc) and N-acetylglucosamine (GlcNAc) in peptidoglycan with concomitant formation of a 1,6-anhydrobond in MurNAc (`EC:4.2.2.n1`).
+  - C-terminal transmembrane helix (`TRANSMEM 219..239`) anchoring P7 in the viral inner membrane (`GO:0039641`, `GO:0055036`).
+- **Protein P14 (`P27380-2`)**:
+  - Nested C-terminal isoform (`VAR_SEQ 1..115 Missing`, `VSP_022588`) corresponding to residues 116–265 of P7.
+  - Lacks the N-terminal SLT catalytic domain and has no muralytic activity, but retains the C-terminal transmembrane domain (`219..239`), forms a heteromultimer with P7 at the virion vertices, and is essential for viral infectivity and DNA delivery via the membrane tail tube (`GO:0046718`, `GO:0039641`, `GO:0055036`).
+
+## Review of Existing GOA Annotations
+- `GO:0140100` (`lytic exotransglycosylase activity`, `EXP` from `PMID:10931330`) & `GO:0008933` (`peptidoglycan lytic transglycosylase activity`, `IEA` from `InterPro:IPR000189`): **ACCEPT**. Accurately capture the experimentally demonstrated muralytic transglycosylase activity of isoform P7 (`EC:4.2.2.n1`).
+- `GO:0003796` (`lysozyme activity`, `IDA` from `PMID:10931330`): **MODIFY** to `GO:0140100` (`lytic exotransglycosylase activity`) and `GO:0008933` (`peptidoglycan lytic transglycosylase activity`). Lysozyme (`EC:3.2.1.17`) is a hydrolytic beta-1,4-N-acetylmuramidase (a role performed by PRD1 endolysin P15, gene `XV`), whereas P7 is a non-hydrolytic lytic transglycosylase (`EC:4.2.2.n1`, a carbon-oxygen lyase) that forms 1,6-anhydromuropeptides.
+- `GO:0003824` (`catalytic activity`, `IEA` from `UniProtKB-KW:KW-0081`) and `GO:0016829` (`lyase activity`, `IEA` from `UniProtKB-KW:KW-0456`): **TOO_GENERAL**. Both are broad parent MF terms subsumed by `GO:0140100` and `GO:0008933`.
+- `GO:0000270` (`peptidoglycan metabolic process`, `IEA` from `InterPro:IPR000189`): **MODIFY** to `GO:0009253` (`peptidoglycan catabolic process`) and `GO:0098932` (`symbiont entry into host cell via disruption of host cell wall peptidoglycan`), as P7 degrades rather than synthesizes peptidoglycan during DNA entry.
+- `GO:0098932` (`symbiont entry into host cell via disruption of host cell wall peptidoglycan`, `IEA` from `UniProtKB-KW:KW-1236`): **ACCEPT**. Precisely describes P7's role in local peptidoglycan digestion to facilitate viral genome entry.
+- `GO:0098994` (`symbiont entry into host cell via disruption of host cell envelope`, `IEA` from `UniProtKB-KW:KW-1235`) and `GO:0046718` (`symbiont entry into host cell`, `IEA` from `UniProtKB-KW:KW-1160`/`KW-1162`): **TOO_GENERAL** for the full-length P7 entry (subsumed by `GO:0098932`), though note that `GO:0046718` is the appropriate process level for the non-catalytic P14 isoform.
+- `GO:0039641` (`viral inner membrane`, `IEA` from `UniProtKB-KW:KW-1231`) and `GO:0055036` (`virion membrane`, `IDA` from `PMID:11741849` and `IEA` from `UniProtKB-SubCell:SL-0275`): **ACCEPT**. Both P7 and P14 are integral single-pass proteins of the PRD1 internal virion membrane.
+- `GO:0016020` (`membrane`, `IEA` from `InterPro:IPR000189`): **TOO_GENERAL** (subsumed by `GO:0039641` and `GO:0055036`).
+- `GO:0031640` (`killing of cells of another organism`, `IEA` from `UniProtKB-KW:KW-0081`) and `GO:0042742` (`defense response to bacterium`, `IEA` from `UniProtKB-KW:KW-0081`): **REMOVE**. False automated keyword mappings from `KW-0081` (Bacteriolytic enzyme). Unlike endolysin P15, P7 acts as a virion-associated entry exolysin that creates a local opening in the murein sacculus during infection without killing the host cell, and it is not a host defense protein.
