@@ -33,7 +33,8 @@ data into a stress role. Two refinements:
   PRK11815, Pfam PF01207, and the PROSITE Dus conserved site (UniProt Q92P85;
   dashboard InterProScan HAMAP 27-389 and PANTHER 29-393 on the 398-aa model).
 - Catalytic Cys conserved: E. coli DusA C114 -> Q92P85 C83 (NVGCPSDRV). All
-  MF_02041 FMN-binding residues except the N-terminal 32-34 segment are conserved,
+  MF_02041 FMN-binding residues are conserved except E. coli P32 (absent from the
+  truncated model) and L34 (present as I2),
   as are the tRNA-contact residues N111 and R201 and the subfamily
   signature residues R314 and R317 (K198 -> R). Identity to E. coli DusA is 53.1%
   over 311 aligned columns (`dusA-bioinformatics/RESULTS.md`).
