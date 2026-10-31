@@ -234,6 +234,30 @@ class SourceResourceEnum(str, Enum):
     """
     ARUK-UCL / BHF-UCL curation groups.
     """
+    CACAO = "CACAO"
+    """
+    CACAO community curation (student annotation challenge).
+    """
+    ECOLIWIKI = "ECOLIWIKI"
+    """
+    EcoliWiki community curation of E. coli genes.
+    """
+    COLLECTF = "COLLECTF"
+    """
+    CollecTF curation of bacterial transcription factor binding sites.
+    """
+    PSEUDOCAP = "PSEUDOCAP"
+    """
+    Pseudomonas Community Annotation Project.
+    """
+    MTBBASE = "MTBBASE"
+    """
+    MTBBASE curation of Mycobacterium tuberculosis genes.
+    """
+    PINC = "PINC"
+    """
+    PINC curation group (assigned_by PINC in GOA).
+    """
     OTHER = "OTHER"
     """
     Name the resource in the explanation.

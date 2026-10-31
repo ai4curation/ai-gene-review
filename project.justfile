@@ -291,6 +291,13 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Evaluate function requirement (NOT) rules: `acceptance` tests them against
+# experimental GOA (QuickGO + UniProt); `sweep` flags local GOA rows.
+# Writes reports/function-requirements/ (git-ignored; regenerate, never commit).
+# See projects/FUNCTION_REQUIREMENT_RULES.md
+function-requirements command *args="":
+    uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
