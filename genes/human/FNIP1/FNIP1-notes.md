@@ -1,0 +1,21 @@
+# FNIP1 review notes
+
+## 2026-10-31 — scientific preparation
+
+The genuine human Q8TF40 fetch produced 58 raw/exported source contexts and 56 stored annotations, with three natural products. The two projection collisions preserve distinct original raw records in the [evidence record](FNIP1-source-evidence.yaml). The [source guide](FNIP1-source-guide.md) describes access, constructs and assay limits. All 21 qualified normal dependencies are present; 15 reuse exact main bytes. Authenticated source caches are immutable.
+
+The integrated scientific proposal has 17 ACCEPT, 19 KEEP_AS_NON_CORE, 14 MODIFY, five TOO_GENERAL and one UNDECIDED decisions. It separates Hsp90 ATPase inhibition/client loading from FLCN-complex binding and nutrient-regulated lysosomal signaling. The original direct-GAP-activation conjunction is retained as unresolved, despite positive evidence for recruitment and pathway participation. The three original extension groups retain all seven atoms. No NEW annotation or publication quotation is added.
+
+Thirteen stored generic-binding contexts have supported specific partner-class replacements. Seven retain supported generic binding under the [standing user instruction](https://ai4curation.io/ai-gene-review/projects/CLINGEN_MENDELIAN.html#curation-instructions). The instruction supersedes the skill's generic informational-removal default; it neither verifies unavailable assays nor changes validators. AMPK regulatory chains, cochaperone co-complexes and inactive viral-protease bait remain distinct from catalytic or direct-binding claims.
+
+The apoptosis ISS review is directionally corrected to negative regulation of B-cell apoptotic process using the actual mouse donor study (PMID:22608497) and separate corroboration (PMID:22709692). The original human source term and evidence remain intact. No existing source-side FNIP1 review was found across species at the recorded main cut; no new mouse review was created. Differences in mTOR activation and rapamycin rescue between these two studies are retained. Human FNIP1 deficiency supports a B-cell developmental context but does not establish identical cellular endpoints (PMID:32905580).
+
+All three official product sequences were reconstructed exactly. Functional equivalence is not inferred. The 2013 FNIP1 accession BC001956.1 encodes 508 aa and differs from current product 2 at one residue; its natural-product assignment remains unresolved. Endogenous human loss/localization experiments and mouse FLCN constructs are distinguished from this clone. The 116-node PANTHER tree and 116-sequence MSA place the exact canonical target below all three original IBDs. Broad cytoplasm is classified by term specificity, not by rejecting that phylogenetic placement.
+
+The configured falcon/perplexity-lite research attempt failed authentication/access and produced no research document. Selected original primary reading and explicit access limits are recorded instead. Independent reviews covered the BP/binding, MF, CC and synthesis proposals before canonical integration. Validation status and outcomes will be appended after the actual repository checks.
+
+## 2026-10-31 — validation and provenance closeout
+
+Ordinary schema, reference and ontology validation passed with seven advisories, all from the disclosed generic-binding campaign exception. Strict GOA matching, generated-history schema, private rendering and exact source/product/context conservation passed. The initial report-only status check correctly reported INITIALIZED versus computed DRAFT; only that status field was changed. The runtime also emits its existing pkg_resources deprecation warning. Final history/status/render/conservation checks follow this factual update; no global suite or actual-merge result is claimed.
+
+The final documentation review corrected one authored donor identifier in the evidence sidecar to the exact original Q68FD7. Original annotation fields and scientific reasons already used the correct donor. All 58 original QuickGO objects and their raw-to-stored map are now embedded in the sidecar, with a declared semantic serialization hash and the separate exact upstream-response byte hash. This makes the two projection collisions reproducible without relying on private files. Prior private snapshots and the initial status report are retained.
