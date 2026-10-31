@@ -8,4 +8,8 @@ Core function is DNA adenine methyltransferase activity at `GATC` sites. The dir
 
 The SPKW immune/defense rows are better treated as replacement cases rather than as a blanket claim that bacteria lack all defense biology. The supported mechanism is phage restriction-modification evasion by DNA methylation, not generic suppression of host innate immune response. The specific replacement target is already in GOA: `GO:0099018 symbiont-mediated evasion of host restriction-modification system`.
 
-The UniProt flatfile also contains `GO:1904047 S-adenosyl-L-methionine binding` and `GO:0006298 mismatch repair`, but these are absent from the fetched `DAM-goa.tsv`, so they were not added to `existing_annotations` in this YAML pass. If those enter GOA later, SAM binding would be non-core at most; mismatch repair would need careful review because T4 Dam is a DNA modification/antirestriction enzyme, not a canonical mismatch-repair factor in this review.
+The UniProt flatfile also contains `GO:1904047 S-adenosyl-L-methionine binding` and `GO:0006298 mismatch repair`, but these are absent from the fetched `DAM-goa.tsv`, so they were not added to `existing_annotations` in this YAML pass. If those enter GOA later, SAM binding would be non-core at most; mismatch repair would need careful review because T4 Dam is a DNA modification/antirestriction enzyme, not a canonical mismatch-repair factor.
+
+## 2026-10-24 completion pass
+
+- Verified verbatim supporting text against `DAM-deep-research-falcon.md` (`"AltName: Full=Orphan methyltransferase M.EcoT4Dam {ECO:0000303|PubMed:12654995}"` and `"By methylating GATC, T4 Dam participates in phage counter-defense against host restriction systems"`) and promoted `status` to `COMPLETE`.
