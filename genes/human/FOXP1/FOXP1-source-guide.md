@@ -120,7 +120,7 @@ Sources: [pubmed](https://pubmed.ncbi.nlm.nih.gov/26647308/); [doi](https://doi.
 
 ### PMID:28218735 — Aurora kinase A regulates Survivin stability through targeting FBXL7 in gastric cancer drug resistance and prognosis.
 
-Selected original Results/Fig7 show context-dependent FBXL7 activation, regional promoter occupancy and deletion-reporter responses. These do not independently prove a core-promoter-specific DNA-contact boundary. AURKA co-IP/GST capture is retained as association with an experimentally classified kinase, without assigning kinase activity or a predicted interface to FOXP1.
+Selected original Results/Fig7 show context-dependent FBXL7 activation, regional promoter occupancy and deletion-reporter responses. These do not independently prove a core-promoter-specific DNA-contact boundary. AURKA co-IP/GST capture supports the protein-kinase-binding refinement, while the FBXL7 reporter supports positive regulation of Pol II transcription. Neither assigns kinase activity or a predicted interface to FOXP1.
 
 Access: Selected original.
 Assay scope: Cellular transcriptional activation and AURKA association; context-specific direction.
@@ -176,15 +176,15 @@ Sources: [pubmed](https://pubmed.ncbi.nlm.nih.gov/24859450/); [original full tex
 
 ### PMID:12815709 — Expression of Foxp2, a gene involved in speech and language, in the developing and adult striatum.
 
-Official identity and abstract explicitly report rat Foxp1 expression in striatal development despite the Foxp2-focused title. Original Methods/Results were not recovered. Expression is not alone a demonstrated FOXP1 contribution to the exact striatal-differentiation process.
+Official identity and abstract explicitly report rat Foxp1 expression in striatal development despite the Foxp2-focused title. Original Methods/Results were not recovered. Expression alone does not establish participation in striatal development; independent mouse perturbation evidence is now documented under PMID:25266127.
 
 Access: Authentic abstract only; original access failed.
-Assay scope: Rat donor IEP; source-specific developmental participation unresolved.
+Assay scope: Rat donor IEP; original-source functional participation remains unresolved, independently corroborated by the mouse developmental study.
 Sources: [pubmed](https://pubmed.ncbi.nlm.nih.gov/12815709/); [doi](https://doi.org/10.1002/jnr.10638).
 
 ### PMID:18561326 — Expression of Foxp4 in the developing and adult rat forebrain.
 
-Official abstract describes Foxp1/Foxp2/Foxp4 expression patterns in the developing rat forebrain. Original Methods/Results remain unavailable in this packet. The exact forebrain-development participation claim remains unresolved; no wrong-paralog inference is made from the title.
+Official abstract describes Foxp1/Foxp2/Foxp4 expression patterns in the developing rat forebrain. Original Methods/Results remain unavailable in this packet. This source alone does not establish functional participation; independent mouse forebrain perturbation evidence is now documented under PMID:29138280. No wrong-paralog inference is made from the title.
 
 Access: Authentic abstract only; original access failed.
 Assay scope: Rat donor IEP expression mapping.
@@ -228,10 +228,25 @@ The immutable event summary describes NANOG promoter regulation without a detail
 Access: Read immutable existing-main cached event; no remote full event expansion.
 Sources: [event](https://reactome.org/content/detail/R-HSA-480204).
 
+
+### PMID:25266127 — Brain-specific Foxp1 deletion impairs neuronal development and causes autistic-like behaviour.
+
+The original main Methods, developmental Results and Figure 1–2 captions were read. Mouse Nestin-Cre Foxp1 deletion reduces the striatal region from early postnatal stages, with no detected E18 difference, and changes striatal transcription and neuronal morphology. This independently supports the existing striatum-development term. The broad neural-lineage deletion does not isolate a cell-autonomous striatal mechanism or demonstrate endogenous human developmental necessity. The original rat IEP source remains separately access-limited.
+
+Access: Selected original main sections and captions; no image pixels or supplementary materials inspected.
+Sources: [PubMed](https://pubmed.ncbi.nlm.nih.gov/25266127/); [original full text](https://pmc.ncbi.nlm.nih.gov/articles/PMC4419151/); [DOI](https://doi.org/10.1038/mp.2014.116).
+
+### PMID:29138280 — Foxp1 regulation of neonatal vocalizations via cortical development.
+
+Selected Results s1a/s1b/s1g/s1h/s1j and Methods s3a/s3c/s3g/s3l/s3m/s3n/s3r were read. Emx1-Cre Foxp1 deletion changes mouse neocortical size, lamination and neuronal positioning; WT FOXP1, unlike K636R, restores the experimental migration phenotype. The human neurosphere comparison uses mutant overexpression and is not endogenous human FOXP1 depletion. Some regional effects may be non-cell-autonomous, and the tagged constructs are not assigned to current natural products from nomenclature alone.
+
+Access: Selected original main Methods, Results and captions; no image pixels or supplementary tables inspected.
+Sources: [PubMed](https://pubmed.ncbi.nlm.nih.gov/29138280/); [original full text](https://pmc.ncbi.nlm.nih.gov/articles/PMC5733496/); [DOI](https://doi.org/10.1101/gad.305037.117).
+
 ## Remaining source questions
 
 - Determine whether the original PMID25609649 experiment independently resolves FOXP1 homomerization beyond self-bait detection, and map the recorded experimental clones before assigning current natural products.
-- Resolve whether the original rat expression-only striatal and forebrain annotations support FOXP1 participation in those precise developmental processes.
+- Resolve the original rat expression-study assay scope while retaining independent mouse developmental support from PMID:25266127 and PMID:29138280.
 - Inspect the exact PMID26333362 H2O2 supplement endpoint and the still-unverified PMID18799727 CXCL2 claim; keep chelerythrine, MCP1/CCL2 and CXCL2 separate.
 - Ask the source curator to reconcile the mouse PMID24859450 positive-IL21 annotation with the measured negative direction, preserving its original ID and qualifiers.
 
@@ -239,7 +254,7 @@ Private source pins and exact paragraph/record ledgers remain separate from thes
 
 ## Genuine acquisition and cache scope
 
-Thirty normal sources are present: twenty-five publication caches, two Reactome records and three PTHR45796 files. Seven existing main sources were reused byte-for-byte; twenty-three qualified absent sources were fetched through the unforced repository tooling. No provider was run. A cache full-text flag describes the cached payload, not which Methods, Results, tables or figures were read. Separately accessible originals support several papers whose normal caches contain only abstracts. PMID:25247470 became available as full text during genuine acquisition and its selected original sections were then read.
+Thirty-two normal sources are present: twenty-seven publication caches, two Reactome records and three PTHR45796 files. Seven existing main sources were reused byte-for-byte; twenty-five qualified absent sources were fetched through the unforced repository tooling, including two targeted developmental papers added during review follow-up. No provider was run. A cache full-text flag describes the cached payload, not which Methods, Results, tables or figures were read. Separately accessible originals support several papers whose normal caches contain only abstracts. PMID:25247470 became available as full text during genuine acquisition and its selected original sections were then read.
 
 | Reference | Normal cache has full text | Actual reading scope |
 |---|---|---|
@@ -268,5 +283,7 @@ Thirty normal sources are present: twenty-five publication caches, two Reactome 
 | PMID:25247470 | yes | Selected original Methods/Results/Discussion read from the genuinely acquired full-text cache; no figure pixels or supplements. |
 | PMID:26333362 | yes | Selected indexed original main; actual supplement blocked |
 | PMID:26842647 | yes | Selected original Methods/Results/Fig2–3 captions/Discussion |
+| PMID:25266127 | yes | Selected developmental Methods/Results and Figure 1–2 captions |
+| PMID:29138280 | yes | Selected forebrain, migration and construct Methods/Results/captions |
 
 The genuine current family fetch contains 23 listed members and a 190-node PAINT slice with eight IBD rows. Its human entry is Q9H334, 677 aa. The separate dated tree/MSA proof establishes the human leaf and four incoming assertions; its off-target chimp and macaque discrepancies remain recorded. The normal family files are not rewritten to resemble that historical proof.
