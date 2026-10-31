@@ -9,9 +9,16 @@
   resolves to UniParc UPI000049B91D, whose active UniProtKB entries are Q31PW6 and
   A0A0H3K6U6; global alignment to the PCC 7942 reference proteome UP000889800 gives
   Q31PW6 at 100% identity and 100% coverage (hackathon run
-  `20261030T220633Z-map-cp088958-1-900-uniprot`). The dashboard contig CP088958.1 is the
-  PCC 6311 chromosome, so this is a different strain carrying an identical protein. The
-  dashboard ID is recorded as an alias.
+  `20261030T220633Z-map-cp088958-1-900-uniprot`). NCBI titles the dashboard contig
+  CP088958.1 "Synechococcus elongatus PCC 6311 chromosome" (BioSample SAMN22215176;
+  esummary frozen as
+  `Synpcc7942_0873-dashboard-prediction-evidence/CP088958.1_nuccore_summary.json`), while
+  the PCC 7942 chromosome is CP000100. So this is a different strain carrying an
+  identical protein. The dashboard ID is recorded as an alias.
+- "Hackathon run" IDs here and in `Synpcc7942_0873-bioinformatics/RESULTS.md` are BERIL
+  runs in the LBNL hackathon workspace project (`projects/LBNL_HACKATHON.md`). That
+  workspace is not in this repository; the committed scripts and `data/` copies are the
+  record.
 - The frozen call and page are in `Synpcc7942_0873-dashboard-prediction-evidence/`,
   copied from hackathon run `20261030T220616Z-dashboard-page-cp088958-1-900`.
 - Prior names: eggNOG and InterPro both give only "Domain of unknown function
@@ -41,7 +48,9 @@ the infected cell by depleting NAD+.
 This protein has the same compact layout (DUF4062 at 6–146, coiled coil at 170–197, an
 unassigned C-terminal region) and keeps the family's most conserved Glu at **Glu83**, in
 `GLSYTEKEY`. Two independent estimates agree: identical in 93% of 375 short bacterial
-homologs, and Pfam HMM match state 78 with consensus E and P(E) = 0.602. The
+homologs, and Pfam HMM match state 78 with consensus E and P(E) = 0.602. The tested
+human TEP1 E1008 maps to the same HMM state, in a matching `SVTEME` / `SYTEKE` motif
+(RESULTS.md section 3b); a naive pairwise alignment misplaces it by a gap. The
 deep-research report proposed Glu81 instead; the HMM puts Glu81 at a weak state
 (P(E) = 0.197), so Glu81 was rejected.
 
@@ -55,7 +64,11 @@ phage-defence process term.
 Two other reviewers on the dashboard reached the same verdict independently, and between
 them supplied a domain this review had left unassigned. Their reasoning is recorded on
 the dashboard page for `CP088958.1_900`, not in this repository, so it is summarised here
-rather than cited as verified evidence.
+rather than cited as verified evidence. (A hackathon run that saved this review's own
+dashboard verdict also scraped the two comments, but they are other reviewers' words and
+are not republished here.) For that reason the winged-helix assignment is kept out of the
+review's `description` and annotations. It informs the reading below but carries no
+annotation.
 
 - **MorganP**: neither CDD nor InterPro links the protein to NTPase domains; the
   predicted structure has two domains, a TIR domain and a winged helix. They suggested a
@@ -102,7 +115,8 @@ gene should read that record for the family-level evidence, and this file for th
 - Its neighbours include an SNF2/RAD54-family helicase and a protein with a UvrC-like
   endonuclease domain. Do they form a defence island with it? Not examined here.
 - The KpSwz sequence is only in the preprint's supplementary material, so Glu83 was never
-  aligned directly to the tested E97. The companion Evangelion preprint
+  aligned directly to the tested E97. (It does map to the HMM state of the other tested
+  Glu, TEP1 E1008.) The companion Evangelion preprint
   (doi:10.64898/2026.06.25.731849), which reports a putative catalytic Glu87 in a
   plasmid-borne DUF4062 system, was not read.
 
@@ -114,4 +128,14 @@ gene should read that record for the family-level evidence, and this file for th
   FACHB-805". For the same reason `validate-terms` was run with `--offline`, against the
   local cache only.
 - `just fetch-fitness` has no FEBA mapping for SYNE7.
+- On 2026-10-31 InterPro and UniProt REST returned HTTP 500, so the TEP1 mapping reused the
+  saved PF13271 HMM and fetched the UniProt sequences through NCBI efetch.
+
+## Evidence code for GO:0003953
+
+ISS rather than ISM. The Pfam HMM locates the domain and the catalytic position, but the
+activity is transferred from two experimentally characterized family members, KpSwz and
+TEP1, whose activity depends on the mapped Glu (E1008A abolishes TEP1 NADase activity).
+Transfer from characterized homologs with a residue-level check fits ISS, and ISS is the
+parent code in either case.
 - UniProt lists no gene symbol for Q31PW6, so the directory uses the locus tag.

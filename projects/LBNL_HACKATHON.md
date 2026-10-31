@@ -2,8 +2,8 @@
 title: "LBNL Hackathon: Dark Protein Atlas genes"
 maturity: SCOPING
 tags: [EVALUATION]
-species: [LACLM, LACLA, SALTY, ECOLI]
-genes: [sufB, ybbO, yxcA]
+species: [LACLM, LACLA, SALTY, ECOLI, SYNE7]
+genes: [sufB, ybbO, yxcA, Synpcc7942_0873]
 ---
 
 # LBNL Hackathon: Dark Protein Atlas genes
@@ -26,9 +26,13 @@ on the dashboard's call in the gene notes file.
 | LACLA/yxcA | *Lactococcus lactis* subsp. *lactis* IL1403 | Q9CDI2 | [NZ_VXKC01000008.1_19](https://gene-annotate-dashboard.kbase.us/review/NZ_VXKC01000008.1_19) | PlsA plasmalogen biosynthesis protein combining activation and reduction/dehydration functions for anaerobic plasmalogen production | supported (GO:0016836 hydro-lyase is an overreach) |
 | SALTY/ybbO | *Salmonella enterica* serovar Typhimurium LT2 | Q7CR11 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), by 1:1 orthology to E. coli YbbO |
 | ECOLI/ybbO | *Escherichia coli* K-12 | P0AFP4 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), direct assays |
+| SYNE7/Synpcc7942_0873 | *Synechococcus elongatus* PCC 7942 (dashboard protein from PCC 6311, identical) | Q31PW6 | [CP088958.1_900](https://gene-annotate-dashboard.kbase.us/review/CP088958.1_900) | DUF4062 domain-containing protein, putative NACHT-family NTPase | wrong: GO:0017111 NTPase is NPI (no P-loop domain); probable DUF4062 TIR-like NAD+ nucleosidase (GO:0003953) |
 
 ## Notes
 
+- The dashboard sequence for CP088958.1_900 comes from the *S. elongatus* PCC 6311
+  chromosome (NCBI CP088958.1) and is 100% identical to PCC 7942 Q31PW6
+  (Synpcc7942_0873), so the review is filed under the PCC 7942 entry.
 - The dashboard sequence for NZ_LKLC01000161.1_58 is 100% identical to A2RMK5
   (llmg_1969), so the review is filed under the MG1363 reference proteome.
 - The dashboard sequence for NZ_VXKC01000008.1_19 (UniParc UPI00072AC48C,

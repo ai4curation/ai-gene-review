@@ -1,15 +1,24 @@
 # Synpcc7942_0873 (Q31PW6): NTPase motifs, DUF4062 domain context and the conserved Glu
 
-Query: dashboard sequence CP088958.1_900 (*S. elongatus* PCC 6311), 362 aa, identical
-to Q31PW6 (UniParc UPI000049B91D). Three analyses, each recorded as a BERIL run in
-`projects/hackathon/`. Numbers below are from the `data/*.json` copies of each run's
-`results.json`.
+Query: dashboard sequence CP088958.1_900, 362 aa, identical to Q31PW6 (UniParc
+UPI000049B91D). The dashboard labels it only "Synechococcus elongatus". NCBI titles contig
+CP088958.1 "Synechococcus elongatus PCC 6311 chromosome" (strain PCC 6311, BioSample
+SAMN22215176; NCBI esummary frozen in
+`../Synpcc7942_0873-dashboard-prediction-evidence/CP088958.1_nuccore_summary.json`). The
+protein is therefore from PCC 6311 and identical to the PCC 7942 protein (UniProt
+`DR EMBL; CP000100`), and the review is filed under PCC 7942.
+
+Each analysis was run as a BERIL run in the LBNL hackathon BERIL workspace project
+`hackathon` (see `projects/LBNL_HACKATHON.md`). That workspace is not part of this
+repository, so the run IDs below are provenance labels only. The scripts here and the
+committed `data/*.json` copies of each run's `results.json` are the record.
 
 | Script | BERIL run | Output copy |
 |---|---|---|
 | `duf4062_ntpase_check.py` | `20261030T221227Z-duf4062-ntpase-check` | `data/ntpase_check_results.json`, `data/duf4062_cooccurrence.tsv` |
 | `duf4062_conserved_glu.py` | `20261030T221430Z-duf4062-conserved-glu` | `data/conserved_glu_results.json`, `data/position_conservation.tsv` |
 | `duf4062_hmm_glu.py` | `20261030T221521Z-duf4062-hmm-glu` | `data/hmm_glu_results.json` |
+| `tep1_glu_correspondence.py` | `20261031T012834Z-tep1-glu-correspondence` | `data/tep1_glu_results.json` |
 
 ## Question
 
@@ -65,6 +74,22 @@ putative catalytic glutamate" for the related Evangelion protein Eva01 (E87; bio
 family conservation. The KpSwz sequence was not available here (it is in the
 preprint's supplement), so it was not aligned directly.
 
+### 3b. Glu83 corresponds to the tested TEP1 Glu1008
+
+The other Glu tested by mutation, human TEP1 E1008 (Q99973; DUF4062 at 886-1113), was
+mapped onto the same PF13271 HMM with `tep1_glu_correspondence.py`. The HMM is the saved
+copy from the HMM run above, because InterPro and UniProt REST returned HTTP 500 on
+2026-10-31; sequences were fetched through NCBI. TEP1 hits PF13271 at 901-1015 (HMM
+2-85, i-Evalue 5.6e-19). TEP1 E1008 also maps to match state 78, the
+state of the query's Glu83. The flanking residues agree position by position: query
+`S78-Y-T80-E81-K-E83` against TEP1 `S1003-V-T1005-E1006-M-E1008`.
+
+A plain pairwise local alignment of the two DUF4062 regions (BLOSUM62, gap open 10,
+extend 1; 116 aligned pairs, 29% identity) does not recover this. It inserts a 7-residue
+gap just upstream and puts Glu83 opposite TEP1 Tyr998. At this divergence the profile
+mapping, which agrees with the shared motif, is the more reliable of the two, but the
+correspondence is still an alignment inference, not a structural one.
+
 ## 4. Independent structural checks (not run here)
 
 Two dashboard reviewers independently assessed the same protein by structure, and their
@@ -83,11 +108,14 @@ fold of the Swarozyc auxiliary domain.
 
 ## Conclusions
 
-- The protein lacks the P-loop NTPase machinery that GO:0017111 requires. The NTPase
-  label comes from multidomain COG5635 relatives through the shared, non-catalytic
-  (for NTP hydrolysis) DUF4062 domain.
+- The dashboard's basis for GO:0017111 is refuted: the call is a NACHT (P-loop) NTPase,
+  and the protein has no NACHT or P-loop domain and no Walker A or Walker B motif.
+  GO:0017111 itself is fold-agnostic, but no other NTPase fold or activity is indicated.
+  The NTPase label comes from multidomain COG5635 relatives through the shared DUF4062
+  domain, which does not hydrolyse NTPs.
 - The protein has the architecture of the short bacterial DUF4062 proteins: an
-  N-terminal TIR-like DUF4062 domain with the conserved putative catalytic Glu (Glu83),
+  N-terminal TIR-like DUF4062 domain with the conserved putative catalytic Glu (Glu83,
+  at the HMM position of TEP1 E1008),
   a coiled-coil stalk and a C-terminal region that structural review predicts to be a
   winged helix (section 4). This matches the Swarozyc layout of TIR-like domain, helical
   stalk and auxiliary domain, down to that domain's winged fold. Its likely activity is
