@@ -10,8 +10,9 @@ title: "Two-layer model: steps need activities, activities need realizers"
 claim, and the engine should keep them apart. A process step requires a
 molecular function (MF); that requirement is close to binary. An MF is
 carried out by one of several families, domains or complexes; that mapping is
-open-world and gappy. Today both are written as `variant_sets` and compiled to
-the same OR, so a genome that fails a rule cannot say which kind of gap it hit.
+open-world and gappy. Both are written as `variant_sets` and compile to an OR;
+the engine now labels each gap by layer, so a genome that fails a rule says
+which kind of gap it hit.
 
 ## The two layers
 
@@ -75,51 +76,37 @@ organisms, so the kinetoplastid placement must come from PANTHER's own
 classification of the T. brucei and Leishmania proteins before any id is
 written into the module.
 
-## What the engine does today
+## What the engine did, and what changed
 
-Checked against `ai_gene_review.module_logic` on `main`, running the
-mitochondrion umbrella with TIM23 and TIM22 absent:
+Before this change, running the mitochondrion umbrella in
+`ai_gene_review.module_logic` with TIM23 and TIM22 absent showed four
+problems. Each is now addressed:
 
-- **The gap is reported at the umbrella stage only.** `unsatisfied_steps`
-  returns `protein_import`; on the import module itself it returns
-  `tim23_translocation` and `tim22_insertion`. Locating a gap inside a
-  referenced module needs a recursive report.
-- **The gap candidates are not filtered to absent atoms.** `abduce` builds
-  `gap_candidates` from every atom under the failed step, so the
-  `protein_import` gap lists all 16 import symbols, including the 14 that
-  were present. The `Abduction.gap_candidates` comment says "the canonical atoms
-  all absent", so this is a mismatch between code and documentation.
-- **Atoms carry no realizer.** An `Atom` holds the MF ids (`function_ids`),
-  a gene symbol and representative UniProt accessions, but not the family or
-  domain selector. An oracle that scans a new proteome with PANTHER HMMs has
-  nothing to scan for; layer 2 exists in the YAML but not in the compiled
-  circuit.
-- **Variant-set axes are free text.** `axis` is a string, and the engine
-  keeps only `set_id` and `selection`. Across the 406 variant sets in
-  `modules/` there are 248 distinct axis strings. A keyword sort (rough, not a
-  curated classification) puts about 117 on the realizer side ("enzyme
-  family", "enzyme architecture", "paralog"), about 101 on the route or
-  context side ("route", "compartment", "taxon"), 54 that mix both, and 134
-  with no axis or one the heuristic cannot place.
+| Problem | Change |
+|---|---|
+| The gap was reported only at the umbrella stage (`protein_import`); the failing steps showed only when the import module was run on its own. | `gap_report` descends through failed steps, `module_ref` nodes and referenced modules, and returns each gap at its innermost failing element with its full path, e.g. `protein_import → mitochondrial_protein_import → tim23_translocation → mitochondrial_protein_import#tim23_channel`. |
+| `gap_candidates` listed every atom under the failed step: 16 import symbols, 14 of them present. | `gap_candidates` lists only atoms that do not hold: `TIMM22`, `TIMM23`. |
+| Atoms carried MF ids and gene identifiers but no family or domain selector, so a proteome oracle had nothing to scan for. | Atoms carry `family_ids` and `domain_ids` from the participant selector. |
+| Variant-set `axis` is free text, and the engine kept only the set id and selection rule, so a gap could not be labelled by layer. | A variant set may declare `variant_kind: REALIZER` or `ROUTE`. When it is omitted, the compiler infers `REALIZER` if every variant carries the same single MF. Each gap is labelled `REALIZER`, `ROUTE` or `UNCLASSIFIED`, and `abduce` attaches only the hypotheses that fit. |
+
+Across the 448 variant sets in the 717 modules that do not use `module_ref`,
+the compiler infers 165 as realizer choices. One, the acetoacetate activation
+choice in `ketone_body_oxidation` (SCOT versus AACS, two different
+activities), is declared `ROUTE`. The other 282 stay unclassified until a
+curator declares them; their gaps get both layers' hypotheses, as before.
 
 ## Options
 
-1. **Controlled axis values.** Add an enum used alongside the free-text
-   `axis` (for example `REALIZER` vs `ROUTE` / `TAXON` / `COMPARTMENT`), carry
-   it into `Or`, and let gap reports label each gap by layer and attach only
-   that layer's hypotheses. Smallest change; existing modules keep working
-   and can be classified gradually.
-2. **A realizer set on the annoton.** Allow an OR of participant selectors
-   on one annoton, so one MF step lists its realizers directly. This makes
-   layer 2 explicit in the data rather than in a label, at the cost of a
-   schema change to `participant` and to every consumer of it.
-3. **Compile realizers into the circuit.** Whichever of the above, carry the
-   family or domain selector on each `Atom` so an HMM-based oracle can
-   evaluate it. This is required before umbrellas can be run on reference
-   proteomes, which is already on the plan.
-
-Options 1 and 3 can be taken without reworking existing modules. Option 2 is
-the cleaner end state, and option 1 is a reasonable first step towards it.
+1. **Controlled kind on variant sets.** Done, with structural inference
+   so that existing modules gain labels without edits.
+2. **A realizer set on the annoton.** Not done. Allowing an OR of
+   participant selectors on one annoton would make layer 2 explicit in the
+   data rather than in a label, at the cost of a schema change to
+   `participant` and to every consumer of it. Worth revisiting once
+   proteome runs show how often realizer choices are written as variant sets.
+3. **Compile realizers into the circuit.** Done for family and domain ids.
+   An HMM-based oracle that evaluates them is still to be written, as part of
+   the reference-proteome plan item.
 
 ## Refinement: layer 1 is not perfectly binary either
 

@@ -243,7 +243,8 @@ of a motif):
 
 - **Satisfiability.** `module_logic` compiles the referenced module in place, so
   the umbrella node is satisfied exactly when the referenced module or node is.
-  Gaps are reported at the umbrella step. Atoms reached through a reference are
+  `unsatisfied_steps` reports gaps at the umbrella step; `gap_report` follows
+  the reference down to the failing step inside it. Atoms reached through a reference are
   namespaced `<stem>#<annoton_id>`, so a step reached twice is one atom.
   Mark the enclosing part `optional` when a lineage may lack the referenced
   module. Inlining multiplies route counts, so for umbrella modules use
@@ -263,3 +264,42 @@ of a motif):
 
 The Boolean-network translator (`module-to-bnet`) does not follow references yet,
 and warns when a document uses them.
+
+### Variant kinds and layered gap reports (`variant_kind`)
+
+A rule makes two kinds of claim. A process step requires a molecular function,
+which is close to binary. That function is carried out by one of several
+families, domains or complexes, which is open-world. A variant set belongs to
+one of the two layers, recorded in the optional `variant_kind`:
+
+- `REALIZER`: the variants are alternative carriers of one required activity
+  (families, isozymes, paralogs, lineage-specific proteins).
+- `ROUTE`: the variants are alternative ways of achieving the step, with
+  different activities (for example SCOT-dependent versus ligase-dependent
+  acetoacetate activation in `ketone_body_oxidation`).
+
+```yaml
+variant_sets:
+  - id: acetoacetate_activation_route
+    axis: CoA-transfer chemistry   # free text, unchanged
+    variant_kind: ROUTE
+    selection: EXACTLY_ONE
+```
+
+When `variant_kind` is omitted, `module_logic` infers `REALIZER` if every
+variant carries the same single molecular function, and otherwise leaves the
+set unclassified. Declare it where the inference cannot tell, chiefly for
+routes. `gap_report(circuit, holds)` returns each gap at its innermost failing
+element, with its path from the top-level step, its layer and the absent atoms:
+
+| layer | what failed | reading |
+|---|---|---|
+| `REALIZER` | an atom, or a realizer variant set | the activity is required but no known carrier was found |
+| `ROUTE` | a route variant set | none of the modelled routes is present |
+| `UNCLASSIFIED` | a variant set with no declared or inferable kind | either reading |
+
+`abduce` attaches only the hypotheses that fit the layers of the gaps, and its
+`gap_candidates` list only the atoms that do not hold. Compiled atoms also
+carry the participant's family and domain ids (`family_ids`, `domain_ids`),
+for oracles that scan a proteome with family models. The design is explained
+in `projects/ORGANELLE_LIFECYCLES/two-layer-model.md`.

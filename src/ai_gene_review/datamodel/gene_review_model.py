@@ -451,6 +451,20 @@ class ModuleTypeEnum(str, Enum):
     """
 
 
+class VariantKindEnum(str, Enum):
+    """
+    The layer of a module rule that a variant set's alternatives belong to. A process step requires a molecular function (close to binary); that function is carried out by one of several families, domains or complexes (open-world). See projects/ORGANELLE_LIFECYCLES/two-layer-model.md.
+    """
+    REALIZER = "REALIZER"
+    """
+    The variants are alternative carriers of the same required activity: families, domains, complexes, isozymes, paralogs or lineage-specific proteins. A gap means the activity is expected but no known carrier was found, which may reflect a divergent homolog, an unknown family or an assembly gap as much as a real loss.
+    """
+    ROUTE = "ROUTE"
+    """
+    The variants are alternative ways of achieving the step: different activities or step sequences, such as SCOT-dependent versus ligase-dependent acetoacetate activation. A gap means none of the modelled routes is present.
+    """
+
+
 class VariantSelectionEnum(str, Enum):
     """
     How variants in a variant set may be selected in a realization.
@@ -4674,6 +4688,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'RuleCondition',
                        'RuleReviewEntry']} })
     axis: Optional[str] = Field(default=None, description="""The dimension along which these variants differ, e.g. taxon, cell type, compartment, route, enzyme family.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
+    variant_kind: Optional[VariantKindEnum] = Field(default=None, description="""Which layer of the rule the alternatives belong to: alternative carriers of one required activity (REALIZER), or alternative ways of achieving the step (ROUTE). Gap reports use it to say whether a failure means \"activity required, no known carrier found\" or \"none of the modelled routes is present\". When omitted, the satisfiability engine infers REALIZER if every variant carries the same single molecular function, and otherwise leaves the set unclassified.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
     selection: Optional[VariantSelectionEnum] = Field(default=None, description="""How many variants may be selected in a concrete realization.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
     variants: list[ModuleNode] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',

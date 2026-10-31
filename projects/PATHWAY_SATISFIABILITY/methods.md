@@ -60,6 +60,7 @@ Everything below is a top-level function in `module_logic.py`; each is doctested
 | `active_routes` | `(circuit, holds) -> list[list[Atom]]` | the routes whose every atom holds |
 | `core_atoms` | `(circuit) -> list[Atom]` | the **AND-core**: atoms required by *every* route (gate candidates) |
 | `unsatisfied_steps` | `(circuit, holds) -> list[Circuit]` | the **gaps**: top-level steps with no satisfiable variant |
+| `gap_report` | `(circuit, holds) -> list[Gap]` | each gap at its innermost failing element (through `module_ref`), with its path, layer (`REALIZER`, `ROUTE`, `UNCLASSIFIED`) and absent atoms |
 | `abduce` | `(circuit, holds, asserted_active: bool) -> Abduction` | reconcile satisfiability with an independent activity claim |
 
 `enumerate_routes` grows multiplicatively (route count = product of branch counts across OR
@@ -168,10 +169,13 @@ four `Classification` values:
 | `ABDUCTION_TARGET` | no | **yes** | **runs but a step has no candidate → a reviewable lead** |
 | `OVERPREDICTION` | yes | no | encoded yet not realised (regulation off, or the claim is wrong) |
 
-For an `ABDUCTION_TARGET` the engine attaches `gap_candidates` (the absent genes per gap step)
-and a fixed `GAP_HYPOTHESES` set: non-orthologous/unannotated enzyme · unmodelled alternative
-route · **not cell-autonomous** (intermediate supplied by another cell/organ — the metazoan-only
-explanation) · the activity assertion itself is wrong. The activity column is independent of the
+For an `ABDUCTION_TARGET` the engine attaches `gap_candidates` (the absent genes per gap step),
+the layered `gaps` from `gap_report`, and the `GAP_HYPOTHESES` that fit those layers. A
+realizer gap (activity required, no known carrier) gets non-orthologous/unannotated enzyme;
+a route gap (no modelled route present) gets unmodelled alternative route; an unclassified gap
+gets both. Every gap also gets **not cell-autonomous** (intermediate supplied by another
+cell/organ — the metazoan-only explanation) and the activity assertion itself is wrong. See
+`variant_kind` in `modules/README.md`. The activity column is independent of the
 oracle, so a scored gap is a genuine prediction, not a circular restatement.
 
 ## Architecture
