@@ -16,18 +16,18 @@
    - Sarr et al. (2021) demonstrated that `Duox1-/-` mice challenged intranasally with influenza A virus exhibit increased mortality and morbidity, impaired lung viral clearance, altered airway cytokine profiles (`IL-1β`, `IL-2`, `CCL1`, `CCL3`, `CCL11`, `CCL19`, `CCL20`, `CCL27`, `CXCL5`, `CXCL11`), impaired innate leukocyte recruitment, and elevated airway epithelial apoptosis [PMID:34168077, "Upon influenza airway challenge, Duox1-/- mice have enhanced mortality, morbidity, and impaired lung viral clearance."]. Uninfected `Duox1-/-` lungs also have reduced basal $\text{H}_2\text{O}_2$ levels in bronchoalveolar lavage fluid.
 
 3. **Neural stem cell ROS production with Nip1/Duoxa1 ([PMID:20233719](https://pubmed.ncbi.nlm.nih.gov/20233719/))**:
-   - Ostrakhovitch et al. (2010) showed that Nip1 (`Duoxa1`, `UniProtKB:Q8VE49`) interacts with `Duox1` at the plasma membrane of differentiating P19 neural stem cells and mediates `Duox1`-dependent ROS production [PMID:20233719, "The highest expression of Nip1 was observed in undifferentiated neuronal stem cells and was associated with Duox1-mediated reactive oxygen species ROS production."].
+   - Kennedy et al. (2010) showed that Nip1 (`Duoxa1`, `UniProtKB:Q8VE49`) interacts with `Duox1` at the plasma membrane of differentiating P19 neural stem cells and mediates `Duox1`-dependent ROS production [PMID:20233719, "The highest expression of Nip1 was observed in undifferentiated neuronal stem cells and was associated with Duox1-mediated reactive oxygen species ROS production."].
 
-### Summary of annotation decisions (50 existing GOA rows)
-- **ACCEPT (27 rows)**:
-  - `NOT GO:0004601` (`peroxidase activity`, ISS from human `Q9NRD9`): Directly confirmed in mouse by `PMID:32929281` (missing heme-coordinating histidines and no heme density in the mouse PHD).
+### Summary of annotation decisions (68 reviewed rows from 69 GOA rows)
+- **ACCEPT (32 rows)**:
+  - `NOT GO:0004601` (`peroxidase activity`, ISS from human `Q9NRD9`, 1 row): Directly confirmed in mouse by `PMID:32929281` (missing heme-coordinating histidines and no heme density in the mouse PHD).
   - `GO:0016174` (`NAD(P)H oxidase H2O2-forming activity`, IBA/IEA/ISO/ISS, 4 rows) and `GO:0050665` (`hydrogen peroxide biosynthetic process`, IDA/IEA/ISO/ISO, 4 rows): Core catalytic function and direct biological process, supported by `PMID:32929281`.
   - Cofactor/substrate binding: `GO:0005509` (`calcium ion binding`, IEA/ISO, 2 rows), `GO:0020037` (`heme binding`, IDA/IEA/ISO, 3 rows), `GO:0070402` (`NADPH binding`, IDA/IEA/ISO, 3 rows), `GO:0071949` (`FAD binding`, IDA/IEA/ISO, 3 rows). Note that `GO:0020037` (`heme binding`) IEA row includes `InterPro:IPR010255` (the haem peroxidase domain signature, which is a false trigger for the PHD), whereas the two hemes are actually bound in the transmembrane ferric-reductase domain (`PMID:32929281`).
   - Subunit & complex assembly: `GO:0046982` (`protein heterodimerization activity`, IPI with `Q8VE49`, 1 row) and `GO:0043020` (`NADPH oxidase complex`, IBA/IEA/IPI/ISO, 4 rows).
   - Core localization: `GO:0005886` (`plasma membrane`, IBA/IDA/IEA/ISO, 4 rows) and `GO:0016324` (`apical plasma membrane`, IEA/ISO/ISS, 3 rows).
-- **KEEP_AS_NON_CORE (17 rows)**:
+- **KEEP_AS_NON_CORE (24 rows)**:
   - `GO:0005783` (`endoplasmic reticulum`, IEA/ISO, 2 rows): Maturation/folding transit compartment prior to DUOXA1-dependent surface delivery.
-  - `GO:0009986` (`cell surface`, IEA/ISO, 2 rows) and `GO:0031252` (`cell leading edge`, IEA/ISO, 2 rows): Coarse or context-specific surface localizations.
+  - `GO:0009986` (`cell surface`, IEA/ISO, 2 rows) and `GO:0031252` (`cell leading edge`, IEA/ISO, 2 rows): Coarse or context-specific surface localizations (`PMID:19339556`).
   - Physiological downstream/context-specific processes: `GO:0140374` (`antiviral innate immune response`, IEA/IMP/ISO, 3 rows), `GO:1900426` (`positive regulation of defense response to bacterium`, IEA/ISO/ISS, 3 rows), `GO:0006952` (`defense response`, IBA, 1 row), `GO:0032757` (`positive regulation of interleukin-8 production`, IEA/ISO/ISS, 3 rows), `GO:0090303` (`positive regulation of wound healing`, IEA/ISO, 2 rows), `GO:2000147` (`positive regulation of cell motility`, IEA/ISO, 2 rows), `GO:0006590` (`thyroid hormone generation`, IEA, 1 row), `GO:2000609` (`regulation of thyroid hormone generation`, NAS, 1 row), `GO:0051591` (`response to cAMP`, IEA/ISO, 2 rows).
 - **MODIFY (9 rows)**:
   - `GO:0005515` (`protein binding`, IPI with `Q8VE49` in `PMID:20233719` and `PMID:32929281`, 2 rows) $\rightarrow$ `GO:0046982` (`protein heterodimerization activity`).
@@ -37,5 +37,5 @@
   - `GO:0072593` (`reactive oxygen species metabolic process`, IEA/IGI, 2 rows) $\rightarrow$ `GO:0050665` (`hydrogen peroxide biosynthetic process`).
   - `GO:0019221` (`cytokine-mediated signaling pathway`, IEA/ISO from human `Q9NRD9`, 2 rows) $\rightarrow$ `GO:0071345` (`cellular response to cytokine stimulus`), matching the human review because DUOX1 is transcriptionally induced by Th2 cytokines (`PMID:16111680`) rather than transducing the cytokine signaling pathway.
 - **REMOVE (3 rows)**:
-  - `GO:0042335` (`cuticle development`, IEA/ISO from human `Q9NRD9`, 2 rows): Secondaryortholog projection of the human IMP row from `PMID:11514595`, which was itself a mis-attributed *C. elegans* `bli-3` RNAi phenotype; mice have no cuticle and the mouse PHD lacks heme and peroxidase activity (`PMID:32929281`).
+  - `GO:0042335` (`cuticle development`, IEA/ISO from human `Q9NRD9`, 2 rows): Secondary ortholog projection of the human IMP row from `PMID:11514595` (Edens et al., 2001), which was itself a mis-attributed *C. elegans* `bli-3` RNAi phenotype; mice have no cuticle and the mouse PHD lacks heme and peroxidase activity (`PMID:32929281`).
   - `GO:0006979` (`response to oxidative stress`, IEA from `InterPro:IPR010255`, 1 row): Triggered by the non-catalytic haem-peroxidase domain signature; DUOX1 generates $\text{H}_2\text{O}_2$ rather than responding to oxidative stress.
