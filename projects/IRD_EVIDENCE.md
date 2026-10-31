@@ -348,6 +348,14 @@ Updated 2026-10-06.
 - [x] Add an IRD check to the annotation-reviewer skill: `just paint-losses <org> <GENE>`
       lists the IRD/IKR losses on a gene's PANTHER lineage and the review's rows on each
       blocked term
+- [ ] Add a structured slot for the PAINT loss that withdrew an IBA (for example
+      `paint_loss_node` and `paint_loss_date` on `PropagationReview`). The 24 stale-IBA
+      notes are prose for now, and `paint_report_gene_cases.yaml` restates three of them
+      by hand; with the slot, report section 2 could be derived from the reviews
+- [ ] Revisit SCHPO pmp20 GO:0005777 peroxisome (UNDECIDED): experimentally supported
+      cytosolic/nuclear pools, no canonical PTS, and the PTN000824099 IRD now point the same
+      way, and `projects/ORGANELLES.md` offers keep, MARK_AS_OVER_ANNOTATED or REMOVE for a
+      synthesis row on a root organelle term
 - [ ] Inspect the 20 fully re-annotated IRD rows (the 14 stale overrides are listed in
       [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md), section 3)
 - [ ] Send the probable IRD errors to PAINT: [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md)

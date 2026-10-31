@@ -71,7 +71,10 @@ def stale_overrides() -> list[list[str]]:
     """IRD rows whose ancestral node has no IBD for the blocked term."""
     path = HERE / "ird_nodes.tsv"
     if not path.exists():
-        return []
+        raise SystemExit(
+            f"{path} is missing (it is git-ignored); run projects/IRD_EVIDENCE/fetch_paint_ird.py "
+            "first, or the stale-override section would be written empty"
+        )
     with path.open() as fh:
         return [
             [r["family"], r["ird_node"], f"{r['go_id']} {r['go_label']}", r["ancestral_node"], r["date"]]

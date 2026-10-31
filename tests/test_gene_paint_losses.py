@@ -26,6 +26,8 @@ IBD = parse_ibd_gaf([
     gaf("PTN2", "GO:1", "IRD", True, "PANTHER:PTN1"),
     gaf("PTN5", "GO:1", "IBD", False, "UniProtKB:P2"),
     gaf("PTN3", "GO:2", "IKR", True, "PANTHER:PTN1"),
+    # a loss on P1's leaf written without the NOT qualifier: still a loss, never a lift
+    gaf("PTN4", "GO:1", "IKR", False, "PANTHER:PTN1"),
 ])
 
 
@@ -39,8 +41,8 @@ def test_tree_helpers() -> None:
 @pytest.mark.parametrize(
     ("leaf", "expected"),
     [
-        # P1 sits under the IRD and nothing below re-annotates GO:1
-        ("PTN4", [("PTN2", "GO:1", "IRD", ["PTN1"], 2, False)]),
+        # P1 sits under the IRD; the un-negated IKR on its leaf is a second loss, not a lift
+        ("PTN4", [("PTN2", "GO:1", "IRD", ["PTN1"], 2, False), ("PTN4", "GO:1", "IKR", ["PTN1"], 1, False)]),
         # P2 sits under the IRD, but PAINT gives its own leaf GO:1 again
         ("PTN5", [("PTN2", "GO:1", "IRD", ["PTN1"], 2, True)]),
         # P3 is outside the IRD clade; the IKR on its own leaf applies
@@ -65,6 +67,12 @@ def test_review_rows_report_existing_annotations_and_core_functions() -> None:
              "review": {"action": "ACCEPT"}},
             {"term": {"id": "GO:9"}, "evidence_type": "IEA", "review": {"action": "REMOVE"}},
         ],
-        "core_functions": [{"molecular_function": {"id": "GO:1"}}],
+        "core_functions": [
+            {"molecular_function": {"id": "GO:1"}},
+            {"contributes_to_molecular_function": {"id": "GO:3"}},
+            {"in_complex": {"id": "GO:4"}},
+        ],
     }
     assert review_rows(review, "GO:1") == ["IBA:ACCEPT", "NOT IDA:ACCEPT", "CORE_FUNCTION"]
+    assert review_rows(review, "GO:3") == ["CORE_FUNCTION"]
+    assert review_rows(review, "GO:4") == ["CORE_FUNCTION"]

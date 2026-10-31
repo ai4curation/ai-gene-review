@@ -50,6 +50,17 @@ class PaintLoss:
     review_rows: list[str] = field(default_factory=list)
 
 
+def is_loss(rec: IBDRecord) -> bool:
+    """True for a PAINT loss row: a NOT qualifier, or IRD/IKR evidence even without one.
+
+    >>> is_loss(IBDRecord("PTN1", "GO:1", "F", "IKR", False))
+    True
+    >>> is_loss(IBDRecord("PTN1", "GO:1", "F", "IBD", False))
+    False
+    """
+    return rec.negated or rec.evidence in ("IRD", "IKR")
+
+
 def losses_on_lineage(
     tree: dict[str, Any], leaf: str, ibd_index: dict[str, list[IBDRecord]]
 ) -> list[PaintLoss]:
@@ -69,11 +80,11 @@ def losses_on_lineage(
     found: list[PaintLoss] = []
     for node in sorted(lineage):
         for rec in ibd_index.get(node, []):
-            if not (rec.negated or rec.evidence in ("IRD", "IKR")):
+            if not is_loss(rec):
                 continue
             clade = set(leaves_below(tree, node))
             lifted = any(
-                not other.negated and other.go_id == rec.go_id
+                not is_loss(other) and other.go_id == rec.go_id
                 for below in lineage
                 if below != node and set(leaves_below(tree, below)) < clade
                 for other in ibd_index.get(below, [])
@@ -105,9 +116,10 @@ def review_rows(review: dict, go_id: str) -> list[str]:
             neg = "NOT " if a.get("negated") else ""
             rows.append(f"{neg}{a.get('evidence_type')}:{(a.get('review') or {}).get('action')}")
     for cf in review.get("core_functions") or []:
-        ids = [(cf.get("molecular_function") or {}).get("id")]
-        ids += [x.get("id") for x in cf.get("directly_involved_in") or []]
-        ids += [x.get("id") for x in cf.get("locations") or []]
+        ids = [(cf.get(slot) or {}).get("id") for slot in ("molecular_function", "contributes_to_molecular_function")]
+        for slot in ("directly_involved_in", "locations", "in_complex"):
+            value = cf.get(slot) or []
+            ids += [x.get("id") for x in (value if isinstance(value, list) else [value])]
         if go_id in ids:
             rows.append("CORE_FUNCTION")
     return rows

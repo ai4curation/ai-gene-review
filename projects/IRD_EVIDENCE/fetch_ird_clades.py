@@ -19,6 +19,7 @@ import csv
 import gzip
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 
 from ai_gene_review.etl.panther_trees import load_family
@@ -34,7 +35,7 @@ def main() -> int:
         ird = list(csv.DictReader(fh, delimiter="\t"))
     families = sorted({r["family"] for r in ird if r["family"]})
     with ThreadPoolExecutor(max_workers=6) as pool:
-        trees = dict(zip(families, pool.map(lambda f: load_family(f, ROOT / ".cache" / "panther_trees"), families)))
+        trees = dict(zip(families, pool.map(partial(load_family, cache_dir=ROOT / ".cache" / "panther_trees"), families)))
     missing = [f for f, t in trees.items() if t is None]
     n_rows = 0
     with gzip.open(OUT, "wt", newline="") as fh:
