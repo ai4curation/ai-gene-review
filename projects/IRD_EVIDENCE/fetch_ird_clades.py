@@ -17,82 +17,16 @@ from __future__ import annotations
 
 import csv
 import gzip
-import json
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import requests
+from ai_gene_review.etl.panther_trees import load_family
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent.parent
-CACHE = ROOT / ".cache" / "panther_trees"
 NODES = HERE / "ird_nodes.tsv"
 OUT = HERE / "ird_clade_members.tsv.gz"
-TREE_URL = "https://pantherdb.org/services/oai/pantherdb/treeinfo"
-
-
-def _children(node: dict) -> list[dict]:
-    ch = node.get("children", {}).get("annotation_node", [])
-    return [ch] if isinstance(ch, dict) else ch
-
-
-def compact_tree(tree: dict) -> dict:
-    """Reduce a treeinfo response to ``{"leaves": {ptn: info}, "under": {ptn: [leaf ptns]}}``.
-
-    ``under`` lists, for every internal node, the leaf PTNs below it. A leaf's
-    ``uniprot`` is parsed from ``node_name`` (``ORG|DB=id|UniProtKB=ACC``).
-    """
-    leaves: dict[str, dict] = {}
-    under: dict[str, list[str]] = {}
-
-    def walk(n: dict) -> list[str]:
-        pid = n.get("persistent_id", "")
-        kids = _children(n)
-        if not kids:
-            name = n.get("node_name", "")
-            acc = ""
-            for tok in name.split("|"):
-                if tok.startswith("UniProtKB="):
-                    acc = tok.split("=", 1)[1]
-            leaves[pid] = {
-                "uniprot": acc,
-                "organism": n.get("organism", ""),
-                "symbol": n.get("gene_symbol", ""),
-                "subfamily": n.get("prop_sf_id", "") or n.get("sf_id", ""),
-            }
-            return [pid]
-        below: list[str] = []
-        for c in kids:
-            below.extend(walk(c))
-        under[pid] = below
-        return below
-
-    sys.setrecursionlimit(100000)
-    walk(tree["search"]["tree_topology"]["annotation_node"])
-    return {"leaves": leaves, "under": under}
-
-
-def load_family(family: str) -> dict | None:
-    CACHE.mkdir(parents=True, exist_ok=True)
-    path = CACHE / f"{family}.json.gz"
-    if path.exists():
-        with gzip.open(path, "rt") as fh:
-            return json.load(fh)
-    for attempt in range(4):
-        try:
-            r = requests.get(TREE_URL, params={"family": family}, timeout=300)
-            if r.status_code == 200:
-                data = compact_tree(r.json())
-                with gzip.open(path, "wt") as fh:
-                    json.dump(data, fh)
-                return data
-        except (requests.RequestException, ValueError, KeyError) as e:
-            print(f"{family}: {e}", file=sys.stderr)
-        time.sleep(5 * (attempt + 1))
-    print(f"{family}: tree not fetched", file=sys.stderr)
-    return None
 
 
 def main() -> int:
@@ -100,7 +34,7 @@ def main() -> int:
         ird = list(csv.DictReader(fh, delimiter="\t"))
     families = sorted({r["family"] for r in ird if r["family"]})
     with ThreadPoolExecutor(max_workers=6) as pool:
-        trees = dict(zip(families, pool.map(load_family, families)))
+        trees = dict(zip(families, pool.map(lambda f: load_family(f, ROOT / ".cache" / "panther_trees"), families)))
     missing = [f for f, t in trees.items() if t is None]
     n_rows = 0
     with gzip.open(OUT, "wt", newline="") as fh:
