@@ -35,3 +35,22 @@ The applied assessment has 21 ACCEPT, 22 KEEP_AS_NON_CORE, 11 TOO_GENERAL, 3 MOD
 Ordinary schema, reference and ontology validation passed with eight advisories: six generic-binding retentions under the campaign instruction and two source-specific action differences (GO:0000978 and GO:0043565). The broader classifications and exact experimental assertions retain their independently justified scopes. Strict GOA matching, generated-history schema, private rendering and exact context/source conservation passed. The repository computes DRAFT. Its initial status mismatch report is retained; the existing status field was changed to that computed value after the ordinary update command left it unchanged. No scientific field changed.
 
 The shared runtime emits an existing pkg_resources deprecation warning. Final history, status, rendering and conservation checks cover the factual documentation closeout. No full CI suite or actual-merge success is claimed. The original seed, raw response, source receipts and failed provider attempt remain preserved.
+
+
+## 2026-10-31 — proposed content-review follow-up
+
+The content review identified a missing UniProt-linked phosphorylation paper and an underrepresented NFAT1 mechanism. The qualified new PMID23878394 normal cache is abstract-only; selected original public HTML was read separately. Human lymphatic endothelial chromatin recruitment, preserved nuclear localization/naked-DNA binding, and mouse blood-endothelial remodeling remain distinct. All prior source files are unchanged.
+
+The proposed follow-up retains all 62 original source contexts and both extension atoms, makes the three binding-specificity actions consistent, and promotes the two negative-transcription contexts using independently established human NFAT1 corepression. It adds one supported transcription-corepressor MF annotation and a second, scoped core, with five quote-free findings across the two mechanistic sources. The original-source actions become 23 ACCEPT, 20 KEEP_AS_NON_CORE, 13 TOO_GENERAL, 3 MODIFY and 3 UNDECIDED, plus one NEW MF. There are no new process annotations, product claims or publication quotations. The precise PMID20956529 assay and the cold-response direction retain explicit limitations. NFAT1/NFATC2 is not conflated with NFATC1 lymphatic-valve biology.
+
+These are proposed changes awaiting application and final checks. Initial PR build jobs succeeded; its full test suite was explicitly skipped for the data-only trigger. A failed provider attempt is not retried without changed authentication.
+
+
+The lymphatic-context follow-up adds genuinely acquired PMID19398761 and selected original primary reading. It supports collecting-vessel maturation in mouse genetics/pharmacology and endogenous FOXC2 chromatin occupancy with selected enhancer assays in human lymphatic endothelium. NFATc1-dependent reporter responses are fragment specific and distinct from the NFAT1/NFATC2 corepressor mechanism. The original GO:0001946 clinical source and non-core action remain; only auxiliary context is added. The proposed record now has 28 references, two cores, one new MF and 23 normal sources; all original source rows and the published notes prefix are preserved.
+
+
+### Follow-up application and local validation
+
+The reviewed proposal was applied with a new CLI-generated EDIT history. Ordinary schema/reference/ontology validation passed with six advisories, all from the supported generic-binding retentions covered by the campaign instruction. The earlier two same-term action advisories are resolved. Strict GOA validation, source-context/source-byte conservation, history validation, report-only status and private rendering passed. The computed status remains DRAFT. The existing eutils/pkg_resources deprecation diagnostic was retained; no environment or provider retry was introduced.
+
+The final scientific record has 62 original contexts plus one NEW transcription-corepressor MF, two cores, 28 references and 23 normal sources. All original source fields/order, the two-atom conjunction, prior publication/history bytes and notes prefix remain intact. Selected original reading supports seven quote-free findings across the NFAT1, phosphorylation and NFATc1 studies. Initial published-head CI completed successfully, with its full test suite skipped; these local results do not claim follow-up CI or an actual merge.
