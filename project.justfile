@@ -1214,8 +1214,9 @@ validate-tag tag:
 # Validate ONLY the given changed gene-review files (full strict per-gene stack:
 # schema + terms + references + best practices, plus PMID-markdown checks).
 # Term/label-mismatch warnings are advisory; enum/not-found errors block.
-# Deleted files and non gene-review paths are skipped. Used by CI to validate
-# only the genes a PR touched instead of the whole corpus.
+# Source manifests and TSV paths select existing sibling reviews, even if the
+# changed source was deleted. Other paths and deleted reviews are skipped.
+# Used by CI to validate only the genes a PR touched instead of the whole corpus.
 # Example: just validate-changed genes/human/TP53/TP53-ai-review.yaml genes/worm/lrx-1/lrx-1-ai-review.yaml
 [group('QC')]
 validate-changed *files:
@@ -1225,6 +1226,13 @@ validate-changed *files:
     for f in {{files}}; do
         if [[ "$f" == genes/*/*/*-ai-review.yaml && -f "$f" ]]; then
             existing+=("$f")
+        elif [[ "$f" == genes/*/*/*-goa-snapshots.yaml || "$f" == genes/*/*/*.tsv ]]; then
+            # Select before testing source existence: deletion must validate the
+            # surviving review and report any missing mandatory/pinned source.
+            # Do not parse a manifest here; malformed manifests must not evade CI.
+            for review in "$(dirname "$f")"/*-ai-review.yaml; do
+                [[ -f "$review" ]] && existing+=("$review")
+            done
         elif [[ ! -f "$f" ]]; then
             echo "Skipping deleted/missing file: $f"
         else
@@ -1235,6 +1243,11 @@ validate-changed *files:
         echo "No existing changed gene-review files to validate."
         exit 0
     fi
+    unique=()
+    while IFS= read -r review; do
+        unique+=("$review")
+    done < <(printf '%s\n' "${existing[@]}" | sort -u)
+    existing=("${unique[@]}")
     echo "Validating ${#existing[@]} changed gene-review file(s) (strict)..."
     rc=0
     uv run ai-gene-review validate --verbose --terms "${existing[@]}" || rc=1
