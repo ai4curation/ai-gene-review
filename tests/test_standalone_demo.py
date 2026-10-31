@@ -12,6 +12,7 @@ from __future__ import annotations
 import ast
 import importlib.util
 import sys
+import types
 from pathlib import Path
 
 DEMO_DIR = Path(__file__).resolve().parents[1] / "projects" / "PATHWAY_SATISFIABILITY"
@@ -41,3 +42,22 @@ def test_committed_demo_matches_a_fresh_build():
     build = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(build)
     assert build.NOTEBOOK == DEMO.read_text()
+
+
+def test_inlined_engine_executes_without_the_package():
+    """Run the inlined engine itself: catches definition-time errors that ``compile`` cannot,
+    such as an annotation naming a type defined later once ``__future__`` annotations are stripped.
+    """
+    spec = importlib.util.spec_from_file_location("build_standalone_demo", DEMO_DIR / "build_standalone_demo.py")
+    assert spec and spec.loader
+    build = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build)
+    engine = types.ModuleType("standalone_engine")
+    sys.modules[engine.__name__] = engine  # dataclasses resolve their module here
+    try:
+        exec(build.ENGINE, engine.__dict__)
+        circuit = engine.compile_module({"module": {"id": "m", "annotons": [
+            {"id": "a", "participant": {"gene": {"preferred_term": "A"}}}]}})
+        assert engine.is_satisfied(circuit, lambda atom: atom.gene_symbol == "A")
+    finally:
+        del sys.modules[engine.__name__]
