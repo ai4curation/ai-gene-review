@@ -3,8 +3,8 @@
 Osinski et al. 2026 (PMID:42146377) report a conserved Glu in DUF4062 (E97 in
 K. pneumoniae Swarozyc) that is required for NAD+ hydrolysis. Without their
 alignment, this script estimates per-position conservation directly: it downloads
-bacterial DUF4062 (IPR025139) proteins of 200-450 aa from UniProtKB (sampled, at
-most --max), aligns each globally to the query (BLOSUM62, gap -11/-1), and for every
+bacterial DUF4062 (IPR025139) proteins of 200-450 aa from UniProtKB (the first
+--max hits of one search, not a random sample), aligns each globally to the query (BLOSUM62, gap -11/-1), and for every
 query position in the DUF4062 region reports the fraction of homologs carrying the
 same residue. Homologs below --min-id identity over the DUF4062 region are dropped.
 

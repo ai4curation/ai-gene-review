@@ -20,6 +20,16 @@ committed `data/*.json` copies of each run's `results.json` are the record.
 | `duf4062_hmm_glu.py` | `20261030T221521Z-duf4062-hmm-glu` | `data/hmm_glu_results.json` |
 | `tep1_glu_correspondence.py` | `20261031T012834Z-tep1-glu-correspondence` | `data/tep1_glu_results.json` |
 
+Exact invocations (the scripts write to `$BERIL_RUN_DIR`; set it to any output
+directory). `data/CP088958.1_900.fasta` is the dashboard query sequence:
+
+```
+python3 -I duf4062_ntpase_check.py --fasta data/CP088958.1_900.fasta
+python3 -I duf4062_conserved_glu.py --fasta data/CP088958.1_900.fasta   # needs biopython
+uv run --no-project --with pyhmmer python -I duf4062_hmm_glu.py --fasta data/CP088958.1_900.fasta
+uv run --no-project --with pyhmmer --with biopython python -I tep1_glu_correspondence.py --hmm data/PF13271.hmm
+```
+
 ## Question
 
 The dashboard called this protein a "putative NACHT-family NTPase" (GO:0017111) because
@@ -46,9 +56,9 @@ P-loop NTPase domain (IPR027417):
 | length <= 450 aa | 1720 | 23 (1.3%) | 1 (0.06%) |
 
 DUF4062 proteins of 450 aa or less, like this 362-aa protein, almost never carry an
-NTPase domain. The four reviewed (Swiss-Prot) DUF4062 entries are all large NACHT
-proteins: TEP1 from human, mouse and rat (2627-2629 aa) and *Dictyostelium*
-DDB_G0287407 (1663 aa). COG5635 groups the short stand-alone DUF4062 proteins with
+NTPase domain. The four reviewed (Swiss-Prot) DUF4062 entries are all large P-loop
+proteins: TEP1 from human, mouse and rat (2627-2629 aa, with NACHT) and *Dictyostelium*
+DDB_G0287407 (Q54KD0, 1663 aa, P-loop domain IPR027417 without a NACHT match). COG5635 groups the short stand-alone DUF4062 proteins with
 these multidomain NACHT proteins, so its NTPase label describes the long members, not
 this one.
 
@@ -59,7 +69,10 @@ activity needs a conserved Glu (E97 in *K. pneumoniae* Swarozyc; E1008 in human 
 Two independent estimates locate that Glu in the query:
 
 - **Pairwise conservation.** 375 bacterial DUF4062 proteins of 200-450 aa (identity
-  >= 20% over the query's DUF4062 region) were aligned globally to the query. Glu83 is
+  >= 20% over the query's DUF4062 region) were aligned globally to the query. They are
+  the first 400 hits of one UniProt search, not a random sample, and conservation is
+  scored against the query residue, so this estimate is query-centred; the HMM below is
+  not. Glu83 is
   identical in 93% of them, the third most conserved position overall after Met1 and
   Gly70 (99%). The next best Glu is Glu38 (73%); Glu81 is at 29%.
 - **Pfam HMM.** The query aligns to PF13271 (HMM length 146) over residues 6-146
@@ -78,7 +91,7 @@ preprint's supplement), so it was not aligned directly.
 
 The other Glu tested by mutation, human TEP1 E1008 (Q99973; DUF4062 at 886-1113), was
 mapped onto the same PF13271 HMM with `tep1_glu_correspondence.py`. The HMM is the saved
-copy from the HMM run above, because InterPro and UniProt REST returned HTTP 500 on
+copy from the HMM run above (committed as `data/PF13271.hmm`), because InterPro and UniProt REST returned HTTP 500 on
 2026-10-31; sequences were fetched through NCBI. TEP1 hits PF13271 at 901-1015 (HMM
 2-85, i-Evalue 5.6e-19). TEP1 E1008 also maps to match state 78, the
 state of the query's Glu83. The flanking residues agree position by position: query

@@ -47,7 +47,7 @@ the infected cell by depleting NAD+.
 
 This protein has the same compact layout (DUF4062 at 6–146, coiled coil at 170–197, an
 unassigned C-terminal region) and keeps the family's most conserved Glu at **Glu83**, in
-`GLSYTEKEY`. Two independent estimates agree: identical in 93% of 375 short bacterial
+`GLSYTEKEY`. Two estimates agree, a query-centred pairwise one and the query-independent HMM: identical in 93% of 375 short bacterial
 homologs, and Pfam HMM match state 78 with consensus E and P(E) = 0.602. The tested
 human TEP1 E1008 maps to the same HMM state, in a matching `SVTEME` / `SYTEKE` motif
 (RESULTS.md section 3b); a naive pairwise alignment misplaces it by a gap. The
