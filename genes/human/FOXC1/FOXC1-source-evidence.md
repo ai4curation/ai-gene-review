@@ -18,7 +18,7 @@ Selected original author-uploaded Methods and Results identify human FREAC3 and 
 
 Normal cache full-text flag: `false`. Reference assessment: `VERIFIED`. Original raw contexts: 92.
 
-Selected original cloning, expression and Discussion sections identify the historical 5-3/L12143 sequence associated with current FOXC1. Activation was inferred and future assays were proposed, consistent with the inherited NAS evidence. Historical translated fragments are not silently treated as the current full-length protein or additional natural products.
+Selected original cloning, expression and Discussion sections identify the historical 5-3/L12143 sequence associated with current FOXC1. Activation was inferred and future assays were proposed, consistent with the inherited NAS evidence. Historical translated fragments are not silently treated as the current full-length protein or additional natural products. Relevance assessment: The historical cloning and expression study establishes target identity and expression context; transcriptional activation was inferred and left for future assays.
 
 ## PMID:9792859
 
@@ -26,7 +26,7 @@ Selected original cloning, expression and Discussion sections identify the histo
 
 Normal cache full-text flag: `false`. Reference assessment: `UNVERIFIED`. Original raw contexts: 0.
 
-The authentic original abstract supports human FKHL7/FOXC1 variation associated with anterior-segment disease. The full original was inaccessible in this consultation, so detailed developmental assays and clinical subgroup claims were not replayed.
+The authentic original abstract supports human FKHL7/FOXC1 variation associated with anterior-segment disease. The full original was inaccessible in this consultation, so detailed developmental assays and clinical subgroup claims were not replayed. Relevance assessment: Human disease-associated variation supports developmental relevance, rather than directly establishing the molecular transcriptional mechanism.
 
 ## PMID:10474162
 
@@ -34,7 +34,7 @@ The authentic original abstract supports human FKHL7/FOXC1 variation associated 
 
 Normal cache full-text flag: `false`. Reference assessment: `UNVERIFIED`. Original raw contexts: 1.
 
-Original abstract and indexed first-page material describe mouse Mf1 expression in developing hearts and human congenital-heart associations. Full Methods were not recovered; retain developmental context without claiming a human autonomous assay.
+Original abstract and indexed first-page material describe mouse Mf1 expression in developing hearts and human congenital-heart associations. Full Methods were not recovered; retain developmental context without claiming a human autonomous assay. Relevance assessment: Expression in developing mouse heart and human disease association support developmental context, rather than directly testing the molecular transcriptional mechanism.
 
 ## PMID:10704385
 
@@ -60,7 +60,7 @@ Selected original Methods and Results assay human WT and patient-variant FOXC1 c
 
 Normal cache full-text flag: `false`. Reference assessment: `UNVERIFIED`. Original raw contexts: 2.
 
-The authentic identifier resolves to a DSCAM mouse-brain paper. The full text was inaccessible, so the existing FOXC1 experimental activation assertion remains unresolved. The abstract alone does not establish a wrong-gene attribution or an identifier replacement.
+The authentic identifier resolves to a DSCAM mouse-brain paper. The full text was inaccessible, so the existing FOXC1 experimental activation assertion remains unresolved. The abstract alone does not establish a wrong-gene attribution or an identifier replacement. Relevance assessment: Provisional to the inspected content: the authentic DSCAM abstract supplies no checkable FOXC1 functional result. The inaccessible full text and original FOXC1 annotation remain unresolved; this is not a finding of irrelevance, misattribution or a wrong identifier.
 
 ## PMID:11562355
 
@@ -96,7 +96,7 @@ The authentic abstract reports TGF-beta1-responsive FOXC1 expression and growth 
 
 Normal cache full-text flag: `false`. Reference assessment: `UNVERIFIED`. Original raw contexts: 88.
 
-The authentic abstract and limited original previews report a human F112S family with anterior-segment and dental phenotypes. The detailed clinical table was not inspected; a clinical association is distinct from a direct molecular tooth-development assay.
+The authentic abstract and limited original previews report a human F112S family with anterior-segment and dental phenotypes. The detailed clinical table was not inspected; a clinical association is distinct from a direct molecular tooth-development assay. Relevance assessment: A human clinical pedigree supports FOXC1 disease and developmental associations but does not directly establish a molecular tooth-development mechanism.
 
 ## PMID:14506133
 
@@ -162,7 +162,7 @@ Selected original assays support FOXC1 association with tested PITX2A, COS-7 nuc
 
 Normal cache full-text flag: `false`. Reference assessment: `VERIFIED`. Original raw contexts: 97, 108.
 
-Selected original JBC Methods and Results use human FOXC1 constructs in HeLa cells: EGF signaling changes protein stability and reporter output, with S272A and pathway-inhibitor comparisons. FOXC1 is not thereby a kinase or an upstream ERK activator.
+Selected original JBC Methods and Results use human FOXC1 constructs in HeLa cells: EGF signaling changes protein stability and reporter output, with S272A and pathway-inhibitor comparisons.
 
 ## PMID:17210863
 
@@ -248,7 +248,7 @@ Selected original Results and Discussion show that mouse corneal neural-crest st
 
 Normal cache full-text flag: `false`. Reference assessment: `VERIFIED`. Original raw contexts: 42.
 
-Original Methods describe HIV-human affinity-purification mass spectrometry and MiST filtering. Three exact positive IntAct records establish the FOXC1/tagged HIV retropepsin-fragment pair; one curated pulldown record points to Figure S11a. The supplementary figure was not read. These data do not establish direct contact, native cleavage or protease inhibition.
+Original Methods describe HIV-human affinity-purification mass spectrometry and MiST filtering. Three exact positive IntAct records establish the FOXC1/tagged HIV retropepsin-fragment pair; one curated pulldown record points to Figure S11a. The supplementary figure was not read. These data do not establish direct contact, native cleavage or protease inhibition. Relevance assessment: The broad interactome and exact positive curated pair records corroborate a peripheral FOXC1 association, without establishing its core transcriptional mechanism.
 
 ## PMID:22991501
 
@@ -264,7 +264,7 @@ Selected genuine full-text Results and Methods show context-dependent proliferat
 
 Normal cache full-text flag: `false`. Reference assessment: `UNVERIFIED`. Original raw contexts: auxiliary donor support.
 
-The authentic abstract describes Foxc1-dependent mesenchymal hematopoietic niche formation, CAR-cell identity and support of stem/progenitor abundance. These do not by themselves establish stem/progenitor-intrinsic differentiation; the exact positive-differentiation assay remains unresolved.
+The authentic abstract describes Foxc1-dependent mesenchymal hematopoietic niche formation, CAR-cell identity and support of stem/progenitor abundance. A niche cell can regulate differentiation in another cell; the unresolved issue is the exact positive-differentiation endpoint and assay.
 
 ## PMID:25609649
 
@@ -272,7 +272,7 @@ The authentic abstract describes Foxc1-dependent mesenchymal hematopoietic niche
 
 Normal cache full-text flag: `true`. Reference assessment: `UNVERIFIED`. Original raw contexts: 43.
 
-Selected original Methods describe tagged transcription-factor purification from soluble and chromatin fractions in HEK293T cells and a modified SAINT filter. The exact high-confidence FOXC1-PBX1 row could not be recovered; attempted workbook downloads were HTML challenges. Other-factor validation does not verify this pair, and the distinct 2005 PBX1 study cannot replay this source.
+Selected original Methods describe tagged transcription-factor purification from soluble and chromatin fractions in HEK293T cells and a modified SAINT filter. The exact high-confidence FOXC1-PBX1 row could not be recovered; attempted workbook downloads were HTML challenges. Other-factor validation does not verify this pair, and the distinct 2005 PBX1 study cannot replay this source. Relevance assessment: The original methods inform the interaction-screen context, but the exact FOXC1–PBX1 table entry remains unrecovered; this is supporting methodological context rather than independently verified target-pair evidence.
 
 ## PMID:25786029
 
@@ -343,3 +343,7 @@ For PMID:11782474, the original author-uploaded Results/Figure 5E and Discussion
 For PMID:15684392, the original TF–TF array Methods, Results and Figures 5/7 captions identify the NFIA-associated signal and explicitly separate the PBX1 co-immunoprecipitation/inhibition follow-up. The specific binding replacement uses NFIA's established transcription-factor class while preserving the extract/probe-complex limitation and absence of an NFIA inhibitory effect in the reported assay.
 
 For PMID:22171010, the previously read corneal Results/Discussion and the official lens-specific GO definition now support structured probable source-defect queries. The original donor is UniProt-assigned, not MGI-assigned. No supplementary experiments, replacement term or upstream reporting action is newly claimed.
+
+## GLI2 regulatory mechanism and partner specificity
+
+The selected original PMID:26565916 Results/Methods support both FOXC1–GLI2 association and a GLI2-dependent increase in DNA-binding and transcriptional readouts in human cancer models. This supports the second core and the ACCEPT decision for positive regulation of DNA binding. The structural-opening explanation remains inferred. The distinct PMID:15684392 PBX1a source supports the narrower Pol-II DNA-binding-transcription-factor binding class, with nuclear-extract association and tested-product limitations retained.

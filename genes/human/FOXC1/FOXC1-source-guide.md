@@ -1,8 +1,12 @@
 # FOXC1 source guide
 
-The review covers 143 original QuickGO contexts represented by 141 stored annotations: 37 ACCEPT, 46 KEEP_AS_NON_CORE, 38 TOO_GENERAL, 5 MODIFY and 15 UNDECIDED. It contains one core function, no NEW annotations and no publication quotations. All 40 normal source files are preserved unchanged after acquisition.
+The review covers 143 original QuickGO contexts represented by 141 stored annotations: 38 ACCEPT, 44 KEEP_AS_NON_CORE, 38 TOO_GENERAL, 6 MODIFY and 15 UNDECIDED. It contains two core functions, no NEW annotations and no publication quotations. All 40 normal source files are preserved unchanged after acquisition.
 
-The core is selective regulatory DNA binding and positive RNA polymerase II transcription in the nucleus. Developmental, growth, migration and differentiation effects retain their tissue and experimental context. The binding refinements describe supported partner classes; co-complex evidence is not silently promoted to purified binary binding.
+The cores are selective regulatory DNA binding coupled to positive RNA polymerase II transcription, and GLI2 binding that enhances GLI2 DNA binding in the tested human breast-cancer models. Both act in the nucleus. Developmental, growth, migration and differentiation effects retain their tissue and experimental context. The binding refinements describe supported partner classes; co-complex evidence is not silently promoted to purified binary binding.
+
+## Campaign decision policy
+
+The explicit [ClinGen campaign instruction](https://github.com/ai4curation/ai-gene-review/blob/981a236fc625a4a75d05d1f0f8241c2f2fd27ef3/projects/CLINGEN_MENDELIAN.md#L2974-L2983) retains supported, biologically correct generic protein-binding associations as KEEP_AS_NON_CORE when no evidence-backed functional subtype is established. It expressly records the user’s task-specific departure from the skill’s informational-exclusion recommendation. This instruction applies to new reviews in this campaign; it is independent of the repository validator’s legacy carve-out. The C1QBP/p32 and HIV-fragment rows retain positive evidence at their stated assay scope and do not acquire a guessed functional subtype.
 
 ## Deterministic projection
 
@@ -187,3 +191,57 @@ For NFIA (raw 39, stored 47), the positive nuclear-extract/probe-array associati
 The two lens-transparency transfers (raw 84/85, stored 97/96) now carry probable WRONG_TERM queries, and stored 97 also records the exact UniProt mouse donor row Q61572!327843743. All request CHECK and remain NOT_REPORTED; no upstream report was sent and no corrected term was guessed. The Ensembl-assigned human IEA row uses resource OTHER with Ensembl named explicitly because the current schema has no ENSEMBL enum. The human ISS and original donor are assigned by UniProt. These queries concern corneal-versus-lens scope, not gene identity or a denial of the positive corneal experiments.
 
 The original GO:1904798 row is a mouse Q61572 similarity transfer traced to PMID:25808752. It is not an experimental human PMID:26565916 row. The separate human evidence does not automatically establish the precise core-promoter scope. Official is_a ancestor queries for GO:0045944 and GO:0045893 exclude GO:0010628, preserving the existing distinction between positive gene expression and those specific transcription terms.
+
+## Source-specific consistency and partner resolution
+
+The three PMID:19793056 contexts (stored 43, 66 and 116) and PMID:14506133 bending context (stored 82) remain UNDECIDED for their inaccessible original functional assays. The established gene-level functions and UniProt attributions are explicitly retained. This is an exception in evidence-access scope, not a claim that the biological functions are false. The current structured consistency_exception facility matches declared action-pair conflicts; its rules do not include these UNDECIDED pairs, so adding the field here would create stale-exception warnings rather than describe a recognized structured conflict. The rationale remains visible in each review and reference assessment.
+
+The PMID:15684392 PBX1a row (stored 128) is refined from GO:0140297 to GO:0061629 using its own source-supported Pol-II transcription-factor partner class. Its original P40424-1 partner remains explicit, distinct from the accession-level PBX1 context in stored 46. Co-immunoprecipitation supports association; purified binary affinity and all-PBX1-product equivalence are not inferred.
+
+The second core uses only the independently consulted human PMID:26565916 evidence. Reciprocal purified-protein pulldowns, endogenous BT549 co-immunoprecipitation and GLI2-dependent DNA-binding/promoter-occupancy/reporter results support the GLI2 regulatory mechanism. The proposed allosteric opening remains a model. Stored 52 is the GLI2 binding refinement; stored 122 is PITX2A and retains its separate partner context. Mouse PMID:25808752 is not substituted for the human mechanism or its unresolved source-specific core-promoter assay.
+
+Official QuickGO queries retrieved on 2026-10-31 for [GO:0045944](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO%3A0045944/ancestors?relations=is_a%2Cpart_of) and [GO:0045893](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO%3A0045893/ancestors?relations=is_a%2Cpart_of), following both is_a and part_of, exclude GO:0010628. Sharing a regulation parent does not create that missing ancestry edge. The positive-gene-expression row therefore remains ACCEPT.
+
+## Reference relevance
+
+Relevance records how a source informs FOXC1 biology; correctness and the explicit access notes separately record what could be verified. The direct P297S characterization remains HIGH despite unavailable assay text. The DSCAM citation is provisionally LOW for its inspected content while its original experimental assertion and unresolved citation question remain preserved.
+
+| Reference | Relevance | Role and access distinction |
+| --- | --- | --- |
+| [PMID:10474162](FOXC1-source-evidence.md#pmid10474162) | MEDIUM | Expression in developing mouse heart and human disease association support developmental context, rather than directly testing the molecular transcriptional mechanism. |
+| [PMID:11179011](FOXC1-source-evidence.md#pmid11179011) | HIGH | Human WT and patient-variant localization, cell-extract DNA binding and reporter assays directly inform FOXC1 molecular function. |
+| [PMID:11237714](FOXC1-source-evidence.md#pmid11237714) | LOW | Provisional to the inspected content: the authentic DSCAM abstract supplies no checkable FOXC1 functional result. The inaccessible full text and original FOXC1 annotation remain unresolved; this is not a finding of irrelevance, misattribution or a wrong identifier. |
+| [PMID:11562355](FOXC1-source-evidence.md#pmid11562355) | HIGH | Direct human-cell nuclear immunostaining and distinct mouse developmental experiments strongly inform FOXC1 localization and biological context. |
+| [PMID:11782474](FOXC1-source-evidence.md#pmid11782474) | HIGH | Direct human FOXC1 domain-mapping and reporter experiments establish activation, nuclear targeting and activation-domain-dependent attenuation. |
+| [PMID:12408963](FOXC1-source-evidence.md#pmid12408963) | HIGH | The authentic abstract directly reports FOXC1 growth-factor responsiveness and a re-expression phenotype in HeLa cells; access limits remain separate. |
+| [PMID:12614756](FOXC1-source-evidence.md#pmid12614756) | MEDIUM | A human clinical pedigree supports FOXC1 disease and developmental associations but does not directly establish a molecular tooth-development mechanism. |
+| [PMID:14506133](FOXC1-source-evidence.md#pmid14506133) | HIGH | The authentic abstract directly characterizes functional FOXC1 patient variants. Missing bending-specific Methods affect that claim’s verification, not the paper’s direct relevance. |
+| [PMID:14578375](FOXC1-source-evidence.md#pmid14578375) | HIGH | WT and L86 substitution assays directly examine FOXC1 nuclear localization, extract-based DNA binding and reporter output. |
+| [PMID:15277473](FOXC1-source-evidence.md#pmid15277473) | HIGH | Variant comparisons directly dissect FOXC1 wing-2 contributions to DNA binding and transactivation. |
+| [PMID:15299087](FOXC1-source-evidence.md#pmid15299087) | HIGH | Engineered FOXC1 forkhead-domain assays directly examine localization, DNA binding and transcriptional output. |
+| [PMID:15684392](FOXC1-source-evidence.md#pmid15684392) | HIGH | Target-specific FOXC1 partner, localization and reporter assays directly inform its regulatory interactions and their direction. |
+| [PMID:16449236](FOXC1-source-evidence.md#pmid16449236) | HIGH | FOXC1–PITX2A association and modulation assays directly inform a specific regulatory interaction. |
+| [PMID:16492674](FOXC1-source-evidence.md#pmid16492674) | HIGH | Human FOXC1 stability and reporter assays directly establish EGF/MAPK-dependent regulation of its output. |
+| [PMID:17210863](FOXC1-source-evidence.md#pmid17210863) | HIGH | Human WT/L130F localization, extract EMSA and reporter assays directly inform FOXC1 functional determinants. |
+| [PMID:17993506](FOXC1-source-evidence.md#pmid17993506) | HIGH | Endogenous human ocular-cell promoter occupancy, target reporters and knockdown directly support FOXC1 regulation of FOXO1. |
+| [PMID:18676636](FOXC1-source-evidence.md#pmid18676636) | HIGH | The authentic abstract explicitly reports a FOXC1 partner and confirmation/regulatory assays, directly informing its interaction biology despite unavailable full Methods. |
+| [PMID:19279310](FOXC1-source-evidence.md#pmid19279310) | HIGH | The authentic abstract directly reports a FOXC1 W152G functional characterization; uninspected assay details remain unverified. |
+| [PMID:19793056](FOXC1-source-evidence.md#pmid19793056) | HIGH | The verified title identifies direct characterization of the FOXC1 P297S variant. High relevance does not establish its inaccessible functional assays; correctness remains UNVERIFIED and three source rows remain UNDECIDED. |
+| [PMID:20406990](FOXC1-source-evidence.md#pmid20406990) | HIGH | Target perturbation and nuclear immunohistochemistry directly inform FOXC1 function in the specified breast-cancer models. |
+| [PMID:22190034](FOXC1-source-evidence.md#pmid22190034) | MEDIUM | The broad interactome and exact positive curated pair records corroborate a peripheral FOXC1 association, without establishing its core transcriptional mechanism. |
+| [PMID:22991501](FOXC1-source-evidence.md#pmid22991501) | HIGH | FOXC1 perturbation directly tests proliferation, epithelial-mesenchymal changes and migration in the studied cancer models. |
+| [PMID:25609649](FOXC1-source-evidence.md#pmid25609649) | MEDIUM | The original methods inform the interaction-screen context, but the exact FOXC1–PBX1 table entry remains unrecovered; this is supporting methodological context rather than independently verified target-pair evidence. |
+| [PMID:25786029](FOXC1-source-evidence.md#pmid25786029) | HIGH | Human WT/variant localization, binding and promoter-reporter assays directly inform FOXC1 transcriptional activity. |
+| [PMID:26565916](FOXC1-source-evidence.md#pmid26565916) | HIGH | Direct FOXC1–GLI2 binding and GLI2-dependent occupancy, DNA-binding and reporter assays establish a distinct regulatory mechanism. |
+| [PMID:27804176](FOXC1-source-evidence.md#pmid27804176) | HIGH | The authentic abstract directly compares human FOXC1 variants through functional assays; missing Methods do not make this a background-only reference. |
+| [PMID:27907090](FOXC1-source-evidence.md#pmid27907090) | HIGH | Human primary-keratinocyte perturbations directly establish FOXC1’s terminal differentiation context and expression hierarchy. |
+| [PMID:7957066](FOXC1-source-evidence.md#pmid7957066) | HIGH | Human FREAC3 forkhead-domain experiments directly establish DNA-site recognition and bending, within the tested fragment scope. |
+| [PMID:8499623](FOXC1-source-evidence.md#pmid8499623) | MEDIUM | The historical cloning and expression study establishes target identity and expression context; transcriptional activation was inferred and left for future assays. |
+| [PMID:9792859](FOXC1-source-evidence.md#pmid9792859) | MEDIUM | Human disease-associated variation supports developmental relevance, rather than directly establishing the molecular transcriptional mechanism. |
+| [PMID:10704385](FOXC1-source-evidence.md#pmid10704385) | HIGH | The authentic abstract directly describes Foxc1 renal/ureteric phenotypes and compound dosage, strongly informing the transferred developmental contexts. |
+| [PMID:28223138](FOXC1-source-evidence.md#pmid28223138) | HIGH | Direct Foxc1/Foxc2 podocyte phenotypes strongly inform a retained biological context; missing negative-transcription assay detail is a separate limitation. |
+| [PMID:24590069](FOXC1-source-evidence.md#pmid24590069) | HIGH | Foxc1-dependent mesenchymal niche formation directly informs its biological role; the precise positive-differentiation endpoint remains unresolved. |
+| [PMID:22171010](FOXC1-source-evidence.md#pmid22171010) | HIGH | Original mouse corneal stromal perturbations directly establish vascular-growth phenotypes and the cornea-versus-lens source-scope distinction. |
+| [PMID:25808752](FOXC1-source-evidence.md#pmid25808752) | HIGH | The authentic abstract directly addresses Foxc1 in Ihh–Gli2-dependent skeletal development; exact core-promoter assay verification remains limited. |
+| [PMID:18187037](FOXC1-source-evidence.md#pmid18187037) | HIGH | Foxc1 endothelial perturbation, receptor expression and chemokine-directed migration directly inform the donor contexts, with Foxc2-only ChIP kept separate. |
+| [PMID:19668217](FOXC1-source-evidence.md#pmid19668217) | HIGH | Human variation and mouse mesenchymal Foxc1 experiments directly inform the non-cell-autonomous cerebellar-development context. |
