@@ -27,7 +27,7 @@ Why PLI rather than UNC: the call's only tryptophan evidence is AatX/VC2283, a 5
 
 ## Other evidence
 
-- PaperBLAST, as shown on the dashboard, reports VC1669 as a direct CarR (RstA) ChIP-seq target (PMID:35676416). The main text of PMC9178039 does not mention VC1669; the hit is presumably in the supplementary tables, which I did not check. `just fetch-pmid 35676416` failed with HTTP 429 and was not retried, so that paper is not cited in the review YAML.
+- PaperBLAST, as shown on the dashboard, reports VC1669 as a direct CarR (RstA) ChIP-seq target (PMID:35676416). `just fetch-pmid 35676416` first failed with HTTP 429. On retry (PR #5753 review) the paper was cached, and its main text does name the gene, in lower case ("encoding transporters (vc0069; vc1325; vc1669; vca0205; vca0227)"). An earlier case-sensitive search missed it. The paper is now cited in the review YAML.
 - The closest annotated homolog, *Shewanella* SO_4339 (48.1%), is a "hypotaurine transporter" assigned from fitness data (PMID:22125499). It is no closer to VC1669 than to AatX (45.2%), so it was not transferred.
 - The deep-research report (claude-code) found no literature on VC_1669 and missed PMID:36130487.
 
