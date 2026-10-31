@@ -3,8 +3,8 @@ title: "Yeast Cell Cycle & Translation Control"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
-last_reviewed: '2026-10-23'
-genes: [CLN3, CLN2, CLN1, SIC1, WHI5, CLB5, CLB2, CDC28, SWE1, SUI2, TOR1]   # reviewed genes only; full candidate list is in the checklist below
+last_reviewed: '2026-10-29'
+genes: [CLN3, CLN2, CLN1, SIC1, WHI5, CLB5, CLB6, CLB2, CDC28, SWE1, SUI2, TOR1]   # reviewed genes only; full candidate list is in the checklist below
 manifest:
   slides:
     - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
@@ -20,8 +20,8 @@ entry into S phase. This project plans to review the GO annotations of 23
 *S. cerevisiae* rows spanning that circuit and the translation and
 ribosome-biogenesis machinery thought to time it. The aim is to test whether GO
 captures translational control of the cell cycle as well as it captures the
-transcriptional program. Eleven rows now have gene reviews in the repo when the
-EIF2A entry is normalized to the standard yeast symbol SUI2 (517 annotations
+transcriptional program. Twelve rows now have gene reviews in the repo when the
+EIF2A entry is normalized to the standard yeast symbol SUI2 (542 annotations
 assessed); the remaining rows still need review or symbol triage. The list also
 needs cleanup before the translation branch starts: yeast eIF1 is SUI1, "EIF3"
 names a complex rather than a gene, and SHE2 needs a narrower rationale than
@@ -60,7 +60,7 @@ This project reviews *Saccharomyces cerevisiae* genes central to **cell cycle re
 
 # STATUS
 
-Last updated: 2026-10-23
+Last updated: 2026-10-29
 
 ## Genes to Review
 
@@ -73,7 +73,7 @@ Last updated: 2026-10-23
 
 ### S/G2/M Cyclins & Checkpoint Control
 - Done: CLB5 - S-phase cyclin (replication-origin firing)
-- Todo: CLB6 - S-phase cyclin (replication-origin firing)
+- Done: CLB6 - S-phase cyclin (early replication origins; Clb6-specific Swi6 and Rnr2 substrates)
 - Todo: CLB1 - M-phase cyclin
 - Done: CLB2 - M-phase cyclin
 
@@ -102,8 +102,8 @@ Last updated: 2026-10-23
 ## Progress
 
 - Total rows: 23
-- Reviewed: 11
-- Open review or symbol-triage rows: 12
+- Reviewed: 12
+- Open review or symbol-triage rows: 11
 - In progress: 0
 - Remaining work: [#3960](https://github.com/ai4curation/ai-gene-review/issues/3960)
 
@@ -136,3 +136,35 @@ Last updated: 2026-10-23
   `-deep-research-<provider>.md` file.
 - Remaining queue (12 rows): CLB6, CLB1, DBF4, RPS3, RPL3, IMP3, SHE2, RRN3,
   SUI1, an eIF3 subunit selection, TIF1, MSN2.
+
+## 2026-10-29
+
+- CLB6 reviewed (25 GOA annotations), completing the S-phase cyclin pair with
+  CLB5. The review turns on the two ways Clb6 is *not* interchangeable with
+  Clb5: it fires only early origins and it is destroyed at the G1/S border by
+  SCF-Cdc4, so the phenotypic asymmetry between the paralogs is largely one of
+  protein lifetime (hyperstabilized Clb6 rescues the clb5 slow S phase).
+- Four actions differ from the CLB5 review because CLB6-specific full-text
+  evidence exists where CLB5's did not. `GO:0032880 regulation of protein
+  localization` was refined to `GO:0046827 positive regulation of protein export
+  from nucleus`: Clb6-Cdc28 is the only one of the nine Cdc28 cyclins that
+  phosphorylates Swi6 Ser160 (driving its nuclear export) and Rnr2 at its TPSK
+  motif (releasing Rnr2-Rnr4 from the Wtm1 anchor), two independent substrates
+  agreeing on the direction. The `regulation of DNA-templated transcription`
+  row, left UNDECIDED for CLB5, is supportable for CLB6 through the Swi6
+  mechanism and is kept as non-core; the sign is not assignable because
+  exporting Swi6 removes SBF activation and relieves MBF repression at once.
+- The four `GO:0016538` rows were refined to `GO:0061575`, matching the CLN1 and
+  CLN2 treatment: Clb5 and Clb6 are described as the primary activators of the
+  S-phase function of Cdc28, so the unsigned regulator term is one step too
+  general. The propagated `microtubule organizing center` and `traversing Start`
+  rows were flagged as over-annotations on the same grounds as in CLB5 (the MTOC
+  sub-node is seeded by mitotic cyclins, and Clb6 is gone before spindle
+  assembly).
+- No new annotations were proposed. The `clb5 clb6` sister-chromatid cohesion
+  defect under replication stress is real but is only published for the double
+  mutant, so it is recorded in `CLB6-notes.md` rather than asserted for CLB6.
+- Deep research was again unavailable (no provider API keys), so the literature
+  synthesis is in `CLB6-notes.md`.
+- Remaining queue (11 rows): CLB1, DBF4, RPS3, RPL3, IMP3, SHE2, RRN3, SUI1, an
+  eIF3 subunit selection, TIF1, MSN2.
