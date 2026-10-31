@@ -3,7 +3,7 @@ title: "LBNL Hackathon: Dark Protein Atlas genes"
 maturity: SCOPING
 tags: [EVALUATION]
 species: [LACLM, LACLA, SALTY, ECOLI]
-genes: [sufB, ybbO, yxcA]
+genes: [sufB, ybbO, yudI, yxcA]
 ---
 
 # LBNL Hackathon: Dark Protein Atlas genes
@@ -23,6 +23,7 @@ on the dashboard's call in the gene notes file.
 | Gene | Organism | UniProt | Dashboard item | Dashboard call | Verdict |
 |---|---|---|---|---|---|
 | LACLM/sufB | *Lactococcus lactis* subsp. *cremoris* MG1363 | A2RMK5 | [NZ_LKLC01000161.1_58](https://gene-annotate-dashboard.kbase.us/review/NZ_LKLC01000161.1_58) | SufB Fe-S cluster assembly scaffold protein of the SUF system | supported |
+| LACLA/yudI | *Lactococcus lactis* subsp. *lactis* IL1403 | Q9CE84 | [CP006766.1_2177](https://gene-annotate-dashboard.kbase.us/review/CP006766.1_2177) | DusB-like FMN-dependent tRNA-dihydrouridine synthase | supported |
 | LACLA/yxcA | *Lactococcus lactis* subsp. *lactis* IL1403 | Q9CDI2 | [NZ_VXKC01000008.1_19](https://gene-annotate-dashboard.kbase.us/review/NZ_VXKC01000008.1_19) | PlsA plasmalogen biosynthesis protein combining activation and reduction/dehydration functions for anaerobic plasmalogen production | supported (GO:0016836 hydro-lyase is an overreach) |
 | SALTY/ybbO | *Salmonella enterica* serovar Typhimurium LT2 | Q7CR11 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), by 1:1 orthology to ECOLI/ybbO |
 | ECOLI/ybbO | *Escherichia coli* K-12 | P0AFP4 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), direct assays |
@@ -31,6 +32,8 @@ on the dashboard's call in the gene notes file.
 
 - The dashboard sequence for NZ_LKLC01000161.1_58 is 100% identical to A2RMK5
   (llmg_1969), so the review is filed under the MG1363 reference proteome.
+- The dashboard sequence for CP006766.1_2177 differs from Q9CE84 (IL1403 L19272) at one
+  position (E267G), so the review is filed under the IL1403 reference proteome.
 - The dashboard sequence for NZ_VXKC01000008.1_19 (UniParc UPI00072AC48C,
   RefSeq WP_081041604) had no active UniProt entry: its two TrEMBL records,
   A0A0V8CX59 and A0A2A5SIM0, were deleted as "Not part of a reference
