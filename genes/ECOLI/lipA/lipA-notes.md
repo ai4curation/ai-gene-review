@@ -74,3 +74,27 @@ abstract-only), the UniProt record and PubMed searches.
 - NEW GO:1904047 (IC, from PMID:15157071 SAM stoichiometry and the HAMAP/Booker cluster
   description of SAM as an exchangeable ligand).
 - Protein binding (AceF/SucB, NfuA) REMOVE.
+
+## Review written (2026-10-31)
+
+`lipA-ai-review.yaml` is complete: 19 rows (8 ACCEPT, 7 MODIFY, 2 REMOVE,
+1 MARK_AS_OVER_ANNOTATED, 1 NEW), 3 core functions, `status: COMPLETE`. The
+decisions are the ones sketched under "GO decisions" above, with two points
+settled while writing:
+
+- **GO:0042803 protein homodimerization** is `MARK_AS_OVER_ANNOTATED`, not
+  REMOVE. The IDA observation is real — LipA purified "as a mixture of monomeric
+  and dimeric species" (PMID:11106496) — so the term is not false; what
+  overreaches is reading a functional homodimer into it, against UniProt's own
+  "Monomer or homodimer", the single-polypeptide sulfur donation
+  (PMID:15740115) and the 1:1 NfuA complex (PMID:29051382).
+- **The cytoplasm rows MODIFY to cytosol.** GO:0005737 is not one of the five
+  root organelle terms that `projects/ORGANELLES.md` exempts from refinement, so
+  the ordinary "correct but general is MODIFY" rule applies, and GO:0005829 is
+  carried by IDA.
+
+Quoting note for whoever edits this file next: the `supporting_text` checker
+strips square brackets as editorial, so
+`"... 1 equiv of [lipoyl]H-protein"` fails even though it is verbatim in
+PMID:15157071. `[4Fe-4S]` is exempt as scientific notation; `[lipoyl]` is not.
+The quote is written in the sanctioned `...` form instead.
