@@ -1,0 +1,7 @@
+# AGX1 (YFL030W, P43567) notes
+
+- Alanine:glyoxylate aminotransferase (EC 2.6.1.44), PLP fold-type I, class V aminotransferase family, homodimer; crystal structure 2BKW [PMID:16226833 "In this paper we show that YFL030w codes for an alanine:glyoxylate aminotransferase, highly specific for its amino donor and acceptor substrates"].
+- Knockout removes 98% of AGT activity [PMID:14745783 "While 100% activity was detectable in the parental strain, 2% was found in a YFL030w::kanMX4 strain"].
+- One of three glycine-forming routes; required for glycine prototrophy on non-fermentable carbon in gly1 shm1 shm2 background [PMID:14745783 "Additional disruption of AGX1 revealed a complete glycine auxotrophy"; PMID:9163906 "On ethanol as carbon source simultaneous disruption of GLY1, SHM1 and SHM2 did not lead to glycine auxotrophy because glycine biosynthesis proceeds via alanine glyoxylate aminotransferase"].
+- Substrate specificity: described as highly specific (16226833), which argues against the IBA-propagated serine:pyruvate transaminase activity of the human AGXT clade. Full text not in cache; specificity panel not verified.
+- Localization unresolved: three mitochondrial proteomes detect it [PMID:14576278; PMID:16823961; PMID:24769239]; SWAT N-terminal GFP shows cytosol [PMID:26928762] — an N-terminal tag would mask a mitochondrial presequence, but UniProt annotates no transit peptide. Human AGXT is peroxisomal; yeast AGX1 has no annotated PTS1. Low abundance (339 molecules/cell) [UniProt:P43567].

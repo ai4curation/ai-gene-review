@@ -1,36 +1,33 @@
 ---
 title: "Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
 tags: [OBSOLETION]
 species: [human]
 genes: [USO1, STX12]
 manifest:
   slides:
     - href: VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/ScwarepnxD4tbNoBeWw92e
-      title: Project brief
+      description: Vesicle docking obsoletion slides
 ---
 
 # Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)
 
 **Bottom line:** A transport vesicle is first tethered at a distance,
 then docked against its target membrane, then fused. GO has retired the
-whole GO:0048278 *vesicle docking* process subtree (nine terms,
-including the regulation terms) because docking is the binding activity
-of specific proteins, and now asks curators to move annotations to one
-of two minted molecular functions: GO:0160321 *vesicle docking
-activity* or GO:7770062 *vesicle membrane tethering activity*. This is
-the parent tracker for go-annotation#6379; we recorded the upstream
-plan and group tallies, found the affected reviews in this repo, and
-queued canonical docking factors (STX1A, STXBP1, exocyst, NSF) as new
-reviews. The obsoletion has landed: OLS shows all nine terms obsolete
-(GO:0048278, GO:0048211, GO:0090384, GO:0006904, GO:0016081, GO:0061790
-and the regulation terms GO:0106020/21/22, which carry only a `consider`
-pointer to GO:0160321) and both MFs minted, so the "not yet applied",
-"placeholder", "not yet minted" and "likely retained regulatory BP" notes below are out of
-date. Both affected human reviews are fixed in #3237 (merged): the USO1
+whole GO:0048278 *vesicle docking* process subtree (nine terms).
+Direct docking/tethering annotations now need a molecular function such
+as GO:0160321 *vesicle docking activity* or GO:7770062 *vesicle membrane
+tethering activity*, while regulatory rows need curator judgement because
+GO:0106020/21/22 carry only a `consider` pointer to GO:0160321 and no
+one-to-one MF replacement. This is the parent tracker for
+go-annotation#6379; we recorded the upstream plan and group tallies,
+found the affected reviews in this repo, and queued canonical docking
+factors (STX1A, STXBP1, exocyst, NSF) as new reviews. The obsoletion has
+landed: OLS shows all nine terms obsolete (GO:0048278, GO:0048211,
+GO:0090384, GO:0006904, GO:0016081, GO:0061790 and the regulation
+terms GO:0106020/21/22) and both MFs minted. Both affected human reviews
+are fixed in #3237 (merged): the USO1
 IBA row on GO:0048211 *Golgi vesicle docking* moves from ACCEPT to
 MODIFY → GO:7770062 *vesicle membrane tethering activity* (p115 is the
 canonical Golgi tether), and the STX12 IBA row on GO:0048278 moves from
@@ -49,18 +46,15 @@ targeting terms that fold into transport processes (#6424).
 
 ## Overview
 
-A GO obsoletion proposal will retire the entire **`GO:0048278 vesicle docking`
+A GO obsoletion proposal retired the entire **`GO:0048278 vesicle docking`
 biological-process subtree** plus its regulation terms, and redirect the
 biology to two molecular-function terms:
 
-- **GO:0160321 vesicle docking activity** (proposed MF; placeholder — not yet
-  resolvable in OLS as of 2026-05-23) for the literal docking step, and
-- a **proposed "vesicle tethering activity" MF** for the upstream tethering
-  step. This MF is not yet minted in GO (a prospective placeholder
-  `GO:7770062 vesicle membrane tethering activity` returned 404 from the GO
-  API as of 2026-05-02; see `genes/human/TMF1/TMF1-notes.md:58`). Note that
-  the existing **GO:0099023 vesicle tethering complex** is a cellular-component
-  term, not the MF — it must not be reused as the MF replacement.
+- **GO:0160321 vesicle docking activity** for the literal docking step, and
+- **GO:7770062 vesicle membrane tethering activity** for the upstream tethering
+  step. Note that the existing **GO:0099023 vesicle tethering complex** is a
+  cellular-component term, not the MF — it must not be reused as the MF
+  replacement.
 
 The rationale is the same as the parallel
 [ER-PM](ER_PM_TETHERING_OBSOLETION.md),
@@ -87,32 +81,35 @@ children).
 - Ontology ticket: [geneontology/go-ontology#31880](https://github.com/geneontology/go-ontology/issues/31880)
 - Annotation review spreadsheet (not machine-accessible):
   `https://docs.google.com/spreadsheets/d/1ylWgI-uS6OuSff_3A6T8g9XQyfoNnBGZJfT7xnWpNOk`
+- Local follow-up: [ai4curation/ai-gene-review#639](https://github.com/ai4curation/ai-gene-review/issues/639)
+  — tracks the remaining Tier 2/3 STX1A/STXBP1/exocyst/NSF, yeast, and
+  worm review queue
 
 ## Obsoletion plan (per upstream)
 
 | Obsoleted term | ID | Replacement (consider) |
 |---|---|---|
-| vesicle docking | GO:0048278 | MF: GO:0160321 vesicle docking activity (placeholder) |
+| vesicle docking | GO:0048278 | MF: GO:0160321 vesicle docking activity |
 | Golgi vesicle docking | GO:0048211 | MF: GO:0160321 |
 | phagosome-lysosome docking | GO:0090384 | MF: GO:0160321 |
 | regulation of vesicle docking | GO:0106020 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
 | positive regulation of vesicle docking | GO:0106022 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
 | negative regulation of vesicle docking | GO:0106021 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
 | vesicle docking involved in exocytosis | GO:0006904 | MF: GO:0160321 |
-| synaptic vesicle docking | GO:0016081 | MF: GO:0160321 (docking) or the proposed "vesicle tethering activity" MF (not yet minted; see Overview) |
+| synaptic vesicle docking | GO:0016081 | MF: GO:0160321 (docking) or GO:7770062 (tethering) |
 | dense core granule docking | GO:0061790 | MF: GO:0160321 |
 
-OLS check (2026-05-23): all nine BP terms are still active. The replacement
-MF **GO:0160321** is not yet resolvable in OLS — this is the same placeholder
-state noted in the sibling synaptic-docking and ciliary-docking trackers, so
-the obsoletion has not landed yet.
+At project creation, all nine BP terms were still active in OLS on
+2026-05-23 and the replacement MF **GO:0160321** was not yet resolvable. By
+the 2026-09-26 audit, the nine BP terms were obsolete and both GO:0160321 and
+GO:7770062 were minted.
 
 ### Affected upstream groups (from issue body)
 
 | Group | Annotations | Status (per upstream) |
 |---|---:|---|
 | ComplexPortal | 52 | pending |
-| SGD | 15 | pending |
+| SGD | 15 | DONE |
 | UniProt | 12 | pending |
 | SynGO | 10 | pending (8 sit under GO:0099148 — see sibling tracker) |
 | FlyBase | 8 | DONE |
@@ -151,20 +148,16 @@ Also tracked under the sibling project
 |---|---|---|
 | Camk2a | mouse | two GO:0099148 rows, was `ACCEPT`, `MODIFY` → GO:0048172 regulation of short-term neuronal synaptic plasticity, fixed in #3237 (merged; see that tracker) |
 
-The **USO1** annotation will need a refresh when the obsoletion lands. USO1
-(p115) is a *bona fide* Golgi vesicle tether/docking factor, so this is one
-of the cleaner candidates for a legitimate transfer onto the new
-docking-activity MF — in contrast to e.g. CaMKIIα, which only *regulates*
-docking. The current review text already notes that "the essential function
-is SNARE assembly rather than tethering per se", so the refresh should
-revisit whether the new MF (GO:0160321 vesicle docking activity) or the
-proposed (not-yet-minted) "vesicle tethering activity" MF is the better fit.
-(Note: GO:0099023 vesicle tethering complex is a CC term, not the
-tethering-activity MF, and must not be used as the MF replacement here.)
+The **USO1** annotation refresh chose GO:7770062 rather than GO:0160321. USO1
+(p115) is a bona fide Golgi vesicle tether, and the obsoleted GO:0048211 row
+was supported by long-range tethering to GM130/giantin upstream of docking and
+fusion. That contrasts with STX12, where the SNARE role is better captured by
+GO:0005484 *SNAP receptor activity*, and with CaMKIIα, which only regulates
+docking and is handled under the synaptic sibling tracker.
 
 ## Scope
 
-- **Organisms**: broadly cross-kingdom — yeast (SGD 15), human/rodent
+- **Organisms**: broadly cross-kingdom — yeast (SGD 15), human and rodent
   (BHF-UCL, ParkinsonsUK-UCL, HGNC-UCL, MGI, RGD, SynGO, PINC), invertebrate
   models (FlyBase, WB), Dictyostelium (dictyBase). UniProt and ComplexPortal
   contribute the bulk of pending rows.
@@ -184,13 +177,10 @@ accessions before starting.
 ### Tier 1 — refresh required (already in repo)
 
 1. **USO1** (human, UniProt **O60763**) — `genes/human/USO1/`. The
-   GO:0048211 IBA row was `ACCEPT`; fixed in #3237 (merged), which
-   chose the tethering MF GO:7770062 (the text below is the original
-   plan). Likely a clean transfer to **GO:0160321 vesicle docking activity**
-   or the **proposed "vesicle tethering activity" MF** (not yet minted; see
-   Overview — *not* GO:0099023, which is the CC "vesicle tethering complex").
-   p115 is the canonical Golgi tether — see existing notes mentioning
-   GM130/giantin interactions and SNARE-assembly function.
+   GO:0048211 IBA row was `ACCEPT`; fixed in #3237 (merged), which chose
+   the tethering MF GO:7770062. p115 is the canonical Golgi tether upstream
+   of docking/fusion — see existing notes mentioning GM130/giantin
+   interactions and SNARE-assembly function.
 2. **Camk2a** (mouse, UniProt **P11798**) — covered by sibling tracker
    [`SYNAPTIC_VESICLE_DOCKING_OBSOLETION`](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md);
    listed here only for completeness because it sits under the same
@@ -214,16 +204,16 @@ high-quality experimental anchors.
    mapping IPR039682 → GO:0090522).
 6. **EXOC6 / Sec15** (human, UniProt **Q8TAG9**) — exocyst component; same
    #6375 InterPro2GO route (IPR007225 → GO:0090522).
-7. **SEC18 / NSF** (human NSF, UniProt **P46459**) — ATPase that disassembles
-   SNARE complexes after docking/fusion; a frequent annotation target for
-   vesicle-fusion and docking terms.
+7. **NSF** (human, UniProt **P46459**; yeast ortholog SEC18) — ATPase that
+   disassembles SNARE complexes after docking/fusion; a frequent annotation
+   target for vesicle-fusion and docking terms.
 
-### Tier 3 — yeast / Dictyostelium / fly cross-organism cases
+### Tier 3 — yeast / worm cross-organism cases
 
-8. **Uso1** (yeast, UniProt **P25386**, SGD `YDL058W`) — yeast ortholog of
-   human USO1; sits in the SGD "15 pending" bucket and provides a clean
-   cross-organism comparison against Tier 1 (#1).
-9. **Sec1** (yeast, UniProt **P30619**) — Munc18 family / STXBP1 ortholog;
+8. **`USO1`** (yeast, UniProt **P25386**, SGD `S000002216` / `YDL058W`) —
+   yeast ortholog of human USO1; was in the SGD "15" bucket, now marked done
+   upstream and provides a clean cross-organism comparison against Tier 1 (#1).
+9. **`SEC1`** (yeast, UniProt **P30619**) — Munc18 family / STXBP1 ortholog;
    docking factor at the plasma membrane.
 10. **tom-1** (C. elegans, UniProt **A0A0K3ATN9**) — tomosyn; already listed
     under the sibling synaptic-docking tracker as the canonical negative
@@ -231,20 +221,17 @@ high-quality experimental anchors.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land.** The replacement MF **GO:0160321** is
-   not yet minted (OLS check 2026-05-23). The ontology ticket
-   [#31880](https://github.com/geneontology/go-ontology/issues/31880) is
-   open and shared with the synaptic-docking and ciliary-docking trackers.
-2. **Refresh `USO1` first** (Tier 1). p115 is the textbook Golgi vesicle
-   tether/docking factor, so this is the cleanest test of "BP → new docking
-   MF" transferability and most likely to be a straightforward `MODIFY`
-   onto the new MF.
+1. **Tier 1 refreshes are done.** #3237 re-reviewed USO1 and STX12 after the
+   obsoletion landed, choosing GO:7770062 for USO1 and GO:0005484 for STX12.
+2. **Keep the USO1/STX12 split visible.** p115/USO1 performs long-range
+   Golgi vesicle tethering, while STX12 is a syntaxin-family SNARE better
+   captured by SNAP receptor activity than by a broad docking BP.
 3. **Coordinate with the sibling tracker
    [`SYNAPTIC_VESICLE_DOCKING_OBSOLETION`](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)**
    for Camk2a, Septin5, tom-1 — those genes belong to the same umbrella
    obsoletion (#6379) but are scoped under #6415 there to avoid duplicated
    work.
-4. **Then queue Tier 2** (STX1A, STXBP1, EXOC4, EXOC6, NSF) as new reviews.
+4. **Use #639 to queue Tier 2** (STX1A, STXBP1, EXOC4, EXOC6, NSF) as new reviews.
    STX1A + STXBP1 in particular pair with the existing Tier 1 USO1 review
    to populate the new MFs across both the Golgi-tether and the
    plasma-membrane-SNARE arms of the literature.
@@ -272,11 +259,10 @@ the cluster:
 
 ## Priority
 
-**Medium.** Higher than purely-queueing obsoletion trackers because one
-existing repo review (`USO1`) goes stale on obsoletion. Lower than
-`SYNAPTIC_VESICLE_DOCKING_OBSOLETION` because USO1 is likely a clean
-`MODIFY` onto the new MF (USO1 / p115 *is* a docking/tether factor),
-whereas CaMKIIα is a regulator and forces a harder per-gene judgment.
+**Medium.** The Tier 1 rows that made existing repo reviews stale are fixed,
+so the remaining value is seeding canonical STX1A/STXBP1/exocyst/NSF
+anchors through #639 for the new docking and tethering molecular functions and
+coordinating EXOC4/EXOC6 with the sibling vesicle-tethering queue.
 
 ## Status
 
