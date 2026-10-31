@@ -24,7 +24,18 @@ replacement is the same term with the opposite sign
 REMOVE, UNDECIDED or a sign-neutral parent are not in that count; a keyword pass over
 review reasons ([sign_reason_census.yaml](REGULATION_SIGN/sign_reason_census.yaml)) gives
 152 candidate rows that still need screening by hand, since it also catches reasons
-that merely discuss direction.
+that merely discuss direction. A third, structured source already exists: reviewers
+have tagged `failure_modes: [REGULATORY_SIGN_INVERSION]` in the `propagation_review` of
+**88 rows across 63 review files** (a grep count, not yet analysed).
+
+## Principle: sign is judged in vivo
+
+GO annotates what a gene product does in the organism, not what it can be made to do
+in an assay. A sign established only in vitro (a purified protein at non-physiological
+concentration, an overexpression readout) does not outweigh the in vivo direction, and
+is not a reason to hold a contradicted sign as UNDECIDED. When the in vivo role has the
+opposite sign, the annotation is corrected (MODIFY to the opposite-sign term) or, if
+the row also has no sound source, removed.
 
 ## Why this deserves its own project
 
@@ -58,11 +69,12 @@ separate axis with a separate failure mode:
    itself reports Gαi2 mediating cyclase *inhibition*.
 4. **Wrong donor entirely.** GNAI1's `GO:0007189` ISS was transferred from an adenylyl
    cyclase (ADCY6), not a Gα ortholog — a sign error manufactured by a mis-matched
-   similarity source. Two independent reviews of this row disagree on the action
-   (REMOVE in PR #5350; UNDECIDED in the merged #5582 review, which notes that
-   high-concentration Gαi can stimulate type I/II cyclases in vitro, PMID:8119955).
-   That disagreement is itself a data point: an in-vitro activity of the opposite sign
-   can keep a physiologically wrong sign alive.
+   similarity source. The merged #5582 review had held it UNDECIDED because
+   high-concentration Gαi can stimulate type I/II cyclases in vitro (PMID:8119955);
+   under the in vivo principle above it is now REMOVE, tagged
+   `PROPAGATION_BAD` with failure modes `WRONG_ORTHOLOG_OR_PARALOG` and
+   `REGULATORY_SIGN_INVERSION`. The episode is a pattern worth looking for elsewhere:
+   an in vitro activity of the opposite sign can keep a physiologically wrong sign alive.
 5. **Family-level sign defaults.** Gα proteins split into activating (Gs) and inhibiting
    (Gi/o) branches of the same pathway; a propagation that ignores the split imports
    the wrong half.
@@ -72,7 +84,7 @@ separate axis with a separate failure mode:
 | Gene | Original → replacement | Evidence | Origin hypothesis (tentative) |
 |---|---|---|---|
 | human/GNAI2 | GO:0007189 AC-activating → GO:0007193 AC-inhibiting GPCR signaling | IEA (GO_REF:0000107) | 3, 5 |
-| human/GNAI1 | GO:0007189 AC-activating → UNDECIDED (REMOVE in a parallel review) | ISS (donor ADCY6) | 4 |
+| human/GNAI1 | GO:0007189 AC-activating → REMOVE | ISS (donor ADCY6) | 4 |
 | human/NTSR1 | GO:0040017 positive regulation of locomotion → GO:0040012 | IEA (GO_REF:0000107) | 2 |
 | human/NTSR1 | GO:0043065 positive regulation of apoptotic process → UNDECIDED | IEA (GO_REF:0000107) | 3 |
 | human/NLRP3 | GO:0050728 negative → GO:0050729 positive regulation of inflammatory response (×3) | IMP | 1 |
@@ -104,6 +116,8 @@ sits on a PAINT node and every descendant inherits it.
 - [x] Seed census of sign-flip MODIFYs across all reviews (35 rows / 25 genes)
 - [x] Keyword census of review reasons mentioning sign/direction (152 candidate rows, unscreened)
 - [ ] Screen the keyword census by hand; classify each true sign issue by origin hypothesis
+- [ ] Harvest the 88 `REGULATORY_SIGN_INVERSION` propagation_review rows (63 files) into a census
+- [ ] Look for other sign calls held UNDECIDED (or ACCEPTed) on in vitro evidence alone
 - [ ] Extend the flip census to REMOVE/UNDECIDED rows and to MF activator/inhibitor pairs
 - [ ] Trace propagated rows (IEA/IBA/ISS) to their donor annotations
 - [ ] Cross-check GO-CAM causal-edge signs against reviews
@@ -120,3 +134,10 @@ sign word (positive/negative regulation, activating/inhibiting, activator/inhibi
 agonist/antagonist, up/down-regulation, stimulation/inhibition), so it misses
 corrections to a sign-neutral parent (NTSR1 locomotion) and sign problems resolved by
 REMOVE or UNDECIDED (GNAI1); those are listed by hand above.
+
+## 2026-10-31
+
+Principle added: sign is judged on in vivo evidence. GNAI1 `GO:0007189` changed from
+UNDECIDED to REMOVE on that basis. Found that `PropagationFailureModeEnum` already has
+`REGULATORY_SIGN_INVERSION` ("Family contains activators and inhibitors, and a
+positive/negative regulatory term leaks across members"), used on 88 rows.

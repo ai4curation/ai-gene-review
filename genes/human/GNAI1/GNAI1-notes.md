@@ -235,3 +235,10 @@ merging. This review is kept as the base. Ported from #5350:
 
 The two reviews disagree on `GO:0007189` (ISS from an adenylyl-cyclase donor): REMOVE
 in #5350, UNDECIDED here. UNDECIDED is kept; see `projects/REGULATION_SIGN.md`.
+
+## 2026-10-31: GO:0007189 resolved as REMOVE
+
+GO annotates in vivo roles. Stimulation of some purified cyclases by high-concentration
+Gi alpha [PMID:8119955] is an in vitro observation and does not establish a Gi1-mediated
+cyclase-activating pathway in vivo, while the ISS donor is an adenylyl cyclase rather
+than a Galpha ortholog. The row is now REMOVE rather than UNDECIDED.
