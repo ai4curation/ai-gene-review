@@ -1927,6 +1927,7 @@ def render_projects_table(
         "EVALUATION",
         "ML_PREDICTIONS",
         "OBSOLETION",
+        "ANNOTATION_REVIEW",
     ]
     review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [
