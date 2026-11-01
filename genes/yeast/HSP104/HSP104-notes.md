@@ -7,9 +7,9 @@
   and the current PTHR11638 PAINT export. PTN007521008 now emits cytosol,
   protein-folding chaperone binding, protein refolding, protein unfolding and
   cellular heat acclimation, but not obsolete GO:0051082. The row was retained
-  as `retired: true` and as `REMOVE` rather than mechanically mapped to
-  GO:0044183 or GO:0140309, because the old bare unfolded-client binding claim
-  is not equivalent to either folding-chaperone or holdase activity.
+  as `retired: true` to record its disappearance from current GOA, while the
+  biological verdict is `MODIFY` to HSP104's accepted GO:0140545 ATP-dependent
+  protein disaggregase activity.
 
 - Treated the S. cerevisiae HSP104 self-donors in the live PTHR11638 IBAs as
   valid PAINT descendant evidence, not circular evidence. The broad PTN000181243
@@ -78,10 +78,10 @@
   nucleotide-regulated binding to permanently unfolded RCMLa, but it does not
   assay folding, aggregation prevention/escort, or disaggregation. Live QuickGO
   records GO:0051082 as obsolete and offers GO:0044183 protein folding chaperone
-  and GO:0140309 unfolded protein holdase activity as `consider` targets. Neither
-  is evidence-matched to this assay; in the context of HSP104, the true substrate
-  engagement claim is best captured by MODIFY to the ATP-dependent protein
-  disaggregase activity that now captures its direct disaggregation evidence.
+  and GO:0140309 unfolded protein holdase activity as `consider` targets. In
+  HSP104, nucleotide-regulated substrate engagement is part of the accepted
+  ATP-dependent threading/disaggregation activity, making GO:0140545 the best
+  replacement for the retired binding row.
 
 - Generic protein-binding annotations from the global TAP and chaperone-network
   studies remain marked over-annotated. The full-text chaperone atlas explicitly
