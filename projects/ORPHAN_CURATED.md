@@ -128,11 +128,29 @@ entries, a separate problem.
 - [x] Assess all 33 remaining accessions across the other 22 taxa, retaining primary IDs.
 - [x] Distinguish equivalents, locus counterparts, candidates, and searches with no supported counterpart.
 - [ ] Map WIN6 source genomic record U01661 and flanks to distinguish locus/model/parental alternatives.
-- [ ] Compare GO coverage on any verified counterpart; distinguish shared and unique assertions.
+- [x] Compare current GO coverage for all 18 assessed equivalents; distinguish shared assertions from unmatched evidence (2026-11-01).
 - [ ] Submit the reviewed candidate report to UniProt and record their explanations.
 - [ ] Consider surfacing reference-proteome status routinely during gene review.
 
 # NOTES
+
+## 2026-11-01: GO coverage on equivalent records
+
+The [reproducible comparison](https://github.com/ai4curation/uniprot-orphan-analysis/blob/f76e03ebe4e05600abd7ce357909d6f7669248d4/analyses/go-coverage/2026-11-01/RESULTS.md)
+uses fresh QuickGO responses for both sides of all 18 equivalent pairs, with
+current UniProt taxonomy and reference-proteome membership checks. The preferred
+Swiss-Prot entries carry 48 non-IEA rows, including 41 experimental-code rows,
+without matching evidence on their counterparts. Shared assertions and
+evidence-only differences are separated in the
+[generated Markdown/CSV report](https://github.com/ai4curation/uniprot-orphan-analysis/blob/f76e03ebe4e05600abd7ce357909d6f7669248d4/analyses/go-coverage/2026-11-01/report/REPORT.md).
+
+AVR9 illustrates a counterpart with no GO annotations; nas-8 illustrates the same
+enzyme-activity assertion with experimental evidence on Swiss-Prot and electronic
+evidence on the counterpart. Exact-match differences are not automatically missing
+functions: qualifiers, ontology relationships, and broad protein-binding rows need
+review before feedback. Counterpart IBA annotations remain curated phylogenetic
+evidence. Full source data and workflows stay in the analysis repository; no
+annotations have been transferred and no UniProt feedback has been sent.
 
 ## Illustrative cases
 
