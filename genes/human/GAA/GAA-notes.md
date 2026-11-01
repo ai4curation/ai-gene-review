@@ -54,3 +54,39 @@ UniProtKB:P10253 (LYAG_HUMAN), gene GAA, HGNC:4065, human (NCBITaxon:9606). 952 
 
 - Re-checked all 45 GOA rows against the review; actions and core function (GO:0004558 alpha-1,4-glucosidase activity, directly involved in GO:0005980 glycogen catabolic process, lysosomal lumen/lysosome) stand. Status set to COMPLETE.
 - dismech Pompe_Disease, Infantile-Onset_Pompe_Disease and Late-Onset_Pompe_Disease now all bind GO:0004558 (DECREASED) on their molecular GAA node, consistent with this core function and with modules/lysosomal_glycogen_degradation.yaml.
+
+
+## Manual reassessment and native reconciliation — 2026-11-01
+
+All 45 current GOA contexts have individual source-based judgments: 18 ACCEPT, 17 KEEP_AS_NON_CORE, five MODIFY, four UNDECIDED and one MARK_AS_OVER_ANNOTATED. Two catalytic cores retain alpha-1,4 hydrolysis and complementary alpha-1,6 branch cleavage in lysosomal glycogen degradation. The five correct parent-term contexts use already-asserted descendants verified through official typed is_a paths; no NEW annotation is added. The four unresolved source contexts remain explicit, and sucrose metabolism is over-annotated without inventing a negative assay. The source guide records all 25 manual reference assessments and their access limits.
+
+The October 10 manual exosome decisions are preserved in full. Positive original GAA peptide observations in the 23533145 and 19056867 preparations support their explicit non-core reassessment; a cognate EV-surface receptor is not a prerequisite for observed fraction membership. Purity, topology and an EV function remain unresolved. The separate YTS membrane source stays UNDECIDED. All six Reactome membrane contexts have literal human GAA target membership, without an exocytosis catalyst or topology assertion. The failed mutant reaction is distinguished from normal wild-type catalysis.
+
+Genuine native fetch used --force --no-seed and left the inherited 45-row review untouched. Its actual 45-context export, all 16 columns, literal donor order and 952-residue sequence match the retained official inputs. Raw41/native38 carries exactly one urine part_of atom; the parser omits this field, so the original atom is restored as BFO:0000050/UBERON:0001088. This is lossless metadata restoration, not a new scientific assertion. Processing features and historical proteomic accessions are not turned into natural isoforms.
+
+The source union is 78: 28 existing immutable objects and 50 missing-only native acquisitions (48 publications and two Reactome records). The original review, old journal and three histories remain fully archived. All 55 original quotation associations remain intact: two existing exact snippets support the current cores, and 53 stay historical-only, including the one whitespace-only old quote. No new quotation, provider output or source rewrite was introduced. Native acquisition outputs were read; failed full-text fallback attempts do not confer full-text access.
+
+The accepted science is transferred. Native EDIT history, target validation, strict GOA conservation, status, scoped whitespace and private rendering passed.
+
+## Executed target checks — 2026-11-01
+
+The native EDIT session is `2026-11-01T154634Z-codex-730a35`. Default validation passed with three advisories, all concerning intentionally different source-specific judgments for the same term: lysosome organization (phylogenetic non-core evidence versus the unresolved human IMP source), membrane (specificity refinement of the electronic parent versus the unresolved YTS assay), and glycophagy (supported ortholog-derived context versus the inaccessible classic human experiment). These differences do not rest on evidence-code ranking and do not claim the unresolved experiments are false. Strict GOA conservation matches all 45 contexts; the restored urine atom remains literal. Status is DRAFT. History, scoped whitespace, source conservation and private HTML rendering passed. All prior journal/history/provider artifacts and the owned family review remain preserved. No broad test suite or provider was run.
+
+
+## 2026-11-01: scientific review follow-up
+
+The initial draft preserved the old COMPLETE sign-off and all 55 inherited quote associations, while native status computation returned DRAFT with three mixed-action advisories. This was an actual computed outcome, not a manual erasure of prior curation. The original automated reviewer could not execute just/uv; the subsequently completed ordinary CI independently validated GAA with exactly those three warnings. Its full test-suite step was skipped by path routing.
+
+The follow-up judges shared biological claims consistently: both lysosome-organization and glycophagy rows are non-core, while both general membrane rows propose the established lysosomal-membrane descendant. The unread 7717400,5264799 and YTS19946888 source details remain explicitly unverified. The diaphragm-contraction annotation remains unresolved because the available evidence does not settle participation in force generation. No new assay is inferred.
+
+The two extracellular-exosome annotations retain the positive original fraction-identification evidence; the complete October 10 soluble-protein/receptor rationale remains unchanged in the historical journal and archive. A receptor requirement is not inherent in a fraction-membership observation. Purity, topology and physiological EV function remain separate unresolved questions. Four selected source-table extracts with public URLs, hashes and locators are now in GAA-bioinformatics/RESULTS.md. They do not change immutable caches or turn imported database GO columns into experiments.
+
+Carbohydrate binding remains non-core on the directly observed secondary acarbose site, spatially separate from the catalytic pocket. The broad term does not require lectin activity, while the site’s contribution to endogenous glycogen processivity remains hypothetical. Both linkage-specific catalytic cores, all 45 original contexts and the exact urine atom remain unchanged. The current follow-up contains 18 ACCEPT, 19 KEEP_AS_NON_CORE, six MODIFY, one UNDECIDED and one MARK_AS_OVER_ANNOTATED; no NEW. Application, native EDIT and scoped checks passed; the computed current status is COMPLETE with zero advisories.
+
+Independent PMID:27805059 evidence now strengthens the EV decision: three tetraspanin-specific immunocaptures, reported vesicle morphology and detergent-free on-bead digestion identified GAA/P10253 with 23–39% coverage. The source uses extraexosomal for the outer vesicle surface, not a nonvesicular fraction. Its native full-text cache was acquired once after bounded qualification; all 78 prior sources remain exact. The new observation is kept within its preparation, control and unresolved physiological-function limits.
+
+## Follow-up executed checks — 2026-11-01
+
+Native EDIT `2026-11-01T162336Z-codex-6dfcdf` records this amendment. Target default validation passed with zero advisories; strict GOA matches all 45 contexts, including the single urine atom. Harmonizing the three shared claims removed the initial mixed-action warnings. Native status computation returned COMPLETE. The status command reported a mismatch without writing the existing DRAFT field, so that exact computed scalar was recorded and the final native status audit passed. The initial diagnostic remains retained privately. All prior history and journal text remain intact.
+
+History validation, scoped whitespace, source conservation and private rendering passed. The 79 normal sources comprise all 78 prior immutable source objects plus the single qualified missing publication. Four selected data-row quotations now support the portable evidence, alongside the two unchanged core snippets; all 55 historical associations remain archived. No broad test suite or provider was run for this local amendment.

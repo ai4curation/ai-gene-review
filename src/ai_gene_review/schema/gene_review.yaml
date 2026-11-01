@@ -195,6 +195,16 @@ slots:
   extensions:
     range: AnnotationExtension
     multivalued: true
+  decomposed_into:
+    range: Decomposition
+    inlined: true
+    description: >-
+      For a MODIFY that decomposes a precomposed "X involved in Y" term to X,
+      where the context Y is now represented: production GO-CAM activities,
+      module elements, this review's core_functions, or a deliberate decision not
+      to carry it. There is intentionally no annotation-extension form: X plus
+      part_of(Y) restates the retired class, whereas GO asks for the context to be
+      captured in a model. See projects/INVOLVED_IN_PRECOMPOSITION.md.
   qualifier:
     range: AnnotationQualifierEnum
     description: >-
@@ -302,6 +312,26 @@ slots:
     range: ManuscriptSection
     description: Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')
     recommended: true
+  record_section:
+    range: string
+    multivalued: true
+    pattern: "^(?:REF|[A-Z]{2}(?::[A-Za-z0-9][A-Za-z0-9 ,/_.()-]*)?)$"
+    description: >-
+      For a quote from a database record (currently a cached UniProt record: a flat
+      file, `file:...-uniprot.txt`, or a UniSave snapshot, `file:...-record-evidence.yaml`),
+      the section(s) of the record the quote comes from,
+      as the line code followed, where the line code has one, by its topic: the
+      comment topic for `CC` (e.g. `CC:CAUTION`, `CC:FUNCTION`, `CC:SUBCELLULAR LOCATION`),
+      the feature key for `FT` (e.g. `FT:BINDING`), the database for `DR`
+      (e.g. `DR:Pfam`), and `REF` for a citation block. Plain line codes are used
+      otherwise (e.g. `DE`, `KW`). A quote whose `...`-separated parts come from
+      different sections lists each once, in order. A quote whose text occurs in
+      several sections (a short phrase found in both a keyword and a comment) has
+      no established section and is left without a value. This is the database-record
+      counterpart of `reference_section_type`, which describes manuscript sections.
+      The value is derived from the cited file, so fill it with
+      `just backfill-record-sections` rather than by hand; validation warns when a
+      stated value disagrees with the cited file.
   proposed_new_terms:
     range: ProposedOntologyTerm
     multivalued: true
@@ -315,6 +345,20 @@ slots:
     range: Experiment
     multivalued: true
     recommended: true
+  gene_model_issues:
+    range: GeneModelIssue
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Problems with the predicted gene model behind this entry: the protein sequence
+      does not correspond to a single real gene product, for example because two
+      neighbouring genes were joined (fused), one gene was split, or the model is
+      truncated or starts at the wrong codon. Record these when they change how the
+      entry's name, sequence features or annotations should be read. A genuine
+      biological fusion (a real chimeric gene or polyprotein) is not a gene model
+      issue. An entry UniProt already flags as a fragment (DE Flags: Fragment) needs
+      an entry here only when the review finds more than the flag records. See
+      projects/GENE_MODEL_ERRORS.md.
   knowledge_gaps:
     range: KnowledgeGap
     multivalued: true
@@ -332,6 +376,17 @@ slots:
       Use only on very rare occasions: records why this annotation's action is
       deliberately allowed to contradict another row's action under the
       action-consistency rules. See docs/action_consistency.md.
+  nd_case:
+    range: NoDataCaseEnum
+    description: >-
+      For an ND (No biological Data available) row only: why there is no data
+      for this gene product in this aspect. It records which case of the ND
+      taxonomy applies (projects/NO_DATA.md) and determines the expected
+      action. An ND row that follows the evidence-code guideline (no literature
+      on this gene product, in this species, identifies a function in that
+      aspect) is ACCEPT; STALE and ONTOLOGY_BLOCKED are the cases where it is
+      not. TRUE_GAP and EXISTENCE rows should be paired with a BIOLOGY
+      knowledge gap whose dark_aspect matches the ND aspect.
   source_defects:
     range: SourceDefect
     multivalued: true
@@ -344,6 +399,17 @@ slots:
       activity attached to the wrong gene product ("that gene, not this gene")
       or keyed to the wrong reference. The review's own action still says what
       this repository does with the claim. See docs/source_defects.md.
+  residue_mappings:
+    range: ResidueMapping
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Residues that this finding names by number, each given in the numbering
+      the source used and, when that is not the displayed UniProt sequence,
+      also in the displayed sequence. Papers often number residues on an
+      isoform other than the one UniProt displays, so the same residue can
+      appear under two numbers (RASAL2 Ser351 in isoform 2 is Ser203 in the
+      displayed isoform). Both sides are checked against the real sequences.
   propagation_review:
     range: PropagationReview
     description: >-
@@ -374,6 +440,7 @@ classes:
      - taxon
      - alternative_products
      - functional_isoforms
+     - gene_model_issues
      - alternative_records
      - reference_proteome_assessments
      - references
@@ -503,6 +570,68 @@ classes:
           that differ from other isoforms.
         recommended: true
 
+  GeneModelIssue:
+    description: >-
+      A problem with the predicted gene model of the reviewed entry, with the evidence
+      for it. For a fused model, list each underlying gene as a component and give the
+      segment of the entry that the review's functional statements apply to.
+    attributes:
+      issue_type:
+        range: GeneModelIssueTypeEnum
+        required: true
+      status:
+        range: GeneModelIssueStatusEnum
+        required: true
+        description: How well established the problem is.
+      description:
+        range: string
+        required: true
+        description: >-
+          What is wrong with the model and what it does to the entry's name and
+          annotations (e.g. "named after the Nup85-like half; the carboxylase half
+          carries the phenotype").
+      components:
+        range: GeneModelComponent
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          For fused (or split) models: the separate genes or proteins that make up the
+          entry, each with the segment of the entry it covers.
+      reviewed_segment:
+        range: string
+        pattern: "^[0-9]+-[0-9]+$"
+        description: >-
+          Residue range of this entry (start-end, 1-based) that the review's
+          functional statements refer to, when only part of a fused or extended model
+          is the gene product being reviewed.
+      evidence_types:
+        range: GeneModelEvidenceEnum
+        multivalued: true
+        description: Kinds of evidence for the issue.
+    slots:
+      - supported_by
+
+  GeneModelComponent:
+    description: >-
+      One underlying gene or protein of a fused (or split) gene model, identified in
+      an independent annotation or assembly, with the segment of the reviewed entry
+      it corresponds to.
+    attributes:
+      accession:
+        range: string
+        description: >-
+          Identifier of the separate protein or gene in the other annotation, as a
+          UniProtKB or UniParc accession or a locus tag (e.g. A0A2T0ACW0, RTO4_12867).
+      segment:
+        range: string
+        pattern: "^[0-9]+-[0-9]+$"
+        description: Residue range of the reviewed entry covered by this component (start-end, 1-based).
+      description:
+        range: string
+        description: >-
+          What this component is (e.g. "3-methylcrotonyl-CoA carboxylase biotin
+          carboxylase subunit; carries the leucine-specific fitness defect").
+
   FunctionalIsoform:
     description: >-
       A curated functional isoform class. Unlike AlternativeProduct (which maps 1:1
@@ -553,6 +682,15 @@ classes:
           GO terms that are specific to this functional class. These are terms
           that should NOT be annotated to the gene as a whole, only to this specific
           form. Using Term objects enables linkml-term-validator checking.
+      source_defects:
+        range: SourceDefect
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Defects in UniProt's (or another source's) record of this isoform,
+          for example an isoform established in the literature that the
+          reviewed UniProt entry does not list (defect_type MISSING_ISOFORM).
+          See docs/source_defects.md.
 
   FunctionalIsoformMapping:
     description: >-
@@ -562,7 +700,9 @@ classes:
       type:
         range: FunctionalIsoformMappingTypeEnum
         required: true
-        description: Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)
+        description: >-
+          Type of identifier (UNIPROT_ISOFORM, UNIPROT_CHAIN, REFSEQ_PROTEIN or
+          UNIPROTKB_UNREVIEWED)
       ids:
         range: string
         multivalued: true
@@ -571,6 +711,8 @@ classes:
           UniProt identifiers belonging to this functional class.
           For UNIPROT_ISOFORM: P19544-1, P19544-2, etc.
           For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.
+          For REFSEQ_PROTEIN: NP_001123538.1 (versioned RefSeq protein).
+          For UNIPROTKB_UNREVIEWED: B7ZCA0 (a TrEMBL accession).
       residues:
         range: string
         description: >-
@@ -617,6 +759,15 @@ classes:
       - correctness
       - review_notes
       - replacement
+      - source_defects
+    slot_usage:
+      source_defects:
+        description: >-
+          Errors in the cited source's own curated text (a MOD gene description
+          cited as its -deep-research-<mod>.md file, or a UniProt FUNCTION or
+          other comment cited as the -uniprot.txt file), in reportable form.
+          Use WRONG_STATEMENT, OUTDATED_STATEMENT or MISSING_STATEMENT. See
+          docs/source_defects.md, "Cited source text".
 
   ReferenceReplacement:
     description: A curated identifier remapping. Keep the original Reference.id and
@@ -723,7 +874,9 @@ classes:
       - supporting_text
       - full_text_unavailable
       - reference_section_type
+      - record_section
       - finding_review
+      - residue_mappings
 
   FindingReview:
     description: Manual reviewer assessment of a specific finding within a reference - in
@@ -750,6 +903,7 @@ classes:
       - supporting_text_fulltext
       - full_text_unavailable
       - reference_section_type
+      - record_section
 
   # ============== Module KB Classes ==============
   #
@@ -1136,15 +1290,26 @@ classes:
       expected_active:
         range: string
         multivalued: true
-        description: Elements expected to be active in every state of every attractor.
+        description: >-
+          Elements expected to be active in every state of every attractor
+          (for Boolean models) or reached/populated by agents (for agent-based models).
       expected_inactive:
         range: string
         multivalued: true
-        description: Elements expected to be inactive in every state of every attractor.
+        description: >-
+          Elements expected to be inactive in every state of every attractor
+          (for Boolean models) or unpopulated by agents (for agent-based models).
       expected_oscillating:
         range: string
         multivalued: true
         description: Elements expected to change value within an attractor.
+      expected_outcome_order:
+        range: string
+        multivalued: true
+        description: >-
+          For quantitative or agent-based models, an ordered list of elements from
+          highest to lowest terminal occupancy or output level (e.g., [e1, e2] asserts
+          final_count[e1] > final_count[e2]).
       evidence:
         range: EvidenceItem
         multivalued: true
@@ -1346,6 +1511,16 @@ classes:
       axis:
         range: string
         description: The dimension along which these variants differ, e.g. taxon, cell type, compartment, route, enzyme family.
+      variant_kind:
+        range: VariantKindEnum
+        description: >-
+          Which layer of the rule the alternatives belong to: alternative
+          carriers of one required activity (REALIZER), or alternative ways of
+          achieving the step (ROUTE). Gap reports use it to say whether a
+          failure means "activity required, no known carrier found" or "none
+          of the modelled routes is present". When omitted, the satisfiability
+          engine infers REALIZER if every variant carries the same single
+          molecular function, and otherwise leaves the set unclassified.
       selection:
         range: VariantSelectionEnum
         description: How many variants may be selected in a concrete realization.
@@ -1456,6 +1631,55 @@ classes:
         range: EvidenceItem
         multivalued: true
         inlined_as_list: true
+      notes:
+        range: string
+
+  Decomposition:
+    description: >-
+      Where the context of a decomposed precomposed term ("X involved in Y") is
+      represented after a MODIFY to the genus X. At least one slot should be
+      filled. Validation checks that modules and elements resolve under modules/
+      and that GO-CAM models are cached under gocams/.
+    attributes:
+      gocam_associations:
+        range: GoCamAssociation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Production GO-CAM activities (of this gene or a named ortholog) whose
+          process context realizes Y.
+      module_associations:
+        range: ModuleAssociation
+        multivalued: true
+        inlined_as_list: true
+        description: Module elements in which this gene's role in Y is modelled.
+      in_core_functions:
+        range: boolean
+        description: >-
+          True when Y is recorded in this review's core_functions (as
+          directly_involved_in of the core function whose activity is X, or
+          that X is part of).
+      context_dropped:
+        range: boolean
+        description: >-
+          True when Y is deliberately not carried forward: either the context was
+          itself the over-annotation (the gene does X, but not as part of Y), or
+          it is peripheral context (typically a propagated developmental
+          phenotype) that does not warrant a model and is not a core function.
+          The review reason or notes must say which.
+      notes:
+        range: string
+
+  ModuleAssociation:
+    description: A reference from a gene review to an element of a module under modules/.
+    attributes:
+      module:
+        range: string
+        required: true
+        description: Module file stem, i.e. modules/<module>.yaml.
+      element:
+        range: string
+        description: Optional id of a node, part or annoton within the module.
       notes:
         range: string
 
@@ -1720,12 +1944,14 @@ classes:
       - action
       - reason
       - proposed_replacement_terms
+      - decomposed_into
       - additional_reference_ids
       - supported_by
       - knowledge_gaps
       - propagation_review
       - consistency_exception
       - source_defects
+      - nd_case
     rules:
       - preconditions:
           slot_conditions:
@@ -1902,6 +2128,33 @@ classes:
 
           The validator compares this against the current record and, when they differ,
           says so explicitly rather than letting a stale claim look verified.
+
+  ResidueMapping:
+    description: >-
+      One residue named in a source, recorded in the sequence whose numbering
+      the source used, and optionally the same residue in the displayed UniProt
+      sequence of this gene. Each side is a ResiduePosition, so the validator
+      can confirm both residues and that they are the same amino acid.
+    attributes:
+      as_reported:
+        range: ResiduePosition
+        required: true
+        inlined: true
+        description: >-
+          The residue as the source numbers it, in the sequence that numbering
+          refers to, e.g. UniProtKB:Q9UJF2-2 (a UniProt isoform) or an
+          unreviewed UniProtKB accession when the isoform is not in the
+          reviewed entry.
+      canonical:
+        range: ResiduePosition
+        inlined: true
+        description: >-
+          The same residue in the displayed sequence of this review's entry
+          (the review's own id). Omit when as_reported already is the
+          displayed sequence, or when the residue has no counterpart there.
+      note:
+        range: string
+        description: How the mapping was established, or why canonical is absent.
 
   PropagationSource:
     description: >-
@@ -2849,6 +3102,38 @@ enums:
         description: The relation/qualifier is wrong (e.g. enables vs involved_in).
       WRONG_CAUSAL_RELATION:
         description: A GO-CAM causal edge has the wrong relation or direction.
+      WRONG_STATEMENT:
+        description: >-
+          A curated free-text statement in the source (a MOD gene description,
+          a UniProt FUNCTION or other comment) is contradicted by the
+          literature. Recorded on the reference_review of the reference that
+          cites the source text; slot names the field (e.g. CC:FUNCTION,
+          MOD_provided_gene_description), record the source record, and
+          asserted_value the offending sentence copied verbatim from the cited
+          text. requested_change is CHECK: the explanation says what the text
+          should say, and the resource rewrites it.
+      OUTDATED_STATEMENT:
+        description: >-
+          A curated free-text statement was true to the knowledge of its time
+          but has been superseded (e.g. "novel protein", "no obvious function
+          in RNAi assays" for a gene with established mutant phenotypes).
+          Recorded like WRONG_STATEMENT: asserted_value is the superseded
+          sentence verbatim, requested_change is CHECK.
+      MISSING_STATEMENT:
+        description: >-
+          A curated description or annotation set omits or has lost content
+          that the source itself previously carried or that is central to the
+          gene (e.g. an automated description that dropped its function
+          sentences between releases). Nothing wrong is asserted, so, as for
+          MISSING_ISOFORM, asserted_value names the record that lacks the
+          content (same as record) and requested_change is ADD; the explanation
+          states the content to add.
+      MISSING_ISOFORM:
+        description: >-
+          An isoform established in the literature is not among the isoforms
+          of the reviewed UniProt entry. asserted_value is the entry
+          (UniProtKB:Q96PV0); corrected_value names a sequence that carries
+          the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
       OTHER:
         description: Any other source-record defect; describe it in the explanation.
 
@@ -2875,10 +3160,24 @@ enums:
       POMBASE: {}
       DICTYBASE: {}
       XENBASE: {}
+      ALLIANCE:
+        description: Alliance of Genome Resources (e.g. its automated gene descriptions).
       ECOCYC: {}
       REACTOME: {}
       ARUK_UCL:
         description: ARUK-UCL / BHF-UCL curation groups.
+      CACAO:
+        description: CACAO community curation (student annotation challenge).
+      ECOLIWIKI:
+        description: EcoliWiki community curation of E. coli genes.
+      COLLECTF:
+        description: CollecTF curation of bacterial transcription factor binding sites.
+      PSEUDOCAP:
+        description: Pseudomonas Community Annotation Project.
+      MTBBASE:
+        description: MTBBASE curation of Mycobacterium tuberculosis genes.
+      PINC:
+        description: PINC curation group (assigned_by PINC in GOA).
       OTHER:
         description: Name the resource in the explanation.
 
@@ -2923,6 +3222,10 @@ enums:
           (e.g. drop one has_input from a GO-CAM activity).
       DELETE_ROW:
         description: Delete the whole record (e.g. a GAF row whose only support is a mis-keyed reference).
+      ADD:
+        description: >-
+          Add something the record lacks, e.g. a missing isoform;
+          corrected_value names what should be added.
       CHECK:
         description: >-
           The value is wrong or doubtful, but the right change depends on
@@ -3015,6 +3318,27 @@ enums:
         description: Transport or translocation step.
       REGULATORY_STEP:
         description: Regulatory or control step.
+
+  VariantKindEnum:
+    description: >-
+      The layer of a module rule that a variant set's alternatives belong to.
+      A process step requires a molecular function (close to binary); that
+      function is carried out by one of several families, domains or
+      complexes (open-world). See projects/ORGANELLE_LIFECYCLES/two-layer-model.md.
+    permissible_values:
+      REALIZER:
+        description: >-
+          The variants are alternative carriers of the same required activity:
+          families, domains, complexes, isozymes, paralogs or lineage-specific
+          proteins. A gap means the activity is expected but no known carrier
+          was found, which may reflect a divergent homolog, an unknown family
+          or an assembly gap as much as a real loss.
+      ROUTE:
+        description: >-
+          The variants are alternative ways of achieving the step: different
+          activities or step sequences, such as SCOT-dependent versus
+          ligase-dependent acetoacetate activation. A gap means none of the
+          modelled routes is present.
 
   VariantSelectionEnum:
     description: How variants in a variant set may be selected in a realization.
@@ -3340,7 +3664,10 @@ enums:
   ActionEnum:
     permissible_values:
       ACCEPT:
-        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene.
+          For an ND (No biological Data available) root-term row, ACCEPT means the annotation follows the evidence-code
+          guideline (no literature on this gene product, in this species, identifies a function in that aspect); it does
+          not make the root term a core function.
       KEEP_AS_NON_CORE:
         description: Keep the existing annotation as-is, but mark it as non-core. For pleiotropic genes, this may be the developmental
           processes, or other processes that are not the core function of the gene.
@@ -3831,6 +4158,74 @@ enums:
 
   # ============== Functional Isoform Enums ==============
 
+  GeneModelIssueTypeEnum:
+    description: Kind of gene model problem affecting a UniProt entry.
+    permissible_values:
+      FUSED_GENE_MODEL:
+        description: >-
+          The predicted protein joins two or more separate (usually neighbouring)
+          genes into one entry. Not for genuine biological fusions such as real
+          chimeric genes or polyproteins.
+      SPLIT_GENE_MODEL:
+        description: >-
+          One real gene is predicted as two or more entries; this entry is one
+          fragment.
+      TRUNCATED_GENE_MODEL:
+        description: >-
+          The model lacks part of the real protein (missing exons, early stop,
+          incomplete assembly), so features such as catalytic residues may be absent
+          from the sequence but present in the gene.
+      WRONG_START_SITE:
+        description: >-
+          The model starts at the wrong initiation codon, adding or removing an
+          N-terminal segment (e.g. a spurious or missing targeting peptide).
+      OTHER:
+        description: Another gene model problem; explain in the description.
+
+  GeneModelIssueStatusEnum:
+    description: How well established a gene model issue is.
+    permissible_values:
+      SUSPECTED:
+        description: >-
+          Indicated by one line of evidence (e.g. length or domain architecture
+          compared with orthologs) but not demonstrated.
+      CONFIRMED:
+        description: >-
+          Demonstrated by independent lines of evidence, e.g. the entry is tiled by
+          separate genes of another assembly and those genes have independent
+          phenotypes.
+
+  GeneModelEvidenceEnum:
+    description: Kinds of evidence for a gene model issue.
+    permissible_values:
+      TILING:
+        description: >-
+          Separate proteins from an independent assembly or annotation of the same
+          species align at near-identity to different, non-overlapping segments of
+          the entry.
+      ADJACENT_GENES:
+        description: The components are neighbouring genes in the independent annotation.
+      GENETIC_SEPARATION:
+        description: >-
+          Mutants in different components have different phenotypes, showing that
+          the components act independently.
+      DOMAIN_ARCHITECTURE:
+        description: >-
+          The entry combines domains from unrelated families, or lacks domains or
+          catalytic residues conserved in its orthologs.
+      ORTHOLOG_COMPARISON:
+        description: >-
+          The entry's length or sequence diverges from its orthologs in a way best
+          explained by a model error.
+      TRANSCRIPT_EVIDENCE:
+        description: cDNA, RNA-seq or proteomic evidence for a different gene structure.
+      GENOMIC_SEQUENCE:
+        description: >-
+          Translation of the genomic sequence around the locus recovers the missing
+          exons, or shows where neighbouring genes were joined.
+      OTHER:
+        description: Another kind of evidence; explain in the issue description.
+
   FunctionalIsoformTypeEnum:
     description: >-
       Type of functional isoform or product. Distinguishes between different mechanisms
@@ -3866,6 +4261,14 @@ enums:
         description: UniProt isoform ID (e.g., P19544-1, Q07817-2)
       UNIPROT_CHAIN:
         description: UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)
+      REFSEQ_PROTEIN:
+        description: >-
+          Versioned RefSeq protein accession (e.g., NP_001123538.1). Use when
+          the isoform is not among the reviewed UniProt entry's isoforms.
+      UNIPROTKB_UNREVIEWED:
+        description: >-
+          Unreviewed UniProtKB (TrEMBL) accession carrying the isoform's
+          sequence (e.g., B7ZCA0). Use when the reviewed entry lacks the isoform.
 
   # ============== Prediction Review Enums ==============
 
@@ -4116,6 +4519,46 @@ enums:
           catalysis-independent scaffolding mechanism, an unidentified recruit).
           Easy to miss because the gene looks finished.
 
+  NoDataCaseEnum:
+    description: >-
+      Why an ND (No biological Data available) annotation has no data. See
+      projects/NO_DATA.md for the taxonomy and worked examples. Bookkeeping
+      artifacts (bulk dates, paralog asymmetry) are not a case of their own:
+      re-check them and assign one of these values.
+    permissible_values:
+      STALE:
+        description: >-
+          N1. Literature on this gene product, in this species, now identifies a
+          function in this aspect (published after the ND, or missed by the
+          search). The ND no longer holds: REMOVE it and add the supported term.
+      INFERABLE:
+        description: >-
+          N2. Nothing has been published on this gene product in this species,
+          but the function is clear from well-characterized orthologs (usually
+          carried by IBA/ISO/ISS rows). The ND is correct: ACCEPT. Not a
+          knowledge gap.
+      EXISTENCE:
+        description: >-
+          N3. Whether a functional gene product exists at all is the open
+          question (sORF/uORF/alternative-frame peptides, dubious ORFs,
+          lineage-restricted ORFs). The ND is correct: ACCEPT, with a BIOLOGY
+          knowledge gap that states the existence question.
+      TRUE_GAP:
+        description: >-
+          N4. Nobody knows: no experiment and no defensible inference assigns a
+          term in this aspect. The ND is correct: ACCEPT, with a BIOLOGY
+          knowledge gap whose dark_aspect matches the ND aspect.
+      ONTOLOGY_BLOCKED:
+        description: >-
+          N5. Literature on this gene identifies its role but no fitting GO term
+          was available (typically structural or accessory subunits). MODIFY to
+          the expressible term, or to an NTR with a proposed_new_terms entry.
+      NEGATIVE:
+        description: >-
+          N6. The expected function was tested and ruled out (usually alongside
+          a NOT row). A negative result identifies no function, so the ND is
+          correct: ACCEPT.
+
   KnowledgeGapStatusEnum:
     description: Lifecycle status of a knowledge gap, tracking progress toward resolution.
     permissible_values:
@@ -4161,8 +4604,10 @@ enums:
         description: A local ad-hoc bioinformatics analysis carried out for this review, referenced
           via a 'file:' identifier (e.g. a bioinformatics RESULTS.md).
       DEEP_RESEARCH:
-        description: An AI/LLM deep-research report generated for this review, referenced via a
-          'file:' identifier (e.g. GENE-deep-research-PROVIDER.md).
+        description: An external narrative source reproduced verbatim in the gene folder and
+          referenced via a 'file:' identifier (GENE-deep-research-PROVIDER.md). Usually an AI/LLM
+          deep-research report (falcon, perplexity, affinage), but also a MOD's hand-written gene
+          description (wormbase, flybase, sgd, ...); the file's frontmatter records its authorship.
       OTHER:
         description: A publication or source that does not fit the other categories.
       UNKNOWN:
