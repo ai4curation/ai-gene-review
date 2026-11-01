@@ -69,3 +69,22 @@ scope of this citation fix.
   NuA4/Sfp1/ribosome-biogenesis paper (PMID:42103225) are additional context.
   None justify new ESA1 GO rows beyond the accepted acetyltransferase,
   complex, chromatin, and Pol II transcription-regulation assertions.
+
+## 2026-11-01 review response
+
+- Corrected the `UniProtKB:O94446` ISS source from fission-yeast Mst2 to
+  fission-yeast Mst1. O94446 is `mst1` in `PTHR10615:SF218`, the same ESA1
+  subfamily as budding-yeast Esa1, not the `mst2`/KAT7 member in SF161.
+- Re-read the `GO:0010629 negative regulation of gene expression` ARBA row
+  against the retained PMID:16436512 rDNA/telomeric silencing rows. The broad
+  negative-regulation parent is true enough to keep as non-core, rather than a
+  false ARBA-only transfer, because Esa1 directly participates in Pol II
+  silencing at telomeres and rDNA even though NuA4 is predominantly a positive
+  transcriptional regulator.
+- Reclassified the `GO:0008270 zinc ion binding` RCA row as non-core structural
+  zinc coordination by the MYST zinc finger, and marked the NAS
+  `GO:0006351 DNA-templated transcription` row as over-annotated beside the
+  accepted, more specific Pol II transcription-regulation rows.
+- Replaced generic HAT and crotonyltransferase snippets in the H4
+  acetyltransferase core-function support with H4-specific evidence from
+  PMID:17274630 and PMID:12353039.
