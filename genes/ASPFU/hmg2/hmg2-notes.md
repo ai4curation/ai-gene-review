@@ -14,8 +14,8 @@
   available (`OPENAI_API_KEY`, `EDISON_API_KEY`, `ASTA_API_KEY`, or
   `PERPLEXITY_API_KEY`).
 - Cached the UniProt-cited HMG-CoA reductase background papers,
-  `PMID:16110826` and `PMID:22106303`; both were available as abstract-only
-  records in this branch.
+  `PMID:16110826` and `PMID:22106303`; `PMID:16110826` remained abstract-only
+  while `PMID:22106303` later became available as local full text.
 - A web/PubMed sweep for `Aspergillus fumigatus hmg2 HMG-CoA reductase`,
   `AFUA_1G11230`, and azole-resistance papers found and cached the full-text
   hmg2-specific paper:
@@ -44,10 +44,10 @@
   early mevalonate module: "Hmg1 and hmg2 catalyze the reduction of
   hydroxymethylglutaryl-CoA (HMG-CoA) to mevalonate".
 - PMID:16110826 and PMID:22106303 are the primary UniProt-cited papers on the
-  hmg2 entry. Both are cached only as abstracts here; PMID:22106303 supports
-  the distinctive A. fumigatus connection between mevalonate, ergosterol, and
-  TAFC siderophore biosynthesis, but its perturbation experiments are on hmg1
-  rather than on weakly expressed hmg2.
+  hmg2 entry. PMID:22106303 names `hmg2` as `AFUA_1G11230`, directly states
+  that the individual contributions of the two putative HMG-CoA reductase
+  isoforms remain unknown, and found by Northern blot that only `hmg1`, not
+  `hmg2`, was expressed under the assayed condition.
 - Gonzalez-Jimenez et al. studied hmg2 explicitly in the context of
   cyp51A-independent azole resistance and reported that both hmg1 and hmg2
   encode HMG-CoA reductases involved in ergosterol biosynthesis
