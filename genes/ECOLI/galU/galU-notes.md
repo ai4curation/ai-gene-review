@@ -38,7 +38,9 @@
 - Oligomeric state from purification: tetramer [PMID:8169209 "The functional enzyme
   appears to be a tetramer of the galU gene product."]; UniProt: homotetramer or
   homopentamer.
-- GalF (paralog in the O-antigen/colanic acid region) is catalytically inactive but
+- GalF (paralog in the O-antigen/colanic acid region) was first reported inactive, but
+  retains only very low residual UDP-glucose pyrophosphorylase activity [PMID:26617591 "We
+  demonstrated that GalF has some residual UDP-glucose pyrophosphorylase activity"]; it
   interacts with GalU and modulates it (E. coli O7:K1) [PMID:8971705 "We propose that
   GalF is a non-catalytic subunit of the UDP-glucose pyrophosphorylase modulating the
   enzyme activity to increase the formation of UDP-glucose"].
