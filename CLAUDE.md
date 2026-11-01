@@ -144,6 +144,8 @@ This will create a file like `GENE-deep-research-perplexity.md`. You can also ma
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
 
+For non-human genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, ...). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
+
 A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
 term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
 the way to deduplicate them or to drop a true-but-broad term. (The one sanctioned exception is bare `GO:0005515` protein
@@ -158,7 +160,8 @@ always use a holistic synthesized picture of the gene function that you have obt
 ActionEnum:
     permissible_values:
       ACCEPT:
-        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene.
+          For an ND root-term row, ACCEPT means the annotation follows the evidence-code guideline (see "ND annotations" below)
       KEEP_AS_NON_CORE:
         description: Keep the existing annotation as-is, but mark it as non-core. For pleiotropic genes, this may be the developmental
           processes, or other processes that are not the core function of the gene.
@@ -195,6 +198,15 @@ When several specific descendants are supported, as for a pleiotropic gene, list
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
 
+**Measured activity is not automatically function.** For an enzyme activity that
+was assayed but is weak or promiscuous, decide whether the protein evolved to
+catalyse the reaction: a genuine secondary activity is `KEEP_AS_NON_CORE`; real
+in vitro activity of unknown relevance is `MARK_AS_OVER_ANNOTATED`; noise-level
+activity of a paralog, when a dedicated enzyme for the same reaction exists in
+the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
+the judgement in `reason`. See the promiscuous-activity tiers in
+`projects/ENZYME_SPECIFICITY.md`.
+
 **Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
 went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
@@ -204,6 +216,28 @@ not tissue or developmental contexts: do not create a module per Y. GO's `consid
 `replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
 `replaced_by` upstream.
 See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
+
+### ND annotations: reward adherence to the evidence-code guideline
+
+An ND (No biological Data available, `GO_REF:0000015`) row says a curator searched
+the literature for one aspect and found nothing to annotate. **ACCEPT it when no
+literature on this gene product, in this species, identifies a function in that
+aspect.** IBA, ISO, ISS or IEA rows in the same aspect do not make it stale: they are
+not literature on the gene, so never REMOVE an ND "because an IBA now covers the
+aspect". Only when such literature exists is the ND stale: REMOVE it (or MODIFY,
+when no fitting term existed) with `nd_case: STALE` or `ONTOLOGY_BLOCKED`, and quote
+the paper. Never use `KEEP_AS_NON_CORE`, `MARK_AS_OVER_ANNOTATED` or `TOO_GENERAL` on
+an ND, and never propose a `NEW` ND (record a `knowledge_gaps` entry instead).
+Record why there is no data in `review.nd_case`; `TRUE_GAP` and `EXISTENCE` need a
+BIOLOGY knowledge gap whose `dark_aspect` matches the ND aspect. What counts as
+literature on the gene: a bare protein-binding IPI does not (it identifies no function,
+so it does not make an MF ND stale); a paper on an ortholog does not, however strong;
+an `NAS` or Reactome `TAS` row on the gene itself does. An accepted ND must cite the
+search: the deep-research file, the notes file recording the queries and their
+result, or the publications checked (PMID, DOI, PMC); the UniProt record is not a
+search. The `nd_policy` check warns on deviations, and the
+compliance score credits an accepted ND that cites the literature search. See
+`projects/NO_DATA.md` for the case taxonomy.
 
 ### Root organelle terms: keep the organelle, add the sub-compartment
 
@@ -524,8 +558,9 @@ apply to every UniProt quote, whatever it supports.
   record's own `DR GO` lines restate an annotation rather than support it.
 - **Protein existence (`PE`) is not evidence of function.** Quote it to argue that an
   annotation rests on prediction (e.g. `MARK_AS_OVER_ANNOTATED`, `KEEP_AS_NON_CORE`,
-  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function. An accepted `ND` annotation needs evidence
-  that the literature was searched, not the existence level.
+  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function.
+  An accepted `ND` annotation needs evidence that the literature was searched, not
+  the existence level.
 
 Validation warns on all three (`uniprot_quote_unvetted_prediction`,
 `uniprot_quote_restating_field`, `uniprot_quote_existence_as_support`;
