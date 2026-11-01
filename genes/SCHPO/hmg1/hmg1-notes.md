@@ -35,7 +35,8 @@
   fungal HMG-CoA reductase. The same broad `PTN000060347` node also
   over-propagates the old `GO:0005778 peroxisomal membrane` assertion to fungal
   descendants even though S. pombe Hmg1 is an ER/nuclear-envelope enzyme.
-- Kept broad `GO:0008299 isoprenoid biosynthetic process` as core in both the
-  PAINT and InterPro2GO rows, matching the existing budding-yeast HMG1/HMG2
-  reviews: the term is general but still names the core pathway that Hmg1 feeds
-  by producing mevalonate.
+- Marked broad `GO:0008299 isoprenoid biosynthetic process` as `TOO_GENERAL`
+  in both the PAINT and InterPro2GO rows, matching the S. pombe mevalonate
+  pathway reviews such as `erg12`, `mvd1`, and `idi1`: Hmg1 produces
+  mevalonate for sterol and non-sterol isoprenoid branches, but the parent term
+  is subsumed by the accepted mevalonate-pathway IPP and ergosterol terms.
