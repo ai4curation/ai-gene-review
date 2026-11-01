@@ -133,9 +133,19 @@ jobs:
             # or commit), with titles so the agent can tell which part each one
             # covers. Without this, consecutive runs opened three PRs for #3918
             # and two EIF2S1 reviews for #3951.
-            open_prs="$(gh api "repos/$REPO/issues/$number/timeline" --paginate \
-              --jq '.[] | select(.event == "cross-referenced" and .source.issue.pull_request != null and .source.issue.state == "open") | "#\(.source.issue.number) (\(.source.issue.title | gsub("\t"; " ")))"' |
-              sort -u | paste -sd';' - | sed 's/;/; /g')"
+            # Entries are joined with the unit separator (titles may contain ';')
+            # and rendered as "; " below. Only cross-referenced events carry the
+            # PR; Development-sidebar `connected` events do not, and scanner PRs
+            # use prose mentions anyway. A failed lookup must not sink the whole
+            # tier's run, so it is reported as unknown for the agent to check.
+            if timeline="$(gh api "repos/$REPO/issues/$number/timeline" --paginate --slurp)"; then
+              open_prs="$(jq -r '[add[] | select(.event == "cross-referenced" and .source.issue.pull_request != null and .source.issue.state == "open") | .source.issue]
+                | unique_by(.number)
+                | map("#\(.number) (\(.title | gsub("[\t\u001f]"; " ")))")
+                | join("\u001f")' <<<"$timeline")"
+            else
+              open_prs="unknown (timeline lookup failed; check the issue yourself)"
+            fi
             # `read` with a tab IFS collapses empty fields, so write "-" for empty ones.
             printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
               "$sort_at" "$number" "${latest_at:--}" "${latest_author:--}" "${open_prs:--}" \
@@ -150,7 +160,7 @@ jobs:
               while IFS=$'\t' read -r _sort_at number latest_at latest_author open_prs updated_at labels url title; do
                 echo "- #${number}: ${title}"
                 echo "  - url: ${url}"
-                echo "  - labels: ${labels}"
+                echo "  - labels: ${labels/#-/none}"
                 echo "  - updated_at: ${updated_at}"
                 if [ "$latest_at" = "-" ]; then
                   echo "  - latest_comment: none"
@@ -158,7 +168,7 @@ jobs:
                   echo "  - latest_comment: ${latest_at} by ${latest_author}"
                 fi
                 if [ "$open_prs" != "-" ]; then
-                  echo "  - open_prs: ${open_prs}"
+                  echo "  - open_prs: ${open_prs//$'\x1f'/; }"
                 fi
               done
             else
@@ -194,7 +204,7 @@ jobs:
               while IFS=$'\t' read -r _sort_at number latest_at latest_author updated_at labels url title; do
                 echo "- #${number}: ${title}"
                 echo "  - url: ${url}"
-                echo "  - labels: ${labels}"
+                echo "  - labels: ${labels/#-/none}"
                 echo "  - updated_at: ${updated_at}"
                 if [ "$latest_at" = "-" ]; then
                   echo "  - latest_discussion: none"
@@ -268,9 +278,11 @@ jobs:
 
             Before selecting an issue, check its timeline and linked PRs; the
             candidate file lists the open ones, with titles, as `open_prs`. If an
-            open PR already addresses the issue, do not open a duplicate: skip the
-            issue and follow up through that PR instead (it is a candidate in its
-            own right if it matches EFFORT SELECTOR and is unassigned). For an
+            open PR already addresses the issue, do not open a duplicate: follow up
+            through that PR instead. If it is unassigned and you select it as this
+            run's single target, add the issue's `curation` and effort labels to it
+            (earlier scanner PRs carry none, so they never appear among the PR
+            candidates) and work on that PR; otherwise skip the issue. For an
             umbrella issue that tracks several deliverables (e.g. one review per
             gene), open a PR only for a deliverable that no open PR already covers.
             A PR that merely mentions the issue without working on it does not
@@ -328,6 +340,8 @@ jobs:
             - If you choose zero targets, do not touch GitHub issues or PRs; summarize only in `$GITHUB_STEP_SUMMARY`
             - Open ordinary, ready-for-review PRs. Draft status is not a lifecycle signal in this
               repository; use assignment when a PR needs a human hold
+            - Give every PR you open the originating issue's `curation` and effort labels, so it
+              stays in this tier's PR queue for follow-up
             - Follow `CLAUDE.md` and the repository conventions
             - Do not edit derived files (`*-uniprot.txt`, `*-goa.tsv`, `*-deep-research*.md`, `publications/*`)
               — regenerate them with `just fetch-gene` or `just fetch-reference` if needed
