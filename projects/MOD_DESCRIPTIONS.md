@@ -306,8 +306,8 @@ each other only.
 - **Follow-up on the yeast findings.** Eight parallel agents worked through the 345 gap
   and discrepancy findings (316 genes) under the same rules as for worm. Each edited
   gene was validated and given a history record.
-  - 88 description-text `source_defects` across 81 genes: 44 SGD and 44 UniProt;
-    49 `WRONG_STATEMENT`, 24 `OUTDATED_STATEMENT`, 15 `MISSING_STATEMENT`; 37 of them
+  - 89 description-text `source_defects` across 81 genes: 44 SGD and 45 UniProt (one in a UniProt SUBUNIT comment);
+    49 `WRONG_STATEMENT`, 25 `OUTDATED_STATEMENT`, 15 `MISSING_STATEMENT`; 38 of them
     CONFIRMED by a quoted paper.
   - 249 reviews edited, mostly with a description sentence for a verified gap.
   - Two `NEW` rows, both checked against the NEW bar:
@@ -364,5 +364,5 @@ each other only.
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
 - [x] Yeast: score descriptions (890 COMPLETE)
-- [x] Yeast: act on gap and discrepancy findings (88 source defects, 249 reviews edited)
+- [x] Yeast: act on gap and discrepancy findings (89 source defects, 249 reviews edited)
 - [ ] Fly (FlyBase) and mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
