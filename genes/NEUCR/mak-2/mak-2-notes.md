@@ -23,13 +23,11 @@
   are safe for MAK-2; the catalytic parent is simply less informative than the
   exact imported `GO:0004707 MAP kinase activity` row.
 - The `PANTHER:PTN001172087` IBD is seeded by S. cerevisiae Fus3 and S. pombe
-  Spk1, and it does identify the inherited fungal Fus3/Spk1-type MAPK clade.
-  `GO:0071507 pheromone response MAPK cascade` is scoped too narrowly for
-  Neurospora MAK-2, however: the direct Neurospora evidence supports a
-  homologous NRC-1/MEK-2/MAK-2 MAPK cascade for self-signaling, chemotropic
-  germling/hyphal fusion, and sexual development, not a pheromone-GPCR
-  conjugation cascade. I changed that row to `MODIFY` with `GO:0000165 MAPK
-  cascade` as the replacement.
+  Spk1, and it correctly identifies the inherited fungal Fus3/Spk1-type MAPK
+  clade. Neurospora papers also name the NRC-1/MEK-2/MAK-2 tier as the
+  PR-MAPK pathway during sexual development, so the `GO:0071507 pheromone
+  response MAPK cascade` IBA should be retained even though MAK-2 also runs
+  chemotropic self-signaling during germling and hyphal fusion.
 - I searched for 2024-2026 Neurospora `mak-2` papers. PMID:34899653,
   PMID:39283084, and PMID:41915693 extend MAK-2/PR-MAPK biology into
   protoperithecium development, VE-1-dependent sexual development, and the
