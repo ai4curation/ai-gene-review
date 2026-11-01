@@ -8,6 +8,9 @@
 ## Curation observations
 - Cysteine synthase activity rows kept as non-core (real in vitro, not physiological).
 - Obsolete GO:0019346 transsulfuration (InterPro) REMOVED; threonine metabolism RCA (P4-PWY-1) REMOVED.
+- The PTHR43797 cytoplasm IBA is sound for Met17's soluble activity but was
+  marked `MODIFY` to cytosol because the gene already carries accepted cytosol
+  rows from yeast-specific evidence.
 
 ## 2026-10-24 re-review
 
