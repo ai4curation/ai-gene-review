@@ -6,7 +6,8 @@ as a tree of nodes. Read as logic, that tree is a *monotone boolean formula* ove
 **step atoms**:
 
 * a node's ``parts`` and its own ``annotons`` are conjunctive  -> :class:`And`
-* a ``variant_sets`` entry is disjunctive (at-least-one for satisfiability)
+* a ``variant_sets`` entry is disjunctive (at-least-one for satisfiability,
+  or none at all when its ``selection`` is ``ZERO_OR_MORE``)
   -> :class:`Or`
 * a leaf ``annoton`` is an :class:`Atom` whose truth value is supplied externally
   by a per-context predicate (e.g. "is this participant gene expressed in this
@@ -299,8 +300,12 @@ def compile_node(
             compile_node(v, modules_dir, chain, namespace) for v in as_list(vs.get("variants"))
         ]
         kind, inferred = _variant_kind(vs, branches)
-        children.append(Or(set_id=vs.get("id", "?"),
-                           selection=vs.get("selection", "ONE_OR_MORE"),
+        selection = vs.get("selection", "ONE_OR_MORE")
+        if selection == "ZERO_OR_MORE":
+            # "Variants are optional and any number may apply": like an
+            # optional part, the set also admits the empty branch.
+            branches.append(And(node_id="empty", children=[]))
+        children.append(Or(set_id=vs.get("id", "?"), selection=selection,
                            children=branches, kind=kind, kind_inferred=inferred))
     return And(node_id=node.get("id", "?"), children=children)
 
