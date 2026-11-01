@@ -1,0 +1,157 @@
+name: Validation Cleanup Scan
+
+# Files low_effort cleanup issues from the weekly full validation, so the
+# curation scanner's low tier has work. Deterministic: no agent runs here.
+# The fixes are made later by curation-scanner (low_effort, review-gated PRs).
+
+on:
+  schedule:
+    - cron: "0 12 * * 2"  # weekly, Tuesday 12:00 UTC, after Monday's full validation
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Optional main.yaml run id to read validation-all-report from (blank = latest scheduled run)"
+        required: false
+        default: ""
+        type: string
+      max_new:
+        description: "Maximum issues to create this run"
+        required: false
+        default: "5"
+        type: string
+      max_open:
+        description: "Cap on open validation-cleanup issues"
+        required: false
+        default: "15"
+        type: string
+      create_issues:
+        description: "Create the issues (off = only write the selection to the run summary)"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: validation-cleanup-scan
+  cancel-in-progress: true
+
+jobs:
+  validation-cleanup-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      # GITHUB_TOKEN only downloads main.yaml's artifact; labels and issues use
+      # the ai4c-agent App token below.
+      actions: read
+      contents: read
+
+    env:
+      SOURCE_RUN_ID: ${{ inputs.source_run_id || '' }}
+      MAX_NEW: ${{ inputs.max_new || '5' }}
+      MAX_OPEN: ${{ inputs.max_open || '15' }}
+      CREATE_ISSUES: ${{ github.event_name == 'schedule' || inputs.create_issues }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Generate ai4c-agent token
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install python tools
+        run: uv sync
+
+      - name: Download the latest full validation report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_id="$SOURCE_RUN_ID"
+          if [ -z "$run_id" ]; then
+            latest="$(gh run list --repo "$REPO" --workflow main.yaml \
+              --event schedule --status completed --limit 1 \
+              --json databaseId,createdAt --jq '.[0] // empty | "\(.databaseId) \(.createdAt)"')"
+            if [ -z "$latest" ]; then
+              echo "::error::No completed scheduled main.yaml run found"
+              exit 1
+            fi
+            read -r run_id created_at <<<"$latest"
+            # A stale report would re-file warnings that have since been fixed.
+            if [ "$(date -d "$created_at" +%s)" -lt "$(date -d '8 days ago' +%s)" ]; then
+              echo "::error::Latest scheduled main.yaml run ($run_id, $created_at) is over 8 days old"
+              exit 1
+            fi
+          fi
+          echo "Reading validation-all-report from main.yaml run $run_id"
+          gh run download "$run_id" --repo "$REPO" -n validation-all-report -D reports || {
+            echo "::error::main.yaml run $run_id has no validation-all-report artifact (validate-all wrote no TSV, or it expired): $GITHUB_SERVER_URL/$REPO/actions/runs/$run_id"
+            exit 1
+          }
+          echo "SOURCE_RUN=$run_id" >> "$GITHUB_ENV"
+
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+        run: |
+          gh label create curation --color 0E8A16 --description "Curation task" --force
+          gh label create low_effort --color 0E8A16 \
+            --description "Suitable for lower-effort/cheaper-model automation; output must remain review-gated" --force
+          gh label create validation-cleanup --color BFD4F2 \
+            --description "Validation warning cleanup on an existing review" --force
+
+      - name: Select cleanup issues
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          gh issue list --repo "$REPO" --label validation-cleanup --state open \
+            --limit 500 --json title --jq '.[].title' > /tmp/open-cleanup-titles.txt
+          # Closed with warnings left means the rest needs a human; do not re-file
+          # it every week.
+          gh issue list --repo "$REPO" --label validation-cleanup --state closed \
+            --search "closed:>=$(date -d '90 days ago' +%Y-%m-%d)" \
+            --limit 500 --json title --jq '.[].title' > /tmp/closed-cleanup-titles.txt
+          uv run ai-gene-review validation-cleanup-issues reports/validation-all.tsv \
+            -o /tmp/cleanup-issues.jsonl \
+            --open-titles /tmp/open-cleanup-titles.txt \
+            --closed-titles /tmp/closed-cleanup-titles.txt \
+            --max-new "$MAX_NEW" --max-open "$MAX_OPEN"
+
+      - name: Create cleanup issues
+        if: env.CREATE_ISSUES == 'true'
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r record; do
+            title="$(jq -r .title <<<"$record")"
+            jq -r .body <<<"$record" > /tmp/issue-body.md
+            gh issue create --repo "$REPO" --title "$title" --body-file /tmp/issue-body.md \
+              --label curation,low_effort,validation-cleanup
+          done < /tmp/cleanup-issues.jsonl
+
+      - name: Write step summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "## Validation Cleanup Scan"
+            echo "- Source: main.yaml run ${SOURCE_RUN:-unknown}"
+            echo "- Open cleanup issues before this run: $(wc -l < /tmp/open-cleanup-titles.txt 2>/dev/null || echo '?')"
+            echo "- Create issues: $CREATE_ISSUES"
+            echo "- Selected:"
+            if [ -s /tmp/cleanup-issues.jsonl ]; then
+              jq -r '"  - \(.title)"' /tmp/cleanup-issues.jsonl
+            else
+              echo "  - (none)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
