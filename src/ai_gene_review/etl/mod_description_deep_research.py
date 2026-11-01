@@ -68,7 +68,7 @@ def uniprot_gene_names(uniprot_data: str) -> set[str]:
 _GREEK = {
     "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon", "ζ": "zeta",
     "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa", "λ": "lambda", "μ": "mu",
-    "ν": "nu", "ξ": "xi", "ο": "omicron", "π": "pi", "ρ": "rho", "σ": "sigma",
+    "ν": "nu", "ξ": "xi", "ο": "omicron", "π": "pi", "ρ": "rho", "σ": "sigma", "ς": "sigma",
     "τ": "tau", "υ": "upsilon", "φ": "phi", "χ": "chi", "ψ": "psi", "ω": "omega",
 }
 
@@ -78,6 +78,8 @@ def _fold_symbol(name: str) -> str:
 
     >>> _fold_symbol("α-Man-Ia")
     'alpha-man-ia'
+    >>> _fold_symbol("Ψ-Σ")
+    'psi-sigma'
     >>> _fold_symbol("Hsp70Aa")
     'hsp70aa'
     """
@@ -185,8 +187,8 @@ def emit_mod_deep_research(
     uniprot_data = up_file.read_text(encoding="utf-8")
     xref = extract_mod_xref(uniprot_data, config)
     if not xref:
-        return "skipped", None, f"no {config['uniprot_xref']} or AGR cross-reference in UniProt entry"
-    mod_id = xref if xref.startswith(f"{config['mod']}:") else f"{config['mod']}:{xref}"
+        return "skipped", None, f"no {config.get('uniprot_xref')} or AGR cross-reference in UniProt entry"
+    mod_id = f"{config['mod']}:{xref}"
 
     data = fetch_alliance_description(mod_id)
     text = data.get("curated_synopsis")

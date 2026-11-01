@@ -495,7 +495,8 @@ def extract_mod_xref(uniprot_data: str, config: Dict[str, Any]) -> Optional[str]
     """Extract the MOD gene id for an organism config, falling back to the AGR line.
 
     Unreviewed UniProt entries often lack the MOD's own DR line but carry
-    ``DR   AGR; <MOD>:<id>; -.``; the id is returned without the MOD prefix.
+    ``DR   AGR; <MOD>:<id>; -.``. The id is always returned without the MOD
+    prefix, which some MODs' own DR lines include (``DR   MGI; MGI:106913;``).
 
     Examples:
         >>> fly = {"uniprot_xref": "FlyBase", "mod": "FB"}
@@ -505,13 +506,19 @@ def extract_mod_xref(uniprot_data: str, config: Dict[str, Any]) -> Optional[str]
         'FBgn0033402'
         >>> extract_mod_xref("DR   AGR; WB:WBGene00000099; -.", fly) is None
         True
+        >>> extract_mod_xref("DR   MGI; MGI:106913; Abi2.", {"uniprot_xref": "MGI", "mod": "MGI"})
+        '106913'
+        >>> extract_mod_xref("DR   HGNC; HGNC:11998; TP53.", {"uniprot_xref": "HGNC", "mod": "HGNC"})
+        '11998'
     """
+    mod = config.get("mod")
     xref = extract_uniprot_xref(uniprot_data, config["uniprot_xref"]) if config.get("uniprot_xref") else None
-    if xref or not config.get("mod"):
-        return xref
-    prefix = f"{config['mod']}:"
-    agr = extract_uniprot_xref(uniprot_data, "AGR")
-    return agr[len(prefix):] if agr and agr.startswith(prefix) else None
+    if not xref and mod:
+        agr = extract_uniprot_xref(uniprot_data, "AGR")
+        xref = agr if agr and agr.startswith(f"{mod}:") else None
+    if xref and mod and xref.startswith(f"{mod}:"):
+        xref = xref[len(mod) + 1:]
+    return xref
 
 
 def extract_uniprot_id(uniprot_data: str) -> Optional[str]:

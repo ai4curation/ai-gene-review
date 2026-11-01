@@ -1016,14 +1016,16 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
-                    # A core function with a BIOLOGY gap on the MF aspect may be a contested
-                    # activity deliberately left out of the NEW rows. The gap need not be about
-                    # this term, so keep the issue but lower it to INFO and drop the NEW advice.
+                    # A BIOLOGY gap on the MF aspect, on this core function or at the top
+                    # level, may mark a contested activity deliberately left out of the NEW
+                    # rows. The gap need not be about this term, so keep the issue but lower
+                    # it to INFO and drop the NEW advice.
                     has_mf_gap = any(
                         isinstance(gap, dict)
-                        and "BIOLOGY" in (gap.get("gap_kind") or [])
+                        and isinstance(gap.get("gap_kind"), list)
+                        and "BIOLOGY" in gap["gap_kind"]
                         and gap.get("dark_aspect") == "MF_DARK"
-                        for gap in core_func.get("knowledge_gaps") or []
+                        for gap in [*(core_func.get("knowledge_gaps") or []), *(data.get("knowledge_gaps") or [])]
                     )
                     if not is_from_annotations and has_support:
                         report.add_issue(
