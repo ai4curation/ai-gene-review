@@ -21,6 +21,9 @@ applies, and the checks here keep action, case and knowledge gaps consistent:
   its own search; a ``knowledge_gaps`` entry is the way to record the gap;
 - ``TRUE_GAP`` and ``EXISTENCE`` need a ``BIOLOGY`` knowledge gap whose
   ``dark_aspect`` matches the ND aspect (or ``WHOLLY_DARK``);
+- ``ACCEPT`` needs evidence that the literature was searched: a cited
+  publication (PMID, DOI, PMC) or a deep-research file. The UniProt record or
+  the protein's existence level is not a search;
 - ``nd_case`` on a non-ND row is a mistake.
 
 Severity is WARNING, like the protein-binding policy: the checks guide
@@ -51,6 +54,28 @@ LITERATURE_CASES = frozenset({"STALE", "ONTOLOGY_BLOCKED"})
 #: Cases that must be paired with a BIOLOGY knowledge gap.
 GAP_CASES = frozenset({"TRUE_GAP", "EXISTENCE"})
 
+#: Reference id prefixes that are literature.
+LITERATURE_PREFIXES = ("PMID:", "DOI:", "PMC")
+
+
+def _cites_search(review: Dict[str, Any]) -> bool:
+    """Whether a review cites a publication or a deep-research file.
+
+    >>> _cites_search({"supported_by": [{"reference_id": "PMID:1"}]})
+    True
+    >>> _cites_search({"additional_reference_ids": ["file:human/X/X-deep-research-falcon.md"]})
+    True
+    >>> _cites_search({"supported_by": [{"reference_id": "file:human/X/X-uniprot.txt"}]})
+    False
+    """
+    ids = [s.get("reference_id") for s in review.get("supported_by") or [] if isinstance(s, dict)]
+    ids += list(review.get("additional_reference_ids") or [])
+    return any(
+        isinstance(i, str) and (i.startswith(LITERATURE_PREFIXES) or "-deep-research" in i)
+        for i in ids
+    )
+
+
 #: Actions that describe a true-but-peripheral or overreaching claim; an ND is neither.
 NON_ND_ACTIONS = frozenset({"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"})
 
@@ -77,12 +102,19 @@ def iter_nd_policy_violations(
 ) -> Iterator[Tuple[int, str, str, str]]:
     """Yield ``(index, field, message, suggestion)`` for each ND policy violation.
 
-    A guideline-conformant ND is accepted:
+    A guideline-conformant ND that cites the literature search is accepted:
 
+        >>> search = [{"reference_id": "PMID:1"}]
         >>> nd = {"term": {"id": "GO:0003674"}, "evidence_type": "ND",
-        ...       "review": {"action": "ACCEPT", "nd_case": "INFERABLE"}}
+        ...       "review": {"action": "ACCEPT", "nd_case": "INFERABLE", "supported_by": search}}
         >>> list(iter_nd_policy_violations({"existing_annotations": [nd]}))
         []
+
+    Without the search it is reported:
+
+        >>> nd["review"] = {"action": "ACCEPT", "nd_case": "INFERABLE"}
+        >>> [v[:2] for v in iter_nd_policy_violations({"existing_annotations": [nd]})]
+        [(0, 'supported_by')]
 
     Keeping it as non-core is reported:
 
@@ -102,7 +134,7 @@ def iter_nd_policy_violations(
 
     A true gap needs a matching BIOLOGY knowledge gap:
 
-        >>> nd["review"] = {"action": "ACCEPT", "nd_case": "TRUE_GAP"}
+        >>> nd["review"] = {"action": "ACCEPT", "nd_case": "TRUE_GAP", "supported_by": search}
         >>> [v[:2] for v in iter_nd_policy_violations({"existing_annotations": [nd]})]
         [(0, 'nd_case')]
         >>> doc = {"existing_annotations": [nd], "knowledge_gaps": [
@@ -168,6 +200,16 @@ def iter_nd_policy_violations(
                 "nd_case",
                 f"ND row is ACCEPTed but nd_case {nd_case} says literature exists",
                 "Use REMOVE (STALE) or MODIFY (ONTOLOGY_BLOCKED), or correct nd_case",
+            )
+
+        if action == "ACCEPT" and not _cites_search(review):
+            yield (
+                index,
+                "supported_by",
+                "ND row is ACCEPTed without evidence that the literature was searched",
+                "Cite the search: the deep-research file, or the publications that were "
+                "checked (a PMID or DOI). The UniProt record or the protein's existence "
+                "level does not show that the literature has no function to annotate",
             )
 
         if action == "ACCEPT" and review.get("proposed_replacement_terms"):

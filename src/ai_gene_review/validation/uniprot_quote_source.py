@@ -38,17 +38,20 @@ quote supports:
     cross-reference.
 ``uniprot_quote_existence_as_support``
     The quote is the protein existence (``PE``) line, cited for an ACCEPT or NEW
-    row or a core function. Existence says nothing about function; it can argue that an
-    annotation rests on prediction, but not support accepting one. An accepted
-    ND annotation needs evidence that the literature was searched instead.
+    row or a core function. Existence says nothing about function; it can argue
+    that an annotation rests on prediction, but not support accepting one. An
+    accepted ND annotation needs evidence that the literature was searched
+    instead.
 
 A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
 reported. Before matching, a quote loses any flat-file line codes and feature
 keys copied with it; feature ranges (``102..292``) are positions, not an
-ellipsis; and brackets the verbatim check treats as editorial are gaps, while
-literal notation such as ``[2Fe-2S]`` stays. Quotes that cannot be located are
-left to the verbatim check.
+ellipsis; brackets the verbatim check treats as editorial are gaps, while
+literal notation such as ``[2Fe-2S]`` stays; and a part left as a lone number
+(``?..649``) is dropped. Dropping a part can only make a flag more likely, since
+a flag must hold for every part. Quotes that cannot be located are left to the
+verbatim check.
 Snapshot support covers embedded UniSave ``record_text`` flat files; JSON fields
 and computed observations are not classified as UniProt flat-file statements.
 """
@@ -589,11 +592,14 @@ def _accepts(data: Any, path: str) -> bool:
     """Whether the quote at *path* supports asserting a function: an ACCEPT or NEW row, or a core function.
 
     >>> data = {"existing_annotations": [{"review": {"action": "ACCEPT"}},
-    ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}}]}
+    ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}},
+    ...                                  {"review": {"action": "NEW"}}]}
     >>> _accepts(data, "existing_annotations[0].review.supported_by[0].supporting_text")
     True
     >>> _accepts(data, "existing_annotations[1].review.supported_by[0].supporting_text")
     False
+    >>> _accepts(data, "existing_annotations[2].review.supported_by[0].supporting_text")
+    True
     >>> _accepts(data, "core_functions[0].supported_by[0].supporting_text")
     True
     >>> _accepts(data, "references[0].findings[0].supporting_text")
@@ -673,8 +679,10 @@ def validate_uniprot_quote_sources(
                 )
             else:
                 suggestion = (
-                    "Cite evidence for the function itself; protein existence can support "
-                    "MARK_AS_OVER_ANNOTATED or UNDECIDED, not ACCEPT"
+                    "Cite evidence for the function itself. Protein existence can argue that "
+                    "an annotation rests on prediction (e.g. MARK_AS_OVER_ANNOTATED, "
+                    "KEEP_AS_NON_CORE, MODIFY, UNDECIDED); it cannot support an ACCEPT, a NEW "
+                    "or a core function"
                 )
         elif f.check_type == UNVETTED_CHECK:
             where = _describe(f.statements)
