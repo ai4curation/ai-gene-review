@@ -119,6 +119,11 @@ propagated annotations; 81 genes are reviewed and 65 await adjudication
 >
 > Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
 > [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
+>
+> External check: [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examines Wei *et al.* 2020
+> (PMID:32470107), which reported IBA as the leading non-IEA source of taxon-inconsistent
+> annotations. Most of its 290 flagged pairs are now gone from GOA; its plant lipid A flags
+> are refuted by experiment.
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
 
@@ -1583,7 +1588,7 @@ should not.
 1. **Flag pseudo-enzyme candidates**: Proteins with enzyme domains but missing catalytic residues
 2. **Flag neo-functionalized subfamilies**: Long branch lengths and different EC numbers indicate potential opposite function
 3. **Validate substrate specificity**: Don't assume identical specificity across orthologs
-4. **Distinguish core vs. secondary**: Mark promiscuous activities as non-core
+4. **Distinguish core vs. secondary**: a genuine secondary activity is non-core, but noise-level promiscuous activity of a paralog is removed; see the promiscuous-activity tiers in [ENZYME_SPECIFICITY](ENZYME_SPECIFICITY.md)
 5. **Prefer specific terms**: Replace generic IBA with specific terms when evidence exists
 6. **Check for functional divergence**: Especially in rapidly evolving families
 7. **Consider organism-specific biases**: Source annotations may reflect experimental systems (e.g., NMJ in flies) that don't apply to target species
@@ -1791,6 +1796,27 @@ the text defensible was the limb arguing against the action it sat on.
 
 ---
 
+## Single-organism IBA phylogenetic distance analysis
+
+While a short `WITH/FROM` donor list is not by itself evidence against an IBA, a single organism's experimental annotation used to seed a deep ancestral `IBD` node (`Opisthokonta`, `Eukaryota`, `LUCA`) and propagated across kingdoms or subfamily boundaries fails at a much higher rate than close-clade transfers. Across all 25,298 positive GOA `IBA` rows (6,382 GOA genes; 6,379 reviewed genes) in this repository, **3,517 (13.9%)** across 2,165 genes rest on experimental support from a single distinct non-self organism (3,433 rated: 3,426 with a resolved donor lineage and 7 in `Tier 0` with an unresolved donor lineage; and **8,161 / 20,108 = 40.6%** of cached PAINT `IBD` rows rest on a single resolved taxon).
+
+We defined and benchmarked four quantitative phylogenetic distance metrics in [`IBA_REVIEW/single-organism-distance.md`](IBA_REVIEW/single-organism-distance.md) (computed by [`IBA_REVIEW/single_organism_distance.py`](IBA_REVIEW/single_organism_distance.py)), separating **Propagation Failure (`Fail` = `REMOVE` + `MARK_AS_OVER_ANNOTATED`)** from **Term Granularity Refinement (`Refn` = `MODIFY` + `TOO_GENERAL`)**:
+
+1. **Taxonomic LCA Clade Depth ($d_{\text{LCA}}$) & Branch Steps ($s_{\text{up}} + s_{\text{down}}$):** Propagation failure (`% Fail`) and outright `% REMOVE` rates climb substantially as the donor–target LCA moves from close clades to deep cross-kingdom and cross-domain splits (whereas term-refinement rates stay roughly flat around 6%–9%, except in small-$n$ Tier 2):
+   - **Tier 1** (Close clade, e.g. `Euarchontoglires`, `Murinae`, `Caenorhabditis`, $n = 1{,}346$): **8.0%** Fail (`REMOVE` **2.6%**), **5.9%** Refn (**14.0%** total downgraded).
+   - **Tier 2** (Intermediate / unenumerated clade, e.g. `Saccharomycotina`, `Magnoliopsida`, plus residual fallback clades, $n = 73$): **1.4%** Fail (`REMOVE` **0.0%**), **16.4%** Refn (**17.8%** total downgraded; 12 of 13 non-retained rows are `MODIFY`/`TOO_GENERAL` refinements).
+   - **Tier 3–4** (Phylum / Bilateria splits, e.g. `Euteleostomi`, `Ascomycota`, `Bilateria`, $n = 556$ and $n = 500$): **12.2%–13.6%** Fail (`REMOVE` **5.9%** and **4.6%**), **5.8%–7.2%** Refn (**19.4%** total downgraded).
+   - **Tier 5** (`Opisthokonta` Fungi $\leftrightarrow$ Metazoa / `Amorphea` / deep bacterial split, $n = 735$): **13.7%** Fail (`REMOVE` **5.4%**), **7.8%** Refn (**21.5%** total downgraded).
+   - **Tier 6** (`Eukaryota` root, e.g. `Viridiplantae` $\leftrightarrow$ `Opisthokonta`, $n = 83$): **19.3%** Fail (`REMOVE` **10.8%**), **1.2%** Refn (**20.5%** total downgraded).
+   - **Tier 7** (`cellular_organisms` / `LUCA`, `Bacteria`/`Archaea` $\leftrightarrow$ `Eukaryota`, $n = 133$): **22.6%** Fail (`REMOVE` **15.0%** — nearly 6$\times$ the Tier 1 `REMOVE` rate), **9.0%** Refn (**31.6%** total downgraded).
+2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):** Calibrated on close donor–target pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}538$ total: 785 in locally cached PAINT families with an explicit node taxid, 226 in cached families with an unrecorded blank `taxon:` in `*-paint.tsv`, and 527 uncached), single-organism IBAs whose `IBD` was placed at `LUCA`/`Eukaryota`/`Opisthokonta` ($d_{\text{PTN}} \le 1$, $n = 121$) or intermediate pre-vertebrate clades ($2 \le d_{\text{PTN}} \le 5$, $n = 252$) have a **7- to 8-fold higher `REMOVE` rate** (**4.1%** and **3.6%**, with **8.3%** and **7.1%** Fail, **14.9%** and **13.9%** total downgraded) than those scoped within the clade/Vertebrata ($d_{\text{PTN}} \ge 6$, $n = 412$: **0.5%** `REMOVE`, **6.6%** Fail, **13.6%** total downgraded). Rows in cached families with an unrecorded blank `taxon:` string ($n = 226$) show **8.4%** Fail and **4.9%** `REMOVE` (**12.4%** total downgraded).
+3. **PANTHER Subfamily Dilution (`SAME_SF` vs `CROSS_SF`):** Across the 1,156 rated rows with resolved PANTHER subfamilies and donor lineages, crossing a subfamily boundary increases the propagation failure (`% Fail`) rate and nearly doubles the `REMOVE` rate across both close/moderate taxa ($d_{\text{LCA}} \ge 4$: **10.6%** vs **7.4%** Fail; **4.2%** vs **2.3%** `REMOVE`; $n = 189$ vs $n = 430$) and distant taxa ($0 \le d_{\text{LCA}} \le 3$: **19.1%** vs **12.3%** Fail; **8.7%** vs **5.8%** `REMOVE`; $n = 277$ vs $n = 260$).
+4. **Exact PANTHER Tree Edge Steps & Duplications (`projects/TREEGRAFTER/graft_paths_all.tsv`):** Across all 383 rated single-taxon `IBD` paths in `graft_paths_all.tsv` (which audits reviewed **TreeGrafter (`IEA`)** graft paths on non-PANTHER species rather than the 3,433 GOA `IBA` population, and has only $n = 2$ direct row overlap with GOA `IBA` annotations), crossing a gene-duplication node on `< 10` step paths raises the failure rate from **12.9%** (`REMOVE` **4.8%**, $n = 209$) to **17.3%** (`REMOVE` **8.0%**, $n = 162$), and to **20.0%** (`REMOVE` **10.0%**, $n = 10$) on paths of $\ge 10$ tree steps with duplication.
+
+*Methodological note*: Because review actions in this repository were generated under `IBA_REVIEW.md` guidelines that explicitly instruct reviewers to scrutinize deep-node and cross-kingdom propagations, observed failure rates partly reflect reviewer policy rather than an independent experimental ground truth; see [`IBA_REVIEW/single-organism-distance.md`](IBA_REVIEW/single-organism-distance.md) for full discussion of confounds, sample sizes, and candidate re-reviews.
+
+---
+
 ## Project history & methodology
 
 This page records the **synthesized findings**. The dated project log, the per-pass
@@ -1800,3 +1826,6 @@ verification narrative (what was added, what was retracted and why), and the
 A reproducible **multiple-sequence-alignment check** of the two central pseudo-enzyme
 claims (Argonaute catalytic tetrad; CRMP/DPYSL metal-coordinating residues) lives in
 [IBA_REVIEW/msa/](IBA_REVIEW/msa/RESULTS.md) — `uv run python catalytic_residue_msa.py`.
+Quantitative phylogenetic distance analysis for single-organism IBAs lives in
+[IBA_REVIEW/single-organism-distance.md](IBA_REVIEW/single-organism-distance.md) —
+`uv run python projects/IBA_REVIEW/single_organism_distance.py --summary`.

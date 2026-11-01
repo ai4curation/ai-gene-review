@@ -162,6 +162,10 @@ more specific term asserted elsewhere in the same review already entails it:
 `hydrolase activity` beside an accepted `metalloendopeptidase activity`, or `membrane`
 beside an accepted `endoplasmic reticulum membrane`.
 
+Root-term ND rows are the exception: an ND is a statement about the literature, not a
+broad term subsumed by a specific one, so `TOO_GENERAL` is never used for it (the
+`nd_policy` check warns; see `projects/NO_DATA.md`).
+
 It judges the term, not the row's evidence, which is weighed separately, and it never
 means the claim is false. How it differs from the other actions:
 

@@ -23,6 +23,25 @@ should fix, in a form from which a report to that resource can be generated.
   activity id.
 - Functional isoforms: `functional_isoforms[].source_defects`, for a defect in
   the source's record of that isoform. Set `record` to the UniProt accession.
+- Cited source text: `references[].reference_review.source_defects`, for an
+  error in a source's own curated text: a MOD gene description (cited as its
+  `-deep-research-<mod>.md` file) or a UniProt FUNCTION or other comment (cited
+  as the `-uniprot.txt` file). Set `record` to the source record (`WB:WBGene...`,
+  `UniProtKB:...`) and `slot` to the field (`MOD_provided_gene_description`,
+  `CC:FUNCTION`). Use `WRONG_STATEMENT` for a claim the literature contradicts,
+  `OUTDATED_STATEMENT` for one that has been superseded ("novel protein", "no
+  obvious function in RNAi assays"), and `MISSING_STATEMENT` for content the
+  source has lost or omits. For the first two, `asserted_value` is the
+  offending sentence copied verbatim from the cited file, run-together words
+  included, and `requested_change` is `CHECK`, with the explanation saying what
+  the text should say. Validation warns when the value is not found in the file
+  (`statement_defect_not_in_source`). For `MISSING_STATEMENT`, as for
+  `MISSING_ISOFORM`, nothing wrong is asserted: `asserted_value` repeats
+  `record` and `requested_change` is `ADD`. An error in an Alliance *automated* description
+  usually comes from the GO annotations it is generated from. Record it on
+  those annotation rows, not on the text, unless the text itself is the fault
+  (for example, function sentences lost between releases, which is
+  `resource: ALLIANCE`).
 
 ## Fields
 

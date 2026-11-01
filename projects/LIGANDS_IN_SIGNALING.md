@@ -457,6 +457,8 @@ validators.
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
   `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`, `PTHR11515`, `PTHR11509`,
   `PTHR16866`, `PTHR24023`, `PTHR13874`, `PTHR16839`, `PTHR20950`, `PTHR11438`):
+- **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
+  `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
     its IBD should use the ligand-activity term; a new `SUBFAMILY_ONLY` assessment of
     *chemorepellent activity* covers the four Slit subfamilies.
@@ -587,6 +589,10 @@ validators.
 - Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
   PTHR11471, PTHR12015, PTHR11412, PTHR11515, PTHR11509, PTHR16866, PTHR24023, PTHR13874,
   PTHR16839, PTHR20950, PTHR11438.
+  (upgraded), `c5a_signaling`.
+- Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22, FASLG, CXCL8, C5.
+- Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
+  PTHR11471, PTHR12015, PTHR11412.
 - Report page: [report/ligand-gap-report.html](LIGANDS_IN_SIGNALING/report/ligand-gap-report.html)
   (human, fly and fission yeast snapshot; also published as the Ligand gap report artifact).
   It predates the GPCR scope and the other species, so its counts are lower than section 3.
@@ -616,6 +622,11 @@ validators.
    *vascular endothelial growth factor signaling pathway*, which is part_of that response.
    Decide alongside #15477; no edit was made.
 6. Check the fly over-annotation (O) calls against data before acting on them.
+7. **Human `C3` (`genes/human/C3/C3-ai-review.yaml`) follow-up:** update the four UniProt `IDA`
+   `GO:0008009` (*chemokine activity*) rows on human `C3` (`PMID:342601`, `PMID:5778786`,
+   `PMID:37169960`, `PMID:37852260`, which seeded the `WRONG_NODE` PAINT IBD at `PTN008967461` in
+   `PTHR11412`) from `ACCEPT` to `REMOVE` with `source_defects` (`WRONG_TERM` → `GO:0001664`),
+   matching `C5-ai-review.yaml` and `PTHR11412-review.yaml`.
 
 ### How to rerun
 
