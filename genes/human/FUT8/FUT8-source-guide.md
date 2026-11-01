@@ -1,0 +1,39 @@
+# FUT8 evidence guide
+
+This is an authored guide to selected source evidence. It is not provider-generated deep research. Original GOA, UniProt, publication and pathway records must retain their machine-fetched contents.
+
+## Catalytic evidence
+
+[PMID:9133635](https://pubmed.ncbi.nlm.nih.gov/9133635/) describes purification and cloning of human FUT8 and fucose transfer to an N-linked glycopeptide. The accessible original abstract supports enzyme chemistry; supernatant purification does not define every endogenous location. [PMID:17172260](https://pubmed.ncbi.nlm.nih.gov/17172260/) describes the human catalytic structure. Its full text was inaccessible in this reading, so individual mutant results are not reconstructed. [PMID:10764839](https://pubmed.ncbi.nlm.nih.gov/10764839/) describes recombinant human enzyme and donor-binding mutagenesis in its abstract; no new residue-level assertion is supplied here.
+
+[PMID:36280670](https://doi.org/10.1038/s41467-022-34029-7), selected original Results/Figure 4 and Methods, tests an engineered soluble human FUT8 fusion made in bacterial hosts. Glycan-product measurements support core fucosylation. The Results/Methods substrate-number discrepancy is preserved; this engineered protein is not a natural isoform. [PMID:29304374](https://pubmed.ncbi.nlm.nih.gov/29304374/) directly reports patient-cell and serum core-fucosylation defects in its abstract. The recovered NCBI PMC XML has no article body, despite HTTP 200; no full-text rescue experiment is claimed.
+
+## Products and location
+
+Current UniProt declares four products with verified sequences of 575, 308, 412 and 169 residues. Product Q9BYC5-2 (308 residues; synonym Retinal; sequence evidence [PMID:10814706](https://pubmed.ncbi.nlm.nih.gov/10814706/)) is distinct from Q9BYC5-4 (169 residues; synonyms Retina-1 and Retina-2; sequence evidence [PMID:14514715](https://doi.org/10.1093/glycob/cwh006) and [PMID:15489334](https://pubmed.ncbi.nlm.nih.gov/15489334/)). UniProt's inactivity comment is specifically attached to product 4. In PMID:14514715, selected author-deposited Results, Tables I–II and Figure 6 support construct-dependent activity and Golgi localization of recombinant human FUT8 in COS7 cells; tag placement affects retention. The Discussion reports inactivity of retinal splice forms, without a retinal construct row in the displayed activity tables, and leaves their proposed GDP-fucose regulation unresolved. That report must not be transferred by the shared retinal naming to product 2, and exact sequence identity alone does not establish equivalent activity or expression of the four products.
+
+[PMID:10814706](https://pubmed.ncbi.nlm.nih.gov/10814706/) concerns genomic organization and promoter activity, not a transcriptional function of the FUT8 protein. Large-scale sequence references [PMID:12508121](https://pubmed.ncbi.nlm.nih.gov/12508121/), [PMID:14702039](https://pubmed.ncbi.nlm.nih.gov/14702039/) and [PMID:15489334](https://pubmed.ncbi.nlm.nih.gov/15489334/) remain sequence provenance; their specific target clones were not independently joined.
+
+## Detection and interactions
+
+[PMID:19199708](https://pubmed.ncbi.nlm.nih.gov/19199708/): authentic supplementary S2, sheet Paratid Exosomes, row 397 identifies historical FUT8 accession IPI00302523.2 with two peptides; S1 rows 3993–3994 provide the matching peptide records. Current-sequence joins support detection in the human parotid exosome preparation, while neither establishes a unique current product. The original parotid context must remain attached. This is not evidence of vesicle biogenesis or a membrane orientation.
+
+[PMID:19946888](https://pubmed.ncbi.nlm.nih.gov/19946888/) studies membranes from the human NK-like YTS line. Its abstract is accessible, but the FUT8-specific identification table was not recovered. Preserve the uncertainty of that experimental context rather than inferring a wrong target from incomplete evidence.
+
+[PMID:32296183](https://pubmed.ncbi.nlm.nih.gov/32296183/): authentic IntAct records EBI-24951701, EBI-23083633 and EBI-24447815 identify FUT8–ZBTB10 isoform3 physical association in yeast two-hybrid assays. The partner suffix is not a FUT8 isoform. Full Supplementary Table 9 and exact construct boundaries were not independently examined. The result does not establish a physiological Golgi/nuclear mechanism or a specific adaptor function.
+
+[PMID:25171405](https://pubmed.ncbi.nlm.nih.gov/25171405/), original Results and Figure 4/S4A caption, explicitly names FUT8 as a substrate phosphorylated following VLK coexpression. It does not give FUT8 kinase activity. [PMID:30237576](https://pubmed.ncbi.nlm.nih.gov/30237576/) names the FUT8 disease case in the original abstract and Figure 1 caption; its exact variant supplement was not inspected.
+
+## Mapping and evolutionary context
+
+[PMID:11698403](https://pubmed.ncbi.nlm.nih.gov/11698403/) distinguishes N-glycan core fucosylation, protein O-fucosylation and fucosidase-mediated degradation. The paper's comparative developmental expression is not a direct human embryogenesis assay. The current GO link from GO:0008424 to protein O-linked fucosylation is recorded as an ontology mapping question; FUT8's measured acceptor is the N-glycan GlcNAc.
+
+Official Reactome [1028788](https://reactome.org/content/detail/R-HSA-1028788) and [9696980](https://reactome.org/content/detail/R-HSA-9696980) trace the human catalyst through 1028794 → 1028782 to Q9BYC5 in Golgi membrane. FUT8 is actually present in the viral pathway model. The parent [9694548](https://reactome.org/content/detail/R-HSA-9694548) must not turn its glycosylation step into peptide-bond cleavage. [975578](https://reactome.org/content/detail/R-HSA-975578) explicitly lists the FUT8 transfer reaction in complex N-glycan synthesis.
+
+The original PANTHER 19 PTHR13132 tree, alignment and node map place human AN19/PTN002490629 below AN0/PTN000992822, the origin of both incoming IBA terms. The 575-residue human sequence is exact. Incoming GOA donor sets dated 2026-05-29 contain four donors including human self; retained IBD records dated 2026-08-28 additionally include zebrafish. Their donor sets are explicitly unequal. Human self is expected experimental grounding, not circularity. This tree read does not independently certify every donor paper or activity of each shorter human product.
+
+Official GO_REF method pages [0000002](https://geneontology.org/GO_REF/0000002.html), [0000033](https://geneontology.org/GO_REF/0000033.html), [0000108](https://geneontology.org/GO_REF/0000108.html), [0000117](https://geneontology.org/GO_REF/0000117.html) and [0000120](https://geneontology.org/GO_REF/0000120.html) explain electronic, phylogenetic and logical propagation. These methods are not additional biochemical experiments.
+
+## Original contexts and native review
+
+The [evidence map](FUT8-source-evidence.yaml) preserves all 29 complete QuickGO originals, all 16 exported columns, the untouched native seed and each actual raw-to-native-to-reviewed join. The parotid context is retained literally under `original_extensions` and normalized under `restored_extensions` as `part_of UBERON:0001831` (parotid gland). The 16-column TSV does not encode annotation extensions. All 23 qualified normal sources are present; native publication and pathway titles are preserved separately from bibliographic title variants. The two normal PAINT rows retain their later five-donor source version, while each original annotation retains its four-donor version. The four native product declarations are unchanged. No new annotation or supporting-text quotation is added. Actual validation and history outcomes are recorded in the [notes](FUT8-notes.md).
