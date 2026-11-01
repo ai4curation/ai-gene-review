@@ -154,6 +154,49 @@ def test_review_without_claims_yields_nothing(tmp_path):
     assert validate_gene_residue_claims(p, CACHE, SITES) == []
 
 
+def test_uniprot_outage_uses_the_reviews_committed_record(tmp_path, monkeypatch):
+    """A new review's own protein is uncached in merge-queue CI; an outage must not block it.
+
+    The anchor is already in the sequence cache, as it is in CI; only the target has to
+    be fetched, and UniProt answers 500 throughout.
+    """
+    import urllib.error
+
+    from ai_gene_review.validation import family_residue_validator as frv
+
+    def down(req, timeout):
+        raise urllib.error.HTTPError(req.full_url, 500, "Internal Server Error", {}, None)
+
+    monkeypatch.setattr(frv.urllib.request, "urlopen", down)
+    monkeypatch.setattr(frv, "_sleep", lambda _seconds: None)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    (cache_dir / "ANCHOR1.seq").write_text("MAHKCDEFGH")
+    gene_dir = tmp_path / "X"
+    gene_dir.mkdir()
+    (gene_dir / "X-uniprot.txt").write_text(
+        "ID   X_TEST                  Unreviewed;        10 AA.\n"
+        "AC   TARGET1;\n"
+        "DT   21-MAR-2012, sequence version 1.\n"
+        "SQ   SEQUENCE   10 AA;  1100 MW;  0000000000000000 CRC64;\n"
+        "     MAAKSDEFGH\n"
+        "//\n"
+    )
+    review = gene_dir / "X-ai-review.yaml"
+    review.write_text(yaml.safe_dump({
+        "id": "UniProtKB:TARGET1", "gene_symbol": "X",
+        "existing_annotations": [{
+            "term": {"id": "GO:1"},
+            "review": {"action": "REMOVE", "propagation_review": {
+                "residue_claims": [_claim("LOST", 3, "H", 3, "A")]}},
+        }],
+    }))
+    results = validate_gene_residue_claims(review, frv.SequenceCache(cache_dir), SITES)
+    assert results and all(r.outcome is ClaimOutcome.PASS for r in results), [
+        str(r) for r in results
+    ]
+
+
 # --------------------------------------------------------------------------
 # Against the real corpus
 # --------------------------------------------------------------------------

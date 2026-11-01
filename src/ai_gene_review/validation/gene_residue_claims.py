@@ -262,6 +262,10 @@ def validate_gene_residue_claims(
     doc = yaml.load(path.read_text(), Loader=_Loader)
     gene = (doc or {}).get("gene_symbol") or path.stem
     accession = (doc or {}).get("id", "")
+    # The review's own protein is the sequence least likely to be cached in CI, so let
+    # its committed UniProt record stand in if UniProt is down.
+    for record in path.parent.glob("*-uniprot.txt"):
+        cache.add_local_record(record)
     results: list[ClaimCheck] = []
     for ann in (doc or {}).get("existing_annotations") or []:
         pr = (ann.get("review") or {}).get("propagation_review") or {}
