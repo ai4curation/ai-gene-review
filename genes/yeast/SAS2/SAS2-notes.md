@@ -89,3 +89,8 @@
   I searched the current web/PubMed-facing index for 2024-2026 direct
   Sas2/SAS-I primary papers and did not find evidence that changes the September
   IBA review.
+- Fetched PMID:38229233 while checking recent Saccharomyces subtelomeric
+  heterochromatin papers. The paper uses IMD2 to follow GTP-dependent
+  heterochromatin fluctuations and cites Sas2-mediated H4K16 acetylation as
+  established boundary context, but it does not provide new direct Sas2
+  biochemical, localization, or SAS-complex evidence.
