@@ -1,0 +1,25 @@
+# FRRS1L review notes
+
+## Evidence and scope
+
+The [source guide](FRRS1L-source-guide.md) records original URLs, selected Methods/Results locators and access limits. The [evidence map](FRRS1L-source-evidence.yaml) retains every original source object, the untouched genuine seed and the actual native mapping. Validation outcomes are recorded separately below after execution.
+
+FRRS1L has a specific role in AMPA receptor biogenesis rather than an established reductase activity. Selective native rat receptor complexes and heterologous coassembly with CPT1c support a receptor-associated ER step. The reported human construct is NM_014334 without a sequence version. Mouse GluA co-IP supplies independent receptor-association evidence. Neither assay resolves a purified binary binding interface. [PMID:28675162](https://pmc.ncbi.nlm.nih.gov/articles/PMC5500892/), [PMID:29276473](https://pmc.ncbi.nlm.nih.gov/articles/PMC5727121/).
+
+Human neuronally differentiated SH-SY5Y knockdown reduces AMPA-evoked calcium influx and inward current. Rat manipulations and mouse deletion/rescue connect FRRS1L to receptor abundance and signaling, while mouse-null glycan and fractionation experiments support receptor maturation. Endo-H sensitivity measures AMPAR subunits and does not establish a glycosyltransferase activity of FRRS1L. Overexpression outcomes differ across preparations; no universal sufficiency claim is made. [PMID:27236917](https://pmc.ncbi.nlm.nih.gov/articles/PMC4908178/), [PMID:28675162](https://pmc.ncbi.nlm.nih.gov/articles/PMC5500892/), [PMID:29276473](https://pmc.ncbi.nlm.nih.gov/articles/PMC5727121/), [PMID:30692144](https://pmc.ncbi.nlm.nih.gov/articles/PMC6398485/).
+
+The review assigns six ACCEPT, two KEEP_AS_NON_CORE, one MODIFY and four UNDECIDED decisions. Raw 0 is refined to ionotropic glutamate receptor binding. Raw 1 remains unresolved because DIC antibodies isolate intact vesicles, not a demonstrated FRRS1L–DIC pair. Raw 2–7 represent the characteristic receptor-regulatory/ER role. Raw 9–10 preserve limited surface-localization evidence. Raw 8 and 11–12 retain source-specific uncertainty about postsynaptic/synaptic localization. The 2019 abstract cannot substitute for the inaccessible localization experiment, and older rat somatic ER observations cannot refute later mouse postsynaptic ER. [PMID:31604597](https://pubmed.ncbi.nlm.nih.gov/31604597/).
+
+## Historical sequence reconciliation
+
+The older 344-residue human reference and the current 293-residue reference differ by a 51-residue N-terminal extension; the remaining sequence is identical. The official historical records resolve why published S317/Q321 coordinates exceed the current length. They do not establish an alternatively spliced natural product or identify the exact sequence of every historical clone. The historical coordinates are retained, with any current-coordinate conversion explicitly labeled. [UniSave Q9P0K9](https://rest.uniprot.org/unisave/Q9P0K9?format=json), [NM_014334.4](https://www.ncbi.nlm.nih.gov/nuccore/NM_014334.4).
+
+## Unresolved sources and biological questions
+
+The primary text of PMID:31604597 is needed to evaluate its exact localization assays; PMID:10603000 and PMID:27239025 were available here as verified bibliographic records without abstracts. These are access follow-ups, not assertions of source error. The biological questions concern receptor-contact interfaces, the possible transport connection to dynein, and compartment-specific functions across neuronal types. They are kept distinct from the practical task of obtaining an unread paper.
+
+## Preparation record
+
+All 13 QuickGO originals, evidence codes, qualifiers, WITH/FROM groups, dates and null extensions are retained. Genuine acquisition yielded 13 exported rows and 13 native seed annotations; the actual raw-to-native mapping, including all 16 TSV columns, was verified before authoring. The typed exporter annotation_extension field contains a gene-name column and is not treated as a biological extension. All eleven normal sources were genuinely acquired; three UniProt bibliography papers were fetched separately after final accounting showed that native gene acquisition had not acquired them. The untouched seed and acquisition diagnostics were retained. The two normal PAINT IBD rows match the separately inspected target lineage and literal donors. No provider call, new quotation, annotation or alternative product is claimed. Local validation, computed status, history and rendering outcomes will be appended after execution.
+
+Local checks passed: default validation reported zero annotation advisories, strict GOA matched all 13 contexts, and native computed status is COMPLETE. The three question rationales were preserved through a lossless schema projection after the initial validation diagnostic. The genuine CREATE history, private HTML rendering, local links and exact context/source conservation were checked. All eleven normal sources, 276 prior protected files, 51 scratch files, 17 prior branch tips and 12 existing PR links remain intact. Scientific PR review and actual merge-group CI remain future requirements.
