@@ -7402,3 +7402,37 @@ All four reviews preserve their original source records and contain no alternati
 The accepted logs retain dependency deprecations and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. Local checkpoint checks cover tracker preservation, history and rendering without rerunning gene reviews.
 
 Object verification covers 28 FOXE1, 32 FOXC2, 19 FOXE3 and 20 FOXG1 objects: 91 distinct objects comprising 58 normal sources and 33 gene/history files. Their 77 published payload paths are distinct, with no parent-identical no-ops. The tracker preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 152 prior completion updates, 235 prior project histories and the complete 854,366-byte progress prefix. The two queue files remain exact mirrors. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-31T212106Z-codex-144198.yaml).
+
+## Completion checkpoint 669 — 2026-11-01 02:34:51 UTC
+
+**669 complete; 2,207 remaining out of 2,876 catalogue genes.** This checkpoint publishes the independently verified actual merges of FOXJ1, FOXN1, FOXP1 and FOXRED1. Their completion credit was already accepted; this tracker adds no new gene credit and changes none of their scientific content.
+
+FOXJ1 is a nuclear Pol II activator supporting motile-cilium assembly and lung ciliated-cell differentiation. Human airway basal-cell gene transfer and variant-cell experiments retain their distinct endpoints; gene transfer alone is not presented as proof of complete multiciliated-cell maturation. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXJ1/FOXJ1-source-guide.md), [PR #5790](https://github.com/ai4curation/ai-gene-review/pull/5790), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/5a04fb413ca65be5a79f9aff525bc330b248a105) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41242610536).
+
+FOXN1 is a nuclear Pol II activator with characteristic roles in keratinocyte differentiation and thymic epithelial morphogenesis. Effects on developing T cells retain the epithelial-niche context and source-specific limits. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXN1/FOXN1-source-guide.md), [PR #5804](https://github.com/ai4curation/ai-gene-review/pull/5804), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/25438c2915d82e1f560dc88f6c9ec521ea482648) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41248850949).
+
+FOXP1 regulates Pol II transcription through sequence-specific DNA recognition and partner recruitment, including SMRT-associated repression. Activation at particular targets, including FBXL7, remains a distinct experimental context. Seven declared natural products are preserved; tested protein fragments are not treated as natural isoforms. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXP1/FOXP1-source-guide.md), [PR #5806](https://github.com/ai4curation/ai-gene-review/pull/5806), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/00ba9ef8fc8dc545a95a63d582896fb3632db50d) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41252252799).
+
+FOXRED1 supports middle-to-late mitochondrial complex I assembly, with inner-membrane association. Its flavoprotein fold and manual similarity annotations remain mechanistic clues; a specific catalytic reaction or FAD-binding activity has not been demonstrated. Three natural products and the complete inherited review remain preserved. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXRED1/FOXRED1-source-guide.md), [PR #5807](https://github.com/ai4curation/ai-gene-review/pull/5807), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/8ea767d4511b9f37a4644f7e2a07277f8e621900) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41262211067).
+
+| Review | Original / exported contexts | Native seed | Final stored | Status / advisories | References |
+| --- | ---: | ---: | ---: | --- | ---: |
+| FOXJ1 | 72 / 72 | 71 | 71 | DRAFT / 1 | 22 |
+| FOXN1 | 40 / 40 | 40 | 40 | DRAFT / 8 | 19 |
+| FOXP1 | 79 / 79 | 74 | 77 | COMPLETE / 0 | 38 |
+| FOXRED1 | 10 / 10 | No new seed | 10 | COMPLETE / 0 | 11 |
+
+FOXJ1 preserves its original collision provenance and two extension atoms. FOXP1 separates three annotation-scope pairs from the native seed while retaining two provenance-only collisions and all 14 extension atoms. FOXRED1's archived twelve-row prior review retains two retired NEW assertions. All 16 original quote associations remain recoverable: 10 active and six historical, with their original reference and section associations. These four accepted reviews introduce no new quotations or current NEW annotations. Each has one core; DRAFT and COMPLETE status do not replace the recorded source-access limits.
+
+All four actual merge-group runs completed their validation, full suite and aggregate jobs successfully. Each executed 287 doctests (37 skipped; eight warnings), 12 examples, 454 Python automation tests, 19 JavaScript tests and type checking of 299 files. Unit runs each deselected 86 tests and reported nine warnings.
+
+| Actual integration | Unit tests | Gene-review schemas | Histories / history tests | Modules / module warnings | Family reviews |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FOXJ1 | 4,566 | 9,942 | 19,920 / 42 | 744 / 2,287 | 751 |
+| FOXN1 | 4,566 | 9,943 | 19,923 / 42 | 744 / 2,287 | 751 |
+| FOXP1 | 4,572 | 9,961 | 19,955 / 42 | 744 / 2,287 | 751 |
+| FOXRED1 | 4,572 | 9,963 | 19,964 / 42 | 746 / 2,288 | 751 |
+
+The accepted logs retain dependency warnings and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. Local checkpoint checks cover tracker preservation, the new history record and private rendering without rerunning gene reviews.
+
+The four accepted closures contain 116 distinct objects: 81 normal sources and 35 gene/history files, with 87 distinct published payload paths and no parent-identical no-ops. This checkpoint preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 153 prior completion updates, 236 prior project histories and the entire 861,304-byte progress prefix. The queue mirrors remain identical. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T023451Z-codex-f69c8d.yaml).
