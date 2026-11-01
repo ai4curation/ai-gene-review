@@ -12,7 +12,7 @@ The actual PTHR45796 human target is PTN002483647/AN150, matching the 715-aa dis
 
 ### PMID:11872605 — MRI analysis of an inherited speech and language disorder: structural brain abnormalities.
 
-Selected original Subjects, statistical Methods, Tables 1–2 and Results printed 467–471, as documented in the retained independent primary consultation.
+Selected original Subjects, statistical Methods, Tables 1–2 and Results printed 467–471. The normal cache is abstract-only; the selected original at https://www.researchgate.net/publication/11489179_MRI_analysis_of_an_inherited_speech_and_language_disorder_Structural_brain_abnormalities was accessible and read within these locators. Complete article, image and supplement coverage is not claimed.
 
 Human KE-family MRI shows caudate reduction and bilateral putamen increase. This is developmental clinical context, not a direct cellular mechanism; the putamen VBM threshold and limited cohort remain explicit.
 
@@ -44,7 +44,7 @@ Sources: [pubmed](https://pubmed.ncbi.nlm.nih.gov/15489334/); [doi](https://doi.
 
 ### PMID:16407075 — Structure of the forkhead domain of FOXP2 bound to DNA.
 
-Selected original human forkhead-domain Results, Figures 1–5 captions, sample preparation and MALS Methods, printed 160–165.
+Selected original human forkhead-domain Results, Figures 1–5 captions, sample preparation and MALS Methods, printed 160–165. The normal cache is abstract-only; the selected original at https://pure.mpg.de/rest/items/item_1555024/component/file_2261109/content was accessible and read within these locators. Complete article, image and supplement coverage is not claimed.
 
 Human 503–584 fragment recognizes DNA and forms monomer/dimer populations. Domain swapping is experimentally supported for the fragment; the proposed DNA-looping/interchromosomal model is not an established native mechanism.
 
@@ -92,7 +92,7 @@ Sources: [pubmed](https://pubmed.ncbi.nlm.nih.gov/24893771/); [doi](https://doi.
 
 ### PMID:25027557 — Transcriptional regulation by FOXP1, FOXP2, and FOXP4 dimerization.
 
-Original author-hosted PDF Methods pp 1–3, Results pp 3–4,6,8 and Figures 1–2 captions, retained independent consultation.
+Original author-hosted PDF Methods pp 1–3, Results pp 3–4,6,8 and Figures 1–2 captions. The normal cache is abstract-only; the selected original at https://www.yorku.ca/dakc/Dorota%20-%20RESEARCH%20ARTICLES/Sin%20Li%20and%20Crawford%202014-Transcriptional%20Regulaton%20by%20FOXP1%20FOXP2%20and%20FOXP4%20Dimerization.pdf was accessible and read within these locators. Complete article, image and supplement coverage is not claimed.
 
 Human BC143867 is described as 714 residues; no equivalence to current 715-aa product is assumed. Tagged family co-IP, nuclear colocalization and target RNA changes support regulation, with activation/repression depending on target. Caption/Methods tag assignment differs; pure heterodimer mediation is not isolated.
 
@@ -204,7 +204,7 @@ Sources: [pubmed](https://pubmed.ncbi.nlm.nih.gov/22133810/); [doi](https://doi.
 
 ## Compartment and ontology scope
 
-Official HPA ICC/IF metadata identify nucleoplasm as the enhanced main location, with human HEK293, Rh30 and U2OS assay metadata. Image pixels and antibody experiments were not independently reanalyzed. Other image-level location metadata are not promoted to NEW annotations.
+Official HPA ICC/IF metadata identify nucleoplasm as the enhanced main location, with human HEK293, Rh30 and U2OS assay metadata. The existing HPA nucleoplasm annotation is retained; the core synthesis uses the broader nucleus location supported by the combined sources. Image pixels and antibody experiments were not independently reanalyzed. Other image-level location metadata are not promoted to NEW annotations.
 
 All sixteen TOO_GENERAL decisions have a retained asserted narrower term connected by an official is_a path. GO:0010467 gene expression and the organ/system developmental contexts remain non-core; part_of containment is not treated as an is_a redundancy argument. FOXP1/FOXP4 class refinements preserve association-versus-direct-contact limits. CTBP/TLE refinements identify the partner class without claiming a functional repression assay for each screened pair.
 
