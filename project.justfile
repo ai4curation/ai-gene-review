@@ -297,6 +297,13 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Rank literature-based GOA rows whose cited PMID is cited in UniProt by another
+# reviewed entry but not by the annotated one (possible wrong-gene annotations).
+# Leads, not verdicts. Writes reports/wrong-gene-leads/leads.tsv (git-ignored).
+# See projects/WRONG_GENE_LEADS.md
+wrong-gene-leads *args="":
+    uv run python -m ai_gene_review.tools.wrong_gene_leads {{args}}
+
 # Evaluate function requirement (NOT) rules: `acceptance` tests them against
 # experimental GOA (QuickGO + UniProt); `sweep` flags local GOA rows.
 # Writes reports/function-requirements/ (git-ignored; regenerate, never commit).
