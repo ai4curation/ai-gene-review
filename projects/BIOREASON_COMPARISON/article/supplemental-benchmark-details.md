@@ -46,7 +46,7 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 | Web export | 44 | 9,712 | 2,321 (23.9%) | 12 (0.1%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.9%) |
 | Mixed-source ARGO139 total | 139 | 10,667 | 3,003 (28.2%) | 125 (1.2%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (66.0%) |
 
-The web-export and mixed-source rows exclude 30 csr-1 predictions recorded as `WRONG_INPUT_SEQUENCE`: the web export was run on the nhr-47 sequence, a pipeline error rather than a model error, as for the RL narrative's `performance_exclusions`. The union in Table S6 excludes them too; each summary reports the count as `excluded_data_errors`.
+The web-export and mixed-source rows exclude 30 csr-1 predictions recorded as `WRONG_INPUT_SEQUENCE`: the web export was run on the nhr-47 sequence, a pipeline error rather than a model error, as for the RL narrative's `performance_exclusions`. The union in Table S6 excludes them too; each summary reports the count as `excluded_data_errors`. Exclusion here is per row, unlike the RL narrative's per-gene exclusion: csr-1's other 7 terms (5 `LSP`, 1 `UNC` and 1 `COR`, on `GO:0005634` nucleus) stay scored, because they were assessed against the curated CSR-1 review; `benchmark-policy.yaml` records this. Table S6's 11,070 scored terms are the 11,100 rows in the sidecar files less these 30; file-level counts such as the project page's 8,783 of 11,100 templated rationales count all rows.
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
