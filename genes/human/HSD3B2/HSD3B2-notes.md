@@ -36,3 +36,23 @@
 - PMID:32814053 (Haenig 2020) — ND interactome Y2H (source of the IntAct protein-binding IPIs).
 - file:human/HSD3B2/HSD3B2-uniprot.txt — UniProt P26439 record.
 - Reactome R-HSA-193052/193073/193961/196350/196372 — the individual dehydrogenation/isomerization reactions in the ER.
+
+
+## 2026-10-25 complete annotation and taxon audit
+Applied review and annotation-reviewer guidance to every seeded row; all machine fields retained exactly. Actions judge term-level biological truth consistently across evidence codes. Correct broad terms were refined instead of removed as over-annotations. No new process annotations were added. Primary sources and cached Reactome reaction records were read; abstract-only sources are not treated as evidence of absence.
+
+Deep research: attempted `just deep-research-falcon human CYP17A1 --fallback perplexity-lite` concurrently with publication caching. Falcon authentication failed; fallback Perplexity HTTP401 reported insufficient quota. The failure affects provider availability for this audit; no provider-labelled report was fabricated. Manual primary-source notes supply the research.
+
+PMID1944309 directly compares expressed human typesI/II and establishes adrenal/gonadal typeII distribution. PMID25322271 directly assays pregnenolone→progesterone and DHEA→androstenedione; androgen biosynthesis is core, not incidental. The coupled enzyme performs NAD+-dependent 3beta oxidation followed by Delta5→Delta4 isomerization. The two MF terms are retained separately.
+
+Full-text PMID21930695 overturns the previous rejection of mitochondrial specificity: fractionation/import/carbonate extraction supports IMM association without integral insertion, with IMS-facing translocase interactions. Most localization experiments use mouse MA-10, but the paper explicitly reports localization in human adrenal NCIH295 cells and tests human adrenal steroid production. PMID22262841 corroborates mitochondrial activity; its local cache is abstract-only (PMC fetch failed), and indexed main-text passages were independently read. Do not rewrite broad mitochondrial membrane and ER labels as peripheral functions solely because they are broad.
+
+GO-CAM index checked using the actual UniProt ID: the human cortisol model includes HSD3B1, not HSD3B2; it does not directly establish this isoform's activity. HSD3B2 core functions rely on direct isoform-specific literature.
+
+## PR #5543 gene-level follow-up (2026-10-25)
+
+Replaced the two IEA ACCEPT rows supported only by EC labels with experimentally grounded CC:CATALYTIC ACTIVITY reactions: pregnenolone oxidation for GO:0003854 and pregn-5-ene-3,20-dione isomerization for GO:0004769. Both reaction records cite ECO:0000269|PubMed:25322271. Actions remain ACCEPT; original annotation fields unchanged.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root endoplasmic reticulum annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
