@@ -93,10 +93,14 @@ scope of this citation fix.
   `GO:0010629` and generic `GO:0004402` explanations so they match their
   actions, adding `GO:0140068 histone crotonyltransferase activity` to
   `core_functions`, and reconciling `esa1-current-goa.yaml` action counts.
-- Removed unsupported H3/H2B substrate language from the description, generic
-  `GO:0004402` reasons, and H4 core-function prose. The cached Piccolo NuA4
-  nucleosome paper instead uses H3 and H2B tails as negative controls and
-  supports H4, H2A, and H2A.Z as Esa1/NuA4 substrates.
+- Restored the curated UniProt ESA1 substrate range to the description,
+  generic `GO:0004402` reasons, and H4 core-function prose: H4 K5/K8/K12/K16
+  remain the dominant and most specific Piccolo NuA4 acetylation sites, but the
+  broader HAT rows are also supported by curated H3K14, H2BK16, H2AK4/7, and
+  H2A.ZK14 acetylation assertions.
+- Reframed the crotonyltransferase core function as Piccolo NuA4-mediated
+  contribution to `GO:0140068`, matching Fellows et al.'s in-vitro
+  heterotrimer assay and in-vivo Esa1-N-FRB depletion result.
 - Revisited two ESA1 rows that had diverged from `main`: the live
   ComplexPortal `GO:0000786 nucleosome` assertion should be `MODIFY` to
   `GO:0031491 nucleosome binding`, because the structural evidence supports
