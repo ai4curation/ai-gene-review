@@ -18,6 +18,12 @@ genes:
   - FASLG
   - CXCL8
   - C5
+  - C3
+  - TSHB
+  - CGA
+  - GRP
+  - NMB
+  - COL1A1
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ
@@ -196,7 +202,7 @@ place genes in pathways.
 
 ## 4. Curated modules
 
-All eleven modules have family-grounded pan-species ligand steps and pass the schema and module
+All seventeen modules have family-grounded pan-species ligand steps and pass the schema and module
 validators.
 
 - **[Netrin signaling](../modules/netrin_signaling.yaml)** (*netrin-activated signaling
@@ -308,6 +314,73 @@ validators.
   mis-curated `PINC` `TAS` `GO:0008009` (*chemokine activity*, `PMID:10820279`) and InterPro2GO
   `IEA` `GO:0004866` (*endopeptidase inhibitor activity*, also over-propagated at PAINT node
   `PTN000892454`) are removed (`REMOVE`, with `source_defects` on `GO:0008009`).
+- **[Thyroid-stimulating hormone (TSH) signaling](../modules/tsh_signaling.yaml)** (*thyroid-stimulating
+  hormone signaling pathway*, `GO:0038194`). Two-step pan-species module. Ligand: TSH
+  heterodimer composed of TSHB (`PANTHER:PTHR11515:SF5`, within `PANTHER:PTHR11515` `GLYCOPROTEIN
+  HORMONE BETA CHAIN`, PAINT node `PTN000162063`) and CGA (`PANTHER:PTHR11509:SF0`, within
+  `PANTHER:PTHR11509` `GLYCOPROTEIN HORMONES ALPHA CHAIN`, PAINT node `PTN002608947`), *hormone
+  activity* (`GO:0005179`) and *signaling receptor binding* (`GO:0005102`). Receptor: TSHR
+  (`PANTHER:PTHR24372:SF0`), *thyroid-stimulating hormone receptor activity* (`GO:0004996`). GOA
+  Category A gap resolved in the new human `TSHB` and `CGA` gene reviews (`NEW` `GO:0038194` on
+  both subunits and `MODIFY` on `GO:0007186` → `GO:0038194` on `TSHB`).
+- **[Bombesin receptor signaling](../modules/bombesin_receptor_signaling.yaml)** (*bombesin receptor
+  signaling pathway*, `GO:0031989`). Two-step pan-species module. Ligands: GRP
+  (`PANTHER:PTHR16866:SF2`) and NMB (`PANTHER:PTHR16866:SF3`, within `PANTHER:PTHR16866`
+  `GASTRIN-RELEASING PEPTIDE`, PAINT node `PTN008565241`), *neuropeptide hormone activity*
+  (`GO:0005184`; with receptor-specific binding terms *gastrin-releasing peptide receptor binding*
+  `GO:0031709` and *neuromedin B receptor binding* `GO:0031710` under *bombesin receptor binding*
+  `GO:0031705`). Receptors: GRPR (`PANTHER:PTHR45695:SF7`), NMBR (`PANTHER:PTHR45695:SF8`), and BRS3
+  (`PANTHER:PTHR45695:SF6`), *bombesin receptor activity* (`GO:0004946`). GOA Category A gap
+  resolved in the new human `GRP` and `NMB` gene reviews (`NEW` `GO:0031989` on both genes,
+  retaining complementary `GO:0007218` *neuropeptide signaling pathway* as `ACCEPT`, plus `MODIFY` on
+  `GO:0007165` → `GO:0031989` on both genes, `MODIFY` on `GO:1900738` → `GO:0007200` on `GRP`, and
+  `MODIFY` on `GO:0005179` → `GO:0005184` on `NMB`).
+- **[Collagen-DDR receptor tyrosine kinase signaling](../modules/collagen_ddr_signaling.yaml)**
+  (*collagen-activated tyrosine kinase receptor signaling pathway*, `GO:0038063`). Two-step
+  pan-species module. Ligands: fibrillar and basement-membrane collagen triple-helical chains
+  including COL1A1 (`PANTHER:PTHR24023:SF1082`), COL1A2 (`PANTHER:PTHR24023:SF568`), COL2A1
+  (`PANTHER:PTHR24023:SF58`), COL3A1 (`PANTHER:PTHR24023:SF604`), and COL4A1
+  (`PANTHER:PTHR24023:SF854`, within `PANTHER:PTHR24023` `COLLAGEN ALPHA`), *receptor ligand
+  activity* (`GO:0048018`). Receptors: DDR1 (`PANTHER:PTHR24416:SF333`) and DDR2
+  (`PANTHER:PTHR24416:SF295`), *protein tyrosine kinase collagen receptor activity* (`GO:0038062`)
+  and *collagen binding* (`GO:0005518`). GOA Category C gap resolved in the updated human `COL1A1`
+  gene review (`NEW` `IC` annotations for `GO:0048018` and `GO:0038063` backed by
+  `Reactome:R-HSA-2327738` and `Reactome:R-HSA-2465890`).
+- **[Endothelin receptor signaling](../modules/endothelin_receptor_signaling.yaml)** (*endothelin
+  receptor signaling pathway*, `GO:0086100`, and *phospholipase C-activating endothelin receptor
+  signaling pathway*, `GO:0160135`). Two-step pan-species module. Ligands: EDN1
+  (`PANTHER:PTHR13874:SF10`), EDN2 (`PANTHER:PTHR13874:SF9`), and EDN3 (`PANTHER:PTHR13874:SF11`,
+  within `PANTHER:PTHR13874` `ENDOTHELIN`, PAINT node `PTN000356323`), *hormone activity*
+  (`GO:0005179`) and *endothelin receptor binding* (`GO:0031708`). Receptors: EDNRA
+  (`PANTHER:PTHR46099:SF2`) and EDNRB (`PANTHER:PTHR46099:SF3`), *endothelin receptor activity*
+  (`GO:0004962`). GOA Category A gap resolved in the new human `EDN1` and `EDN3` gene reviews
+  (`EDN1` accepts existing `GO:0086100`, `GO:0005179`, `GO:0031707`, and `GO:0031708`, adds `NEW`
+  `IC` `GO:0160135`, modifies `GO:0007165`, `GO:0007186`, and `GO:0007200` → `GO:0160135`, and
+  modifies `GO:0005102` → `GO:0031707` and `GO:0031708`; `EDN3` adds `NEW` `IDA` `GO:0086100`,
+  `GO:0160135`, and `GO:0031707`, accepts `GO:0005179` and `GO:0031708`, modifies `GO:0007165`,
+  `GO:0007186`, and `GO:0007200` → `GO:0160135`, and modifies `GO:0001664` → `GO:0031708`).
+- **[Galanin-activated signaling](../modules/galanin_signaling.yaml)** (*galanin-activated
+  signaling pathway*, `GO:0090663`). Two-step pan-species module. Ligands: GAL
+  (`PANTHER:PTHR16839:SF1`, PAINT node `PTN008359337`) and GALP (`PANTHER:PTHR20950:SF1`, PAINT node
+  `PTN001463568`), *neuropeptide hormone activity* (`GO:0005184`) and *G protein-coupled receptor
+  binding* (`GO:0001664`). Receptors: GALR1 (`PANTHER:PTHR24230:SF31`), GALR2
+  (`PANTHER:PTHR24230:SF13`), and GALR3 (`PANTHER:PTHR24230:SF17`), *galanin receptor activity*
+  (`GO:0004966`). GOA Category A gap resolved in the new human `GAL` and `GALP` gene reviews (`GAL`
+  adds `NEW` `IDA` `GO:0090663` and retains `GO:0005184` and `GO:0007218` *neuropeptide signaling
+  pathway* as `ACCEPT`; `GALP` adds `NEW` `IDA` `GO:0090663` and `GO:0005184`, modifies `GO:0007186`
+  → `GO:0090663` and `GO:0005179` → `GO:0005184`, and retains `GO:0001664` as `ACCEPT`).
+- **[Opioid receptor signaling](../modules/opioid_receptor_signaling.yaml)** (*G protein-coupled
+  opioid receptor signaling pathway*, `GO:0038003`, and *adenylate cyclase-inhibiting opioid receptor
+  signaling pathway*, `GO:0031635`). Two-step pan-species module. Ligands: PENK
+  (`PANTHER:PTHR11438:SF3`), PDYN (`PANTHER:PTHR11438:SF4`), and PNOC (`PANTHER:PTHR11438:SF2`,
+  within `PANTHER:PTHR11438` `PROENKEPHALIN`, PAINT node `PTN000153716`), *opioid peptide activity*
+  (`GO:0001515`). Receptors: OPRM1 (`PANTHER:PTHR24229:SF7`), OPRD1 (`PANTHER:PTHR24229:SF2`),
+  OPRK1 (`PANTHER:PTHR24229:SF1`), and OPRL1 (`PANTHER:PTHR24229:SF11`), *G protein-coupled opioid
+  receptor activity* (`GO:0004985`). GOA Category A gap resolved in the new human `PENK` and `PDYN`
+  gene reviews (`PENK` accepts existing `GO:0038003`, `GO:0001515`, `GO:0031630`, `GO:0031632`, and
+  `GO:0007218`, adds `NEW` `IC` `GO:0031635`, and modifies `GO:0007186` → `GO:0038003` and
+  `GO:0007193` → `GO:0031635`; `PDYN` adds `NEW` `IDA` `GO:0038003` and `NEW` `IC` `GO:0031635` and
+  accepts existing `GO:0001515`, `GO:0031631`, and `GO:0007218`).
 
 ## 5. Other curator work in this branch
 
@@ -354,6 +427,36 @@ validators.
   `GO:0005102` to `GO:0001664`), and removing (`REMOVE`) both the mis-curated `PINC` `TAS`
   `GO:0008009` (*chemokine activity*, `PMID:10820279`, with `source_defects`) and the InterPro2GO
   `IEA` `GO:0004866` (*endopeptidase inhibitor activity*).
+- **C3, TSHB, CGA, GRP, NMB, and COL1A1 gene reviews (Tranche 4B):** updated human `C3`
+  (`genes/human/C3/C3-ai-review.yaml`) so that all four UniProt `IDA` `GO:0008009` (*chemokine
+  activity*) rows (`PMID:342601` previously `REMOVE`, `PMID:37169960` and `PMID:37852260` previously
+  `MODIFY`, and `PMID:5778786` previously `UNDECIDED`) are uniformly `REMOVE` with `source_defects`
+  (`WRONG_TERM` with `REPOINT` to `GO:0048018` on `PMID:37169960`/`PMID:37852260` and `DELETE_ROW` on
+  `PMID:342601`/`PMID:5778786`), matching `C5` and `PTHR11412-review.yaml`; created the full human
+  `TSHB` (`genes/human/TSHB/TSHB-ai-review.yaml`) and `CGA` (`genes/human/CGA/CGA-ai-review.yaml`)
+  reviews for `GO:0038194` (*thyroid-stimulating hormone signaling pathway*); created the full human
+  `GRP` (`genes/human/GRP/GRP-ai-review.yaml`) and `NMB` (`genes/human/NMB/NMB-ai-review.yaml`)
+  reviews for `GO:0031989` (*bombesin receptor signaling pathway*); and updated human `COL1A1`
+  (`genes/human/COL1A1/COL1A1-ai-review.yaml`) to add `NEW` `IC` annotations and a second
+  `core_functions` entry for `GO:0048018` (*receptor ligand activity*) and `GO:0038063`
+  (*collagen-activated tyrosine kinase receptor signaling pathway*).
+- **EDN1, EDN3, GAL, GALP, PENK, and PDYN gene reviews (Tranche 4C):** created the full human `EDN1`
+  (`genes/human/EDN1/EDN1-ai-review.yaml`) and `EDN3` (`genes/human/EDN3/EDN3-ai-review.yaml`)
+  reviews for `GO:0086100` (*endothelin receptor signaling pathway*) and `GO:0160135` (*phospholipase
+  C-activating endothelin receptor signaling pathway*), accepting existing `GO:0086100` on `EDN1`,
+  adding `NEW` `IC` `GO:0160135` on `EDN1` and `NEW` `IDA` `GO:0086100`, `GO:0160135`, and `GO:0031707`
+  on `EDN3`, and refining `GO:0007165`, `GO:0007186`, and `GO:0007200` via `MODIFY` to `GO:0160135`;
+  created the full human `GAL` (`genes/human/GAL/GAL-ai-review.yaml`) and `GALP`
+  (`genes/human/GALP/GALP-ai-review.yaml`) reviews for `GO:0090663` (*galanin-activated signaling
+  pathway*) and `GO:0005184` (*neuropeptide hormone activity*); and created the full human `PENK`
+  (`genes/human/PENK/PENK-ai-review.yaml`) and `PDYN` (`genes/human/PDYN/PDYN-ai-review.yaml`) reviews
+  for `GO:0038003` (*G protein-coupled opioid receptor signaling pathway*) and `GO:0031635` (*adenylate
+  cyclase-inhibiting opioid receptor signaling pathway*), accepting existing `GO:0038003` on `PENK`,
+  adding `NEW` `IC` `GO:0031635` on `PENK` and `NEW` `IDA` `GO:0038003` and `NEW` `IC` `GO:0031635` on
+  `PDYN`, and modifying `GO:0007186` to `GO:0038003` and `GO:0007193` to `GO:0031635` on `PENK`.
+- **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
+  `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`, `PTHR11515`, `PTHR11509`,
+  `PTHR16866`, `PTHR24023`, `PTHR13874`, `PTHR16839`, `PTHR20950`, `PTHR11438`):
 - **PANTHER family reviews** (`PTHR45836`, `PTHR11574`, `PTHR11304`, `PTHR11954`, `PTHR28606`,
   `PTHR14356`, `PTHR48488`, `PTHR11471`, `PTHR12015`, `PTHR11412`):
   - `interpro/panther/PTHR45836/PTHR45836-review.yaml`: the `PTN002911633` assessment notes that
@@ -420,6 +523,49 @@ validators.
     `PTN002605320` (C3), and `SUBFAMILY_ONLY` term assessments for `GO:0038178` (*complement
     component C5a signaling pathway* on `PANTHER:PTHR11412:SF83`) and `GO:0004866` (*endopeptidase
     inhibitor activity* on `SF165`, `SF182`, `SF92`, `SF116`, `SF133`, `SF170`, `SF174`).
+  - `interpro/panther/PTHR11515/PTHR11515-review.yaml` and
+    `interpro/panther/PTHR11509/PTHR11509-review.yaml`: `SOUND` node assessments on `PTN000162063`
+    (beta chains) and `PTN002608947` (alpha chain `CGA`), `SCOPE_MISMATCH` on `PTN002608947`
+    `GO:0016914` (*follicle-stimulating hormone complex*), and `SUBFAMILY_ONLY` / `FAMILY_WIDE`
+    term assessments scoping `GO:0038194` (*thyroid-stimulating hormone signaling pathway*) to
+    `TSHB` (`PTHR11515:SF5`), `GPHB5` (`PTHR11515:SF14`), `CGA` (`PTHR11509:SF0`), and `GPHA2`
+    (`PTHR11509:SF5`).
+  - `interpro/panther/PTHR16866/PTHR16866-review.yaml`: `SOUND` node assessments on `PTN008565241`
+    (`GO:0005576`, `GO:0005184` *neuropeptide hormone activity*, `GO:0007218` *neuropeptide
+    signaling pathway*), `PTN002704034` (`NMB`), and `PTN002704045` (`GRP`), and a `SUBFAMILY_ONLY`
+    term assessment scoping `GO:0031989` (*bombesin receptor signaling pathway*) to `GRP`
+    (`PTHR16866:SF2`) and `NMB` (`PTHR16866:SF3`).
+  - `interpro/panther/PTHR24023/PTHR24023-review.yaml`: `SOUND` node assessments on `PTN001166351`
+    (`GO:0030020`), `PTN008390299` (`GO:0031012`), `PTN009074843` (`GO:0030199` on the major
+    fibrillar collagen clade), `PTN000615596` (`COL4A3`), and `PTN000615545` (`COL4A6`), plus
+    `SUBFAMILY_ONLY` term assessments for `GO:0048018` (*receptor ligand activity*) and
+    `GO:0038063` (*collagen-activated tyrosine kinase receptor signaling pathway*) across `COL1A1`
+    (`SF1082`), `COL1A2` (`SF568`), `COL2A1` (`SF58`), and `COL3A1` (`SF604`).
+  - `interpro/panther/PTHR13874/PTHR13874-review.yaml`: `SOUND` node assessments on `PTN000356323`
+    (`GO:0005576` *extracellular region*, `GO:0005179` *hormone activity*, `GO:0031708` *endothelin B
+    receptor binding*, `GO:0003100` *regulation of systemic arterial blood pressure by endothelin*,
+    `GO:0006874` *intracellular calcium ion homeostasis*, `GO:0014826` *vein smooth muscle
+    contraction*, `GO:0045987` *positive regulation of smooth muscle contraction*) and `PTN002676936`
+    (`GO:0031707` *endothelin A receptor binding* on the `EDN1` clade), `FAMILY_WIDE` term
+    assessments for `GO:0005179` and `GO:0005576`, and `SUBFAMILY_ONLY` term assessments for
+    `GO:0086100` (*endothelin receptor signaling pathway*) and `GO:0160135` (*phospholipase
+    C-activating endothelin receptor signaling pathway*) across `EDN1` (`SF10`), `EDN2` (`SF9`), and
+    `EDN3` (`SF11`).
+  - `interpro/panther/PTHR16839/PTHR16839-review.yaml` and
+    `interpro/panther/PTHR20950/PTHR20950-review.yaml`: `SOUND` node assessments on `PTN008359337`
+    (`GAL`: `GO:0005576`, `GO:0030141`, `GO:0043025`, `GO:0005184`, `GO:0007189`, `GO:0007218`) and
+    `PTN001463568` (`GALP`: `GO:0042595`), plus `FAMILY_WIDE` term assessments for `GO:0005184`
+    (*neuropeptide hormone activity*), `GO:0090663` (*galanin-activated signaling pathway*), and
+    `GO:0005576` (*extracellular region*).
+  - `interpro/panther/PTHR11438/PTHR11438-review.yaml`: `SOUND` node assessments on `PTN000153716`
+    (`GO:0043025` *neuronal cell body*, `GO:0001515` *opioid peptide activity*, `GO:0031628` *opioid
+    receptor binding*, `GO:0007218` *neuropeptide signaling pathway*, `GO:0019233` *sensory perception
+    of pain*), `PTN002605991` (`PNOC`: `GO:0099013`), `PTN002606001` (`PENK`: `GO:0099013`), and
+    `PTN002606008` (`PDYN`: `GO:0097060`, `GO:0007270`), plus `FAMILY_WIDE` term assessments for
+    `GO:0001515` (*opioid peptide activity*), `GO:0038003` (*G protein-coupled opioid receptor
+    signaling pathway*), `GO:0031635` (*adenylate cyclase-inhibiting opioid receptor signaling
+    pathway*), and `GO:0005576` (*extracellular region*) across `PENK` (`SF3`), `PDYN` (`SF4`), and
+    `PNOC` (`SF2`).
 - **Corpus count of receptor-specific binding terms** in gene reviews: 820 annotation rows in
   353 reviews (489 ACCEPT, 221 KEEP_AS_NON_CORE, 13 MODIFY), plus 162 core functions. Most common:
   Notch binding (73), integrin binding (67), EGF receptor binding (36), ephrin receptor binding
@@ -435,6 +581,14 @@ validators.
 - Modules: `netrin_signaling`, `slit_robo_signaling`, `kit_signaling` (upgraded),
   `ephrin_receptor_signaling` (upgraded), `mif_signaling`, `il34_signaling`, `il21_signaling`,
   `il22_signaling`, `death_receptor_apoptotic_signaling` (upgraded), `chemokine_signaling`
+  (upgraded), `c5a_signaling`, `tsh_signaling`, `bombesin_receptor_signaling`,
+  `collagen_ddr_signaling`, `endothelin_receptor_signaling`, `galanin_signaling`,
+  `opioid_receptor_signaling`.
+- Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22, FASLG, CXCL8, C5, C3,
+  TSHB, CGA, GRP, NMB, COL1A1, EDN1, EDN3, GAL, GALP, PENK, PDYN.
+- Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
+  PTHR11471, PTHR12015, PTHR11412, PTHR11515, PTHR11509, PTHR16866, PTHR24023, PTHR13874,
+  PTHR16839, PTHR20950, PTHR11438.
   (upgraded), `c5a_signaling`.
 - Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22, FASLG, CXCL8, C5.
 - Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
@@ -446,7 +600,9 @@ validators.
 ### Next steps
 
 1. **More modules**, pan-species, ligand step first, using the decisions in section 2. Queue from
-   the gap check: collagen-DDR, fly Toll-6/7 neurotrophin (spz5, NT1).
+   the gap check: fly Toll-6/7 neurotrophin (spz5, NT1), angiotensin signaling (AGT), CCL19
+   signaling, APOA1 signaling (plus remaining ligand paralogs `EDN2` and `POMC` for the endothelin
+   and opioid modules).
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an
