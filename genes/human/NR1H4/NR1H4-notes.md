@@ -277,18 +277,44 @@ a handful of `MARK_AS_OVER_ANNOTATED`.
   bile acid import across the plasma membrane.
 
 **The second gap is narrower than it first looked**, and the first version of
-these notes overstated it. Checked against QuickGO on 2026-11-01: `GO:0015721`
-has no regulation child of its own (its only children are `GO:0015125`, an MF,
-and `GO:0015722` canalicular bile acid transport), but the bile-acid space does
-have `GO:0120188/9/90 regulation of bile acid secretion`. So the export arm of
-what FXR does is annotatable after all — its induction of the canalicular pumps
-is `GO:0120189` — and `GO:0015721` is `MODIFY` to that rather than
-over-annotated. What has no term is the **uptake** arm: FXR represses
-SLC10A1/NTCP, and GO has no bile-acid import process term at all, so there is
-nothing for a regulation term to hang off. That is what the proposal now asks
-for. The row also carries a `WRONG_QUALIFIER` source defect for Reactome, since
-`involved_in` on a transport term is the qualifier asserting participation FXR
-does not have.
+these notes overstated it. The export arm of what FXR does is annotatable after
+all — its induction of the canalicular pumps is `GO:0120189` — so `GO:0015721`
+is `MODIFY` to that rather than over-annotated. What has no term is the
+**uptake** arm: FXR represses SLC10A1/NTCP, and GO has no bile-acid import
+*process* term at all, so there is nothing for a regulation term to regulate.
+The proposal is therefore two entries — the import process, then its regulation
+— since minting the regulation class alone would leave it with nothing to
+regulate. The row also carries a `WRONG_TERM` source defect for Reactome: with
+`GO:0120189` in place the `involved_in` qualifier is correct, so the term was
+the defect, not the qualifier.
+
+### The bile-acid transport and secretion terms, verbatim
+
+Recorded in full because the sign of `GO:0120189` is load-bearing — it is the
+`MODIFY` replacement and a `corrected_value` headed upstream — and because
+`GO:0070857/8/9` is ordered regulation/**negative**/positive, so the obvious
+guess for this triple is wrong. QuickGO, queried 2026-11-01:
+
+| CURIE | Label |
+|---|---|
+| `GO:0120188` | regulation of bile acid secretion |
+| `GO:0120189` | **positive** regulation of bile acid secretion |
+| `GO:0120190` | negative regulation of bile acid secretion |
+
+So this triple runs regulation/**positive**/negative — the opposite order to
+`GO:0070857/8/9`. Definitions, to pin it beyond the labels: `GO:0120189` is
+*"Any process that activates or increases the frequency, rate or extent of the
+controlled release of bile acid from a cell or a tissue"*, and `GO:0120190` is
+the *"stops, prevents or reduces"* counterpart. FXR induces the canalicular
+pumps, so `GO:0120189` is the right one.
+
+And the surrounding space, same query date: `GO:0015721 bile acid and bile salt
+transport` has exactly two children, `GO:0015125` (a molecular function, via
+`part_of`) and `GO:0015722 canalicular bile acid transport`, so it has no
+regulation child of its own. `GO:0032782 bile acid secretion` is what the
+`GO:0120188` triple regulates. A search of the bile-acid space returns no
+import, uptake or influx process term in any direction, which is the gap the two
+proposed terms address.
 
 ## The IL-17 row
 
