@@ -1,6 +1,6 @@
 # FTL source guide
 
-This guide distinguishes actual selected original text or target tables from curated interaction records, abstracts and bibliography-only sources. It now accompanies genuine native acquisition and exact reconciliation of 73 original contexts, all 16 TSV columns and 73 native seed objects. The accepted scientific assessment has been applied to the genuine seed; validation and publication status are recorded separately in the notes. Normal cache availability must not be confused with access to separately retained originals. No new quotations were added.
+This guide distinguishes actual selected original text or target tables from curated interaction records, abstracts and bibliography-only sources. It now accompanies genuine native acquisition and exact reconciliation of 73 original contexts, all 16 TSV columns and 73 native seed objects. The accepted scientific assessment has been applied to the genuine seed; validation and publication status are recorded separately in the notes. Normal cache availability must not be confused with access to separately retained originals. Five short, literal snippets from immutable normal caches now anchor specified iron-handling, structural and receptor-contact claims; their source locations and limits are recorded in the evidence archive.
 
 ## Core and source interpretation
 
@@ -116,7 +116,7 @@ Selected original Methods 2–4/7 and Results 11/Figure 3 caption were read. HTT
 
 ### [PMID:23533145: In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine](https://pubmed.ncbi.nlm.nih.gov/23533145/)
 
-Actual main Methods/Results describe human expressed-prostatic-secretion urine fractions and possible nonvesicular carryover. Exact FTL Supplementary Table 2 remains unverified after challenge responses. Independent PMID19056867 supports the unrestricted exosome location; no prostate-specific FTL mechanism is inferred.
+Actual main Methods/Results describe human expressed-prostatic-secretion urine fractions and possible nonvesicular carryover. Exact FTL Supplementary Table 2 remains unverified after challenge responses. Independent PMID:19056867 supports the unrestricted exosome location; no prostate-specific FTL mechanism is inferred.
 
 ### [PMID:23685131: Ferritin light chain interacts with PEN-2 and affects γ-secretase activity.](https://pubmed.ncbi.nlm.nih.gov/23685131/)
 
@@ -136,7 +136,7 @@ Selected original main-text AP-MS, ferritin localization and NCOA4 perturbation/
 
 ### [PMID:25327288: Selective VPS34 inhibitor blocks autophagy and uncovers a role for NCOA4 in ferritin degradation and iron homeostasis in vivo.](https://pubmed.ncbi.nlm.nih.gov/25327288/)
 
-Authentic abstract and original Supplementary Figures 2/4/5/6 captions were read; complete main Methods and detailed subunit-localization panels were not recovered. Human DLD1 NCOA4 pulldown enriches FTL/FTH1, while re-expression distinguishes FTH1-specific contact. Ferritin is cargo; raw 66 is autolysosome CC, not a process annotation.
+Authentic abstract and original Supplementary Figures 2/4/5/6 captions were read; complete main Methods and detailed subunit-localization panels were not recovered. Human DLD1 NCOA4 pulldown enriches FTL/FTH1, while re-expression distinguishes FTH1-specific contact. Ferritin is cargo; the corresponding incoming annotation describes autolysosome localization, not participation in an autophagy process.
 
 ### [PMID:25416956: A proteome-scale map of the human interactome network.](https://pubmed.ncbi.nlm.nih.gov/25416956/)
 
@@ -305,3 +305,13 @@ All 55 planned normal sources are present: 37 exact existing-main files and 18 n
 | [PMID:7492760](https://pubmed.ncbi.nlm.nih.gov/7492760/) | no | native acquisition |
 | [PMID:7493028](https://pubmed.ncbi.nlm.nih.gov/7493028/) | no | native acquisition |
 | [PMID:8706699](https://pubmed.ncbi.nlm.nih.gov/8706699/) | no | reused unchanged |
+
+## Review follow-up: source records and functional scope
+
+The [evidence archive](FTL-source-evidence.yaml) now reproduces selected original IntAct fields for 94 source-qualified records covering 28 of the 34 generic-binding contexts. The six remaining contexts have separately identified original-paper support. These are source records and original locators, not additional experiments or repeated review judgments. The dated query URL, response checksum, record indices, exact partners, methods, host organisms, expansion labels and construct features permit the joins to be checked. An absent exact source pair in that query is not absence from the publication.
+
+In particular, the [HI-NGS supplement](https://static-content.springer.com/esm/art%3A10.1038%2Fnmeth.1597/MediaObjects/41592_2011_BFnmeth1597_MOESM157_ESM.pdf) lists FTH1–FTL on PDF page 13; the [2015 original Table S3 workbook](https://www.ebi.ac.uk/biostudies/files/S-EPMC4441215/NIHMS680142-supplement-11.xlsx) distinguishes positive WT pairs in rows 960, 962 and 963 from mutant losses; and the [2025 author-linked NDEx network](https://public.ndexbio.org/v2/network/95bc75d5-d1d1-11ee-8a40-005056ae23aa) contains FTL–FTH1 edge 561950 and FTL–NCOA4 edge 562046. Table S3B does not contain an FTL/FTH1 GPCA entry.
+
+All 34 generic-binding original contexts remain positive, contextual associations. None is an FTL self-partner context; the seven incoming identical-protein-binding annotations already describe self-association. Nine generic contexts concern FTH1, with six binary-screen sources and three AP-MS sources. Neither a positive pairwise reporter nor co-complex recovery alone establishes the two-subunit stoichiometry required by protein heterodimerization activity. The ferritin shell structural role is instead synthesized from independent structural and functional evidence.
+
+Iron ion transport explicitly includes movement within a cell through a pore, so ferritin pore-dependent movement is not excluded by the absence of a biological membrane. The two broad experimental iron-binding annotations remain TOO_GENERAL because incorporation, ferrous input, oxidation and mineral retention do not independently isolate a valence-specific L-chain binding event. The retained ancestral Fe(II)-binding assertion is represented in a distinct core function; the shell core uses structural molecule activity. The contributes_to molecular-function slot is not used as a list of additional activities.
