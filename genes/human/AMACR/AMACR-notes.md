@@ -84,3 +84,7 @@ Asp152 (proton donor) by similarity to UniProtKB:O06543. Monomer [PMID:7649182 "
 - Caveat: the signal is not cleaved in mouse [PMID:10770938 "the noncleavable N-terminal sequence of the polypeptide acts as a weak mitochondrial"]. No sub-mitochondrial assay exists, so the row is IC.
 - New cached paper: PMID:10770938.
 - core_functions locations left as peroxisomal matrix + mitochondrion. The matrix site of the mitochondrial activity is inferred, not shown (MMADHC lesson).
+
+## 2026-10-24 correction (after PR #5223 review)
+
+- The HTP GO:0005739 row (MitoCoP proteome) changed UNDECIDED -> ACCEPT in PR #5223, in deference to the curator and for consistency with the EXP, IDA, IBA and IEA rows on the same term; the per-protein call is in uncached supplementary tables. The entry above did not record this. The action-consistency warning it caused is gone.
