@@ -7436,3 +7436,40 @@ All four actual merge-group runs completed their validation, full suite and aggr
 The accepted logs retain dependency warnings and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. Local checkpoint checks cover tracker preservation, the new history record and private rendering without rerunning gene reviews.
 
 The four accepted closures contain 116 distinct objects: 81 normal sources and 35 gene/history files, with 87 distinct published payload paths and no parent-identical no-ops. This checkpoint preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 153 prior completion updates, 236 prior project histories and the entire 861,304-byte progress prefix. The queue mirrors remain identical. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T023451Z-codex-f69c8d.yaml).
+
+## Completion checkpoint 673 — 2026-11-01 06:29:20 UTC
+
+673 complete; 2,203 remaining out of 2,876 catalogue genes. This publishes the four independently accepted completions after checkpoint 669; it adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → stored | Status; annotation advisories |
+|---|---|---|---|
+| [FOXP2](https://github.com/ai4curation/ai-gene-review/pull/5808) | [merge 697bac83](https://github.com/ai4curation/ai-gene-review/commit/697bac83b0b3069170ab9b9991bb995d165e6aac); [run 41264900872](https://github.com/ai4curation/ai-gene-review/actions/runs/41264900872) | 72/72 → 70 → 72 | DRAFT; 9 |
+| [FRMPD4](https://github.com/ai4curation/ai-gene-review/pull/5812) | [merge d0211172](https://github.com/ai4curation/ai-gene-review/commit/d02111725e1eb12de835628a96d5a297921e1862); [run 41267878385](https://github.com/ai4curation/ai-gene-review/actions/runs/41267878385) | 76/76 → 76 → 76 | DRAFT; 7 |
+| [FRRS1L](https://github.com/ai4curation/ai-gene-review/pull/5814) | [merge a5fe7128](https://github.com/ai4curation/ai-gene-review/commit/a5fe7128c6a3683871c12f43b3f32bab8b3880b4); [run 41273013978](https://github.com/ai4curation/ai-gene-review/actions/runs/41273013978) | 13/13 → 13 → 13 | COMPLETE; 0 |
+| [FTL](https://github.com/ai4curation/ai-gene-review/pull/5818) | [merge a623939c](https://github.com/ai4curation/ai-gene-review/commit/a623939cf1a290393b0c3de27d79bf936294b6b9); [run 41277830293](https://github.com/ai4curation/ai-gene-review/actions/runs/41277830293) | 73/73 → 73 → 73 | DRAFT; 35 |
+
+FOXP2 retains both scope-distinct source pairs as separate rows, including all 11 nucleus extension atoms. Its nine UniProt product declarations include eight verified sequences and one unresolved product sequence; declaration does not establish an isoform-specific function. FRMPD4 retains 22 UNDECIDED interaction contexts where censored or unquantified fragment data do not establish the exact binding claim. Its portable audit preserves all 713 target workbook rows and all 53 source-specific joins. FRRS1L retains four UNDECIDED contexts, including the sampled synapse-localization uncertainty. FTL retains two source-specific UNDECIDED contexts, the original urine atom and five exact cached quotations linked to their claims. Its 35 advisories comprise 34 generic-binding contexts and the structural core term absent from the existing annotation list; no NEW annotation was added to suppress that warning.
+
+| Gene | Actions | References / assessed | Cores | Verified objects / normal sources / PR payload |
+|---|---|---|---|---|
+| FOXP2 | ACCEPT: 12, KEEP_AS_NON_CORE: 22, TOO_GENERAL: 16, MODIFY: 22 | 32 / 24 | 1 | 35 / 27 / 17 |
+| FRMPD4 | MODIFY: 39, KEEP_AS_NON_CORE: 8, UNDECIDED: 22, ACCEPT: 6, TOO_GENERAL: 1 | 19 / 14 | 2 | 34 / 17 / 23 |
+| FRRS1L | ACCEPT: 6, KEEP_AS_NON_CORE: 2, MODIFY: 1, UNDECIDED: 4 | 13 / 8 | 1 | 19 / 11 / 19 |
+| FTL | TOO_GENERAL: 6, KEEP_AS_NON_CORE: 44, ACCEPT: 20, MARK_AS_OVER_ANNOTATED: 1, UNDECIDED: 2 | 58 / 57 | 3 | 63 / 55 / 26 |
+
+The combined accepted closure contains 144 distinct objects, including 103 normal sources. The four PR payloads contain 85 distinct paths. Shared sources have identical object identities; no infrastructure change is credited to these gene payloads. Original source objects, native seed mappings and current reviewed annotations are checked separately.
+
+All four actual merge-group runs completed the suite, validation and aggregate jobs successfully. Their executed counts are retained below and in the queue mirror.
+
+| Gene | Unit tests | Doctests | Schemas | Modules (warnings) | History records + tests | Families |
+|---|---|---|---|---|---|---|
+| FOXP2 | 4572 | 287 | 9964 | 746 (2288) | 19966 + 42 | 751 |
+| FRMPD4 | 4577 | 295 | 9965 | 746 (2288) | 19985 + 42 | 751 |
+| FRRS1L | 4577 | 295 | 9966 | 747 (2409) | 19992 + 42 | 751 |
+| FTL | 4577 | 295 | 9967 | 747 (2291) | 19997 + 42 | 751 |
+
+Each actual run also passed 12 example checks, 454 automation tests and 19 JavaScript tests. FOXP2 checked 299 mypy source files; the later three checked 302. Each suite retained 86 deselections and nine unit-test warnings, plus 37 skipped doctests and eight doctest warnings. Dependency deprecations and the nonfatal SqlImplementation destructor diagnostic are retained in the raw-log evidence. The PR-only history-coverage step, saved-UniProt step and full-upstream PAINT step were skipped as explicitly recorded; this does not erase the executed history validation, family validation or full suite.
+
+The 867,103-byte progress prefix, all 237 existing project histories, 235 original queue records and 154 earlier completion updates remain unchanged. Catalogue text/order is preserved apart from checking these four completed genes. The project policy now permits concise, verified source-backed snippets and reference-only entries when appropriate, replacing the obsolete blanket prohibition without altering the separate generic-binding instruction.
+
+Local tracker checks cover the exact five-path delta, source/object preservation, queue equality, the new native history record and private rendered checkpoint links. They do not substitute for the actual integration results above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T062920Z-codex-663640.yaml).
