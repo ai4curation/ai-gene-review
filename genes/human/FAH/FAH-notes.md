@@ -53,3 +53,19 @@ diet.
 - GO:0005515 protein binding (x2 refs; IPI) — high-throughput binary interactome screens (PMID:25416956 Rolland/HuRI; PMID:32296183 Luck/HuRI reference map). Bare "protein binding", uninformative; interactors (TCF4, KRTAPs, ADAMTSL4, CHRDL2, SERTAD1, PLEKHF2) have no functional relationship to a cytosolic metabolic hydrolase — classic HT-Y2H artifacts. REMOVE per curation guideline against bare protein binding.
 - GO:0070062 extracellular exosome (x2; HDA) — high-throughput proteomics of urinary/prostatic exosomes (PMID:23533145, PMID:19056867). FAH is a cytosolic liver/kidney enzyme; detection in urinary exosomes is a mass-spec catalog finding, not a functional localization. KEEP_AS_NON_CORE (do not remove HDA; keep as non-core secondary location).
 - GO:0005829 cytosol (TAS Reactome) — CORE CC. ACCEPT.
+
+## 2026-10-23 re-review (homogentisate catabolism module, step 3)
+
+- GO:0005515 protein binding (PMID:25416956, PMID:32296183; HT Y2H, WITH/FROM
+  TCF4, KRTAP5-9, KRTAP10-8, SERTAD1, ADAMTSL4 / KRTAP13-3, CHRDL2, PLEKHF2):
+  now REMOVE per the protein-binding policy (MARK_AS_OVER_ANNOTATED is not
+  permitted for GO:0005515); no informative MF is supported by these screens.
+- GO:1902000 homogentisate catabolic process (IBA): changed from
+  KEEP_AS_NON_CORE to ACCEPT. A catabolic-process term covers all steps from the
+  substrate to end products, and FAH catalyzes the last step of homogentisate
+  breakdown; treating it as non-core while accepting L-tyrosine catabolic
+  process (further upstream) was inconsistent. Added to core function.
+- GO:0003824 and GO:0009072 changed to MODIFY (correct but general) with
+  replacements GO:0004334 and GO:0006572 + GO:0006559.
+- IBA rows now cite the PAINT IBD rows for PTN002453799; the PTHR43069 family
+  review assesses all four as SOUND. Status set to COMPLETE.

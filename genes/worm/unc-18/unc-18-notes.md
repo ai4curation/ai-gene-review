@@ -44,3 +44,16 @@
 - Dense-core-vesicle rows citing PMID:18031683 are left UNDECIDED: that paper's abstract documents
   UNC-31 (not UNC-18) as required for DCV docking, and the full text is not cached, so the
   unc-18-specific evidence cannot be checked.
+
+## Additional UniProt-named roles (checked 2026-10-30)
+- Ethanol sensitivity: UNC-18 point mutants change the locomotor response to acute ethanol. A
+  D214N rescue, which weakens binding to the assembled SNARE complex, is resistant to ethanol
+  [PMID:18923141 "Strikingly, D214N worms were strongly resistant to both stimulatory and sedative effects of acute ethanol."].
+  E465K and R39C enhance sensitivity, with different rab-3 dependence
+  [PMID:24244732 "We found that expressing the orthologous E466K mutation (unc-18 E465K) enhanced alcohol sensitivity."].
+  These are effects of engineered alleles on a drug response. They follow from UNC-18's role in
+  SNARE-dependent release, so no separate GO term is proposed.
+- Molting quiescence in ALA: UniProt cites PMID:17891142 for unc-18 acting in ALA downstream of
+  LIN-3/LET-23 and PLC-3. The cached abstract mentions only "regulators of synaptic vesicle
+  release" and does not name unc-18, so the claim could not be checked here. It would be a
+  context-specific case of UNC-18's general role in neurotransmitter release, so nothing is added.

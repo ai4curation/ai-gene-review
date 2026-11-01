@@ -46,7 +46,7 @@ Very little. GOA experimental rows are three IPI "identical protein binding" row
 - GO:0046933 (IBA, contributes_to) and GO:0045259 (IBA, part_of) from PANTHER:PTN008558586. Local PAINT table
   (interpro/panther/PTHR15184/PTHR15184-paint.tsv) shows both IBDs at PTN008558586, seeded only by F1-beta
   proteins (E. coli AtpD P0ABB4, human ATP5F1B P06576, yeast ATP2 S000003882, S. pombe atp2 SPAC222.12c; plus
-  plant/rat/bovine F1 subunits for the CC term). projects/TREEGRAFTER/rotary_atpase/node_placement.tsv shows
+  plant/rat/bovine F1 subunits for the CC term). projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv shows
   PTN008558586 is a DUPLICATION node whose children are PTN000390097 (FliI/SctN clade: SF9, SF62, SF81) and
   PTN008558588 (F1-beta subfamilies). So the IBD sits one node too deep: it spans the FliI/SctN paralog clade,
   none of whose members has any evidence of ATP synthesis or proton transport, and which lacks Fo partners.

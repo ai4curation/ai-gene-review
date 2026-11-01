@@ -1,0 +1,8 @@
+| Identity / localization | Substrates | Most relevant biological interpretation |
+|---|---|---|
+| **Drosophila Efr (CG3774; Q9W429)** — ER-localized SLC35B-family nucleotide-sugar transporter (pqac-00000012, pqac-00000031) | GDP-fucose, UDP-GlcNAc, and UDP-xylose (pqac-00000024, pqac-00000035) | Supplies the ER with GDP-fucose for Notch O-fucosylation, acting redundantly with Gfr; its UDP-sugar transport may also support glycosaminoglycan biosynthesis (pqac-00000015, pqac-00000031) |
+| **Drosophila Gfr/Nac (CG9620)** — Golgi-localized SLC35C1-family transporter; distinct from Efr (pqac-00000012, pqac-00000035) | GDP-fucose (pqac-00000005, pqac-00000010) | Principal characterized route supplying Golgi GDP-fucose for glycan fucosylation, especially N-glycan core fucosylation; loss strongly lowers, but does not eliminate, core-fucosylated N-glycans (pqac-00000003, pqac-00000009) |
+| **Human SLC35B4 (YEA4)** — related ER/Golgi nucleotide-sugar transporter, but not functionally identical to fly Efr (pqac-00000024, pqac-00000031) | UDP-xylose and UDP-GlcNAc; UDP-glucuronic-acid transport has also been reported. **No GDP-fucose transport activity** (pqac-00000031) | Proposed to supply nucleotide sugars for proteoglycan and other glycosylation pathways. It cannot complement GDP-fucose-transporter-deficient cells, so fly Efr’s GDP-fucose activity must not be transferred to human SLC35B4 by orthology alone (pqac-00000031) |
+
+
+*Table: A strict comparison of fly Efr, fly Gfr, and human SLC35B4 that prevents cross-gene or cross-species functional attribution. It highlights the unique experimentally reported GDP-fucose activity of Drosophila Efr.*

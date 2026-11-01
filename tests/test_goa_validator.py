@@ -1,12 +1,231 @@
 """Tests for GOA annotation validator."""
 
 import pytest
+import hashlib
 from pathlib import Path
 import tempfile
 import yaml
 
 from ai_gene_review.validation import validate_gene_review
 from ai_gene_review.validation.goa_validator import GOAValidator, GOAAnnotation
+
+
+@pytest.fixture
+def snapshot_review(tmp_path):
+    """Two real source shapes: a changed donor group and a current-only term."""
+    header = "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+    row = "UniProtKB\tQ12345\tTEST\tinvolved_in\tGO:0007507\theart development\tBP\tECO:0000318\tIBA\tGO_REF:0000033\tPANTHER:PTN000000001|UniProtKB:P00001{}\t9606\tHomo sapiens\tGO_Central\tTest protein\t20261031\n"
+    original = tmp_path / "TEST-goa.tsv"
+    current = tmp_path / "TEST-goa-20261031.tsv"
+    original.write_text(header + row.format("|UniProtKB:P00002"))
+    current.write_text(header + row.format("") + "UniProtKB\tQ12345\tTEST\tlocated_in\tGO:0005737\tcytoplasm\tCC\tECO:0000314\tIDA\tGO_REF:0000001\t\tNCBITaxon:9606\tHomo sapiens\tUniProt\tTest protein\t20261031\n")
+    annotations = []
+    for support in [["PANTHER:PTN000000001", "UniProtKB:P00001", "UniProtKB:P00002"],
+                    ["PANTHER:PTN000000001", "UniProtKB:P00001"]]:
+        annotations.append({"term": {"id": "GO:0007507", "label": "heart development"},
+                            "evidence_type": "IBA", "original_reference_id": "GO_REF:0000033",
+                            "supporting_entities": support,
+                            "review": {"action": "KEEP_AS_NON_CORE", "summary": "Conserved developmental contribution."}})
+    annotations.append({"term": {"id": "GO:0005737", "label": "cytoplasm"},
+                        "evidence_type": "IDA", "original_reference_id": "GO_REF:0000001",
+                        "review": {"action": "ACCEPT", "summary": "Observed cytoplasmic localization."}})
+    document = {"id": "Q12345", "gene_symbol": "TEST", "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+                "description": "A test protein with retained historical and current source assertions.",
+                "references": [{"id": "GO_REF:0000033", "title": "Phylogenetic inference"},
+                               {"id": "GO_REF:0000001", "title": "Published evidence"}],
+                "existing_annotations": annotations}
+    review = tmp_path / "TEST-ai-review.yaml"
+    review.write_text(yaml.safe_dump(document, sort_keys=False))
+    manifest = tmp_path / "TEST-goa-snapshots.yaml"
+    data = {"version": 1, "gene_product_db": "UniProtKB", "gene_product_id": "Q12345", "taxon_id": "NCBITaxon:9606",
+            "snapshots": [{"path": p.name, "sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+                           "role": role, "provenance": "Authenticated test source snapshot."}
+                          for p, role in [(original, "original"), (current, "additive")]]}
+    manifest.write_text(yaml.safe_dump(data, sort_keys=False))
+    return review, original, current, manifest, document, data
+
+
+def test_snapshot_default_union_and_explicit_single_file(snapshot_review):
+    review, original, current, manifest, _, _ = snapshot_review
+    before = {p: p.read_bytes() for p in [review, original, current, manifest]}
+    validator = GOAValidator(strict_mode=True)
+    result = validator.validate_against_goa(review)
+    assert result.is_valid
+    assert [s["rows"] for s in result.snapshot_sources] == [1, 2]
+    assert "2 GOA snapshots (3 source rows)" in validator.get_summary(result)
+    assert not validator.validate_against_goa(review, original).is_valid
+    assert not validator.validate_against_goa(review, current).is_valid
+    assert {p: p.read_bytes() for p in before} == before
+    manifest.unlink()
+    assert not validator.validate_against_goa(review).is_valid
+
+
+@pytest.mark.parametrize("removed", [0, 1, 2])
+def test_snapshot_union_requires_every_source_context(snapshot_review, removed):
+    review, _, _, _, document, _ = snapshot_review
+    del document["existing_annotations"][removed]
+    review.write_text(yaml.safe_dump(document))
+    validator = GOAValidator()
+    result = validator.validate_against_goa(review)
+    assert not result.is_valid and len(result.missing_in_yaml) == 1
+    missing = result.missing_in_yaml[0]
+    assert missing.source_path and missing.source_line >= 2
+    assert f"{missing.source_path}:{missing.source_line}" in validator.get_summary(result)
+
+
+@pytest.mark.parametrize("change", ["term", "evidence", "reference", "polarity", "partial_donors", "invented_donor", "new_action"])
+def test_snapshot_union_does_not_relax_strict_matching(snapshot_review, change):
+    review, _, _, _, document, _ = snapshot_review
+    row = document["existing_annotations"][1]
+    if change == "term":
+        row["term"]["id"] = "GO:9999999"
+    elif change == "evidence":
+        row["evidence_type"] = "IMP"
+    elif change == "reference":
+        row["original_reference_id"] = "PMID:12345"
+    elif change == "polarity":
+        row["negated"] = True
+    elif change == "partial_donors":
+        row["supporting_entities"] = ["UniProtKB:P00001"]
+    elif change == "invented_donor":
+        row["supporting_entities"].append("UniProtKB:FAKE")
+    else:
+        row["review"]["action"] = "NEW"
+    review.write_text(yaml.safe_dump(document))
+    assert not GOAValidator().validate_against_goa(review).is_valid
+
+
+@pytest.mark.parametrize("change", ["unknown_key", "unknown_snapshot_key", "bool_version", "string_version", "hash_type", "path_type", "bad_hash", "missing_original", "duplicate_path", "absolute", "traversal", "backslash", "empty_list", "wrong_role", "no_provenance", "wrong_target", "wrong_taxon"])
+def test_snapshot_manifest_fails_closed(snapshot_review, change):
+    review, original, current, manifest, _, data = snapshot_review
+    item = data["snapshots"][1]
+    if change == "unknown_key":
+        data["allow_missing"] = True
+    elif change == "unknown_snapshot_key":
+        item["optional"] = True
+    elif change == "bool_version":
+        data["version"] = True
+    elif change == "string_version":
+        data["version"] = "1"
+    elif change == "hash_type":
+        item["sha256"] = 1
+    elif change == "path_type":
+        item["path"] = [current.name]
+    elif change == "bad_hash":
+        item["sha256"] = "0" * 64
+    elif change == "missing_original":
+        data["snapshots"].pop(0)
+    elif change == "duplicate_path":
+        item["path"] = original.name
+    elif change == "absolute":
+        item["path"] = str(current)
+    elif change == "traversal":
+        item["path"] = "../" + current.name
+    elif change == "backslash":
+        item["path"] = "..\\" + current.name
+    elif change == "empty_list":
+        data["snapshots"] = []
+    elif change == "wrong_role":
+        item["role"] = "original"
+    elif change == "no_provenance":
+        item["provenance"] = ""
+    elif change == "wrong_target":
+        data["gene_product_id"] = "P99999"
+    else:
+        data["taxon_id"] = "NCBITaxon:10090"
+    manifest.write_text(yaml.safe_dump(data))
+    result = GOAValidator().validate_against_goa(review)
+    assert not result.is_valid and "snapshot manifest" in result.error_message
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_snapshot_manifest_rejects_duplicate_keys(snapshot_review, nested):
+    review, _, _, manifest, _, _ = snapshot_review
+    text = manifest.read_text()
+    if nested:
+        text = text.replace("  role: additive", "  role: additive\n  role: additive")
+    else:
+        text += "version: 1\n"
+    manifest.write_text(text)
+    result = GOAValidator().validate_against_goa(review)
+    assert not result.is_valid and "Duplicate" in result.error_message
+
+
+@pytest.mark.parametrize("change", ["empty", "header_only", "header", "short_row", "invalid_utf8", "wrong_accession", "wrong_taxon", "wrong_namespace", "missing_term", "missing_reference", "missing"])
+def test_snapshot_sources_fail_closed_even_with_updated_hash(snapshot_review, change):
+    review, _, current, manifest, _, data = snapshot_review
+    raw = current.read_bytes()
+    if change == "empty":
+        raw = b""
+    elif change == "header_only":
+        raw = raw.splitlines(keepends=True)[0]
+    elif change == "header":
+        raw = raw.replace(b"GENE PRODUCT DB", b"UNKNOWN", 1)
+    elif change == "short_row":
+        raw = raw.splitlines(keepends=True)[0] + b"UniProtKB\tQ12345\n"
+    elif change == "invalid_utf8":
+        raw += b"\xff"
+    elif change == "wrong_accession":
+        raw = raw.replace(b"Q12345", b"P99999")
+    elif change == "wrong_namespace":
+        raw = raw.replace(b"UniProtKB", b"OtherDB")
+    elif change == "wrong_taxon":
+        raw = raw.replace(b"9606", b"10090")
+    elif change == "missing_term":
+        raw = raw.replace(b"GO:0007507", b"")
+    elif change == "missing_reference":
+        raw = raw.replace(b"GO_REF:0000033", b"")
+    current.write_bytes(raw)
+    data["snapshots"][1]["sha256"] = hashlib.sha256(raw).hexdigest()
+    manifest.write_text(yaml.safe_dump(data))
+    if change == "missing":
+        current.unlink()
+    result = GOAValidator().validate_against_goa(review)
+    assert not result.is_valid and result.error_message
+
+
+def test_snapshot_symlink_escape_and_mandatory_original(snapshot_review, tmp_path):
+    review, original, current, manifest, _, _ = snapshot_review
+    outside = tmp_path.parent / (tmp_path.name + "-outside.tsv")
+    outside.write_bytes(current.read_bytes())
+    current.unlink()
+    current.symlink_to(outside)
+    result = GOAValidator().validate_against_goa(review)
+    assert not result.is_valid and "escaping" in result.error_message
+    original.unlink()
+    assert not GOAValidator().validate_against_goa(review).is_valid
+
+
+def test_snapshot_duplicate_records_and_target_isoform(snapshot_review):
+    review, original, current, manifest, document, data = snapshot_review
+    raw = current.read_bytes() + original.read_bytes().split(b"\n", 1)[1]
+    raw = raw.replace(b"Q12345\tTEST", b"Q12345-2\tTEST", 1)
+    current.write_bytes(raw)
+    data["snapshots"][1]["sha256"] = hashlib.sha256(raw).hexdigest()
+    manifest.write_text(yaml.safe_dump(data))
+    assert GOAValidator().validate_against_goa(review).is_valid
+    # The matcher retains its existing identity scope; it is not an isoform or
+    # extension conservation proof. Duplicate source rows keep both origins.
+    result = GOAValidator().validate_against_goa(review)
+    assert [s["rows"] for s in result.snapshot_sources] == [1, 3]
+
+
+def test_snapshot_default_gene_validator_integration(snapshot_review, monkeypatch):
+    review, _, _, manifest, document, _ = snapshot_review
+    # No network access may be needed for this local default-path integration.
+    import requests
+    def no_network(*args, **kwargs):
+        raise AssertionError("Unexpected network request during local validation")
+    monkeypatch.setattr(requests.sessions.Session, "request", no_network)
+    report = validate_gene_review(review, check_supporting_text=False)
+    assert report.is_valid, report.issues
+    document["existing_annotations"].pop(0)
+    review.write_text(yaml.safe_dump(document))
+    report = validate_gene_review(review, check_supporting_text=False)
+    assert any(issue.message.startswith("Missing 1 annotations from GOA") and issue.severity == "error" for issue in report.issues)
+    manifest.write_text("version: true\n")
+    report = validate_gene_review(review, check_supporting_text=False)
+    assert any("snapshot manifest" in issue.message for issue in report.issues)
 
 
 @pytest.fixture
@@ -849,6 +1068,62 @@ def test_seed_missing_annotations_true_noop_preserves_yaml_bytes(tmp_path):
         supporting_backfilled,
     ) == (0, 0, 0, 0)
     assert yaml_path.read_text() == original
+
+
+def test_seed_missing_annotations_uses_given_cache_dirs(tmp_path):
+    """Title lookups read the given caches, not the repo's publications/ or reactome/.
+
+    PMID:12345 and R-CEL-9856612 are also cached in the committed trees with
+    different titles, so a lookup there would be visible as the wrong title.
+    """
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "UniProt\tTest protein\t20180515\n"
+        "UniProtKB\tQ12345\tTEST\tinvolved_in\tGO:0005678\ttest process\tBP\t"
+        "ECO:0000304\tTAS\tReactome:R-CEL-9856612\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "Reactome\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+    )
+    reactome_dir = tmp_path / "reactome"
+    reactome_dir.mkdir()
+    (reactome_dir / "R-CEL-9856612.md").write_text(
+        "---\nstable_id: R-CEL-9856612\n---\n\n# Fixture-only pathway title\n"
+    )
+    publications_dir = tmp_path / "publications"
+    publications_dir.mkdir()
+    (publications_dir / "PMID_12345.md").write_text(
+        "---\npmid: '12345'\n---\n\n# Fixture-only cached title\n"
+    )
+
+    _, _, references_added, _, _ = validator.seed_missing_annotations(
+        yaml_path,
+        goa_path,
+        fetch_titles=True,
+        publications_dir=publications_dir,
+        reactome_dir=reactome_dir,
+    )
+
+    assert references_added == 2
+    document = yaml.safe_load(yaml_path.read_text())
+    titles = {ref["id"]: ref["title"] for ref in document["references"]}
+    assert titles == {
+        "PMID:12345": "Fixture-only cached title",
+        "Reactome:R-CEL-9856612": "Fixture-only pathway title",
+    }
+    assert sorted(publications_dir.iterdir()) == [publications_dir / "PMID_12345.md"]
+    assert sorted(reactome_dir.iterdir()) == [reactome_dir / "R-CEL-9856612.md"]
 
 
 def test_seed_missing_annotations_noop_writes_requested_output(tmp_path):

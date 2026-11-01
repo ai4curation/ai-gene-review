@@ -10,7 +10,7 @@ Target: **Drosophila melanogaster A0A0B4KEF3 (Lcp3)**. Source: the frozen ProtNL
 
 | Claim | Assessment | Evidence and limitation |
 |---|---|---|
-| Component of cuticle | LSP, score 2 | Correct, but less specific than the experimentally grounded larval-cuticle function on reviewed Lcp3 P07188. The selected target and P07188 are identical current 112-residue sequences at the same FlyBase locus. This support is independent of ARBA. |
+| Component of cuticle | CNN, score 2 | Correct and not novel. GOA already annotates this accession to GO:0042302 structural constituent of cuticle and GO:0005214 structural constituent of chitin-based cuticle, and the reviewed Lcp3 product P07188 of the same gene carries the experimentally grounded larval-cuticle function GO:0008010. The selected target and P07188 are identical current 112-residue sequences at the same FlyBase locus. This support is independent of ARBA. |
 | Rigid cuticle | UNC, score 1 | The retrieved target evidence establishes larval cuticle structure, not the stated mechanical specialization. The adjective occurs in a spider donor description; it is not a demonstrated Lcp3 property. |
 | Of the spider | NPI, score 0; taxon-context error | The target is D. melanogaster, an insect. The literal claim places its function in the wrong organism. This is a narrative taxon mismatch, not a formal GO taxon-constraint assessment. |
 

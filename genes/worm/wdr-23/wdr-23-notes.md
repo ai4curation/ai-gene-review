@@ -61,3 +61,70 @@ PTHR19847/SF7 identifies the DCAF11/WDR23 substrate-receptor lineage. A WD-repea
 The 2019 report is available in full text; the 2009 cache is abstract-only. Neither directly assays D2030.9d/S6FN32. The genuine Falcon report provides useful primary leads, but its gene-level nuclear and SKN-1 conclusions require the exact isoform boundary documented here. No NEW experimental annotation is assigned to an untested protein product. No direct assay was found either establishing or refuting ribosome association.
 
 Exact sequence mapping: [wdr-23-bioinformatics/RESULTS.md](wdr-23-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output and prediction-evidence files were not opened or used for this section.
+
+### Identity of the benchmark accession
+
+- S6FN32 (unreviewed TrEMBL, WormBase D2030.9d, 498 aa) is an **alternative gene model** of wdr-23, not
+  the canonical product. The canonical reviewed entry is Swiss-Prot P90794 (WDR-23A, 571 aa); isoform
+  P90794-2 is WDR-23B (530 aa).
+- Re-derived from the UniProt flat file (new script `wdr-23-bioinformatics/compare_isoforms_rereview.py`,
+  report `RESULTS-rereview.md`): S6FN32 is an exact substring starting at Met74 of WDR-23A / residue 33 of
+  WDR-23B. It lacks the WDR-23A-specific N terminus (54 aa, carrying the predicted NESs), the basic
+  WDR-23B-specific N terminus (MPYKRHSSSNLKR) and the 19-residue shared acidic segment
+  NHSNDSDTDFSSDDEGCPK. All six WD repeats and four (W/Y)DxR DDB1-binding motifs (pos 266, 313, 336, 440)
+  are retained. No catalytic residues are relevant (non-enzymatic adaptor).
+- Cytoplasmic WDR-23A carries predicted NESs in its N terminus that WDR-23B lacks
+  [PMID:31409866 "cytoplasmic WDR-23A is predicted to encode two nuclear export signals (NES) in the
+  N-terminal region that are not found in nuclear WDR-23B."]; in neurons WDR-23a is punctate/mitochondrial
+  and WDR-23b is nuclear [PMID:24453991 "whereas WDR-23b::GFP localized exclusively to nuclei"]. So no
+  compartment can be transferred to S6FN32.
+
+### Evolutionary grounding
+
+- PANTHER PTHR19847:SF7 (DCAF11 subfamily) contains P90794/S6FN32 and human DCAF11 (Q8TEB1). PAINT node
+  PTN000457302 (taxon Eukaryota) carries IBD GO:0080008 Cul4-RING E3 ubiquitin ligase complex (seed
+  Q8TEB1) and GO:0043161 proteasome-mediated ubiquitin-dependent protein catabolic process (seed
+  WBGene00008419, i.e. wdr-23 itself). S6FN32 falls under that node, so the gene-level CRL4 substrate
+  receptor role is inherited, not only worm-specific.
+- PAINT did not propagate any localization or substrate-specific (SKN-1/NRF2) term; these are kept out of
+  the core function as product-level claims.
+
+### Annotation review
+
+- GOA has **no rows** for S6FN32 (gene-level annotations are on P90794), so `existing_annotations` is
+  empty. I deliberately did not add NEW rows to this untested gene-model accession: the CRL4 adaptor,
+  complex and proteasomal-catabolism terms are recorded in `core_functions` at gene level with the caveat
+  that the D2030.9d product itself has not been assayed. The three resulting validator warnings
+  ("not reflected in existing_annotations") are expected.
+- Core function changed from the generic GO:0060090 molecular adaptor activity to the more specific
+  GO:1990756 ubiquitin-like ligase-substrate adaptor activity (a descendant of molecular adaptor activity), matching
+  the human DCAF11 review, plus in_complex GO:0080008 and GO:0043161 per the PAINT IBD node.
+- Description rewritten to be project-independent and to state the gene-model relationship explicitly.
+- Organismal phenotypes (locomotion, aldicarb resistance, brood size, lifespan, Mn-induced CEP
+  degeneration in the PIRNR free text) were not treated as process participation.
+- Prediction-campaign references (protnlm-source.json, prediction-donor.json) retained in the references
+  list but marked relevance NONE / not used.
+
+### Relative to review next
+
+- Rule: benchmark is an alternative gene model, and the canonical product P90794 (WDR-23A) has no review
+  in the repo (`genes/worm/wdr-23` is keyed to S6FN32). Relative = same-gene canonical P90794, folder
+  `genes/worm/wdr-23__P90794`.
+- PANTHER family review `interpro/panther/PTHR19847/PTHR19847-review.yaml` places S6FN32 in SF7; it lists
+  P90794 and Q8TEB1 in unlabelled subfamily blocks without subfamily ids. No disagreement on placement
+  (UniProt PANTHER xref and the entries CSV both give PTHR19847:SF7 for P90794).
+- Module: `modules/nrf_oxidative_stress_response.yaml` (CUL-4/DDB-1/WDR-23 step in the nematode
+  SKN-1 branch).
+
+## Mn-induced CEP degeneration (UniProt PIRNR text, checked 2026-10-30)
+- The UniProt FUNCTION line "Required for dopaminergic CEP neuron degeneration in response to Mn(2+)"
+  matches Settivari et al. 2013. There, knockdown of the SKN-1 inhibitor WDR-23 makes worms
+  resistant to Mn-induced dopamine neuron degeneration
+  [PMID:23721876 "decreases in gene expression of the SKN-1 inhibitor WDR-23 or the GSTπ-binding cell death activator JNK/JNK-1 result in an increase in resistance to the metal"].
+  The effect is indirect. Loss of WDR-23 releases SKN-1, which induces the neuroprotective GST-1.
+  It follows from the SKN-1 substrate-receptor role already in the review, and it was not tested on
+  the D2030.9d product, so no annotation is proposed.

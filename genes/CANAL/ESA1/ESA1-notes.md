@@ -58,3 +58,20 @@ Main row-level calls:
 - Keep or mark as over-annotated the budding-yeast-specific EnsemblCompara
   process rows for rDNA heterochromatin, triglyceride biosynthesis, and
   macroautophagy rather than presenting them as core Candida ESA1 biology.
+
+## 2026-10-11
+
+Rechecked `CANAL/ESA1` after refetching GOA/UniProt and recaching all four cited
+PMIDs. The `PTHR10615` PAINT evidence still supports the broad MYST root
+`PTN004172926` rows and the fungal ESA1-subfamily `PTN000834946` H4 HAT row:
+`Q5A7Q2` remains in `PTHR10615:SF218`, which contains the *S. cerevisiae* ESA1,
+*S. pombe* mst1, CGD ESA1, *N. crassa* esa-1, and multiple Aspergillus/Emericella
+ESA1-family members.
+
+`falcon` plus the `perplexity-lite` fallback still failed because `agentapi` and
+provider keys are absent in this environment. A fresh web/PubMed search found no
+newer ESA1-specific paper beyond the two 2025 CGD references already cited here.
+The abstract for PMID:40795216 remains useful for the `esa1E372Q` filamentation
+phenotype; PMID:40988556 remains abstract-free in the local cache and should stay
+`UNDECIDED` for the ESA1 `GO:1900239 regulation of phenotypic switching` row until
+the paper's ESA1 evidence can be read.
