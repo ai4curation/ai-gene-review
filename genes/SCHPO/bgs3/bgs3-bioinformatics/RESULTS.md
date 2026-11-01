@@ -72,3 +72,49 @@ itself is confident about.
 - Limitations: PAE measures how uncertain the relative placement is, not that it is
   wrong. This analysis uses no membrane-orientation model and cannot locate the pore
   itself. It covers one seed (the deposited one).
+
+## Multi-seed re-run (prepared; needs AlphaFold Server)
+
+AF3 cannot run in this repository's environment: there is no GPU, and the AF3
+weights are licensed per user. The re-run is therefore set up for the public
+AlphaFold Server, using the same job format the authors deposited.
+
+1. `uv run python make_af_server_jobs.py` writes `af_server_jobs/`. It checks that the
+   UniProt sequences of Ghs2 and Bgs3 are identical to the deposited job request (they
+   are: 636 and 1826 aa). It contains:
+   - `ghs2_bgs3_multiseed.json`: 10 Ghs2+Bgs3 jobs. One uses the paper's Methods seed
+     (361330275); 9 use further fixed seeds.
+   - `ghs2_controls.json`: 3 Ghs2+Bgs4 jobs (Bgs4 does not co-IP with Ghs2 in the paper)
+     and 3 Ghs2+Bgs1 jobs. These test whether AF3 also "finds" a Ghs2 interface with
+     synthases Ghs2 is not known to bind.
+2. Upload the JSON files at alphafoldserver.com (Upload JSON), download each result zip,
+   and unzip them all under `af_server_runs/`, which is git-ignored.
+3. `uv run python af3_multiseed_analysis.py data af_server_runs` reports, for each model
+   and each job:
+   - ipTM;
+   - contacts and inter-chain PAE for each Ghs2 region;
+   - the GH16 block PAE (median PAE between confident GH16 residues and confident
+     partner residues);
+   - for Bgs3 runs, the GH16 and TM placement relative to the deposited model_0 after
+     superposing on Bgs3.
+
+### Baseline: the 5 deposited models, all from a single seed (`af3_multiseed_deposited.out`)
+
+These 5 diffusion samples share one trunk, so they understate the variability a
+multi-seed run would show.
+- The Ghs2 TM helix is fixed against Bgs3: CA RMSD 0.4-0.6 A versus model_0, TM contact
+  PAE about 4 A.
+- The GH16 domain moves: CA RMSD 7.4-13.7 A after superposing on Bgs3 (centroid shift
+  5.5-10.8 A).
+- The GH16 block PAE is 28.4-28.7 A in every model, near the top of AF3's PAE scale.
+
+So even within the authors' own run, the GH16 position near the Bgs3 pore varies
+between samples. Only the TM anchoring is stable.
+
+### What the multi-seed run would decide
+
+If the GH16 position and block PAE stay variable across seeds, while the TM interface
+recurs and the Bgs4/Bgs1 controls do not show it, the model supports a specific TM-TM
+interface but no defined GH16 placement. If the controls show an equally confident TM
+interface, AF3 is packing a lone TM helix against any synthase, and even the TM result
+is not specific evidence.
