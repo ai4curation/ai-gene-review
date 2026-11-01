@@ -84,10 +84,16 @@ def test_accept_with_replacement_terms_is_reported():
     assert fields(row) == [(0, "proposed_replacement_terms")]
 
 
-@pytest.mark.parametrize("reference_id", ["PMID:12345", "DOI:10.1000/x", SEARCH])
-def test_accept_citing_a_search_passes(reference_id):
+@pytest.mark.parametrize("reference_id", [
+    "PMID:12345", "DOI:10.1000/x", "PMC:PMC1", SEARCH,
+    "file:DROME/CG42763/CG42763-notes.md",
+    "file:human/X/X-deep-research-manual.md",
+])
+@pytest.mark.parametrize("slot", ["supported_by", "additional_reference_ids"])
+def test_accept_citing_a_search_passes(reference_id, slot):
     row = nd("ACCEPT", searched=False)
-    row["review"]["supported_by"] = [{"reference_id": reference_id}]
+    row["review"][slot] = (
+        [{"reference_id": reference_id}] if slot == "supported_by" else [reference_id])
     assert fields(row) == []
 
 
@@ -104,3 +110,7 @@ def test_accept_without_a_search_is_reported(supported_by):
 
 def test_search_rule_applies_only_to_accept():
     assert fields(nd("REMOVE", "STALE", searched=False)) == []
+
+
+def test_search_rule_ignores_non_nd_rows():
+    assert fields(nd("ACCEPT", term="GO:0016787", evidence="IBA", searched=False)) == []

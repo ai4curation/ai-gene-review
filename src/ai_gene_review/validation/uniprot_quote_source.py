@@ -49,8 +49,9 @@ reported. Before matching, a quote loses any flat-file line codes and feature
 keys copied with it; feature ranges (``102..292``) are positions, not an
 ellipsis; brackets the verbatim check treats as editorial are gaps, while
 literal notation such as ``[2Fe-2S]`` stays; and a part left as a lone number
-(``?..649``) is dropped. Dropping a part can only make a flag more likely, since
-a flag must hold for every part. Quotes that cannot be located are left to the
+(``?..649``) is dropped. While a part remains, dropping one can only make a
+flag more likely, since a flag must hold for every part; a quote left with no
+part is not located and is not flagged. Quotes that cannot be located are left to the
 verbatim check.
 Snapshot support covers embedded UniSave ``record_text`` flat files; JSON fields
 and computed observations are not classified as UniProt flat-file statements.

@@ -22,8 +22,9 @@ applies, and the checks here keep action, case and knowledge gaps consistent:
 - ``TRUE_GAP`` and ``EXISTENCE`` need a ``BIOLOGY`` knowledge gap whose
   ``dark_aspect`` matches the ND aspect (or ``WHOLLY_DARK``);
 - ``ACCEPT`` needs evidence that the literature was searched: a cited
-  publication (PMID, DOI, PMC) or a deep-research file. The UniProt record or
-  the protein's existence level is not a search;
+  publication (PMID, DOI, PMC) or the gene's deep-research or notes file
+  recording the search. The UniProt record or the protein's existence level
+  is not a search;
 - ``nd_case`` on a non-ND row is a mistake.
 
 Severity is WARNING, like the protein-binding policy: the checks guide
@@ -54,30 +55,16 @@ LITERATURE_CASES = frozenset({"STALE", "ONTOLOGY_BLOCKED"})
 #: Cases that must be paired with a BIOLOGY knowledge gap.
 GAP_CASES = frozenset({"TRUE_GAP", "EXISTENCE"})
 
-#: Reference id prefixes that are literature.
-LITERATURE_PREFIXES = ("PMID:", "DOI:", "PMC")
-
-
-def _cites_search(review: Dict[str, Any]) -> bool:
-    """Whether a review cites a publication or a deep-research file.
-
-    >>> _cites_search({"supported_by": [{"reference_id": "PMID:1"}]})
-    True
-    >>> _cites_search({"additional_reference_ids": ["file:human/X/X-deep-research-falcon.md"]})
-    True
-    >>> _cites_search({"supported_by": [{"reference_id": "file:human/X/X-uniprot.txt"}]})
-    False
-    """
-    ids = [s.get("reference_id") for s in review.get("supported_by") or [] if isinstance(s, dict)]
-    ids += list(review.get("additional_reference_ids") or [])
-    return any(
-        isinstance(i, str) and (i.startswith(LITERATURE_PREFIXES) or "-deep-research" in i)
-        for i in ids
-    )
-
-
 #: Actions that describe a true-but-peripheral or overreaching claim; an ND is neither.
 NON_ND_ACTIONS = frozenset({"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"})
+
+#: Reference id prefixes that are literature.
+LITERATURE_PREFIXES = ("PMID:", "DOI:", "PMC:", "PMCID:")
+
+#: Gene-folder files that record a literature search: deep research (including
+#: ``-deep-research-manual.md``) and the reviewer's notes, where CLAUDE.md says a
+#: search goes when deep research fails. A negative search has no paper to cite.
+SEARCH_RECORD_MARKERS = ("-deep-research", "-notes.md")
 
 
 def _gaps(data: Dict[str, Any], review: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -87,6 +74,27 @@ def _gaps(data: Dict[str, Any], review: Dict[str, Any]) -> List[Dict[str, Any]]:
         if isinstance(source, dict):
             gaps.extend(g for g in source.get("knowledge_gaps") or [] if isinstance(g, dict))
     return gaps
+
+
+def _cites_search(review: Dict[str, Any]) -> bool:
+    """Whether a review cites a publication or a file recording the literature search.
+
+    >>> _cites_search({"supported_by": [{"reference_id": "PMID:1"}]})
+    True
+    >>> _cites_search({"additional_reference_ids": ["file:human/X/X-deep-research-falcon.md"]})
+    True
+    >>> _cites_search({"supported_by": [{"reference_id": "file:DROME/X/X-notes.md"}]})
+    True
+    >>> _cites_search({"supported_by": [{"reference_id": "file:human/X/X-uniprot.txt"}]})
+    False
+    """
+    ids = [s.get("reference_id") for s in review.get("supported_by") or [] if isinstance(s, dict)]
+    ids += list(review.get("additional_reference_ids") or [])
+    return any(
+        isinstance(i, str)
+        and (i.startswith(LITERATURE_PREFIXES) or any(m in i for m in SEARCH_RECORD_MARKERS))
+        for i in ids
+    )
 
 
 def _has_matching_gap(gaps: List[Dict[str, Any]], aspect: str | None) -> bool:
@@ -207,9 +215,11 @@ def iter_nd_policy_violations(
                 index,
                 "supported_by",
                 "ND row is ACCEPTed without evidence that the literature was searched",
-                "Cite the search: the deep-research file, or the publications that were "
-                "checked (a PMID or DOI). The UniProt record or the protein's existence "
-                "level does not show that the literature has no function to annotate",
+                "Cite the search: the deep-research file, or the notes file recording the "
+                "queries and their result (when a search finds nothing there is no paper "
+                "to cite), or the publications that were checked (PMID, DOI). The UniProt "
+                "record or the protein's existence level does not show that the "
+                "literature has no function to annotate",
             )
 
         if action == "ACCEPT" and review.get("proposed_replacement_terms"):
