@@ -23,17 +23,21 @@
   2021 fumiquinazoline work showed that MpkA is the kinase responsible for
   FmqC phosphorylation during conidiogenesis.
 - Several EnsemblFungi rows come from S. pombe `pmk1`/`spm1`. `GO:0000196`
-  is reasonable for the conserved fungal CWI MAPK, and broad cytoplasm/nucleus
-  rows are plausible active compartments to retain as non-core. By contrast,
+  is reasonable for the conserved fungal CWI MAPK. The cytoplasm rows are core
+  active compartments because full-text MpkA evidence shows FmqC
+  phosphorylation and GliT/GtmA interaction in cytoplasmic contexts; the broad
+  nucleus rows remain non-core because the cached nuclear-output evidence is for
+  RlmA downstream of MpkA. By contrast,
   the negative regulation of mitotic cytokinesis, negative regulation of
   glucose-mediated signaling, and positive regulation of calcium ion import
   rows are PomBase-specific Pmk1 outputs, not established A. fumigatus MpkA
   functions.
 - PMID:22220813, an abstract-only CWI sensor/Rho GTPase paper, supports the A.
   fumigatus CWI pathway background but the cached abstract does not mention
-  `mpkA` or show how CGD's heat and alkaline-pH IMP rows were assigned. I kept
-  those rows as non-core stress phenotypes rather than second-guessing the
-  full-text curation.
+  `mpkA` or show how AspGD's heat and alkaline-pH IMP rows were assigned. The
+  heat, heat-acclimation, and alkaline-pH rows are left `UNDECIDED`: the cached
+  papers are relevant, but the evidence that AspGD saw is in inaccessible full
+  text.
 - A 2024 search found PMID:38167253 as the newest direct MpkA paper. It adds
   full-text evidence that MpkA is required for gliotoxin production and
   self-protection, physically interacts with GliT and GtmA, and is required for
