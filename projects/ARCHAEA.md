@@ -172,6 +172,19 @@ succinyl-CoA reductase (NADP+), succinate-semialdehyde reductase (NADPH) and
 4-hydroxybutyrate-CoA ligase activities, and carbon fixation by the
 3HP/4HB cycle.
 
+**Module.** The cycle is modelled in
+`modules/hydroxypropionate_hydroxybutyrate_cycle.yaml` (DRAFT): two branches,
+16 reaction steps, each grounded to an *M. sedula* protein identified in the
+literature or, for the methylmalonyl-CoA epimerase and mutase, by UniProt EC
+assignment. Enzymes that act twice are modelled as separate steps with the
+same representative: the acetyl-CoA/propionyl-CoA carboxylase (Msed_0147,
+Msed_0148, Msed_1375), the malonyl-CoA/succinyl-CoA reductase (Msed_0709) and
+the 3-hydroxypropionyl-CoA dehydratase/crotonyl-CoA hydratase (Msed_2001).
+Four steps have no GO activity term; their gene reviews propose one. Five of
+the 15 proteins have gene reviews; the other ten (the carboxylase subunits,
+Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399 and Msed_0656)
+are the next review targets for this module.
+
 ## Anchor organisms
 
 Chosen on 2026-10-14 for relevance to DOE missions (bioenergy, critical
@@ -208,8 +221,8 @@ The cycle has no GO-CAM model in the repo, and its enzymes are
 multifunctional. The two 4-hydroxybutyrate--CoA ligase paralogs (Msed_0406
 and Msed_0394) also accept acetate, butyrate and propionate. That makes them
 a test of whether GO records the physiological substrate or every substrate
-seen in vitro. All five are now reviewed (Round 3), so the cycle is ready
-to be built as the first archaeal module.
+seen in vitro. All five are now reviewed (Round 3), and the cycle is built
+as the first archaeal module, `modules/hydroxypropionate_hydroxybutyrate_cycle.yaml`.
 
 #### A2. Sulfur oxidation and bioleaching
 
@@ -328,8 +341,9 @@ split.
    rows). Cross-link PAINT-derived entries to [IBA_REVIEW](IBA_REVIEW.md)
    and add new patterns as reviews are done.
 5. **Breadth and modules:** review the rest of Part A theme by theme, then
-   Part B. Candidate modules: the 3HP/4HB CO2-fixation cycle,
-   hydrogenotrophic methanogenesis, and archaeal ether-lipid biosynthesis.
+   Part B. The 3HP/4HB CO2-fixation cycle module is built (DRAFT); remaining
+   candidates are hydrogenotrophic methanogenesis and archaeal ether-lipid
+   biosynthesis.
 6. **Coverage measure:** add a script under `ARCHAEA/` that counts GOA rows
    by evidence code for each target species. It will show how far archaeal
    GO coverage depends on IEA, and can be re-run as the project progresses.
