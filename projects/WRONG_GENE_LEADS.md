@@ -3,7 +3,7 @@ title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI]
-genes: [CSGALNACT1, ARHGDIB, traB]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC]
 ---
 
 # Wrong-Gene Leads
@@ -107,14 +107,34 @@ species, few citing entries, gene not named in the abstract". Many of these are
 complex or pathway papers where UniProt cited the paper only for the protein it
 foregrounded.
 
+## First lead review (2026-11-01)
+
+The five top-tier leads that looked most plausible from paper titles were checked
+against the cached abstracts. Full text could not be retrieved for any of them
+(Europe PMC has none, and the JBC pages returned 403), so CLAUDE.md's rule applies:
+an experimental row is not called wrong-gene unless the abstract itself says so.
+
+| Gene | Row | Paper | Outcome |
+|---|---|---|---|
+| PAPSS1 | skeletal system development (TAS, PINC) | PMID:9771708, SEMD and brachymorphic mouse | **Confirmed.** The abstract names the mutated gene as ATPSK2 (PAPSS2); PAPSS1 is ATPSK1. The review had already marked the row over-annotated in prose; it now carries a `WRONG_GENE_PRODUCT` source defect (PINC, repoint to O95340). |
+| FLNC | cytoplasm (IDA, MGI) | PMID:12393796, filamin A and B in neurons | **Query.** The abstract never mentions filamin C, but the row is experimental and the full text was unavailable. Recorded as a `WRONG_REFERENCE` / `CHECK` / `SUSPECTED` defect; the action (TOO_GENERAL) is unchanged. |
+| SOCS3 | protein kinase inhibitor activity; cytoplasmic side of plasma membrane (IDA) | PMID:9727029, SOCS-2 and the IGF-I receptor | **Query**, as for FLNC; actions unchanged. The activity is well supported for SOCS3 by other evidence. |
+| NLRP3 | inflammatory response (IMP) | PMID:12093792, PAN2 (NLRP4) | **Query**, as for FLNC; the abstract names Cryopyrin only as a protein PAN2 resembles. Action unchanged. |
+| NLRP3 | NF-kappaB regulation (IPI) | PMID:15817483, PYPAF3 | **False positive.** The abstract discusses PYPAF1, an NLRP3 synonym. A parser bug missed synonyms that wrap onto a later `GN` line; it is fixed and tested. |
+| AURKC | seven rows (TAS) | PMID:19774610, review on Aurora A | **False positive.** The review covers "aurora kinases A, B, and C"; the name check does not match "Aurora C" against AURKC. |
+
+So one of five leads was confirmed, three need the full text, and the remaining
+flags were detector false positives. The two false-positive patterns, wrapped synonyms
+and protein names written in words, are both name-matching gaps; the first is fixed.
+
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
   paper is irrelevant, and unreviewed entries (like pKM101 TraB) rarely cite papers at
   all, so cases like traB are invisible.
-- **The name check uses gene names only.** Abstracts that say "filamin C" or
-  "calcineurin A beta" are not matched against FLNC or PPP3CB, which leaves some
-  multi-gene papers ranked too high.
+- **The name check uses gene names only.** Abstracts that say "filamin C",
+  "Aurora C" or "calcineurin A beta" are not matched against FLNC, AURKC or PPP3CB,
+  which leaves some multi-gene papers ranked too high.
 - **IPI rows are noisy.** An interaction paper is often cited by UniProt for only one
   partner.
 - **Uncached papers** get no name-check adjustment.

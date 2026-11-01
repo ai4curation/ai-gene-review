@@ -99,7 +99,7 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
     accession = ""
     taxon = ""
     families: set[str] = set()
-    names: set[str] = set()
+    gn_lines: list[str] = []
     for line in text.splitlines():
         if line.startswith("AC   ") and not accession:
             accession = line[5:].split(";")[0].strip()
@@ -107,12 +107,15 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
             m = re.search(r"NCBI_TaxID=(\d+)", line)
             taxon = m.group(1) if m else ""
         elif line.startswith("GN   "):
-            for m in re.finditer(
-                r"(?:Name|Synonyms|OrderedLocusNames|ORFNames)=([^;]+)", line
-            ):
-                names.update(n.split("{")[0].strip() for n in m.group(1).split(","))
+            gn_lines.append(line[5:])
         elif line.startswith("DR   PANTHER; "):
             families.add(line.split(";")[1].strip().split(":")[0])
+    # GN entries wrap across lines (a synonym list can continue on the next line),
+    # so parse the joined block with evidence braces removed.
+    gn = re.sub(r"\{[^}]*\}", "", " ".join(gn_lines))
+    names: set[str] = set()
+    for m in re.finditer(r"(?:Name|Synonyms|OrderedLocusNames|ORFNames)=([^;]+)", gn):
+        names.update(n.strip() for n in m.group(1).split(","))
     pmids = frozenset(re.findall(r"PubMed=(\d+)", text))
     return GeneRecord(
         accession, taxon, frozenset(families), frozenset(n for n in names if n), pmids

@@ -178,3 +178,13 @@ def test_fetch_citing_entries_from_uniprot(tmp_path):
     citing = fetch_citing_entries(["11514575", "9113980"], cache_dir=tmp_path)
     assert "Q86X52" in {c.accession for c in citing["11514575"]}
     assert "Q99819" in {c.accession for c in citing["9113980"]}
+
+
+def test_gene_names_wrapping_across_gn_lines_are_parsed():
+    """Synonyms continued on a later GN line are read (NLRP3's NALP3, PYPAF1)."""
+    from ai_gene_review.tools.wrong_gene_leads import parse_uniprot_flatfile
+
+    text = (GENES / "human" / "NLRP3" / "NLRP3-uniprot.txt").read_text()
+    assert {"NLRP3", "NALP3", "PYPAF1", "CIAS1"} <= parse_uniprot_flatfile(
+        text
+    ).gene_names
