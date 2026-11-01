@@ -30,9 +30,16 @@ proposed_ontology_changes:
     replaced by outright, while the 1:1 molecular function GO:0004813 is advice a curator
     applies per annotation and so is recorded as a non-direct replacement. GO's own
     obsoletion comment names both.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: NOT_STARTED
+  affected_annotations:
+  - genes/POPTR/ALARS/ALARS-ai-review.yaml
+  - genes/PSEPK/alaS/alaS-ai-review.yaml
+  - genes/human/AARS1/AARS1-ai-review.yaml
+  - genes/human/AARS2/AARS2-ai-review.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
   see_also:
   - https://github.com/geneontology/go-annotation/issues/6525
 - change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
@@ -54,9 +61,14 @@ proposed_ontology_changes:
     replaced by outright, while the 1:1 molecular function GO:0004814 is advice a curator
     applies per annotation and so is recorded as a non-direct replacement. GO's own
     obsoletion comment names both.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: NOT_STARTED
+  affected_annotations:
+  - genes/PSEPK/argS/argS-ai-review.yaml
+  - genes/PSEPK/glyS/glyS-ai-review.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
   see_also:
   - https://github.com/geneontology/go-annotation/issues/6525
 - change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
@@ -78,9 +90,15 @@ proposed_ontology_changes:
     replaced by outright, while the 1:1 molecular function GO:0004813 is advice a curator
     applies per annotation and so is recorded as a non-direct replacement. GO's own
     obsoletion comment names both.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: NOT_STARTED
+  affected_annotations:
+  - genes/DANRE/gtpbp3/gtpbp3-ai-review.yaml
+  - genes/human/AARS2/AARS2-ai-review.yaml
+  - modules/mitochondrial_trna_charging_and_initiator_formylation.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
   see_also:
   - https://github.com/geneontology/go-annotation/issues/6525
 - change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
@@ -102,9 +120,11 @@ proposed_ontology_changes:
     replaced by outright, while the 1:1 molecular function GO:0004817 is advice a curator
     applies per annotation and so is recorded as a non-direct replacement. GO's own
     obsoletion comment names both.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: NOT_APPLICABLE
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
   see_also:
   - https://github.com/geneontology/go-annotation/issues/6525
 ---

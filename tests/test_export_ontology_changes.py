@@ -8,7 +8,10 @@ import pytest
 from ai_gene_review.tools.export_ontology_changes import (
     COLUMNS,
     collect,
-    render_report,
+    is_inbound,
+    is_outbound,
+    render_inbound_report,
+    render_request_report,
     write_outputs,
 )
 
@@ -25,6 +28,7 @@ proposed_ontology_changes:
   - id: GO:0070328
     label: triglyceride homeostasis
   justification: Remodeling is post-secretory; the evidence is about secretion.
+  origin: SELF_PROPOSED
   confidence: PROBABLE
   affected_annotations:
   - genes/human/NR1H4/NR1H4-ai-review.yaml
@@ -49,9 +53,13 @@ proposed_ontology_changes:
     label: vesicle membrane tethering activity
   change_dsl: obsolete GO:0099022 with replacement GO:7770062
   justification: Tethering is a binding activity, not a process.
-  confidence: CONFIRMED
-  report_status: REPORTED
-  term_tracker_issue: https://github.com/geneontology/go-ontology/issues/1
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: 2026-11-01
+  adoption_status: NOT_STARTED
+  affected_annotations:
+  - modules/vesicle_tethering.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/1
 - change_type: REMOVE_MAPPING
   ontology: GO
   about_node:
@@ -59,6 +67,7 @@ proposed_ontology_changes:
     label: vesicle tethering involved in exocytosis
   old_value: InterPro:IPR007225
   justification: The InterPro2GO mapping sends annotations to a term being obsoleted.
+  origin: SELF_PROPOSED
   confidence: PROBABLE
 """
 
@@ -74,6 +83,7 @@ proposed_ontology_changes:
   old_value: old label
   new_value: new label
   justification: The label is miscased.
+  origin: SELF_PROPOSED
   confidence: SUSPECTED
 """
 
@@ -119,10 +129,17 @@ def test_gene_symbol_is_recorded_for_gene_reviews_only(root: Path):
     assert by_term["GO:0099022"]["gene_symbol"] == ""
 
 
-def test_report_status_defaults_to_not_reported(root: Path):
+def test_origin_is_recorded_per_row(root: Path):
     by_term = {r["about_node"]: r for r in collect(root)}
-    assert by_term["GO:0010903"]["report_status"] == "NOT_REPORTED"
-    assert by_term["GO:0099022"]["report_status"] == "REPORTED"
+    assert by_term["GO:0010903"]["origin"] == "SELF_PROPOSED"
+    assert by_term["GO:0099022"]["origin"] == "UPSTREAM_COMPLETED"
+
+
+def test_no_status_is_invented_for_a_row_that_records_none(root: Path):
+    """An absent status means not assessed; defaulting would claim a request exists."""
+    by_term = {r["about_node"]: r for r in collect(root)}
+    assert by_term["GO:0010903"]["request_status"] == ""
+    assert by_term["GO:0099022"]["request_status"] == ""
 
 
 def test_dsl_is_generated_when_absent_and_kept_when_given(root: Path):
@@ -155,54 +172,45 @@ def test_write_outputs_writes_a_tsv_and_one_report_per_ontology(
         read = list(csv.DictReader(fh, delimiter="\t"))
     assert len(read) == 4
     assert list(read[0]) == COLUMNS
-    assert (reports / "GO.md").is_file()
-    assert (reports / "UBERON.md").is_file()
+    assert (reports / "GO-requests.md").is_file()
+    assert (reports / "GO-inbound.md").is_file()
+    assert (reports / "UBERON-requests.md").is_file()
 
 
-def test_report_names_the_change_and_its_justification(root: Path):
+def test_the_request_report_holds_only_our_own_proposals(root: Path):
+    """An upstream change must not be presented back to the ontology as our request."""
     rows = [r for r in collect(root) if r["ontology"] == "GO"]
-    md = render_report("GO", rows)
-    assert "GO:0099022" in md
-    assert "obsolete GO:0099022 with replacement GO:7770062" in md
-    assert "Tethering is a binding activity" in md
+    md = render_request_report("GO", rows)
+    assert "GO:0010903" in md
     assert "CDCA treatment lowered hepatic VLDL-TG secretion" in md
+    assert "GO:0099022" not in md
+
+
+def test_the_inbound_report_holds_only_upstream_changes(root: Path):
+    rows = [r for r in collect(root) if r["ontology"] == "GO"]
+    md = render_inbound_report("GO", rows)
+    assert "GO:0099022" in md
+    assert "GO:0010903" not in md
+
+
+def test_the_two_reports_partition_the_work(root: Path):
+    """No row is both a request to the ontology and work for us at once."""
+    rows = collect(root)
+    assert not [r for r in rows if is_outbound(r) and is_inbound(r)]
+    assert [r for r in rows if is_outbound(r)]
+    assert [r for r in rows if is_inbound(r)]
 
 
 def test_report_lists_affected_annotations(root: Path):
     rows = [r for r in collect(root) if r["ontology"] == "GO"]
-    md = render_report("GO", rows)
+    md = render_request_report("GO", rows)
     assert "genes/human/NR1H4/NR1H4-ai-review.yaml" in md
 
 
 def test_report_links_a_filed_tracker_issue(root: Path):
     rows = [r for r in collect(root) if r["ontology"] == "GO"]
-    md = render_report("GO", rows)
+    md = render_inbound_report("GO", rows)
     assert "https://github.com/geneontology/go-ontology/issues/1" in md
-
-
-def test_report_excludes_fixed_and_declined_changes():
-    base = {c: "" for c in COLUMNS}
-    rows = [
-        {
-            **base,
-            "ontology": "GO",
-            "about_node": "GO:1",
-            "report_status": "FIXED",
-            "justification": "done",
-            "change_type": "NODE_RENAME",
-        },
-        {
-            **base,
-            "ontology": "GO",
-            "about_node": "GO:2",
-            "report_status": "NOT_REPORTED",
-            "justification": "open",
-            "change_type": "NODE_RENAME",
-        },
-    ]
-    md = render_report("GO", rows)
-    assert "GO:2" in md
-    assert "GO:1" not in md
 
 
 def test_a_repo_with_no_changes_yields_nothing(tmp_path: Path):
@@ -220,12 +228,13 @@ def test_a_mapping_removal_does_not_render_an_arrow_to_nothing():
             "about_node": "GO:1",
             "change_type": "REMOVE_MAPPING",
             "old_value": "InterPro:IPR1",
-            "report_status": "NOT_REPORTED",
+            "origin": "SELF_PROPOSED",
+            "request_status": "NOT_FILED",
             "justification": "Sends IEAs to an obsolete term.",
             "supported_by": "[]",
         }
     ]
-    md = render_report("GO", rows)
+    md = render_request_report("GO", rows)
     assert "**Mapping to remove:** `InterPro:IPR1`" in md
     assert "→" not in md
 
@@ -240,12 +249,13 @@ def test_a_value_change_still_renders_the_arrow():
             "change_type": "NODE_RENAME",
             "old_value": "old",
             "new_value": "new",
-            "report_status": "NOT_REPORTED",
+            "origin": "SELF_PROPOSED",
+            "request_status": "NOT_FILED",
             "justification": "Miscased.",
             "supported_by": "[]",
         }
     ]
-    assert "`old` → `new`" in render_report("GO", rows)
+    assert "`old` → `new`" in render_request_report("GO", rows)
 
 
 PROJECT_PAGE = """---
@@ -260,15 +270,22 @@ proposed_ontology_changes:
   - id: GO:7770062
     label: vesicle membrane tethering activity
   justification: Tethering is a binding activity, not a process.
-  confidence: CONFIRMED
-  report_status: FIXED
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: 2026-11-01
+  adoption_status: COMPLETE
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
   about_node:
     id: GO:0099069
     label: synaptic vesicle tethering involved in synaptic vesicle exocytosis
   justification: Same rationale as its parent term.
-  confidence: CONFIRMED
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: 2026-11-01
+  adoption_status: NOT_STARTED
+  affected_annotations:
+  - genes/human/STX12/STX12-ai-review.yaml
 ---
 
 # Body text
@@ -283,6 +300,7 @@ proposed_ontology_changes:
     id: GO:0000001
     label: x
   justification: nope
+  origin: SELF_PROPOSED
   confidence: PROBABLE
 ---
 

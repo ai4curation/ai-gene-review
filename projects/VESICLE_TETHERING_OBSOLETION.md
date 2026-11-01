@@ -26,9 +26,11 @@ proposed_ontology_changes:
     term replaced by: a biological process cannot be replaced outright by a molecular
     function, and the recommended pattern is the new MF with a part_of link to the
     transport process it serves, which a curator must choose per annotation.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  adoption_status: COMPLETE
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
   about_node:
@@ -45,9 +47,11 @@ proposed_ontology_changes:
     term replaced by: a biological process cannot be replaced outright by a molecular
     function, and the recommended pattern is the new MF with a part_of link to the
     transport process it serves, which a curator must choose per annotation.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  adoption_status: COMPLETE
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
   about_node:
@@ -64,9 +68,11 @@ proposed_ontology_changes:
     term replaced by: a biological process cannot be replaced outright by a molecular
     function, and the recommended pattern is the new MF with a part_of link to the
     transport process it serves, which a curator must choose per annotation.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  adoption_status: COMPLETE
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
   about_node:
@@ -83,9 +89,11 @@ proposed_ontology_changes:
     term replaced by: a biological process cannot be replaced outright by a molecular
     function, and the recommended pattern is the new MF with a part_of link to the
     transport process it serves, which a curator must choose per annotation.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  adoption_status: COMPLETE
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
   about_node:
@@ -102,9 +110,11 @@ proposed_ontology_changes:
     term replaced by: a biological process cannot be replaced outright by a molecular
     function, and the recommended pattern is the new MF with a part_of link to the
     transport process it serves, which a curator must choose per annotation.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  adoption_status: COMPLETE
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: REMOVE_MAPPING
   ontology: GO
   about_node:
@@ -118,9 +128,10 @@ proposed_ontology_changes:
     and GO:7770062 appears nowhere in that file, so the mapping needs removing or
     repointing to the replacement MF rather than simply dropping. Recorded on this page
     rather than on a module because no module in this repository curates Njmu-R1.
-  confidence: CONFIRMED
-  report_status: NOT_REPORTED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_PROPOSED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)

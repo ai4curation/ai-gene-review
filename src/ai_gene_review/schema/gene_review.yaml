@@ -886,20 +886,42 @@ classes:
           `BFO:0000050` part_of, `RO:0002211` regulates). Needed because moving a
           term under a new parent and adding a `part_of` link to it are different
           changes.
+      origin:
+        range: OntologyChangeOriginEnum
+        required: true
+        description: >-
+          Who wants this change: this repository, or the ontology itself. The two
+          carry different work and different risks, and conflating them produces
+          records that assert things nobody did. A change we propose needs a
+          ticket filed and chased; a change the ontology has proposed or already
+          made needs our own affected content migrated, and the risk is that we
+          never notice it landed.
+      stance:
+        range: OntologyChangeStanceEnum
+        description: >-
+          Our position on a change we did not originate. Only meaningful when
+          `origin` is one of the upstream values; a change we proposed needs no
+          stance, since proposing it is the position. This is what makes
+          "upstream plans to do this and we think it is wrong" expressible at all.
       justification:
         range: string
         required: true
         description: >-
-          Why the ontology should make this change, self-contained enough to
-          paste into a term tracker. State what is wrong with the current term,
-          not merely what this repository would prefer.
+          For a change we propose, why the ontology should make it, self-contained
+          enough to paste into a term tracker: state what is wrong with the current
+          term, not merely what this repository would prefer. For a change we did
+          not originate, what the upstream rationale is and - where `stance` is not
+          plain agreement - what we think of it.
       confidence:
         range: SourceDefectConfidenceEnum
-        required: true
         description: >-
-          How firmly the case for the change is established. Reuses the
-          source-defect enum deliberately: the three levels mean the same thing
-          here, and a parallel enum would drift from it.
+          How firmly the case for the change is established. Required for a
+          `SELF_PROPOSED` change, where it grades our own argument, and left unset
+          otherwise: on an upstream change the ontology's own decision is not ours
+          to grade, and what a curator has actually verified belongs in
+          `ontology_state_verified`. Reuses the source-defect enum deliberately,
+          since the three levels mean the same thing and a parallel enum would
+          drift from it.
       affected_annotations:
         range: string
         multivalued: true
@@ -918,19 +940,36 @@ classes:
           as any other supporting text. An obsoletion argued from nothing but a
           reviewer's judgement should say so by carrying no quotes, rather than
           by paraphrasing a source.
-      report_status:
-        range: SourceDefectReportStatusEnum
-        ifabsent: string(NOT_REPORTED)
+      request_status:
+        range: OntologyChangeRequestStatusEnum
         description: >-
-          Where the upstream request stands. Reuses the source-defect enum, whose
-          values carry over unchanged; FIXED means the ontology made the change,
-          so the term should be re-fetched and the dependent annotations
-          revisited.
-      term_tracker_issue:
+          How far *our* request has got with the ontology. Only meaningful for a
+          `SELF_PROPOSED` change: on an upstream change we filed nothing, and the
+          old spelling of this slot made such a record claim that the ontology had
+          acted on a report that never existed.
+      adoption_status:
+        range: OntologyChangeAdoptionStatusEnum
+        description: >-
+          How far *we* have got migrating our own content to match, once the change
+          has landed or is certain to. This is the half of the work that an
+          upstream-originated change creates, and the half that silently does not
+          happen: a landed obsoletion whose `affected_annotations` are still
+          unmigrated leaves this repository citing obsolete terms.
+      ontology_state_verified:
+        range: date
+        description: >-
+          When a curator last checked the term's actual state in the ontology,
+          rather than restating a plan. Both obsoletion projects backfilled here
+          had audits that said a term was live after it had been retired, so an
+          undated status is not evidence of anything. Record the date of the
+          lookup, not of the plan.
+      upstream_tracker_issue:
         range: uri
         description: >-
-          The ontology's own tracker issue, once filed (KGCL
-          `term_tracker_issue`). For GO this is a geneontology/go-ontology issue.
+          The ontology's own tracker issue for this change, whoever opened it (KGCL
+          `term_tracker_issue`). For GO this is a geneontology/go-ontology or
+          go-annotation issue. Deliberately not named "ours": the same slot carries
+          a ticket we filed and one we are reacting to, and `origin` says which.
       pull_request:
         range: uri
         description: The pull request implementing the change, once opened (KGCL `pull_request`).
@@ -3234,6 +3273,93 @@ enums:
     permissible_values:
       NO_SUPPORTED_COUNTERPART:
         description: No counterpart sufficiently supported for a relationship was identified in the documented search; not proof of genomic absence.
+
+  OntologyChangeOriginEnum:
+    description: >-
+      Who wants an ontology change. The distinction decides what work the record
+      implies and which report it belongs in, and it is not recoverable from the
+      other fields: a well-argued obsoletion looks the same whether we thought of
+      it or read it on a tracker.
+    permissible_values:
+      SELF_PROPOSED:
+        description: >-
+          This repository is asking the ontology to make the change. The record is
+          an outbound request: it needs `confidence`, a justification that stands
+          on its own, and a `request_status` tracking whether it was filed and
+          what came of it.
+      UPSTREAM_PROPOSED:
+        description: >-
+          The ontology, or a group curating for it, has proposed the change and it
+          has not landed yet. The record is us tracking somebody else's plan, so it
+          takes a `stance` and no `request_status`. Both obsoletion projects in
+          this repository began in this state.
+      UPSTREAM_COMPLETED:
+        description: >-
+          The ontology has already made the change. Nothing is owed upstream; what
+          is owed is migrating our own `affected_annotations`, tracked by
+          `adoption_status`. Record `ontology_state_verified` with the date the
+          term's state was actually looked up.
+
+  OntologyChangeStanceEnum:
+    description: >-
+      This repository's position on a change it did not originate. Absent means
+      nobody has taken one, which is different from agreeing.
+    permissible_values:
+      AGREE:
+        description: The change is right and we will migrate to it.
+      PARTIALLY_AGREE:
+        description: >-
+          The change is right in substance but some part of it is wrong - a
+          replacement that does not fit, a term that should not be in the batch.
+          Say which part in the justification.
+      DISAGREE:
+        description: >-
+          The change should not be made, or not as proposed. Needs the objection
+          argued in the justification; this is the case the schema previously could
+          not express at all.
+      NEEDS_CONFIRMATION:
+        description: >-
+          We cannot tell yet - the upstream scope is unclear, or whether a term is
+          in the batch has to be confirmed before we touch our own content. A real
+          and common state, and not the same as agreeing.
+
+  OntologyChangeRequestStatusEnum:
+    description: >-
+      Progress of a request *this repository* made to an ontology. Only applies to
+      a `SELF_PROPOSED` change.
+    permissible_values:
+      NOT_FILED:
+        description: Recorded here, not yet raised with the ontology.
+      FILED:
+        description: Raised on the ontology's tracker; see `upstream_tracker_issue`.
+      ACKNOWLEDGED:
+        description: The ontology's curators have responded without deciding.
+      ACCEPTED:
+        description: >-
+          The ontology made the change. Our own content may still need migrating,
+          which `adoption_status` tracks.
+      DECLINED:
+        description: The ontology considered the request and kept the term as it is.
+
+  OntologyChangeAdoptionStatusEnum:
+    description: >-
+      How far this repository has got updating its own content for a change that
+      has landed, or will. The counterpart of `request_status`: one tracks what the
+      ontology owes us, this tracks what we owe the ontology's decision.
+    permissible_values:
+      NOT_STARTED:
+        description: >-
+          Nothing migrated yet. On a landed change this means our reviews still
+          cite the old term.
+      IN_PROGRESS:
+        description: Some `affected_annotations` migrated, others outstanding.
+      COMPLETE:
+        description: Every affected record in this repository has been updated.
+      NOT_APPLICABLE:
+        description: >-
+          The change touches no content here, so there is nothing to migrate. Say
+          so explicitly rather than leaving the slot unset, which reads as
+          not-assessed.
 
   OntologyChangeTypeEnum:
     description: >-

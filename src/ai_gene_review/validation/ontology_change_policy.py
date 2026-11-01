@@ -71,8 +71,18 @@ PROSE_ONLY = frozenset({"COMPLEX_CHANGE", "OTHER"})
 #: Words below which a PROSE_ONLY justification is not an argument.
 MIN_JUSTIFICATION_WORDS = 20
 
-#: Report statuses that mean the request reached the ontology.
-FILED_STATUSES = frozenset({"REPORTED", "ACKNOWLEDGED", "FIXED", "DECLINED"})
+#: Request statuses that mean our request reached the ontology.
+FILED_STATUSES = frozenset({"FILED", "ACKNOWLEDGED", "ACCEPTED", "DECLINED"})
+
+#: Origins where the change is somebody else's, so a stance is owed and no
+#: request of ours exists.
+UPSTREAM_ORIGINS = frozenset({"UPSTREAM_PROPOSED", "UPSTREAM_COMPLETED"})
+
+#: Stances that record an objection, which has to be argued rather than asserted.
+OBJECTING_STANCES = frozenset({"DISAGREE", "PARTIALLY_AGREE"})
+
+#: Adoption statuses that leave our own content still citing the old term.
+UNMIGRATED = frozenset({"NOT_STARTED", "IN_PROGRESS"})
 
 
 def _term_id(value: Any) -> Optional[str]:
@@ -289,11 +299,13 @@ def validate_change_entries(
     >>> # a policy nit does not exclude the entry
     >>> entry = {"change_type": "NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT",
     ...          "ontology": "GO", "about_node": {"id": "GO:1", "label": "x"},
-    ...          "justification": "j", "confidence": "PROBABLE",
-    ...          "report_status": "FIXED"}
+    ...          "justification": "j", "origin": "SELF_PROPOSED",
+    ...          "confidence": "PROBABLE", "request_status": "FILED"}
     >>> valid, errors = validate_change_entries([entry])
     >>> len(valid), errors
     (1, [])
+    >>> change_policy_warnings([entry])[0].endswith("no tracker issue is linked")
+    True
     """
     if not isinstance(changes, list):
         return [], ["proposed_ontology_changes must be a list"]
@@ -487,17 +499,126 @@ def iter_ontology_change_violations(
                     "that should replace it and what distinguishes them",
                 )
 
-        status = change.get("report_status") or "NOT_REPORTED"
-        if status in FILED_STATUSES and not (
-            change.get("term_tracker_issue") or change.get("pull_request")
+        origin = change.get("origin")
+        stance = change.get("stance")
+        request_status = change.get("request_status")
+        adoption_status = change.get("adoption_status")
+        is_upstream = origin in UPSTREAM_ORIGINS
+
+        if origin == "SELF_PROPOSED":
+            if not change.get("confidence"):
+                yield (
+                    index,
+                    "confidence",
+                    "missing_confidence",
+                    "a SELF_PROPOSED change does not grade its own case",
+                    "Set confidence: CONFIRMED, PROBABLE or SUSPECTED. It grades the "
+                    "argument we are making, so a request without it says nothing about "
+                    "how firmly we hold it",
+                )
+            if stance:
+                yield (
+                    index,
+                    "stance",
+                    "stance_on_self_proposed",
+                    f"a SELF_PROPOSED change carries stance {stance}",
+                    "Proposing the change is the position; drop stance, or set origin to "
+                    "an upstream value if we are in fact reacting to somebody else's plan",
+                )
+
+        if is_upstream:
+            if change.get("confidence"):
+                yield (
+                    index,
+                    "confidence",
+                    "confidence_on_upstream_change",
+                    f"an {origin} change grades our confidence in it",
+                    "The ontology's own decision is not ours to grade. Drop confidence; "
+                    "if what was meant is that a curator checked the term's state, record "
+                    "ontology_state_verified instead",
+                )
+            if not stance:
+                yield (
+                    index,
+                    "stance",
+                    "missing_stance",
+                    f"an {origin} change records no stance",
+                    "Set stance: AGREE, PARTIALLY_AGREE, DISAGREE or NEEDS_CONFIRMATION. "
+                    "Absent reads as nobody having looked, which is different from agreeing",
+                )
+            if request_status:
+                yield (
+                    index,
+                    "request_status",
+                    "request_status_on_upstream_change",
+                    f"an {origin} change has request_status {request_status}",
+                    "We filed nothing, so there is no request of ours to have a status. "
+                    "Drop it; adoption_status tracks the work this change creates for us",
+                )
+
+        if stance in OBJECTING_STANCES:
+            words = len(str(change.get("justification") or "").split())
+            if words < MIN_JUSTIFICATION_WORDS:
+                yield (
+                    index,
+                    "justification",
+                    "thin_objection",
+                    f"stance {stance} is argued in {words} words",
+                    f"An objection to an ontology's own decision needs the case made, in "
+                    f"at least {MIN_JUSTIFICATION_WORDS} words: say which part is wrong "
+                    "and why. Asserting disagreement is not raising it",
+                )
+
+        if origin == "UPSTREAM_COMPLETED" and not change.get("ontology_state_verified"):
+            yield (
+                index,
+                "ontology_state_verified",
+                "unverified_completed_change",
+                "an UPSTREAM_COMPLETED change records no verification date",
+                "Record ontology_state_verified with the date the term's state was "
+                "actually looked up. Both obsoletion projects here had audits asserting a "
+                "term was live after it had been retired, so an undated claim that a "
+                "change landed is not evidence that it did",
+            )
+
+        landed = origin == "UPSTREAM_COMPLETED" or request_status == "ACCEPTED"
+        if (
+            landed
+            and adoption_status in UNMIGRATED
+            and change.get("affected_annotations")
+        ):
+            count = len(change["affected_annotations"])
+            yield (
+                index,
+                "adoption_status",
+                "unmigrated_landed_change",
+                f"the change has landed and {count} affected record(s) are "
+                f"{adoption_status}",
+                "Migrate the records in affected_annotations, or if they turn out not to "
+                "need it set adoption_status to NOT_APPLICABLE. A landed obsoletion with "
+                "unmigrated content means this repository cites an obsolete term",
+            )
+        if adoption_status and not landed:
+            yield (
+                index,
+                "adoption_status",
+                "premature_adoption_status",
+                f"adoption_status is {adoption_status} but the change has not landed",
+                "There is nothing to migrate until the ontology makes the change. Drop "
+                "adoption_status until origin is UPSTREAM_COMPLETED or our own "
+                "request_status is ACCEPTED",
+            )
+
+        if request_status in FILED_STATUSES and not (
+            change.get("upstream_tracker_issue") or change.get("pull_request")
         ):
             yield (
                 index,
-                "term_tracker_issue",
+                "upstream_tracker_issue",
                 "missing_tracker_issue",
-                f"report_status is {status} but no tracker issue is linked",
-                "Add term_tracker_issue (or pull_request) so the upstream discussion can "
-                "be found, or set report_status back to NOT_REPORTED",
+                f"request_status is {request_status} but no tracker issue is linked",
+                "Add upstream_tracker_issue (or pull_request) so the discussion can be "
+                "found, or set request_status back to NOT_FILED",
             )
 
         dsl = change.get("change_dsl")

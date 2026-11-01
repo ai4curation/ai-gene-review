@@ -58,6 +58,54 @@ excluded an otherwise fine entry because its `report_status: FIXED` carried no
 tracker link. A missing link is worth flagging and is not grounds for dropping
 the record.
 
+## Who wants the change: the distinction everything else hangs off
+
+`origin` is required, and it is the first thing to get right. Two cases that look
+identical in every other field carry completely different work:
+
+| | `SELF_PROPOSED` | `UPSTREAM_PROPOSED` / `UPSTREAM_COMPLETED` |
+|---|---|---|
+| What the record is | an outbound request | us tracking somebody else's plan |
+| Next action | file a ticket, chase it | migrate our own affected content |
+| Load-bearing field | `justification` (the argument) | `affected_annotations` (the blast radius) |
+| Lifecycle slot | `request_status` | `adoption_status` |
+| Needs `confidence` | yes, it grades our argument | no — their decision is not ours to grade |
+| Takes a `stance` | no, proposing it *is* the position | yes |
+| How it goes wrong | they never act | **we never notice it landed** |
+| Appears in | `<ONT>-requests.md` | `<ONT>-inbound.md` |
+
+The first version of this schema had no `origin`, and the consequence was not
+hypothetical: all 15 records committed under it were reactive, every one was
+marked with a `report_status` whose documented meaning is *"the source has
+corrected the record"* — i.e. acted on **our** report — and every one linked GO's
+own ticket as though we had filed it. The report called them "requests for GO."
+Nothing in those 15 rows was a request. `just export-ontology-changes` now
+reports **0** open requests and 8 inbound changes to adopt.
+
+`stance` exists so that *disagreeing* with an upstream change is expressible at
+all. Two live objections in this repository could not previously be recorded:
+the vesicle page's warning that `GO:0099023` is a cellular-component term and
+**must not** be reused as the molecular-function replacement, and the
+amino-acid page's note that batch membership must be confirmed before any
+in-repo edits. Those are `DISAGREE` and `NEEDS_CONFIRMATION`. An objection has to
+be argued — `thin_objection` fires on a `DISAGREE` or `PARTIALLY_AGREE` carrying
+fewer than 20 words, because asserting disagreement is not raising it.
+
+`ontology_state_verified` records when a curator last *looked up* the term's
+state, as distinct from when somebody wrote down a plan. Both backfilled projects
+had audits claiming a term was live after it had been retired, so an undated
+status is not evidence of anything.
+
+### The failure this is really for
+
+`unmigrated_landed_change` fires when a change has landed and its
+`affected_annotations` are still `NOT_STARTED` or `IN_PROGRESS`. That is the
+failure that actually happens: the ontology moves, and the repository keeps
+citing the retired term. It fires three times on
+`AMINO_ACID_ACTIVATION_OBSOLETION` today, naming nine files across four species
+that still annotate to terms GO obsoleted — found by adding the field, not by
+anyone noticing.
+
 ## It is KGCL, wrapped
 
 `change_type` names a class from
@@ -145,14 +193,26 @@ proposed_ontology_changes:
 just export-ontology-changes
 ```
 
-Writes `reports/ontology-changes.tsv` plus one Markdown report per ontology in
-`reports/ontology-changes/` — each ontology has its own tracker, so the report is
-grouped the way the request is actually sent. Both paths are gitignored, for the
-same reason the source-defect report is: they aggregate every review, so
-committing them makes every curation PR conflict.
+Writes `reports/ontology-changes.tsv` plus **two** Markdown reports per ontology
+in `reports/ontology-changes/`:
 
-Rows with `report_status` `FIXED` or `DECLINED` are left out of the Markdown,
-since there is nothing left to send; they stay in the TSV as a record.
+- `<ONT>-requests.md` — the outbound document, holding only `SELF_PROPOSED`
+  changes with an open `request_status`. This is what gets sent upstream, so an
+  upstream-originated change must not appear in it: that would hand the
+  ontology's own decision back to them as our request.
+- `<ONT>-inbound.md` — the worklist for curators here, holding changes the
+  ontology originated (or ours that it accepted) whose `adoption_status` is not
+  yet `COMPLETE` or `NOT_APPLICABLE`. Nothing here is owed upstream; the work is
+  ours.
+
+Grouping by ontology rather than lumping everything together matters because each
+ontology has its own tracker. Both paths are gitignored, for the same reason the
+source-defect report is: they aggregate every review, so committing them makes
+every curation PR conflict.
+
+A row is never in both reports — `test_the_two_reports_partition_the_work` pins
+that — and a settled request or a fully adopted change drops out of both while
+staying in the TSV as a record.
 
 ## What is checked
 
@@ -214,6 +274,14 @@ mitochondrial, enough to pin both shapes. The other 39 are mechanically derivabl
 from the markdown tables already on that page, and hand-writing them would
 duplicate those tables in a second format with no new information. A generator
 that reads a project's own tables is the right answer; nobody has written one.
+
+**A mapping removal goes to the wrong recipient.** `REMOVE_MAPPING` on an
+InterPro2GO or UniRule mapping is grouped under `ontology: GO`, because GO owns
+the term the mapping points at — but the mapping itself lives in InterPro2GO or
+UniRule, and that is who would remove it. Five such records are currently filed
+under GO. `SourceDefect` has a `resource` slot for exactly this and
+`ProposedOntologyChange` does not; adding one would let the exporter route a
+mapping removal to the body that maintains the mapping.
 
 **Both pages' audits were stale, and in the same direction.** Vesicle tethering
 recorded two of five terms obsolete as of 2026-09-26; all five are. Amino acid

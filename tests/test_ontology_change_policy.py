@@ -22,6 +22,7 @@ def _change(**kw):
         "about_node": dict(GO_A),
         "has_direct_replacement": dict(GO_B),
         "justification": "Tethering is a binding activity, not a process.",
+        "origin": "SELF_PROPOSED",
         "confidence": "PROBABLE",
     }
     base.update(kw)
@@ -167,17 +168,17 @@ def test_other_change_type_wants_a_long_justification():
     assert "thin_justification" in _codes(data)
 
 
-def test_a_filed_report_needs_a_tracker_link():
-    data = {"proposed_ontology_changes": [_change(report_status="REPORTED")]}
+def test_a_filed_request_needs_a_tracker_link():
+    data = {"proposed_ontology_changes": [_change(request_status="FILED")]}
     assert "missing_tracker_issue" in _codes(data)
 
 
-def test_a_filed_report_with_a_tracker_link_passes():
+def test_a_filed_request_with_a_tracker_link_passes():
     data = {
         "proposed_ontology_changes": [
             _change(
-                report_status="REPORTED",
-                term_tracker_issue="https://github.com/geneontology/go-ontology/issues/1",
+                request_status="FILED",
+                upstream_tracker_issue="https://github.com/geneontology/go-ontology/issues/1",
             )
         ]
     }
@@ -440,7 +441,7 @@ class TestSchemaDerivedFacts:
         )
 
         assert required_change_fields() == frozenset(
-            {"change_type", "ontology", "about_node", "justification", "confidence"}
+            {"change_type", "ontology", "about_node", "justification", "origin"}
         )
 
     def test_allowed_change_types_come_from_the_schema(self):
@@ -460,7 +461,11 @@ class TestSchemaDerivedFacts:
 
         fields = allowed_change_fields()
         assert "has_nondirect_replacement" in fields
-        assert "term_tracker_issue" in fields
+        assert "upstream_tracker_issue" in fields
+        assert {"origin", "stance", "request_status", "adoption_status"} <= fields
+        # the retired spellings must not linger
+        assert "report_status" not in fields
+        assert "term_tracker_issue" not in fields
         assert "replacement" not in fields
 
     def test_every_dsl_builder_names_a_real_change_type(self):
@@ -558,7 +563,7 @@ class TestValidateChangeEntries:
             validate_change_entries,
         )
 
-        entries = [_change(report_status="FIXED")]
+        entries = [_change(request_status="FILED")]
         assert len(validate_change_entries(entries)[0]) == 1
         assert any(
             "missing_tracker_issue" in w for w in change_policy_warnings(entries)
@@ -581,3 +586,153 @@ class TestValidateChangeEntries:
         )
         assert len(valid) == 1
         assert len(errors) == 1
+
+
+class TestOriginAndStance:
+    """The distinction between proposing a change and reacting to one."""
+
+    def _upstream(self, **kw):
+        base = _change(
+            change_type="NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT",
+            has_direct_replacement=None,
+            origin="UPSTREAM_PROPOSED",
+            stance="AGREE",
+        )
+        base.pop("confidence", None)
+        base.update(kw)
+        return base
+
+    def test_a_self_proposed_change_needs_confidence(self):
+        bad = _change()
+        del bad["confidence"]
+        assert "missing_confidence" in _codes({"proposed_ontology_changes": [bad]})
+
+    def test_an_upstream_change_must_not_grade_our_confidence(self):
+        data = {"proposed_ontology_changes": [self._upstream(confidence="CONFIRMED")]}
+        assert "confidence_on_upstream_change" in _codes(data)
+
+    def test_a_self_proposed_change_takes_no_stance(self):
+        data = {"proposed_ontology_changes": [_change(stance="AGREE")]}
+        assert "stance_on_self_proposed" in _codes(data)
+
+    def test_an_upstream_change_without_a_stance_is_flagged(self):
+        data = {"proposed_ontology_changes": [self._upstream(stance=None)]}
+        assert "missing_stance" in _codes(data)
+
+    def test_an_upstream_change_must_not_carry_a_request_status(self):
+        """We filed nothing, so there is no request of ours to have a status."""
+        data = {"proposed_ontology_changes": [self._upstream(request_status="FILED")]}
+        assert "request_status_on_upstream_change" in _codes(data)
+
+    def test_a_disagreement_needs_more_than_a_sentence(self):
+        data = {
+            "proposed_ontology_changes": [
+                self._upstream(stance="DISAGREE", justification="Wrong term.")
+            ]
+        }
+        assert "thin_objection" in _codes(data)
+
+    def test_a_well_argued_disagreement_passes(self):
+        data = {
+            "proposed_ontology_changes": [
+                self._upstream(
+                    stance="DISAGREE",
+                    justification=(
+                        "GO:0099023 vesicle tethering complex is a cellular component "
+                        "term rather than a molecular function, so it cannot serve as "
+                        "the replacement this batch proposes for the tethering step, "
+                        "and reusing it would assert a location where an activity is "
+                        "meant."
+                    ),
+                    ontology_state_verified="2026-11-01",
+                )
+            ]
+        }
+        assert _codes(data) == []
+
+    def test_a_completed_change_wants_a_verification_date(self):
+        data = {
+            "proposed_ontology_changes": [
+                self._upstream(origin="UPSTREAM_COMPLETED", adoption_status="COMPLETE")
+            ]
+        }
+        assert "unverified_completed_change" in _codes(data)
+
+    def test_a_completed_verified_change_passes(self):
+        data = {
+            "proposed_ontology_changes": [
+                self._upstream(
+                    origin="UPSTREAM_COMPLETED",
+                    ontology_state_verified="2026-11-01",
+                    adoption_status="COMPLETE",
+                )
+            ]
+        }
+        assert _codes(data) == []
+
+    def test_a_landed_change_with_unmigrated_content_is_flagged(self):
+        """The failure that actually happens: the ontology moved, we did not."""
+        data = {
+            "proposed_ontology_changes": [
+                self._upstream(
+                    origin="UPSTREAM_COMPLETED",
+                    ontology_state_verified="2026-11-01",
+                    adoption_status="NOT_STARTED",
+                    affected_annotations=["genes/human/TMF1/TMF1-ai-review.yaml"],
+                )
+            ]
+        }
+        assert "unmigrated_landed_change" in _codes(data)
+
+    def test_a_landed_change_with_no_affected_content_is_not_flagged(self):
+        data = {
+            "proposed_ontology_changes": [
+                self._upstream(
+                    origin="UPSTREAM_COMPLETED",
+                    ontology_state_verified="2026-11-01",
+                    adoption_status="NOT_APPLICABLE",
+                )
+            ]
+        }
+        assert _codes(data) == []
+
+    def test_adoption_status_on_an_unlanded_change_is_flagged(self):
+        """Nothing to migrate until the change exists."""
+        data = {
+            "proposed_ontology_changes": [self._upstream(adoption_status="COMPLETE")]
+        }
+        assert "premature_adoption_status" in _codes(data)
+
+    def test_adoption_status_is_fine_once_our_own_request_is_accepted(self):
+        data = {
+            "proposed_ontology_changes": [
+                _change(
+                    request_status="ACCEPTED",
+                    upstream_tracker_issue="https://github.com/geneontology/go-ontology/issues/1",
+                    adoption_status="NOT_STARTED",
+                )
+            ]
+        }
+        assert _codes(data) == []
+
+
+def test_committed_changes_use_string_dates():
+    """A bare YAML date parses to datetime.date, which LinkML's date range rejects.
+
+    The repo's convention elsewhere (``reviewed_on``) is a quoted string, so this
+    pins it for ``ontology_state_verified`` rather than leaving it to be
+    rediscovered by a validation failure.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    paths = sorted(root.glob("modules/*.yaml")) + sorted(root.glob("projects/**/*.md"))
+    offenders = []
+    for path in paths:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if re.match(r"\s*ontology_state_verified:\s*\d{4}-\d{2}-\d{2}\s*$", line):
+                offenders.append(f"{path.relative_to(root)}: {line.strip()}")
+    assert not offenders, (
+        "ontology_state_verified must be a quoted string: " + "; ".join(offenders)
+    )
