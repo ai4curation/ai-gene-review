@@ -88,3 +88,8 @@ scope of this citation fix.
 - Replaced generic HAT and crotonyltransferase snippets in the H4
   acetyltransferase core-function support with H4-specific evidence from
   PMID:17274630 and PMID:12353039.
+- Followed up on the PR re-review by moving the `GO:0008270 zinc ion binding`
+  support to the exact UniProt `FT ZN_FING 195..220` feature, narrowing the
+  `GO:0010629` and generic `GO:0004402` explanations so they match their
+  actions, adding `GO:0140068 histone crotonyltransferase activity` to
+  `core_functions`, and reconciling `esa1-current-goa.yaml` action counts.
