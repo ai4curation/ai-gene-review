@@ -30,7 +30,9 @@ in specificity, paralogs, pseudoenzymes and organism context. In the largest
 model benchmark most correct predictions were already known: as of the review
 snapshot (2026-09-27, commit `c7551cb3db`), 682 of 955 BioReason-Pro SFT terms
 were correct but not novel and 23 were correct and novel. ProtNLM2's purposive
-cohorts invert that balance because they were selected for likely-novel targets.
+cohorts, selected for likely-novel targets, have a much larger novel share: as of
+its own snapshot (2026-10-29, commit `ac95c69686`), 35 of 288 GO terms were correct
+and novel and 48 correct but not novel.
 Affinage's GO layer rarely reached the specific curated function, and reviewers
 accepted uncorroborated TreeGrafter inferences much less often than curated
 PAINT/IBA ones. Each project below has its own cohorts, methods and denominators.
@@ -77,6 +79,7 @@ orthology, phylogeny, and family membership have their own index,
 | Project | Focus |
 |---------|-------|
 | [TreeGrafter](TREEGRAFTER.md) | Automated placement onto PANTHER trees and transfer of ancestral GO annotations. |
+| [eggNOG-mapper](EGGNOG_MAPPER_EVALUATION.md) | Orthology-based GO transfer by eggNOG-mapper 2.1, run on 520 reviewed proteins with and without the query's own species. |
 | [InterPro2GO](INTERPRO.md) | GO mappings attached to domain and family signatures, including specificity and propagation limits. |
 | [NCBIFam](NCBIFam.md) | Functional-family mappings and opportunities or risks in extending GO coverage. |
 | [PAINT / IBA](IBA_REVIEW.md) | Curator-assessed phylogenetic function inheritance and the evidence for individual transfers. |

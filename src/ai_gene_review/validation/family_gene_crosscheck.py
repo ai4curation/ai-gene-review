@@ -5,11 +5,14 @@ see it. The family review says "this term is only safe for these subfamilies"; a
 review in a different subfamily says "ACCEPT". Both files are individually valid, both
 pass their own validators, and the disagreement is invisible.
 
-That is exactly the PGRP case. PTHR11022's single PAINT node asserts amidase activity at
-Bilateria, so every descendant inherits it -- including the PGRP-LC receptors that have
-demonstrably lost the zinc site. The family review records that; a gene review that
+That is the PGRP case among cellular PAINT-tree members. PTHR11022's single PAINT node
+asserts amidase activity at Bilateria, so every cellular tree descendant inherits it --
+including the PGRP-LC receptors that have demonstrably lost the zinc site. The family
+review records that; a cellular PAINT-tree gene review (`in_paint_tree=True`) that
 accepted the amidase term anyway would be in direct conflict, and this module is what
-notices.
+notices (whereas viral entries with `OC   Viruses;`, which receive out-of-tree InterPro
+PANTHER HMM subfamily assignments but do not participate in PAINT trees, are skipped by
+the propagation checks and checked only against explicit `member_exceptions`).
 
 Three checks, all deterministic joins over data already in the repo:
 
@@ -19,7 +22,8 @@ Three checks, all deterministic joins over data already in the repo:
     violation. ``NOT_APPLICABLE`` is the stronger form: no member may retain it.
 
 ``check_pruning_conflicts``
-    A ``node_assessment`` of ``NEEDS_PRUNING`` / ``TOO_DEEP`` / ``WRONG_NODE`` names the
+    A ``node_assessment`` of ``NEEDS_PRUNING`` / ``TOO_DEEP`` / ``WRONG_NODE`` (or
+    ``LOSS_SUPPORTED`` on an IRD/IKR row) names the
     subfamilies that wrongly inherit a term. A gene in one of those subfamilies that
     retains the term is a conflict.
 
@@ -55,9 +59,15 @@ from pathlib import Path
 import yaml
 from yaml import CSafeLoader as _Loader  # libyaml; ~10x faster over the gene corpus
 
+# Node verdicts that say the named subfamilies should NOT carry the term: a gain placed
+# too deep or needing pruning, or a loss (IRD/IKR) judged correct. LOSS_CONTRADICTED and
+# LOSS_TOO_BROAD are deliberately absent: they say members below the loss keep the term.
+PRUNING_VERDICTS = frozenset({"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE", "LOSS_SUPPORTED"})
+
 PANTHER_SF_RE = re.compile(r"DR   PANTHER; (PTHR\d+:SF\d+);")
 PANTHER_FAM_RE = re.compile(r"DR   PANTHER; (PTHR\d+);")
 ACCESSION_RE = re.compile(r"^AC   (\S+?);", re.M)
+VIRAL_OC_RE = re.compile(r"^OC   Viruses;", re.M)
 
 #: Actions where the gene review holds the claim to be true. TOO_GENERAL is among them:
 #: it judges the term uninformative, not false, so a family that scopes the term out
@@ -85,6 +95,7 @@ class GeneRef:
     family: str
     subfamily: str | None
     review_path: Path
+    in_paint_tree: bool = True
 
 
 @dataclass
@@ -112,7 +123,13 @@ def index_genes_by_family(genes_dir: Path) -> dict[str, list[GeneRef]]:
 
     Built by scanning UniProt records line-wise rather than parsing the review YAMLs, so
     the index over the whole corpus is cheap; only genes in a family that actually has a
-    review are loaded in full later.
+    review are loaded in full later. Viral UniProt records (``OC   Viruses;``) are
+    indexed with ``in_paint_tree=False``: InterPro's PANTHER HMM scan (reflected in
+    UniProt ``DR   PANTHER`` lines and ``PTHR*-entries.csv``) assigns viral proteins to
+    PANTHER subfamilies, but PANTHER phylogenetic trees and PAINT annotations
+    (``PTHR*-paint.tsv``) cover only cellular reference proteomes. Keeping viral genes in
+    the index allows ``check_member_exceptions`` to verify explicit ``member_exceptions``
+    while PAINT-tree subfamily scope and node-pruning checks skip ``not gene.in_paint_tree``.
     """
     index: dict[str, list[GeneRef]] = {}
     for uniprot_path in sorted(genes_dir.glob("*/*/*-uniprot.txt")):
@@ -134,6 +151,7 @@ def index_genes_by_family(genes_dir: Path) -> dict[str, list[GeneRef]]:
             family=f"PANTHER:{fam_match.group(1)}",
             subfamily=f"PANTHER:{sf_match.group(1)}" if sf_match else None,
             review_path=review_path,
+            in_paint_tree=not bool(VIRAL_OC_RE.search(text)),
         )
         index.setdefault(ref.family, []).append(ref)
     return index
@@ -156,6 +174,44 @@ def gene_actions_for_term(review_path: Path) -> dict[str, set[str]]:
         if term:
             actions.setdefault(term, set()).add(action)
     return actions
+
+
+def soft_rows_excused(review_path: Path, term: str) -> bool:
+    r"""True when the gene keeps ``term`` on rows that differ from every over-annotated row.
+
+    A gene review can flag one row and keep another for the same term because the rows make
+    different claims: an ``enables`` IEA beside an accepted ``contributes_to`` ISS for a
+    non-catalytic subunit, say. The flag is then about that row's qualifier or evidence, and
+    the gene agrees the term is its own. A flagged row with a kept twin (same qualifier and
+    evidence code, opposite verdict) is never excused, whatever other rows are kept: that is
+    an inconsistency to surface.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> p = d / "g-ai-review.yaml"
+    >>> _ = p.write_text(
+    ...     "existing_annotations:\n"
+    ...     "- {term: {id: GO:1}, evidence_type: IEA, qualifier: enables,"
+    ...     " review: {action: MARK_AS_OVER_ANNOTATED}}\n"
+    ...     "- {term: {id: GO:1}, evidence_type: ISS, qualifier: contributes_to,"
+    ...     " review: {action: ACCEPT}}\n")
+    >>> soft_rows_excused(p, "GO:1")
+    True
+    >>> soft_rows_excused(p, "GO:2")
+    False
+    """
+    doc = yaml.load(review_path.read_text(), Loader=_Loader)
+    soft, kept = [], []
+    for ann in (doc or {}).get("existing_annotations") or []:
+        if ann.get("negated") or (ann.get("term") or {}).get("id") != term:
+            continue
+        action = ((ann.get("review") or {}).get("action")) or ""
+        row = (ann.get("qualifier"), ann.get("evidence_type"))
+        if action in SOFT_DISAGREEING_ACTIONS:
+            soft.append(row)
+        elif action in RETAINING_ACTIONS:
+            kept.append(row)
+    return bool(soft) and bool(kept) and all(s not in kept for s in soft)
 
 
 def _term_ids(entries) -> list[tuple[str, str]]:
@@ -197,6 +253,8 @@ def check_scope_violations(
         allowed = {sf for sf, _ in _term_ids(assessment.get("applicable_subfamilies"))}
 
         for gene in gene_index.get(family, []):
+            if not gene.in_paint_tree:
+                continue
             if scope == "SUBFAMILY_ONLY" and gene.subfamily in allowed:
                 continue
             actions = gene_actions_for_term(gene.review_path).get(term)
@@ -246,7 +304,7 @@ def check_pruning_conflicts(
 ) -> list[CrossCheck]:
     """Genes retaining a term whose node assessment says their subfamily should be pruned."""
     family = review.get("family_id", "?")
-    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    negative = PRUNING_VERDICTS
     results: list[CrossCheck] = []
 
     for assessment in review.get("node_assessments") or []:
@@ -259,7 +317,7 @@ def check_pruning_conflicts(
             continue
 
         for gene in gene_index.get(family, []):
-            if gene.subfamily not in affected:
+            if not gene.in_paint_tree or gene.subfamily not in affected:
                 continue
             actions = gene_actions_for_term(gene.review_path).get(term)
             if not actions:
@@ -304,6 +362,8 @@ def check_family_gene_disagreement(
         excepted = _excepted_accessions(assessment)
 
         for gene in gene_index.get(family, []):
+            if not gene.in_paint_tree:
+                continue
             covered = scope == "FAMILY_WIDE" or (
                 scope == "SUBFAMILY_ONLY" and gene.subfamily in allowed
             )
@@ -322,10 +382,14 @@ def check_family_gene_disagreement(
                         f"but the gene review removes it",
                     )
                 )
-            elif actions & SOFT_DISAGREEING_ACTIONS:
+            elif actions & SOFT_DISAGREEING_ACTIONS and not soft_rows_excused(
+                gene.review_path, term
+            ):
                 # A softer push-back still disagrees with a family that calls the term
                 # safe here, but it does not assert the term is wrong, so it is surfaced
-                # for adjudication rather than failing validation.
+                # for adjudication rather than failing validation. It is excused only
+                # when a kept row with a different qualifier or evidence code shows the
+                # gene agrees the term is its own (see soft_rows_excused).
                 results.append(
                     CrossCheck(
                         "FAMILY_GENE_DISAGREEMENT", family, gene.symbol, gene.subfamily,
@@ -349,7 +413,7 @@ def check_member_exceptions(
     member's gene review, which must not keep the term.
     """
     family = review.get("family_id", "?")
-    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    negative = PRUNING_VERDICTS
     pruned_nodes = {
         (a.get("node_id"), (a.get("asserted_term") or {}).get("id"))
         for a in review.get("node_assessments") or []

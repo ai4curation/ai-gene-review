@@ -33,7 +33,7 @@ For each annotation you will create or update the `review` section of the `exist
         supporting_text: DIRECT TEXT QUOTE FROM PUBLICATION HERE [EDITORIAL NOTES IN SQUARE BRACKETS ARE IGNORED]
 
 
-Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`.
+Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`. Never cite a `-goa.tsv` file (this gene's or another's) in `supported_by`: it records an annotation, not evidence for it, and validation rejects it. If no independent source supports a row, set the action to `UNDECIDED`.
 
 Note that there should be an entry under `existing_annotations` for every line in the GOA tsv.
 
@@ -97,6 +97,25 @@ evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a nega
 `node_assessment`. The exception is the family's judgement on that member, so the gene
 review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
 `MARK_AS_OVER_ANNOTATED` just to silence the check.
+
+**Check the PAINT losses on the gene's lineage.** Run `just paint-losses <organism> <GENE>`
+before judging IBA rows. It lists every IRD or IKR whose PANTHER node lies above the gene,
+the IBD node each one blocks, whether PAINT re-annotates the term below the loss, and the
+review's own rows on the blocked term. Act on what it reports:
+
+- An IRD produces no leaf annotation; it only stops the ancestral IBD from descending. The
+  cached `*-goa.tsv` can therefore still carry an IBA that a newer IRD has withdrawn. Say so
+  in that row's `reason` (node and date), and judge the claim on its evidence: the IBA's
+  ancestral support is gone, but the term may still be right.
+- If the review keeps the blocked term (ACCEPT, KEEP_AS_NON_CORE, a core function or a
+  NEW), it now argues against a deliberate PAINT decision. State the evidence that
+  contradicts the loss, as for SLC52A1 riboflavin transport (IDA) under PTN000309189.
+- If the family has a FamilyReview, check its `node_assessments` for the loss node. A
+  LOSS_TOO_BROAD or LOSS_CONTRADICTED verdict there is the argument to cite.
+- "Re-annotated below: yes" means PAINT lifts the block for this gene; the IBA is current.
+
+The tool matches terms exactly, so a review row on a descendant of the blocked term is not
+listed. See [projects/IRD_EVIDENCE.md](../../../projects/IRD_EVIDENCE.md).
 
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.

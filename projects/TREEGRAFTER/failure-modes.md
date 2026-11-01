@@ -15,6 +15,14 @@ autolink_gene_symbols: false
 > [rejection re-review](../TREEGRAFTER.md#rejection-re-review-2026-09-24)
 > outcomes and the [holozoan](holozoan-hippo-case-study.md) rows.
 
+> **Later curation (2026-10-26, PR #5550).** The Thlaspi TFP nucleus row
+> (`genes/THLAR/TFP/TFP-ai-review.yaml`, `GO:0005634`) is now `UNDECIDED`;
+> the prior call is preserved with explicit supersession in
+> `rereview-2026-09-24/batch-08.yaml`. The counts below remain the dated
+> `f81b9f300` snapshot, not a count of current reviews. A fresh extraction must
+> exclude that unresolved row from the downgraded population; keeping a row in
+> that population is not a biological reason to retain an over-annotation call.
+
 This sub-page drills into the **283 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it
@@ -124,7 +132,7 @@ specific (or divergent).
 |---|---|---|
 | eryAI / eryAII / eryAIII | `fatty acid synthase activity` (MODIFY) | *INACTIVE PHENOLPHTHIOCEROL SYNTHESIS **POLYKETIDE SYNTHASE*** |
 | mcr-1 / mcr2 / mcr-3 / mcr-4 | `LPS core region biosynthetic process` (OVER), `phosphotransferase activity, phosphate group as acceptor` (MODIFY) | **PHOSPHOETHANOLAMINE TRANSFERASE EptA** |
-| fliI ×3, sctN ×2 | `proton-transporting ATP synthase activity, rotational mechanism` (REMOVE) | SPI-1 TYPE 3 SECRETION SYSTEM ATPASE / FLAGELLUM-SPECIFIC ATP SYNTHASE (PTHR15184); the term comes from a PAINT IBD on the duplication node above the F1-β and FliI/SctN clades ([case study](rotary-atpase-leak.md)) |
+| fliI ×3, sctN ×2 | `proton-transporting ATP synthase activity, rotational mechanism` (REMOVE) | SPI-1 TYPE 3 SECRETION SYSTEM ATPASE / FLAGELLUM-SPECIFIC ATP SYNTHASE (PTHR15184); the term comes from a PAINT IBD on the duplication node above the F1-β and FliI/SctN clades ([case study](../CONSERVED_FUNCTION_RECOVERY.md)) |
 | ADAR2 | `tRNA-specific adenosine deaminase activity` (REMOVE) | AT07585P-RELATED (PTHR10910:SF62); the same graft node PTN000098697 supplied the **accepted** `double-stranded RNA adenosine deaminase activity`, `double-stranded RNA binding` and `adenosine to inosine editing` |
 
 The erythromycin PKS modules are the clearest case: the **family** is named
@@ -396,3 +404,12 @@ accepted 77% of the time (an upper bound — reviewers could see the label).
   node-term errors (mcr-1's EptA/SF0 TAS) as direct GO_Central corrections.
 - **Cross-check against InterPro2GO** where InterPro out-resolves PANTHER
   (`IPR011803 AprA`, `IPR003083 S-crystallin`, `IPR058128 Mcr1`).
+- **Check subfamily names before trusting them as labels.** PANTHER subfamily
+  names are not always about their members. `PTHR45664:SF12` is named
+  "PANCREAS_DUODENUM HOMEOBOX PROTEIN 1" (PDX1) but holds *Drosophila* `zen`
+  and `zen2` (P09089, P09090), which are not PDX1 homologs
+  (`interpro/panther/PTHR45664/PTHR45664-entries.csv`, fetched for the
+  DONKEY40 HOXA2 review). Three families fetched in that batch (`PTHR16484`,
+  `PTHR45664`, `PTHR45889`) also carry InterPro names flagged `is_llm: true`
+  and not reviewed, which differ from PANTHER's own names in `panther.obo`;
+  use the `panther.obo` name for any module `term.label`.

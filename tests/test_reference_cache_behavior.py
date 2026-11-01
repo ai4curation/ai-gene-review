@@ -257,3 +257,12 @@ def test_subprocess_network_guard_is_active_through_wrapper(tmp_path, no_network
     assert event in {"socket.connect", "socket.getaddrinfo"}
     assert target.startswith("(") and target != "()", attempted.read_text()
     assert not (cache_dir / "PMID_1.md").exists()
+
+
+def test_bare_cli_default_config_trusts_reviewed_cache(monkeypatch):
+    """A validator run without --config uses .linkml-reference-validator.yaml."""
+    from linkml_reference_validator.cli.shared import load_validation_config
+
+    monkeypatch.chdir(PROJECT_ROOT)
+    config = load_validation_config(None, load_custom_sources=False)
+    assert config.trust_cached_entries is True

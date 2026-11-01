@@ -46,7 +46,7 @@
 
 ## ATP-synthase-family GO rows
 - GO:0046933 (IBA, contributes_to) and GO:0045259 (IBA) from PANTHER:PTN008558586. Per
-  projects/TREEGRAFTER/rotary_atpase/node_placement.tsv, PTN008558586 is a DUPLICATION node whose
+  projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv, PTN008558586 is a DUPLICATION node whose
   children are PTN000390097 (FliI/SctN clade: SF9, SF62, SF81) and PTN008558588 (F1-beta clade).
   All seeds (E. coli AtpD P0ABB4, human ATP5F1B, yeast ATP2, S. pombe atp2, etc.) are in the F1-beta
   branch. The IBD therefore sits one node too deep: above the duplication that created the
