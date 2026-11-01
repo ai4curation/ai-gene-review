@@ -1,6 +1,6 @@
 ---
 title: "Integrated Stress Response (ISR) Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 manifest:
@@ -17,13 +17,15 @@ manifest:
 **Bottom line:** in the integrated stress response, four kinases (HRI, PKR,
 PERK and GCN2) each sense a different stress and phosphorylate eIF2α, which
 blocks the eIF2B exchange factor, dampens global translation and lets ATF4 be
-translated. Scoped, not yet started as a project: this page lists about 18
-candidate human genes, including the DELE1-OMA1 route from mitochondrial stress
-to HRI, but no project-specific review work has been done. Five candidates
-already have reviews from other work: EIF2AK3 (PERK), ATF4, ATF3 and EIF2B4 are
-COMPLETE and OMA1 is IN_PROGRESS, 489 annotations between them. Thirteen have
-no gene folder, including the hub EIF2S1 (eIF2α), three of the four kinases,
-DELE1 and four of the five eIF2B subunits. There is no ISR module yet.
+translated. The hub and most of the periphery are now reviewed: of the 20
+genes named below, 15 have reviews (1,036 annotation rows between them) and 5
+have no gene folder — PKR/EIF2AK2, the beta subunit EIF2S2, DDIT3/CHOP, and
+both phosphatase regulatory subunits PPP1R15A/GADD34 and PPP1R15B/CReP.
+EIF2S1 (eIF2α) itself was reviewed on
+2026-10-29 and is the one place in the pathway where a `NEW` molecular function
+was needed: `GO:1990624` *guanyl nucleotide exchange factor inhibitor activity*,
+the actual ISR mechanism, which PomBase already carries on the *S. pombe*
+ortholog but human GOA did not. There is still no ISR module.
 
 We scoped this because the ISR is a drug target (ISRIB), eIF2B mutations cause
 vanishing white matter disease, and the DELE1-HRI branch was only described in
@@ -97,7 +99,30 @@ Four kinases sense different stresses:
 
 ## Project Status
 
-- [ ] Stub - needs gene folder setup
+Reviewed (15): EIF2AK1, EIF2AK3, EIF2AK4, EIF2S1, EIF2S3, DELE1, OMA1, ATF4,
+ATF3, ASNS, EIF2B1, EIF2B2, EIF2B3, EIF2B4, EIF2B5.
+
+Remaining review queue (5):
+
+- [ ] `just fetch-gene human EIF2AK2` and review EIF2AK2 (PKR)
+- [ ] `just fetch-gene human EIF2S2` and review EIF2S2 (eIF2β)
+- [ ] `just fetch-gene human DDIT3` and review DDIT3 (CHOP)
+- [ ] `just fetch-gene human PPP1R15A` and review PPP1R15A (GADD34)
+- [ ] `just fetch-gene human PPP1R15B` and review PPP1R15B (CReP)
+- [ ] Build an ISR module including the OMA1-DELE1 mitochondrial branch
+
+Curation decisions to carry into the remaining reviews:
+
+- EIF2S1 (eIF2α): the review adds `GO:1990624` *guanyl nucleotide exchange
+  factor inhibitor activity* as a `NEW` molecular function — phospho-eIF2 binds
+  eIF2B in the exchange-inactive mode (PMID:31048492, PMID:29599213), and
+  PomBase already carries the term on *S. pombe* tif211 from the same paper.
+  As with EIF2AK3 below, `GO:0140467` was **not** proposed: it is an ancestor
+  of the already-accepted `GO:0036499` and `GO:0140468`. The stress-input terms
+  (amino acid starvation, oxidative stress, heat, UV, kainic acid,
+  manganese-induced ER stress) are kept non-core, since they name upstream
+  contexts feeding the single `GO:0032057` mechanism rather than separate
+  functions. Expect the same pattern on the kinases and on DDIT3.
 - EIF2AK3 (PERK): the review does not add GO:0140467 *integrated stress
   response signaling*. [PR #3219](https://github.com/ai4curation/ai-gene-review/pull/3219)
   removed that proposed `NEW` row: GO:0140467 is an ancestor of the
