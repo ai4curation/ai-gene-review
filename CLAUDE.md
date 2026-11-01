@@ -207,6 +207,16 @@ the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
 the judgement in `reason`. See the promiscuous-activity tiers in
 `projects/ENZYME_SPECIFICITY.md`.
 
+**A term in another EC class names a different reaction, not a broader one.**
+Watch for synthase/synthetase swaps: `GO:0004321` fatty-acyl-CoA synthase is
+the fatty acid synthase reaction (EC 2.3.1.86), while an acyl-CoA synthetase is
+a ligase (EC 6.2.1). When a kept or MODIFYed term's EC class differs from every
+EC on the protein's UniProt record, `just validate` warns (`ec_class_conflict`,
+`src/ai_gene_review/validation/ec_class_consistency.py`). Fix it with `REMOVE`
+and `source_defects`, or say in `reason` why the activity is genuine (a
+multifunctional or moonlighting enzyme). `just ec-class-audit` lists every hit
+in the corpus.
+
 **Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
 went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
