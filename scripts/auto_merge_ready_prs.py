@@ -293,12 +293,99 @@ def _is_explicit_success(entry: dict) -> bool:
     return (entry.get("state") or "").upper() == "SUCCESS"
 
 
+def _check_group_key(entry: dict) -> tuple[str, str, str]:
+    """Identify which check a rollup entry reports on.
+
+    GitHub supersedes a check run by (name, workflow) and a commit status by
+    context, so those are the keys a re-run or a duplicate run collides on.
+    """
+    if _is_check_run(entry):
+        return ("check_run", _check_name(entry), str(entry.get("workflowName") or ""))
+    return ("status", _check_name(entry), "")
+
+
+def _rollup_entry_time(entry: dict) -> datetime | None:
+    """When this rollup entry last reported, or None if it does not say.
+
+    A still-running entry has no completedAt, so startedAt stands in: a re-run
+    that has started but not finished is newer than the finished attempt it
+    supersedes, and must keep the PR pending rather than inherit its result.
+    """
+    for field in ("completedAt", "startedAt", "createdAt"):
+        raw = entry.get(field)
+        if not raw:
+            continue
+        try:
+            parsed = _parse_ts(str(raw).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        # Normalize: a naive stamp beside an aware one makes comparison raise,
+        # which would abort the whole sweep rather than skip one entry.
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed
+    return None
+
+
+def latest_rollup_entries(rollup: list[dict]) -> list[dict]:
+    """Drop entries that a later attempt on the same check has superseded.
+
+    A commit can carry several entries under one check name: a re-run, or two
+    workflow runs racing on the same push where the concurrency group cancels
+    one. GitHub's own branch protection reads the latest entry per check, so a
+    cancelled or failed attempt sitting beside a later success does not block a
+    merge there. Counting every entry instead made such a commit permanently
+    ineligible here while every other signal reported the PR ready -- see the
+    ENDOG re-review in #5618, where a duplicate run cancelled one second after
+    its twin left `test (3.12)=failure` plus three cancelled entries on three
+    successive heads.
+
+    Superseding needs proof. Entries are collapsed only where timestamps give a
+    strict order; where a group carries missing or tied timestamps, every entry
+    is kept, so an unexplained failure still vetoes. That keeps the fail-closed
+    default: this function can only ever discard an attempt that something
+    demonstrably later replaced.
+    """
+    groups: dict[tuple[str, str, str], list[tuple[int, dict]]] = {}
+    for index, entry in enumerate(rollup):
+        if not isinstance(entry, dict):
+            continue
+        groups.setdefault(_check_group_key(entry), []).append((index, entry))
+
+    keep: list[tuple[int, dict]] = []
+    for members in groups.values():
+        if len(members) == 1:
+            keep.extend(members)
+            continue
+        stamped: list[tuple[datetime, tuple[int, dict]]] = []
+        for member in members:
+            stamp = _rollup_entry_time(member[1])
+            if stamp is None:
+                break
+            stamped.append((stamp, member))
+        if len(stamped) != len(members):
+            keep.extend(members)
+            continue
+        newest = max(stamp for stamp, _ in stamped)
+        winners = [member for stamp, member in stamped if stamp == newest]
+        if len(winners) != 1:
+            keep.extend(members)
+            continue
+        keep.append(winners[0])
+
+    return [entry for _, entry in sorted(keep, key=lambda item: item[0])]
+
+
 def check_rollup_decision(
     rollup: list[dict] | None,
     *,
     required_checks: Iterable[str] = (),
 ) -> Decision:
     """Require all reported checks green and named checks explicitly successful."""
+    if not rollup:
+        return Decision(False, "no status checks reported on the head commit")
+
+    rollup = latest_rollup_entries(rollup)
     if not rollup:
         return Decision(False, "no status checks reported on the head commit")
 
