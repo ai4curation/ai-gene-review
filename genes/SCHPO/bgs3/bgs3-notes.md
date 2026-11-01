@@ -38,3 +38,17 @@ attempted in this session.
   transit; internal puncta were seen in PMID:42786154.
 - A GO CC term for the Bgs3-Ghs2 (and analogous Bgs1-Sbg1) synthase-remodeler
   assembly does not exist. This is raised as a suggested question, not proposed.
+
+### How PMID:42786154 uses AlphaFold3 (checked against the full text)
+
+- Methods: AF3 server, single copy of each full-length protein, automatic seed, top
+  "model_0" only (Ghs2-Bgs3 seed 361330275; Sbg1-Bgs1 seed 815971004). The paper gives
+  Ghs2 as O13789 (SPAC17G6.11c). The main text reports no ipTM/pTM/pLDDT/PAE values
+  (supplementary data were not checked).
+- Residue check against Q9P377: the text's "I1224" is Thr1224, not in a TM; the mutant
+  list says I1334A, so "I1224" is probably a typo for I1334. The interface residues sit in
+  UniProt TM7 (W670, L673) and TM9 (I1334, I1338, L1341). The paper calls these helices 6
+  and 8, a different numbering. The UniProt TMs are ECO:0000255 predictions, and TM6/TM7
+  are only 2 residues apart.
+- Correction of my own earlier text: UniProt lists 18 predicted TMs, not 16. I also took
+  the AF3 model out of the supporting evidence for the plasma membrane row.
