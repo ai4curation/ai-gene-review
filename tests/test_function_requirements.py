@@ -234,3 +234,28 @@ def test_exempt_terms_are_removed_from_closure():
     assert "GO:0015293" in closure  # symporter activity stays covered
     assert "GO:0008564" not in closure  # protein-exporting ATPase activity (SecA)
     assert "GO:0046933" not in closure  # ATP synthase activity
+
+
+@pytest.mark.integration
+def test_interpro_ids_and_labels_match_interpro():
+    """Every InterPro id in the rules resolves, and its label is InterPro's name.
+
+    A real-looking id with a plausible label is invisible otherwise, and silently
+    changes what a rule flags.
+    """
+    import json
+    import urllib.request
+
+    features = {
+        f["id"]: f["label"]
+        for r in load_rules(RULES_PATH)
+        for f in r.get("requires_any_of", []) + r.get("excluded_by_any_of", [])
+    }
+    mismatches = {}
+    for ipr, label in sorted(features.items()):
+        url = f"https://www.ebi.ac.uk/interpro/api/entry/interpro/{ipr}/"
+        with urllib.request.urlopen(url, timeout=60) as resp:
+            name = json.load(resp)["metadata"]["name"]["name"]
+        if name != label:
+            mismatches[ipr] = (label, name)
+    assert not mismatches, mismatches

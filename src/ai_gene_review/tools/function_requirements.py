@@ -159,7 +159,18 @@ def term_closures(rules: list[Rule]) -> dict[str, set[str]]:
 
 
 def _applies(rule: Rule, closure: set[str], go_id: str, qualifier: str) -> bool:
-    """Whether a rule covers an annotation row; negated (NOT) rows are never covered."""
+    """Whether a rule covers an annotation row.
+
+    Negated rows are excluded explicitly: GOA writes them as ``NOT|enables``, and a
+    NOT annotation already says the protein lacks the activity, so a rule has nothing
+    to flag.
+
+    >>> rule = {"qualifiers": ["enables"]}
+    >>> _applies(rule, {"GO:1"}, "GO:1", "enables"), _applies(rule, {"GO:1"}, "GO:1", "NOT|enables")
+    (True, False)
+    """
+    if qualifier.startswith("NOT"):
+        return False
     return go_id in closure and qualifier in rule["qualifiers"]
 
 
