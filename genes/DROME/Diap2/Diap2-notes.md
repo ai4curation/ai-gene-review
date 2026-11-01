@@ -43,3 +43,13 @@ the cache exposes only a preliminary abstract statement that DIAP2 mediates
 DIAP1 degradation. The `PMID:23940367` rows also remain unresolved locally:
 the visible abstract is a DIAP1/Grim study, even though FlyBase may have read a
 full-text Diap2 assay.
+
+## Follow-up: ion channels (UniProt FUNCTION, PubMed:24374974)
+
+UniProt says Diap2 "Plays a role in regulating the expression of ion channels".
+The source is a Malpighian-tubule study whose evidence is correlative: Diap2
+knockdown lowers Na+/K+-ATPase and V-ATPase expression [PMID:24374974, "loss of
+Diap2 consequently reduces the expression of ion channels"], and the authors
+hedge the conclusion ("Diap2 could be regulating ion channels"). Added to the
+description as a tissue observation; no GO row added, since no mechanism links
+DIAP2 E3 activity to these transcripts and the effect may run through Relish.

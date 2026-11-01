@@ -30,6 +30,8 @@ from ai_gene_review.module_logic import (
     abduce,
     compile_module,
     compile_module_file,
+    core_atoms,
+    is_satisfied,
     gap_report,
     iter_atoms,
 )
@@ -226,3 +228,18 @@ def test_ketolysis_activation_is_a_route_gap():
     activation = [g for g in result.gaps if g.path[0] == "acetoacetate_activation"]
     assert [(g.step, g.layer, g.layer_inferred) for g in activation] == [
         ("acetoacetate_activation_route", "ROUTE", False)]
+
+
+def test_zero_or_more_variant_set_is_optional():
+    """``ZERO_OR_MORE``: "variants are optional and any number may apply"."""
+    def doc(selection):
+        return {"module": {"id": "m", "parts": [
+            {"node": {"id": "core", "annotons": [_annoton("a", "A")]}},
+            {"node": {"id": "extra", "variant_sets": [{"id": "vs", "selection": selection,
+                "variants": [{"id": "x", "annotons": [_annoton("x", "X")]}]}]}},
+        ]}}
+    holds = lambda atom: atom.gene_symbol == "A"  # noqa: E731
+    assert is_satisfied(compile_module(doc("ZERO_OR_MORE")), holds)
+    assert not is_satisfied(compile_module(doc("ONE_OR_MORE")), holds)
+    assert [a.gene_symbol for a in core_atoms(compile_module(doc("ZERO_OR_MORE")))] == ["A"]
+    assert gap_report(compile_module(doc("ZERO_OR_MORE")), holds) == []

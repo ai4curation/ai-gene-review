@@ -144,6 +144,8 @@ This will create a file like `GENE-deep-research-perplexity.md`. You can also ma
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
 
+For non-human genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, ...). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
+
 A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
 term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
 the way to deduplicate them or to drop a true-but-broad term. (The one sanctioned exception is bare `GO:0005515` protein
@@ -230,7 +232,10 @@ Record why there is no data in `review.nd_case`; `TRUE_GAP` and `EXISTENCE` need
 BIOLOGY knowledge gap whose `dark_aspect` matches the ND aspect. What counts as
 literature on the gene: a bare protein-binding IPI does not (it identifies no function,
 so it does not make an MF ND stale); a paper on an ortholog does not, however strong;
-an `NAS` or Reactome `TAS` row on the gene itself does. The `nd_policy` check warns on deviations, and the
+an `NAS` or Reactome `TAS` row on the gene itself does. An accepted ND must cite the
+search: the deep-research file, the notes file recording the queries and their
+result, or the publications checked (PMID, DOI, PMC); the UniProt record is not a
+search. The `nd_policy` check warns on deviations, and the
 compliance score credits an accepted ND that cites the literature search. See
 `projects/NO_DATA.md` for the case taxonomy.
 
@@ -563,8 +568,9 @@ apply to every UniProt quote, whatever it supports.
   record's own `DR GO` lines restate an annotation rather than support it.
 - **Protein existence (`PE`) is not evidence of function.** Quote it to argue that an
   annotation rests on prediction (e.g. `MARK_AS_OVER_ANNOTATED`, `KEEP_AS_NON_CORE`,
-  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function. An accepted `ND` annotation needs evidence
-  that the literature was searched, not the existence level.
+  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function.
+  An accepted `ND` annotation needs evidence that the literature was searched, not
+  the existence level.
 
 Validation warns on all three (`uniprot_quote_unvetted_prediction`,
 `uniprot_quote_restating_field`, `uniprot_quote_existence_as_support`;
