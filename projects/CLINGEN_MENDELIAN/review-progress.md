@@ -7549,3 +7549,51 @@ Each run also passed 12 example checks, 454 automation tests and 19 JavaScript t
 The 878,077-byte progress prefix, all 239 existing project histories, 235 original queue records and 156 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking these three completed genes. The current quotation and generic-binding policies are unchanged.
 
 Local tracker checks cover the exact five-path delta, accepted object preservation, queue equality, native history and private rendered checkpoint links. They do not substitute for the completed integration runs above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T130235Z-codex-451d90.yaml).
+
+## Completion checkpoint 684 — 2026-11-01 19:38:01 UTC
+
+684 complete; 2,192 remaining out of 2,876 catalogue genes. This publishes five independently accepted completions after checkpoint 679 and adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → current stored | Status; annotation advisories |
+|---|---|---|---|
+| [G6PC1](https://github.com/ai4curation/ai-gene-review/pull/5833) | [merge f12e63ef](https://github.com/ai4curation/ai-gene-review/commit/f12e63efc295f16deb6b8eb90ac00afe7c6fa1e8); [run 41315587697](https://github.com/ai4curation/ai-gene-review/actions/runs/41315587697) | 40/40 → 40 → 40 | DRAFT; 3 |
+| [FZD4](https://github.com/ai4curation/ai-gene-review/pull/5831) | [merge ab56cfad](https://github.com/ai4curation/ai-gene-review/commit/ab56cfad0209e5d269e58370b11b25d042a52f5d); [run 41316538776](https://github.com/ai4curation/ai-gene-review/actions/runs/41316538776) | 134/134 → 134 → 134 | DRAFT; 8 |
+| [G6PC3](https://github.com/ai4curation/ai-gene-review/pull/5834) | [merge a93774f2](https://github.com/ai4curation/ai-gene-review/commit/a93774f2166724827c83bb9c1dcd7a57aa4ebd70); [run 41325704845](https://github.com/ai4curation/ai-gene-review/actions/runs/41325704845) | 17/17 → 17 → 18 | COMPLETE; 0 |
+| [G6PD](https://github.com/ai4curation/ai-gene-review/pull/5836) | [merge 9067107a](https://github.com/ai4curation/ai-gene-review/commit/9067107a8339c84b4ba22d6154fed8b38e2ac0e1); [run 41325713373](https://github.com/ai4curation/ai-gene-review/actions/runs/41325713373) | 66/66 → 66 → 66 | DRAFT; 4 |
+| [GAA](https://github.com/ai4curation/ai-gene-review/pull/5838) | [merge 3c6145f2](https://github.com/ai4curation/ai-gene-review/commit/3c6145f27c93c4e1fa82b25292686d3da3ef60b2); [run 41328147496](https://github.com/ai4curation/ai-gene-review/actions/runs/41328147496) | 45/45 → 45 → 45 | COMPLETE; 0 |
+
+G6PC1's core describes ER-luminal glucose-6-phosphate hydrolysis and the terminal glucose-production step. Its 40 current contexts, two product sequences and 28 reference assessments remain distinct from the inherited 39-record review and 42 quotation associations preserved in the archive. Two active core quotations are retained. One source-specific UNDECIDED judgment remains.
+
+FZD4's two cores distinguish Wnt reception from Norrin-dependent retinal vascular signaling. Its 134 original contexts, six extension atoms, one canonical sequence, 60 reference assessments and eight active quotations are preserved. Seventeen source-specific UNDECIDED judgments remain, including the ATRA-response context; experimental species, constructs and interaction-participant limits remain explicit.
+
+G6PC3 has 17 original contexts and one separately justified cellular-detoxification annotation. Its two cores distinguish physiological 1,5-anhydroglucitol-6-phosphate detoxification from the demonstrated glucose-6-phosphate catalytic capability. The physiological contribution of the latter remains unresolved; rat microsomal transport does not quantify human G6PC3-dependent glucose flux. Four current quotation associations and all 23 historical associations are retained separately.
+
+G6PD's core is NADP+-dependent glucose-6-phosphate oxidation in the cytosolic pentose-phosphate pathway. All 66 original contexts, three documented products and 39 reference assessments remain intact. The urine extension is preserved in the original-context archive with its raw64/native62 join; it is not a restored structured field in the current annotation. Seven active quote occurrences remain distinct from 52 inherited associations, of which six remain associated with current claims and 46 are historical-only.
+
+GAA's two cores describe complementary alpha-1,4 and alpha-1,6 glucan hydrolysis during lysosomal glycogen degradation. Its 45 original contexts, canonical 952-residue product and restored urine atom are preserved. The full prior 45-record review and all 55 inherited quotation associations remain archived. Two current core snippets and four selected-table file snippets have distinct source locators; none of these counts creates an extra annotation.
+
+| Gene | Current actions | References / assessed | Cores | Objects / scientific sources / PR payload |
+|---|---|---|---|---|
+| G6PC1 | ACCEPT: 26, KEEP_AS_NON_CORE: 7, TOO_GENERAL: 5, MARK_AS_OVER_ANNOTATED: 1, UNDECIDED: 1 | 28 / 28 | 1 | 69 / 56 / 43 |
+| FZD4 | KEEP_AS_NON_CORE: 36, UNDECIDED: 17, TOO_GENERAL: 8, ACCEPT: 57, MODIFY: 16 | 60 / 60 | 2 | 90 / 80 / 43 |
+| G6PC3 | ACCEPT: 11, KEEP_AS_NON_CORE: 4, TOO_GENERAL: 2, NEW: 1 | 18 / 18 | 2 | 40 / 29 / 27 |
+| G6PD | ACCEPT: 36, KEEP_AS_NON_CORE: 19, UNDECIDED: 6, TOO_GENERAL: 2, MODIFY: 2, MARK_AS_OVER_ANNOTATED: 1 | 39 / 39 | 1 | 115 / 104 / 74 |
+| GAA | KEEP_AS_NON_CORE: 19, UNDECIDED: 1, MODIFY: 6, ACCEPT: 18, MARK_AS_OVER_ANNOTATED: 1 | 27 / 27 | 2 | 93 / 79 / 61 |
+
+The combined accepted closure contains 387 distinct objects, including 328 normal scientific source paths. The five cumulative PR payloads contain 248 distinct paths. Shared sources have matching byte/hash/blob identities. The 302 original contexts remain distinct from 303 current annotations, including G6PC3's single NEW row. Eight original extension atoms are preserved: seven are represented structurally in current reviews and G6PD's one urine atom remains in its archive. No gene or source object is changed by this tracker update.
+
+| Gene | Unit tests | Doctests | Modules | History records + tests | Families |
+|---|---|---|---|---|---|
+| G6PC1 | 4613 | 298 | 747 | 20070 + 42 | 751 |
+| FZD4 | 4613 | 298 | 747 | 20074 + 42 | 751 |
+| G6PC3 | 4658 | 305 | 748 | 20673 + 42 | 751 |
+| G6PD | 4658 | 305 | 748 | 20675 + 42 | 751 |
+| GAA | 4658 | 305 | 748 | 20677 + 42 | 751 |
+
+These are actual executed integration results. Every run also passed 12 example checks and 454 automation tests. G6PC1 and FZD4 checked 303 mypy source files; G6PC3, G6PD and GAA checked 309 and validated all 605 prediction reviews. The source receipts retain unit/doctest warnings, deselections and skipped doctests. History-coverage, UniProt-save and full-upstream-PAINT workflow steps were skipped and receive no execution credit.
+
+G6PD's suite executed successfully in attempt 1. After an OLS service timeout, validation and the aggregate job executed successfully in attempt 2; GitHub's copied suite record in attempt 2 is not a second suite execution. G6PC3 and GAA's retained `gh` logs lacked step labels. Their actual job-step metadata and complete original logs were read directly; the stopped parser attempts remain preserved and are not reported as collector passes.
+
+The 883,943-byte progress prefix, all 240 prior project histories, 235 dated queue records and 157 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking the five completed genes. The current quotation and generic-binding policies are unchanged.
+
+Local checks cover the exact five-path tracker delta, queue equality, preserved accepted objects, native history and private rendered checkpoint links. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T193801Z-codex-479f15.yaml).
