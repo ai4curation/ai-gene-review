@@ -197,6 +197,12 @@ fetch-panther-paint-all *args="":
 paint-review-coverage *args="":
     uv run python scripts/paint_review_coverage.py {{args}}
 
+# List PAINT losses (IRD/IKR) on one gene's PANTHER lineage, with the review's rows on
+# each blocked term. An IRD leaves no leaf annotation, so the GOA file never shows it.
+# Example: just paint-losses human SLC52A1
+paint-losses organism gene:
+    uv run python -m ai_gene_review.validation.gene_paint_losses {{organism}} {{gene}}
+
 # Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
 # `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
 # verdict or overwrites a curated field; lists losses still judged with a gain verdict.
