@@ -1,0 +1,13 @@
+# FOXP2 review notes
+
+FOXP2 is a nuclear forkhead transcription factor with direct human regulatory-DNA binding and repression evidence. The review retains one Pol II repressor core while acknowledging target-dependent activation and context-dependent developmental roles. Public article URLs, assay locators and construct/species limits are in the [source guide](FOXP2-source-guide.md); the [source evidence](FOXP2-source-evidence.yaml) preserves all original objects and the genuine mapping.
+
+All 72 original contexts were reviewed: 12 ACCEPT, 22 KEEP_AS_NON_CORE, 16 TOO_GENERAL and 22 MODIFY. The genuine seed contains 70 rows; two extension-distinct pairs are represented separately, preserving all eleven original nuclear extension atoms and each partner isoform. The native machine fields and reference identifiers are unchanged. No NEW annotation or supporting quotation was added.
+
+The core draws on human regulatory DNA recognition and repression, with target-dependent activation retained in the synthesis. Human clinical basal-ganglia findings, mouse cooperative muscle-development findings and different cortical perturbation models remain distinct. Pair-screen associations do not establish endogenous complexes or isolated binding affinity. Historical 714-residue clones, structural fragments and reported interaction regions are not assigned to current natural products by length alone. Nine official product declarations are preserved; eight sequences are verified, while O15409-3 remains undescribed.
+
+Genuine acquisition provided the pending seed, UniProt record and 72-row GOA export, archived before authoring. Of 27 normal source files, 18 accepted-main objects were reused unchanged and nine publication caches were genuinely acquired. The normal eight-row family slice preserves all seven incoming target-path assertions; its other family assertion does not create a new FOXP2 annotation. Actual cache availability is separated from the previously selected original readings and their limits.
+
+Manual primary research was used under the existing provider credential limitation; no provider retry or report is claimed. Local validation, computed status, history and rendering outcomes will be appended after execution.
+
+Local checks passed: default validation reported nine deliberate generic-binding advisories, strict GOA matched all 72 annotation contexts, and report-only status confirmed DRAFT. The genuine CREATE history, private HTML rendering, local links and exact source/decision conservation passed. All 27 normal source files remain exact, including the 18 reused main objects; prior lane records and the shared runtime are preserved. Scientific PR review and actual merge-group CI remain future requirements.
