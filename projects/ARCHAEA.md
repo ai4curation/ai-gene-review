@@ -184,8 +184,8 @@ Four steps have no GO activity term; their gene reviews propose one.
 
 ## Round 4 results: the rest of the module (November 2026)
 
-Ten more proteins reviewed, so 15 of the module's 17 proteins now have
-reviews (QC: 13 function checks match reviewed core functions, 0 conflicts).
+Ten more proteins reviewed, so 15 of the module's 17 proteins had
+reviews at this point (the last two follow below) (QC: 13 function checks match reviewed core functions, 0 conflicts).
 
 | Gene(s) | Finding |
 |---|---|

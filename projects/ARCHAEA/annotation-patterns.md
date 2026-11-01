@@ -33,10 +33,11 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   Msed_1700, as a malonyl-CoA reductase. Both rules have only two
   conditions: FunFam 3.40.50.720:FF:000411 (itself named
   "Aspartate-semialdehyde dehydrogenase", covering both paralogs) and the
-  taxon Archaea. Of the 40 archaeal UniProt entries named EC 1.2.1.75, 19
-  match MCR-type CDD models, 17 match only ASD-type models (probably
-  misnamed true ASDs, including Msed_1700 and *Sulfurisphaera tokodaii*
-  ST1242) and 4 match neither. No GO row derives from this naming yet.
+  taxon Archaea. Of the 40 archaeal UniProt entries matching the FunFam, 38
+  carry the rule's EC 1.2.1.75 naming; of those 38, 17 match MCR-type CDD
+  models, 17 match only ASD-type models (probably misnamed true ASDs,
+  including Msed_1700 and *Sulfurisphaera tokodaii* ST1242) and 4 match
+  neither. No GO row derives from this naming yet.
   The Msed_1700 review (genes/METS5/Msed_1700/) accepts its ASD terms.
 - **Possible fix:** split the malonyl-CoA reductase clade into its own
   PANTHER subfamily, and add the CDD models as conditions in the ARBA

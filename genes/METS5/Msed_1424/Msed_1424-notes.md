@@ -30,7 +30,8 @@ the EC of the step just upstream of the one it catalyses.
 - Substrate specificity: [PMID:19684143 "Malonic semialdehyde, acetaldehyde, butyraldehyde, propionaldehyde, or glutaraldehyde did not serve as a substrate"]
 - Homodimer: [PMID:19684143 "The native molecular mass determined by gel filtration was 74 ± 7 kDa, suggesting a homodimeric subunit composition."]
 - The authors assign EC 1.1.1.2: [PMID:19684143 "Succinic semialdehyde reductase (EC 1.1.1.2) (Fig. 1 ) strongly prefers NADPH as the electron donor and does not act on malonic semialdehyde."]
-- Rhea has the exact reaction: RHEA:26381, 4-hydroxybutanoate + NADP(+) = succinate
+- Rhea has the exact reaction (undirected master reaction, written oxidatively; the
+  enzyme works in the reductive direction): RHEA:26381, 4-hydroxybutanoate + NADP(+) = succinate
   semialdehyde + NADPH + H(+) (EC 1.1.1.n11), with no GO cross-reference (Rhea REST query,
   2026-10-31). The NAD+ reaction RHEA:23948 maps to GO:0047577 4-hydroxybutyrate dehydrogenase
   activity, which is defined with NAD+ only.
