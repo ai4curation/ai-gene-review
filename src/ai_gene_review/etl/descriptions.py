@@ -76,17 +76,25 @@ ORGANISM_CONFIG: Dict[str, Dict[str, str]] = {
 }
 
 # Most gene folders are named by UniProt species code rather than these short names.
+ORGANISM_CONFIG["CAEEL"] = ORGANISM_CONFIG["worm"]
 ORGANISM_CONFIG["DROME"] = ORGANISM_CONFIG["fly"]
 ORGANISM_CONFIG["DANRE"] = ORGANISM_CONFIG["zebrafish"]
 ORGANISM_CONFIG["XENTR"] = ORGANISM_CONFIG["frog"]
 ORGANISM_CONFIG["XENLA"] = {**ORGANISM_CONFIG["frog"], "alliance_species": "Xenopus laevis",
                             "taxon_id": "NCBITaxon:8355"}
 
-# Openings of the Alliance automated (GO-derived) gene description. Some MODs (RGD)
-# file that generated text in the MOD_provided_gene_description note too.
+# The Alliance automated (GO-derived) gene description opens with one of these and uses
+# the generator's fixed vocabulary. Some MODs (RGD) file that generated text in the
+# MOD_provided_gene_description note too.
 _AUTOMATED_OPENINGS = re.compile(
     r"^(Enables|Predicted to|Involved in|Acts upstream of|Located in|Is active in|"
-    r"Part of|Contributes to|Exhibits|Used to study|Is expressed in|Orthologous to)\b"
+    r"Part of|Contributes to|Exhibits|Used to study|Is expressed in|Orthologous to|"
+    r"Human ortholog)\b"
+)
+_AUTOMATED_SIGNATURES = re.compile(
+    r"activity[.;]|activity and |Involved in several processes|Predicted to (?:enable|be)|"
+    r"Orthologous to (?:human|several)|Human ortholog\(s\) of this gene|Is expressed in |"
+    r"Used to study "
 )
 
 
@@ -94,17 +102,26 @@ def looks_automated(curated: str, automated: Optional[str]) -> bool:
     """True when a "curated" MOD description is really the automated, GO-derived text.
 
     Such text restates the GO annotations under review, so it must not be treated as an
-    independent hand-written source.
+    independent hand-written source. It is recognised by identity with the Alliance
+    automated text, or by opening with a generator phrase *and* using the generator's
+    fixed vocabulary ("... activity.", "Involved in several processes", "Orthologous to
+    human ..."). The opening alone is not enough: hand-written SGD texts sometimes start
+    "Part of" or "Involved in". The vocabulary test does not need the Alliance text,
+    because a MOD's own generated text (RGD's) need not match it.
 
-    >>> looks_automated("Enables GTP binding activity.", None)
+    >>> looks_automated("Enables GTP binding activity. Involved in transport.", None)
+    True
+    >>> looks_automated("Enables heterocyclic compound binding activity; metallopeptidase activity.", "x")
     True
     >>> looks_automated("rab-11.1 encodes a small GTPase.", "Enables GTP binding activity.")
+    False
+    >>> looks_automated("Part of the CCR4-NOT complex; involved in mRNA degradation", None)
     False
     """
     text = curated.strip()
     if automated and text == automated.strip():
         return True
-    return bool(_AUTOMATED_OPENINGS.match(text))
+    return bool(_AUTOMATED_OPENINGS.match(text)) and bool(_AUTOMATED_SIGNATURES.search(text))
 
 # -------------------------------------------------------------------
 # Data model

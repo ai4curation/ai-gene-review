@@ -235,6 +235,26 @@ results were spot-checked (pek-1, lrx-1, sem-5).
   The lrx-1 suggested questions look as if they belong to another gene. Both need
   a human look.
 
+## Yeast (SGD), in progress
+
+- `fetch-descriptions-bulk yeast` refreshed all 890 sidecars, and
+  `mod-description-deep-research yeast` wrote 890 `-deep-research-sgd.md`
+  files. Every yeast gene has an SGD-written description.
+- Re-fetching kept the 2026-03 pilot scores wherever a source text was
+  unchanged. Where SGD or the Alliance had changed a text since then, that
+  source's score and the cross-source review were dropped as stale: 17 files
+  stay `COMPLETE`, 101 are `IN_PROGRESS` and 772 are new (`STUB`).
+- SGD texts are much shorter than WormBase's (median 33 words, against 75 for
+  WormBase and 111 for our yeast reviews). On lexical overlap they are closer to
+  ours: a median 0.42 of SGD content words appear in our descriptions, against
+  0.35 for worm. See [yeast-comparison.yaml](MOD_DESCRIPTIONS/yeast-comparison.yaml).
+- Guard against automated text filed as curated (`looks_automated`): it
+  rejects all 12 RGD notes sampled, and flags none of the 902 WormBase and SGD
+  curated texts on disk. A first version that matched on the opening alone
+  wrongly rejected SGD's CAF120 ("Part of the CCR4-NOT ... complex; involved
+  in ..."), and was fixed before any file used it.
+- Next: score the 873 incomplete files, then act on their findings, as for worm.
+
 ## Recommendations
 
 1. **Use the curated MOD description as an input, not as an authority.** This
@@ -262,4 +282,6 @@ results were spot-checked (pek-1, lrx-1, sem-5).
 - [x] Work through the gap and discrepancy findings in `worm-findings.yaml`
 - [x] Record the contradicted MOD and UniProt statements as `source_defects`
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
-- [ ] Generate for fly, mouse, rat, zebrafish and yeast
+- [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
+- [ ] Yeast: score descriptions and act on findings
+- [ ] Fly (FlyBase) and mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none

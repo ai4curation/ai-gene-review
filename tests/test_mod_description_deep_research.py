@@ -76,7 +76,7 @@ def test_emit_worm_gene_from_alliance(tmp_path: Path):
     assert path is not None and "small GTPase" in path.read_text()
 
 
-@pytest.mark.parametrize("folder,mod", [("DROME", "FB"), ("fly", "FB"), ("DANRE", "ZFIN"), ("XENLA", "Xenbase"), ("worm", "WB")])
+@pytest.mark.parametrize("folder,mod", [("CAEEL", "WB"), ("DROME", "FB"), ("fly", "FB"), ("DANRE", "ZFIN"), ("XENLA", "Xenbase"), ("worm", "WB")])
 def test_organism_folder_aliases(folder, mod):
     """Repo folders named by UniProt species code resolve to the same MOD as the short names."""
     from ai_gene_review.etl.descriptions import ORGANISM_CONFIG
@@ -88,9 +88,12 @@ def test_organism_folder_aliases(folder, mod):
     [
         ("Enables GTP binding activity. Involved in vesicle transport.", "Something else.", True),
         ("Predicted to enable kinase activity.", None, True),
+        ("Enables heterocyclic compound binding activity; metallopeptidase activity; and peptidyl-dipeptidase activity.", "Different.", True),
         ("Same text.", "Same text.", True),
         ("rab-11.1 encodes a small GTPase homologous to Rab proteins.", "Predicted to enable GTP binding.", False),
         ("Ubiquitin-protein ligase; role in proteasome-dependent degradation", "Enables ligase activity.", False),
+        ("Part of the CCR4-NOT transcriptional regulatory complex; involved in controlling mRNA initiation", None, False),
+        ("Involved in vulval development. rab-11.1 encodes a small GTPase.", None, False),
     ],
 )
 def test_looks_automated(curated, automated, expected):
