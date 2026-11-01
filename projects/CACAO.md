@@ -247,6 +247,11 @@ alone. Re-check the abstract-only rows when GONUTS returns.
   reference; counts by group; and the top 100 unreviewed microbial gene
   products by CACAO row count. Regenerate with
   `uv run python projects/CACAO/scripts/cacao_inventory.py`.
+- [`CACAO/batch3-screens.yaml`](CACAO/batch3-screens.yaml): the three
+  screens that chose batch 3, one per batch-2 failure shape that can be looked
+  for without reading papers — numerically-named genes sharing a cited paper,
+  references spanning sibling taxa, and non-standard qualifiers. Regenerate
+  with `uv run python projects/CACAO/scripts/batch3_screens.py`.
 
 ## Coverage
 
@@ -297,8 +302,9 @@ Top taxa:
 # STATUS
 
 Snapshot 2026-10-29: 311/2,987 CACAO gene products reviewed; 646/4,373 rows
-judged. Microbial: 146/1,617 reviewed. Batches 1 and 2 complete except phage
-phi29 p6 (blocked, below).
+judged. Microbial: 146/1,617 reviewed. Batches 1 and 2 complete and merged
+(#5724) except phage phi29 p6 (blocked, below). Batch 3 selected by screen and
+under review.
 
 ## Batch 1: microbes, at least five CACAO rows
 
@@ -406,22 +412,63 @@ for entries with no usable gene symbol.
 - [x] SINDV P03316 (P03316), structural polyprotein, 50/4
 - [x] BPT4 5.4 (P39234), baseplate puncturing device, 8/4 — all 4 misattributed
 
-## Batch 3 (not started)
+## Batch 3: three screens, 15 genes
 
-1,174 of the 1,501 unreviewed microbial gene products carry a single CACAO
-row, so ranking by row count is exhausted. Group them instead, and prefer
-groupings that test a batch-2 finding:
+Ranking by CACAO row count is exhausted (1,174 of the 1,501 unreviewed
+microbial gene products carry a single row), so batch 3 is chosen by screen
+instead. Each of the three batch-2 failure shapes that can be looked for
+*without reading papers* was turned into a query over the snapshot
+(`projects/CACAO/scripts/batch3_screens.py`, output in
+`projects/CACAO/batch3-screens.yaml`), and the batch is five genes from each.
+The point is to make the batch a test of the taxonomy rather than a list: if
+these shapes are real, the screens should enrich for them, and if they are
+not, that is the more useful result.
 
-- [ ] **Phage genes with numeric names**, for adjacent-locus identifier
-  confusion (the T4 gp5.4 shape). Cheap to screen: compare each cited paper's
-  gene designation against the entry's.
-- [ ] **Virus rows whose cited paper used a different isolate**, for the
-  cross-isolate transfer shape (Gag). Also screenable without reading.
-- [ ] **All CACAO rows with a non-`involved_in` qualifier**, for the
-  wrong-qualifier shape (AcrIIA5). One query over the snapshot.
-- [ ] By organism, for the remaining bacteria (941 unreviewed gene products)
-  and *E. coli* / *B. subtilis* in particular, where MOD curation gives a
-  professional comparator on the same genes.
+**Screen 1, adjacent-locus confusion (the T4 gp5.4 shape).** 71 gene products
+carry a numeric symbol; 55 are unreviewed, and **33 share a cited PMID with
+another numerically-named gene in the same organism**, which is exactly the
+configuration that misattributed all four of gp5.4's rows. The sharpest
+cluster is phage phi29, where one paper (PMID:820555, mutants in six genes
+fail to synthesise phage DNA) is cited across most of the numbered genes —
+including gene 3, whose row this project already accepted under curator
+deference. Reviewing its siblings tests whether that deference was right.
+
+**Screen 2, cross-isolate transfer (the Gag shape).** 95 references are cited
+by CACAO rows on more than one taxon, but **taxon count alone is a bad
+screen**: the widest spans 25 taxa and is a comparative study that
+legitimately annotates each one. The discriminator is taxonomic proximity, so
+the candidate set is references spanning 2–4 taxa whose organism names look
+like isolates of one species group — 24 of them, mostly same-species strain
+pairs. Some may not be transfers at all but one organism annotated under two
+taxon ids, which is a different defect worth recording either way.
+
+**Screen 3, wrong qualifier (the AcrIIA5 shape).** 63 rows carry a qualifier
+outside `involved_in` / `enables` / `part_of` / `located_in`, 43 of them on
+unreviewed genes, and nearly all are
+`acts_upstream_of_or_within_positive_effect`. The striking thing is the
+composition: the list is dominated by **phage anti-CRISPR and
+host-interaction proteins**, the same family where AcrIIA5's regressed
+qualifier was found. That makes it a direct replication test rather than a
+fresh screen.
+
+- [ ] **Group A — adjacent locus, phage phi29 numbered genes.** BPPH2 1
+  (P03679, DNA replication protein), 2 (P03680, DNA polymerase), 4 (P03682,
+  late genes activator p4), 15 (P11187, endolysin), 17 (P03686, DNA
+  replication protein). Gene 4 also tests the *partner-mutant IMP* pattern
+  that the blocked p6 notes flagged but could not confirm, since p6's
+  transcription rows rest on p4 mutants.
+- [ ] **Group B — wrong qualifier, phage host-interaction proteins.** 9CAUD
+  DMS3-25 (A0SMN5) and DMS3-30 (A0SMP0), 9CAUD JBD30_035 (L7P7M1), BPG15
+  GH15_072 (I6P9Q0, holin), PSE14 PSPPH_4093 (Q48EH2). A0SMP0 is a double
+  hit: it is also in screen 2, on a paper spanning phages D3112 and DMS3.
+- [ ] **Group C — cross-isolate and taxon-id pairs.** RHOCB bchF (P26165),
+  bchE (P26168) and bchJ (P26169), all from one paper cited across two
+  *Rhodobacter capsulatus* taxon ids; MYXXA actC (Q93P57) and actA (Q93P59),
+  from a paper cited across *Myxococcus xanthus* and its DK1622 strain.
+
+Still open for later batches: the remaining bacteria by organism (941
+unreviewed gene products), where *E. coli* and *B. subtilis* give a
+professional MOD comparator on the same genes.
 
 ## Later: animals and plants (top by CACAO row count)
 
