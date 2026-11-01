@@ -1045,7 +1045,7 @@ validate-predictions-all:
 # `fetch` (true/false) is the only difference.
 _validate-predictions fetch +files:
     just validate-prediction-terms {{files}}
-    uv run python -m ai_gene_review.validation.prediction_evidence {{ if fetch == "true" { "--fetch" } else { "" } }} --require-excerpts --report reports/prediction-evidence.json {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence {{ if fetch == "true" { "--fetch" } else if fetch == "false" { "" } else { error("fetch must be true or false") } }} --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Schema and term validation for prediction files. In a PredictionReview the only
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;

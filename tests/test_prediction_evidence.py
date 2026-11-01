@@ -164,3 +164,4 @@ def test_doi_reference_is_resolved_whatever_the_prefix_case(
     assert report.is_valid is title_ok
     assert not any("Unsupported source" in issue.message for issue in report.issues)
     assert report.metadata["verified_titles"] == (1 if title_ok else 0)
+

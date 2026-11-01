@@ -290,6 +290,7 @@ def sft_prediction_rows() -> list[dict[str, Any]]:
             }
         )
         source_version = ";".join(source_versions)
+        excluded = sum(is_data_error(pred.get("review")) for pred in predictions)
         rows.append(
             {
                 "organism": organism,
@@ -297,7 +298,9 @@ def sft_prediction_rows() -> list[dict[str, Any]]:
                 "uniprot_id": doc.get("id") or gene_review_id(organism, gene),
                 "source_version": source_version,
                 "source_file": path,
-                "n_predictions": len(predictions),
+                # Same rule as assessment_summary: wrong-input rows are counted apart.
+                "n_predictions": len(predictions) - excluded,
+                "excluded_data_errors": excluded,
             }
         )
     return rows
@@ -687,6 +690,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
         "source_file",
         "reason_included",
         "n_predictions",
+        "excluded_data_errors",
         "correctness",
         "completeness",
         "goa_overlap",
@@ -730,6 +734,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
             "benchmark": "argo95_sft_terms",
             "n_genes": len(argo_hf),
             "n_predictions": sum(row["n_predictions"] for row in argo_hf),
+            "excluded_data_errors": sum(row["excluded_data_errors"] for row in argo_hf),
             "source": "HuggingFace wanglab/protein_catalogue SFT term predictions",
             "description": "ARGO95 primary SFT term-prediction benchmark: ARGO139 genes available in the cleaner HF catalogue source.",
         },
@@ -737,6 +742,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
             "benchmark": "supplement_sft_terms_argo139_mixed_sources",
             "n_genes": len({(row["organism"], row["gene"]) for row in argo_predictions}),
             "n_predictions": sum(row["n_predictions"] for row in argo_predictions),
+            "excluded_data_errors": sum(row["excluded_data_errors"] for row in argo_predictions),
             "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
             "description": f"Supplemental mixed-source ARGO139 SFT diagnostic: {len(argo_hf)} HF-catalogue genes and {len(argo_web)} web-export genes; not a primary benchmark.",
         },
@@ -759,6 +765,11 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
                 for row in sft_predictions
                 if row["source_version"] == "wanglab/protein_catalogue"
             ),
+            "excluded_data_errors": sum(
+                row["excluded_data_errors"]
+                for row in sft_predictions
+                if row["source_version"] == "wanglab/protein_catalogue"
+            ),
             "source": "HuggingFace wanglab/protein_catalogue SFT term predictions",
             "description": f"Supplemental all-HF source view; includes {len(hf_keys & rl_keys)} ARGO139 genes plus {len(hf_keys - rl_keys)} additional HF-only genes.",
         },
@@ -774,6 +785,11 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
                 for row in sft_predictions
                 if row["source_version"] != "wanglab/protein_catalogue"
             ),
+            "excluded_data_errors": sum(
+                row["excluded_data_errors"]
+                for row in sft_predictions
+                if row["source_version"] != "wanglab/protein_catalogue"
+            ),
             "source": "BioReason-Pro SFT web export",
             "description": f"SFT web-export predictions for {len(web_keys & rl_keys)} ARGO139 genes absent from the HF catalogue; includes full ancestor hierarchy.",
         },
@@ -781,6 +797,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
             "benchmark": "supplement_sft_terms_union_all",
             "n_genes": len({(row["organism"], row["gene"]) for row in sft_predictions}),
             "n_predictions": sum(row["n_predictions"] for row in sft_predictions),
+            "excluded_data_errors": sum(row["excluded_data_errors"] for row in sft_predictions),
             "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
             "description": f"All available SFT term-prediction reviews: {len(rl_keys)} genes in ARGO139 plus {len(hf_keys - rl_keys)} HF-only genes; source partitions are listed separately.",
         },
@@ -801,6 +818,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
             "n_performance_genes",
             "n_flagged_inputs",
             "n_predictions",
+            "excluded_data_errors",
             "source",
             "description",
         ],

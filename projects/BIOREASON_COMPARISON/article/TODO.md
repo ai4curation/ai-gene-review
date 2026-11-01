@@ -25,9 +25,9 @@ All counts come from `uv run python projects/BIOREASON_COMPARISON/audit_followup
 - **Open.** 22 `UNC` calls carry the template "Generic or ancestor term not confirmed or refuted by GOA or AI gene review." They have not been reviewed term by term. All 93 templated ARGO95 rationales, `CNN` and `UNC` together, fall in 9 genes: mouse Calm1 and Pten, and rat Casp3, Hspa5, Rgn, Slc5a1, St13, Tp53 and Uggt1.
 - **Open.** 62 of the 147 discordant (`NPI`/`PLI`/`REP`) ARGO95 terms carry no `error_type`. They are reported as untagged on the project page.
 
-**Supplemental SFT union (198 files, 11,070 scored terms, all marked `COMPLETE`; 30 csr-1 wrong-input terms are excluded):**
+**Supplemental SFT union (198 files, 11,100 terms, all marked `COMPLETE`):**
 
-- **Not manually reviewed.** 8,783 of the 11,070 scored rationales are the two templates above: 7,009 generic `UNC` and 1,774 in-GOA `CNN`. They span 42 genes.
+- **Not manually reviewed.** 8,783 of the 11,100 rationales are the two templates above: 7,009 generic `UNC` and 1,774 in-GOA `CNN`. They span 42 genes.
 - These files are used only as supplemental source-availability diagnostics, never as a main result.
 - **Open.** Their `COMPLETE` status overstates review depth. Either downgrade them to `DRAFT` or review them manually, prioritizing any `COR` and `NPI` calls.
 
