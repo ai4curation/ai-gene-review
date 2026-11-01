@@ -28,8 +28,9 @@
   caspofungin/xenobiotic rows as non-core outputs. CGD curated these from direct
   Candida experimental papers; several caches are abstract-only, but the
   abstracts are consistent with a real MKC1 phenotype.
-- Removed three EnsemblFungi transfers from fission-yeast Spm1/Pmk1:
+- Removed four EnsemblFungi transfers from fission-yeast Spm1/Pmk1:
   `GO:0050850 positive regulation of calcium-mediated signaling`,
-  `GO:1902413 negative regulation of mitotic cytokinesis`, and `GO:1902660
-  negative regulation of glucose mediated signaling pathway`. Those are
+  `GO:1902413 negative regulation of mitotic cytokinesis`, `GO:1902660
+  negative regulation of glucose mediated signaling pathway`, and `GO:1905665
+  positive regulation of calcium ion import across plasma membrane`. Those are
   source-side fission-yeast outputs, not conserved Candida Mkc1 functions.
