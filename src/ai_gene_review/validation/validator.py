@@ -1016,7 +1016,15 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
-                    if not is_from_annotations and has_support:
+                    # A core activity recorded as contested (a BIOLOGY gap on the MF
+                    # aspect) is deliberately not asserted as a NEW row, so do not ask for one.
+                    contested_mf = any(
+                        isinstance(gap, dict)
+                        and "BIOLOGY" in (gap.get("gap_kind") or [])
+                        and gap.get("dark_aspect") == "MF_DARK"
+                        for gap in core_func.get("knowledge_gaps") or []
+                    )
+                    if not is_from_annotations and has_support and not contested_mf:
                         report.add_issue(
                             ValidationSeverity.WARNING,
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
