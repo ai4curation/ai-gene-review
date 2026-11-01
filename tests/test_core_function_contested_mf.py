@@ -1,4 +1,4 @@
-"""A contested core activity recorded as an MF_DARK knowledge gap is not told to become a NEW row."""
+"""A core function with an MF_DARK knowledge gap gets an INFO note, not a warning to add a NEW row."""
 
 from pathlib import Path
 
@@ -6,6 +6,7 @@ import pytest
 import yaml
 
 from ai_gene_review.validation import validate_gene_review
+from ai_gene_review.validation.validation_report import ValidationSeverity
 
 CHECK = "core_function_molecular_function_not_in_annotations"
 
@@ -38,9 +39,11 @@ def _review(with_gap: bool) -> dict:
     }
 
 
-@pytest.mark.parametrize("with_gap,warns", [(False, True), (True, False)])
-def test_contested_core_mf(tmp_path: Path, with_gap: bool, warns: bool):
+@pytest.mark.parametrize(
+    "with_gap,severity", [(False, ValidationSeverity.WARNING), (True, ValidationSeverity.INFO)]
+)
+def test_contested_core_mf(tmp_path: Path, with_gap: bool, severity: ValidationSeverity):
     f = tmp_path / "TEST-ai-review.yaml"
     f.write_text(yaml.dump(_review(with_gap)))
     report = validate_gene_review(f, check_best_practices=True)
-    assert any(i.check_type == CHECK for i in report.issues) is warns
+    assert [i.severity for i in report.issues if i.check_type == CHECK] == [severity]
