@@ -3,7 +3,7 @@ title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI]
-genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1]
 ---
 
 # Wrong-Gene Leads
@@ -126,6 +126,35 @@ an experimental row is not called wrong-gene unless the abstract itself says so.
 So one of five leads was confirmed, three need the full text, and the remaining
 flags were detector false positives. The two false-positive patterns, wrapped synonyms
 and protein names written in words, are both name-matching gaps; the first is fixed.
+
+## Protein-name matching and second lead review (2026-11-01)
+
+The name check now also matches UniProt protein names (`DE` `Full=`/`Short=`) as
+phrases in the cached title and abstract, including family enumerations such as
+"aurora kinases A, B, and C" for "Aurora kinase C". This penalised papers that spell
+out the protein, and the top tier fell from 466 to 390 rows.
+
+The next 20 top-tier leads (one row per gene, IPI rows skipped, genes already checked
+excluded) were then checked against the cached abstracts, and the cached full text
+where available:
+
+| Gene | Row | Outcome |
+|---|---|---|
+| DICDI/tagC | cell differentiation (IMP, dictyBase) | **Probable wrong gene.** The abstract of PMID:7744252 describes a tagB REMI mutant. `WRONG_GENE_PRODUCT` defect repointing to tagB (P54683); the reason, which had attributed the genetics to tagC, is corrected. Action unchanged (KEEP_AS_NON_CORE, consistent with the IEA row). |
+| ARATH/AHK2 | response to toxic substance (IMP, TAIR) | **Probable wrong gene.** The abstract reports the cre1 (AHK4) mutant, not ahk2. `WRONG_GENE_PRODUCT` / `CHECK` toward AHK4 (Q9C5U0); the review had already noted this. |
+| human/POFUT1 | three IDA rows (UniProt) | **Wrong evidence code, not wrong gene.** The 1996 paper assayed enzyme from CHO cells and rat liver; it is cited by the Chinese hamster and rat POFUT1 entries. `WRONG_EVIDENCE_CODE` / `CHECK` on all three rows. |
+| ARATH/GLN2 | ammonia assimilation cycle (TAS, TAIR) | **Wrong reference.** The paper is about cytosolic GS1 isoenzymes; GLN2 is plastidic GS2. The claim is true; `WRONG_REFERENCE` / `CHECK`. |
+| ARATH/SYP121 | plasma membrane (TAS, TIGR) | **Wrong reference.** The cached full text never mentions SYP121, SYR1, PEN1 or At3g11820. The location is true; `WRONG_REFERENCE` / `CHECK`. |
+| ARATH/BEH2, ARATH/CYP71A12, DICDI/statA | TAS, IEP, IDA | **Query.** The abstracts concern BZR1, CYP71A13 and STATc respectively; full text unavailable. `WRONG_REFERENCE` / `CHECK` / `SUSPECTED`; actions unchanged. |
+| rat/Dusp21, ARATH/ERS1, ARATH/FRK1, ARATH/ARR5, DANRE/tbx5a | various | **False positives.** The papers study DSP21 directly, all five ethylene receptor isoforms, the FRK1 marker gene, the ARR5 cytokinin marker, and Tbx5 DNA binding by gel-shift assay (in the full text). |
+| human/ALDOA, ARATH/AGO1, ARATH/CCA1, ARATH/HSP17.7, ARATH/MLO2, ARATH/MYB34, ARATH/RGA | various | **No change.** An ortholog paper (rabbit aldolase), multi-gene papers whose abstracts do not settle it (AGO1, CCA1, a possible HSP17.6A/17.7 nomenclature mix-up), a family-wide statement (MLO), a gene discussed in the full text (MYB34), and a row the review already removes (RGA). |
+
+Across both batches (25 leads): 3 rows are confirmed or probable wrong-gene
+annotations (PAPSS1, tagC, AHK2), 1 is a wrong evidence code (POFUT1), 2 are wrong
+references for true claims (GLN2, SYP121), 6 are unresolved queries pending full
+text, and the rest are false positives or need no change. Remaining false positives
+come mostly from synonyms UniProt does not list (DSP21) and from papers that study a
+gene as an assay readout or as one of a named family ("five receptor isoforms").
 
 ## Limitations
 
