@@ -48,3 +48,7 @@ an ortholog-lineage relative by tree and Ensembl Compara, not by a shared PANTHE
 CG6836 has no subfamily assigned. There is no review in the repo. The module
 modules/enterohepatic_bile_salt_cycling.yaml covers SLC51A in vertebrates. CG6836 is not a member of
 that module.
+
+## Follow-up on description sources (2026-11-01)
+
+- The Alliance automated text says CG6836 is "Used to study chromosome 3q29 microdeletion syndrome". This disease-model statement most likely comes from the Drosophila 3q29 screen [PMID:32053595 "We systematically characterized developmental, cellular, and nervous system phenotypes for 14 conserved homologs of human 3q29 genes and 314 pairwise interactions using Drosophila"]; SLC51A (OSTalpha), the human ortholog of CG6836, lies in the 3q29 region. The cached main text does not name CG6836, so inclusion could not be verified. It is an RNAi disease model, not evidence of molecular function; no annotation change.

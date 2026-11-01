@@ -284,7 +284,14 @@ search, so we cannot meaningfully propose one. These rows should become
    - `nd_case` `TRUE_GAP` or `EXISTENCE` without a `BIOLOGY` gap whose
      `dark_aspect` matches the ND aspect (`MF_DARK`, `BP_DARK` or `CC_DARK`,
      or `WHOLLY_DARK`), on the row, the gene or a core function;
-   - `nd_case` on a non-ND row.
+   - `nd_case` on a non-ND row;
+   - `ACCEPT` without evidence that the literature was searched: the row must
+     cite a publication (PMID, DOI, PMC), the deep-research file, or the notes
+     file recording the queries and their result (a search that finds nothing
+     has no paper to cite). The UniProt record, or its protein-existence (`PE`)
+     line, is not a search. On 2026-11-01 this flags 206 of 311 accepted ND
+     rows in 147 reviews; 197 of them cite nothing, mostly rows the re-action
+     pass converted.
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites
    a source for the literature search (e.g. the deep-research file). The pass
