@@ -75,6 +75,37 @@ ORGANISM_CONFIG: Dict[str, Dict[str, str]] = {
     },
 }
 
+# Most gene folders are named by UniProt species code rather than these short names.
+ORGANISM_CONFIG["DROME"] = ORGANISM_CONFIG["fly"]
+ORGANISM_CONFIG["DANRE"] = ORGANISM_CONFIG["zebrafish"]
+ORGANISM_CONFIG["XENTR"] = ORGANISM_CONFIG["frog"]
+ORGANISM_CONFIG["XENLA"] = {**ORGANISM_CONFIG["frog"], "alliance_species": "Xenopus laevis",
+                            "taxon_id": "NCBITaxon:8355"}
+
+# Openings of the Alliance automated (GO-derived) gene description. Some MODs (RGD)
+# file that generated text in the MOD_provided_gene_description note too.
+_AUTOMATED_OPENINGS = re.compile(
+    r"^(Enables|Predicted to|Involved in|Acts upstream of|Located in|Is active in|"
+    r"Part of|Contributes to|Exhibits|Used to study|Is expressed in|Orthologous to)\b"
+)
+
+
+def looks_automated(curated: str, automated: Optional[str]) -> bool:
+    """True when a "curated" MOD description is really the automated, GO-derived text.
+
+    Such text restates the GO annotations under review, so it must not be treated as an
+    independent hand-written source.
+
+    >>> looks_automated("Enables GTP binding activity.", None)
+    True
+    >>> looks_automated("rab-11.1 encodes a small GTPase.", "Enables GTP binding activity.")
+    False
+    """
+    text = curated.strip()
+    if automated and text == automated.strip():
+        return True
+    return bool(_AUTOMATED_OPENINGS.match(text))
+
 # -------------------------------------------------------------------
 # Data model
 # -------------------------------------------------------------------
@@ -658,6 +689,10 @@ def fetch_gene_descriptions(
         try:
             alliance_data = fetch_alliance_description(alliance_id)
 
+            curated = alliance_data.get("curated_synopsis")
+            if curated and looks_automated(curated, alliance_data.get("automated_synopsis")):
+                logger.warning("%s: MOD 'curated' description is automated text; not recorded as curated", alliance_id)
+                alliance_data["curated_synopsis"] = None
             if alliance_data.get("curated_synopsis"):
                 gd.descriptions.append(
                     SourceDescription(

@@ -74,3 +74,25 @@ def test_emit_worm_gene_from_alliance(tmp_path: Path):
     status, path, _ = emit_mod_deep_research("worm", "rab-11.1", tmp_path, write=True)
     assert status == "written"
     assert path is not None and "small GTPase" in path.read_text()
+
+
+@pytest.mark.parametrize("folder,mod", [("DROME", "FB"), ("fly", "FB"), ("DANRE", "ZFIN"), ("XENLA", "Xenbase"), ("worm", "WB")])
+def test_organism_folder_aliases(folder, mod):
+    """Repo folders named by UniProt species code resolve to the same MOD as the short names."""
+    from ai_gene_review.etl.descriptions import ORGANISM_CONFIG
+    assert ORGANISM_CONFIG[folder]["mod"] == mod
+
+
+@pytest.mark.parametrize(
+    "curated,automated,expected",
+    [
+        ("Enables GTP binding activity. Involved in vesicle transport.", "Something else.", True),
+        ("Predicted to enable kinase activity.", None, True),
+        ("Same text.", "Same text.", True),
+        ("rab-11.1 encodes a small GTPase homologous to Rab proteins.", "Predicted to enable GTP binding.", False),
+        ("Ubiquitin-protein ligase; role in proteasome-dependent degradation", "Enables ligase activity.", False),
+    ],
+)
+def test_looks_automated(curated, automated, expected):
+    from ai_gene_review.etl.descriptions import looks_automated
+    assert looks_automated(curated, automated) is expected

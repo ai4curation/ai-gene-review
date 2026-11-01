@@ -42,6 +42,7 @@ from ai_gene_review.etl.descriptions import (
     extract_uniprot_id,
     extract_uniprot_xref,
     fetch_alliance_description,
+    looks_automated,
 )
 from ai_gene_review.mod_providers import MOD_PROVIDER, is_mod_description_file  # noqa: F401  (re-export)
 
@@ -166,6 +167,8 @@ def emit_mod_deep_research(
     text = data.get("curated_synopsis")
     if not text:
         return "no_curated", None, f"{mod_id} has no curated description"
+    if looks_automated(text, data.get("automated_synopsis")):
+        return "no_curated", None, f"{mod_id}: the MOD-provided description is automated (GO-derived) text"
 
     problem = identity_gate(gene, uniprot_data, data.get("symbol"), data.get("systematic_name"))
     doc = render_mod_deep_research(
