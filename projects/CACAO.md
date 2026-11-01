@@ -228,11 +228,15 @@ CACAO annotations are experimental, so the
 text, and a `REMOVE` needs the paper itself, not its abstract. The GONUTS wiki
 (`gowiki.tamu.edu`) keeps a page per paper and per protein for CACAO
 annotations (the ALDH4A1 review used both), and is the first thing to check
-when the cached publication is abstract-only. **As of 2026-10-29 that check
-is unavailable**: gowiki.tamu.edu serves only "This site is temporarily
-offline while we perform upgrades", and the Internet Archive has no snapshot
-of the relevant pages. Every batch-1 row was therefore judged from the paper
-alone. Re-check the abstract-only rows when GONUTS returns.
+when the cached publication is abstract-only. **That check is permanently
+gone.** Through batches 1 and 2 gowiki.tamu.edu served only "This site is
+temporarily offline while we perform upgrades"; as of 2026-11-01 it returns
+HTTP 410 with a page reading "GONUTS, the GO wiki, has been retired", and
+the Internet Archive has no snapshot of the relevant pages. The programme's
+own record of what each student read, and of the evidence they entered, is
+therefore unrecoverable. Every row in this project is judged from the cited
+paper alone, and a row whose cache is abstract-only has to be decided on
+what can be read rather than deferred to a re-check that will never come.
 
 ## Project files
 
@@ -292,7 +296,7 @@ Top taxa:
 2. Use the standard workflow (`just fetch-gene`, deep research, the
    annotation-reviewer agent). In each review, note in the CACAO rows'
    `reason` what the cited paper shows and, where the cache is abstract-only,
-   what the GONUTS page records.
+   say so: GONUTS is retired, so there is no student record to fall back on.
 3. After each batch, rerun the inventory script and update the counts and
    failure shapes above.
 4. Once enough rows are judged, compare the CACAO acceptance rate with that of
@@ -480,7 +484,9 @@ mouse Reln (20), Shank3 (18), Sirt6 (14), Nlgn3 (13), Wnt5a (11), Pafah1b1
 - [ ] Add the 5 CACAO rows missing from existing reviews (phage T4 genes 9,
   11 and 18, lambda stf, phi6 P9); four have no evidence code in GOA.
 - [ ] Resolve the 7 `UNDECIDED` CACAO rows (DNM1L, CASK, APC, Gpdh1, Sirt5,
-  and fliH x2) using the GONUTS records.
+  and fliH x2). The plan was to use the GONUTS records; those are gone, so
+  each has to be decided from the paper's full text, or left UNDECIDED with
+  the unavailability stated as the reason.
 - [ ] Re-check batch 1's "paper not about the gene" judgments against full
   text where it exists. Two batch-2 near-misses (AcrIIA5, whose cited paper's
   title is about a different anti-CRISPR, and VPS74, whose mammalian GOLPH3
@@ -488,6 +494,35 @@ mouse Reln (20), Shank3 (18), Sirt6 (14), Nlgn3 (13), Wnt5a (11), Pafah1b1
   wrong-gene errors from the abstract alone.
 
 # NOTES
+
+## 2026-11-01 (session 3: batch 3)
+
+Batch 3 selected by three deterministic screens rather than by row count, so
+that each gene tests a predicted failure shape instead of sampling at random.
+The screens and the fifteen genes are described under "Batch 3" above.
+
+**GONUTS has been retired.** gowiki.tamu.edu now returns HTTP 410 behind a
+page titled "GONUTS, the GO wiki, has been retired", pointing at
+geneontology.org instead; the Internet Archive has no snapshot of the CACAO
+paper or protein pages. Through the first two batches the site served a
+"temporarily offline while we perform upgrades" notice, so the plan had been
+to revisit abstract-only rows once it came back. That is no longer possible,
+and the three follow-ups above that depended on it have been rewritten: the
+programme's own record of what each student read is gone for good, and every
+row has to stand or fall on the cited paper. This also removes the only
+route to distinguishing a student's reasoning from the annotation it
+produced, which is a real limit on what this project can conclude about the
+programme as opposed to about its output.
+
+**A hedged qualifier is not automatically a defect.** All ten of phi29's
+2025-dated CACAO rows use `acts_upstream_of_or_within_positive_effect`, where
+the programme's 2012-2017 rows use `involved_in`, `enables` or `part_of`, so
+screen 3's shape is a campaign-wide habit rather than a per-row judgement. On
+phi29 gene 17 the hedge turned out to fit the evidence better than
+`involved_in` would have: the support is a bulk nonsense-mutant screen, and
+the modern literature shows much of the sus17 replication defect is indirect.
+The taxonomy therefore needs to separate a regressed qualifier from an honest
+one, and screen-3 hits have to be judged on the evidence behind the row.
 
 ## 2026-10-29 (session 2: batch 2)
 
@@ -529,6 +564,7 @@ Method notes for later batches:
 
 - **GONUTS is offline**, so the student-evidence check that the plan relies on
   is unavailable. Revisit the abstract-only rows when it returns.
+  (Superseded 2026-11-01: it is retired, not offline, and will not return.)
 - **No deep-research provider keys in this container**, so reviews were done
   from cached publications plus PubMed/PMC and web search. Recorded in each
   notes file; no `-deep-research-*.md` files were created.
@@ -551,7 +587,8 @@ UNDECIDED 7, TOO_GENERAL 2, not in review 5.
 The nine removals: swrD, fliY (PMID:25313396), phage T4 E lysozyme GO:0003796,
 yeast HAP4 GO:0098803, LRO1 GO:0046027 (ISO), spoVAD GO:0031160, ECOLI traB
 GO:0016887, lambda Rz1 GO:0045861, ARATH DELTA-OAT GO:0051646. Each should be
-rechecked against its GONUTS record before the failure taxonomy is fixed.
+rechecked before the failure taxonomy is fixed. The GONUTS records this
+originally meant to consult are gone, so the recheck has to go to the papers.
 
 Later the same day, at the user's request, the review order was switched to
 microbes first. Added `fetch_taxon_groups.py`, which assigns every taxon to a
