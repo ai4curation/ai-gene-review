@@ -4,9 +4,22 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, BIOLOGY_DOMAIN]
 species: [human, mouse, DROME, SCHPO, worm]
 genes: [TFRC, CLTC, AP2M1, DNM2, ATP6V1A, EHD1, TSG101, RAB7A, Rab7, CTSD, APOB, LDLR, PCSK9, LIPA, ASGR1, ASGR2, ALB, FCGRT, B2M, SNAP23, SORL1, VPS35, VPS26A, VPS29, Vps35, Vps26, Vps29, RAB9A, AP1B1, AP1G1, apl2, apb-1, dpy-23]
+manifest:
+  slides:
+    - href: ABM_TRAFFICKING/slides/ABM_TRAFFICKING-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/RvU9kSUAsvoz17LfaKWAXw
+      title: Executable modules brief
+      description: AI generated
+    - href: https://claude.ai/artifact/6c2seZotkYZQ22pTQxPvMR
+      title: Deliverome project brief
+      description: AI generated
 ---
 
 # Agent-Based Modeling of Intracellular Trafficking
+
+**Bottom line:** Boolean networks represent pathway activities as binary `ON`/`OFF` states and cannot conserve discrete cargo particles or quantify how competing sorting branches split flux. This project extends the [Executable Models](EXECUTABLE_MODELS.md) architecture ("the module is the model") to **Agent-Based Modeling (`model_type: AGENT_BASED`, `derivation: DERIVED_FROM_MODULE`)**: `module_to_abm()` compiles a curated `ModuleReview` YAML directly into a particle-conserving cohort simulator ($N = 100, T = 24$) with no external rule files, and `just validate-modules` checks every perturbation scenario (`expected_active`, `expected_inactive`, `expected_outcome_order`) in CI. Five curated intracellular trafficking modules — spanning canonical endosomal routing and LNP escape (`endosomal_trafficking_routing`), hepatocyte GalNAc-conjugate delivery (`asgr_galnac_hepatocyte_delivery`), FcRn pH-dependent IgG and albumin salvage (`fcrn_igg_albumin_salvage_transcytosis`), retromer endosome-to-TGN retrieval (`retromer_endosome_to_tgn_retrieval`), and LDL receptor endocytosis (`ldl_receptor_mediated_endocytosis`) — are backed by 33 gene reviews across 5 species ([Deliverome](DELIVEROME.md)).
 
 Can a curated pathway module simulate **where a cohort of cargo particles goes, how competing sorting branches split flux, and where cargo accumulates when a trafficking step is perturbed** — without authoring a separate simulation script?
 
