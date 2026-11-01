@@ -102,3 +102,85 @@ Not verifiable without the full text:
   S. pombe in the abstract.
 - Not added: group I / group II intron splicing terms; the abstract shows an
   intron-dependent mRNA level defect, not accumulation of unspliced precursors.
+
+## 2026-11-01 session 2: full text of PMID:38604460
+
+The user supplied the PDF. The full text is now in `publications/PMID_38604460.md`
+(PDF extraction; supplementary figures S1-S3 and tables not available). All quotes
+below are exact substrings of the cached file; the extraction joined hyphenated
+line breaks, so some words appear joined, e.g. "intronretaining".
+
+### Answers to the six open questions from session 1
+
+1. **Which subunit and which assay.** Sucrose gradients (DDM, 10 mM MgCl2) probed with
+   mtSSU Mrp5 and Rsm24 and mtLSU Mrpl16, and steady-state westerns adding Mrpl40.
+   Assembled mitoribosomes are reduced, and proteins of **both** subunits are reduced
+   [PMID:38604460 "Deletion of spmss116 impaired the formation of the mitoribosome (Fig. 6B)."]
+   [PMID:38604460 "Deletion of spmss116 led to a statistically significant reduction in levels of two mtSSU proteins Mrp5 and Rsm24, and two mtLSU proteins Mrpl40 and"].
+   The same holds with intronless mtDNA (Fig. S3). mt-rRNA levels are unchanged
+   [PMID:38604460 "the levels of other mt-mRNAs and mt-rRNAs were unchanged or slightly increased in Δspmss116 cells"].
+   Neither GO:1902775 (LSU) nor GO:0180026 (SSU) is specifically supported.
+2. **Physical association.** None was detected; this is the opposite of budding yeast
+   [PMID:38604460 "The results showed that spMss116-Myc did not cosediment with the mtSSU, mtLSU, or mitoribosome (Fig. 6A)."].
+3. **Unspliced precursors.** Yes. RT-PCR shows intron-retaining cox1 (group I introns
+   cox1-I1b, cox1-I2b) and cob1 (group II intron cob1-I1) precursors increased
+   [PMID:38604460 "RT-PCR with cox1 and cob1 intron primers revealed that the levels of intronretaining cox1 and cob1 pre-mRNAs were increased in Δspmss116 cells"].
+   The authors do not claim a splicing role, because the maturases come from
+   mitochondrial translation
+   [PMID:38604460 "relies on their intron-encoded proteins, whose synthesis was dependent on mitochondrial translation."]
+   [PMID:38604460 "It remains to be determined whether spMss116 participates in splicing of mitochondrial introns."].
+4. **Catalytic-dead mutants.** Not tested. The only rescue is overexpressed wild-type
+   spMss116-HA. Budding-yeast Mss116 does **not** rescue
+   [PMID:38604460 "overexpression of spmss116 but not scmss116 was able to restore growth of Δspmss116 cells on respiratory medium"].
+5. **Global or specific translation defect.** Global: all mtDNA-encoded products fall
+   in [35S] labelling with anisomycin, in both mtDNA backgrounds
+   [PMID:38604460 "we demonstrate that the DEAD-box helicase spMss116 is required for global mitochondrial translation in S. pombe."].
+   The budding-yeast Pet309/COX1-specific role is assigned in fission yeast to Mrh5C
+   [PMID:38604460 "Thus, it appears that in S. pombe, Mrh5C assumes the role of the scMss116-Pet309 complex in mediating cox1 mRNA translation in S. cerevisiae."].
+6. **Localisation.** There are dedicated experiments: Myc-tagged protein in purified
+   mitochondria, controlled with Mcp60 (matrix), Sla1 (nuclear) and Tom20 (outer
+   membrane); protease protection; carbonate extraction
+   [PMID:38604460 "spMss116 was protected from proteinase K digestion in the absence of Triton X-100 (Fig. 1B), demonstrating that spMss116 is localized inside the mitochondria."]
+   [PMID:38604460 "Most of spMss116 was found in the soluble fraction after treatment with Na2CO3, with a small amount in the pellet fraction (Fig. 1C)."].
+   No IMS marker or mitoplasts were used, so matrix versus IMS is not resolved. The
+   authors suggest a peripheral membrane protein
+   [PMID:38604460 "These results suggest that spMss116 might be mitochondrial peripheral membrane protein."].
+
+### Other facts
+
+- S. pombe has **four** mitochondrial DEAD-box proteins (Mrh5, Rpm2, Mss116, Irc3).
+  This corrects the session-1 statement "one of only two". Herbert 2021's "only one
+  other" refers to the narrower class those authors considered.
+- S. pombe mtDNA encodes an mtSSU protein
+  [PMID:38604460 "a small mitochondrial ribosomal (mitoribosome) subunit (mtSSU) protein"].
+  A primary translation defect could therefore itself impair assembly. The study did
+  not relocate this gene to the nucleus, as De Silva 2017 did with VAR1 in budding
+  yeast.
+- The authors' own conclusion is weaker than the title
+  [PMID:38604460 "Our study also suggests that spMss116 may participate in mitoribosome assembly."].
+
+### Revised decisions
+
+- **NEW GO:0061668 mitochondrial ribosome assembly, withdrawn.** The data establish
+  necessity only. There is no co-sedimentation, no catalytic-mutant test, and
+  assembly and translation cannot be ordered causally because of the mtDNA-encoded
+  mtSSU protein. The authors themselves say "may participate". Recorded as a
+  suggested question instead. GOA (2026) has no GO rows from this paper; whether
+  PomBase captured it as FYPO phenotypes only was not checked.
+- **GO:0032543 mitochondrial translation, still not added.** It has the same
+  necessity-only problem; this is now recorded in the core function description
+  rather than as a term.
+- **GO:0090615 mitochondrial mRNA processing (ISS): ACCEPT → UNDECIDED.** The
+  precursor accumulation is real but can be explained indirectly through loss of the
+  maturases. The authors leave it open, and functional divergence from budding yeast
+  is documented. No group I or group II splicing terms are added.
+- **Mitochondrion IDA.** I tried a NEW row, but validation forbids NEW for a term
+  already in GOA (HDA, IBA). The IDA evidence is now folded into the HDA row's reason,
+  and a gene-specific IDA row is noted as a curation suggestion.
+- **Matrix rows (IEA, ISS): ACCEPT kept.** The lines are now the transit peptide plus
+  the protease-protected, carbonate-soluble behaviour; the reasons state that
+  matrix versus IMS was not resolved experimentally.
+- **Core function** location changed from mitochondrial matrix to mitochondrion,
+  because the activity's site is shown only at organelle level. The process terms
+  were removed from the core function, and a BIOLOGY knowledge gap was added
+  (unknown target and step).
