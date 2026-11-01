@@ -74,6 +74,7 @@ class GeneRecord:
     panther_families: frozenset[str]
     gene_names: frozenset[str]
     cited_pmids: frozenset[str]
+    protein_names: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -118,8 +119,29 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
         names.update(n.strip() for n in m.group(1).split(","))
     pmids = frozenset(re.findall(r"PubMed=(\d+)", text))
     return GeneRecord(
-        accession, taxon, frozenset(families), frozenset(n for n in names if n), pmids
+        accession,
+        taxon,
+        frozenset(families),
+        frozenset(n for n in names if n),
+        pmids,
+        parse_protein_names(text),
     )
+
+
+def parse_protein_names(text: str) -> frozenset[str]:
+    """Recommended, alternative and submitted protein names from ``DE`` lines.
+
+    >>> sorted(parse_protein_names(
+    ...     "DE   RecName: Full=Aurora kinase C;\\nDE            EC=2.7.11.1;\\n"
+    ...     "DE   AltName: Full=Aurora 3 {ECO:0000303};\\nDE            Short=ARK-3;\\n"))
+    ['ARK-3', 'Aurora 3', 'Aurora kinase C']
+    """
+    names = set()
+    for line in text.splitlines():
+        if line.startswith("DE   "):
+            for m in re.finditer(r"(?:Full|Short)=([^;{]+)", line):
+                names.add(m.group(1).strip())
+    return frozenset(n for n in names if n and "uncharacterized" not in n.lower())
 
 
 def _norm(token: str) -> str:
@@ -127,19 +149,57 @@ def _norm(token: str) -> str:
     return re.sub(r"[^A-Z0-9]", "", token.upper())
 
 
-def named_in_abstract(
-    pmid: str, names: Iterable[str], publications_dir: Path = PUBLICATIONS_DIR
-) -> bool | None:
-    """Whether the cached title or abstract names one of the gene's names.
+def _phrase(text: str) -> str:
+    """Lower-case and turn punctuation into spaces, so "Filamin-C" reads "filamin c"."""
+    return " " + " ".join(re.sub(r"[^a-z0-9,]+", " ", text.lower()).split()) + " "
 
-    Returns None when the paper is not cached. Matching is per whitespace token
-    after normalisation, and names shorter than three characters are ignored.
+
+def _names_protein(text: str, name: str) -> bool:
+    """Whether a protein name occurs in phrase-normalised text.
+
+    A name whose last word is a short qualifier ("Aurora kinase C") also matches an
+    enumeration of the family ("aurora kinases A, B, and C").
+
+    >>> t = _phrase("The aurora kinases A, B, and C are serine/threonine kinases.")
+    >>> _names_protein(t, "Aurora kinase C"), _names_protein(t, "Aurora kinase D")
+    (True, False)
+    >>> _names_protein(_phrase("expression of Filamin C in muscle"), "Filamin-C")
+    True
+    """
+    words = _phrase(name).replace(",", " ").split()
+    if len(" ".join(words)) < 6:
+        return False
+    if " " + " ".join(words) + " " in text.replace(",", " ").replace("  ", " "):
+        return True
+    if len(words) >= 2 and len(words[-1]) <= 2:
+        stem = r"\s+".join(re.escape(w) for w in words[:-1])
+        # _phrase leaves single spaces between words and keeps commas attached,
+        # so each listed item is a whole 1-2 character word, e.g. "a, b, and c".
+        item = r"[a-z0-9]{1,2},? (?:(?:and|or) )?"
+        pattern = rf" {stem}s? (?:{item})*{re.escape(words[-1])},? "
+        return re.search(pattern, text) is not None
+    return False
+
+
+def named_in_abstract(
+    pmid: str,
+    names: Iterable[str],
+    publications_dir: Path = PUBLICATIONS_DIR,
+    protein_names: Iterable[str] = (),
+) -> bool | None:
+    """Whether the cached title or abstract names the gene or its protein.
+
+    Returns None when the paper is not cached. Gene names are matched per
+    whitespace token after normalisation (names shorter than three characters are
+    ignored); protein names are matched as phrases.
 
     >>> import tempfile
     >>> d = Path(tempfile.mkdtemp())
-    >>> _ = (d / "PMID_1.md").write_text("title: X\\n## Abstract\\nGFP-tagged GDI/D4 was diffuse.\\n## Full Text\\nCSGALNACT1")
+    >>> _ = (d / "PMID_1.md").write_text("title: X\\n## Abstract\\nGFP-tagged GDI/D4 was diffuse; aurora kinases A, B, and C.\\n## Full Text\\nCSGALNACT1")
     >>> named_in_abstract("1", ["GDID4"], d), named_in_abstract("1", ["CSGALNACT1"], d), named_in_abstract("2", ["X"], d)
     (True, False, None)
+    >>> named_in_abstract("1", ["AURKC"], d, ["Aurora kinase C"])
+    True
     """
     path = publications_dir / f"PMID_{pmid}.md"
     if not path.exists():
@@ -147,7 +207,10 @@ def named_in_abstract(
     text = path.read_text(errors="replace").split("\n## Full Text", 1)[0]
     tokens = {_norm(tok) for tok in text.split()}
     wanted = {_norm(n) for n in names}
-    return bool({w for w in wanted if len(w) >= 3} & tokens)
+    if {w for w in wanted if len(w) >= 3} & tokens:
+        return True
+    phrased = _phrase(text)
+    return any(_names_protein(phrased, n) for n in protein_names)
 
 
 def score_lead(
@@ -335,7 +398,10 @@ def find_leads(
                 own,
                 others,
                 named_in_abstract(
-                    row["REFERENCE"][5:], own.gene_names, publications_dir
+                    row["REFERENCE"][5:],
+                    own.gene_names,
+                    publications_dir,
+                    own.protein_names,
                 ),
             )
             leads.append(

@@ -188,3 +188,16 @@ def test_gene_names_wrapping_across_gn_lines_are_parsed():
     assert {"NLRP3", "NALP3", "PYPAF1", "CIAS1"} <= parse_uniprot_flatfile(
         text
     ).gene_names
+
+
+def test_protein_name_in_abstract_penalises_aurkc_lead():
+    """The Aurora A review names "aurora kinases A, B, and C", so AURKC is named.
+
+    Before protein names were matched, this TAS citation of a review covering all
+    three Aurora kinases ranked in the top tier.
+    """
+    aurka = CitingEntry("O14965", "AURKA", "9606", frozenset({"PTHR24350"}))
+    rows = find_leads([GENES / "human" / "AURKC"], citing={"19774610": [aurka]})
+    hits = [r for r in rows if r["reference"] == "PMID:19774610"]
+    assert hits
+    assert all("gene_named_in_abstract" in r["reasons"] for r in hits)
