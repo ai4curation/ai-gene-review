@@ -2,7 +2,7 @@
 title: "MOD gene descriptions as review input"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
-species: [worm]
+species: [worm, yeast]
 autolink_exclude: [MOD, MODS, GET3]
 ---
 
@@ -253,7 +253,36 @@ results were spot-checked (pek-1, lrx-1, sem-5).
   curated texts on disk. A first version that matched on the opening alone
   wrongly rejected SGD's CAF120 ("Part of the CCR4-NOT ... complex; involved
   in ..."), and was fixed before any file used it.
-- Next: score the 873 incomplete files, then act on their findings, as for worm.
+- All 890 yeast files are now `COMPLETE`. The 873 incomplete files were scored by
+  16 parallel agents, calibrated on the worm examples and on the yeast pilot. Sources
+  that kept a pilot review were not rescored, and each batch was schema-checked.
+  Spot-checked findings (GTT2, IRC24, RIB7) hold against the source texts.
+
+| Source (yeast genes) | Utility | Completeness | Specificity | Mean correctness |
+|---|---|---|---|---|
+| SGD curated (890) | 4.1 | 4.0 | 4.0 | **4.8** |
+| UniProt FUNCTION (798) | 3.7 | 3.5 | 3.8 | 4.6 |
+| Alliance automated (890) | 2.9 | 3.1 | 2.9 | 4.4 |
+
+  The test the worm run could not make: **SGD's maintained text is the best source**.
+  It scores above UniProt on every rubric, whereas WormBase scored below it (4.2
+  against 4.5). Only two SGD texts score 2 or less on correctness:
+  - ALG11: Man5 rather than Man3-to-Man5.
+  - RIB7: called a deaminase; it is the reductase.
+
+  Twelve WormBase texts did. Concordance is a mean 4.48 (worm 4.25). The 354
+  findings (182 gaps, 163 discrepancies, 9 insights) are in
+  [yeast-findings.yaml](MOD_DESCRIPTIONS/yeast-findings.yaml). Most discrepancies are
+  dated **UniProt** text, for example:
+  - ACP1: a Complex I subunit, in a species that has no Complex I.
+  - ACH1 and VIP1: claims transferred from mammalian or S. pombe homologues.
+  - MVD1, ERG12, ERG19 and ERG20: mevalonate pathway steps placed in the vacuole; the reviews have these enzymes in the cytosol.
+
+  Others are automated-text picks of terms the reviews reject: kinase activity
+  for the KDX1 and CAF120 pseudo- or non-kinases, and THI3 decarboxylase activity.
+  SGD has two self-referencing copy errors: GTT2 "overlaps with Gtt2p", and IRC24
+  is "a putative paralog of IRC24".
+- Next: act on the yeast gap and discrepancy findings, as for worm.
 
 ## Recommendations
 
@@ -283,5 +312,6 @@ results were spot-checked (pek-1, lrx-1, sem-5).
 - [x] Record the contradicted MOD and UniProt statements as `source_defects`
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
-- [ ] Yeast: score descriptions and act on findings
+- [x] Yeast: score descriptions (890 COMPLETE)
+- [ ] Yeast: act on gap and discrepancy findings
 - [ ] Fly (FlyBase) and mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
