@@ -2,8 +2,8 @@
 title: "Regulation Sign Errors: Activator vs Inhibitor"
 maturity: SCOPING
 tags: [EVALUATION]
-species: [human, DROME, ARATH, worm]
-genes: [GNAI1, GNAI2, NTSR1, NLRP3, LRP5, CD47, CLYBL, CIB2, MCL1, ced-9, FLC, SVP]
+species: [human, mouse, rat, yeast, DROME, ARATH, worm]
+genes: [GNAI1, GNAI2, NTSR1, NLRP3, LRP5, CD47, CLYBL, CIB2, MCL1, ced-9, FLC, SVP, ADIPOQ, CFLAR, BAX, Cd48, Pck1]
 ---
 
 # Regulation Sign Errors: Activator vs Inhibitor
@@ -24,9 +24,9 @@ replacement is the same term with the opposite sign
 REMOVE, UNDECIDED or a sign-neutral parent are not in that count; a keyword pass over
 review reasons ([sign_reason_census.yaml](REGULATION_SIGN/sign_reason_census.yaml)) gives
 152 candidate rows that still need screening by hand, since it also catches reasons
-that merely discuss direction. A third, structured source already exists: reviewers
-have tagged `failure_modes: [REGULATORY_SIGN_INVERSION]` in the `propagation_review` of
-**88 rows across 63 review files** (a grep count, not yet analysed).
+that merely discuss direction. A third, structured source is the
+`REGULATORY_SIGN_INVERSION` failure mode reviewers already record in
+`propagation_review`: **90 rows across 63 review files**, harvested below.
 
 ## Principle: sign is judged in vivo
 
@@ -78,6 +78,75 @@ separate axis with a separate failure mode:
 5. **Family-level sign defaults.** Gα proteins split into activating (Gs) and inhibiting
    (Gi/o) branches of the same pathway; a propagation that ignores the split imports
    the wrong half.
+6. **Participant for an inhibitor.** An unsigned process term placed on a PAINT node
+   whose family holds both effectors and inhibitors of the process lands on the
+   inhibitors as if they took part (BCL2 family, CFLAR). The harvest below finds 28 such
+   rows, 15 of them IBA.
+
+## Harvest of `REGULATORY_SIGN_INVERSION` rows
+
+[sign_inversion_harvest.py](REGULATION_SIGN/sign_inversion_harvest.py) collects every
+`existing_annotations` row whose `propagation_review.failure_modes` includes
+`REGULATORY_SIGN_INVERSION`, with its action, replacement, root cause and sources
+([sign_inversion_harvest.yaml](REGULATION_SIGN/sign_inversion_harvest.yaml)). Because
+the failure mode lives on `propagation_review`, every row is a propagated annotation:
+ISO 40, IBA 23, IEA 16, ISS 10, plus one IGI.
+
+The tagged rows have two structural shapes, distinguished by whether the original
+term itself carries a direction:
+
+| Shape | Rows | Dominant evidence | What went wrong |
+|---|---|---|---|
+| **Signed term, wrong sign** | 62 | ISO 29, IEA 15, ISS 9, IBA 8 | A `positive`/`negative`, activating/inhibiting or similar term transferred with the opposite direction to the target's own biology |
+| **Participant for an inhibitor** | 28 | IBA 15, ISO 11 | An unsigned process or activity (`apoptotic process`, `mitochondrial fusion`, `transcytosis`, `heterochromatin formation`) given to a gene that *opposes* it |
+
+The two shapes point to different mechanisms:
+
+- **Signed rows lean on orthology transfers to rodents.** ISO is the largest evidence
+  class among signed rows (29 of 62), and 40 of all 90 rows are rat or mouse ISO rows, transferred from a human (or other rodent) annotation; the sign
+  error is inherited from, or created by, that single source. These are where tracing
+  the donor annotation (next step below) will pay off, and where an upstream fix to
+  one human row would correct several rodent rows.
+- **Participant-for-inhibitor rows are mostly PAINT nodes over mixed families.**
+  15 of the 28 are IBA, from families that contain both effectors and inhibitors of
+  the same process: the BCL2 family (MCL1 `release of cytochrome c`, `intrinsic
+  apoptotic signaling`, `channel activity`; BAX `mitochondrial fusion`), CFLAR
+  (`apoptotic process`, `extrinsic apoptotic signaling`), LONRF2, plant EPF2 and
+  SERK4, fly NijA, worm sta-1 and yeast RPD3. This is the case the enum describes
+  ("family contains activators and inhibitors"), and it adds a sixth origin to the
+  hypotheses above.
+
+How reviewers resolved them:
+
+| Correction | Rows |
+|---|---|
+| No replacement (REMOVE 19, MARK_AS_OVER_ANNOTATED 13, UNDECIDED 10, KEEP_AS_NON_CORE 2) | 44 |
+| MODIFY to another kind of term (mostly participant → `negative regulation of` the process) | 24 |
+| Opposite-sign sibling (15 MODIFY; one REMOVE, naked mole-rat Cgas, also names the flipped term) | 16 |
+| MODIFY to the sign-neutral `regulation of` parent | 6 |
+
+Root causes are split: `SOURCE_BAD` 34 (the donor annotation itself is wrong),
+`TERM_SCOPING_PROBLEM` 25, `PROPAGATION_BAD` 16 (sound donor, wrong target),
+`UNRESOLVED` 10. Only **16 of the 90 rows carry a `source_defects` entry**, so most of
+the `SOURCE_BAD` cases have not yet been routed upstream by `just
+export-source-defects`. The most frequent co-occurring failure mode is
+`ROLE_CONFLATION` (16), which tracks the participant-for-inhibitor shape.
+
+Cases worth singling out:
+
+- **Both signs from the same evidence.** Human ADIPOQ carries `positive` and `negative
+  regulation of cold-induced thermogenesis` cited to the same two papers, a full 2×2
+  cross-product that mouse Adipoq repeats; reviewers removed the unsupported pair.
+- **Species divergence in direction.** Mouse and rat Cd48: CD48-2B4 activates human NK
+  cells but inhibits rodent ones, so the human-seeded `natural killer cell activation`
+  does not transfer.
+- **GO-CAM causal chains.** Mouse Pck1 rows (`SREBP-SCAP complex retention in ER`,
+  `positive regulation of cholesterol biosynthetic process`) derive from a human GO-CAM
+  in which PCK1 *negatively* regulates INSIG; the derived process rows do not carry
+  that negative edge. This makes the GO-CAM cross-check below concrete.
+- **Neutral is sometimes the right answer.** S. pombe zds1, mouse Ptk7, yeast CDC55 and
+  ROF1 went to the unsigned parent because the direction is context-dependent or
+  untested in the target, not because the opposite sign is established.
 
 ## Seed cases
 
@@ -116,7 +185,8 @@ sits on a PAINT node and every descendant inherits it.
 - [x] Seed census of sign-flip MODIFYs across all reviews (35 rows / 25 genes)
 - [x] Keyword census of review reasons mentioning sign/direction (152 candidate rows, unscreened)
 - [ ] Screen the keyword census by hand; classify each true sign issue by origin hypothesis
-- [ ] Harvest the 88 `REGULATORY_SIGN_INVERSION` propagation_review rows (63 files) into a census
+- [x] Harvest the `REGULATORY_SIGN_INVERSION` propagation_review rows (90 rows / 63 files)
+- [ ] Add `source_defects` to the `SOURCE_BAD` harvest rows that lack one (74 of 90 rows have none)
 - [ ] Look for other sign calls held UNDECIDED (or ACCEPTed) on in vitro evidence alone
 - [ ] Extend the flip census to REMOVE/UNDECIDED rows and to MF activator/inhibitor pairs
 - [ ] Trace propagated rows (IEA/IBA/ISS) to their donor annotations
@@ -141,3 +211,13 @@ Principle added: sign is judged on in vivo evidence. GNAI1 `GO:0007189` changed 
 UNDECIDED to REMOVE on that basis. Found that `PropagationFailureModeEnum` already has
 `REGULATORY_SIGN_INVERSION` ("Family contains activators and inhibitors, and a
 positive/negative regulatory term leaks across members"), used on 88 rows.
+
+## 2026-11-01
+
+Harvested the `REGULATORY_SIGN_INVERSION` rows: 90 rows in 63 files (GNAI1 and one other
+added since the earlier grep). Two shapes: 62 rows with a signed term carrying the wrong
+direction, mostly rodent ISO transfers; 28 rows where an inhibitor was annotated as a
+participant, mostly IBA over mixed families. Added that second shape as origin
+hypothesis 6. Only 16 rows have a `source_defects` entry. The harvest's `original_signed`
+flag is a regex over the term label, and its `correction` classes compare labels, so
+both are aids to reading the table rather than curated judgements.
