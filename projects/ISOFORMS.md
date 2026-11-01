@@ -2,7 +2,7 @@
 title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, TPM3, DSCAM, FGFR2, PKM, STAT3]
+genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, TPM3, DSCAM, FGFR2, PKM, STAT3, SYNGAP1, RASAL2]
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv
@@ -103,6 +103,44 @@ This project should:
 - Canonical annotations (no isoform suffix) have this field omitted
 
 **Important caveat**: Just because an annotation was made on a specific isoform doesn't necessarily mean the function is isoform-specific. Researchers may have used a particular isoform for convenience. The `isoform` field indicates *what was tested*, not necessarily *what is unique to that isoform*.
+
+## Where UniProt and the literature disagree about isoforms
+
+A review sometimes finds that the isoforms the literature describes do not match
+the isoforms the UniProt entry records. These cases matter for annotation: a
+function stated for "the protein" may belong to an isoform the entry does not
+contain, and residue numbers in a paper may refer to an isoform that is not the
+displayed sequence. Cases found so far:
+
+| Gene | UniProt entry | What the literature says | What UniProt records | Kind of mismatch |
+|---|---|---|---|---|
+| SYNGAP1 | Q96PV0 | Four C-terminal splice forms (alpha1, alpha2, beta, gamma); only alpha1 ends in the class I PDZ ligand -QTRV that binds PSD-95 (PMID:32579114) | Four named isoforms, none ending in -QTRV. The alpha1 C-terminus exists as RefSeq NP_001123538.1 (1292 aa), which the entry cross-references without assigning it to an isoform, and as unreviewed entries B7ZCA0 and A0A2R8Y6T2 | Literature isoform missing from the reviewed entry |
+| RASAL2 | Q9UJF2 | Phosphosites S351 (PMID:33563064) and Ser237 (PMID:33096593) | Both are serines only in isoform 2 (Q9UJF2-2, 1280 aa, the RefSeq NP_733793.2 form); in the displayed sequence (Q9UJF2) they are Ser203 and Ser89 | Residue numbering uses a non-displayed isoform |
+
+Both were found while reviewing the SynGAP RasGAP subfamily (PRs #5338, #5364
+and the SYNGAP1 follow-up). In each case the error propagated into prose: the
+SYNGAP1 description attributed the PDZ ligand to the whole protein, and a deep-
+research report placed RASAL2 S351 in the PH domain, which is correct for
+neither numbering.
+
+### How these are recorded
+
+Each kind of mismatch has a structured home, so the cases can be counted and
+the ones that are UniProt's to fix can be reported to UniProt:
+
+1. **A literature isoform missing from UniProt** is a `functional_isoforms`
+   entry whose `maps_to` names the sequences that carry it (`REFSEQ_PROTEIN`,
+   `UNIPROTKB_UNREVIEWED`) and has no `UNIPROT_ISOFORM` mapping, plus a
+   `source_defects` item (`MISSING_ISOFORM`, resource `UNIPROT`,
+   `requested_change: ADD`). `just export-source-defects` writes these into the
+   report for UniProt. SYNGAP1 `SYNGAP1_ALPHA1` is the first.
+2. **Residue numbers given on a non-displayed isoform** are not an error in
+   UniProt, so they are not source defects. The finding carries
+   `residue_mappings`: the residue as the paper numbers it (`as_reported`, e.g.
+   `UniProtKB:Q9UJF2-2` 351 S) and the same residue in the displayed sequence
+   (`canonical`, `UniProtKB:Q9UJF2` 203 S). The validator resolves both against
+   the real sequences and fails a number read on the wrong one. The two RASAL2
+   findings are the first.
 
 ## References
 

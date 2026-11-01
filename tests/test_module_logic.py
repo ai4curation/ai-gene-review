@@ -14,8 +14,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
+from ai_gene_review.module_gene_symbols import descriptor_symbol
+from ai_gene_review.render_modules import as_list
 from ai_gene_review.module_logic import (
+    _uniprot_from_gene,
+    And,
     Atom,
     compile_module,
     compile_module_file,
@@ -29,7 +34,11 @@ from ai_gene_review.module_logic import (
     abduce,
 )
 
-GLUCONEO_HUMAN = Path("modules/gluconeogenesis_human.yaml")
+#: Anchor module paths to the repository, not the invoking cwd, so the
+#: corpus-wide tests below hold wherever pytest is started from.
+MODULES_DIR = Path(__file__).parents[1] / "modules"
+
+GLUCONEO_HUMAN = MODULES_DIR / "gluconeogenesis_human.yaml"
 
 
 def _annoton(aid: str, symbol: str, acc: str) -> dict:
@@ -387,5 +396,306 @@ def test_atom_carries_step_function_ids():
 
 
 def test_serine_module_steps_have_activities():
-    atoms = list(iter_atoms(compile_module_file("modules/phosphorylated_serine_biosynthesis.yaml")))
+    atoms = list(iter_atoms(compile_module_file(MODULES_DIR / "phosphorylated_serine_biosynthesis.yaml")))
     assert [a.function_ids for a in atoms] == [("GO:0004617",), ("GO:0004648",), ("GO:0036424",)]
+
+
+# --------------------------------------------------------------------------- #
+# Grounding: a participant may ground through gene or gene_product            #
+# --------------------------------------------------------------------------- #
+
+
+def test_gene_product_participant_is_grounded():
+    """An ANY_WITH_FUNCTION step's exemplar `gene_product` grounds its atom.
+
+    Reading only `participant.gene` left such steps with no symbol and no
+    accession, so no genome- or expression-keyed oracle could ever satisfy
+    them and their modules were unsatisfiable in every context.
+    """
+    doc = {"module": {"id": "m", "annotons": [{
+        "id": "holin",
+        "participant": {
+            "selector_type": "ANY_WITH_FUNCTION",
+            "required_function": {"term": {"id": "GO:0140911"}},
+            "gene_product": {"preferred_term": "t (Bacteriophage T4)",
+                             "term": {"id": "UniProtKB:P06808"}},
+        },
+    }]}}
+    (atom,) = list(iter_atoms(compile_module(doc)))
+    assert atom.uniprot == "P06808"
+    assert atom.gene_symbol == "t"
+
+
+def test_explicit_gene_takes_precedence_over_gene_product():
+    doc = {"module": {"id": "m", "annotons": [{
+        "id": "a",
+        "participant": {"gene": {"preferred_term": "A", "term": {"id": "UniProtKB:P1"}},
+                        "gene_product": {"preferred_term": "B",
+                                         "term": {"id": "UniProtKB:P2"}}},
+    }]}}
+    (atom,) = list(iter_atoms(compile_module(doc)))
+    assert (atom.gene_symbol, atom.uniprot) == ("A", "P1")
+
+
+# --------------------------------------------------------------------------- #
+# No curated module may be vacuously satisfiable                              #
+# --------------------------------------------------------------------------- #
+
+
+def _curated_modules() -> list[Path]:
+    return sorted(MODULES_DIR.glob("*.yaml"))
+
+
+@pytest.fixture(scope="session")
+def curated_corpus() -> dict[Path, And]:
+    """Compile every curated module once; shared by the corpus-wide tests.
+
+    Compiling inlines `module_ref` targets, so doing it per test made the three
+    corpus tests re-walk the whole of `modules/` three times over.
+    """
+    return {path: compile_module_file(path) for path in _curated_modules()}
+
+
+def test_no_curated_module_is_satisfied_by_an_empty_context(curated_corpus):
+    """A module satisfied when nothing holds asserts no requirement at all.
+
+    This happens when every part of a module is marked `optional: true`:
+    `compile_module` turns an optional part into OR(filled, empty), so a node
+    whose parts are all optional admits the empty route and is vacuously true.
+    Alternative mechanisms belong in a `variant_sets`, whose selection requires
+    a branch. Caught `phage_single_gene_lysis`, which every genome satisfied,
+    including genomes encoding no lysis protein at all.
+    """
+    vacuous = [
+        path.name
+        for path, circuit in curated_corpus.items()
+        if list(iter_atoms(circuit)) and is_satisfied(circuit, lambda atom: False)
+    ]
+    assert vacuous == [], (
+        "these modules are satisfied by a context in which no step holds: "
+        + ", ".join(vacuous)
+    )
+
+
+@pytest.mark.parametrize("principal_executioners,expected", [
+    (set(), False),
+    ({"casp3_executioner"}, True),
+    ({"casp7_executioner"}, True),
+    ({"casp3_executioner", "casp7_executioner"}, True),
+])
+@pytest.mark.parametrize("optional_branches_present", [False, True])
+def test_apoptotic_execution_requires_a_principal_executioner(
+    curated_corpus, principal_executioners, expected, optional_branches_present,
+):
+    """Either principal caspase contributes; contextual branches cannot replace both."""
+    circuit = curated_corpus[MODULES_DIR / "apoptotic_execution_phase.yaml"]
+    principal_ids = {"casp3_executioner", "casp7_executioner"}
+
+    def holds(atom):
+        aid = atom.node_id.rsplit("#", 1)[-1]
+        if aid in principal_ids:
+            return aid in principal_executioners
+        return optional_branches_present
+
+    assert is_satisfied(circuit, holds) is expected
+
+
+# --------------------------------------------------------------------------- #
+# Grounding: an ungrounded atom is satisfiable by nothing                     #
+# --------------------------------------------------------------------------- #
+
+#: Participant slots `_atom_from_annoton` reads for a symbol or accession. An
+#: ungrounded atom whose participant carries a *usable* descriptor in one of
+#: these is an engine defect: the grounding was there to be read and was not.
+READ_GROUNDING_SLOTS = ("gene", "gene_product", "family")
+
+#: Slots the engine knowingly does not read, so an atom grounded only through
+#: one of them is expected to come out ungrounded until that is fixed.
+#: `protein_complex` holds its subunits one level deeper, at
+#: ``active_units[].participant.gene_product``, and reading them raises an
+#: any-of versus all-of question (a complex needs every subunit, while the
+#: representative slots are any-of) that wants a curator's decision.
+#: `ortholog_of`/`homolog_of` name a reference gene rather than the ortholog
+#: actually required in context, so grounding on it would assert the presence
+#: of the wrong gene. `domain` names a region, not a gene product. A
+#: participant with none of these slots, such as a descriptor-less
+#: ANY_WITH_FUNCTION step, needs an activity-keyed oracle.
+UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of", "domain")
+
+#: Every entity-grounding slot on `ParticipantSelector`, i.e. those whose range
+#: is a Descriptor naming *what plays the role* rather than constraining it
+#: (`required_function`, `required_domain` and `taxon` are constraints). Kept
+#: as the union of the two tuples above so that adding a slot to the schema and
+#: leaving it unread fails the partition test below rather than going silent --
+#: which is how `gene_product` was missed in the first place. The partition test
+#: recognises a new slot by its Descriptor range, so an entity slot added as a
+#: bare `string`/`uriorcurie` would still have to be listed here by hand.
+ENTITY_GROUNDING_SLOTS = (*READ_GROUNDING_SLOTS, *UNREAD_GROUNDING_SLOTS)
+
+
+def _descriptor_is_usable(slot: str, descriptor: dict) -> bool:
+    """True when a descriptor actually offers a symbol or a UniProt accession.
+
+    Separates an engine defect (a usable grounding that was dropped) from a
+    curation defect (a descriptor too ambiguous to ground, e.g. a label that is
+    not symbol-first and carries no accession). Both exist in the corpus.
+
+    Usability is evaluated on whichever descriptor actually holds the
+    grounding, which is why `family` reads its `representative_members` rather
+    than the family descriptor itself. **Any slot moved into
+    `READ_GROUNDING_SLOTS` needs its case added here in the same change.**
+    A `protein_complex` descriptor, for instance, usually carries a
+    non-symbol-first `preferred_term` and no `term`, so it evaluates False;
+    that is harmless only while the slot is unread. Reclassify it without
+    adding an `active_units` case and every complex whose subunits are
+    perfectly groundable reports as "unusable descriptor" instead of as the
+    dropped grounding it is -- silencing the population this guard exists for.
+    """
+    candidates = (
+        as_list(descriptor.get("representative_members"))
+        if slot == "family"
+        else [descriptor]
+    )
+    # Both predicates are the engine's own (`_symbol_from_gene` defers to
+    # `descriptor_symbol`), imported rather than restated: the guard's job is to
+    # agree with the engine about what counts as groundable, so a copy of the
+    # accession rule that silently stopped matching a broadened one would
+    # reclassify a dropped grounding as an unusable descriptor and go quiet --
+    # this PR's own bug class, inside the guard against it.
+    return any(
+        descriptor_symbol(candidate or {}) or _uniprot_from_gene(candidate or {})
+        for candidate in candidates
+    )
+
+
+def _participant_slots(document: dict) -> dict[str, dict[str, bool]]:
+    """Map each annoton id to the grounding slots it carries, and their usability."""
+    slots: dict[str, dict[str, bool]] = {}
+
+    def walk(node: dict) -> None:
+        for annoton in as_list(node.get("annotons")):
+            participant = annoton.get("participant") or {}
+            slots[str(annoton.get("id"))] = {
+                slot: _descriptor_is_usable(slot, participant[slot])
+                for slot in ENTITY_GROUNDING_SLOTS
+                if participant.get(slot)
+            }
+        for part in as_list(node.get("parts")):
+            walk(part["node"])
+        for variant_set in as_list(node.get("variant_sets")):
+            for variant in as_list(variant_set.get("variants")):
+                walk(variant)
+
+    walk(document["module"])
+    return slots
+
+
+@pytest.fixture(scope="session")
+def curated_slots() -> dict[Path, dict[str, dict[str, bool]]]:
+    """Parse each module once for its participants' grounding slots."""
+    return {
+        path: _participant_slots(yaml.safe_load(path.read_text()))
+        for path in _curated_modules()
+    }
+
+
+def test_every_participant_slot_is_classified_read_or_unread(curated_slots):
+    """A grounding slot the schema gains must be classified, not ignored.
+
+    `ENTITY_GROUNDING_SLOTS` is the union of the read and unread tuples, so a
+    new `ParticipantSelector` descriptor slot (a `paralog_of`, say) that the
+    engine does not read is invisible to the guard below until it is listed
+    here. This makes the omission itself fail.
+    """
+    schema = yaml.safe_load(
+        (MODULES_DIR.parent / "src/ai_gene_review/schema/gene_review.yaml").read_text()
+    )
+    attributes = schema["classes"]["ParticipantSelector"]["attributes"]
+    entity_slots = {
+        slot
+        for slot, spec in attributes.items()
+        if "Descriptor" in str(spec.get("range", ""))
+        and slot not in ("required_function", "required_domain", "taxon")
+    }
+    overlap = sorted(set(READ_GROUNDING_SLOTS) & set(UNREAD_GROUNDING_SLOTS))
+    assert overlap == [], (
+        "these slots are listed as both read and unread, so the guard below "
+        f"silently treats them as read: {overlap}"
+    )
+    assert entity_slots == set(ENTITY_GROUNDING_SLOTS), (
+        "ParticipantSelector's entity-grounding slots are not all classified; "
+        f"unclassified: {sorted(entity_slots - set(ENTITY_GROUNDING_SLOTS))}, "
+        f"stale: {sorted(set(ENTITY_GROUNDING_SLOTS) - entity_slots)}"
+    )
+
+
+def test_no_ungrounded_atom_comes_from_a_slot_the_engine_reads(
+    curated_corpus, curated_slots
+):
+    """Guard the direction the empty-context test structurally cannot see.
+
+    An empty context is *meant* to leave a module unsatisfied, so that test
+    passes just as happily when an atom is unsatisfiable by construction. This
+    is the dual guard, and it is deliberately keyed on the *cause* rather than
+    on a total: a count over a growing corpus would fail an unrelated PR that
+    merely adds a 195th `PROTEIN_COMPLEX` module, and name the wrong reason.
+    Keyed this way it stays quiet for the known-unread slots and fires the day
+    a slot the engine does read stops being read -- which is exactly how
+    `participant.gene_product` went missing, silently and with no validation
+    error.
+
+    Only *usable* descriptors count: one too ambiguous to yield a symbol and
+    carrying no accession is a curation defect, not a dropped grounding.
+    """
+    offenders = []
+    for path, circuit in curated_corpus.items():
+        slots = curated_slots[path]
+        for atom in iter_atoms(circuit):
+            if atom.is_grounded:
+                continue
+            if "#" in atom.node_id:
+                # Compiled from a `module_ref`; its own file covers it. Looking
+                # the bare id up in the referring document's slot map would
+                # report this file for another's atom on an id collision.
+                continue
+            annoton_id = atom.node_id
+            dropped = sorted(
+                slot
+                for slot, usable in slots.get(annoton_id, {}).items()
+                if usable and slot in READ_GROUNDING_SLOTS
+            )
+            if dropped:
+                offenders.append(f"{path.name}:{annoton_id} carries {dropped}")
+    assert offenders == [], (
+        "these steps are ungrounded although their participant carries a "
+        "usable descriptor in a slot the engine reads, so a grounding is being "
+        "dropped: " + ", ".join(offenders[:10])
+    )
+
+
+def test_report_corpus_grounding_counts(curated_corpus, capsys):
+    """Report, without asserting, how much of the corpus is still ungroundable.
+
+    These are the numbers quoted in PR #5333: they are visibility, not a
+    ratchet, because asserting a total over a growing corpus erodes into a
+    constant that gets bumped. The invariant that can only improve is the
+    cause-keyed test above.
+    """
+    ungrounded = [
+        atom
+        for circuit in curated_corpus.values()
+        for atom in iter_atoms(circuit)
+        if not atom.is_grounded
+    ]
+    dead = [
+        path.name
+        for path, circuit in curated_corpus.items()
+        if list(iter_atoms(circuit))
+        and not is_satisfied(circuit, lambda atom: atom.is_grounded)
+    ]
+    with capsys.disabled():
+        print(
+            f"\n  corpus grounding: {len(ungrounded)} ungrounded atoms; "
+            f"{len(dead)} of {len(curated_corpus)} modules unsatisfiable in "
+            "every context"
+        )
