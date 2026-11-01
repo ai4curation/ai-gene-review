@@ -32,3 +32,27 @@
 
 ### Falcon deep research (GSTU20-deep-research-falcon.md, appeared mid-session)
 - Consulted after the review was drafted. It frames GSTU20 as catalysing "or facilitating" the GSH-conjugation step, citing Zhang et al. 2022 and Choi et al. 2024 (Plant Physiol 196:1340, HY5-HDA9 repression of glucosinolate genes including GSTU20). Neither provides enzyme assays on the native intermediate (Choi 2024 is transcriptional regulation), so the no-NEW decision stands. Choi 2024 not cached/cited in the YAML.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (25) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+PMID17220357 and28223489 directly assay general GST activity and FIN219 interaction/adenylation stimulation. Both enzyme-binding rows now refine consistently to enzyme activation. PMID35145536 measures pathway mutants and profiles, not purified native activated-aldoxime conjugation: maintain that limitation. Generic GSH metabolism describes real conjugation; toxin catabolism is unresolved rather than assumed from family reputation. Unchecked organellar/apoplastic fractionation assignments remain undecided.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final consistency QA, 2026-10-26
+
+The FIN219-activation core location now matches the supported cytosol refinement already applied to its general cytoplasm annotations.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+Primary supplemental check for PMID:18431481: [annotated-protein workbook s005](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0001994.s005&type=supplementary), worksheet `supplTable5`, and [abundance workbook s003](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0001994.s003&type=supplementary), worksheet `supplTable1`, explicitly classify AT1G78370 as **"not plastid"**. Internal workbook titles and article table numbering differ, so file identifier plus locus are the stable join. These are direct reads of publisher supplements, not an inference from absent targeting signals. Working downloads are under `.cache/module-audit-logs/18431481-s003` and `18431481-s005`; source caches were not manually modified.
+
+Read PMID:28887381 full text, especially "Identification of True Membrane-associated Proteins" and Fig. 7: washed microsomes and sucrose gradients distinguish membrane association but do not separate organelles; named compartments are imported from SUBAcon/GFP knowledge. The paper states "no organelle fell in a single cluster". Mark the specific compartment claim as over-annotated while preserving proteomic detection. This applies projects/ORGANELLES.md at the actual resolution of the assay.
+
+Both GO:0019899 refinements now quote the FIN219–FIP1 adenylation-doubling result from PMID:28223489. PMID:18538804 remains abstract-only after force-fetch: GSTU20 apoplastic peptide identification/purity controls remain unresolved; unlike SUBAcon labels, this is a genuine access limitation.
