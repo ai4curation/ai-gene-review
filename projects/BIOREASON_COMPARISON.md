@@ -247,7 +247,7 @@ For 21 of the 25 `COR` → `CNN` calls, a matching GOA line is dated before 2022
 
 **71 `CNN` calls carry a scripted rationale.** In nine ARGO95 genes (mouse Calm1 and Pten; rat Casp3, Hspa5, Rgn, Slc5a1, St13, Tp53 and Uggt1), 71 `CNN` calls carry the identical sentence "Term is in GOA — already a known curated annotation." A further 22 `UNC` calls carry the identical sentence "Generic or ancestor term not confirmed or refuted by GOA or AI gene review." Both sentences come from the original automated review pass, not from term-by-term reading.
 
-For the 71 `CNN` calls this is acceptable. `CNN` is definitional for an exact in-GOA term, and all 71 have an exact line in the committed GOA TSV. It is still disclosed here because all 95 ARGO95 files are marked `COMPLETE`. The 22 scripted `UNC` calls have not been individually reviewed. The supplemental 198-file SFT union is dominated by these templates: 8,783 of 11,100 rationales. See [`article/TODO.md`](BIOREASON_COMPARISON/article/TODO.md).
+For the 71 `CNN` calls this is acceptable. `CNN` is definitional for an exact in-GOA term, and all 71 have an exact line in the committed GOA TSV. It is still disclosed here because all 95 ARGO95 files are marked `COMPLETE`. The 22 scripted `UNC` calls have not been individually reviewed. The supplemental 198-file SFT union is dominated by these templates: 8,783 of 11,070 scored rationales. See [`article/TODO.md`](BIOREASON_COMPARISON/article/TODO.md).
 
 ## Results (138-gene performance set; 139 collected exports)
 

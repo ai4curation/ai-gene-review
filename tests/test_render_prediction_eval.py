@@ -76,3 +76,23 @@ def test_default_cli_discovers_review_sidecars_across_species(tmp_path: Path) ->
     assert len(soup.select(".no-pred-row")) == 2
     assert "DROME" in soup.get_text()
     assert "WHEAT" in soup.get_text()
+
+
+def test_wrong_input_rows_are_reported_but_not_scored():
+    """A wrong-input row is a pipeline error, not a model error: it stays out of the score."""
+    proteins = [{"id": "Q21992", "gene_symbol": "csr-1", "taxon": {"label": "worm"}, "predictions": [
+        {"review": {"assessment": "COR", "confidence_score": 2}},
+        {"review": {"assessment": "NPI", "confidence_score": 0,
+                    "error_type": "WRONG_INPUT_SEQUENCE"}},
+        {"review": {"assessment": "NPI", "confidence_score": 0,
+                    "error_type": "PARALOG_OVERANNOTATION"}},
+    ]}]
+    for i, pred in enumerate(proteins[0]["predictions"]):
+        pred["predicted_term"] = {"id": f"GO:000000{i}", "label": f"term {i}"}
+    stats = compute_stats(proteins)
+    assert stats["total_predictions"] == 2
+    assert stats["counts"]["NPI"] == 1
+    assert stats["mean_cs"] == 1.0
+    assert stats["excluded_data_errors"] == 1
+    page = BeautifulSoup(render_prediction_eval(proteins), "html.parser").get_text()
+    assert "1 prediction excluded" in page

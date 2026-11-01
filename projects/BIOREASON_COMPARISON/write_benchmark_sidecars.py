@@ -18,6 +18,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from ai_gene_review.export.prediction_export import is_data_error
 from ai_gene_review.source_tree import (
     GitSnapshot,
     declared_review_snapshot,
@@ -406,6 +407,8 @@ def assessment_summary(
     assessments: Counter[str] = Counter()
     statuses: Counter[str] = Counter()
     genes: set[tuple[str, str]] = set()
+    # A wrong-input row records a pipeline error, not the model's: counted apart.
+    excluded_data_errors = 0
     for organism, gene, path in glob_genes(pattern):
         if keys is not None and (organism, gene) not in keys:
             continue
@@ -419,7 +422,11 @@ def assessment_summary(
                 and prediction.get("source_version") == exclude_source_version
             ):
                 continue
-            assessment = (prediction.get("review") or {}).get("assessment")
+            review = prediction.get("review") or {}
+            if is_data_error(review):
+                excluded_data_errors += 1
+                continue
+            assessment = review.get("assessment")
             if assessment:
                 assessments[str(assessment)] += 1
                 included = True
@@ -431,6 +438,7 @@ def assessment_summary(
         "n_predictions": sum(assessments.values()),
         "assessment_distribution": dict(sorted(assessments.items())),
         "document_status_distribution": dict(sorted(statuses.items())),
+        "excluded_data_errors": excluded_data_errors,
     }
 
 

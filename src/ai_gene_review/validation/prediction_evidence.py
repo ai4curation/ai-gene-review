@@ -52,11 +52,28 @@ def source_path(reference_id: str, root: Path) -> Path | None:
         relative = reference_id.removeprefix("file:")
         gene_path = root / "genes" / relative
         return gene_path if gene_path.is_file() else root / relative
+    reference_id = canonical_reference_id(reference_id)
     if reference_id.startswith("PMID:"):
         return root / "publications" / f"PMID_{reference_id[5:]}.md"
     if reference_id.startswith("DOI:"):
         return root / "publications" / f"DOI_{reference_id[4:].replace('/', '_')}.md"
     return None
+
+
+def canonical_reference_id(reference_id: str) -> str:
+    """Upper-case a PMID or DOI prefix; other identifiers are returned unchanged.
+
+    >>> canonical_reference_id("doi:10.64898/2026.03.19.712954")
+    'DOI:10.64898/2026.03.19.712954'
+    >>> canonical_reference_id("pmid:123")
+    'PMID:123'
+    >>> canonical_reference_id("file:SCHPO/pmp20/x.md")
+    'file:SCHPO/pmp20/x.md'
+    """
+    prefix, sep, local = reference_id.partition(":")
+    if sep and prefix.upper() in ("PMID", "DOI"):
+        return f"{prefix.upper()}:{local}"
+    return reference_id
 
 
 def local_quote_matches(quote: str, text: str) -> bool:
@@ -104,11 +121,11 @@ def validate_prediction_evidence(
                   "references")
             continue
         texts[ref_id] = source.read_text()
-        if ref_id.startswith(("PMID:", "DOI:")):
+        if canonical_reference_id(ref_id).startswith(("PMID:", "DOI:")):
             if validator is None:
                 error("Reference validation dependency unavailable", "references")
                 continue
-            result = validator.validate_title(ref_id, ref["title"])
+            result = validator.validate_title(canonical_reference_id(ref_id), ref["title"])
             if not result.is_valid:
                 error(f"Publication title mismatch: {ref_id}: {result.message}", "references")
             else:
@@ -144,7 +161,7 @@ def validate_prediction_evidence(
             if ref_id.startswith("file:"):
                 matched = local_quote_matches(quote, texts[ref_id])
             elif validator is not None:
-                matched = validator.validate(quote, ref_id).is_valid
+                matched = validator.validate(quote, canonical_reference_id(ref_id)).is_valid
             else:
                 matched = False
             if matched:
