@@ -54,8 +54,11 @@ processes are needed for it. See [Deep-research integration](#deep-research-inte
 | Genes fetched | 432 |
 | With curated WormBase description | 374 |
 | Median words, WormBase curated | 75 |
-| Median words, our `description` | 139 |
-| Median share of WormBase content words found in ours | 0.35 |
+| Median words, our `description` | 143 (139 before the follow-up) |
+| Median share of WormBase content words found in ours | 0.37 (0.35 before the follow-up) |
+
+Acting on the findings (below) raised both numbers: the descriptions gained
+sentences for verified gaps, so more of the WormBase content now appears in them.
 
 ## Hand comparison (16 genes)
 
@@ -163,7 +166,8 @@ RefSeq is left out of the table. It is usually a copy of the Alliance automated
 text, but for about a third of genes it comes from an older or newer Alliance
 release and was scored separately.
 
-The 312 findings (142 gaps, 104 discrepancies, 66 insights) are collected in
+The 313 findings (142 gaps, 105 discrepancies, 66 insights; one lgg-2 discrepancy
+was added later) are collected in
 [worm-findings.yaml](MOD_DESCRIPTIONS/worm-findings.yaml), which is a curator
 worklist. Recurring patterns:
 
@@ -247,7 +251,8 @@ results were spot-checked (pek-1, lrx-1, sem-5).
 - SGD texts are much shorter than WormBase's (median 33 words, against 75 for
   WormBase and 111 for our yeast reviews). On lexical overlap they are closer to
   ours: a median 0.42 of SGD content words appear in our descriptions, against
-  0.35 for worm. See [yeast-comparison.yaml](MOD_DESCRIPTIONS/yeast-comparison.yaml).
+  0.37 for worm (0.35 before the worm follow-up). See
+  [yeast-comparison.yaml](MOD_DESCRIPTIONS/yeast-comparison.yaml).
 - Guard against automated text filed as curated (`looks_automated`): it
   rejects all 12 RGD notes sampled, and flags none of the 902 WormBase and SGD
   curated texts on disk. A first version that matched on the opening alone
@@ -258,11 +263,16 @@ results were spot-checked (pek-1, lrx-1, sem-5).
   that kept a pilot review were not rescored, and each batch was schema-checked.
   Spot-checked findings (GTT2, IRC24, RIB7) hold against the source texts.
 
-| Source (yeast genes) | Utility | Completeness | Specificity | Mean correctness |
-|---|---|---|---|---|
-| SGD curated (890) | 4.1 | 4.0 | 4.0 | **4.8** |
-| UniProt FUNCTION (798) | 3.7 | 3.5 | 3.8 | 4.6 |
-| Alliance automated (890) | 2.9 | 3.1 | 2.9 | 4.4 |
+| Source (yeast genes) | Correctness | Utility | Compactness | Completeness | Specificity |
+|---|---|---|---|---|---|
+| SGD curated (890) | **4.8** | 4.1 | 4.3 | 4.0 | 4.0 |
+| UniProt FUNCTION (798) | 4.6 | 3.7 | 4.0 | 3.5 | 3.8 |
+| Alliance automated (890) | 4.4 | 2.9 | 3.8 | 3.1 | 2.9 |
+
+The counts include one protein twice: `genes/yeast/ERG19` and `genes/yeast/MVD1`
+are the same entry (P32377; ERG19 is the SGD standard name). Two genes, HKR1 and
+MSB2, have no gene review, so their concordance scores compare the sources with
+each other only.
 
   The test the worm run could not make: **SGD's maintained text is the best source**.
   It scores above UniProt on every rubric, whereas WormBase scored below it (4.2
@@ -272,14 +282,24 @@ results were spot-checked (pek-1, lrx-1, sem-5).
 
   Twelve WormBase texts did. Concordance is a mean 4.48 (worm 4.25). The 354
   findings (182 gaps, 163 discrepancies, 9 insights) are in
-  [yeast-findings.yaml](MOD_DESCRIPTIONS/yeast-findings.yaml). Most discrepancies are
-  dated **UniProt** text, for example:
+  [yeast-findings.yaml](MOD_DESCRIPTIONS/yeast-findings.yaml). Most discrepancies
+  involve the **automated** text (108 of 163), which picks GO terms the reviews
+  reject. Examples:
+  - kinase activity for the pseudo- or non-kinases KDX1 and CAF120;
+  - THI3 decarboxylase activity.
+
+  SGD text is involved in 61 discrepancies and UniProt in 51 (one discrepancy can
+  involve several sources). The UniProt cases are often dated or transferred text,
+  for example:
   - ACP1: a Complex I subunit, in a species that has no Complex I.
   - ACH1 and VIP1: claims transferred from mammalian or S. pombe homologues.
-  - MVD1, ERG12, ERG19 and ERG20: mevalonate pathway steps placed in the vacuole; the reviews have these enzymes in the cytosol.
+  - ERG12, ERG19 (also filed as MVD1) and ERG20: mevalonate pathway steps placed
+    in the vacuole; the reviews have these enzymes in the cytosol.
 
-  Others are automated-text picks of terms the reviews reject: kinase activity
-  for the KDX1 and CAF120 pseudo- or non-kinases, and THI3 decarboxylase activity.
+  Yeast has only 9 insight findings against 66 for worm, while gaps and
+  discrepancies rose. That may be because SGD's shorter text yields fewer side
+  observations, or because the yeast agents used the category more narrowly; the
+  data cannot tell the two apart.
   SGD has two self-referencing copy errors: GTT2 "overlaps with Gtt2p", and IRC24
   is "a putative paralog of IRC24".
 - Next: act on the yeast gap and discrepancy findings, as for worm.
