@@ -269,6 +269,11 @@ def _compile_reference(
     return And(node_id=node.get("id", "?"), children=[sub])
 
 
+def _empty_branch() -> And:
+    """The always-true branch that makes an optional part or variant set skippable."""
+    return And(node_id="empty", children=[])
+
+
 def compile_node(
     node: dict,
     modules_dir: Path = DEFAULT_MODULES_DIR,
@@ -290,9 +295,8 @@ def compile_node(
         sub = compile_node(part["node"], modules_dir, chain, namespace)
         if part.get("optional"):
             # An optional part is an OR of (filled, empty) -> always satisfiable.
-            empty: Circuit = And(node_id="empty", children=[])
             children.append(Or(set_id=f"opt:{part['node'].get('id', '?')}",
-                               selection="ZERO_OR_MORE", children=[sub, empty]))
+                               selection="ZERO_OR_MORE", children=[sub, _empty_branch()]))
         else:
             children.append(sub)
     for vs in as_list(node.get("variant_sets")):
@@ -304,7 +308,7 @@ def compile_node(
         if selection == "ZERO_OR_MORE":
             # "Variants are optional and any number may apply": like an
             # optional part, the set also admits the empty branch.
-            branches.append(And(node_id="empty", children=[]))
+            branches.append(_empty_branch())
         children.append(Or(set_id=vs.get("id", "?"), selection=selection,
                            children=branches, kind=kind, kind_inferred=inferred))
     return And(node_id=node.get("id", "?"), children=children)
