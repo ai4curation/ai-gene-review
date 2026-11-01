@@ -52,3 +52,16 @@ attempted in this session.
   are only 2 residues apart.
 - Correction of my own earlier text: UniProt lists 18 predicted TMs, not 16. I also took
   the AF3 model out of the supporting evidence for the plasma membrane row.
+
+### 2026-11-01: deposited AF3 output re-analysed
+
+The authors deposited their full AF3 server output (Mendeley doi:10.17632/8j46dhsyxr.1).
+See `bgs3-bioinformatics/RESULTS.md`. In summary:
+- Ghs2-Bgs3 ipTM is 0.68; Sbg1-Bgs1 ipTM is 0.59, with Sbg1 chain pTM 0.25.
+- The TM-TM interface is confident (PAE about 3.5-4.5 A) and contains exactly the
+  residues the paper mutated.
+- The GH16 position relative to Bgs3 is not determined (PAE about 20-23 A), so the
+  "GH16 at the extrusion pore" picture is not a confident prediction.
+- The deposited job seed (1940401513) does not match the Methods seed (361330275).
+- Bgs3 T1224 makes no contact in the model, which supports reading "I1224" as a typo
+  for I1334.
