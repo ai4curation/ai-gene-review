@@ -112,12 +112,21 @@ NASEKVARVS SVSNSLPKLK FHSM                               (201-224)
 - **Oca1/YNL099C**: founding OCA gene (oxidant-induced G1 arrest); shown catalytically inactive in vitro.
 - **Oca2 and Oca4**: other OCA-clade pseudophosphatases in S. cerevisiae; Oca4 has lost its catalytic motif.
   **Oca5/YHL021C** carries the same historical OCA name but is not part of the PFA-DSP/OCA phosphatase-fold
-  family. None of their specific data should be attributed to OCA6.
+  family — the clade census is SIW14 plus four OCA-clade genes, i.e. Oca1, Oca2, Oca4 and Oca6
+  [PMID:42347707 "cerevisiae has SIW14 and four genes from the OCA clade"]. None of their specific data
+  should be attributed to OCA6.
 - OCA6-specific direct evidence is limited to: cytoplasmic localization (HTP), BMV-screen phenotype,
   caffeine-sensitivity/genetic-linkage as an oca6Δ member of the family, SGD phenotype survey, and the Thr2
   phosphosite. Everything else is family-level or orthology-based inference.
 
-## Annotation review plan (6 GOA annotations)
+## Annotation review plan (6 GOA annotations) — SUPERSEDED 2026-09-28, see below
+
+> **Superseded.** This is the *pre-decision* plan, written before PMID:42222812 and PMID:42347707 were
+> cached. Items 1 and 2 were overridden by the delivered review: `GO:0016791` and `GO:0004725` are both
+> `REMOVE`, not `KEEP_AS_NON_CORE`/`MARK_AS_OVER_ANNOTATED`. Read the "2026-09-28 IBA/new-literature
+> re-review" and "2026-10-01 current GOA and PAINT refresh" sections below for the decisions that stand,
+> and treat the cached-PMID list at the end of the "Deep research" section as similarly pre-dating
+> PMID:42347707 and PMID:38287338.
 
 1. GO:0016791 phosphatase activity (IBA, GO_REF:0000033) — family/fold supports a phosphatase-like domain; but
    catalytic Arg is degenerate. Keep as a cautious non-core general MF (KEEP_AS_NON_CORE) — IBA reflects the fold,
@@ -181,3 +190,35 @@ The review therefore does not depend on an automated deep-research file.
   it shows that `oca6` deletion can combine with `pmt1`, `pmt2`, or `ski3`
   deletions to increase engineered laccase secretion, but does not establish
   OCA6's molecular substrate or a native biological process.
+
+## 2026-11-01 two loose ends from review: the UniProt-side IBA drop, and what the donors are
+
+Both were flagged across four review rounds and are recorded here rather than left as reviewer prose.
+Neither changes any annotation action; both point the same way as the delivered `GO:0016791` `REMOVE`.
+
+- **UniProt itself stopped carrying the assertion being removed.** The 2026-10-01 refresh dropped
+  `DR   GO; GO:0016791; F:phosphatase activity; IBA:GO_Central.` from the flat file. The pre-refresh
+  record (commit `f6de3cf549`) had three `DR GO` lines — `GO:0005737` HDA:SGD, `GO:0016791` IBA:GO_Central,
+  `GO:0004725` IEA:UniProtKB-EC; the current `OCA6-uniprot.txt:150-151` has only the first and third. The
+  GOA TSV still carries the `GO:0016791` IBA row (GOA date 20260529), so the earlier note that OCA6
+  "still has the same six GOA rows" is true *of GOA* but reads as "nothing moved". It moved on the
+  UniProt side. This is an independent signal, not evidence we generated, and it does not by itself
+  justify the `REMOVE` — the degenerate CX5R loop plus PMID:42222812/PMID:42347707 do that.
+
+- **The IBD donor set contains nothing from OCA6's own clade.** `PTN001258896`'s `WITH/FROM`
+  (`interpro/panther/PTHR31126/PTHR31126-paint.tsv:3`) is four Arabidopsis loci — `AT1G05000`,
+  `AT2G32960`, `AT3G02800`, `AT5G16480` — plus `SGD:S000005043` and `UniProtKB:I6WXK4`, `Q4QBX1`,
+  `Q6K461`, `Q9HXC7`. The four plant donors cannot be OCA-clade members: *A. thaliana* is a land plant,
+  and land plants have no OCA-clade orthologs at all [PMID:42347707 "Land plants and green algae lack
+  orthologs in the OCA clade, suggesting gene loss; however, the early diverging bryophytes have three
+  genes in the OCA clade"]. They therefore sit in the *active* PFA-DSP sister clade, which is where the
+  measured phosphatase activity lives, while OCA6 sits in the clade whose members have "substitutions or
+  deletions in the critical active site residues" [PMID:42347707 "The PFA‐DSP family has a sister clade,
+  the OCA clade, that shares overall sequence conservation and the CC1 structural fold; however, these
+  proteins have substitutions or deletions in the critical active site residues"]. That is the correct
+  framing per `projects/IBA_REVIEW.md`: the objection is to the **node placement** — the IBD sits above
+  the PFA-DSP/OCA split, so descent carries it into a clade that lost the activity — and not to a short
+  donor list, a weak source, or circularity. The non-plant donors (`SGD:S000005043` and the four
+  UniProtKB accessions) are deliberately left unidentified here; none is resolvable from the cached
+  files, and guessing which family member each is would be exactly the inference this argument does
+  not need.
