@@ -6,6 +6,11 @@ regulation (positive<->negative, activating<->inhibiting, activator<->inhibitor,
 agonist<->antagonist, up<->down).  Writes a YAML table to stdout.
 
 Usage: uv run python projects/REGULATION_SIGN/sign_flip_census.py [genes_dir]
+
+Limitation: sign_key() keys on the first sign word it finds (count=1), so a
+label containing two sign words (e.g. "positive regulation of ... inhibitor
+activity") is compared on only one of them and can mis-pair. The output is a
+seed list for hand screening, not a final count.
 """
 import re
 import sys
