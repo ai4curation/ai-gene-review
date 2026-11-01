@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656]
 ---
 
 # Archaea
@@ -22,13 +22,13 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, thirteen new archaeal reviews are complete (a five-gene pilot, a
-second round of four, and the remaining four enzymes of the *M. sedula*
-CO2-fixation cycle), METAC mcrA has been revised, and the duplicate amoA
+So far, twenty-three new archaeal reviews are complete (a five-gene pilot, a
+second round of four, and two rounds on the *M. sedula* CO2-fixation
+cycle), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
 reviews have been merged. Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
-thin, old experimental coverage. Fourteen recurring error patterns are
+thin, old experimental coverage. Sixteen recurring error patterns are
 collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
 largest affect hundreds of archaeal proteins each: InterPro2GO mappings
 that put catalytic activity on non-catalytic proteasome alpha subunits
@@ -175,15 +175,30 @@ succinyl-CoA reductase (NADP+), succinate-semialdehyde reductase (NADPH) and
 **Module.** The cycle is modelled in
 `modules/hydroxypropionate_hydroxybutyrate_cycle.yaml` (DRAFT): two branches,
 16 reaction steps, each grounded to an *M. sedula* protein identified in the
-literature or, for the methylmalonyl-CoA epimerase and mutase, by UniProt EC
-assignment. Enzymes that act twice are modelled as separate steps with the
-same representative: the acetyl-CoA/propionyl-CoA carboxylase (Msed_0147,
-Msed_0148, Msed_1375), the malonyl-CoA/succinyl-CoA reductase (Msed_0709) and
-the 3-hydroxypropionyl-CoA dehydratase/crotonyl-CoA hydratase (Msed_2001).
-Four steps have no GO activity term; their gene reviews propose one. Five of
-the 15 proteins have gene reviews; the other ten (the carboxylase subunits,
-Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399 and Msed_0656)
-are the next review targets for this module.
+literature. Enzymes that act twice are modelled as separate steps with the
+same participant. The acetyl-CoA/propionyl-CoA carboxylase (Msed_0147 biotin
+carboxylase, Msed_0148 carrier, Msed_1375 carboxyltransferase) and the
+methylmalonyl-CoA mutase (Msed_0638 with the B12-binding subunit Msed_2055)
+are modelled as complexes whose subunits carry only their own activities.
+Four steps have no GO activity term; their gene reviews propose one.
+
+## Round 4 results: the rest of the module (November 2026)
+
+Ten more proteins reviewed, so 15 of the module's 17 proteins now have
+reviews (QC: 13 function checks match reviewed core functions, 0 conflicts).
+
+| Gene(s) | Finding |
+|---|---|
+| Msed_0147, Msed_0148, Msed_1375 | Each carboxylase subunit enables only its own half-reaction and contributes to both carboxylase activities (PMID:12581213); TreeGrafter and InterPro2GO had put the whole-complex activity on the carboxyltransferase subunit; the carrier subunit had no GO rows |
+| Msed_1993 | Malonic semialdehyde reductase; L-gulonate 3-dehydrogenase removed (lambda-crystallin subfamily transfer), NAD+ binding corrected to NADP binding |
+| Msed_1426 | Acryloyl-CoA reductase; an IDA row uses the NADH-dependent term although the cited paper shows the enzyme does not use NADH (corrected to the NADPH term); alcohol dehydrogenase (NAD+) removed |
+| Msed_0638, Msed_0639 | Confirmed as the cycle's mutase and epimerase by recombinant activity and autotrophic induction (PMID:22752162); the mutase needs the separate B12-binding subunit Msed_2055 |
+| Msed_1321 | 4-hydroxybutyryl-CoA dehydratase; its main activity was missing from GOA because UniProt names it after an untested isomerase activity |
+| Msed_0399 | Not the main enzyme for either of its activities: Msed_2001 hydrates crotonyl-CoA and Msed_1423 oxidizes (S)-3-hydroxybutyryl-CoA (PMID:32218776), so Msed_1423 replaces it as the module's representative |
+| Msed_0656 | Beta-ketothiolase; general acyltransferase rows refined |
+
+Remaining for the module: reviews of Msed_1423 (A4YGM9) and Msed_2055
+(A4YIE3), and no step has genetic (knockout) evidence.
 
 ## Anchor organisms
 
