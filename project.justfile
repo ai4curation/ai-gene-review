@@ -2445,6 +2445,22 @@ rules-export *args="":
 rules-validate *args="":
     uv run ai-gene-review rules-validate {{args}}
 
+# Validate curated rules (rules/curated/CR-*.yaml): schema, then semantic checks
+# (anchored condition sets, exclusion-only module conditions, known modules).
+validate-curated-rules:
+    for f in rules/curated/CR-*.yaml; do uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C CuratedRule "$f" || exit 1; done
+    uv run python -m ai_gene_review.curated_rules check rules/curated/CR-*.yaml
+
+# Report UniProtKB match counts for curated rules (network). Example:
+#   just count-curated-rules rules/curated/CR-0004.yaml
+count-curated-rules *files="rules/curated/CR-*.yaml":
+    uv run python -m ai_gene_review.curated_rules check {{files}} --count
+
+# Evaluate a module-context detector on UniProt proteomes (cached; network for new ones).
+# Example: just evaluate-module-context rules/curated/context/ubiquitin_transfer_relay.yaml UP000008243 --rule rules/curated/CR-0003.yaml
+evaluate-module-context detector *args="":
+    uv run python -m ai_gene_review.context_oracle {{detector}} {{args}}
+
 # Sync a single rule review YAML file with analysis data (automatically analyzes first if needed)
 # This populates the `entries` field in the review YAML with pairwise overlap data
 # DEPENDENCIES:

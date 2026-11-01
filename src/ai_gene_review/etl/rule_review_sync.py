@@ -12,6 +12,8 @@ from typing import Optional, Dict, List, cast
 
 import yaml
 
+from ai_gene_review.etl.rule_review_init import extract_condition_sets
+
 
 def categorize_relationship(
     jaccard: float,
@@ -324,34 +326,9 @@ def sync_review_with_analysis(
             with open(enriched_path, 'r') as f:
                 enriched_data = json.load(f)
 
-            # Extract condition sets from enriched data
-            cond_sets = enriched_data.get('conditionSets') or enriched_data.get('mainRule', {}).get('conditionSets', [])
-            populated_cs = []
-            for cs_idx, cond_set in enumerate(cond_sets, start=1):
-                conditions = []
-                for condition in cond_set.get('conditions', []):
-                    cond_type = condition.get('type', '')
-                    for cond_val in condition.get('conditionValues', []):
-                        # Map enriched condition types to review YAML types
-                        condition_type_map = {
-                            'InterPro id': 'INTERPRO',
-                            'FunFam id': 'FUNFAM',
-                            'PANTHER id': 'PANTHER',
-                            'taxon': 'TAXON'
-                        }
-                        mapped_type = condition_type_map.get(cond_type, cond_type.upper())
-                        conditions.append({
-                            'condition_type': mapped_type,
-                            'value': cond_val.get('value', ''),
-                            'curie': cond_val.get('curie', ''),
-                            'label': cond_val.get('label', ''),
-                            'negated': cond_val.get('negated', False)
-                        })
-                populated_cs.append({
-                    'number': cs_idx,
-                    'conditions': conditions,
-                    'notes': ''
-                })
+            populated_cs = extract_condition_sets(enriched_data)
+            for cs in populated_cs:
+                cs['notes'] = ''
 
             if populated_cs:
                 review_data['rule']['condition_sets'] = populated_cs
