@@ -56,6 +56,8 @@ from ai_gene_review.validation.uniprot_quote_source import (
     validate_uniprot_quote_sources,
 )
 from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.source_statement_defects import validate_statement_defects
+from ai_gene_review.mod_providers import is_mod_description_file
 from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
@@ -408,6 +410,7 @@ def validate_gene_review(
         validate_uniprot_quote_sources(data, report)
         validate_record_sections(data, report)
         validate_goa_support(data, report, yaml_file_path)
+        validate_statement_defects(data, report)
 
     return report
 
@@ -868,7 +871,12 @@ def check_best_practices_rules(
 
         if not has_research_support:
             if yaml_file is not None:
-                research_files = list(yaml_file.parent.glob("*research*.md"))
+                # MOD gene descriptions are curator-written source text, not AI deep
+                # research, so leaving one uncited is not what this check is about.
+                research_files = [
+                    f for f in yaml_file.parent.glob("*research*.md")
+                    if not is_mod_description_file(f.name)
+                ]
                 if research_files:
                     research_file_names = [
                         f.name for f in research_files[:3]
@@ -1008,12 +1016,26 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
+                    # A core function with a BIOLOGY gap on the MF aspect may be a contested
+                    # activity deliberately left out of the NEW rows. The gap need not be about
+                    # this term, so keep the issue but lower it to INFO and drop the NEW advice.
+                    has_mf_gap = any(
+                        isinstance(gap, dict)
+                        and "BIOLOGY" in (gap.get("gap_kind") or [])
+                        and gap.get("dark_aspect") == "MF_DARK"
+                        for gap in core_func.get("knowledge_gaps") or []
+                    )
                     if not is_from_annotations and has_support:
                         report.add_issue(
-                            ValidationSeverity.WARNING,
+                            ValidationSeverity.INFO if has_mf_gap else ValidationSeverity.WARNING,
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
                             path=f"core_functions[{i}].molecular_function",
-                            suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                            suggestion=(
+                                "The core function has an MF_DARK knowledge gap; if that gap is about this "
+                                "activity, leaving it out of NEW rows is intended"
+                                if has_mf_gap
+                                else "Consider adding this term to existing_annotations with action: NEW if it's a novel annotation"
+                            ),
                             validation_category="BestPractices",
                             check_type="core_function_molecular_function_not_in_annotations",
                         )
