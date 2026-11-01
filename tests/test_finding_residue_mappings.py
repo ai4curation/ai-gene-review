@@ -172,3 +172,46 @@ def test_canonical_identity_failure_says_what_to_write():
     results = check_mapping(mapping, "P1", "G", "PMID:1", StubCache(seqs))
     detail = next(r.detail for r in results if r.kind == "CANONICAL_IDENTITY")
     assert "use UniProtKB:P1" in detail
+
+
+def test_uniprot_outage_uses_the_reviews_committed_record(tmp_path, monkeypatch):
+    """The review's own displayed sequence is uncached in merge-queue CI; an outage must
+    not block it. The as-reported isoform is cached, as an earlier run would leave it."""
+    import urllib.error
+
+    from ai_gene_review.validation import family_residue_validator as frv
+
+    def down(req, timeout):
+        raise urllib.error.HTTPError(req.full_url, 500, "Internal Server Error", {}, None)
+
+    monkeypatch.setattr(frv.urllib.request, "urlopen", down)
+    monkeypatch.setattr(frv, "_sleep", lambda _seconds: None)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    (cache_dir / "P1-2.seq").write_text("MQQQAKSDEFGH")
+    gene_dir = tmp_path / "G"
+    gene_dir.mkdir()
+    (gene_dir / "G-uniprot.txt").write_text(
+        "ID   G_TEST                  Reviewed;           9 AA.\n"
+        "AC   P1;\n"
+        "DT   21-MAR-2012, sequence version 1.\n"
+        f"SQ   SEQUENCE   9 AA;  1000 MW;  {frv._crc64('MAKSDEFGH')} CRC64;\n"
+        "     MAKSDEFGH\n"
+        "//\n"
+    )
+    review = gene_dir / "G-ai-review.yaml"
+    review.write_text(yaml.safe_dump({
+        "id": "UniProtKB:P1", "gene_symbol": "G",
+        "references": [{"id": "PMID:1", "title": "t", "findings": [{
+            "statement": "s",
+            "residue_mappings": [
+                {"as_reported": _pos("P1-2", 7, "S"), "canonical": _pos("P1", 4, "S")}
+            ],
+        }]}],
+    }))
+    cache = frv.SequenceCache(cache_dir)
+    results = validate_finding_residue_mappings(review, cache)
+    assert results and all(r.outcome is ClaimOutcome.PASS for r in results), [
+        str(r) for r in results
+    ]
+    assert cache.fallbacks == ["P1"]
