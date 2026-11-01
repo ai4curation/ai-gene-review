@@ -722,13 +722,13 @@ def save_preserving_reviews(gd: GeneDescriptions, path: Path) -> Path:
         old = load_gene_descriptions(path)
         old_by_source = {d.source: d for d in old.descriptions}
         fresh_sources = {d.source for d in gd.descriptions}
-        for prev in old.descriptions:
-            if prev.source not in fresh_sources:
+        for old_desc in old.descriptions:
+            if old_desc.source not in fresh_sources:
                 logger.warning(
                     "%s %s: not returned by this fetch; keeping the existing text and review",
-                    path.name, prev.source,
+                    path.name, old_desc.source,
                 )
-                gd.descriptions.append(prev)
+                gd.descriptions.append(old_desc)
         unchanged = True
         for d in gd.descriptions:
             prev = old_by_source.get(d.source)
