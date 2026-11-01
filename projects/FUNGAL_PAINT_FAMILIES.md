@@ -38,6 +38,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
 | `PTHR43290` MEVALONATE KINASE | root mevalonate-kinase node and fungal ergosterol node | `ERG12`/`erg12`/`ERG12`/`ASPFU/erg12` |
+| `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
@@ -405,6 +406,13 @@ broad isoprenoid-biosynthesis terms.
   fungal peroxisomal-overpropagation decisions into a siderophore-producing
   filamentous ascomycete.
 
+- Started `PTHR10572`, separating long fungal sterol-pathway HMG-CoA
+  reductases from Aspergillus short cluster paralogs. `CANAL/HMG1`,
+  `ASPFU/hmg1`, `ASPFU/hmg2`, and `SCHPO/hmg1` all remove the stale
+  peroxisomal-membrane IBA from `PTN000060347` while keeping exact HMGR
+  activity and the ER-membrane and fungal ergosterol branches where appropriate;
+  `EMENI/AN1593` keeps exact HMGR catalysis but removes ergosterol and
+  ER-specific terms that overreach the pimaradiene-cluster paralog.
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
   yeast, Aspergillus, and Candida reviews were updated in PRs #5358-#5361;
