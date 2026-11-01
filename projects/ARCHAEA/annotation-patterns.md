@@ -247,6 +247,11 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   activity from TreeGrafter and ligase activity from InterPro2GO; the ATP-using
   ligation belongs to the biotin carboxylase subunit. The PANTHER node also
   misses the enzyme's equal activity on acetyl-CoA. A wider form of pattern 8.
+- **Example:** METS5/Msed_2055, the separately encoded B12-binding subunit of
+  methylmalonyl-CoA mutase. InterPro2GO maps the MCM B12-binding domain
+  (IPR006159) to isomerase activity with `enables`; in split-subunit mutases the
+  protein matching it binds the cofactor but does not catalyse alone (active
+  enzyme needs both subunits, PMID:22752162).
 
 ## Related findings from round 2
 

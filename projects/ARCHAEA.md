@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055]
 ---
 
 # Archaea
@@ -22,7 +22,7 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, twenty-three new archaeal reviews are complete (a five-gene pilot, a
+So far, twenty-five new archaeal reviews are complete (a five-gene pilot, a
 second round of four, and two rounds on the *M. sedula* CO2-fixation
 cycle), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
 reviews have been merged. Most archaeal annotation turns out to be
@@ -197,8 +197,13 @@ reviews (QC: 13 function checks match reviewed core functions, 0 conflicts).
 | Msed_0399 | Not the main enzyme for either of its activities: Msed_2001 hydrates crotonyl-CoA and Msed_1423 oxidizes (S)-3-hydroxybutyryl-CoA (PMID:32218776), so Msed_1423 replaces it as the module's representative |
 | Msed_0656 | Beta-ketothiolase; general acyltransferase rows refined |
 
-Remaining for the module: reviews of Msed_1423 (A4YGM9) and Msed_2055
-(A4YIE3), and no step has genetic (knockout) evidence.
+Msed_1423, now the main representative of the (S)-3-hydroxybutyryl-CoA
+dehydrogenase step, and Msed_2055, the mutase's B12-binding subunit, were
+reviewed afterwards, so all 17 module proteins now have reviews. Msed_1423 is
+NAD+-specific (about 170-fold over NADP+) and inactive on C8, so its fatty acid
+metabolism term is marked over-annotated. Msed_2055's isomerase row was a
+whole-complex activity on a cofactor subunit (pattern 16). What remains open
+for the module is biological: no step has genetic (knockout) evidence.
 
 ## Anchor organisms
 
