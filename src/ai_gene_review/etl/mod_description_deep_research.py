@@ -40,7 +40,7 @@ from ai_gene_review.etl.descriptions import (
     ALLIANCE_API_BASE,
     ORGANISM_CONFIG,
     extract_uniprot_id,
-    extract_uniprot_xref,
+    extract_mod_xref,
     fetch_alliance_description,
     looks_automated,
 )
@@ -65,6 +65,25 @@ def uniprot_gene_names(uniprot_data: str) -> set[str]:
     return names
 
 
+_GREEK = {
+    "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon", "ζ": "zeta",
+    "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa", "λ": "lambda", "μ": "mu",
+    "ν": "nu", "ξ": "xi", "ο": "omicron", "π": "pi", "ρ": "rho", "σ": "sigma",
+    "τ": "tau", "υ": "upsilon", "φ": "phi", "χ": "chi", "ψ": "psi", "ω": "omega",
+}
+
+
+def _fold_symbol(name: str) -> str:
+    """Spell out Greek letters and lower-case, for comparing gene symbols.
+
+    >>> _fold_symbol("α-Man-Ia")
+    'alpha-man-ia'
+    >>> _fold_symbol("Hsp70Aa")
+    'hsp70aa'
+    """
+    return "".join(_GREEK.get(c, c) for c in name.lower())
+
+
 def identity_gate(
     gene: str, uniprot_data: str, alliance_symbol: Optional[str], alliance_systematic: Optional[str]
 ) -> Optional[str]:
@@ -77,12 +96,18 @@ def identity_gate(
     True
     >>> identity_gate("rab-11.1", "GN   Name=rab-11.1;", "rab-10", "T23H2.5")
     'Alliance record names rab-10/T23H2.5, but neither matches the folder (rab-11.1) or the UniProt gene names (rab-11.1).'
+
+    FlyBase writes Greek letters as characters; UniProt and folders spell them out:
+
+    >>> identity_gate("alpha-Man-Ia", "GN   Name=alpha-Man-Ia;", "α-Man-Ia", "CG42275") is None
+    True
     >>> identity_gate("J7SF87", "", "lin-4", None)
     'Alliance record names lin-4, but neither matches the folder (J7SF87) or the UniProt gene names (none).'
     """
     uniprot = uniprot_gene_names(uniprot_data)
     found = {n for n in (alliance_symbol, alliance_systematic) if n}
-    if not found or found & (uniprot | {gene}):
+    known = {_fold_symbol(n) for n in uniprot | {gene}}
+    if not found or {_fold_symbol(n) for n in found} & known:
         return None
     uniprot_names = ", ".join(sorted(uniprot)) or "none"
     return (
@@ -158,9 +183,9 @@ def emit_mod_deep_research(
     if not up_file.exists():
         return "skipped", None, f"missing {up_file}"
     uniprot_data = up_file.read_text(encoding="utf-8")
-    xref = extract_uniprot_xref(uniprot_data, config["uniprot_xref"])
+    xref = extract_mod_xref(uniprot_data, config)
     if not xref:
-        return "skipped", None, f"no {config['uniprot_xref']} cross-reference in UniProt entry"
+        return "skipped", None, f"no {config['uniprot_xref']} or AGR cross-reference in UniProt entry"
     mod_id = xref if xref.startswith(f"{config['mod']}:") else f"{config['mod']}:{xref}"
 
     data = fetch_alliance_description(mod_id)

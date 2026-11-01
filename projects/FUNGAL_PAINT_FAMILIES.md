@@ -38,6 +38,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11635` PKA REGULATORY SUBUNIT | conserved PKA-R node, fungal nuclear node, and broad cAMP-signaling node | `BCY1`/`cgs1`/`BCY1`/`mcb` |
 | `PTHR10868` SIGMA 1-TYPE OPIOID RECEPTOR-RELATED | fungal `ERG2` node | `ERG2`/`erg2`/`ERG2`/`erg-1` |
 | `PTHR43290` MEVALONATE KINASE | root mevalonate-kinase node and fungal ergosterol node | `ERG12`/`erg12`/`ERG12`/`ASPFU/erg12` |
+| `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
@@ -49,7 +50,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-10-24
+Last updated: 2026-11-01
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -57,8 +58,7 @@ Last updated: 2026-10-24
 cytosolic Hsp104-family disaggregases at `PANTHER:PTN007521008` and
 mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 
-- [ ] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; existing
-  curated anchor, not yet rechecked in this project
+- [x] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; open in PR #3692
 - [x] `yeast/HSP78` - mitochondrial `Hsp104`/ClpB paralog; merged in PR #4519
 - [x] `SCHPO/hsp104` - fission yeast cytosolic `Hsp104` ortholog; merged in
   PR #4524
@@ -91,7 +91,7 @@ paralog-aware activity and complex checks.
 ## Later Candidates
 
 - [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
-- [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
+- [x] `PTHR19370` fungal NADH-cytochrome b5 reductases
 
 ## Family 3: Chitin Synthase Export Chaperones
 
@@ -116,9 +116,8 @@ stress-activated MAPK-cascade assertions.
 - [x] `NEUCR/hog-1` - *Neurospora crassa* OS-2/HOG-1 stress MAPK; merged in PR
   #4570
 - [x] `CANAL/HOG1` - *Candida albicans* HOG stress MAPK; merged in PR #4565
-- [ ] `SCHPO/sty1` - fission yeast Sty1/Spc1 stress MAPK; drafted in PR #4573
-  and awaiting follow-up review
-- [ ] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; drafted in this branch
+- [x] `SCHPO/sty1` - fission yeast Sty1/Spc1 stress MAPK; merged in PR #4573
+- [x] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; merged in PR #4703
 
 ## Family 5: Fungal Glucanases
 
@@ -292,8 +291,8 @@ records the non-fungal branch structure: eukaryotic `PANTHER:PTN002214956`
 prunes the root mevalonate-kinase and IPP-biosynthesis assertions by IRD, while
 plant `PANTHER:PTN008680403` carries `GO:0047940` glucuronokinase activity.
 
-- [x] `yeast/ERG12` - *S. cerevisiae* mevalonate-kinase anchor; already
-  `COMPLETE` and revalidated without changes
+- [x] `yeast/ERG12` - *S. cerevisiae* mevalonate-kinase anchor; merged in PR
+  #5765
 - [x] `SCHPO/erg12` - fission-yeast mevalonate kinase; re-reviewed in PR
   #5358
 - [x] `ASPFU/erg12` - *Aspergillus fumigatus* mevalonate kinase; drafted in PR
@@ -328,16 +327,14 @@ the NAD(+), L-lysine-forming `LYS1`/`lys3` branch and
 `PANTHER:PTN000875327` for the reciprocal NADP(+), L-glutamate-forming
 `LYS9`/`lys9` branch.
 
-- [ ] `yeast/LYS1` - *S. cerevisiae* peroxisomal/cytosolic
-  LYS1-family enzyme; already `COMPLETE`
-- [ ] `yeast/LYS9` - *S. cerevisiae* LYS9-family saccharopine reductase;
-  already `COMPLETE`
-- [ ] `SCHPO/lys3` - fission-yeast LYS1-family member; already reviewed and
-  ready for this family recheck
-- [ ] `SCHPO/lys9` - fission-yeast LYS9-family member; already reviewed and
-  ready for this family recheck
-- [x] `CANAL/LYS1` - CGD-seeded *Candida albicans* LYS1-family member; drafted
-  in this branch
+- [x] `yeast/LYS1` - *S. cerevisiae* peroxisomal/cytosolic
+  LYS1-family enzyme; open in PR #5436
+- [x] `yeast/LYS9` - *S. cerevisiae* LYS9-family saccharopine reductase;
+  merged in PR #5442
+- [x] `SCHPO/lys3` - fission-yeast LYS1-family member; merged in PR #5439
+- [x] `SCHPO/lys9` - fission-yeast LYS9-family member; open in PR #5445
+- [x] `CANAL/LYS1` - CGD-seeded *Candida albicans* LYS1-family member; merged
+  in PR #5434
 - [x] `NEUCR/lys-4` - *Neurospora crassa* LYS1-family member; merged in PR
   #4644
 
@@ -350,14 +347,14 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 `PANTHER:PTN002887184` node seeded by *S. cerevisiae* `MET17`,
 *S. pombe* `met17`, the CGD *C. albicans* `MET15` member, and bacterial MetY.
 
-- [ ] `yeast/MET17` - *S. cerevisiae* bifunctional Met17/Met15 enzyme; already
-  drafted and needs PAINT-source refresh against `PTN002887184`
-- [ ] `SCHPO/met17` - fission-yeast O-acetylhomoserine sulfhydrylase; already
-  drafted and needs PAINT-source refresh against `PTN002887184`
+- [x] `yeast/MET17` - *S. cerevisiae* bifunctional Met17/Met15 enzyme; open in
+  PR #5451
+- [x] `SCHPO/met17` - fission-yeast O-acetylhomoserine sulfhydrylase; open in
+  PR #5450
 - [x] `CANAL/MET15` - CGD *Candida albicans* MET15 seed with 2024 direct
-  CaMet15p biochemical evidence; drafted in this branch
-- [ ] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
-  PTHR43797:SF2 subfamily
+  CaMet15p biochemical evidence; merged in PR #5447
+- [x] `EMENI/cysD` - *Aspergillus nidulans* CysD member in the same
+  PTHR43797:SF2 subfamily; merged in PR #5449
 
 ## Family 17: HMG-CoA Reductases
 
@@ -369,24 +366,39 @@ node seeded by a canonical sterol-pathway HMGR. The short AN1593 branch is an
 exception to the ER and ergosterol propagation, but retains the catalytic and
 broad isoprenoid-biosynthesis terms.
 
-- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; already
-  `COMPLETE`
+- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; open in
+  PR #5463
 - [x] `yeast/HMG2` - *S. cerevisiae* regulated minor HMG-CoA reductase isozyme;
-  already `COMPLETE`
+  merged in PR #5464
 - [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
-  exemplar
+  exemplar; open in PR #5460
 - [x] `CANAL/HMG1` - Candida albicans long sterol-pathway HMG-CoA reductase;
-  drafted in PR #5454
+  merged in PR #5454
 - [x] `ASPFU/hmg1` - Aspergillus fumigatus long sterol-pathway HMG-CoA
-  reductase; drafted in PR #5456
+  reductase; merged in PR #5456
 - [x] `ASPFU/hmg2` - Aspergillus fumigatus Hmg1-related HMG-CoA reductase;
-  drafted in PR #5458
+  open in PR #5458
 - [x] `EMENI/AN1593` - Aspergillus nidulans short pimaradiene-cluster
-  HMG-CoA reductase; drafted in this branch
+  HMG-CoA reductase; merged in PR #5459
 
 ---
 
 # NOTES
+
+## 2026-11-01
+
+- Cleaned the PTHR11638, PTHR11133, PTHR43797, PTHR43290, and PTHR10572
+  ledger rows touched by this PR shepherding pass. The `yeast/HSP104`,
+  `yeast/LYS1`, `SCHPO/lys9`, `SCHPO/met17`, `yeast/MET17`, `ASPFU/hmg2`,
+  `SCHPO/hmg1`, and `yeast/HMG1` reviews are open in PRs #3692, #5436, #5445,
+  #5450, #5451, #5458, #5460, and #5463 respectively; `CANAL/LYS1`,
+  `SCHPO/lys3`, `yeast/LYS9`, `CANAL/MET15`, `EMENI/cysD`, `CANAL/HMG1`,
+  `ASPFU/hmg1`, `EMENI/AN1593`, `yeast/HMG2`, and `yeast/ERG12` have already
+  merged in PRs #5434, #5439, #5442, #5447, #5449, #5454, #5456, #5459, #5464,
+  and #5765.
+- Confirmed the PTHR19370 fungal NADH-cytochrome b5 reductase set is already
+  complete across the MCR1, CBR1, and related CYC2-like branches, including
+  the October MCR1/CBR1 follow-up PRs #5413-#5415 and #5419-#5423.
 
 ## 2026-10-24
 
@@ -405,6 +417,13 @@ broad isoprenoid-biosynthesis terms.
   fungal peroxisomal-overpropagation decisions into a siderophore-producing
   filamentous ascomycete.
 
+- Started `PTHR10572`, separating long fungal sterol-pathway HMG-CoA
+  reductases from Aspergillus short cluster paralogs. `CANAL/HMG1`,
+  `ASPFU/hmg1`, `ASPFU/hmg2`, and `SCHPO/hmg1` all remove the stale
+  peroxisomal-membrane IBA from `PTN000060347` while keeping exact HMGR
+  activity and the ER-membrane and fungal ergosterol branches where appropriate;
+  `EMENI/AN1593` keeps exact HMGR catalysis but removes ergosterol and
+  ER-specific terms that overreach the pimaradiene-cluster paralog.
 - Re-reviewed the compact `PTHR43290` mevalonate-kinase set across
   `yeast/ERG12`, `SCHPO/erg12`, `ASPFU/erg12`, and `CANAL/ERG12`. The fission
   yeast, Aspergillus, and Candida reviews were updated in PRs #5358-#5361;

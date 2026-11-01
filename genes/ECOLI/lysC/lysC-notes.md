@@ -24,3 +24,16 @@ All 24 current panel reviews remain within the preservation proof (439 rows, inc
 ## 2026-10-26 — source-specific PR #5569 follow-up
 
 The remaining action-only refinement summaries and generic refinement reasons were replaced with reaction-, pathway- or assembly-specific explanations. Existing actions and replacement terms are unchanged.
+
+
+## 2026-11-01 bacterial aspartate-to-threonine audit follow-up
+
+Re-read the existing COMPLETE review and every annotation decision for the narrower bacterial route audit. Retained all annotation actions, machine-sourced payloads, standalone description, core functions and raw records. Added manual assessments and verbatim findings to existing references, distinguishing native experiments from comparative synthesis, bibliographic-only records and inference. No new annotation rows were proposed.
+
+LysC is the native monofunctional AKIII alternative at the shared aspartyl-phosphate supply step. Lysine-responsive regulation does not make the product exclusive to lysine biosynthesis; homoserine-derived synthesis can use the common precursor. PMID:14623187 separately tests AKIII and N-acetylglutamate kinase and states: "AKIII is homodimeric and is inhibited by lysine." AKIII findings are not conflated with parallel NAGK experiments.
+
+PMID:16905770 distinguishes active R-state assembly from lysine-promoted inactive T-state tetramer formation. PMID:6249791 supports regulation of lysC expression using lysC-lac fusions, not purified kinase kinetics. PMID:4360904 is bibliographic-only, but independent direct assembly evidence is available. Existing homoserine and lysine process annotations already convey shared precursor participation; no mechanically mirrored NEW row is needed.
+
+Acquisition and evidence limits: `just mod-description-deep-research ECOLI thrA metL lysC asd thrB thrC` completed with all six skipped because no MOD provider is configured for ECOLI. A fresh normal Falcon request for ECOLI thrA failed with the shared Edison authentication/access 403; the same failed service was not retried for the other five. Earlier actual provider attempts remain documented above. No provider report was fabricated or rewritten. Manual review used existing primary-publication and curated UniProt caches. Logs are in the ignored `.cache/module-audit-logs/bacterial-threonine-ecoli/` directory.
+
+PMID:11368768 supports the native route, but its nominal full-text HTML cache contains a duplicated abstract and PDF link rather than the full paper. The coordinating agent's normal PDF retrieval also returned an HTML interstitial. No unseen kinetic measurements or exact strain details are attributed to that abstract. Native proteomics annotations retain the caveat that individual target supplement rows were not independently reconstructed. Raw UniProt PANTHER membership and the official `interpro/panther/panther.obo` label were checked for module selectors; membership alone does not establish every family's substrate or regulatory specificity.
