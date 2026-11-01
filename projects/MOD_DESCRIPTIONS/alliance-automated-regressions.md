@@ -65,3 +65,18 @@ helicase binding.
 
 - **Current Alliance automated:** Predicted to enable RNA endonuclease activity; miRNA binding activity; and single-stranded RNA binding activity. Predicted to be involved in regulatory ncRNA-mediated post-transcriptional gene silencing. Located in P granule. Is expressed in germ line and in male.
 - **RefSeq (GeneID:172463):** Enables DEAD/H-box RNA helicase binding activity. Predicted to be involved in regulatory ncRNA-mediated post-transcriptional gene silencing. Located in P granule. Is expressed in germ line and in male. [provided by Alliance of Genome Resources, Jul 2025]
+
+## Yeast candidates
+
+Found during the yeast follow-up. Fewer yeast genes have a RefSeq copy to compare
+against, so most of these are omissions, not before/after losses.
+
+- **CNE1:** the RefSeq copy has "Enables unfolded protein binding activity"; the
+  current automated text has "predicted calcium ion binding" instead.
+- **SER3:** the current automated text drops phosphoglycerate dehydrogenase and
+  alpha-ketoglutarate reductase, which the RefSeq copy lists.
+- **PNO1, VMA22:** "unfolded protein binding" was dropped. This probably follows
+  the obsoletion of GO:0051082, so it is not a regression.
+- **IMD2, IMD3, IMD4:** the automated text omits IMP dehydrogenase activity
+  although GOA has those rows (IBA, IEA, RCA). There is no RefSeq copy to compare,
+  so this is an omission by the generator, not a loss.

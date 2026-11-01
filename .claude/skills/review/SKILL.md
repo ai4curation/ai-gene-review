@@ -32,7 +32,9 @@ concurrently with deep research. Launch both at the same time:
   source: it has no citations and no date, and it is often years old. Use it as a recall
   checklist. Each claim should be either covered in the review (traced to a publication)
   or set aside in `reference_review.review_notes` (for example "stale: superseded by
-  PMID:..."). A claim found only in the MOD text is a lead for a literature search.
+  PMID:..."). A claim found only in the MOD text is a lead for a literature search. Set that reference's
+  `correctness` by one rule: `DISPUTED` if any claim is wrong, otherwise `UNVERIFIED`
+  if any claim could not be traced (name it in `review_notes`), otherwise `VERIFIED`.
 
 Run these two steps **in parallel** (e.g. as concurrent background agents or shell jobs).
 Do NOT wait for deep research to finish before starting publication caching.

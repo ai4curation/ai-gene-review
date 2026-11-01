@@ -250,7 +250,8 @@ results were spot-checked (pek-1, lrx-1, sem-5).
   stay `COMPLETE`, 101 are `IN_PROGRESS` and 772 are new (`STUB`).
 - SGD texts are much shorter than WormBase's (median 33 words, against 75 for
   WormBase and 111 for our yeast reviews). On lexical overlap they are closer to
-  ours: a median 0.42 of SGD content words appear in our descriptions, against
+  ours: a median 0.42 of SGD content words appeared in our descriptions (0.44 after
+  the follow-up below), against
   0.37 for worm (0.35 before the worm follow-up). See
   [yeast-comparison.yaml](MOD_DESCRIPTIONS/yeast-comparison.yaml).
 - Guard against automated text filed as curated (`looks_automated`): it
@@ -302,7 +303,37 @@ each other only.
   data cannot tell the two apart.
   SGD has two self-referencing copy errors: GTT2 "overlaps with Gtt2p", and IRC24
   is "a putative paralog of IRC24".
-- Next: act on the yeast gap and discrepancy findings, as for worm.
+- **Follow-up on the yeast findings.** Eight parallel agents worked through the 345 gap
+  and discrepancy findings (316 genes) under the same rules as for worm. Each edited
+  gene was validated and given a history record.
+  - 88 description-text `source_defects` across 81 genes: 44 SGD and 44 UniProt;
+    49 `WRONG_STATEMENT`, 24 `OUTDATED_STATEMENT`, 15 `MISSING_STATEMENT`; 37 of them
+    CONFIRMED by a quoted paper.
+  - 249 reviews edited, mostly with a description sentence for a verified gap.
+  - Two `NEW` rows, both checked against the NEW bar:
+    - MIH1 GO:1905279 regulation of retrograde transport, endosome to Golgi:
+      purified Mih1 dephosphorylates Vps26.
+    - HOG1 GO:0071243 cellular response to arsenic-containing substance: Hog1
+      senses arsenic through conserved cysteines.
+  - Three action changes. RAS2's duplicate IEA bud-neck row is now ACCEPT, matching
+    the accepted IGI row. DCI1's two dienoyl-CoA isomerase rows are now UNDECIDED,
+    because purified Dci1 shows no activity (PMID:19830908), against an earlier
+    crude-extract result.
+  - As for worm, lexical overlap rose (recall 0.42 to 0.44, median 111 to 115 words).
+  - Examples of SGD defects:
+    - RIB7 called a deaminase;
+    - ALG11's Man5 substrate;
+    - PFK1 ribosome association, which belongs to Pfk2;
+    - KDX1 called a kinase;
+    - GUT1 regulators swapped.
+  - Examples of UniProt defects:
+    - THI3 decarboxylase activity that direct assays do not find;
+    - BTS1 contradicted by its own kinetic data;
+    - CPT1 given Ept1's substrate;
+    - the vacuolar mevalonate module.
+- **`correctness` convention**, now in the review skill: `DISPUTED` if any claim is
+  wrong, otherwise `UNVERIFIED` if any claim could not be traced, otherwise `VERIFIED`.
+  53 earlier worm and yeast MOD and UniProt references were brought into line with it.
 
 ## Recommendations
 
@@ -333,5 +364,5 @@ each other only.
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
 - [x] Yeast: score descriptions (890 COMPLETE)
-- [ ] Yeast: act on gap and discrepancy findings
+- [x] Yeast: act on gap and discrepancy findings (88 source defects, 249 reviews edited)
 - [ ] Fly (FlyBase) and mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
