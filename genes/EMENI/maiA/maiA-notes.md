@@ -45,3 +45,10 @@ in this session; none was generated. Notes are from cached publications
   no fungal localization evidence and UniProt places MaiA in the cytoplasm by
   similarity, so the propagated term likely overstates MaiA localization. Not
   removed because a mitochondrial fraction has never been tested.
+
+## 2026-11-01 review follow-up (PR 5356)
+
+- GO:1902000 homogentisate catabolic process is now asserted uniformly for all nine
+  homogentisate-pathway exemplars (KT2440 hmgA/hmgC/hmgB, human HGD/GSTZ1/FAH,
+  A. nidulans hmgA/maiA/fahA), as NEW where GOA lacks it: each enzyme performs one of
+  the three catalytic steps of homogentisate breakdown.

@@ -73,3 +73,10 @@ UniProtKB: Q93099 (HGD_HUMAN); HGNC:4892; EC 1.13.11.5; 445 aa.
   HGD oxidizing tryptophan to N-formylkynurenine; not in the publications cache and not
   replicated, so recorded only as a suggested question/experiment, not as an annotation.
 - Status set to COMPLETE.
+
+## 2026-11-01 review follow-up (PR 5356)
+
+- GO:1902000 homogentisate catabolic process is now asserted uniformly for all nine
+  homogentisate-pathway exemplars (KT2440 hmgA/hmgC/hmgB, human HGD/GSTZ1/FAH,
+  A. nidulans hmgA/maiA/fahA), as NEW where GOA lacks it: each enzyme performs one of
+  the three catalytic steps of homogentisate breakdown.

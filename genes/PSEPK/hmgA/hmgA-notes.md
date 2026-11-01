@@ -19,3 +19,10 @@
   family review (interpro/panther/PTHR11056/PTHR11056-review.yaml) lists Q88E47 as an SF0
   representative.
 - Status set to COMPLETE.
+
+## 2026-11-01 review follow-up (PR 5356)
+
+- GO:1902000 homogentisate catabolic process is now asserted uniformly for all nine
+  homogentisate-pathway exemplars (KT2440 hmgA/hmgC/hmgB, human HGD/GSTZ1/FAH,
+  A. nidulans hmgA/maiA/fahA), as NEW where GOA lacks it: each enzyme performs one of
+  the three catalytic steps of homogentisate breakdown.

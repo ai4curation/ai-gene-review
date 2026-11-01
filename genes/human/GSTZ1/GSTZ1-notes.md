@@ -67,3 +67,10 @@
 - Weak title-fragment quotes were replaced with curated UniProt statements (MAAI
   reaction with ECO:0000269; GSH cofactor note; homodimer from PubMed:11327815) and with
   PAINT rows.
+
+## 2026-11-01 review follow-up (PR 5356)
+
+- GO:1902000 homogentisate catabolic process is now asserted uniformly for all nine
+  homogentisate-pathway exemplars (KT2440 hmgA/hmgC/hmgB, human HGD/GSTZ1/FAH,
+  A. nidulans hmgA/maiA/fahA), as NEW where GOA lacks it: each enzyme performs one of
+  the three catalytic steps of homogentisate breakdown.

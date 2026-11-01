@@ -38,3 +38,10 @@ the UniProt record and the PAINT file for PTHR11056.
   named compound (not a substrate-of-process case).
 - Not added: L-tyrosine catabolic process (no fungal hmgA data on Tyr in the cached
   abstracts) and a location term (no data).
+
+## 2026-11-01 review follow-up (PR 5356)
+
+- GO:1902000 homogentisate catabolic process is now asserted uniformly for all nine
+  homogentisate-pathway exemplars (KT2440 hmgA/hmgC/hmgB, human HGD/GSTZ1/FAH,
+  A. nidulans hmgA/maiA/fahA), as NEW where GOA lacks it: each enzyme performs one of
+  the three catalytic steps of homogentisate breakdown.
