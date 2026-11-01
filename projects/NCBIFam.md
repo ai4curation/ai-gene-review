@@ -3,6 +3,7 @@ title: "NCBIFAM / CDD → GO Contribution & Gap Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+autolink_exclude: [ParB, parB]
 sidecars:
   slide_charts:
     - NCBIFam/slides/ncbifam-flow.svg
@@ -25,7 +26,7 @@ measured both sides. Forward, NCBIFAM backs 705 (13%) of the 5,549 InterPro2GO
 rows in this repo and is the only integrating signature for 250 of them. Reverse,
 NCBIFAM's own curated metadata puts GO terms on 11,228 of 34,351 models that GO
 never ingests, while CDD-proper has no GO of its own. We built a validated
-250-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
+252-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
 checked four high-gain rows structurally with OpenScientist. The gain is real
 but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
 entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
@@ -53,7 +54,7 @@ straight from the [validated seed](NCBIFam/ncbifam2go.sssom.yaml):
 |---|---|---:|---:|---|---|
 | NF033545 IS630 transposase | GO:0004803 transposase activity | **18,874** | 2 ~ | adopt NCBI | Mobile elements — InterPro integration lags most here; single biggest gap |
 | TIGR03542 LL-DAP aminotransferase | GO:0010285 LL-DAP transaminase | **1,185** | 2→**0** ✗ | **refine** | Large *bacterial* TrEMBL gap is real; but both reviewed "gaps" are plant ALD1 paralogs (see †) |
-| NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation |
+| NF041162 encapsulin shell protein | GO:0140737 encapsulin nanocompartment | **897** | 0 | adopt NCBI | CC term; new microbial-compartment biology, essentially no propagation. Checked for viral capsid contamination (2026-10-17): 0 viral members; phage SrpI-like capsids go to NF045672 instead; 829/932 neighbourhoods carry the cysteine-desulfurase cargo ([context check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)) |
 | TIGR00417 spermidine synthase | GO:0004766 spermidine synthase | **575** | 1→**0** ✗ | **refine** | NCBI gave near-root GO:0003824 (gain ~0); specific term reveals 575; the 1 reviewed "gap" is tobacco PMT paralog (see †) |
 | NF006559 dihydroorotase | GO:0004151 dihydroorotase activity | **491** | 0 | **refine** | NCBI gave broad GO:0016810; specific child (EC 3.5.2.3) unmasks 491 |
 | NF002326 dGTPase | GO:0016793 (family) + GO:0008832 / GO:0106375 (clades) | (split) | — | **split** | ⚠️ **Corrected**: structural verification showed this family is substrate-heterogeneous, so it was **split** — family-level `exactMatch` to the parent GO:0016793 (gain ~0) + two `narrowMatch` sub-clades (strict dGTPase GO:0008832 marked *do-not-blanket-propagate*; broad SAMHD1-like GO:0106375). The apparent 456 net-new for the strict term applies only to the dGTPase core, not the whole family (see ‡‡ / the SSSOM split block) |
@@ -137,7 +138,7 @@ The round was productive in *both* altitude directions:
 | **NF042963** DUF1156 (anti-phage) | A0A3B7MFS0 | Intact SAM-dependent **DNA amino-methyltransferase** (DPPY), no nuclease; BREX/DISARM-like defense; DUF1156 accessory | **Adds an MF** the DUF name hid (GO:0009008; base UNDECIDED m6A/m4C) — seed *under*-specified |
 | **NF002326** dGTPase | Q92Q32 ("-like") | Active site **intact**, but SAMHD1-like **broad dNTPase**, strict dGTP not supported | **Over-refinement caught**: keep GO:0008832 for strict members, map "-like" clade to sibling GO:0106375 |
 | **NF033545** IS630 transposase | P16943 ("uncharacterized") | Bona fide **DDE transposase** (RNase-H fold, intact D181/D261/E297 triad) | **Confirms** GO:0004803; grounds the 18,874 headline (add an intact-triad filter for defective IS copies) |
-| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein (⚠️ *weakly blinded* — the prompt named the accession, so Foldseek could read `encap_f2a`/IPR049822 off the curated signature; the independent part is the AlphaFold no-TM evidence) | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation |
+| **NF041162** encapsulin | A0A0D5NHT9 ("Membrane protein") | **HK97 encapsulin shell**, not a membrane protein (⚠️ *weakly blinded* — the prompt named the accession, so Foldseek could read `encap_f2a`/IPR049822 off the curated signature; the independent part is the AlphaFold no-TM evidence) | **Confirms** CC GO:0140737; "membrane protein" is a mis-annotation. Follow-up (2026-10-17): Aguilar et al. 2026 (PMID:42875451) show the SrpI-like domain also occurs in phage major capsid proteins, but NCBIFAM puts those in NF045672, not NF041162; a domain-level PF19307/IPR045641 → GO:0140737 rule would **not** be safe ([context check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)) |
 
 The two enzyme rows are the payoff: DUF1156 shows the seed can **under**-specify (a
 "DUF" concealing a real MF) and dGTPase shows it can **over**-specify (a strict child
@@ -356,6 +357,13 @@ like it carries GO. The answer separates two things CDD conflates:
 Pfam→InterPro). Reproduce with `ncbifam_cdd_probe.py` and the FTP/Entrez checks in
 [NCBIFAM-METHODOLOGY.md](NCBIFam/NCBIFAM-METHODOLOGY.md).
 
+> **Caveat (2026-10-18):** this holds for the `cd` models and the bulk CDD files,
+> but NCBI also stores GO on **CDD domain architectures (SPARCLE)** and has
+> propagated it to RefSeq proteins since March 2023 (`ArchId:` in the WITH/FROM
+> column of NCBI's per-assembly GAFs). That GO is in neither `cddannot*.dat` nor
+> `hmm_PGAP.tsv`. In *P. putida* KT2440 it is the largest single NCBI GO source
+> (47% of GO-bearing proteins). See [REFSEQ_GO](REFSEQ_GO.md).
+
 ## Gaps Found (scoping)
 
 | # | Gap | Size | What it is |
@@ -379,13 +387,13 @@ The curation deliverable mirrors RHEA's [`rhea2go.sssom.yaml`](RHEA/rhea2go.ssso
 GO mapping **we propose for ingestion** — *not* a transcription of NCBI's
 `hmm_PGAP.tsv go_terms`. Each is backed by the model's `family_type`,
 `product_name`, EC, and PMIDs, plus the live UniProtKB propagation gain. A
-**250-row seed** (248 families; the dGTPase family is 3 rows after the clade split
-below, +220 EC-bridge rows promoted from the candidate set — batch 2 (10 hand-picked) plus
+**252-row seed** (249 families; the dGTPase family is 3 rows after the clade split
+below and the ParB family TIGR00180 is 2, +220 EC-bridge rows promoted from the candidate set — batch 2 (10 hand-picked) plus
 gain-ranked batches 3–5 covering the **complete gain ≥ 100 set** (60 at ≥500, 48 at 200–499,
 102 at 100–199)) spanning all three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family
 resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
 
-- **`skos:exactMatch`** (246 rows) — the GO term *is* the family's function; a
+- **`skos:exactMatch`** (247 rows) — the GO term *is* the family's function; a
   ready-to-add `ncbifam2go` row. The enzyme majority are **EC-bridge supported**
   (verified live: `ec2go(EC)` = this GO term, e.g. formamidase EC
   3.5.1.49→`GO:0004328`, β-lactamase EC 3.5.2.6→`GO:0008800`, uridine kinase EC
@@ -395,7 +403,9 @@ resource, not enzyme-only) is in place, with predicate classes parallel to RHEA:
   IS630 transposase → `GO:0004803` (18,874 entries missing it), an encapsulin-shell
   CC term, and an anti-phage defense BP term. **Five of these rows propose our own
   *specific* term to replace an NCBI value that was too broad** (see below).
-- **`skos:narrowMatch`** (2 rows) — the **dGTPase family split** (NF002326). Structural
+- **`skos:narrowMatch`** (3 rows) — the **dGTPase family split** (NF002326), and
+  chromosome segregation for the chromosomal sub-clade of ParB/RepB/Spo0J (TIGR00180;
+  see the ParB case below). For the dGTPase family, structural
   verification showed this one accession is substrate-heterogeneous, so its family-level
   `exactMatch` is the common parent `GO:0016793` (triphosphoric monoester hydrolase, true
   for all members) and the two specific sub-clade activities — strict `GO:0008832` dGTPase
@@ -440,6 +450,29 @@ We therefore propose the curator-consensus `GO:0051301 cell division` as the
 `exactMatch` and **decline** the higher-gain specific term. Specificity is the goal
 only up to the altitude the evidence supports.
 
+**…and the gain can be the error set: the ParB/RepB/Spo0J case.** `TIGR00180` came
+up in the reviews of *P. putida* and *P. aeruginosa* ParB
+([worked case in REFSEQ_GO](REFSEQ_GO.md#worked-case-the-parab-chromosome-partition-proteins)).
+NCBI gives it DNA binding, chromosome segregation and cytokinesis. InterPro2GO for
+its InterPro entry (IPR004437) passes on only DNA binding, so it looked like the
+model's curated chromosome-segregation term was being masked. It is not a gap
+worth filling. TIGR00180 is a domain model, and its 79 reviewed members are 32
+chromosomal ParB/Spo0J, 33 Noc nucleoid-occlusion proteins, 10 plasmid partition
+proteins (SopB, P1 ParB, KorB, RepB), 2 F-plasmid YubM and 2 Shigella VirB
+transcription activators. Chromosome segregation already reaches 95% of TIGR00180
+entries (27,383 of 28,687) by other routes. **All 6 reviewed entries that lack it
+are SopB, P1 ParB, YubM or VirB, where it would be wrong.** The existing coverage
+is not clean either: 7 reviewed plasmid proteins already carry chromosome
+segregation by other routes (KorB P07674 and Q52313, RepB P05683, Y4cJ P55392, and
+the plasmid ParBs Q746H2, Q9PHE9 and Q9RZV8). These are the same error, made
+upstream, and all 33 Noc entries carry it too, which is debatable. We therefore map the
+family to DNA binding (`exactMatch`, the only NCBI term true of every member,
+confirmatory). Chromosome segregation is a `narrowMatch` for the chromosomal ParB
+sub-clade, not to be propagated to the whole family, as in the dGTPase split.
+Cytokinesis is not mapped: no member does the work of cytokinesis. The plasmid
+partition members carry no plasmid-partitioning term (`GO:0030541`) at all, which
+is a separate gap that this family model cannot fill.
+
 **Verification matters and catches real errors.** One scoping-sample NCBIFAM
 `go_terms` value (`GO:0009448` on a GABA transaminase) is **obsolete**; a
 diacylglycerol-kinase model (NF009874, EC 2.7.1.107) is tagged with the **wrong**
@@ -461,9 +494,9 @@ CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 
-The 250-row seed has **two tiers of review**, and they should not be conflated: **~40
+The 252-row seed has **two tiers of review**, and they should not be conflated: **~42
 fully hand-curated rows** (the original bespoke set + the hand-picked batch 2) with
-individually-written rationale, plus **210 EC-bridge rows bulk-promoted** from the
+individually-written rationale (including the 2 TIGR00180 rows), plus **210 EC-bridge rows bulk-promoted** from the
 candidate set (batches 3–5). The promoted rows are *not* individually hand-reasoned —
 their comments are uniform/generated and each was auto-verified against a fixed bar
 (live `ec2go` bridge, QuickGO non-obsolete + canonical label, live UniProtKB gain ≥ 100,
@@ -471,7 +504,7 @@ non-catalytic-subunit screen). The **EC bridge** is what lets us apply that *sam
 mechanical evidence standard* to the whole collection with no per-row human judgement,
 because the agreement of two independent curated resources (NCBI's `go_terms` and GO's
 `ec2go`) *is* the verification — but that standard is weaker than the altitude/over-
-annotation judgement applied to the ~40 hand-curated rows (the "high gain is a flag,
+annotation judgement applied to the ~42 hand-curated rows (the "high gain is a flag,
 not an instruction" discipline holds for the hand-set; the promoted rows rely on the
 EC-bridge agreement plus the subunit screen). [`ncbifam2go_candidates.py`](NCBIFam/ncbifam2go_candidates.py)
 walks every NCBIFAM model and emits each `(model, GO)` where `ec2go(model's EC)`
@@ -549,6 +582,13 @@ over-annotation.
    contribution skews broad; prefer the specific child the curated entry supports.
 5. **Unintegrated signatures with a real function are `proposed_new_terms` /
    InterPro-integration requests**, not silent gaps.
+6. **Do not adopt NCBI `go_terms` that are known to be wrong.** NF016349
+   (Linocin_M18, PfamEq; encapsulin shell) carries GO:0008233 peptidase activity
+   and GO:0042742 defense response to bacterium in hmm_PGAP/20.0, left over from
+   Linocin M18's original misidentification as a bacteriocin. Exclude it from any
+   candidate round. Likewise, never map the SrpI-like domain (PF19307 / IPR045641 /
+   NF040250) to GO:0140737, because it also matches phage major capsid proteins
+   ([NF041162 check](NCBIFam/NF041162-hypotheses/genomic_context/RESULTS.md)).
 
 ## Follow-Up Targets
 
@@ -568,7 +608,7 @@ over-annotation.
 - **Maturity**: IN_PROGRESS — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
-  250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
+  252-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
   generated at collection scale, the **member-DB attribution re-join done** on the
   repo's annotations, and **four seed rows structurally verified via OpenScientist**
   (DUF1156, dGTPase, IS630, encapsulin).
@@ -582,12 +622,13 @@ over-annotation.
   5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
   repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 250 SSSOM rows in **two tiers**: ~40 fully hand-curated (bespoke rationale, altitude
+  — 252 SSSOM rows in **two tiers**: ~42 fully hand-curated (bespoke rationale, altitude
   judgement) + 210 EC-bridge rows bulk-promoted from the candidate set (batches 3–5,
-  uniform generated comments, auto-verified to a fixed bar). Predicates: 246 exactMatch
+  uniform generated comments, auto-verified to a fixed bar). Predicates: 247 exactMatch
   (incl. 5 proposing our own specific term over NCBI's broad one and 1 — FtsX — declining
-  a too-specific term), plus 2 narrowMatch (the dGTPase NF002326 clade split after structural
-  verification) and 2 broadMatch (VirB5 → T4SS complex, and the arsenate reductase Rieske
+  a too-specific term, and 1 — TIGR00180 — mapping a role-heterogeneous family to DNA
+  binding), plus 3 narrowMatch (the dGTPase NF002326 clade split after structural
+  verification, and chromosome segregation for the ParB sub-clade of TIGR00180) and 2 broadMatch (VirB5 → T4SS complex, and the arsenate reductase Rieske
   small subunit → whole-enzyme activity — a subunit→whole relation, not blanket-propagatable).
   Spanning MF/BP/CC, each with
   live propagation gain; **passes** `just validate-ncbifam-mappings`.

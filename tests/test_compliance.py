@@ -357,3 +357,42 @@ def test_comparison_policy_holds_action_changes_in_denominator(tmp_path):
     assert before.weighted_compliance == after.weighted_compliance
     for name in ("literature_support", "inference_support"):
         assert metric(before, name).total == metric(after, name).total == 1
+
+
+def test_accepted_nd_rewards_recorded_search(tmp_path):
+    """A guideline-conformant ND earns credit for citing the literature search."""
+    searched = {"reference_id": "file:yeast/X/X-deep-research-falcon.md"}
+    report = analyze(
+        tmp_path,
+        [
+            annotation("ND", "ACCEPT"),
+            annotation("ND", "ACCEPT", supported_by=[searched]),
+        ],
+    )
+    score = metric(report, "nd_search_support")
+    assert (score.populated, score.total) == (1, 2)
+
+
+@pytest.mark.parametrize("action", ["REMOVE", "MODIFY"])
+def test_stale_nd_needs_literature_quote(tmp_path, action):
+    """Removing an ND claims literature exists, so only a quote from it earns credit."""
+    report = analyze(
+        tmp_path,
+        [
+            annotation("ND", action, supported_by=[{"reference_id": "file:x.md"}]),
+            annotation(
+                "ND",
+                action,
+                supported_by=[{"reference_id": "PMID:1", "supporting_text": "A quote"}],
+            ),
+        ],
+    )
+    score = metric(report, "nd_stale_support")
+    assert (score.populated, score.total) == (1, 2)
+
+
+def test_kept_nd_earns_no_credit(tmp_path):
+    report = analyze(tmp_path, [annotation("ND", "KEEP_AS_NON_CORE")])
+    assert not {"nd_search_support", "nd_stale_support"} & {
+        s.slot_name for s in report.aggregated_scores
+    }

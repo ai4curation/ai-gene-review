@@ -33,7 +33,7 @@ For each annotation you will create or update the `review` section of the `exist
         supporting_text: DIRECT TEXT QUOTE FROM PUBLICATION HERE [EDITORIAL NOTES IN SQUARE BRACKETS ARE IGNORED]
 
 
-Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`.
+Only edit the `review` section. For any statement, back it up with a citation used in the overall document. You should quote exact passages of text in `supporting_text`. Never cite a `-goa.tsv` file (this gene's or another's) in `supported_by`: it records an annotation, not evidence for it, and validation rejects it. If no independent source supports a row, set the action to `UNDECIDED`.
 
 Note that there should be an entry under `existing_annotations` for every line in the GOA tsv.
 
@@ -98,6 +98,25 @@ evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a nega
 review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
 `MARK_AS_OVER_ANNOTATED` just to silence the check.
 
+**Check the PAINT losses on the gene's lineage.** Run `just paint-losses <organism> <GENE>`
+before judging IBA rows. It lists every IRD or IKR whose PANTHER node lies above the gene,
+the IBD node each one blocks, whether PAINT re-annotates the term below the loss, and the
+review's own rows on the blocked term. Act on what it reports:
+
+- An IRD produces no leaf annotation; it only stops the ancestral IBD from descending. The
+  cached `*-goa.tsv` can therefore still carry an IBA that a newer IRD has withdrawn. Say so
+  in that row's `reason` (node and date), and judge the claim on its evidence: the IBA's
+  ancestral support is gone, but the term may still be right.
+- If the review keeps the blocked term (ACCEPT, KEEP_AS_NON_CORE, a core function or a
+  NEW), it now argues against a deliberate PAINT decision. State the evidence that
+  contradicts the loss, as for SLC52A1 riboflavin transport (IDA) under PTN000309189.
+- If the family has a FamilyReview, check its `node_assessments` for the loss node. A
+  LOSS_TOO_BROAD or LOSS_CONTRADICTED verdict there is the argument to cite.
+- "Re-annotated below: yes" means PAINT lifts the block for this gene; the IBA is current.
+
+The tool matches terms exactly, so a review row on a descendant of the blocked term is not
+listed. See [projects/IRD_EVIDENCE.md](../../../projects/IRD_EVIDENCE.md).
+
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
@@ -153,7 +172,10 @@ Always make use of the `original_reference_id`. If this refers to a PMID, then r
 
 You should make use of:
 
-- pre-existing literature deep research review (GENE-deep-research.md)
+- pre-existing literature deep research review (GENE-deep-research-PROVIDER.md), including any
+  MOD curated gene description (GENE-deep-research-wormbase.md, -flybase.md, -sgd.md, ...).
+  The MOD text is hand-written but uncited and often stale: check each of its claims and record
+  the verdict in that reference's `reference_review`.
 - existing UniProt annotations (.uniprot.txt), in particular text annotations and features and domains
 - holistic but critical gestalt of existing GO annotations in the gene review YAML file (priortizing IBA annotations)
 
@@ -163,10 +185,18 @@ You should make use of:
    - **REMOVE**: Remove as likely incorrect based on combined evidence
    - **MODIFY**: Essence is sound but better terms exist (provide proposed_replacement_terms). Use this if the term is too deep or too shallow
    - **MARK_AS_OVER_ANNOTATED**: Not wrong but likely over-annotation
+   - **TOO_GENERAL**: True of the gene but uninformative, because a more specific term asserted elsewhere in this review (ACCEPT, KEEP_AS_NON_CORE, NEW, or a MODIFY replacement) already entails it — e.g. `hydrolase activity` beside an accepted `metalloendopeptidase activity`. Judges the term, not this row's evidence, and never means the claim is false. Use sparingly: a broader term that still says something (a pathway-level process beside a specific step, `endoplasmic reticulum` from a localization screen beside `ER membrane`) stays ACCEPT/KEEP_AS_NON_CORE. Not for `GO:0005515` protein binding, which has its own policy below
    - **UNDECIDED**: Unclear annotation requiring more evidence (always use if unable to access relevant publications)
    - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it does some of the work of it (catalysing a step, or contributing structure or cofactor activity a step depends on), and not merely because it is required for, consumed by, or acted on by it
 
 Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need to favor one evidence code over another.
+A review judges claims about the gene, not evidence codes: rows sharing a term reinforce each other, and their
+actions must not contradict each other. Never REMOVE a row as a "duplicate" of another row to the same term, and
+never REMOVE a true-but-broad term (use TOO_GENERAL). Validation enforces this from the table in
+`src/ai_gene_review/schema/action_consistency.yaml` (see `docs/action_consistency.md`).
+Do not keep both a term and a NOT annotation to it: decide which the evidence supports (REMOVE or UNDECIDED
+the other). Only in the very rare case where both genuinely hold (e.g. different tissues or conditions), add
+`review.consistency_exception: {reason: ...}` to the row, citing the evidence for each context.
 
 It may also be OK for IEAs to be broader than what is determined by IBA or literature, you can just mark these as accept,
 unless you think the mapping is too general.
