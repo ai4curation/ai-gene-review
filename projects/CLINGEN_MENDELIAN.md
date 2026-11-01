@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**673 of 2,876 genes are complete; 2,203 remain.**
-This checkpoint adds FOXP2, FRMPD4, FRRS1L and FTL after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-673-2026-11-01-062920-utc) records the evidence and retained uncertainties.
+**676 of 2,876 genes are complete; 2,200 remain.**
+This checkpoint adds FUCA1, FTSJ1 and FUT8 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-676-2026-11-01-094300-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3808,10 +3808,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FRMPD4** — HGNC:29007; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdc39072-6ab1-4ec6-af69-ce7a2f874f1b-2022-11-02T160000.000Z) (MONDO:0100148; XL; Definitive).
 - [x] **FRRS1L** — HGNC:1362; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_254975f0-b3ae-4838-909a-17db2e9faabc-2024-09-17T170000.000Z) (MONDO:0100062; AR; Definitive).
 - [x] **FTL** — HGNC:3999; [hereditary hyperferritinemia with congenital cataracts](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ecf284e7-1022-4a2e-9e3f-3fd60b4cd3b2-2026-02-18T063000.000Z) (MONDO:0010952; AD; Definitive); [neuroferritinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f311ed35-a376-46cc-a2bf-8292d0b7104c-2026-06-26T063000.000Z) (MONDO:0011638; AD; Definitive).
-- [ ] **FTSJ1** — HGNC:13254; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1bc0312a-eb44-4d79-8816-d9ef685e2c8c-2023-02-01T170000.000Z) (MONDO:0100148; XL; Definitive).
-- [ ] **FUCA1** — HGNC:4006; [fucosidosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e88e0ef6-e788-40e2-bbd4-7fb3efb6b0ea-2022-08-02T160000.000Z) (MONDO:0009254; AR; Definitive).
+- [x] **FTSJ1** — HGNC:13254; [X-linked complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1bc0312a-eb44-4d79-8816-d9ef685e2c8c-2023-02-01T170000.000Z) (MONDO:0100148; XL; Definitive).
+- [x] **FUCA1** — HGNC:4006; [fucosidosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e88e0ef6-e788-40e2-bbd4-7fb3efb6b0ea-2022-08-02T160000.000Z) (MONDO:0009254; AR; Definitive).
 - [ ] **FUS** — HGNC:4010; [amyotrophic lateral sclerosis type 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b2e8f55b-371e-438f-8923-73ca9b7ec034-2021-10-12T183601.087Z) (MONDO:0011951; AD; Definitive).
-- [ ] **FUT8** — HGNC:4019; [congenital disorder of glycosylation with defective fucosylation 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a593a104-5904-461f-956b-ad1e154df921-2024-05-15T170000.000Z) (MONDO:0020775; AR; Definitive).
+- [x] **FUT8** — HGNC:4019; [congenital disorder of glycosylation with defective fucosylation 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a593a104-5904-461f-956b-ad1e154df921-2024-05-15T170000.000Z) (MONDO:0020775; AR; Definitive).
 - [ ] **FXN** — HGNC:3951; [Friedreich ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec3f674b-1e71-4254-a0f9-f8909becff59-2017-12-22T170000.000Z) (MONDO:0100339; AR; Definitive).
 - [ ] **FZD4** — HGNC:4042; [FZD4-related exudative vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2da74e15-54c4-405c-aa44-301f4717087d-2024-04-04T160000.000Z) (MONDO:1040041; AD; Definitive).
 - [ ] **G6PC1** — HGNC:4056; [glycogen storage disease I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_951fef4e-a9ac-400c-b94a-5d6531086d9f-2024-09-27T160000.000Z) (MONDO:0002413; AR; Definitive).
