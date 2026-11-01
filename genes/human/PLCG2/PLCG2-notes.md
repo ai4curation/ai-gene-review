@@ -34,3 +34,19 @@ immune receptor signaling complexes. Alzheimer relevance should be captured
 through microglial receptor-proximal PLCG2 signaling, calcium/lipid
 second-messenger output, phagocytosis, survival, and inflammatory response
 biology rather than disease-progression annotations.
+
+
+## 2026-10-26 full annotation audit: evidence review in progress
+
+The preserved acquisition baseline and raw-file hashes are in `.cache/module-audit-logs/b-cell-panel-baseline.json`. This review covers all annotations, including functions outside B-cell signaling. Normal acquisition and actual provider attempts are recorded in `b-cell-acquisition-report.md` and `b-cell-fetch/provider-publication-results.json`; provider failures are not research reports. Existing genuine exact-target reports, where available, are discovery aids. Original machine annotation payloads and raw source records will be preserved.
+
+
+## 2026-10-26 completed full annotation audit
+
+The catalytic core is PI(4,5)P2 hydrolysis to DAG and IP3, with phosphotyrosine recognition by its SH2 domains. The phosphatidylinositol-biosynthesis row is corrected laterally to IP3 biosynthesis; this is a product-role correction, not an ontology descendant claim. Broad lipid/phospholipid catabolism is refined to glycerophospholipid catabolism, while phosphatidylinositol metabolism remains an appropriate substrate-class process.
+
+Full PMID:11331309 identifies human PLCγ2 constructs, EGF-stimulated membrane/ruffle recruitment and subsequent vesicular internalization. The experimental expression system is distinguished from universal native-cell residence. PMID:23555801 directly shows dynamic perinuclear BANK1–PLCG2 proximity in Daudi cells. Full PMID:15509800 establishes BTK-dependent Y753/Y759 phosphorylation in human Ramos cells, with Y1217 behaving differently. Human PLCγ2 with avian BLNK in reconstitution experiments does not become an entirely native human complex assay.
+
+PMID:24642916 supports phosphotyrosine binding directly. Full PMID:27609517 independently recovers human platelet SYK with PLCγ2 tandem SH2 domains, although much more weakly than with PLCγ1; this supports the kinase-binding class without resolving the exact microglial interaction behind PMID:32514138. Generic interaction rows are refined only where the functional binding class is supported; other bare GO:0005515 rows are removed under policy while preserving the interaction provenance. Epithelial migration (PAINT PTN000741536) and Wnt signaling remain unresolved; hematopoietic enrichment is not evidence of loss, and an inaccessible full source is not proof of misattribution.
+
+All 178 original annotation payloads, including qualifiers and any negation flags, were preserved; no NEW assertions were added. Normal source acquisition and actual provider outcomes are retained in the acquisition logs. Failed provider calls were not replaced with fabricated reports. Source-access limits are recorded above and in the individual row reasons; partial publisher pages and captcha responses were not treated as full articles. The six-member focused strict/schema, GO-term and source-quotation check passed with zero errors and warnings before final packaging; the final package reruns those checks after finding additions. Record-section backfill, HTML rendering, helper-generated Codex provenance and exact payload/raw-hash checks accompany the package.

@@ -2291,7 +2291,7 @@ def validate_executable_models(
                 )
     warnings = [
         f"Executable model {model_id}: its scenarios are not checked "
-        "(only module-derived Boolean models are simulated)"
+        "(only module-derived Boolean and agent-based models are simulated)"
         for model_id in unchecked_scenario_models(doc)
     ]
     logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
