@@ -92,3 +92,8 @@ External experimental reading is separate from those abstract-grounded reasons. 
 |---|---|---|
 | [PMID:25597503](https://pubmed.ncbi.nlm.nih.gov/25597503/) | Genuinely fetched; full_text_available: false. | Accepted original manuscript, selected Results/Discussion/Methods. |
 | [PMID:23265191](https://pubmed.ncbi.nlm.nih.gov/23265191/) | Genuinely fetched; full_text_available: false. | Official abstract and complete ACS supplement; main article body inaccessible. |
+
+
+## Ferroxidase activity and physiological function
+
+The two GO:0004322 rows are MARK_AS_OVER_ANNOTATED. The [PMID:15641778 abstract](https://pubmed.ncbi.nlm.nih.gov/15641778/) positively reports ferroxidase activity of assembled recombinant human frataxin. The [PMID:15581888 abstract](https://pubmed.ncbi.nlm.nih.gov/15581888/) also reports human-heart mitochondrial species ranging from monomers to large polymers. Thus physiological assembly is supported; it is the physiological use of iron-oxidation chemistry that remains unestablished. The measured activity and its existing quotations remain intact. No quantitative inefficiency, noise, promiscuity, absent oligomerization or unreported assay condition is inferred from the abstract-only access. The question about physiological settings requiring this activity remains open.
