@@ -2999,9 +2999,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**661 of 2,876 genes are complete; 2,215 remain.**
-This checkpoint adds FNIP1, FN1 and FOXC1 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-661-2026-10-31-170331-utc) records the evidence and retained uncertainties.
+**665 of 2,876 genes are complete; 2,211 remain.**
+This checkpoint adds FOXE1, FOXC2, FOXE3 and FOXG1 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-665-2026-10-31-212106-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3801,10 +3801,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FNIP1** — HGNC:29418; [FNIP1-associated syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25c930ed-965b-47ae-b9c2-7157b06cb868-2024-11-26T170000.000Z) (MONDO:0100432; AR; Definitive).
 - [ ] **FOLR1** — HGNC:3791; [neurodegenerative syndrome due to cerebral folate transport deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_22c12588-dc55-4e90-827a-d7a6349e38a9-2017-10-20T100000.000Z) (MONDO:0013110; AR; Definitive).
 - [x] **FOXC1** — HGNC:3800; [FOXC1-related anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b2271229-84ea-4aff-81b4-3428c173ed7b-2021-11-18T170000.000Z) (MONDO:0100235; AD; Definitive).
-- [ ] **FOXC2** — HGNC:3801; [lymphedema-distichiasis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_757840b2-8b39-44d0-aff9-dd9983e77d0f-2024-01-24T170000.000Z) (MONDO:0007922; AD; Definitive).
-- [ ] **FOXE1** — HGNC:3806; [Bamforth-Lazarus syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0a00a763-90dc-4d36-8b34-54cf4f477269-2024-05-16T160000.000Z) (MONDO:0009437; AR; Definitive).
-- [ ] **FOXE3** — HGNC:3808; [anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d9cf89fb-ebb9-4c38-8b8c-97d9ce5af270-2023-07-20T160000.000Z) (MONDO:0019503; SD; Definitive); [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_982f5f02-596f-4dfa-a019-147934f6509b-2026-06-19T160000.000Z) (MONDO:0019625; AD; Limited); [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8261) (MONDO:0019625; AD; Moderate).
-- [ ] **FOXG1** — HGNC:3811; [FOXG1 disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3f14c6c5-b051-4c94-b9c6-3b80771eed22-2018-07-02T140827.839Z) (MONDO:0100040; AD; Definitive).
+- [x] **FOXC2** — HGNC:3801; [lymphedema-distichiasis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_757840b2-8b39-44d0-aff9-dd9983e77d0f-2024-01-24T170000.000Z) (MONDO:0007922; AD; Definitive).
+- [x] **FOXE1** — HGNC:3806; [Bamforth-Lazarus syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0a00a763-90dc-4d36-8b34-54cf4f477269-2024-05-16T160000.000Z) (MONDO:0009437; AR; Definitive).
+- [x] **FOXE3** — HGNC:3808; [anterior segment dysgenesis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d9cf89fb-ebb9-4c38-8b8c-97d9ce5af270-2023-07-20T160000.000Z) (MONDO:0019503; SD; Definitive); [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_982f5f02-596f-4dfa-a019-147934f6509b-2026-06-19T160000.000Z) (MONDO:0019625; AD; Limited); [familial thoracic aortic aneurysm and aortic dissection](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_8261) (MONDO:0019625; AD; Moderate).
+- [x] **FOXG1** — HGNC:3811; [FOXG1 disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3f14c6c5-b051-4c94-b9c6-3b80771eed22-2018-07-02T140827.839Z) (MONDO:0100040; AD; Definitive).
 - [ ] **FOXJ1** — HGNC:3816; [ciliary dyskinesia, primary, 43](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_53a48f3c-42fc-4c60-becb-149019b1e4bf-2025-10-17T190000.000Z) (MONDO:0032874; AD; Definitive).
 - [ ] **FOXN1** — HGNC:12765; [T-cell immunodeficiency, congenital alopecia, and nail dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4518c986-fb1d-4f9a-a24a-ab38891a0162-2021-11-05T181626.460Z) (MONDO:0011132; SD; Definitive).
 - [ ] **FOXP1** — HGNC:3823; [intellectual disability-severe speech delay-mild dysmorphism syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db1c240c-7ffb-4a95-92ad-da9e8af2adc6-2019-05-09T100000.000Z) (MONDO:0013352; AD; Definitive).
