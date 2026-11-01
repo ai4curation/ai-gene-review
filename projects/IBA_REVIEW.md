@@ -119,6 +119,11 @@ propagated annotations; 81 genes are reviewed and 65 await adjudication
 >
 > Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
 > [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
+>
+> External check: [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examines Wei *et al.* 2020
+> (PMID:32470107), which reported IBA as the leading non-IEA source of taxon-inconsistent
+> annotations. Most of its 290 flagged pairs are now gone from GOA; its plant lipid A flags
+> are refuted by experiment.
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
 
@@ -1583,7 +1588,7 @@ should not.
 1. **Flag pseudo-enzyme candidates**: Proteins with enzyme domains but missing catalytic residues
 2. **Flag neo-functionalized subfamilies**: Long branch lengths and different EC numbers indicate potential opposite function
 3. **Validate substrate specificity**: Don't assume identical specificity across orthologs
-4. **Distinguish core vs. secondary**: Mark promiscuous activities as non-core
+4. **Distinguish core vs. secondary**: a genuine secondary activity is non-core, but noise-level promiscuous activity of a paralog is removed; see the promiscuous-activity tiers in [ENZYME_SPECIFICITY](ENZYME_SPECIFICITY.md)
 5. **Prefer specific terms**: Replace generic IBA with specific terms when evidence exists
 6. **Check for functional divergence**: Especially in rapidly evolving families
 7. **Consider organism-specific biases**: Source annotations may reflect experimental systems (e.g., NMJ in flies) that don't apply to target species
