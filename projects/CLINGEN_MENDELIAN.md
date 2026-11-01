@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**676 of 2,876 genes are complete; 2,200 remain.**
-This checkpoint adds FUCA1, FTSJ1 and FUT8 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-676-2026-11-01-094300-utc) records the evidence and retained uncertainties.
+**679 of 2,876 genes are complete; 2,197 remain.**
+This checkpoint adds FXYD2, FXN and FYB1 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-679-2026-11-01-130235-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3812,7 +3812,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **FUCA1** — HGNC:4006; [fucosidosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e88e0ef6-e788-40e2-bbd4-7fb3efb6b0ea-2022-08-02T160000.000Z) (MONDO:0009254; AR; Definitive).
 - [ ] **FUS** — HGNC:4010; [amyotrophic lateral sclerosis type 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b2e8f55b-371e-438f-8923-73ca9b7ec034-2021-10-12T183601.087Z) (MONDO:0011951; AD; Definitive).
 - [x] **FUT8** — HGNC:4019; [congenital disorder of glycosylation with defective fucosylation 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a593a104-5904-461f-956b-ad1e154df921-2024-05-15T170000.000Z) (MONDO:0020775; AR; Definitive).
-- [ ] **FXN** — HGNC:3951; [Friedreich ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec3f674b-1e71-4254-a0f9-f8909becff59-2017-12-22T170000.000Z) (MONDO:0100339; AR; Definitive).
+- [x] **FXN** — HGNC:3951; [Friedreich ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec3f674b-1e71-4254-a0f9-f8909becff59-2017-12-22T170000.000Z) (MONDO:0100339; AR; Definitive).
 - [ ] **FZD4** — HGNC:4042; [FZD4-related exudative vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2da74e15-54c4-405c-aa44-301f4717087d-2024-04-04T160000.000Z) (MONDO:1040041; AD; Definitive).
 - [ ] **G6PC1** — HGNC:4056; [glycogen storage disease I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_951fef4e-a9ac-400c-b94a-5d6531086d9f-2024-09-27T160000.000Z) (MONDO:0002413; AR; Definitive).
 - [ ] **G6PC3** — HGNC:24861; [autosomal recessive severe congenital neutropenia due to G6PC3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff1ec187-3779-4437-b17b-fa406fafc406-2024-08-07T170000.000Z) (MONDO:0012930; AR; Definitive).
@@ -5312,8 +5312,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **FLII** — HGNC:3750; [cardiomyopathy, dilated, 2j](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_660622fe-f967-42be-a565-0383e5f710c2-2026-03-04T170000.000Z) (MONDO:0957984; AR; Moderate).
 - [ ] **FOXA2** — HGNC:5022; [combined pituitary hormone deficiencies, genetic form](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8a995738-1ea3-454b-b92f-251d4b21d530-2025-10-08T170000.000Z) (MONDO:0013099; AD; Moderate).
 - [ ] **FTH1** — HGNC:3976; [hemochromatosis type 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cc52d02d-1b04-4add-8922-cd72fbe76867-2025-08-25T063000.000Z) (MONDO:0014225; AD; Limited); [neurodegeneration with brain iron accumulation 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_32fde665-99c7-4034-8830-80c9558ccada-2025-09-23T063000.000Z) (MONDO:0958012; AD; Moderate).
-- [ ] **FXYD2** — HGNC:4026; [renal hypomagnesemia 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aef2e6fc-52d8-4077-a5c9-0f70bbebea36-2025-12-03T050000.000Z) (MONDO:0007937; AD; Moderate).
-- [ ] **FYB1** — HGNC:4036; [thrombocytopenia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0e4e83fb-516b-43f8-a0af-687b9d938f74-2024-02-05T170000.000Z) (MONDO:0010120; AR; Moderate).
+- [x] **FXYD2** — HGNC:4026; [renal hypomagnesemia 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aef2e6fc-52d8-4077-a5c9-0f70bbebea36-2025-12-03T050000.000Z) (MONDO:0007937; AD; Moderate).
+- [x] **FYB1** — HGNC:4036; [thrombocytopenia 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0e4e83fb-516b-43f8-a0af-687b9d938f74-2024-02-05T170000.000Z) (MONDO:0010120; AR; Moderate).
 - [ ] **GABBR2** — HGNC:4507; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_563863fd-cdfa-452c-af03-715b3696670d-2024-11-19T180000.000Z) (MONDO:0100038; AD; Moderate).
 - [ ] **GABRD** — HGNC:4084; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2c112d0b-91a0-4ba3-b3d6-d36eadddd5ee-2023-07-18T190000.000Z) (MONDO:0100038; AD; Moderate); [epilepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_64f743b4-408d-40d6-855b-ef9d67fc172e-2023-07-18T190000.000Z) (MONDO:0005027; AD; Limited).
 - [ ] **GAS2L2** — HGNC:24846; [ciliary dyskinesia, primary, 41](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_91afae37-4cfc-4aeb-af0f-26a9596611f3-2023-09-14T160000.000Z) (MONDO:0032757; AR; Moderate).

@@ -7511,3 +7511,41 @@ Each run also passed 12 example checks, 454 automation tests and 19 JavaScript t
 The 872,512-byte progress prefix, all 238 existing project histories, 235 original queue records and 155 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking these three completed genes. The current quotation and generic-binding policies are unchanged.
 
 Local tracker checks cover the exact five-path delta, accepted object preservation, queue equality, native history and private rendered checkpoint links. They do not substitute for the completed integration runs above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T094300Z-codex-7c19c2.yaml).
+
+## Completion checkpoint 679 — 2026-11-01 13:02:35 UTC
+
+679 complete; 2,197 remaining out of 2,876 catalogue genes. This publishes three independently accepted completions after checkpoint 676 and adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → current stored | Status; annotation advisories |
+|---|---|---|---|
+| [FXYD2](https://github.com/ai4curation/ai-gene-review/pull/5828) | [merge df3df230](https://github.com/ai4curation/ai-gene-review/commit/df3df230778f928fa437e99d67cdc2d858bc761a); [run 41294795127](https://github.com/ai4curation/ai-gene-review/actions/runs/41294795127) | 25/25 → 25 → 25 | COMPLETE; 0 |
+| [FXN](https://github.com/ai4curation/ai-gene-review/pull/5827) | [merge 2d87d72a](https://github.com/ai4curation/ai-gene-review/commit/2d87d72ac8cb78f9b0a1d5bee0fb531587bdf7f7); [run 41302726137](https://github.com/ai4curation/ai-gene-review/actions/runs/41302726137) | 92/92 → 92 → 92 | DRAFT; 20 |
+| [FYB1](https://github.com/ai4curation/ai-gene-review/pull/5830) | [merge ce6b1910](https://github.com/ai4curation/ai-gene-review/commit/ce6b191094181b90d0b948c55c812cd5f10a76b0); [run 41304269937](https://github.com/ai4curation/ai-gene-review/actions/runs/41304269937) | 35/35 → 35 → 37 | DRAFT; 10 |
+
+FXYD2 preserves 25 original GOA contexts, 16 extension atoms and two documented product sequences. Its core is regulation of the sodium/potassium ATPase complex; this does not attribute ATP hydrolysis or independent ion translocation to FXYD2. Four source-specific UNDECIDED judgments remain in the accepted COMPLETE review. Five verified quotations are counted over the whole PR, including the initial excerpt and four additions. The generated GO cache companion is distinct from the 28 scientific sources; its accepted actual state includes eight upstream rows and the one approved GO:1903406 addition.
+
+FXN preserves 92 original GOA contexts, five extension atoms and three documented products. Its core remains the iron-sulfur assembly machinery, with conditional biochemical results distinguished from a defining physiological iron-oxidation role. The entire inherited 79-record review remains archived. All 68 inherited quotation associations are traceable: 20 active and 48 historical, with six additional current gene quotations. The separate prediction review contains 17 predictions and 19 quote occurrences representing 16 distinct excerpts from 13 sources; those are not additional GOA annotations. Two accepted prediction-code companion files remain part of the immutable accepted closure.
+
+FYB1 preserves 35 original contexts and adds two separately justified process annotations: protection of SKAP1 from degradation and positive regulation of integrin-mediated cell adhesion in T cells. The evidence retains the binding-dependent protection and engineered membrane-targeting limits. Its 37 current rows, three documented product sequences and nine verified quote associations remain distinct counts; the initial two quotations and seven follow-up additions belong to the same accepted PR. The core remains an intracellular signaling adaptor, with context-specific domain and lipid binding refinements preserved.
+
+| Gene | Current actions | References / assessed | Cores | Objects / normal sources / PR payload |
+|---|---|---|---|---|
+| FXYD2 | UNDECIDED: 4, ACCEPT: 9, TOO_GENERAL: 4, KEEP_AS_NON_CORE: 4, MODIFY: 4 | 28 / 27 | 1 | 37 / 28 / 29 |
+| FXN | MARK_AS_OVER_ANNOTATED: 2, MODIFY: 1, KEEP_AS_NON_CORE: 38, ACCEPT: 33, UNDECIDED: 10, TOO_GENERAL: 8 | 49 / 49 | 1 | 86 / 65 / 40 |
+| FYB1 | MODIFY: 6, KEEP_AS_NON_CORE: 14, UNDECIDED: 3, TOO_GENERAL: 2, ACCEPT: 10, NEW: 2 | 50 / 50 | 1 | 55 / 47 / 30 |
+
+The combined accepted closure contains 176 distinct objects, including 138 normal scientific sources and three explicit generated-cache/code companions. The three PR payloads contain 99 distinct paths. Shared sources have identical object identities. The 152 original GOA contexts are separated from FYB1's two authored annotations; FXN's prediction reviews remain separate. Historical seed judgments and current reviews are joined through the actual source mappings. The tracker does not alter any gene, source, prediction or companion object.
+
+All three actual merge-group runs completed the suite, validation and aggregate jobs successfully. Executed counts are preserved below and in the queue mirror.
+
+| Gene | Unit tests | Doctests | Schemas | Modules (warnings) | History records + tests | Families |
+|---|---|---|---|---|---|---|
+| FXYD2 | 4602 | 298 | 9981 | 747 (2291) | 20059 + 42 | 751 |
+| FXN | 4613 | 298 | 9981 | 747 (2291) | 20065 + 42 | 751 |
+| FYB1 | 4613 | 298 | 9982 | 747 (2291) | 20067 + 42 | 751 |
+
+Each run also passed 12 example checks, 454 automation tests and 19 JavaScript tests, and checked 303 mypy source files. Each retained 89 unit-test deselections, nine unit-test warnings, 37 skipped doctests and eight doctest warnings. Recorded dependency and destructor diagnostics remain in the actual logs. Explicit skipped-step records are preserved in the queue evidence; the suite, schema, history, module and family checks above actually executed.
+
+The 878,077-byte progress prefix, all 239 existing project histories, 235 original queue records and 156 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking these three completed genes. The current quotation and generic-binding policies are unchanged.
+
+Local tracker checks cover the exact five-path delta, accepted object preservation, queue equality, native history and private rendered checkpoint links. They do not substitute for the completed integration runs above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T130235Z-codex-451d90.yaml).
