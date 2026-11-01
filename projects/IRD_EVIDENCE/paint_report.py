@@ -4,8 +4,9 @@ Collects three kinds of case:
 
 1. Family-review node assessments judging an IRD/IKR LOSS_CONTRADICTED or LOSS_TOO_BROAD
    (``interpro/panther/*/*-review.yaml``).
-2. IRDs contradicted in a gene review whose family has no review yet
-   (``paint_report_gene_cases.yaml``, curated by hand).
+2. Gene-review rows whose ``propagation_review.paint_losses`` judge a loss CONTRADICTED
+   or TOO_BROAD, for (node, term) pairs that no family review has assessed
+   (``genes/*/*/*-ai-review.yaml``).
 3. Stale overrides: IRD rows whose ancestral node no longer carries an IBD for the term
    (``ird_nodes.tsv``, from ``fetch_paint_ird.py``).
 
@@ -67,6 +68,45 @@ def family_cases() -> list[list[str]]:
     return rows
 
 
+GENE_SUGGEST = {"CONTRADICTED": "Retract the IRD", "TOO_BROAD": "Move the IRD to a lower node"}
+
+
+def gene_cases(assessed: set[tuple[str, str]]) -> list[list[str]]:
+    """Rows for gene-review losses judged contradicted or too broad, not already in section 1.
+
+    The family is the one PAINT files the loss node under (``ird_nodes.tsv``); the gene's
+    UniProt PANTHER cross-reference is used only when the node is not listed there, since
+    the two can come from different PANTHER releases.
+    """
+    from ai_gene_review.validation.gene_paint_losses import panther_families
+
+    with (HERE / "ird_nodes.tsv").open() as fh:
+        node_family = {r["ird_node"]: r["family"] for r in csv.DictReader(fh, delimiter="\t")}
+    rows = []
+    for path in sorted(ROOT.glob("genes/*/*/*-ai-review.yaml")):
+        text = path.read_text()
+        if "paint_losses:" not in text:
+            continue
+        doc = yaml.safe_load(text) or {}
+        uniprot = path.with_name(path.name.replace("-ai-review.yaml", "-uniprot.txt"))
+        xref_family = ", ".join(panther_families(uniprot.read_text())) if uniprot.exists() else ""
+        for a in doc.get("existing_annotations") or []:
+            review = a.get("review") or {}
+            term = a.get("term") or {}
+            for loss in (review.get("propagation_review") or {}).get("paint_losses") or []:
+                agreement = loss.get("agreement", "")
+                node = str(loss.get("node_id", "")).split(":")[-1]
+                if agreement not in GENE_SUGGEST or (node, term.get("id")) in assessed:
+                    continue
+                rows.append([
+                    node_family.get(node, xref_family), node, f"{term.get('id')} {term.get('label', '')}", loss.get("evidence", ""),
+                    agreement, f"{doc.get('gene_symbol')} ({a.get('evidence_type')}:{review.get('action')})",
+                    first_sentences(review.get("reason", ""), 1), GENE_SUGGEST[agreement],
+                    str(path.relative_to(ROOT)),
+                ])
+    return rows
+
+
 def stale_overrides() -> list[list[str]]:
     """IRD rows whose ancestral node has no IBD for the blocked term."""
     path = HERE / "ird_nodes.tsv"
@@ -93,8 +133,8 @@ def table(header: list[str], rows: list[list[str]]) -> list[str]:
 def main() -> int:
     """Write PAINT_REPORT.md."""
     fam = family_cases()
-    genes = (yaml.safe_load((HERE / "paint_report_gene_cases.yaml").read_text()) or {})["cases"]
     stale = stale_overrides()
+    genes = gene_cases({(r[1], r[2].split()[0]) for r in fam})
     md = [
         "# Probable PAINT IRD errors: draft report",
         "",
@@ -105,15 +145,12 @@ def main() -> int:
         "",
         *table(["Family", "Node", "Blocked term", "Code", "Verdict", "Why (from the review)", "Suggested", "Review"], fam),
         "",
-        f"## 2. Gene reviews: IRDs contradicted by direct evidence ({len(genes)})",
+        f"## 2. Gene reviews: losses judged contradicted or too broad ({len(genes)})",
         "",
-        "These families have no family review yet; the evidence is in the gene review.",
+        "From `propagation_review.paint_losses` in the gene reviews, for losses no family",
+        "review has assessed. The quoted evidence is in each gene review.",
         "",
-        *table(
-            ["Family", "Node", "Blocked term", "Clade", "Evidence", "Suggested", "Review"],
-            [[c["family"], c["node"], f"{c['go_id']} {c['label']}", c["clade"],
-              " ".join(c["evidence"].split()), c["suggestion"], c["gene_review"]] for c in genes],
-        ),
+        *table(["Family", "Node", "Blocked term", "Code", "Judged", "Gene (row)", "Why (from the review)", "Suggested", "Review"], genes),
         "",
         f"## 3. Stale overrides: the blocked IBD is gone ({len(stale)})",
         "",

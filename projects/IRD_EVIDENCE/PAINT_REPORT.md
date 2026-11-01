@@ -22,15 +22,17 @@ sent. Each case links the review that argues it, with verbatim quotes in that fi
 | PTHR45618 | PTN000642212 | GO:0017077 oxidative phosphorylation uncoupler activity | IRD | LOSS_CONTRADICTED | This IRD NOT covers the mammalian UCP3 clade (15 leaves, all in PTHR45618:SF2 MITOCHONDRIAL TRANSPORTER UCP3-RELATED, including human, mouse and rat UCP3) and blocks the GO:0017077 IBD at PTN000642156 that PAINT seeded from MGI:98894, RGD:3931 and Arabidopsis AT3G54110. GO:0017077 is defined as proton transfer into the matrix that dissipates the gradient (proton leak); it does not require thermogenesis. | Retract the IRD | interpro/panther/PTHR45618/PTHR45618-review.yaml |
 | PTHR45807 | PTN002910252 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | IRD | LOSS_CONTRADICTED | This row is a negated IRD (dated 2026-08-28, the same day the Bilateria GO:0007259 IBD was refreshed). It asserts that the euteleostome TYK2 clade (SF6) has diverged so far that it no longer takes part in receptor JAK-STAT signaling, and its effect is that human and mouse TYK2 get no GO:0007259 IBA (confirmed in QuickGO). | Retract the IRD | interpro/panther/PTHR45807/PTHR45807-review.yaml |
 
-## 2. Gene reviews: IRDs contradicted by direct evidence (3)
+## 2. Gene reviews: losses judged contradicted or too broad (4)
 
-These families have no family review yet; the evidence is in the gene review.
+From `propagation_review.paint_losses` in the gene reviews, for losses no family
+review has assessed. The quoted evidence is in each gene review.
 
-| Family | Node | Blocked term | Clade | Evidence | Suggested | Review |
-|---|---|---|---|---|---|---|
-| PTHR12929 | PTN000309189 | GO:0032217 riboflavin transmembrane transporter activity | primate SLC52A1 (4 proteins) | Human SLC52A1 (RFVT1) transports riboflavin in direct assays (IDA, PMID:20463145 and PMID:21854757). The IRD also blocks GO:0032218 riboflavin transport on the same node. | Retract the IRD for GO:0032217 and GO:0032218. | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
-| PTHR13194 | PTN000995776 | GO:0010257 NADH dehydrogenase complex assembly | fungal CIA30/NDUFAF1 (11 proteins, including Neurospora crassa cia30) | N. crassa cia30 disruption mutants fail to form the membrane-arm assembly intermediate of complex I (PMID:9769214). The clade includes complex I-containing fungi. | Retract the IRD, or restrict it to a branch that has lost complex I. | genes/NEUCR/cia30/cia30-ai-review.yaml |
-| PTHR10454 | PTN000047958 | GO:0031265 CD95 death-inducing signaling complex | mammalian CFLAR (6 proteins) | The CD95/TRAILR-FADD DISC assembles with procaspase-8 and cFLIP (PMID:38710704). The other CFLAR IRDs on this node (endopeptidase activity, macrophage differentiation, neuron apoptosis) agree with the gene review. | Retract the IRD for GO:0031265 only. | genes/human/CFLAR/CFLAR-ai-review.yaml |
+| Family | Node | Blocked term | Code | Judged | Gene (row) | Why (from the review) | Suggested | Review |
+|---|---|---|---|---|---|---|---|---|
+| PTHR13194 | PTN000995776 | GO:0010257 NADH dehydrogenase complex assembly | IRD | CONTRADICTED | cia30 (IBA:ACCEPT) | NADH dehydrogenase complex assembly is the core function of CIA30. | Retract the IRD | genes/NEUCR/cia30/cia30-ai-review.yaml |
+| PTHR10454 | PTN000047958 | GO:0031265 CD95 death-inducing signaling complex | IRD | CONTRADICTED | CFLAR (IBA:ACCEPT) | c-FLIP is a component of the CD95 death-inducing signaling complex: the CD95/TRAILR-FADD DISC assembles by DED assembly with procaspase-8 and cFLIP (PMID:38710704), and FAS/CD95 signaling is one of the core death-receptor branches c-FLIP regulates. | Retract the IRD | genes/human/CFLAR/CFLAR-ai-review.yaml |
+| PTHR12929 | PTN000309189 | GO:0032217 riboflavin transmembrane transporter activity | IRD | CONTRADICTED | SLC52A1 (IBA:ACCEPT) | Riboflavin transmembrane transport is the defining activity of SLC52A1 (RFVT1/hRFT-1), measured directly in riboflavin uptake assays (IDA rows from PMID:20463145 and PMID:21854757). | Retract the IRD | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
+| PTHR12929 | PTN000309189 | GO:0032218 riboflavin transport | IRD | CONTRADICTED | SLC52A1 (IBA:ACCEPT) | SLC52A1 (RFVT1/hRFT-1) carries out riboflavin transport, measured directly in riboflavin uptake assays (IDA row from PMID:20463145; PMID:21854757). | Retract the IRD | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
 
 ## 3. Stale overrides: the blocked IBD is gone (14)
 

@@ -348,14 +348,17 @@ Updated 2026-10-06.
 - [x] Add an IRD check to the annotation-reviewer skill: `just paint-losses <org> <GENE>`
       lists the IRD/IKR losses on a gene's PANTHER lineage and the review's rows on each
       blocked term
-- [ ] Add a structured slot for the PAINT loss that withdrew an IBA (for example
-      `paint_loss_node` and `paint_loss_date` on `PropagationReview`). The 24 stale-IBA
-      notes are prose for now, and `paint_report_gene_cases.yaml` restates three of them
-      by hand; with the slot, report section 2 could be derived from the reviews
-- [ ] Revisit SCHPO pmp20 GO:0005777 peroxisome (UNDECIDED): experimentally supported
-      cytosolic/nuclear pools, no canonical PTS, and the PTN000824099 IRD now point the same
-      way, and `projects/ORGANELLES.md` offers keep, MARK_AS_OVER_ANNOTATED or REMOVE for a
-      synthesis row on a root organelle term
+- [x] Structured slot for the PAINT loss that withdrew an IBA:
+      `review.propagation_review.paint_losses` (node, IRD/IKR, date, and AGREES /
+      CONTRADICTED / TOO_BROAD / UNRESOLVED). All 24 stale-IBA rows carry it; validation
+      checks each entry against the family's paint.tsv; section 2 of
+      [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md) is now derived from it, replacing the
+      hand-maintained case list
+- [x] SCHPO pmp20 GO:0005777 peroxisome and GO:0005739 mitochondrion: UNDECIDED to
+      MARK_AS_OVER_ANNOTATED under `projects/ORGANELLES.md` rule 3. Experimental locations are
+      cytoplasm, cytosol and nucleus; there is no PTS1 (the protein ends in SSL) and no
+      PRDX5-type transit peptide; and the PTN000824099 IRD withdraws the IBA's support.
+      Not REMOVE, because no assay excludes a minor organelle pool
 - [ ] Inspect the 20 fully re-annotated IRD rows (the 14 stale overrides are listed in
       [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md), section 3)
 - [ ] Send the probable IRD errors to PAINT: [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md)

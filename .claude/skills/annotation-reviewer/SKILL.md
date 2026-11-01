@@ -113,6 +113,11 @@ review's own rows on the blocked term. Act on what it reports:
 - If the family has a FamilyReview, check its `node_assessments` for the loss node. A
   LOSS_TOO_BROAD or LOSS_CONTRADICTED verdict there is the argument to cite.
 - "Re-annotated below: yes" means PAINT lifts the block for this gene; the IBA is current.
+- Record each loss that applies on the row itself, as
+  `review.propagation_review.paint_losses` (`node_id`, `evidence`, `date`, and `agreement`:
+  AGREES, CONTRADICTED, TOO_BROAD or UNRESOLVED). Validation checks it against the
+  family's paint.tsv, and `projects/IRD_EVIDENCE/paint_report.py` collects the
+  CONTRADICTED and TOO_BROAD rows for the PAINT team.
 
 The tool matches terms exactly, so a review row on a descendant of the blocked term is not
 listed. See [projects/IRD_EVIDENCE.md](../../../projects/IRD_EVIDENCE.md).
