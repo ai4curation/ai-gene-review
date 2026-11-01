@@ -127,9 +127,14 @@ How reviewers resolved them:
 
 Root causes are split: `SOURCE_BAD` 34 (the donor annotation itself is wrong),
 `TERM_SCOPING_PROBLEM` 25, `PROPAGATION_BAD` 16 (sound donor, wrong target),
-`UNRESOLVED` 10. Only **16 of the 90 rows carry a `source_defects` entry**, so most of
-the `SOURCE_BAD` cases have not yet been routed upstream by `just
-export-source-defects`. The most frequent co-occurring failure mode is
+`UNRESOLVED` 10. Every `SOURCE_BAD` and `PROPAGATION_BAD` row still in current GOA
+now carries a `source_defects` entry (**50 of the 90 rows**), so `just
+export-source-defects` routes them to the assigning group: GO Central (PAINT and the
+rodent orthology pipeline) and Ensembl Compara take most of them. The rows without one
+are term-scoping, unresolved or weak-source cases, where the source record is not
+shown to be wrong. For family-tree (IBA) rows the requested change is `CHECK` rather
+than a repoint, because PAINT fixes them at the node (an IRD or a narrower placement),
+not on the gene's row. The most frequent co-occurring failure mode is
 `ROLE_CONFLATION` (16), which tracks the participant-for-inhibitor shape.
 
 Cases worth singling out:
@@ -186,7 +191,8 @@ sits on a PAINT node and every descendant inherits it.
 - [x] Keyword census of review reasons mentioning sign/direction (152 candidate rows, unscreened)
 - [ ] Screen the keyword census by hand; classify each true sign issue by origin hypothesis
 - [x] Harvest the `REGULATORY_SIGN_INVERSION` propagation_review rows (90 rows / 63 files)
-- [ ] Add `source_defects` to the `SOURCE_BAD` harvest rows that lack one (74 of 90 rows have none)
+- [x] Add `source_defects` to the `SOURCE_BAD` / `PROPAGATION_BAD` harvest rows (34 added; 50 of 90 rows now carry one)
+- [ ] File the GO Central and Ensembl reports from `just export-source-defects`
 - [ ] Look for other sign calls held UNDECIDED (or ACCEPTed) on in vitro evidence alone
 - [ ] Extend the flip census to REMOVE/UNDECIDED rows and to MF activator/inhibitor pairs
 - [ ] Trace propagated rows (IEA/IBA/ISS) to their donor annotations
@@ -221,3 +227,11 @@ participant, mostly IBA over mixed families. Added that second shape as origin
 hypothesis 6. Only 16 rows have a `source_defects` entry. The harvest's `original_signed`
 flag is a regex over the term label, and its `correction` classes compare labels, so
 both are aids to reading the table rather than curated judgements.
+
+Later the same day: added `source_defects` to the 34 `SOURCE_BAD` / `PROPAGATION_BAD`
+rows that lacked one (rat Prkaa2's row is no longer in GOA, so it was skipped). Resource
+is the GOA assigned_by: GO_CENTRAL 19, OTHER 11 (Ensembl Compara, TreeGrafter,
+YuBioLab, named in each explanation), and one each for ARUK_UCL, RGD, SGD and UNIPROT.
+Requested changes: 18 CHECK, 9 DELETE_ROW, 7 REPOINT. REPOINT is used only where the
+review gives a clear opposite-sign replacement for a row whose donor annotation it
+shows to be wrong (GNAI2, ABCC8, ARG2, GOT1, RGS2 ×2, mouse Btk). Explanations reuse each review's own reasoning; no review action changed.
