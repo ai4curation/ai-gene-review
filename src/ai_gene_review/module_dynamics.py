@@ -280,6 +280,10 @@ def run_scenario(
     count = scenario.get("expected_attractor_count")
     if count is not None and len(found) != int(count):
         failures.append(f"expected {count} attractor(s), got {len(found)}")
+    if as_list(scenario.get("expected_outcome_order")):
+        failures.append(
+            "expected_outcome_order is not supported on BOOLEAN scenarios"
+        )
     for slot, attr in (
         ("expected_active", "always_on"),
         ("expected_inactive", "always_off"),
@@ -305,16 +309,20 @@ def run_scenario(
 def unchecked_scenario_models(doc: dict[str, Any]) -> list[str]:
     """Ids of declared models that carry scenarios this module cannot run.
 
-    Only module-derived Boolean models are simulated; scenarios on an external
-    or non-Boolean model are recorded but never checked.
+    Module-derived Boolean and agent-based models are simulated; scenarios on an
+    external or unsupported model type are recorded but never checked.
 
     >>> unchecked_scenario_models({"executable_models": [
     ...   {"id": "ext", "model_type": "BOOLEAN", "derivation": "EXTERNAL",
     ...    "scenarios": [{"id": "s"}]},
+    ...   {"id": "abm", "model_type": "AGENT_BASED", "derivation": "DERIVED_FROM_MODULE",
+    ...    "scenarios": [{"id": "s"}]},
     ...   {"id": "kin", "model_type": "KINETIC", "derivation": "EXTERNAL"}]})
     ['ext']
     """
-    checked = {id(m) for m in boolean_models(doc)}
+    from ai_gene_review.module_abm import abm_models
+
+    checked = {id(m) for m in boolean_models(doc)} | {id(m) for m in abm_models(doc)}
     return [
         str(m.get("id"))
         for m in as_list(doc.get("executable_models"))
@@ -323,12 +331,15 @@ def unchecked_scenario_models(doc: dict[str, Any]) -> list[str]:
 
 
 def run_declared_scenarios(doc: dict[str, Any]) -> list[ScenarioResult]:
-    """Run every scenario of every derived Boolean model the module declares."""
+    """Run every scenario of every derived Boolean or ABM model the module declares."""
+    from ai_gene_review.module_abm import run_declared_abm_scenarios
+
     results: list[ScenarioResult] = []
     for model in boolean_models(doc):
         for scenario in as_list(model.get("scenarios")):
             if isinstance(scenario, dict):
                 results.append(run_scenario(doc, str(model.get("id")), scenario))
+    results.extend(run_declared_abm_scenarios(doc))
     return results
 
 
