@@ -75,6 +75,54 @@ ORGANISM_CONFIG: Dict[str, Dict[str, str]] = {
     },
 }
 
+# Most gene folders are named by UniProt species code rather than these short names.
+ORGANISM_CONFIG["CAEEL"] = ORGANISM_CONFIG["worm"]
+ORGANISM_CONFIG["DROME"] = ORGANISM_CONFIG["fly"]
+ORGANISM_CONFIG["DANRE"] = ORGANISM_CONFIG["zebrafish"]
+ORGANISM_CONFIG["XENTR"] = ORGANISM_CONFIG["frog"]
+ORGANISM_CONFIG["XENLA"] = {**ORGANISM_CONFIG["frog"], "alliance_species": "Xenopus laevis",
+                            "taxon_id": "NCBITaxon:8355"}
+
+# The Alliance automated (GO-derived) gene description opens with one of these and uses
+# the generator's fixed vocabulary. Some MODs (RGD) file that generated text in the
+# MOD_provided_gene_description note too.
+_AUTOMATED_OPENINGS = re.compile(
+    r"^(Enables|Predicted to|Involved in|Acts upstream of|Located in|Is active in|"
+    r"Part of|Contributes to|Exhibits|Used to study|Is expressed in|Orthologous to|"
+    r"Human ortholog)\b"
+)
+_AUTOMATED_SIGNATURES = re.compile(
+    r"activity[.;]|activity and |Involved in several processes|Predicted to (?:enable|be)|"
+    r"Orthologous to (?:human|several)|Human ortholog\(s\) of this gene|Is expressed in |"
+    r"Used to study "
+)
+
+
+def looks_automated(curated: str, automated: Optional[str]) -> bool:
+    """True when a "curated" MOD description is really the automated, GO-derived text.
+
+    Such text restates the GO annotations under review, so it must not be treated as an
+    independent hand-written source. It is recognised by identity with the Alliance
+    automated text, or by opening with a generator phrase *and* using the generator's
+    fixed vocabulary ("... activity.", "Involved in several processes", "Orthologous to
+    human ..."). The opening alone is not enough: hand-written SGD texts sometimes start
+    "Part of" or "Involved in". The vocabulary test does not need the Alliance text,
+    because a MOD's own generated text (RGD's) need not match it.
+
+    >>> looks_automated("Enables GTP binding activity. Involved in transport.", None)
+    True
+    >>> looks_automated("Enables heterocyclic compound binding activity; metallopeptidase activity.", "x")
+    True
+    >>> looks_automated("rab-11.1 encodes a small GTPase.", "Enables GTP binding activity.")
+    False
+    >>> looks_automated("Part of the CCR4-NOT complex; involved in mRNA degradation", None)
+    False
+    """
+    text = curated.strip()
+    if automated and text == automated.strip():
+        return True
+    return bool(_AUTOMATED_OPENINGS.match(text)) and bool(_AUTOMATED_SIGNATURES.search(text))
+
 # -------------------------------------------------------------------
 # Data model
 # -------------------------------------------------------------------
@@ -113,7 +161,10 @@ class DescriptionReview:
     rubrics: List[DescriptionReviewRubric] = field(default_factory=list)
     overall_notes: Optional[str] = None
 
-    # Standard rubric names for convenience
+    # Rubric for the cross-source review on GeneDescriptions.review (1-5).
+    CONCORDANCE_RUBRIC = "overall_concordance"
+
+    # Standard per-source rubric names for convenience
     RUBRIC_NAMES = [
         "correctness",
         "utility",
@@ -424,7 +475,15 @@ def extract_uniprot_xref(uniprot_data: str, db: str) -> Optional[str]:
         >>> extract_uniprot_xref(data, "GeneID")
         '854965'
         >>> extract_uniprot_xref(data, "HGNC")
+
+        WormBase lines lead with the transcript; the gene id is the WBGene field:
+
+        >>> extract_uniprot_xref("DR   WormBase; B0207.4; CE24761; WBGene00000099; air-2.", "WormBase")
+        'WBGene00000099'
     """
+    if db == "WormBase":
+        match = re.search(r"^DR\s+WormBase;.*?\b(WBGene\d+)\b", uniprot_data, re.MULTILINE)
+        return match.group(1) if match else None
     pattern = rf"^DR\s+{re.escape(db)};\s+([^;]+?);\s"
     match = re.search(pattern, uniprot_data, re.MULTILINE)
     if match:
@@ -469,14 +528,71 @@ def fetch_alliance_description(mod_id: str) -> Dict[str, Any]:
     url = f"{ALLIANCE_API_BASE}/gene/{mod_id}"
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
-    data = resp.json()
+    return parse_alliance_gene(resp.json())
+
+
+def parse_alliance_gene(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract synopses from an Alliance ``/api/gene`` response.
+
+    Handles the current response shape (``{"gene": {"relatedNotes": [...]}}``,
+    notes typed by ``noteType.name``) and the legacy flat shape
+    (``geneSynopsis`` / ``automatedGeneSynopsis``).
+
+    Examples:
+        >>> data = {"gene": {
+        ...     "geneSymbol": {"displayText": "rab-11.1"},
+        ...     "geneFullName": {"displayText": "RAB family"},
+        ...     "dataProviderCrossReference": {"referencedCurie": "WB:WBGene00004274",
+        ...         "displayName": "WBGene00004274",
+        ...         "resourceDescriptorPage": {"urlTemplate": "https://www.wormbase.org/db/get?name=[%s];class=Gene"}},
+        ...     "relatedNotes": [
+        ...         {"freeText": "rab-11.1 encodes a small GTPase", "noteType": {"name": "MOD_provided_gene_description"}},
+        ...         {"freeText": "Predicted to enable GTP binding", "noteType": {"name": "automated_gene_description"}},
+        ...     ]}}
+        >>> r = parse_alliance_gene(data)
+        >>> r["curated_synopsis"]
+        'rab-11.1 encodes a small GTPase'
+        >>> r["automated_synopsis"]
+        'Predicted to enable GTP binding'
+        >>> r["url"]
+        'https://www.wormbase.org/db/get?name=WBGene00004274;class=Gene'
+        >>> parse_alliance_gene({"geneSynopsis": "x", "automatedGeneSynopsis": "y"})["curated_synopsis"]
+        'x'
+    """
+    gene = data.get("gene")
+    if not isinstance(gene, dict):
+        return {
+            "curated_synopsis": data.get("geneSynopsis"),
+            "automated_synopsis": data.get("automatedGeneSynopsis"),
+            "name": data.get("name"),
+            "symbol": data.get("symbol"),
+            "url": data.get("modCrossRefCompleteUrl"),
+        }
+
+    notes: Dict[str, str] = {}
+    for note in gene.get("relatedNotes") or []:
+        note_type = (note.get("noteType") or {}).get("name")
+        if note_type and note.get("freeText") and note_type not in notes:
+            notes[note_type] = note["freeText"]
+
+    url = None
+    xref = gene.get("dataProviderCrossReference") or {}
+    template = (xref.get("resourceDescriptorPage") or {}).get("urlTemplate")
+    if template and xref.get("displayName") and "[%s]" in template:
+        url = template.replace("[%s]", xref["displayName"])
+    elif template:
+        logger.warning("Unrecognised Alliance URL template %r; no MOD page URL recorded", template)
 
     return {
-        "curated_synopsis": data.get("geneSynopsis"),
-        "automated_synopsis": data.get("automatedGeneSynopsis"),
-        "name": data.get("name"),
-        "symbol": data.get("symbol"),
-        "url": data.get("modCrossRefCompleteUrl"),
+        "curated_synopsis": notes.get("MOD_provided_gene_description"),
+        "automated_synopsis": notes.get("automated_gene_description")
+        or notes.get("MOD_provided_automated_gene_description"),
+        "name": (gene.get("geneFullName") or {}).get("displayText"),
+        "symbol": (gene.get("geneSymbol") or {}).get("displayText"),
+        "systematic_name": (gene.get("geneSystematicName") or {}).get("displayText"),
+        "primary_id": gene.get("primaryExternalId"),
+        "data_provider": (gene.get("dataProvider") or {}).get("fullName"),
+        "url": url,
     }
 
 
@@ -590,6 +706,10 @@ def fetch_gene_descriptions(
         try:
             alliance_data = fetch_alliance_description(alliance_id)
 
+            curated = alliance_data.get("curated_synopsis")
+            if curated and looks_automated(curated, alliance_data.get("automated_synopsis")):
+                logger.warning("%s: MOD 'curated' description is automated text; not recorded as curated", alliance_id)
+                alliance_data["curated_synopsis"] = None
             if alliance_data.get("curated_synopsis"):
                 gd.descriptions.append(
                     SourceDescription(
@@ -633,6 +753,52 @@ def fetch_gene_descriptions(
     return gd
 
 
+def save_preserving_reviews(gd: GeneDescriptions, path: Path) -> Path:
+    """Save freshly fetched descriptions without discarding reviews in an existing file.
+
+    A source keeps its review when its text is unchanged; a source whose text
+    changed loses it, because the review judged the old text. A source in the
+    existing file that the fresh fetch did not return (a failed request, or an
+    API change that makes the parser return nothing) is carried forward
+    unchanged, with a warning, rather than deleted. The cross-source review and
+    the findings are kept unless some source text changed. Status is recomputed.
+
+    Args:
+        gd: Freshly fetched descriptions (normally without reviews).
+        path: Sidecar file to write; may already hold reviews.
+
+    Returns:
+        The path written to.
+    """
+    if path.exists():
+        old = load_gene_descriptions(path)
+        old_by_source = {d.source: d for d in old.descriptions}
+        fresh_sources = {d.source for d in gd.descriptions}
+        for old_desc in old.descriptions:
+            if old_desc.source not in fresh_sources:
+                logger.warning(
+                    "%s %s: not returned by this fetch; keeping the existing text and review",
+                    path.name, old_desc.source,
+                )
+                gd.descriptions.append(old_desc)
+        unchanged = True
+        for d in gd.descriptions:
+            prev = old_by_source.get(d.source)
+            if prev is not None and prev.text == d.text:
+                d.review = d.review or prev.review
+            else:
+                unchanged = False
+                if prev is not None and prev.review is not None:
+                    logger.warning("%s %s: text changed; its review was dropped", path.name, d.source)
+        if unchanged:
+            gd.review = gd.review or old.review
+            gd.findings = gd.findings or old.findings
+        elif old.review is not None or old.findings:
+            logger.warning("%s: source texts changed; cross-source review and findings dropped", path.name)
+    gd.status = compute_description_status(gd)
+    return save_gene_descriptions(gd, path)
+
+
 def fetch_and_save_gene_descriptions(
     organism: str,
     gene_symbol: str,
@@ -651,7 +817,7 @@ def fetch_and_save_gene_descriptions(
     base = base_path or Path.cwd()
     gd = fetch_gene_descriptions(organism, gene_symbol, base_path=base)
     out_path = base / "genes" / organism / gene_symbol / f"{gene_symbol}-descriptions.yaml"
-    return save_gene_descriptions(gd, out_path)
+    return save_preserving_reviews(gd, out_path)
 
 
 # -------------------------------------------------------------------
@@ -702,7 +868,7 @@ def fetch_organism_descriptions(
 
             # Save per-gene file
             per_gene_path = gene_dir / f"{gene_symbol}-descriptions.yaml"
-            save_gene_descriptions(gd, per_gene_path)
+            save_preserving_reviews(gd, per_gene_path)
 
             count += 1
 
