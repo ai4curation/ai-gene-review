@@ -205,14 +205,16 @@ def main() -> int:
         sources = {(src, gid) for m in members for gid, src in leaf_src.get(m["uniprot"], []) if gid in desc(r["go_id"])}
 
         def where(src: str) -> str:
+            if src == r["ird_node"]:
+                return "same node"
             below = set(leaves_below(tree, src)) if tree else set()
-            return "below" if below and below <= inside and src != r["ird_node"] else "above"
+            return "below" if below and below <= inside else "above"
 
         readders = sorted(f"{src} {gid} ({where(src)}{', same term' if gid == r['go_id'] else ''})" for src, gid in sources)
         full_rows.append({
             "family": r["family"], "ird_node": r["ird_node"], "go_id": r["go_id"], "go_label": r["go_label"],
             "ird_date": r["date"], "clade_size": len(members), "reannotated_by": "|".join(readders),
-            "kind": "below" if any(where(s) == "below" for s, _ in sources) else "descendant from above",
+            "kind": next((k for k in ("below", "same node") if any(where(s) == k for s, _ in sources)), "above"),
         })
     with OUT_FULL.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(full_rows[0]) if full_rows else ["family"], delimiter="\t", lineterminator="\n")
@@ -247,17 +249,23 @@ def main() -> int:
         "",
         f"## 2. Fully re-annotated IRD rows ({len(full_rows)})",
         "",
-        "Every protein in the clade still gets the blocked term, or a GO descendant of it, as a",
-        "positive IBA, so the IRD removes nothing a user can see. The source of each IBA is the",
-        "PTN node in the leaf GAF's with/from. Two kinds occur:",
+        "Every protein in the clade still gets the blocked term, or a term below it in GO (by",
+        "is_a or part_of, the relations `analyze_ird.py` uses), as a positive IBA. The IRD",
+        "therefore removes nothing a user can see. The source of each IBA is the PTN node in",
+        "the leaf GAF's with/from. Three kinds occur:",
         "",
         f"- **Below** ({sum(r['kind'] == 'below' for r in full_rows)}): PAINT annotates the term again on a",
-        "  node inside the IRD clade, so the IRD is overridden for the whole clade.",
-        f"- **Descendant from above** ({sum(r['kind'] != 'below' for r in full_rows)}): the IRD blocks a general",
-        "  term, but an ancestral IBD carries a more specific child term that the IRD does not",
-        "  block, and that child implies the blocked term. The IRD is then logically inconsistent",
-        "  with the annotation set: a gene cannot lack a process while performing one of its",
-        "  subtypes. Either the IRD should also block the child term, or it should be retracted.",
+        "  node inside the IRD clade, overriding the IRD.",
+        f"- **Same node** ({sum(r['kind'] == 'same node' for r in full_rows)}): the IRD node itself carries an",
+        "  IBD for a more specific term, for example a mitochondrion IBD beside a NOT cytoplasm.",
+        f"- **Above** ({sum(r['kind'] == 'above' for r in full_rows)}): an ancestral IBD carries a more specific",
+        "  term that the IRD does not block.",
+        "",
+        "In each case the IRD contradicts annotations PAINT itself propagates: a gene cannot lack",
+        "a process or location while having one of its subtypes or parts. Either the IRD should",
+        "also block the more specific term, or it should be retracted. Some pairs cross GO",
+        "aspects through part_of (a transporter activity that is part of transmembrane",
+        "transport); those are listed but are weaker evidence of inconsistency.",
         "",
         *md_table(["Family", "IRD node", "Blocked term", "IRD date", "Clade", "Kind", "IBA sources (node, term, where)"],
                   [[r["family"], r["ird_node"], f"{r['go_id']} {r['go_label']}", r["ird_date"], r["clade_size"],
