@@ -93,3 +93,14 @@ scope of this citation fix.
   `GO:0010629` and generic `GO:0004402` explanations so they match their
   actions, adding `GO:0140068 histone crotonyltransferase activity` to
   `core_functions`, and reconciling `esa1-current-goa.yaml` action counts.
+- Removed unsupported H3/H2B substrate language from the description, generic
+  `GO:0004402` reasons, and H4 core-function prose. The cached Piccolo NuA4
+  nucleosome paper instead uses H3 and H2B tails as negative controls and
+  supports H4, H2A, and H2A.Z as Esa1/NuA4 substrates.
+- Revisited two ESA1 rows that had diverged from `main`: the live
+  ComplexPortal `GO:0000786 nucleosome` assertion should be `MODIFY` to
+  `GO:0031491 nucleosome binding`, because the structural evidence supports
+  NuA4/Piccolo binding to nucleosome substrates but not Esa1 being part of the
+  nucleosome; the broad NAS `GO:0006351 DNA-templated transcription` row stays
+  `MARK_AS_OVER_ANNOTATED`, because the accepted `GO:0006357` Pol II
+  transcription-regulation rows already capture the specific Esa1 role.
