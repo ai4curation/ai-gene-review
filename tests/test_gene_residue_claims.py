@@ -26,6 +26,9 @@ class StubCache:
     def get(self, accession: str) -> str:
         return self.seqs[accession.split(":")[-1]]
 
+    def add_review_records(self, review_path: Path) -> None:
+        pass
+
 
 #            positions: 1234567890
 CACHE = StubCache({"ANCHOR1": "MAHKCDEFGH", "TARGET1": "MAAKSDEFGH", "TARGET2": "MAHKCDEFGH"})
@@ -178,7 +181,7 @@ def test_uniprot_outage_uses_the_reviews_committed_record(tmp_path, monkeypatch)
         "ID   X_TEST                  Unreviewed;        10 AA.\n"
         "AC   TARGET1;\n"
         "DT   21-MAR-2012, sequence version 1.\n"
-        "SQ   SEQUENCE   10 AA;  1100 MW;  0000000000000000 CRC64;\n"
+        f"SQ   SEQUENCE   10 AA;  1100 MW;  {frv._crc64('MAAKSDEFGH')} CRC64;\n"
         "     MAAKSDEFGH\n"
         "//\n"
     )
