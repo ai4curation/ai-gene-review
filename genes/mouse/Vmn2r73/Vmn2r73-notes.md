@@ -44,3 +44,50 @@ V2R family membership and retention of its ligand-binding region are separable f
 No assay or localization study of the exact 496-residue product was found. The genuine Falcon report describes conventional seven-transmembrane receptor biology but does not account for this input sequence boundary; its full-length signaling conclusions cannot be transferred. The 1997 V2R publication is abstract-only in the cache. Stable expression and any accessory role of the shortened product remain unresolved.
 
 Exact sequence mapping: [Vmn2r73-bioinformatics/RESULTS.md](Vmn2r73-bioinformatics/RESULTS.md). Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+No ProtNLM2 file or prediction-evidence folder was opened for this section. New analysis:
+`Vmn2r73-bioinformatics/compare_sequences_rereview.py` → `RESULTS-rereview.md` (sequences fetched
+from UniProt REST).
+
+### Identity (alternative gene model)
+
+- A0A3B2WCZ5 (496 aa) = Ensembl ENSMUST00000232965 (Vmn2r73-203), a non-canonical transcript of
+  ENSMUSG00000070458. Ensembl canonical is ENSMUST00000077478 (Vmn2r73-201) → UniProt D3Z7M3, 851 aa.
+  There are 8 TrEMBL Vmn2r73 gene models (475–851 aa); none is Swiss-Prot reviewed.
+- Target 1–429 = canonical 1–429 (signal peptide + Venus-flytrap ligand-binding domain); canonical
+  430–505 skipped; target 430–470 = canonical 506–546 (nine-cysteine domain, Pfam NCD3G 432–474 on
+  target); then a ~26-aa divergent tail.
+- No transmembrane segment: UniProt has no TRANSMEM on the target (7 on D3Z7M3), and the only
+  KD window ≥1.6 is the signal peptide (positive control: 69 windows in canonical 561–851).
+- So the product, if made, is a soluble/luminal extracellular-domain-only V2R fragment.
+
+### Evolutionary placement
+
+- PANTHER PTHR24061 (CALCIUM-SENSING RECEPTOR-RELATED) : SF413 (VOMERONASAL 2, RECEPTOR 66-RELATED),
+  for the target and all Vmn2r73 models. The family review `interpro/panther/PTHR24061/PTHR24061-review.yaml`
+  places it in the same subfamily; no disagreement.
+- No experimentally characterised member of SF413 is known to me; the deorphanised V2Rs
+  (Vmn2r116/ESP1 receptor, SF398; Vmn2r1, family C, SF546) are in other subfamilies, so no
+  ligand specificity can be transferred. mGlu/CaSR structural work is used only for class C
+  domain architecture (VFT binds ligand, 7TM couples G protein; PMID:30675062).
+- No IBA rows exist for this accession; no GO-CAM or module includes Vmn2r73.
+
+### Decisions
+
+| Term | Prior | Now | Why |
+|---|---|---|---|
+| GO:0004930 GPCR activity (IEA InterPro) | REMOVE | REMOVE | product lacks 7TM; domain-architecture mismatch |
+| GO:0007186 GPCR signaling pathway (IEA InterPro) | UNDECIDED | REMOVE | same basis as MF; no evidence for any decoy/partner role |
+| GO:0005886 plasma membrane (IEA SubCell, ARBA) | UNDECIDED | MARK_AS_OVER_ANNOTATED | multi-pass topology false; partner-mediated surface retention untested |
+| GO:0016020 membrane (IEA InterPro) | UNDECIDED | MARK_AS_OVER_ANNOTATED | no anchor; signal-peptide product |
+
+Description rewritten as a gene-level summary that states the gene-model identity. core_functions
+left empty: no function is established for this product. Literature: the Falcon report found no
+Vmn2r73-specific study; Vmn2r73 is an orphan V2R.
+
+### Relative to review next
+
+Canonical same-gene product D3Z7M3 (Vmn2r73-201, 851 aa, full 7TM) has no review in the repo →
+`genes/mouse/Vmn2r73__D3Z7M3` (relation same_gene_canonical).

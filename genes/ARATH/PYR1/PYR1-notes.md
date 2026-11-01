@@ -90,3 +90,8 @@ turnover (Bueso 2014 RSL1; García-León 2019 ALIX/ESCRT), Ca2+ feedback via CBL
 (You 2023), and chemical-genetics modulation of the dimer interface (DBSA; Wang 2024), but
 these concern regulation/chemistry rather than new core PYR1 functions, so no new
 `existing_annotations` were created. No `UNDECIDED` actions were present to resolve.
+
+
+## 2026-10-25 ABA module source audit
+
+Reviewed all 50 existing rows against cached primary sources and the existing Falcon report. Corrected the unsupported claim that PYR1 does not associate with kinases: PMID:19874541 directly reports PYR1-SnRK2.3 co-IP. The proximal activity remains PP2C inhibition (PMID:19407142), now used to refine kinase regulator activity. Refined cytoplasm and identical-protein binding to the supported cytosol and homodimer terms. Consolidated core functions into receptor and phosphatase inhibitor activities with target-specific primary evidence. PMID:35388459 reports RCAR12/PYL1 phosphomimic/affinity experiments; these no longer become PYR1 mechanisms in the description. PMID:29970817 is a combined CARK1/RCAR11 transgene experiment. PMID:25652827 concerns engineered ligand recognition. Family studies and abstract-only records are scoped in reference reviews; no experimental interaction was rejected merely because its abstract foregrounds a paralog.

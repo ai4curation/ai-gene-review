@@ -155,3 +155,14 @@ are specific and independently supported.
   The α-syn work is all cytosolic.
 - GLOD4-KO mice are healthy to 18 months. What, then, is the physiological function of selective
   α-syn nitration, and does removing it change synuclein pathology rather than baseline biology?
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- Two mitochondrion rows, both kept ACCEPT: HTP MitoCoP (PMID:34800366, organelle-level) and IEA
+  GO_REF:0000044 (SL-0173). The UniProt location line is ECO:0000305 from a GFP-fusion study
+  [PMID:12897971 "Fusion expression of C17orf25 and GFP and computer analysis showed that C17orf25 was probably located in mitochondria."],
+  corroborated by fractionation [PMID:41628334 "GLOD4 is present in both mitochondria and cytosol, with relatively higher levels in the cytosol"].
+- Stayed at the root (no sub-compartment): UniProt has no transit peptide and no TM segment, the 2026
+  fractionation only separates mitochondria from cytosol, and no matrix- or membrane-side activity or
+  partner is known (the NUDT9 two-hybrid interaction does not fix a side). Fewer than two lines.
+- core_functions.locations unchanged. Cached PMID:12897971.

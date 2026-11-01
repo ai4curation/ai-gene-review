@@ -60,3 +60,9 @@ review additionally settles that FGF23's specific receptor term is GO:0005105 (t
 FGFR1c) and that its distinctive molecular function is hormone activity (GO:0005179) rather than
 growth factor activity - the module may wish to note the endocrine-ligand hormone activity alongside
 receptor binding. No module edits made.
+
+### 2026-10-10 content re-audit
+All 190 rows re-checked after the status change to COMPLETE; no corrections were needed (see
+history/genes/human/FGF23). The physiological axis is now modelled in
+`modules/fgf23_klotho_phosphate_homeostasis.yaml`, using hormone activity (GO:0005179) for FGF23,
+consistent with this review's core functions.

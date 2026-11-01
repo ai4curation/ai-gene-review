@@ -7,6 +7,7 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
+  merge_group:
   # Weekly full re-validation safety net: per-PR scoping can miss breakage caused by
   # upstream ontology drift (e.g. a GO term becoming obsolete), so validate everything
   # once a week and on manual dispatch.
@@ -14,12 +15,10 @@ on:  # yamllint disable-line rule:truthy
     - cron: '17 6 * * 1'
   workflow_dispatch:
 
-# A new push to a PR branch (or to main) supersedes the run for the previous
-# commit; without this, every intermediate commit holds a ~50 min runner slot
-# and the queue backs up behind bulk agent PRs. Scheduled and manual runs get
-# their own group so the weekly full validation is never cancelled by a push.
+# Cancel superseded PR/main push runs to reduce runner pressure. Queue and
+# scheduled/manual runs are unique: cancelling integration ejects its queued PR.
 concurrency:
-  group: build-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  group: build-${{ github.event.pull_request.number || (github.event_name == 'push' && github.ref) || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
@@ -28,7 +27,7 @@ env:
 #permissions: {}
 
 jobs:
-  test:
+  validation:
 
     runs-on: ubuntu-latest
     strategy:
@@ -38,12 +37,11 @@ jobs:
 
     steps:
 
-      # Ontology SQLite DBs (GO, CHEBI, ...) are large; free space before downloads.
-      - name: Free disk space
-        uses: jlumbroso/free-disk-space@v2.0.0
-        with:
-          tool-cache: false
-          large-packages: false
+      # Like dismech, avoid deleting preinstalled SDKs on every run. The runner
+      # started with 86 GB free in run 38122109159 (2026-10-11); cleanup still
+      # spent 121 seconds reclaiming another 22 GB. Log capacity for monitoring.
+      - name: Report disk space
+        run: df -h /
 
       # https://github.com/actions/checkout
       - name: Check out repository
@@ -53,108 +51,11 @@ jobs:
           fetch-depth: 1
 
       - name: Check for source changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4 # merge_group support requires >=4.0.1
         id: changes
         with:
           list-files: shell
-          filters: |
-            src:
-              - 'src/**'
-              - 'tests/**'
-              - 'pyproject.toml'
-              - 'uv.lock'
-              # projects/ is here because tests/test_project_frontmatter.py
-              # validates it. Without this the check can only ever fire on a PR
-              # that also touches src/, which project-doc PRs do not -- so it
-              # was structurally unable to catch what it exists to catch, and a
-              # doc with four out-of-vocabulary tags merged green.
-              - 'projects/**'
-            # The agentic-automation surface: workflow definitions, the central
-            # agent config, the composite actions, and the deterministic guard
-            # scripts. Cheap to check, and not otherwise covered when a PR only
-            # touches .github/.
-            agents:
-              - '.github/workflows/**'
-              - '.github/actions/**'
-              - '.github/scripts/**'
-              - '.github/agent-config.yaml'
-              - '.github/cron-profiles.yaml'
-              - 'scripts/auto_merge_ready_prs.py'
-              - 'scripts/retry_failed_reviews.py'
-              - 'scripts/apply_cron_profile.py'
-              - 'tests/js/**'
-            genes:
-              - 'genes/**/*-ai-review.yaml'
-            predictions:
-              - 'genes/**/*-predictions-review.yaml'
-            # BioReason/GO-GPT prediction sidecars: schema + term validation only
-            # (they carry no excerpts for the source-evidence check).
-            bioreason_predictions:
-              - 'genes/**/*-sft-predictions.yaml'
-              - 'genes/**/*-gogpt-predictions.yaml'
-              - 'genes/**/*-gogpt-leaf-predictions.yaml'
-            modules:
-              - 'modules/**/*.yaml'
-              - 'modules/**/*.yml'
-            # The curated dirs are here because the history layout test asserts
-            # every record's target.path exists on disk -- an invariant a
-            # gene/module/gocam/project rename or delete can break without
-            # touching history/ itself.
-            history:
-              - 'history/**/*.yaml'
-              - 'src/ai_gene_review/schema/history.yaml'
-              - 'scripts/new_history.py'
-              - 'scripts/backfill_history_from_prs.py'
-              - 'tests/test_history_schema.py'
-              - 'tests/test_backfill_history.py'
-              - 'genes/**'
-              - 'modules/**'
-              - 'gocams/**'
-              - 'projects/**'
-            families:
-              - 'interpro/panther/**/*-review.yaml'
-              # The member index (a build artifact) is the authority for
-              # family_residue_validator's PANTHER_MEMBERSHIP check, so a change to
-              # how it is built, or to its curated overrides, must re-validate.
-              - 'src/ai_gene_review/etl/panther_families.py'
-              - 'interpro/panther/panther-members-overrides.tsv'
-            # Anything that can change validation behaviour for ALL genes. If any of
-            # these change we cannot trust per-gene scoping, so we validate everything.
-            infra:
-              # This includes the history schema, so editing it triggers full
-              # validate-all it cannot affect. Do NOT "fix" that with a leading-!
-              # entry: dorny/paths-filter compiles each pattern independently
-              # (picomatch) and combines them with some(), so a negated pattern
-              # matches every OTHER path and turns the filter on for every PR.
-              # Real exclusions need predicate-quantifier: every, which would
-              # change the semantics of all the multi-pattern filters above.
-              - 'src/ai_gene_review/schema/**'
-              - 'src/ai_gene_review/validation/**'
-              - 'src/ai_gene_review/cli.py'
-              - 'src/ai_gene_review/tools/validate_pmid_references.py'
-              - 'conf/**'
-              - 'scripts/run_term_validator.sh'
-              - 'scripts/run_reference_validator.sh'
-              - 'justfile'
-              - 'project.justfile'
-
-      # The benchmark tests read frozen inputs with `git cat-file` at two declared
-      # commits: baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit
-      # (reviews/GOA behind the GO-GPT, BioReason sidecar and ProtNLM reports).
-      - name: Fetch benchmark baseline and review snapshot commits
-        if: steps.changes.outputs.src == 'true'
-        shell: bash
-        run: |
-          policy=projects/BIOREASON_COMPARISON/benchmark-policy.yaml
-          for field in baseline_commit review_snapshot_commit; do
-            commit="$(sed -n "s/^${field}: //p" "$policy")"
-            if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "Invalid BioReason benchmark ${field}: $commit" >&2
-              exit 1
-            fi
-            # persist-credentials is disabled; this targeted fetch uses public read access.
-            git fetch --no-tags --depth=1 origin "$commit"
-          done
+          filters: .github/ci-path-filters.yaml
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
@@ -246,16 +147,35 @@ jobs:
             echo "No gene-review or validation-infrastructure changes; skipping gene validation."
           fi
 
-      - name: Validate changed prediction reviews and source evidence
-        if: steps.changes.outputs.predictions == 'true'
-        run: just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+      # Integration can expose schema incompatibilities outside the PR's paths.
+      # Full reference/ontology revalidation remains on infra changes and the
+      # weekly pass; avoid refetching the entire literature corpus per merge.
+      - name: Validate all gene schemas (merge queue)
+        if: github.event_name == 'merge_group' && steps.changes.outputs.infra != 'true'
+        run: >-
+          uv run python -m ai_gene_review.validation.schema_batch --schema src/ai_gene_review/schema/gene_review.yaml
+          --target-class GeneReview genes/*/*/*-ai-review.yaml
 
-      - name: Validate changed BioReason/GO-GPT prediction files
-        if: steps.changes.outputs.bioreason_predictions == 'true'
-        run: just validate-prediction-terms ${{ steps.changes.outputs.bioreason_predictions_files }}
+      # Everything on the weekly/manual run, in the merge queue (a full pass
+      # takes about a minute) or on a validation-infrastructure change,
+      # otherwise only the changed files.
+      - name: Validate prediction reviews and source evidence
+        id: predictions
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "merge_group" ] || [ "${{ steps.changes.outputs.infra }}" = "true" ]; then
+            echo "::notice::Validating ALL prediction reviews."
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+            just validate-predictions-all
+          elif [ "${{ steps.changes.outputs.predictions }}" = "true" ]; then
+            echo "ran=true" >> "$GITHUB_OUTPUT"
+            just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+          else
+            echo "No prediction-review or validation-infrastructure changes; skipping."
+          fi
 
       - name: Upload prediction evidence validation
-        if: always() && steps.changes.outputs.predictions == 'true'
+        if: always() && steps.predictions.outputs.ran == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: prediction-evidence-validation
@@ -267,6 +187,7 @@ jobs:
       # full run.
       - name: Validate modules (scoped)
         if: >-
+          github.event_name == 'merge_group' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
@@ -279,6 +200,7 @@ jobs:
       # paths the layout test checks change, or on the full pass.
       - name: Validate history records (scoped)
         if: >-
+          github.event_name == 'merge_group' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
@@ -340,6 +262,7 @@ jobs:
       # broken these checks.
       - name: Validate family reviews (scoped)
         if: >-
+          github.event_name == 'merge_group' ||
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
@@ -348,7 +271,7 @@ jobs:
         run: just validate-families
 
       # Cache maintenance is advisory; every validation keeps its normal exit status.
-      # Save before the test suite, so synthetic test fixtures cannot enter this cache.
+      # Only this validation job saves sequences; tests run on a separate runner.
       - name: Inspect downloaded UniProt sequences
         id: sequence_cache_after
         if: ${{ !cancelled() && steps.sequence_cache_before.outcome == 'success' }}
@@ -376,25 +299,170 @@ jobs:
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: just verify-panther-paint
 
+  suite:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+      fail-fast: false
+
+    steps:
+
+      # Like dismech, avoid deleting preinstalled SDKs on every run. The runner
+      # started with 86 GB free in run 38122109159 (2026-10-11); cleanup still
+      # spent 121 seconds reclaiming another 22 GB. Log capacity for monitoring.
+      - name: Report disk space
+        run: df -h /
+
+      # https://github.com/actions/checkout
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Check for source changes
+        uses: dorny/paths-filter@v4 # merge_group support requires >=4.0.1
+        id: changes
+        with:
+          list-files: shell
+          filters: .github/ci-path-filters.yaml
+
+      - name: Decide whether test setup is needed
+        id: scope
+        run: echo "run=${{ github.event_name == 'merge_group' || steps.changes.outputs.src == 'true' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.agents == 'true' }}" >> "$GITHUB_OUTPUT"
+
+      # The benchmark tests read frozen inputs with `git cat-file` at declared commits:
+      # baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit (reviews/GOA
+      # behind the GO-GPT and BioReason sidecar reports), plus the ProtNLM2
+      # evaluation's own review_snapshot_commit.
+      - name: Fetch benchmark baseline and review snapshot commits
+        if: github.event_name == 'merge_group' || steps.changes.outputs.src == 'true'
+        shell: bash
+        run: |
+          fetch_field() {
+            local policy="$1" field="$2" commit
+            commit="$(sed -n "s/^${field}: //p" "$policy")"
+            if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "Invalid ${field} in ${policy}: $commit" >&2
+              exit 1
+            fi
+            # persist-credentials is disabled; this targeted fetch uses public read access.
+            git fetch --no-tags --depth=1 origin "$commit"
+          }
+          fetch_field projects/BIOREASON_COMPARISON/benchmark-policy.yaml baseline_commit
+          fetch_field projects/BIOREASON_COMPARISON/benchmark-policy.yaml review_snapshot_commit
+          fetch_field projects/PROTNLM_EVALUATION/review-snapshot.yaml review_snapshot_commit
+
+      # https://github.com/astral-sh/setup-uv
+      - name: Install uv
+        if: steps.scope.outputs.run == 'true'
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      # https://github.com/actions/setup-python
+      - name: Set up Python ${{ matrix.python-version }}
+        if: steps.scope.outputs.run == 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install just
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          uv tool install rust-just
+
+      - name: Install project
+        if: steps.scope.outputs.run == 'true'
+        run: uv sync --dev
+
+      # Cache the oaklib ontology SQLite DBs so term validation does not re-download
+      # multi-GB GO/CHEBI/etc. every run. Weekly-rotating key keeps them reasonably fresh.
+      - name: Compute ontology cache week
+        if: steps.scope.outputs.run == 'true'
+        id: ontoweek
+        run: echo "week=$(date -u +%Y%U)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache ontology databases
+        if: steps.scope.outputs.run == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.data/oaklib
+          key: oaklib-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            oaklib-${{ runner.os }}-
+
+      # PR runs reuse compatible generations, with the legacy cache as fallback.
+      # Scheduled/manual full passes resolve cold to detect upstream sequence drift.
+      - name: Restore UniProt sequences
+        if: steps.scope.outputs.run == 'true' && github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+        uses: actions/cache/restore@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-v2-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}-
+          restore-keys: |
+            uniprot-seq-v2-${{ runner.os }}-
+            uniprot-seq-${{ runner.os }}-
+
+      # The PANTHER member index (accession -> family) is a build artifact, not
+      # committed: validate-modules / validate-families run
+      # `just ensure-panther-members`, which extends it incrementally from the
+      # release-pinned PANTHER classification files cached here. A warm cache
+      # makes that a quick offline no-op; a cold one downloads ~300 MB once. The
+      # tests only restore this index; the validation job owns cache updates.
+      - name: Cache PANTHER classifications and member index
+        if: steps.scope.outputs.run == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: .cache/panther
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          restore-keys: |
+            panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
+            panther-${{ runner.os }}-
+
       - name: Test valid/invalid examples
-        if: steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
         run: just test-examples
 
       - name: Run test suite
-        if: steps.changes.outputs.src == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.src == 'true'
         run: just test
 
       # Runs even when `src` is false, so a .github-only change still gets its
       # agent-config consistency and guard-script checks.
       - name: Check agentic automation
-        if: steps.changes.outputs.agents == 'true'
+        if: github.event_name == 'merge_group' || steps.changes.outputs.agents == 'true'
         run: |
           uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
-            tests/test_sequence_cache_persistence.py -q
+            tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
-            .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py
+            .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py \
+            tests/test_merge_group_ci.py tests/test_merge_queue.py
           just test-js
+
+  # Keep the branch-protection context unchanged. An unconditional gate is needed:
+  # a skipped dependent job can otherwise look green when a prerequisite fails.
+  test:
+    needs: [validation, suite]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+      fail-fast: false
+    steps:
+      - name: Require validation and tests to succeed
+        env:
+          VALIDATION_RESULT: ${{ needs.validation.result }}
+          SUITE_RESULT: ${{ needs.suite.result }}
+        run: |
+          printf 'Validation: %s; tests: %s\n' "$VALIDATION_RESULT" "$SUITE_RESULT"
+          test "$VALIDATION_RESULT" = success && test "$SUITE_RESULT" = success
