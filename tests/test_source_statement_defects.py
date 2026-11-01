@@ -39,6 +39,6 @@ def test_statement_value_must_be_in_source(tmp_path: Path, defect_type: str, val
     gene = tmp_path / "genes" / "worm" / "g"
     gene.mkdir(parents=True)
     (gene / "g-deep-research-wormbase.md").write_text(SOURCE)
-    report = ValidationReport(file_path="g-ai-review.yaml", is_valid=True)
+    report = ValidationReport(file_path=Path("g-ai-review.yaml"), is_valid=True)
     validate_statement_defects(_data(defect_type, value), report, project_root=tmp_path)
     assert any(i.check_type == STATEMENT_DEFECT_CHECK for i in report.issues) is warns

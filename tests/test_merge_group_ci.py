@@ -1,6 +1,8 @@
 """Protect the required integration check and cancellation boundaries."""
 
 import os
+import fnmatch
+import shlex
 from pathlib import Path
 import subprocess
 
@@ -82,3 +84,101 @@ def test_required_gate_rejects_failed_cancelled_or_skipped_workers(validation, s
         capture_output=True, text=True,
     )
     assert (result.returncode == 0) == (validation == suite == "success")
+
+
+
+def _run_changed_gene_recipe(tmp_path, paths, fail_validation=False):
+    """Execute the real recipe; replace only its external validation commands."""
+    recipe = (ROOT / "project.justfile").read_text().split("validate-changed *files:\n", 1)[1]
+    recipe = recipe.split("\n# conf/local_quote_baseline.yaml", 1)[0]
+    script = "\n".join(line[4:] if line.startswith("    ") else line
+                       for line in recipe.splitlines())
+    script = script.replace("{{files}}", " ".join(shlex.quote(path) for path in paths))
+    calls = tmp_path / "calls"
+    stub = tmp_path / "bin"
+    stub.mkdir(exist_ok=True)
+    uv = stub / "uv"
+    uv.write_text(
+        '#!/bin/sh\nprintf "%s\\0" "$@" >> "$CALL_LOG"\nprintf "\\n" >> "$CALL_LOG"\n'
+        'if [ "$2" = "ai-gene-review" ] && [ "$FAIL_VALIDATION" = "1" ]; then exit 1; fi\n'
+    )
+    uv.chmod(0o755)
+    result = subprocess.run(
+        ["bash", "-c", script], cwd=tmp_path,
+        env={**os.environ, "PATH": str(stub) + os.pathsep + os.environ["PATH"],
+             "CALL_LOG": str(calls), "FAIL_VALIDATION": "1" if fail_validation else "0"},
+        capture_output=True, text=True,
+    )
+    recorded = ([line.decode().rstrip("\0").split("\0")
+                 for line in calls.read_bytes().splitlines()] if calls.exists() else [])
+    return result, recorded
+
+
+@pytest.mark.parametrize("source,state", [
+    ("FN1-goa.tsv", "added"),
+    ("FN1-goa-20261031.tsv", "modified"),
+    ("arbitrary-snapshot.tsv", "modified"),
+    ("arbitrary-snapshot.tsv", "deleted"),
+    ("FN1-goa.tsv", "deleted"),
+    ("FN1-goa-snapshots.yaml", "deleted"),
+    ("FN1-goa-snapshots.yaml", "malformed"),
+])
+def test_source_only_changes_validate_the_affected_review(tmp_path, source, state):
+    directory = tmp_path / "genes/human/FN1"
+    directory.mkdir(parents=True)
+    review = "genes/human/FN1/FN1-ai-review.yaml"
+    (tmp_path / review).write_text("id: P02751\n")
+    unrelated = tmp_path / "genes/human/OTHER/OTHER-ai-review.yaml"
+    unrelated.parent.mkdir()
+    unrelated.write_text("id: OTHER\n")
+    changed = f"genes/human/FN1/{source}"
+    if state != "deleted":
+        (tmp_path / changed).write_text("snapshots: [broken" if state == "malformed" else state)
+    filters = yaml.safe_load((ROOT / ".github/ci-path-filters.yaml").read_text())
+    # These positive, simple glob cases exercise the configured selection scope;
+    # the actual CI service still applies its own picomatch implementation.
+    assert any(fnmatch.fnmatchcase(changed, pattern) for pattern in filters["genes"])
+    assert not any(fnmatch.fnmatchcase(changed, pattern) for pattern in filters["infra"])
+    result, calls = _run_changed_gene_recipe(tmp_path, [changed])
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert calls == [
+        ["run", "ai-gene-review", "validate", "--verbose", "--terms", review],
+        ["run", "python", "src/ai_gene_review/tools/validate_pmid_references.py", "genes/human/FN1"],
+    ]
+
+
+def test_changed_sources_and_reviews_are_deduplicated(tmp_path):
+    directory = tmp_path / "genes/human/FN1"
+    directory.mkdir(parents=True)
+    reviews = ["genes/human/FN1/FN1-ai-review.yaml", "genes/human/FN1/SECOND-ai-review.yaml"]
+    for review in reviews:
+        (tmp_path / review).write_text("id: P02751\n")
+    result, calls = _run_changed_gene_recipe(tmp_path, [
+        reviews[0], "genes/human/FN1/FN1-goa.tsv", "genes/human/FN1/FN1-goa-snapshots.yaml",
+    ])
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert calls[0] == ["run", "ai-gene-review", "validate", "--verbose", "--terms", *reviews]
+    assert len(calls) == 2  # The PMID check also runs once for the shared directory.
+
+
+def test_changed_source_validation_failure_is_not_hidden(tmp_path):
+    directory = tmp_path / "genes/human/FN1"
+    directory.mkdir(parents=True)
+    (directory / "FN1-ai-review.yaml").write_text("id: P02751\n")
+    (directory / "FN1-goa-snapshots.yaml").write_text("snapshots: [broken")
+    result, calls = _run_changed_gene_recipe(
+        tmp_path, ["genes/human/FN1/FN1-goa-snapshots.yaml"], fail_validation=True,
+    )
+    assert result.returncode == 1
+    assert len(calls) == 2
+
+
+def test_unrelated_paths_and_deleted_reviews_do_not_select_other_genes(tmp_path):
+    directory = tmp_path / "genes/human/FN1"
+    directory.mkdir(parents=True)
+    (directory / "FN1-ai-review.yaml").write_text("id: P02751\n")
+    result, calls = _run_changed_gene_recipe(tmp_path, [
+        "docs/source.tsv", "genes/human/DELETED/DELETED-ai-review.yaml",
+    ])
+    assert result.returncode == 0
+    assert calls == []

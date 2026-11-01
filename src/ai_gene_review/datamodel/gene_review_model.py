@@ -467,6 +467,20 @@ class ModuleTypeEnum(str, Enum):
     """
 
 
+class VariantKindEnum(str, Enum):
+    """
+    The layer of a module rule that a variant set's alternatives belong to. A process step requires a molecular function (close to binary); that function is carried out by one of several families, domains or complexes (open-world). See projects/ORGANELLE_LIFECYCLES/two-layer-model.md.
+    """
+    REALIZER = "REALIZER"
+    """
+    The variants are alternative carriers of the same required activity: families, domains, complexes, isozymes, paralogs or lineage-specific proteins. A gap means the activity is expected but no known carrier was found, which may reflect a divergent homolog, an unknown family or an assembly gap as much as a real loss.
+    """
+    ROUTE = "ROUTE"
+    """
+    The variants are alternative ways of achieving the step: different activities or step sequences, such as SCOT-dependent versus ligase-dependent acetoacetate activation. A gap means none of the modelled routes is present.
+    """
+
+
 class VariantSelectionEnum(str, Enum):
     """
     How variants in a variant set may be selected in a realization.
@@ -900,7 +914,7 @@ class PropagationSourceStatusEnum(str, Enum):
 class ActionEnum(str, Enum):
     ACCEPT = "ACCEPT"
     """
-    Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+    Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene. For an ND (No biological Data available) root-term row, ACCEPT means the annotation follows the evidence-code guideline (no literature on this gene product, in this species, identifies a function in that aspect); it does not make the root term a core function.
     """
     KEEP_AS_NON_CORE = "KEEP_AS_NON_CORE"
     """
@@ -1902,6 +1916,36 @@ class KnowledgeGapAspectEnum(str, Enum):
     RESIDUAL_SUBGAP = "RESIDUAL_SUBGAP"
     """
     The core function is textbook-solid, but one sharp, load-bearing mechanistic hole remains (e.g. an unidentified GEF/GAP, a catalysis-independent scaffolding mechanism, an unidentified recruit). Easy to miss because the gene looks finished.
+    """
+
+
+class NoDataCaseEnum(str, Enum):
+    """
+    Why an ND (No biological Data available) annotation has no data. See projects/NO_DATA.md for the taxonomy and worked examples. Bookkeeping artifacts (bulk dates, paralog asymmetry) are not a case of their own: re-check them and assign one of these values.
+    """
+    STALE = "STALE"
+    """
+    N1. Literature on this gene product, in this species, now identifies a function in this aspect (published after the ND, or missed by the search). The ND no longer holds: REMOVE it and add the supported term.
+    """
+    INFERABLE = "INFERABLE"
+    """
+    N2. Nothing has been published on this gene product in this species, but the function is clear from well-characterized orthologs (usually carried by IBA/ISO/ISS rows). The ND is correct: ACCEPT. Not a knowledge gap.
+    """
+    EXISTENCE = "EXISTENCE"
+    """
+    N3. Whether a functional gene product exists at all is the open question (sORF/uORF/alternative-frame peptides, dubious ORFs, lineage-restricted ORFs). The ND is correct: ACCEPT, with a BIOLOGY knowledge gap that states the existence question.
+    """
+    TRUE_GAP = "TRUE_GAP"
+    """
+    N4. Nobody knows: no experiment and no defensible inference assigns a term in this aspect. The ND is correct: ACCEPT, with a BIOLOGY knowledge gap whose dark_aspect matches the ND aspect.
+    """
+    ONTOLOGY_BLOCKED = "ONTOLOGY_BLOCKED"
+    """
+    N5. Literature on this gene identifies its role but no fitting GO term was available (typically structural or accessory subunits). MODIFY to the expressible term, or to an NTR with a proposed_new_terms entry.
+    """
+    NEGATIVE = "NEGATIVE"
+    """
+    N6. The expected function was tested and ruled out (usually alongside a NOT row). A negative result identifies no function, so the ND is correct: ACCEPT.
     """
 
 
@@ -4712,6 +4756,7 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'RuleCondition',
                        'RuleReviewEntry']} })
     axis: Optional[str] = Field(default=None, description="""The dimension along which these variants differ, e.g. taxon, cell type, compartment, route, enzyme family.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
+    variant_kind: Optional[VariantKindEnum] = Field(default=None, description="""Which layer of the rule the alternatives belong to: alternative carriers of one required activity (REALIZER), or alternative ways of achieving the step (ROUTE). Gap reports use it to say whether a failure means \"activity required, no known carrier found\" or \"none of the modelled routes is present\". When omitted, the satisfiability engine infers REALIZER if every variant carries the same single molecular function, and otherwise leaves the set unclassified.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
     selection: Optional[VariantSelectionEnum] = Field(default=None, description="""How many variants may be selected in a concrete realization.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
     variants: list[ModuleNode] = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleVariantSet']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
@@ -5414,6 +5459,7 @@ class Review(ConfiguredBaseModel):
                        'ReferenceReview',
                        'GoCamActivityReview',
                        'Review']} })
+    nd_case: Optional[NoDataCaseEnum] = Field(default=None, description="""For an ND (No biological Data available) row only: why there is no data for this gene product in this aspect. It records which case of the ND taxonomy applies (projects/NO_DATA.md) and determines the expected action. An ND row that follows the evidence-code guideline (no literature on this gene product, in this species, identifies a function in that aspect) is ACCEPT; STALE and ONTOLOGY_BLOCKED are the cases where it is not. TRUE_GAP and EXISTENCE rows should be paired with a BIOLOGY knowledge gap whose dark_aspect matches the ND aspect.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
 
 
 class ConsistencyException(ConfiguredBaseModel):

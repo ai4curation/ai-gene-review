@@ -33,6 +33,7 @@ from ai_gene_review.validation.action_consistency import (
     check_action_consistency,
     go_ancestors,
 )
+from ai_gene_review.validation.nd_policy import check_nd_policy
 from ai_gene_review.validation.decomposition import (
     check_decomposition,
     go_is_a_ancestors,
@@ -497,6 +498,7 @@ def check_best_practices_rules(
     validate_alternative_records(data, report)
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
+    check_nd_policy(data, report)
     check_decomposition(
         data,
         report,
