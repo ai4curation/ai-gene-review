@@ -104,3 +104,11 @@ Four kinases sense different stresses:
   already-accepted GO:0036499 *PERK-mediated unfolded protein response*, and
   the cited 1999 cloning paper (PMID:9930704) does not show ISR signalling.
   With #3219 merged, EIF2AK3 has 95 annotation rows, down from 96.
+- EIF2AK2 (PKR) reviewed, completing the four ISR kinases alongside EIF2AK1,
+  EIF2AK3 and EIF2AK4. 178 GOA rows; core functions are dsRNA binding and
+  eIF2alpha kinase activity in the cytosol. Two judgments worth reusing across
+  the cohort: the NF-kB and interferon-beta arms are kept non-core because
+  PMID:22948139 shows they follow from eIF2alpha-mediated loss of IkB-alpha
+  rather than from a separate adapter activity, and `GO:0034198 cellular
+  response to amino acid starvation` is marked over-annotated on PKR because
+  that stress is sensed by EIF2AK4/GCN2.
