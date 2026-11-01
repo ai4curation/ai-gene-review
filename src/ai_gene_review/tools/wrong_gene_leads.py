@@ -11,15 +11,25 @@ PMID:11514575, which cloned chondroitin synthase CHSY1 (Q86X52), and only CHSY1'
 entry cites it.
 
 The output is a ranked lead list for review, never a verdict. UniProt does not cite
-every relevant paper, and a paper can study several genes. Leads rank higher when
-the other entry is in the same species, in the same PANTHER family (a paralog), or
-shares a gene name with the annotated protein, and when few entries cite the paper.
-Papers cited by many reviewed entries are treated as large-scale and skipped.
+every relevant paper, and a paper can study several genes. Two confounders are
+removed or penalised:
+
+- An entry for the *same gene* in the same species (an unreviewed or secondary entry
+  annotated while the reviewed one cites the paper) is not a different gene, so such
+  citing entries are dropped.
+- A paper that names the annotated gene in its cached title or abstract probably did
+  study it (papers on several paralogs are common), so the lead is penalised.
+
+Leads rank higher for a paralog in the same species, another gene in the same
+species, the same-named gene in another species (an annotation transferred across
+species with a direct evidence code), few citing entries, and an abstract that does
+not name the annotated gene. Papers cited by many reviewed entries are treated as
+large-scale and skipped, as are bare protein-binding rows.
 
 >>> own = GeneRecord("P1", "9606", frozenset({"PTHR1"}), frozenset({"ABC1"}), frozenset())
 >>> other = CitingEntry("P2", "ABC2", "9606", frozenset({"PTHR1"}))
->>> score_lead(own, [other])
-(6, 'same_taxon;same_panther_family;few_citing_entries')
+>>> score_lead(own, [other], named_in_abstract=False)
+(6, 'same_taxon_paralog;few_citing_entries;gene_not_named_in_abstract')
 """
 
 from __future__ import annotations
@@ -38,6 +48,8 @@ import yaml
 
 from ai_gene_review.tools.function_requirements import REPO_ROOT, _get, _write_tsv
 
+PUBLICATIONS_DIR = REPO_ROOT / "publications"
+
 REPORT_DIR = REPO_ROOT / "reports" / "wrong-gene-leads"
 CACHE_DIR = REPO_ROOT / ".cache" / "wrong-gene-leads"
 UNIPROT_STREAM = "https://rest.uniprot.org/uniprotkb/stream"
@@ -49,6 +61,8 @@ LITERATURE_CODES = frozenset({"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "TAS", "
 # A paper cited by more reviewed entries than this is treated as large-scale.
 MAX_CITING_ENTRIES = 20
 BATCH_SIZE = 40
+# Bare protein binding is removed by policy regardless of gene, so it is skipped.
+SKIPPED_TERMS = frozenset({"GO:0005515"})
 
 
 @dataclass(frozen=True)
@@ -105,26 +119,64 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
     )
 
 
-def score_lead(own: GeneRecord, citing: list[CitingEntry]) -> tuple[int, str]:
+def _norm(token: str) -> str:
+    """Upper-case and strip non-alphanumerics, so ``GDI/D4`` matches ``GDID4``."""
+    return re.sub(r"[^A-Z0-9]", "", token.upper())
+
+
+def named_in_abstract(
+    pmid: str, names: Iterable[str], publications_dir: Path = PUBLICATIONS_DIR
+) -> bool | None:
+    """Whether the cached title or abstract names one of the gene's names.
+
+    Returns None when the paper is not cached. Matching is per whitespace token
+    after normalisation, and names shorter than three characters are ignored.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = (d / "PMID_1.md").write_text("title: X\\n## Abstract\\nGFP-tagged GDI/D4 was diffuse.\\n## Full Text\\nCSGALNACT1")
+    >>> named_in_abstract("1", ["GDID4"], d), named_in_abstract("1", ["CSGALNACT1"], d), named_in_abstract("2", ["X"], d)
+    (True, False, None)
+    """
+    path = publications_dir / f"PMID_{pmid}.md"
+    if not path.exists():
+        return None
+    text = path.read_text(errors="replace").split("\n## Full Text", 1)[0]
+    tokens = {_norm(tok) for tok in text.split()}
+    wanted = {_norm(n) for n in names}
+    return bool({w for w in wanted if len(w) >= 3} & tokens)
+
+
+def score_lead(
+    own: GeneRecord, citing: list[CitingEntry], named_in_abstract: bool | None
+) -> tuple[int, str]:
     """Score how likely the cited paper is about one of the citing entries instead.
 
-    Same species +2, same PANTHER family (a paralog) +3, a shared gene name +3, and
-    +1 when three or fewer entries cite the paper. Returns the score and the reasons.
+    A paralog in the same species +3, another gene in the same species +2, the
+    same-named gene in another species +2, three or fewer citing entries +1, and an
+    abstract that does not name the annotated gene +2 (or -3 if it does).
     """
     reasons = []
     score = 0
-    if any(c.taxon == own.taxon for c in citing):
+    same_taxon = [c for c in citing if c.taxon == own.taxon]
+    if any(c.panther_families & own.panther_families for c in same_taxon):
+        score += 3
+        reasons.append("same_taxon_paralog")
+    elif same_taxon:
         score += 2
-        reasons.append("same_taxon")
-    if any(c.panther_families & own.panther_families for c in citing):
-        score += 3
-        reasons.append("same_panther_family")
-    if any(c.gene and c.gene in own.gene_names for c in citing):
-        score += 3
-        reasons.append("shared_gene_name")
+        reasons.append("same_taxon_other_gene")
+    if any(c.taxon != own.taxon and c.gene in own.gene_names for c in citing):
+        score += 2
+        reasons.append("same_gene_other_species")
     if len(citing) <= 3:
         score += 1
         reasons.append("few_citing_entries")
+    if named_in_abstract is False:
+        score += 2
+        reasons.append("gene_not_named_in_abstract")
+    elif named_in_abstract:
+        score -= 3
+        reasons.append("gene_named_in_abstract")
     return score, ";".join(reasons)
 
 
@@ -143,6 +195,7 @@ def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | 
                 row.get("GO EVIDENCE CODE") in LITERATURE_CODES
                 and ref.startswith("PMID:")
                 and ref[5:] not in own.cited_pmids
+                and row.get("GO TERM") not in SKIPPED_TERMS
                 and not (row.get("QUALIFIER") or "").startswith("NOT")
             ):
                 rows.append(row)
@@ -242,6 +295,7 @@ def find_leads(
     gene_dirs: Iterable[Path],
     citing: dict[str, list[CitingEntry]] | None = None,
     cache_dir: Path = CACHE_DIR,
+    publications_dir: Path = PUBLICATIONS_DIR,
 ) -> list[dict[str, Any]]:
     """Ranked wrong-gene leads for the GOA rows in the given gene folders.
 
@@ -259,10 +313,13 @@ def find_leads(
     for gene_dir, (own, rows) in candidates:
         index: dict[tuple[str, str, str], tuple[str, bool]] | None = None
         for row in rows:
+            # Drop the gene itself: the same accession, or the same-named gene in
+            # the same species (a secondary entry for one gene is not a wrong gene).
             others = [
                 c
                 for c in citing.get(row["REFERENCE"][5:], [])
                 if c.accession != own.accession
+                and not (c.taxon == own.taxon and c.gene in own.gene_names)
             ]
             if not others or len(others) > MAX_CITING_ENTRIES:
                 continue
@@ -271,7 +328,13 @@ def find_leads(
             action, wrong_gene = index.get(
                 (row["GO TERM"], row["GO EVIDENCE CODE"], row["REFERENCE"]), ("", False)
             )
-            score, reasons = score_lead(own, others)
+            score, reasons = score_lead(
+                own,
+                others,
+                named_in_abstract(
+                    row["REFERENCE"][5:], own.gene_names, publications_dir
+                ),
+            )
             leads.append(
                 {
                     "gene": f"{gene_dir.parent.name}/{gene_dir.name}",
