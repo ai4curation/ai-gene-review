@@ -19,3 +19,7 @@
 ## Pathway context
 - YeastPathways places SAM2 in SAM biosynthesis (SAM-PWY), SAM cycle (PWY-5041), and superpathways of sulfur amino acid biosynthesis (PWY-821-1) and methionine salvage (PWY3O-351). SAM synthesis is not an amino acid biosynthetic step and SAM2 does not regenerate methionine; the latter two BP assignments are superpathway inheritance.
 - GO:0006556 S-adenosylmethionine biosynthetic process is NOT a descendant of GO:0000097 sulfur amino acid biosynthetic process (checked with runoak ancestors).
+
+## Possible mitochondrial isoform (SGD description follow-up)
+
+- SGD says comparative analysis suggests a mitochondrially targeted Sam2 may be translated from a non-canonical codon upstream of the annotated start. Monteuuis et al. 2019 list Sam2 among such predicted N-terminally extended isoforms, citing earlier comparative work [PMID:31216041 "Finally, extended mitochondrial isoforms of Bpl1, Faa2 and Sam2 have been predicted based on comparative analyses (31)."]. That paper's experimental confirmations concern other proteins; we found no experimental evidence for a mitochondrial Sam2 isoform. It remains a prediction and is not annotated; it would need ribosome profiling or a tagged extended isoform to test.
