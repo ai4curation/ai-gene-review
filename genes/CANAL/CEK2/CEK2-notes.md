@@ -51,5 +51,21 @@ The three CGD filamentation/starvation rows and the starvation response row all
 cite PMID:12773383. The cached full text describes the Spider-medium and
 serum-based haploinsufficiency screen and points to Supplementary table 1 for
 the gene assignments, but the cached article does not include that table and
-does not mention CEK2 or `orf19.460` in the body. I left those rows
+does not mention CEK2 or `orf19.8091` in the body. I left those rows
 `UNDECIDED` rather than second-guessing CGD without the supplement.
+
+### PR #5859 follow-up
+
+The initial CEK2 review over-corrected the Fus3-derived `GO:0043409 negative
+regulation of MAPK cascade` row. PMID:30787119 shows that deleting `CEK2`
+increases pheromone-arrest halos and Cek1 activation-loop phosphorylation, so
+the broad negative-regulation row should be retained as a conserved feedback
+role rather than removed as a sign-inverted propagation.
+
+I also reconciled the two Cek2-GFP localization papers. PMID:30787119 saw
+wild-type Cek2-GFP as perinuclear rather than nuclear and did not detect
+pheromone-induced activation-loop phosphorylation on tagged Cek2, while the
+later PMID:33793759 paper detected pheromone-induced Cek2/Cek2-GFP
+phosphorylation and cytoplasmic-to-nuclear Cek2-GFP movement. The accepted
+cytoplasm and nucleus rows now cite the later paper and the 2019 discrepancy is
+tracked as a disputed reference finding.
