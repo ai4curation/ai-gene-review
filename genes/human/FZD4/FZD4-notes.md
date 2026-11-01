@@ -1,3 +1,21 @@
+# FZD4 biological notes
+
+## 2026-11-01 — Receptor mechanisms and physiological roles
+
+FZD4 is a seven-pass receptor with two complementary ligand-response roles. Wnt ligands engage pathways whose outputs depend on the ligand, coreceptor and cell system. Norrin is a distinct, non-Wnt ligand that signals through FZD4 with an LRP coreceptor. In retinal endothelium, this signal-reception step contributes to vascular growth and organization; endothelial-specific mouse experiments connect the receptor mechanism to human FEVR-associated signaling defects (PMID:19837032, PMID:12172548, PMID:15035989).
+
+The receptor's intracellular interfaces have different levels of experimental resolution. NHERF1 binding depends on the receptor terminal motif and NHERF1 PDZ2 (PMID:20802536). Positive isolated-domain measurements also show recognition of the human FZD4 terminal peptide by several PDZ domains (PMID:36115835); these measurements do not establish endogenous complexes of every full-length protein pair. Dvl2 recruitment and co-immunoprecipitation in the NHERF1 study are positive association evidence, but do not themselves map the Dvl2 interface. Norrin binding is represented by a ligand-specific term rather than generic protein binding.
+
+FZD4-dependent reporter activation is evidence of positive regulation of transcription through signaling; it does not require the receptor to bind DNA. Likewise, increased FZD4 expression after ATRA in human NT2 cells is an expression response within the definition of cellular response to retinoic acid (PMID:12429992). It is not evidence that FZD4 binds retinoic acid or executes neuronal differentiation. The two WNT7B-derived ISS records need a separate upstream source check.
+
+Evidence from brain and retina is not interchangeable. Selected cerebellar experiments establish endothelial barrier integrity and vascular stability, whereas the retinal experiments directly examine vascular development. The unrecovered older cerebellar morphogenesis experiment remains an explicit uncertainty. Native protein products are also distinct from extracellular domains, short peptides, disease variants and engineered structural constructs.
+
+See the [source guide](FZD4-source-guide.md) and [compact source evidence](FZD4-source-evidence.yaml) for source locators, construct limits and preserved original contexts. This follow-up preserves all original annotation objects and source bytes. Local validation passed with eight advisories: seven concern retained generic protein-binding rows, and one records the source-specific beta40/beta42 distinction. Strict GOA validation matches all 134 original contexts, and status remains DRAFT. The native EDIT history and private render/local-link and scoped whitespace checks passed. All 80 source files and the original CREATE history remain unchanged.
+
+<details>
+<summary>Historical preparation and validation journal (unchanged text)</summary>
+
+```text
 # FZD4 evidence notes
 
 ## Private integration, 2026-11-01
@@ -19,3 +37,6 @@ All approved judgments, both receptor cores and the 60 manual reference assessme
 ## 2026-11-01 — Local validation
 
 Local validation passed with 24 advisories: 23 concern retained positive generic protein-binding annotations under the standing curation policy; one notes differing amyloid-beta-binding decisions whose reasons distinguish the actually resolved beta40 context from unresolved beta42 evidence. Strict GOA matched all 134 original contexts, and the computed status is DRAFT. Native CREATE history, private HTML/local links, scoped whitespace and exact source/context conservation passed. Source bytes and the accepted biological judgments remain unchanged. Scientific PR review and actual merge-group CI are still required before acceptance.
+```
+
+</details>
