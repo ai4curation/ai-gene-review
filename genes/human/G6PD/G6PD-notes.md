@@ -85,3 +85,22 @@ for regenerating reduced glutathione and defending against oxidative stress.
   (clearly wrong-context IEA).
 - Do NOT REMOVE experimental annotations whose full text I cannot verify; bare `protein binding`
   IPIs → MARK_AS_OVER_ANNOTATED (informative interactors noted: HSPB1, SIRT2, TP53, ALDOB).
+
+
+## 2026-11-01 — current-context manual re-review
+
+The complete current set of 66 official contexts was manually assessed, retaining every original object and the single urine extension. The proposal has 36 ACCEPT, 20 KEEP_AS_NON_CORE, six UNDECIDED, three TOO_GENERAL and one MARK_AS_OVER_ANNOTATED decisions, with no NEW rows. The one core function is cytosolic NADP-dependent G6P oxidation in the oxidative pentose-phosphate pathway, including direct NADP metabolism. Natural products of 515, 561 and 545 residues remain separate; engineered assay constructs do not establish functional equivalence of every product.
+
+The earlier confident removals based on inaccessible classic experiments, protein-title mismatch, absence of a human intervention, or generic binding are not retained. Actual family ancestry supports all four IBA contexts, including legitimate target self evidence; the H6PD cytosol-loss record is outside the human G6PD path. All four positive generic-binding contexts are non-core under the standing project policy. Earlier OMICS membrane corrections remain intact, with the YTS-specific peptide evidence still unverified. Both exosome contexts now have literal target-table membership, without a peptide-unique current-isoform or vesicle-biogenesis claim.
+
+Free D-glucose is distinguished from the proven G6P substrate. The rat endoplasmic-reticulum paper actually assays soluble G6PD as well as microsomal hexose dehydrogenase, so its title does not prove misattribution. The three free-glucose assertions remain undecided. The unavailable 1968 pentose/maturation experiments and target-specific substantia-nigra developmental evidence also remain unresolved. Conversely, the selected neonatal rat cardiac experiment is genuinely positive for a G6PD-associated anti-hypertrophic effect; its extension to developmental cardiac growth is marked over-annotated because the term requires progression from initial formation to maturity. The distinct measured calcium-current and ROS-regulation contexts are retained non-core.
+
+The immutable UniProt FUNCTION prose reverses the G6PD NAADP/NAADPH direction stated in PMID:34784249 and represented by its own RHEA:86243 reaction. This discrepancy is flagged rather than silently repaired. R-HSA-9761849 likewise retains its fetched P6GD title while its summary names G6PD. No new calcium-signaling annotation is inferred from the unresolved G6PD assay construct.
+
+The complete old review, this journal's preceding bytes, both OMICS history records and all 52 inherited quotation associations are preserved. One inherited catalytic excerpt remains active; 51 are historical-only. One new exact wild-type assembly excerpt yields two active excerpts in the current core. Historical literal validity does not make all old associations valid current support. The source guide supplies selected original-text and table locators and exact access limits; the YAML reference reviews contain the 39 manual assessments.
+
+The approved private review was transferred after genuine native acquisition. All 66 original contexts match the actual parser and all 16 TSV columns, with the single urine extension preserved. The qualified 104-source union is present: 38 accepted-base files reused unchanged and 64 publications plus two Reactome files acquired through the native missing-only workflow. All 29 PMID assessment titles match the actual caches, and both active excerpts match their unchanged source bytes. Native history and scoped validation follow this transfer. The old review, journal and two OMICS histories remain available as original provenance.
+
+## 2026-11-01 — native re-review checks
+
+Target validation passed with five advisories: four generic-binding rows retained under the standing project policy and one broad cytoplasm-specificity advisory. Strict comparison covers all 66 GOA contexts; the computed status is DRAFT. The 104 source files and all inherited source bytes remain unchanged by authoring. Questions and proposed experiments were projected losslessly to the native object schema; their text is unchanged. The initial validation failure is retained privately. Native history, private rendering and scoped whitespace checks are recorded with this session.
