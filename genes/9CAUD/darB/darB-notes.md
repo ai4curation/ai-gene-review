@@ -12,10 +12,10 @@
 - **Acts in cis**: Protects DNA packaged with it in the same phage head
 
 ### Molecular Architecture
-- **Size**: 251 kDa (512 amino acids in UniProt Q9XJG2 is fragment)
-- **N-terminal methyltransferase domain**: Type II methyltransferase M.TaqI-like domain
-- **Central DExD-like helicase domain**: Suggests potential DNA unwinding activity
-- **SAM-dependent methyltransferase fold**: Uses S-adenosyl methionine as cofactor
+- **Size**: 512 amino acids in UniProt `Q9XJG2` (`darB'`, `Q9XJG2_9CAUD`), an unreviewed N-terminal sequence fragment translated from GenBank `AF125376` (`AAD20627.1`) immediately upstream of `ssb-P1` [PMID:10515938 Identification and characterization of the single-stranded DNA-binding protein of bacteriophage P1., "The genome of bacteriophage P1 harbors a gene coding for a 162-amino-acid protein which shows 66% amino acid sequence identity to the Escherichia coli single-stranded DNA-binding protein (SSB)."]. Full-length P1 DarB is 2,255 aa (~251 kDa; reviewed entry `Q71TF8`).
+- **N-terminal methyltransferase domain**: Type II methyltransferase M.TaqI-like domain (`IPR011639` / `PF07669`, residues 44-119 in `Q9XJG2`).
+- **Central DExD-like helicase domain**: Present in full-length DarB (`Q71TF8`), C-terminal to the 512-aa `Q9XJG2` fragment.
+- **SAM-dependent methyltransferase fold**: Predicted to bind S-adenosyl-L-methionine, though direct catalytic DNA methylation by DarB has not been biochemically demonstrated.
 
 ### Biological Context
 - Part of multicomponent P1 antirestriction system
