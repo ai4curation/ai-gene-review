@@ -705,9 +705,11 @@ def save_preserving_reviews(gd: GeneDescriptions, path: Path) -> Path:
     """Save freshly fetched descriptions without discarding reviews in an existing file.
 
     A source keeps its review when its text is unchanged; a source whose text
-    changed loses it, because the review judged the old text. The cross-source
-    review and the findings are kept only when every source text is unchanged.
-    Status is recomputed.
+    changed loses it, because the review judged the old text. A source in the
+    existing file that the fresh fetch did not return (a failed request, or an
+    API change that makes the parser return nothing) is carried forward
+    unchanged, with a warning, rather than deleted. The cross-source review and
+    the findings are kept unless some source text changed. Status is recomputed.
 
     Args:
         gd: Freshly fetched descriptions (normally without reviews).
@@ -719,7 +721,15 @@ def save_preserving_reviews(gd: GeneDescriptions, path: Path) -> Path:
     if path.exists():
         old = load_gene_descriptions(path)
         old_by_source = {d.source: d for d in old.descriptions}
-        unchanged = {d.source for d in old.descriptions} == {d.source for d in gd.descriptions}
+        fresh_sources = {d.source for d in gd.descriptions}
+        for prev in old.descriptions:
+            if prev.source not in fresh_sources:
+                logger.warning(
+                    "%s %s: not returned by this fetch; keeping the existing text and review",
+                    path.name, prev.source,
+                )
+                gd.descriptions.append(prev)
+        unchanged = True
         for d in gd.descriptions:
             prev = old_by_source.get(d.source)
             if prev is not None and prev.text == d.text:

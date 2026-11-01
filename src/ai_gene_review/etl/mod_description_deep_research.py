@@ -43,30 +43,10 @@ from ai_gene_review.etl.descriptions import (
     extract_uniprot_xref,
     fetch_alliance_description,
 )
+from ai_gene_review.mod_providers import MOD_PROVIDER, is_mod_description_file  # noqa: F401  (re-export)
 
 logger = logging.getLogger(__name__)
 
-# Provider slug used in the filename, keyed by Alliance MOD prefix.
-MOD_PROVIDER: Dict[str, Tuple[str, str]] = {
-    "WB": ("wormbase", "WormBase"),
-    "FB": ("flybase", "FlyBase"),
-    "SGD": ("sgd", "SGD"),
-    "MGI": ("mgi", "MGI"),
-    "RGD": ("rgd", "RGD"),
-    "ZFIN": ("zfin", "ZFIN"),
-    "Xenbase": ("xenbase", "Xenbase"),
-}
-
-
-def is_mod_description_file(name: str) -> bool:
-    """True for a ``GENE-deep-research-<mod>.md`` file written by this module.
-
-    >>> is_mod_description_file("fshr-1-deep-research-wormbase.md")
-    True
-    >>> is_mod_description_file("fshr-1-deep-research-falcon.md")
-    False
-    """
-    return any(name.endswith(f"-deep-research-{slug}.md") for slug, _ in MOD_PROVIDER.values())
 
 
 def uniprot_gene_names(uniprot_data: str) -> set[str]:

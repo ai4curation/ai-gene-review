@@ -110,13 +110,12 @@ def main() -> None:
         "median_ai_words": sorted(r["ai_words"] for r in rows)[len(rows) // 2] if rows else None,
         "median_mod_term_recall": recalls[len(recalls) // 2] if recalls else None,
     }
-    out = yaml.safe_dump({"summary": summary, "genes": rows}, sort_keys=False, width=100)
-    if a.output:
-        a.output.write_text(out)
     if a.findings_output:
         findings = collect_findings(a.organism, a.genes_dir)
         summary["findings"] = {k: len(v) for k, v in findings.items()}
         a.findings_output.write_text(yaml.safe_dump(findings, sort_keys=False, width=100))
+    if a.output:
+        a.output.write_text(yaml.safe_dump({"summary": summary, "genes": rows}, sort_keys=False, width=100))
     print(yaml.safe_dump(summary, sort_keys=False))
 
 

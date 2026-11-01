@@ -8,8 +8,12 @@ reference's own text: a MOD gene description cited as its
 report can show the resource exactly what to revise and a later re-fetch can
 show whether it changed. This check warns when the value is not found in the
 cited file (for example a record id, or a paraphrase). Matching uses the same
-normalisation as supporting-text quotes. ``MISSING_STATEMENT`` reports an
-omission, so its ``asserted_value`` names the record and is not checked.
+normalisation as supporting-text quotes, including their rule that ``...``
+separates parts checked independently: an elided value is checked part by part,
+not as a whole sentence. A statement defect on a reference that is not a local
+file (e.g. a PMID) is reported as uncheckable, since these defects are meant for
+source-database text. ``MISSING_STATEMENT`` reports an omission, so its
+``asserted_value`` names the record and is not checked.
 """
 
 from __future__ import annotations

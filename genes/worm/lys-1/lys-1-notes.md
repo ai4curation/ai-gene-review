@@ -142,8 +142,10 @@ Gene product: Lysozyme-like protein 1 (LYS-1). Precursor with N-terminal signal 
   induced by *P. aeruginosa*, and is not promoted by DAF-16. Likely sources are Mallo et al.
   2002 (PMID:12176330, DBL-1 control of some infection-inducible genes: [PMID:12176330 "Certain
   infection-inducible genes are under the control of the DBL-1/TGFbeta pathway."]) and Alper et
-  al. 2007 (PMID:17526726). Both are abstract-only in the cache and neither abstract names lys-1,
-  so the gene-specific regulator claims are unverified.
+  al. 2007 (PMID:17526726). Both are abstract-only in the cache. The PMID:12176330 abstract names
+  lys-1 only as a resistance factor against *S. marcescens* [PMID:12176330 "overexpression of the
+  lysozyme gene lys-1 augments the resistance of C. elegans to S. marcescens"], and neither abstract
+  links lys-1 expression to these regulators, so the gene-specific regulator claims are unverified.
 - The DAF-16 "target" wording in the review was softened: PMID:21209831 used a list of putative
   targets and did not test DAF-16 dependence of lys-1 expression, so it does not contradict
   WormBase's "not by DAF-16".

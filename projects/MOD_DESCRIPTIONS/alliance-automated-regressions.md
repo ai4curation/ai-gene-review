@@ -59,5 +59,9 @@ expression and orthology only).
 
 ## wago-1 (WB:WBGene00011061)
 
+Note: this is a divergence rather than a pure loss. The current text adds RNA endonuclease
+and miRNA binding (which the wago-1 review removes or modifies) and drops DEAD/H-box RNA
+helicase binding.
+
 - **Current Alliance automated:** Predicted to enable RNA endonuclease activity; miRNA binding activity; and single-stranded RNA binding activity. Predicted to be involved in regulatory ncRNA-mediated post-transcriptional gene silencing. Located in P granule. Is expressed in germ line and in male.
 - **RefSeq (GeneID:172463):** Enables DEAD/H-box RNA helicase binding activity. Predicted to be involved in regulatory ncRNA-mediated post-transcriptional gene silencing. Located in P granule. Is expressed in germ line and in male. [provided by Alliance of Genome Resources, Jul 2025]

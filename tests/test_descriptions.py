@@ -211,3 +211,22 @@ def test_refetch_drops_reviews_of_changed_text(tmp_path):
     assert gd.descriptions[1].review is None
     assert gd.review is None and gd.findings == []
     assert gd.status == "IN_PROGRESS"
+
+
+def test_refetch_keeps_sources_missing_from_fresh_fetch(tmp_path):
+    """A source the fresh fetch did not return (fetch failure, API change) is carried forward with its review."""
+    from ai_gene_review.etl.descriptions import (
+        GeneDescriptions, SourceDescription, load_gene_descriptions,
+        save_gene_descriptions, save_preserving_reviews,
+    )
+    path = tmp_path / "g-descriptions.yaml"
+    save_gene_descriptions(_reviewed(), path)
+    fresh = GeneDescriptions(gene_symbol="g", organism="worm", descriptions=[
+        SourceDescription(source="UniProt", text="A text"),
+    ])
+    save_preserving_reviews(fresh, path)
+    gd = load_gene_descriptions(path)
+    assert [d.source for d in gd.descriptions] == ["UniProt", "Alliance_Imported"]
+    assert [d.review.rubrics[0].score for d in gd.descriptions] == [4, 2]
+    assert gd.review is not None and len(gd.findings) == 1
+    assert gd.status == "COMPLETE"
