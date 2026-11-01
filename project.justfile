@@ -292,7 +292,8 @@ export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
 # Collect proposed ontology changes (top-level proposed_ontology_changes on gene
-# and module reviews) into reports/ontology-changes.tsv plus one Markdown report
+# and module reviews, and in project-page frontmatter) into
+# reports/ontology-changes.tsv plus one Markdown report
 # per ontology in reports/ontology-changes/. These are changes an ONTOLOGY should
 # make to a term that already exists (obsoletion, merge, definition fix,
 # reparenting, mapping removal), modelled on KGCL; the source-defect exporter

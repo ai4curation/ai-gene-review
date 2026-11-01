@@ -246,3 +246,81 @@ def test_a_value_change_still_renders_the_arrow():
         }
     ]
     assert "`old` → `new`" in render_report("GO", rows)
+
+
+PROJECT_PAGE = """---
+title: Vesicle tethering obsoletion
+proposed_ontology_changes:
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0099044
+    label: vesicle tethering to endoplasmic reticulum
+  has_nondirect_replacement:
+  - id: GO:7770062
+    label: vesicle membrane tethering activity
+  justification: Tethering is a binding activity, not a process.
+  confidence: CONFIRMED
+  report_status: FIXED
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0099069
+    label: synaptic vesicle tethering involved in synaptic vesicle exocytosis
+  justification: Same rationale as its parent term.
+  confidence: CONFIRMED
+---
+
+# Body text
+"""
+
+MALFORMED_PROJECT_PAGE = """---
+title: Broken
+proposed_ontology_changes:
+- change_type: NOT_A_REAL_TYPE
+  ontology: GO
+  about_node:
+    id: GO:0000001
+    label: x
+  justification: nope
+  confidence: PROBABLE
+---
+
+# Body
+"""
+
+
+def test_project_page_frontmatter_is_collected(tmp_path: Path):
+    (tmp_path / "projects").mkdir()
+    (tmp_path / "projects" / "VESICLE.md").write_text(PROJECT_PAGE)
+    rows = collect(tmp_path)
+    assert {r["about_node"] for r in rows} == {"GO:0099044", "GO:0099069"}
+    assert all(r["source_path"] == "projects/VESICLE.md" for r in rows)
+
+
+def test_project_pages_in_subfolders_are_collected(tmp_path: Path):
+    nested = tmp_path / "projects" / "VESICLE"
+    nested.mkdir(parents=True)
+    (nested / "sub.md").write_text(PROJECT_PAGE)
+    rows = collect(tmp_path)
+    assert len(rows) == 2
+    assert rows[0]["source_path"] == "projects/VESICLE/sub.md"
+
+
+def test_a_malformed_project_entry_is_not_exported(tmp_path: Path):
+    """The renderer reports it as a page warning; the exporter must not ship it."""
+    (tmp_path / "projects").mkdir()
+    (tmp_path / "projects" / "BROKEN.md").write_text(MALFORMED_PROJECT_PAGE)
+    assert collect(tmp_path) == []
+
+
+def test_a_project_page_without_changes_is_skipped(tmp_path: Path):
+    (tmp_path / "projects").mkdir()
+    (tmp_path / "projects" / "PLAIN.md").write_text("---\ntitle: x\n---\n# Body\n")
+    assert collect(tmp_path) == []
+
+
+def test_project_rows_carry_no_gene_symbol(tmp_path: Path):
+    (tmp_path / "projects").mkdir()
+    (tmp_path / "projects" / "VESICLE.md").write_text(PROJECT_PAGE)
+    assert all(r["gene_symbol"] == "" for r in collect(tmp_path))

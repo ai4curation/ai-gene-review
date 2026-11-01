@@ -25,9 +25,38 @@ in several hundred reviews, and a `ProposedOntologyTerm` is a KGCL
 
 ## Where it lives
 
-Top level of a gene review (`genes/*/*/*-ai-review.yaml`) or of a module review
-(`modules/*.yaml`). Module reviews matter here because subtree-level obsoletions
-are usually noticed while curating a pathway rather than a single gene.
+Three homes, in increasing scope:
+
+- **a gene review** (`genes/*/*/*-ai-review.yaml`), top level — when the change
+  was noticed while curating one gene;
+- **a module review** (`modules/*.yaml`), top level — subtree-level obsoletions
+  are usually noticed while curating a pathway rather than a single gene;
+- **a project page's frontmatter** (`projects/**/*.md`) — when the change spans
+  several terms and MOD groups and so belongs to no single gene or module. The
+  `projects/*_OBSOLETION.md` pages are exactly that case.
+
+A gene or module review is schema-validated, so `linkml-validate` checks the
+block's structure. **A project page is markdown and LinkML never sees it**, so
+the structure is checked by `validate_change_entries`, which reads the required
+fields, the allowed fields and the permissible `change_type` values out of the
+schema file rather than restating them. `tests/test_project_frontmatter.py`
+applies it to every project page, and `render-projects` reports what it rejects
+as page warnings.
+
+### Structural errors exclude; policy violations do not
+
+Two severities, and the distinction is deliberate. A **structural** problem — a
+missing required field, an unknown field, a `change_type` outside the enum, a
+term field with no `id` — makes the entry unusable: the renderer drops it, the
+exporter will not ship it, and the frontmatter test fails. A **policy**
+violation is advisory: the entry still renders and still exports, and it shows
+up as a page warning and in `check_ontology_change_policy` at WARNING severity,
+exactly as on a gene or module review.
+
+Getting this wrong is what the first version of the project-page gate did: it
+excluded an otherwise fine entry because its `report_status: FIXED` carried no
+tracker link. A missing link is worth flagging and is not grounds for dropping
+the record.
 
 ## It is KGCL, wrapped
 
@@ -151,12 +180,46 @@ What is **not** checked: whether the ontology should actually make the change,
 which no rule can settle, and whether `about_node` exists and carries the stated
 label, which is the term validator's job.
 
-## Known gap
+## Two shapes, from the two projects backfilled so far
 
-A project-wide obsoletion has no single home. The vesicle-tethering case spans
-five terms, eight MOD annotation groups and five flagged InterPro2GO/UniRule
-mappings; only the exocyst-scoped subset belongs on `modules/dmel_exocyst.yaml`,
-and `GO:0099044` (tethering to ER) and `GO:0099041` (to Golgi) belong to no
-module that exists. The 30-odd `projects/*_OBSOLETION.md` pages remain the place
-where such an argument is written, and extending this slot to project-page
-frontmatter is the obvious follow-up.
+The direct/non-direct distinction is the thing to get right, and the two cases
+already recorded show both answers to it.
+
+**`VESICLE_TETHERING_OBSOLETION` — no direct replacement.** Five BPs obsoleted
+in favour of one MF, `GO:7770062 vesicle membrane tethering activity`. GO records
+**no** `replaced_by` for any of them: a biological process cannot be replaced
+outright by a molecular function, so the MF is `consider` and a curator picks the
+transport process to hang it on. All five are
+`NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT` with one
+`has_nondirect_replacement`.
+
+**`AMINO_ACID_ACTIVATION_OBSOLETION` — a direct replacement *and* advice.** 43
+substrate-specific tRNA aminoacylation BPs, each obsoleted with a formal
+`replaced_by` pointing at its block's generic process (`GO:0006418` cytosolic,
+`GO:0070127` mitochondrial) — a BP replaced by a BP, which is legitimate — while
+GO's obsoletion comment separately names the 1:1 molecular function to annotate
+instead. So each entry carries `has_direct_replacement` (the BP) *and* a
+`has_nondirect_replacement` (the MF). Both, on one entry.
+
+The rule that survives both: **what can be repointed mechanically goes in
+`has_direct_replacement`; what needs a curator's judgement per annotation goes in
+`has_nondirect_replacement`.** Whether the replacement happens to be in the same
+GO aspect is a consequence, not the test.
+
+## What is still open
+
+**A large uniform batch should be generated, not transcribed.** Only four of the
+43 amino-acid-activation terms are recorded structurally — two cytosolic, two
+mitochondrial, enough to pin both shapes. The other 39 are mechanically derivable
+from the markdown tables already on that page, and hand-writing them would
+duplicate those tables in a second format with no new information. A generator
+that reads a project's own tables is the right answer; nobody has written one.
+
+**Both pages' audits were stale, and in the same direction.** Vesicle tethering
+recorded two of five terms obsolete as of 2026-09-26; all five are. Amino acid
+activation recorded all 43 live as of 2026-08-29; the four rechecked are
+obsolete. In both cases the ontology moved and the page did not. Nothing here
+detects that: `report_status` is a curator's assertion, and no check compares it
+against the live ontology. A periodic audit that re-queries each `about_node` and
+flags a `NOT_REPORTED` change whose term is already obsolete would close the
+loop, and would have caught both.

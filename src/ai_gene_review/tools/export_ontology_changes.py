@@ -7,7 +7,10 @@ They appear in two places:
 
 * top level of a gene review (``genes/*/*/*-ai-review.yaml``);
 * top level of a module review (``modules/*.yaml``), which is where subtree-level
-  obsoletions are usually noticed.
+  obsoletions are usually noticed;
+* the frontmatter of a project page (``projects/**/*.md``), which is where an
+  obsoletion spanning several terms and MOD groups lives: it belongs to no single
+  gene or module, and the ``projects/*_OBSOLETION.md`` pages are exactly that case.
 
 This module flattens both into one row per change and renders a Markdown report
 per *ontology* -- the thing that is actually sent upstream, since each ontology
@@ -153,6 +156,31 @@ def _review_rows(
             yield _row(str(path.relative_to(root)), resolved, change)
 
 
+def _project_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
+    """Yield change rows from a project page's frontmatter.
+
+    Unlike a review, a project page is markdown, so the changes live in its YAML
+    frontmatter and LinkML never validates it. Only entries that pass the
+    structural gate are exported; the renderer reports the rest as page
+    warnings, so a malformed entry is visible rather than silently dropped.
+    """
+    text = path.read_text(encoding="utf-8")
+    if "proposed_ontology_changes:" not in text:
+        return
+    from ai_gene_review.render_projects import parse_frontmatter
+    from ai_gene_review.validation.ontology_change_policy import (
+        validate_change_entries,
+    )
+
+    frontmatter, _body = parse_frontmatter(text)
+    changes = frontmatter.get("proposed_ontology_changes")
+    if changes is None:
+        return
+    valid, _errors = validate_change_entries(changes)
+    for change in valid:
+        yield _row(str(path.relative_to(root)), {}, change)
+
+
 def collect(root: Path) -> list[dict[str, str]]:
     """Collect every proposed ontology change under ``root``, sorted for stable output."""
     rows: list[dict[str, str]] = []
@@ -164,6 +192,8 @@ def collect(root: Path) -> list[dict[str, str]]:
         )
     for path in sorted(root.glob("modules/*.yaml")):
         rows.extend(_review_rows(path, root, {}))
+    for path in sorted(root.glob("projects/**/*.md")):
+        rows.extend(_project_rows(path, root))
     rows.sort(
         key=lambda r: (
             r["ontology"],

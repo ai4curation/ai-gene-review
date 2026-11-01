@@ -34,7 +34,8 @@ and carries the stated label is the term validator's job, not this module's.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, Optional, Tuple
+from functools import lru_cache
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 #: Change types that must name a surviving/replacing term.
 NEEDS_DIRECT_REPLACEMENT = frozenset(
@@ -208,6 +209,149 @@ def kgcl_dsl(change: Dict[str, Any]) -> Optional[str]:
     if not candidate:
         return None
     return candidate if parse_kgcl(candidate) is not None else None
+
+
+@lru_cache(maxsize=1)
+def _schema() -> Dict[str, Any]:
+    """The gene-review schema, parsed once.
+
+    Read as raw YAML rather than through SchemaView, which takes ten seconds to
+    build and is not needed for the three facts below. The schema file stays the
+    single source of truth either way.
+    """
+    import yaml
+
+    from ai_gene_review.validation.validator import get_schema_path
+
+    with open(get_schema_path(), encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
+
+
+@lru_cache(maxsize=1)
+def allowed_change_fields() -> frozenset[str]:
+    """Attribute names ``ProposedOntologyChange`` declares.
+
+    >>> "has_nondirect_replacement" in allowed_change_fields()
+    True
+    """
+    attrs = _schema()["classes"]["ProposedOntologyChange"]["attributes"]
+    return frozenset(attrs)
+
+
+@lru_cache(maxsize=1)
+def required_change_fields() -> frozenset[str]:
+    """Attribute names ``ProposedOntologyChange`` marks required.
+
+    >>> sorted(required_change_fields())[:2]
+    ['about_node', 'change_type']
+    """
+    attrs = _schema()["classes"]["ProposedOntologyChange"]["attributes"]
+    return frozenset(n for n, a in attrs.items() if (a or {}).get("required"))
+
+
+@lru_cache(maxsize=1)
+def allowed_change_types() -> frozenset[str]:
+    """Permissible values of ``OntologyChangeTypeEnum``.
+
+    >>> "NODE_DIRECT_MERGE" in allowed_change_types()
+    True
+    """
+    enum = _schema()["enums"]["OntologyChangeTypeEnum"]["permissible_values"]
+    return frozenset(enum)
+
+
+#: Fields whose value is an inlined term, so a bare string or a label-only
+#: mapping is a mistake rather than a shorthand.
+_TERM_FIELDS = ("about_node", "has_direct_replacement", "subject")
+
+
+def validate_change_entries(
+    changes: Any,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """Split a list of proposed changes into usable entries and structural errors.
+
+    This is the structural gate for places LinkML never sees -- chiefly project
+    page frontmatter, which is markdown rather than a schema-validated document.
+    Gene and module reviews get the same checks from ``linkml-validate``.
+
+    Only *structural* problems exclude an entry: a missing required field, an
+    unknown field, a ``change_type`` outside the enum, or a term field without
+    an id. Those make the entry unusable. Policy violations are advisory and
+    reported separately by :func:`change_policy_warnings`, matching how they are
+    treated on gene and module reviews, where they are WARNING-severity and
+    exclude nothing.
+
+    >>> valid, errors = validate_change_entries([{"change_type": "OTHER"}])
+    >>> valid
+    []
+    >>> errors[0].startswith("proposed_ontology_changes[0] is missing")
+    True
+    >>> # a policy nit does not exclude the entry
+    >>> entry = {"change_type": "NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT",
+    ...          "ontology": "GO", "about_node": {"id": "GO:1", "label": "x"},
+    ...          "justification": "j", "confidence": "PROBABLE",
+    ...          "report_status": "FIXED"}
+    >>> valid, errors = validate_change_entries([entry])
+    >>> len(valid), errors
+    (1, [])
+    """
+    if not isinstance(changes, list):
+        return [], ["proposed_ontology_changes must be a list"]
+    errors: List[str] = []
+    valid: List[Dict[str, Any]] = []
+    for index, change in enumerate(changes):
+        where = f"proposed_ontology_changes[{index}]"
+        if not isinstance(change, dict):
+            errors.append(f"{where} must be a mapping")
+            continue
+        problems: List[str] = []
+        missing = sorted(required_change_fields() - set(change))
+        if missing:
+            problems.append(f"is missing required field(s) {missing}")
+        unknown = sorted(set(change) - allowed_change_fields())
+        if unknown:
+            problems.append(
+                f"has unknown field(s) {unknown}; allowed fields are "
+                f"{sorted(allowed_change_fields())}"
+            )
+        kind = change.get("change_type")
+        if kind is not None and kind not in allowed_change_types():
+            problems.append(
+                f"has change_type {kind!r}, which is not an OntologyChangeTypeEnum value"
+            )
+        for field in _TERM_FIELDS:
+            value = change.get(field)
+            if value is not None and not _term_id(value):
+                problems.append(f"{field} needs a mapping with a non-empty 'id'")
+        for problem in problems:
+            errors.append(f"{where} {problem}")
+        if not problems:
+            valid.append(change)
+    return valid, errors
+
+
+def change_policy_warnings(changes: Any) -> List[str]:
+    """Advisory policy messages for a bare list of proposed changes.
+
+    The same checks :func:`iter_ontology_change_violations` applies to a review,
+    phrased for a context that has no annotation rows to cross-check against.
+
+    >>> change_policy_warnings([{"change_type": "NODE_DIRECT_MERGE",
+    ...     "ontology": "GO", "about_node": {"id": "GO:1"}, "justification": "j",
+    ...     "confidence": "PROBABLE"}])
+    ['proposed_ontology_changes[0] missing_direct_replacement: NODE_DIRECT_MERGE names no replacement term']
+    >>> change_policy_warnings("not a list")
+    []
+    """
+    if not isinstance(changes, list):
+        return []
+    usable = [c for c in changes if isinstance(c, dict)]
+    return [
+        f"proposed_ontology_changes[{index}] {code}: {message}"
+        for index, _field, code, message, _suggestion in (
+            iter_ontology_change_violations({"proposed_ontology_changes": usable})
+        )
+    ]
 
 
 def _accepted_terms(data: Dict[str, Any]) -> Dict[str, int]:

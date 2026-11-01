@@ -304,7 +304,9 @@ class TestKgclDsl:
 
     def test_new_synonym(self):
         change = _change(
-            change_type="NEW_SYNONYM", has_direct_replacement=None, new_value="tethering"
+            change_type="NEW_SYNONYM",
+            has_direct_replacement=None,
+            new_value="tethering",
         )
         assert kgcl_dsl(change) == "create synonym 'tethering' for GO:0099022"
 
@@ -359,14 +361,18 @@ class TestKgclDsl:
             )
             dsl = kgcl_dsl(change)
             if dsl is not None:
-                assert parse_kgcl(dsl) is not None, f"{change_type} rendered unparseable: {dsl}"
+                assert parse_kgcl(dsl) is not None, (
+                    f"{change_type} rendered unparseable: {dsl}"
+                )
 
 
 class TestDslAgreement:
     """The stated DSL is checked against the structured slots via the parser."""
 
     def test_unparseable_dsl_is_flagged(self):
-        data = {"proposed_ontology_changes": [_change(change_dsl="obsoletify GO:0099022")]}
+        data = {
+            "proposed_ontology_changes": [_change(change_dsl="obsoletify GO:0099022")]
+        }
         assert "dsl_unparseable" in _codes(data)
 
     def test_a_merge_dsl_is_unparseable_and_flagged(self):
@@ -398,7 +404,9 @@ class TestDslAgreement:
 
     def test_dsl_of_the_wrong_kind_is_flagged(self):
         """A bare `obsolete` under the with-replacement change type is the wrong class."""
-        data = {"proposed_ontology_changes": [_change(change_dsl="obsolete GO:0099022")]}
+        data = {
+            "proposed_ontology_changes": [_change(change_dsl="obsolete GO:0099022")]
+        }
         assert "dsl_wrong_kind" in _codes(data)
 
     def test_an_agreeing_dsl_passes(self):
@@ -421,3 +429,155 @@ class TestDslAgreement:
             ]
         }
         assert _codes(data) == []
+
+
+class TestSchemaDerivedFacts:
+    """Structural facts are read from the schema, not duplicated in Python."""
+
+    def test_required_fields_come_from_the_schema(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            required_change_fields,
+        )
+
+        assert required_change_fields() == frozenset(
+            {"change_type", "ontology", "about_node", "justification", "confidence"}
+        )
+
+    def test_allowed_change_types_come_from_the_schema(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            allowed_change_types,
+        )
+
+        types = allowed_change_types()
+        assert "NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT" in types
+        assert "OTHER" in types
+        assert "NODE_OBSOLETE" not in types
+
+    def test_allowed_fields_come_from_the_schema(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            allowed_change_fields,
+        )
+
+        fields = allowed_change_fields()
+        assert "has_nondirect_replacement" in fields
+        assert "term_tracker_issue" in fields
+        assert "replacement" not in fields
+
+    def test_every_dsl_builder_names_a_real_change_type(self):
+        """A typo in _DSL_BUILDERS would silently disable the DSL for that type."""
+        from ai_gene_review.validation.ontology_change_policy import (
+            _DSL_BUILDERS,
+            _KGCL_CLASS,
+            allowed_change_types,
+        )
+
+        types = allowed_change_types()
+        assert set(_DSL_BUILDERS) <= types
+        assert set(_KGCL_CLASS) <= types
+        assert set(_DSL_BUILDERS) == set(_KGCL_CLASS)
+
+
+class TestValidateChangeEntries:
+    """The structural gate used for project pages, which LinkML never sees."""
+
+    def test_a_valid_entry_passes(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        valid, errors = validate_change_entries([_change()])
+        assert errors == []
+        assert len(valid) == 1
+
+    def test_a_non_list_is_rejected(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        valid, errors = validate_change_entries({"change_type": "X"})
+        assert valid == []
+        assert errors == ["proposed_ontology_changes must be a list"]
+
+    def test_a_missing_required_field_is_reported(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        bad = _change()
+        del bad["justification"]
+        valid, errors = validate_change_entries([bad])
+        assert valid == []
+        assert any("justification" in e for e in errors)
+
+    def test_an_unknown_field_is_reported(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        valid, errors = validate_change_entries([_change(replacement="GO:1")])
+        assert valid == []
+        assert any("replacement" in e for e in errors)
+
+    def test_an_unknown_change_type_is_reported(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        valid, errors = validate_change_entries([_change(change_type="OBSOLETE_IT")])
+        assert valid == []
+        assert any("OBSOLETE_IT" in e for e in errors)
+
+    def test_a_term_without_an_id_is_reported(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        valid, errors = validate_change_entries([_change(about_node={"label": "x"})])
+        assert valid == []
+        assert any("about_node" in e for e in errors)
+
+    def test_a_policy_violation_does_not_exclude_the_entry(self):
+        """Policy checks are advisory, as they are on gene and module reviews."""
+        from ai_gene_review.validation.ontology_change_policy import (
+            change_policy_warnings,
+            validate_change_entries,
+        )
+
+        entries = [_change(has_direct_replacement=None)]
+        valid, errors = validate_change_entries(entries)
+        assert len(valid) == 1
+        assert errors == []
+        assert any(
+            "missing_direct_replacement" in w for w in change_policy_warnings(entries)
+        )
+
+    def test_a_missing_tracker_link_does_not_exclude_the_entry(self):
+        """The case that exposed the structural/advisory split."""
+        from ai_gene_review.validation.ontology_change_policy import (
+            change_policy_warnings,
+            validate_change_entries,
+        )
+
+        entries = [_change(report_status="FIXED")]
+        assert len(validate_change_entries(entries)[0]) == 1
+        assert any(
+            "missing_tracker_issue" in w for w in change_policy_warnings(entries)
+        )
+
+    def test_policy_warnings_ignore_a_non_list(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            change_policy_warnings,
+        )
+
+        assert change_policy_warnings("nope") == []
+
+    def test_valid_and_invalid_entries_are_separated(self):
+        from ai_gene_review.validation.ontology_change_policy import (
+            validate_change_entries,
+        )
+
+        valid, errors = validate_change_entries(
+            [_change(), _change(change_type="NOPE")]
+        )
+        assert len(valid) == 1
+        assert len(errors) == 1

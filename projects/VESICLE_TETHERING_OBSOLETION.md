@@ -9,6 +9,118 @@ manifest:
   slides:
     - href: VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html
       description: Vesicle tethering obsoletion slides
+proposed_ontology_changes:
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0099022
+    label: vesicle tethering
+  has_nondirect_replacement:
+  - id: GO:7770062
+    label: vesicle membrane tethering activity
+  change_dsl: obsolete GO:0099022
+  justification: >-
+    Tethering is a binding activity rather than a process, so this biological process
+    is replaced by the molecular function GO:7770062 vesicle membrane tethering activity.
+    This is the parent of the four terms below. Recorded as a non-direct replacement because GO deliberately carries no
+    term replaced by: a biological process cannot be replaced outright by a molecular
+    function, and the recommended pattern is the new MF with a part_of link to the
+    transport process it serves, which a curator must choose per annotation.
+  confidence: CONFIRMED
+  report_status: FIXED
+  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0099069
+    label: synaptic vesicle tethering involved in synaptic vesicle exocytosis
+  has_nondirect_replacement:
+  - id: GO:7770062
+    label: vesicle membrane tethering activity
+  change_dsl: obsolete GO:0099069
+  justification: >-
+    Tethering is a binding activity rather than a process, so this biological process
+    is replaced by the molecular function GO:7770062 vesicle membrane tethering activity.
+    Recorded as a non-direct replacement because GO deliberately carries no
+    term replaced by: a biological process cannot be replaced outright by a molecular
+    function, and the recommended pattern is the new MF with a part_of link to the
+    transport process it serves, which a curator must choose per annotation.
+  confidence: CONFIRMED
+  report_status: FIXED
+  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0090522
+    label: vesicle tethering involved in exocytosis
+  has_nondirect_replacement:
+  - id: GO:7770062
+    label: vesicle membrane tethering activity
+  change_dsl: obsolete GO:0090522
+  justification: >-
+    Tethering is a binding activity rather than a process, so this biological process
+    is replaced by the molecular function GO:7770062 vesicle membrane tethering activity.
+    The exocyst-scoped mapping removals for this term are recorded on modules/dmel_exocyst.yaml, which curates the complex that carries them. Recorded as a non-direct replacement because GO deliberately carries no
+    term replaced by: a biological process cannot be replaced outright by a molecular
+    function, and the recommended pattern is the new MF with a part_of link to the
+    transport process it serves, which a curator must choose per annotation.
+  confidence: CONFIRMED
+  report_status: FIXED
+  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0099044
+    label: vesicle tethering to endoplasmic reticulum
+  has_nondirect_replacement:
+  - id: GO:7770062
+    label: vesicle membrane tethering activity
+  change_dsl: obsolete GO:0099044
+  justification: >-
+    Tethering is a binding activity rather than a process, so this biological process
+    is replaced by the molecular function GO:7770062 vesicle membrane tethering activity.
+    Recorded as a non-direct replacement because GO deliberately carries no
+    term replaced by: a biological process cannot be replaced outright by a molecular
+    function, and the recommended pattern is the new MF with a part_of link to the
+    transport process it serves, which a curator must choose per annotation.
+  confidence: CONFIRMED
+  report_status: FIXED
+  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0099041
+    label: vesicle tethering to Golgi
+  has_nondirect_replacement:
+  - id: GO:7770062
+    label: vesicle membrane tethering activity
+  change_dsl: obsolete GO:0099041
+  justification: >-
+    Tethering is a binding activity rather than a process, so this biological process
+    is replaced by the molecular function GO:7770062 vesicle membrane tethering activity.
+    Recorded as a non-direct replacement because GO deliberately carries no
+    term replaced by: a biological process cannot be replaced outright by a molecular
+    function, and the recommended pattern is the new MF with a part_of link to the
+    transport process it serves, which a curator must choose per annotation.
+  confidence: CONFIRMED
+  report_status: FIXED
+  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+- change_type: REMOVE_MAPPING
+  ontology: GO
+  about_node:
+    id: GO:0099041
+    label: vesicle tethering to Golgi
+  old_value: InterPro:IPR028280
+  justification: >-
+    The InterPro2GO mapping from IPR028280 Protein Njmu-R1 to GO:0099041 sends every
+    C17orf75 orthologue to a term GO has obsoleted, so it now generates IEA annotations
+    to an obsolete term. It is still present in the pinned rules/arba/_interpro2go.txt,
+    and GO:7770062 appears nowhere in that file, so the mapping needs removing or
+    repointing to the replacement MF rather than simply dropping. Recorded on this page
+    rather than on a module because no module in this repository curates Njmu-R1.
+  confidence: CONFIRMED
+  report_status: NOT_REPORTED
+  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)
