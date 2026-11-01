@@ -1,0 +1,33 @@
+# ERCC2 — manual literature synthesis
+
+## Catalytic repair function
+
+XPD performs ATP-dependent 5′–3′ DNA unwinding within TFIIH. Human full-length XPD assembled with the other six core subunits in insect cells loses unwinding with the K48R substitution. Opposite-polarity and XPB-specific controls distinguish XPD helicase action from the separate XPB translocase assay. Affinity tags were removed during purification. These experiments directly support a catalytic contribution to opening repair DNA; XPD does not perform the downstream nuclease incisions. [PMID:31253769, Figure 1 and Supplementary Figure1; Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC6599211/).
+
+Human XPD variant studies measured ATP hydrolysis separately from unwinding and reconstituted nucleotide-excision repair. Several variants impair helicase activity or TFIIH assembly without uniformly eliminating ATPase activity. Therefore ATP binding, ATP hydrolysis, DNA contact and productive DNA unwinding should not be treated as interchangeable measurements. [PMID:19934020, Figures 4–6; ATPase/helicase/NER Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC2806454/).
+
+The human repair structure contains a lesion-free bifurcated DNA substrate. It shows how XPD engages single-stranded DNA but does not independently prove lesion-selective binding or every proposed aromatic-pocket/charge-transfer proofreading mechanism. The damaged-DNA-binding PAINT annotation has separate experimental grounding: purified yeast RAD3 binds UV-damaged DNA with ATP and DNA-topology controls. The actual ancestral node encompasses human XPD and yeast RAD3. This is a conserved phylogenetic inference, not a human binding assay relabeled from yeast. [PMID:8132553, Methods and Figures 1/3/4](https://doi.org/10.1016/S0021-9258(17)37193-4).
+
+Current human Reactome models explicitly include full-length XPD in transcription-coupled repair and assign XPD as the active unit of a directional-helicase event. Together with directly established human repair chemistry, this supports the shared pathway role. Specific RNA-polymerase-backtracking descriptions remain model details unless separately tested; they are not required to establish the helicase activity. [TC-NER pathway](https://reactome.org/content/detail/R-HSA-6781827).
+
+## Structural transcription function
+
+XPD also connects TFIIH components, including the CAK module and the p44-associated core, in initiation-competent assemblies. Native HeLa preparations separate CAK–ERCC2 from holo-TFIIH and show that CAK–ERCC2 reconstitutes transcription more effectively than CAK alone in the tested depleted preparations. Human XPD/p44 interface and variant experiments connect assembly integrity to transcriptional behavior. This is an experimentally supported structural contribution, not XPD-catalyzed phosphorylation or RNA synthesis. [PMID:8692841, Figures 2–5](https://pmc.ncbi.nlm.nih.gov/articles/PMC39049/); [PMID:8692842, Figures 3–6](https://pmc.ncbi.nlm.nih.gov/articles/PMC39050/); [PMID:19934020, Figures 4–6](https://pmc.ncbi.nlm.nih.gov/articles/PMC2806454/).
+
+The human initiation-complex study places XPD within TFIIH purified from HeLa nuclei. It used TBP in place of TFIID, so the source does not support XPD membership in the TBP–TAF TFIID complex. Its density interpretation includes homology modelling and varied local resolution; not every complex contact becomes a purified binary interaction. [PMID:27193682, Results, Figure 3f and Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC4940141/).
+
+The repair and transcription conformations differ. XPA bridges repair DNA and TFIIH; XPG contacts are supported by crosslinks despite its absence from the final reconstruction. These properties should not be transferred to XPD. Likewise, CAK inhibition of XPD can persist with inactive CDK7, demonstrating structural regulation distinct from kinase catalysis. The comparison does not prove that XPD can never contact DNA in any transcription-associated state. [PMID:31253769, Figures 2–4](https://pmc.ncbi.nlm.nih.gov/articles/PMC6599211/).
+
+## Localization, maturation and additional contexts
+
+Human full-length XPD-GFP complements UV sensitivity in XP-D fibroblasts and associates with XPB. Nuclear and cytoplasmic pools are observed. HPA structured assays independently support nucleoplasmic localization in three human cell lines and cytosol in U-251MG; they are not isoform-resolved. [PMID:16669699, Figures 1–2 and Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC1457016/); [HPA](https://www.proteinatlas.org/ENSG00000104884-ERCC2/subcellular).
+
+XPD binds CIAO1, CIAO2B/MIP18 and MMS19 as an iron–sulfur maturation client. Human recombinant pairwise binding and cellular co-IP support the associations. The client is not thereby assigned Fe–S-cluster synthesis or transfer activity. The positive MMXD/spindle/segregation abstract has not been resolved at the original purification, microscopy and perturbation level; independent CIA binding does not prove the entire named MMXD assembly or negate its reported mitotic role. [PMID:23585563, Figure 4E](https://pmc.ncbi.nlm.nih.gov/articles/PMC3675602/); [PMID:28178521, Figures 4/6 and Supplementary Figure S2](https://pmc.ncbi.nlm.nih.gov/articles/PMC5993189/); [PMID:20797633](https://pubmed.ncbi.nlm.nih.gov/20797633/).
+
+Human fibroblast studies support contextual p53-induced apoptosis and UV checkpoint signaling. The former has wild-type XPD rescue; the latter measures Chk1/p53 phosphorylation, with XP-D/CS exceptions. Neither establishes XPD as a kinase, caspase or universal cell-cycle transition controller. [PMID:8675009, Table 3/Figure 4 and Methods](https://repub.eur.nl/pub/3094/8559.pdf); [PMID:17088560, Figures 4–5](https://pmc.ncbi.nlm.nih.gov/articles/PMC1859929/).
+
+## Product and access limits
+
+UniProt's canonical product is 760 residues. Its reported second splice product reconstructs to 405 residues using the specified alternative-sequence edits; no equivalent catalytic activity, TFIIH assembly or localization is established. Engineered disease variants, truncated experimental cDNAs and fluorescent fusions are identified separately in the source guide.
+
+The source guide records main-paper, supplement and image-reading scope for every directly cited PMID, plus database donor chains. Fourteen direct originals remain incomplete or unavailable, including one with partial indexed Methods/Results; ten annotation contexts remain undecided after independent corroboration is considered. Provider-based research attempts failed, so this document is a manual synthesis of the inspected primary evidence, not a provider-generated report.

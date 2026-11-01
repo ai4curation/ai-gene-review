@@ -15,3 +15,23 @@ Cytosolic aspartate aminotransferase (AspAT, EC 2.6.1.1).
 - Core: GO:0004069 / GO:0006532 / cytosol, same as S. cerevisiae AAT2 review.
 - Malate-aspartate shuttle (IC, ARBA) kept as non-core: canonical by analogy, no S. pombe test.
 - ISS donor P00508 is chicken *mitochondrial* AspAT; MF transfer fine, BP rows (2-oxoglutarate/glutamate/aspartate metabolic process) are generic -> non-core.
+
+
+## 2026-10-26 comparative annotation audit
+
+Reviewed all 17 existing rows and the core-function synthesis for SCHPO/caa1; no rows were added or dropped. Original GO terms, evidence codes, source identifiers and all other machine fields are preserved. Actions: {'ACCEPT': 10, 'MODIFY': 5, 'KEEP_AS_NON_CORE': 2}.
+
+Added and read full text of PMID:31641022, the direct native study underlying the later Maa1 paper's Caa1 comparison. “Deletion of the entire ORF of caa1” causes aspartate auxotrophy, slow growth and rapamycin sensitivity. The K255R catalytic-site variant is expressed but does not rescue these phenotypes. This independently supports existing Caa1 aspartate synthesis and the PLP-dependent catalytic mechanism. TORC1 responses depend on catalytic competence but the paper does not identify direct TOR binding or a dedicated sensor; no NEW TOR-regulatory annotation is proposed.
+
+PMID:39502420 independently shows that Caa1 does not rescue the tested Maa1/glu1 ammonium-assimilation defect. These native observations replace reliance solely on budding-yeast analogy. The malate-aspartate-shuttle rows remain explicitly inferred and non-core, not newly established by the TORC1 phenotype. Cytoplasm and broad enzyme/process terms refine to supported cytosol and catalytic/BP children. Direct co-substrate metabolism and PLP binding are core chemistry.
+
+### Research access and provenance
+
+An actual per-gene Falcon attempt with Perplexity-lite fallback ran in parallel with normal publication caching. Falcon returned HTTP 403 authentication failure; Perplexity returned HTTP 401 insufficient quota. No provider report was fabricated. Manual evidence review is recorded here; research and publication logs are `.cache/module-audit-logs/aspartate-SCHPO-caa1-research.log` and `aspartate-SCHPO-caa1-publications.log`. Normal publication fetching succeeded. Cached abstracts are used only for explicit reported findings; unverified target-specific experiments are not confidently rejected.
+
+The annotation-reviewer workflow and current bare-protein-binding policy were applied. No GOA file is used as evidence. Existing sound source quotations were preserved, new quotations were checked against cached source text, and UniProt record sections were backfilled by the helper. Gene summaries are standalone biology. Histories use the helper with explicit Codex actor/tool; focused strict/term/source validation and HTML rendering are logged under `.cache/module-audit-logs/aspartate-SCHPO-caa1-*`. Final results and machine-payload proof are in the panel validation/payload manifests.
+
+
+## PR #5568 follow-up, 2026-10-26
+
+Repaired authored citation spacing and fused numeric prose while preserving original annotation payloads, every action, raw UniProt/GOA records and all existing supporting quotations. Source-cited passages in notes were protected from rewriting.
