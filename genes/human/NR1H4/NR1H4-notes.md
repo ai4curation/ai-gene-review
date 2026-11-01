@@ -265,12 +265,30 @@ a handful of `MARK_AS_OVER_ANNOTATED`.
   carry them.
 - `GO:0046965` is obsolete, so it is `MODIFY` to `GO:0016922` rather than
   removed — the RXRA heterodimerisation claim is correct and central.
+- `GO:0070857 regulation of bile acid biosynthetic process` is `MODIFY` to the
+  signed child `GO:0070858`, not `ACCEPT`. The row's own reason says FXR
+  *represses* CYP7A1 and CYP8B1 and its quote states the direction outright, so
+  accepting the unsigned parent would have been accepting a term while arguing
+  it was too general. FGFR4 and KLB — the two downstream members of the same
+  circuit — already carry `GO:0070858` for it, so this also makes the three
+  agree. Caught in review on #5845.
 - Two `proposed_new_terms` came out of the review, both genuine GO gaps found by
   curating this gene: regulation of VLDL particle assembly, and regulation of
-  bile acid and bile salt transport. The second is the reason `GO:0015721` is
-  marked over-annotated: FXR induces ABCB11, ABCC2 and ABCB4 and represses
-  SLC10A1, so `involved_in` on a transport term asserts a participation it does
-  not have, and there is no regulation child to modify to.
+  bile acid import across the plasma membrane.
+
+**The second gap is narrower than it first looked**, and the first version of
+these notes overstated it. Checked against QuickGO on 2026-11-01: `GO:0015721`
+has no regulation child of its own (its only children are `GO:0015125`, an MF,
+and `GO:0015722` canalicular bile acid transport), but the bile-acid space does
+have `GO:0120188/9/90 regulation of bile acid secretion`. So the export arm of
+what FXR does is annotatable after all — its induction of the canalicular pumps
+is `GO:0120189` — and `GO:0015721` is `MODIFY` to that rather than
+over-annotated. What has no term is the **uptake** arm: FXR represses
+SLC10A1/NTCP, and GO has no bile-acid import process term at all, so there is
+nothing for a regulation term to hang off. That is what the proposal now asks
+for. The row also carries a `WRONG_QUALIFIER` source defect for Reactome, since
+`involved_in` on a transport term is the qualifier asserting participation FXR
+does not have.
 
 ## The IL-17 row
 
@@ -282,9 +300,10 @@ disagreement between us and a curator.
 - UniProt's curated `CC FUNCTION` block cites this exact paper for the opposite
   claim: *"Down-regulates inflammatory cytokine expression in several types of
   immune cells including macrophages and mononuclear cells (PubMed:21242261)."*
-- The two sibling GOA rows UniProt created from this paper in the **same
-  curation session** (2016-01-19) are both negative: `GO:0032689` type II
-  interferon, `GO:0032720` TNF. One row out of three carries the opposite sign.
+- The sibling GOA rows UniProt created from this paper in the **same curation
+  session** (2016-01-19) are all negative: `GO:0032689` type II interferon,
+  `GO:0032720` TNF, and `GO:0043124` canonical NF-kappaB. One row out of **four**
+  carries the opposite sign.
 - The paper's own conclusion is that FXR activation *inhibits* proinflammatory
   cytokine production.
 - IL-17 appears nowhere in its abstract, nowhere in its MeSH terms, and nowhere
@@ -299,8 +318,20 @@ be excluded from outside.
 
 Hence `UNDECIDED` plus a `source_defects` entry: `WRONG_TERM`, resource
 `UNIPROT`, `requested_change: CHECK`, `confidence: SUSPECTED`, proposing
-`GO:0032703 negative regulation of interleukin-17 production` as the expected
-term if IL-17 was measured at all. `just export-source-defects` now carries it
+`GO:0032700 negative regulation of interleukin-17 production` as the expected
+term if IL-17 was measured at all.
+
+**The first version of this proposal named `GO:0032703`, which is negative
+regulation of interleukin-*2*.** Caught in review on #5845. It is worth recording
+rather than quietly fixing, because it is precisely the failure the *Every CURIE
+is read from a source in the same step it is written* rule exists to prevent, and
+because `source_defects` is the one field here that gets exported and sent
+upstream — so the defect report would have reached UniProt naming a term about
+the wrong cytokine. This same file already used `GO:0032703` correctly for IL-2
+eleven hundred lines earlier, and the gene's own UniProt flat file states its
+label on line 1048. Nothing checked the two against each other: a CURIE inside
+`corrected_value` is free text as far as validation is concerned, which is the
+same blind spot that `qualifiers` has in dismech. `just export-source-defects` now carries it
 in the UniProt report. This keeps the action honest — the rule against
 overruling an experimental annotation from an unread full text applies — while
 not losing the finding, which bare `UNDECIDED` would have done.
