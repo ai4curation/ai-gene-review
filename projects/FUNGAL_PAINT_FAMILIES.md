@@ -123,7 +123,7 @@ stress-activated MAPK-cascade assertions.
   MAPK; drafted in this branch
 - [ ] `yeast/FUS3` - budding-yeast pheromone MAPK; drafted in PR #5872
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
-  drafted in this branch
+  drafted in PR #5885
 
 ## Family 5: Fungal Glucanases
 
