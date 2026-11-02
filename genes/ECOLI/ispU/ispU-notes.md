@@ -17,3 +17,4 @@
 - PAINT: PTN000033434 (proteobacterial UppS clade, GO:0008834/GO:0000287/GO:0005829)
   and PTN000033324 (PTHR10291 root; GO:0045547, GO:0016094). P60472 is the reference
   protein of the PTHR10291 family review.
+- Review round (PR #5923): Mg2+ rows now separate catalytic Mg2+ dependence [PMID:9882662 "All enzymes were absolutely Triton X-100 and MgCl2 dependent."] from the structural His-199/Glu-213 site [PMID:12756244 "possibly plays a structural rather than catalytic role"].

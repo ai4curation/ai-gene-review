@@ -26,3 +26,4 @@
 - Truncated UniProt and deep-research quotes completed; the NEW GO:0016094 row now also
   cites the E. coli ortholog study [PMID:15778224 "The enzyme function is to synthesize the carrier lipid"].
   Status set to COMPLETE.
+- Review round (PR #5923): proposed new term "undecaprenyl phosphate biosynthetic process" added and cross-referenced from the NEW GO:0016094 row; no GO:0016311 row exists on this gene.

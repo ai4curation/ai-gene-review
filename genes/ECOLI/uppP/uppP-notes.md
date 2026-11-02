@@ -15,3 +15,8 @@
   P60932. P60932 is the reference protein of the PTHR30622 family review.
 - Open question: periplasm-facing active site vs. cytoplasmic de novo C55-PP; possible
   flippase role (not asserted).
+
+## 2026-11-02 review round (PR #5923)
+
+- GO:0016311 dephosphorylation changed to KEEP_AS_NON_CORE: BacA demonstrably performs the reaction; the core process is carrier formation.
+- Proposed new term "undecaprenyl phosphate biosynthetic process" (parent GO:0008654, modelled on GO:0043048); the GO:0016094 NEW row now rests on primary data (PMID:15138271, PMID:15778224 triple-mutant depletion).
