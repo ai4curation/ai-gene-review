@@ -16,7 +16,8 @@ Writes ``PAINT_REPORT.md``. It is a draft to send; nothing is posted anywhere.
 
 Sections 2-4 read git-ignored inputs (``ird_nodes.tsv``, ``ird_clade_members.tsv.gz``,
 ``ird_fully_reannotated.tsv``), so the report cannot be regenerated from a clean
-checkout: run ``fetch_paint_ird.py`` and ``ird_seed_check.py`` first. The script stops
+checkout: run ``fetch_paint_ird.py``, ``fetch_ird_clades.py`` and ``ird_seed_check.py``
+first. The script stops
 rather than write a section empty.
 
 Usage:
@@ -88,11 +89,14 @@ def gene_cases(assessed: set[tuple[str, str]]) -> list[list[str]]:
     """
     from ai_gene_review.validation.gene_paint_losses import panther_families
 
-    with (HERE / "ird_nodes.tsv").open() as fh:
+    nodes = HERE / "ird_nodes.tsv"
+    if not nodes.exists():
+        raise SystemExit(f"{nodes} is missing (it is git-ignored); run projects/IRD_EVIDENCE/fetch_paint_ird.py first")
+    with nodes.open() as fh:
         node_family = {r["ird_node"]: r["family"] for r in csv.DictReader(fh, delimiter="\t")}
     members = HERE / "ird_clade_members.tsv.gz"
     if not members.exists():
-        raise SystemExit(f"{members} is missing (it is git-ignored); run projects/IRD_EVIDENCE/fetch_paint_ird.py first")
+        raise SystemExit(f"{members} is missing (it is git-ignored); run projects/IRD_EVIDENCE/fetch_ird_clades.py first")
     with gzip.open(members, "rt") as fh:
         clade: dict[str, set[str]] = {}
         for r in csv.DictReader(fh, delimiter="\t"):
@@ -118,7 +122,7 @@ def gene_cases(assessed: set[tuple[str, str]]) -> list[list[str]]:
                     str(len(clade.get(node, ())) or "?"),
                     agreement, f"{doc.get('gene_symbol')} ({a.get('evidence_type')}:{review.get('action')})",
                     " ".join(str(loss.get("argument") or first_sentences(review.get("reason", ""), 1)).split()),
-                    loss.get("suggestion") or GENE_SUGGEST[agreement],
+                    " ".join(str(loss.get("suggestion") or GENE_SUGGEST[agreement]).split()),
                     str(path.relative_to(ROOT)),
                 ])
     return rows

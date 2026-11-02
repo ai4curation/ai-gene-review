@@ -239,7 +239,7 @@ def main() -> int:
         "",
         f"- IRD rows: {len(ird)}. Seed slots on their ancestral IBDs: {n_seeds} "
         f"({len(set().union(*ibd_seeds.values())) if ibd_seeds else 0} distinct seeds, {mapped} mapped to UniProt).",
-        f"- Clade members checked: {sum(1 for ms in clade.values() for m in ms if m['uniprot'])} of "
+        f"- Clade-member rows (IRD node, term, leaf) checked: {sum(1 for ms in clade.values() for m in ms if m['uniprot'])} of "
         f"{sum(len(ms) for ms in clade.values())} (only leaves with a UniProt accession can match a seed).",
         *[f"- Not mapped: {n} {prefix} seeds ({reason[:120]})." for prefix, (n, reason) in UNMAPPABLE.items()],
         f"- **{len(seed_rows)} IRD rows ({100 * len(seed_rows) / len(ird):.1f}%) have at least one seed of the "

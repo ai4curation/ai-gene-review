@@ -7,7 +7,7 @@ trees. Detail rows are in the git-ignored `ird_seed_in_clade.tsv` and
 ## 1. The IRD clade contains a seed of the IBD it blocks
 
 - IRD rows: 2538. Seed slots on their ancestral IBDs: 10532 (7393 distinct seeds, 7387 mapped to UniProt).
-- Clade members checked: 52660 of 52660 (only leaves with a UniProt accession can match a seed).
+- Clade-member rows (IRD node, term, leaf) checked: 52660 of 52660 (only leaves with a UniProt accession can match a seed).
 - Not mapped: 3 JaponicusDB seeds (UniProt ID mapping rejected source JaponicusDB: {'url': 'http://rest.uniprot.org/idmapping/run', 'messages': ["The param).
 - **144 IRD rows (5.7%) have at least one seed of the blocked IBD inside their own clade**, in 113 families.
 
