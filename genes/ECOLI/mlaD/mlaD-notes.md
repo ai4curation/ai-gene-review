@@ -35,5 +35,5 @@
 - GO:0015914 phospholipid transport (IEA, NAS): MODIFY -> GO:0120010.
 - GO:0016020 membrane NAS: MODIFY -> GO:0005886.
 - GO:1990531 (P-type flippase complex): MODIFY -> GO:0043190.
-- GO:0120014 enables (IBA, IDA): ACCEPT; core records contributes_to since activity requires whole complex
+- GO:0120014 enables (IBA, IDA): MARK_AS_OVER_ANNOTATED (revised in PR review); the activity belongs to the assembled MlaFEDB complex with MlaC, so core records contributes_to; MlaD-intrinsic lipid contact is GO:0005543 phospholipid binding. Same reading applied to MlaB, MlaE and MlaF.
   (plus MlaC).

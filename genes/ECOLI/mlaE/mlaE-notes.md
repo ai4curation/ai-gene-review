@@ -46,7 +46,8 @@
 - GO:0015914 phospholipid transport (IBA, NAS): correct but general -> MODIFY to GO:0120010 (is_a child,
   already on the gene).
 - GO:0016020 membrane (NAS): MODIFY to GO:0005886 plasma membrane. The cited Tat paper (PMID:29358647)
-  does not mention MlaE in cached text (likely a supplementary proteomics table).
-- GO:0120014 phospholipid transfer activity (IDA, enables): ACCEPT; activity is a complex-level one, so the
-  core function records it as contributes_to.
+  does not mention Mla at all; ComplexPortal mis-cited it (recorded as a WRONG_REFERENCE source defect).
+- GO:0120014 phospholipid transfer activity (IDA, enables): MARK_AS_OVER_ANNOTATED (revised in PR review);
+  the activity belongs to the assembled MlaFEDB complex with MlaC, so the core function records it as
+  contributes_to, the same reading applied to MlaB, MlaD and MlaF.
 - NEW: GO:0005543 phospholipid binding (IDA, PMID:33236984) based on cryo-EM + in vivo crosslinking.
