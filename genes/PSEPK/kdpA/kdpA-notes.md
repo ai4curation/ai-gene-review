@@ -17,3 +17,10 @@ GO:0030955 is KdpA's own molecular function. GO:0008556 describes the complete
 heteromeric pump and is accepted in substance, with the preferred
 `contributes_to` relationship represented in `core_functions` rather than as a
 no-op term replacement.
+
+## 2026-11-01 completion pass
+
+Rows upgraded with reasons and supported_by; GO:0006813 changed to MODIFY ->
+GO:0071805 (correct-but-general rule). Added NEW part_of GO:0031004 (ISO, from E.
+coli KdpFABC) to match the core_functions in_complex. E. coli evidence is cited as
+orthology-based support throughout.
