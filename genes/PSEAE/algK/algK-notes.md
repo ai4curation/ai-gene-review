@@ -21,4 +21,4 @@ UniProt PTHR11102:SF160 official name ERAD-ASSOCIATED E3 UBIQUITIN-PROTEIN LIGAS
 
 ## 2026-11-02 update
 
-Removed GO:0042597 periplasmic space from core_functions locations: AlgK is an outer-membrane lipoprotein whose TPR scaffold faces the periplasm, and cell outer membrane is the location used for the KT2440 and Azotobacter AlgK reviews and the module. The periplasmic orientation remains described in prose; no separate periplasmic-space annotation is asserted.
+Removed GO:0042597 periplasmic space from core_functions locations. No cellular-component row in this review backs it: the only CC annotation is GO:0009279 cell outer membrane (IEA), and no periplasmic-space annotation exists in GOA or was proposed as NEW. A core location must be reflected in the reviewed annotations, and the evidence (outer-membrane lipidation and fractionation, PMID:20159471) supports a membrane-anchored lipoprotein, not a soluble periplasmic protein. Its TPR scaffold faces the periplasm, which stays described in prose. Cell outer membrane matches the KT2440 and Azotobacter AlgK reviews and the module.
