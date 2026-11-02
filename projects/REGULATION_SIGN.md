@@ -2,8 +2,8 @@
 title: "Regulation Sign Errors: Activator vs Inhibitor"
 maturity: SCOPING
 tags: [EVALUATION]
-species: [human, DROME, ARATH, worm]
-genes: [GNAI1, GNAI2, NTSR1, NLRP3, LRP5, CD47, CLYBL, CIB2, MCL1, ced-9, FLC, SVP]
+species: [human, mouse, rat, yeast, DROME, ARATH, worm]
+genes: [GNAI1, GNAI2, NTSR1, NLRP3, LRP5, CD47, CLYBL, CIB2, MCL1, ced-9, FLC, SVP, ADIPOQ, CFLAR, BAX, Cd48, Pck1]
 ---
 
 # Regulation Sign Errors: Activator vs Inhibitor
@@ -24,9 +24,9 @@ replacement is the same term with the opposite sign
 REMOVE, UNDECIDED or a sign-neutral parent are not in that count; a keyword pass over
 review reasons ([sign_reason_census.yaml](REGULATION_SIGN/sign_reason_census.yaml)) gives
 152 candidate rows that still need screening by hand, since it also catches reasons
-that merely discuss direction. A third, structured source already exists: reviewers
-have tagged `failure_modes: [REGULATORY_SIGN_INVERSION]` in the `propagation_review` of
-**88 rows across 63 review files** (a grep count, not yet analysed).
+that merely discuss direction. A third, structured source is the
+`REGULATORY_SIGN_INVERSION` failure mode reviewers already record in
+`propagation_review`: **91 rows across 64 review files**, harvested below.
 
 ## Principle: sign is judged in vivo
 
@@ -78,6 +78,90 @@ separate axis with a separate failure mode:
 5. **Family-level sign defaults.** Gα proteins split into activating (Gs) and inhibiting
    (Gi/o) branches of the same pathway; a propagation that ignores the split imports
    the wrong half.
+6. **Participant for an inhibitor.** An unsigned process term placed on a PAINT node
+   whose family holds both effectors and inhibitors of the process lands on the
+   inhibitors as if they took part (BCL2 family, CFLAR). The harvest below finds 29 such
+   rows, 15 of them IBA.
+
+## Harvest of `REGULATORY_SIGN_INVERSION` rows
+
+[sign_inversion_harvest.py](REGULATION_SIGN/sign_inversion_harvest.py) collects every
+`existing_annotations` row whose `propagation_review.failure_modes` includes
+`REGULATORY_SIGN_INVERSION`, with its action, replacement, root cause and sources
+([sign_inversion_harvest.yaml](REGULATION_SIGN/sign_inversion_harvest.yaml)). Because
+the failure mode lives on `propagation_review`, every row is a propagated annotation:
+ISO 40, IBA 23, IEA 17, ISS 10, plus one IGI.
+
+The tagged rows have two structural shapes, distinguished by whether the original
+term itself carries a direction:
+
+| Shape | Rows | Dominant evidence | What went wrong |
+|---|---|---|---|
+| **Signed term, wrong sign** | 62 | ISO 29, IEA 15, ISS 9, IBA 8 | A `positive`/`negative`, activating/inhibiting or similar term transferred with the opposite direction to the target's own biology |
+| **Participant for an inhibitor** | 29 | IBA 15, ISO 11 | An unsigned process or activity (`apoptotic process`, `mitochondrial fusion`, `transcytosis`, `heterochromatin formation`) given to a gene that *opposes* it |
+
+The two shapes point to different mechanisms:
+
+- **Signed rows lean on orthology transfers to rodents.** ISO is the largest evidence
+  class among signed rows (29 of 62), and 40 of all 91 rows are rat or mouse ISO rows, transferred from a human (or other rodent) annotation; the sign
+  error is inherited from, or created by, that single source. These are where tracing
+  the donor annotation (next step below) will pay off, and where an upstream fix to
+  one human row would correct several rodent rows.
+- **Participant-for-inhibitor rows are mostly PAINT nodes over mixed families.**
+  15 of the 29 are IBA, from families that contain both effectors and inhibitors of
+  the same process: the BCL2 family (MCL1 `release of cytochrome c`, `intrinsic
+  apoptotic signaling`, `channel activity`; BAX `mitochondrial fusion`), CFLAR
+  (`apoptotic process`, `extrinsic apoptotic signaling`), LONRF2, plant EPF2 and
+  SERK4, fly NijA, worm sta-1 and yeast RPD3. This is the case the enum describes
+  ("family contains activators and inhibitors"), and it adds a sixth origin to the
+  hypotheses above.
+
+How reviewers resolved them:
+
+| Correction | Rows |
+|---|---|
+| No replacement (REMOVE 20, MARK_AS_OVER_ANNOTATED 13, UNDECIDED 10, KEEP_AS_NON_CORE 2) | 45 |
+| MODIFY to another kind of term (mostly participant → `negative regulation of` the process) | 23 |
+| Opposite-sign sibling (16 MODIFY, including mouse Lamp1 pH elevation → acidification; one REMOVE, naked mole-rat Cgas, also names the flipped term) | 17 |
+| MODIFY to the sign-neutral `regulation of` parent | 6 |
+
+Root causes are split: `SOURCE_BAD` 35 (the donor annotation itself is wrong),
+`TERM_SCOPING_PROBLEM` 25, `PROPAGATION_BAD` 16 (sound donor, wrong target),
+`UNRESOLVED` 10. **50 of the 91 rows** carry a `source_defects` entry, so `just
+export-source-defects` routes them upstream. The rows without one are term-scoping,
+unresolved or weak-source cases, where the source record is not shown to be wrong,
+plus Candida CEK2 (`SOURCE_BAD`, added to main by another review after this harvest's
+defect pass).
+
+Routing follows the schema's definition of `resource` as the group that *holds the
+defective record*, as rat Alpl already did for the same GO:0140928 defect:
+
+- **A wrong donor annotation** is filed against the donor's holder, with `record` set
+  to the donor gene (RGD or MGI for the Ensembl Compara and rodent ISO transfers),
+  because fixing the donor removes every row transferred from it.
+- **A sound donor transferred to the wrong target**, or a transfer with no current
+  donor, is filed against the group that made the transfer (GO Central for PAINT and
+  the rodent orthology pipeline, TreeGrafter, UniProt for ARBA, SGD, BHF-UCL).
+- **Family-tree (IBA) rows** request `CHECK` rather than a repoint or deletion,
+  because PAINT fixes them at the node (an IRD or a narrower placement), not on the
+  gene's row. The most frequent co-occurring failure mode is
+`ROLE_CONFLATION` (16), which tracks the participant-for-inhibitor shape.
+
+Cases worth singling out:
+
+- **Both signs from the same evidence.** Human ADIPOQ carries `positive` and `negative
+  regulation of cold-induced thermogenesis` cited to the same two papers, a full 2×2
+  cross-product that mouse Adipoq repeats; reviewers removed the unsupported pair.
+- **Species divergence in direction.** Mouse and rat Cd48: CD48-2B4 activates human NK
+  cells but inhibits rodent ones, so the human-seeded `natural killer cell activation`
+  does not transfer.
+- **GO-CAM causal chains.** Mouse Pck1 rows (`SREBP-SCAP complex retention in ER`,
+  `positive regulation of cholesterol biosynthetic process`) derive from a human GO-CAM
+  in which PCK1 *negatively* regulates INSIG; the derived process rows do not carry
+  that negative edge. This makes the GO-CAM cross-check below concrete.
+- **Neutral is sometimes the right answer.** S. pombe zds1, mouse Ptk7, yeast CDC55 and
+  ROF1 went to the unsigned parent because the direction is context-dependent or
+  untested in the target, not because the opposite sign is established.
 
 ## Seed cases
 
@@ -116,7 +200,12 @@ sits on a PAINT node and every descendant inherits it.
 - [x] Seed census of sign-flip MODIFYs across all reviews (35 rows / 25 genes)
 - [x] Keyword census of review reasons mentioning sign/direction (152 candidate rows, unscreened)
 - [ ] Screen the keyword census by hand; classify each true sign issue by origin hypothesis
-- [ ] Harvest the 88 `REGULATORY_SIGN_INVERSION` propagation_review rows (63 files) into a census
+- [x] Harvest the `REGULATORY_SIGN_INVERSION` propagation_review rows (91 rows / 64 files after merging main)
+- [x] Add `source_defects` to the `SOURCE_BAD` / `PROPAGATION_BAD` harvest rows (34 added; 50 of 91 rows now carry one)
+- [ ] File the GO Central, RGD and MGI reports from `just export-source-defects`
+- [ ] Route ADIPOQ's origin to MGI: the review traces the thermogenesis cross-product to four MGI IMP rows on mouse Adipoq, which has no review here yet
+- [ ] Add `source_defects` to the Candida CEK2 `SOURCE_BAD` row that arrived from main
+- [ ] Add `source_defects` to the origin rows of mouse Alpl GO:0140928 (resource MGI, record unset): human ALPL and rat Alpl file against MGI:MGI:87983, but the origin review carries none, and its two IMP rows cite *Ank* and *Enpp1* alleles as With/From. The harvest keys on `propagation_review`, so it cannot see experimental origin rows like these
 - [ ] Look for other sign calls held UNDECIDED (or ACCEPTed) on in vitro evidence alone
 - [ ] Extend the flip census to REMOVE/UNDECIDED rows and to MF activator/inhibitor pairs
 - [ ] Trace propagated rows (IEA/IBA/ISS) to their donor annotations
@@ -141,3 +230,36 @@ Principle added: sign is judged on in vivo evidence. GNAI1 `GO:0007189` changed 
 UNDECIDED to REMOVE on that basis. Found that `PropagationFailureModeEnum` already has
 `REGULATORY_SIGN_INVERSION` ("Family contains activators and inhibitors, and a
 positive/negative regulatory term leaks across members"), used on 88 rows.
+
+## 2026-11-01
+
+Harvested the `REGULATORY_SIGN_INVERSION` rows: 90 rows in 63 files (GNAI1 and one other
+added since the earlier grep). Two shapes: 62 rows with a signed term carrying the wrong
+direction, mostly rodent ISO transfers; 28 rows where an inhibitor was annotated as a
+participant, mostly IBA over mixed families. Added that second shape as origin
+hypothesis 6. Only 16 rows have a `source_defects` entry. The harvest's `original_signed`
+flag is a regex over the term label, and its `correction` classes compare labels, so
+both are aids to reading the table rather than curated judgements.
+
+Later the same day: added `source_defects` to the 34 `SOURCE_BAD` / `PROPAGATION_BAD`
+rows that lacked one (rat Prkaa2's row is no longer in GOA, so it was skipped). Resource
+is the GOA assigned_by: GO_CENTRAL 19, OTHER 11 (Ensembl Compara, TreeGrafter,
+YuBioLab, named in each explanation), and one each for ARUK_UCL, RGD, SGD and UNIPROT.
+Requested changes: 18 CHECK, 9 DELETE_ROW, 7 REPOINT. REPOINT is used only where the
+review gives a clear opposite-sign replacement for a row whose donor annotation it
+shows to be wrong (GNAI2, ABCC8, ARG2, GOT1, RGS2 ×2, mouse Btk). Explanations reuse each review's own reasoning; no review action changed.
+
+## 2026-11-02
+
+Addressed review of PR #5905. Thirteen defects on orthology transfers asked RGD or MGI to
+fix the donor annotation while naming the transferring group as `resource`; they now name
+the donor's holder and set `record` (8 RGD, 5 MGI), matching rat Alpl. The three mouse
+Aldh7a1 ISO rows turned out to be orphans (QuickGO, 2026-11-02: human ALDH7A1 no longer
+carries the transport terms), so they request `DELETE_ROW` from GO Central. SPRY2, MCL1,
+CFLAR and Cgas now request `CHECK`, matching the IBA convention and, for SPRY2, a review
+that marks the row over-annotated rather than wrong; Cacnb3 and Spr request deletion,
+which their reviews prefer. Resources are now GO_CENTRAL 15, RGD 8, MGI 5, OTHER 3,
+ARUK_UCL, SGD and UNIPROT 1 each; changes CHECK 17, DELETE_ROW 10, REPOINT 7. The harvest
+now treats pH elevation ↔ acidification as a sign pair, moving mouse Lamp1 to FLIP;
+merging main added Candida CEK2, for 91 rows in 64 files.
+
