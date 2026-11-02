@@ -86,3 +86,22 @@ extensive structural evidence (PMID:10801319, PMID:22654673, UniProt BINDING fea
 - MF GO:0003974 UDP-N-acetylglucosamine 4-epimerase activity (bifunctional; glycoconjugate
   UDP-sugar supply); location GO:0005829 cytosol.
 </content>
+
+
+## Current scientific reassessment — 2026-11-02
+
+The preceding journal is preserved verbatim as history, including its original counts and interpretations. Current direct evidence supports two catalytic cores: reversible UDP-galactose/UDP-glucose epimerization and reversible UDP-GalNAc/UDP-GlcNAc epimerization. Recombinant human GALE kinetics and crosslinking support the first reaction and homodimeric assembly ([PMID:16302980](https://doi.org/10.1111/j.1742-4658.2005.05017.x)). Human transgenes assayed in fly knockdown lysates support both activities, while the endogenous fly enzyme is also dual-specific ([PMID:22654673](https://pmc.ncbi.nlm.nih.gov/articles/PMC3359975/)). The second activity is therefore not human-specific. The narrower E. coli contrast and proposed active-site explanation in [PMID:11279032](https://doi.org/10.1074/jbc.M100220200) are preserved without inventing a successful human UDP-GalNAc co-crystal or completed specificity mutagenesis.
+
+The bound NAD cofactor participates in the epimerization mechanism. The inherited NAD-binding NEW is retained separately from current GOA, supported by the authentic abstract and exact canonical human 1EK5/1EK6 ligand/sequence records ([PMID:10801319](https://doi.org/10.1021/bi000215l)). The coupled assay's NADH reporter is not net GALE NAD consumption. NAD binding and dimerization are catalytic context rather than additional independent physiological cores.
+
+All 18 current source contexts are retained. Five broad identical-protein-binding annotations become MODIFY to the actual homodimerization descendant, supported by direct human assembly evidence; this does not claim that inaccessible screen pair tables were independently read. Two galactose-catabolism parents become MODIFY to the actual Leloir descendant. The broader galactose metabolic process remains valid for the reversible metabolic contribution. Current actions are 11 ACCEPT and seven MODIFY, plus the separate inherited NAD-binding NEW, for 19 stored annotations.
+
+The two direct natural product sequences are 348 and 274 residues. The short product replaces canonical residues 1–79 with MSPLQ; its biochemical activity remains unresolved. The deposited human 1HZJ structure has an A-to-V difference at position 180 from the current canonical sequence, despite zero-mutation metadata. No pathogenic or isoform conclusion follows. The paper's NADH designation and deposited NAD ligand label are retained as distinct source facts. The [source guide](GALE-source-guide.md) records the construct, access, phylogenetic, donor and normal-versus-mutant Reactome limits.
+
+All 21 old quote associations and the complete inherited review remain archived. One exact NAD-binding excerpt remains current; the other 20 legacy associations are historical-only. Two short primary catalytic anchors are added without repeating their text here. Genuine native acquisition has now verified 18 current contexts, all 16 exporter columns, both products and all 38 normal sources. The inherited review was not reseeded. All 16 existing-source bytes are unchanged; only 22 missing sources were fetched. All 11 normal assessed reference titles match exactly, and all three active excerpts match the native caches. The PMID:11279032 line break is retained verbatim. The newly cached defective Reactome summary confirms its model context without changing the localization judgment. Native EDIT and scoped-check outcomes are recorded below.
+
+## Native verification
+
+Default target validation and strict GOA reconciliation passed for all 18 current contexts, with the separate inherited NEW retained. The only default-validation advisory is an ontology-cache label difference for GO:0033499; the retained current official GO label is preserved. Native status computation yields COMPLETE, which does not erase that separate terminology advisory. The first audit of provisional DRAFT and its status-only correction are retained. The ontology cache and all 38 normal sources remain unchanged during validation.
+
+The finalized native EDIT history validates. Private rendering succeeds and shows all 19 annotations, two cores and 16 references. Relative source-guide links and scoped whitespace checks are recorded with the final candidate.
