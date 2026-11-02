@@ -297,6 +297,15 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Collect proposed ontology changes (top-level proposed_ontology_changes on gene
+# and module reviews, and in project-page frontmatter) into
+# reports/ontology-changes.tsv plus one Markdown report
+# per ontology in reports/ontology-changes/. These are changes an ONTOLOGY should
+# make to a term that already exists (obsoletion, merge, definition fix,
+# reparenting, mapping removal), modelled on KGCL; the source-defect exporter
+# above covers defects in annotation records instead. See docs/ontology_changes.md.
+export-ontology-changes *args="":
+    uv run python -m ai_gene_review.tools.export_ontology_changes {{args}}
 # Evaluate function requirement (NOT) rules: `acceptance` tests them against
 # experimental GOA (QuickGO + UniProt); `sweep` flags local GOA rows.
 # Writes reports/function-requirements/ (git-ignored; regenerate, never commit).

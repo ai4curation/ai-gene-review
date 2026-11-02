@@ -17,8 +17,14 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
-from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+from ai_gene_review.render import (
+    normalize_artifact_metadata,
+    resolve_research_artifacts,
+)
+from ai_gene_review.publication_links import (
+    protect_scientific_notation,
+    rewrite_publication_links,
+)
 from ai_gene_review.site_provenance import SourceHistory
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
@@ -27,7 +33,7 @@ NOTEBOOK_SUFFIXES = {".ipynb"}
 
 def has_gene_review(genes_dir: Path, species: str, symbol: str) -> bool:
     """Only link targets that the gene renderer will actually publish."""
-    return (genes_dir / species / symbol / f'{symbol}-ai-review.yaml').is_file()
+    return (genes_dir / species / symbol / f"{symbol}-ai-review.yaml").is_file()
 
 
 def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
@@ -205,14 +211,18 @@ def set_frontmatter_key(content: str, key: str, value: Any) -> str:
     if end_idx is None:
         raise ValueError("content has no YAML frontmatter block")
     lines = content.split("\n")
-    block = yaml.dump(
-        {key: value},
-        Dumper=_IndentedListDumper,
-        sort_keys=False,
-        allow_unicode=True,
-        default_flow_style=False,
-        width=10_000,
-    ).rstrip("\n").split("\n")
+    block = (
+        yaml.dump(
+            {key: value},
+            Dumper=_IndentedListDumper,
+            sort_keys=False,
+            allow_unicode=True,
+            default_flow_style=False,
+            width=10_000,
+        )
+        .rstrip("\n")
+        .split("\n")
+    )
     # Locate the key's lines with the YAML parser, not a text heuristic: the
     # block runs from the key to the next top-level key (or the closing ---).
     root = yaml.compose("\n".join(lines[1:end_idx]))
@@ -348,7 +358,9 @@ def validate_manifest(
     return valid, errors
 
 
-def _manifest_entry_errors(entry: Any, spec: ManifestKind, projects_dir: Path) -> List[str]:
+def _manifest_entry_errors(
+    entry: Any, spec: ManifestKind, projects_dir: Path
+) -> List[str]:
     """Problems with one manifest entry (empty if valid)."""
     if not isinstance(entry, dict):
         return ["must be a mapping"]
@@ -373,7 +385,10 @@ def _manifest_entry_errors(entry: Any, spec: ManifestKind, projects_dir: Path) -
         errors.append(f"href {href!r} must be an https URL or a path under projects/")
     elif not target.is_file():
         errors.append(f"href {href!r} does not exist under projects/")
-    elif spec.local_source_suffix and not target.with_suffix(spec.local_source_suffix).is_file():
+    elif (
+        spec.local_source_suffix
+        and not target.with_suffix(spec.local_source_suffix).is_file()
+    ):
         errors.append(
             f"href {href!r} has no sibling "
             f"{target.with_suffix(spec.local_source_suffix).name} source"
@@ -461,6 +476,65 @@ def referenced_manifest_files(md_path: Path, projects_dir: Path) -> List[Path]:
             if candidate not in files:
                 files.append(candidate)
     return files
+
+
+def project_ontology_changes(
+    frontmatter: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """The valid ``proposed_ontology_changes`` entries of a project page.
+
+    A project page is the natural home for an obsoletion that spans several
+    terms and MODs and so belongs to no single gene or module review -- the
+    ``projects/*_OBSOLETION.md`` pages are exactly that case. Unlike a gene or
+    module review the page is markdown, so LinkML never validates it and the
+    structural checks come from
+    :func:`~ai_gene_review.validation.ontology_change_policy.validate_change_entries`
+    instead.
+
+    >>> project_ontology_changes({})
+    []
+    >>> project_ontology_changes({"proposed_ontology_changes": [{"change_type": "OTHER"}]})
+    []
+    """
+    from ai_gene_review.validation.ontology_change_policy import validate_change_entries
+
+    if "proposed_ontology_changes" not in frontmatter:
+        return []
+    valid, _errors = validate_change_entries(frontmatter["proposed_ontology_changes"])
+    return valid
+
+
+def ontology_change_warnings(frontmatter: Dict[str, Any], md_path: Path) -> List[str]:
+    """Page warnings for every proposed change the renderer had to exclude.
+
+    >>> warn = ontology_change_warnings(
+    ...     {"proposed_ontology_changes": [{"change_type": "OTHER"}]},
+    ...     Path("projects/FOO.md"))
+    >>> warn[0].startswith("Invalid proposed_ontology_changes in FOO.md")
+    True
+    >>> "missing required field(s)" in warn[0]
+    True
+    >>> ontology_change_warnings({}, Path("projects/FOO.md"))
+    []
+    """
+    from ai_gene_review.validation.ontology_change_policy import (
+        change_policy_warnings,
+        validate_change_entries,
+    )
+
+    if "proposed_ontology_changes" not in frontmatter:
+        return []
+    changes = frontmatter["proposed_ontology_changes"]
+    _valid, errors = validate_change_entries(changes)
+    # Structural errors exclude the entry; policy violations are advisory and
+    # the entry still renders, so the two are phrased differently.
+    return [
+        f"Invalid proposed_ontology_changes in {md_path.name}, entry not rendered: {error}"
+        for error in errors
+    ] + [
+        f"Proposed ontology change in {md_path.name} needs review: {warning}"
+        for warning in change_policy_warnings(changes)
+    ]
 
 
 def manifest_warnings(
@@ -1056,6 +1130,7 @@ def process_markdown_content(content: str) -> str:
     """
 
     content = protect_scientific_notation(content)
+
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
         mermaid_code = match.group(1)
@@ -1549,6 +1624,7 @@ def render_project(
         + qualified_warnings
         + symbol_warnings
         + manifest_warnings(frontmatter, md_path, manifest_root)
+        + ontology_change_warnings(frontmatter, md_path)
     )
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
@@ -1629,20 +1705,27 @@ def render_project(
         title=title,
         content=html_content,
         source_file=md_path.name,
-        source_provenance=(source_history or SourceHistory(md_path.parent)).for_file(md_path),
+        source_provenance=(source_history or SourceHistory(md_path.parent)).for_file(
+            md_path
+        ),
         family_rows=family_rows,
         source_ref=quote(source_ref, safe=""),
         warnings=warnings,
         frontmatter=frontmatter,
         collections=collections,
         resources=manifest_resources(frontmatter, md_path, manifest_root),
+        ontology_changes=project_ontology_changes(frontmatter),
         projects_base_path="../" * subdir_depth,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
-    repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
+    repo_root = (
+        projects_dir.resolve().parent
+        if projects_dir is not None
+        else genes_dir.resolve().parent
+    )
     # Bundle assets are copied after rendering; retain their mirrored URLs even
     # on a clean build where those output files do not exist yet.
     mirrored_assets = (
@@ -1657,9 +1740,14 @@ def render_project(
     # Keep artifact URLs relative to the source here; the publication rewriter
     # below maps archived files into their mirrored output locations.
     html = resolve_research_artifacts(
-        normalize_artifact_metadata(frontmatter), html, md_path, md_path.parent,
+        normalize_artifact_metadata(frontmatter),
+        html,
+        md_path,
+        md_path.parent,
     )
-    html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
+    html = rewrite_publication_links(
+        html, md_path, output_path, repo_root, mirrored_assets
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 
@@ -1870,8 +1958,11 @@ def collection_context(
     """
     registry = load_collections(projects_dir)
     memberships = [
-        {"key": key, "title": registry[key].get("title", key),
-         "index": registry[key].get("index")}
+        {
+            "key": key,
+            "title": registry[key].get("title", key),
+            "index": registry[key].get("index"),
+        }
         for key in _as_string_list(frontmatter.get("collections"))
         if key in registry and registry[key].get("index") != slug
     ]
@@ -1881,8 +1972,13 @@ def collection_context(
         rows = collect_project_rows(projects_dir)
         for key in indexed:
             members = [r for r in rows if key in r["collections"] and r["slug"] != slug]
-            indexes.append({"key": key, "title": registry[key].get("title", key),
-                            "members": members})
+            indexes.append(
+                {
+                    "key": key,
+                    "title": registry[key].get("title", key),
+                    "members": members,
+                }
+            )
     return {"memberships": memberships, "indexes": indexes}
 
 

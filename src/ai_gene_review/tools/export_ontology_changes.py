@@ -1,0 +1,455 @@
+#!/usr/bin/env python3
+"""Collect proposed ontology changes for upstream term-tracker reporting.
+
+Reviews record changes an *ontology* should make -- obsolete a term, merge two,
+fix a definition, reparent, drop a mapping -- under ``proposed_ontology_changes``.
+They appear in two places:
+
+* top level of a gene review (``genes/*/*/*-ai-review.yaml``);
+* top level of a module review (``modules/*.yaml``), which is where subtree-level
+  obsoletions are usually noticed;
+* the frontmatter of a project page (``projects/**/*.md``), which is where an
+  obsoletion spanning several terms and MOD groups lives: it belongs to no single
+  gene or module, and the ``projects/*_OBSOLETION.md`` pages are exactly that case.
+
+This module flattens both into one row per change and renders a Markdown report
+per *ontology* -- the thing that is actually sent upstream, since each ontology
+has its own tracker. It is the ontology-side counterpart of
+``export_source_defects``, which reports annotation-record defects per resource.
+
+>>> row = _row(
+...     source_path="modules/m.yaml",
+...     context={"gene_symbol": ""},
+...     change={"change_type": "NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT",
+...             "ontology": "GO", "about_node": {"id": "GO:1", "label": "x"},
+...             "justification": "Wrong.", "origin": "UPSTREAM_COMPLETED"},
+... )
+>>> row["origin"]
+'UPSTREAM_COMPLETED'
+>>> row["change_dsl"]
+'obsolete GO:1'
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+from pathlib import Path
+from typing import Any, Iterator
+
+from ruamel.yaml import YAML
+
+from ai_gene_review.validation.ontology_change_policy import kgcl_dsl
+
+COLUMNS = [
+    "ontology",
+    "origin",
+    "stance",
+    "request_status",
+    "adoption_status",
+    "change_type",
+    "confidence",
+    "source_path",
+    "gene_symbol",
+    "about_node",
+    "about_node_label",
+    "change_dsl",
+    "has_direct_replacement",
+    "has_direct_replacement_label",
+    "has_nondirect_replacement",
+    "old_value",
+    "new_value",
+    "subject",
+    "predicate",
+    "justification",
+    "affected_annotations",
+    "supported_by",
+    "ontology_state_verified",
+    "upstream_tracker_issue",
+    "pull_request",
+    "see_also",
+]
+
+DEFAULT_TSV = Path("reports/ontology-changes.tsv")
+DEFAULT_REPORT_DIR = Path("reports/ontology-changes")
+
+
+def _load(path: Path) -> Any:
+    """Load a YAML file, skipping files that do not mention proposed_ontology_changes."""
+    text = path.read_text(encoding="utf-8")
+    if "proposed_ontology_changes:" not in text:
+        return None
+    return YAML(typ="safe").load(text)
+
+
+def _term(value: Any) -> tuple[str, str]:
+    """Split an inlined term into ``(id, label)``.
+
+    >>> _term({"id": "GO:1", "label": "x"})
+    ('GO:1', 'x')
+    >>> _term(None)
+    ('', '')
+    """
+    if isinstance(value, dict):
+        return str(value.get("id") or ""), str(value.get("label") or "")
+    return "", ""
+
+
+def _row(
+    source_path: str, context: dict[str, Any], change: dict[str, Any]
+) -> dict[str, str]:
+    """Flatten one proposed change plus its review context into a TSV row."""
+    row = {c: "" for c in COLUMNS}
+    row.update({k: "" if v is None else str(v) for k, v in context.items()})
+    for key in (
+        "ontology",
+        "change_type",
+        "confidence",
+        "old_value",
+        "new_value",
+        "predicate",
+        "origin",
+        "stance",
+        "request_status",
+        "adoption_status",
+        "ontology_state_verified",
+        "upstream_tracker_issue",
+        "pull_request",
+    ):
+        if change.get(key) is not None:
+            row[key] = " ".join(str(change[key]).split())
+    row["justification"] = " ".join(str(change.get("justification") or "").split())
+    row["about_node"], row["about_node_label"] = _term(change.get("about_node"))
+    direct_id, direct_label = _term(change.get("has_direct_replacement"))
+    row["has_direct_replacement"] = direct_id
+    row["has_direct_replacement_label"] = direct_label
+    row["has_nondirect_replacement"] = "|".join(
+        f"{i} {label}".strip()
+        for i, label in (
+            _term(t) for t in (change.get("has_nondirect_replacement") or [])
+        )
+        if i
+    )
+    row["subject"] = _term(change.get("subject"))[0]
+    row["affected_annotations"] = "|".join(
+        str(a) for a in (change.get("affected_annotations") or [])
+    )
+    row["see_also"] = "|".join(str(u) for u in (change.get("see_also") or []))
+    row["supported_by"] = json.dumps(
+        change.get("supported_by") or [], ensure_ascii=False
+    )
+    # No default for either status: an absent one means not assessed, and
+    # inventing NOT_FILED would claim we hold a request we never made.
+    # The DSL is optional in the YAML; derive it when absent so every row that
+    # can be expressed as KGCL carries it.
+    row["change_dsl"] = " ".join(
+        str(change.get("change_dsl") or kgcl_dsl(change) or "").split()
+    )
+    row["source_path"] = source_path
+    return row
+
+
+def _review_rows(
+    path: Path, root: Path, context: dict[str, Any]
+) -> Iterator[dict[str, str]]:
+    """Yield change rows from one review file."""
+    data = _load(path)
+    if not data:
+        return
+    resolved = {k: v(data) if callable(v) else v for k, v in context.items()}
+    for change in data.get("proposed_ontology_changes") or []:
+        if isinstance(change, dict):
+            yield _row(str(path.relative_to(root)), resolved, change)
+
+
+def _project_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
+    """Yield change rows from a project page's frontmatter.
+
+    Unlike a review, a project page is markdown, so the changes live in its YAML
+    frontmatter and LinkML never validates it. Only entries that pass the
+    structural gate are exported; the renderer reports the rest as page
+    warnings, so a malformed entry is visible rather than silently dropped.
+    """
+    text = path.read_text(encoding="utf-8")
+    if "proposed_ontology_changes:" not in text:
+        return
+    from ai_gene_review.render_projects import parse_frontmatter
+    from ai_gene_review.validation.ontology_change_policy import (
+        validate_change_entries,
+    )
+
+    frontmatter, _body = parse_frontmatter(text)
+    changes = frontmatter.get("proposed_ontology_changes")
+    if changes is None:
+        return
+    valid, _errors = validate_change_entries(changes)
+    for change in valid:
+        yield _row(str(path.relative_to(root)), {}, change)
+
+
+def collect(root: Path) -> list[dict[str, str]]:
+    """Collect every proposed ontology change under ``root``, sorted for stable output."""
+    rows: list[dict[str, str]] = []
+    for path in sorted(root.glob("genes/*/*/*-ai-review.yaml")):
+        rows.extend(
+            _review_rows(
+                path, root, {"gene_symbol": lambda d: d.get("gene_symbol", "")}
+            )
+        )
+    for path in sorted(root.glob("modules/*.yaml")):
+        rows.extend(_review_rows(path, root, {}))
+    for path in sorted(root.glob("projects/**/*.md")):
+        rows.extend(_project_rows(path, root))
+    rows.sort(
+        key=lambda r: (
+            r["ontology"],
+            r["about_node"],
+            r["source_path"],
+            r["change_type"],
+        )
+    )
+    return rows
+
+
+def _describe(r: dict[str, str]) -> str:
+    """One line naming the change, preferring its KGCL DSL.
+
+    >>> _describe({"change_dsl": "obsolete GO:1", "change_type": "X", "about_node": "GO:1"})
+    'obsolete GO:1'
+    >>> _describe({"change_dsl": "", "change_type": "COMPLEX_CHANGE", "about_node": "GO:1"})
+    'COMPLEX_CHANGE on GO:1 (see justification)'
+    """
+    if r["change_dsl"]:
+        return r["change_dsl"]
+    return f"{r['change_type']} on {r['about_node']} (see justification)"
+
+
+#: Request statuses that mean there is nothing left to ask the ontology for.
+CLOSED_REQUESTS = ("ACCEPTED", "DECLINED")
+
+#: Adoption statuses that mean there is nothing left for us to migrate.
+CLOSED_ADOPTIONS = ("COMPLETE", "NOT_APPLICABLE")
+
+
+def is_outbound(row: dict[str, str]) -> bool:
+    """True for a change this repository is asking an ontology to make.
+
+    >>> is_outbound({"origin": "SELF_PROPOSED", "request_status": ""})
+    True
+    >>> is_outbound({"origin": "SELF_PROPOSED", "request_status": "DECLINED"})
+    False
+    >>> is_outbound({"origin": "UPSTREAM_PROPOSED", "request_status": ""})
+    False
+    """
+    return (
+        row.get("origin") == "SELF_PROPOSED"
+        and row.get("request_status", "") not in CLOSED_REQUESTS
+    )
+
+
+def is_inbound(row: dict[str, str]) -> bool:
+    """True for a change the ontology originated that still needs work from us.
+
+    An upstream change is ours to act on until our own content is migrated, and a
+    request of ours that was accepted becomes inbound work for the same reason.
+
+    >>> is_inbound({"origin": "UPSTREAM_COMPLETED", "adoption_status": "NOT_STARTED"})
+    True
+    >>> is_inbound({"origin": "UPSTREAM_COMPLETED", "adoption_status": "COMPLETE"})
+    False
+    >>> is_inbound({"origin": "SELF_PROPOSED", "request_status": "ACCEPTED",
+    ...             "adoption_status": "NOT_STARTED"})
+    True
+    """
+    upstream = str(row.get("origin", "")).startswith("UPSTREAM")
+    accepted = row.get("request_status") == "ACCEPTED"
+    if not (upstream or accepted):
+        return False
+    return row.get("adoption_status", "") not in CLOSED_ADOPTIONS
+
+
+def _entry_lines(r: dict[str, str]) -> list[str]:
+    """The shared body of one change, used by both reports."""
+    label = f" *{r['about_node_label']}*" if r["about_node_label"] else ""
+    lines = [
+        f"- **Term:** {r['about_node']}{label}",
+        f"- **Change:** {_describe(r)}",
+    ]
+    if r["has_direct_replacement"]:
+        rep_label = (
+            f" *{r['has_direct_replacement_label']}*"
+            if r["has_direct_replacement_label"]
+            else ""
+        )
+        lines.append(
+            f"- **Replacement (term replaced by):** {r['has_direct_replacement']}{rep_label}"
+        )
+    if r["has_nondirect_replacement"]:
+        alts = ", ".join(r["has_nondirect_replacement"].split("|"))
+        lines.append(f"- **Alternatives (consider):** {alts}")
+    if r["change_type"] == "REMOVE_MAPPING":
+        if r["old_value"]:
+            lines.append(f"- **Mapping to remove:** `{r['old_value']}`")
+    elif r["old_value"] or r["new_value"]:
+        lines.append(f"- **Value:** `{r['old_value']}` → `{r['new_value']}`")
+    if r["subject"]:
+        lines.append(f"- **Other end of edge:** {r['predicate']} {r['subject']}")
+    if r["affected_annotations"]:
+        lines.append("- **Depends on it here:**")
+        for a in r["affected_annotations"].split("|"):
+            lines.append(f"  - `{a}`")
+    lines.append(f"- **Recorded in:** `{r['source_path']}`")
+    if r["ontology_state_verified"]:
+        lines.append(f"- **Ontology state verified:** {r['ontology_state_verified']}")
+    if r["upstream_tracker_issue"]:
+        lines.append(f"- **Tracker:** {r['upstream_tracker_issue']}")
+    if r["pull_request"]:
+        lines.append(f"- **Pull request:** {r['pull_request']}")
+    if r["see_also"]:
+        for u in r["see_also"].split("|"):
+            lines.append(f"- **See also:** {u}")
+    lines += ["", r["justification"]]
+    for ev in json.loads(r["supported_by"] or "[]"):
+        text = " ".join(str(ev.get("supporting_text") or "").split())
+        if text:
+            lines += ["", f"> {text}", f"> — {ev.get('reference_id', '')}"]
+        else:
+            lines += ["", f"- **Evidence reference:** {ev.get('reference_id', '')}"]
+    return lines
+
+
+def render_request_report(ontology: str, rows: list[dict[str, str]]) -> str:
+    """Render the outbound report: what we are asking this ontology to change.
+
+    Only ``SELF_PROPOSED`` rows appear, and only while the request is open. This
+    is the document that is actually sent upstream, so a change the ontology
+    itself proposed must not be in it -- that would present their own decision
+    back to them as our request.
+
+    >>> md = render_request_report("GO", [{**{c: "" for c in COLUMNS},
+    ...     "ontology": "GO", "origin": "SELF_PROPOSED", "request_status": "NOT_FILED",
+    ...     "change_type": "NODE_RENAME", "about_node": "GO:1", "confidence": "PROBABLE",
+    ...     "justification": "Miscased.", "supported_by": "[]"}])
+    >>> "GO:1" in md and "Miscased." in md
+    True
+    """
+    open_rows = [r for r in rows if is_outbound(r)]
+    lines = [f"# Change requests for {ontology}", ""]
+    lines.append(
+        f"{len(open_rows)} open request(s) from this repository, generated from "
+        "`proposed_ontology_changes` blocks. Do not edit by hand."
+    )
+    lines.append("")
+    lines.append(
+        "Every entry here is a change **this repository is asking for**. Changes the "
+        "ontology proposed or has already made are not requests and are listed in the "
+        "inbound worklist instead. Where a `Change` line is given in KGCL's controlled "
+        "English it can be applied with `oaklib apply`; a COMPLEX_CHANGE or OTHER "
+        "request has no such form and the rationale carries it."
+    )
+    for i, r in enumerate(open_rows, 1):
+        status = r["request_status"] or "NOT_FILED"
+        lines += [
+            "",
+            f"## {i}. {r['change_type']} ({r['confidence']}, {status})",
+            "",
+        ] + _entry_lines(r)
+    return "\n".join(lines) + "\n"
+
+
+def render_inbound_report(ontology: str, rows: list[dict[str, str]]) -> str:
+    """Render the inbound worklist: changes *this ontology* made that we must adopt.
+
+    Nothing here is owed upstream. What is owed is migrating our own
+    ``affected_annotations``, which is the half of the work that silently does not
+    happen -- both obsoletion projects in this repository went stale precisely
+    because nobody was watching for changes in this category.
+
+    >>> md = render_inbound_report("GO", [{**{c: "" for c in COLUMNS},
+    ...     "ontology": "GO", "origin": "UPSTREAM_COMPLETED", "stance": "AGREE",
+    ...     "adoption_status": "NOT_STARTED", "change_type": "NODE_RENAME",
+    ...     "about_node": "GO:1", "justification": "Upstream tidied the label.",
+    ...     "affected_annotations": "genes/human/X/X-ai-review.yaml",
+    ...     "supported_by": "[]"}])
+    >>> "needs migrating here" in md and "genes/human/X" in md
+    True
+    """
+    open_rows = [r for r in rows if is_inbound(r)]
+    lines = [f"# Inbound {ontology} changes to adopt", ""]
+    needing = [r for r in open_rows if r["affected_annotations"]]
+    lines.append(
+        f"{len(open_rows)} change(s) originated by {ontology} that are not yet fully "
+        f"adopted here, {len(needing)} of which name content that needs migrating here. "
+        "Generated from `proposed_ontology_changes` blocks; do not edit by hand."
+    )
+    lines.append("")
+    lines.append(
+        "These are **not** requests to the ontology: it proposed or already made them. "
+        "The work they create is ours."
+    )
+    for i, r in enumerate(open_rows, 1):
+        adoption = r["adoption_status"] or "not assessed"
+        stance = r["stance"] or "no stance recorded"
+        lines += [
+            "",
+            f"## {i}. {r['change_type']} ({r['origin']}, stance {stance}, "
+            f"adoption {adoption})",
+            "",
+        ] + _entry_lines(r)
+    return "\n".join(lines) + "\n"
+
+
+def write_outputs(root: Path, tsv: Path, report_dir: Path) -> list[dict[str, str]]:
+    """Write the TSV plus, per ontology, an outbound request report and an
+    inbound worklist; return the rows.
+
+    Two reports rather than one because the two halves go to different readers:
+    the requests are sent to the ontology, the worklist is for curators here.
+    """
+    rows = collect(root)
+    tsv.parent.mkdir(parents=True, exist_ok=True)
+    with tsv.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(
+            fh, fieldnames=COLUMNS, delimiter="\t", lineterminator="\n"
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+    report_dir.mkdir(parents=True, exist_ok=True)
+    for ontology in sorted({r["ontology"] for r in rows}):
+        subset = [r for r in rows if r["ontology"] == ontology]
+        (report_dir / f"{ontology}-requests.md").write_text(
+            render_request_report(ontology, subset), encoding="utf-8"
+        )
+        (report_dir / f"{ontology}-inbound.md").write_text(
+            render_inbound_report(ontology, subset), encoding="utf-8"
+        )
+    return rows
+
+
+def main() -> None:
+    """Command-line entry point."""
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--root", type=Path, default=Path("."))
+    parser.add_argument("--tsv", type=Path, default=DEFAULT_TSV)
+    parser.add_argument("--report-dir", type=Path, default=DEFAULT_REPORT_DIR)
+    args = parser.parse_args()
+    rows = write_outputs(args.root, args.tsv, args.report_dir)
+    outbound = sum(1 for r in rows if is_outbound(r))
+    inbound = sum(1 for r in rows if is_inbound(r))
+    unmigrated = sum(1 for r in rows if is_inbound(r) and r["affected_annotations"])
+    by_ont: dict[str, int] = {}
+    for r in rows:
+        by_ont[r["ontology"]] = by_ont.get(r["ontology"], 0) + 1
+    print(
+        f"{len(rows)} proposed ontology change(s) -> {args.tsv}; "
+        f"reports in {args.report_dir}: {by_ont}"
+    )
+    print(
+        f"  {outbound} open request(s) to file upstream; {inbound} inbound change(s) "
+        f"to adopt here, {unmigrated} naming content that still needs migrating"
+    )
+
+
+if __name__ == "__main__":
+    main()
