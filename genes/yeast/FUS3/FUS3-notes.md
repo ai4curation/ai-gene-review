@@ -17,6 +17,7 @@
 - In vitro kinase assay: STE12 and FAR1 candidates [PMID:8334305 "FUS3 mediates transcription and G1 arrest by direct activation of STE12 and FAR1"].
 - Dig1/Dig2 (Rst1/Rst2) are Fus3 substrates/partners that repress Ste12 [PMID:9094309 "Rst1 and Rst2 were prominent substrates in kinase reactions of Fus3 immune complexes from pheromone-treated cells"].
 - Fus2 S84 phosphorylation drives Fus2 nuclear export (cell fusion) [PMID:22588722 "the mitogen-activated protein kinase Fus3p phosphorylates Ser 84 in Fus2p to drive nuclear export"].
+- Gpa1-Fus3 binding contributes to mating polarity-site guidance, but the 2025 Robertson et al. analysis argues the effect is not explained by Fus3 phosphorylation of Ste4, Ste18, Far1 or Bni1 [PMID:40833811 "binding of Gpa1 to Fus3 contributes to polarity site guidance by pheromone"; PMID:40833811 "phosphorylation of Ste4, Ste18, Far1, and Bni1 by Fus3 does not account"].
 - Tec1 T273 phosphorylation -> SCF-dependent degradation -> signaling specificity [PMID:15620357 "active Fus3 phosphorylates Tec1 on T273 in vitro"]; second site T276 needed for Cdc4 binding [PMID:19897738].
 - Limits Kss1 activation [PMID:11583629 "active Fus3 limits the extent of Kss1 activation"].
 - Kinase-independent inhibition of invasion crosstalk [PMID:9393860 "Fus3 has a different inhibitory activity that prevents the inappropriate activation of invasion by the pheromone response pathway"].
