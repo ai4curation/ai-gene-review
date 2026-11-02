@@ -548,3 +548,23 @@ def test_cafa_overlap_table_is_regenerated_from_snapshot(
         "cafa-style/argo139_prediction_goa_overlap.csv is stale; run "
         "`just refresh-benchmark-snapshot` from the repository root"
     )
+
+
+def test_cohort_csv_term_counts_match_metrics() -> None:
+    """The cohort table and the metrics count the same scored terms and exclusions."""
+    metrics = json.loads((PROJECT_DIR / "benchmark-metrics.json").read_text())
+    keys = {
+        "argo95_sft_terms": "argo95_sft_terms",
+        "supplement_sft_terms_argo139_mixed_sources": "supplement_sft_terms_argo139_mixed_sources",
+        "supplement_sft_terms_hf_catalogue_all": "supplement_sft_terms_hf_catalogue_all",
+        "supplement_sft_terms_web_export_44": "supplement_sft_terms_web_export",
+        "supplement_sft_terms_union_all": "supplement_sft_terms_union_all",
+    }
+    with (PROJECT_DIR / "benchmark-cohorts.csv").open() as handle:
+        cohorts = {row["benchmark"]: row for row in csv.DictReader(handle)}
+    for cohort, metric in keys.items():
+        assert int(cohorts[cohort]["n_predictions"]) == metrics[metric]["n_predictions"], cohort
+        assert (
+            int(cohorts[cohort]["excluded_data_errors"])
+            == metrics[metric]["excluded_data_errors"]
+        ), cohort
