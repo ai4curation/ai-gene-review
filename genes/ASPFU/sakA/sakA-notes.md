@@ -48,3 +48,14 @@
 - `just deep-research-falcon ASPFU sakA` failed in this environment because
   `agentapi` was not in `PATH` and the Falcon provider was unavailable. I used
   this notes file instead of creating a provider-named deep-research artifact.
+
+## 2026-11-02 follow-up
+
+- Reconciled the `GO:0034605 cellular response to heat` IMP row with the
+  curated UniProt record rather than leaving it `UNDECIDED`: the `CC:PTM`
+  statement explicitly includes high-temperature stress among conditions that
+  modulate SakA phosphorylation, and `CC:DISRUPTION PHENOTYPE` records conidial
+  heat sensitivity for the sakA/mpkC deletion study. The row is therefore
+  supportable as `KEEP_AS_NON_CORE`; `ASPFU/mpkA` should be rechecked by the
+  same standard before treating its abstract-only heat-stress rows as truly
+  unresolved.
