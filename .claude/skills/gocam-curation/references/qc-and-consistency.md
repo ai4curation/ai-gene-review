@@ -48,6 +48,15 @@ How the activity relates to the gene's `genes/**/<gene>-ai-review.yaml` (join on
 
 `CONFLICT` and `NOT_IN_REVIEW` are the signals worth surfacing.
 
+## Start from the linter
+
+Run `just gocam-lint <model_id>` before reviewing. It lists structural
+anomalies (compartment crossings on direct edges, same-gene chains, duplicate
+nodes, opposite-sign fan-out, transcription factors with direct edges, ligands
+as receptor inputs, generic or binding MFs, orphans, parallel components) with
+the QC flag each maps to. Every finding still needs checking against the
+literature; see `docs/gocam_lint.md`.
+
 ## Pre-finalize checklist
 
 - [ ] MF is the most specific correct term (not generic, not bare binding).

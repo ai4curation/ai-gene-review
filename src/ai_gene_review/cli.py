@@ -4191,6 +4191,90 @@ def gocam_index(
 
 
 @app.command()
+def gocam_lint(
+    model_ids: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="GO-CAM model ids to lint (default: every cached model)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    rule_ids: Annotated[
+        Optional[List[str]],
+        typer.Option("--rule", "-r", help="Only run these rules (repeatable)"),
+    ] = None,
+    no_ontology: Annotated[
+        bool,
+        typer.Option("--no-ontology", help="Skip rules that need GO (no download)"),
+    ] = False,
+    min_severity: Annotated[
+        str,
+        typer.Option("--min-severity", help="ERROR, WARNING or INFO"),
+    ] = "INFO",
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write findings as TSV to this file"),
+    ] = None,
+    list_rules: Annotated[
+        bool,
+        typer.Option("--list-rules", help="List the available rules and exit"),
+    ] = False,
+):
+    """Report structural anomalies in cached GO-CAM models.
+
+    Rules cover impossible compartment crossings on direct causal edges,
+    same-gene chains, duplicate activities, opposite-sign fan-out, transcription
+    factors with direct edges, ligands as receptor inputs, generic or binding
+    MFs, orphans, disconnected components and near-duplicate models. See
+    docs/gocam_lint.md. Ontology rules use the oaklib GO SQLite build
+    (downloaded on first use).
+
+    Examples:
+        ai-gene-review gocam-lint 59cc772c00000000
+        ai-gene-review gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+    """
+    from ai_gene_review.etl.gocam import normalize_gocam_id, src_path
+    from ai_gene_review.gocam_lint import (
+        RULES,
+        SEVERITY_ORDER,
+        OakOracle,
+        lint_paths,
+        write_findings_tsv,
+    )
+
+    if list_rules:
+        for r in RULES.values():
+            tag = " [GO]" if r.needs_ontology else ""
+            typer.echo(f"{r.id}{tag}: {r.description}")
+        typer.echo("near_duplicate_models: Models whose (gene, MF) activities largely overlap.")
+        return
+    if model_ids:
+        paths = [src_path(normalize_gocam_id(m), cache_dir) for m in model_ids]
+        missing = [p for p in paths if not p.exists()]
+        if missing:
+            raise typer.BadParameter(f"not cached: {', '.join(map(str, missing))}")
+    else:
+        paths = sorted(cache_dir.glob("*/*-src.yaml"))
+    oracle = None if no_ontology else OakOracle()
+    findings = lint_paths(paths, oracle, rule_ids, corpus=len(paths) > 1)
+    cutoff = SEVERITY_ORDER[min_severity.upper()]
+    findings = [f for f in findings if SEVERITY_ORDER[f.severity] <= cutoff]
+    findings.sort(key=lambda f: (f.model_id, SEVERITY_ORDER[f.severity], f.rule))
+    if output:
+        write_findings_tsv(findings, output)
+        typer.echo(f"✓ Wrote {len(findings)} findings for {len(paths)} models to {output}")
+    else:
+        for f in findings:
+            typer.echo(f"{f.model_id}\t{f.severity}\t{f.rule}\t{f.message}")
+    counts: dict[tuple[str, str], int] = {}
+    for f in findings:
+        counts[(f.severity, f.rule)] = counts.get((f.severity, f.rule), 0) + 1
+    for (sev, rid), n in sorted(counts.items(), key=lambda kv: (SEVERITY_ORDER[kv[0][0]], -kv[1])):
+        typer.echo(f"{sev:8} {rid:28} {n}", err=True)
+
+
+@app.command()
 def subtraction_report(
     paths: Annotated[
         Optional[List[Path]],
