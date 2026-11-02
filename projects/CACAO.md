@@ -338,6 +338,29 @@ Counts are total review rows / CACAO rows.
 Recorded as `source_defects` / `proposed_new_terms`; run
 `just export-source-defects` for the per-resource reports.
 
+Batch 3 added two pipeline-level reports with their own pages, both reached
+from a sound CACAO row on the gene being reviewed. Each is one mis-stated
+source annotation amplified by an automatic pipeline; verify both with
+`uv run python projects/CACAO/scripts/upstream_checks.py`.
+
+- [ ] **InterPro**: delete the `GO:0019685` mapping from IPR005969,
+  IPR005970, IPR005971 and IPR009905. All four are light-independent
+  (bacterio)chlorophyll families, all four already carry their correct terms,
+  and the four lines account for all 3,731 GOA annotations on the term.
+  **GO**, separately and lower priority: rename the term, whose "dark
+  reaction" label invited exactly this misreading, and generalise its
+  definition, which describes only the Calvin cycle although C4 and CAM
+  photosynthesis are also children.
+  [Report](CACAO/upstream-interpro2go-dark-reaction.md).
+- [ ] **SGD, then GO Central, then PANTHER**: `Q12177`'s `GO:0004029` IDA
+  states the wrong reaction — its paper reports an NADH-dependent aldehyde
+  *reductase*, which makes an alcohol, while `GO:0004029` is defined as
+  making a carboxylate. Re-term it to `GO:0004022` (or `GO:0018455`), then
+  correct the PAINT IBD at PTN002449572 (63 IBA rows) and the PANTHER node
+  association behind PTN005180820 (1,324 TreeGrafter rows). Also ask PANTHER
+  whether a node spanning SF6 and SF9 should assert a specific catalytic
+  activity at all. [Report](CACAO/upstream-panther-aldh-propagation.md).
+
 - [ ] GO: no symbiont-mediated counterpart of GO:0032480 *interferon
   production*. Filed once, in the RVFV NSs review, with three cases: RVFV NSs
   and Bunyamwera NSs, whose four `GO:0039502` rows need it, and Sendai virus
@@ -542,14 +565,18 @@ This is batch 2's conclusion holding up under a deliberately adversarial
 selection. Three screens built to catch student mistakes mostly caught
 pipelines:
 
-- **`GO:0019685` "photosynthesis, dark reaction" is the Calvin cycle** by
-  its own definition, and InterPro2GO maps light-independent
-  (bacterio)chlorophyll families to it — the label read, the definition
+- **`GO:0019685` "photosynthesis, dark reaction" is the carbon-fixation
+  grouping term** — its `is_a` children are the Calvin cycle, C4 and CAM
+  photosynthesis — and InterPro2GO maps light-independent
+  (bacterio)chlorophyll families to it: the label read, the definition
   unread. QuickGO returns **3,731 annotations on the term and every one is
   IEA from GO_REF:0000002 by InterPro**; there is no other use of it in
-  GOA. All four interpro2go rules using it are light-independent chlorophyll
-  families. Invisible to any ancestor or descendant check, because the term
-  is neither too broad nor too narrow but a different pathway.
+  GOA. All four interpro2go entries using it are light-independent
+  chlorophyll families. Invisible to any ancestor or descendant check,
+  because the term is neither too broad nor too narrow but a different
+  pathway. Written up, with the requested deletions and a separate request
+  to GO about the term's label and definition, in
+  [its report](CACAO/upstream-interpro2go-dark-reaction.md).
 - **Experimental annotations stranded off the reference proteome.** UniProt
   holds two unmerged entries per *Myxococcus* act locus: the AF350253
   submission set (taxon 34) and the DK1622 genome set (taxon 246197).
@@ -561,8 +588,17 @@ pipelines:
   because `actB` is a `GN Name` only on the genome side and `actC` only on
   the submission side, so a student following gene names lands wherever the
   names happen to be.
-- **PANTHER node PTN005180820 emits `GO:0004029` to 1,324 proteins**,
-  including actC, which has no ALDH signature at all.
+- **A reductase annotated as a dehydrogenase, amplified 1,387-fold.** actC
+  carries `GO:0004029` aldehyde dehydrogenase (NAD+) from TreeGrafter node
+  PTN005180820, and has no ALDH fold at all. Tracing it found a single seed:
+  of the 56 proteins in GOA with an experimental `GO:0004029`, exactly one is
+  in PTHR48079 — `Q12177` (yeast YLL056C), whose IDA cites a paper titled
+  "...encodes a novel protein with aldehyde **reductase** activity". A
+  reductase makes an alcohol; `GO:0004029` is defined as making a
+  carboxylate. PAINT then propagated the term to 63 proteins and TreeGrafter
+  to 1,324 across 1,277 taxa, all of them extended-SDR epimerases and
+  dehydratases. Written up in
+  [its report](CACAO/upstream-panther-aldh-propagation.md).
 - **An ontology fix that left its own motivating rows behind.**
   `GO:0140181` was created 2025-06-12 with PMID:18836083 as its definition
   xref — two months after the PSPPH_4093 rows citing that paper — and has
