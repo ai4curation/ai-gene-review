@@ -20,3 +20,29 @@ The normally cached BRENDA EC1.2.1.79 page explicitly links Q9RBF6/reference 288
 ## PR #5591 source and cofactor follow-up — 2026-10-26
 
 Verified live QuickGO ancestry: both NAD-specific GO:0004777 and NADP-specific GO:0036243 descend from GO:0009013 and the two broader oxidoreductase terms used here. Both core activities remain supported by the exact Q9RBF6 BRENDA extraction tied to PMID:10564790; the primary cache remains abstract-only. NAD activity around 11% of NADP activity at high pH is an assay comparison, not native flux or exclusivity. The module now explicitly depicts the NADP branch, matching that gene core, while this review preserves the additional NAD branch. All original annotation payloads, qualifiers, actions and raw UniProt/GOA bytes are preserved. No NEW annotation was added. Independent bounded consultation agreed that NAD capacity does not imply NADP exclusion. Focused validation, source checks, renders and preservation checks are recorded in the PR #5591 follow-up report.
+
+## 2026-11-02 — cytosol row resolved to KEEP_AS_NON_CORE
+
+Revisited the one row the earlier sessions left UNDECIDED, because the module
+`bacterial_4_hydroxybutyrate_oxidation` cannot reach its completion bar with an
+unresolved row. The earlier restraint was about the right thing: there is still
+no imaging or fractionation of the SHF3 clone, and the suggested question asking
+for an independent source is kept.
+
+What changed is the reading of what the term claims. Live QuickGO gives
+GO:0005829 as "The part of the cytoplasm that does not contain organelles but
+which does contain other particulate matter, such as protein complexes", which
+for an organism without organelles is simply the soluble interior of the cell.
+Three independent lines agree on that: no signal peptide and no transmembrane
+segment anywhere in the FT block of the record; succinate semialdehyde is
+generated intracellularly, by 4HB oxidation and by GABA transamination, and the
+gab-cluster enzymes that supply it are cytoplasmic; and the characterized
+enterobacterial enzymes of the same reaction, GabD and Sad (see
+`genes/ECOLI/sad`), are cytoplasmic. Family membership is *not* used as a
+localization assay, and the "mitochondrial" wording of the PTHR43353 label is
+still not imported into bacterial biology.
+
+The row is therefore kept but marked non-core: the compartment is inferred
+background rather than part of the demonstrated functional claim, and
+`core_functions` continues to assert no location. No other row, action or core
+function was changed in this session.
