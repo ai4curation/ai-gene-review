@@ -122,7 +122,7 @@ stress-activated MAPK-cascade assertions.
 - [ ] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; drafted in this branch
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
-  drafted in this branch
+  drafted in PR #5885
 
 ## Family 5: Fungal Glucanases
 
