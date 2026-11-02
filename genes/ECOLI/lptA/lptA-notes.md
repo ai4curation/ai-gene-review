@@ -13,7 +13,7 @@
 - Periplasmic beta-jellyroll bridge protein; binds lipid A of LPS [PMID:18480051 "it interacts specifically with the lipid A domain of LPS"].
 - Contacts LptC (IM) and N-LptD (OM) [PMID:22668317 "periplasmic LptA contacts both LptC at the IM and the N-terminal domain of LptD at the OM"].
 - Reconstitution: LPS goes from LptBFGC to LptC then LptA [PMID:29449493 "transfer it to LptC and then to a periplasmic protein LptA"].
-- Native LptA co-fractionates with OM [PMID:20446753 "LptA was also found to co-fractionate almost exclusively with these OM fractions"]. Cell outer membrane rows were kept as non-core (differs from PSEPK, where the term came by IEA only).
+- Native LptA co-fractionates with OM [PMID:20446753 "LptA was also found to co-fractionate almost exclusively with these OM fractions"]. Cell outer membrane rows were kept as non-core; the P. putida LptA review makes the same call for its IEA row.
 
 ## Decisions
 - GO:0017089 glycolipid transfer activity -> MODIFY to GO:0140332.

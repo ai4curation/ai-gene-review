@@ -25,7 +25,8 @@ No additional PMIDs were fetched.
 
 - Molecular function: core function uses **contributes_to GO:0140332 lipopolysaccharide transfer
   activity** (added as a NEW row), rather than GO:0015221 lipopolysaccharide transmembrane
-  transporter activity used in the PSEPK review. Reason: E. coli structures show LptB2FG extrudes
+  transporter activity (which an earlier version of the PSEPK review used; it now uses the same
+  GO:0140332 term). Reason: E. coli structures show LptB2FG extrudes
   LPS out of the membrane rather than across it, which matches GO:0140332's definition (removal
   from the donor-membrane outer leaflet) better than a trans-bilayer transporter activity.
   LptG does not have the activity alone, hence contributes_to. Both lptF and lptG reviews use the

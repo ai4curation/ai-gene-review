@@ -32,8 +32,8 @@
   a membrane, which LptB2FG does not do; GO:0015437 LPS floppase is MsbA's activity;
   GO:0140332 LPS transfer activity is used for LptC-type LPS-binding proteins. Raised
   as a suggested question instead of asserting a contributes_to MF.
-- GO:0055085 transmembrane transport (IEA): MODIFY to GO:0015920 (diverges from the
-  PSEPK review, which kept it as non-core), because of the extraction mechanism above.
+- GO:0055085 transmembrane transport (IEA): MODIFY to GO:0015920, because of the
+  extraction mechanism above; the P. putida LptB review now makes the same MODIFY.
 - GO:1990351 transporter complex: MODIFY to GO:0062051 lipopolysaccharide transport
   system (its definition cites PMID:29449493, the source paper of the row).
 - GO:0016020 membrane (NAS): MODIFY to GO:0005886 plasma membrane.

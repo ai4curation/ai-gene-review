@@ -15,6 +15,6 @@
 - LptBFGC stoichiometry is 2:1:1:1 [PMID:20720015], so the LptC dimer seen on overexpression [PMID:21169485] is marked over-annotated.
 
 ## Decisions
-- GO:0017089 -> MODIFY to GO:0140332 (PSEPK lptC used MARK_AS_OVER_ANNOTATED; MODIFY is used here per current correct-but-general guidance).
+- GO:0017089 -> MODIFY to GO:0140332 per current correct-but-general guidance; the P. putida LptC review makes the same refinement.
 - GO:1990351 -> MODIFY to GO:0062051; GO:0016020 -> MODIFY to GO:0005886; GO:0046836 -> MODIFY to GO:0015920.
 - Bare protein binding (3 rows) -> REMOVE.
