@@ -34,7 +34,11 @@ What we learned:
   FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
   often the more informative source, especially for fly.
 - **Most errors are stale, transferred or copied text, in both MOD and UniProt
-  descriptions.** The 262 recorded defects split 156 MOD and 106 UniProt. Typical
+  descriptions.** The 262 recorded defects split 156 MOD and 106 UniProt. They are the
+`WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects (plus one worm
+`WRONG_REFERENCE`) on the cited MOD and UniProt files, counted per resource across
+`genes/worm`, `genes/yeast` and `genes/DROME`. Other source defects in those folders,
+mostly on GO annotations, are not included. Typical
   cases are a claim later overturned (FlyBase says amon cleaves Slit; Tolkin is the
   Slit protease), text carried over from another species (UniProt gives fly SCAP the
   mammalian sterol-sensing mechanism) and a copy error (UniProt names Gurken, another

@@ -36,7 +36,7 @@ def _review(gap_at: str | None, n_core: int = 1) -> dict:
             "original_reference_id": "PMID:1",
             "review": {"action": "UNDECIDED"},
         }],
-        "core_functions": [core] * n_core,
+        "core_functions": [dict(core) for _ in range(n_core)],
     }
     if gap_at == "top":
         review["knowledge_gaps"] = [gap]
@@ -57,4 +57,4 @@ def test_contested_core_mf(tmp_path: Path, gap_at: str | None, n_core: int, seve
     f = tmp_path / "TEST-ai-review.yaml"
     f.write_text(yaml.dump(_review(gap_at, n_core)))
     report = validate_gene_review(f, check_best_practices=True)
-    assert {i.severity for i in report.issues if i.check_type == CHECK} == {severity}
+    assert [i.severity for i in report.issues if i.check_type == CHECK] == [severity] * n_core
