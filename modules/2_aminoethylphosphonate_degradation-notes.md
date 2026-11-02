@@ -69,3 +69,12 @@ Completion pass for the module bar (precedent PR #3222).
   phosphonate catabolism (PMID:37836707).
 - Knowledge-gap provenance now records `reference_section_type`; recommended-field
   compliance is 100%, gene-review summary 6/6 complete.
+
+## 2026-11-02 (PR #5893 review round)
+
+Deep-research provider files are cited as UNVERIFIED reference findings, not as row
+support on rows that already carry primary evidence. The resulting advisory
+"uncited deep research" warnings on PSEPK phnW/phnX are accepted. The PSEPK and BACCE
+PhnX cytosol rows now carry propagation_review records. Their TreeGrafter nodes are
+absent from the cached PAINT slice, so those source entities are UNRESOLVED and no
+node lineage is claimed.
