@@ -28,3 +28,20 @@
   only broad oxidoreductase chemistry across the whole family.  A specific
   fungal CBR1/MCR1 IBD would not cover AlnC unless future work shows that
   AlnC carries the same electron acceptor specificity.
+
+## 2026-11-02
+
+- Rechecked PR #5873 feedback against cached PMID:30339758 and the curated
+  Swiss-Prot comments.  The paper supports adding a new
+  `GO:0030639 polyketide biosynthetic process` proposal because AlnC is named
+  among the (+)-asperlin biosynthetic genes and its deletion fully eliminates
+  (+)-asperlin production after cluster induction; unlike a substrate case,
+  AlnC is a predicted redox enzyme in the aln cluster.
+- Refined the author-synthesized core molecular function from
+  `GO:0016491 oxidoreductase activity` to the still-conservative
+  `GO:0016651 oxidoreductase activity, acting on NAD(P)H`.  The
+  cytochrome-b5-like/FAD/FNR domain architecture and UniProt's flavoprotein
+  pyridine nucleotide cytochrome reductase family assignment support a
+  pyridine-nucleotide donor, but the direct acceptor and aln-cluster substrate
+  remain unknown, so `GO:0004128` and `GO:0016653` would still overstate the
+  evidence.

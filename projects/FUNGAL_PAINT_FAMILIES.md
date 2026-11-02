@@ -419,7 +419,7 @@ refining the root oxidoreductase transfer.
 - [x] `EMENI/mcr1` - *Aspergillus nidulans* mitochondrial MCR1-family member;
   merged in PR #5415
 - [ ] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
-  the (+)-asperlin cluster; drafted in this branch
+  the (+)-asperlin cluster; drafted in PR #5873
 
 ---
 
