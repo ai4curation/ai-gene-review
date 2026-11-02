@@ -495,6 +495,16 @@ broken real PAINT links. The same rule applies to evolutionary claims generally:
 the PAINT evidence for a step is not clear, say nothing about it rather than
 asserting an inference the data does not support.
 
+## Curated annotation rules
+
+`rules/curated/CR-nnnn.yaml` holds annotation rules this project owns (`CuratedRule`).
+A rule couples sequence-feature conditions with taxon or module-context conditions
+and names the InterPro2GO mapping or UniProt rule it replaces. Use one when a
+mapping is right for some members and wrong for others and a condition can separate
+them; when a term is wrong for every member, record a removal instead. Module
+conditions are exclusion-only. See `rules/curated/README.md`; check with
+`just validate-curated-rules`.
+
 ## Reviewing references
 
 Entries in the top-level `references:` list can carry an optional `reference_review` object recording

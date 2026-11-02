@@ -384,6 +384,43 @@ broad isoprenoid-biosynthesis terms.
 - [x] `EMENI/AN1593` - Aspergillus nidulans short pimaradiene-cluster
   HMG-CoA reductase; merged in PR #5459
 
+## Family 18: NADH-Cytochrome B5 Reductases
+
+`PTHR19370` contains a broad ancestral `GO:0016491` oxidoreductase
+placement at `PANTHER:PTN001833551` that spans fungal CBR1, MCR1, PGA3, and
+AlnC-like reductases as well as plant nitrate reductases and animal CYB5R
+proteins. Its fungal members split across cytochrome-b5 reductases, Dph3
+reductases, mitochondrial adrenodoxin-like reductases, and secondary-metabolite
+cluster reductases, so each review needs a paralog-aware check before
+refining the root oxidoreductase transfer.
+
+- [x] `yeast/CBR1` - *S. cerevisiae* ER cytochrome-b5 reductase and Dph3
+  reductase partner; merged in PR #4696
+- [x] `yeast/MCR1` - *S. cerevisiae* mitochondrial adrenodoxin-like reductase;
+  merged in PR #4687
+- [x] `SCHPO/cbr1` - fission-yeast Cbr1 cytochrome-b5 reductase; merged in PR
+  #4591
+- [x] `SCHPO/SPAC17H9.12c` - fission-yeast mitochondrial Mcr1-family member;
+  merged in PR #4593
+- [x] `CANAL/CBR1` - *Candida albicans* ER CBR1-family member; merged in PR
+  #4585
+- [x] `CANAL/MCR1` - *Candida albicans* mitochondrial MCR1-family member;
+  merged in PR #4586
+- [x] `NEUCR/cbr1` - *Neurospora crassa* CBR1-family member; merged in PR
+  #4590
+- [x] `NEUCR/mcr-1` - *Neurospora crassa* mitochondrial MCR1-family member;
+  merged in PR #4588
+- [x] `ASPFU/cbr1` - *Aspergillus fumigatus* CBR1-family member; merged in PR
+  #5414
+- [x] `ASPFU/mcr1` - *Aspergillus fumigatus* mitochondrial MCR1-family member;
+  merged in PR #5413
+- [x] `EMENI/cbr1` - *Aspergillus nidulans* CBR1-family member; merged in PR
+  #4741
+- [x] `EMENI/mcr1` - *Aspergillus nidulans* mitochondrial MCR1-family member;
+  merged in PR #5415
+- [ ] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
+  the (+)-asperlin cluster; drafted in PR #5873
+
 ---
 
 # NOTES
