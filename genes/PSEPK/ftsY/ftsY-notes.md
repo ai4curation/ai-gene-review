@@ -17,3 +17,13 @@ another"]. The abstract of a study characterizing a minimal bacterial SRP system
 describes FtsY only by resemblance to the mammalian receptor; it does not report
 a direct FtsY interaction experiment [PMID:12949169, "FtsY resembles the
 mammalian SRP receptor"].
+
+## 2026-11-02
+
+Re-reviewed for the bacterial SRP cotranslational targeting module and set to
+COMPLETE. Plasma membrane and membrane rows are refined to GO:0009898
+cytoplasmic side of plasma membrane (HAMAP: peripheral membrane protein,
+cytoplasmic side), matching the experimentally grounded E. coli FtsY review
+(genes/ECOLI/ftsY), where in vivo imaging shows FtsY is almost exclusively
+membrane-bound [PMID:19912622, "the vast majority of FtsY was localized to the
+inner membrane"]. The cytoplasm row stays non-core.
