@@ -21,3 +21,30 @@ Primary reports are interpreted at the species, assay and subunit level. Abstrac
 ## Provider report appraisal
 
 The Falcon report supports a noncatalytic architecture and highlights human TSEN15 structures lacking detectable direct RNA contacts. Its generic claim that no target localization data exist is incomplete because PomBase retains tagged-ORFeome observations. No compartment was inferred from budding-yeast mitochondrial localization.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 files were not opened or used.
+
+### Identity
+- Q7LKV3 (SEN15_SCHPO), 143 aa, Swiss-Prot reviewed, sequence version 1, PE 3 (inferred from homology). This is the canonical and only product of sen15/SPAC959.10; it is not a fragment, isoform or alternative gene model. Length is comparable to fungal family members in PTHR28518:SF1 (S. cerevisiae SEN15 Q04675 128 aa, Eremothecium Q759Y8 118 aa; Neurospora tsp-1 Q7RY78 223 aa).
+- Sen15 has no catalytic triad: the 5' and 3' splice-site active sites are in Sen2 and Sen34 [PMID:9200603 "Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5' and 3' splice sites, encoded by SEN2 and SEN34, respectively."]. Sen15 retains only the C-terminal part of the archaeal endonuclease fold [PMID:17166513 "Sen15 and Sen54, which are otherwise non-homologous, contain C-terminal sequences similar to the stretch of MJ_endo that spans the last two β -strands"], which explains the IPR011856/IPR036167 superfamily matches.
+
+### Evolutionary placement
+- PANTHER: Q7LKV3 in PTHR28518:SF1 (fungal Sen15; the only subfamily in panther.obo). S. cerevisiae SEN15 (Q04675, SGD:S000004663) is in the same subfamily and is the PAINT donor (node PTN002003396) for both IBA rows.
+- Human TSEN15 (Q8WW01) is in a different PANTHER family, PTHR28582, though it shares Pfam PF09631 and IPR018593 (checked via UniProt REST). Human structural data are therefore used only for the conserved, complex-architecture level (Sen15-Sen34 pairing, noncatalytic role), not for subfamily-specific functions. Song & Markley report only 23% identity between human and S. pombe Sen15 [PMID:17166513 "it shows only 23% and 20% sequence identities, respectively, to two yeast orthologs, Sp Sen15 from Schizosaccharomyces pombe and Sc Sen15 from Saccharomyces cerevisiae."].
+- QuickGO check of SEN15 (Q04675): SGD has contributes_to GO:0000213 tRNA-intron endonuclease activity (IDA, PMID:9200603), but PAINT propagated only GO:0000214 and GO:0000379 from PTN002003396. The MF omission is treated as deliberate; no NEW MF was added (raised as a suggested question).
+
+### Changes from previous review
+- GO:0003676 nucleic acid binding (IEA, IPR011856): UNDECIDED -> MARK_AS_OVER_ANNOTATED. Superfamily mapping; in human TSEN-pre-tRNA cryo-EM, recognition is by the other three subunits [PMID:37028420 "The mature domain of pre-tRNA is recognized by conserved structural elements of TSEN34, TSEN54, and TSEN2."]. Not REMOVE because this is indirect negative evidence from a different PANTHER family.
+- GO:0006388 tRNA splicing via endonucleolytic cleavage and ligation (IEA): ACCEPT -> MODIFY to GO:0000379 (part_of child, already carried); Sen15 does not take part in ligation.
+- Complex and splice-site-cleavage rows (IBA+IEA) kept ACCEPT, with added support (UniProt SUBUNIT, Sen34-Sen15 two-hybrid, human TSEN15-34 heterodimer [PMID:34584079]).
+- Nucleus/cytosol HDA kept as non-core. S. cerevisiae endonuclease is mitochondrial-surface associated, so localization is not transferred between yeasts.
+- Description rewritten; core function now names the Sen34 partnership; suggested questions/experiment added.
+
+### Family review / modules
+- interpro/panther/PTHR28518/PTHR28518-review.yaml: single subfamily SF1 with sen15 as representative; no disagreement about placement. Its FAMILY_WIDE GO:0006388 assessment is compatible with the MODIFY here (the term is true; the gene-level row is just refined to the specific step).
+- No module in modules/ covers tRNA splicing or the TSEN complex.
+
+### Relative to review next
+- S. cerevisiae SEN15 (Q04675), same PANTHER subfamily PTHR28518:SF1 and PAINT donor; experimentally characterized (PMID:9200603). No review exists in genes/yeast/.

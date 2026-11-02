@@ -334,6 +334,29 @@ Status as of 2026-08-11:
   evidence supports its function, while the UniProt record itself remains
   unreviewed.
 
+## Wave 42 batch: bacterial aspartate-to-threonine biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00260_bacterial_aspartate_to_threonine_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00260_bacterial_aspartate_to_threonine_biosynthesis.md`
+
+Status as of 2026-08-11:
+
+- A new five-part reusable module separates the two-reaction shared
+  aspartate-family trunk, homoserine formation shared with methionine, and the
+  two threonine-specific reactions.
+- Eight full-length PSEPK proteins were selected for review: five canonical
+  representatives and three paralog candidates requiring conservative
+  interpretation.
+- PP_1147 is excluded as a 109-residue fragment lacking family and activity
+  support for a complete aspartate-semialdehyde dehydrogenase.
+- OpenScientist gene, generic-module, and PSEPK/pathway jobs were started with
+  the full long-run allowances. The annotation-reviewer consultation is part of
+  the curation gate.
+- The historical all-pathway preservation commit is used read-only for evidence
+  recovery; its broad module boundary is not restored.
+
 ## Completed batch: ppu00220 / arginine_biosynthesis
 
 Batch files:
@@ -504,8 +527,10 @@ Main curation conclusions from this batch:
   outside this module boundary.
 - Other KT2440 serine acetyltransferase-like candidates remain a targeted
   paralog-resolution question rather than speculative module leaves.
-- Live route-specific GO:0006535 is used for authored core functions and the
-  module concept; broad GO:0019344 annotations remain valid.
+- The route-specific GO:0006535 was retired by GO (obsolete since at least
+  release 2026-03-25, replaced_by GO:0019344); authored core functions and the
+  module concept use GO:0019344, and the O-acetylserine route is carried by the
+  module structure.
 
 ## Previous batch: ppu00622 / benzoate_upper_pathway
 

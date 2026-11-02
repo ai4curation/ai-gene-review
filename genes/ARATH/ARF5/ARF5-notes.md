@@ -151,3 +151,22 @@ which correctly captures the PB1-domain-mediated ARF5-Aux/IAA interaction. Updat
 ARF-ARF homodimerization (where the partner IS a DNA-binding TF) remains covered by
 the existing GO:0042802 "identical protein binding" annotations, so no redundant
 ARF-ARF term was created. Validation: ✓ Valid.
+
+
+## 2026-10-26 native auxin-system evidence audit
+
+All seeded annotation payloads were preserved, including term IDs, evidence types, original sources, supporting entities and flags. The review evaluates biological claims independently of inert relationship fields. No new annotation row was added. Available genuine prior research reports were used for discovery; primary text and curated record statements were preferred for evidence. The actual Falcon and perplexity-lite fallback attempts failed (authorization/quota errors), as recorded in `.cache/module-audit-logs/auxin-fetch/`; no provider report was fabricated. Normal publication fetching and normal ReferenceFetcher URL recovery supplied the sources below. Canonical PMID records were not hand-edited to insert recovered text.
+
+The annotation-reviewer workflow was applied to every row. Bare protein-binding rows are refined only where the interaction and functional partner class support a more informative term; removal of an otherwise uninformative binding row does not dispute the measured interaction. True general transcription terms are refined rather than rejected. Nuclear evidence does not establish absence from cytoplasm.
+MP is an activator, supported by direct DNA recognition and native target regulation, rather than an undifferentiated ARF-family transcription factor [PMID:24485461; PMID:19369397]. The latter reports “MP binds in vivo to two AuxRE-spanning fragments in the DRN promoter”. The supported core is GO:0001216, with GO:0001222 for Aux/IAA corepressor binding and the existing cis-regulatory binding core retained. Generic binding rows for characterized Aux/IAA partners are refined to corepressor binding; the BRM/SYD interaction is refined to transcription coregulator binding because MP recruits these remodelers to target loci [PMID:26460543]. The 2005 IAA14 abstract foregrounds ARF7/19, which is not evidence that the curator's ARF5 interaction is wrong; independently demonstrated MP–BODENLOS binding supports the functional class [PMID:12101120].
+
+DBD homodimerization and PB1-mediated interaction assays are distinguished; an interaction-screen row need not have tested the same interface as a later DBD structure. Broad hormone response is refined to auxin response, and broad transcription regulation to the demonstrated positive direction. Developmental patterning claims remain supported context-specific roles, not excluded merely because they are outputs of transcription. Existing proposed domain-binding and auxin-signaling rows are preserved; they were not newly created in this session. Provider-summary quotations were replaced by available primary support without deleting their reference provenance.
+
+A specific caution is retained: auxin-sensitive regulation is not a claim that all MP target loci use an invariant TPL/HDA19 complex or that every AuxRE is TGTCTC. Receptor-associated catalytic findings in other panel members are not transferred to MP.
+
+Validation and source-closure results are recorded in `.cache/module-audit-logs/auxin-arf-tpl-final-report.md`; the committed helper history identifies this curation session.
+
+
+### Partner-matched source follow-up, 2026-10-26
+
+Independent QA identified that the canonical PMID:14729917 extraction is truncated despite its full-text flag. The parent recovered the complete public source normally at `publications/url_https___pmc.ncbi.nlm.nih.gov_articles_PMC341911_.md`. Its Results/Figure 9B directly support ARF5 CTD binding to IAA19 and additional Aux/IAAs (bars 12–17). The existing binding row now uses the target-specific Results sentence. The self-binding summary distinguishes the paper’s CTD constructs from the independent DBD homodimer structure. All existing actions and raw annotation payloads are unchanged. Yeast binding capacity is not equated to a shared native developmental phenotype or an obligatory TPL-containing complex. Canonical PMID provenance is retained alongside the recovered full-source file.

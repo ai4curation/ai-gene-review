@@ -1,0 +1,9 @@
+# gsl-elong-A1 / BjMAM1-A evidence audit
+
+2026-10-25. Normal fetch-gene and fetch-gene-pmids seed preserved C5J4P1, taxon3707 and all eight GOA rows. Paper PMID31023839 accession list identifies BjMAM1-A as FM161920; UniProt maps that to CAQ56040.1 and PDB6E1J. Thus this is an exact experimentally characterized Brassica exemplar, not a generic homolog assignment. Official gene name retained; BjMAM1-A/BjMAMS1A are literature aliases.
+
+Read the full primary: recombinant proteins lack predicted targeting sequences; substrate products were assayed by LC-MS/MS. BjMAM1-A accepts 4MTOB/5MTOP/6MTOH and is much more efficient with longer substrates than BjMAM2 proteins. Native antisense suppresses both MAM1 homeologs, whereas complementation in Arabidopsis uses the individual A gene. Crystal structure is directly BjMAM1-A; the two-chain active-site architecture is a homodimer of identical enzyme subunits, not a noncatalytic accessory protein requiring contributes_to. Metal dependence is measured, but no new bare metal-binding row is needed to describe its core reaction. Residual IPMS chemistry remains unresolved; native leucine biosynthesis is not established.
+
+PMID39322014 is a 2024 kinetic study of BjMAMS2A, not BjMAM1-A, and is not transferred as direct target evidence. No new process proposals were needed: both measured MAM activity and glucosinolate biosynthesis were already present in GOA. Chloroplast localization is explicitly inferred from sequence/family comparison, not a target localization assay and not ARBA text.
+
+Default Falcon plus perplexity-lite was attempted on the same panel (MAM1); authentication/quota failure is recorded in /tmp/gluco-MAM1-deep.log. No fabricated research report and no repeated known-unavailable provider call. This is manual primary-literature research. Plant target: bacterial fitness workflow is inapplicable.

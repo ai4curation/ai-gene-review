@@ -1,16 +1,14 @@
 ---
 title: "Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-05
+autolink_gene_symbols: false
 tags: [OBSOLETION, FLAGSHIP]
 species: [mouse, worm]
-genes: [Camk2a, Septin5, tom-1]
+genes: [Camk2a]
 manifest:
   slides:
     - href: SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/S1zALM2bz3sWnCmAk4ucMa
-      title: Project brief
 ---
 
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor
@@ -25,10 +23,9 @@ experimental annotations sit on three genes: mouse Camk2a, mouse
 Septin5 and worm tom-1. We listed those rows and argued that most
 should not become the new MF, because a kinase such as CaMKIIα
 regulates docking without doing it. The obsoletion has now landed:
-OLS shows GO:0099148 obsolete and GO:0160321 minted, so the "not yet
-applied", "placeholder" and "not yet minted" notes below are out of date. The one affected review is fixed
-in #3237 (merged): mouse Camk2a's two GO:0099148 rows (IMP and IDA,
-PMID:17660813) move from ACCEPT to MODIFY → GO:0048172 *regulation of
+OLS shows GO:0099148 obsolete and GO:0160321 minted. The one affected
+review is fixed in #3237 (merged): mouse Camk2a's GO:0099148 entries,
+from PMID:17660813, move from ACCEPT to MODIFY → GO:0048172 *regulation of
 short-term neuronal synaptic plasticity*, not the docking MF, because
 the paper shows αCaMKII regulates the number of docked vesicles without
 docking them. Septin5 and tom-1 still have no review here.
@@ -41,15 +38,13 @@ the earlier tethering step (#6375).
 
 ## Overview
 
-A GO obsoletion proposal will retire the vesicle-docking biological-process
-hierarchy and replace it with a new **molecular function** term:
+GO has retired the vesicle-docking biological-process hierarchy and replaced
+it with a **molecular function** term:
 
-- **GO:0160321 vesicle docking activity** (proposed MF; placeholder ID — not
-  yet minted, see "Replacement-term status" below), defined as *"the binding
-  activity of a protein that directly mediates the stable attachment of a
-  transport vesicle to a target membrane, bringing the two membranes into
-  close apposition"*, proposed parent **GO:0140177 membrane-membrane adaptor
-  activity**.
+- **GO:0160321 vesicle docking activity** (MF), defined for the binding
+  activity of a protein that directly mediates stable transport-vesicle
+  attachment to a target membrane and brings the two membranes into close
+  apposition, under **GO:0140177 membrane-membrane adaptor activity**.
 
 The upstream ontology ticket scopes the obsoletion broadly across the whole
 `GO:0048278 vesicle docking` BP subtree and its regulation terms. This project
@@ -77,11 +72,14 @@ This project differs from the other obsoletion trackers in this repo because
 - Annotation review spreadsheet (SynGO; not machine-accessible):
   `https://docs.google.com/spreadsheets/d/1oP8qDeDVhVD_43GcnN2_IQgWO4vPxVGAYPY-o_zWq1o`
 
-## Obsoletion plan (per upstream)
+## Upstream obsoletion outcome
 
-The full upstream proposal retires `GO:0048278 vesicle docking` plus its
-descendants and the associated regulation terms, all redirected to the new MF
-`GO:0160321 vesicle docking activity`:
+The upstream obsoletion retired `GO:0048278 vesicle docking`, its descendants,
+and the associated regulation terms. All are now obsolete; the literal docking
+terms carry `consider` pointers to both **GO:0160321 vesicle docking activity**
+and **GO:7770062 vesicle membrane tethering activity**, while the regulation
+terms, including **GO:0099148 regulation of synaptic vesicle docking**, carry
+`consider: GO:0160321`:
 
 | Obsoleted term | ID |
 |---|---|
@@ -96,7 +94,7 @@ descendants and the associated regulation terms, all redirected to the new MF
 | negative regulation of vesicle docking | GO:0106021 |
 | **regulation of synaptic vesicle docking** (focus of #6415) | **GO:0099148** |
 
-Replacement (consider term): **GO:0160321 vesicle docking activity** (MF).
+Focus term consider replacement: **GO:0160321 vesicle docking activity** (MF).
 
 ### Affected annotations to GO:0099148 (verified via QuickGO, 2026-05-16)
 
@@ -104,7 +102,7 @@ Experimental / curated rows (the SynGO "8 annotations"):
 
 | Group | Gene | Species | UniProt | Reference | Evidence | In repo? |
 |---|---|---|---|---|---|---|
-| SynGO | **Camk2a** | M. musculus | **P11798** | PMID:17660813 | IMP + IDA (×2) | **YES — `genes/mouse/Camk2a`, both rows currently `ACCEPT`** |
+| SynGO | **Camk2a** | M. musculus | **P11798** | PMID:17660813 | IMP + IDA (×2) | **YES — `genes/mouse/Camk2a`, fixed in #3237** |
 | RGD | Camk2a | R. norvegicus | P11275 | GO_REF:0000121 | ISO | no |
 | SynGO | **Septin5** | M. musculus | **Q9Z2Q6** | PMID:20624595 | IMP + IDA | no |
 | RGD | Septin5 | R. norvegicus | Q9JJM9 | GO_REF:0000121 | ISO | no |
@@ -125,19 +123,15 @@ in the upstream issue.
 now `MODIFY` → GO:0048172 regulation of short-term neuronal synaptic
 plasticity, fixed in #3237 (merged), which also replaced the supporting text
 with the abstract's sentences on docked-vesicle number and short-term
-presynaptic plasticity. The paragraphs below record the original reasoning.
+presynaptic plasticity.
 
 The refresh is **not** a mechanical relabel. CaMKIIα is a Ser/Thr kinase that
 *regulates* presynaptic vesicle docking; it is not itself a vesicle-docking
 adaptor/tether, so transferring a `regulation of synaptic vesicle docking` BP
 annotation onto the new `vesicle docking activity` **MF** is biologically
-questionable for this gene. The likely correct outcome is `MODIFY` toward a
-retained regulatory BP (or the synaptic-vesicle-cycle process) rather than a
-literal docking-activity MF — exactly the curator-judgment question this repo
-exists to evaluate. The existing `supporting_text` on those rows (*"Kinase
-activity is not required for αCaMKII-dependent presynaptic plasticity at
-CA3-CA1 synapses"*) is also only tangential to docking and should be revisited
-against PMID:17660813.
+questionable for this gene. The correct outcome was `MODIFY` toward a
+retained regulatory BP rather than a literal docking-activity MF — exactly the
+curator-judgment question this repo exists to evaluate.
 
 `Septin5` and `tom-1` are **not** in the repo. The human Septin5 ortholog is
 **SEPTIN5 / UniProt Q99719** (not yet reviewed; `genes/human/` has no SEPT/
@@ -162,38 +156,32 @@ accessions before starting.
 
 ### Tier 1 — refresh required (already in repo)
 
-1. **Camk2a** (mouse, UniProt **P11798**) — `genes/mouse/Camk2a/`. Two
-   GO:0099148 rows were `ACCEPT`; now `MODIFY` → GO:0048172, fixed in
-   #3237 (merged). Highest priority because an existing review goes stale on
-   obsoletion. Expect `MODIFY` (regulatory kinase, not a docking adaptor),
-   not a clean transfer to the new MF.
+- **Camk2a** (mouse, UniProt **P11798**) — `genes/mouse/Camk2a/`. Its
+   GO:0099148 entries were `ACCEPT`; now `MODIFY` → GO:0048172, fixed in
+   #3237 (merged). The decision was `MODIFY` (regulatory kinase, not a
+   docking adaptor), not a clean transfer to the new MF.
 
 ### Tier 2 — direct SynGO experimental annotations, not yet in repo
 
-2. **Septin5 / SEPTIN5** (mouse UniProt **Q9Z2Q6**; human ortholog
+- **Septin5 / SEPTIN5** (mouse UniProt **Q9Z2Q6**; human ortholog
    **Q99719**) — presynaptic septin / CDCrel-1, syntaxin-1A interactor;
    strong SynGO experimental annotation from **PMID:20624595**. A genuine
    structural component of the docking/SNARE machinery, so this one *may*
    legitimately move to the new docking-activity MF — a good contrast case
    against Camk2a.
-3. **tom-1** (C. elegans, UniProt **A0A0K3ATN9**) — tomosyn ortholog; classic
+- **tom-1** (C. elegans, UniProt **A0A0K3ATN9**) — tomosyn ortholog; classic
    negative regulator of synaptic-vesicle priming/docking
    (**PMID:16895441**). Tests the "regulator, not effector" reannotation
    pattern in an invertebrate model.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land.** As of 2026-05-16, GO:0099148 is still
-   active in OLS (`is_obsolete: false`) and the replacement `GO:0160321` is
-   not yet resolvable via OLS or the GO API (placeholder, like the
-   `GO:7770065` placeholder in [#423](https://github.com/ai4curation/ai-gene-review/issues/423)).
-   The ontology ticket #31880 is open.
-2. **Refresh `Camk2a` first** once the obsoletion is applied: regenerate GOA
-   (`just fetch-gene mouse Camk2a`), then re-review the two GO:0099148 rows —
-   expect `MODIFY` away from a literal docking-activity MF toward a retained
-   regulatory BP, with corrected `supporting_text`. Re-validate
-   (`just validate mouse Camk2a`).
-3. **Then queue `Septin5`** (mouse, with human SEPTIN5 follow-up) as a clean
+1. **Record the upstream outcome.** GO:0099148 is obsolete and GO:0160321
+   vesicle docking activity is live, so this page no longer depends on a
+   placeholder MF term.
+2. **Camk2a: done.** #3237 regenerated mouse Camk2a, moved the GO:0099148
+   entries to GO:0048172, and corrected the PMID:17660813 support.
+3. **Queue `Septin5`** (mouse, with human SEPTIN5 follow-up) as a clean
    new review — the strongest candidate for a legitimate transfer to the new
    docking MF.
 4. **Then `tom-1`** (C. elegans) to cover the invertebrate negative-regulator
@@ -205,11 +193,10 @@ accessions before starting.
 
 ## Priority
 
-**Medium.** Higher than the purely-queueing obsoletion trackers because an
-existing repo review (`Camk2a`) goes stale the moment the obsoletion is
-applied, and the BP→MF refactor makes the correct reannotation non-obvious.
-Nothing is broken until the obsoletion lands, so no immediate action is
-required.
+**Medium.** Higher than the purely queueing obsoletion trackers because an
+existing repo review (`Camk2a`) did go stale when the obsoletion landed, and
+the BP→MF refactor made the correct reannotation non-obvious. Camk2a is fixed
+now; Septin5 and tom-1 are the remaining direct experimental cases.
 
 ## Status
 
@@ -230,3 +217,7 @@ required.
 - 2026-09-27 — #3237 merged, so the Camk2a refresh is on `main`.
   Maturity moves to IN_PROGRESS: the one affected review is done and
   only the Septin5 and tom-1 new reviews remain.
+- 2026-10-04 — Re-audited the repo after #3237: Camk2a validates with the
+  obsolete GO:0099148 entries marked `MODIFY`, and no mouse Septin5, human
+  SEPTIN5 or worm tom-1 review exists yet. Frontmatter now lists only Camk2a,
+  the reviewed gene already tied to this tracker.

@@ -1,0 +1,9 @@
+# ilv6 (SPBC14C8.04, UniProt O60086) notes
+
+- Role in module `branched_chain_amino_acid_biosynthesis`: AHAS regulatory (small) subunit, ortholog of S. cerevisiae ILV6 (P25605); partner of the catalytic subunit ilv1 (= S. cerevisiae ILV2, NOT ILV1).
+- Identity rests on sequence similarity only: [PMID:35325114 "In S. pombe, the former is encoded by ilv1+, and the latter is predicted to be encoded by ilv6+ as identified through sequence similarity"]. UniProt: [UniProt:O60086 "Stimulates activity of the acetolactate synthase catalytic subunit ilv1. {ECO:0000250}"]. No GN Name in UniProt (ORF only), so `just fetch-gene` fails; fetched by accession.
+- Ortholog biochemistry: [PMID:10213630 "Reconstitution studies showed that the ilv6 protein stimulates the catalytic activity of the ilv2 protein by up to 7-fold"] (S. cerevisiae).
+- S. pombe AHAS regulation: [PMID:35325114 "ALS activity is strongly inhibited by feedback from the final product, Val, and is also less potently inhibited by Ile"].
+- Localisation conflict: PomBase HDA and UniProt record cytoplasm from the ORFeome screen [UniProt:O60086 "SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}."], whereas the review citing the same screen says mitochondria [PMID:35325114 "In S. pombe, both the products of ilv1+ and ilv6+ are localized in the mitochondria (Matsuyama et al. 2006)"]. N-terminus is Arg-rich (MFARRCGRLANRFVRLKS...), compatible with a presequence, but UniProt annotates no transit peptide. Kept cytoplasm as non-core; core location mitochondrion (orthology + GO-CAM).
+- PomBase GO-CAM 6690711d00002706: two ilv6 GO:1990610 activities (Ile and Leu branches), matrix, directly regulating ilv1. Consistent with review.
+- Decisions: all process/MF annotations accepted; enzyme regulator activity (IBA) and mitochondrial nucleoid (IBA) kept non-core, as in the S. cerevisiae ILV6 review.

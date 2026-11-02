@@ -1,0 +1,17 @@
+# Curation Notes for Escherichia phage lambda Gene V (gpV, P03733)
+
+## Summary of Gene Product Function
+Gene `V` encodes the major tail protein gpV (UniProt: `P03733`, 246 aa, ~25.8 kDa), the principal structural subunit of the long, flexible, non-contractile tail tube of bacteriophage lambda. Monomeric gpV in solution remains unassembled until it encounters the 25S tail tip initiator complex (`gpJ`-`gpI`-`gpL`-`gpK`-`gpM` associated with `gpH` and chaperones `gpG`/`gpGT`). Upon initiation on the C6-symmetric `gpM` ring and guided by the T domain of `gpGT` along the `gpH` tape measure scaffold, gpV polymerizes into a stack of 31–32 C6-symmetric hexameric discs (~132.7 nm long) that enclose the cleaved tape measure protein (`gpH*`) in the central lumen and form the conduit for viral DNA ejection during infection [PMID:41237242; PMID:23911548; file:LAMBD/V/V-uniprot.txt].
+
+## Literature & Structural Evidence
+- **Cryo-EM structure of Ur-lambda tail tube (`PMID:41237242`)**: Shows that the 132.7-nm tail tube consists of 31 stacked hexameric discs of gpV whose lumen houses the cleaved tape measure protein `gpH*`, and whose distal ring abuts the hexameric `gpM` ring and is enveloped by the `gpStf` collar in Ur-lambda [PMID:41237242, "The 132.7-nm tail tube is composed of 31 discs of gpV"; "The tail tube is a stack of gpV rings whose lumen contains a cleaved form of gpH, called gpH*; cleavage occurs after tail assembly but before its attachment to a head"].
+- **Chaperone-guided polymerization (`PMID:23911548`)**: Demonstrates that the T domain of the frameshift chaperone gpGT binds directly to gpV and recruits or facilitates gpV polymerization along the gpH tape measure scaffold [PMID:23911548, "We show that the \"G\" domains of gpG and gpGT bind to all or parts of tail length tape measure protein gpH and that the \"T\" domain of gpGT binds to major tail shaft subunit gpV, and present a model for how gpG and gpGT chaperone gpH and direct the polymerization of gpV to form a tail of the correct length."].
+- **Classical purification & characterization (`PMID:835226`, UniProt `P03733`)**: Established gpV as the major tail tube subunit assembling into stacked hexameric rings on the gpM/gpL initiation complex [file:LAMBD/V/V-uniprot.txt].
+
+## Review of Existing GO Annotations
+- `GO:0098026` (`virus tail, tube`, `IDA` from `PMID:41237242`, `IDA` from `PMID:835226`, `IEA` from `GO_REF:0000043`): **ACCEPT**. gpV is the defining structural subunit of the viral tail tube.
+- `GO:0098015` (`virus tail`, `IEA` from `GO_REF:0000043`): **MODIFY** to `GO:0098026` (`virus tail, tube`), the more specific child term already supported by experimental evidence on this gene.
+- `GO:0098003` (`viral tail assembly`, `IEA` from `GO_REF:0000043`): **ACCEPT**. Polymerization of gpV hexameric rings forms the tail shaft during viral tail assembly.
+- `GO:0099001` (`symbiont genome ejection through host cell envelope, long flexible tail mechanism`, `IEA` from `GO_REF:0000043`): **ACCEPT**. The gpV tail tube forms the central channel through which the phage genome is ejected into the host cell.
+- `GO:0046718` (`symbiont entry into host cell`, `IEA` from `GO_REF:0000043`): **MODIFY** to `GO:0099001` (`symbiont genome ejection through host cell envelope, long flexible tail mechanism`), which is more specific and already present on this gene.
+- `GO:0030430` (`host cell cytoplasm`, `IEA` from `GO_REF:0000044`): **KEEP_AS_NON_CORE**. Monomeric gpV is synthesized in the bacterial cytoplasm prior to polymerization into the virion tail tube.

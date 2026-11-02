@@ -6,7 +6,7 @@ title: "SNIPE GO Issue: Supporting Bioinformatics Note"
 
 This note contains detailed architecture-analysis support for the InterPro2GO section of:
 
-- `go-issue-antiviral-nucleic-acid-defense.md`
+- [go-issue-antiviral-nucleic-acid-defense.md](go-issue-antiviral-nucleic-acid-defense.md)
 
 ## Scope
 

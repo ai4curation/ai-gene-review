@@ -80,3 +80,13 @@ Second-pass curation decisions:
 - Added knowledge-gap questions and suggested experiments focused on evolved
   in-vivo APP isoform, fragment, adhesion, trophic-signaling, metal-binding, and
   intracellular-domain biology.
+
+## 2026-10-23 — GO:0008285 IDA row cites an islet amyloid polypeptide paper
+
+The `involved_in GO:0008285 negative regulation of cell population proliferation` IDA row cites
+PMID:22944668, "Antimicrobial activity of human islet amyloid polypeptides". Its abstract (the only
+text cached) is about bacterial membrane disruption by hIAPP (amylin) aggregates and does not mention
+APP, amyloid-beta or cell proliferation. Following the rule against overruling curators on incomplete
+evidence, the row is now UNDECIDED rather than ACCEPT or REMOVE. A `source_defects` entry asks UniProt
+to check whether the row belongs to IAPP (P10997) or cites the wrong paper. The DONKEY40 re-review
+(PR #5309) found the problem through the horse and donkey APP rows propagated from this annotation.

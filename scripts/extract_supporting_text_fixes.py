@@ -13,22 +13,11 @@ import sys
 import yaml
 from pathlib import Path
 
-from linkml_reference_validator.validation.supporting_text_validator import SupportingTextValidator
-from linkml_reference_validator.models import ReferenceValidationConfig
+from ai_gene_review.validation.supporting_text import build_supporting_text_validator
 
 
-config = ReferenceValidationConfig(
-    cache_dir="publications",
-    literal_bracket_patterns=[r"[^a-zA-Z\s]"],
-)
-validator = SupportingTextValidator(config)
-
-SKIP_PREFIXES = {
-    "GO_REF", "GO", "Reactome", "UniProt", "UniProtKB",
-    "PDB", "EC", "TEMP", "ISBN", "RHEA", "file",
-    "curator_inference", "ComplexPortal", "HPA",
-    "PROSITE", "CHEBI", "PMC", "CONTACT_INFO",
-}
+validator, _ = build_supporting_text_validator(Path("publications"))
+SKIP_PREFIXES = set(validator.config.skip_prefixes)
 
 
 def check_file(filepath: Path):

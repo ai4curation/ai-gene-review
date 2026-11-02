@@ -79,3 +79,15 @@ Based on protein structure and interactions:
 - Likely contains novel C. elegans-specific cysteine-rich domains
 - Probable secreted protein of unknown function
 - UniProt correctly notes "lacks conserved residues" for LDL domains
+
+## 2026-10-10 - Bioinformatics report audit
+
+The older unprefixed `bioinformatics/RESULTS.md` file was reviewed and left
+uncited. It is a preliminary artifact that is superseded by the reproducible
+`lrx-1-bioinformatics/RESULTS.md` analysis, which is already declared as
+`file:worm/lrx-1/lrx-1-bioinformatics/RESULTS.md` in `lrx-1-ai-review.yaml` and
+used for the secreted-protein, non-LRP-family, and topology decisions. The
+20-line `bioinformatics/ANALYSIS_RESULTS.md` stub was deleted rather than
+retained because its only specific LRP-family, LDL-receptor-domain, and
+vesicular-trafficking claims were the stale preliminary inferences rejected by
+the maintained analysis.

@@ -66,3 +66,21 @@ Left for later: a source-level review should triage individual substrates,
 protein interactions, Reactome location rows, and old TAS/NAS phenotype rows.
 Several annotations remain PENDING where I did not inspect the primary
 publication.
+
+Follow-up pass, 2026-09-30. `just fetch-gene human MAPK1` backfilled
+qualifiers/supporting entities and added a block of 49 new pending rows. I
+reviewed the newly pending set: 48 rows were generic GO:0005515 protein-binding
+IPI assertions from PMID-supported interaction studies, and one was a rat
+MAPK1-supported ISS row for GO:0035094 response to nicotine.
+
+The GO:0005515 backfill rows were removed rather than retained as non-core
+because the current review policy treats bare protein binding as uninformative
+for a multi-partner kinase. ERK2 clearly uses partner docking and binds many
+substrates, phosphatases, scaffolds, and regulators, but a generic GO:0005515
+row cannot distinguish those mechanisms and should only be reintroduced through
+a more specific, source-backed term when one exists.
+
+The duplicate GO:0035094 response to nicotine row was kept as non-core,
+matching the already reviewed mouse/rat-supported nicotine response rows:
+nicotine is an upstream stimulus context that can recruit ERK signaling, not
+MAPK1's primary conserved function.

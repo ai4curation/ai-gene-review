@@ -24,6 +24,7 @@ models/boolean/
     SIGNOR-EGF.tsv                    # verbatim SIGNOR pathway export (DO NOT EDIT)
     SIGNOR-EGF.mapping_to_modules.yaml
     README.md
+  conformance/                        # shared translator/engine fixtures (see its README)
 ```
 
 ## Mapping file format

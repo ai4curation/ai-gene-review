@@ -59,3 +59,11 @@ regulator of conidiophore development ("bristle"). Part of the
   a *regulator*, not part of ST biosynthesis; the regulation term GO:0010913 already
   captures the real relationship. Also the IBA **response to starvation**
   (GO:0042594, involved_in) is a phylogenetic over-propagation from SGD paralogs.
+
+## Re-review 2026-10-01 (GOA refresh)
+
+- Retired: GO:0006357 regulation of transcription by RNA polymerase II (IEA, ARBA
+  GO_REF:0000117) - this electronic row is no longer present in the current GOA snapshot.
+  Its ACCEPT review is kept as history; the same term remains well supported by the
+  current IDA/IMP rows (PMID:8417986, PMID:2655931, PMID:2823119, PMID:3293800).
+- No new GOA rows; other judgments unchanged.

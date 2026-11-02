@@ -385,15 +385,16 @@ end-to-end from public data.</strong></p>
 <ul>
 <li><strong>Coherence = 86.8%</strong> on the E. coli EcoCyc GAF: of <strong>129</strong> <code>has_part</code> dependencies activated<br />
   by the genome's annotations, <strong>17</strong> have a required part annotated on no protein.</li>
-<li><strong>The 17 violations are real, reviewable leads</strong> — and they sort into exactly the three<br />
-  categories the project predicts (below), including one likely <em>genuine biological gap</em>.</li>
+<li><strong>The 17 violations are real, reviewable leads</strong> — the first-pass triage already separates<br />
+  10 into whole-pathway overreach, annotation-granularity, or over-annotation candidates, with<br />
+  7 still unresolved.</li>
 <li><strong>It runs on public data with the tooling already here</strong> — GO <code>has_part</code> from <code>go.obo</code>, the<br />
   EcoCyc GAF, true-path (<code>is_a</code>+<code>part_of</code>) closure for "present in genome." Numbers are computed<br />
   live by <code>coherence_pilot.py</code>; see <a href="RESULTS.html">RESULTS.md</a> and <code>violations.tsv</code>.</li>
 </ul>
 <h2 id="what-the-leads-look-like">What the leads look like</h2>
-<p>The 17 violations triage cleanly — this triage is the point, because each class routes to a<br />
-different curator action:</p>
+<p>The first-pass triage separates 10 of the 17 violations; that triage is the point, because<br />
+each class routes to a different curator action:</p>
 <table>
 <thead>
 <tr>
@@ -405,28 +406,35 @@ different curator action:</p>
 </thead>
 <tbody>
 <tr>
-<td><strong>Genuine biological gap</strong></td>
+<td><strong>Whole-pathway overreach</strong></td>
 <td><code>denitrification pathway</code> → missing <em>nitrous-oxide reductase activity</em></td>
-<td>E. coli K-12 is not a complete denitrifier (no NosZ); the pathway term is over-reaching</td>
-<td>review the <code>denitrification pathway</code> annotation; confirm absence with sequence search</td>
+<td>E. coli K-12 has partial nitrate/nitrite metabolism, not complete denitrification to N2</td>
+<td>review the pathway annotation and narrow it to the supported step</td>
 </tr>
 <tr>
-<td><strong>Annotation-granularity gap</strong></td>
-<td><code>DnaB-DnaC</code> / <code>DnaA-DiaA</code> / <code>DnaB-DnaG</code> complexes → missing sub-complex terms; <code>tRNA CCA addition</code> → missing its two MF activities; <code>molybdopterin cofactor biosynthesis</code> → missing MPT-synthase sulfurtransferase</td>
-<td>the gene <em>is</em> present; only the finer GO term is unannotated</td>
-<td>add the missing MF/CC annotation</td>
+<td><strong>Likely annotation-granularity gap</strong></td>
+<td><code>DnaB-DnaC</code> / <code>DnaA-DiaA</code> / <code>DnaB-DnaG</code> complexes → missing sub-complex terms; <code>tRNA CCA addition</code> → missing its two MF activities</td>
+<td>the activity or complex is present; only the finer GO term is unannotated</td>
+<td>review the exact part term and add it if direct evidence supports it</td>
 </tr>
 <tr>
 <td><strong>Probable over-annotation</strong></td>
-<td><code>heterochromatin formation</code>, <code>establishment of integrated proviral latency</code>, <code>virion attachment to host cell</code> on E. coli</td>
+<td><code>heterochromatin formation</code>, <code>establishment of integrated proviral latency</code>, <code>virion attachment to host cell</code>, <code>receptor-mediated virion attachment to host cell</code> on E. coli</td>
 <td>prophage-gene or electronic propagation of eukaryote/virus-centric terms</td>
 <td>candidate <code>REMOVE</code> / <code>MARK_AS_OVER_ANNOTATED</code>; feeds the over-annotation work</td>
 </tr>
+<tr>
+<td><strong>Unresolved</strong></td>
+<td><code>molybdopterin cofactor biosynthesis</code> → MPT-synthase sulfurtransferase; plus cytokinesis, RNA-binding transcription regulator activity, translational initiation, deubiquitination, glycolipid transfer, and side-of-membrane dependencies</td>
+<td>could be missing annotation, a missing or too-specific GO axiom, or a dependency that is not yet safe at bacterial genome scale</td>
+<td>triage with term definitions and sequence evidence before making a curation call</td>
+</tr>
 </tbody>
 </table>
-<p>That a single genome-scale check simultaneously surfaces a metabolic over-reach, a batch of<br />
-missing complex/MF annotations, and a set of implausible eukaryote/viral terms — from <em>nothing<br />
-but GO axioms + a GAF</em> — is the pilot's proof of concept.</p>
+<p>That a single genome-scale check simultaneously surfaces a whole-pathway over-reach, a batch<br />
+of likely missing complex/MF annotations, a set of implausible eukaryote/viral terms, and<br />
+test cases where the GO axiom itself needs more care — from <em>nothing but GO axioms + a GAF</em> —<br />
+is the pilot's proof of concept.</p>
 <h2 id="run-it">Run it</h2>
 <div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>coherence_pilot.py
 </code></pre></div>
@@ -446,12 +454,13 @@ cached.</p>
 <h2 id="honest-limitations">Honest limitations</h2>
 <ul>
 <li><strong>Asserted <code>has_part</code> only</strong> (743 pairs here). The reference paper (Tawfiq et al. 2026,<br />
-  bbag336) uses an ELK reasoner to also pull <em>inferred</em> <code>has_part some X</code> subclasses (~5038<br />
-  pairs). So this is a <strong>lower bound</strong> on detectable violations; adding ELK/relation-graph<br />
-  inference is the obvious next increment.</li>
+  bbag336) reports thousands of additional ELK-inferred <code>has_part some X</code> subclasses. So this<br />
+  is a <strong>lower bound</strong> on detectable violations; adding ELK/relation-graph inference is the<br />
+  obvious next increment.</li>
 <li><strong>Set-based, not sequence-based.</strong> A violation cannot by itself distinguish "gene absent"<br />
-  from "gene present but unannotated." Genuine-gap candidates (e.g. denitrification) must be<br />
-  confirmed with a sequence-level tool (GapMind / Pathway Tools) before any <code>REMOVE</code>.</li>
+  from "gene present but unannotated." Whole-pathway overreach candidates such as<br />
+  denitrification must be confirmed with a sequence-level tool (GapMind / Pathway Tools)<br />
+  before any <code>REMOVE</code>.</li>
 <li><strong>Coherence only.</strong> Completeness (a curated minimal-genome essential set) and consistency<br />
   (taxon constraints) are not yet implemented; the small essential-process probe in the output<br />
   is an illustrative sanity check, not the completeness metric.</li>

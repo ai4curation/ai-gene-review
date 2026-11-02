@@ -1,0 +1,11 @@
+# ELF4 database evidence results
+
+The offline replay reconciles all 43 raw GOA records with 42 normalized source contexts. Source row34 combines raw rows27 and37, retaining their NTNU_SB/20140320 and UniProt/20050426 provenance in the raw file. Canonical FASTA, official UniProt JSON, normal UniProt text and the ungapped PANTHER alignment agree on one 663-residue Q99607 product. No alternative-products block is present.
+
+The 1,510-entry tree/MSA places human ELF4 at PTN002483845 in subfamily SF170, within the PTN000218930 clade. Four literal positive IBD assertions occur on its ancestry. Source rows15 and17 have exact donor sets; row2 has one extra IBD-snapshot donor, and row22 has source-versus-snapshot donor differences. The saved path has no negative record. These facts neither establish a loss of function nor make self-donation circular. The full differing lists and assertion dates are in `results.json`.
+
+Two selected ARBA branches match current target premises. The selected ARBA00029082 branch requires IPR006715, which is absent from the captured target record. The program retains that discrepancy and does not assert a cause or exhaustive current-rule firing. Exact rule annotations, conditions and the InterPro/location mappings are available in the results. The 40-row mouse Q9Z2U4 response is complete for its saved query and preserves experimental evidence and references; direct donor assay interpretation remains source-specific.
+
+The HPA XML reports supported nuclear bodies and additional nucleoplasm. A-431 and U-251MG records and antibody HPA060277 are reproduced; no image pixels or PML-marker specificity follow from these metadata. The complete RUNX1 product block retains AML-1B/Q01196-1 and AML-1G/Q01196-8 without equating them to historical experimental inserts. Official term definitions and typed is_a ancestors remain separate from manual biological judgments.
+
+The source review retains four proliferation-specific uncertainties and contextual immune phenotypes, while refining independently supported DNA/transcription, RUNX1-binding and source-specific PML coactivator-binding terms. Two source-reference queries preserve the original assignments and positive biology. These are manually reviewed conclusions documented in the source guide; the program verifies their database context, not the scientific verdicts.

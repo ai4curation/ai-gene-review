@@ -180,5 +180,7 @@ silent on entirely**.
   validation) + **210 family-specific PROPOSED** signature→GO candidates across 56 families (e.g.
   GH28→polygalacturonase, GT4→sucrose synthase, GH47→α-1,2-mannosidase). Fixes the poly-specific
   safety problem by attributing each activity to its InterPro-signature subfamily.
-- **Next**: (1) human GO/InterPro2GO curator sign-off on the 34 ENDORSE true-gaps + 210 subfamily
-  proposals before any submission; (2) GlycoCoO→GO alignment SSSOM; (3) GlyGen-join confirmatory probe.
+- **Next**: (1) rerun or explicitly freeze the 2026-06 CAZy/UniProt/InterPro inputs before external
+  submission; (2) human GO/InterPro2GO curator sign-off on the 34 ENDORSE true-gaps + 210 subfamily
+  proposals; (3) GlycoCoO→GO alignment SSSOM; (4) GlyGen-join confirmatory probe. Tracked in
+  [#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).

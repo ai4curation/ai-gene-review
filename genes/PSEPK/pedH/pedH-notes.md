@@ -123,3 +123,19 @@ GO molecular-function curation. The report also states that no experimental
 PedH structure was found, but UniProt Q88JH0 lists the PedH crystal structures
 6ZCV and 6ZCW; that generated claim is rejected. Its explicit caveat that the
 physiological cytochrome partner remains unresolved is retained.
+
+
+## Acetoin audit: primary-source reassessment
+
+Reviewed all 13 inherited rows without changing source payloads; retained inherited proposals, added no new rows. Current UniProt and native papers identify pedH, Q88JH0, PP_2679. Genuine existing Falcon/OpenScientist research was reused only for retrieval, and primary texts were read independently. New normal publication retrieval passed; actual FEBA fitness retrieval failed (see acquisition log), so no fitness result is inferred. Raw records and provider reports remain unchanged.
+
+GO:0052934 denotes primary-alcohol oxidation to aldehydes; GO:0016614 independently preserves the secondary-alcohol chemistry. PMID:28655819 assays use artificial PMS/DCPIP, not an identified native cytochrome. PMID:34513815 Figure 5 establishes native S,S entry through PedE/PedH and metal-dependent rescue, not a new purified stereospecificity assay. Its sentence reversing the lanthanide expression switch is inconsistent with its own phenotypes and PMID:30158283. Broad alcohol-metabolism proposals already cover the catalytic process; no redundant NEW butanediol term is added.
+
+The earlier assertion that GO:0030288 requires outer-membrane association is false: it is the periplasmic compartment. General membrane inference is over-annotation for these soluble type I enzymes, without pretending that missing transmembrane helices exclude every peripheral contact. Heme mapping conflates quinoproteins with quinohemoproteins. Calcium inactivity in PedH does not prove absolute inability to bind calcium. Source-qualified periplasm and measured metal/cofactor roles supersede stronger older notes.
+
+Native reporter feedback (PMID:28655819 Figure 7; PMID:30158283) supports the inherited non-core expression-regulation proposal, not a direct DNA-binding or proven sensor MF. RCSB 6ZCW was normally cached and inspected: Q88JH0, mature recombinant construct, PQQ and Pr ligands. ACS DOI full text was unavailable. Old claims that vicinal cysteines are proven essential for transfer to native cytochrome c550 exceed the inspected structure and assays. Previous provider failure to locate structures is superseded. Ontology suggestions are questions rather than claims that all lanthanides activate PedH.
+
+
+## PR 5588 follow-up — 2026-10-26
+
+Withdrew the inherited GO:0010468 NEW proposal to UNDECIDED: PMID:28655819 measures PedH-dependent promoter feedback, while PMID:30158283 proposes an unresolved sensor mechanism. Necessity alone does not identify regulatory work performed by PedH; indirect metabolic signaling remains possible. The positive phenotype and expert question remain. The retired marker records withdrawal of an author-created proposal absent from GOA, not retirement of a GOA annotation. Two measured alcohol/aromatic-substrate process proposals retain NEW with IC and PMID:28655819 replacing inherited IEA placeholders.

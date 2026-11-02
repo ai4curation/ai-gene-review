@@ -18,7 +18,6 @@ from urllib.parse import urlencode
 
 WORKFLOW = "claude-code-review.yml"
 RETRYABLE = {"failure", "timed_out"}
-REVIEWERS = {"ai4c-reviewer[bot]", "github-actions[bot]"}
 RERUN_WINDOW_DAYS = 30
 STALE_JOBLESS_QUEUE_HOURS = 24
 LOOKUP_ERRORS = (
@@ -213,7 +212,7 @@ def unassociated_active_disposition(run, repo, now):
         )
 
 
-def skip_reason(run, pr, peers, reviews, now, minimum, repo):
+def skip_reason(run, pr, peers, now, minimum, repo):
     if run["status"] != "completed" or run["conclusion"] not in RETRYABLE:
         return "latest attempt is not a failed or timed-out run"
     if now - timestamp(run["created_at"]) >= timedelta(days=RERUN_WINDOW_DAYS):
@@ -250,17 +249,9 @@ def skip_reason(run, pr, peers, reviews, now, minimum, repo):
             peer["updated_at"]
         ) > timestamp(run["updated_at"]):
             return "another review succeeded after this failure"
-    latest = {}
-    for review in sorted(reviews, key=lambda row: row["id"]):
-        login = (review.get("user") or {}).get("login")
-        if login in REVIEWERS and review["state"] != "COMMENTED":
-            latest[login] = review
-    if any(
-        r["commit_id"] == pr["head"]["sha"]
-        and r["state"] in {"APPROVED", "CHANGES_REQUESTED"}
-        for r in latest.values()
-    ):
-        return "reviewer already submitted a verdict for the current commit"
+    # A formal verdict does not repair a failed Actions check. It may predate
+    # this run (PR #5433), or the job may fail after posting it. Recover the
+    # failed job in either case; workflow peers above prevent duplicate runs.
     wait = delay_hours(run.get("run_attempt", 1), minimum)
     if now - timestamp(run["updated_at"]) < timedelta(hours=wait):
         return f"waiting {wait:g} hours after latest failure"
@@ -326,15 +317,14 @@ def sweep(
             # may already have changed this run to queued since discovery.
             current = api(f"repos/{repo}/actions/runs/{run['id']}")
             pr = api(f"repos/{repo}/pulls/{number}")
-            reviews = pages(f"repos/{repo}/pulls/{number}/reviews")
-            reason = skip_reason(current, pr, indexed[number], reviews, now, minimum, repo)
+            reason = skip_reason(current, pr, indexed[number], now, minimum, repo)
             if reason:
                 rows.append(f"{prefix}: skipped; {reason}.")
                 continue
             if len(retried) >= limit:
                 rows.append(f"{prefix}: deferred; retry budget reached.")
                 continue
-            # Recheck branch-triggered runs for pushes/reviews arriving during
+            # Recheck branch-triggered runs for pushes/runs arriving during
             # this sweep, plus manual runs created since discovery began.
             # Manual runs execute on the default branch; a fork PR can itself
             # have a head named main. Only PR events associate by head branch.
@@ -376,8 +366,7 @@ def sweep(
                 continue
             current = api(f"repos/{repo}/actions/runs/{run['id']}")
             pr = api(f"repos/{repo}/pulls/{number}")
-            reviews = pages(f"repos/{repo}/pulls/{number}/reviews")
-            reason = skip_reason(current, pr, peers, reviews, now, minimum, repo)
+            reason = skip_reason(current, pr, peers, now, minimum, repo)
             if reason:
                 rows.append(f"{prefix}: skipped; {reason}.")
                 continue

@@ -29,28 +29,28 @@ Research the biological concept 'What are the current state-of-the-art machine l
 3. **DNA-binding domain prediction**: Methods for predicting the presence and type of DNA-binding domains (zinc finger, helix-turn-helix, leucine zipper, bHLH, homeodomain, etc.) from sequence without relying on existing domain databases.
 
 4. **Functional subtype prediction**: Can models distinguish between:
-   - Sequence-specific DNA-binding transcription factors vs general transcription factors
-   - Activators vs repressors
-   - Pioneer factors vs non-pioneer factors
-   - Direct DNA binders vs cofactors that lack DNA-binding activity
+    - Sequence-specific DNA-binding transcription factors vs general transcription factors
+    - Activators vs repressors
+    - Pioneer factors vs non-pioneer factors
+    - Direct DNA binders vs cofactors that lack DNA-binding activity
 
 5. **Benchmark datasets**: What gold-standard datasets exist for training and evaluating TF classifiers? How are negative examples (non-TF proteins) selected? What taxonomic scope do these datasets cover?
 
 6. **Comparison with traditional methods**: How do ML/DL methods compare with:
-   - Hidden Markov Models (Pfam, InterPro)
-   - Position-specific scoring matrices
-   - Sequence similarity/homology-based methods
-   - DBD (DNA-Binding Domain) database approaches
+    - Hidden Markov Models (Pfam, InterPro)
+    - Position-specific scoring matrices
+    - Sequence similarity/homology-based methods
+    - DBD (DNA-Binding Domain) database approaches
 
 7. **Interpretability**: What methods exist for understanding which sequence features or regions contribute to TF predictions? How can we extract biological insights from these models?
 
 8. **Recent tools and databases**: What are the most recent (2023-2026) published tools, web servers, or databases for sequence-based TF prediction? Include tools like TFpredict, DeepTF, or similar.
 
 9. **Limitations and challenges**: What are the main limitations of current approaches? How do they handle:
-   - Novel TF families with no homology to known TFs
-   - Moonlighting proteins with dual TF/non-TF functions
-   - Intrinsically disordered regions common in TFs
-   - Species-specific vs evolutionarily conserved predictions
+    - Novel TF families with no homology to known TFs
+    - Moonlighting proteins with dual TF/non-TF functions
+    - Intrinsically disordered regions common in TFs
+    - Species-specific vs evolutionarily conserved predictions
 
 10. **Integration with other data**: Methods that combine sequence features with structural predictions (AlphaFold), evolutionary information (MSAs), or functional annotations for improved TF prediction.
 
@@ -72,6 +72,7 @@ De novo DBD prediction avoids databases like Pfam. **DeepTFactor** implicitly le
 
 ### 4. Functional Subtype Prediction
 Current models struggle with subtypes from sequence alone:
+
 - **Sequence-specific vs. general TFs**: DeepTFactor predicts binary TF status; subtype distinction requires DBD strength (strong for sequence-specific like homeodomains).[1]
 - **Activators vs. repressors**: Not directly predicted; inferred from transactivation domain IDRs.
 - **Pioneer vs. non-pioneer**: Absent in sequence models.
@@ -109,6 +110,7 @@ Low data for rare subtypes; overfitting on conserved DBDs.
 
 ### 10. Integration with Other Data
 Limited sequence-only focus, but extensions include:
+
 - **AlphaFold structures**: Not in cited works; potential for ESM embeddings + structure.
 - **MSAs/evolutionary**: Implicit in protein LMs (ProtTrans), but DeepTFactor uses raw sequence.[1]
 - **Functional annotations**: JASPAR integrates ChIP-seq for motif refinement.[3]

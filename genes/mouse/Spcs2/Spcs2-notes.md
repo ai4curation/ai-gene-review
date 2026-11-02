@@ -50,3 +50,66 @@ Exact sequence mapping: [Spcs2-bioinformatics/RESULTS.md](Spcs2-bioinformatics/R
 ## Research integration
 
 The genuine Falcon report is retained. Its gene-level synthesis is interpreted through the exact product sequence and the primary sources above; the truncation boundary and paralog distinctions are assessed independently.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 files were not opened or used. Sources: UniProt A0A140LHW5 and Q9CYN2, Ensembl
+gene ENSMUSG00000035227, PANTHER PTHR13085 family files, PMID:34388369, PMID:42173868,
+and the Falcon deep-research report (gene-level; it does not notice that the accession is
+a short alternative product).
+
+### Identity: alternative transcript product, not the canonical protein
+
+New analysis: `Spcs2-bioinformatics/compare_sequences_rereview.py` -> `RESULTS-rereview.md`
+(live UniProt + Ensembl REST fetch; earlier RESULTS.md left untouched).
+
+- A0A140LHW5 = ENSMUSP00000146574, the 74-aa translation of Ensembl transcript Spcs2-206
+  (ENSMUST00000208465, protein_coding, not canonical). Canonical is Spcs2-201
+  (ENSMUST00000036274) -> Q9CYN2, 226 aa, Swiss-Prot reviewed.
+- Spcs2-206 has 4 exons. It skips canonical coding exon 3 (ENSMUSE00000263814, 161 nt;
+  161 mod 3 = 2, frameshifting) and uses a shorter version of canonical exon 4
+  (5' end at 99493966 instead of 99494041 on the minus strand). Exons 1-2 encode exactly
+  66 aa of CDS (114 + 84 nt), matching the 66-residue identical prefix; the 8-residue tail
+  KRPHRNGS is out-of-frame sequence from the shortened exon 4, and is not in Q9CYN2.
+- Lost relative to canonical: both TM helices (87-107, 112-132), the lumenal loop, the
+  C-terminal cytosolic domain (133-226) and the acetyl-lysine sites K169/K191. Retained:
+  N-acetyl-Ala2 site and the Gly-rich, predicted-disordered N-terminal cytosolic segment.
+- UniProt PE 1 rests on proteomics hits; because residues 1-66 are shared with Q9CYN2,
+  these cannot be assigned uniquely to this product unless a tail-spanning peptide was seen.
+  Not used as evidence of function.
+- Record type: isoform / alternative gene model product of the same gene (MGI:1913874).
+
+### Annotations
+
+GOA has zero rows for A0A140LHW5, so there are no existing annotations to act on.
+I propose no NEW annotations: the activities and complex membership of SPCS2 are
+established for the full-length two-pass membrane protein (human Q15005 and mouse Q9CYN2,
+both PANTHER PTHR13085:SF0, PAINT node PTN000317824 IBD for GO:0005787 signal peptidase
+complex, GO:0045047, GO:0051604). The fragment has no PANTHER assignment and lacks the
+membrane region through which SPCS2 contacts the complex
+[PMID:42173868 "The TM helix of SPCS2 displays a limited set of contacts"], so neither
+complex membership nor ER-membrane localization can be transferred. The SPC is catalysed
+by SEC11A/C [PMID:42173868 "the catalytic SPC subunit (paralog Sec11A or Sec11C,
+respectively) is joined by SPCS1 (also known as SPC12), SPCS2 (SPC25), and SPCS3
+(SPC22/23)."], so peptidase activity would be wrong even for full-length Spcs2.
+core_functions left empty deliberately.
+
+### Changes vs previous review
+
+- Description rewritten: identifies the transcript model (Spcs2-206), the exon-3 skip and
+  frameshift, and the retained/lost regions explicitly.
+- Added RESULTS-rereview.md, UniProt file and an extra PMID:42173868 finding as references;
+  kept the earlier RESULTS.md and the ProtNLM source JSON references (the latter marked
+  relevance NONE, not opened).
+- Added suggested experiment and a BIOLOGY knowledge gap on whether the product exists.
+
+### Relative, family, modules
+
+- Relative to review next: canonical same-gene product Q9CYN2 (mouse Spcs2, Swiss-Prot).
+  No review of Q9CYN2 exists in the repo (genes/mouse/Spcs2 is keyed to the fragment), so
+  the folder would be genes/mouse/Spcs2__Q9CYN2. Human SPCS2 (Q15005) and DROME Spase25
+  are already reviewed.
+- PANTHER family review interpro/panther/PTHR13085/PTHR13085-review.yaml places Q9CYN2 in
+  SF0 and treats A0A140LHW5 as unassigned gene context. No disagreement.
+- Modules: only modules/dmel_signal_peptidase_complex.yaml (Drosophila SPC, includes the
+  Spase25 ortholog); no mammalian SPC module exists.

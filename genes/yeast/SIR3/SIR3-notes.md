@@ -111,3 +111,42 @@ nonhomologous end joining`. Because the same paper explicitly describes Sir3 as
 "a direct negative regulator of Sae2", the proposed Sae2-directed molecular
 function is the direction-preserving `GO:0140678 molecular function inhibitor
 activity`.
+
+## 2026-10-16: GO:0070481 nonstop decay row resolved (issue #4027)
+
+The September note left `GO:0070481` UNDECIDED pending Table 2 of
+PMID:17660569 or the underlying SGD detail. The table is still not in the
+cached text (the PMC copy is not open access and the publisher page is
+paywalled), but SGD's phenotype curation for this reference
+(`https://www.yeastgenome.org/backend/reference/17660569/phenotype_details`,
+retrieved 2026-10-16) lists sir3-null in the systematic mutation set as
+"RNA accumulation: increased", together with SKI3, SKI7, SKI8, SSN2, SSN3,
+MED1, NUP2, HTZ1, IPK1 and YGR122W; PRE9, UMP1 and RKR1 are scored instead for
+increased protein accumulation. So SIR3 was one of the eleven hits that raised
+the Protein A-nonstop reporter mRNA [PMID:17660569 "This experiment showed that
+deletion of 11 of the 15 mutants tested also increased the abundance of our
+Protein A-nonstop mRNA"]. The paper gives no mechanism for SIR3, and notes that
+most new hits did not behave like general exosome factors [PMID:17660569
+"This observation suggests that these genes are not required for general
+cytoplasmic exosome activity."].
+
+Decision: `MARK_AS_OVER_ANNOTATED`. The phenotype is verified, so REMOVE is
+not justified, but a deletion-screen hit shows necessity rather than
+participation, and Sir3 is a nuclear heterochromatin protein with no known
+activity in cytoplasmic mRNA surveillance. An indirect route through loss of
+silencing is plausible (compare the indirect NEJ1/HML-HMR contribution to NHEJ
+discussed above) but untested.
+
+Follow-up after PR #5072 review (2026-10-16): the reason now quotes and answers
+the authors' own reading of the eleven RNA-increased strains [PMID:17660569
+"Importantly, these data showed that suppression in these 11 strains was not
+specific to the his3 -nonstop reporter, but was most likely due to a general
+defect in the nonstop mRNA decay pathway."]. sir3-null passed the heterologous
+Protein A reporter control, so the HIS3-promoter caveat (which the paper raises
+for SSN2/SSN3/MED1) was dropped as support. The reviewer suggested sir3-null
+must be one of the "eight other mutants" with a longer Protein A-nonstop
+half-life in Figure 6. The count does not close: SGD's eight non-SKI,
+non-proteasome RNA-increased strains (SIR3, YGR122W, HTZ1, SSN2, SSN3, NUP2,
+MED1, IPK1) plus ylr021w, which the text puts in Figure 6 but SGD does not list
+in that phenotype set, give nine candidates for eight slots. Either way the
+action stands, because a half-life increase is also a necessity readout.

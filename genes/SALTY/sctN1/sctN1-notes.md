@@ -72,7 +72,7 @@ activity, contributes_to; GO:0045259 proton-transporting ATP synthase complex, p
 downstream/side IEA rows GO:0015986 (GO_REF:0000108 logical inference from GO:0046933),
 GO:0046034 and GO:1902600 (InterPro2GO from IPR004100).
 
-Node placement (from `projects/TREEGRAFTER/rotary_atpase/node_placement.tsv` and
+Node placement (from `projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv` and
 `interpro/panther/PTHR15184/PTHR15184-paint.tsv`): PTN008558586 is a **DUPLICATION** node whose
 two children are PTN000390097 (bacterial export ATPases: SF9 SPI-1 T3SS ATPase — this protein —,
 SF62 SPI-2 ATPase, SF81 flagellar FliI) and PTN008558588 (the genuine F1-beta clade, SF51/74/75/76/

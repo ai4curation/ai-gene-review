@@ -78,3 +78,14 @@ should not be propagated without direct wild-type evidence [file:human/KRAS/KRAS
 "It explicitly avoids over-annotation from (i) pathway membership, (ii) overexpression
 systems, and (iii) oncogenic-mutant phenotypes unless the claim is a direct biochemical
 consequence of the mutation that is relevant to the core switch mechanism."].
+
+## 2026-09-30 PIP5K1A protein binding backfill
+
+`just fetch-gene human KRAS` added a second `GO:0005515` / `PMID:30194290`
+IPI row with `UniProtKB:Q99755` as the supporting entity. I reviewed the full-text
+PMID:30194290 cache; Adhikari and Counter report that "PIP5K1A binds to a unique
+region in KRAS", supporting the PIP5K1A-KRAS interaction. The row was marked
+`REMOVE` for the same reason as the preexisting generic binding row from this
+paper: the interaction is credible, but `GO:0005515` is not an informative KRAS
+molecular-function term, and the oncogenic-mutant dependency evidence should not
+be expanded into a new wild-type KRAS process annotation.

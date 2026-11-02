@@ -28,7 +28,7 @@ style: |
 
 Detecting gene reviews whose reasoning and evidence are boilerplate
 
-<span class="small">AI Gene Review · projects/REVIEW_QUALITY_AUDIT · 2026</span>
+<span class="small">AI Gene Review · projects/REVIEW_QUALITY_AUDIT · 2026-10-05</span>
 
 ---
 
@@ -38,7 +38,7 @@ Detecting gene reviews whose reasoning and evidence are boilerplate
 
 - One generation pass filled whole reviews with **templated reasons** and a **placeholder evidence string**; actions looked plausible, curation was absent.
 - `scan_boilerplate.py` flags this in three tiers. First run: **51 of 2,801** files; **4 Tier 1** and **13 genuine Tier 2** reviews were then **fully re-reviewed**.
-- Re-run today over **4,982** files: **Tier 1: 0, Tier 2: 0**, 30 low-severity Tier 3. The CI smell test is **not yet** added.
+- 2026-10-05 run over **5,625** files: **Tier 1: 0**, **4 Tier 2 candidates**, 31 low-severity Tier 3. Detector tuning and CI are tracked in #4010.
 
 ---
 
@@ -80,9 +80,9 @@ Detecting gene reviews whose reasoning and evidence are boilerplate
 
 ## Status and next steps
 
-- ✅ Detector built; Tier 1 and Tier 2 cleared and confirmed by re-run.
-- ⬜ Tier 3 (30 files): tighten the one-line `reason` in bulk; low priority.
-- ⬜ Add the placeholder string and a low unique-reason ratio as a **CI smell test**.
-- ⬜ Regenerate the committed report (post-rework, but still over 2,801 files).
+- ✅ Detector built; original Tier 1 and Tier 2 rework batches cleared.
+- ⬜ Tier 2 (4 live hits): separate repeated-term false positives from true boilerplate.
+- ⬜ Tier 3 (31 files): tighten the one-line `reason` in bulk; low priority.
+- ⬜ Add tuned low-ratio checks as a **CI smell test** (#4010).
 
 **Read more:** `projects/REVIEW_QUALITY_AUDIT.md` · `REVIEW_QUALITY_AUDIT/scan_boilerplate.py` · `reports/REPORT.md`

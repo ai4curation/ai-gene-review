@@ -38,7 +38,10 @@ engine lives in `src/ai_gene_review/module_logic.py` with tests; the context
 resolvers are still in `modules/experimental/`, and a spin-off
 [taxon-absent-component detector](PATHWAY_SATISFIABILITY/taxon_absent_component/README.md)
 applies the same logic to flag IBA over-propagation (JAK-STAT in
-*Dictyostelium*).
+*Dictyostelium*). A second spin-off, the
+[ARBA deployment check](PATHWAY_SATISFIABILITY/arba_deployment/README.md),
+uses an activity oracle to test whether an automated process annotation is
+entailed by the protein's activity plus a satisfiable module.
 
 We did this because a gap between "the pathway is known to run here" and "the
 logic says it cannot" is a reviewable hypothesis that points at one gene in

@@ -21,8 +21,15 @@
 - Generates glyoxylate, the immediate precursor of oxalate. In primary hyperoxaluria (PH1: AGXT deficiency),
   glyoxylate is not detoxified to glycine and is converted to oxalate -> kidney stones/oxalosis.
 - HAO1 (upstream of glyoxylate) is a validated therapeutic target: the siRNA drug **lumasiran** silences HAO1
-  to reduce hepatic oxalate production. HAO1 loss is protective (substrate-reduction rationale), so there is
-  no classic HAO1 loss-of-function Mendelian disease.
+  to reduce hepatic oxalate production. HAO1 loss is protective (substrate-reduction rationale).
+- Human HAO1 loss of function is NOT silent biochemically: biallelic HAO1 variants cause **isolated glycolic
+  aciduria** (glycolate oxidase deficiency, OMIM 605023 gene), clinically essentially benign.
+  [PMID:24996905 "Direct DNA sequencing of glycolate oxidase gene (HAO1) revealed a homozygous c.814-1G>C mutation";
+  "markedly increased urinary glycolic acid excretion with normal excretion of oxalate, citrate and glycerate"].
+  A third patient had absent liver GO activity [PMID:28752386 "Further analysis of the liver biopsy demonstrated
+  absent GO enzyme activity, confirming GO deficiency in this case."]; that patient's persistent hyperoxaluria was
+  unexplained. Human genetics therefore confirm glycolate catabolism as HAO1's non-redundant in vivo role.
+- dismech counterpart: kb/disorders/HAO1-Related_Glycolate_Oxidase_Deficiency.yaml (GO:0003973 DECREASED).
 - PMID:10777549: HAOX1 in liver/kidney peroxisomes + ability to oxidise glyoxylate to oxalate implicate it in
   PH1 pathophysiology.
 

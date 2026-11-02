@@ -256,7 +256,7 @@ def test_daily_generation_relies_on_main_validation_workflow():
     main_ci = _workflow(ROOT / ".github/workflows/main.yaml")
     assert "pull_request" in main_ci[True]
     assert "schedule" in main_ci[True]
-    validation = _step(main_ci["jobs"]["test"], "Validate gene reviews (scoped)")
+    validation = _step(main_ci["jobs"]["validation"], "Validate gene reviews (scoped)")
     assert "just validate-changed" in validation["run"]
     assert "just validate-all" in validation["run"]
 
@@ -287,8 +287,8 @@ def test_pages_artifact_contains_rule_and_prediction_builds():
     for name, command in (
         ("Render cached rule reviews and index", "just render-rule-pages"),
         ("Render ProtNLM prediction evaluations from all review sidecars", "just render-prediction-eval"),
-        ("Build shared predictions browser", "just deploy-predictions-browser"),
-        ("Build homology propagation browser", "just deploy-propagation-browser"),
+        ("Build shared predictions browser", 'just deploy-predictions-browser "$BROWSER_TARGET"'),
+        ("Build homology propagation browser", 'just deploy-propagation-browser "$BROWSER_TARGET"'),
     ):
         build = _step(job, name)
         assert build["run"] == command
@@ -491,4 +491,4 @@ def test_publication_does_not_run_biological_validation():
     assert not any('validate-modules' in step.get('run', '') for step in workflow['jobs']['generate-pages']['steps'])
     assert 'validate-modules' not in (ROOT / 'project.justfile').read_text().split('build-pages:', 1)[1].splitlines()[0]
     ci = _workflow(ROOT / '.github/workflows/main.yaml')
-    assert _step(ci['jobs']['test'], 'Validate modules (scoped)')['run'] == 'just validate-modules'
+    assert _step(ci['jobs']['validation'], 'Validate modules (scoped)')['run'] == 'just validate-modules'

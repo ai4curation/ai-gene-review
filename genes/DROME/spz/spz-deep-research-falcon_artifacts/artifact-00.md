@@ -1,0 +1,18 @@
+| Pathway Component | Type | Function/Role | Location |
+|---|---|---|---|
+| Pro-Spätzle (Spz; P48607) | Inactive cytokine precursor | Secreted, disulfide-linked precursor containing an inhibitory prodomain and C-terminal cystine-knot signaling domain; it is not an enzyme or direct microbial sensor. (pqac-00000002, pqac-00000010) | Secretory pathway → extracellular space/hemolymph or embryonic perivitelline space |
+| Spätzle-processing enzyme (SPE) / Easter | Serine protease | SPE cleaves pro-Spätzle during immune responses; Easter performs the corresponding terminal cleavage during embryonic dorsoventral patterning. Cleavage exposes the active C-terminal C-106 ligand. (pqac-00000009, pqac-00000010, pqac-00000011) | Extracellular protease cascade |
+| Mature Spätzle C-106 | Cytokine-like ligand | Disulfide-stabilized cystine-knot dimer that binds the Toll ectodomain and rearranges Toll receptors so their juxtamembrane and intracellular signaling regions approach one another. (pqac-00000018, pqac-00000020) | Extracellular |
+| Toll (Toll-1) | Transmembrane receptor | Recognizes processed Spätzle through its extracellular leucine-rich-repeat domain; ligand-induced receptor reorganization activates the intracellular TIR domain. (pqac-00000019, pqac-00000022) | Plasma membrane |
+| MyD88 | Adaptor | Associates with the activated Toll TIR domain and nucleates the downstream death-domain signaling complex. (pqac-00000047, pqac-00000052) | Cytoplasmic face of plasma membrane |
+| Tube | Scaffold/adaptor | Bridges MyD88 to Pelle through death-domain interactions, organizing the receptor-proximal signaling complex. (pqac-00000047, pqac-00000048) | Cytoplasmic |
+| Pelle | Serine/threonine kinase | Functions in the MyD88–Tube–Pelle complex and promotes phosphorylation and subsequent removal of the NF-κB inhibitor Cactus. (pqac-00000047, pqac-00000048) | Cytoplasmic |
+| Pellino | Positive signaling regulator | Positively regulates Pelle and supports propagation of Toll signaling. (pqac-00000047) | Cytoplasmic |
+| Cactus | IκB-like inhibitor | Retains Dorsal and Dif in the cytoplasm under resting conditions; Toll signaling promotes its phosphorylation, ubiquitylation, and proteasomal degradation. (pqac-00000047, pqac-00000048) | Cytoplasmic |
+| Dorsal | NF-κB-family transcription factor | After Cactus removal, enters nuclei; generates the graded transcriptional response used in embryonic dorsoventral patterning and also contributes to larval immune responses. (pqac-00000032, pqac-00000034, pqac-00000048) | Cytoplasmic when inhibited → nuclear when activated |
+| Dif | NF-κB-family transcription factor | Translocates to nuclei after Cactus degradation and is a principal Toll-pathway transcription factor in adult systemic immunity. (pqac-00000048, pqac-00000049) | Cytoplasmic when inhibited → nuclear when activated |
+| Drosomycin | Antimicrobial-peptide target gene/effector | Canonical Toll-responsive antifungal peptide gene induced by Dorsal/Dif-dependent transcription. (pqac-00000047, pqac-00000049) | Transcribed in nucleus; peptide secreted extracellularly |
+| Other Toll-responsive AMP genes | Target genes/effectors | Encode additional antimicrobial effectors; their induction links extracellular Spätzle activation to systemic host defense, although the exact AMP repertoire varies by tissue and context. (pqac-00000026, pqac-00000049) | Transcribed in nucleus; peptide products generally secreted extracellularly |
+
+
+*Table: This table traces canonical signaling from extracellular pro-Spätzle processing through Toll, the MyD88–Tube–Pelle complex, Cactus removal, NF-κB activation, and antimicrobial-peptide expression. It also distinguishes the developmental and immune processing enzymes and locations of each step.*

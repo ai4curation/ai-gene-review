@@ -264,3 +264,10 @@ production (GO:0032641, GO:0032681, GO:0062048), none for LTBR-initiated signall
 - Isoform 2 (Q13114-2) has no functional data at all in the reviewed literature.
 - Which substrates besides ASC does TRAF3 ubiquitinate directly? Most published "TRAF3
   ubiquitination" work is TRAF3-as-substrate.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (SL-0173), EXP (PMID:32562145), IC (PMID:16858409), IDA (PMID:19898473); all stay ACCEPT. Reasons rewritten on the IEA and IC rows to record the check; EXP reason notes the assay resolves only the organelle.
+- IEA: SL-0173 comes from the UniProt curated location [file:human/TRAF3/TRAF3-uniprot.txt "Mitochondrion {ECO:0000269|PubMed:32562145}"], so the mapping is sound.
+- IC: built on MAVS binding [PMID:16858409 "Cardif-mediated IFNalpha induction occurs through a direct interaction between the TRAF domain of TRAF3 and a TRAF-interaction motif (TIM) within Cardif"]; confirmed by co-localisation [PMID:32562145 "TRIM35 associates with TRAF3 in the mitochondria"].
+- No GO:0005741: TRAF3 is a peripheral adaptor with no anchor; binding to OMM-anchored MAVS is one line, and no cached paper shows TRAF3 in an outer-membrane fraction. Stays at the root (brief rule for peripheral recruitment). The IDA row on PMID:19898473 remains questionable (no mitochondria in the cached full text), as already noted above.

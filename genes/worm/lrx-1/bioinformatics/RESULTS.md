@@ -1,5 +1,13 @@
 # LRX-1 Bioinformatics Analysis Results
 
+## Audit Note
+
+This unprefixed report is retained as a superseded preliminary analysis
+artifact, not as curated evidence for `lrx-1-ai-review.yaml`. The review instead
+cites `../lrx-1-bioinformatics/RESULTS.md`, whose reproducible DeepTMHMM,
+AlphaFold, and cysteine-pattern checks are the maintained evidence surface for
+LRX-1 topology and domain assessment.
+
 ## Executive Summary
 
 Initial bioinformatics analysis of the C. elegans LRX-1 protein suggests it may have been misannotated. While described as having similarity to mammalian LRP2 receptor with multiple LDL receptor domains, detailed analysis in the lrx-1-bioinformatics directory reveals LRX-1 is likely a small secreted protein without canonical LDL-A domains or transmembrane regions.
@@ -38,7 +46,7 @@ Initial bioinformatics analysis of the C. elegans LRX-1 protein suggests it may 
 - [ ] Full pipeline not implemented here
 
 ### Data Integrity
-- [x] UniProt entry Q95Y86 analyzed
+- [x] UniProt entry Q22179 analyzed
 - [x] Sequence features examined
 - [x] External predictions obtained
 - [ ] Comprehensive validation pending
@@ -70,7 +78,6 @@ Initial bioinformatics analysis of the C. elegans LRX-1 protein suggests it may 
 
 ## Files in This Directory
 
-- `ANALYSIS_RESULTS.md`: Original preliminary findings (deprecated)
 - `RESULTS.md`: This file with updated summary and checklist
 
 ---

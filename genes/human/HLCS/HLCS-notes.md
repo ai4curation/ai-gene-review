@@ -84,3 +84,16 @@ the established, disease-defining core function, and their in vivo relevance is 
 - PMID:18429047: "the turn-over rate for the mutant protein was double that of wildtype HLCS"
 - PMID:19157941: "essential for biotinylation of carboxylases by HCS"; "N- and C-termini play roles in substrate recognition"; "catalyzes the binding of the vitamin biotin to"
 - PMID:16780588: "the HLCS gene codes for a biotin-protein ligase and was found to localize throughout the cytosol"
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- One GO:0005739 row, IEA GO_REF:0000044 (UniProt SubCell SL-0173). Kept ACCEPT; reason now records the check.
+- UniProt's mitochondrial location is ECO:0000305 (curator inference from PubMed:7842009), not an assay. The
+  inference is genetic: [PMID:7753853 "Patients with HCS deficiency lack activity of all four carboxylases, indicating that a single HCS is targeted to the mitochondria and cytoplasm."]
+- Direct evidence is thin: [PMID:29454998 "Western blots of mitochondrial HLCS are inconclusive"]. The only targeted
+  assay is an HLCS-KLAK fusion that killed HEK293 cells like known mitochondrial proteins
+  [PMID:29454998 "Rapid cell death was evident when cells were transfected with KLAKLAKKLAKLAK fusion constructs of CPT1, ACC2, UCP1, and HLCS, judged by MTT assay"];
+  the assay is designed not to resolve the sub-compartment.
+- No transit peptide or TM segment in UniProt; import route unknown. The only matrix pointer is that PC, PCC and
+  MCC are matrix enzymes [PMID:29454998 "which reside in the mitochondrial matrix"]. One functional line only, so
+  rule 4 is not met: stayed at the root (PYCR2 pattern). No NEW row, core_functions locations unchanged.

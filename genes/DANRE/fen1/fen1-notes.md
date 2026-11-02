@@ -63,3 +63,18 @@ FEN1 is highly conserved across eukaryotes. Mouse Fen1 knockout is embryonically
 - PMID:19699691 - Zheng et al. 2008, DNA Repair, FEN1 mitochondrial DNA role
 - PMID:12861020 - Larsen et al. 2003, MCB, Fen1 null mouse lethality
 - PMID:18697748 - Syson et al. 2008, JBC, three metal ions in FEN reaction
+
+## Re-review 2026-09-29
+
+Refreshed GOA added three IBA process rows that were PENDING; resolved as follows.
+
+- GO:0006260 DNA replication (IBA, PTN000118792) -> ACCEPT. FEN1 performs the flap-cleavage step of Okazaki fragment maturation itself [PMID:23451868 "FEN1 recognizes this structure, binds to the base of the flap, and precisely cleaves it, removing the RNA and some portion of the initiator DNA to make a nick"]; participation, not just necessity.
+- GO:0006281 DNA repair (IBA, PTN008960732) -> ACCEPT. LP-BER flap trimming is a catalytic step of FEN1 [PMID:23451868 "lifts the 5′ dRP moiety into a flap structure, initiating LP-BER. The flap is a substrate for FEN1"]; the FEN1 branch (RAD27, rad2, mouse Fen1) is among the experimental donors.
+- GO:0006310 DNA recombination (IBA, PTN008960732) -> KEEP_AS_NON_CORE with propagation_review. The deep node is mostly grounded by EXO1/GEN1, but yeast RAD27 is also a donor so the FEN1 clade does retain a (minor) recombination role; the cached review mentions recombination intermediates only in passing [PMID:23451868 "The absence of the cap in some nucleases possibly allows them to access DNA bubbles and recombination intermediates"].
+
+Other changes:
+- GO:0060041 retina development (IMP, PMID:15716491) kept as KEEP_AS_NON_CORE but the block was rewritten: the cached record is abstract-only and does not name fen1 [PMID:15716491 "Forty loci whose disruption resulted in defects in eye development and/or visual function were identified"]; removed deep-research quotes that wrongly claimed no zebrafish loss-of-function data exist. Interpretation: replication failure in a highly proliferative tissue [PMID:12861020 "complete depletion of FEN1 causes early embryonic lethality"].
+- GO:0005739 mitochondrion (IEA) downgraded ACCEPT -> KEEP_AS_NON_CORE: HAMAP transfer from yeast/mouse [PMID:19699691 "Rad27p/FEN1 is localized in the mitochondrial compartment of both yeast and mice"], secondary to the nuclear role.
+- Localization rows now quote the UniProt SUBCELLULAR LOCATION lines rather than FUNCTION text; dropped a placeholder "See BioReason SFT trace" support entry.
+- Added reference_review to all nine PMIDs (titles verified against the cache; all abstract-only except PMID:23451868).
+- Added a core_functions entry for 5'-3' exonuclease activity (GO:0008409) in DNA replication.

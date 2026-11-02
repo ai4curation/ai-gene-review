@@ -4,14 +4,14 @@ title: "GREEKC dbTF Target Set vs GOA Comparison"
 
 # GREEKC dbTF Target Set vs GOA Comparison
 
-Analysis comparing the GREEKC curated dbTF target set with current GOA annotations.
+Analysis comparing the February 2026 GREEKC curated dbTF target set snapshot with the February 2026 local GOA dbTF comparison set.
 
 ## Summary
 
 | Category | Count | Notes |
 |----------|-------|-------|
 | **GREEKC dbTF target set** | 1,449 | Curated by GREEKC consortium |
-| **GOA dbTF annotations** | 1,447 | GO:0003700 descendants, Swiss-Prot |
+| **GOA dbTF annotations** | 1,447 | GO:0003700 descendants in `goa-dbTF-ids.txt` |
 | **Agreement** | 1,385 | 95.6% overlap |
 | **GOA-only** | 62 | Potential over-annotations |
 | **GREEKC-only** | 64 | 14 isoform IDs (canonical in GOA), 50 true gaps |
@@ -20,7 +20,7 @@ Analysis comparing the GREEKC curated dbTF target set with current GOA annotatio
 
 ### GOA-only: 62 proteins annotated as dbTF but NOT in GREEKC curated set
 
-These may represent over-annotations in GOA. Examples:
+These may represent over-annotations in GOA. Seven high-priority proteins have since been reviewed, leaving 55 for follow-up. Examples:
 
 | UniProt | Gene | Concern |
 |---------|------|---------|
@@ -58,6 +58,7 @@ After excluding 14 isoform-specific IDs (whose canonical forms are in GOA), 50 p
 **Full list**: `comparison-greekc-only.txt` (remove isoform IDs)
 
 **Pattern**: Most GREEKC-only entries are ZNF proteins. These may be:
+
 1. Newly characterized TFs not yet annotated in GOA
 2. Proteins with DBDs but lacking experimental validation
 3. Computational predictions awaiting manual curation
@@ -73,7 +74,7 @@ After excluding 14 isoform-specific IDs (whose canonical forms are in GOA), 50 p
 ## Recommendations
 
 ### For GOA annotation review
-1. Review 62 GOA-only proteins for potential removal from GO:0003700
+1. Review the remaining 55 of 62 GOA-only proteins for potential removal from GO:0003700
 2. Prioritize: RFXAP, RFXANK, netrins, ribosomal proteins, enzymes
 
 ### For annotation completion

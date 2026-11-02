@@ -1,6 +1,7 @@
 ---
 title: "Mitochondrial Fatty Acid β-Oxidation (cross-species)"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-04
 tags: [BIOLOGY_DOMAIN]
 species: [human, DROME, mouse]
 genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Acadl, Acadvl, Egm, Mcad, Arc42, CG4860, Mtpalpha, Echs1, scu, Mtpbeta, Acaa, Acat1, Dci, Ech1, CG4592, CG4594, CG4598]
@@ -28,11 +29,12 @@ versus peroxisome, and GO↔RHEA mapping. Across the 27 reviews (713 annotations
 389 were accepted, 237 kept as non-core, 23 marked over-annotated, 30 modified,
 14 removed and 20 left undecided; the removals include SOAT-derived cholesterol
 acyltransferase rows on ACAT1. On ACADVL, six IEA/ISS lipid-regulation rows
-transferred from mouse *Acadvl* (P50544, the true ortholog) are left undecided
-because the underlying mouse knockout result could not be verified in full. Six blinded
-OpenScientist runs on organelle and chain-length questions all agreed with the
-reviews. Open work: the remaining mouse orthologs, a fly DECR1 ortholog that no
-resource can assign, and a schema gap for negating an existing positive
+transferred from mouse `Acadvl` (P50544, the true ortholog) are left undecided
+because the underlying mouse knockout result could not be verified in full.
+Seven integrated OpenScientist checks corroborated the organelle, chain-length,
+and scully calls; a later Egm/dACAD9 substrate-scope run now needs review
+reconciliation. Open work: the remaining mouse orthologs, a fly DECR1 ortholog
+that no resource can assign, and a schema gap for negating an existing positive
 annotation.
 
 ## Overview
@@ -119,7 +121,7 @@ and the straight-chain thiolases (`GO:0003988`). See the flagship
 [Enzyme Specificity](ENZYME_SPECIFICITY.html) project for the worked table.
 
 ### Cross-paralog and cross-gene mis-annotation
-- **ACADVL** ← mouse *Acadvl* (P50544, MGI:895149): six IEA/ISS rows
+- **ACADVL** ← mouse `Acadvl` (P50544, MGI:895149): six IEA/ISS rows
   (negative regulation of fatty acid biosynthesis and of fatty acid oxidation,
   regulation of cholesterol metabolism) are transferred from the true mouse
   ortholog, not from LCAD. An earlier pass treated them as LCAD cross-transfers
@@ -213,8 +215,11 @@ The residue analyses are the value-add: OpenScientist supplies an independent
 *structural* basis (ACAD9 Thr-139/Ala-143 channel geometry; CG4860 RIGIA+8
 Leu→Thr; Echs1 fully-conserved crotonase pocket; Mcad 20/21 pocket identity) for
 the chain-length / substrate-range calls our reviews made on enzymatic/genetic
-grounds. All six blinded runs to date (Acat1, Mtpalpha, ACAD9, CG4860, Echs1,
-Mcad) have agreed with the conclusions the reviews reached independently.
+grounds. These four integrated substrate-scope checks, the two organelle checks,
+and the scully step-3 ortholog check corroborated the review conclusions. A
+later `DROME/Egm` run challenged the medium-chain IBA terms that the current Egm
+review still keeps or leaves unresolved; reconciling that result is now explicit
+follow-up work.
 
 ### Resolving the step-3 fly ortholog gap (scully)
 
@@ -313,13 +318,24 @@ represented directly. Flagged here as a candidate improvement.
 
 ## In progress / open
 - [ ] 2,4-dienoyl-CoA reductase (DECR1) fly ortholog — no clean ortholog found (see cassette gap above); needs reciprocal-BLAST / experimental resolution
-- [ ] Remaining mouse FAO orthologs (Acadvl, Acad9, Acadm, Acads, Hadha, Hadhb, Echs1, Hadh, Acat1, Acaa2); then rat and worm arms
+- [ ] Reconcile the later `DROME/Egm` OpenScientist medium-chain challenge with the current Egm review
+- [ ] Remaining mouse FAO orthologs (`mouse/Acadvl`, `mouse/Acad9`, `mouse/Acadm`, `mouse/Acads`, `mouse/Hadha`, `mouse/Hadhb`, `mouse/Echs1`, `mouse/Hadh`, `mouse/Acat1`, `mouse/Acaa2`); then rat and worm arms
 - [ ] FlyBase curation-gap candidates from PMID:40519079 (above)
 - [ ] Negation-representation gap (NOT+NEW vs existing positive term)
 
-Last updated: 2026-07-01
+Last updated: 2026-10-04
 
 # NOTES
+
+## 2026-10-04
+
+Rechecked the project against the 27 completed review YAMLs, the
+`fatty_acid_beta_oxidation` module, and the Reactome comparison page. The
+action-count table still matches the 713 reviewed GOA rows; open work remains
+the mouse expansion beyond `Acadl`, Egm medium-chain reconciliation, the
+unresolved fly DECR1/reductase step, the FlyBase PMID:40519079 candidate
+updates, and the NOT+NEW schema gap for experimentally supported negative
+annotations.
 
 ## 2026-07-01
 

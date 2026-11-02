@@ -28,7 +28,7 @@ style: |
 
 Reviewing GO annotations that come only from `GO_REF:0000044`
 
-<span class="small">AI Gene Review · projects/SL · 2026</span>
+<span class="small">AI Gene Review · projects/SL · 2026-10-05</span>
 
 ---
 
@@ -37,8 +37,8 @@ Reviewing GO annotations that come only from `GO_REF:0000044`
 ## Bottom line
 
 - The UniProt SL → GO pipeline is **still running** and supplies many CC annotations with **no other evidence**.
-- Failures track **granularity**: `membrane`, `cytoskeleton`, `mitochondrial membrane` flagged at **23–36%**; precise membranes at **0%**.
-- Dropping SL terms made **redundant** by a more specific term was **tested and refuted** (10% vs 8%). **27** annotations moved so far.
+- Failures track **granularity**: broad locations such as `mitochondrial membrane`, `endomembrane system`, and `membrane` are flagged at **21–36%**.
+- Dropping SL terms made **redundant** by a more specific term was **tested and refuted** (10% vs 8%). **27** first-pass annotations moved.
 
 ---
 
@@ -47,7 +47,7 @@ Reviewing GO annotations that come only from `GO_REF:0000044`
 - SPKW (keywords, `GO_REF:0000043`) was retired by GOA around April 2026. **`GO_REF:0000044` is live.**
 - The GAF writes `UniProtKB-SubCell:SL-xxxx` into WITH/FROM, so each row names its **source location**.
 - Scan: every annotation whose **only** source is `GO_REF:0000044`, joined to the reviewer's verdict.
-- Now **1,580** such annotations in **1,179** gene folders; **1,565** reviewed.
+- Now **1,852** such annotations in **1,380** gene folders; **1,837** reviewed.
 
 ---
 
@@ -72,7 +72,7 @@ Reviewing GO annotations that come only from `GO_REF:0000044`
 | **C** family-rule propagation | a family trait attached to all | enolase `Secreted` via HAMAP MF_00318 |
 | **D** transit as destination | passes through on the way out | SALTY slrP, STAAU lytN |
 
-<span class="small">Plus SL-0221: the target term GO:0034045 is itself defective (a membrane bounding a condensate); 18 of 29 annotations moved.</span>
+<span class="small">Plus SL-0221: GO:0034045 was defective; GO has obsoleted it and created GO:7770114 phagophore membrane.</span>
 
 ---
 
@@ -91,9 +91,9 @@ Reviewing GO annotations that come only from `GO_REF:0000044`
 ## Status and next steps
 
 - ✅ Scanner and redundancy test committed: `projects/SL/scripts/`.
-- ✅ 22 genes re-reviewed; **27 annotations moved** (18 SL-0221, 9 SL-0162/SL-0090).
-- ⬜ Audit the few family rules that attach `Secreted` to housekeeping enzymes (pattern C).
+- ✅ 22 first-pass genes re-reviewed; **27 annotations moved** (18 SL-0221, 9 SL-0162/SL-0090).
+- ⬜ Audit the few family rules that attach `Secreted` to housekeeping enzymes (pattern C, #4259).
 - ⬜ Decide whether "true but uninformative" deserves its own verdict (31% land on KEEP_AS_NON_CORE).
-- ⬜ Systematic check for SL → GO mappings whose axioms fail, like SL-0221.
+- ⬜ Systematic check for SL → GO mappings whose axioms fail, like SL-0221 (#4260).
 
 **Read more:** `projects/SL.md` · `projects/SL/SL-METHODOLOGY.md`

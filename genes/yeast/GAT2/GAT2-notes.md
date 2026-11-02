@@ -157,6 +157,28 @@ terms; no CRITICAL/IMPORTANT issues, 3 non-blocking suggestions). Two of the
 non-blocking suggestions were addressed (tightened description; clarified why
 GO:0000976 and GO:0043565 are complementary MF terms).
 
+## 2026-10-01 current-GOA refresh
+
+Refreshed the UniProt/QuickGO seed from the 2026-10-01 current GOA:
+
+- Current GOA contains 13 GAT2 rows. The three newly seeded rows are additional
+  `PMID:10392447` / ISA `GO:0006357 regulation of transcription by RNA polymerase
+  II` assertions whose `WITH/FROM` donors are `SGD:S000001742` (DAL80),
+  `SGD:S000001873` (GAT1), and `SGD:S000003646` (GZF3).
+- Those three new rows were marked `KEEP_AS_NON_CORE`, matching the existing GLN3
+  donor row. They support only the broad expectation that Gat2 is a DNA-binding
+  Pol-II transcription factor; the characterized NCR roles of the PTHR10071 donors
+  should not be transferred to divergent GAT2 in PTHR45658.
+- The `GO:0000976`, `GO:0005634`, and `GO:0006357` IBA rows still trace to
+  `PTN008694228`; explicit `propagation_review` blocks were added for all three
+  without changing their actions.
+- No stale signatures required `retired: true`, and no `GO:0005515 protein binding`
+  row was present.
+- The 2026 public-literature search found no peer-reviewed GAT2-specific paper that
+  changes the review. A public 2023 GEO auxin-degron RNA-seq series includes GAT2
+  depletion samples, but no accompanying citable paper or direct binding assay was
+  found.
+
 ## Provenance index
 - Domain/sequence: `genes/yeast/GAT2/GAT2-uniprot.txt` (UniProt P40209).
 - PANTHER family: `interpro/panther/PTHR45658/PTHR45658-metadata.yaml` and

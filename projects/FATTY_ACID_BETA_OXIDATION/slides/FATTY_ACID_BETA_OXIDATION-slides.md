@@ -38,7 +38,7 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 
 - β-oxidation strips **two carbons per turn** through four steps, each run by **chain-length-specific** enzymes.
 - We reviewed **713 GO annotations on 27 genes** (10 human, 16 fly, mouse LCAD) and built a **cross-species module**.
-- **389 accepted, 237 non-core, 23 over-annotated, 30 modified, 14 removed, 20 undecided**. Six blinded OpenScientist runs **agreed** with the reviews.
+- **389 accepted, 237 non-core, 23 over-annotated, 30 modified, 14 removed, 20 undecided**. Seven integrated OpenScientist checks support the review calls; Egm needs follow-up.
 
 ---
 
@@ -80,7 +80,7 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 
 ---
 
-## Blinded checks agree with the reviews
+## Blinded checks: support + follow-up
 
 | Question | OpenScientist verdict |
 |---|---|
@@ -90,6 +90,7 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 | fly CG4860 short-chain? | Over-specific: pocket Leu→Thr → general ACAD |
 | fly Echs1, Mcad substrate range | Conserved pockets; human-like range |
 | fly step ③ = scully? | Yes: 100% of 11 catalytic residues conserved |
+| fly Egm medium-chain? | Follow-up: challenged medium-chain IBA terms |
 
 ---
 
@@ -103,10 +104,9 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 
 ## Status and next steps
 
-- ✅ Human spiral (10), fly spiral + auxiliary enzymes (16), mouse Acadl; module built; Reactome cross-check done.
-- ⬜ Remaining **mouse** orthologs (Acadvl, Acadm, Hadha, …), then rat and worm.
-- ⬜ **Fly DECR1**: no ortholog assignable from NCBI, UniProt, Ensembl or OrthoDB.
-- ⬜ FlyBase has taken **one** annotation from PMID:40519079; Arc42/CG4860 candidates listed.
-- ⬜ Schema: no way to **negate an existing positive** annotation (CG4860 case).
-
-**Read more:** `projects/FATTY_ACID_BETA_OXIDATION.md` · `modules/fatty_acid_beta_oxidation.yaml`
+- **Done:** human spiral (10), fly spiral + auxiliary enzymes (16), mouse Acadl; module built; Reactome cross-check done.
+- **Open:** remaining **mouse** orthologs (Acadvl, Acadm, Hadha, ...), then rat and worm.
+- **Open:** later **Egm/dACAD9** run challenged medium-chain IBA terms.
+- **Open:** **fly DECR1** has no ortholog assignable from NCBI, UniProt, Ensembl or OrthoDB.
+- **Open:** FlyBase has taken **one** annotation from PMID:40519079; Arc42/CG4860 candidates listed.
+- **Open:** schema cannot yet **negate an existing positive** annotation (CG4860 case).

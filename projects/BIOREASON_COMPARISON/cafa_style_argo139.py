@@ -30,7 +30,6 @@ from typing import Iterable
 import matplotlib.pyplot as plt
 import pandas as pd
 import pronto
-import yaml
 
 from ai_gene_review.bioreason_ontology import (
     FROZEN_GO_PATH,
@@ -44,6 +43,7 @@ from ai_gene_review.source_tree import (
     declared_review_snapshot,
     review_snapshot_tree,
 )
+from ai_gene_review.yaml_utils import safe_load
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -243,7 +243,7 @@ def read_predictions(
         _, organism, gene, _ = path.split("/")
         if (organism, gene) not in argo_keys:
             continue
-        doc = yaml.safe_load(tree.read_text(path)) or {}
+        doc = safe_load(tree.read_text(path)) or {}
         for pred in doc.get("predictions", []) or []:
             term = pred.get("predicted_term", {}) or {}
             term_id = str(term.get("id") or "")

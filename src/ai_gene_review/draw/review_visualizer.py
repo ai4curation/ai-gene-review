@@ -201,6 +201,7 @@ class ReviewVisualizer:
                 "MODIFY": 0,
                 "REMOVE": 0,
                 "MARK_AS_OVER_ANNOTATED": 0,
+                "TOO_GENERAL": 0,
                 "KEEP_AS_NON_CORE": 0,
                 "UNDECIDED": 0
             }

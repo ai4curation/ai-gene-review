@@ -1,0 +1,149 @@
+# DYNC1H1 evidence and source boundaries
+
+DYNC1H1 is the force-generating heavy chain of cytoplasmic dynein-1. One ATP-driven, minus-end motor mechanism accounts for its cargo transport, nuclear movement and mitotic roles. The tail participates in assembly with accessory subunits, whereas the motor region produces movement. These are coupled parts of the motor system rather than three independent molecular activities.
+
+This guide distinguishes primary assays, curated model assertions and inherited phylogenetic judgments. The [source-record package](DYNC1H1-evidence/README.md) supplies exact public URLs, raw hashes, target measurements and a replay script. The guide and derived extracts organize evidence; they are not independent primary experiments.
+
+## Motor mechanism, expression constructs and products
+
+[PMID:21723285](https://pubmed.ncbi.nlm.nih.gov/21723285/) establishes directional movement of recombinant human dynein preparations in ensemble assays. It does not establish sustained single-complex movement of unactivated dynein. [PMID:24986880](https://pubmed.ncbi.nlm.nih.gov/24986880/) reconstitutes processive movement using human dynein, pig-brain dynactin and a mouse BICD2 fragment. [PMID:28602352](https://pubmed.ncbi.nlm.nih.gov/28602352/) distinguishes autoinhibited and open motor states: opening alone is insufficient for high processivity. The source's mutation-label discrepancies are not silently reconciled. Sf9 expression is an insect host for human coding constructs, not evidence that the tested motor is an insect ortholog.
+
+The official [Q14204 record](https://www.uniprot.org/uniprotkb/Q14204/entry) supplies one 4,646-residue protein and no alternative-products block. Its independent FASTA and the target PANTHER alignment sequence agree exactly. A sequence checksum attached to an interaction participant authenticates the referenced sequence, not the complete archived experimental insert. A fragment, tag, proteolytic band or database transcript cross-reference is not introduced as a new natural product.
+
+[PMID:29420470](https://pubmed.ncbi.nlm.nih.gov/29420470/) provides human tail/accessory-subunit structural evidence, including heavy-chain contacts with intermediate and light-intermediate chains. Pig dynactin, mouse BICD2/BICDR1 and human HOOK3 constructs remain distinguished. [PMID:36071160](https://pubmed.ncbi.nlm.nih.gov/36071160/) uses engineered open human motor with pig dynactin and porcine tubulin. Its [publisher correction](https://www.nature.com/articles/s41586-022-05458-7) corrects the nucleotide-site label in Figure 1f; this is not a retraction or a general objection to the structural results.
+
+## Transport, nuclear and spindle contexts
+
+Human HeLa DYNC1H1 depletion and cortical imaging in [PMID:23027904](https://pubmed.ncbi.nlm.nih.gov/23027904/) support a direct mechanical role in spindle positioning. NuMA/Astrin and heavy-chain perturbations in [PMID:27462074](https://pubmed.ncbi.nlm.nih.gov/27462074/) support spindle-pole organization and localization. These mechanisms can be described as motor participation without manufacturing a different molecular function for each cellular context.
+
+The nuclear-migration evidence in [PMID:15173193](https://pubmed.ncbi.nlm.nih.gov/15173193/) includes mouse postnatal cerebellar neurons and GFP-dynamitin overexpression, which perturbs the dynein complex. Nuclear–centrosome separation, migration and doublecortin rescue were measured; this is not presented as a human heavy-chain-specific knockout. The authentic abstract of [PMID:19229290](https://pubmed.ncbi.nlm.nih.gov/19229290/) explicitly concerns LIC1-dependent spindle-checkpoint silencing. Its unavailable full Methods are not replaced by an invented DYNC1H1-specific assay.
+
+The integrated core retains microtubule-based transport, nuclear migration, mitotic spindle organization and checkpoint deactivation. Current typed ontology closures show no ancestor/descendant redundancy among those four process terms. The motor's complex membership is recorded separately from its cytoplasmic-microtubule, cortical, centrosomal and axonal locations. Some annotation refinements are direct-role reframings rather than literal ontology descendants; these are explained in the individual reasons.
+
+## Interaction evidence and partner classes
+
+All 56 imported generic-binding assertions were considered separately. The [campaign's specific binding policy](../../../projects/CLINGEN_MENDELIAN.md) retains a supported positive generic association as non-core when an informative class is not established. It permits a supported partner-class refinement without requiring proof that DYNC1H1 recognizes the partner's catalytic site. No partner activity is transferred to DYNC1H1.
+
+The [interaction extract](DYNC1H1-evidence/interactions.yaml) exposes 148 matching IntAct/MINT records across the 56 source claims. Records can duplicate experiments or represent different stages of one screen; their count is not a count of independent papers. For [PMID:32814053](https://pubmed.ncbi.nlm.nih.gov/32814053/), the pooling, array and validation stages are retained along with literal fragments and participant sequence checksums. Human protein identities do not turn a yeast host into a human-cell interaction assay. No native coexpression or physiological regulation is inferred from a screening hit alone.
+
+Important product and assay limits include:
+
+- TMPRSS6 Q8IU80-2 and ASPH Q12797-6 lack the canonical catalytic regions needed for the tempting protease/hydroxylase class assignments. TMTC1 Q8IUR5-4 and unreviewed short records are likewise not silently treated as complete enzymes.
+- FA2H's recorded 93–372 binding region retains the annotated catalytic domain but excludes the N-terminal heme-binding region. The enzyme-partner class is bounded to that evidence; neither a complete intact enzyme assay nor recognition of a catalytic site is claimed.
+- ATP23 Q9Y6H3 has an inferred M76 peptidase class, catalytic E126 and metal-binding H125/H129 in the official record. These support an inferred protease-partner class, with no assertion that the Y2H paper assayed human ATP23 catalysis.
+- BAG3 is a co-chaperone rather than automatically a folding chaperone; POLR2E and WDR5 are noncatalytic subunits, not complete polymerase or methyltransferase enzymes. A regulatory protein does not automatically satisfy an enzyme-binding term.
+- The genuine PSEN2 source, [PMID:21163940](https://genome.cshlp.org/content/21/3/364.full), includes human Y2H and reciprocal co-IP. Figure 2 labels the DYNC1H1-reactive band approximately 140 kDa. Positive association is retained, but that band is not equated with sequence-authenticated intact heavy chain.
+- GIGYF1 is O75420. Both literal MINT records join O75420 to Q14204 under PMID:36950384. The accession typo in an intermediate explanation was corrected without changing the imported identity, source, action or inherited excerpt.
+
+The human HeLa 14-3-3 capture in [PMID:15161933](https://www.researchgate.net/publication/8544393_Comprehensive_Proteomic_Analysis_of_Interphase_and_Mitotic_14-3-3-binding_Proteins) has separately recovered author-deposited Methods and target supplementary entries. Specific elution and peptides in the phase datasets support association, not a mapped heavy-chain phosphosite. The independent OpenCell row has YWHAZ bait and a DYNC1H1 prey accession group; the full group and literal numerical fields remain visible in [measurements](DYNC1H1-evidence/measurements.yaml).
+
+## RNA capture and extracellular preparations
+
+The genuine HeLa Table S1 from [PMID:22658674](https://pubmed.ncbi.nlm.nih.gov/22658674/) reports DYNC1H1 in UV-crosslinked oligo(dT) capture, with no control identification and an adjusted interaction P value of 0.00162134388789347. UV capture supports an RNA-contact observation but does not establish a purified binding site or sequence specificity. For [PMID:22681889](https://pubmed.ncbi.nlm.nih.gov/22681889/), a genuine [author thesis](https://refubium.fu-berlin.de/bitstream/handle/fub188/9034/Dissertation_Baltz.pdf?sequence=1) provides HEK293 PAR-CL Methods and the group III DYNC1H1 row on physical page 148. This is study-specific supplementary evidence from a thesis, not recovered full journal text. Group III is not interpreted as a universal negative RNA-binding result.
+
+The [parotid Supplementary Table 2](https://ndownloader.figshare.com/files/4571341) for PMID:19199708 reports five DYNC1H1 sequences, nine spectra and 2.1% sequence coverage. The [authors' urinary-exosome database](https://esbl.nhlbi.nih.gov/UrinaryExosomes/) reports 14 peptides for NP_001367 under reference key 2, which identifies PMID:19056867. These are positive preparation-level detections. They do not establish intravesicular topology, single-vesicle localization, a secretion mechanism or an extracellular motor function. No contamination is asserted solely because DYNC1H1 is usually cytoplasmic.
+
+The original preparation Methods for trabecular-meshwork and expressed-prostatic-secretion samples were read, but their DYNC1H1-bearing supplements were not recovered. Attempted HTML/error payloads are not counted as workbooks. The NK-cell membrane source and B-cell exosome source retain their explicit target-table access limits. Independent positive membrane association and vesicle detections support contextual retention without pretending that every historical target row was inspected.
+
+## Phylogeny, Reactome and unresolved locations
+
+The current official family is PTHR10676. The [phylogeny extract](DYNC1H1-evidence/phylogeny.yaml) reconstructs a 787-node tree and alignment, exact Q14204 sequence, target leaf PTN002473032 and nine literal IBD joins. The older PTHR46532 capture lacks the target and is not used as negative functional evidence. The PAINT assertion concerns ancestral node placement and descent; a short donor list or the target's own experimentally grounded descendant evidence does not invalidate it. Separate dynein-1 IRD records for other terms remain separate from the positive assertions reviewed here.
+
+The [Reactome paths](DYNC1H1-evidence/reactome-paths.yaml) verify 49 explicit event-to-Q14204 chains. Forty-eight terminate in the cytosolic human 1–4646 entity. The remaining event, [R-HSA-6798751](https://reactome.org/content/detail/R-HSA-6798751), has granule-lumen and extracellular placements in its input/output model. The granule-lumen claim remains unresolved because a target-specific assay was not established. An event name is not treated as a direct DYNC1H1 reaction assay; a chimeric R-NUL context is not silently relabelled as an entirely human experiment.
+
+The genuine mouse IDA filopodium source, PMID:16496424, also remains unresolved because the narrow imaging evidence was unavailable. Generic cytoplasmic localization does not verify filopodia, and lack of access does not refute the curator. Mouse meiotic nuclear-envelope/telomere imaging in PMID:36973253 is positive with its stated organism and preparation; it does not establish free nucleoplasmic localization. Mouse stress-granule/P-body and cold-response observations remain positive contextual evidence rather than being erased as nonspecific phenotypes.
+
+## Access record
+
+The entries below record operative source access separately from immutable normal-cache flags. A recovered body can coexist with an abstract-only protected cache. Conversely, a cache flag alone is not proof that target Methods, figures or supplementary rows were read. Bibliographic verification does not certify unresolved target attribution. No generated provider text or failed-download payload is used as primary evidence.
+
+**[PMID:15161933](https://pubmed.ncbi.nlm.nih.gov/15161933/)** — Authenticated primary identity. Separately recovered author-deposited Methods and supplementary target entries establish human HeLa 14-3-3 affinity capture, with DYNC1H1 peptides in the phase datasets and specific elution controls. The protected normal cache remains abstract-only. Association does not identify a heavy-chain phosphosite or prove an isolated binary interface.
+
+**[PMID:17043677](https://pubmed.ncbi.nlm.nih.gov/17043677/)** — Authenticated primary identity; the publisher main-text route supplies a subscription preview. Genuine publisher supplementary Methods and interaction spreadsheets were recovered. Three literal DISC1–DNCH1 records include the historical XM_040948 reagent and distinct library/fragment contexts. No full main-body or current full-length clone authentication is claimed.
+
+**[PMID:17500595](https://pubmed.ncbi.nlm.nih.gov/17500595/)** — Selected original Methods and Results were read. Human huntingtin Y2H constructs and separate pull-down complexes support the interaction network; the exact source record distinguishes binary evidence from spoke expansion. Huntingtin fragment context is retained and is not a general proof of every native cargo interface.
+
+**[PMID:17548833](https://pubmed.ncbi.nlm.nih.gov/17548833/)** — Separately recovered indexed original Results and Methods were read. The mapped huntingtin contact is with dynein intermediate chain; mouse-brain immunoprecipitation, purified bovine complex and human-cell perturbation support a heavy-chain-containing transport complex, not a purified huntingtin–heavy-chain interface.
+
+**[PMID:19056867](https://pubmed.ncbi.nlm.nih.gov/19056867/)** — Original preparation/MS Methods and the authors' NHLBI target database were read separately from the limited normal cache. DYNC1H1/NP_001367 has 14 reported peptides under reference key 2. This is positive urinary extracellular-vesicle preparation evidence, not single-vesicle topology, secretion mechanism or a physiological extracellular motor role.
+
+**[PMID:19199708](https://pubmed.ncbi.nlm.nih.gov/19199708/)** — Original Methods and genuine Supplementary Table 2 were read. DYNC1H1/IPI00456969.1 is reported with five sequences, nine spectra and 2.1% coverage in a one-donor human parotid preparation. The table's copied functional annotations are not new experimental evidence. Vesicle-cargo topology and a native extracellular function were not established.
+
+**[PMID:19229290](https://pubmed.ncbi.nlm.nih.gov/19229290/)** — The authentic abstract explicitly identifies LIC1-dependent spindle-checkpoint silencing. Full operative Methods were not recovered from the publisher subscription route. This supports a dynein-complex mechanism with accessory-subunit scope, not a claimed DYNC1H1-specific knockdown or an independently read mutant construct.
+
+**[PMID:19946888](https://pubmed.ncbi.nlm.nih.gov/19946888/)** — Authenticated source identity and abstract; the target-bearing NK-cell membrane table was not recovered. The original membrane source is preserved without claiming a verified DYNC1H1 peptide row. Independent human cortical-dynein evidence supports a membrane-associated pool; membrane association does not require a transmembrane helix.
+
+**[PMID:20458337](https://pubmed.ncbi.nlm.nih.gov/20458337/)** — Authenticated abstract and original curated exosome source are retained. The target-specific B-cell exosome table was not independently recovered. Other human vesicle preparations provide positive DYNC1H1 detection, but they do not reconstruct this source's individual target measurement or establish a constitutive extracellular role.
+
+**[PMID:20887786](https://pubmed.ncbi.nlm.nih.gov/20887786/)** — The complete authentic abstract reports mouse dynein-mutant adipocyte/energy-metabolism phenotypes, including altered thermoregulation. The underlying cellular response is positive contextual evidence; a direct human thermogenic catalytic step is not inferred. Full operative target Methods were not recovered.
+
+**[PMID:21163940](https://pubmed.ncbi.nlm.nih.gov/21163940/)** — A genuine publisher original and Figure 2 pixels were recovered independently of the abstract-only normal cache. Human Y2H and reciprocal SH-SY5Y coimmunoprecipitation support PSEN2 association. The DYNC1H1-reactive band is labelled approximately 140 kDa; this is not silently treated as sequence authentication of the intact 530-kDa heavy chain.
+
+**[PMID:21362503](https://pubmed.ncbi.nlm.nih.gov/21362503/)** — Selected original human trabecular-meshwork preparation and MS Methods were read. The target-bearing supplementary row remains uninspected because attempted workbook routes did not yield a genuine workbook. Preserve the curator's source and independently supported vesicle pool without asserting that the missing target row was read.
+
+**[PMID:21399614](https://pubmed.ncbi.nlm.nih.gov/21399614/)** — Selected original centrosome-profiling Methods and Results were read, including the KE37 experimental design. The DYNC1H1 supplementary entry or validation image was not recovered. Independent heavy-chain localization and functional experiments support centrosomal involvement; no source-specific validation image is invented.
+
+**[PMID:21525035](https://pubmed.ncbi.nlm.nih.gov/21525035/)** — The authentic abstract concerns PEX14-dependent peroxisome motility in human cells. The DYNC1H1-specific operative assay was not independently recovered. The curator's attribution is retained and microtubule localization is refined from independent target evidence, not rejected because the abstract foregrounds PEX14.
+
+**[PMID:21723285](https://pubmed.ncbi.nlm.nih.gov/21723285/)** — An independently recovered original was read for the reserved motor consultation although the protected normal cache is abstract-only. Recombinant human cytoplasmic dynein preparations establish directional ensemble motility; ensemble gliding is not equated with long-range single-complex processivity. Expression host and tested human construct are distinguished.
+
+**[PMID:22658674](https://pubmed.ncbi.nlm.nih.gov/22658674/)** — Separately recovered author original, supplementary Methods and genuine Table S1 were read. Human HeLa UV-crosslinked oligo(dT) capture reports DYNC1H1 with no control detection and adjusted interaction P=0.00162134388789347. This supports RNA contact in the assay but does not identify a purified binding site, RNA-sequence specificity or an RNA-processing enzyme activity.
+
+**[PMID:22681889](https://pubmed.ncbi.nlm.nih.gov/22681889/)** — The normal journal cache remains abstract-only. A genuine author-deposited thesis supplies study-specific HEK293 PAR-CL Methods and Supplementary Table 1. DYNC1H1 is a group III candidate with the literal numerical row exposed in the evidence extract. This is not represented as recovered full journal text or exclusion from all RNA binding.
+
+**[PMID:23027904](https://pubmed.ncbi.nlm.nih.gov/23027904/)** — Selected original human HeLa Methods and Results were read. Independent DYNC1H1 siRNAs and imaging establish the importance of cortical motor recruitment for spindle positioning. Cortical association, spindle pulling and the cytoplasmic motor pool are retained without an integral-membrane claim.
+
+**[PMID:23533145](https://pubmed.ncbi.nlm.nih.gov/23533145/)** — Original expressed-prostatic-secretion urine preparation and MS Methods were read. The target-bearing supplement was not recovered; attempted HTML/error payloads are excluded as workbook evidence. Positive curated exosome localization is retained contextually with independent DYNC1H1 preparation evidence, without claiming this source's target row was reproduced.
+
+**[PMID:24986880](https://pubmed.ncbi.nlm.nih.gov/24986880/)** — Reserved original Methods and Results were independently read. Reconstitution combines recombinant human dynein with pig-brain dynactin and a mouse BICD2 fragment. Strong processive movement requires their combination; the experiment does not establish that isolated human dynein is constitutively highly processive or that every cargo adaptor is interchangeable.
+
+**[PMID:25272277](https://pubmed.ncbi.nlm.nih.gov/25272277/)** — Selected original construct, coimmunoprecipitation and structural Methods/Results were read. Human LIC1 globular and tail regions separate heavy-chain association from cargo-adaptor binding. The subunit assembly interface supports specific LIC binding; it is not an unrelated autonomous heavy-chain catalytic activity.
+
+**[PMID:27462074](https://pubmed.ncbi.nlm.nih.gov/27462074/)** — Selected original Results and Methods were recovered/read separately from the abstract-only protected cache. Human NuMA/Astrin and DYNC1H1 perturbations support spindle-pole localization and organization. Recruitment toward poles is distinguished from a claim that all downstream spindle phenotypes are separate motor functions.
+
+**[PMID:28602352](https://pubmed.ncbi.nlm.nih.gov/28602352/)** — Reserved original structural, motility and human-cell sections were independently read. Recombinant human dynein is distinguished from pig dynactin and mouse adaptor reagents. Opening the motor alone does not make it highly processive. Literal discrepancies in reported mutation labels were not harmonized by invention; no uncertain residue identifier is asserted here.
+
+**[PMID:31092558](https://pubmed.ncbi.nlm.nih.gov/31092558/)** — Selected original human endothelial-cell Results and Methods were read. Rab46/Q9BSW2-2 experiments include activated constructs, coimmunoprecipitation and stimulus/crosslinking contexts. These support Rab association with the motor complex, without establishing exchange-factor activity or direct recognition of a catalytic site.
+
+**[PMID:31413325](https://pubmed.ncbi.nlm.nih.gov/31413325/)** — Selected original human-brain Y2H library, construct verification and interaction Results were read. The DYNC1H1 region 3451–3538 is explicitly mapped in the source context. Its association with DISC1 is positive but does not by itself define a distinct motor cargo class or authenticate a natural full-length product.
+
+**[PMID:32814053](https://pubmed.ncbi.nlm.nih.gov/32814053/)** — A genuine author-deposited full original and selected Methods were recovered independently of the abstract-only normal cache. Literal human-pair records distinguish pooling, array and validation stages and retain recorded fragments. Positive partner-class refinements are bounded to verified partner functions and represented regions; screening does not prove physiological coexpression, substrate regulation or full-insert identity.
+
+**[PMID:33957056](https://pubmed.ncbi.nlm.nih.gov/33957056/)** — Authenticated review article and available full cache provide background on dynein motor mechanisms. It is not substituted for the independently read primary reconstitutions, cellular perturbations or target-specific interaction records.
+
+**[PMID:35271311](https://pubmed.ncbi.nlm.nih.gov/35271311/)** — Selected original endogenous-tagging Methods and literal public interaction CSV were read. YWHAZ is the bait in the selected DYNC1H1 prey-group record; the full accession group and numerical fields are exposed. Association does not resolve a unique natural product or a purified interface, and the field called pval is not interpreted as a raw probability.
+
+**[PMID:36692009](https://pubmed.ncbi.nlm.nih.gov/36692009/)** — Selected original human dynein/LIS1 structural and biochemical Methods/Results were read. The source supports LIS1 contacts and regulation of motor assembly, with the experimental constructs retained. LIS1 binding is not transferred into an enzyme-binding class merely because it regulates an ATPase.
+
+**[PMID:36950384](https://pubmed.ncbi.nlm.nih.gov/36950384/)** — Selected original endogenous affinity-proteomics Methods and Results in human iPSC-derived excitatory neurons were read. Exact MINT GIGYF1/O75420 and ANK2 associations are retained with IgG controls and repeat-experiment context. Neither direct contact nor a particular natural product is inferred from coassociation alone.
+
+**[PMID:36973253](https://pubmed.ncbi.nlm.nih.gov/36973253/)** — Original selected Methods/Results and authentic supplementary Figure S4 were read. Mouse meiotic nuclear-spread imaging provides positive DYNC1H1 localization near pachytene telomeres. Nuclear-envelope association is not relabelled as freely intranuclear protein; the source's DYNLRB1/2 perturbation scope remains distinct from a direct human DYNC1H1 experiment.
+
+**[PMID:38547289](https://pubmed.ncbi.nlm.nih.gov/38547289/)** — Selected original human motor/LIS1 reconstitution and structural Methods/Results were read. Engineered open-state motor and mixed assembly reagents are kept explicit. The results inform regulated dynein–dynactin assembly, not a separate LIS1-catalysed activity of DYNC1H1.
+
+**[PMID:8227145](https://pubmed.ncbi.nlm.nih.gov/8227145/)** — Authenticated abstract supports the historical mammalian spindle-role context. The recovered archival XML points to a body PDF rather than supplying operative Methods, and a full original was not read. The experimental curator is not overruled from this access limit; modern human evidence independently supports the motor's spindle role.
+
+**[PMID:8666668](https://pubmed.ncbi.nlm.nih.gov/8666668/)** — Authenticated abstract and original comparative heavy-chain source retained. The archival XML does not supply operative full-body Methods. The broad dynein-complex assertion is refined to the independently established cytoplasmic dynein-1 complex without claiming that a missing historical target assay was inspected.
+
+**[PMID:12730604](https://pubmed.ncbi.nlm.nih.gov/12730604/)** — The authentic complete abstract reports mouse dynein missense mutations and motor-neuron/retrograde-transport phenotypes. This is organism-specific genetic context, not a direct assay of human variant chemistry. Full original Methods were not independently recovered.
+
+**[PMID:21820100](https://pubmed.ncbi.nlm.nih.gov/21820100/)** — The authentic abstract and protected primary cache establish human pedigree segregation of a DYNC1H1 variant with dominant axonal Charcot-Marie-Tooth disease. This assessment uses the genetic evidence; it does not claim an independent full Methods read or purified variant-mechanism assay.
+
+**[PMID:22368300](https://pubmed.ncbi.nlm.nih.gov/22368300/)** — The authentic complete abstract reports de novo human DYNC1H1 variants associated with severe intellectual disability and neuronal-migration defects. It informs disease context rather than proving a specific biochemical defect for every variant. Full original Methods were not recovered.
+
+**[PMID:15173193](https://pubmed.ncbi.nlm.nih.gov/15173193/)** — Selected original mouse postnatal cerebellar-neuron Methods/Results were read. GFP-dynamitin overexpression increases nucleus–centrosome separation and slows migration, with doublecortin rescue. This is a dynein-complex perturbation, not DYNC1H1-specific knockdown or direct human neuronal experimentation.
+
+**[PMID:17618279](https://pubmed.ncbi.nlm.nih.gov/17618279/)** — Authenticated complete abstract supports LIS1/dynein involvement in radial neuronal migration and distinguishes centrosomal and somal movements. Full operative Methods were not recovered, so precise construct identity and a target-specific human assay are not claimed from the abstract.
+
+**[PMID:29420470](https://pubmed.ncbi.nlm.nih.gov/29420470/)** — Selected original Methods/Results were read. Human dynein tail/subunit constructs are distinguished from pig-brain dynactin and mouse BICDR1/BICD2 or human HOOK3 reagents. Structural heavy-chain contacts with intermediate and light-intermediate subunits support integrated motor assembly and regulated transport.
+
+**[PMID:36071160](https://pubmed.ncbi.nlm.nih.gov/36071160/)** — Selected original reconstitution/structural Methods were read. The motor is engineered open human dynein, combined with pig-brain dynactin and porcine tubulin. The publisher correction (doi:10.1038/s41586-022-05458-7) corrects a Figure 1f nucleotide-site label from the third AAA module to the first; it is not evidence of retraction or a general loss of the paper's structural support.
+
+**[PMID:19825938](https://pubmed.ncbi.nlm.nih.gov/19825938/)** — Original mouse NIH3T3 Methods/Results were read. Two DHC1 RNAi reagents and DHC2 controls support stress-induced granule/P-body accumulation, with opposing-kinesin rescue; resting P bodies and global translational silencing were not equivalently affected. This is contextual motor-dependent assembly evidence, not direct human proof of every granule outcome.
+
+**[PMID:16496424](https://pubmed.ncbi.nlm.nih.gov/16496424/)** — Authenticated source identity and complete abstract; the current mouse IDA filopodium attribution is genuine. The target-specific original imaging could not be recovered. Failed thesis routes returned HTML rather than a PDF. The narrow filopodium claim remains UNDECIDED rather than being rejected from the abstract or confirmed by generic cytoplasmic localization.
+
+
+## Review-follow-up clarification
+
+The positive PSEN2 Y2H/co-IP reports above remain part of the evidence record. Their assignment to the full DYNC1H1 product is now UNDECIDED because the 140-kDa band, antibody identity and clone extent remain unresolved. No wrong-gene attribution is asserted. See the [source-record audit results](DYNC1H1-evidence/RESULTS.md) for the unchanged computational extracts and separately sourced partner-class evidence.

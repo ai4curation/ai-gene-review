@@ -46,8 +46,16 @@ is a real and important result, not an error to be skipped.
 Usage
 -----
     uv run python retrieval_recall.py --all
-    uv run python retrieval_recall.py --genes-file campaign-genes.txt
+    uv run python retrieval_recall.py --genes-file results/paint-campaign/campaign-genes.txt \
+        --split-file fa-cohort-genes.txt --split-name FA
     uv run python retrieval_recall.py AFF4 AGFG1 ACTG2
+
+``--all`` scores every committed report and so grows as reviews are added; the
+91-gene PAINT campaign cohort is pinned in
+``results/paint-campaign/campaign-genes.txt``. ``--split-file`` reports every
+pooled number separately for the genes in that file and for the rest — used to
+separate the Fanconi-anemia cohort, whose reviews were built with the Affinage
+narrative as a deliberate input and so are not an independent reference set.
 
 Writes results/paint-campaign/{per-gene.json,summary.csv,summary.md}
 """
@@ -289,6 +297,37 @@ def aggregate(rows: list[dict]) -> dict:
     }
 
 
+def split_summary(rows: list[dict], members: set[str], name: str) -> dict:
+    """Pooled recall, overall and by curation band, inside and outside a gene subset.
+
+    >>> rows = [
+    ...     {"gene": "A", "has_report": True, "has_review": True, "n_goa": 0,
+    ...      "n_novel": 4, "n_hits": 4},
+    ...     {"gene": "B", "has_report": True, "has_review": True, "n_goa": 20,
+    ...      "n_novel": 4, "n_hits": 1},
+    ... ]
+    >>> s = split_summary(rows, {"A"}, "FA")
+    >>> s["FA"]["recall"], s["non-FA"]["recall"]
+    (1.0, 0.25)
+    >>> s["non-FA"]["by_curation_depth"]["well-studied (10+)"]["recall"]
+    0.25
+    """
+    out = {}
+    for label, keep in ((name, True), (f"non-{name}", False)):
+        sub = [r for r in rows if (r["gene"] in members) == keep]
+        scored = [r for r in sub if r["has_report"] and r["has_review"]]
+        novel = sum(r["n_novel"] for r in scored)
+        hits = sum(r["n_hits"] for r in scored)
+        out[label] = {
+            "genes": len(scored),
+            "novel": novel,
+            "hits": hits,
+            "recall": ratio(hits, novel),
+            "by_curation_depth": stratify(sub),
+        }
+    return out
+
+
 def _tally(values) -> dict[str, int]:
     out: dict[str, int] = {}
     for v in values:
@@ -330,6 +369,7 @@ def stratify(rows: list[dict]) -> dict[str, dict]:
 
 
 def write_outputs(rows: list[dict], summary: dict) -> None:
+    """Write per-gene.json, summary.csv and summary.md into OUTDIR."""
     OUTDIR.mkdir(parents=True, exist_ok=True)
     (OUTDIR / "per-gene.json").write_text(
         json.dumps({"summary": summary, "genes": rows}, indent=2) + "\n"
@@ -381,6 +421,25 @@ def write_outputs(rows: list[dict], summary: dict) -> None:
             f"| {b} | {acc['genes']} | {acc['novel']} | {acc['hits']} "
             f"| {_pct(acc['recall'])} |"
         )
+    split = summary.get("split")
+    if split:
+        lines += [
+            "",
+            f"## Split by cohort (`{summary['split_file']}`)",
+            "",
+            "| cohort | curation depth | genes | novel refs | supplied | recall |",
+            "|--------|----------------|------:|-----------:|---------:|-------:|",
+        ]
+        for label, acc in split.items():
+            lines.append(
+                f"| {label} | **all** | {acc['genes']} | {acc['novel']} "
+                f"| {acc['hits']} | **{_pct(acc['recall'])}** |"
+            )
+            for b, bacc in sorted(acc["by_curation_depth"].items()):
+                lines.append(
+                    f"| {label} | {b} | {bacc['genes']} | {bacc['novel']} "
+                    f"| {bacc['hits']} | {_pct(bacc['recall'])} |"
+                )
     lines += [
         "",
         "| gene | gates | aff | review | GOA | novel | hits | novel recall | used |",
@@ -393,6 +452,22 @@ def write_outputs(rows: list[dict], summary: dict) -> None:
             f"| {_pct(r['novel_recall'])} | {_pct(r['used_fraction'])} |"
         )
     (OUTDIR / "summary.md").write_text("\n".join(lines) + "\n")
+
+
+def read_gene_list(path: Path) -> list[str]:
+    """One symbol per line; blank lines and ``#`` comments are ignored.
+
+    >>> import tempfile, pathlib
+    >>> p = pathlib.Path(tempfile.mkdtemp()) / "g.txt"
+    >>> _ = p.write_text("# cohort\\nBRCA1\\n\\nFANCA\\n")
+    >>> read_gene_list(p)
+    ['BRCA1', 'FANCA']
+    """
+    return [
+        ln.strip()
+        for ln in path.read_text().splitlines()
+        if ln.strip() and not ln.lstrip().startswith("#")
+    ]
 
 
 def _pct(x: float | None) -> str:
@@ -419,6 +494,14 @@ def main(
     outdir: Path = typer.Option(
         DEFAULT_OUTDIR, "--outdir", help="Where to write per-gene.json / summary.*"
     ),
+    split_file: Path = typer.Option(
+        None,
+        "--split-file",
+        help="Gene list; report pooled recall separately inside and outside it.",
+    ),
+    split_name: str = typer.Option(
+        "subset", "--split-name", help="Label for the --split-file genes."
+    ),
 ) -> None:
     """Score Affinage retrieval recall and write the results triple."""
     global GENES, OUTDIR
@@ -429,9 +512,7 @@ def main(
 
     symbols = list(genes or [])
     if genes_file:
-        symbols += [
-            ln.strip() for ln in genes_file.read_text().splitlines() if ln.strip()
-        ]
+        symbols += read_gene_list(genes_file)
     if all_genes:
         symbols += discover()
     if not symbols:
@@ -439,6 +520,10 @@ def main(
 
     rows = [analyse(s) for s in sorted(set(symbols))]
     summary = aggregate(rows)
+    if split_file:
+        members = set(read_gene_list(split_file))
+        summary["split_file"] = str(split_file)
+        summary["split"] = split_summary(rows, members, split_name)
     write_outputs(rows, summary)
 
     typer.echo(
@@ -447,6 +532,8 @@ def main(
         f"used {_pct(summary['pooled_used_fraction'])} | "
         f"empty reports {len(summary['empty_reports'])}"
     )
+    for label, acc in (summary.get("split") or {}).items():
+        typer.echo(f"  {label}: {acc['genes']} genes, recall {_pct(acc['recall'])}")
     typer.echo(f"wrote {OUTDIR}/")
 
 

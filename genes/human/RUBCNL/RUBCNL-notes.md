@@ -25,3 +25,23 @@ Falcon deep research was run for RUBCNL on 2026-06-02 but timed out after 600 se
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the prior wording framed RUBCNL in the Proteostasis Network context as an autophagosome-maturation adaptor/recruitment factor associated with PI3KC3-C2 and HOPS, not as generic protein binding.
+
+## 2026-10-10 GOA refresh (PTHR45971 family pass)
+
+- GOA now carries five GO:0005515 IPI rows. Policy: protein binding is never MARK_AS_OVER_ANNOTATED.
+  - STX17 (P56962; PMID:28306502 and PMID:30704899) and UVRAG (Q9P2Y5; PMID:28306502): MODIFY to
+    GO:0030674 protein-macromolecule adaptor activity (STX17 rows also list GO:0019905 syntaxin binding).
+    UniProt: "Interacts with UVRAG; the interaction is direct and promotes association with the
+    PI3K/PI3KC3 and HOPS complexes" [file:human/RUBCNL/RUBCNL-uniprot.txt].
+  - MTOR (P42345) and KAT5 (Q92993) (PMID:30704899): REMOVE. These are kinase/acetyltransferase
+    substrate interactions [PMID:30704899, "mTORC1 phosphorylates Pacer at serine157 to disrupt the
+    association of Pacer with Stx17 and the HOPS complex"]; there is no informative PACER MF to substitute.
+- Added propagation_review to the GO:1901981 IBA MODIFY (PTN002915557 is seeded only by RUBCNL).
+- Additional literature not yet reflected in GOA: RH-domain binding to phospho-Ser72 RAB7A and a role in
+  Parkin-dependent mitophagy [PMID:38728007, "Pacer knockout reduces Parkin mitophagy with little
+  effect on bulk autophagy or Parkin-independent mitophagy"]; negative regulation of RIPK1-dependent
+  apoptosis/necroptosis in MSCs [PMID:38873940]. Not added as NEW in this pass (single studies);
+  candidate future annotations.
+- Correction: the PACER discovery paper is Cheng et al. 2017 Mol Cell (PMID:28306502), not Nat Cell Biol.
+- The PI3P-binding region of PACER is not established from accessible text; the RH domain's verified
+  ligand is phospho-RAB7A.

@@ -2,13 +2,11 @@
 title: "Structure-Based Function Prediction for Gene Review"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+last_reviewed: 2026-10-05
+autolink_gene_symbols: false
 manifest:
   slides:
     - href: STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/9LtNVgeV5JyNbBwHNAtzYt
-      title: Project brief
 ---
 
 # Structure-Based Function Prediction for Gene Review
@@ -25,12 +23,15 @@ selectivity; the IEA `calcium ion binding` row stays as KEEP_AS_NON_CORE. For
 a DUF4246 protein (A0A2N3VF44) with no sequence-detectable homolog, a
 Foldseek search of its AlphaFold model returned 2OG-Fe(II) oxygenases as all
 top 20 PDB hits at 8–15% identity, reproducing Holm's 2023 DALI assignment.
-Local catalytic-residue checks already decide calls in the pipeline
-(PSEAE/pqsC versus PSEAE/pqsB, SACEN/eryCII, MYCTU/cds1, human/PHYKPL). The planned pipeline work has not
-started: the `scripts/structural_search.py` prototype and
-`projects/quantum-sensing-bioinformatics/` referenced below do not exist,
-the Foldseek run was not saved, and the MYCTU/cds1 and human/PHYKPL structural checks
-are still to do.
+Local catalytic-residue checks already decide several calls in the pipeline
+(PSEAE/pqsC versus PSEAE/pqsB, SACEN/eryCII, STRCO/actI-ORF2, MYCTU/cds1,
+VIBCH/cds1). The planned structural-search work is still tracked in
+[#4014](https://github.com/ai4curation/ai-gene-review/issues/4014): the
+`scripts/structural_search.py` prototype does not exist, the DUF4246 Foldseek
+run was not saved, and the two desulfhydrase plus human/PHYKPL structural
+checks are still to do. The older quantum-sensing triage sidecar has been superseded by
+[QUANTUM_SENSING](QUANTUM_SENSING.md) and its missing workflow is tracked in
+[#3971](https://github.com/ai4curation/ai-gene-review/issues/3971).
 
 We did this to know when to reach for structure during review: it pays off
 when there is no sequence homology at all or the active site is conserved
@@ -54,6 +55,7 @@ Fold-level match tells you the structural scaffold but is necessary-not-sufficie
 - **Ig-like folds**: binding, signaling, enzymatic functions
 
 **What's new (2024-2026):**
+
 - ECOD now integrates AlphaFold structures -- 1.8M domains classified (NAR 2025)
 - CATH-eMMA uses Foldseek distances for automated classification
 
@@ -64,12 +66,14 @@ Fold-level match tells you the structural scaffold but is necessary-not-sufficie
 This is where structure gives you something sequence often cannot:
 
 **M-CSA + EnzyMM** (EBI, December 2025):
+
 - 6,870 catalytic site templates
 - Searches PDB, AlphaFoldDB, or user-uploaded structures
 - Detects known catalytic motifs by geometric similarity
 - Web: https://www.ebi.ac.uk/thornton-srv/m-csa/
 
 **PARSE** (PNAS 2025):
+
 - Embeds local structural environments (COLLAPSE embeddings), then enrichment analysis
 - F1 >= 85% for catalytic function, with residue-level attribution
 - Works with only one known example -- no large training set needed
@@ -80,6 +84,7 @@ This is where structure gives you something sequence often cannot:
 
 **Worked examples — catalytic-residue presence/absence is decisive (BGC project, `BGC.md`):**
 the same global fold gives opposite functional calls depending on the local active site.
+
 - **PqsC** (`genes/PSEAE/pqsC`): FabH/KAS-III fold *with* an intact Cys-129/His-269 dyad → genuine
   condensing enzyme (EC 2.3.1.230). Its partner **PqsB** has the same fold but **lacks** the dyad →
   non-catalytic.
@@ -87,6 +92,7 @@ the same global fold gives opposite functional calls depending on the local acti
   **absent** and the heme pocket is empty (apo PDB 2YJN) → "not an active P450 enzyme" (a pseudoenzyme).
 - **Act KSβ/CLF** (`genes/STRCO/actI-ORF2`): ketosynthase fold with **no active site** → chain-length
   factor, not a catalyst.
+
 These illustrate the Level-2 principle directly: presence of the active-site residue, not the fold,
 determines whether to assign (or NOT-assign) the catalytic MF. See also `PSEUDOENZYMES.md`, `TOP_NOTS.md`.
 
@@ -143,6 +149,7 @@ Three hard cases where no single method works:
 3. **Fold switching** (same sequence, different structures) -- AlphaFold cannot predict; active research area
 
 **Hierarchy of evidence for function transfer by similarity:**
+
 - Sequence identity >40%: generally safe
 - 30-40%: likely but verify with domain/motif analysis
 - 20-30%: structure-based methods essential
@@ -161,18 +168,21 @@ Three hard cases where no single method works:
 ### Implementation priorities (effort vs. value):
 
 **Low effort, high value:**
+
 - Foldseek web search (search.foldseek.com) -- structural neighbors in seconds
 - EnzyMM (M-CSA web tool) -- catalytic motif detection
 - DeepGO-SE -- pip-installable, sequence-only input
 
 **Medium effort, high value:**
+
 - ProstT5 -> Foldseek pipeline -- fully automatable
 - DPFunc -- best GO predictor using structure
 - PARSE -- local motif analysis with residue attribution
 
 ## Prototype: `scripts/structural_search.py`
 
-See `projects/quantum-sensing-bioinformatics/` and REE project for test cases.
+Not yet implemented; see [#4014](https://github.com/ai4curation/ai-gene-review/issues/4014)
+for the AlphaFold/Foldseek/EnzyMM prototype and saved benchmark runs.
 
 ## Demonstrator Use Cases
 
@@ -190,7 +200,7 @@ See `projects/quantum-sensing-bioinformatics/` and REE project for test cases.
 **The problem**: Cryptochromes and photolyases share the same fold (photolyase/cryptochrome superfamily). Photolyases repair UV-damaged DNA; cryptochromes sense light and possibly magnetic fields. Global structural search returns photolyases as top hits, but the function is completely different.
 **What structure reveals**: Differences in the FAD-binding pocket geometry, antenna chromophore binding, and C-terminal tail distinguish sensory from repair function. Local motif analysis should distinguish them.
 **Demonstrator value**: Classic fold-function problem. Tests whether local motif methods outperform global fold matching.
-**Status**: PDB structures available; data in `projects/quantum-sensing-bioinformatics/`.
+**Status**: PDB structures are available; the cryptochrome accession triage has moved to [QUANTUM_SENSING](QUANTUM_SENSING.md), and remaining native cryptochrome or MagLOV setup is tracked in [#3971](https://github.com/ai4curation/ai-gene-review/issues/3971).
 
 ### Case 3: Novel EF-hands from NMDC metagenomes — Dark proteome
 
@@ -204,13 +214,15 @@ See `projects/quantum-sensing-bioinformatics/` and REE project for test cases.
 **Proteins**: mllF (C5B1I7), mllG (C5B1I8), mllH (C5B1I9)
 **The problem**: These are annotated by HMMs as generic xylose isomerase-like, aldolase, and N-acetyltransferase respectively. But they function in methylolanthanin (lanthanophore) biosynthesis. Can structural search find more specific functional analogs?
 **Demonstrator value**: Tests whether Foldseek finds metallophore/siderophore biosynthetic homologs that sequence methods miss.
-**Status**: Reviews exist in `genes/METEA/mll*/`; all have sparse (1-4) IEA annotations.
+**Status**: Reviews exist in `genes/METEA/mll*/`; mllF and mllH have sparse
+IEA rows, while mllG currently has none.
 
 ## Worked Example: Lanmodulin (lanM) — Honest Assessment of Structural Methods
 
 ### The annotation problem
 
 InterPro analysis of lanM (C5B164, 133 aa) detects:
+
 - **PF13202** (EF-hand_5) x3
 - **IPR002048** (EF-hand domain)
 - **IPR018247** (EF-Hand 1, calcium-binding site)
@@ -249,6 +261,7 @@ Lanpepsy (LanP, Mfla_0908) binds lanthanides using **PepSY domains** — a compl
 ### What lanM teaches us about where structure-based methods need to go
 
 LanM is an honest negative result for current tools. A future pipeline that could help would need:
+
 1. **Binding site geometry comparison** — not just "is there a metal site?" but "how does the coordination geometry compare to canonical examples?" (not yet available)
 2. **Sequence deviation flagging** — "this EF-hand has prolines where no characterized EF-hand does" (achievable now with MSA analysis, but not a structural method)
 3. **Genomic context integration** — "adjacent to lanthanide-dependent MDH genes in a methylotroph" (this is what actually resolves the function)
@@ -287,7 +300,7 @@ MorphologFinder (ColabFold + Foldseek) annotated the *Spongilla lacustris* prote
 
 - **Spongilla FGF ligand**: Structural morpholog of chicken FGF4 (UniProt P48804), RMSD 0.89 A over 543 atoms, but only **11.8% sequence identity**. BLAST completely missed it. Revealed FGF signaling in sponge epithelia — previously unknown.
 
-### Phage Protein Annotation: Phold (NAR 2025)
+### Phage Protein Annotation: Phold (NAR 2026)
 
 Over 65% of phage proteins lack sequence-detectable homologs. Phold (ColabFold + Foldseek) annotated **>50% of genes on an average phage** vs. significantly less by sequence methods alone. Structure-based annotation revealed RNA ligase T-like phosphodiesterases that hydrolyze host immune-activating cyclic dinucleotides.
 
@@ -298,6 +311,7 @@ MJ0577 — a hypothetical protein with no sequence-detectable function. Crystal 
 ### What these share
 
 The pattern: structure adds genuine value when:
+
 1. **No sequence homology exists at all** (dark proteome, DUFs, phage proteins)
 2. **Sequence identity is <20%** (twilight zone; sponge FGF at 11.8%)
 3. **Local active site geometry is conserved** despite divergent global fold (PARSE metalloproteases)
@@ -306,13 +320,13 @@ Structure does NOT help when the functional difference is subtle chemistry withi
 
 ## Candidates from Our Pipeline
 
-### Best candidate: cds1 (L-Cysteine Desulfhydrase) — IBA Annotation Failure
+### Best candidate: MYCTU/cds1 and VIBCH/cds1 — IBA Annotation Failure
 
 **Proteins**: MYCTU/cds1 (O69652), VIBCH/cds1 (Q9KT44)
 
-**The problem**: Both annotated via IBA (phylogenetic inference) with "L-cysteine biosynthetic process" (GO:0019344). But cds1 is a cysteine **catabolic** enzyme — EC 4.4.1.1 (desulfhydrase) vs EC 2.5.1.47 (synthase). The IBA propagated from the PANTHER family root node to all descendants, but the cds1 subfamily underwent neo-functionalization. Active site motif differs: ASSGST (desulfhydrase) vs PTSGNTG (synthase). Only 24% sequence identity to synthases.
+**The problem**: Both annotated via IBA (phylogenetic inference) with "L-cysteine biosynthetic process" (GO:0019344). But these proteins are cysteine **catabolic** enzymes — EC 4.4.1.1 (desulfhydrase) vs EC 2.5.1.47 (synthase). The IBA propagated from the PANTHER family root node to all descendants, but the desulfhydrase subfamily underwent neo-functionalization. Active site motif differs: ASSGST (desulfhydrase) vs PTSGNTG (synthase). Only 24% sequence identity to synthases.
 
-**Why structure could help here**: Unlike lanM, the functional difference between desulfhydrase and synthase involves different active site architecture — detectable by structural comparison. Foldseek search of the cds1 structure should return desulfhydrase hits, not synthase hits. EnzyMM catalytic site matching should match EC 4.4.1.1 templates, not EC 2.5.1.47.
+**Why structure could help here**: Unlike lanM, the functional difference between desulfhydrase and synthase involves different active site architecture — detectable by structural comparison. Foldseek searches of the MYCTU/cds1 and VIBCH/cds1 structures should return desulfhydrase hits, not synthase hits. EnzyMM catalytic site matching should match EC 4.4.1.1 templates, not EC 2.5.1.47.
 
 **Status**: Both genes already reviewed in our pipeline with the IBA error documented.
 
@@ -320,13 +334,18 @@ Structure does NOT help when the functional difference is subtle chemistry withi
 
 **Protein**: Human PHYKPL (Q8IUZ5)
 
-**The problem**: Annotated as "transaminase activity" (GO:0008483) based on family membership. Actually functions as an ammoniophospholyase (EC 4.2.3.134). The active site is structurally distinct from transaminases despite belonging to the same fold family.
+**The problem**: Annotated as "transaminase activity" (GO:0008483) based on
+family membership. The local review removes that row from biochemical evidence
+and UniProt's caution that PHYKPL does not seem to possess aminotransferase
+activity; a saved structural search would test whether local-site methods can
+separate its ammoniophospholyase chemistry (EC 4.2.3.134) from transaminases
+inside the aminotransferase III fold.
 
 ### Also promising: mll cluster genes — Sparse IEA on Novel Pathway
 
-**Proteins**: mllA (C5B1I4), mllBC (C5B1I5), mllH (C5B1I9)
+**Proteins**: mllA (C5B1I4), mllBC (C5B1I5), mllF (C5B1I7), mllG (C5B1I8), mllH (C5B1I9)
 
-**The problem**: 1-4 IEA annotations each. Annotated as generic siderophore biosynthesis enzymes, but they synthesize methylolanthanin (a lanthanophore, not a siderophore). Foldseek might find metallophore biosynthetic homologs that refine the functional prediction beyond "siderophore."
+**The problem**: these reviews have sparse or absent GOA rows. UniProt/Pfam detect generic biosynthetic families such as NIS synthetases, a TIM-barrel fold, DUF2218, or GNAT, but the proteins act in methylolanthanin biosynthesis and the single-enzyme chemistry is mostly inferred from cluster context. Foldseek might find metallophore biosynthetic homologs that refine the functional prediction beyond "siderophore."
 
 ## Worked Example: DUF4246 — Structure Finds What Sequence Cannot
 
@@ -377,6 +396,7 @@ AlphaFold model AF-A0A2N3VF44-F1 (pLDDT 90.81) submitted to Foldseek search agai
 ### Implications for the gene review pipeline
 
 DUF4246 is not in our current review pipeline, but this demonstrates a generalizable approach:
+
 1. For any protein with only DUF annotations or no functional annotation, download the AlphaFold structure
 2. Submit to Foldseek against PDB100
 3. If top hits are functionally characterized proteins at <20% sequence identity, this is a structure-based function prediction that sequence methods miss
@@ -385,13 +405,13 @@ DUF4246 is not in our current review pipeline, but this demonstrates a generaliz
 ## Next Steps
 
 ### Immediate
-- Run the same Foldseek analysis on **cds1** (O69652) and **PHYKPL** (Q8IUZ5) from our pipeline — do structural hits correctly predict the function that IBA/IEA gets wrong?
+- Track and save reproducible Foldseek/EnzyMM benchmark runs for DUF4246, **MYCTU/cds1** (O69652), **VIBCH/cds1** (Q9KT44) and **PHYKPL** (Q8IUZ5) in [#4014](https://github.com/ai4curation/ai-gene-review/issues/4014) — do structural hits correctly predict the function that IBA/IEA gets wrong?
 - Try **DeepGO-SE** (pip-installable) on the same proteins as a complementary ML approach
 
 ### Medium-term
 - Systematically screen all DUF-containing proteins in the review pipeline through Foldseek
-- Set up a reproducible script for AlphaFold → Foldseek → functional annotation
-- Evaluate PARSE for catalytic site detection on cds1 (desulfhydrase vs. synthase active site)
+- Set up a reproducible script for AlphaFold → Foldseek → functional annotation ([#4014](https://github.com/ai4curation/ai-gene-review/issues/4014))
+- Evaluate PARSE for catalytic site detection on MYCTU/cds1 and VIBCH/cds1 (desulfhydrase vs. synthase active site)
 
 ## Key References
 
@@ -417,7 +437,7 @@ DUF4246 is not in our current review pipeline, but this demonstrates a generaliz
 
 ### Case studies: structure beats sequence
 - Cross-phyla morphologs: Ruperti et al., Genome Biol 2023 (doi:10.1186/s13059-023-02942-9)
-- Phage annotation (Phold): Bouras et al., NAR 2025 (doi:10.1093/nar/gkaf1448)
+- Phage annotation (Phold): Bouras et al., NAR 2026 (doi:10.1093/nar/gkaf1448)
 - MJ0577 ATPase: Zarembinski et al., PNAS 1998 (doi:10.1073/pnas.95.26.15189)
 
 ### Classification

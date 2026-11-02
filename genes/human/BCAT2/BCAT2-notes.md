@@ -106,3 +106,56 @@ The notes remain an append-only record. Earlier processing details and decisions
 ### Focused verification of the evidence follow-up
 
 The applied review retains 41 source assertions and two UniProt products, with one directly supported PLP-binding NEW and one catalytic core. Focused gene validation passed with eight advisories: seven supported generic interactions remain non-core under the supplied ActionEnum, and one advisory concerns not directly citing the unchanged generated research report. The biological evidence is instead tied to primary papers and curated records. HTML rendering passed. No global validation result is claimed. Earlier notes remain historical; this follow-up states the current decisions.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: ProtNLM2 benchmark target O15382 (cohort HORSE40 + HORSE40_HUMAN_PAIR). No ProtNLM2 output
+was opened or used.
+
+**Identity.** O15382 is the reviewed, canonical Swiss-Prot entry BCAT2_HUMAN (392 aa precursor,
+transit peptide 1–27, PLP lysine Lys229, CXXC Cys342/Cys345). It is not a fragment or an
+alternative gene model. The only alternative product is isoform B (O15382-2, VSP_000236, residues
+9–100 missing; PP18b, placental cytosolic fraction; PMID:11170829). The review describes the
+canonical product.
+
+**Evolutionary grounding.** PANTHER PTHR11825:SF39 (BRANCHED-CHAIN-AMINO-ACID AMINOTRANSFERASE,
+MITOCHONDRIAL) contains human BCAT2 with rat Bcat2 O35854, mouse Bcat2 O35855, bovine and orangutan
+BCAT2. The cytosolic paralog BCAT1 (P54687, mouse P24288) is a separate subfamily, SF70, so
+BCAT1-specific findings are not transferred. PAINT: MF transaminase terms (Leu/Val/Ile) sit on
+PTN000214535 (seeds include fly, pombe, rat, human); Ile/Val catabolism on the same node;
+mitochondrion on PTN000214536 (eukaryote-level; seeds include yeast BAT1, pombe, mouse, rat, human).
+PAINT did not propagate the mouse brown-fat or energy-homeostasis terms; those reach human only by
+ISS/IEA ortholog transfer from mouse SF39, which I treat as a deliberate PAINT omission.
+
+**Changes this round (all 41 source rows re-examined):**
+- GO:0005515 protein binding, 7 IPI rows (HSPD1, YBEY; BioPlex 2/3, MAC-tag, cell maps):
+  KEEP_AS_NON_CORE -> REMOVE, per the repository protein-binding policy. Uninformative; the
+  interactions are not disputed. HSPD1 association is consistent with BCAT2 as an imported matrix
+  client of the chaperonin.
+- GO:0009081 BCAA metabolic process (IEA InterPro): ACCEPT -> MODIFY to GO:0009083 (already
+  carried). A correct parent must be MODIFY, not ACCEPT, under the refinement rule.
+- GO:1903444 negative regulation of brown fat cell differentiation (ISS, involved_in):
+  KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. In the human GO-CAM gomodel:682fbcd000004638 the
+  regulatory term is on EP300's acetyltransferase activity, and BCAT2 sits upstream as the BCAA
+  catabolic enzyme. BCAT2 supplies the substrate (acetyl-CoA via BCAA catabolism), not the
+  regulation. The companion row GO:0050873 with acts_upstream_of_negative_effect states this
+  correctly and stays KEEP_AS_NON_CORE.
+- GO:0097009 energy homeostasis (IEA from mouse): KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED,
+  as a downstream organismal phenotype rather than process participation.
+- No change: catalytic transaminase MFs (IDA/IBA/IEA/TAS, ACCEPT); BCAA/Leu/Ile/Val catabolism
+  (ACCEPT); mitochondrion/matrix (ACCEPT); GO:0003824 MODIFY -> GO:0004084; GO:0009082
+  biosynthetic (KEEP_AS_NON_CORE, reamination direction, Reactome R-HSA-508179); NEW GO:0030170
+  PLP binding (structural, PMID:11264579). Description and core function still hold.
+
+**Relative.** Human BCAT2 is itself well characterised. The closest experimentally characterised
+relative by phylogeny is mouse Bcat2 (O35855; same SF39 subfamily; MGI:1276534 is a PAINT seed on
+PTN000214535/PTN000214536 and the donor of the brown-fat ISS rows). The repo has no mouse Bcat2
+review. Rat Bcat2 O35854 (SF39, PMID:9165094) is the other ortholog with experimental data.
+
+**Family review** (interpro/panther/PTHR11825/PTHR11825-review.yaml): the SF39 placement agrees.
+One wording issue: the SF39 `description` says the "subfamily inventory comprises ... BCAT1 and
+BCAT2 groups", but BCAT1 is in SF70. That sentence describes the family, not SF39.
+
+**Modules:** modules/branched_chain_amino_acid_catabolism.yaml,
+modules/valine_isoleucine_distal_catabolism.yaml, modules/branched_chain_amino_acid_biosynthesis.yaml,
+modules/ehrlich_pathway.yaml (family-level mentions).

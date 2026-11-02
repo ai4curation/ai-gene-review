@@ -74,7 +74,7 @@ Right enzyme class, wrong substrate, cofactor, donor or reaction
 ## Findings
 
 1. **Family membership is the usual culprit**: PHYKPL (aminotransferase III), EryCIII (IEA UDP-GT), GND1 D-gluconate (UniProt keyword via ARBA rule).
-2. **Wrong subunit or paralog** errors cluster in complexes and families: HADHA thiolase, HADH long-chain, ACADVL mouse-LCAD transfers.
+2. **Wrong subunit or evidence-scope** errors cluster in complexes and families: HADHA thiolase, HADH long-chain, ACAD9 C16 assays.
 3. **Name collisions** create errors no sequence check finds: "ACAT1" = SOAT1 vs mitochondrial T2.
 4. A **GO → RHEA** gap: hydratase GO:0004300 maps to RHEA:20724 (3E), not the canonical (2E) RHEA:16105.
 

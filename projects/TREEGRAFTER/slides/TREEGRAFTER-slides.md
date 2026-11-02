@@ -26,9 +26,9 @@ style: |
 
 # TreeGrafter inference evaluation
 
-How reviewers treated 898 automated PANTHER-graft GO annotations
+How reviewers treated 1,074 automated PANTHER-graft GO annotations
 
-<span class="small">AI Gene Review · projects/TREEGRAFTER · snapshot 2026-09-06</span>
+<span class="small">AI Gene Review · projects/TREEGRAFTER · snapshot 2026-10-03 at `f81b9f300`</span>
 
 ---
 
@@ -36,9 +36,9 @@ How reviewers treated 898 automated PANTHER-graft GO annotations
 
 ## Bottom line
 
-- Reviewers **accepted 41%** of TreeGrafter IEA annotations (`GO_REF:0000118`) as-is, against **72%** for curated PAINT/IBA; molecular-function terms were worst (**52% down-graded**).
+- Reviewers **accepted 43%** of uncorroborated TreeGrafter IEA rows as-is; corpus-wide curated PAINT/IBA rows, on a mostly different gene set, were accepted at **73%**.
 - When another pipeline reproduced the call (`GO_REF:0000120`), acceptance rose to **77%**, an upper bound because reviewers saw the label.
-- In **five of six** failures the graft placement was fine and the **inherited term** was wrong; errors cluster in a few PANTHER families.
+- In about **three of four** down-grades the graft placement itself was not the defect; the inherited term was too coarse, sibling-level, generic or out of context.
 
 ---
 
@@ -71,30 +71,32 @@ How reviewers treated 898 automated PANTHER-graft GO annotations
 
 | Family | n | Down-graded | Problem |
 |---|---:|---:|---|
+| PTHR24027 cadherin-23 | 30 | 100% | choanoflagellate cadherins on a Bilateria node |
 | PTHR10543 beta-carotene dioxygenase | 8 | 100% | stilbene dioxygenases on the carotenoid subfamily |
 | PTHR30443 EptA | 8 | 100% | node carries LPS core instead of pEtN transferase (mcr-1..4) |
+| PTHR15184 ATP synthase | 5 | 100% | ATP synthase term on FliI/SctN export ATPases |
 | PTHR43775 fatty acid synthase | 4 | 100% | FAS term on PKS subfamilies (eryAI-III, Pks1) |
-| PTHR43128 L-2-hydroxycarboxylate DH | 4 | 100% | MDH grafted onto the L-LDH subfamily |
-| PTHR11558 spermidine synthase | 9 | 67% | spermidine terms on the PMT subfamily |
 
-<span class="small">29 of 63 families with at least four reviewed annotations had half or more down-graded. Full table: TREEGRAFTER/treegrafter_family_hotspots.tsv</span>
+<span class="small">26 of 77 families with at least four reviewed annotations had half or more down-graded. Full table: TREEGRAFTER/treegrafter_family_hotspots.tsv</span>
 
 ---
 
 ## Caveats
 
-- ~70% of rows come from the ***P. putida* KT2440** batch; rates are directional.
-- The reference is the AIGR corpus (AI-assisted, mixed maturity).
-- Tables are **frozen at 2026-09-06**; at least 63 more `GO_REF:0000118` rows have landed since.
-- `KEEP_AS_NON_CORE` is not an error: accept + non-core gives ~63% (TreeGrafter) vs ~88% (IBA).
+- **65% of rows** come from the ***P. putida* KT2440** batch; rates are directional.
+- The PAINT/IBA bar is corpus-wide, not matched; same-file IBA has n=20.
+- The reference is the AIGR corpus at `f81b9f300`, and reviews are revised over time.
+- Reviewers saw `GO_REF:0000118` vs `GO_REF:0000120`, so the corroboration gap may be inflated.
+- `KEEP_AS_NON_CORE` is not an error; accepted + non-core is **69%** for TreeGrafter.
 
 ---
 
 ## Status and next steps
 
-- ✅ 898 annotations tallied; 306 down-grades classified into failure modes; family hotspots listed.
+- ✅ 1,074 annotations tallied; 283 down-grades classified into failure modes; family hotspots listed.
+- ⬜ Adjudicate the ten awaiting genes from the 2026-09-20 re-review.
 - ⬜ Send the hotspot families to PAINT / PANTHER as tickets.
 - ⬜ **Blind the corroboration test** (hide `original_reference_id`).
-- ⬜ Hand-curate the 66 keyword-placed failure-mode rows; broaden beyond *P. putida*.
+- ⬜ Second-pass 53 keyword-placed MF/BP rows and 33 mode-0 rows; broaden beyond *P. putida*.
 
 **Read more:** `projects/TREEGRAFTER.md` · `TREEGRAFTER/failure-modes.md` · `analyze_treegrafter.py`

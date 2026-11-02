@@ -375,20 +375,20 @@
 <p><strong>Parent project:</strong> <a href="../TCDB.html">TCDB.md</a></p>
 <h2 id="what-exists-and-what-doesnt">What exists, and what doesn't</h2>
 <p>Two separate things are easy to conflate:</p>
-<ol>
-<li><strong>TC references on GO terms — these exist, but are neglected leads.</strong> GO<br />
-   carries TC references on molecular-function terms, as term-level <code>xref: TC:</code><br />
-   clauses and as definition dbxrefs (<code>def: "…" [TC:…]</code>). These are largely<br />
-   neglected and the term-vs-definition distinction is not meaningful, so treat<br />
-   both alike, as <strong>sources</strong>. Extract them from <code>go-basic.obo</code>:</li>
-</ol>
-<p><code>bash
-   uv run python extract_go_tc_xrefs.py --stats
-   # 202 TC references on 170 non-obsolete MF terms / 185 TC systems / 63 families
-   uv run python extract_go_tc_xrefs.py -o tc2go.from_go.sssom.yaml</code></p>
+<h3 id="tc-references-on-go-terms">TC references on GO terms</h3>
+<p>These exist, but are neglected leads. GO carries TC references on<br />
+molecular-function terms, as term-level <code>xref: TC:</code> clauses and as definition<br />
+dbxrefs (<code>def: "…" [TC:…]</code>). These are largely neglected and the<br />
+term-vs-definition distinction is not meaningful, so treat both alike, as<br />
+<strong>sources</strong>. Extract them from <code>go-basic.obo</code>:</p>
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>extract_go_tc_xrefs.py<span class="w"> </span>--stats
+<span class="c1"># 202 TC references on 170 non-obsolete MF terms / 185 TC systems / 63 families</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>extract_go_tc_xrefs.py<span class="w"> </span>-o<span class="w"> </span>tc2go.from_go.sssom.yaml
+</code></pre></div>
+
 <p>Every emitted row is <code>skos:relatedMatch</code> + <code>semapv:UnspecifiedMatching</code> — an<br />
-   unreviewed lead. Whether it is safe to <strong>propagate</strong> (a protein with the TC id<br />
-   inheriting the GO term) is scored next.</p>
+unreviewed lead. Whether it is safe to <strong>propagate</strong> (a protein with the TC id<br />
+inheriting the GO term) is scored next.</p>
 <h3 id="propagation-scoring-evidence-not-assertion">Propagation scoring (evidence, not assertion)</h3>
 <p><a href="curate_propagation.py"><code>curate_propagation.py</code></a> scores every one of the 194 leads<br />
 against UniProt member evidence — no hand-assertion:</p>
@@ -413,14 +413,16 @@ The fraction <code>k/n</code> drives the verdict, encoded as the SSSOM predicate
   minority/subfamily property; wholesale propagation would over-annotate. <strong>18</strong>.</li>
 </ul>
 <p>These two are listed in <strong>evaluation order</strong>, and the order is load-bearing: <code>k=0</code><br />
-  also satisfies <code>k/n&lt;0.5</code>, so GAP_CANDIDATE must be tested first or every specific<br />
-  system with zero carrying members would be filed as narrow — inverting the reading<br />
-  of the evidence and hiding the lead from the gap harvest.<br />
-- <code>broadMatch</code> <strong>CLASS_LEVEL</strong> — a whole TC class/subclass (level ≤2): broad by<br />
-  construction, out of scope for substrate-level propagation. <strong>12</strong>.<br />
-- <code>relatedMatch</code> <strong>NO_REVIEWED_MEMBER</strong> — <code>n=0</code>: only TrEMBL members, or the<br />
-  reviewed protein lacks a <code>DR TCDB</code> xref (e.g. MelB); cannot assess. <strong>10</strong>.<br />
-- <code>relatedMatch</code> <strong>UNCERTAIN</strong> — the ambiguous small-<code>n</code> middle. <strong>7</strong>.</p>
+also satisfies <code>k/n&lt;0.5</code>, so GAP_CANDIDATE must be tested first or every specific<br />
+system with zero carrying members would be filed as narrow — inverting the reading<br />
+of the evidence and hiding the lead from the gap harvest.</p>
+<ul>
+<li><code>broadMatch</code> <strong>CLASS_LEVEL</strong> — a whole TC class/subclass (level ≤2): broad by<br />
+  construction, out of scope for substrate-level propagation. <strong>12</strong>.</li>
+<li><code>relatedMatch</code> <strong>NO_REVIEWED_MEMBER</strong> — <code>n=0</code>: only TrEMBL members, or the<br />
+  reviewed protein lacks a <code>DR TCDB</code> xref (e.g. MelB); cannot assess. <strong>10</strong>.</li>
+<li><code>relatedMatch</code> <strong>UNCERTAIN</strong> — the ambiguous small-<code>n</code> middle. <strong>7</strong>.</li>
+</ul>
 <p>Two of these are direct feeds to the gene-review workflow: a <strong>JUSTIFIED</strong> lead<br />
 with <code>k&lt;n</code> (e.g. <code>3.A.3.1.1 → GO:0005391</code>, 4/5) and every <strong>GAP_CANDIDATE</strong> are<br />
 reverse-gap finds — the activity is real for the system but the member is missing<br />
@@ -428,15 +430,14 @@ the (specific) term. Re-score without re-querying via<br />
 <code>curate_propagation.py --reclassify</code> (reads the cached evidence TSV). The<br />
 hand-curated <code>tc2go.sssom.yaml</code> is a deeper, individually read-through pass over a<br />
 handful of exemplars.</p>
-<ol>
-<li><strong>An <code>external2go</code> <em>annotation pipeline</em> — this does not exist.</strong> Every other<br />
-   source-audit project here hangs off a public mapping file (<code>ec2go</code>, <code>rhea2go</code>,<br />
-<code>interpro2go</code>, …); TCDB has none:</li>
-</ol>
-<p><code>bash
-   # ec2go, rhea2go, ... are present; tc2go is not
-   curl -sL http://current.geneontology.org/ontology/external2go/ | grep -o 'external2go/[a-z0-9_]*' | sort -u
-   curl -sIL http://current.geneontology.org/ontology/external2go/tc2go   # no such file</code></p>
+<h3 id="missing-external2go-annotation-pipeline">Missing external2go annotation pipeline</h3>
+<p>Every other source-audit project here hangs off a public mapping file (<code>ec2go</code>,<br />
+<code>rhea2go</code>, <code>interpro2go</code>, …); TCDB has none:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># ec2go, rhea2go, ... are present; tc2go is not</span>
+curl<span class="w"> </span>-sL<span class="w"> </span>http://current.geneontology.org/ontology/external2go/<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-o<span class="w"> </span><span class="s1">&#39;external2go/[a-z0-9_]*&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-u
+curl<span class="w"> </span>-sIL<span class="w"> </span>http://current.geneontology.org/ontology/external2go/tc2go<span class="w">   </span><span class="c1"># no such file</span>
+</code></pre></div>
+
 <p>So GO's curated term-xrefs are <strong>never propagated to the proteins</strong> that carry a<br />
 <code>DR TCDB;</code> cross-reference — there is no forward <code>GO_REF</code> volume (as there is for<br />
 RHEA's <code>GO_REF:0000116</code>). That reframes the project: the mapping partly exists,<br />

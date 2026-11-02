@@ -28,7 +28,7 @@ style: |
 
 Scoring a whole genome's annotation set for completeness, coherence and consistency
 
-<span class="small">AI Gene Review · projects/GENOME_WIDE_VALIDATION · 2026</span>
+<span class="small">AI Gene Review · projects/GENOME_WIDE_VALIDATION · E. coli pilot rerun 2026-10-04</span>
 
 ---
 
@@ -38,7 +38,7 @@ Scoring a whole genome's annotation set for completeness, coherence and consiste
 
 - Per-gene review asks if **one annotation** is right; this asks if the **whole set** could coexist in a living cell.
 - **Coherence is built:** the *E. coli* EcoCyc GAF satisfies 112 of 129 activated GO `has_part` dependencies (**86.8%**).
-- The **17 violations** are curation leads: a likely denitrification over-reach, missing complex/MF terms, viral and heterochromatin terms. Completeness and consistency are **not started**.
+- The **17 violations** are curation leads: likely pathway overreach, missing complex/MF terms, viral or heterochromatin over-annotations, and unresolved cases. Completeness and consistency are **still roadmap items**.
 
 ---
 
@@ -64,7 +64,7 @@ Scoring a whole genome's annotation set for completeness, coherence and consiste
 
 ## Limits of the pilot
 
-- **Asserted `has_part` only** (743 pairs); the reference paper adds ~5,038 ELK-inferred pairs, so this is a lower bound.
+- **Asserted `has_part` only** (743 pairs); the reference paper reports thousands of additional ELK-inferred pairs, so this is a lower bound.
 - **Set-based, not sequence-based:** a violation cannot tell "gene absent" from "gene present but unannotated". Confirm gaps with GapMind or Pathway Tools before any REMOVE.
 - The completeness probe in the output (DNA replication, transcription, translation present) is a sanity check, not the metric.
 
@@ -72,9 +72,9 @@ Scoring a whole genome's annotation set for completeness, coherence and consiste
 
 ## Status and next steps
 
-- ✅ *E. coli* coherence pilot, from public data (`pilot-ecoli/coherence_pilot.py`).
-- ⬜ Add inferred `has_part` pairs and MetaCyc routes.
-- ⬜ Minimal-genome essential-function set → **completeness**; GO taxon constraints → **consistency**.
-- ⬜ Predictor sweep (InterPro2GO, DeepGO-family); decide whether to reuse GAEF.
+- Done: *E. coli* coherence pilot, from public data (`pilot-ecoli/coherence_pilot.py`).
+- Next: add inferred `has_part` pairs and MetaCyc routes.
+- Next: minimal-genome essential-function set for **completeness**; GO taxon constraints for **consistency**.
+- Next: predictor sweep (InterPro2GO, DeepGO-family); decide whether to reuse GAEF.
 
-**Read more:** `projects/GENOME_WIDE_VALIDATION.md` · `GENOME_WIDE_VALIDATION/pilot-ecoli/RESULTS.md`
+**Read more:** project page · E. coli pilot `RESULTS.md`

@@ -46,7 +46,7 @@ A retrospective audit of GO_REF:0000043, where a UniProt keyword was the only so
 
 - A keyword such as *Apoptosis* maps to a GO term via `GO_REF:0000043`. For many genes it was the **only** evidence.
 - Closure filter: a row counts only if **no other source** supports that term **or a more specific one**.
-- 12 subprojects: human apoptosis / rhythm / autophagy; *S. pombe*, *Drosophila*, *Anopheles*, *P. putida*, *Arabidopsis*; phage T4, *E. coli* O157, virus clades; non-Arabidopsis plants.
+- 12 downstream subprojects: human apoptosis / rhythm / autophagy; *S. pombe*, *Drosophila*, *Anopheles*, *P. putida*, *Arabidopsis*; phage T4, *E. coli* O157, virus clades; non-Arabidopsis plants.
 - Swiss-Prot keywords are **manually assigned**, so errors in reviewed organisms sit in the **keyword→GO mapping**, not keyword choice.
 
 ---
@@ -94,7 +94,7 @@ A retrospective audit of GO_REF:0000043, where a UniProt keyword was the only so
 
 ## Status
 
-- **Complete** as a retrospective: 12 subprojects, 137 genes in the results table.
+- **Mature** as a retrospective: 12 downstream subprojects, 137 genes in the results table; ViralZone is active upstream follow-up.
 - Side finding: 265/550 plant `file:` quotes were non-verbatim because the validator skips `file:` refs; all fixed, no action changes.
 - Methods and SQL: `projects/SPKW/SPKW-METHODOLOGY.md`.
 

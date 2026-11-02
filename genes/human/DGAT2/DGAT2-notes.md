@@ -133,3 +133,27 @@ describe organism-level roles of DGAT2, largely correct but peripheral to the mo
 References PMID:14521909 (psoriatic skin / diabetic mice; ER localization), PMID:11481335 (cloning),
 PMID:16214399 (ARAT), PMID:27184406 (DGAT/localization), PMID:28420705 (ether lipid/MAMAG),
 PMID:30970241 (SLC27A1 interaction) all verified against cached abstracts/full text.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 colocalizes_with, IEA GO_REF:0000107 and ISS GO_REF:0000024 (both from mouse
+Q9DCV3). No sub-compartment row before this pass. Both kept KEEP_AS_NON_CORE; NEW
+GO:0044233 (mitochondria-associated endoplasmic reticulum membrane contact site) added (IC).
+
+- Source check (QuickGO, 2026-10-25): mouse Q9DCV3 colocalizes_with GO:0005739 IDA
+  PMID:19049983 (BHF-UCL). Paper fetched (full text).
+- PMID:19049983: "Immunoblotting showed that DGAT2 and calnexin were present in the microsomal
+  fraction and were also enriched several-fold in MAM"; "DGAT activity, which should reflect
+  only that of DGAT2, was ∼2-fold higher in the mitochondria plus MAM fraction than in the
+  microsomal fraction"; "Based on our data, we favor a model in which DGAT2 is enriched in MAM,
+  and DGAT2 in this compartment associates with mitochondria as a peripheral protein via its N
+  terminus." The authors leave residence open ("Our findings raise the question of whether
+  DGAT2 is a true mitochondrial enzyme or is present in a compartment, such MAM, which is
+  associated with mitochondria.").
+- UniProt [file:human/DGAT2/DGAT2-uniprot.txt "Endoplasmic reticulum membrane"; "TRANSMEM
+  70..88"]: multi-pass ER membrane protein, both termini cytoplasmic.
+- Rule 4 lines agreeing: direct Percoll-purified MAM fraction with calnexin marker + MAM-
+  enriched DGAT2 activity (DGAT1-KO liver); ER TM topology; MAM-enriched lipid-synthetic
+  function. Unlike STOM (one detergent experiment, no MAM marker), this is a proper MAM prep.
+  IC because the data are rodent. core_functions left alone.
+- colocalizes_with on the root rows is apt (contact, not residence). No is_active_in rows.

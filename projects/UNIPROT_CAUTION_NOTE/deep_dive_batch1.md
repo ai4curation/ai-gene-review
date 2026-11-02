@@ -75,8 +75,8 @@ retained. Same pattern as
 
 ## All five reviews completed
 
-Full, schema- and term-validated DRAFT reviews are now written for every gene in
-the batch:
+Full, schema- and term-validated reviews are now written for every gene in the
+batch:
 
 | Gene | Catalytic `NOT` handled | Notable actions |
 |------|-------------------------|-----------------|

@@ -4,17 +4,34 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 collections: [HOMOLOGY_PROPAGATION]
 autolink_gene_symbols: false
+last_reviewed: 2026-10-04
 manifest:
+  slides:
+    - href: HOMOLOGY_PROPAGATION/slides/HOMOLOGY_PROPAGATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/FaLey8iR7RmW4B56haRQ5C
       title: Project brief
 ---
 # Propagation by Homology
 
-An index to the projects that review GO annotations **transferred to a gene from
-other gene products**: orthology transfers (ISO), curator similarity transfers
-(ISS/ISA), phylogenetic inference (IBA/PAINT), and the electronic pipelines that
-do the same thing automatically (Ensembl Compara, TreeGrafter, InterPro2GO).
+**Bottom line:** many GO annotations reach a gene by transfer from another gene
+product: an ortholog (ISO), a sequence a curator judged similar (ISS/ISA), a
+PANTHER family node placed by a PAINT curator (IBA), or an electronic pipeline
+that does the same automatically (Ensembl Compara, TreeGrafter, InterPro2GO).
+A transfer can go wrong in three places: the donor annotation can be weak or
+stale, the orthology or tree relation can point to the wrong gene, or the term
+can describe a context that does not carry over to the target. This page indexes
+the projects that review these transfers method by method, and a propagation
+browser that shows each transferred annotation as donor, intermediate and target
+beside the gene review's verdict. We built it so that reviewers record where each
+defect sits, and so that a fix can go to the mapping, node or pipeline that
+produced it, where one change corrects every affected gene. In the statistics
+generated on 2026-09-26, reviewers had judged 34,253 of 34,265 propagated
+annotations and flagged 13% as REMOVE, MARK_AS_OVER_ANNOTATED or MODIFY: 9% of
+PAINT IBA, 20% of Ensembl Compara and 28% of TreeGrafter annotations. Of the
+4,232 ISO annotations, 383 rest on a donor that no longer carries the term, and
+3,000 (71%) add an assertion with no related IBA on the target.
 
 **[Browse all propagated annotations](../app/propagation/index.html)** — one row per
 transferred GOA annotation, read as *donor(s) → intermediate → target*, with what
@@ -55,9 +72,20 @@ The shared vocabulary for recording the answer is the
 | [IBA annotation quality](IBA_REVIEW.md) | IBA (GO_REF:0000033) | Whether the PAINT node placement fits the target: paralog subfamilies, lost sub-activities, lineage mismatches. |
 | [PAINT no-IBA genes](PAINT.md) | IBA gaps | Human genes with no IBA — missing PAINT coverage or genuinely lineage-specific function. |
 | [TreeGrafter](TREEGRAFTER.md) | IEA (GO_REF:0000118) | Automatic placement onto PANTHER trees and inheritance of PAINT annotations. |
+| [eggNOG-mapper](EGGNOG_MAPPER_EVALUATION.md) | eggNOG orthology (not in GOA) | How the union of every ortholog's GO terms holds up against reviews, with and without the query's own species, and on non-model genomes. |
 | [Ortholog conjecture](ORTHOLOG_CONJECTURE.md) | Orthologs vs paralogs | Whether orthologs retain function more than paralogs in the reviewed corpus. |
 | [InterPro2GO](INTERPRO.md) | IEA (GO_REF:0000002) | Family- and domain-signature transfers and where they over-reach. |
 | [NCBIFam / CDD](NCBIFam.md) | Family HMMs | What NCBI family models add or mis-assign. |
+
+## Status and follow-ups
+
+The propagation browser and current statistics are built and committed from a
+2026-09-26 donor cache. Component projects continue to move independently: PAINT
+no-IBA reviews, the IBA corpus re-review, InterPro2GO and NCBIFAM/CDD mapping
+proposals, TreeGrafter recomputation, and the ortholog-conjecture pilot each
+need their own refresh or curator-facing handoff before the next umbrella
+snapshot. The cross-project tracker is
+[#4095](https://github.com/ai4curation/ai-gene-review/issues/4095).
 
 ## Methods covered by the browser
 

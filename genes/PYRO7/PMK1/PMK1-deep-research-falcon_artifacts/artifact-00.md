@@ -1,0 +1,9 @@
+| Pmk1 substrate | Type | Site | Direct evidence | Functional interpretation |
+|---|---|---:|---|---|
+| Hox7 | Native transcription factor | Ser158 | Activated purified GST–Pmk1 phosphorylated recombinant Hox7; phosphoproteomics and targeted PRM confirmed Pmk1-dependent S158 phosphorylation during early appressorium development (pqac-00000017, pqac-00000019) | Controls early appressorium differentiation, autophagy/cell-cycle programs, and downstream transcription. Functional rescue involved a **triple phosphomimetic Hox7 S126D/S158D/S254D allele**, not an isolated S158D test (pqac-00000019) |
+| Mst12 | Native transcription factor | Ser133 | Activated Pmk1 directly phosphorylated recombinant Mst12 in vitro (pqac-00000017) | Supports the later appressorium-maturation program, including septin/F-actin remodeling, repolarization, exocytosis, penetration, and effector-gene expression |
+| MoFim1 | Native actin-bundling protein | Ser94 | Recombinant Pmk1 phosphorylated MoFim1 in vitro in a dose-dependent manner; S94A abolished this phosphorylation whereas S117A did not (pqac-00000013) | S94 phosphorylation promotes actin bundling and hyphal-tip organization. MoFim1-S94D restored Δpmk1 actin organization and hyphal growth and yielded appressorium-like structures in about 15% of germ tubes, but did not restore plant penetration (pqac-00000008) |
+| Myelin basic protein | Artificial assay substrate | Not determined | Recombinant GST–Pmk1 autophosphorylated and phosphorylated myelin basic protein in vitro (pqac-00000001) | Establishes intrinsic Ser/Thr-protein-kinase activity but does **not** identify a physiological fungal substrate or native substrate specificity |
+
+
+*Table: Experimentally tested substrates of rice-blast-fungus Pmk1, distinguishing native targets from the artificial kinase-assay substrate. The table summarizes phosphosites, biochemical evidence, and functional consequences.*

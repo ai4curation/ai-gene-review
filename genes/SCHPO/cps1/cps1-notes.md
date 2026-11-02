@@ -8,6 +8,11 @@ Full PMID:17660439 Methods explicitly states “A CPS1 homologue, SPAC24C9.08 (S
 Cyberian's routing lead is confirmed; its native maturation language should not exceed these assays. Perplexity's conserved-function synthesis is supported. Falcon's likely-cytosolic/unestablished-localization language conflicts with target source PMID:16823372 and PMID:17660439. Mammalian PM20D1 primary PMID:27374330 does not demonstrate loss of fungal peptide hydrolysis; peptide and nonpeptide capacities can coexist. Extracellular, lipid-amide and heat-production hypotheses await focused OpenScientist adjudication. GO:1990845 does not require brown fat. Live GO confirmed obsolete GO:0051603/GO:0043604/GO:0043605; source IDs remain frozen and active replacements are supplied only where the biology is established.
 
 
+## 2026-10-10 focused OpenScientist PM20D1-derived follow-up
+
+The focused OpenScientist report on additional lipid-amide and extracellular capacities agrees with the current review that fungal Cps1 should keep its core vacuolar carboxypeptidase interpretation and that mammalian PM20D1 divergence does not prove loss of peptide hydrolysis. It also makes the unresolved ARBA-only rows actionable: the extracellular-region, lipid-metabolic-process, nonpeptide C-N hydrolase and obsolete amide-biosynthesis assertions are family/name carry-over from secreted mammalian PM20D1 rather than evidence-backed O13968 functions, and the adaptive-thermogenesis row should be removed because there is no S. pombe regulated heat-production pathway comparable to the mammalian adipocyte context. The open experimental question is promiscuous N-acyl-amino-acid chemistry, not whether the current electronic PM20D1-derived GO rows are supported.
+
+
 ## Recovery review consistency follow-up (2026-09-22)
 
 Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.

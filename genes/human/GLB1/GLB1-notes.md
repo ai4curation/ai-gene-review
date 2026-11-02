@@ -76,3 +76,10 @@ Two disease-relevant catabolic roles:
 - IEA `response to cortisone` (GO:0051413) and `response to Thyroglobulin triiodothyronine`
   (GO:1904016): rat-ortholog electronic transfers (GO_REF:0000107), no human evidence,
   not molecular function of the enzyme. Marked over-annotated.
+
+## 2026-10-09 completion pass (alignment with dismech GM1 gangliosidosis entries)
+
+- The three GO:0005515 protein binding IPI rows were re-actioned: PMID:32296183 (binary interactome) and PMID:15498789 (GOA interactor is ezrin, UniProtKB:P15311; the cached abstract describes NGX6 associating with ezrin, not GLB1) are REMOVE as uninformative; PMID:22128166 is MODIFY to GO:0042803 protein homodimerization activity, which GOA also carries from that paper.
+- The SA-beta-gal paper (PMID:11927518) beta-galactosidase activity IDA is now ACCEPT for consistency with every other row on that term (SA-beta-gal is lysosomal beta-galactosidase activity); carbohydrate metabolic process IDA is KEEP_AS_NON_CORE, matching the IEA row.
+- Core function 1 (GO:0004565 beta-galactosidase activity, directly involved in GO:0006689 ganglioside catabolic process, lysosomal lumen) matches the dismech GM1_Gangliosidosis_Type_1 and _Type_3 molecular nodes, which mark the same MF and BP DECREASED.
+- GLB1 added as the GM1/lactosylceramide entry step of modules/glycosphingolipid_lysosomal_degradation.yaml (Reactome R-HSA-1605624, R-HSA-1606312).

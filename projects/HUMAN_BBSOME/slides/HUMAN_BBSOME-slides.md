@@ -28,7 +28,7 @@ style: |
 
 Reviewing GO annotations for the 14 genes of a ciliary coat complex
 
-<span class="small">AI Gene Review · projects/HUMAN_BBSOME · 2026</span>
+<span class="small">AI Gene Review · projects/HUMAN_BBSOME · reviewed 2026-10-04</span>
 
 ---
 
@@ -76,7 +76,7 @@ Reviewing GO annotations for the 14 genes of a ciliary coat complex
 | BBS4 | 110 | 42 | 37 | 31 | 0 | 0 |
 | MKKS | 60 | 5 | 21 | 32 | 2 | 0 |
 | TTC8 | 45 | 23 | 10 | 12 | 0 | 0 |
-| BBIP1 | 22 | 11 | 8 | 3 | 0 | 0 |
+| BBIP1 | 23 | 11 | 11 | 0 | 1 | 0 |
 
 <span class="small">Six of 14 shown; full table in projects/HUMAN_BBSOME.md.</span>
 
@@ -101,8 +101,8 @@ Reviewing GO annotations for the 14 genes of a ciliary coat complex
 
 ## Status and next steps
 
-- ✅ 14/14 gene reviews validate; module validates.
-- ⬜ Pathway/summary integration (optional).
+- Done: 14/14 gene reviews validate; module validates.
+- Optional: pathway/summary integration tracked in #4096.
 - Out of scope, candidates for their own modules: **IFT** (IFT27/BBS19, IFT172/BBS20) and the **transition zone** (MKS1, CEP290).
 
 **Read more:** `projects/HUMAN_BBSOME.md` · `modules/bbsome.yaml` · `genes/human/<GENE>/`

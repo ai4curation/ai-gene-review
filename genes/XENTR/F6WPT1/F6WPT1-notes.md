@@ -162,3 +162,64 @@ quotes chosen reflect what each paper actually shows.
 
 `just validate XENTR F6WPT1` passes clean after the changes; verbatim
 substring status of every new quote also independently re-checked.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not opened or used for this pass.
+
+**Identity.** F6WPT1 (Xenbase arl5a, XB-GENE-1004384; RefSeq XP_002936704.1) is
+an unreviewed TrEMBL entry, PE 3, 179 aa. It is the full-length canonical
+product: same length as human ARL5A (Q9Y689, 179 aa), with the complete G domain
+(P-loop GLDNAGKT 23-30, switch II WDIGGQ 65-70, G4 NKQD 125-128). It is not a
+fragment, isoform or alternative gene model. The PANTHER family review
+(interpro/panther/PTHR11711/PTHR11711-review.yaml) places it in PTHR11711:SF147
+(vertebrate ARL5A), the same subfamily as human ARL5A, inside the ARL5 clade
+whose PAINT node is PTN000195484. No disagreement about subfamily placement.
+
+**Paralog check from primary full text.** Some claims in the older text were
+ARL5B-specific:
+- Houghton 2012 (PMID:22245584): the single-paralog knockdown retrograde
+  phenotypes are for ARL5B. PMID:31575603 restates this ("knockdown (KD) of
+  ARL5B, but not ARL5A, reduced retrograde transport"), and attributes it to ARL5B
+  being more abundant in HeLa cells.
+- Ishida & Bonifacino 2019 (PMID:31575603): their "ARL5 KO" is the ARL5A+ARL5B
+  double knockout.
+- Shi 2018 (PMID:30478271): the detailed Ragulator work is on Arl5b. GST-Arl5a
+  also pulls down Lamtor1, but "Arl5b possibly contributes most to Ragulator
+  interaction".
+- ARMH3 (PMID:39580461) binds active forms of both ARL5A and ARL5B.
+The description and core function now describe the Ragulator link as ARL5B-led
+and no longer list it as an ARL5A core function.
+
+**Comparator check.** QuickGO (2026-10-21) shows that human ARL5B has GO:1903292
+by IMP and human ARL5A has it by IGI, both from PMID:25795912. Fly Arl5 (Q9VSG8)
+has GO:0042147 IMP, GO:1903292 IMP and GO:0005802 IDA from the same paper. PAINT
+node PTN000195484 (snapshot 20171006) propagated GO:1903292 and GO:0005802 but
+not GO:0042147. I keep the NEW GO:0042147 (ISS) anyway, for two reasons: the
+vertebrate double-KO cargo-transport evidence (2019) postdates that PAINT
+decision, and ARL5 does part of the work of the process (it is the TGN receptor
+for the GARP tether) rather than only being required for it. This reasoning is
+recorded in the row's reason.
+
+**Action changes (term ancestry verified with OLS4 hierarchicalAncestors):**
+- GO:0005737 cytoplasm IBA: KEEP_AS_NON_CORE -> MODIFY to GO:0005802 trans-Golgi
+  network. The old reason argued the term was too broad, and the project rule
+  says that calls for MODIFY. TGN is a part_of descendant of cytoplasm.
+- GO:0016192 vesicle-mediated transport IBA: ACCEPT -> MODIFY to GO:0042147,
+  which is an is_a descendant of it.
+- GO:0006886 intracellular protein transport IBA: ACCEPT -> KEEP_AS_NON_CORE.
+  GO:0042147 is not a descendant of GO:0006886, and GO has no endosome-to-Golgi
+  protein-transport child, so MODIFY is not available.
+- GO:1903292 (IBA and ARBA): still ACCEPT. The reason now rests on the direct
+  mechanism: GTP-bound ARL5 localizes GARP and ARMH3 to the Golgi membrane.
+- GTP binding (IBA, IEA) and GTPase activity (IEA): unchanged, ACCEPT.
+- core_functions: directly_involved_in is now GO:0042147 + GO:1903292 (GO:0006886
+  dropped).
+
+**Relative to review next.** Human ARL5A (Q9Y689), the same PANTHER subfamily
+SF147 and the anchor of the family's g_domain site. The repo has no human ARL5A
+review (and none for ARL5B or fly Arl5).
+
+**Modules.** No module under modules/ covers ARL5 or GARP. The only grep hits
+are in unrelated deep-research artifacts (fc_gamma_receptor_signaling,
+nodal_signaling).

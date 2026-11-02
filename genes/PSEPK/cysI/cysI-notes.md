@@ -23,8 +23,26 @@
 - The paper leaves open whether FprA transfers electrons through reduced
   ferredoxin or directly. GO:0050311 is therefore the best current functional
   model, not a claim that the exact carrier has been reconstituted.
+- The OpenScientist report recovered the same PP_2371/Q88KB9 sulfite-reductase
+  hemoprotein identity but followed KEGG in mapping a NADPH-dependent CysJ
+  partner to PP_0860/PP_1703. I treated that donor model as disputed rather than
+  as independent support because the KO-based transfer does not distinguish
+  E. coli CysJ from the Fpr-class reductases implicated by PMID:23794620.
 
 ## Open issue
 
 Reconstitute CysI with Fpr-I and candidate KT2440 ferredoxins or flavodoxins to
 resolve the immediate electron donor.
+
+
+## Comparative sulfate-assimilation audit — 2026-10-26
+
+Re-reviewed all five rows. Supersedes the first-pass donor choice: the prior NEW ferredoxin-specific GO0050311 is retired and UNDECIDED, because full [PMID:23794620] leaves direct FprA transfer or carrier-mediated transfer unresolved. Positive sulfite-reduction chemistry is retained, and the general oxidoreductase term is refined to current GO0016667 sulfur-group redox activity. Live QuickGO confirmed GO0016002 is obsolete. PTHR32439 contains multiple reductase substrates and is not used as a donor assay. The old P9WJ02 comparator is CDC1551, whereas direct H37Rv experiments concern P9WJ03. OpenScientist’s CysJ assignment remains disputed; Fpr is an FAD-containing FNR, not a CysJ diflavin subunit.
+
+Research provenance: parent already attempted Falcon (403) and Perplexity-lite (401 quota) for this batch; no generated report was fabricated. Existing PSEPK OpenScientist reports were used only as discovery. Source caches were fetched normally and never hand-edited. All original annotation payloads were preserved, with a retirement marker only for the existing CysI donor-specific NEW proposal.
+
+## 2026-10-26 PR #5560 evidence follow-up
+
+Consolidated the PMC URL twin into canonical PMID:23794620 after normal full-text recovery. Added the paper’s explicit direct-versus-intermediate electron-transfer uncertainty as a structured knowledge gap. No claim of a known native ferredoxin partner was introduced.
+
+All original annotation payloads and row order are preserved. Focused validation and automatic record-section backfill pass; generated pages and append-only history record this follow-up.

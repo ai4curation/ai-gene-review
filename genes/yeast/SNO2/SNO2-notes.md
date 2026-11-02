@@ -180,3 +180,21 @@ without altering the evidence-grounded conclusions above.
   papers. No newer SNO2 functional paper changed the existing caveat that SNO2-specific
   enzymatic activity and physiology are assigned from family membership, an intact catalytic
   triad, and fungal SNO orthologs rather than from a direct SNO2 assay.
+
+## 2026-10-01 current GOA refresh
+
+- Forced a fresh GOA/UniProt pull for SNO2 and confirmed the live set is still 11 rows: four
+  IBA assertions, five electronic process/MF assertions, and the two SGD ND root placeholders.
+- Copied GOA's explicit `WITH/FROM` values into `supporting_entities` for all four IBA rows and
+  the five supported IEA rows without changing any review actions. Current GOA now makes the
+  `PANTHER:PTN000774355` node and SNO1/SNO3/M. tuberculosis PdxT donors explicit for the IBA
+  rows and records the InterPro/RHEA/EC/ARBA/UniPathway supports for the IEA rows.
+- Refreshed `interpro/panther/PTHR31559/PTHR31559-paint.tsv`; it still has the single
+  `PANTHER:PTN000774355` node with the same four node-level annotations, so the September 29
+  IBA propagation calls remain current.
+- Current GOA uses the synonym spelling `pyridoxal 5'-phosphate synthase (glutamine hydrolyzing)
+  activity` for GO:0036381, but the review keeps the ontology-cache primary label spelling
+  `pyridoxal 5'-phosphate synthase (glutamine hydrolysing) activity`. Current GOA has no SNO2
+  cytosol row; UniProt also dropped the stale cytosol xref.
+- Re-ran a current web search for SNO2/YNL334C/PdxT/SNZ yeast papers. I found no newer direct
+  SNO2 functional study that changes the review's family-based conclusion.

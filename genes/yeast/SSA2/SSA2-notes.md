@@ -87,3 +87,26 @@
   valid because the paper directly assays *S. cerevisiae* SSA mutants. The provider
   report remains `DISPUTED` only for the incorrect live-database claim; its conservative
   localization judgment is retained.
+
+## 2026-10-01 current-GOA reconciliation
+
+- Force-refreshed SSA2 from the current GOA feed and reconciled the review to 61 live
+  source rows. The refresh added 17 rows: 15 newly split current IntAct
+  `GO:0005515 protein binding` assertions from PMID:16429126, PMID:17892321, and
+  PMID:37968396; a live InterPro `GO:0005524 ATP binding` row; and the
+  ComplexPortal `GO:0017053 transcription repressor complex` row from PMID:15102838.
+- Preserved the 12 older source assertions that are absent from current GOA as
+  `retired: true` rows. These cover the stale plasma-membrane IBA, older
+  GO_REF:0000043/GO_REF:0000117/GO_REF:0000120 automatic rows, five no-longer-live
+  unsourced IntAct `protein binding` rows, and two retired GO:0051082 experimental/ISS
+  rows.
+- Rechecked the eight baseline PTHR19375 IBA rows against the current PAINT table.
+  The accepted/non-core nucleus, cytoplasm, cytosol, ATPase, heat-shock-protein-binding,
+  and protein-folding-chaperone rows still trace to current PTHR19375 assertions; the
+  old plasma-membrane IBA remains stale at PTN002500132; and the GO:0042026
+  `protein refolding` row remains a stale 2022 inheritance beside the 2026 fungal
+  PTN001065099 NOT/IRD override.
+- Read the newer cached primary paper PMID:40202836. It shows that the constitutive
+  Ssa1/Ssa2 pair limits aggregation of the endogenous Pab1 stress-granule protein, but
+  it does not require a new GO assertion beyond the existing Ssa2 folding/refolding and
+  proteostasis curation.

@@ -73,3 +73,12 @@ function acts in the cytosol.
 
 Deep research: falcon provider out of credits (HTTP 402); no -deep-research-falcon.md was
 generated. Review grounded in UniProt P19367, seeded GOA, and cached publications.
+
+## 2026-10 update (completion)
+- Bare protein binding IPIs changed MARK_AS_OVER_ANNOTATED -> REMOVE (validator policy; removal does not deny the interactions).
+- Added congenital hyperinsulinism to description: [PMID:36333503 "We demonstrated that the variants result in a loss of repression of HK1 in pancreatic beta cells, thereby causing insulin secretion and congenital hyperinsulinism."]
+  HK1 is a beta-cell disallowed gene; this is a disease-state ectopic expression, not normal beta-cell function, so HK1 is
+  not added to the beta-cell GSIS module.
+- dismech node "Lowered Beta-Cell Glucose Set-Point" binds glucokinase activity (GO:0004340) INCREASED for GCK+HK1;
+  GO:0004340 is_a GO:0004396 hexokinase activity (HK1 core MF), so the terms are compatible.
+- Status set to COMPLETE.

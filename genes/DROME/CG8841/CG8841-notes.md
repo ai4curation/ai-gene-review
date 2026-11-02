@@ -43,3 +43,44 @@ No target-specific primary finding is used to establish a molecular activity her
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG8841-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: Q0E9B5 is the single 837-aa UniProt entry for FlyBase CG8841 (FBgn0033713); the three RefSeq
+proteins (NP_610760.1, NP_725131.1, NP_725132.1) map to this one sequence, so the benchmark accession is
+the canonical full-length product, not a fragment or isoform. The "Dmc1" gene name in UniProt is a
+submitter-imported label; the protein is unrelated to the DMC1 recombinase.
+
+Evolutionary placement: PANTHER PTHR21575:SF12 (PROTEIN HID1), the same subfamily as human HID1 (Q8IV36),
+mouse/rat Hid1, Dictyostelium hid1, S. pombe hid3/SPAC17A5.16 and S. cerevisiae ECM30
+(interpro/panther/PTHR21575/PTHR21575-entries.csv). The family review
+(interpro/panther/PTHR21575/PTHR21575-review.yaml) lists Q0E9B5 as the SF12 representative; no
+disagreement. IBAs descend from PTN000491103 (eukaryote node; Golgi cisternae, cytosol, membrane, Golgi
+organization; negated only in Schizosaccharomyces clades, taxon:4895) and PTN001090684 (secretory granule
+maturation, seeded by MGI Hid1).
+
+New bioinformatics (CG8841-bioinformatics/RESULTS.md): global alignment gives ~69% identity to
+human/mouse/rat HID1, ~26-30% to the fungal SF12 members; Gly2 myristoylation motif (MGNTDSKL)
+conserved; extra length is the disordered acidic segment 570-705, not a missing domain.
+
+Literature: no Drosophila CG8841 study found (web search 2026-10-21). Ortholog evidence cached and used:
+PMID:21337012 (human HID1 medial/trans Golgi + cytosol, peripheral, myristoylation-dependent),
+PMID:27751232 (mouse Hid1 beta-cell KO blocks immature-granule homotypic fusion),
+PMID:29074564 (rat KO: LDCV formation, cargo sorting, TGN acidification, V-ATPase a2 mislocalization),
+PMID:21115972 (C. elegans HID-1 in DCV neurosecretion; N-terminal myristoyl motif needed for membranes),
+PMID:40899782 (S. pombe SPAC17A5.16 mutant lacks stacked Golgi).
+
+Decisions (changes from the previous draft, which cited only the InterPro line for every row):
+- GO:0000138, GO:0005797 (IBA): ACCEPT, now supported by PMID:21337012 + RESULTS.
+- GO:0005794 Golgi apparatus (ISS): ACCEPT -> MODIFY to medial/trans cisterna (already carried).
+- GO:0016020 membrane (IBA): ACCEPT -> MODIFY to GO:0000139 Golgi membrane.
+- GO:0005829 cytosol (IBA): ACCEPT -> KEEP_AS_NON_CORE (reservoir pool).
+- GO:0006886 intracellular protein transport (ISS): ACCEPT -> KEEP_AS_NON_CORE (mechanism unresolved).
+- GO:0007030 Golgi organization (IBA): ACCEPT -> KEEP_AS_NON_CORE (ancestral, distant fungal seed).
+- GO:0061792 secretory granule maturation (IBA): ACCEPT (core).
+- GO:0003674 ND: ACCEPT.
+No NEW terms: dense core granule biogenesis is suggested by rat data but PAINT propagated only
+secretory granule maturation; treated as deliberate.
+
+Relative to review next: human HID1 (Q8IV36), same PANTHER subfamily SF12, seed of both the ISS rows and
+PTN000491103; no review in the repo (no genes/human/HID1).

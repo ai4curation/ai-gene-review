@@ -20,7 +20,7 @@ An evolved, programmed cell-death process — not a pathological accident
 
 **Chris Mungall | AI-Assisted Gene Review**
 
-2026-06-22
+2026-10-04
 
 ---
 
@@ -149,9 +149,8 @@ These discoveries reframed ferroptosis from "GPX4 failure" to a
   suppressor arms**.
 - Curation target: **22 genes** across drivers, four defense arms, and regulators.
 - An **evolved, conserved program** — appropriate to model as biology, not pathology.
-- Next steps:
-  - [ ] Fold in 2023–2026 papers (MBOAT1/2, new suppressors)
-  - [ ] Ontology-gap assessment for the parallel-defense structure
-  - [ ] Cross-link the module to production GO-CAM models
+- Next steps tracked in [#4084](https://github.com/ai4curation/ai-gene-review/issues/4084):
+  refresh optional switch genes, MBOAT1/2-adjacent scope, and remaining GO-CAM
+  switch coverage.
 - Parallels the **[Cuproptosis](../../CUPROPTOSIS.html)** project as a
   metal-dependent regulated-cell-death program.

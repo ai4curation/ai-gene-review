@@ -50,6 +50,8 @@ prefixes:
   MCSA: https://www.ebi.ac.uk/thornton-srv/m-csa/entry/
   RHEA: http://rdf.rhea-db.org/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
+  oa: http://www.w3.org/ns/oa#
+  dcterms: http://purl.org/dc/terms/
 
 imports:
   - linkml:types
@@ -187,7 +189,9 @@ slots:
     range: Term
     inlined: true
     required: true
-    description: The GO term asserted at this node by PAINT (IBD), which descends as IBA.
+    description: >-
+      The GO term PAINT records at this node: an IBD gain, which descends as IBA, or, when
+      ``negated`` is true, an IRD/IKR loss that stops an ancestral IBD descending.
     bindings:
       - binds_value_of: id
         range: GOTermEnum
@@ -196,11 +200,17 @@ slots:
     range: ProteinRef
     inlined_as_list: true
     multivalued: true
-    description: The experimentally annotated descendants the PAINT curator used (the IBD seeds).
+    description: >-
+      PAINT's with/from for this node and term. For an IBD these are the experimentally
+      annotated descendants (the seeds); for an IRD/IKR loss it is the ancestral IBD node
+      whose term is being stopped.
   assessment:
     range: NodeAssessmentEnum
     required: true
-    description: Whether the node placement is sound, too deep, or otherwise wrong.
+    description: >-
+      The verdict on the node row. Gain verdicts (SOUND, TOO_DEEP, WRONG_NODE, NEEDS_PRUNING)
+      apply to IBD rows; LOSS_* verdicts apply to negated IRD/IKR rows; UNRESOLVED to either.
+      The validator rejects a verdict whose polarity does not match ``negated``.
   assessment_reason:
     range: string
     required: true
@@ -212,8 +222,9 @@ slots:
     inlined_as_list: true
     multivalued: true
     description: >-
-      Subfamilies that wrongly inherit the term, if the assessment is negative, as
-      id/label pairs. The label must be PANTHER's official subfamily name verbatim -- a
+      Subfamilies that should not carry the term, as id/label pairs: those that wrongly
+      inherit it under a negative gain verdict, or those below the loss under
+      LOSS_SUPPORTED. The label must be PANTHER's official subfamily name verbatim -- a
       plausible-sounding label is exactly how a wrong SF accession stays hidden.
   node_taxon:
     range: Term
@@ -225,6 +236,20 @@ slots:
       is the clade the curator judged the function arose in, and therefore the thing a
       TOO_DEEP assessment disputes. Roughly a quarter of PAINT rows carry no taxon at all,
       so this slot is optional.
+  evidence:
+    range: PaintEvidenceEnum
+    description: >-
+      PAINT's evidence code for this node row, copied from the family's paint.tsv. Optional
+      for IBD gains (the default reading); required whenever the row is a loss, so that an
+      IRD or IKR is never assessed as if it were a gain. Checked against paint.tsv.
+      `just fill-node-evidence` copies it (and ``negated`` and a loss's seed) from paint.tsv.
+  negated:
+    range: boolean
+    description: >-
+      True when the PAINT row is a NOT (an IRD or IKR loss, or a rare NOT|IBD). An IRD
+      produces no leaf annotation at all: it only stops the ancestral IBD from descending,
+      so the genes below it get nothing rather than a NOT (see projects/IRD_EVIDENCE.md).
+      An IKR loss does descend, as NOT|IBA. Checked against paint.tsv.
   paint_snapshot:
     range: string
     pattern: "^[0-9]{8}$"
@@ -277,6 +302,34 @@ slots:
       The functions this site supports, and how strongly. This is what makes the site
       actionable: it turns "these residues matter" into a claim a gene review can be
       checked against.
+  contact_atom:
+    range: string
+    description: >-
+      For a STRUCTURE-sourced site, the atom of this residue that makes the closest
+      approach to the ligand, in PDB atom naming (e.g. OE2, OG1, O). Recording the atom
+      is what separates a side-chain ligand from a backbone contact at the same residue.
+  contact_via:
+    range: ContactViaEnum
+    description: >-
+      Whether that closest contact is made by a side-chain or a main-chain atom. A
+      main-chain contact is sequence-independent, so a substitution at such a position
+      does not remove the contact and must not be scored as loss of the site.
+  contact_distance:
+    range: float
+    description: >-
+      Distance in angstroms from contact_atom to the nearest ligand atom, as measured in
+      contact_structure. A number to re-measure, not a claim about affinity.
+  contact_ligand:
+    range: string
+    description: >-
+      Chemical component id of the ligand contacted (e.g. NA, CHO), so a site defined
+      against sodium is not confused with one defined against a substrate.
+  contact_structure:
+    range: string
+    description: >-
+      The entry the contact was measured in, as a CURIE (e.g. PDB:7ZYI). Different
+      entries of the same protein can disagree about which atom is closest, so the
+      measurement is only meaningful with its source attached.
   site_source:
     range: SiteSourceEnum
     required: true
@@ -368,7 +421,11 @@ slots:
     range: SupportingText
     inlined_as_list: true
     multivalued: true
-    description: Verbatim quotes from cited references supporting the requirement.
+    description: >-
+      Verbatim quotes from cited references supporting the enclosing claim: a
+      requirement, a term assessment, a member exception, a node assessment's verdict,
+      or a subfamily's description or divergence. Each quote is checked as a verbatim
+      substring of the cached publication by the reference validator.
 
   # --- TermAssessment ---
   assessed_term:
@@ -402,6 +459,44 @@ slots:
       Subfamilies the term IS safe for, when scope is SUBFAMILY_ONLY, as id/label pairs
       with PANTHER's official subfamily name verbatim.
 
+  member_exceptions:
+    range: MemberException
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Members inside the term's scope for which the term nevertheless does not hold.
+      Scope is set per subfamily, but a function can be lost on a branch that a PANTHER
+      subfamily does not separate -- PTHR10782:SF94 holds both fly Su(var)2-10, a valid
+      JAK-STAT regulator, and C. elegans GEI-17, whose organism has no JAK. Each entry is
+      the family review's own judgement on that member, with evidence, so a gene review
+      that removes the term is agreeing with the family rather than overriding it. The
+      family/gene cross-check honours exceptions in both directions: an excepted member may
+      remove the term, and may not keep it.
+  member:
+    range: ProteinRef
+    inlined: true
+    required: true
+    description: The excepted member, as a UniProtKB CURIE with its gene review if one exists.
+  exception_reason:
+    range: string
+    required: true
+    description: Why the term does not hold for this member despite its subfamily.
+  pruned_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      The PAINT node whose propagation this exception prunes. When set, the review must
+      carry a node_assessment for this node and term with a negative verdict
+      (NEEDS_PRUNING, TOO_DEEP or WRONG_NODE on a gain row, or LOSS_SUPPORTED on an
+      IRD/IKR row that already stops the term); the cross-check enforces this, so an
+      exception is always anchored in an adjudicated node rather than standing alone.
+  lost_in_clade_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      Optional PTN for the branch on which the function was lost (the place a PAINT IRD
+      would go), when it is broader than the single member.
+
   # --- ProteinRef / Reference / SupportingText / ExternalRef ---
   control_position:
     range: integer
@@ -432,6 +527,8 @@ slots:
     range: string
     required: true
     description: "Reference CURIE (e.g. PMID:14506275) or a file: path."
+    implements:
+      - dcterms:references
   title:
     range: string
     description: Publication title.
@@ -441,6 +538,8 @@ slots:
     description: >-
       Verbatim quote from the reference. Must be an exact substring of the cached
       publication -- the validator checks this, so do not paraphrase.
+    implements:
+      - oa:exact
   source_db:
     range: ExternalSourceEnum
     required: true
@@ -496,6 +595,7 @@ classes:
       - representative_members
       - diverged_from_family
       - divergence_description
+      - supported_by
     rules:
       - preconditions:
           slot_conditions:
@@ -509,9 +609,10 @@ classes:
 
   NodeAssessment:
     description: >-
-      Assessment of a PAINT/IBD assertion at one ancestral node. This is where an IBA is
-      actually adjudicated: the question is whether the node placement is right, not
-      whether the target resembles the donors.
+      Assessment of a PAINT assertion at one ancestral node. For an IBD gain this is where
+      an IBA is actually adjudicated: the question is whether the node placement is right,
+      not whether the target resembles the donors. For an IRD or IKR loss (``negated:
+      true``) the question is whether the clade below the node really lacks the function.
     slots:
       - node_id
       - asserted_term
@@ -520,7 +621,10 @@ classes:
       - assessment_reason
       - affected_subfamilies
       - node_taxon
+      - evidence
+      - negated
       - paint_snapshot
+      - supported_by
 
   ResidueSite:
     description: >-
@@ -542,12 +646,22 @@ classes:
       - negative_controls
 
   Residue:
-    description: One functionally important position in the anchor protein.
+    description: >-
+      One functionally important position in the anchor protein. For a site whose
+      site_source is STRUCTURE, the optional contact_* slots carry the atom-level
+      provenance of the observation: which atom approaches the ligand, whether it does so
+      through the side chain or the backbone, how close, to which ligand, and in which
+      entry.
     slots:
       - position
       - expected
       - role
       - role_term
+      - contact_atom
+      - contact_via
+      - contact_distance
+      - contact_ligand
+      - contact_structure
 
   Motif:
     description: A contiguous sequence block that must match a pattern.
@@ -573,6 +687,7 @@ classes:
       - scope_reason
       - determined_by_site
       - applicable_subfamilies
+      - member_exceptions
       - supported_by
     rules:
       - preconditions:
@@ -593,6 +708,20 @@ classes:
             determined_by_site:
               required: true
         description: A residue-determined term must name the site that decides it.
+
+  MemberException:
+    description: >-
+      A family-level exception to a term assessment for one member: the term is in scope
+      for the member's subfamily but does not hold for this member.
+    slots:
+      - member
+      - exception_reason
+      - pruned_node_id
+      - lost_in_clade_node_id
+      - supported_by
+    slot_usage:
+      supported_by:
+        required: true
 
   ProteinRef:
     description: >-
@@ -637,6 +766,25 @@ classes:
 # Enums
 # =====================================================================
 enums:
+  PaintEvidenceEnum:
+    description: Evidence codes that occur on PAINT node rows in IBD.gaf.
+    permissible_values:
+      IBD:
+        description: Inferred from Biological aspect of Descendant (a gain at the node).
+        meaning: ECO:0000319
+      IRD:
+        description: >-
+          Inferred from Rapid Divergence (a loss at the node). Stops the ancestral IBD
+          descending; produces no leaf annotation.
+        meaning: ECO:0000321
+      IKR:
+        description: >-
+          Inferred from Key Residues (a loss at the node). Descends to leaves as NOT|IBA.
+        meaning: ECO:0000320
+      IBA:
+        description: A small number of PAINT node rows carry IBA directly.
+        meaning: ECO:0000318
+
   FunctionalCoherenceEnum:
     permissible_values:
       COHERENT:
@@ -666,6 +814,24 @@ enums:
           an IRD/NOT to stop the term descending.
       UNRESOLVED:
         description: Investigated but not confidently classifiable.
+      LOSS_SUPPORTED:
+        description: >-
+          (Loss rows only.) The clade below the node lacks the function, so stopping the
+          term here is right. Name the evidence (assay, key residues, absent partner or
+          pathway) in assessment_reason.
+      LOSS_CONTRADICTED:
+        description: >-
+          (Loss rows only.) Members below the node retain the function, so the IRD/IKR
+          should be removed and the ancestral term allowed to descend.
+      LOSS_TOO_BROAD:
+        description: >-
+          (Loss rows only.) The function was lost, but on a narrower branch than this node;
+          some members below it retain the function. Name the branch that lost it and the
+          members that kept it.
+      LOSS_STALE:
+        description: >-
+          (Loss rows only.) The ancestral node named in with/from no longer carries the IBD
+          this row overrides, so the loss stops nothing and can be retired.
 
   RequirementStrengthEnum:
     permissible_values:
@@ -696,6 +862,18 @@ enums:
       UNRESOLVED:
         description: Investigated but undecided.
 
+  ContactViaEnum:
+    permissible_values:
+      SIDE_CHAIN:
+        description: >-
+          The closest contact is made by a side-chain atom, so the contact depends on the
+          residue identity and a substitution can remove it.
+      MAIN_CHAIN:
+        description: >-
+          The closest contact is made by a backbone atom (N, CA, C, O), so it is
+          sequence-independent: any residue at this position makes the same contact, and a
+          substitution here is not loss of the site.
+
   SiteSourceEnum:
     permissible_values:
       UNIPROT_FEATURE:
@@ -709,6 +887,16 @@ enums:
           UNIPROT_FEATURE.
       LITERATURE:
         description: From a publication, with supporting_text quoting the relevant statement.
+      STRUCTURE:
+        description: >-
+          Read from deposited coordinates: the positions are the reference protein's
+          residues contacting a bound ligand, metal, or partner in a named PDB entry.
+          Stronger than LITERATURE for a site a paper describes only in prose, because the
+          contact set is recomputable from the entry and the cutoff. Record the entry (and
+          the ligand) in the description, and prefer UNIPROT_FEATURE when a curated feature
+          table already covers the same residues. Note that a contact made only through
+          main-chain atoms is sequence-independent, so such positions should normally be
+          left out of the site rather than curated as substitutable.
       ALIGNMENT_INFERENCE:
         description: >-
           Inferred from conservation in the family alignment with no external annotation.

@@ -87,3 +87,15 @@ GO:1903376 regulation of oxidative-stress neuron apoptosis (IDA) → KEEP_AS_NON
 
 GO:0010133 "L-proline catabolic process to L-glutamate" (in UniProt DR line as IBA:GO_Central) is
 now OBSOLETE in GO — not present in the seeded GOA TSV, so not reviewed; would map to GO:0006562.
+
+## 2026-10-09 completion pass (alignment with dismech Hyperprolinemia Type 1)
+
+- Re-checked all 18 GOA rows; dispositions above stand. Status set to COMPLETE.
+- PMID:23743200 (DJ-1/PYCR1): abstract does not mention PRODH, but PubMed MeSH terms for the
+  paper include "Proline Oxidase", so PRODH appears in the full text (not accessible here).
+  The IDA GO:1903376 annotation stays KEEP_AS_NON_CORE.
+- Added disease anchors: [PMID:17412540 "Hyperprolinemia type I (HPI) results from a deficiency of proline oxidase (POX),"]
+  and [PMID:18806117 "Hyperprolinemia type I (HPI) is a result of a deficiency in POX."]; the latter also names
+  hydroxyproline oxidase (PRODH2) as the hyperhydroxyprolinemia enzyme, supporting the over-annotation call on GO:0019470.
+- dismech Hyperprolinemia_Type_1 binds GO:0004657 (DECREASED), GO:0006562 (DECREASED) and
+  GO:0005743 on its PRODH node: identical to core function 1 here.

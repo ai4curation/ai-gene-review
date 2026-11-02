@@ -85,6 +85,32 @@ def test_schema_invalid_taxon_id():
         temp_file.unlink()
 
 
+@pytest.mark.parametrize(
+    "taxon_id,blocked",
+    [
+        ("NCBITaxon:3055", False),
+        ("NCBITaxon:CHLRE", True),
+        ("uniprot:CHLRE", True),
+        (9606, True),
+    ],
+)
+def test_best_practices_taxon_id_must_be_numeric_ncbitaxon(tmp_path: Path, taxon_id, blocked: bool):
+    """A placeholder taxon id such as NCBITaxon:<CODE> is a best-practices error."""
+    review = tmp_path / "X-ai-review.yaml"
+    review.write_text(yaml.dump({
+        "id": "Q456",
+        "gene_symbol": "X",
+        "description": "Test gene with a long enough description",
+        "taxon": {"id": taxon_id, "label": "Chlamydomonas reinhardtii"},
+    }))
+    report = validate_gene_review(review, check_best_practices=True)
+    taxon_errors = [
+        i for i in report.issues
+        if i.path == "taxon.id" and i.severity == ValidationSeverity.ERROR
+    ]
+    assert bool(taxon_errors) is blocked
+
+
 def test_cli_validate_rejects_schema_structural_errors():
     """The ai-gene-review validate command should run strict schema validation."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -391,3 +417,58 @@ def test_various_gene_review_structures(gene_data, should_be_valid):
             assert not report.is_valid, "Should be invalid but passed validation"
     finally:
         temp_file.unlink()
+
+
+def test_cli_term_validator_taxon_label_mismatch_is_blocking():
+    """An NCBITaxon label mismatch on the bound taxon slot must block.
+
+    The advisory label policy exists for GOA/GO release lag, which does not apply
+    to NCBITaxon labels; a wrong taxon label (e.g. a UniProt species code written
+    as the label) is a data error.
+    """
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Term validation",
+        [
+            "bash",
+            "-c",
+            "printf '%s\\n%s\\n' "
+            "'❌ rbcL-ai-review.yaml - 1 issue(s):' "
+            "\"  ⚠️  WARN: Label mismatch for 'NCBITaxon:3055': expected "
+            "'Chlamydomonas reinhardtii', got 'CHLRE'\"; exit 1",
+        ],
+        "TermValidator",
+        "linkml_term_validator",
+        Path.cwd(),
+    )
+
+    assert not report.is_valid
+    assert report.error_count == 1
+    assert "NCBITaxon:3055" in report.issues[0].message
+
+
+def test_cli_term_validator_go_label_warning_stays_advisory_beside_taxon_error():
+    """GO label drift stays a warning even when a taxon label mismatch blocks."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Term validation",
+        [
+            "bash",
+            "-c",
+            "printf '%s\\n%s\\n%s\\n' "
+            "'❌ x-ai-review.yaml - 2 issue(s):' "
+            "\"  ⚠️  WARN: Label mismatch for 'NCBITaxon:9606': expected 'Homo sapiens', got 'HUMAN'\" "
+            "\"  ⚠️  WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'\"; exit 1",
+        ],
+        "TermValidator",
+        "linkml_term_validator",
+        Path.cwd(),
+    )
+
+    assert not report.is_valid
+    assert report.error_count == 1
+    assert report.warning_count == 1

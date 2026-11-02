@@ -28,7 +28,7 @@ style: |
 
 Auditing how GO annotates the enzymes and lectins of glycosylation, and mapping CAZy families to GO
 
-<span class="small">AI Gene Review · projects/GLYCOBIOLOGY · 2026</span>
+<span class="small">AI Gene Review · projects/GLYCOBIOLOGY · reviewed 2026-10-04</span>
 
 ---
 
@@ -36,7 +36,7 @@ Auditing how GO annotates the enzymes and lectins of glycosylation, and mapping 
 
 ## Bottom line
 
-- We reviewed **376 annotations on 11 human glycogenes** and indexed **17 pathway modules** (100 more genes, 2,735 annotations).
+- We reviewed **376 annotations on 11 human glycogenes** and indexed **17 pathway modules** (100 more genes, 2,748 annotations).
 - Only **4 removals**: the problem is **altitude and pleiotropy** (generic parent terms, downstream physiology), not wrong functions.
 - A **CAZy→GO mapping** (`cazy2go`) yields a **60-row safe propagation set** and **34 hand-endorsed** `interpro2go` gaps.
 
@@ -77,13 +77,13 @@ Auditing how GO annotates the enzymes and lectins of glycosylation, and mapping 
 
 ![h:430](n-glycan-module-page.jpg)
 
-<span class="small">One of the 17 indexed glycobiology modules (N-glycan LLO lumenal assembly). The 100-gene module cohort shows the same skew: 0.5% REMOVE, 63% ACCEPT, 18% non-core, 15% over-annotated.</span>
+<span class="small">One of the 17 indexed glycobiology modules (N-glycan LLO lumenal assembly). The 100-gene module cohort shows the same skew: 0.8% REMOVE, 63.3% ACCEPT, 17.6% non-core, 14.0% over-annotated.</span>
 
 ---
 
 ## cazy2go: CAZy families → GO MF
 
-| Step | Result |
+| Step | Result (2026-06 snapshot) |
 |---|---|
 | Families with a GO MF via member ECs | 283 |
 | Fully masked by `interpro2go` | 56 (20%) |
@@ -97,9 +97,9 @@ Auditing how GO annotates the enzymes and lectins of glycosylation, and mapping 
 
 ## Status and next steps
 
-- ✅ 11 exemplar reviews (7 + 4 mucin O-glycan); 17 modules indexed; `cazy2go` safe set built.
-- ⬜ Run the **GOA closure query** to size the animal glycogene set and its baseline.
-- ⬜ Submit the **8 proposed terms** and the **34 endorsed** `interpro2go` gaps after curator sign-off.
-- ⬜ Remaining GALNT paralogues, core 3/4 and capping steps; re-review modules for new terms (1 across 100 genes).
+- Done: 11 exemplar reviews; 17 modules indexed; `cazy2go` safe set built.
+- Next: run the **GOA closure query** to size the animal glycogene set and its baseline.
+- Next: submit the **8 proposed terms** and the **34 endorsed** `interpro2go` gaps after curator sign-off.
+- Next: remaining GALNT paralogues, core 3/4 and capping steps; re-review modules for new terms.
 
 **Read more:** `projects/GLYCOBIOLOGY.md` · `projects/GLYCOBIOLOGY/`

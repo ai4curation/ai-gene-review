@@ -103,7 +103,7 @@ annotations. Three PI4KB rows are `MODIFY`ed to `GO:0043495`.
 | Picornaviral 3A (Aichi O91464, polio P03300, …) | 2 | the same adaptor activity, hijacked |
 | **PRKAR1A** (P10644) | 1 | already informatively annotated |
 | TBC1D22A/B | 3 | bind the **same Q domain**, mutually exclusively with PI4KB → MODIFY |
-| PPM1L | 1 | topically coherent, no follow-up → over-annotated |
+| PPM1L | 1 | GOLD-mediated recruitment to ER-Golgi contact sites → MODIFY |
 
 ## Core/non-core consistency
 
@@ -464,3 +464,37 @@ Each is a shorter, tidier text that sits next to the real one and reads as if it
 is in the body text, and it is the only one that counts. Corollary: this cut against my own
 annotation — the correction *strengthened* `GO:2000639` from one-directional to bidirectional — so
 the habit is not conservative, it is just wrong in whichever direction the summary happens to lean.
+
+## 2026-10-05 bioinformatics-audit follow-up
+
+- Re-ran `uv run python genes/human/ACBD3/ACBD3-bioinformatics/audit_acbd3_claims.py`;
+  the hand-maintained regression audit still reports 29 retracted phrasings checked,
+  9 required claims checked, and 0 problems.
+- Changed the PPM1L `protein binding` row from `MARK_AS_OVER_ANNOTATED` to
+  `MODIFY` with `GO:0043495 protein-membrane adaptor activity`. PMID:22796112
+  reports that ACBD3 recruits PPM1L to ER-Golgi membrane contact sites through
+  its GOLD domain, so the same adaptor term used for the other membrane-recruited
+  ACBD3 partners is the more informative molecular-function target for this row.
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+Row: one GO:0005739 row, IEA GO_REF:0000044 (UniProt keyword SL-0173), already
+KEEP_AS_NON_CORE. No sub-compartment rows.
+
+Checked:
+- UniProt: "Mitochondrion {ECO:0000250}. Note=Also mitochondrial (via its interaction
+  with PBR)" [file:human/ACBD3/ACBD3-uniprot.txt] - By similarity, no human
+  localisation data.
+- The rodent source (fetched, abstract-only) [PMID:11731621 "Glutathione-S-transferase
+  -PAP7 interacted with both the mitochondrial PBR and cytosolic PKA-RIalpha in MA-10
+  Leydig cells."]; the mitochondrial targeting of PKA is proposed, not shown
+  [PMID:11731621 "PAP7 may function by targeting the PKA isoenzyme to organelles rich
+  in PBR, i.e. mitochondria"].
+- No presequence, no TM; ACBD3 is a peripheral Golgi membrane scaffold. Any
+  mitochondrial pool would be peripheral on the TSPO-bearing outer membrane, but that
+  is one indirect (partner-location) line.
+
+Outcome: root; KEEP_AS_NON_CORE kept with a reason recording the check. The
+organelle claim is weak (interaction-based, rodent) but not contradicted; flagged as a
+judgement call (MARK_AS_OVER_ANNOTATED would also be defensible). PMID:11731621 added
+to references.

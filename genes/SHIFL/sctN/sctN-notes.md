@@ -96,7 +96,7 @@ GOA row: `GO:0046933 proton-transporting ATP synthase activity, rotational
 mechanism`, IEA, `GO_REF:0000118` (TreeGrafter), `WITH/FROM
 PANTHER:PTN001807734`.
 
-From `projects/TREEGRAFTER/rotary_atpase/node_placement.tsv`:
+From `projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv`:
 
 - `PTN008558586` is the **IBD node** carrying GO:0046933 and GO:0045259, and its
   `event_type` is **DUPLICATION**.

@@ -73,3 +73,53 @@ Wheat F6LAX4 is a direct ortholog (PTHR10648 A-subunit clade), so the conserved 
 - Entry is TrEMBL/PE3; all functional inference is by homology (IBA + ARBA IEA). Decisions rest on
   the unambiguous, deeply conserved domain architecture and family assignment, not on wheat-specific
   experiments.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not opened or used. Re-examined every annotation against PAINT node placement,
+a new phylogeny and cached literature.
+
+### Identity
+- F6LAX4 (587 aa) is a full-length A subunit (Arabidopsis PP2AA1-3 are 587-588 aa, human PPP2R1A 589 aa).
+  It is the longest wheat PTHR10648:SF4 entry; the other wheat entries for LOC123103357/LOC123120841
+  (A0A341VDM8 583, A0A341UW13 562, A0A341WDI6 558, A0A3B6MQ20 578, A0A3B6KFF3 571, A0A3B6MQ25 407 aa)
+  are shorter isoforms or homoeolog models. F6LAX4 is the canonical product, not a fragment or isoform.
+
+### Phylogeny (file:WHEAT/F6LAX4/F6LAX4-bioinformatics/RESULTS-rereview.md)
+- New script `phylogeny_rereview.py` (MAFFT + NJ, 21 sequences). F6LAX4 groups with grass A subunits;
+  eudicot A subunits (tomato + Arabidopsis PP2AA1/RCN1, PP2AA2, PP2AA3) form their own group, so the
+  three Arabidopsis paralogs are eudicot-specific and F6LAX4 is a co-ortholog of all three
+  (identity 85.2% RCN1, 89.8% PP2AA2, 88.6% PP2AA3; 59.3% human PPP2R1A).
+- PANTHER subfamily discrepancy: grass/Amborella/moss A subunits are in SF4 with fly, worm, yeast and
+  Dictyostelium scaffolds; Arabidopsis PP2AA1 is SF29 and PP2AA2/3 SF36. Sequence identity shows this
+  is an HMM-boundary artefact, not functional divergence. The PTHR10648 family review
+  (interpro/panther/PTHR10648/PTHR10648-review.yaml) records F6LAX4 in SF4 and does not discuss this
+  split; no disagreement on placement, but its SF4 description is wheat-only.
+
+### PAINT nodes (interpro/panther/PTHR10648/PTHR10648-paint.tsv)
+- PTN000068663 (Eukaryota): GO:0000159, GO:0005634, GO:0005829 IBDs -> covers F6LAX4.
+- PTN000068596: GO:0005737, GO:0019888 and GO:0140378 protein complex scaffold activity (IBD 2026-06-03,
+  seed P30153). F6LAX4 receives GO:0019888 from this node, so GO:0140378 is expected to propagate;
+  added as NEW (IBA).
+- PTN000068664: spindle assembly / meiotic centromeric cohesion BP IBDs on an animal/fungal subclade;
+  not propagated to F6LAX4 — deliberate, so no BP added.
+- PTN000068762: IRD NOT cytosol on Arabidopsis PP2AA3 leaf only; does not cover grasses.
+
+### Changes vs previous review
+- GO:0000159, GO:0019888: ACCEPT (unchanged), now supported by PMID:17174897 and the human PPP2R1A
+  curated UniProt function text instead of only the deep-research file.
+- GO:0005634 nucleus: ACCEPT, now supported by PMID:22404109 (Arabidopsis A1/A2/A3 in nucleus and cytosol).
+- GO:0005737 cytoplasm: MODIFY -> GO:0005829 cytosol (unchanged action; PMID:22404109 support).
+- GO:0032991 protein-containing complex: MARK_AS_OVER_ANNOTATED -> TOO_GENERAL (true, entailed by GO:0000159).
+- NEW GO:0140378 protein complex scaffold activity; core function MF switched to it, with
+  GO:0019888 as a second core function; in_complex GO:0000159 added.
+- Description rewritten to drop Arabidopsis-specific BRI1/BZR1 claims stated as if they were wheat
+  functions, and to record co-orthology.
+
+### Relative to review next
+- Arabidopsis PP2AA1/RCN1 (Q38845), the best genetically characterised co-ortholog; no review in repo
+  (Drosophila Pp2A-29B is reviewed; human PPP2R1A review is DRAFT).
+
+### Modules
+- modules/dmel_pp2a_holoenzymes.yaml (PP2A complex, fly-specific); modules/brassinosteroid_signaling.yaml
+  and modules/auxin_polar_transport.yaml mention PP2A in plants but do not model the A subunit.

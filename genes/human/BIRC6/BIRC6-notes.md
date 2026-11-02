@@ -16,5 +16,6 @@ Evidence inspected: [PMID:25733871](https://pubmed.ncbi.nlm.nih.gov/25733871/), 
 Remaining questions:
 
 - Inspect PMID:18329369 full text for any direct BIRC6 contribution to phosphorylation; being phosphorylated is not participation.
+  - 2026-10-16 (issue #4246): full text still inaccessible (no PMC/Europe PMC copy; cell.com returns HTTP 403), so the GO:0006468 TAS row stays UNDECIDED. UniProt's citation scope for this paper lists phosphorylation and MEK1/PLK1 binding [file:human/BIRC6/BIRC6-uniprot.txt "BIRC5/SURVIVIN; MAP2K1/MEK1; RAB8A/RAB8; RAB11A/RAB11; PLK1"]; the BRUCE-MEK1 interaction is the thing to check for a scaffolding role.
 
 The project audit records all changed row indices and decisions in `projects/IBA_REVIEW/rereview-2026-09-20/localization.yaml`.

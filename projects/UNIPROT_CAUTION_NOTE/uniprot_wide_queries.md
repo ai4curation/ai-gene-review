@@ -1,5 +1,6 @@
 ---
 title: "UniProt-wide CAUTION over-annotation queries"
+autolink_gene_symbols: false
 ---
 
 # UniProt-wide CAUTION over-annotation queries (QuickGO)

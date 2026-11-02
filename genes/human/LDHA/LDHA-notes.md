@@ -53,5 +53,11 @@
   oxidoreductase complex → ACCEPT.
 - IEA catalytic-activity/oxidoreductase parents (GO:0003824, GO:0016491, GO:0016616): correct but
   too general given the specific EC-level annotation exists → MODIFY to GO:0004459.
-</content>
-</invoke>
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+- Row: GO:0005739 IBA (is_active_in, PTN000899413, WITH/FROM UniProtKB:P07195 = LDHB), stays MARK_AS_OVER_ANNOTATED; reason extended, quote and reference added.
+- Source check (QuickGO, 2026-10-25): LDHB's experimental mitochondrial annotation is GO:0005743 IDA from PMID:27618187 (full text cached). Immunogold TEM put LDHB at the inner membrane, and the same paper tested LDHA: [PMID:27618187 "In contrast to LDHB, TEM experiments with gold-labeled LDHA did not show localization to the mitochondria"]. The node's only seed therefore shows the location is LDHB-specific.
+- Current PAINT snapshot [file:interpro/panther/PTHR43128/PTHR43128-paint.tsv] (20260616) has only GO:0005829 cytosol on PTN000899413; the 2022 GOA IBA row looks stale.
+- No transit peptide or TM; UniProt "Cytoplasm". Organelle not supported for LDHA; no sub-compartment. is_active_in not supported (no LDHA activity shown in the organelle).
+- Removed a stray tool-markup tail (closing content and invoke tags) left at the end of this notes file by an earlier edit.

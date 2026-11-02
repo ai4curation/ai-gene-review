@@ -122,3 +122,11 @@ DNA) and the TLR3/TLR4-TRIF pathway.
 - IBA annotations (DNA-binding TF activity, Pol II cis-reg binding, nucleus, immune system
   process, regulation of transcription by Pol II) sit at the right level for the IRF family
   and include Q14653 in their own WITH/FROM (expected experimental grounding) — ACCEPT.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+- Rows: GO:0005739 EXP (PMID:39362857), IDA (PMID:25609812), IEA (GO_REF:0000044, SL-0173); all located_in, all stay KEEP_AS_NON_CORE. Reasons extended with the check; quotes added to EXP and IEA rows.
+- IEA: SL-0173 rests on [file:human/IRF3/IRF3-uniprot.txt "Mitochondrion {ECO:0000269|PubMed:25609812, ECO:0000269|PubMed:39362857}."]; mapping sound.
+- PMID:25609812 (full text): [PMID:25609812 "Tom70 resides on the outer membrane of mitochondria, whereas IRF3 is located in the cytosol of resting cells."]; subcellular fractionation shows virus-induced relocalization that needs Tom70, not Tom20.
+- PMID:39362857 (full text): mitochondrial/cytosolic fractions with [PMID:39362857 "β-actin and TOMM20 were utilized as markers for the cytosolic and mitochondrial fractions, respectively."]; no ER marker, organelle level only.
+- No transit peptide or TM. Recruited surface pool (TRAF3/BRAF precedent): binding the OMM receptor Tom70 is one line, no OMM fraction or protease assay. Stays at the root; no GO:0005741.

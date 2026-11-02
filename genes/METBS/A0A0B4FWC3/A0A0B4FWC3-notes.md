@@ -37,3 +37,15 @@ Based on UniProt entry, this protein is a sesquiterpene synthase with the follow
 - Single domain protein (332 aa)
 - Contains Terpene_syn_C_2 domain (Pfam: PF19086)
 - Belongs to Isoprenoid Synthase Type I superfamily
+## Re-review 2026-10-01 (GOA refresh)
+
+- Four IEA rows vanished from the current GOA snapshot and are marked `retired: true`
+  (reviews kept): GO:0008299 isoprenoid biosynthetic process (GO_REF:0000117 ARBA),
+  GO:0016829 lyase activity (GO_REF:0000043 keyword), GO:0016838 carbon-oxygen lyase
+  activity, acting on phosphates (GO_REF:0000117 ARBA), GO:0046872 metal ion binding
+  (GO_REF:0000043 keyword). Only GO:0010333 terpene synthase activity (IEA,
+  GO_REF:0000002) remains; its MODIFY to GO:0010334 sesquiterpene synthase activity stands.
+- The NEW GO:0051762 sesquiterpene biosynthetic process row had no support; now grounded
+  in PMID:31239482 (MbrBTPSL1 = MBR_10393 produces mainly corvol ether B) as IDA.
+- NOTE: genes/METBS/MBR_10393/ is a duplicate review of the same UniProt accession
+  (A0A0B4FWC3); both were refreshed in parallel.

@@ -129,3 +129,13 @@ activity term — MODIFY to the specific child GO:0046863.
 ADP binding (GO:0043531): experimentally supported (PMID:16822862), reflects nucleotide
 exchange / inhibition; KEEP_AS_NON_CORE (real but a facet of the ATPase cycle, not the
 headline function).
+
+## 2026-10-15 journal: stromule row resolved (PR #5026 follow-up)
+
+Supersedes the "stromule provenance is questionable; treated as UNDECIDED" statement in the Cold section above.
+
+- Stromule (GO:0010319, IDA, PMID:16923014) is now MODIFY to chloroplast stroma (GO:0009570), a term RCA already carries with ACCEPT from other proteomic studies.
+- Evidence: the paper fractionated isolated chloroplasts into stroma and lumen and compared them by DIGE; stromules were not isolated or imaged. TAIR applied the same IDA stromule annotation to all 33 proteins it curated from PMID:16923014
+  (together with response to cold IEP for the same set), including CAT2 (peroxisomal catalase, P25819) and SHM1 (mitochondrial serine hydroxymethyltransferase, Q9SZJ5). The term therefore labels the fraction measured, not an observation of stromules.
+- Query (re-run 2026-10-15): QuickGO REST, `https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=PMID:16923014&limit=200` (Accept: application/json). Returned 66 annotations on 33 UniProtKB entries, all assigned by TAIR: each entry has exactly one GO:0010319 IDA located_in row and one GO:0009409 IEP acts_upstream_of_or_within row; RCA is P10896.
+- Full text of PMID:16923014 is not cached (full_text_available: false); the conclusion rests on the abstract plus the QuickGO pattern.

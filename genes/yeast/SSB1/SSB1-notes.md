@@ -201,3 +201,22 @@
   `MARK_AS_OVER_ANNOTATED` to `REMOVE` under the current generic-binding policy.
   This withdraws only the unqualified protein-binding GO term; it does not
   reject the Sse1, Bmh, Uri1, or other observed physical interactions.
+
+## 2026-10-01 current-GOA refresh follow-up
+
+- Forced a current `fetch-gene` refresh. The live SSB1 GOA feed still contains
+  39 rows, and all 39 exact live signatures are represented by unretired YAML
+  rows after the refresh; the two exact rows absent from live GOA are the
+  intentional `NEW` proposals for `GO:0043022 ribosome binding` and
+  `GO:0022626 cytosolic ribosome`.
+- Reviewed the three newly seeded rows that the older review had collapsed: the
+  third PMID:1394434 `GO:0002181 cytoplasmic translation` row is kept as a
+  non-core translation-context annotation, and the two additional PMID:16429126
+  `GO:0005515 protein binding` rows are removed as uninformative generic
+  protein-binding assertions from the same proteome-wide complex survey.
+- Backfilled 25 current supporting-entity lists from GOA. The IBA rows continue
+  to use PAINT ancestral nodes as their proximate source evidence, and SSB1
+  self-donors remain valid descendant evidence rather than circular support.
+- Searched PubMed for exact `SSB1`/`Ssb1`/`YDL229W` mentions in 2025-2026. The
+  search returned the same two recent Ssb1/2 papers noted in the 2026-09-29
+  follow-up and no newer exact-match paper that changes the review.

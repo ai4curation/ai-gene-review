@@ -1,0 +1,7 @@
+# SNZ1 (YMR096W, UniProt Q03148) – review notes
+
+- PdxS/Pdx1 family PLP synthase subunit [UniProt:Q03148 "Belongs to the PdxS/SNZ family"]. Purified yeast Pdx1 (Snz1) is hexameric and active [PMID:19523954 "The universal enzymatic cofactor vitamin B6 can be synthesized as pyridoxal 5-phosphate (PLP) by the glutamine amidotransferase Pdx1"]; UniProt kinetics (Km R5P 0.11 mM, G3P 0.3 mM) from this paper.
+- Forms the glutaminase-active complex with Sno1 [PMID:14764090 "When expressed simultaneously, the two protein products formed a complex and showed glutaminase activity"].
+- Required for growth without B6 [PMID:12271461 "SNZ1 and SNO1 were both required for growth in certain conditions"]; [PMID:30498136 "SNZ1 was required for growth in dextrose medium lacking only pyridoxine"]; Snz1 uses free ammonia in vitro [PMID:30498136 "Snz1p is a PLP synthase that uses glyceraldehyde-3-phosphate, ribose-5-phosphate and free ammonia as substrates"].
+- GO issues: "pyridoxine biosynthetic process" (IBA/IEA/IGI/IMP) reflects the pyridoxine-auxotrophy phenotype; the enzyme makes PLP directly -> MODIFY to GO:0036001 'de novo' PLP biosynthetic process. amine-lyase activity (IBA) -> MODIFY to GO:0036381. protein binding (IPI x3, Snz1-Sno1) -> REMOVE (captured by GO:1903600).
+- Pathway context: SNZ1/SNO1 are absent from YeastPathways PLPSAL-PWY (salvage only); the module adds them as the de novo variant. Consistent with literature. Paralog specialisation: SNZ2/SNZ3 linked to thiamine (B1) synthesis (PMID:12271461, PMID:30498136).

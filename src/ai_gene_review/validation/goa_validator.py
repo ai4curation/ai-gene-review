@@ -1,6 +1,9 @@
 """Validator for checking existing_annotations against GOA source files."""
 
 import csv
+import hashlib
+import io
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
@@ -15,6 +18,26 @@ EXPERIMENTAL_EVIDENCE_CODES: frozenset = frozenset(
 )
 # Author/curator-statement codes: still backed by a specific publication.
 AUTHOR_STATEMENT_CODES: frozenset = frozenset({"TAS", "NAS"})
+
+SNAPSHOT_TSV_HEADER = (
+    "GENE PRODUCT DB", "GENE PRODUCT ID", "SYMBOL", "QUALIFIER", "GO TERM",
+    "GO NAME", "GO ASPECT", "ECO ID", "GO EVIDENCE CODE", "REFERENCE",
+    "WITH/FROM", "TAXON ID", "TAXON NAME", "ASSIGNED BY", "GENE NAME", "DATE",
+)
+
+
+class _SnapshotManifestLoader(yaml.SafeLoader):
+    """Reject duplicate keys instead of silently replacing a source declaration."""
+
+    def construct_mapping(self, node, deep=False):
+        self.flatten_mapping(node)
+        result = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if not isinstance(key, str) or key in result:
+                raise ValueError(f"Duplicate or non-string manifest key: {key!r}")
+            result[key] = self.construct_object(value_node, deep=deep)
+        return result
 
 
 def referenced_pmids(
@@ -78,6 +101,8 @@ class GOAAnnotation:
     annotation_extension: str
     date: str
     isoform: str = ""  # UniProt isoform ID (e.g., "P19544-1") if present
+    source_path: str = ""  # Populated for explicit multi-snapshot validation
+    source_line: int = 0
 
     @classmethod
     def from_tsv_row(cls, row: list) -> "GOAAnnotation":
@@ -147,6 +172,7 @@ class GOAValidationResult:
         default_factory=list
     )  # (go_id, yaml_evidence, goa_evidence)
     error_message: Optional[str] = None
+    snapshot_sources: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -249,6 +275,9 @@ class GOAValidator:
         Returns:
             GOAValidationResult with validation details
         """
+        # An explicit --goa remains a single-file diagnostic. Only the default
+        # sibling lookup opts in to a declared collection of immutable sources.
+        use_manifest = goa_file is None
         # Derive GOA file path if not provided
         if goa_file is None:
             # Assume standard structure: gene-name-ai-review.yaml -> gene-name-goa.tsv
@@ -268,12 +297,24 @@ class GOAValidator:
                 is_valid=False, error_message=f"GOA file not found: {goa_file}"
             )
 
-        # Parse both files
-        goa_annotations = self.parse_goa_file(goa_file)
+        snapshot_sources: List[Dict[str, Any]] = []
+        manifest = goa_file.with_name(f"{goa_file.stem}-snapshots.yaml")
+        if use_manifest and (manifest.exists() or manifest.is_symlink()):
+            try:
+                goa_annotations, snapshot_sources = self._load_snapshots(
+                    yaml_file, goa_file, manifest
+                )
+            except (OSError, ValueError, TypeError, yaml.YAMLError, csv.Error) as exc:
+                return GOAValidationResult(
+                    is_valid=False,
+                    error_message=f"Invalid GOA snapshot manifest {manifest}: {exc}",
+                )
+        else:
+            goa_annotations = self.parse_goa_file(goa_file)
         yaml_annotations = self.parse_yaml_annotations(yaml_file)
 
         # Initialize result
-        result = GOAValidationResult(is_valid=True)
+        result = GOAValidationResult(is_valid=True, snapshot_sources=snapshot_sources)
 
         if self.strict_tuple_matching:
             # Strict mode: check complete tuples (go_id, evidence_code, reference)
@@ -283,6 +324,102 @@ class GOAValidator:
         else:
             # Legacy mode: check by GO ID only
             return self._validate_by_go_id(goa_annotations, yaml_annotations, result)
+
+    def _load_snapshots(
+        self, yaml_file: Path, original: Path, manifest: Path
+    ) -> Tuple[List[GOAAnnotation], List[Dict[str, Any]]]:
+        """Load only explicitly pinned sibling snapshots; never synthesize sources."""
+        directory = original.parent.resolve()
+        if manifest.resolve().parent != directory:
+            raise ValueError("Manifest escapes the gene directory")
+        data = yaml.load(manifest.read_text(encoding="utf-8"), Loader=_SnapshotManifestLoader)
+        keys = {"version", "gene_product_db", "gene_product_id", "taxon_id", "snapshots"}
+        if not isinstance(data, dict) or set(data) != keys:
+            raise ValueError(f"Manifest must contain exactly {sorted(keys)}")
+        if type(data["version"]) is not int or data["version"] != 1:
+            raise ValueError("Manifest version must be integer 1")
+        target, taxon = data["gene_product_id"], data["taxon_id"]
+        database = data["gene_product_db"]
+        if not isinstance(database, str) or not database.strip():
+            raise ValueError("gene_product_db must be a nonempty namespace string")
+        if not isinstance(target, str) or not target:
+            raise ValueError("gene_product_id must be a nonempty accession string")
+        if not isinstance(taxon, str) or not re.fullmatch(r"NCBITaxon:[0-9]+", taxon):
+            raise ValueError("taxon_id must be an NCBITaxon CURIE string")
+        review = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
+        if (not isinstance(review, dict) or review.get("id") != target
+                or not isinstance(review.get("taxon"), dict)
+                or review["taxon"].get("id") != taxon):
+            raise ValueError("Manifest accession/taxon does not match the reviewed gene")
+        snapshots = data["snapshots"]
+        if not isinstance(snapshots, list) or not snapshots:
+            raise ValueError("snapshots must be a nonempty ordered list")
+        annotations = []
+        sources = []
+        seen = set()
+        for index, item in enumerate(snapshots):
+            item_keys = {"path", "sha256", "role", "provenance"}
+            if not isinstance(item, dict) or set(item) != item_keys:
+                raise ValueError(f"Each snapshot must contain exactly {sorted(item_keys)}")
+            name, digest = item["path"], item["sha256"]
+            if (not isinstance(name, str) or not name
+                    or Path(name).name != name or "/" in name or "\\" in name
+                    or not name.endswith(".tsv")):
+                raise ValueError("Snapshot path must be a sibling TSV filename")
+            if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                raise ValueError(f"Invalid SHA256 for {name}")
+            if not isinstance(item["provenance"], str) or not item["provenance"].strip():
+                raise ValueError(f"Missing source provenance for {name}")
+            if index == 0:
+                if name != original.name or item["role"] != "original":
+                    raise ValueError("First snapshot must be the mandatory original sibling GOA file")
+            elif item["role"] != "additive":
+                raise ValueError("Subsequent snapshot roles must be additive")
+            path = original.parent / name
+            resolved = path.resolve()
+            if resolved.parent != directory or resolved in seen:
+                raise ValueError(f"Duplicate or escaping snapshot path: {name}")
+            seen.add(resolved)
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != digest:
+                raise ValueError(f"SHA256 mismatch for {name}")
+            # Parse the exact bytes hashed above. The legacy permissive parser is
+            # intentionally unchanged for genes without a manifest.
+            reader = csv.reader(io.StringIO(raw.decode("utf-8")), delimiter="\t", strict=True)
+            header_seen = False
+            count = 0
+            for row in reader:
+                if not row or (row[0] and row[0].startswith("#")):
+                    continue
+                if not header_seen:
+                    if tuple(row) != SNAPSHOT_TSV_HEADER:
+                        raise ValueError(f"Unexpected TSV header in {name}")
+                    header_seen = True
+                    continue
+                location = f"{name}:{reader.line_num}"
+                if len(row) != len(SNAPSHOT_TSV_HEADER):
+                    raise ValueError(f"Malformed TSV row at {location}")
+                product = row[1]
+                valid_product = product == target or (
+                    "-" not in target and product.startswith(target + "-")
+                    and product[len(target) + 1:].isdigit()
+                )
+                if (row[0] != database or not valid_product
+                        or row[11] not in {taxon, taxon.removeprefix("NCBITaxon:")}):
+                    raise ValueError(f"Wrong namespace/accession/taxon at {location}")
+                if (not row[0] or not re.fullmatch(r"GO:[0-9]{7}", row[4])
+                        or not row[8] or not row[9]):
+                    raise ValueError(f"Incomplete annotation identity at {location}")
+                annotation = GOAAnnotation.from_tsv_row(row)
+                annotation.source_path = str(path)
+                annotation.source_line = reader.line_num
+                annotations.append(annotation)
+                count += 1
+            if not header_seen or not count:
+                raise ValueError(f"Empty GOA snapshot: {name}")
+            sources.append({"path": str(path), "sha256": digest, "rows": count,
+                            "role": item["role"], "provenance": item["provenance"]})
+        return annotations, sources
 
     def _validate_strict_tuples(
         self,
@@ -580,19 +717,28 @@ class GOAValidator:
             Summary string
         """
         if result.is_valid:
+            if result.snapshot_sources:
+                count = len(result.snapshot_sources)
+                rows = sum(source["rows"] for source in result.snapshot_sources)
+                return f"✓ All existing_annotations match {count} GOA snapshots ({rows} source rows)"
             return "✓ All existing_annotations match GOA file"
 
         lines = ["✗ Annotations do not match GOA file:"]
 
         if result.error_message:
             lines.append(f"  Error: {result.error_message}")
+        if result.snapshot_sources:
+            lines.append("  Snapshot sources: " + ", ".join(
+                f"{source['path']} ({source['rows']} rows)" for source in result.snapshot_sources
+            ))
 
         if result.missing_in_yaml:
             lines.append(
                 f"  - {len(result.missing_in_yaml)} annotations in GOA but not in YAML:"
             )
             for ann in result.missing_in_yaml[:3]:  # Show first 3
-                lines.append(f"    • {ann.go_id} ({ann.go_term}) - {ann.evidence_type}")
+                origin = f" [{ann.source_path}:{ann.source_line}]" if ann.source_path else ""
+                lines.append(f"    • {ann.go_id} ({ann.go_term}) - {ann.evidence_type}{origin}")
             if len(result.missing_in_yaml) > 3:
                 lines.append(f"    ... and {len(result.missing_in_yaml) - 3} more")
 
@@ -633,6 +779,8 @@ class GOAValidator:
         goa_file: Optional[Path] = None,
         output_file: Optional[Path] = None,
         fetch_titles: bool = False,
+        publications_dir: Optional[Path] = None,
+        reactome_dir: Optional[Path] = None,
     ) -> Tuple[int, Path, int, int, int]:
         """Seed missing annotations from GOA file into YAML.
 
@@ -645,6 +793,10 @@ class GOAValidator:
             goa_file: Path to GOA file (if None, derives from yaml_file path)
             output_file: Output path (if None, overwrites input file)
             fetch_titles: If True, fetch actual titles from PubMed (may be slow)
+            publications_dir: Publication cache read and written when fetching
+                titles (default: ``publications`` relative to the working directory)
+            reactome_dir: Reactome cache read and written when fetching titles
+                (default: ``reactome`` relative to the working directory)
 
         Returns:
             Tuple of (annotations added, output file path, references added,
@@ -894,8 +1046,11 @@ class GOAValidator:
                     if pmid.startswith("PMID:"):
                         pmid_num = pmid[5:]  # Remove 'PMID:' prefix
                         try:
-                            # Use publications directory for cache
-                            cache_dir = Path("publications")
+                            cache_dir = (
+                                publications_dir
+                                if publications_dir is not None
+                                else Path("publications")
+                            )
 
                             # First try to get just the title from cache (fast)
                             cached_title = get_cached_title(pmid_num, cache_dir)
@@ -918,7 +1073,13 @@ class GOAValidator:
                         title = self._get_go_ref_title(pmid, go_ref_titles)
                     elif pmid.startswith("Reactome:"):
                         # Fetch Reactome pathway title
-                        title = self._get_reactome_title(pmid, reactome_titles)
+                        title = self._get_reactome_title(
+                            pmid,
+                            reactome_titles,
+                            reactome_dir
+                            if reactome_dir is not None
+                            else Path("reactome"),
+                        )
 
                 new_ref = {
                     "id": pmid,
@@ -1113,12 +1274,15 @@ class GOAValidator:
         base = qualifier.replace("NOT|", "").replace("NOT", "").strip("|").strip()
         return base == "contributes_to"
 
-    def _get_reactome_title(self, reactome_id: str, cache: Dict[str, str]) -> str:
+    def _get_reactome_title(
+        self, reactome_id: str, cache: Dict[str, str], cache_dir: Path
+    ) -> str:
         """Fetch Reactome pathway title from Reactome API or cache.
 
         Args:
             reactome_id: The Reactome identifier (e.g., 'Reactome:R-HSA-6785807')
             cache: Dictionary to cache fetched titles
+            cache_dir: Reactome cache directory read and written for the title
 
         Returns:
             The title of the Reactome pathway, or a TODO placeholder if not found
@@ -1136,9 +1300,6 @@ class GOAValidator:
             clean_id = clean_id.split(":", 1)[1].strip()
 
         try:
-            # Use reactome directory for cache
-            cache_dir = Path("reactome")
-
             # First try to get just the title from cache (fast)
             cached_title = get_cached_title(clean_id, cache_dir)
             if cached_title:

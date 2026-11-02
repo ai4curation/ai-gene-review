@@ -347,6 +347,12 @@ supporting_text at all, nothing verifiable was lost — but the `⚠ No annotati
 available deep research files` warning that `just validate` emits is a direct result of this
 and should not be read as the affinage record having been ignored.
 
+2026-10-05 update: the Codex environment validates `file:` references from the checkout root,
+so the review now carries a `file:human/ARHGAP11B/ARHGAP11B-bioinformatics/RESULTS.md`
+reference. The PMID-supported annotation decisions are unchanged; the file reference records
+the residue, interface and domain-boundary audit that explains why the propagated RhoGAP
+activity and signalling calls fail even though the catalytic arginine is retained.
+
 ## Open items and limits on what could be verified
 
 - **PMID:31883789 and PMID:25721503 are abstract-only.** Their IDA rows are accepted on the

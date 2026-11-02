@@ -3,6 +3,7 @@ title: "Geranylgeranyl Reductase Activity — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [human, ARATH, TOBAC]
+last_reviewed: 2026-10-04
 manifest:
   slides:
     - href: GERANYLGERANYL_REDUCTASE_OBSOLETION/slides/GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.html
@@ -14,32 +15,29 @@ manifest:
 
 # Geranylgeranyl Reductase Activity — Obsoletion & Replacement
 
-**Bottom line:** GO has obsoleted GO:0045550 *geranylgeranyl reductase
-activity*, which had no enzyme cross-reference, and merged it into
-GO:0102067 *geranylgeranyl diphosphate reductase activity* (EC 1.3.1.83),
-the plant and cyanobacterial CHLP reaction that reduces geranylgeranyl
-diphosphate to phytyl diphosphate for chlorophyll and tocopherol. We
-listed the four experimental annotations that must move, the four
-UniRule/InterPro mappings to redirect, and checked the repo. Two rows fit
-the new term's substrate (Arabidopsis and tobacco CHLP); the Arabidopsis
-row is IDA, but the tobacco row is NAS only and may warrant removal rather
-than remapping. Two do not obviously fit:
-human AKR1C3 and AKR1B10, both IDA from one aldo-keto reductase paper
-(PMID:21187079), and the archaeal IPR023590 mapping, whose enzyme acts on
-a lipid rather than free GGDP. Scoped, not yet started: none of the four
-genes has a review here. The obsoletion has since landed (OLS lists
-GO:0045550 as obsolete), so the "not yet applied" notes below are out of
-date.
+**Bottom line:** GO has obsoleted GO:0045550 *geranylgeranyl reductase activity*,
+which had no enzyme cross-reference, and replaced it with GO:0102067
+*geranylgeranyl diphosphate reductase activity* (EC 1.3.1.83; RHEA:26229). The
+new term captures the plant/cyanobacterial CHLP reaction that reduces
+geranylgeranyl diphosphate to phytyl diphosphate and can also reduce
+geranylgeranyl-chlorophyll *a*. The open work is now the annotation and mapping
+cleanup in [#363](https://github.com/ai4curation/ai-gene-review/issues/363):
+Arabidopsis CHLP is the clean experimental replacement case, tobacco CHLP is in
+the same family but has only NAS evidence, and human AKR1C3/AKR1B10 both come
+from one aldo-keto reductase substrate-screening paper that needs review before
+any move to GO:0102067. The archaeal IPR023590 mapping remains the suspicious
+mapping because that family reduces lipid-linked geranylgeranyl chains rather
+than free GGDP. As of 2026-10-04, none of the four affected gene products has a
+review in this repo.
 
 ## Overview
 
-A GO obsoletion proposal will obsolete `GO:0045550 geranylgeranyl reductase
-activity` and replace it with `GO:0102067 geranylgeranyl diphosphate reductase
-activity`. The replacement narrows the substrate from generic
-"geranylgeranyl-X" to the diphosphate (GGDP), aligning the term with the
-chlorophyll/tocopherol biosynthesis enzyme (plant/cyanobacterial CHLP /
-ChlP / GGR) that catalyses the reduction of geranylgeranyl-(diphosphate or
-chlorophyll) to phytyl form.
+The GO obsoletion has replaced `GO:0045550 geranylgeranyl reductase activity`
+with `GO:0102067 geranylgeranyl diphosphate reductase activity`. The replacement
+narrows the substrate from generic "geranylgeranyl-X" to the diphosphate (GGDP),
+aligning the term with the chlorophyll/tocopherol biosynthesis enzyme
+(plant/cyanobacterial CHLP / ChlP / GGR) that catalyses the reduction of
+geranylgeranyl-(diphosphate or chlorophyll) to phytyl form.
 
 This project tracks the four experimental annotations on the upstream list and
 queues per-gene reviews where useful — particularly the two human aldo-keto
@@ -49,18 +47,19 @@ geranylgeranyl reductase term derived from in vitro substrate-screening data.
 ## Upstream tickets
 
 - Annotation tracker: [geneontology/go-annotation#6394](https://github.com/geneontology/go-annotation/issues/6394)
+  remains open.
 - Ontology ticket: [geneontology/go-ontology#31963](https://github.com/geneontology/go-ontology/issues/31963)
+  closed on 2026-04-28.
 
-## Obsoletion plan (per upstream)
+## Obsoletion outcome
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
 | geranylgeranyl reductase activity | GO:0045550 | GO:0102067 geranylgeranyl diphosphate reductase activity |
 
-Term labels were verified in OLS on 2026-05-08. Both `GO:0045550`
-(`geranylgeranyl reductase activity`) and `GO:0102067` (`geranylgeranyl
-diphosphate reductase activity`) are still live in OLS at the time of this
-check; the obsoletion is tracked by geneontology/go-ontology#31963.
+The current GO ontology cache on 2026-10-04 lists `GO:0045550` as obsolete,
+with `replaced_by: GO:0102067`; the live replacement carries EC 1.3.1.83 and
+RHEA:26229 cross-references.
 
 The replacement term is substrate-specific (geranylgeranyl-**diphosphate**),
 so any annotation that was made because the enzyme reduces a different
@@ -80,28 +79,28 @@ removal or remapping rather than a mechanical move.
 
 Group impact tally (from upstream): TIGR 1, UniProt 3.
 
-## Mappings flagged for redirection
+## Mappings flagged by upstream
 
 - `unirule2go`: UniRule:UR001995838 → GO:0045550 (UniProt UniRule REST
-  checked 2026-05-08; rule applies to Cyanobacteriota proteins with
-  TIGR02028 and currently maps to GO:0045550)
+  checked 2026-05-08; the rule applied to Cyanobacteriota proteins with
+  TIGR02028 and still mapped to GO:0045550 at that check)
 - `interpro2go`: IPR010253 (Geranylgeranyl reductase, plant/prokaryotic) → GO:0045550
 - `interpro2go`: IPR011774 (Geranylgeranyl reductase, plant/cyanobacteria) → GO:0045550
 - `interpro2go`: IPR023590 (Digeranylgeranylglycerophospholipid reductase) → GO:0045550
 
-These are for upstream to redirect to GO:0102067 once the obsoletion is
-applied. The plant/cyanobacterial CHLP/GGR family in IPR010253/IPR011774 is
-substrate-correct for the replacement; IPR023590
+The plant/cyanobacterial CHLP/GGR family in IPR010253/IPR011774 is
+substrate-correct for the replacement; follow-up should verify that those
+signatures and UniRule UR001995838 have landed on GO:0102067. IPR023590
 (Digeranylgeranylglycerophospholipid reductase, archaeal lipid biosynthesis)
-acts on a *digeranylgeranylglycerophospholipid* substrate that is not free
-GGDP, so the IPR023590 mapping should be reviewed for whether GO:0102067 is
-the right replacement.
+acts on a *digeranylgeranylglycerophospholipid* substrate that is not free GGDP,
+so the IPR023590 mapping should be reviewed for whether GO:0102067 is the right
+replacement.
 
 ## Impact on this repo
 
 None of the four affected genes currently have an `*-ai-review.yaml` in this
 repo (verified via `find genes -iname '*AKR1C3*' -o -iname '*AKR1B10*' -o
--iname '*CHLP*'` on 2026-05-03). This project is therefore primarily a
+-iname '*CHLP*'` on 2026-10-04). This project is therefore primarily a
 queueing exercise rather than a re-review of existing files.
 
 ## Scope
@@ -146,34 +145,35 @@ Listed in priority order. Each should be set up with
    traceable primary support, this annotation may need removal rather than
    automatic remapping.
 
-## Proposed approach
+## Implementation status
 
-1. **Wait for obsoletion to land before bulk-rewriting.** GO ontology
-   ticket #31963 is still under discussion. AI Gene Review reviews can,
-   however, proceed on the underlying biology now and just record the
-   currently-live term ID; the action codes (ACCEPT vs MODIFY vs REMOVE) are
-   what actually matter and those are independent of whether the obsoletion
-   has been merged.
-2. **Prioritise the human AKR pair.** AKR1C3 and AKR1B10 are the most
+Open follow-up is tracked in
+[#363](https://github.com/ai4curation/ai-gene-review/issues/363).
+
+1. **Prioritise the human AKR pair.** AKR1C3 and AKR1B10 are the most
    scientifically interesting cases here — both are well-studied human
-   enzymes whose IDA annotation to GO:0045550 deserves a critical evidence
-   review rather than a mechanical remap. Start with AKR1C3.
-3. **Use the plant CHLP as a positive control.** Reviewing the Arabidopsis
+   enzymes whose former IDA annotation to GO:0045550 deserves a critical
+   evidence review rather than a mechanical remap. Start with AKR1C3.
+2. **Use the plant CHLP as a positive control.** Reviewing the Arabidopsis
    CHLP entry is straightforward and helps confirm that GO:0102067 is the
    right replacement for genuine in-vivo GGR enzymes.
    Treat the tobacco Q9ZS34 NAS annotation separately because NAS evidence
    may not provide enough traceable support for either ACCEPT or MODIFY.
+3. **Verify the family mappings after ontology refresh.** UR001995838,
+   IPR010253, and IPR011774 should point to GO:0102067; IPR023590 should not
+   be moved mechanically if its archaeal lipid substrate falls outside the
+   term's substrate scope.
 4. **Flag IPR023590 mapping question to upstream.** The
    digeranylgeranylglycerophospholipid reductase family does not act on free
    GGDP, so noting this on the upstream issue (or via a comment on
-   #6394 / #31963) is a useful contribution even before any review work.
+   #6394) is a useful contribution even before any review work.
 
 ## Priority
 
 Medium — the human AKR1C3 / AKR1B10 entries are interesting reviews on their
-own merits, independent of the obsoletion timing. The plant CHLP entries are
-lower priority and largely passive (will move cleanly to the replacement
-term).
+own merits, independent of the obsoletion timing. The Arabidopsis CHLP entry is
+a clean positive control for the replacement term; the tobacco CHLP entry is a
+lower-priority NAS row that still needs traceable support.
 
 ## Status
 
@@ -183,3 +183,8 @@ term).
 - 2026-05-08 — Verified Q9ZS34 organism via UniProt REST as Nicotiana tabacum
   (taxon 4097), verified GO:0045550 and GO:0102067 labels via OLS, and
   verified UniRule:UR001995838 via UniProt REST.
+- 2026-10-04 — Verified GO:0045550 is obsolete in the current GO ontology with
+  `replaced_by: GO:0102067`; rechecked that the four affected gene products
+  still have no AI Gene Review files in this repo; reopened the next steps
+  around evidence review and mapping follow-up now that the ontology ticket is
+  done.

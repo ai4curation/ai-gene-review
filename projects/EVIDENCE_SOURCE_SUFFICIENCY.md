@@ -1,6 +1,7 @@
 ---
 title: "EVIDENCE_SOURCE_SUFFICIENCY"
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-04
 tags: [PIPELINE, FLAGSHIP]
 manifest:
   slides:
@@ -82,8 +83,7 @@ not just a tally of the existing `supported_by` blocks.
 
 ## What has been built
 
-A reusable measurement layer (PR on branch
-`claude/go-annotation-sources-rqwmfl`):
+The repo now has a reusable measurement layer:
 
 - **`Reference.publication_type`** (`PublicationTypeEnum`: `PRIMARY_RESEARCH`,
   `REVIEW`, `SYSTEMATIC_REVIEW`, `META_ANALYSIS`, `DEEP_RESEARCH`, `DATABASE`,
@@ -154,22 +154,22 @@ the reproducible stratified sample (30 genes, 484 ACCEPT annotations, seed
 - [x] `analyze-evidence-sources` CLI and first human census report
 - [x] Pre-registered study protocol + reproducible stratified-by-aspect sampler
 - [x] Scoring harness (`sample/../score.py`): estimands + gene-clustered bootstrap CIs + blind calibration
-- [x] Objective auto-labeling pass (`autolabel.py`, cited-snippet provenance) + [preliminary results](EVIDENCE_SOURCE_SUFFICIENCY/RESULTS.md): for ACCEPT annotations citing a full-text-cached pub, the justifying quote is in the **abstract 90.6%** of the time (artifact-free fair test)
+- [x] Objective auto-labeling pass (`autolabel.py`, cited-snippet provenance) + [pilot results](EVIDENCE_SOURCE_SUFFICIENCY/RESULTS.md): for ACCEPT annotations citing a full-text-cached pub, the justifying quote is in the **abstract 90.6%** of the time (artifact-free fair test)
 - [x] Blind-ablation validation (`build_blind_bundles.py` + blinded reviewers): conditional on availability, **abstract 85.7% ≫ deep research 40% > review-alone 14.3%**; retrospective abstract number is optimistic by only +7 pts
 - [ ] Full-text reading pass (fixes H-d; upgrades fact_in_abstract to semantic)
 - [ ] Broaden REVIEW_ONLY bundle + scale sample to tighten blind CIs
-- [ ] Better review detection (journal/MeSH heuristics) + `publication_type` backfill
+- [ ] Better review detection (MeSH/content heuristics) + `publication_type` backfill
 - [ ] Raise `reference_section_type` coverage above the current ~5%
-- [ ] Ablation re-review harness for ACCEPT annotations (sufficiency test)
 - [ ] Deep-research depth scoring (H-c)
 
 ## Next steps
 
-1. Improve review detection so H-a is tested against a real review set, not a
-   PubMed-PT floor.
-2. Backfill section tags so the H-b / H-d distributions are representative.
-3. Stand up the ablation re-review harness on a pilot of ACCEPT annotations,
-   starting with MF terms where abstract-level confirmation looks strongest.
+1. Run a full-text reading pass so H-d tests real narrative sections and
+   fact-in-abstract is semantic rather than cited-snippet provenance.
+2. Improve review detection and broaden REVIEW_ONLY bundles so H-a is tested
+   against a fair review set, not only a gene's already-cited references.
+3. Scale the blinded sample past 30 genes to tighten the per-bundle intervals
+   and score deep-research depth for H-c.
 
 ## Relationship to existing projects
 

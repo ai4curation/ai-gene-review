@@ -1,13 +1,10 @@
 ---
 title: "Comprehensive GO Annotation Review: C. elegans Surveillance Immunity Genes (Priority 2)"
 maturity: COMPLETE
+last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
 genes: [zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1]
-manifest:
-  artifacts:
-    - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
-      title: Project brief (C. elegans surveillance immunity)
 ---
 
 # Comprehensive GO Annotation Review: C. elegans Surveillance Immunity Genes (Priority 2)
@@ -631,12 +628,12 @@ These 6 genes represent the core surveillance immunity pathway in C. elegans:
 
 For each gene review in YAML:
 
-- [ ] ZIP-2: Replace 3x GO:0005515 with GO:0046983
-- [ ] CEBP-2: Address redundant protein binding annotations
-- [ ] IRG-1: Verify ND status is appropriate; consider NADAR domain follow-up
-- [ ] ELT-2: Remove 6 over-annotated generic terms
-- [ ] HLH-30: Remove 3 over-annotated generic terms; verify dual localization justification
-- [ ] FSHR-1: Run literature validation on immune annotations before finalizing
+- ZIP-2: Replace 3x GO:0005515 with GO:0046983
+- CEBP-2: Address redundant protein binding annotations
+- IRG-1: Verify ND status is appropriate; consider NADAR domain follow-up
+- ELT-2: Remove 6 over-annotated generic terms
+- HLH-30: Remove 3 over-annotated generic terms; verify dual localization justification
+- FSHR-1: Run literature validation on immune annotations before finalizing
 
 ---
 

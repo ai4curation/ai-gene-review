@@ -397,9 +397,43 @@ python -m ai_gene_review.render --all genes/    # Alternative rendering command
 preserves current public URL paths, writes an ignored `_site/` directory, and
 reports the uncompressed publication size. Cleanup is restricted to the repository's
 `_site/` directory, and the root is verified with Git before cleanup. The CLI always
-uses `<repo-root>/_site`. Shadow build failures warn
-without blocking regeneration PRs. With Actions deployment enabled, the live site uses the validated artifact built
-from `main`. Regeneration PRs separately maintain the committed HTML.
+uses `<repo-root>/_site`. With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, the live site
+uses the validated artifact built from `main`. In this mode no regeneration PR
+is created: committed generated HTML is not refreshed and is not the live site.
+The repository's Pages source must separately be set to **GitHub Actions**.
+Artifact failures preserve the previous deployment and fail publication status.
+
+The published homepage shows **Site built** in UTC and links to the originating
+Actions run. `_site/build-info.json` records that timestamp, the checked-out
+commit and the run URL. These describe the artifact: redeploying an older
+artifact preserves its original build date. Project HTML separately shows
+**Source last changed**, using the last commit touching its Markdown source,
+with links to the commit and that exact source revision. Stamps omit names,
+emails and commit messages. Source history follows the published branch's first
+parents: merged edits use the merge commit that introduced them on that branch,
+while discarded side-branch edits do not affect the stamp. History and the gene
+symbol index are each collected once per rendering batch.
+Local edits are marked; incomplete shallow history
+is labelled instead of assigning a misleading date. Standalone Markdown exports
+without Git history can still be rendered, without a source stamp.
+The maintained `index.html` must contain exactly one `<!-- site-build-info -->`
+marker; staging fails if it is missing or duplicated, and audits the injected
+link along with the other published links.
+
+The legacy regeneration PR path is retained only when artifact publication is
+disabled; artifact-build failures do not block that path. It still enforces Git's
+100 MiB blob limit and cannot handle the current browser payload, so disabling
+the flag is not a working rollback. Use the verified-artifact recovery workflow
+below instead. Disabling the flag does not change the repository's Pages source.
+
+For disposable builds use `just deploy-browser pages`,
+`just update-browser-data pages`, `just deploy-predictions-browser pages`, or
+`just deploy-propagation-browser pages`. `just build-pages` selects this target
+for all three browsers. The default `git` target keeps the blob guard for output
+intended to be committed; `BROWSER_TARGET=pages` also selects artifact mode.
+Staging compresses the main annotation payload, but prediction and propagation
+payloads are still uncompressed. Total artifact limits do not guarantee browser
+memory or load-time performance.
 
 Staging also follows local links from published HTML and CSS, plus literal
 JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
@@ -535,13 +569,14 @@ Older validated builds without a checksum declaration remain recoverable using
 the trusted run/artifact provenance and the actual archive size.
 
 Once enabled, the artifact built from the checked-out source on `main` is
-authoritative for the live site. It deploys without waiting for the legacy
-regeneration PR to merge; that PR only commits derived output back to `main`.
+authoritative for the live site. Generated-file commits, App tokens, reviews and
+PR merges are skipped entirely in this mode. Git-tracked output is not updated.
 
 The Build and deploy site workflow runs daily at 08:23 UTC and can also be started with
 GitHub Actions' **Run workflow** button. Each run rebuilds the full site; merged
-content appears after the next successful deployment. The generated-files PR
-updates tracked output separately and does not hold up publication.
+content appears after the next successful deployment. Generated-files PRs are
+only attempted in the disabled-artifact legacy mode, subject to the Git size
+limit described above.
 Agent cron profiles do not control this publication schedule. Manual runs wait for
 an active build to finish instead of cancelling it. Gene review validation remains
 in PR CI and the weekly full validation workflow.

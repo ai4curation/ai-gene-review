@@ -111,3 +111,23 @@ cofactor; Mn2+ reflects in vitro metal substitution common to this nuclease fold
 
 95 annotations (94 from GOA + 1 proposed NEW):
 ACCEPT 54 · MARK_AS_OVER_ANNOTATED 23 · MODIFY 9 · KEEP_AS_NON_CORE 6 · REMOVE 2 · NEW 1.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- Two mitochondrion rows: IDA PMID:18995831 (ACCEPT, organelle-level; protease K protection does not
+  separate inner membrane from matrix) and IEA GO_REF:0000120 (SL-0173 + HAMAP MF_03140 from the
+  curated FENMIT location line backed by PMID:23675412; ACCEPT after the check).
+- Surprise worth recording: in Kazak et al. most full-length FEN1 that co-purifies with mitochondria
+  is outside the organelle [PMID:23675412 "∼75% of FEN1 co-purifying with the organelles is located outside mitochondria"];
+  the internal species is mainly the short FENMIT isoform from alternative initiation, which UniProt
+  says has no nuclease activity.
+- NEW GO:0005759 mitochondrial matrix (IC). Lines of evidence:
+  1. Internal by protease protection [PMID:23675412 "Limited protease treatment of intact mitochondria is a key assay for assigning proteins to internal compartments of these organelles"];
+     [PMID:18995831 "similar to Polγ and FEN1, hDNA2 in mitochondria was resistant to treatment with protease K"].
+  2. Presequence-type import [PMID:23675412 "was imported in a membrane potential-dependent manner"].
+  3. Soluble, no membrane anchor [PMID:23675412 "little if any FEN1S co-fractionated with mtDNA, with the majority resolving close to the top of the gradient, where soluble proteins are found"].
+  4. Engages mtDNA [PMID:23675412 "FENMIT is recruited to the DNA under these conditions, and is released by RNase treatment."]
+  Not nucleoid (little basal co-fractionation with mtDNA). IC because no assay separates matrix from inner membrane.
+- core_functions.locations left as nucleoplasm + mitochondrion: the mitochondrial LP-BER activity was
+  measured in whole mitochondrial extracts, and the matrix-resident FENMIT lacks nuclease activity.
+- Cached PMID:23675412.

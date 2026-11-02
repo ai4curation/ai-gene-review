@@ -1,0 +1,91 @@
+# CYLD evidence review
+
+CYLD has two experimentally distinguishable activity systems. Its USP domain removes K63 and Met1 ubiquitin linkages, while its N-terminal region associates with microtubules and inhibits HDAC6-mediated tubulin deacetylation. The signaling, cell-cycle and centrosomal observations are interpreted in those mechanistic contexts, with human, mouse, fragment and intact-product experiments kept distinct.
+
+The source review preserves all 107 seeded annotation objects from 109 raw GOA rows. Two raw pairs collapse to identical seeded source identities despite differing provenance metadata. Original qualifiers, evidence codes, reference IDs, partner IDs and distinct source multiplicity remain unchanged. The review contains no new annotation. The first scientific draft has 59 ACCEPT, five MODIFY, 39 KEEP_AS_NON_CORE and four UNDECIDED judgments; these counts describe the evidence outcome rather than a target distribution.
+
+## Identity and products
+
+Official HGNC:2584 and UniProt Q9NQC7 establish human CYLD. Independent reconstruction of both official FASTAs gives 956 and 953 residues. The shorter product deletes displayed-sequence ALS305–307 (VSP_011277). Their shared N-terminal 1–212 region and shared USP sequence do not establish equal activity of both intact products. The engineered delta932 allele in the ciliogenesis study is a different truncation, and the reported C598A construct in PMID:27458237 is not assigned to a specific splice product merely from its numbering. The latter paper names a human Addgene clone, but its historical insert was not independently reconstructed.
+
+The 2VHF structural deposition is a human 583–956 USP fragment produced in Sf9 cells. It corroborates the catalytic fold, B-box and zinc contacts, not equivalent intact-product function or every assay in the unrecovered full structural paper. Zinc is a structural feature and is retained as non-core rather than portrayed as the catalytic nucleophile.
+
+## Catalytic and signaling evidence
+
+PMID:27591049 directly reconstitutes CYLD USP with SPATA2 PUB fragments and measures K63 and M1 cleavage. CYLD supplies hydrolysis; SPATA2 binds and activates it and links it to HOIP/LUBAC. The B-box supports dimerization, while the isolated B-box alone does not supply the SPATA2-binding interface. The absence of direct purified HOIP PUB–CYLD USP binding in PMID:27545878 is compatible with positive cellular complex association through SPATA2. It does not justify deleting the original RNF31 interaction object.
+
+PMID:26997266 resolves K63/M1 modifications on RIPK2 using CYLD perturbation, catalytic controls and linkage-selective restriction. Its cited direct-cleavage supplement was not separately viewed; independent purified cleavage experiments provide corroboration. PMID:32185393 directly compares WT CYLD with D681G and M719V, so WT cleavage is not inferred solely from a disease mutant. The K48-negative assay and the branched-chain context in the abstract of PMID:27746020 are not converted into a universal claim about every ubiquitin substrate.
+
+The complete original texts of PMID:18313383 and PMID:27746020 could not be recovered through bounded attempts. Their complete available abstracts positively support the established enzyme biology, and independent direct experiments support curator-deferred catalytic and broad-location assertions. The specific noncanonical NF-kappaB IDA from PMID:18313383 remains undecided because the available text does not resolve that pathway-specific assay. Canonical RelA/TNF/NOD2 results do not authenticate the noncanonical assertion.
+
+PMID:18636086 has a cache full-text flag but its stored main body lacks complete Results and Discussion. Additional indexed original Results were separately read: they distinguish RIG-I, MAVS, TBK1 and IKK-epsilon associations and reporter outcomes. The exact four current partner pairs were checked. IKK-epsilon association is not represented as proof that CYLD inhibits every bound kinase. The RIG-I partner supports a DEAD/H-box RNA-helicase-binding refinement, not helicase catalysis by CYLD.
+
+The full available abstract of PMID:20227366 supports Dishevelled K63 ubiquitination and negative canonical Wnt regulation. Its exact DVL3 construct remains unresolved, and no current literal DVL3 pair was returned. This supports source-specific uncertainty for the partner assertion while retaining the independently stated broad Wnt function. An empty current interaction join is not a negative experiment.
+
+## Microtubule and HDAC6 mechanism
+
+PMID:19893491 combines cellular alpha-tubulin association, nocodazole sensitivity, microtubule cosedimentation and CAP-Gly-region analysis. The antibody and bulk microtubule assays do not uniquely identify a single human alpha-tubulin product, so the literal TUBA1A supporting entity remains unchanged while the reviewed activity is refined to microtubule binding.
+
+The same study directly demonstrates recombinant CYLD–HDAC6 binding and a separate inhibition assay using immunoprecipitated or peptide-eluted proteins with MAP-enriched bovine microtubules. The inhibitory N-terminal 1–212 fragment and the retained cellular effect of a DUB-inactive C/S construct support enzyme inhibitor activity. They do not establish a histone-specific inhibitor activity, CYLD deacetylase activity or CYLD acetyltransferase activity. The current official HDAC6 record emphasizes protein/nonhistone substrates; its historical histone annotation was not independently overruled here.
+
+The noncatalytic core therefore uses enzyme inhibitor activity and explains the coupled microtubule mechanism. No new annotation or extra list of downstream processes is needed. The reported cytokinesis delay can persist with inactive DUB, whereas the G1/S result requires both catalytic activity and the N-terminal region. PMID:17495026 separately supports human G2/M regulation through siRNA/rescue, and its PLK1 association does not establish direct PLK1 deubiquitination. Cell-cycle direction and mechanism are not flattened across these contexts.
+
+Selected indexed original Results and captions from PMID:20194890 support HUVEC microtubule dynamics, polarity and migration. Its membrane-fraction Methods/caption were recovered, but the actual fraction result and a leaflet-resolving assay were not inspected. The precise cytoplasmic-side-of-plasma-membrane IDA remains undecided. The broader official peripheral membrane-associated location can be retained contextually without claiming integral insertion.
+
+## Centrosome, inflammation and death contexts
+
+The genuine publisher original of PMID:25134987 supports human RPE1 centrosomal recruitment and mouse ependymal basal-body/ciliary-tip observations. Human targeting/rescue experiments support a local catalytic requirement for ciliogenesis, but the exact substrate is unresolved. Delta932, knockout and official isoform 2 are not interchangeable. This study did not observe midbody staining under its conditions, whereas PMID:17495026 reported tagged CYLD at the midbody; both source-specific observations are stated rather than made into a universal contradiction.
+
+PMID:29291351 supports CYLD–TAK1 association and K63-ubiquitin/JNK/p38 regulation in mouse hepatic and human-labelled L02 systems. Its separate in-vitro ubiquitination subsection assays TRIM47 modifying CYLD, not purified CYLD cleavage of TAK1. This distinction prevents substrate/catalyst role transfer.
+
+PMID:32424362 was genuinely fetched as a new supporting cache after confirming its absence from the selected main/source boundary. It is the literal mouse donor source for inflammation and IL-18 regulation. Selected complete original Methods/Results/Discussion show NLRP6 deubiquitination, ASC/inflammasome regulation, catalytic rescue and IL-18 genetic/antibody tests. The performed step is upstream regulation of mature IL-18 production; no direct IL-18-receptor action is inferred. Human colonic findings are correlative. No new annotation was created from this source.
+
+The actual mouse L929 CYLD-depletion experiments in PMID:27545878 support a contextual necroptotic role and its IBA grounding. The separate precise necroptosis IDA attributed to PMID:27458237 remains unresolved because the inspected text principally resolves SPATA2/CYLD biochemistry and apoptosis contexts; the original source is preserved rather than replaced with another paper’s experiment.
+
+PMID:21525013 was independently read in full scientific text, with actual Figure 6 pixels. Human HSC3 CYLD siRNA reduces RIP1/FADD/caspase-8 death-complex assembly and viability loss. Intrinsic-apoptosis involvement is upstream cross-talk to the BID/BAX/BAK-dependent type-II response, not demonstrated CYLD mitochondrial chemistry. The three related existing assertions are retained as non-core. Supplement S10 was not inspected; its TNF result remains the authors’ main-text narrative. The local cache remains abstract-only and is not rewritten to imply full cache access.
+
+## Inference and source reconstruction
+
+The actual PTHR11830 tree has 510 nodes. The human leaf is PTN002483694, its MSA sequence matches all 956 displayed residues, and its path has 23 nodes. Seven actual IBD records lie on this path. The two on-path losses concern ribosomal functions, not DUB activity or cytosol. A broad cytosol IBD includes ribosomal descendants; this is not an assertion that those proteins share CYLD catalysis. Current same-term records for two historical fly/rat cytosol donors were not recovered, while human CYLD and other descendant evidence remain positive. Human self donors in three IBA contexts are legitimate experimental grounding, not circularity.
+
+The donor audit contains 478 current records and 12 explicit IBA/ISS joins. Mouse basal-body, ciliary-tip, ciliogenesis, inflammation and IL-18 sources remain mouse experiments when transferred to human. The electronic audit checked all 3142 ARBA00029065 branches: only zero-based branch 1117 matches the three actual target FunFam predicates. The broad organelle output is compatible with cytoskeletal/centrosomal observations. Actual IPR001394/IPR018200 matches and mappings corroborate the USP mechanism.
+
+The interaction audit retains 103 literal 42-field records, with 18 distinct used records across 19 source-row joins and 36 sequence/species ROGID checks. Association, colocalization, purified binding and functional inhibition are distinguished. Supported generic pairs remain non-core under the standing ClinGen Mendelian project policy; class/activity refinements require source-specific evidence. No bulk binding-policy conversion was used.
+
+The selected Reactome traversal contains 86 retrieved objects and 22 actual source roots, with 99 verified target paths to three human CYLD forms. CYLD is a DUB active unit in some events, a complex component in others and MIB2’s ubiquitination substrate in others. No ligase or kinase activity is transferred from neighboring proteins. R-HSA-936390 incorrectly calls CYLD an OTU-domain enzyme; the actual protein is USP/C19. That descriptive error does not invalidate its correct target/catalyst/location path. The two cached GO-CAM models already use CYLD K63-DUB activity in canonical NF-kappaB regulation; no absence-based process expansion is proposed.
+
+HPA050095 ICC/IF records support the existing centriolar-satellite location in several human cell lines. No image pixels, isoform-specific peptides or new sperm/nuclear/ciliary assertions are claimed from those records.
+
+## Access, provenance and remaining work
+
+The initial genuine fetch and publication-cache phases completed normally. The genuine Falcon attempt and configured fallback failed authentication/quota checks and produced no report. No manually written text was labeled as provider output. All source caches, UniProt/GOA files and protected contexts remain byte-exact. Primary text recovered outside a cache is identified separately from the cache’s access flag; failed responses are retained as failures.
+
+The catalytic 19-row consultation, noncatalytic two-row saved-source assessment and apoptosis three-row original assessment were integrated with their exact read limits. The remaining source-specific judgments and actual inference/identity reconstruction were completed independently. The scientific draft is frozen for whole review while ordinary validation, status, rendering and current application qualification remain additive. The public evidence index gives checkable repository/source locators and concise assay limits; raw responses and full reconstruction ledgers remain in the immutable audit packet.
+
+## Normal validation result
+
+Default GOA-enabled validation and CI-equivalent term validation both passed, as did the genuine status updater, status check and renderer. The updater derived DRAFT; the only YAML change from the frozen scientific draft is that derived status. Nine source-specific/generic-binding advisories remain disclosed. The frozen dependency environment was used throughout. Validation genuinely hydrated one missing ontology-cache entry, GO:1990108 protein linear deubiquitination; the exact generated row and its timestamp were preserved, its label checked against the saved official definition, and the original cache restored. The other 284 tooling inputs and all 63 source files remained exact. No ontology-cache change is proposed for publication. Whole scientific review and current publication applicability remain separate gates.
+
+## Current IBD donor correction
+
+The first public index accidentally displayed GAF aspect letters as IBD source identifiers, and the initial donor-expansion helper read that same column. The preserved raw GAF and original annotation objects were intact. The corrected projection reads WITH/FROM from column 7 and treats column 8 only as aspect. Six IBA expansions and every ISS join remain identical. Row 82 additionally resolves the current zebrafish E7FEV5 donor, with its literal ZFIN GO:0061578 IDA record citing PMID:25686088; the current same-term record count rises from nine to ten. This is curated-record corroboration, not a claimed new primary-paper read. All 107 source objects, decisions, reference assessments, products and cores remain unchanged. The final checker now explicitly validates the GAF column semantics and actual source/accession expansion.
+## Review follow-up: biological evidence and annotation specificity
+
+The current evidence guide is [CYLD-evidence-index.yaml](CYLD-evidence-index.yaml). It preserves the earlier JSON guide's contents and adds the verified HDAC binding term and this follow-up's scope. Earlier notes and history remain a record of the earlier state.
+
+CYLD directly edits ubiquitin chains. The disease study identifies its basal activity as "CYLD encodes a lysine 63
+deubiquitinase" [PMID:32185393](https://pubmed.ncbi.nlm.nih.gov/32185393/). Its [original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC7089666/) distinguishes wild-type cleavage from enhanced M719V activity; the local cache is abstract-only. The variant's disease and trafficking phenotypes therefore do not define normal CYLD function. The RIPK2 work resolves K63 and Met1 chain regulation [PMID:26997266](https://pubmed.ncbi.nlm.nih.gov/26997266/). SPATA2 supplies recruitment and activation: "SPATA2 binding activates
+CYLD-mediated hydrolysis of ubiquitin chains." [PMID:27591049](https://pubmed.ncbi.nlm.nih.gov/27591049/). Neither HOIP ligase activity nor SPATA2's bridging role is transferred to CYLD.
+
+Substrate topology limits cleavage: K48 branching "protects K63 linkages" [PMID:27746020](https://pubmed.ncbi.nlm.nih.gov/27746020/). The available abstract supports that result, while exact full-paper assay conditions remain unverified. In the Wnt study, CYLD "regulates K63-linked
+ubiquitination of Dvl" [PMID:20227366](https://pubmed.ncbi.nlm.nih.gov/20227366/); this broad finding does not resolve the missing DVL3-specific construct evidence.
+
+CYLD also binds polymerized microtubules and directly inhibits HDAC6-mediated tubulin deacetylation [PMID:19893491](https://pubmed.ncbi.nlm.nih.gov/19893491/). These are now separate structured core functions. The HDAC6 association supports both enzyme inhibitor activity and the partner-class term histone deacetylase binding. The latter names the enzyme bound; it does not claim that histone deacetylation was inhibited. The measured inhibitor function remains attached to tubulin. No additional ontology term is proposed without a separate assessment of the appropriate inhibitor hierarchy.
+
+The localization study reports "CYLD localizes
+at centrosomes and basal bodies" [PMID:25134987](https://pubmed.ncbi.nlm.nih.gov/25134987/). Human RPE1 and CAP350 recruitment details come from the separately assessed [original publisher article](https://doi.org/10.1038/ncomms5585), rather than full text in the local abstract-only cache. Accepted centrosome and cytoplasmic microtubule terms both entail cytoskeleton and organelle in the verified GO ancestry. Those broad electronic rows are therefore TOO_GENERAL, while their mappings and ARBA predicate assessment remain supported.
+
+The endothelial study states "Silencing of CYLD dramatically decreases microtubule dynamics
+in endothelial cells" [PMID:20194890](https://pubmed.ncbi.nlm.nih.gov/20194890/). This abstract anchor supports the observed phenotype; the tracking and figure details refer to separately recovered [original article text](https://doi.org/10.1182/blood-2009-10-248526). The associated Rac1 response is not evidence of exchange-factor catalysis by CYLD.
+
+RIG-I is the DExD/H helicase partner of the existing helicase-binding refinement, not a reason to assign RNA-helicase catalysis to CYLD. The exact DVL3 interaction, membrane leaflet, source-specific necroptosis assay and noncanonical NF-kappaB assay remain UNDECIDED. No NEW annotation is added. GO:1990108 remains the verified existing linear-deubiquitination term; its normal validator-generated cache entry is kept outside this finite curation change because it already resolves in the committed ontology inputs. A new append-only history record documents the follow-up without rewriting the earlier session.

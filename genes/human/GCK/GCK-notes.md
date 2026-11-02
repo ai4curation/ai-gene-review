@@ -71,3 +71,22 @@ hepatic glucose uptake/glycogen synthesis in the liver
   MARK_AS_OVER_ANNOTATED.
 </content>
 </invoke>
+
+## 2026-10-10 review pass (INITIALIZED -> COMPLETE)
+
+- **Mitochondrion corrected.** The earlier notes treated GO:0005739 as hexokinase-family
+  over-propagation. That was wrong for the ISS row: its source UniProtKB:P17712 is HXK4_RAT
+  (rat glucokinase itself), whose mitochondrion location rests on rat liver fractionation
+  [PMID:16542652 "We confirmed association of glucokinase immunoreactivity with rat liver mitochondria using Percoll gradient centrifugation"]
+  (following Danial et al. 2003, BAD-glucokinase mitochondrial complex). Both mitochondrion
+  rows (ISS, IEA) are now KEEP_AS_NON_CORE: a minor pool, not the main compartment.
+  The IBA "cytoplasmic side of mitochondrial outer membrane" stays MARK_AS_OVER_ANNOTATED
+  (sources P52789 = human HK2 and M4FD55 = Brassica hexokinase, both anchor-bearing);
+  the source comments were corrected (P52789 had been mislabelled as rat HK1).
+- **protein binding (GO:0005515) IPI x3** changed MARK_AS_OVER_ANNOTATED -> REMOVE per
+  the repo policy for this term; the GCKR, PFKFB1 and MIDN interactions stay in notes/description.
+- Core function 2 (beta-cell glucose sensing) now also lists positive regulation of insulin
+  secretion (GO:0032024, accepted IMP PMID:8132752) and cytosol.
+- dismech alignment: Congenital_Isolated_Hyperinsulinism binds GO:0004340 glucokinase activity
+  INCREASED on the GCK node, matching the AIGR core MF. Hyperinsulinemic_Hypoglycemia's
+  "Lowered Beta-Cell Glucose Set-Point" node binds only GO:0050796 (DYSREGULATED) and no MF.

@@ -1,0 +1,9 @@
+| Domain name | Location | Number of repeats/copies | Function |
+|---|---|---:|---|
+| MZM substrate-recognition module | N-terminal | 1 composite module: 2 MIB/HERC2 domains + 1 ZZ-type zinc finger | Forms a principal substrate-binding region; recognizes the N-box within intracellular domains of DSL-family Notch ligands and cooperates with REP domains to support ligand selection (pqac-00000021, pqac-00000022) |
+| REP domains (Mind bomb SH3-repeat domains) | N-terminal to central | 2 | Provide additional substrate-recognition surfaces; bind ligand intracellular domains, including the C-box of JAGGED1, and cooperate with MZM in bipartite ligand engagement (pqac-00000021, pqac-00000022) |
+| Ankyrin repeats | Central | 8–9, depending on annotation/counting scheme | Protein–protein interaction scaffold likely contributing to assembly, substrate recognition, and regulation; reviews report eight repeats in one architecture description and nine in another (pqac-00000021, pqac-00000022) |
+| RING-finger domains (RF1–RF3) | C-terminal | 3 | Zinc-binding catalytic module that recruits ubiquitin-loaded E2 enzymes and promotes ubiquitin transfer to substrate lysines. The three RINGs are not equivalent: RF3, the terminal RING, is especially critical for ligase function and autoubiquitination; deletion or mutation disrupts substrate ubiquitination and signaling (pqac-00000021, pqac-00000022, pqac-00000024, pqac-00000025, pqac-00000026) |
+
+
+*Table: Domain-level summary of human MIB1 (Q86YT6), separating its N-terminal substrate-recognition modules, central ankyrin-repeat scaffold, and C-terminal catalytic RING fingers. The 8–9 ankyrin-repeat range reflects differing literature annotation conventions.*

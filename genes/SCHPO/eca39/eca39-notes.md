@@ -1,0 +1,9 @@
+# eca39 (SPBC428.02c, UniProt O14370) notes
+
+- Single S. pombe branched-chain aminotransferase (BCAT, EC 2.6.1.42); homolog of S. cerevisiae BAT1/BAT2 and mammalian ECA39/BCAT.
+- [PMID:9483807 "A genetic growth assay for BCAT activity was established using an S. cerevisiae strain disrupted in both BCAT isoenzymes."]; [PMID:9483807 "Consequently, the activity of the S. pombe BCAT was demonstrated by genetic and biochemical means."] (abstract only).
+- Pathway role: [PMID:35325114 "At this stage, Ile and Val are produced by BCAAs aminotransferase (BCAT), encoded by eca39+"]; [PMID:35325114 "The final step in Leu biosynthesis, i.e. the transamination reaction, is catalyzed by BCAT Eca39, which is the same enzyme as in Ile and Val syntheses"]; reversible [PMID:35325114 "These reactions are reversible and not only act as the last steps in BCAA syntheses but also as the first steps in the BCAA catabolic pathways"].
+- Localisation: transit peptide 1-47 [UniProt:O14370]; [PMID:35325114 "BCAT Eca39 has been confirmed to be present in various parts of S. pombe cells, including cytoplasm and mitochondria"]; UniProt Nucleus/Cytoplasm from ORFeome YFP. UniProt flags an erroneous earlier gene model (AAC39352.1) and a gene-model revision (PMID:21511999); whether the ORFeome clone was full-length is unknown.
+- UniProt FUNCTION text emphasises catabolism ("first reaction in the catabolism"), but S. pombe evidence is biosynthetic (complements bat1 bat2 auxotrophy). Catabolic IBAs kept non-core.
+- GO-CAM: two eca39 activities: GO:0052656 (Ile, matrix, part_of GO:1901705) and GO:0052654 (Leu, cytosol IC, part_of GO:0009098); no valine activity.
+- Differs from S. cerevisiae: one BCAT doing both BAT1 (mitochondrial, biosynthetic) and BAT2 (cytosolic, catabolic) jobs. Core MF uses parent GO:0004084, as in BAT1 review; core location mitochondrion, with cytosol kept as non-core (IC).

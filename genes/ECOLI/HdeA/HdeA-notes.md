@@ -22,7 +22,7 @@ The three experimental GO:0044183 protein folding chaperone rows are retained. A
 
 ## Other annotation decisions
 
-- GO:0042802 identical protein binding remains `MARK_AS_OVER_ANNOTATED` because the specific physical GO:0042803 homodimerization activity is present and experimentally supported.
+- GO:0042802 identical protein binding is now `MODIFY` to the specific physical GO:0042803 homodimerization activity, which is experimentally supported.
 - Broad and specific periplasm/local acid-response rows remain accepted; their exact GOA qualifiers are now explicit in YAML.
 - The standalone description remains biological and project-independent, covering compartment, pH-dependent activation, aggregation prevention, controlled release, and cooperation with HdeB/DegP/SurA.
 
@@ -36,3 +36,7 @@ The three experimental GO:0044183 protein folding chaperone rows are retained. A
 - Anchored the PMID:9298646 signal-peptide claim to the UniProt record's `PROTEIN SEQUENCE OF 22-33` attribution and `SIGNAL 1..21` feature, while keeping the abstract's limited subcellular-location wording separate and not treating it as HdeA-specific compartment proof.
 - Recorded that the cached PMID:9731767 entry contains no result-bearing abstract, whereas UniProt explicitly attributes 2.2-A crystallography and the Cys39-Cys87 disulfide to that PMID.
 - Simplified the GO:0006457 BP rationale to the specificity argument: the parent is too general, GO:0042026 captures the demonstrated neutralization-triggered refolding process, and this does not imply that HdeA catalyzes folding chemistry.
+
+## PR #3610 follow-up - 2026-10-01
+
+- Updated the GO:0042802 notes summary to match the reviewed YAML: HdeA's identical-protein-binding row is a `MODIFY` to the specific homodimerization activity rather than `MARK_AS_OVER_ANNOTATED`.

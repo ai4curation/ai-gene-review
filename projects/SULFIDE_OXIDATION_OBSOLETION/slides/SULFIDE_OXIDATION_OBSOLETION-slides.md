@@ -52,7 +52,7 @@ GO:0070221 · GO:0070222 · GO:0070223 → GO:0019418 sulfide oxidation
 
 - Each child named **the enzyme that does the oxidation**, which is more specific than any gene product needs.
 - **GO:0070222** and **GO:0070223** had **zero** direct annotations.
-- The mechanism stays expressible through the MF, e.g. **GO:0047804** sulfide:quinone reductase activity.
+- The mechanism stays expressible through the MF, e.g. **GO:0070224** sulfide:quinone oxidoreductase activity.
 - Upstream cleanup: InterPro dropped **IPR042457 → GO:0070221**; Reactome migrated its 2 rows; IBA rows follow PAINT.
 
 ---
@@ -65,11 +65,11 @@ GO:0070221 · GO:0070222 · GO:0070223 → GO:0019418 sulfide oxidation
 
 ## State in this repo
 
-| Gene | Row on obsolete term | Review here |
+| Gene | Former row / current state | Current review state |
 |---|---|---|
 | SQOR (Q9Y6N5) | IDA + IBA | none |
 | TSTD1 (Q8NFU3) | TAS + IEA | none |
-| SLC25A10 (Q9UBX3) | now TAS on GO:0019418 (Reactome) | `genes/human/SLC25A10`: MARK_AS_OVER_ANNOTATED |
+| SLC25A10 (Q9UBX3) | TAS, now on GO:0019418 (Reactome) | `genes/human/SLC25A10`: MARK_AS_OVER_ANNOTATED |
 
 <span class="small">SLC25A10 was reviewed in the mitochondrial carrier work (#2093), after this page was written. The carrier exchanges sulfate and thiosulfate for phosphate; it does not oxidise sulfide.</span>
 
@@ -77,9 +77,10 @@ GO:0070221 · GO:0070222 · GO:0070223 → GO:0019418 sulfide oxidation
 
 ## Next steps
 
-1. `just fetch-gene human SQOR`: anchor MF on GO:0047804 and BP on GO:0019418; SQOR deficiency makes it clinically relevant.
+1. `just fetch-gene human SQOR`: anchor MF on GO:0070224 and BP on GO:0019418; SQOR deficiency makes it clinically relevant.
 2. Then **TSTD1**: is GO:0019418 right for a thiosulfate sulfurtransferase, or was the TAS weak?
 3. Leave S. pombe hmt2 and bacterial homologs to IBA remapping.
 
-**Upstream:** go-annotation#6388 (open) · go-ontology#31842 (closed) · PRs #31949, #32025, #32068 (merged)
+**Upstream:** go-annotation#6388 (closed) · go-ontology#31842 (closed) · PRs #31949, #32025, #32068 (merged)
+
 **Read more:** `projects/SULFIDE_OXIDATION_OBSOLETION.md`

@@ -126,3 +126,14 @@ UniProt DR: Reactome R-HSA-2408557 "Selenocysteine synthesis."
    the 40S ribosome to enable EEFSEC-mediated Sec-tRNA(Sec) delivery.
 </content>
 </invoke>
+
+## 2026-10-09 review completion (claude-code)
+
+Re-reviewed the INITIALIZED review against the disease literature (see history/genes/human/SECISBP2/). Status set COMPLETE; changes are summarized in the history record.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- Rows: GO:0005739 IBA (PTN000328589) and IEA (GO_REF:0000044, SL-0173); both kept KEEP_AS_NON_CORE with reasons recording the check.
+- IBA seed: the PAINT IBD at PTN000328589 (PTHR13284-paint.tsv) is seeded only by T. brucei Q57Y14, whose mitochondrion annotation is a TrypTag genome-wide tagging IDA (GO_REF:0000109). The human mitochondrial form comes from human alternative splicing instead [PMID:19004874 "The identification of a potential mitochondrial human-specific SBP2 isoform was an intriguing and somewhat puzzling finding"].
+- Organelle evidence (isoform 2, mtSBP2) [PMID:19004874 "This data established that the MTS encoded by the alternative reading frame in exon 2 is functional, and required for targeting the mtSBP2-GFP protein to the mitochondria."]
+- No sub-compartment: the lines disagree. The MTS suggests import, but the authors propose an outer-surface pool [PMID:19004874 "pointed to a localization of the mtSBP2 isoform on the outer mitochondrial surface, in specific punctate clusters"] and fractionation was negative [PMID:19004874 "we were unable to confirm the presence of mtSBP2 isoform in mitochondrial fractions of cells by this method"]. Stays at the root.

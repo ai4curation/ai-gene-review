@@ -14,3 +14,10 @@ The old Spaetzle-to-PRR argument was invalid: GO:0038187 requires combining with
 ## Recovery PR specificity follow-up (2026-09-22)
 
 Link the preserved ontology constraint snapshot directly from the inflammation annotation assessment.
+
+
+## OpenScientist follow-up (2026-10-10)
+
+Reviewed `TOLL9-hypotheses/toll9-ligand-and-immune-pathway-specificity/openscientist.md`. The report supports the existing conservative boundary: the LRR/TM/TIR architecture and current PTHR24365 placement are sufficient for generic `GO:0038023` signaling receptor activity, `GO:0007165` signal transduction, and plasma membrane, but the evidence still does not justify adding `GO:0038187` pattern-recognition receptor activity or a target-specific Toll immune pathway term for *Anopheles* TOLL9.
+
+The report independently recapitulated the key caveats in the curated file: positive LPS/MD-2 evidence is Bombyx-specific, the signaling readout used a BmToll9/mouse TLR4 chimera, Drosophila Toll-9 loss-of-function lacks an antibacterial phenotype in the tested assays, and the mosGILT result is AGAP006974 co-expression rather than TOLL9 perturbation. No annotation action changes are needed; the report is now recorded as a supporting reference for the unproven-ligand boundary.

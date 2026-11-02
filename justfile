@@ -77,6 +77,12 @@ lint-caches:
 fix-caches:
 	uv run python -m ai_gene_review.tools.cache_lint --fix
 
+# Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
+# thing in a copy of the committed reports and checks the generator refuses with the message
+# it declares, or still renders with the clause it declares.
+check-alignment-page-guards *ARGS:
+	uv run python projects/DISMECH_METABOLIC_ALIGNMENT/check_page_guards.py {{ARGS}}
+
 # Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
 # (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
 # linkml-term-validator on the regenerated nested term-tuple file.
@@ -84,6 +90,15 @@ validate-mappings:
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/ANTIMICROBIAL_RESISTANCE/*.sssom.yaml
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
+
+# Validate the RGD Pathway Ontology -> GO mapping sets against the SSSOM schema: the
+# hand-curated pw_go_curated.sssom.yaml and the generated pw_go_mappings.sssom.yaml.
+# There is no separate GO label step. analyze_rgd_pathways.py stops with an error on any
+# curated GO id that is missing, obsolete, not a biological process or mislabelled, and
+# the generated set deliberately keeps obsolete and unresolvable targets, flagged
+# pw2go:qa/OBSOLETE_TARGET and qa/MISSING_TARGET.
+validate-rgd-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_curated.sssom.yaml projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.yaml
 
 # Validate the curated RHEA->GO gap-fill mapping set (projects/RHEA/rhea2go.sssom.yaml):
 # (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.

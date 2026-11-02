@@ -209,3 +209,7 @@ assertions and supporting evidence are preserved.
 - PMID:26230318: ACCEPT -> REMOVE
 - PMID:14504384: ACCEPT -> REMOVE
 - PMID:17148606: ACCEPT -> UNDECIDED
+
+## 2026-10-14 — UNDECIDED rows resolved
+
+Resolved 2 UNDECIDED rows. The cell-wall HDA (PMID:16287169) is now MARK_AS_OVER_ANNOTATED. HSP90.1 is cytoplasmic and has no signal peptide, and the study's own extracellular set was filtered for signal peptides. Detection in the wall fraction is not disputed, but it does not establish a cell-wall constituent. Protein binding (PMID:17148606) is now REMOVE, consistent with the other protein-binding rows.

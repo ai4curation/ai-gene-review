@@ -15,6 +15,10 @@ Those two things cannot both be casually true, so this script asks what the sequ
    assigns AK4P3 PE=1 ("evidence at protein level") with a PeptideAtlas cross-reference, and
    peptide-to-protein assignment between near-identical paralogs is exactly where that can go
    wrong. The test is whether any fully tryptic peptide is unique to AK4P3.
+3. Does AK4P3 carry AK4's inactivating active-site residue? AK4 has no adenylate kinase
+   activity in vitro because it has a glutamine at position 159 where other adenylate kinases
+   have a conserved arginine, and the Q159R mutation restores activity with GTP (PMID:19130895).
+   An intact P-loop says nothing about this residue, so it is checked separately.
 
 Nothing is hardcoded: sequences are fetched live from the UniProt REST API and the comparison and
 digest are computed. The script reports what it finds and draws no conclusion the data does not
@@ -30,6 +34,7 @@ import urllib.request
 AK4P3 = "A0A8I5KW96"   # TrEMBL, gene symbol AK4P3
 AK4 = "P27144"         # Swiss-Prot, genuine human AK4
 MIN_PEPTIDE_LEN = 7    # below this, a tryptic peptide is not usefully identifying
+AK4_Q159 = 159         # AK4's Gln in place of the conserved catalytic Arg (PMID:19130895)
 
 
 def fetch_seq(accession: str) -> str:
@@ -77,6 +82,11 @@ def main() -> int:
         print(f"  {label} P-loop: {loc[1]} at {loc[0]}" if loc else f"  {label} P-loop: ABSENT")
     print()
 
+    ctx = slice(AK4_Q159 - 4, AK4_Q159 + 3)
+    for label, seq in ((f"AK4  ", b), ("AK4P3", a)):
+        print(f"  {label} residue {AK4_Q159}: {seq[AK4_Q159 - 1]} (context {seq[ctx]})")
+    print()
+
     pa, pb = tryptic(a), tryptic(b)
     sa, sb = set(pa), set(pb)
     uniq_a = sorted(p for p in sa - sb if len(p) >= MIN_PEPTIDE_LEN)
@@ -90,9 +100,14 @@ def main() -> int:
         print("  The two ORFs are identical. Nothing in the protein sequence can distinguish them.")
     elif p_loop(a) and ident / len(a) > 0.95:
         print("  The AK4P3 ORF is near-identical to AK4 with the catalytic P-loop intact, so the")
-        print("  sequence gives NO evidence of pseudogenisation at the protein level. The GO")
-        print("  annotations are appropriate to this sequence. Whether the locus is expressed and")
-        print("  translated is a separate question this analysis cannot answer.")
+        print("  sequence gives NO evidence of pseudogenisation at the protein level. Whether the")
+        print("  locus is expressed and translated is a separate question this analysis cannot answer.")
+    if a[AK4_Q159 - 1] == b[AK4_Q159 - 1] == "Q":
+        print(f"  AK4P3 keeps AK4's Gln{AK4_Q159}, the residue that makes AK4 inactive as an adenylate")
+        print("  kinase in vitro. The sequence therefore predicts AK4's enzymology, which is NOT an")
+        print("  active AMP kinase.")
+    elif a[AK4_Q159 - 1] == "R":
+        print(f"  AK4P3 has Arg at {AK4_Q159}, the substitution that restores AK4 activity.")
     else:
         print("  See the differences above.")
     if uniq_a:

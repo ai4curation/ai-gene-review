@@ -9,6 +9,12 @@ authored core-MF term. On manual inspection only **KRAS** (`GTPase activity`) is
 gene's specific *primary* activity; AATF/ABL1/GAPDH match on general/secondary core terms
 (RNA binding, DNA binding). So "1/42" is an editorial refinement of the computed "4/42",
 not a separate hard-coded number.
+*Update 2026-09-27:* every GO id Affinage emits is a `goslim_generic` term, so the
+over-generality is built into the vocabulary. At slim level the core-MF bin is emitted
+for 38/42 genes. See the [project page](../../AFFINAGE_EVALUATION.md). The redundancy
+argument below was later tested by the FA cohort ([fa-cohort.md](fa-cohort.md)), which
+found net value from the narrative as an input.
+
 But that is Affinage's **weakest** output. Its actual product is the
 citation-anchored **`narrative.mechanistic_narrative`** plus the structured
 `timeline.discoveries`. This note evaluates that layer, because judging Affinage by

@@ -1,0 +1,9 @@
+| Step number | Enzyme type | Arabidopsis gene or protein | Substrate | Product | Notes |
+|---:|---|---|---|---|---|
+| 1 | 3-ketoacyl-CoA synthase (KCS; condensing enzyme) | Multiple KCS isoforms; PAS2-associated proteins include KCS1, KCS5, KCS6, KCS8, KCS9, KCS10, and KCS18 | Acyl-CoA and malonyl-CoA | 3-ketoacyl-CoA, CO₂, and CoA | Initiates each elongation cycle and largely determines chain-length specificity. PAS2 interacts with several KCS isoforms. (pqac-00000016, pqac-00000041) |
+| 2 | 3-ketoacyl-CoA reductase (KCR) | KCR1, the principal functional isoform | 3-ketoacyl-CoA, NADPH, and H⁺ | (3R)-3-hydroxyacyl-CoA and NADP⁺ | Performs the first reduction and generates the direct substrate of PAS2. KCR and PAS2 associate in the ER elongase machinery. (pqac-00000016, pqac-00000042) |
+| 3 | Very-long-chain (3R)-3-hydroxyacyl-CoA dehydratase (HACD or HCD) | PAS2, PASTICCINO2, or PEP; At5g10480; UniProt Q8VZB2 | (3R)-3-hydroxyacyl-CoA | trans-2-enoyl-CoA and H₂O | PAS2 is the third core enzyme. pas2 mutants accumulate 3-hydroxy-C18:0-, C20:0-, and C22:0-CoA intermediates; a sharply defined intrinsic chain-length preference remains unestablished. (pqac-00000000, pqac-00000001, pqac-00000002) |
+| 4 | trans-2,3-enoyl-CoA reductase (ECR) | CER10 or ECR | trans-2-enoyl-CoA, NADPH, and H⁺ | Acyl-CoA extended by two carbons and NADP⁺ | Completes one elongation round. CER10 physically interacts with PAS2 in the ER, and the elongated acyl-CoA can re-enter the cycle. (pqac-00000015, pqac-00000038, pqac-00000040) |
+
+
+*Table: The four reactions of the ER-associated fatty-acid elongase cycle, highlighting PAS2 as the third-step dehydratase. Each completed cycle extends an acyl-CoA chain by two carbons.*

@@ -1,0 +1,9 @@
+
+
+## 2026-10-25 ABA module source audit
+
+Accession Q9M7Q4 verified by fetch-gene; ABF2 and AREB1 denote the same Arabidopsis protein. All 31 seeded rows individually reviewed. Falcon research failed authentication and the automatic perplexity-lite fallback returned HTTP 401 insufficient_quota; no generated research file was invented. This is a manual primary-source review using all 12 GOA-cited PMID caches plus PMID:16446457, existing pathway sources and full text when cached.
+
+PMID:11005831 shows ABRE binding, ABA-dependent transactivation and vegetative induction. PMID:16284313 distinguishes inactive intact overexpression from activated AREB1DeltaQT and dominant repression; PMID:15361142 reports glucose-specific abf2 defects and no ABA/salt/dehydration defect in that single-mutant setting. These findings support overlapping transcriptional roles without universal single-mutant necessity. PMID:19924127 directly reconstructs PYR1-ABI1-OST1-ABF2 signaling; PMID:16446457 establishes multisite phosphorylation. Nuclear localization is direct in PMID:15516505 and PMID:16284313.
+
+PMID:27373216 demonstrates direct ABF2/3/4 target-promoter binding and uses triple-mutant genetics for leaf senescence. PMID:32167237 was inspected in full: Y1H, EMSA, ChIP and reporters measure binding of ABF2 to the TPPE DNA promoter. Its generic protein-binding row is refined to sequence-specific cis-regulatory DNA binding, and no ABF2 phosphatase activity is inferred. PMID:16299177 foregrounds ABF4 and PMID:19207209 bZIP67; cached abstracts and unsuccessful PMC/EuropePMC full-text attempts do not resolve target-specific ABF2 assays. This is an access limitation, not evidence of erroneous curator attribution. Independent primary AREB1 activation assays support the transcription claim. No new process annotations were added from downstream physiological necessity alone.

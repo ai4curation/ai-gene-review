@@ -32,3 +32,15 @@ The same burden-of-proof clarification now applies to both disputed peroxisome-f
 ## Final tracking PR evidence follow-up (2026-09-23)
 
 Remove the negative-assay absence clause from the disputed report reference review, aligning it with the annotation reasons. Preserve the independently verified ancestry and domain-architecture rebuttal; no action or supporting quotation changes in this gene.
+
+## Re-review 2026-09-28
+
+Audit only; the 2026-09-20/23 adjudications were kept. The refreshed GOA added five rows, all resolved here (31 rows total):
+
+- GO:0003924 GTPase activity (IBA, PTN000170013): ACCEPT, consistent with the IEA/ISS rows. Family-wide activity, intact dynamin-type G domain (291-567) on the target record; human OPA1 GTP hydrolysis measured directly [PMID:20185555 "OPA1-S1 associates strongly with liposomes containing 25% phosphatidic acid (POPA) or 25% phosphoserine (POPS)"].
+- GO:0005737 cytoplasm (IBA, is_active_in, PTN000170013): MODIFY to mitochondrial inner membrane / intermembrane space. True by GO definition (cytoplasm includes organelles) but a lowest-common-denominator placement at the deep dynamin node; the target record gives a transit peptide, single IM helix and IMS topology for residues 113-776 [file:DANRE/opa1/opa1-uniprot.txt "inner mitochondrial membrane, and the short soluble form"]. propagation_review: TERM_SCOPING_PROBLEM / GRANULARITY_MISMATCH.
+- GO:0005874 microtubule (IBA, is_active_in, PTN000170013): UNDECIDED, paired with the microtubule binding row already UNDECIDED from the same node. Topological objection recorded (entire GTPase/stalk/paddle region is IMS-facing per UniProt; structure assembled on lipid membranes [PMID:32228866 "hydrophobic residues in its extended membrane-binding domain are critical for its tubulation activity."]); inheritance-or-loss at the OPA1 branch still unresolved, so both rows stay together.
+- GO:0043009 chordate embryonic development (IMP, PMID:23516612, second ZFIN row = splice-blocking MO): KEEP_AS_NON_CORE, same as the translation-blocking row [PMID:23516612 "splice-blocking morpholino (SB) designed to span the junction between intron 12 and exon 13 was also injected at 4."].
+- GO:0097749 membrane tubulation (ISS from human S-OPA1 chain PRO_0000253479): ACCEPT, matching the whole-protein ISS row; the target annotates the corresponding short chain PRO_0000417514.
+
+Also added a reference_review (HIGH/VERIFIED) for PMID:23516612, which lacked one, and two suggested questions/experiments (zebrafish L/S processing; PAINT decision on the OPA1-branch inheritance of the deep-node microtubule/peroxisome terms; in vitro lipid-stimulated GTPase/tubulation with purified zebrafish S-Opa1; stable CRISPR mutant EM). Validation: zero errors, zero warnings.

@@ -1,0 +1,14 @@
+# Curation Notes for Escherichia phage lambda `exo` (P03697)
+
+## Summary of Gene Product
+Bacteriophage lambda exonuclease (`exo`, also known as `redX` or `Red alpha`, UniProt `P03697`, 226 AA, EC 3.1.11.3) is a highly processive, ring-shaped homotrimeric 5'-to-3' double-stranded DNA exonuclease that forms the two-component Red homologous recombination system together with the single-strand DNA annealing protein Beta (`bet`) [file:LAMBD/exo/exo-uniprot.txt]. Lambda Exo resects the 5'-terminated strand at double-strand DNA breaks to release 5'-mononucleotides and generate 3'-single-stranded DNA overhangs onto which Beta is loaded to promote homologous recombination via double-strand break repair (DSBR) and single-strand annealing (SSA), as well as supporting the transition to late rolling-circle phage DNA replication [file:LAMBD/exo/exo-uniprot.txt].
+
+## Structural and Mechanistic Architecture
+- **Toroidal homotrimer (`PDB:1AVQ`, `PDB:3SM4`, `PDB:4WUZ`)**: Three subunits assemble into a funnel-shaped toroid with a tapered central channel (~30 A wide at the dsDNA entrance and ~15 A wide at the exit) that accommodates B-form dsDNA at one end and only extruded 3'-ssDNA at the narrow exit [file:LAMBD/exo/exo-uniprot.txt].
+- **PD-(D/E)XK nuclease active site and divalent metal cofactor**: Each subunit contains a DEK catalytic triad (`Asp119`, `Glu129`, `Lys131`) that coordinates two divalent cations (`Mg2+` physiologically, or `Mn2+`) to hydrolyze phosphodiester bonds processively in the 5'-to-3' direction, coupled to 5'-phosphate recognition at `Arg28` [file:LAMBD/exo/exo-uniprot.txt].
+- **Exo-Beta complex (`PDB:6M9K`)**: Forms a direct complex with the `bet` single-strand annealing protein, coupling 5'-to-3' resection of dsDNA ends directly to the loading of Beta monomers onto the nascent 3'-ssDNA overhang.
+
+## Review of Existing GO Annotations
+- **`GO:0051908` (`double-stranded DNA 5'-3' DNA exonuclease activity`, IEA `GO_REF:0000003` via `EC:3.1.11.3`)**: `ACCEPT`. Accurately describes the core enzymatic reaction of lambda Exo: processive exonucleolytic degradation of double-stranded DNA in the 5'-to-3' direction to yield nucleoside 5'-phosphates and a 3'-ssDNA tail [file:LAMBD/exo/exo-uniprot.txt].
+- **`GO:0046872` (`metal ion binding`, IEA `GO_REF:0000043`)**: `MODIFY` -> `GO:0000287` (`magnesium ion binding`). Lambda Exo coordinates catalytic `Mg2+` ions (`ChEBI:18420`) at `Asp119` and `Glu129` as its physiological divalent cofactor [file:LAMBD/exo/exo-uniprot.txt].
+- **`GO:0004527` (`exonuclease activity`, IEA `GO_REF:0000043`)**, **`GO:0004518` (`nuclease activity`, IEA `GO_REF:0000043`)**, and **`GO:0016787` (`hydrolase activity`, IEA `GO_REF:0000043`)**: `TOO_GENERAL`. All three are ancestor terms already entailed by the specific annotation `GO:0051908` (`double-stranded DNA 5'-3' DNA exonuclease activity`).

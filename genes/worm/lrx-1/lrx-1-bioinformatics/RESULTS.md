@@ -1,5 +1,12 @@
 # LRX-1 Bioinformatics Analysis Results
 
+> **Correction (2026-10-30):** the conclusion below that LRX-1 has "no canonical LDL-A
+> domain patterns" is wrong. The cysteine-spacing heuristic used here missed the repeats,
+> which Pfam (PF00057, 4 hits), SMART (SM00192, 4), CDD (cd00112, 4) and PROSITE all
+> detect (UniProt record `lrx-1-uniprot.txt`). The gene review now describes four LDL-A
+> repeats; the original analysis text is kept unchanged below for provenance.
+
+
 ## Summary
 Analysis of the C. elegans LRX-1 protein sequence reveals significant discrepancies with automated domain predictions in UniProt. The protein does not contain canonical LDL receptor Class A domains and lacks key features of LRP family proteins.
 
@@ -218,7 +225,7 @@ python analyze_lrx1.py ../../../yeast/MTC7/MTC7.fasta -o mtc7_test_results.json
 - [x] Visualizations created where applicable
 
 ### Data Integrity
-- [x] Input data source documented (UniProt Q95Y86)
+- [x] Input data source documented (UniProt Q22179)
 - [x] Analysis methods clearly described (LDL-A patterns, hydrophobicity)
 - [x] External tools documented (DeepTMHMM, AlphaFold)
 - [x] Results are reproducible from FASTA input

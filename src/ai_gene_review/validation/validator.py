@@ -27,6 +27,19 @@ from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-un
 from ai_gene_review.validation.folded_scalar import (
     check_folded_scalar_hyphens,
 )
+from ai_gene_review.validation.alternative_records import validate_alternative_records
+from ai_gene_review.validation.gene_model_issues import validate_gene_model_issues
+from ai_gene_review.validation.action_consistency import (
+    check_action_consistency,
+    go_ancestors,
+)
+from ai_gene_review.validation.nd_policy import check_nd_policy
+from ai_gene_review.validation.paint_loss_check import check_paint_losses, has_paint_losses
+from ai_gene_review.validation.decomposition import (
+    check_decomposition,
+    go_is_a_ancestors,
+    go_names,
+)
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -36,6 +49,17 @@ from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
+from ai_gene_review.validation.local_source_text import (
+    validate_local_source_quotes,
+)
+from ai_gene_review.validation.uniprot_quote_source import (
+    validate_record_sections,
+    validate_uniprot_quote_sources,
+)
+from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.source_statement_defects import validate_statement_defects
+from ai_gene_review.mod_providers import is_mod_description_file
+from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
     cached_text_missing,
@@ -47,6 +71,8 @@ from ai_gene_review.validation.supporting_text import (
 
 
 PROPAGATION_REVIEW_EVIDENCE_TYPES = {"IBA", "ISO"}
+# Actions that challenge a propagated annotation. TOO_GENERAL is deliberately absent:
+# it accepts the propagated claim as true and only judges the term uninformative.
 PROPAGATION_REVIEW_ACTIONS = {
     "REMOVE",
     "MODIFY",
@@ -309,6 +335,7 @@ def validate_gene_review(
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
     publications_dir: Optional[Path] = None,
+    check_ontology: bool = False,
 ) -> ValidationReport:
     """Run custom best-practices checks on a gene review YAML file.
 
@@ -323,7 +350,9 @@ def validate_gene_review(
         check_goa: Whether to validate against GOA file (enabled by default)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
-        publications_dir: Optional publication-cache directory for quote validation
+        publications_dir: Optional publication-cache directory for quote and availability checks
+        check_ontology: Whether to run checks that need the GO hierarchy (loads the
+            local GO database)
 
     Returns:
         ValidationReport with detailed validation results
@@ -373,7 +402,16 @@ def validate_gene_review(
             check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
             publications_dir=publications_dir,
+            check_ontology=check_ontology,
         )
+        # Local sources need no network, so this runs even when reference
+        # validation is off (validate-all's best-practices pass): the external
+        # validator skips file: and Reactome: quotes entirely.
+        validate_local_source_quotes(data, report, yaml_file_path)
+        validate_uniprot_quote_sources(data, report)
+        validate_record_sections(data, report)
+        validate_goa_support(data, report, yaml_file_path)
+        validate_statement_defects(data, report)
 
     return report
 
@@ -433,6 +471,7 @@ def check_best_practices_rules(
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
     publications_dir: Optional[Path] = None,
+    check_ontology: bool = False,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -446,7 +485,8 @@ def check_best_practices_rules(
         yaml_file: Path to YAML file for GOA validation (if enabled)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
-        publications_dir: Optional publication-cache directory for quote validation
+        publications_dir: Optional publication-cache directory for quote and availability checks
+        check_ontology: Whether to run checks that need the GO hierarchy
     """
     if progress_callback:
         progress_callback("Running best-practices checks")
@@ -457,7 +497,26 @@ def check_best_practices_rules(
     if check_supporting_text:
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
+    validate_alternative_records(data, report)
+    validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
+    check_nd_policy(data, report)
+    check_decomposition(
+        data,
+        report,
+        get_project_root(),
+        is_a_ancestors=go_is_a_ancestors if check_ontology else None,
+        names=go_names if check_ontology else None,
+    )
+    check_action_consistency(
+        data, report, ancestors=go_ancestors() if check_ontology else None
+    )
+    if has_paint_losses(data):
+        from ai_gene_review.validation.module_validator import load_paint_index
+
+        check_paint_losses(
+            data, report, load_paint_index(get_project_root() / "interpro" / "panther")
+        )
     if yaml_file is not None:
         # Source-level check: a folded scalar turns a newline into a space, so a
         # hyphenated compound split across lines renders as two words. Invisible to
@@ -819,7 +878,12 @@ def check_best_practices_rules(
 
         if not has_research_support:
             if yaml_file is not None:
-                research_files = list(yaml_file.parent.glob("*research*.md"))
+                # MOD gene descriptions are curator-written source text, not AI deep
+                # research, so leaving one uncited is not what this check is about.
+                research_files = [
+                    f for f in yaml_file.parent.glob("*research*.md")
+                    if not is_mod_description_file(f.name)
+                ]
                 if research_files:
                     research_file_names = [
                         f.name for f in research_files[:3]
@@ -959,12 +1023,26 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
+                    # A core function with a BIOLOGY gap on the MF aspect may be a contested
+                    # activity deliberately left out of the NEW rows. The gap need not be about
+                    # this term, so keep the issue but lower it to INFO and drop the NEW advice.
+                    has_mf_gap = any(
+                        isinstance(gap, dict)
+                        and "BIOLOGY" in (gap.get("gap_kind") or [])
+                        and gap.get("dark_aspect") == "MF_DARK"
+                        for gap in core_func.get("knowledge_gaps") or []
+                    )
                     if not is_from_annotations and has_support:
                         report.add_issue(
-                            ValidationSeverity.WARNING,
+                            ValidationSeverity.INFO if has_mf_gap else ValidationSeverity.WARNING,
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
                             path=f"core_functions[{i}].molecular_function",
-                            suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                            suggestion=(
+                                "The core function has an MF_DARK knowledge gap; if that gap is about this "
+                                "activity, leaving it out of NEW rows is intended"
+                                if has_mf_gap
+                                else "Consider adding this term to existing_annotations with action: NEW if it's a novel annotation"
+                            ),
                             validation_category="BestPractices",
                             check_type="core_function_molecular_function_not_in_annotations",
                         )
@@ -1100,8 +1178,10 @@ def check_best_practices_rules(
                                 f"existing_annotations[{i}].review.supported_by[{j}].reference_id",
                             )
 
-    # Check for ACCEPT annotations with PMIDs lacking supported_by
-    # Only warn if the publication file exists (full text is available)
+    # Match quote validation's cache root and full-text availability semantics.
+    # Nested publication directories must not shadow the repository cache.
+    cache_dir = publications_dir if publications_dir is not None else get_project_root() / "publications"
+    # Check for ACCEPT annotations with PMIDs lacking supported_by.
     if "existing_annotations" in data and data["existing_annotations"]:
         for i, annotation in enumerate(data["existing_annotations"]):
             if isinstance(annotation, dict):
@@ -1111,40 +1191,9 @@ def check_best_practices_rules(
                     if ref_id and ref_id.startswith("PMID:"):
                         supported_by = review.get("supported_by", [])
                         if not supported_by:
-                            pmid_number = ref_id.replace("PMID:", "")
-                            if yaml_file is not None:
-                                project_root = yaml_file.parent
-                                while (
-                                    project_root.parent != project_root
-                                    and not (project_root / "publications").exists()
-                                ):
-                                    project_root = project_root.parent
-                                pub_file = (
-                                    project_root
-                                    / "publications"
-                                    / f"PMID_{pmid_number}.md"
-                                )
-                            else:
-                                pub_file = (
-                                    Path("publications") / f"PMID_{pmid_number}.md"
-                                )
-
-                            full_text_available = False
-                            if pub_file.exists():
-                                import yaml as yaml_lib
-
-                                with open(pub_file, "r") as f:
-                                    content = f.read()
-                                    if content.startswith("---"):
-                                        end_marker = content.find("---", 3)
-                                        if end_marker != -1:
-                                            frontmatter = content[3:end_marker]
-                                            pub_data = yaml_lib.safe_load(
-                                                frontmatter
-                                            )
-                                            full_text_available = pub_data.get(
-                                                "full_text_available", False
-                                            )
+                            full_text_available = cached_full_text_available(
+                                ref_id, cache_dir
+                            )
 
                             if full_text_available:
                                 report.add_issue(
@@ -1158,12 +1207,12 @@ def check_best_practices_rules(
     if "taxon" in data:
         taxon = data["taxon"]
         if isinstance(taxon, dict):
-            if "id" in taxon and not taxon["id"].startswith("NCBITaxon:"):
+            if "id" in taxon and not is_ncbitaxon_curie(taxon["id"]):
                 report.add_issue(
-                    ValidationSeverity.INFO,
-                    "Taxon ID should use NCBITaxon prefix",
+                    ValidationSeverity.ERROR,
+                    "Taxon ID must be an NCBITaxon:<digits> CURIE",
                     path="taxon.id",
-                    suggestion=f"Use 'NCBITaxon:{taxon['id']}' format",
+                    suggestion="Use the NCBI taxonomy id from the UniProt OX line, e.g. 'NCBITaxon:9606'",
                 )
 
     # Check description length

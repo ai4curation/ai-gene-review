@@ -23,3 +23,15 @@
   KT2440 enzyme. Its extrapolations of cysteine synthase-complex formation,
   cytoplasmic localization, and CDI-toxin activation were not promoted to
   target-specific annotations.
+
+## 2026-09-27 correction: GO:0006535 is retired
+
+- The 2026-08-11 entry above says the live route-specific GO:0006535 is used for
+  the authored core process. That was wrong: GO retired the term (obsolete no
+  later than release 2026-03-25, replaced_by GO:0019344). A reviewed label alias
+  in conf/oak_config.yaml and stale committed term caches had kept it
+  validating. The NEW proposal is removed and the authored core process is
+  GO:0019344; the O-acetylserine route is carried by the
+  bacterial_cysteine_biosynthesis_via_o_acetylserine module. UniProt's
+  `DR GO; GO:0006535` line is a stale cross-reference, not support for a new
+  term (PR #3105).

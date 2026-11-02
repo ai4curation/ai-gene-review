@@ -59,3 +59,12 @@ PDB: 5A10 (1.42 Å), 5A11 (2.47 Å)
 Pennycress is a winter-annual oilseed cover crop / SAF feedstock. Glucosinolate breakdown
 chemistry (TFP and related specifier proteins) governs seed-meal palatability and defense
 volatiles — a target for engineering low-antinutrient feed co-products.
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (8) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+Direct pennycress proteinG1FNI6 has recombinant product evidence21783213, structure26260516, and mechanistic30900313 support. Replaced a title-only core quote with the actual allylthiocyanate/epithionitrile result. Other tested substrates yield simple nitriles; product output depends on aglucone structure and specifier type. A lack of strict addedFe2+ dependence in early assays is not absence of bound iron. Propagated nuclear localization remains unresolved; ESP interaction-specific nuclear recruitment is not a demonstrated TaTFP location.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.

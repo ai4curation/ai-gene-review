@@ -1,0 +1,10 @@
+> **Mastermind-like identity:** *C. elegans* SEL-8/LAG-3 is the functional counterpart of Mastermind-family Notch coactivators. This assignment rests primarily on its conserved role in the Notch transcription complex rather than strong primary-sequence similarity to non-nematode Mastermind proteins. (pqac-00000019, pqac-00000020)
+>
+> **Mechanism and location:** SEL-8/LAG-3 is a glutamine-rich nuclear protein. Following ligand-induced cleavage of GLP-1 or LIN-12, the receptor intracellular domain enters the nucleus and associates with LAG-1/CSL; SEL-8/LAG-3 joins this complex, bridging or stabilizing the receptor intracellular domain–LAG-1 assembly and converting it into a transcriptionally active complex. (pqac-00000001, pqac-00000004, pqac-00000005)
+>
+> **Not a sequence-specific DNA-binding factor:** Target-site recognition is supplied by LAG-1/CSL, which binds CSL motifs in regulatory DNA. SEL-8/LAG-3 instead provides coactivator or scaffolding activity; it has no known enzymatic substrate and is not established as independently recognizing DNA. The precise downstream biochemical step—such as direct recruitment of RNA polymerase or a particular chromatin modifier—remains unresolved. (pqac-00000000, pqac-00000034, pqac-00000035)
+>
+> **Context-dependent output:** The same core coactivator supports different programs according to receptor, tissue, and cis-regulatory context. With GLP-1 in the germ line, it promotes transcription of *lst-1* and *sygl-1*, maintaining stem-cell fate and preventing premature meiotic entry; with LIN-12 in somatic reproductive lineages, the complex participates in cell-fate specification and positive autoregulation of *lag-1*. Recent work also implicates SEL-8 in neuronal Notch transcription connecting hypodermal insulin signaling to associative memory. (pqac-00000014, pqac-00000039, pqac-00000040, pqac-00000025)
+
+
+*Blockquote: Mechanistic summary of SEL-8/LAG-3 as a nuclear, Mastermind-like component of the canonical Notch transcription complex, emphasizing its non-DNA-binding coactivator role and context-dependent outputs.*

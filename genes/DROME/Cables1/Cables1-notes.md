@@ -47,3 +47,29 @@ The Falcon report misses PMID:37317646 and incorrectly presents fly Cables1 as l
 Provider output: [Cables1-deep-research-falcon.md](Cables1-deep-research-falcon.md). Primary papers and source records, rather than provider verdicts, support the assessment.
 
 The annotation and prediction assessments are complete. UNC/UNDECIDED record delimited scientific or evidence uncertainty. Empty core-function lists indicate that no sufficiently resolved molecular activity can be asserted, rather than an unfinished review.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+No ProtNLM2 output was consulted for this section.
+
+### Identity of the benchmark accession
+
+FlyBase FBgn0027581 (Cables1/CG6191) maps to four unreviewed UniProt entries (UniProt REST query `xref:flybase-FBgn0027581`, 2026-10-20): A0A0B4KF19 (746 aa), A0A0B4KEN8 (728 aa), A1Z9G1 (717 aa) and Q9Y138 (696 aa, cDNA BcDNA:GH06193). None is Swiss-Prot reviewed, so there is no separate canonical entry. A pairwise comparison of the FASTA sequences shows that A1Z9G1 is identical to residues 1-717 of A0A0B4KF19 (A0A0B4KF19 has a 29-residue C-terminal extension), that A0A0B4KEN8 shares residues 1-501 and then diverges, and that Q9Y138 matches the first 694 residues. All four carry the Pfam PF00134 cyclin N-terminal domain (621-699 in A0A0B4KF19, 632-710 in A0A0B4KEN8) and are classified as PTHR22896:SF0. A0A0B4KF19 is the longest product and the only one with FlyBase experimental GO annotations, so it is the gene's annotation representative and not a fragment. It is an alternative-isoform product of a multi-isoform gene with no missing domains.
+
+### Evolutionary placement
+
+PANTHER PTHR22896 (CDK5 AND ABL1 ENZYME SUBSTRATE 1) splits into SF1 (vertebrate CABLES1: human Q8TDN4, mouse Q9ESJ1, zebrafish cables1), SF3/SF4 (vertebrate CABLES2, zebrafish cables2a/cables2b) and SF0, which contains fly Cables1 and the uncharacterized C. elegans Y71F9B.6 (A0A078BPF2 and isoforms, IEA-only in GOA). The fly gene is therefore a single-copy invertebrate relative of both vertebrate paralogs, in a subfamily separate from the characterized CABLES1. Human CABLES1 carries IBA terms (GO:0007399 nervous system development, GO:0005829 cytosol); fly Cables1 receives no IBA at all. I treat that as a deliberate PAINT decision and transfer none of the mammalian CDK5/ABL1/cell-proliferation biology to the fly protein.
+
+The family review at interpro/panther/PTHR22896/PTHR22896-review.yaml places A0A0B4KF19 in SF0, which agrees with UniProt. I found no disagreement about subfamily placement. The grep hits for "cables" in modules/linc_complex.yaml are "actin cables" text and unrelated, so no module covers this gene.
+
+### Re-examination of the annotations against PMID:37317646 (full text)
+
+- Basal body (IDA): the paper says "CABLES1, also localized to spermatocyte basal bodies, albeit much more weakly, precluding detailed analysis." The localization is real but faint. ACCEPT retained.
+- Motile and non-motile cilium assembly (IMP; RNAi plus deletion mutants): for CABLES1, CCDC6 and TEX9 together, the paper reports "a general disorganization and shortening of ciliary axonemes, with missing and displaced doublet microtubules toward the ciliary tip" in chordotonal neurons, and in sperm "the central pair of microtubules was frequently missing". These are ultrastructural defects in the axoneme itself, so they are a direct ciliogenesis readout and not a downstream organismal phenotype. The protein is at the basal body, so participation is plausible. Both ACCEPTs retained.
+- Regulation of cell cycle (IEA, InterPro2GO from IPR012388): still UNDECIDED. I expanded the reason to give the SF0/SF1 separation and the absence of IBA. The term is neither supported nor contradicted in fly.
+
+The falcon deep-research report still misses PMID:37317646, so it is not used as support. The description and core function (basal-body localization, motile and sensory cilium assembly, molecular activity unresolved) hold and are unchanged.
+
+### Relative to review next
+
+The closest experimentally characterized relative chosen by phylogeny is human CABLES1 (Q8TDN4, PTHR22896:SF1), the better-studied of the two vertebrate paralogs of the SF0 fly gene. The SF0 worm relative is uncharacterized. The repo has no review of CABLES1 or CABLES2 in any species (genes/*/CABLES* has no matches; mouse Cables1 is absent too).

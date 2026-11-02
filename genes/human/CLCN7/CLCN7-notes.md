@@ -58,3 +58,7 @@ Discrepancies / annotations to revisit:
 
 - No contradictions with the existing review; the Cl--dependent cathepsin-activation and phagolysosome/autophagy findings reinforce, not overturn, current ACCEPT/MODIFY calls.
 - Possible additions to consider for the YAML (not required by GOA, would be NEW/proposed terms, all PI(3,5)P2/cathepsin claims pending full-text verification): a BP for autophagy/autophagosome-lysosome cargo degradation (e.g. GO:0006914 autophagy or GO:0061684 chaperone-mediated autophagy is NOT appropriate; rather GO:0007040 lysosome organization or GO:0007041 lysosomal transport), and a regulatory MF/process capturing direct inhibition by PI(3,5)P2 (e.g. phosphatidylinositol-3,5-bisphosphate binding, GO:0080025). The osteoclast bone-resorption role (GO:0045453 bone resorption / GO:0001503 ossification) is biologically central and currently not annotated in GOA for this gene — worth flagging as a candidate, though no experimental human GOA term exists to ACCEPT.
+
+## OpenScientist GO:0030321 retest (2026-10-11)
+
+The newer topology-overannotation template retest corroborated the original topology analysis and again found GO:0030321 inappropriate for CLCN7. The report explicitly traced the ComplexPortal IDA row to the same CLC-family-level sentence in PMID:32851177 and recommended removing GO:0030321 from both the ComplexPortal IDA annotation and the PANTHER-derived IBA row, so the direct row has been escalated from MARK_AS_OVER_ANNOTATED to REMOVE.

@@ -1,0 +1,30 @@
+history_version: 1
+target:
+  kind: other
+  slug: module_logic
+  path: src/ai_gene_review/module_logic.py
+session:
+  id: 2026-10-24T042704Z-claude-code-b07d6c
+  timestamp: '2026-10-24T04:27:04Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/5333
+  urls: []
+events:
+- type: REVIEW
+  outcome: changed
+  summary: 'Address review on PR 5333: EXACTLY_ONE, gene_product symbol warnings,
+    grounding ratchets'
+  details: |
+    Second round on PR 5333, acting on ai4c-reviewer[bot]'s changes-requested review. Verified each claim by running the engine, which the review bot could not do in its runner.
+
+    Confirmed and fixed: (1) selection was ONE_OR_MORE while the variant set's own note said a single-gene-lysis phage encodes exactly one lysis protein; now EXACTLY_ONE, which 81 other modules already use and which compile_node treats identically, so satisfiability is unchanged. (2) module_gene_symbols.symbol_label_warnings checked only 'gene' descriptors, but this PR made 'gene_product' feed symbol extraction, so ambiguous gene_product labels yielded no symbol and no advisory; extending the walker raises 113 new SYMBOL_LABEL warnings across 47 modules, all advisory (module_validator treats warnings as non-blocking), including the reviewer's cited cases in lipid_a_l_arabinose_modification and thiamine_diphosphate_biosynthesis. (3) The cytolytic_virion_release node carries concepts but no annotons, so it compiles to an empty conjunction and contributes nothing to satisfiability; its notes now say so, so a later editor does not trim the variant set believing a required part still constrains the module.
+
+    Confirmed and scoped, not fixed: participant.protein_complex, ortholog_of and homolog_of are still unread by _atom_from_annoton, exactly as gene_product was. PROTEIN_COMPLEX is used 477 times across 194 modules and grounds its subunits one level deeper, at protein_complex.active_units[].participant.gene_product. Measured consequence: 354 atoms remain ungrounded and 127 modules are unsatisfiable in every possible context, even under an oracle where every groundable step holds. That is larger than the review's estimate of six example modules. Not fixed here because grounding a complex raises a semantic question this PR should not settle unilaterally: representative_uniprots is an any-of slot, whereas a complex requires all its subunits, so reading active_units into it would make 194 modules satisfiable on a single subunit. 197 of the 476 PROTEIN_COMPLEX annotons do carry a function id and so are already activity-groundable; the remaining 279 are not.
+
+    Added Atom.is_grounded plus two corpus ratchet tests (ungrounded atoms <= 354, modules unsatisfiable in every context <= 127). These guard the direction the empty-context test structurally cannot see: an empty context is meant to leave a module unsatisfied, so that test passes just as happily when an atom is unsatisfiable by construction, which is how the gene_product gap stayed silent. Also anchored the test module paths to the repository root rather than the invoking cwd.

@@ -11,3 +11,8 @@ regulator of secondary metabolism; velvet-complex subunit. Velvet tier of the
   biosynthesis. ascospore-formation, ST/penicillin metabolic-process, and
   fungivory/"interaction with host" annotations kept non-core (GO:0051701 is a
   loose fit — springtail is a predator, not a host).
+
+## 2026-10-01 re-review (GOA refresh)
+
+- No new or vanished GOA rows. Added supporting text to the nucleus IDA row (PMID:15075281).
+  Other judgments unchanged.

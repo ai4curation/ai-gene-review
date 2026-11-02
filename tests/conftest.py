@@ -128,3 +128,22 @@ def forbid_working_tree_genes(monkeypatch):
         return original_open(file, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "open", guarded_open)
+
+
+@pytest.fixture
+def no_network_subprocess_env(tmp_path):
+    """Block and record DNS/socket attempts in Python subprocesses via audit hooks."""
+    guard_dir = tmp_path / "network_guard"
+    guard_dir.mkdir()
+    attempted = guard_dir / "network_attempted"
+    (guard_dir / "sitecustomize.py").write_text(
+        "import sys\nfrom pathlib import Path\n"
+        "def forbid_network(event, args):\n"
+        "    if event in ('socket.connect', 'socket.getaddrinfo'):\n"
+        f"        Path({str(attempted)!r}).write_text(f'{{event}} {{args!r}}')\n"
+        "        raise RuntimeError('Network forbidden in offline validation test')\n"
+        "sys.addaudithook(forbid_network)\n"
+    )
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(guard_dir) + os.pathsep + env.get("PYTHONPATH", "")
+    return env, attempted
