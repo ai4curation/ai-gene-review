@@ -126,3 +126,12 @@ Core CC: **GO:0005759 mitochondrial matrix** (soluble matrix enzyme).
   PTN004406956 (NAD+ kinase activity, NAD+ metabolic process) is a horizontal-transfer
   node that includes a divergent bacterial branch; judged TOO_DEEP. Human NADK2 is in
   the eukaryotic clade, so its IBA rows are unaffected.
+
+## 2026-11-02 PR review fixes (claude-code)
+
+- Removed "or, in other models, lethality" from the description: no reviewed paper was
+  added to support a specific lethal allele, so the clause was dropped rather than cited
+  second-hand.
+- GO:0005759 ARBA row now quotes Reactome:R-HSA-8955030 directly; core function text
+  states that the matrix location is inferred (soluble protein, cleavable presequence,
+  matrix NADPH-dependent enzymes, Reactome), not measured.

@@ -14,8 +14,10 @@ Outputs (written next to this script):
   member_summary.tsv   UniProtKB members (all, reviewed + unreviewed) counted by
                        lineage group, PANTHER subfamily, NADK catalytic-motif class and
                        presence of the Pfam NAD_kinase domain (PF01513).
-  nadk_paralogs.tsv    for selected model organisms, every protein carrying Pfam PF01513
-                       with its PANTHER family, to show which NADK families each genome has.
+  nadk_paralogs.tsv    for selected model organisms, every UniProtKB entry in PTHR13158 or
+                       PTHR20275 (the cytosolic NADK / Pos5 family), found by PANTHER
+                       cross-reference (not gated on Pfam), with its subfamily and whether
+                       it also carries Pfam PF01513.
 
 Steps:
 1. PANTHER treeinfo API (PANTHER 19) -> reference tree topology and subfamily nodes.
@@ -25,7 +27,9 @@ Steps:
    are classed as GGDGT, GQDGL (the common bacterial variant), other G-x-D-G, or none.
    A regex search is a coarse proxy for an alignment: it can miss motifs that are
    present but substituted, so 'none' means 'no G-x-D-G found', not 'no active site'.
-4. UniProtKB search, PF01513 per organism -> NADK paralog inventory.
+4. UniProtKB search per organism, xref:panther-PTHR13158 and xref:panther-PTHR20275
+   -> NADK paralog inventory. Organisms that return no entry for either family are
+   reported as dropped rather than silently omitted.
 """
 
 from __future__ import annotations
@@ -105,9 +109,6 @@ def tree_leaves(node: dict, path: list[str]) -> list[dict]:
                 "under_mito_ibd": IBD_MITO in path,
             }
         ]
-    label = pid + (f"[{node['species']}]" if node.get("species") else "")
-    label += f"{{{node['event_type']}}}" if node.get("event_type") else ""
-    label += f"<{node['sf_id']}>" if node.get("sf_id") else ""
     out: list[dict] = []
     for k in kids:
         out += tree_leaves(k, path + [pid] if pid else path)
@@ -193,7 +194,10 @@ def main() -> None:
             seqs[cur] += line.strip()
     human = seqs.get("Q4G0N4", "")
     i = human.find("GGDGT")
-    print(f"\nhuman NADK2 Q4G0N4 GGDGT motif at {i + 1}-{i + 5}: {human[i - 6:i + 10]}")
+    if i < 0:
+        print("\nhuman NADK2 Q4G0N4 GGDGT motif: absent (or sequence not retrieved)")
+    else:
+        print(f"\nhuman NADK2 Q4G0N4 GGDGT motif at {i + 1}-{i + 5}: {human[i - 6:i + 10]}")
     counts: Counter = Counter()
     for r in rows:
         sf = next((p for p in r["PANTHER"].split(";") if ":SF" in p), "none")
@@ -214,21 +218,49 @@ def main() -> None:
     for k, v in sorted(counts.items()):
         print("  ", *k, v)
 
+    pf = Counter()
+    for k, v in counts.items():
+        pf[(k[0], k[1], k[3])] += v
+    print("\n## Pfam PF01513 (NAD_kinase) coverage by lineage and subfamily")
+    for lg, sfam in sorted({(a, b) for a, b, _ in pf}):
+        yes, no = pf[(lg, sfam, True)], pf[(lg, sfam, False)]
+        print(f"   {lg} {sfam}: {yes}/{yes + no} with PF01513 ({100 * yes / (yes + no):.0f}%)")
+
     para_rows = []
+    print("\n## NADK paralog inventory per model organism (by PANTHER cross-reference)")
     for taxid, name in MODEL_ORGANISMS.items():
-        t = uniprot_paged(f"organism_id:{taxid}+AND+xref:pfam-PF01513", "tsv", "accession,gene_names,xref_panther")
-        for r in csv.DictReader(io.StringIO(t), delimiter="\t"):
-            fam = next((p for p in r["PANTHER"].split(";") if ":SF" in p), r["PANTHER"])
-            para_rows.append({"organism": name, "accession": r["Entry"], "gene": r["Gene Names"], "panther": fam})
+        found = 0
+        for fam_query in ["PTHR13158", "PTHR20275"]:
+            t = uniprot_paged(
+                f"organism_id:{taxid}+AND+xref:panther-{fam_query}", "tsv", "accession,gene_names,xref_panther,xref_pfam"
+            )
+            entries = list(csv.DictReader(io.StringIO(t), delimiter="\t"))
+            found += len(entries)
+            genes = sorted({(r["Gene Names"].split() or ["?"])[0] for r in entries})
+            subfams = Counter(
+                next((p for p in r["PANTHER"].split(";") if p.startswith(fam_query + ":SF")), fam_query) for r in entries
+            )
+            print(f"   {name} (taxid {taxid}) {fam_query}: {len(entries)} entries; genes {genes}; subfamilies {dict(subfams)}")
+            for r in entries:
+                para_rows.append(
+                    {
+                        "organism": name,
+                        "taxid": taxid,
+                        "family_query": fam_query,
+                        "accession": r["Entry"],
+                        "gene": r["Gene Names"],
+                        "panther_subfamily": next(
+                            (p for p in r["PANTHER"].split(";") if p.startswith(fam_query + ":SF")), ""
+                        ),
+                        "has_PF01513": "PF01513" in r["Pfam"],
+                    }
+                )
+        if found == 0:
+            print(f"   DROPPED: {name} (taxid {taxid}) returned no entry for either family")
     with open(HERE / "nadk_paralogs.tsv", "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["organism", "accession", "gene", "panther"], delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(para_rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(para_rows)
-    print("\n## PF01513 (NAD_kinase) proteins per model organism, by PANTHER family")
-    pc = Counter((r["organism"], r["panther"].split(":")[0]) for r in para_rows)
-    for k, v in sorted(pc.items()):
-        print("  ", *k, v)
-
 
 if __name__ == "__main__":
     main()
