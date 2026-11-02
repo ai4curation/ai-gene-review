@@ -139,3 +139,11 @@ Native reporter feedback (PMID:28655819 Figure 7; PMID:30158283) supports the in
 ## PR 5588 follow-up — 2026-10-26
 
 Withdrew the inherited GO:0010468 NEW proposal to UNDECIDED: PMID:28655819 measures PedH-dependent promoter feedback, while PMID:30158283 proposes an unresolved sensor mechanism. Necessity alone does not identify regulatory work performed by PedH; indirect metabolic signaling remains possible. The positive phenotype and expert question remain. The retired marker records withdrawal of an author-created proposal absent from GOA, not retirement of a GOA annotation. Two measured alcohol/aromatic-substrate process proposals retain NEW with IC and PMID:28655819 replacing inherited IEA placeholders.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- The retired, previously proposed GO:0010468 regulation of gene expression row moved from UNDECIDED
+  to MARK_AS_OVER_ANNOTATED. PedH-dependent pedH promoter feedback is necessity evidence; no
+  experiment shows PedH itself doing regulatory work [PMID:30158283 "in which a functional PedH protein is an essential component, most likely by acting as a lanthanide sensor"].
+- Cited the falcon deep-research file for the active-site Asp/Ln3+ coordination point on the
+  metal ion binding row.

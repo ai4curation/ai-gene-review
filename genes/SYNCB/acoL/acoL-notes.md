@@ -40,3 +40,15 @@ All original non-review annotation fields and both raw files are preserved again
 ## Independent lipoyl-mechanism review
 
 Full PMID20508247 explains the TPP-bound hydroxyethyl intermediate and E2 lipoyl acylation. It reports: "Reconstituted AoDH containing the E1, E2, and E3 subunits from the bacterium Pelobacter carbinolicus is specific for acetoin and does not use pyruvate or α-ketoglutarate as substrate ( 162 )." This is secondary evidence of whole-complex substrate specificity, not a newly inspected negative assay in the abstract-only primary. It does not exclude E2/E3 sharing with other native partners or establish H16/Bacillus isolated-subunit kinetics.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- Deep research: no provider deep-research file exists for this gene, and none could be generated
+  in this session (no deep-research provider API keys were configured). No deep-research file was
+  written by hand. The review rests on the cached primary publications, the UniProt record and the
+  PANTHER/PAINT family files cited in the review.
+- Resolved the former UNDECIDED TreeGrafter row for GO:0006103 as MARK_AS_OVER_ANNOTATED, matching
+  the B. subtilis AcoL row: the reconstituted system rejects alpha-ketoglutarate [PMID:20508247
+  "is specific for acetoin and does not use pyruvate or α-ketoglutarate as substrate"].
+- Added NEW IDA GO:0045150 acetoin catabolic process from the purified-component reconstitution
+  (PMID:1898934). The same row was added to acoA, acoB and acoC.

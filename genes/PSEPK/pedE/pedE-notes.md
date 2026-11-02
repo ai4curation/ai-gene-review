@@ -16,3 +16,7 @@ Git-index correction: the historical directory itself was lowercase `genes/PSEPK
 ## PR 5588 follow-up — 2026-10-26
 
 Completed the exact-case pedE source filenames using two-step git mv; all raw and provider bytes are unchanged. The provider-generated OpenScientist artifact directory retains its legacy spelling because immutable provider text links to that exact relative path. Old history identities remain frozen, with successor metadata and records relocated to the pedE directory. Two inherited metabolic-process proposals now use IC with PMID:28655819, reflecting inference from measured target turnover rather than an electronic annotation. The durable supersession JSON separates these author-controlled changes from unchanged GOA payloads.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- Cited the falcon deep-research file for Ca2+/PQQ dependence on the calcium ion binding row.
