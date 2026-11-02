@@ -8,12 +8,13 @@ genes: [LIAS, RSAD2, MOCS1, CDKAL1, CDK5RAP1, ELP3, TYW1, TYW1B, RSAD1, bioB, li
 
 # Radical SAM Enzymes
 
-**Bottom line:** across 28 reviewed members of the largest known enzyme
-superfamily, the annotation problem is **resolution, not error** — 210 rows
-accepted against 49 removed, but 115 modified, almost all pulling a
+**Bottom line:** across all 29 members in scope of the largest known enzyme
+superfamily — the gene list is now reviewed end to end — the annotation problem
+is **resolution, not error**: 218 rows accepted against 51 removed, but 122
+modified, almost all pulling a
 correct-but-generic term down to the actual reaction. Two findings are
 family-wide and machine-fixable. **`GO:1904047` S-adenosyl-L-methionine binding
-is absent from GOA for 18 of the 20 members whose catalysis is established**,
+is absent from GOA for 19 of the 21 members whose catalysis is established**,
 although the curated UniProt cofactor note already records SAM as an exchangeable
 ligand of the cluster. And **6 members' core activity has no GO term at all** —
 three of them for reactions described since 2018, where discovery has simply
@@ -109,7 +110,7 @@ is_a `GO:0051540` metal cluster binding; `GO:0046872` metal ion binding is
 | `GO:0051539` 4 iron, 4 sulfur cluster binding | `ACCEPT`, or `NEW` where GOA lacks the row | The radical SAM cluster is the catalytic cofactor, so it is core for every active member, and a core cofactor has to be proposable where it is missing (PSEPK/bioB carries `GO:0051537` but not `GO:0051539`). `KEEP_AS_NON_CORE` only where catalysis is not established. |
 | `GO:0005506` iron ion binding | `MODIFY` | Same as `GO:0046872`: the iron is bound as a cluster, so replace with `GO:0051539`. |
 | `GO:0046872` metal ion binding | `MODIFY` | `GO:0051539` (lateral correction: the iron is bound as a cluster). Keep only if the protein binds a separate metal ion. |
-| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT`, or `NEW` where GOA lacks the row | Cosubstrate binding, true for every active member. GOA lacks it far more often than not: 18 of the 20 members with established catalysis. The absence is **patchy UniRule coverage, not a GO convention** — see below. |
+| `GO:1904047` S-adenosyl-L-methionine binding | `ACCEPT`, or `NEW` where GOA lacks the row | Cosubstrate binding, true for every active member. GOA lacks it far more often than not: 19 of the 21 members with established catalysis. The absence is **patchy UniRule coverage, not a GO convention** — see below. |
 
 Never `MARK_AS_OVER_ANNOTATED` for these rows: none of them is false. The same
 principle carries to the adjacent generic MF rows that are not in the table
@@ -157,17 +158,18 @@ Last updated: 2026-10-28 (Phase 3)
 - [x] TYW1B (Q6NUM6): TYW1 paralog. Activity only inferred; alignment (TYW1B-bioinformatics/) shows TYW1B lacks the FMN phosphate loop and 2 of 3 auxiliary-cluster cysteines. 8 rows: 4 UNDECIDED, 2 KEEP_AS_NON_CORE, 1 MODIFY, 1 REMOVE (protein binding); no core functions asserted
 - [x] RSAD1 (Q9HA92): HemW homolog; heme binding (IDA) is the only supported function. 12 rows: 3 ACCEPT, 3 KEEP_AS_NON_CORE, 3 MODIFY, 3 REMOVE (coproporphyrinogen oxidase + porphyrin biosynthesis, transferred from HemN; HemW subfamily lacks that activity)
 
-## Phase 2: *E. coli* K-12 (20 in scope, 19 reviewed)
+## Phase 2: *E. coli* K-12 (20 in scope, all 20 reviewed)
 
-**lipA is not reviewed.** Its review file is still the `fetch-gene` stub
-(`status: INITIALIZED`, 18 `PENDING` rows). Only `lipA-notes.md` was written.
-See the 2026-10-19 note below.
+**lipA was completed on 2026-10-31**, closing the last gap in the project's
+gene scope. Its first attempt was interrupted (see the 2026-10-19 note below);
+the review was written from the notes that attempt left behind, plus the
+cached publications and the UniProt record.
 
 
 Characterised, in priority order:
 
 - [x] bioB (P12996): biotin synthase. 16 rows: 8 ACCEPT, 3 MODIFY, 2 REMOVE (protein binding), 1 KEEP_AS_NON_CORE, 1 NEW (SAM binding, IDA from SAM-bound structure). [2Fe-2S] binding treated as core (sacrificial S donor)
-- [ ] lipA (P60716): lipoyl synthase. Notes written; review YAML not started (reviewer stopped; see notes 2026-10-19)
+- [x] lipA (P60716): lipoyl synthase, the second and final step of endogenous lipoate assembly. 19 rows: 8 ACCEPT, 7 MODIFY (incl. 2 obsolete GO:0009107 → GO:0009249 and cytoplasm → cytosol), 2 REMOVE (protein binding: the PDH/OGDH complexes it modifies, and the NfuA carrier that rebuilds its auxiliary cluster), 1 MARK_AS_OVER_ANNOTATED (GO:0042803 homodimerization, from a monomer/dimer purification mixture; both sulfurs come from one polypeptide), 1 NEW (SAM binding)
 - [x] moaA (P30745): GTP 3',8-cyclase. 17 rows: 11 ACCEPT, 4 MODIFY, 1 KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED (response to heat), 1 REMOVE (cPMP synthase IBA: MoaC's activity, transferred from MOCS1 fusion proteins)
 - [x] nrdG (P0A9N8): anaerobic RNR (class III) activase. 23 rows: 8 ACCEPT, 4 MODIFY, 4 MARK_AS_OVER_ANNOTATED (dNTP synthesis: upstream), 4 REMOVE (protein binding; GO:0043365 PflB-activase IEA from IPR012837; GO:0004748 thioredoxin RDP reductase, wrong RNR class), 3 NEW (SAM binding, peptidyl-glycine modification, protein maturation). Proposed new term: anaerobic RNR-activating enzyme activity
 - [x] pflA (P0A9N4): pyruvate formate-lyase activase. 22 rows: 12 ACCEPT, 6 MODIFY, 1 KEEP_AS_NON_CORE (K+ binding), 1 MARK_AS_OVER_ANNOTATED (DNA damage response IEP), 2 REMOVE (protein binding), 1 NEW (SAM binding). Sets the activase pattern: MF GO:0043365/GO:0043364, BP GO:0018201 + GO:0051604
@@ -300,7 +302,7 @@ Two changes went beyond flipping an action, and one convention was settled along
   erythromycin-specific child would need the cluster's identity, which only that
   gene name supplies.
 - **10 `NEW` `GO:1904047` rows.** Phase 4's headline finding is that GOA is
-  missing SAM binding for 18 of the 20 members with established catalysis; the
+  missing SAM binding for 19 of the 21 members with established catalysis; the
   pre-existing reviews were missing it too. Coded `IC`, grounded in each entry's
   own curated cofactor note ("coordinated with 3 cysteines and an exchangeable
   S-adenosyl-L-methionine") and its `4Fe-4S-S-AdoMet` binding features, not in an
@@ -404,33 +406,33 @@ do, and also checks that the totals quoted here actually partition.
 
 ## What was covered
 
-29 proteins in scope, **28 reviewed** across **500 annotation rows**. A gene
+29 proteins in scope, **all 29 reviewed** across **519 annotation rows**. A gene
 counts as reviewed here when it has rows and none is still `PENDING`, which
 deliberately ignores `status:`, which can go stale: MOCS1 was fully reviewed
 while still carrying `status: INITIALIZED`, and the script reported that
 separately under `data_quality` rather than letting it skew the arithmetic
-(Phase 3 has since corrected it, and `data_quality` is now empty). lipA is the
-one genuine gap, and its 18 `PENDING` rows are excluded throughout. Actions
-across the 500:
+(Phase 3 corrected it, and `data_quality` is now empty). lipA was the last gap
+and was closed on 2026-10-31, so nothing is excluded here any more. Actions
+across the 519:
 
 | Action | n |
 |---|---:|
-| ACCEPT | 210 |
-| MODIFY | 115 |
+| ACCEPT | 218 |
+| MODIFY | 122 |
 | KEEP_AS_NON_CORE | 65 |
-| REMOVE | 49 |
-| NEW | 28 |
-| MARK_AS_OVER_ANNOTATED | 20 |
+| REMOVE | 51 |
+| NEW | 29 |
+| MARK_AS_OVER_ANNOTATED | 21 |
 | UNDECIDED | 10 |
 | TOO_GENERAL | 3 |
 
-`MODIFY` at 115 is the signature of this family: a quarter of all rows were true
+`MODIFY` at 122 is the signature of this family: a quarter of all rows were true
 but pitched at the wrong level, which is exactly what a shared catalytic domain
 with unshared chemistry produces.
 
 ## The resolution gap: 6 core activities have no GO term
 
-25 of the 28 reviewed genes assert at least one core function. Of those, **6 name
+26 of the 29 reviewed genes assert at least one core function. Of those, **6 name
 an activity GO cannot express** and carry a `proposed_new_terms` entry instead:
 
 | Gene | Activity with no GO term | Why GO has none |
@@ -453,7 +455,7 @@ request, not research. `RSAD2`, `ygiQ` and `yhcC` are **recent discoveries**
 question: GO has no vocabulary for a protein that carries a cofactor to an
 apo-enzyme without chemistry.
 
-The remaining breakdown: **19 genes' core functions use existing GO terms**, one
+The remaining breakdown: **20 genes' core functions use existing GO terms**, one
 of which (RSAD1) is `GO:0020037` heme binding with no reaction established; and
 TYW1B, aslB and ydeM assert **no core function at all**, deliberately.
 
@@ -480,16 +482,16 @@ because it is unreviewed; it is reported under `not_reviewed_so_not_classified`.
 
 ## The treatment rule held
 
-Across the 28 reviewed genes (lipA's `PENDING` rows excluded), the
-domain-derived generic rows came out as:
+Across all 29 reviewed genes, the domain-derived generic rows came out as:
 
 | Term | MODIFY | ACCEPT | KEEP_AS_NON_CORE | other |
 |---|---:|---:|---:|---|
-| `GO:0003824` catalytic activity | 22 | – | 5 | 1 |
-| `GO:0051536` iron-sulfur cluster binding | 28 | – | 1 | – |
-| `GO:0051539` 4Fe-4S binding | – | 31 | 12 | – |
-| `GO:0046872` metal ion binding | 1 | – | 1 | – |
+| `GO:0003824` catalytic activity | 24 | – | 5 | – |
+| `GO:0051536` iron-sulfur cluster binding | 30 | – | – | – |
+| `GO:0051539` 4Fe-4S binding | – | 34 | 12 | – |
+| `GO:0046872` metal ion binding | 2 | – | – | – |
 | `GO:0005506` iron ion binding | 3 | – | – | – |
+| `GO:1904047` SAM binding | – | 2 | – | 19 NEW |
 | `GO:1904047` SAM binding | – | 2 | – | 18 NEW |
 
 The 5 `KEEP_AS_NON_CORE` on `GO:0003824` and the 12 on `GO:0051539` are the rule's
@@ -558,17 +560,17 @@ filed as `resource: OTHER` with InterPro named in each explanation.
 
 Three claims the data supports, and one it does not.
 
-1. **The family's annotation problem is resolution, not error.** 210 ACCEPT
-   against 49 REMOVE — and only **3 of those 49** overturned a claim anyone had
+1. **The family's annotation problem is resolution, not error.** 218 ACCEPT
+   against 51 REMOVE — and only **3 of those 51** overturned a claim anyone had
    actually asserted about the gene. The rest were uninformative `protein
-   binding` (**34**) or terms that had propagated in rather than been asserted
+   binding` (**36**) or terms that had propagated in rather than been asserted
    (**12**: 8 `IEA` signature/EC mappings, 3 `IBA`, 1 `ISS`). The 3 are nrdG's
    `IMP` ribonucleoside-diphosphate reductase row, removed because the activase
    is necessary for the reaction without performing it, and two `NAS` rows on
    CDK5RAP1 projecting CDK5 neuronal biology onto a mitochondrial tRNA enzyme.
    The split is computed from each row's **evidence code** — how the row arose,
    not which term it carries (`remove_breakdown`).
-2. **The shared domain is an attractor for over-general annotation.** 115 MODIFY,
+2. **The shared domain is an attractor for over-general annotation.** 122 MODIFY,
    almost all pulling a correct-but-generic term down to the specific reaction.
 3. **Discovery is outrunning the ontology.** Three of the six missing terms are
    for reactions described in 2018 or later, two of them in 2026.
@@ -579,6 +581,27 @@ Three claims the data supports, and one it does not.
    judgement correctly.
 
 # NOTES
+
+## 2026-10-31
+
+- **lipA reviewed; the project's gene scope is complete.** All 29 members in
+  scope now have a finished review, 519 annotation rows in total. The figures in
+  the Synthesis section above moved accordingly (ACCEPT 210 → 218, MODIFY 115 →
+  122, REMOVE 49 → 51, NEW 28 → 29, MARK_AS_OVER_ANNOTATED 20 → 21), and the SAM
+  gap is now 19 of the 21 members with established catalysis rather than 18 of 20.
+  Both rule scopes still report zero deviations.
+- **On the 2026-10-19 block.** The review was written in a later session from the
+  notes the interrupted attempt had already committed, plus the cached
+  publications and the UniProt record — not by reissuing the blocked text, and
+  not by handing the task to another agent. Nothing in the subject matter turned
+  out to need special handling: lipA is an ordinary radical SAM enzyme and the
+  review followed the same treatment rule as the other 28.
+- One incidental finding worth recording for other reviewers: the
+  `supporting_text` checker strips square brackets as editorial, so a quote
+  containing `[lipoyl]H-protein` fails even though it is verbatim in the source.
+  `[4Fe-4S]` is exempt as scientific notation; `[lipoyl]` is not. The fix is the
+  sanctioned `...` form for non-contiguous parts — `"… 1 equiv of ... H-protein"`
+  — which the validator splits and matches part by part.
 
 ## 2026-10-19
 
@@ -605,7 +628,7 @@ Three claims the data supports, and one it does not.
   trigger does not appear to be lipA's subject matter. The task was not handed
   to another reviewer, because reissuing blocked content through a different
   agent would route around the decision rather than resolve it. lipA is left
-  for a separate session.
+  for a separate session. **Resolved 2026-10-31 — see the note above.**
 
 ## 2026-10-18
 
