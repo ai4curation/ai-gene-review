@@ -35,3 +35,13 @@ This follow-up preserves all 66 actions, original machine fields, three extensio
 ## Follow-up checks — 2026-11-01
 
 The native EDIT session is `2026-11-01T232321Z-codex-9b9bc6`. Target default validation passed with 10 optional suggestions for additional excerpts, reduced from 18 at the initial submission. Reference-only reuse keeps repeated quotations within the per-paper budget; those suggestions do not identify an unsupported action. Strict GOA conservation passed for all 66 contexts, status remains DRAFT, and history validation, source conservation, scoped whitespace and private rendering passed. The four approved drafts changed only in this factual completion wording and evidence outcomes. All 29 sources, the existing ontology companion and prior CREATE record remain exact. No provider or broad test suite was run.
+
+## Receptor assembly and source-relation clarification — 2026-11-02
+
+Alpha1 supplies ligand-contact and pore-forming elements within GABA-A receptor assemblies. Human alpha1-containing receptor expression, channel measurements and structural work support that molecular role [PMID:2465923](https://pubmed.ncbi.nlm.nih.gov/2465923/), [PMID:29950725](https://pmc.ncbi.nlm.nih.gov/articles/PMC6220708/), [PMID:30602789](https://pmc.ncbi.nlm.nih.gov/articles/PMC6364807/). These measurements do not demonstrate an autonomous isolated-alpha1 channel. The ten accepted molecular-function reasons now make that distinction explicit while preserving their original enables relations; the core continues to express contributes_to_molecular_function in the receptor complex.
+
+The [source guide](GABRA1-source-guide.md) explains this interpretation against the official GO relation guidance. No upstream WRONG_QUALIFIER finding is inferred merely from assembly membership. This follow-up changes no action, original machine field, extension, product, core, reference assessment or supporting quotation. Previous journal entries and the immutable source caches remain unchanged. Native EDIT history and scoped checks have completed for this amendment.
+
+## Clarification checks — 2026-11-02
+
+The native EDIT session is `2026-11-02T013830Z-codex-fbd4bb`. Default validation passed with 10 optional suggestions for additional excerpts; strict GOA conservation passed for all 66 contexts and status remains DRAFT. History validation, source conservation, scoped whitespace and private rendering passed. All 29 sources, all 13 quotation occurrences, the ontology companion and both earlier history records remain exact. No provider or broad local test suite was run.
