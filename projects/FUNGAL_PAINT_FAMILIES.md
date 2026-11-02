@@ -130,6 +130,8 @@ stress-activated MAPK-cascade assertions.
   merged in PR #5885
 - [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
   filamentous-growth and cell-wall evidence; revalidated in this branch
+- [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
+  drafted in this branch
 
 ## Family 5: Fungal Glucanases
 
