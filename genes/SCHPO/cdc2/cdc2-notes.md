@@ -47,3 +47,12 @@ the CDK inhibitor Rum1 in G1.
 - NOT nuclear pore complex assembly (GO:0051292, negated, PMID:35354597) — ACCEPT the negation.
 - IEA GO:0004693 from EC/ARBA and InterPro GO:0004672 — redundant electronic versions of experimentally proven
   activity; ACCEPT (correct) but redundant.
+
+## 2026-11-01 PMID:23222840 (Grallert et al. 2013, Nat Cell Biol)
+
+Cached text: abstract plus author-manuscript main text; no figure legends/methods.
+- [PMID:23222840 "indicating that MPF activity is continuously required for Plo1 association with the late G2 SPB"] (cdc2.as + 1NA-PP1).
+- [PMID:23222840 "Thus, division is not driven from the SPB, rather MPF activation at the SPB serves as trigger event that promotes conversion of the bulk population MPF throughout the cell22,23 to the active state."]
+- [PMID:23222840 "However, a stronger level of inhibition (20 μM BrB-PP1) did block NETO (Figure 4a, Supplementary Figure 4), indicating that the threshold of MPF activity required for NETO was lower than that for mitotic commitment."]
+- [PMID:23222840 "Critically, this ability of Cut12.NEGFP anchored Cdc2.RL to induce NETO was reliant on Plo1 activity (Figure 4d)."]
+- Decision: NEW GO:0051523 cell growth mode switching, monopolar to bipolar (IMP), non-core; comparator regulators (ssp1, kin1, rgf1) carry this term in PomBase by IMP. Existing SPB localization and G2/M terms already cover the rest; no other changes.
