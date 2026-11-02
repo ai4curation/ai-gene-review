@@ -46,3 +46,26 @@ phosphatase/DNA-repair annotations to PhnX are evaluated against its specialized
 phosphonatase chemistry rather than accepted solely from broad HAD-superfamily
 inheritance. Native cytosolic localization remains UNDECIDED where no independent
 localization evidence was found.
+
+## 2026-11-02
+
+Completion pass for the module bar (precedent PR #3222).
+
+- Overlap check: open PR #5076 carries an older, pre-generalization copy of this
+  module (status DRAFT, KT2440-only exemplars) and no new PANTHER grounding beyond
+  the SF1/SF19 subfamilies already used here, so it was not adopted. Open PR #2170
+  adds a separate KT2440 `phosphonoacetaldehyde_degradation` module and edits
+  `genes/PSEPK/phnW`; it does not rework this module, but the two modules overlap in
+  scope and should be reconciled when #2170 is resolved.
+- Generalization: unchanged. The module was already species-neutral (Bacteria
+  envelope, Salmonella/Bacillus biochemical anchors, KT2440 as one exemplar).
+- New family review `interpro/panther/PTHR42778/PTHR42778-review.yaml` (PhnW).
+  `just fetch-panther-paint PTHR42778` found 25 PTN nodes and no node-level PAINT
+  annotations, so there are no IBD nodes to assess.
+- Gene reviews: KT2440 phnW and phnX promoted to COMPLETE. The cytosol rows of all
+  three PhnX reviews (KT2440, Salmonella, Bacillus) moved from UNDECIDED to
+  KEEP_AS_NON_CORE, consistent with the PTHR43434 family review's SOUND assessment
+  of the cytosol IBD at PTN001291474 and with transporter-dependent intracellular
+  phosphonate catabolism (PMID:37836707).
+- Knowledge-gap provenance now records `reference_section_type`; recommended-field
+  compliance is 100%, gene-review summary 6/6 complete.
