@@ -97,3 +97,10 @@ the annotation itself is accepted.
 AcrIIA4 is heavily used as a Cas9 "off-switch" reagent in human cells. That is a
 laboratory application, not a biological function of the prophage gene, and is excluded
 from the review's `description` and from all annotations.
+
+
+## 2026-10-25 comparative anti-CRISPR audit
+
+PMID:28706995 supplies the missing kinetic boundary: 1:1 binding and inhibition before DNA recognition, but no effect on preformed Cas9-sgRNA-DNA complexes and no increase in DNA dissociation. The old suggestion that displacement remained untested was removed. The paper also supports near-stoichiometric inhibition, so universal inhibitor molar excess and rapid reversibility were removed from the description and shared NTR definition. Accession identity is exact to AEO04689.1; the record remains bacterial because its sequence originates in a resident prophage.
+
+Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals were reassessed independently. Primary references were obtained through the normal publication cache. A normal Falcon attempt with perplexity-lite fallback failed; logs are in `.cache/module-audit-logs/anti-crispr-deep-LISMN-acrIIA4.log`. These are manual research notes, not provider-generated research.

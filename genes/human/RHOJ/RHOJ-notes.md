@@ -80,3 +80,15 @@ All three IEAs (GTPase activity, G protein activity, GTP binding) changed from U
 ### Relative to review next
 
 The canonical product of the same gene, Q9H4E5 (RHOJ_HUMAN, reviewed). `genes/human/RHOJ` is keyed to G3V4H1, and no review of Q9H4E5 exists in the repo, so the next folder would be `genes/human/RHOJ__Q9H4E5`. No module names RHOJ or Q9H4E5. These modules use PTHR24072 Rho-family descriptors and are context only: `modules/rho_gprotein_signaling.yaml`, `modules/ephrin_receptor_signaling.yaml`, `modules/chemokine_signaling.yaml`, `modules/phagocytic_engulfment.yaml`.
+
+## 2026-10-29: function narrative rescored
+
+The function narrative (`RHOJ-protnlm-function-review.md`) now scores "binds GTP" as NPI
+(DOMAIN_ARCHITECTURE_MISMATCH) for G3V4H1. GTP binding is true of the gene, but guanine binding needs
+the G4 (TQID) and G5 (CSAL) motifs, and G3V4H1 keeps only the P-loop, switch I and switch II before
+diverging after residue 103. "Lacks intrinsic GTPase activity and is resistant to Rho-specific GAPs"
+stays UNC. This supersedes the single UNC given under "Exact non-GO claims" above.
+The GO row for GTP binding (GO:0005525) stays MARK_AS_OVER_ANNOTATED, not REMOVE. The two calls rest
+on different grounds and are consistent: the narrative score judges whether this exact product can do
+what the text says, and the missing G4/G5 motifs refute that; the GO action judges an annotation that
+is correct for the gene, and no assay of G3V4H1 exists to justify removing it.

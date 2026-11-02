@@ -129,3 +129,12 @@
 - The ten GO:0005515 rows with clade A PP2C partners (ABI1, ABI2, HAB1, AHG1) changed from REMOVE to MODIFY to GO:0019903 protein phosphatase binding, matching the OST1 review, which ACCEPTs a curated GO:0019903 IPI row (PMID:19955427) in place of its generic phosphatase-binding rows. The bHLH122 and MAP4K rows stay REMOVE.
 - GO:0009737 rows: reason now explains why the term is kept alongside GO:0009738.
 - Source defect recorded on the PMID:19407142 IPI row: WITH/FROM is ABI1 (P49597) but the cached main text names only PP2CA/AHG3 (P49598) and AHG1 [PMID:19407142 "we observe interaction of SnRK2.2 with PP2CA/AHG3 and AHG1 using the Y2H assay (SOM Figure 3)"]. Confidence SUSPECTED because the supplementary figure was not checked.
+
+
+## 2026-10-25 — ABA module member audit
+
+Assessed all 37 existing annotation decisions and the core synthesis. Direct kinase assays, nuclear/cytoplasmic localization, seed-germination effects and redundant ABA/stress function continue to support this module exemplar. No additional GO assertions were introduced. The AKS1-binding row's reason accidentally described a PP2C interaction; corrected it to the kinase-substrate relationship. PP2C-binding refinements now rely on partner-specific function, not the absence of duplicate annotations; obsolete comparisons with older OST1 actions were removed.
+
+PMID:33911084 full Results tests analog-sensitive SnRK2.2 and SnRK2.3 with RAF3/RAF10 rather than relying only on OST1. It states "transphosphorylation by RAFs is required for the reactivation of SnRK2.2/2.3/2.6." Description and core synthesis now distinguish RAF initiation from intermolecular SnRK2 amplification after PP2C inhibition. PMID:31896774 supplies complementary biochemical reconstitution and genetic evidence. Both papers are cached with full text.
+
+Research used existing provider reports/manual notes and cached primary literature. All rows retain explicit decisions; unresolved findings are UNDECIDED rather than inferred from missing text. Record-section backfill and targeted validation were run for this session.

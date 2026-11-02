@@ -22,7 +22,7 @@ from typing import Any
 # Default timeout for deep research subprocess (seconds)
 DEFAULT_TIMEOUT = 600
 DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
-DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
+DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.12"
 PROVIDERS = (
     "openai",
     "perplexity",
@@ -32,6 +32,7 @@ PROVIDERS = (
     "codex",
     "asta",
     "openscientist",
+    "claude-code",
 )
 
 
@@ -201,6 +202,8 @@ def _build_cmd(
         actual_provider = "perplexity"
     elif provider == "codex":
         actual_provider = "cyberian"
+    elif provider == "claude-code":
+        actual_provider = "claude_code"
     else:
         actual_provider = provider
 

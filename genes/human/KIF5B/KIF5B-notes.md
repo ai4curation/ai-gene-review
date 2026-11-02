@@ -61,3 +61,10 @@ MTOC-lytic granule polarization and reduces cytotoxicity
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: for Proteostasis Network curation, the supported lysosomal role is kinesin-dependent lysosome localization/positioning; the PN lysosomal-tubulation row is context-only and should not be propagated to a new lysosome-organization annotation for KIF5B without more direct ALR-specific evidence.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+- Row: GO:0005739 IEA (GO_REF:0000107, Ensembl projection from mouse Q61768), located_in, stays KEEP_AS_NON_CORE.
+- Source check (QuickGO, 2026-10-25): mouse Kif5b's only GO:0005739 (or descendant) annotation is an MGI IDA from PMID:34048705 (mitocytosis). Not circular; no NOT row dropped. The cached copy of that paper is abstract-only and does not name Kif5b, so the assay is deferred to the curator.
+- Consistent with curated function [file:human/KIF5B/KIF5B-uniprot.txt "Microtubule-dependent motor required for normal distribution of mitochondria and lysosomes."] and [file:human/KIF5B/KIF5B-uniprot.txt "Found in a complex with OGT, RHOT1, RHOT2 and TRAK1 (PubMed:24995978)."].
+- Soluble motor, no transit peptide or TM; binds the mitochondrial surface through Miro/TRAK adaptors (cargo association). Stays at the root; no GO:0005741.
