@@ -60,3 +60,13 @@ against D-Tyr (plus D-Leu) toxicity. Inferred only: activity on D-Leu-tRNA(Leu)
 Yeast is a donor for the activity/cytoplasm IBA, not for any DUE-B DNA-replication
 biology. The DNA-binding C-terminal extension of human DUE-B has no counterpart in
 the 150-aa yeast protein, so yeast cannot ground those functions.
+
+## Nonsense suppression (SGD description follow-up, 2026-11-01)
+
+SGD says DTD1 "may affect nonsense suppression via alteration of the protein synthesis
+machinery". The source is an overexpression screen for genes that alter tRNA-mediated
+nonsense suppression in a Mod5-limited strain [PMID:10618371 "We identified SAL6 , TEF4 , and
+YDL219w, all of which likely affect nonsense suppression via alteration of the protein synthesis
+machinery."]. Overexpressed YDL219w did not change i6A tRNA levels. This is a one-off
+overexpression phenotype with no mechanism, so it is recorded as peripheral and is not
+annotated. It fits the deacylase role in keeping translation accurate but does not test it.

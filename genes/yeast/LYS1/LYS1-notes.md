@@ -7,3 +7,16 @@ Pathway context: YeastPathways LYSINE-AMINOAD-PWY-2, final step (EC 1.5.1.7, sac
 - Pls1 (Ynl097c-b) import requires Lys1 [PMID:35563734 "Indeed, in LYS1-deleted cells, Ynl097c-b did not localize to peroxisomes in neither control nor lysine-deprived media"] -> IMP protein import into peroxisome matrix kept non-core.
 - mRNA binding [PMID:20844764 "Lys1 interacted with >1,000 mRNAs"] -> non-core.
 - Decisions: RCA cytosol rows (two pathway diagrams) MODIFY -> peroxisomal matrix GO:0005782. RCA lysine catabolic process (LYSDEGII-PWY) marked over-annotated: reverse reaction possible [PMID:35563734 "Lys1 can convert saccharopine to lysine or the reverse reaction depending on the local pH in the active site"] but no yeast evidence of Lys1-dependent lysine degradation found. Protein binding (Rsp5 WW array) REMOVE.
+- PTHR11133 PAINT review: `PANTHER:PTN000123605` places generic `GO:0004753`
+  on the broad eukaryotic saccharopine-dehydrogenase ancestor, while the
+  fungal process nodes are split into `PANTHER:PTN000875292` for the NAD(+),
+  L-lysine-forming LYS1/lys3 branch and `PANTHER:PTN000875327` for the
+  reciprocal NADP(+), L-glutamate-forming LYS9/lys9 branch. S. cerevisiae LYS1
+  is in `PTHR11133:SF23`, so the broad `GO:0004753` IBA should be narrowed to
+  `GO:0004754`.
+- Newer-paper search: Kosir et al. 2026 used acetate-grown `pex3` cells for
+  peroxisome-deficiency metabolomics and found that lysine trended higher
+  without a change in Lys1 abundance [PMID:41612055 "Lys1 and Cat2 showed no
+  differences in transcript or protein abundance"]. This adds pathway context
+  for peroxisomal substrate/cofactor availability but no new Lys1 activity,
+  localization, or annotation change.

@@ -55,7 +55,7 @@ def clean_engine(src: str) -> str:
             continue
         if stripped == "import yaml":  # only used by compile_module_file, now removed
             continue
-        if "from ai_gene_review.render_modules import as_list" in line:
+        if stripped.startswith("from ai_gene_review."):  # replaced by the stand-ins below
             continue
         keep.append(line)
     as_list = (
@@ -67,7 +67,37 @@ def clean_engine(src: str) -> str:
         "        return value\n"
         "    return [value]\n"
     )
-    return as_list + "\n" + "\n".join(keep).strip() + "\n"
+    # Neither embedded module uses module_ref, so the reference helpers only
+    # need to exist; reaching one in the demo is an error.
+    module_ref_stand_ins = (
+        "from pathlib import Path\n"
+        "\n"
+        'DEFAULT_MODULES_DIR = Path("modules")\n'
+        "\n"
+        "\n"
+        "def resolve_template_node(module_ref, modules_dir):\n"
+        '    """module_ref is not supported in the standalone demo."""\n'
+        '    raise ValueError(f"module_ref {module_ref!r} is not supported in the standalone demo")\n'
+    )
+    engine = "\n\n".join([as_list, symbol_rule(), module_ref_stand_ins, "\n".join(keep).strip()]) + "\n"
+    if "ai_gene_review" in engine:
+        raise SystemExit("generated engine still references ai_gene_review; extend clean_engine")
+    # A multi-line import stripped line by line would leave orphaned names that
+    # pass the check above; compiling catches that and any other breakage.
+    compile(engine, "<standalone engine>", "exec")
+    return engine
+
+
+def symbol_rule() -> str:
+    """Return ``descriptor_symbol`` and its patterns from ``module_gene_symbols``.
+
+    The engine calls it for every atom, so the demo carries the same
+    conservative symbol rule as the real engine.
+    """
+    src = (ROOT / "src" / "ai_gene_review" / "module_gene_symbols.py").read_text()
+    start = src.index("import re\n")
+    end = src.index("\ndef ", src.index("def descriptor_symbol"))
+    return src[start:end].strip() + "\n"
 
 
 def b64_json(path: Path) -> str:

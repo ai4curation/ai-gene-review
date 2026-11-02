@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_aspartate_to_threonine_biosynthesis`: 20 genes across three native routes and a PSEAE ThrH comparator. All 192 machine rows and 40 raw sources are preserved; final 193 rows include one restored inherited authored proposal, with two others remaining retired. Round-one review corrections pass focused validation, 49 route cases and 353 regression tests. Full corpus validation passed at the recorded audit base (10,044 reviews, zero errors). [PR #5858](https://github.com/ai4curation/ai-gene-review/pull/5858) awaits renewed review, CI and merge; its outstanding verdict is CHANGES_REQUESTED. Other entries below retain their dated snapshots.
+
 - [ ] `bacterial_ammonia_assimilation`: Audit 30 has started in an isolated verified worktree. Twelve normally seeded members cover Pseudomonas putida, Escherichia coli, Bacillus subtilis and Azospirillum brasilense; the baseline contains 126 rows and 24 raw sources. PSEPK glnA/gltB/gltD reviews and focused checks are complete (19 rows after one redundant authored proposal retirement); the other nine reviews and cross-lineage module reconstruction remain in progress. No full validation or PR yet.
 
 - [x] `2_aminoethylphosphonate_degradation`: [PR #5538](https://github.com/ai4curation/ai-gene-review/pull/5538) merged after approval and required checks, at `7d28f887b2dbbab34afee940716ba660efc3a173`. Six member reviews, comparative literature, step/edge evidence and taxon/family grounding were rechecked in the merged content.

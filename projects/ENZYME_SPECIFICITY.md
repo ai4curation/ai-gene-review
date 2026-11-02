@@ -262,8 +262,37 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 
 1. **Verify substrate range**: Don't assume specificity from one characterized reaction
 2. **Check reaction mechanism**: Domain family doesn't guarantee mechanism
-3. **Distinguish promiscuity from core function**: Secondary activities → KEEP_AS_NON_CORE
+3. **Distinguish promiscuity from core function**: see the three tiers below
 4. **Propose specific terms**: When existing terms are too broad or narrow
+
+### Promiscuous and residual activities
+
+A measured activity is not automatically a function. The question is whether
+the protein evolved to catalyse the reaction, not whether it can be made to do
+so in a test tube. There is no numeric cutoff; it is a judgement call, made
+from the criteria below and stated in the `reason`. The tiers follow the
+categories of de Crécy-Lagard et al. 2025 (PMID:40703034).
+
+| Tier | Action | When |
+|---|---|---|
+| Genuine secondary activity | `KEEP_AS_NON_CORE` | Respectable efficiency, and a plausible physiological substrate or an in vivo phenotype; no other enzyme in the cell clearly owns the reaction |
+| In vitro activity, relevance unknown (their UNC) | `MARK_AS_OVER_ANNOTATED` | Activity is real but nothing shows it is used, and nothing else in the cell can be named as the enzyme that does the job |
+| Promiscuous noise (their PLI/NPI) | `REMOVE` | Most of: a dedicated enzyme for the same reaction exists in the same organism (ideally essential or non-redundant); the activity is orders of magnitude below it (as a guide, about 10³-fold or more); the protein sits in a different subfamily or lacks the specificity determinants; no in vivo phenotype for the reaction |
+
+`REMOVE` in the third tier does not doubt the assay. It accepts the
+measurement and argues that the activity is not the gene's function, which is
+the "genuinely contradicted function" case that permits removing an
+experimental annotation.
+
+Worked pair (both from the same ML-prediction paper, PMID:37963869):
+- **ECOLI/yciO**, TC-AMP synthase (`GO:0061710`): `REMOVE`. TsaC is the
+  essential dedicated enzyme, YciO's rate is about 10⁴-fold lower, and YciO
+  lacks the KRSN tetrad and sits in a different subfamily.
+- **ECOLI/yjdM**, phosphonoacetate hydrolase (`GO:0047400`):
+  `MARK_AS_OVER_ANNOTATED`. The link to phosphonates is a name collision
+  (positional `phnA` synonym) and YjdM is a zinc-ribbon protein, but E. coli has
+  no dedicated phosphonoacetate hydrolase, so the activity cannot be assigned
+  elsewhere.
 
 ---
 
@@ -281,6 +310,19 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 Last updated: 2026-10-04
 
 # NOTES
+
+## 2026-10-24
+
+**Added tiers for promiscuous and residual activities (Curation Principle 3).**
+
+The old rule ("secondary activities → KEEP_AS_NON_CORE") did not separate a
+real secondary activity from noise-level in vitro activity, and would have
+kept E. coli yciO's TC-AMP synthase activity as non-core. Replaced it with three
+tiers aligned to de Crécy-Lagard et al. 2025 (PMID:40703034), with no numeric
+cutoff. Prompted by OpenScientist function-assignment runs on seven bacterial
+REMOVE/over-annotated calls (yciO, yjdM, traB, glpK, PP_3195, mdcD, kguE); all
+seven supported the direction of the existing calls. yciO stays REMOVE and
+yjdM stays MARK_AS_OVER_ANNOTATED, as in the worked pair above.
 
 ## 2026-10-04
 

@@ -119,6 +119,9 @@ JSON and recomputes the attractors whenever a box is locked.
 | [JAK-STAT signaling](../modules/jak_stat_signaling.html) | [JAK-STAT signaling as a Boolean network](../models/jak_stat_signaling_boolean.html) | Boolean | derived | 6, all hold |
 | [p38 cascade](../modules/p38_cascade.html) | [p38 cascade as a Boolean network](../models/p38_cascade_boolean.html) | Boolean | derived | 4, all hold |
 | [Endosomal trafficking & escape](../modules/endosomal_trafficking_routing.html) | [Endosomal Trafficking, Sorting & Cytosolic Escape (Agent-Based Cohort Model)](../models/endosomal_trafficking_abm.html) | Agent-Based | derived | 6, all hold |
+| [ASGR1/ASGR2 hepatocyte GalNAc delivery](../modules/asgr_galnac_hepatocyte_delivery.html) | [Hepatocyte ASGR1/ASGR2 GalNAc Uptake & Endosomal Escape (Agent-Based Cohort Model)](../models/asgr_galnac_delivery_abm.html) | Agent-Based | derived | 6, all hold |
+| [FcRn IgG & albumin salvage](../modules/fcrn_igg_albumin_salvage_transcytosis.html) | [Neonatal Fc Receptor (FCGRT/B2M) IgG & Albumin Salvage (Agent-Based Cohort Model)](../models/fcrn_salvage_transcytosis_abm.html) | Agent-Based | derived | 6, all hold |
+| [Retromer & SORL1 TGN retrieval](../modules/retromer_endosome_to_tgn_retrieval.html) | [Retromer (VPS35/VPS26A/VPS29) & SORL1 Endosome-to-TGN Retrieval (Agent-Based Cohort Model)](../models/retromer_retrograde_sorting_abm.html) | Agent-Based | derived | 6, all hold |
 | [LDLR endocytosis](../modules/ldl_receptor_mediated_endocytosis.html) | [LDLR Endocytosis & Cholesterol Clearance (Agent-Based Cohort Model)](../models/ldlr_endocytosis_abm.html) | Agent-Based | derived | 4, all hold |
 | [Methionine cycle](../modules/methionine_cycle.html) | Maud kinetic model (biosustain) | Kinetic | external | |
 

@@ -98,6 +98,25 @@ evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a nega
 review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
 `MARK_AS_OVER_ANNOTATED` just to silence the check.
 
+**Check the PAINT losses on the gene's lineage.** Run `just paint-losses <organism> <GENE>`
+before judging IBA rows. It lists every IRD or IKR whose PANTHER node lies above the gene,
+the IBD node each one blocks, whether PAINT re-annotates the term below the loss, and the
+review's own rows on the blocked term. Act on what it reports:
+
+- An IRD produces no leaf annotation; it only stops the ancestral IBD from descending. The
+  cached `*-goa.tsv` can therefore still carry an IBA that a newer IRD has withdrawn. Say so
+  in that row's `reason` (node and date), and judge the claim on its evidence: the IBA's
+  ancestral support is gone, but the term may still be right.
+- If the review keeps the blocked term (ACCEPT, KEEP_AS_NON_CORE, a core function or a
+  NEW), it now argues against a deliberate PAINT decision. State the evidence that
+  contradicts the loss, as for SLC52A1 riboflavin transport (IDA) under PTN000309189.
+- If the family has a FamilyReview, check its `node_assessments` for the loss node. A
+  LOSS_TOO_BROAD or LOSS_CONTRADICTED verdict there is the argument to cite.
+- "Re-annotated below: yes" means PAINT lifts the block for this gene; the IBA is current.
+
+The tool matches terms exactly, so a review row on a descendant of the blocked term is not
+listed. See [projects/IRD_EVIDENCE.md](../../../projects/IRD_EVIDENCE.md).
+
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
@@ -153,7 +172,10 @@ Always make use of the `original_reference_id`. If this refers to a PMID, then r
 
 You should make use of:
 
-- pre-existing literature deep research review (GENE-deep-research.md)
+- pre-existing literature deep research review (GENE-deep-research-PROVIDER.md), including any
+  MOD curated gene description (GENE-deep-research-wormbase.md, -flybase.md, -sgd.md, ...).
+  The MOD text is hand-written but uncited and often stale: check each of its claims and record
+  the verdict in that reference's `reference_review`.
 - existing UniProt annotations (.uniprot.txt), in particular text annotations and features and domains
 - holistic but critical gestalt of existing GO annotations in the gene review YAML file (priortizing IBA annotations)
 

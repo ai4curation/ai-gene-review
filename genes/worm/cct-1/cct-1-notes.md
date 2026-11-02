@@ -135,3 +135,22 @@ contributes_to_molecular_function = ATP-dependent protein folding chaperone
 (GO:0006457), in_complex = chaperonin-containing T-complex (GO:0005832),
 locations = cytoplasm (GO:0005737). Unlike theta (a low-ATPase subunit), alpha
 retains a canonical nucleotide-binding/ATPase site.
+
+## WormBase description follow-up (2026-10-30)
+
+The WormBase description says CCT-1 is "required to repress SKN-1-dependent
+transcription of gst-4". The likely source is the RNAi survey of Kahn et al.
+(PMID:17714076, abstract only in cache), which reports that knockdown of chaperonin
+components causes SKN-1 nuclear localization and sometimes gst-4 induction
+[PMID:17714076 "RNAi knockdown of ubiquitin-specific hydrolases
+and chaperonin components also caused nuclear localization of SKN-1 and, in some
+cases, also induced gst-4 transcription."]. The abstract does not name cct-1. A
+later screen found the same for the beta subunit cct-2 [PMID:20700440 "knockdown of
+the chaperonin cct-2 and the proteasome lid subunit rpn-9 upregulated SKN-1 target
+genes in a skn-1-dependent manner without detectably increasing the presence of
+SKN-1 in nuclei"]. This is best read as an indirect proteostasis-stress readout of
+losing CCT folding capacity, not a regulatory activity of CCT-1 on SKN-1, so no GO
+annotation is proposed. The RNAi phenotypes in the same description
+(pronuclear-centrosome rotation, spindle positioning, meiosis, distal tip cell
+migration) are consistent with loss of tubulin and actin folding and are likewise
+treated as peripheral.
