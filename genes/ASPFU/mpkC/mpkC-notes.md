@@ -50,3 +50,11 @@ mobilization observations are informative pathway outputs, but they do not by
 themselves identify MpkC as a direct participant in a distinct GO process beyond
 its stress-activated MAPK signaling role [PMID:26878695; PMID:30538182;
 PMID:32743127].
+
+The SakA-MpkC co-immunoprecipitation in PMID:31134001 establishes a
+stress-regulated association, but it was not promoted to a bare
+`GO:0005515 protein binding` annotation because that term would add no
+mechanistic information beyond the existing stress-MAPK signaling rows. The
+current evidence does not yet distinguish a stable MAPK complex from transient
+cross-regulation or shared substrate recruitment, so the mechanistic question is
+recorded for follow-up instead of asserted as a new molecular function.
