@@ -308,13 +308,14 @@ controlled release of bile acid from a cell or a tissue"*, and `GO:0120190` is
 the *"stops, prevents or reduces"* counterpart. FXR induces the canalicular
 pumps, so `GO:0120189` is the right one.
 
-The other two terms this argument leans on, same query date, neither of which is
-in the repo's caches either:
+The other terms this review leans on, same query date, none of which is in the
+repo's caches either:
 
 | CURIE | Label |
 |---|---|
 | `GO:0032782` | bile acid secretion |
 | `GO:0034762` | regulation of transmembrane transport |
+| `GO:0004879` | nuclear receptor activity |
 
 `GO:0032782` is *"The regulated release of bile acid, composed of any of a group
 of steroid carboxylic acids occurring in bile, by a cell or a tissue"* — it is
@@ -323,6 +324,17 @@ already covered" half of the import-gap argument. `GO:0034762` is *"Any process
 that modulates the frequency, rate or extent of the directed movement of a
 solute from one side of a membrane to the other"* — the `proposed_parent` of the
 regulation term.
+
+`GO:0004879` is here because four `ACCEPT` rows now quote its term comment to
+justify keeping it alongside the more specific `GO:0038186`. The comment reads,
+verbatim: *"Usage guidance: Nuclear receptors are a protein family defined by the
+presence of a C4-type zinc finger DNA-binding domain and a ligand binding domain.
+For nuclear receptors, the DNA binding motif is most often referred to as a
+response element. GO:0004879 is intended for annotation of nuclear receptors that
+regulate transcription by binding directly to DNA."* FXR qualifies on both counts
+— two C4-type zinc fingers at `FT ZN_FING 137..157` and `173..197`, and direct
+DNA binding as an RXRA heterodimer at FXREs. That is the fifth and last QuickGO
+lookup this review rests on, so all five are now in one table.
 
 And the surrounding space, same query date: `GO:0015721 bile acid and bile salt
 transport` has exactly two children, `GO:0015125` (a molecular function, via
