@@ -75,7 +75,7 @@ We have **15 entries** that WILL BE REMOVED from UniProtKB.
 | A0A9Q6Z964 | stx2A | E. coli O157:H7 | ECO57/stx2A |
 | D2STP8 | PGRPS3 | Anopheles gambiae | ANOGA/PGRPS3 |
 | D2SU82 | PGRPS2 | Anopheles gambiae | ANOGA/PGRPS2 |
-| D9J262 | amoA | Nitrobacter sp. | NITRP/amoA |
+| D9J262 | amoA | Nitrosopumilus maritimus (archaeon) | NITRP/amoA |
 | O30741 | dorR | Cereibacter sphaeroides | CERSP/dorR |
 | Q1IFG0 | Q1IFG0 | Pseudomonas entomophila | PSEEN/Q1IFG0 |
 | Q6DTY2 | Q6DTY2 | Clostridium cellulovorans | CLOCL/Q6DTY2 |

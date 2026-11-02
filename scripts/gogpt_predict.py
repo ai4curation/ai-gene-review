@@ -38,9 +38,10 @@ from ai_gene_review.sft_prediction_evidence import (
 
 
 BIOREASON_REF = "doi:10.64898/2026.03.19.712954"
+# The cached publication title, verbatim; prediction_evidence checks it.
 BIOREASON_TITLE = (
     "BioReason-Pro: Advancing Protein Function Prediction with Multimodal "
-    "Biological Reasoning (Fallahpour et al. 2026)"
+    "Biological Reasoning"
 )
 MANUAL_ASSESSMENT_MARKER = "Requires manual assessment"
 ONTOLOGY_LABEL_AUDIT_MARKER = "[ONTOLOGY_LABEL_AUDIT]"
