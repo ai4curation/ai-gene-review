@@ -1,5 +1,20 @@
 # EMENI cysD notes
 
+## 2026-11-01
+
+Rechecked the `PTHR43797` paint rows against the current local cache. The
+`PANTHER:PTN002887184` node still carries `GO:0005737` cytoplasm,
+`GO:0051009` O-acetylhomoserine sulfhydrylase activity, and `GO:0071269`
+L-homocysteine biosynthetic process, and the stale `GO:0004124` IBA remains
+absent from the 2026 PAINT export. That matches the existing review: the
+current PAINT rows are retained as core, while the old cysteine synthase IBA is
+kept only as a non-core in-vitro side activity.
+
+Searched for newer primary `cysD`, homocysteine synthase, and
+O-acetylhomoserine sulfhydrylase literature in A. nidulans/Emericella. The
+search did not find a newer cysD-specific paper that changes the interpretation
+from the cached 1984, 1993, 1998, and 2007 primary literature.
+
 ## 2026-10-24
 
 Fetched `EMENI/cysD`, read the cached GOA and UniProt records, and reviewed all

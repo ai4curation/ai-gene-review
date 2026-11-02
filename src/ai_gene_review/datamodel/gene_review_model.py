@@ -190,6 +190,18 @@ class SourceDefectTypeEnum(str, Enum):
     """
     A GO-CAM causal edge has the wrong relation or direction.
     """
+    WRONG_STATEMENT = "WRONG_STATEMENT"
+    """
+    A curated free-text statement in the source (a MOD gene description, a UniProt FUNCTION or other comment) is contradicted by the literature. Recorded on the reference_review of the reference that cites the source text; slot names the field (e.g. CC:FUNCTION, MOD_provided_gene_description), record the source record, and asserted_value the offending sentence copied verbatim from the cited text. requested_change is CHECK: the explanation says what the text should say, and the resource rewrites it.
+    """
+    OUTDATED_STATEMENT = "OUTDATED_STATEMENT"
+    """
+    A curated free-text statement was true to the knowledge of its time but has been superseded (e.g. "novel protein", "no obvious function in RNAi assays" for a gene with established mutant phenotypes). Recorded like WRONG_STATEMENT: asserted_value is the superseded sentence verbatim, requested_change is CHECK.
+    """
+    MISSING_STATEMENT = "MISSING_STATEMENT"
+    """
+    A curated description or annotation set omits or has lost content that the source itself previously carried or that is central to the gene (e.g. an automated description that dropped its function sentences between releases). Nothing wrong is asserted, so, as for MISSING_ISOFORM, asserted_value names the record that lacks the content (same as record) and requested_change is ADD; the explanation states the content to add.
+    """
     MISSING_ISOFORM = "MISSING_ISOFORM"
     """
     An isoform established in the literature is not among the isoforms of the reviewed UniProt entry. asserted_value is the entry (UniProtKB:Q96PV0); corrected_value names a sequence that carries the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
@@ -228,6 +240,10 @@ class SourceResourceEnum(str, Enum):
     POMBASE = "POMBASE"
     DICTYBASE = "DICTYBASE"
     XENBASE = "XENBASE"
+    ALLIANCE = "ALLIANCE"
+    """
+    Alliance of Genome Resources (e.g. its automated gene descriptions).
+    """
     ECOCYC = "ECOCYC"
     REACTOME = "REACTOME"
     ARUK_UCL = "ARUK_UCL"
@@ -2021,7 +2037,7 @@ class PublicationTypeEnum(str, Enum):
     """
     DEEP_RESEARCH = "DEEP_RESEARCH"
     """
-    An AI/LLM deep-research report generated for this review, referenced via a 'file:' identifier (e.g. GENE-deep-research-PROVIDER.md).
+    An external narrative source reproduced verbatim in the gene folder and referenced via a 'file:' identifier (GENE-deep-research-PROVIDER.md). Usually an AI/LLM deep-research report (falcon, perplexity, affinage), but also a MOD's hand-written gene description (wormbase, flybase, sgd, ...); the file's frontmatter records its authorship.
     """
     OTHER = "OTHER"
     """
@@ -2652,7 +2668,10 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'RuleReview',
                        'PredictionReview']} })
     isoform_specific_terms: Optional[list[Term]] = Field(default=None, description="""GO terms that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Using Term objects enables linkml-term-validator checking.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in UniProt's (or another source's) record of this isoform, for example an isoform established in the literature that the reviewed UniProt entry does not list (defect_type MISSING_ISOFORM). See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in UniProt's (or another source's) record of this isoform, for example an isoform established in the literature that the reviewed UniProt entry does not list (defect_type MISSING_ISOFORM). See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
+                       'ReferenceReview',
+                       'GoCamActivityReview',
+                       'Review']} })
 
 
 class FunctionalIsoformMapping(ConfiguredBaseModel):
@@ -2773,12 +2792,31 @@ class ReferenceReview(ConfiguredBaseModel):
     """
     Manual reviewer assessment of a reference - how relevant it is to the gene's function, and whether it is correctly cited and scientifically sound. Distinct from the machine-fetched id/title fields; all fields are optional and reviewer-supplied.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
+         'slot_usage': {'source_defects': {'description': 'Errors in the cited '
+                                                          "source's own curated text "
+                                                          '(a MOD gene description '
+                                                          'cited as its '
+                                                          '-deep-research-<mod>.md '
+                                                          'file, or a UniProt FUNCTION '
+                                                          'or other comment cited as '
+                                                          'the -uniprot.txt file), in '
+                                                          'reportable form. Use '
+                                                          'WRONG_STATEMENT, '
+                                                          'OUTDATED_STATEMENT or '
+                                                          'MISSING_STATEMENT. See '
+                                                          'docs/source_defects.md, '
+                                                          '"Cited source text".',
+                                           'name': 'source_defects'}}})
 
     relevance: Optional[ReferenceRelevanceEnum] = Field(default=None, description="""Reviewer judgment of how relevant the reference is to the gene's function and this review.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
     correctness: Optional[ReferenceCorrectnessEnum] = Field(default=None, description="""Reviewer's overall assessment of a reference's trustworthiness - both citation correctness (the identifier resolves to the intended paper that supports its use) and scientific soundness of that paper's claim.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
     review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
     replacement: Optional[ReferenceReplacement] = Field(default=None, description="""Manually established replacement for this reference identifier. This records identifier provenance, not a biological contradiction or retraction, and does not implicitly redirect supporting_text to another publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Errors in the cited source's own curated text (a MOD gene description cited as its -deep-research-<mod>.md file, or a UniProt FUNCTION or other comment cited as the -uniprot.txt file), in reportable form. Use WRONG_STATEMENT, OUTDATED_STATEMENT or MISSING_STATEMENT. See docs/source_defects.md, \"Cited source text\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
+                       'ReferenceReview',
+                       'GoCamActivityReview',
+                       'Review']} })
 
 
 class ReferenceReplacement(ConfiguredBaseModel):
@@ -5132,7 +5170,10 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
+                       'ReferenceReview',
+                       'GoCamActivityReview',
+                       'Review']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5438,7 +5479,10 @@ class Review(ConfiguredBaseModel):
                        'CoreFunction']} })
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
-    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform', 'GoCamActivityReview', 'Review']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
+                       'ReferenceReview',
+                       'GoCamActivityReview',
+                       'Review']} })
     nd_case: Optional[NoDataCaseEnum] = Field(default=None, description="""For an ND (No biological Data available) row only: why there is no data for this gene product in this aspect. It records which case of the ND taxonomy applies (projects/NO_DATA.md) and determines the expected action. An ND row that follows the evidence-code guideline (no literature on this gene product, in this species, identifies a function in that aspect) is ACCEPT; STALE and ONTOLOGY_BLOCKED are the cases where it is not. TRUE_GAP and EXISTENCE rows should be paired with a BIOLOGY knowledge gap whose dark_aspect matches the ND aspect.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
 
 

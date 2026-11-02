@@ -111,7 +111,10 @@ The organelle-by-stage matrix lives in
 - [x] `mitochondrial_iron_sulfur_cluster_assembly`: core ISC machinery (NFS1-ISD11, ISCU with frataxin, HSCB-mtHsp70, GLRX5), eukaryote-wide and PAINT-grounded; `RULE_CANDIDATE` (Archamoebae use a NIF system)
 - [ ] Extend the Fe-S module: Archamoebae NIF (and any SUF) realizers for the desulfurase and scaffold steps, the ferredoxin electron supply, and the late [4Fe-4S] machinery; check the frataxin/HSCB/GLRX5 arm against reduced mitosomal proteomes
 - [ ] Extract a shared receptor-to-Atg8 capture module from `mitophagy`
-- [ ] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus referenced modules; add pexophagy
-- [ ] Lysosome/endosome, ER, Golgi, nucleus, lipid droplet, autophagosome
+- [x] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus `peroxisomal_protein_import` (eukaryote-wide, PAINT-grounded per subunit; `RULE_CANDIDATE`); metabolism referenced as optional modules
+- [ ] Peroxisome: ground the receptor E2 (Pex4/Pex22 and animal E2s) and the PEX1/PEX6 anchor (PEX26, Pex15, APEM9) per lineage; check the PEX3 step in kinetoplastid genomes and Pex16 and PTS2 losses against proteomes; add pexophagy
+- [x] Lysosome/endosome: `lysosome_lifecycle` umbrella with two eukaryote-wide rule modules, `vacuolar_atpase_acidification` (V-ATPase, one PANTHER family per subunit) and `escrt_iii_intralumenal_vesicle_formation` (ESCRT-III and Vps4 by subfamily); both `RULE_CANDIDATE`
+- [ ] Lysosome/endosome: add ESCRT-I (TSG101, VPS28, VPS37 reviews exist) and ESCRT-II; model endosome maturation (Rab7, Mon1-Ccz1, HOPS) eukaryote-wide; Vps10/VSR hydrolase sorting; lysophagy
+- [ ] ER, Golgi, nucleus, lipid droplet, autophagosome
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)

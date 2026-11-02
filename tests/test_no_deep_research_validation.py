@@ -279,3 +279,27 @@ def test_various_research_file_patterns(research_filename):
                 break
 
         assert warning_found, f"Should detect and warn about unused {research_filename}"
+
+@pytest.mark.parametrize("provider", ["wormbase", "flybase", "sgd", "mgi"])
+def test_mod_description_alone_does_not_trigger_warning(provider):
+    """A MOD gene description file is not unused AI deep research, so it alone raises no warning."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        (tmpdir_path / f"TEST-deep-research-{provider}.md").write_text("# MOD gene description\n")
+        yaml_data = {
+            "id": "Q12345",
+            "gene_symbol": "TEST",
+            "taxon": {"id": "NCBITaxon:6239", "label": "Caenorhabditis elegans"},
+            "description": "Test gene",
+            "references": [{"id": "PMID:12345", "title": "Test paper"}],
+            "existing_annotations": [{
+                "term": {"id": "GO:0003674", "label": "molecular_function"},
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:12345",
+                "review": {"action": "ACCEPT"},
+            }],
+        }
+        yaml_file = tmpdir_path / "TEST-ai-review.yaml"
+        yaml_file.write_text(yaml.dump(yaml_data))
+        report = validate_gene_review(yaml_file, check_best_practices=True)
+        assert not any(i.check_type == "no_deep_research_results" for i in report.issues)
