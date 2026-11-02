@@ -28,3 +28,7 @@ IPR028362 — Alginate O-acetyltransferase AlgI; PTHR13285 — ACYLTRANSFERASE; 
 ## PR 5546 follow-up, 2026-10-25
 
 Retained GO:0016746 acyltransferase activity (ACCEPT) and used it as the core MF. MBOAT membership and locus context support the broad activity, but the pathway acetyl group alone does not resolve the intrinsic AlgI reaction. The earlier GO:0016407 refinement exceeded that evidence. This is the same evidential boundary used for the Pseudomonas AlgI homologs. All three original rows and machine-seeded fields remain intact.
+
+## Deep research availability, 2026-11-02
+
+No provider deep-research report exists for this gene. During the alginate O-acetylation module audit, `just deep-research-falcon PSEAE algI` was retried and failed with "403 Failed to authenticate"; earlier Falcon and Perplexity attempts for the KT2440 homologs also failed (see genes/PSEPK/algI/algI-notes.md). No deep-research file was written by hand. The review instead rests on cached primary publications, the UniProt record and the existing annotation reviews.
