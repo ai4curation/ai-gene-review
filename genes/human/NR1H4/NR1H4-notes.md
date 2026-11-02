@@ -308,13 +308,41 @@ controlled release of bile acid from a cell or a tissue"*, and `GO:0120190` is
 the *"stops, prevents or reduces"* counterpart. FXR induces the canalicular
 pumps, so `GO:0120189` is the right one.
 
+The other two terms this argument leans on, same query date, neither of which is
+in the repo's caches either:
+
+| CURIE | Label |
+|---|---|
+| `GO:0032782` | bile acid secretion |
+| `GO:0034762` | regulation of transmembrane transport |
+
+`GO:0032782` is *"The regulated release of bile acid, composed of any of a group
+of steroid carboxylic acids occurring in bile, by a cell or a tissue"* — it is
+what the `GO:0120188` triple regulates, and it carries the "export direction is
+already covered" half of the import-gap argument. `GO:0034762` is *"Any process
+that modulates the frequency, rate or extent of the directed movement of a
+solute from one side of a membrane to the other"* — the `proposed_parent` of the
+regulation term.
+
 And the surrounding space, same query date: `GO:0015721 bile acid and bile salt
 transport` has exactly two children, `GO:0015125` (a molecular function, via
 `part_of`) and `GO:0015722 canalicular bile acid transport`, so it has no
-regulation child of its own. `GO:0032782 bile acid secretion` is what the
-`GO:0120188` triple regulates. A search of the bile-acid space returns no
-import, uptake or influx process term in any direction, which is the gap the two
+regulation child of its own. A search of the bile-acid space returns no import,
+uptake or influx process term in any direction, which is the gap the two
 proposed terms address.
+
+**The uptake arm is now quoted, which it was not.** Both proposed terms exist
+because FXR's repression of SLC10A1/NTCP has nowhere to go, and until round 3
+that claim appeared in the entry's `description`, in two `reason` fields, in a
+defect `explanation`, in a `core_functions` description and in both proposal
+justifications — and in no `supporting_text` anywhere. `SLC10A1` was in zero
+quotes. UniProt states it outright, in the same `CC FUNCTION` sentence the
+synthesis-repression quote is taken from, one clause after that quote stops:
+*"and SLC10A1/NTCP (involved in hepatic uptake of conjugated BAs)"*. Both
+proposals now carry it. The lesson is the ordinary one — a quote was truncated at
+the clause that supported a *different* claim, and nothing downstream noticed,
+because `proposed_new_terms` support is checked for being verbatim and not for
+being on topic.
 
 ## The IL-17 row
 
