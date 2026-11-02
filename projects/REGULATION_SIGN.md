@@ -205,6 +205,7 @@ sits on a PAINT node and every descendant inherits it.
 - [ ] File the GO Central, RGD and MGI reports from `just export-source-defects`
 - [ ] Route ADIPOQ's origin to MGI: the review traces the thermogenesis cross-product to four MGI IMP rows on mouse Adipoq, which has no review here yet
 - [ ] Add `source_defects` to the Candida CEK2 `SOURCE_BAD` row that arrived from main
+- [ ] Add `source_defects` to the origin rows of mouse Alpl GO:0140928 (resource MGI, record unset): human ALPL and rat Alpl file against MGI:MGI:87983, but the origin review carries none, and its IMP row's With/From cites *Ank* and *Enpp1* alleles. The harvest keys on `propagation_review`, so it cannot see experimental origin rows like these
 - [ ] Look for other sign calls held UNDECIDED (or ACCEPTed) on in vitro evidence alone
 - [ ] Extend the flip census to REMOVE/UNDECIDED rows and to MF activator/inhibitor pairs
 - [ ] Trace propagated rows (IEA/IBA/ISS) to their donor annotations
