@@ -2,7 +2,7 @@
 title: "MOD gene descriptions as review input"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
-species: [worm, yeast]
+species: [worm, yeast, DROME]
 autolink_exclude: [MOD, MODS, GET3]
 ---
 
@@ -239,7 +239,7 @@ results were spot-checked (pek-1, lrx-1, sem-5).
   The lrx-1 suggested questions look as if they belong to another gene. Both need
   a human look.
 
-## Yeast (SGD), in progress
+## Yeast (SGD)
 
 - `fetch-descriptions-bulk yeast` refreshed all 890 sidecars, and
   `mod-description-deep-research yeast` wrote 890 `-deep-research-sgd.md`
@@ -271,7 +271,8 @@ results were spot-checked (pek-1, lrx-1, sem-5).
 | Alliance automated (890) | 4.4 | 2.9 | 3.8 | 3.1 | 2.9 |
 
 The counts include one protein twice: `genes/yeast/ERG19` and `genes/yeast/MVD1`
-are the same entry (P32377; ERG19 is the SGD standard name). Two genes, HKR1 and
+are the same entry (P32377; MVD1 is the SGD standard name and ERG19 a synonym). Merging them is
+[issue 5837](https://github.com/ai4curation/ai-gene-review/issues/5837). Two genes, HKR1 and
 MSB2, have no gene review, so their concordance scores compare the sources with
 each other only.
 
@@ -335,6 +336,65 @@ each other only.
   wrong, otherwise `UNVERIFIED` if any claim could not be traced, otherwise `VERIFIED`.
   53 earlier worm and yeast MOD and UniProt references were brought into line with it.
 
+## Fly (FlyBase)
+
+- `mod-description-deep-research DROME` wrote 345 `-deep-research-flybase.md` files
+  for the 539 fly reviews; 189 genes have no FlyBase-written description. Every gene
+  has a descriptions sidecar.
+- Two fetcher fixes came out of the run:
+  - Unreviewed UniProt entries often lack the `DR   FlyBase` line and carry only
+    `DR   AGR; FB:FBgn...`. Both fetchers now fall back to the AGR line for any MOD,
+    which recovered 8 genes.
+  - FlyBase writes Greek letters as characters ("α-Man-Ia"), so the identity check
+    now spells them out and ignores case.
+
+  Two genes are still not fetched. CG4592's UniProt entry gives only a VectorBase id,
+  and the Alliance API rejects GatB's `FBgn0039153` with HTTP 400.
+- FlyBase texts are a median 37 words (SGD 33, WormBase 75), and a median 0.50 of their
+  content words appear in our descriptions, the highest of the three MODs. See
+  [fly-comparison.yaml](MOD_DESCRIPTIONS/fly-comparison.yaml).
+- 531 files are `COMPLETE`, scored by 8 parallel agents with the yeast brief adapted for
+  fly. Eight genes have no description from any source and were left unscored.
+
+| Source (fly genes) | Correctness | Utility | Compactness | Completeness | Specificity |
+|---|---|---|---|---|---|
+| FlyBase curated (345) | **4.7** | 3.7 | 4.8 | 3.4 | 3.5 |
+| UniProt FUNCTION (319) | 4.6 | 3.8 | 3.9 | 3.6 | 3.8 |
+| Alliance automated (529) | 4.3 | 2.9 | 3.7 | 3.0 | 2.8 |
+
+  As with SGD, the curated MOD text is the most accurate source. Unlike SGD, it is not
+  the most informative: UniProt scores higher on utility, completeness and specificity,
+  and FlyBase's lead is in compactness. Concordance is a mean 4.34. The 211 findings
+  (116 discrepancies, 89 gaps, 5 insights, 1 consensus) are in
+  [fly-findings.yaml](MOD_DESCRIPTIONS/fly-findings.yaml). The automated text is
+  involved in 74 of the 116 discrepancies, UniProt in 38 and FlyBase in 37.
+- **Follow-up on the fly findings.** Eight agents worked through the 205 gap and
+  discrepancy findings (187 genes) under the yeast rules.
+  - 73 description-text `source_defects` across 64 genes: 39 FlyBase and 34 UniProt;
+    34 `WRONG_STATEMENT`, 13 `OUTDATED_STATEMENT`, 26 `MISSING_STATEMENT`; 25 of them
+    CONFIRMED by a quoted paper.
+  - 124 reviews edited, mostly with a description sentence or a `reference_review`.
+  - One `NEW` row: Tango5 GO:0000045 autophagosome assembly (IMP, PMID:34019822).
+    Tango5 is the fly VMP1, the ER scramblase that does part of the work, and human
+    VMP1 carries the term.
+  - Lexical overlap did not move (median recall 0.50; review median 125 to 128 words).
+  - Examples of FlyBase defects:
+    - Pxd called a catalase-like, glutathione-oxidising enzyme; it is the chorion
+      peroxidase that makes di-tyrosine cross-links.
+    - Br140 and Ing5 called histone acetyltransferases; Enok is the enzyme.
+    - Lis-1 called a PAF-AH subunit; fly Lis-1 does not bind the fly alpha homolog.
+    - amon said to cleave Slit; Tolkin is the Slit protease.
+    - SREBP said to respond to cholesterol; fly SREBP responds to phosphatidylethanolamine.
+  - UniProt defects are mostly mammalian text carried over to the fly entry:
+    - smo and SCAP: cilium and sterol mechanisms.
+    - cact and IKKbeta: IKK as the Cactus kinase; Pelle phosphorylates Cactus.
+    - spi: Gurken named as the EGF receptor.
+    - Ccs: described as a dismutase; it is the copper chaperone for Sod1.
+    - borr: copied from the Australin paper and contradicted by the borr paper it cites.
+  - Alliance automated text: two losses (Mtpalpha, IKKepsilon) and two doubtful human
+    orthologs (ey given PAX4, tin given NKX2-2), in
+    [alliance-automated-regressions](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
+
 ## Recommendations
 
 1. **Use the curated MOD description as an input, not as an authority.** This
@@ -344,8 +404,8 @@ each other only.
 2. **Treat a claim that appears only in the MOD text as a literature lead.**
    fshr-1 is the model case: the gap is a missed role, not wording.
 3. **Re-audit existing reviews** with the comparison script, starting with the
-   lowest-overlap genes, then repeat for fly (FlyBase), mouse (MGI) and zebrafish
-   (ZFIN), whose Alliance records carry the same note type.
+   lowest-overlap genes, then repeat for mouse (MGI), whose Alliance records carry
+   the same note type.
 4. The NCBI step hits rate limits (HTTP 429) on bulk runs. It should honour an
    `NCBI_API_KEY`, or back off and retry.
 
@@ -365,4 +425,5 @@ each other only.
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
 - [x] Yeast: score descriptions (890 COMPLETE)
 - [x] Yeast: act on gap and discrepancy findings (89 source defects, 249 reviews edited)
-- [ ] Fly (FlyBase) and mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
+- [x] Fly: fetch, score and act on findings (345 FlyBase files, 73 source defects, 124 reviews edited)
+- [ ] Mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
