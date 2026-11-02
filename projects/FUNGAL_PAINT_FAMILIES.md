@@ -132,6 +132,8 @@ stress-activated MAPK-cascade assertions.
   filamentous-growth and cell-wall evidence; revalidated in this branch
 - [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
   drafted in PR #5883
+- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
+  drafted in this branch
 
 ## Family 5: Fungal Glucanases
 
