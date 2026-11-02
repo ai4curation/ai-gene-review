@@ -373,6 +373,21 @@ def test_accepted_nd_rewards_recorded_search(tmp_path):
     assert (score.populated, score.total) == (1, 2)
 
 
+def test_accepted_nd_citing_only_uniprot_earns_no_credit(tmp_path):
+    """The UniProt record is not a literature search, matching the nd_policy warning."""
+    uniprot = {"reference_id": "file:yeast/X/X-uniprot.txt"}
+    notes = {"reference_id": "file:yeast/X/X-notes.md"}
+    report = analyze(
+        tmp_path,
+        [
+            annotation("ND", "ACCEPT", supported_by=[uniprot]),
+            annotation("ND", "ACCEPT", supported_by=[notes]),
+        ],
+    )
+    score = metric(report, "nd_search_support")
+    assert (score.populated, score.total) == (1, 2)
+
+
 @pytest.mark.parametrize("action", ["REMOVE", "MODIFY"])
 def test_stale_nd_needs_literature_quote(tmp_path, action):
     """Removing an ND claims literature exists, so only a quote from it earns credit."""
