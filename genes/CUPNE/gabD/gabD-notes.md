@@ -21,28 +21,46 @@ The normally cached BRENDA EC1.2.1.79 page explicitly links Q9RBF6/reference 288
 
 Verified live QuickGO ancestry: both NAD-specific GO:0004777 and NADP-specific GO:0036243 descend from GO:0009013 and the two broader oxidoreductase terms used here. Both core activities remain supported by the exact Q9RBF6 BRENDA extraction tied to PMID:10564790; the primary cache remains abstract-only. NAD activity around 11% of NADP activity at high pH is an assay comparison, not native flux or exclusivity. The module now explicitly depicts the NADP branch, matching that gene core, while this review preserves the additional NAD branch. All original annotation payloads, qualifiers, actions and raw UniProt/GOA bytes are preserved. No NEW annotation was added. Independent bounded consultation agreed that NAD capacity does not imply NADP exclusion. Focused validation, source checks, renders and preservation checks are recorded in the PR #5591 follow-up report.
 
-## 2026-11-02 — cytosol row resolved to KEEP_AS_NON_CORE
+## 2026-11-02 — cytosol compartment, and one core for a dual-acceptor enzyme
 
-Revisited the one row the earlier sessions left UNDECIDED, because the module
-`bacterial_4_hydroxybutyrate_oxidation` cannot reach its completion bar with an
-unresolved row. The earlier restraint was about the right thing: there is still
-no imaging or fractionation of the SHF3 clone, and the suggested question asking
-for an independent source is kept.
+### The cytosol row
 
-What changed is the reading of what the term claims. Live QuickGO gives
-GO:0005829 as "The part of the cytoplasm that does not contain organelles but
-which does contain other particulate matter, such as protein complexes", which
-for an organism without organelles is simply the soluble interior of the cell.
-Three independent lines agree on that: no signal peptide and no transmembrane
-segment anywhere in the FT block of the record; succinate semialdehyde is
-generated intracellularly, by 4HB oxidation and by GABA transamination, and the
+What GO:0005829 claims here is modest. Live QuickGO gives it as "The part of the
+cytoplasm that does not contain organelles but which does contain other
+particulate matter, such as protein complexes", which for an organism without
+organelles is the soluble interior of the cell. Three independent lines agree on
+that compartment: there is no signal peptide and no transmembrane segment
+anywhere in the FT block of the record; succinate semialdehyde is generated
+intracellularly, by 4HB oxidation and by GABA transamination, and the
 gab-cluster enzymes that supply it are cytoplasmic; and the characterized
 enterobacterial enzymes of the same reaction, GabD and Sad (see
-`genes/ECOLI/sad`), are cytoplasmic. Family membership is *not* used as a
-localization assay, and the "mitochondrial" wording of the PTHR43353 label is
-still not imported into bacterial biology.
+`genes/ECOLI/sad`), are cytoplasmic.
 
-The row is therefore kept but marked non-core: the compartment is inferred
-background rather than part of the demonstrated functional claim, and
-`core_functions` continues to assert no location. No other row, action or core
-function was changed in this session.
+What is still missing is a location measurement on the SHF3 clone itself. Family
+membership is *not* used as a localization assay, and the "mitochondrial"
+wording of the PTHR43353 label is still not imported into bacterial biology. So
+the row is kept at the resolution the evidence supports but marked non-core, and
+the suggested question asking for an independent source stays open;
+`core_functions` continues to assert no location. The earlier UNDECIDED verdict
+was recording the same gap, and resolving it this way does not close it.
+
+### One core function instead of two
+
+Both acceptors are measured on this exact clone, 132.1 micromol/min/mg with NADP
+against 14.9 with NAD at pH 11.0 and 30°C, so NADP is the major branch and NAD,
+at about 11%, the minor one. That is one active site running one reaction with
+either cofactor, and GO has a term for exactly that: the QuickGO definition of
+GO:0009013 is the reaction with NAD(P)+.
+
+This review previously refined the GO:0009013 row away into GO:0036243 and
+GO:0004777 and carried two core functions, one per acceptor. That is withdrawn.
+Asserting both children says what the parent already says, and it reports one
+reaction as two evolved functions. The GO:0009013 row is now ACCEPT and is the
+single core; the two broad oxidoreductase rows refine to it; the NAD-specific
+child is kept as its own row, marked non-core at its measured weight; and the
+NADP preference is recorded in the core description rather than in the choice of
+term. The same convention now runs through `genes/ECOLI/sad` (where the
+preference is reversed), the Pseudomonas Sad candidates (where it is unresolved),
+the PTHR43217 and PTHR43353 family reviews, and every SSA-oxidation annoton of
+the `bacterial_4_hydroxybutyrate_oxidation` module. No evidence changed; only
+the number of terms used to state it.

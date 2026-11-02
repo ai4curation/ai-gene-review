@@ -29,22 +29,24 @@ Workflow: all original annotation fields, order and flags and both raw source ha
 
 Removed curation commentary from the standalone PP_2650 summary. The biological distinction from PP_2049 and unresolved substrate specificity remain intact; no action or core changed. All original annotation payloads, qualifiers, actions and raw UniProt/GOA bytes are preserved. No NEW annotation was added. Independent bounded consultation agreed that NAD capacity does not imply NADP exclusion. Focused validation, source checks, renders and preservation checks are recorded in the PR #5591 follow-up report.
 
-## 2026-11-02 — GO:0047577 resolved to MARK_AS_OVER_ANNOTATED
+## 2026-11-02 — GO:0047577 marked over-annotated
 
-The exact 4HB row was the last UNDECIDED one, which blocks the completion bar of
-the module `bacterial_4_hydroxybutyrate_oxidation`. Nothing new was found about
-PP_2650, so the verdict follows the audit already recorded above rather than
-overturning it: the substrate-specific assignment rests on the EMBL submitter
-name and the EC number derived from it, the independent signatures establish
-only a broad group III Fe-ADH, and the KT2440 study that looked for this
-chemistry tested other loci and reports unsuccessful direct 4HB assays.
+Nothing new about PP_2650 turned up, so this follows the audit recorded above
+rather than overturning it. The substrate-specific 4HB assignment rests on the
+EMBL submitter name and the EC number derived from it; the independent
+signatures (`Pfam; PF00465; Fe-ADH`, `InterPro; IPR018211; ADH_Fe_CS`) establish
+a broad group III iron alcohol dehydrogenase, a family whose members differ
+widely in substrate; and the one KT2440 study that looked for this chemistry
+tested other loci and reports unsuccessful direct 4HB dehydrogenase assays on
+extracts [PMID:32256468 "Attempts to obtain direct biochemical evidence for the oxidation hypothesis with"].
+Within PTHR11496:SF102 the reaction is established only for the assayed
+Cupriavidus GHBDH (Q59104), not for the subfamily.
 
 MARK_AS_OVER_ANNOTATED rather than REMOVE, because the enzyme class is right and
 a 4HB activity has not been excluded for this protein; the true class-level
 claim stays in the GO:0004022 row. The same judgement is now recorded at family
 level as a `member_exceptions` entry on the GO:0047577 scope in
-`interpro/panther/PTHR11496/PTHR11496-review.yaml`, where the term is scoped to
-the GHBDH-type clade of SF102 on the assayed Cupriavidus Q59104. The module
-continues to use PP_2650 only as an optional comparator with the
-alcohol-dehydrogenase class term, never as the enzyme of the pathway step. No
-other row, action or core function was changed.
+`interpro/panther/PTHR11496/PTHR11496-review.yaml`, so the gene and the family
+say the same thing. The module continues to use PP_2650 only as an optional
+comparator with the alcohol-dehydrogenase class term, never as the enzyme of the
+pathway step. No other row, action or core function was changed.
