@@ -73,3 +73,30 @@ Notes on individual annotations:
 
 Falcon deep research is OUT OF CREDITS (HTTP 402) — no -deep-research-falcon.md generated.
 Review grounded in GALC-uniprot.txt, GALC-goa.tsv, and cached publications/PMID_*.md.
+
+
+## 2026-11-02 — source-context and enzyme-mechanism review
+
+The preceding text is an unchanged historical journal. Its older numerical kinetic statements and quote-to-claim associations are not automatically adopted. The current [source guide](GALC-source-guide.md) records what was actually read and the review YAML contains the present judgments.
+
+Positive human purification and COS-1 expression support GALC's defining galactosylceramidase function. Cat RNA in the cloning workflow was only a probe intermediate. Full original assay Methods were not recovered, so numerical pH/Km details are omitted from current reasons ([PMID:8281145](https://pubmed.ncbi.nlm.nih.gov/8281145/), [PMID:8399327](https://pubmed.ncbi.nlm.nih.gov/8399327/)). The human gene paper supports established lysosomal hydrolysis as background; it is not a direct imaging assay ([PMID:7601472](https://pubmed.ncbi.nlm.nih.gov/7601472/)).
+
+Selected GALC-SapA original text supports an acidic-compartment lipid-presentation mechanism. The principal structure uses mouse proteins, with a separate limited human pull-down; substrate placement is modeled rather than resolved in that complex. General hydrolase-active endolysosome physiology supports the IC location without pretending that GALC itself was imaged. A single precise endolysosome-lumen core avoids repeating its ancestor compartment ([PMID:29323104](https://pubmed.ncbi.nlm.nih.gov/29323104/), [PMID:27498570](https://pubmed.ncbi.nlm.nih.gov/27498570/)).
+
+All 20 current contexts are retained. The 19-row parser forecast collapses the unextended activity assertion and a separately assigned three-atom substrate/product context. The planned twentieth row restores that existing context, not a new assertion, and leaves the unextended row intact. The original two assignments, literal conjunction and old mapping ambiguity remain explicit. The current InterPro reference differs from an older combined-inference reference; both are preserved in their respective versions.
+
+The three actual IBA placements descend from the verified ancestral node. Mouse donor papers provide positive cDNA-expression and mutant biochemical grounding, with abstract-only access limits retained; a donor's title foregrounding SapA does not demonstrate a curator error ([PMID:8769874](https://pubmed.ncbi.nlm.nih.gov/8769874/), [PMID:11371512](https://pubmed.ncbi.nlm.nih.gov/11371512/), [PMID:11734583](https://pubmed.ncbi.nlm.nih.gov/11734583/)). The primary catalytic and pathway claims remain independently supported in human.
+
+The current four products have exact official sequences of 685, 662, 659 and 589 residues. Sequence verification does not prove equivalent activity or trafficking. Historical 669-residue cDNAs, alternative initiation and protein fragments are not silently assigned current suffixes ([PMID:8297359](https://pubmed.ncbi.nlm.nih.gov/8297359/), [PMID:9434153](https://pubmed.ncbi.nlm.nih.gov/9434153/)). Variant-expression studies corroborate activity sensitivity but do not create extra biological processes or product equivalence.
+
+Two source inconsistencies are explicitly recorded: Reactome's modeled glucose output disagrees with the same reaction's galactose definition, and UniProt's ester-bond phrase disagrees with glycosidic chemistry. The model's human GALC identity and lumen assignment remain verified; all fetched source bytes are preserved. Eight current excerpt occurrences are checked against retained source bytes. All 30 inherited associations remain historical provenance. No NEW annotation, provider report or canonical acquisition has been generated during this private review. Genuine native acquisition, context restoration and targeted validation remain future work.
+
+## 2026-11-02 — genuine native reconciliation
+
+The authorized existing lane refreshed GALC with the native no-seed command while preserving the inherited review. All 20 original contexts and every field of the 16-column export matched the retained current records. Fourteen normal sources were reused unchanged and 19 missing publications were acquired, completing the 33-source union. The genuine native 19-row seed is preserved separately without edits. Its collapsed activity pair is represented here as two original contexts: raw3 remains unextended at review1; raw4 is restored at review19 with its exact substrate/two-product conjunction. This is source-context restoration, not a NEW annotation. Explicit joins supplement the strict matcher, which does not check assignedBy or extension identity.
+
+All four native product declarations and sequences agree; source titles and availability flags were reconciled, and all eight current excerpts match the actual normal caches. PMID:20886637 and PMID:34449528 now have full caches, but their manual assessments retain the actual abstract reading scope. PMID:8940268 remains abstract-only after failed publisher-restricted XML/HTML/PDF fallbacks. The 20 approved judgments, one core, 36 manual assessments, two source defects and all 30 historical quotation associations remain intact. Native EDIT history and targeted validation follow.
+
+## 2026-11-02 — targeted checks and finalization
+
+Native validation passed with zero advisories; strict GOA matching passed, and computed status is COMPLETE for all 20 reviewed original contexts. No NEW annotation was added. The first validation diagnostic is preserved: three extension predicates initially used descriptive objects, while the schema requires CURIE strings. Only those wrappers were projected to their exact RO identifiers; labels and the literal source conjunction remain in the archive. All 33 scientific source files remain unchanged. The initial INITIALIZED-versus-COMPLETE status diagnostic is retained. Native EDIT history, private rendering/link checks and scoped whitespace checks accompany this candidate.
