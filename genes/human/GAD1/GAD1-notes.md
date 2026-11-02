@@ -78,3 +78,32 @@ record (`GAD1-uniprot.txt`), the seeded GOA (`GAD1-goa.tsv`), and cached
 - MF identical protein binding (GO:0042802) IDA (PMID:17384644): supports the homodimer;
   ACCEPT (structurally verified homodimer).
 </content>
+
+
+## 2026-11-02: source-grounded augmentation (private proposal)
+
+This dated entry supersedes the biological interpretations above where they differ; the earlier journal remains unchanged as historical provenance. The proposed review now covers all 50 current literal GOA contexts, four declared products and one catalytic core. No NEW annotation is proposed. Genuine native reconciliation and target validation have not yet been performed.
+
+The catalytic core is GAD67-mediated, PLP-dependent conversion of L-glutamate to GABA and carbon dioxide. Original activity experiments compare active full-length GAD67 with inactive GAD25, rather than supporting a gene-wide loss of enzyme function (PMID:10671565, original Methods/Results/Figure 4). Human clone activity (PMID:1549570) and structural/catalytic evidence (PMID:17384644; official PDB 2OKJ) corroborate this. The crystallization entity is an engineered 504-residue truncation with terminal HH, distinct from natural products. Current sequences are 594, undescribed, 224 and 425 residues; Q99259-2 has no described sequence, and the 425-residue product is not assigned untested catalytic equivalence.
+
+The old exclusive soluble-versus-vesicle contrast was too strong. Actual GAD67 immunostaining supports cytoplasm and inhibitory presynaptic terminals (PMID:15347806, 23258346, 24613359), while the exact official Q99259 Reactome component R-HSA-888580 participates in a vesicle-associated GAD1:GAD2 model. This does not prove every product is membrane-bound or that reaction-level plasma-membrane compartments locate every participant. Active-zone placement retains actual PAINT and donor curatorial provenance, with the inaccessible original marker panels explicitly distinguished from independently read broader terminal staining. Perinuclear, cell-cortex and event-level plasma-membrane specificity remain unresolved. GFP cell identity is not silently substituted for a protein-localization assay.
+
+The NCK1 screen supports SH3-domain binding by a GAD1 peptide (PMID:17474147, Table S2). Other positive binary pairs remain supported with actual clone/suffix scope, while their generic protein-binding annotations are removed as uninformative. This policy decision does not negate the experiments or establish a more specific molecular function. PMID:21516116 does not recover the incoming AGTRAP pair in its complete available table; independent positives elsewhere are preserved without pretending to repair that citation. HAAO variants belong to HAAO, and study GAD1 clone numbers are not current UniProt suffixes. See the source guide for the exact target-table and original-access limits.
+
+GAD1 performs the first chemical step of the GABA shunt, but the broader complete-pathway flux is not measured by every cited assay. The chemical-synaptic-transmission term concerns release and receptor activation; neurotransmitter synthesis alone does not establish GAD1's own participation in those steps, so the specific PMID:8954991 TAS remains uncertain. No new developmental process is inferred from knockout necessity.
+
+The original 32-row review and all 37 quotation associations remain preserved by immutable Git/private copies and public hash/locator provenance. The old cytosol NEW is archived rather than silently treated as incoming GOA: the actual ancestral assertion is cytoplasm, its family-membership quote is not a localization assay, and a new descendant would duplicate existing coverage. Two precise inherited excerpts remain active; 35 old associations remain historical only. Earlier source descriptions and action summaries above are historical, not the current judgments. Current decisions and all 32 manual reference assessments appear only in the review; the compact source archive preserves raw contexts, products, source inventory and history without a second current-review copy.
+
+## 2026-11-02: generic interaction-term policy
+
+The thirteen resolved positive interaction contexts retain their source-specific pair, assay and construct evidence, but use REMOVE for the uninformative GO:0005515 term. The NCK1-domain interaction retains its supported SH3-binding refinement; two unresolved source-specific binding claims remain UNDECIDED. Earlier journal statements about a different generic-binding policy are historical. No interaction is declared false by this policy correction.
+
+## 2026-11-02: genuine native reconciliation
+
+The actual UniProt snapshot and 50-row, 16-column GOA export match the independently inspected inputs. A private genuine native seed resolves all 50 current joins without seeding over the inherited review. The four product records, including undescribed Q99259-2, are exact. All 46 normal sources are present: 21 reused main files remain unchanged and 25 previously missing files were acquired. A transient UniProt HTTP 500 stopped the first target fetch before target writes; one ordinary retry succeeded, with the original diagnostic retained.
+
+Both actively reused historical excerpts are exact native-cache substrings. All 37 original quotation associations and the inherited 32-row review remain available through the immutable historical locators. Newly available cache full text does not imply a broader primary reading than the reference assessments state. The six source-specific uncertainties remain; no NEW assertion is added. Scoped validation and rendering outcomes are pending.
+
+## 2026-11-02: scoped validation outcomes
+
+Default schema, ontology, reference and best-practice validation passed with zero advisories. Strict GOA reconciliation confirms all 50 current annotations and no NEW. The status audit computed COMPLETE, preserving all six UNDECIDED scientific judgments; the initial DRAFT mismatch remains in the execution record. Native EDIT history, final status and the private 50-row/one-core/32-reference render passed. All 46 scientific sources remain unchanged by authored curation, and the GO term cache is unchanged.
