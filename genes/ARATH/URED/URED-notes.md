@@ -5,9 +5,9 @@
 - Nickel binding (InterPro2GO) marked over-annotated: no plant data; bacterial UreD binds Ni weakly with Zn competition [PMID:20207756]; bacterial UreF is a fidelity gatekeeper coupling UreG GTPase [PMID:22369361]; nickel carrier in plants is UREG [PMID:28710280].
 
 ## Decisions
-- Core: urease activator activity (GO:0018237), directly_involved_in protein maturation (GO:0051604), in urease activator complex (GO:0150006), cytoplasm.
+- Core: urease activator activity (GO:0018237), directly_involved_in urea catabolic process (GO:0043419; GO relates the urease activator complex GO:0150006 to it by "capable of part of"), the same core process used for every urease accessory protein in the urease module; protein maturation (GO:0051604) is kept as non-core, in urease activator complex (GO:0150006), cytoplasm.
 - urea catabolic process (IDA) KEEP_AS_NON_CORE (acts upstream of hydrolysis); IBA urea metabolic process TOO_GENERAL.
-- GO:0110147 "protein maturation by nickel ion transfer" is obsolete, so protein maturation retained.
+- GO:0110147 "protein maturation by nickel ion transfer" is obsolete; its GO record gives `replaced_by` GO:0051604 (go-ontology issue 29105), so protein maturation is the most precise available term.
 
 ## Deep research
 - `just deep-research ARATH UREG --provider perplexity` was attempted once (2026-10-23) and failed: "Provider 'perplexity' not available. Available: falcon, openscientist". No deep-research file was generated; review based on cached literature and UniProt.

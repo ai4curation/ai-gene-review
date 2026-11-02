@@ -35,8 +35,9 @@ able to reach UreG inefficiently without a chaperone, not with UreE being dispen
 - `GO:0016151`: ACCEPT (core, measured directly on the H. pylori protein).
 - `GO:0006457 protein folding`: MODIFY to `GO:0051604 protein maturation`. UreE does not fold
   anything; urease folds and assembles without accessory proteins [PMID:1612735]. The
-  precise child `GO:0110147 protein maturation by nickel ion transfer` is **obsolete**
-  (checked in the local GO build), so the parent is the available term.
+  precise child `GO:0110147 protein maturation by nickel ion transfer` is **obsolete**;
+  its GO record gives `replaced_by` GO:0051604 (go-ontology issue 29105), so that is the
+  available term. The K. aerogenes and P. putida UreE reviews use the same MODIFY.
 - `GO:0065003 protein-containing complex assembly`: MODIFY to `GO:0051604` for the same
   reason - urease oligomer assembly is accessory-independent.
 - `GO:0019627 urea metabolic process`: MODIFY to `GO:0043419 urea catabolic process`.
