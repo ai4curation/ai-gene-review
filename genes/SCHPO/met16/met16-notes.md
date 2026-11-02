@@ -27,3 +27,12 @@ Naming: UniProt MET16_SCHPO; ortholog of S. cerevisiae MET16 (PAPS reductase, E.
   evidence is the deletion phenotype cited by UniProt and the trx1 genetics.
 - GOA has no GO:0000103 sulfate assimilation row for met16 (only GO:0006790 and GO:0070814);
   core_functions uses GO:0000103, matching the GO-CAM part_of and the S. cerevisiae review.
+
+
+## 2026-10-26 complete fungal-member reassessment
+
+Reassessed all 9 existing rows, core functions, biological summary and references under the current review and annotation-reviewer guidance. Original term, evidence, reference, qualifier and supporting-entity payloads are preserved; no annotation row was added in this session. Correct claims are assessed holistically across evidence codes. Generic protein-binding removals implement the uninformative-binding policy and do not deny the measured association or transfer a partner's activity.
+
+The performed PAPS-to-sulfite reaction is supported by conserved reductase architecture and characterized budding-yeast chemistry (PMID:3060034). Native trx1 deletion and sulfite rescue in PMID:18758731 support an important physiological electron-donor role for Trx1, without proving donor exclusivity under every condition. The review does not assert a particular native met16 intermolecular-disulfide mechanism based on a pathway diagram. Broad sulfur-compound metabolism is refined to sulfate assimilation; the enzyme contributes a real chemical step upstream of sulfide. All original rows and source-specific phenotype limits are retained.
+
+Research provenance: the existing real research reports and curated primary/publication caches were read. The requested normal Falcon run with perplexity-lite fallback was attempted in parallel with publication caching; Falcon returned HTTP 403 and the fallback returned HTTP 401 insufficient quota. No provider report was fabricated. `just fetch-gene-pmids SCHPO met16` completed successfully. Manual primary-source assessment and source-access limits are documented above and in the review; abstract-only evidence was not used to overturn experimental assertions as wrong-gene errors. Run logs are under `.cache/module-audit-logs/fungal-SCHPO-met16-*.log`.

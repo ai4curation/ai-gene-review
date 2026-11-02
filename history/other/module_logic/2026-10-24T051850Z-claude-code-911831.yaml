@@ -1,0 +1,34 @@
+history_version: 1
+target:
+  kind: other
+  slug: module_logic
+  path: src/ai_gene_review/module_logic.py
+session:
+  id: 2026-10-24T051850Z-claude-code-911831
+  timestamp: '2026-10-24T05:18:50Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/5333
+  urls: []
+events:
+- type: REVIEW
+  outcome: changed
+  summary: Couple the grounding guard to the engine's own predicates; assert the slot
+    partition is disjoint
+  details: |
+    Fifth and final review round on PR 5333. The bot re-granted approval on c99bcdfd4, verified that ParticipantSelector has exactly the seven entity-grounding slots now classified, and confirmed domain was both unclassified and used (6 participants across 3 modules: bacterial_type_v_secretion, crispr_cas_adaptive_immunity, phagophore_organelle_contact_site). It also observed that the usability gate incidentally closes the gene/gene_product masking case raised in round 1 and written off then as not worth a speculative branch: an unusable gene descriptor beside a usable gene_product now yields dropped == ['gene_product'] and fails with the real cause, so that bug can no longer land silently.
+
+    Six non-blocking suggestions, all taken. The substantive one: _descriptor_is_usable had copied _uniprot_from_gene's accession rule rather than importing it. The guard's purpose is to agree with the engine about what counts as groundable, so broadening the engine's rule would have left the test's gate silently unmatched, reclassifying a dropped grounding of the new form as an unusable descriptor and going quiet. That is this PR's own bug class inside the guard against it, so the test now imports _uniprot_from_gene and descriptor_symbol and calls both.
+
+    READ_GROUNDING_SLOTS and UNREAD_GROUNDING_SLOTS are now asserted disjoint. ENTITY_GROUNDING_SLOTS is their concatenation and the partition test used set equality, so a slot listed in both passed while the guard treated it as read: precisely the failure mode of the family move made in the previous commit, had it been done as an add without a delete. Verified by adding family to both tuples, which fails naming it.
+
+    A namespaced atom (one compiled through a module_ref) is now skipped rather than having its bare id looked up in the referring document's slot map. Unreachable today, since all 11 module_ref targets are top-level files visited on their own, but with the usability gate in place an id collision would have produced a false positive naming the wrong file rather than a quiet miss.
+
+    Three documentation clauses: _descriptor_is_usable now states that any slot moved into READ_GROUNDING_SLOTS needs its usability case added in the same change, because a protein_complex descriptor evaluates False on its own preferred_term and would silence every complex whose subunits are groundable; ENTITY_GROUNDING_SLOTS states that the partition test recognises a new slot by its Descriptor range, so a bare string or uriorcurie slot would still need listing by hand; and symbol_label_warnings records that its walk also reaches a gene_product nested in protein_complex.active_units, which the engine does not read, deliberately, since an ambiguous label is a curation defect either way.
+
+    Verified the dropped-grounding guard still fires after the refactor: reverting the gene_product grounding fails it naming "carries ['gene_product']". Corpus counts unchanged at 354 ungrounded atoms and 127 of 698 modules unsatisfiable in every context.

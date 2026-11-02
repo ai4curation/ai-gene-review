@@ -66,3 +66,30 @@ GO definitions were fetched from [QuickGO](https://www.ebi.ac.uk/QuickGO/) on 20
 [PMID:31475145](https://pubmed.ncbi.nlm.nih.gov/31475145/), Weber et al. (2019), [DOI:10.3389/fcell.2019.00148](https://doi.org/10.3389/fcell.2019.00148), is cached with full text. Its deletion/rescue experiments show that particular ankyrin-repeat subdomains determine synaptic targeting of the giant proteins. Thus, the retained repeat module supports an intracellular interaction/scaffold context, but does not make every fine presynaptic location transferable automatically. The broad plasma-membrane HDA observation is retained as compatible with this context; the detailed giant-isoform localization claims remain unresolved for PE.
 
 The Falcon literature research completed on 2026-09-08 and is stored unedited as `Ank2-deep-research-falcon.md`, with its evidence-summary artifact. It appropriately distinguishes locus-level evidence from accession-specific function and highlights the 2019 domain-targeting work. Its canonical 24-repeat/spectrin-binding architecture is a description of the large proteins, not of the 697-residue input; the FlyBase sequence reconciliation above supplies that distinction. The synthesis is useful for evaluating domain dependence and locating sources, while the per-annotation excerpts point to the primary papers or exact source records.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not opened or used for this section.
+
+### Identity
+- Q3KN55 (RE55168p, Ank2-PE, FBpp0292239) is a 697-aa alternative product of Ank2 (FBgn0261788), not the canonical product. UniProt has no reviewed Ank2 entry; the UniProt gene-centric canonical for Ank2 in the reference proteome is M9MRX4 (isoform U, 13559 aa). Other giant products include Ank2-L Q7KU92 (4083 aa).
+- New analysis `Ank2-bioinformatics/compare_isoforms_rereview.py` / `RESULTS-rereview.md`: Q3KN55 159-667 is identical to giant-isoform residues 9-517; it carries 13 of the 21 UniProt ANK repeat features of M9MRX4/Q7KU92 and nothing C-terminal to residue 517 (3.8% of M9MRX4, 12.5% of Ank2-L). Residues 1-158 (His-rich) and the 30-aa tail are PE-specific. Q3KN55 and M9PBV0 (isoform X, 547 aa) differ only at the N terminus.
+- PANTHER: the giant products (including M9MRX4) are in PTHR24123:SF141 ("ANKYRIN 2, ISOFORM U"), whose family PTHR24123 holds the bilaterian ankyrin PAINT node PTN002380879 (seeds fly Ank, human ANK1/ANK2/ANK3; plasma membrane, spectrin binding, cytoskeletal anchor activity, protein localization to plasma membrane). Q3KN55 and M9PBV0 instead classify into PTHR24198:SF165 ("ANKYRIN REPEAT-CONTAINING PROTEIN-RELATED"), a heterogeneous grab-bag of viral ankyrin proteins, latrotoxins and fungal regulators. That placement is a consequence of the repeat-only sequence, not evidence of a different evolutionary origin; no function should be transferred from SF165 members. The PTHR24198 family review lists Q3KN55 as the SF165 representative; this is correct as a classification fact but does not reflect where the Ank2 gene sits phylogenetically.
+- No IBA rows exist for Q3KN55 or for the giant accessions (checked QuickGO for M9MRX4 and Q7KU92: identical FlyBase gene-level rows plus IEA only).
+
+### Key observation about the GOA rows
+All 17 FlyBase/IntAct rows on Q3KN55 are gene-level: QuickGO shows the identical FlyBase set on M9MRX4 and Q7KU92. They are not measurements on Ank2-PE. Because this folder is keyed to the short product, gene-level claims that need the giant-isoform architecture are not accepted here; they belong on a canonical-product review (genes/DROME/Ank2__M9MRX4, not yet created).
+
+### Action changes vs the previous review
+- GO:0000226 microtubule cytoskeleton organization (2 rows): UNDECIDED -> MARK_AS_OVER_ANNOTATED. Pielage 2008 maps MT binding/organisation to the Ank2-L extended C terminus [PMID:18439405 "The stabilizing functions of Ank2-L can be mapped to the extended C-terminal domain that we demonstrate can directly bind and organize synaptic microtubules."], which Q3KN55 lacks entirely.
+- GO:0005515 protein binding (Tramtrack, Y2H): KEEP_AS_NON_CORE -> REMOVE under the protein-binding policy (uninformative; interaction not disputed).
+- GO:1900074 negative regulation of neuromuscular synaptic transmission: UNDECIDED -> REMOVE. Full text [PMID:22153373 "Next, we confirmed that the loss of ank2 results in impaired average EPSP amplitudes"] shows loss of ank2 lowers transmission secondary to terminal degeneration, the opposite sign and an indirect effect; no positive-regulation replacement is proposed.
+- GO:0005886 plasma membrane (HDA): ACCEPT retained; the shared N-terminal ANK repeats are compatible with membrane association.
+- All other gene-level rows (NMJ development, NMJ, presynaptic membrane, periactive zone, terminal bouton, axon extension, neuron cellular homeostasis, memory, hearing, synaptic assembly): UNDECIDED retained for this product. Weber 2019 shows synaptic targeting of Ank2-L depends on central/C-terminal ARD subdomains [PMID:31475145 "We show that specific subdomains control synaptic but not axonal localization of Ank2-L."]; PE has only the N-terminal and part of the central repeats.
+- Added core_functions (plasma-membrane-associated short ankyrin-repeat product; no MF asserted), a BIOLOGY knowledge gap and a suggested experiment.
+
+### Relative to review next
+Same-gene canonical product M9MRX4 (Ank2 isoform U), no review in repo -> genes/DROME/Ank2__M9MRX4. That review is where the gene-level giant-isoform functions (microtubule organisation, presynaptic localisation, NMJ stability) should be accepted.
+
+### Modules
+No module in modules/ covers Ank2 or ankyrin-based synaptic scaffolds.

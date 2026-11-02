@@ -93,3 +93,23 @@ Current disposition: 52 ACCEPT, 32 KEEP_AS_NON_CORE, 17 MODIFY, 5 UNDECIDED, 4 M
 The undated opening sections record the initial review checkpoint. In particular, the paragraph under “Contextual and unresolved functions” that lists nine UNDECIDED source objects is historical, not the current disposition. At approved commit 4c4360695, the 115 assessments comprise 52 ACCEPT, 32 KEEP_AS_NON_CORE, 17 MODIFY, 5 UNDECIDED, 4 MARK_AS_OVER_ANNOTATED and 5 TOO_GENERAL. The five unresolved objects concern steroid catabolism (row 33), oxidative-stress intrinsic apoptosis (rows 53/54) and lipid catabolism (rows 58/59). The two NO-biosynthesis objects (rows 36/37) and two receptor/JAK–STAT objects (rows 92/93) are MARK_AS_OVER_ANNOTATED, with the positive surrounding biology retained. Row numbers here use the same zero-based convention as the preceding checkpoints.
 
 The preceding Follow-up 3 sentence about the “submitted PR body” referred only to that separate artifact, which reported seven UNDECIDED objects before that follow-up; it did not deny the historical nine-object paragraph in these notes. The PR body captured at 11:00 UTC on 2026-10-16 already reports the current five UNDECIDED and four MARK_AS_OVER_ANNOTATED objects. This appendix clarifies the checkpoints without revising prior notes, annotations or scientific conclusions.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 IBA (is_active_in, PTN001210461), IEA GO_REF:0000120 (Q64429 + SL-0173),
+ISS GO_REF:0000024 (Q64429; GOA has two ISS rows, dated 2014 and 2024, reviewed as one).
+No sub-compartment rows. All KEEP_AS_NON_CORE; kept, with dated reasons.
+
+- PAINT (interpro/panther/PTHR24289/PTHR24289-paint.tsv): PTN001210461 GO:0005739 IBD, taxon
+  6072, seeds MGI:MGI:88590 and RGD:2458. UniProt cross-reference lookup: MGI:88590 = mouse
+  Cyp1b1 (Q64429); RGD:2458 = rat Cyp1a1 (P00185). Both are direct mitochondrial cases.
+- PMID:23692925 (full text) addresses the ER/MAM confound: nonhepatic tissues, "Inclusion of
+  the microsomal marker POR and mitochondrial marker PHB", and mc1A1 mice whose ER-only CYP1A1
+  was absent from MT. Result: "inducible CYP1B1 protein (60,581 Da) was more abundant in ER
+  than MT in lung, spleen and uterus of TCDD-treated 1A1 KO, mt1A1, mc1A1, and WT mice";
+  absent in Cyp1b1 KO. Organelle claim supported (mouse, TCDD-inducible minor pool).
+- is_active_in (IBA row): not shown for CYP1B1 - the paper detects protein only;
+  mitochondrial monooxygenase activity (adrenodoxin-dependent) is a CYP1A1 finding. located_in
+  would match the evidence. Qualifier not changed.
+- Rule 4: stay at root; the inner-membrane location is known only for CYP1A1 (by analogy, one
+  line), and UniProt gives CYP1B1 as a peripheral ER-membrane protein.

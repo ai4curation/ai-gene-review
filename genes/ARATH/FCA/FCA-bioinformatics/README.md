@@ -1,0 +1,11 @@
+# FCA/FPA/FY PAINT node inspection, 2026-10-26
+
+The raw `IBD-target-nodes.gaf` is an exact streamed subset of https://data.pantherdb.org/ftp/downloads/paint/current/IBD.gaf (retrieved 2026-10-26), selected by the PTNs already present in the five target review payloads. It is not a reconstructed tree or a complete family slice. `fetch-node-slice.py` reproduces the subset using requests, available in the repository environment. A normal full-family fetch failed when disk filled; its incomplete leaf-download `.part` was removed. No family assignment or inferred ancestral placement has been invented.
+
+PTN000609546 carries the mRNA-binding, cytoplasm and nucleus IBD assertions used by Arabidopsis FCA; the nucleus seeds include AT4G16280 (FCA itself), which is legitimate descendant experimental grounding. Predominantly nuclear FCA imaging does not establish cytoplasm exclusion; the cytoplasm transfer remains unresolved for this target, not demonstrably a misplaced ancestral assertion.
+
+PTN002768817 carries RNP-complex IBD. The term GO:1990904 means a complex containing both RNA and protein (https://amigo.geneontology.org/amigo/term/GO:1990904, inspected 2026-10-26); it does not require PABP activity or constitutive CPSF membership. Native FCA-COOLAIR association in PMID:31032401 independently supports this broad claim, regardless of the poly(A)-binding experimental seeds.
+
+Rice FCA's spliceosome and spliceosomal-splicing IBDs are both at PTN000391532 (Eukaryota). These are real ancestral assertions, not pairwise donor transfers. Neither the retrieved IBD rows nor rice FCA interactions with SF1 establish a rice spliceosomal assembly/catalytic contribution. No target loss or incorrect tree placement was demonstrated either; both specific claims remain unresolved. Rice mRNA binding at PTN008729690 is compatible with its experimentally identified FCA architecture and RNA-processing partner interactions, and is retained as inherited biochemical capability, not a measured RNA specificity.
+
+PTN002509179 supplies FPA RNA-binding IBD ; no self-seed is asserted for FPA. PTN000519834 carries FY CPSF-complex IBD, independently corroborated by native Arabidopsis FY/CPSF purification (PMID:19439664).

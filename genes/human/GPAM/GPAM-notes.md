@@ -149,3 +149,36 @@ Research provenance: external Falcon/Edison was attempted with Perplexity fallba
 ## External report topology check
 
 The Falcon report repeats an integral two-transmembrane-helix GPAT1 model from older literature. The directly inspected human structural study PMID:36522428 explicitly states “GPAT1 has no transmembrane regions as previously proposed” and describes amphipathic membrane association. The review uses that primary structural result; the external report is preserved unchanged and is not counted as a second independent confirmation.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: full re-review of all 28 GOA rows, description and core functions for Q9HCL2. No ProtNLM2 output was consulted.
+
+### Identity
+- Q9HCL2 is the reviewed Swiss-Prot canonical product of human GPAM (828 aa, PE 1), not an isoform, fragment or alternative gene model. It has the full N-terminal membrane-association/targeting region (80-120), the HXXXXD catalytic motif (230-235) and the C-terminal GPAT_C domain (PF19277) [file:human/GPAM/GPAM-uniprot.txt].
+
+### Evolutionary grounding
+- PANTHER PTHR12563:SF16 ("GLYCEROL-3-PHOSPHATE ACYLTRANSFERASE 1, MITOCHONDRIAL"). Mouse Gpam Q61586 and rat Gpam P97564 are in the same subfamily (interpro/panther/PTHR12563/PTHR12563-entries.csv). GPAT2 (Q6NUI2) is in SF15, and the DHAPAT/GNPAT branches are in SF17/20/22/24/25.
+- PAINT node PTN000970957 (taxon Eumetazoa, the GPAT1+GPAT2 clade) carries IBDs for GO:0005739, GO:0004366, GO:0006650 and GO:0019432 (PTHR12563-paint.tsv). PAINT did not put the outer membrane at the node; the review refines to the outer membrane from GPAM-specific evidence.
+- The family review (interpro/panther/PTHR12563/PTHR12563-review.yaml) lists GPAM under SF16, which agrees with this review. One small defect: its SF16 `description` copies the family-level coherence text rather than describing SF16.
+
+### Literature added (cached via just fetch-pmid)
+- PMID:12417724 Hammond 2002: Gpam-/- mice have lower liver and plasma TAG and less sn-1 palmitate in PC/PE.
+- PMID:23908354 Wendel 2013: GPAT1, but not GPAT4, routes de novo fatty acids into TAG and away from oxidation.
+- PMID:17158253 Gonzalez-Baro 2007 and PMID:25415055 Yamashita 2014: reviews covering outer-membrane location, NEM resistance and the motifs.
+- PMC full-text fetches for PMID:18238778 (PMC2442282) and PMID:19075029 (PMC2666181) returned no body text, so both stay abstract-only. Their experimental rows are kept, deferring to the curators; UniProt cites both with ECO:0000269 for GPAM reactions, and Reactome R-HSA-75886 cites Chen 2008 for recombinant human GPAM.
+- The deep-research (falcon) report repeats the old two-TM topology. PMID:36522428 contradicts it ("GPAT1 has no transmembrane regions as previously proposed"), so the report is not used for topology.
+
+### Changes vs previous review
+- mitochondrion (IBA, HTP): KEEP_AS_NON_CORE -> MODIFY to GO:0005741, since a correct-but-general term gets MODIFY.
+- glycerophospholipid metabolic process (IBA), phospholipid biosynthetic process (IEA): ACCEPT -> MODIFY to GO:0006654.
+- lipid metabolic process (IEA): ACCEPT -> MODIFY to GO:0006654 + GO:0019432.
+- protein binding (HuRI, CIDEB): UNDECIDED -> REMOVE per the generic protein-binding policy. A CIDEB question was added.
+- CDP-diacylglycerol biosynthetic process, diacylglycerol biosynthetic process: ACCEPT -> KEEP_AS_NON_CORE (precise but peripheral branches).
+- phosphatidylglycerol biosynthetic process (IMP, PMID:19075029): UNDECIDED -> KEEP_AS_NON_CORE. The curated UniProt reaction RHEA:33203 (ECO:0000269) supports it; it is a side activity.
+- plasma membrane (InterPro IPR028354 PlsB mapping): REMOVE retained. This is a lineage-inappropriate electronic transfer from bacterial PlsB.
+- Core function now adds directly_involved_in GO:0006654 and GO:0019432. The description was rewritten to cover the structure-based membrane association and the knockout physiology.
+- No NEW terms. Fatty-acid-oxidation effects in knockouts are downstream partitioning phenotypes, not participation, so they are not annotated.
+
+### Relative for next review
+- Mouse Gpam (Q61586, MGI:109162) is the SF16 ortholog with knockout, hepatocyte and GO-CAM (63a86a8600001386, 6446bfcb00000006) evidence. It has no review in the repo.

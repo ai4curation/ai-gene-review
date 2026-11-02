@@ -427,3 +427,27 @@ The optional broad-location and self-association suggestions do not warrant acti
 All 17 original source assertions, three alternative products and the integrated core are preserved. The sole action change is the historical assay MODIFY to KEEP_AS_NON_CORE. All 11 required PMIDs and three Reactome records remain cached; the prior DOI-inclusive census and six explicitly unused raw-bibliography exclusions still apply. There are no new provider artifacts or source dependencies.
 
 Full targeted validation passed without curation warnings. All 35 case-sensitive, whitespace-normalized cached quotations and source-preservation checks passed. Independent review of every changed biological block and this notes addition concurred, including a separate check of the original indexed CACAO source. Status remains COMPLETE.
+
+## 2026-10-25 complete comparative arginase-route audit
+
+All 18 rows were reviewed, comprising 17 inherited GOA assertions and the one previously proposed NEW transporter-activator activity. No row is added, removed from the file or reseeded; every original non-review field remains unchanged. The previous detailed primary-source work is retained. This session changes the two broad mitochondrial localization decisions to MODIFY mitochondrial matrix, applying the current general-term policy. This supersedes historical task-specific permissions to keep the broad location, not the original HPA/proteomic observations. The independent human cloning source PMID:8621661 explicitly identifies a "mitochondrial matrix NAD(+)-dependent dehydrogenase"; that specificity does not imply that each original imaging assay had matrix resolution.
+
+### Chemistry and source scope
+
+The human cloning/complementation PMID:8621661 and direct recombinant human kinetics/structures PMID:22516612 establish NAD+-dependent glutamate-semialdehyde oxidation to glutamate. The latter says "it catalyzes the NAD+-dependent oxidation of L-glutamate-γ-semialdehyde (GSA) to L-glutamate". Its mouse ligand structures are distinguished from the human kinetic experiments; the native human dimer conclusion is supported by solution analysis, not simply by assuming all ALDH family proteins have identical assemblies. Hydroxyproline-pathway evidence in PMID:21998747 and the corresponding Reactome reaction is retained with the existing distinction between a pathway statement, mouse structural modeling and direct human substrate kinetics. The original PMID:4015840/CACAO broad aldehyde-dehydrogenase evidence remains KEEP_AS_NON_CORE: reported alternative-aldehyde activity cannot be erased by simply refining every aldehyde activity to GSA. The abstract's focus on other ALDH isoforms is not a basis for alleging a misattribution.
+
+The same GSA pool can come from proline oxidation or ornithine transamination. Consequently the arginine-catabolic module may connect OAT to ALDH4A1 through the shared substrate, but ALDH4A1 has no universal obligatory PRODH or OAT protein partner. This is a pathway input distinction, not a reason to manufacture another biological-process NEW term.
+
+### Previously proposed MPC activity retained
+
+The full PMID:40355545 was rechecked, particularly the interaction and reconstitution experiments. Purified MPC1/MPC2 transport is enhanced by ALDH4A1, including the catalytically inactive S352L variant. This supports the prior GO:0141109 proposal as accessory transport activation. It does not make ALDH4A1 a pyruvate-translocating channel, an obligatory third carrier subunit or a fixed native stoichiometric component. The interaction-defective deletion experiment is distinct from a complete purified-mutant catalytic characterization. The existing questions about native occupancy and normalization per active MPC remain appropriate. Independent MPC structures PMID:40044865, PMID:40101766 and PMID:40691140 do not by themselves falsify an accessory activator, and their scope was preserved.
+
+### Access and provenance
+
+Normal Falcon and fallback perplexity-lite attempts failed with authentication/credit errors (403 and 401); no new provider output was invented. Publication caching ran in parallel and existing genuine research was reused. All original publications, curated source notes, reference assessments, core functions and the prior NEW payload were preserved. Current focused strict plus term validation, record-section backfill, render and helper-generated history record document the update. No GOA file was used as biological evidence.
+
+## 2026-10-26 PR #5566 root-organelle follow-up
+
+The human P5CDH cloning study identifies a mitochondrial matrix enzyme (PMID:8621661), independently supporting the mitochondrial organelle claim. Retain that informative assertion alongside the matrix rows. The current root-organelle policy explicitly keeps the organelle; it does not replace it with the subcompartment or upgrade the resolution of the original HPA/proteomics assay. Existing matrix annotations and core functions are preserved.
+
+The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.

@@ -1,5 +1,7 @@
 # Horse benchmark review: pairs 11–20
 
+> **Working notes from the initial pass.** ProtNLM2 verdicts here predate the 2026-10-23 gene re-review and the 2026-10-24 rescoring; the current calls are in each gene's `*-protnlm-predictions-review.yaml` and are summarised in [horse40-review-findings.md](../horse40-review-findings.md).
+
 All ten selected horse targets have a paired human review, a human research file, an exact-sequence comparison, and claim-level ProtNLM assessment. Unresolved experimental-source details and consequential target-sequence gaps remain explicit uncertainties.
 
 | Pair | Human GOA rows reviewed | Horse GOA rows reviewed | Human research | ProtNLM output |

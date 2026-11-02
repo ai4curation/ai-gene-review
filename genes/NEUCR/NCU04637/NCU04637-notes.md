@@ -30,3 +30,45 @@ GOA refresh added no new rows and no existing rows vanished from the current sna
 judgments were re-audited against current curation rules and left unchanged. Added structured
 `propagation_review` blocks (with PANTHER PTN source entities) to the IBA rows reviewed as
 UNDECIDED/MODIFY, which previously lacked them.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 files were not opened or used. Falcon deep research was re-attempted
+(`just deep-research-falcon NEUCR NCU04637 --fallback perplexity-lite`) and failed again
+(falcon: "Failed to authenticate"; perplexity-lite: HTTP 401 insufficient quota). No provider
+report exists; review is based on cached literature, UniProt and PANTHER.
+
+Identity: Q7S3B9 is the full-length 467-aa product (sequence version 2; BAR 17-269,
+disordered P/A-rich linker 281-400, SH3 407-467). Not a fragment, isoform or alternative model;
+architecture matches yeast RVS167 (482 aa).
+
+Phylogenetic placement: PTHR47174 has three N. crassa members: NCU04637 (SF1, Rvs167
+subfamily, with S. cerevisiae RVS167 P39743, C. albicans RVS167 Q59LF3 and S. pombe hob1 O74352),
+amph-1/NCU01069 (SF3, BIN3/Rvs161 subfamily) and NCU01883 (SF2). Closest characterised
+relative by subfamily: S. cerevisiae RVS167 (P39743). Note that pombe Hob1 (same SF1) is
+dispensable for endocytosis (InterPro IPR046982 text), a lineage-specific divergence.
+
+New in-species evidence: PMID:22646057 (abstract only) - N. crassa rvs-161 and rvs-167 deletion
+mutants show reduced endocytic PAF26 internalization [PMID:22646057 "Deletion mutants of the
+endocytic proteins RVS-161, RVS-167 and RAB-5 exhibited reduced rates of PAF26 internalization and
+fungicidal activity."]. NCU04637 is the only SF1 protein, so this RVS-167 is presumably NCU04637.
+Also cached PMID:22082017 (yeast Rvs167 SH3 binds Vps1; heterodimer disassembles Vps1 oligomers).
+
+Changes vs previous review:
+- cytoplasm (IEA) ACCEPT -> MODIFY to actin cortical patch (GO:0030479 is a part_of descendant).
+- actin cytoskeleton (IBA) ACCEPT -> MODIFY to actin cortical patch (is_a descendant).
+- medial cortex (IBA) UNDECIDED -> MARK_AS_OVER_ANNOTATED: term defines a pombe nucleus-overlying
+  band for contractile ring positioning; donors only pombe hob1/hob3; no counterpart in
+  multinucleate hyphae.
+- mating projection tip (IBA) UNDECIDED -> MARK_AS_OVER_ANNOTATED: defined for unicellular fungi.
+- actin cortical patch localization (IEA) ACCEPT -> MARK_AS_OVER_ANNOTATED: evidence is a
+  mutant patch-polarization phenotype (Candida), i.e. necessity, not participation.
+- plasma membrane tubulation (IBA) ACCEPT -> KEEP_AS_NON_CORE (in vitro tubulation; in vivo role
+  is invagination-neck stabilisation/scission).
+- endocytosis, lipid binding (contributes_to), actin cortical patch, Rvs161p-Rvs167p complex: ACCEPT,
+  now with Neurospora deletion evidence and amph-1 as the predicted heterodimer partner.
+- Core function now uses contributes_to_molecular_function lipid binding, location actin cortical
+  patch, in_complex GO:1990528. Description rewritten.
+
+Modules: no fungal endocytosis module exists; modules/synaptic_vesicle_endocytosis.yaml mentions
+amphiphysin but is a metazoan neuronal module, not applicable.

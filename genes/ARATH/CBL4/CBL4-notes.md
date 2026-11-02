@@ -85,3 +85,7 @@ directly from the cached publications (`publications/PMID_*.md`) and the UniProt
 
 - Does CBL4 have a physiologically relevant role with CIPKs other than CIPK24 and CIPK6?
 - How does the Ca2+ signature in the root "sodium-sensing niche" map onto CBL4 vs CBL8 activation?
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+Source defects recorded for the TAIR rows already reviewed here: GO:0042539 hypotonic salinity response (IMP, PMID:9405721) should be GO:0042538 hyperosmotic salinity response [PMID:9405721 "which is hypersensitive to Na+ and Li+ stresses"]; the ISS calcineurin phosphatase activity (GO:0004723) and calcineurin complex (GO:0005955) rows from PMID:9632394 should be withdrawn.

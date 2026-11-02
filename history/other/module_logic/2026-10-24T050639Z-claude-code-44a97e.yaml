@@ -1,0 +1,33 @@
+history_version: 1
+target:
+  kind: other
+  slug: module_logic
+  path: src/ai_gene_review/module_logic.py
+session:
+  id: 2026-10-24T050639Z-claude-code-44a97e
+  timestamp: '2026-10-24T05:06:39Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/5333
+  urls: []
+events:
+- type: REVIEW
+  outcome: changed
+  summary: Cover every participant entity slot in the grounding guard
+  details: |
+    Fourth round on PR 5333. The review bot approved 2dc9bbdc7 and withdrew its earlier ortholog_of suggestion, accepting that grounding on the reference accession would assert the wrong gene's presence (a wrong answer rather than a missing one), unlike gene_product on an ANY_WITH_FUNCTION step where required_function gives an activity oracle a route independent of the exemplar. Four non-blocking points remained, all in the new test code; two were holes in the guard rather than polish, so all four were taken.
+
+    family sat in neither slot tuple although _atom_from_annoton does read family.representative_members, so a dropped family grounding would have passed the guard built to catch dropped groundings. Enumerating ParticipantSelector from the schema showed domain was unclassified too, so the point generalised: both tuples now cover all seven entity-grounding slots, meaning the Descriptor-ranged attributes that name what plays the role, as against required_function, required_domain and taxon, which constrain it.
+
+    UNREAD_GROUNDING_SLOTS and the 'family' literal were collected into the slot map and never consulted, since only the READ intersection was used; the constants were decorative and the test default-deny. test_every_participant_slot_is_classified_read_or_unread now reads the schema and fails when a slot is added and left unclassified. Verified by removing 'domain' from the tuple, which fails with "unclassified: ['domain']". That closes the recurrence path: a future paralog_of breaks a test instead of going silent, as gene_product did.
+
+    The invariant could not distinguish a dropped grounding (engine defect, which its message asserts) from a descriptor too ambiguous to ground (curation defect); a non-symbol-first gene_product with no accession would have been misreported as the former, and both populations exist in the corpus. The check now gates on whether the descriptor yields a symbol or a UniProt accession, via descriptor_symbol for the direct slots and over representative_members for family.
+
+    Grounding slots now come from their own session fixture, so the corpus is not re-parsed by the test the first fixture was added to speed up.
+
+    Verified both guards still fire: reverting the gene_product grounding fails the dropped-grounding test naming "carries ['gene_product']". Corpus counts are unchanged at 354 ungrounded atoms and 127 of 698 modules unsatisfiable in every context, as expected, since reclassifying family and domain changes the guard's coverage rather than any grounding. 46 tests pass in test_module_logic.

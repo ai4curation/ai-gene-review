@@ -1,0 +1,3222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gtp-14 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --color-too-general: #14b8a6;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .action-too_general {
+            background-color: var(--color-too-general);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gtp-14</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9C2L8" target="_blank" class="term-link">
+                        Q9C2L8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Neurospora crassa OR74A</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gtp-14";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">10</span> Annotations</a>
+
+
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">7</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9C2L8" data-a="DESCRIPTION: Neurospora crassa gtp-14 encodes the Rab7/Ypt7-fam..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Neurospora crassa gtp-14 encodes the Rab7/Ypt7-family small GTPase RAB-7. RAB-7 is a prenylated GTP/GDP molecular switch that localizes to late-endosomal prevacuolar compartments and fungal-type vacuolar membranes, where the conserved fungal Rab7/Ypt7 switch supports vacuole fusion and endovacuolar trafficking.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000329" target="_blank" class="term-link">
+                                    GO:0000329
+                                </a>
+                            </span>
+                            <span class="term-label">fungal-type vacuole membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0000329" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PTN001178553 places fungal-type vacuole membrane on the fungal Rab7/Ypt7 node, which contains N. crassa RAB-7 with budding- and fission-yeast Ypt7 proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accept. This IBA follows a curated fungal PAINT node rather than a pairwise transfer. N. crassa RAB-7 is a PTHR47981:SF20 Ras-related protein Rab-7A member, and tagged N. crassa RAB-7 localizes to VMA-1-positive prevacuolar compartments and carbon-starvation-induced tonoplasts/vacuolar membranes.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001178553</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Fungal Rab7/Ypt7 PAINT node seeded by S. cerevisiae and S. pombe Ypt7 proteins; N. crassa RAB-7 is in the same fungal PTHR47981:SF20 branch and has direct PVC/vacuolar-membrane localization evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR47981	PTN001178553	GO:0000329	C	IBD	false	PomBase:SPAPB1A10.10c|PomBase:SPBC405.04c|SGD:S000004460	taxon:4751	20260128</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26453652" target="_blank" class="term-link">
+                                        PMID:26453652
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The fluorescence from RAB-7-dsRED almost completely overlapped the fluorescence from VMA-1-GFP</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37847028" target="_blank" class="term-link">
+                                        PMID:37847028
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">appears concentrated in tonoplasts/vacuolar membranes (panel g), but clearly is not in the vacuolar bulk.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0003924" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RAB-7 has the conserved Rab small-GTPase fold and switch motifs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accept. The InterPro small-GTPase row is generic but biologically correct for this Rab7/Ypt7-family protein; the same UniProt record also carries the Rab-specific PROSITE signature and conserved GTP-binding residues.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR001806; Small_GTPase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">MOTIF           37..45 FT                   /note=&#34;Effector region&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0005525" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTP binding is the nucleotide-binding facet of the conserved RAB-7 molecular switch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accept. N. crassa RAB-7 is a canonical Rab GTPase with an InterPro small-GTP-binding domain and multiple conserved GTP-binding features in UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR005225; Small_GTP-bd.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">BINDING         17..23
+FT                   /ligand=&#34;GTP&#34;
+FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+FT   BINDING         33..40
+FT                   /ligand=&#34;GTP&#34;
+FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+FT   BINDING         66
+FT                   /ligand=&#34;GTP&#34;
+FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+FT   BINDING         125..128
+FT                   /ligand=&#34;GTP&#34;
+FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+FT   BINDING         157..159
+FT                   /ligand=&#34;GTP&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005770" target="_blank" class="term-link">
+                                    GO:0005770
+                                </a>
+                            </span>
+                            <span class="term-label">late endosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0005770" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad Rab7 PAINT late-endosome placement is consistent with direct N. crassa imaging of RAB-7 on the late-endosome-like prevacuolar compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accept. PTN000635769 marks a conserved Rab7 branch for late-endosomal localization, and the fungal Rab7/Ypt7 node does not prune this assertion. N. crassa RAB-7 directly labels hyphal-tip prevacuolar compartments whose protein composition and 2023 super-resolution morphology support a late endosome/multivesicular body identity.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000635769</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Rab7 late-endosome PAINT node that includes fungal Ypt7 seed support; the more specific fungal PTN001178553 node prunes lysosome and phagosome-lysosome terms but leaves this late-endosomal localization intact.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR47981	PTN000635769	GO:0005770	C	IBD	false	FB:FBgn0015795|FB:FBgn0032782|MGI:MGI:105068|MGI:MGI:2442295|RGD:61908|RGD:619740|SGD:S000004460|UniProtKB:P51149|UniProtKB:P51151|UniProtKB:Q96AH8|WB:WBGene00004271|ZFIN:ZDB-GENE-040426-1352	taxon:	20260828</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26453652" target="_blank" class="term-link">
+                                        PMID:26453652
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RAB-2, RAB-4, and RAB-7, localized to the PVCs.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37093794" target="_blank" class="term-link">
+                                        PMID:37093794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These data suggest that the PVC is the late endosome in hyphal tips.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-toogeneral">
+                            TOO GENERAL
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0005773" data-r="GO_REF:0000033" data-act="TOO_GENERAL">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PAINT vacuole row is directionally correct but less specific than the accepted active localization to the fungal-type vacuole membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mark too general. RAB-7 localizes to vacuolar/PVC membranes, but the more precise active site for this fungal Rab7 is the fungal-type vacuole membrane, already asserted by the fungal PTN001178553 PAINT node and supported directly by N. crassa imaging.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001178553</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The fungal node is valid for N. crassa, but its fungal-type vacuole membrane assertion is the better-scoped location.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000329" target="_blank" class="term-link">
+                                    fungal-type vacuole membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR47981	PTN001178553	GO:0000329	C	IBD	false	PomBase:SPAPB1A10.10c|PomBase:SPBC405.04c|SGD:S000004460	taxon:4751	20260128</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-toogeneral">
+                            TOO GENERAL
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0005773" data-r="GO_REF:0000117" data-act="TOO_GENERAL">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ARBA vacuole row is correct only at the compartment level and should be narrowed to the membrane of the fungal vacuole where RAB-7 is active.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mark too general. ARBA assigns the parent vacuole compartment, whereas the direct N. crassa imaging places RAB-7 on prevacuolar and vacuolar membranes and PAINT already supplies the fungal-specific membrane descendant.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000329" target="_blank" class="term-link">
+                                    fungal-type vacuole membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26453652" target="_blank" class="term-link">
+                                        PMID:26453652
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The fluorescence from RAB-7-dsRED almost completely overlapped the fluorescence from VMA-1-GFP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The UniProtKB-SubCell plasma-membrane mapping is not supported by direct N. crassa RAB-7 localization or by fungal Rab7 PAINT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Remove. Q9C2L8 is a reviewed Swiss-Prot entry, but its Cell membrane; Lipid-anchor; Cytoplasmic side source statement is generic Rab prenylation boilerplate and the UniProtKB-SubCell SL-0039 to GO:0005886 mapping over-reads that lipid-anchored-membrane assertion as plasma membrane. Direct N. crassa imaging instead places RAB-7 on late-endosomal prevacuolar compartments and tonoplasts/vacuolar membranes; current Rab-family PAINT places this fungal branch at the late endosome and fungal vacuole membrane, not the plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane {ECO:0000305}; Lipid-anchor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26453652" target="_blank" class="term-link">
+                                        PMID:26453652
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The fluorescence from RAB-7-dsRED almost completely overlapped the fluorescence from VMA-1-GFP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032889" target="_blank" class="term-link">
+                                    GO:0032889
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of vacuole fusion, non-autophagic</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0032889" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PTN001178553 places the inherited Ypt7/Rab7 regulation of homotypic vacuole fusion at the fungal Rab7 node.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accept. The IBA follows a fungal PAINT node seeded by S. cerevisiae and S. pombe Ypt7 proteins. N. crassa RAB-7 remains in the same Rab7/Ypt7 subfamily, and direct N. crassa imaging places the protein on the PVC/vacuolar membranes on which the fungal Rab7 switch is expected to recruit tethering and fusion effectors.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001178553</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Fungal Rab7/Ypt7 PAINT node seeded by budding- and fission-yeast experimental Ypt7 annotations; there is no evidence that the N. crassa ortholog has lost the inherited non-autophagic vacuole-fusion role.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR47981	PTN001178553	GO:0032889	P	IBD	false	PomBase:SPAPB1A10.10c|PomBase:SPBC405.04c|SGD:S000004460	taxon:4751	20181128</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003925" target="_blank" class="term-link">
+                                    GO:0003925
+                                </a>
+                            </span>
+                            <span class="term-label">G protein activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0003925" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PTN001939797 places G protein activity on the eukaryotic Rab7 ancestor, matching the conserved switch function of N. crassa RAB-7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Add GO:0003925 G protein activity. GO:0003924 and GO:0005525 capture the catalytic and ligand-binding facets, but Rab7/Ypt7 proteins execute their membrane-fusion roles as GTP/GDP molecular switches that bind effectors in the active state. N. crassa RAB-7 is retained within the PAINT Rab7 clade and has all of the expected Rab GTP-binding features.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001939797</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Eukaryotic Rab7-family PAINT node seeded by small-G-protein experimental annotations; N. crassa RAB-7 has no evidence of molecular-switch divergence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR47981	PTN001939797	GO:0003925	F	IBD	false	MGI:MGI:105068|UniProtKB:P51149|UniProtKB:P51151|UniProtKB:Q96AH8|UniProtKB:Q9NP90	taxon:2759	20260724</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Ypt/Rab-type GTPases are key regulators of membrane
+CC       trafficking and intracellular vesicular transport. They act as
+CC       molecular switches that convert between GTP-bound and GDP-bound states,
+CC       and regulate virtually all steps of membrane traffic from the formation
+CC       of the transport vesicle at the donor membrane to its fusion at the
+CC       target membrane. In the GDP-bound state, Ypt proteins are predominantly
+CC       cytosolic, solubilized through the interaction with a GDP dissociation
+CC       inhibitor (GDI). In the GTP-bound state, the proteins are membrane
+CC       bound and interact with specific effector proteins that select cargo,
+CC       promote vesicle movement, or verify the correct site of fusion.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ACTIVITY REGULATION: Alternates between an inactive form bound to GDP CC       and an active form bound to GTP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042144" target="_blank" class="term-link">
+                                    GO:0042144
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole fusion, non-autophagic</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9C2L8" data-a="GO:0042144" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The 2026 PTN001178553 PAINT curation places non-autophagic vacuole fusion on the same fungal Rab7/Ypt7 node that contains N. crassa RAB-7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Add GO:0042144 vacuole fusion, non-autophagic. This current PAINT assertion is more direct than the existing regulatory parent row and is placed on the fungal Rab7/Ypt7 node from fission-yeast and A. nidulans experimental seeds. The assignment is consistent with N. crassa RAB-7 localization to PVC/vacuolar membranes and with its placement in PTHR47981:SF20.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001178553</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Fungal Rab7/Ypt7 PAINT node seeded by direct S. pombe ypt7 and A. nidulans avaA experimental annotations; N. crassa gtp-14 is in the same Rab7/Ypt7 branch.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR47981	PTN001178553	GO:0042144	P	IBD	false	PomBase:SPBC405.04c|UniProtKB:C8VQY7	taxon:4751	20260724</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RAB-7 acts as the Rab7-family GTP/GDP molecular switch on late-endosomal prevacuolar and fungal-type vacuole membranes, where it is inferred from the fungal PAINT Rab7/Ypt7 node to regulate non-autophagic vacuole fusion.</h3>
+                <span class="vote-buttons" data-g="Q9C2L8" data-a="FUNCTION: RAB-7 acts as the Rab7-family GTP/GDP molecular sw..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003925" target="_blank" class="term-link">
+                            G protein activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042144" target="_blank" class="term-link">
+                                vacuole fusion, non-autophagic
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005770" target="_blank" class="term-link">
+                                late endosome
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000329" target="_blank" class="term-link">
+                                fungal-type vacuole membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+
+                        </span>
+
+                        <div class="finding-text">PTHR47981	PTN001178553	GO:0042144	P	IBD	false	PomBase:SPBC405.04c|UniProtKB:C8VQY7	taxon:4751	20260724</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:NEUCR/gtp-14/gtp-14-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">ACTIVITY REGULATION: Alternates between an inactive form bound to GDP CC       and an active form bound to GTP.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26453652" target="_blank" class="term-link">
+                                PMID:26453652
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The fluorescence from RAB-7-dsRED almost completely overlapped the fluorescence from VMA-1-GFP</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26453652" target="_blank" class="term-link">
+                            PMID:26453652
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of a Novel Prevacuolar Compartment in Neurospora crassa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Tagged N. crassa RAB-7 localizes to prevacuolar compartments and overlaps strongly with the vacuolar ATPase subunit VMA-1.</div>
+
+                        <div class="finding-text">"The fluorescence from RAB-7-dsRED almost completely overlapped the fluorescence from VMA-1-GFP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37093794" target="_blank" class="term-link">
+                            PMID:37093794
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The structure of prevacuolar compartments in Neurospora crassa as observed with super-resolution microscopy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Super-resolution imaging confirmed that RAB-7 labels the dynamic N. crassa PVC, a compartment the paper interprets as the late endosome in hyphal tips.</div>
+
+                        <div class="finding-text">"Using the rab-7 GTPase as a marker, I observed the distribution of PVCs in the hyphal tip in a restricted region of the first hyphal compartment, starting ~25 microns from the tip and ending where the tubular vacuolar network begins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37847028" target="_blank" class="term-link">
+                            PMID:37847028
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Morphodynamics of non-canonical autophagic structures in Neurospora crassa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Under carbon starvation, mCherry-RAB7 in N. crassa concentrates on tonoplasts/vacuolar membranes rather than in the vacuolar bulk.</div>
+
+                        <div class="finding-text">"appears concentrated in tonoplasts/vacuolar membranes (panel g), but clearly is not in the vacuolar bulk."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gtp-14-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9C2L8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="neucrgtp-14-manual-review-notes">NEUCR/gtp-14 manual review notes</h1>
+<h2 id="scope-and-source-availability">Scope and source availability</h2>
+<p>Provider deep research was unavailable in this sparse worktree because the<br />
+configured deep-research providers require credentials that were not present. I<br />
+used the seeded GOA review, the cached UniProt flat file, the cached PTHR47981<br />
+PAINT rows, the full-text cached Bowman et al. 2015 PVC paper, the full-text<br />
+cached Bowman 2023 PVC super-resolution paper, and the full-text cached Rivetta<br />
+et al. 2023 non-canonical autophagy paper.</p>
+<h2 id="pantheriba-assessment">PANTHER/IBA assessment</h2>
+<p>PTHR47981 is the Rab-family PAINT tree. N. crassa RAB-7 (<code>Q9C2L8</code>, <code>gtp-14</code>,<br />
+<code>NCU03711</code>) is in <code>PTHR47981:SF20</code>, <code>RAS-RELATED PROTEIN RAB-7A</code>, together with<br />
+S. cerevisiae YPT7, S. pombe ypt7, A. nidulans AvaA/RabS, and other fungal<br />
+Rab7/Ypt7 orthologs.</p>
+<p>The important fungal node is <code>PTN001178553</code>. It places fungal-type vacuole<br />
+membrane, regulation of non-autophagic vacuole fusion, and non-autophagic<br />
+vacuole fusion on the fungal Rab7/Ypt7 branch, while explicitly pruning the<br />
+broad lysosome and phagosome-lysosome rows inherited from a broad Rab7 node.<br />
+The node placement is therefore the point to review, and N. crassa RAB-7 is a<br />
+normal fungal descendant of that branch. The fungal-type vacuole membrane and<br />
+non-autophagic fusion rows are sound IBA transfers rather than similarity-only<br />
+or wrong-paralog calls.</p>
+<p>The broad Rab7 node <code>PTN000635769</code> places <code>GO:0005770 late endosome</code> from<br />
+fungal and animal Rab7/Ypt7/Rab9 seeds. That row is broad but appropriate here:<br />
+the fungal <code>PTN001178553</code> node leaves the late-endosome assertion intact, and<br />
+the N. crassa PVCs labelled by RAB-7 are interpreted as late<br />
+endosome/multivesicular body-like compartments.</p>
+<p>The generic <code>GO:0005773 vacuole</code> rows are directionally correct but parent-level<br />
+relative to <code>GO:0000329 fungal-type vacuole membrane</code>. I treated both the PAINT<br />
+and ARBA rows as too general and pointed them at the fungal membrane term.</p>
+<p>The <code>GO:0005886 plasma membrane</code> IEA comes from UniProtKB-SubCell on a<br />
+homology-based, low-specificity <code>Cell membrane</code> comment. The direct N. crassa<br />
+papers localize RAB-7 to prevacuolar, late-endosomal, and vacuolar membranes,<br />
+and the PAINT tree has no plasma-membrane assertion for the fungal Rab7/Ypt7<br />
+branch, so I removed that row.</p>
+<h2 id="cached-publication-findings">Cached publication findings</h2>
+<p>Bowman et al. 2015 is the direct confocal paper that identified large<br />
+hyphal-tip prevacuolar compartments in N. crassa and localized RAB-7 to those<br />
+PVCs together with the vacuolar ATPase subunit VMA-1<br />
+[PMID:26453652, "The fluorescence from RAB-7-dsRED almost completely overlapped<br />
+the fluorescence from VMA-1-GFP"].</p>
+<p>Bowman 2023 revisited the same PVCs with super-resolution microscopy, using<br />
+RAB-7-RFP and RAB-7-GFP as PVC markers. The paper supports the interpretation<br />
+that N. crassa PVCs are unusual hyphal-tip late endosomes/multivesicular bodies<br />
+[PMID:37093794, "These data suggest that the PVC is the late endosome in hyphal<br />
+tips."].</p>
+<p>Rivetta et al. 2023 studied carbon-starvation-induced vacuoles and<br />
+non-canonical autophagic structures in N. crassa. mCherry-RAB7 was used as a<br />
+late endosome/vacuolar-membrane marker and concentrated on tonoplasts rather<br />
+than vacuolar bulk during starvation, but the paper did not perturb gtp-14<br />
+itself [PMID:37847028, "appears concentrated in tonoplasts/vacuolar membranes<br />
+(panel g), but clearly is not in the vacuolar bulk."].</p>
+<h2 id="2024-2026-literature-search">2024-2026 literature search</h2>
+<p>I searched PubMed and Europe PMC for direct or newer N. crassa gtp-14/RAB-7<br />
+papers with <code>gtp-14</code>, <code>NCU03711</code>, <code>Q9C2L8</code>, <code>Rab7</code>, and <code>RAB-7</code> queries. PubMed<br />
+only found the 2015 RAB-7/PVC paper by title or abstract, and the recent Europe<br />
+PMC hits were the 2023 N. crassa PVC/autophagy papers, non-Neurospora papers, or<br />
+papers about other Neurospora G proteins. I did not find a direct N. crassa<br />
+gtp-14 deletion, nucleotide-cycle, or vacuole-fusion assay newer than the cached<br />
+localization literature.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9C2L8
+gene_symbol: gtp-14
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:367110
+  label: Neurospora crassa OR74A
+description: &gt;-
+  Neurospora crassa gtp-14 encodes the Rab7/Ypt7-family small GTPase RAB-7.
+  RAB-7 is a prenylated GTP/GDP molecular switch that localizes to
+  late-endosomal prevacuolar compartments and fungal-type vacuolar membranes,
+  where the conserved fungal Rab7/Ypt7 switch supports vacuole fusion and
+  endovacuolar trafficking.
+existing_annotations:
+- term:
+    id: GO:0000329
+    label: fungal-type vacuole membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN001178553
+  - PomBase:SPAPB1A10.10c
+  - PomBase:SPBC405.04c
+  - SGD:S000004460
+  review:
+    summary: &gt;-
+      PTN001178553 places fungal-type vacuole membrane on the fungal Rab7/Ypt7
+      node, which contains N. crassa RAB-7 with budding- and fission-yeast Ypt7
+      proteins.
+    action: ACCEPT
+    reason: &gt;-
+      Accept. This IBA follows a curated fungal PAINT node rather than a
+      pairwise transfer. N. crassa RAB-7 is a PTHR47981:SF20 Ras-related
+      protein Rab-7A member, and tagged N. crassa RAB-7 localizes to
+      VMA-1-positive prevacuolar compartments and carbon-starvation-induced
+      tonoplasts/vacuolar membranes.
+    additional_reference_ids:
+    - PMID:26453652
+    - PMID:37847028
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+      supporting_text: &#34;PTHR47981\tPTN001178553\tGO:0000329\tC\tIBD\tfalse\tPomBase:SPAPB1A10.10c|PomBase:SPBC405.04c|SGD:S000004460\ttaxon:4751\t20260128&#34;
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: PMID:26453652
+      supporting_text: &gt;-
+        The fluorescence from RAB-7-dsRED almost completely overlapped the
+        fluorescence from VMA-1-GFP
+      reference_section_type: RESULTS
+    - reference_id: PMID:37847028
+      supporting_text: &gt;-
+        appears concentrated in tonoplasts/vacuolar membranes (panel g), but
+        clearly is not in the vacuolar bulk.
+      reference_section_type: RESULTS
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN001178553
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Fungal Rab7/Ypt7 PAINT node seeded by S. cerevisiae and S. pombe Ypt7
+          proteins; N. crassa RAB-7 is in the same fungal PTHR47981:SF20 branch
+          and has direct PVC/vacuolar-membrane localization evidence.
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001806
+  review:
+    summary: &gt;-
+      RAB-7 has the conserved Rab small-GTPase fold and switch motifs.
+    action: ACCEPT
+    reason: &gt;-
+      Accept. The InterPro small-GTPase row is generic but biologically correct
+      for this Rab7/Ypt7-family protein; the same UniProt record also carries
+      the Rab-specific PROSITE signature and conserved GTP-binding residues.
+    supported_by:
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      record_section: [&#34;DR:InterPro&#34;]
+      supporting_text: InterPro; IPR001806; Small_GTPase.
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      supporting_text: &gt;-
+        MOTIF           37..45
+        FT                   /note=&#34;Effector region&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001806
+  - InterPro:IPR005225
+  review:
+    summary: &gt;-
+      GTP binding is the nucleotide-binding facet of the conserved RAB-7
+      molecular switch.
+    action: ACCEPT
+    reason: &gt;-
+      Accept. N. crassa RAB-7 is a canonical Rab GTPase with an InterPro
+      small-GTP-binding domain and multiple conserved GTP-binding features in
+      UniProt.
+    supported_by:
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      record_section: [&#34;DR:InterPro&#34;]
+      supporting_text: InterPro; IPR005225; Small_GTP-bd.
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      supporting_text: |-
+        BINDING         17..23
+        FT                   /ligand=&#34;GTP&#34;
+        FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+        FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+        FT   BINDING         33..40
+        FT                   /ligand=&#34;GTP&#34;
+        FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+        FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+        FT   BINDING         66
+        FT                   /ligand=&#34;GTP&#34;
+        FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+        FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+        FT   BINDING         125..128
+        FT                   /ligand=&#34;GTP&#34;
+        FT                   /ligand_id=&#34;ChEBI:CHEBI:37565&#34;
+        FT                   /evidence=&#34;ECO:0000250|UniProtKB:P32939&#34;
+        FT   BINDING         157..159
+        FT                   /ligand=&#34;GTP&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005770
+    label: late endosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - FB:FBgn0015795
+  - FB:FBgn0032782
+  - MGI:MGI:105068
+  - MGI:MGI:2442295
+  - PANTHER:PTN000635769
+  - RGD:61908
+  - RGD:619740
+  - SGD:S000004460
+  - UniProtKB:P51149
+  - UniProtKB:P51151
+  - UniProtKB:Q6PA99
+  - UniProtKB:Q96AH8
+  - WB:WBGene00004271
+  - ZFIN:ZDB-GENE-040426-1352
+  review:
+    summary: &gt;-
+      The broad Rab7 PAINT late-endosome placement is consistent with direct
+      N. crassa imaging of RAB-7 on the late-endosome-like prevacuolar
+      compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Accept. PTN000635769 marks a conserved Rab7 branch for late-endosomal
+      localization, and the fungal Rab7/Ypt7 node does not prune this
+      assertion. N. crassa RAB-7 directly labels hyphal-tip prevacuolar
+      compartments whose protein composition and 2023 super-resolution
+      morphology support a late endosome/multivesicular body identity.
+    additional_reference_ids:
+    - PMID:26453652
+    - PMID:37093794
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+      supporting_text: &#34;PTHR47981\tPTN000635769\tGO:0005770\tC\tIBD\tfalse\tFB:FBgn0015795|FB:FBgn0032782|MGI:MGI:105068|MGI:MGI:2442295|RGD:61908|RGD:619740|SGD:S000004460|UniProtKB:P51149|UniProtKB:P51151|UniProtKB:Q96AH8|WB:WBGene00004271|ZFIN:ZDB-GENE-040426-1352\ttaxon:\t20260828&#34;
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: PMID:26453652
+      supporting_text: RAB-2, RAB-4, and RAB-7, localized to the PVCs.
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:37093794
+      supporting_text: These data suggest that the PVC is the late endosome in hyphal tips.
+      reference_section_type: DISCUSSION
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN000635769
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Rab7 late-endosome PAINT node that includes fungal Ypt7 seed support;
+          the more specific fungal PTN001178553 node prunes lysosome and
+          phagosome-lysosome terms but leaves this late-endosomal localization
+          intact.
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000635769
+  - PANTHER:PTN001178553
+  review:
+    summary: &gt;-
+      The PAINT vacuole row is directionally correct but less specific than the
+      accepted active localization to the fungal-type vacuole membrane.
+    action: TOO_GENERAL
+    reason: &gt;-
+      Mark too general. RAB-7 localizes to vacuolar/PVC membranes, but the more
+      precise active site for this fungal Rab7 is the fungal-type vacuole
+      membrane, already asserted by the fungal PTN001178553 PAINT node and
+      supported directly by N. crassa imaging.
+    proposed_replacement_terms:
+    - id: GO:0000329
+      label: fungal-type vacuole membrane
+    additional_reference_ids:
+    - PMID:26453652
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+      supporting_text: &#34;PTHR47981\tPTN001178553\tGO:0000329\tC\tIBD\tfalse\tPomBase:SPAPB1A10.10c|PomBase:SPBC405.04c|SGD:S000004460\ttaxon:4751\t20260128&#34;
+      reference_section_type: DATABASE_ENTRY
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      source_entities:
+      - source_id: PANTHER:PTN001178553
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The fungal node is valid for N. crassa, but its fungal-type vacuole
+          membrane assertion is the better-scoped location.
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  supporting_entities:
+  - ARBA:ARBA00028576
+  review:
+    summary: &gt;-
+      The ARBA vacuole row is correct only at the compartment level and should
+      be narrowed to the membrane of the fungal vacuole where RAB-7 is active.
+    action: TOO_GENERAL
+    reason: &gt;-
+      Mark too general. ARBA assigns the parent vacuole compartment, whereas
+      the direct N. crassa imaging places RAB-7 on prevacuolar and vacuolar
+      membranes and PAINT already supplies the fungal-specific membrane
+      descendant.
+    proposed_replacement_terms:
+    - id: GO:0000329
+      label: fungal-type vacuole membrane
+    additional_reference_ids:
+    - PMID:26453652
+    supported_by:
+    - reference_id: PMID:26453652
+      supporting_text: &gt;-
+        The fluorescence from RAB-7-dsRED almost completely overlapped the
+        fluorescence from VMA-1-GFP
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0039
+  review:
+    summary: &gt;-
+      The UniProtKB-SubCell plasma-membrane mapping is not supported by direct
+      N. crassa RAB-7 localization or by fungal Rab7 PAINT.
+    action: REMOVE
+    reason: &gt;-
+      Remove. Q9C2L8 is a reviewed Swiss-Prot entry, but its Cell membrane;
+      Lipid-anchor; Cytoplasmic side source statement is generic Rab prenylation
+      boilerplate and the UniProtKB-SubCell SL-0039 to GO:0005886 mapping
+      over-reads that lipid-anchored-membrane assertion as plasma membrane.
+      Direct N. crassa imaging instead places RAB-7 on late-endosomal
+      prevacuolar compartments and tonoplasts/vacuolar membranes; current
+      Rab-family PAINT places this fungal branch at the late endosome and
+      fungal vacuole membrane, not the plasma membrane.
+    source_defects:
+    - defect_type: WRONG_TERM
+      resource: UNIPROT
+      record: UniProtKB:Q9C2L8
+      slot: SUBCELLULAR LOCATION
+      requested_change: DELETE_VALUE
+      asserted_value: Cell membrane
+      cause: OTHER
+      confidence: PROBABLE
+      explanation: &gt;-
+        Q9C2L8&#39;s &#34;Cell membrane; Lipid-anchor; Cytoplasmic side&#34; statement is
+        generic Rab prenylation boilerplate and is being mapped by
+        UniProtKB-SubCell:SL-0039 to GO:0005886 plasma membrane. Direct
+        N. crassa RAB-7 imaging localizes RAB-7 to late-endosomal prevacuolar
+        compartments and vacuolar membranes, while PAINT places the fungal
+        Rab7 branch at late endosome and fungal-type vacuole membrane rather
+        than plasma membrane.
+      supported_by:
+      - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+        record_section: [&#34;CC:SUBCELLULAR LOCATION&#34;]
+        supporting_text: &gt;-
+          SUBCELLULAR LOCATION: Cell membrane {ECO:0000305}; Lipid-anchor
+        reference_section_type: DATABASE_ENTRY
+      - reference_id: PMID:26453652
+        supporting_text: &gt;-
+          The fluorescence from RAB-7-dsRED almost completely overlapped the
+          fluorescence from VMA-1-GFP
+        reference_section_type: RESULTS
+    supported_by:
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      record_section: [&#34;CC:SUBCELLULAR LOCATION&#34;]
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Cell membrane {ECO:0000305}; Lipid-anchor
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: PMID:26453652
+      supporting_text: &gt;-
+        The fluorescence from RAB-7-dsRED almost completely overlapped the
+        fluorescence from VMA-1-GFP
+      reference_section_type: RESULTS
+- term:
+    id: GO:0032889
+    label: regulation of vacuole fusion, non-autophagic
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN001178553
+  - PomBase:SPAPB1A10.10c
+  - PomBase:SPBC405.04c
+  - SGD:S000004460
+  review:
+    summary: &gt;-
+      PTN001178553 places the inherited Ypt7/Rab7 regulation of homotypic
+      vacuole fusion at the fungal Rab7 node.
+    action: ACCEPT
+    reason: &gt;-
+      Accept. The IBA follows a fungal PAINT node seeded by S. cerevisiae and
+      S. pombe Ypt7 proteins. N. crassa RAB-7 remains in the same Rab7/Ypt7
+      subfamily, and direct N. crassa imaging places the protein on the
+      PVC/vacuolar membranes on which the fungal Rab7 switch is expected to
+      recruit tethering and fusion effectors.
+    additional_reference_ids:
+    - PMID:26453652
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+      supporting_text: &#34;PTHR47981\tPTN001178553\tGO:0032889\tP\tIBD\tfalse\tPomBase:SPAPB1A10.10c|PomBase:SPBC405.04c|SGD:S000004460\ttaxon:4751\t20181128&#34;
+      reference_section_type: DATABASE_ENTRY
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN001178553
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Fungal Rab7/Ypt7 PAINT node seeded by budding- and fission-yeast
+          experimental Ypt7 annotations; there is no evidence that the
+          N. crassa ortholog has lost the inherited non-autophagic
+          vacuole-fusion role.
+- term:
+    id: GO:0003925
+    label: G protein activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - PANTHER:PTN001939797
+  review:
+    summary: &gt;-
+      PTN001939797 places G protein activity on the eukaryotic Rab7 ancestor,
+      matching the conserved switch function of N. crassa RAB-7.
+    action: NEW
+    reason: &gt;-
+      Add GO:0003925 G protein activity. GO:0003924 and GO:0005525 capture the
+      catalytic and ligand-binding facets, but Rab7/Ypt7 proteins execute their
+      membrane-fusion roles as GTP/GDP molecular switches that bind effectors in
+      the active state. N. crassa RAB-7 is retained within the PAINT Rab7 clade
+      and has all of the expected Rab GTP-binding features.
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+      supporting_text: &#34;PTHR47981\tPTN001939797\tGO:0003925\tF\tIBD\tfalse\tMGI:MGI:105068|UniProtKB:P51149|UniProtKB:P51151|UniProtKB:Q96AH8|UniProtKB:Q9NP90\ttaxon:2759\t20260724&#34;
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      record_section: [&#34;CC:FUNCTION&#34;]
+      supporting_text: |-
+        FUNCTION: Ypt/Rab-type GTPases are key regulators of membrane
+        CC       trafficking and intracellular vesicular transport. They act as
+        CC       molecular switches that convert between GTP-bound and GDP-bound states,
+        CC       and regulate virtually all steps of membrane traffic from the formation
+        CC       of the transport vesicle at the donor membrane to its fusion at the
+        CC       target membrane. In the GDP-bound state, Ypt proteins are predominantly
+        CC       cytosolic, solubilized through the interaction with a GDP dissociation
+        CC       inhibitor (GDI). In the GTP-bound state, the proteins are membrane
+        CC       bound and interact with specific effector proteins that select cargo,
+        CC       promote vesicle movement, or verify the correct site of fusion.
+      reference_section_type: DATABASE_ENTRY
+    - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+      record_section: [&#34;CC:ACTIVITY REGULATION&#34;]
+      supporting_text: &gt;-
+        ACTIVITY REGULATION: Alternates between an inactive form bound to GDP
+        CC       and an active form bound to GTP.
+      reference_section_type: DATABASE_ENTRY
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN001939797
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Eukaryotic Rab7-family PAINT node seeded by small-G-protein
+          experimental annotations; N. crassa RAB-7 has no evidence of
+          molecular-switch divergence.
+- term:
+    id: GO:0042144
+    label: vacuole fusion, non-autophagic
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN001178553
+  review:
+    summary: &gt;-
+      The 2026 PTN001178553 PAINT curation places non-autophagic vacuole fusion
+      on the same fungal Rab7/Ypt7 node that contains N. crassa RAB-7.
+    action: NEW
+    reason: &gt;-
+      Add GO:0042144 vacuole fusion, non-autophagic. This current PAINT
+      assertion is more direct than the existing regulatory parent row and is
+      placed on the fungal Rab7/Ypt7 node from fission-yeast and A. nidulans
+      experimental seeds. The assignment is consistent with N. crassa RAB-7
+      localization to PVC/vacuolar membranes and with its placement in
+      PTHR47981:SF20.
+    additional_reference_ids:
+    - PMID:26453652
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+      supporting_text: &#34;PTHR47981\tPTN001178553\tGO:0042144\tP\tIBD\tfalse\tPomBase:SPBC405.04c|UniProtKB:C8VQY7\ttaxon:4751\t20260724&#34;
+      reference_section_type: DATABASE_ENTRY
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN001178553
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Fungal Rab7/Ypt7 PAINT node seeded by direct S. pombe ypt7 and
+          A. nidulans avaA experimental annotations; N. crassa gtp-14 is in the
+          same Rab7/Ypt7 branch.
+core_functions:
+- description: &gt;-
+    RAB-7 acts as the Rab7-family GTP/GDP molecular switch on late-endosomal
+    prevacuolar and fungal-type vacuole membranes, where it is inferred from
+    the fungal PAINT Rab7/Ypt7 node to regulate non-autophagic vacuole fusion.
+  molecular_function:
+    id: GO:0003925
+    label: G protein activity
+  directly_involved_in:
+  - id: GO:0042144
+    label: vacuole fusion, non-autophagic
+  locations:
+  - id: GO:0005770
+    label: late endosome
+  - id: GO:0000329
+    label: fungal-type vacuole membrane
+  supported_by:
+  - reference_id: file:interpro/panther/PTHR47981/PTHR47981-paint.tsv
+    supporting_text: &#34;PTHR47981\tPTN001178553\tGO:0042144\tP\tIBD\tfalse\tPomBase:SPBC405.04c|UniProtKB:C8VQY7\ttaxon:4751\t20260724&#34;
+    reference_section_type: DATABASE_ENTRY
+  - reference_id: file:NEUCR/gtp-14/gtp-14-uniprot.txt
+    record_section: [&#34;CC:ACTIVITY REGULATION&#34;]
+    supporting_text: &gt;-
+      ACTIVITY REGULATION: Alternates between an inactive form bound to GDP
+      CC       and an active form bound to GTP.
+    reference_section_type: DATABASE_ENTRY
+  - reference_id: PMID:26453652
+    supporting_text: &gt;-
+      The fluorescence from RAB-7-dsRED almost completely overlapped the
+      fluorescence from VMA-1-GFP
+    reference_section_type: RESULTS
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:26453652
+  title: Characterization of a Novel Prevacuolar Compartment in Neurospora crassa.
+  findings:
+  - statement: &gt;-
+      Tagged N. crassa RAB-7 localizes to prevacuolar compartments and overlaps
+      strongly with the vacuolar ATPase subunit VMA-1.
+    supporting_text: &gt;-
+      The fluorescence from RAB-7-dsRED almost completely overlapped the
+      fluorescence from VMA-1-GFP
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text PMC cache. This is the direct N. crassa confocal study that
+      colocalized RAB-7 with VMA-1 on prevacuolar compartments.
+- id: PMID:37093794
+  title: The structure of prevacuolar compartments in Neurospora crassa as observed
+    with super-resolution microscopy.
+  findings:
+  - statement: &gt;-
+      Super-resolution imaging confirmed that RAB-7 labels the dynamic N. crassa
+      PVC, a compartment the paper interprets as the late endosome in hyphal
+      tips.
+    supporting_text: &gt;-
+      Using the rab-7 GTPase as a marker, I observed the distribution of PVCs
+      in the hyphal tip in a restricted region of the first hyphal compartment,
+      starting ~25 microns from the tip and ending where the tubular vacuolar
+      network begins
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text PMC cache. This newer super-resolution study used RAB-7-RFP and
+      RAB-7-GFP to image the N. crassa PVC structure and supports treating PVCs
+      as unusually large hyphal-tip late endosomes.
+- id: PMID:37847028
+  title: Morphodynamics of non-canonical autophagic structures in Neurospora crassa.
+  findings:
+  - statement: &gt;-
+      Under carbon starvation, mCherry-RAB7 in N. crassa concentrates on
+      tonoplasts/vacuolar membranes rather than in the vacuolar bulk.
+    supporting_text: &gt;-
+      appears concentrated in tonoplasts/vacuolar membranes (panel g), but
+      clearly is not in the vacuolar bulk.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text PMC cache. The paper uses RAB7 as a vacuolar/late-endosomal
+      marker during carbon-starvation autophagy and corroborates RAB-7 membrane
+      localization, but it does not directly assay gtp-14 function.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

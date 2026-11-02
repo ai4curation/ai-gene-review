@@ -48,3 +48,13 @@
   binding and nuclear import, caspase-3 cleavage, and dissociation of DFFA
   fragments from active DFF40. These are consistent pathway locations rather
   than independent DFFA activities.
+
+## 2026-10-26: comparative execution-phase source audit
+
+All39 existing rows, including the two earlier folding proposals, were reviewed. DFFA retains distinct CAD-folding and nuclease-inhibitory activities. It is not assigned CAD phosphodiester cleavage simply because DFFA loss prevents DNA fragmentation. Cytoplasm is refined to the directly supported cytosolic pool, and the stable DFF complex is core membership at the available ontology resolution rather than a peripheral function merely because its GO label is broad.
+
+PMID:11371636 was normally force-fetched and its full text read. Human DFF40 NTD induces folding of the DFF45 NTD, and DFF45 subsequently assists DFF40 catalytic-domain folding. Thus both subunits do structural work, but their activities are not interchangeable. Full PMID:22253444 supports cell-dependent cytosolic/nuclear pools; cleavage is not treated as universal first nuclear entry. Existing chaperone/protein-folding proposals are retained without adding new execution-process assertions. Broad PAINT-family membership and donor counts are not used to reject the DFFA-specific function.
+
+The normal Falcon research request with Perplexity-lite fallback was attempted for this gene. Falcon authentication and fallback quota checks failed; no provider report was fabricated. Normal publication caching completed independently. This manual primary-source audit is the research record.
+
+Review/annotation-reviewer workflows were applied, with independent annotation-reviewer consultation on claim consistency and the distinctions among Acinus condensation, ICAD folding/inhibition, and AIF death pathways. Row count: 39; actions: ACCEPT=24, MODIFY=7, NEW=2, REMOVE=6. No imported annotation payload was edited and no new row was added in this session.

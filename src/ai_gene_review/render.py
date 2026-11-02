@@ -15,6 +15,7 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.mod_providers import MOD_PROVIDER
 from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
 from ai_gene_review.validation.local_source_text import resolve_local_source
 
@@ -215,6 +216,7 @@ def humanize_provider(value: Optional[str]) -> Optional[str]:
         "bioreason": "BioReason",
         "bioreason-rl": "BioReason RL",
         "bioreason-sft": "BioReason SFT",
+        "claude-code": "Claude Code",
         "codex": "Codex",
         "cyberian": "Cyberian",
         "falcon": "Falcon",
@@ -224,6 +226,7 @@ def humanize_provider(value: Optional[str]) -> Optional[str]:
         "perplexity": "Perplexity",
         "perplexity-lite": "Perplexity Lite",
     }
+    special_cases.update({slug: name for slug, name in MOD_PROVIDER.values()})
     normalized = str(value).strip().lower()
     if normalized in special_cases:
         return special_cases[normalized]

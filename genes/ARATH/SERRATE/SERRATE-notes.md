@@ -100,3 +100,8 @@ UniProt record. Abstract-only papers are flagged.
   condensate scaffold activity (GO:0140693).
 - Upstream report candidates: GO:0005846 part_of -> GO:0140262; ISS DNA binding/TF
   rows from 2000-2001 sequence-based speculation.
+
+## 2026-10-20: ported fixes from the parallel review branch
+
+- The SE-DCL1/SMA1 GO:0005515 row (PMID:29982637, full text cached) changed from REMOVE to MODIFY to GO:0030674 protein-macromolecule adaptor activity, as for the SE-HYL1/CPL1 rows from PMID:23141542 [PMID:29982637 "After IP, both DCL1 and SE were detected in the GFP-SMA1 precipitates but not in the GFP precipitates"].
+- Source defects recorded for the TAIR ISS rows GO:0003700 (PMID:11118137) and GO:0003677 (PMID:11402159), both without With/From, and for part_of GO:0005846 nuclear cap binding complex (PMID:24137006), which should be enables GO:0140262.

@@ -26,3 +26,31 @@
 - regulation of gene expression: KEEP_AS_NON_CORE (broad).
 - metal ion binding: KEEP_AS_NON_CORE (Fe(II) and Zn(2+) sites conserved; cofactor binding, not the function).
 - DNA-templated transcription: MARK_AS_OVER_ANNOTATED (KDM4C regulates transcription via chromatin; it does not synthesize RNA).
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 prediction files were not opened or used.
+
+### Identity
+
+- A0A9L0K3L6 is the full-length donkey KDM4C gene product (1052 aa vs 1056 aa for human Q9H3R0; RESULTS.md: 91.44% identity, 99.62% human coverage, only single-residue indels at human 396, 474, 488-489). Not a fragment or isoform; JmjN, JmjC, PHD/ePHD and both Tudor domains present, all JmjC Fe/2OG/Zn ligands conserved.
+- PANTHER (donkey UniProt): PTHR10694:SF104 "LYSINE-SPECIFIC DEMETHYLASE 4C", the same subfamily as human Q9H3R0 and mouse Q8VCD7 (interpro/panther/PTHR10694/PTHR10694-entries.csv). No family review exists under interpro/panther/PTHR10694 (entries + metadata only), so no placement disagreement to report. TreeGrafter rows come from PTN001322185.
+- Evolutionary grounding: [PMID:21914792 "KDM4A–C, which are highly conserved in all vertebrates, and demethylate both H3K9 and H3K36"]; [PMID:21914792 "each of KDM4A/B/C preferentially catalyze demethylation at Lys-9 rather than Lys-36"].
+
+### Deep research
+
+- `just deep-research-falcon EQUAS KDM4C --fallback perplexity-lite` failed: falcon "Failed to authenticate"; perplexity-lite fallback HTTP 401 insufficient_quota. No deep-research file was produced. Review proceeds from cached literature: PMID:16603238, PMID:17277772 (abstracts), and newly cached full texts PMID:21914792 (KDM4C structure 2XML, KDM4 kinetics/phylogeny) and PMID:28262558 (KDM4C H190A/E192A inactive control).
+
+### Changes vs the previous review
+
+- histone demethylase activity (GO:0032452) and histone H3K9 demethylase activity (GO:0032454): ACCEPT -> TOO_GENERAL (entailed by accepted GO:0140684).
+- regulation of gene expression (GO:0010468): KEEP_AS_NON_CORE -> TOO_GENERAL (entailed by GO:0006355).
+- metal ion binding (GO:0046872): KEEP_AS_NON_CORE -> MODIFY to iron ion binding + zinc ion binding [human UniProt "Binds 1 Fe(2+) ion per subunit. {ECO:0000269|PubMed:21914792}"; PMID:21914792 "nickel (substituting iron) ion is coordinated by the conserved HX(E/D)"]; human has IDA zinc ion binding.
+- histone H3K36 demethylase activity (GO:0051864): ACCEPT -> MODIFY to GO:0140681 histone H3K36me2/H3K36me3 demethylase activity (trimethyl-state activity, parallel to GO:0140684); core function updated.
+- regulation of DNA-templated transcription kept as ACCEPT (directionality shown only for AR coactivation in human cells); DNA-templated transcription kept MARK_AS_OVER_ANNOTATED; chromatin, nucleus, chromatin remodeling, H3K9me2/me3 demethylase kept ACCEPT.
+- No NEW annotations. Tudor-domain methylated-histone binding raised as a question only (no KDM4C-specific cached evidence).
+
+### Relative
+
+- Closest experimentally characterised relative: human KDM4C (Q9H3R0), same PANTHER subfamily SF104 (ortholog). No genes/human/KDM4C review exists in the repo -> needs review.
+- Modules: no module under modules/ mentions KDM4C, JMJD2 or PTHR10694.

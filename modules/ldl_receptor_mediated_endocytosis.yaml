@@ -288,3 +288,115 @@ module:
     SREBP2-dependent transcriptional control of LDLR and PCSK9 is upstream regulation, not modelled.
     ApoE-mediated remnant uptake by LDLR is noted in the LDLR review but kept out of this LDL-specific
     module.
+executable_models:
+  - id: ldlr_endocytosis_abm
+    title: Agent-based LDL particle clearance and PCSK9 receptor-degradation model
+    model_type: AGENT_BASED
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      Tracks a cohort of 100 extracellular apoB-100 LDL particles (apob_ligand) through LDLR-mediated
+      clathrin endocytosis (ldlr_endocytosis) and lysosomal acid lipase cholesteryl-ester hydrolysis
+      (lipa_ce_hydrolysis), gated by secreted PCSK9 chaperone activity (pcsk9_degradation).
+    notes: >-
+      Deterministic particle-conserving agent-based simulation (N=100 LDL particles, T=24 steps)
+      derived directly from the module's PROVIDES_INPUT_FOR transport connections and the
+      NEGATIVELY_REGULATES PCSK9 regulatory connection. Because pcsk9_degradation has no incoming
+      transport edges, it is treated as a pure regulatory switch that defaults to inactive unless
+      explicitly perturbed.
+    scenarios:
+      - id: normal_ldl_clearance
+        label: Maximal PCSK9-independent hepatic LDL clearance (complete lysosomal cholesteryl-ester hydrolysis)
+        description: >-
+          In the absence of PCSK9-mediated receptor degradation (pcsk9_degradation defaults to false
+          as an unstimulated pure regulator) and with functional lysosomal acid lipase, 100% of bound
+          LDL particles are internalized and hydrolyzed in lysosomes.
+        expected_active:
+          - apob_ligand
+          - ldlr_endocytosis
+          - lipa_ce_hydrolysis
+        expected_inactive:
+          - pcsk9_degradation
+        evidence:
+          - source_id: Reactome:R-HSA-171141
+            title: LDL:LDLR complex [plasma membrane] => LDL:LDLR complex [clathrin-coated vesicle] (LDLRAP1-independent)
+            statement: Cell-surface LDLR binds apoB-100 LDL and internalizes the complex via clathrin-coated vesicles.
+          - source_id: Reactome:R-HSA-8865667
+            title: LIPA hydrolyses sterol esters to sterols and fatty acids
+            statement: Endocytosed LDL cholesteryl esters delivered to lysosomes are hydrolyzed by LIPA.
+      - id: pcsk9_gain_of_function
+        label: PCSK9 gain-of-function / familial hypercholesterolaemia (LDLR degraded; extracellular LDL retention)
+        description: >-
+          Constitutively active PCSK9 (pcsk9_degradation: true) diverts LDLR to lysosomal degradation,
+          gating off receptor-mediated LDL endocytosis and leaving 100% of LDL particles uncleared at
+          apob_ligand.
+        settings:
+          - element: pcsk9_degradation
+            active: true
+        expected_active:
+          - apob_ligand
+          - pcsk9_degradation
+        expected_inactive:
+          - ldlr_endocytosis
+          - lipa_ce_hydrolysis
+        evidence:
+          - source_id: file:human/PCSK9/PCSK9-ai-review.yaml
+            statement: Secreted PCSK9 binds LDLR EGF-A and reroutes the receptor to lysosomes for degradation, reducing hepatic LDL clearance.
+          - source_id: PMID:17452316
+            title: Binding of proprotein convertase subtilisin/kexin type 9 to epidermal growth factor-like repeat A of low density lipoprotein receptor decreases receptor recycling and increases degradation.
+            statement: PCSK9 binding to the EGF-A domain of LDLR prevents receptor recycling and reroutes LDLR from endosomes to lysosomes for degradation.
+            supporting_text: >-
+              These data are consistent with a model in 
+              which PCSK9 binding to EGF-A interferes with an acid-dependent conformational 
+              change required for receptor recycling. As a consequence, the LDLR is rerouted 
+              from the endosome to the lysosome where it is degraded.
+      - id: ldlr_loss_fh
+        label: LDLR loss-of-function familial hypercholesterolaemia (receptor uptake blocked)
+        description: >-
+          Loss of LDLR function (ldlr_endocytosis: false) prevents internalization of apoB-100 LDL
+          particles, retaining 100% of the cohort in the extracellular apob_ligand pool.
+        settings:
+          - element: ldlr_endocytosis
+            active: false
+        expected_active:
+          - apob_ligand
+        expected_inactive:
+          - ldlr_endocytosis
+          - pcsk9_degradation
+          - lipa_ce_hydrolysis
+        evidence:
+          - source_id: file:human/LDLR/LDLR-ai-review.yaml
+            statement: Loss-of-function mutations in LDLR abolish hepatic receptor-mediated LDL endocytosis and cause familial hypercholesterolaemia.
+          - source_id: PMID:6299582
+            title: "The LDL receptor locus in familial hypercholesterolemia: multiple mutations disrupt transport and processing of a membrane receptor."
+            statement: Familial hypercholesterolaemia mutations at the LDLR locus disrupt receptor synthesis, transport, or LDL binding at the cell surface.
+            supporting_text: >-
+              We describe seven mutations that
+              disrupt synthesis, processing and transport of the receptor in fibroblasts from
+              77 subjects with the clinical diagnosis of homozygous familial
+              hypercholesterolemia.
+      - id: lipa_loss_wolman
+        label: LIPA loss-of-function (Wolman disease / CESD; endolysosomal cholesteryl-ester accumulation)
+        description: >-
+          Inactivating lysosomal acid lipase (lipa_ce_hydrolysis: false) permits normal LDLR-mediated
+          internalization of LDL particles, which then accumulate unhydrolyzed at the endolysosomal
+          delivery stage (ldlr_endocytosis).
+        settings:
+          - element: lipa_ce_hydrolysis
+            active: false
+        expected_active:
+          - apob_ligand
+          - ldlr_endocytosis
+        expected_inactive:
+          - pcsk9_degradation
+          - lipa_ce_hydrolysis
+        evidence:
+          - source_id: file:human/LIPA/LIPA-ai-review.yaml
+            statement: Deficiency of lysosomal acid lipase (LIPA) blocks hydrolysis of endocytosed LDL cholesteryl esters in lysosomes, causing Wolman disease and CESD.
+          - source_id: PMID:1718995
+            title: Cloning and expression of cDNA encoding human lysosomal acid lipase/cholesteryl ester hydrolase. Similarities to gastric and lingual lipases.
+            statement: LIPA catalyzes deacylation of cholesteryl ester and triacylglycerol core lipids of endocytosed LDL, an activity deficient in Wolman disease and cholesteryl ester storage disease.
+            supporting_text: >-
+              The lysosomal enzyme catalyzes
+              the deacylation of triacylglyceryl and cholesteryl ester core lipids of
+              endocytosed low density lipoproteins; this activity is deficient in patients
+              with Wolman disease and cholesteryl ester storage disease.

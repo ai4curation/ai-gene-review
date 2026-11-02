@@ -1,16 +1,15 @@
-# SYK notes
 
-Deep research providers unavailable (no API keys). Notes from UniProt P43405 and cached literature.
 
-## Identity / localization
-- Cytoplasmic (non-receptor) protein tyrosine kinase of the SYK/ZAP70 family; two tandem N-terminal SH2
-  domains and a C-terminal kinase domain. UniProt SUBCELLULAR LOCATION: cytoplasm, cytosol; recruited to
-  the plasma membrane (inner leaflet) and nucleus.
-- [UniProt P43405 "Non-receptor tyrosine kinase which mediates signal transduction"]; [UniProt "signaling complexes with activated receptors at the plasma membrane via interaction between its SH2 domains and the receptor tyrosine-phosphorylated ITAM domains"].
-- Localization conclusion: cytosolic/cytoplasmic kinase recruited to the inner face of the plasma membrane at ITAM-phosphorylated immunoreceptors; a nuclear pool is reported. Not a cell-surface/extracellular protein.
+## Complete BCR-panel reassessment, 2026-10-26
 
-## Function
-- ITAM-coupled immunoreceptor signaling: B-cell receptor, Fc receptors (FcepsilonRI, Fcgamma), C-type lectin
-  receptors (CLEC7A/Dectin-1), and integrins. Phosphorylates BLNK, PLCG1, VAV1, LCP2, BTK and others.
-- [UniProt "Initially identified as essential in B-cell receptor"]; [UniProt "Also plays a crucial role in the innate immune response to fungal, bacterial and viral pathogens"].
-- Non-canonical: serine phosphorylation of Ikaros and nuclear functions reported [PMID:23071339], and roles in amyloid-beta clearance (PMID:27477018) and cGAS/STING signaling (PMID:39694035).
+All baseline rows were manually assessed, including roles outside BCR signaling. The original term, reference, evidence, partner, isoform, qualifier and NOT payloads remain unchanged. No new annotation was added; mouse Syk retains its two historically inherited NEW rows. Actual Falcon/fallback and publication-retrieval jobs were run by the shared acquisition workflow. Provider failures were recorded honestly; provider prose is not used as primary evidence. Normal additional publication recovery and direct source inspection resolved the principal catalytic and binding claims. Incomplete source access remains explicit in individual review reasons rather than being converted into wrong-gene or negative-function conclusions.
+
+The principal molecular activity is non-receptor tyrosine phosphorylation with tandem-SH2-mediated phosphotyrosine recognition. A broad kinase assertion is refined to supported chemistry rather than removed. Cytoplasm is retained alongside finer pools, and membrane recruitment does not imply integral membrane topology. Binding to a phosphotyrosine ligand is distinguished from binding to another protein's SH2 domain. Purified recombinant and mixed-species DT40 complementation assays retain their construct species; DT40 host identity does not identify every tested protein.
+
+Primary PMID:10648173 and 8163536 establish human tyrosine kinase activity, while 18818202 separates ITAM binding and autophosphorylation. The structural tandem-SH2 work (9698567/7761456) supports the binding core. Full PMID:23071339, recovered normally from PMC because the PMID extraction omitted key sections, directly assays Ikaros serine phosphorylation: mapped mouse Ikaros S358/S361 correspond to human S361/S364. Human-cell knockdown supports the native substrate response. Serine kinase activity and Ikaros-dependent transcription are retained as contextual, and nuclear import is corrected laterally to positive regulation of import rather than assigning SYK the import-carrier role.
+
+Full PMID:31875558 explicitly says “LACC1 did not associate with either Dectin-1 or Syk”; the preserved positive LACC1 interaction is contradicted within its source. Other bare-binding rows are removed only under the information-content rule, or refined when exact partners support kinase, phosphatase, scaffold, phosphotyrosine or transcription-factor binding. Unknown screen pairs remain unresolved. The STAT3 mechanism has independent direct support (20133729), so an abstract foregrounding another partner is not grounds to remove an otherwise established function.
+
+The normal publisher page for 32514138 exposes Extended Data Figure 4a: human iMG cells respond to PS liposomes with SYK phosphorylation. That figure supports lipid response, not a resolved binary SYK–PLCG2 interaction. Independent full 27609517 does test PLCgamma2 tandem-SH2 binding to Syk, weaker than PLCgamma1. The 22267217 abstract and figure headings describe a caspase-8 inflammasome, not enough to settle an apoptotic-process claim; 27477018's exact SYK clearance experiment remains access-limited. These are specific uncertainties, not claims that SYK is uninvolved.
+
+Native human neutrophil adhesion/chemotaxis (12885943), immune-receptor phosphorylation and mouse ortholog developmental/myeloid studies retain their respective scopes. Reactome FCGR3A-mediated IL10 synthesis supports one anti-inflammatory context; the TLR study 23962979 corroborates opposing pathway effects without being treated as a direct FCGR3A experiment.

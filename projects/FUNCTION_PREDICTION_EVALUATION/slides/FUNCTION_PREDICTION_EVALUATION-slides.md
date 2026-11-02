@@ -61,7 +61,7 @@ Testing protein-function predictors claim by claim against reviewed genes
 
 ![h:480](prediction-results.svg)
 
-<span class="small">Snapshots: BioReason/ProtNLM2 2026-09-27 `c7551cb3`; TreeGrafter 2026-10-03 `f81b9f300`.</span>
+<span class="small">Snapshots: BioReason 2026-09-27 `c7551cb3`; ProtNLM2 2026-10-29 `ac95c696`; TreeGrafter 2026-10-03 `f81b9f300`.</span>
 
 ---
 
@@ -70,12 +70,12 @@ Testing protein-function predictors claim by claim against reviewed genes
 | Project | Cohort | Headline |
 |---|---|---|
 | BioReason-Pro | 139 genes | correctness 4.0/5, completeness 2.9/5; 23 of 955 SFT terms correct and novel |
-| ProtNLM2 | 186/242 targets assessed | 288 GO terms: 52 COR, 84 LSP, 98 UNC, 20 NPI |
+| ProtNLM2 | 186/242 targets assessed | 288 GO terms: 35 COR, 48 CNN, 83 LSP, 78 UNC, 42 NPI, 2 PLI |
 | DeepECTransformer | 7 E. coli genes | one gene per error category; paper found 3/453 correct novel |
 | Affinage | 42 GO-layer + 91 PAINT genes | 38/42 core-MF slim bins; non-FA PAINT recall 48% |
 | TreeGrafter | 1,074 IEA rows | 43% accepted; 26% down-graded |
 
-<span class="small">Snapshots: BioReason/ProtNLM2 2026-09-27 `c7551cb3`; TreeGrafter 2026-10-03 `f81b9f300`.</span>
+<span class="small">Snapshots: BioReason 2026-09-27 `c7551cb3`; ProtNLM2 2026-10-29 `ac95c696`; TreeGrafter 2026-10-03 `f81b9f300`.</span>
 
 ---
 

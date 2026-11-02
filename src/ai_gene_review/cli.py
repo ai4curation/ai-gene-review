@@ -1662,6 +1662,64 @@ def backfill_isoforms(
 
 
 @app.command()
+def backfill_record_sections(
+    paths: Annotated[
+        Optional[list[Path]],
+        typer.Argument(help="Review YAML files or directories (default: genes/)"),
+    ] = None,
+    fix: Annotated[
+        bool,
+        typer.Option("--fix", help="Also rewrite existing values that disagree with the cited file"),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Report what would change without writing files"),
+    ] = False,
+):
+    """Fill record_section on quotes from cached UniProt flat files.
+
+    Each supporting_text quoting a file:...-uniprot.txt record gets the
+    section(s) of the record it comes from (e.g. CC:CAUTION, CC:FUNCTION,
+    FT:BINDING, DR:Pfam). Only the new lines are written; the rest of each
+    file is left as it was. Existing values are kept unless --fix is given.
+
+    Examples:
+        ai-gene-review backfill-record-sections genes/human/TP53/TP53-ai-review.yaml
+        ai-gene-review backfill-record-sections genes/human --dry-run
+        ai-gene-review backfill-record-sections --fix
+    """
+    from ai_gene_review.tools.backfill_record_sections import backfill_file, review_files
+
+    files = review_files(paths or [Path("genes")])
+    counts = ("added", "fixed", "mismatched", "unlocated", "unsearchable", "ambiguous", "unplaceable")
+    totals = dict.fromkeys(("files",) + counts, 0)
+    failed: list[Path] = []
+    for f in files:
+        try:
+            r = backfill_file(f, fix=fix, dry_run=dry_run)
+        except ValueError as e:  # the edit would change more than record_section: skip this file
+            typer.echo(f"{f}: skipped, {e}", err=True)
+            failed.append(f)
+            continue
+        totals["files"] += int(r.changed)
+        for key in counts:
+            totals[key] += getattr(r, key)
+        if r.changed or r.mismatched:
+            typer.echo(f"{f}: added {r.added}, fixed {r.fixed}, mismatched {r.mismatched}")
+    verb = "would update" if dry_run else "updated"
+    typer.echo(
+        f"{verb} {totals['files']} of {len(files)} files: added {totals['added']}, "
+        f"fixed {totals['fixed']}; left {totals['mismatched']} mismatched, "
+        f"{totals['unlocated']} not located in the cited file, "
+        f"{totals['unsearchable']} with nothing searchable, "
+        f"{totals['ambiguous']} in more than one section, {totals['unplaceable']} unplaceable"
+    )
+    if failed:
+        typer.echo(f"{len(failed)} file(s) skipped because the edit was unsafe", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def backfill_qualifiers(
     yaml_file: Annotated[Path, typer.Argument(help="Gene review YAML file to update")],
     goa_file: Annotated[
@@ -3734,6 +3792,45 @@ def fetch_descriptions_bulk(
         typer.echo(f"Fetched descriptions for {count} genes")
     except Exception as e:
         typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def mod_description_deep_research(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., worm, fly, yeast, mouse)")
+    ],
+    genes: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="Gene folder name(s) (default: every gene of the organism)"),
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Write even when the Alliance record names a different gene"),
+    ] = False,
+    delay: Annotated[
+        float,
+        typer.Option("--delay", "-d", help="Delay between API calls in seconds"),
+    ] = 0.3,
+):
+    """Write each gene's curated MOD description as GENE-deep-research-<mod>.md.
+
+    The file is a verbatim copy of the MOD's hand-written gene description
+    (Alliance MOD_provided_gene_description); judge it in the review's
+    references[].reference_review.
+
+    Examples:
+        ai-gene-review mod-description-deep-research worm fshr-1
+        ai-gene-review mod-description-deep-research worm
+    """
+    from ai_gene_review.etl.mod_description_deep_research import emit_organism
+
+    results = emit_organism(organism, genes=genes, force=force, delay=delay)
+    for status, names in sorted(results.items()):
+        typer.echo(f"{status}: {len(names)}")
+        if status in ("blocked", "error"):
+            typer.echo("  " + ", ".join(names))
+    if results.get("blocked") or results.get("error"):
         raise typer.Exit(code=1)
 
 

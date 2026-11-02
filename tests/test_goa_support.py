@@ -3,11 +3,13 @@
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_gene_review.validation import ValidationSeverity
 from ai_gene_review.validation.goa_support import (
     GOA_SUPPORT_CHECK,
     goa_support_paths,
+    main,
     validate_goa_support,
 )
 from ai_gene_review.validation.validation_report import ValidationReport
@@ -102,3 +104,18 @@ def test_reported_as_errors(tmp_path):
     assert [i.severity for i in issues] == [ValidationSeverity.ERROR.value] * 2
     assert "own GOA file" in issues[0].message
     assert "another gene's GOA file" in issues[1].message
+
+
+@pytest.mark.parametrize(
+    ("reference_id", "exit_code"), [(OWN_GOA, 1), (UNIPROT, 0)]
+)
+def test_cli_exit_code(tmp_path, capsys, reference_id, exit_code):
+    path = tmp_path / "x-sft-predictions.yaml"
+    path.write_text(yaml.safe_dump({"predictions": [{"review": {
+        "assessment": "NPI",
+        "supported_by": [{"reference_id": reference_id, "supporting_text": "x"}],
+    }}]}))
+    assert main([str(path)]) == exit_code
+    out = capsys.readouterr().out
+    assert ("supported_by[0]" in out) == bool(exit_code)
+    assert ("use UNDECIDED" in out) == bool(exit_code)

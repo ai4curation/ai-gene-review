@@ -408,3 +408,8 @@ readout. Both are ADCK1-specific and neither bears on ADCK2.
   - the yeast orthologue Cqd1 is an inner-membrane protein [PMID:37073556 "formed by the inner membrane protein Cqd1"].
 - I chose IC rather than IDA because no carbonate extraction or sub-fractionation of human ADCK2 has been done. This adds the term as a separate row. It does not change the GO:0016020 row, whose reason (written earlier) declines to MODIFY membrane to a specific term.
 - core_functions locations stay at mitochondrion. The CoQ-pool role has not been shown to happen at the inner membrane.
+
+## 2026-10-24 correction (after PR #5223 review)
+
+- The GO:0016020 membrane row (IEA, GO_REF:0000044) is now MODIFY to GO:0005743 mitochondrial inner membrane. The 2026-10-20 entry above says that row was left unmodified; that changed during review of PR #5223.
+- The MODIFY and the NEW GO:0005743 row rest on the same three lines (predicted TM 103-123, protease protection in PMID:31480808, yeast Cqd1 in PMID:37073556). The NEW row's reason now says so, so the two rows are not read as independent support.

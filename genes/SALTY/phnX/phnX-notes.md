@@ -1,0 +1,9 @@
+# SALTY phnX curation notes
+
+## 2026-10-25
+
+Seeded by `just fetch-gene SALTY phnX` from the reviewed LT2 record. The automatic deep-research workflow was attempted using Falcon and the configured perplexity-lite fallback: Falcon returned an authentication error (403), and Perplexity returned insufficient quota (401). No provider-generated research report was created or impersonated. This manual literature audit supplies the research instead. Publication fetching ran concurrently. FEBA lookup failed because neither a local database nor a remote source was available; no fitness claim is made.
+
+PMID:9649311 directly characterizes Salmonella and Bacillus phosphonatases. The cached abstract states: "Phosphonoacetaldehyde hydrolase (phosphonatase) catalyzes the hydrolysis of phosphonoacetaldehyde to acetaldehyde and inorganic phosphate." Full article read from https://www.unm.edu/~dd39/75.pdf; assays use MgCl2 and the discussion explicitly distinguishes phosphonatases from phosphoglycolate phosphatases despite their shared HAD scaffold. PMID:7592415 independently establishes the LT2 catabolic locus. UniProt's current sequence uses Lys52, while the historical article uses Lys53: residue-number corrections are not evidence of a different enzymatic identity.
+
+PAINT cache PTHR43434-paint.tsv places GO:0008967 and GO:0006281 at PTN001052204 and cytosol at PTN001291474. It also records an IRD on PTN001822758. No tree with resolved lineage coverage was inspected, so this review does not prescribe which tree node to edit. The phosphoglycolate/DNA-repair transfer is rejected on the target's experimentally characterized distinct activity and pathway, not on donor count. Cytosol is UNDECIDED because no independent native-localization evidence was verified. Magnesium binding uses the curated non-GO cofactor statement. Broad catalytic/metal terms are refined to already present specific terms.

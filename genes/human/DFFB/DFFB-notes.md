@@ -41,3 +41,15 @@ as secondary enzyme binding because it is a focused apoptotic-chromatin-condensa
 observation rather than a blind screen [PMID:10959840 DNA topoisomerase IIalpha interacts
 with CAD nuclease and is involved in chromatin condensation during apoptotic execution.,
 "CAD binds to Topo IIalpha"].
+
+## 2026-10-26: comparative execution-phase source audit
+
+All45 existing rows were reviewed. Direct DNA endonuclease activity and apoptotic DNA fragmentation remain the core. Stable DFF complex membership is retained as core, and the broad cytoplasmic term is refined to cytosol.
+
+Normal force fetch recovered full PMID:11371636. Its experiments show DFF40 folds the DFF45 N-terminal domain, after which DFF45 assists DFF40 folding. The prior categorical REMOVE of negative regulation of apoptotic DNA fragmentation therefore overstated a simple nuclease-versus-inhibitor division: DFF40 does structural work in maturation of its inhibitor. The exact negative-regulation process contribution remains UNDECIDED; this does not assign direct ICAD inhibition to CAD or reject the established nuclease activity.
+
+PMID:10959840 reports that CAD association enhances TOP2A decatenation in vitro. The enzyme-binding row is refined to enzyme activator activity (live QuickGO GO:0008047), with explicit contextual scope. This capacity is not promoted to a second core mechanism and does not establish that all CAD-associated condensation proceeds by TOP2A activation. Condensation remains an experimental process assertion, including its independent/parallel routes; it is not mechanically paired with a nuclease MF in a separate core. The structural paper reports regulatory-domain oligomerization, not an unqualified physiological dimer stoichiometry.
+
+The normal Falcon research request with Perplexity-lite fallback was attempted for this gene. Falcon authentication and fallback quota checks failed; no provider report was fabricated. Normal publication caching completed independently. This manual primary-source audit is the research record.
+
+Review/annotation-reviewer workflows were applied, with independent annotation-reviewer consultation on claim consistency and the distinctions among Acinus condensation, ICAD folding/inhibition, and AIF death pathways. Row count: 45; actions: ACCEPT=27, KEEP_AS_NON_CORE=3, MODIFY=9, REMOVE=5, UNDECIDED=1. No imported annotation payload was edited and no new row was added in this session.

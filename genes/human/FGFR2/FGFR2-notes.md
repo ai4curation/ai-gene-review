@@ -66,3 +66,129 @@ These may act as decoy receptors, similar to soluble FAS.
 - UniProt P21802 function annotation distinguishes IIIb and IIIc ligand binding
 - PMID:1309608 - FGFR2 cloning and splice variants
 - PMID:7987400 - FGF receptor ligand specificities
+
+
+## 2026-10-27 — source audit and correction
+
+The earlier journal entry above is preserved as written. Its accession table and
+ligand exclusivity statement are superseded by the following source-bound
+correction. UniProt P21802 identifies **P21802-1 as IIIc/BEK** and **P21802-3 as
+IIIb/KGFR**. The products named 8 and 13 are **P21802-14 and P21802-19**, not
+P21802-8/P21802-13. Six truncated sequence-note strings were completed from
+the literal continuation lines of the same immutable UniProt record. No product
+was regenerated, renamed, reordered or assigned a new function.
+
+Alternative exon choice is distinct from mutually exclusive ligand recognition.
+PMID:8663044 Table I uses human FGFR2b and mouse FGFR2c in BaF3 cells; its Methods,
+Figure 3 and Table II show overlapping recognition, including FGF1. The original
+Results warn that mitogenic rankings depend on the cell and heparan-sulfate
+context. PMID:7987400 is a Crouzon syndrome paper, not the ligand-specificity
+experiment previously assigned to it here. Soluble-product secretion does not
+establish a decoy mechanism, and epithelial/mesenchymal expression preferences
+should not become universal rules for every tissue or splice product.
+
+The receptor's biological role is extracellular ligand recognition coupled to
+tyrosine phosphorylation and intracellular signaling. The original
+PMID:10618369 Methods and structural Results identify a human FGF1–FGFR2IIIc
+extracellular complex. Recovered PMID:11390973 Results and Figure 1/2 captions
+identify FGF2 contacts in Apert mutant structures, although complete construct
+Methods remain unrecovered. Those are evidence-backed FGF-binding refinements.
+In contrast, PMID:22726438 identifies GRB2 as the adaptor and FGFR2 as the
+receptor: binding an adaptor does not confer its adaptor activity. Its operative
+full text remains unavailable, so the source-specific interaction is undecided.
+
+PMID:16844695 was read in bounded original Methods/Results and figure captions.
+Human FGFR2IIIc and engineered glycosylation/C278F constructs in MC3T3-E1 and
+COS7 cells distinguish surface receptor from retained intracellular pools.
+Dimerization and phosphorylation/PLCG1 readouts support the receptor mechanism,
+but retention and signaling differ with cell context. These engineered proteins
+are not the 17 natural splice products. No figure-pixel or whole-paper reading
+claim is made. The original PMID:17959718 Methods instead use mouse gland
+explants and mouse FGFR2b–human Fc as a binding probe; that does not establish
+endogenous human FGFR2 cell-surface localization in that experiment.
+
+Protein association is not rejected merely because it is non-core or comes from
+a large screen. Exact original BioPlex rows (PMID:33961781) and the separate
+AP-MS/co-IP versus BioID records in PMID:35384245 support bounded association.
+Drug-focused PMID:23597563 and PMID:26267536 also have exact positive protein-pair
+NMR records in IntAct, so the previous drug-only objections were unsound; their
+original panels remain unread. PMID:25241761 provides proximity-ligation records,
+which do not by themselves measure direct affinity. For PMID:35922511, the
+author workbooks actually contain the FCER2–FGFR2 target pair. Uncertainty now
+concerns specificity: the original screening Methods explicitly discuss FGFRs
+as recurrent nonspecific candidates. Network membership and the aggregate
+validation rate do not establish pair-specific physiological binding.
+
+All 75 mouse ISS and 11 rat Ensembl contexts have actual same-term donor joins.
+Their tissue-specific phenotypes or expression responses remain distinct from
+human experimental evidence. A narrow developmental context is not an error
+simply because it is non-core. PAINT has eight literal positive IBD joins and
+a complete 159-row family assertion census, including 23 negatives. The failed
+tree request and capped MSA response leave target ancestry and sequence matching
+unverified; no family-negative node is assigned to FGFR2 without that path.
+All 58 Reactome references have genuine P21802-family participant joins, including
+mutant/fusion models. A PI3K-containing complex or RAS-GEF set does not turn FGFR2
+into PI3K or a GEF. Current source-specific details and access limits are indexed
+in [the source guide](FGFR2-source-guide.md) and
+[the evidence file](FGFR2-source-evidence.yaml).
+
+The core remains receptor-centered. The checked strict is_a/part_of ancestry
+returned no ancestor pair among the seven previously listed BP terms. The
+embryonic cranial skeleton term was omitted from the revised core because its
+specific human source/participation scope remains unresolved, not because it
+was shown to be redundant. Broader bone-development and branching/lung contexts
+retain curated ortholog support.
+Unresolved human localization and soluble-product physiology remain questions,
+not new annotations. All 229 source objects, 94 inherited references/findings,
+65 inherited quotation associations and immutable source caches are preserved.
+No publication quotations were added.
+
+
+## 2026-10-27 — Review follow-up: positive evidence and bounded deferral
+
+Re-read the immutable abstracts after PR #5613 review 5665591151. The first
+audit treated missing complete Methods too uniformly. PMID:8386828 explicitly
+reports human FGFR2–FGF5 binding/KD; PMID:10830168, PMID:12591959 and PMID:1309608
+report the relevant complexes or binding assays. Positive abstract statements
+are now distinguished from unread construct and assay details.
+
+PMID:15629145 reports receptor-mutant signaling/proliferation. Generic receptor,
+kinase and membrane NAS claims are also retained with curator deference and
+separately read target experiments, without inventing functional assays in
+clinical papers. Human urothelial localization and mutant human osteoblast
+differentiation are positive contextual results in PMID:16597614, PMID:17471512
+and PMID:15190072; they do not resolve every sibling annotation or product.
+
+The clinical craniosynostosis evidence remains positive. The official
+[GO:0048701 definition](https://www.ebi.ac.uk/QuickGO/term/GO:0048701), separately
+recorded in the source evidence, specifically requires embryonic-stage cranial
+organization. That narrow scope and the PMID:7874170 erratum remain unresolved.
+The core omission is not based on an ancestor/descendant argument.
+
+GRB2 binding does not make FGFR2 an adaptor. Supported generic associations
+remain non-core under the explicit campaign policy. The source-evidence file
+now has reference-only joins from relevant reviews. Biological summaries and
+evidential reasons are separated. No inherited quotation/source assertion,
+reference identity/finding, product record or cache was changed in this follow-up.
+
+
+## 2026-10-27 — Second review follow-up: generic claims and source limits
+
+Re-read latest formal 5666051033 and companion 6440239906. Human receptor
+microscopy and BEK evidence support the generic surface/cytoplasmic decisions.
+The curated UniProt target-function statement supports osteoblast proliferation
+and skeletal development; human craniosynostosis genetics corroborate broad
+skeletal morphogenesis. Mouse-Fc, ligand redistribution and unread osteoblast
+endpoints remain explicit caveats. Embryonic-stage uncertainty remains.
+
+Current raw QuickGO metadata has two alternative extension groups on positive
+PMID:16597614 siblings 120/121, preserved exactly in the authored evidence.
+The disputed generic contexts have null current extensions; historic ARBA row 25
+is absent today. Historical extensions cannot be inferred from the old TSV.
+Neither source objects nor their qualifiers/products are rewritten.
+
+Seven saved positive human IntAct NMR/direct pairs support specific FGF binding
+for PMID:23597563 and PMID:26267536. Fragment boundaries, the unread erratum and
+unread original panels remain limits. Proximity evidence in PMID:25241761 is
+unchanged. All inherited quotations/reference associations are preserved; no
+new publication quotation, source cache or experiment suggestion is added.

@@ -35,7 +35,7 @@ from pathlib import Path
 import yaml
 
 from ai_gene_review.bioreason_ontology import GO_RELEASE, get_go_adapter
-from ai_gene_review.source_tree import SourceTree, declared_review_snapshot, review_snapshot_tree
+from ai_gene_review.source_tree import PROTNLM_SNAPSHOT, SourceTree, declared_review_snapshot, review_snapshot_tree
 
 PREDICATES = ["rdfs:subClassOf", "BFO:0000050"]  # is_a, part_of
 ASPECT = {"GO_MF": "molecular_function", "GO_BP": "biological_process", "GO_CC": "cellular_component"}
@@ -68,10 +68,14 @@ def main() -> None:
             ancestor_cache[term] = set(go.ancestors(term, predicates=PREDICATES, reflexive=False))
         return ancestor_cache[term]
 
+    def breadth(term: str) -> int:
+        """Number of is_a/part_of descendant terms: a rough measure of how general a COR term is."""
+        return len(set(go.descendants(term, predicates=PREDICATES, reflexive=False)))
+
     # Read reviews and GOA at the same review_snapshot_commit as build_benchmark_summary.py,
     # so the COR denominator here matches the dated cross-cohort counts.
-    tree = review_snapshot_tree(root)
-    snapshot = declared_review_snapshot(root)
+    tree = review_snapshot_tree(root, PROTNLM_SNAPSHOT)
+    snapshot = declared_review_snapshot(root, PROTNLM_SNAPSHOT)
     rows = []
     for path in sorted(tree.glob("genes/*/*/*-protnlm-predictions-review.yaml")):
         doc = yaml.safe_load(tree.read_text(path))
@@ -109,6 +113,7 @@ def main() -> None:
                     relation=relation,
                     via_target_goa_terms=evidence,
                     via_labels=";".join(go.label(t) or "" for t in evidence.split(";") if t),
+                    descendant_terms=breadth(pred),
                 )
             )
     out = base / "cor-goa-entailment.tsv"
@@ -123,10 +128,23 @@ def main() -> None:
                 review_snapshot=snapshot.commit,
                 cor_calls=len(rows),
                 relation=dict(Counter(r["relation"] for r in rows)),
+                breadth=breadth_bins([r["descendant_terms"] for r in rows]),
             ),
             indent=2,
         )
     )
+
+
+def breadth_bins(counts: list[int]) -> dict[str, int]:
+    """Bin COR terms by number of descendant terms.
+
+    >>> breadth_bins([0, 3, 22, 130, 2080])
+    {'0': 1, '1-19': 1, '20-99': 1, '>=100': 2}
+    """
+    bins = {"0": 0, "1-19": 0, "20-99": 0, ">=100": 0}
+    for n in counts:
+        bins["0" if n == 0 else "1-19" if n < 20 else "20-99" if n < 100 else ">=100"] += 1
+    return bins
 
 
 if __name__ == "__main__":

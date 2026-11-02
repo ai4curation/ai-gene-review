@@ -126,3 +126,20 @@ Highly regulated enzyme:
   mitochondrial isozyme) — MARK_AS_OVER_ANNOTATED.
 - GO:0051289 protein homotetramerization (IEA/ISS): real (SUBUNIT: homotetramer);
   KEEP_AS_NON_CORE (regulatory oligomerization, not the core catalytic function).
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+Row: one GO:0005739 row, IBA GO_REF:0000033, already MARK_AS_OVER_ANNOTATED. No
+sub-compartment rows.
+
+Checked the PAINT seed in interpro/panther/PTHR45728/PTHR45728-paint.tsv: node
+PTN000429607, GO:0005739 IBD, evidence MGI:MGI:2140940 | RGD:620500 |
+SGD:S000004820 | UniProtKB:O00763, i.e. mouse and rat Acacb, human ACACB and yeast
+HFA1, all of the mitochondrial-isozyme lineage. No ACC1 ortholog seeds the node.
+ACC1's own curated location is cytosol [file:human/ACACA/ACACA-uniprot.txt
+"SUBCELLULAR LOCATION: Cytoplasm, cytosol"], and the isozyme split is stated in
+[PMID:29899443 "the metabolic, cytosolic ACC1, and ACC2, which is anchored to the"]
+(outer mitochondrial membrane).
+
+Outcome: root; MARK_AS_OVER_ANNOTATED kept, with a reason recording the PAINT-seed
+check. No sub-compartment row.

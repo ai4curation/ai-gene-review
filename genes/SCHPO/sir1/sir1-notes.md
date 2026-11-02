@@ -34,3 +34,12 @@ alpha flavoprotein partner.
 - GO-CAM models sir1 and met10 each as independently enabling GO:0004783; the GOA IBA uses
   contributes_to. contributes_to + complex is the more accurate representation of a
   heteromeric enzyme; the module already notes this discrepancy.
+
+
+## 2026-10-26 complete fungal-member reassessment
+
+Reassessed all 16 existing rows, core functions, biological summary and references under the current review and annotation-reviewer guidance. Original term, evidence, reference, qualifier and supporting-entity payloads are preserved; no annotation row was added in this session. Correct claims are assessed holistically across evidence codes. Generic protein-binding removals implement the uninformative-binding policy and do not deny the measured association or transfer a partner's activity.
+
+Sir1 supplies the sulfite-reducing siroheme/[4Fe-4S] module to the assembled enzyme, with alpha-subunit electron input. The broad Fe-S binding term is refined to the supported [4Fe-4S] site. A positive PF00258/Flavodoxin_1 match at residues 728–876 supports inferred FMN binding; the holoenzyme FMN assay is from budding yeast (PMID:6751400), not isolated native Sir1. PMID:11319255 uses old S. pombe O14167; mapping that historical accession to Q1K9C2 has not been independently completed and is not silently assumed. PMID:10224084 foregrounds Hmt2 in the abstract, which does not establish that sir1 controls or mutants were absent from the full text. The biologically supported native sulfite-reduction claim is retained with curator deference, not falsely removed as misattributed. All localization and secondary phenotype rows were considered.
+
+Research provenance: the existing real research reports and curated primary/publication caches were read. The requested normal Falcon run with perplexity-lite fallback was attempted in parallel with publication caching; Falcon returned HTTP 403 and the fallback returned HTTP 401 insufficient quota. No provider report was fabricated. `just fetch-gene-pmids SCHPO sir1` completed successfully. Manual primary-source assessment and source-access limits are documented above and in the review; abstract-only evidence was not used to overturn experimental assertions as wrong-gene errors. Run logs are under `.cache/module-audit-logs/fungal-SCHPO-sir1-*.log`.

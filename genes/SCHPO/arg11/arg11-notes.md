@@ -12,3 +12,22 @@
 - All experimental rows accepted (deferred to curator, full text not cached).
 - Cytoplasm (InterPro2GO) MODIFY -> matrix; NAD binding over-annotated (NADP enzyme); generic BPs/MF MODIFY.
 - No NAGS/NAGK complex added: no S. pombe evidence (ARG5,6 has IPI in budding yeast) - raised as suggested question.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 21 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+Kinase and reductase activities are attributed to precursor regions. Internal proteolysis is a curated comparative inference here, not a fresh direct S. pombe cleavage assay; budding-yeast import-dependent processing must not be automatically transplanted as an observed event. PMID:1313366 supports mitochondrial targeting and functional differences in cross-species complementation. NAD cofactor mapping is refined to NADP.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-SCHPO-arg11-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 14, MODIFY 7. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.
+
+Ontology-cache advisory: live QuickGO confirms GO:0003942 has the NADP+-specific label; the local ontology cache retains the older shorter label. The machine payload and current chemically specific label are preserved rather than rewritten to silence a stale-label warning.
+
+## PR #5563 follow-up, 2026-10-26
+
+Restored supported GO:0005739 mitochondrion rows to ACCEPT under the explicit root-organelle policy; existing matrix rows remain separate. Reasons distinguish organelle screens, direct targeting, publication-linked curated evidence and unavailable full text. No original annotation payload changed. Cytosol decisions use target-specific fractionation/processing evidence rather than relationship qualifiers or generic precursor transit. For Aga1, matrix inference does not imply universal post-import autoproteolysis.
+
+The authored GO:0003942 label follows the repository ontology version; NADPH specificity remains explicit in the biological rationale. Original GOA term labels are preserved.

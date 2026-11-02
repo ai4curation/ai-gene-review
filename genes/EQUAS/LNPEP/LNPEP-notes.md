@@ -36,3 +36,53 @@
 - GO:0016020 membrane -> LSP (plasma membrane in GOA).
 - GO:0008237 metallopeptidase activity -> LSP (metalloaminopeptidase activity in GOA).
 - No non-GO outputs for this accession in the snapshot.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not consulted for this pass.
+
+- Deep research: `just deep-research-falcon EQUAS LNPEP --fallback perplexity-lite` failed
+  (falcon "Failed to authenticate"; perplexity-lite HTTP 401 insufficient_quota). No
+  deep-research file was produced; this pass relies on cached publications, the human Q9UIQ6
+  Swiss-Prot record and the existing sequence comparison.
+- Identity: A0A9L0JGC2 is a full-length gene model (1026 aa vs 1025 aa human Q9UIQ6; 100% of
+  human paired, no unpaired segments >=5 aa) [file:EQUAS/LNPEP/LNPEP-bioinformatics/RESULTS.md
+  "Paired coverage is 100.0% of the human sequence and 99.9% of the donkey sequence."]. Not a
+  fragment or isoform; all three Pfam domains (Peptidase_M1_N, Peptidase_M1, ERAP1_C), the
+  type II TM segment (110-131, Phobius) and all catalytic residues are present.
+- Evolutionary grounding: UniProt places the donkey protein in PANTHER PTHR11533:SF42
+  (LEUCYL-CYSTINYL AMINOPEPTIDASE), the same subfamily as human Q9UIQ6, mouse Q8C129 and rat
+  P97629 (interpro/panther/PTHR11533/PTHR11533-entries.csv). Transfer from human/rodent LNPEP is
+  therefore within-subfamily. Donkey GOA rows come from TreeGrafter node PTN001355382; human IBA
+  rows for the LNPEP-specific terms (plasma membrane, regulation of blood pressure, neuropeptide
+  catabolic process) come from PTN002609779 (rat Lnpep RGD:621752 donor). The node ids differ
+  (likely PANTHER release difference); I could not inspect PAINT tree files for either node.
+- PANTHER family review: interpro/panther/PTHR11533/ holds only an entries table and metadata (no
+  family review); it agrees with SF42 placement. No disagreement.
+- Modules: no module in modules/ lists LNPEP or Q9UIQ6. Grep for aminopeptidase/oxytocin/GLUT4
+  hit only leptin_melanocortin_signaling.yaml and kallikrein_kinin_cascade.yaml, neither of which
+  contains LNPEP.
+
+### Changes
+
+- GO:0006508 proteolysis: ACCEPT -> MODIFY to GO:0043171 peptide catabolic process. The previous
+  reason argued the term was too broad while accepting it; this now matches the human review.
+- GO:0031410 cytoplasmic vesicle: MODIFY now lists both supported descendants, cytoplasmic
+  vesicle membrane and GO:0032593 insulin-responsive compartment (is_a cytoplasmic vesicle via
+  secretory vesicle, OLS ancestors checked) [PMID:11701721 "IRAP is expressed and translocates to PM
+  in response to insulin"].
+- GO:0043171 peptide catabolic process: ACCEPT kept; added neuropeptide evidence
+  [PMID:11389728 "P-LAP was shown to degrade several bioactive neuropeptides such as Met-enkephalin
+  and dynorphin A (1-8)"]. Neuropeptide catabolic process (GO:0010813, descendant of GO:0043171,
+  human IBA) goes in core_functions only, not as a NEW row, because it is a descendant of a term the
+  gene already carries.
+- Replaced quotes of the donkey record's ARBA-only "Single-pass type II membrane protein" with the
+  human Swiss-Prot statement backed by PubMed:11389728 (ECO:0000269).
+- Other rows unchanged after re-examination: plasma membrane ACCEPT; metalloaminopeptidase
+  ACCEPT (core); aminopeptidase, metallopeptidase, cytoplasm, membrane TOO_GENERAL; zinc ion
+  binding, peptide binding (AT4/angiotensin IV), regulation of blood pressure KEEP_AS_NON_CORE.
+- Not transferred: MHC class I antigen cross-presentation (endosomal IRAP in mouse dendritic
+  cells; human review accepts it). Equine immune-cell data are absent and the GOA set does not carry
+  it, so it was not proposed as NEW.
+- Relative: human LNPEP Q9UIQ6 (same subfamily SF42), already completely reviewed at
+  genes/human/LNPEP/LNPEP-ai-review.yaml (status COMPLETE).

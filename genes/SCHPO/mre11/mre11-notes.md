@@ -42,3 +42,20 @@ The full original function paragraph and all atomic claims are assessed in [mre1
 ## Provider report appraisal
 
 The late Falcon report was inspected after the wrapper timeout. Its suggestion of a general Rad32 requirement in programmed Rec12-dependent break formation conflicts with primary PMID:15238514; the accepted formation annotations are confined to the experimentally supported Rec12-independent palindrome pathway in PMID:15654094. The report is a research lead, not adjudicative authority.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: Q09683 (RAD32_SCHPO, SPAC13C5.07) is the reviewed, canonical, full-length 649-aa product (sequence version 1), with no isoforms. It has the N-terminal metallophosphoesterase domain (PF00149) with Mn2+-binding residues (D25, H27, D65, N133; active site H134) seen in the crystal structures [PMID:22705791 "Two Mn2+ ions are coordinated in each of the two apparently functional nuclease sites"], the Mre11 capping/DNA-binding domain (PF04152), and a disordered C-terminal tail (553-649). The benchmark accession is not a fragment or alternative gene model.
+
+Evolutionary placement: PANTHER PTHR10139:SF1, the same subfamily as S. cerevisiae MRE11 (P32829). Human MRE11 (P49959) is in PTHR10139:SF4. The nuclease chemistry IBAs come from the family-root PAINT node PTN000015644, so transfer from human biochemistry (ISO from P49959) is a family-wide claim and acceptable. The family review interpro/panther/PTHR10139/PTHR10139-review.yaml places Q09683 in SF1, which agrees with the UniProt cross-reference. No disagreement.
+
+Changes in this pass:
+- Generic or under-specified terms changed from ACCEPT to MODIFY, pointing to specific terms the gene already carries: nuclease activity (IDA; the assay used single-stranded poly(dT) [PMID:22705791 "retains its ssDNA endo/exo nuclease activity"]), endonuclease activity, DNA endonuclease activity -> GO:0000014; 3'-5'-DNA exonuclease activity -> GO:0008311; hydrolase activity -> GO:0000014 + GO:0008311; double-strand break repair (IEA/IMP/NAS) -> GO:0000724 + GO:0006303; chromosome -> GO:0035861 + GO:0140445; chromosome, telomeric region -> GO:0140445.
+- GO:0005515 protein binding: under the protein-binding policy, the self-interaction row (PMID:22705791, partner SPAC13C5.07) is MODIFY to GO:0042803 protein homodimerization activity [PMID:22705791 "SpMre11cd dimerizes via phosphodiesterase domains"]. The Nbs1 rows are REMOVE: the interaction is real but already captured by GO:0030870 Mre11 complex.
+- GO:0007095 mitotic G2 DNA damage checkpoint signaling (IBA): changed from UNDECIDED to MARK_AS_OVER_ANNOTATED. The only donors are metazoan (Drosophila mre11, mouse Mre11). Fission yeast MRN is required for the S-phase checkpoint but not the G2 checkpoint [PMID:12944482 "However, they are not required for G(2) DNA damage checkpoint."].
+- GO:0000403 Y-form DNA binding (ISO from P. furiosus): changed from ACCEPT to KEEP_AS_NON_CORE. DNA end binding (GO:0045027) is the core binding claim.
+- GO:0097552 mitochondrial DSB repair via HR (IBA, donor S. cerevisiae MRE11 in the same SF1 subfamily): kept UNDECIDED. No fission yeast data either way.
+- The core function for exonuclease chemistry now points to GO:0000724 instead of the general GO:0006302.
+- All other rows were re-checked and kept unchanged (HR, NHEJ, DSB processing, telomere maintenance, intra-S checkpoint, meiotic DSB repair, the palindrome-specific meiotic DSB formation as non-core, Mre11 complex, site of DSB, nucleus, Mn2+ binding).
+
+Relative: S. cerevisiae MRE11 (P32829) is the closest experimentally characterised relative in the same PANTHER subfamily (SF1). There is no genes/yeast/MRE11 review in the repo. Human MRE11 (SF4) is not reviewed either. Module search found only modules/dmel_mrn_complex.yaml (the Drosophila MRN complex), which does not include fission yeast Rad32.

@@ -7,3 +7,14 @@
 ## Curation decisions
 - Core MF GO:0004585; BP GO:0006526 + GO:0019240 (citrulline is the direct product); CC GO:0005829.
 - Generic IEA (amino acid metabolic process; carboxyl/carbamoyltransferase) MODIFY to specific; amino acid binding over-annotated.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 22 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+Budding-yeast OTC is cytosolic, unlike pombe and mammalian OTC. PMID:205532 fractionation and PMID:1313366 targeting comparisons support the compartment distinction. PMID:12679340 demonstrates arginase-OTC regulatory complex and altered ornithine affinity in interface mutants, supporting amino-acid binding. Bare protein binding is removed under the current policy without denying the physical interaction. Urea-cycle participation is contextual; the regulatory inhibition limits claims of simultaneous net cycling.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-yeast-ARG3-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 17, MODIFY 3, REMOVE 2. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.

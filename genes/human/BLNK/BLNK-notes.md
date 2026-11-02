@@ -50,3 +50,17 @@ The corrected totals are 26 ACCEPT, 11 MODIFY, 3 KEEP_AS_NON_CORE and 5 UNDECIDE
 ## Follow-up verification
 
 Independent science review approved the SCIMP phosphotyrosine-binding refinement. The exact proposal was applied; focused canonical validation passed without advisories, rendering passed and the new history record validated. All raw source caches and previous history remain unchanged.
+
+
+## Full BCR-panel annotation reassessment (2026-10-26): human/BLNK
+
+All 45 baseline annotations were assessed, including functions outside BCR signaling. Original terms, evidence, qualifiers, source partners and flags are unchanged. The panel acquisition performed real Falcon/fallback attempts and publication caching; provider attempts failed and no provider prose was fabricated. Prior substantive human BLNK source work was rechecked and retained where sound.
+
+The adaptor, lipid-vesicle and condensate mechanisms remain supported by the original BLNK identification, 11606584 purified assembly, 21822214 partner-domain work, 25140054 vesicle binding and full 32051419 phase separation. Human constructs in chicken DT40 are still human proteins. The recovered full mouse donor source 22949502 supports contextual positive gene-expression regulation through inducible BASH–ER signaling and LAPTM5 induction. The kinase-independent organizational role is distinct from phosphorylation or phospholipase catalysis. Original source-specific uncertainties (16969585 and AR/KIT pair-level 24728074 evidence) remain explicit.
+
+The RTK-pathway IBA at PTN001019935 remains unresolved: BCR/SYK signaling is not receptor-tyrosine-kinase signaling, but that distinction does not itself disprove a broader ancestral adaptor function. The single Clnk evidence source is not weak by donor count. No new annotations were proposed.
+
+
+### Final source recovery
+
+Normal recovery obtained full PMID:18369315 and the author manuscript for PMID:11606584. Earlier abstract-only access descriptions for those sources are superseded. The recovered texts support Syk–SLP65 feedback and purified BLNK/PLCgamma2 assembly; mixed-species construct boundaries remain in force.

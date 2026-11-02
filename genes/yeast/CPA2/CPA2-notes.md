@@ -11,3 +11,14 @@ Evidence journal built from UniProt and cached abstracts.
 ## Curation decisions
 - Core MF: carbamoyl-phosphate synthase (ammonia) activity GO:0004087 (enables) plus contributes_to GO:0004088; in complex GO:0005951; cytosol; arginine biosynthesis.
 - Pyrimidine nucleotide biosynthesis IDA -> KEEP_AS_NON_CORE. ATP binding / metal ion binding IEA -> KEEP_AS_NON_CORE.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 29 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+The large CPSase subunit uses ammonia supplied by CPA1 and carries the ATP-dependent synthesis machinery. Core whole-complex contribution is distinguished from glutamine hydrolysis. PMID:206535 and 206652 support component-specific chemistry. Magnesium/manganese binding refinement follows curated PROSITE cofactor evidence, not a new isolated-target metal-stoichiometry experiment.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-yeast-CPA2-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 21, KEEP_AS_NON_CORE 1, MODIFY 7. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.

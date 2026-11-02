@@ -1,0 +1,25 @@
+# Mouse Cyp11b2 evidence notes
+
+Identity: reviewed UniProt P15539 (C11B2_MOUSE), 500 amino acids. PANTHER PTHR24279:SF1 is officially CYTOCHROME P450 11B2, MITOCHONDRIAL. The supported fetch normalized the organism directory to `mouse`.
+
+PMID:1686470 directly expressed cloned mouse Cyp11b enzymes in COS7 cells: Cyp11b2 efficiently formed aldosterone, whereas Cyp11b1 formed corticosterone without aldosterone. This establishes the selected mouse protein as the terminal multistep aldosterone enzyme. PMID:15731365 independently reports loss of plasma aldosterone in Cyp11b2-deficient mice, with hypotension, hyperkalemia, compensatory renin/angiotensin activation and adrenal cortical remodeling. These physiological findings corroborate hormone production but do not turn the enzyme into an ion transporter or developmental patterning factor. PMID:16118390 and PMID:18039983 further support electrolyte and blood-pressure phenotypes. All these caches were abstract-only at inspection.
+
+Three core reactions are distinguished: DOC 11beta-hydroxylation to corticosterone, corticosterone 18-hydroxylation, and terminal 18-hydroxycorticosterone oxidation to aldosterone. The last has a proposed molecular-function term rather than an invented GO identifier. Corticosterone is both an intermediate here and the predominant mouse glucocorticoid. Human-like cortisol synthesis is not asserted as the normal mouse adrenal endpoint; the existing cortisol-metabolism IBA is retained only as a secondary homolog-supported catalytic capability.
+
+All 46 seeded rows were judged. Mitochondrial localization is refined consistently to the inner membrane; ISO source metadata records localization refinement rather than failed orthology. Dendritic localization remains UNDECIDED because independent target-specific evidence was not recovered. The hamster-focused PMID:8645611 and rat PMID:2738055 are explicitly distinguished from the direct mouse expression study; an abstract naming another species was not used to declare an experimental annotation erroneous. Proteomic abstracts do not expose all target-specific supplementary identifications. Broad cholesterol metabolism is non-core pathway context, without claiming cholesterol is the immediate substrate. No NEW annotation rows were added.
+
+
+## Terminal steroidogenesis audit, 2026-10-25
+
+Manual primary-literature reassessment followed the review and annotation-reviewer workflow. Falcon deep research failed authentication, and its Perplexity-lite fallback failed with insufficient quota (run log `/tmp/adrenal-CYP11B1-deep.log`); the established outage was not retried for each homolog. No provider-branded research file was manufactured. Supported fetch commands supplied UniProt, GOA and publication caches. Abstract-only caches were treated as such, and inaccessible experimental evidence was not rejected merely for being inaccessible. No NEW biological-process rows were added.
+
+Evolutionary scope: PMID:32196091 reconstructs functional specialization after duplication in Old World primates. This is not a universal mammalian two-paralog architecture: some mammals retain a single multifunctional CYP11B, and other lineages have additional copies. PANTHER PTHR24279:SF1 has official label CYTOCHROME P450 11B2, MITOCHONDRIAL but also contains zebrafish cyp11c1; membership alone cannot establish aldosterone synthesis. Corticosterone 18-monooxygenase activity describes the hydroxylation step, not the final conversion of 18-hydroxycorticosterone to aldosterone.
+
+
+## PR #5543 Linux reference-path correction, 2026-10-25
+
+The tracked source is `genes/mouse/Cyp11b2/Cyp11b2-uniprot.txt`. Active review references now use `file:mouse/Cyp11b2/Cyp11b2-uniprot.txt`, matching Git path case exactly. Local case-insensitive filesystem validation had hidden the uppercase-organism mismatch that failed Linux CI. A case-sensitive audit against `git ls-files` covered all 14 curated YAML files changed by this PR (177 expanded file-reference occurrences, 12 unique references); this was the only mismatched source. Module and other active notes contained no incorrect path. Biological decisions and source quotations are unchanged, and earlier history target identifiers are preserved.
+
+## Root-organelle correction, 2026-10-26
+
+The supported root mitochondrion annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.

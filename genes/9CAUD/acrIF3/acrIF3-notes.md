@@ -99,3 +99,10 @@ texts — and the relevant full text is cached and has been read.
 
 No Aca repressor is assigned to the JBD5 locus in the evidence reviewed here, so the
 module's part 4 is not annotated for this gene.
+
+
+## 2026-10-25 comparative anti-CRISPR audit
+
+PMIDs:26416740,27455460,27585537 establish Cas2/3 sequestration, preserved target recognition and loss of recruitment/primed acquisition. PDB 5B7I/5GNF/5GQH map this 139-aa accession. The mechanism is established for the tested type I-F machinery; an assertion that protein sequestration is possible only in class 1 systems was removed. Crystallographic calcium contacts remain over-annotated as a functional metal-binding claim, not declared nonexistent.
+
+Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals were reassessed independently. Primary references were obtained through the normal publication cache. A normal Falcon attempt with perplexity-lite fallback failed; logs are in `.cache/module-audit-logs/anti-crispr-deep-9CAUD-acrIF3.log`. These are manual research notes, not provider-generated research.

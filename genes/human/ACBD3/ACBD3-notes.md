@@ -475,3 +475,26 @@ the habit is not conservative, it is just wrong in whichever direction the summa
   reports that ACBD3 recruits PPM1L to ER-Golgi membrane contact sites through
   its GOLD domain, so the same adaptor term used for the other membrane-recruited
   ACBD3 partners is the more informative molecular-function target for this row.
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+Row: one GO:0005739 row, IEA GO_REF:0000044 (UniProt keyword SL-0173), already
+KEEP_AS_NON_CORE. No sub-compartment rows.
+
+Checked:
+- UniProt: "Mitochondrion {ECO:0000250}. Note=Also mitochondrial (via its interaction
+  with PBR)" [file:human/ACBD3/ACBD3-uniprot.txt] - By similarity, no human
+  localisation data.
+- The rodent source (fetched, abstract-only) [PMID:11731621 "Glutathione-S-transferase
+  -PAP7 interacted with both the mitochondrial PBR and cytosolic PKA-RIalpha in MA-10
+  Leydig cells."]; the mitochondrial targeting of PKA is proposed, not shown
+  [PMID:11731621 "PAP7 may function by targeting the PKA isoenzyme to organelles rich
+  in PBR, i.e. mitochondria"].
+- No presequence, no TM; ACBD3 is a peripheral Golgi membrane scaffold. Any
+  mitochondrial pool would be peripheral on the TSPO-bearing outer membrane, but that
+  is one indirect (partner-location) line.
+
+Outcome: root; KEEP_AS_NON_CORE kept with a reason recording the check. The
+organelle claim is weak (interaction-based, rodent) but not contradicted; flagged as a
+judgement call (MARK_AS_OVER_ANNOTATED would also be defensible). PMID:11731621 added
+to references.

@@ -16,3 +16,14 @@
 ## Curation points
 - Urea cycle rows (IBA, IEA, and PomBase IGI from PMID:20435771): S. pombe has OTC (mitochondrial arg3) and the cytosolic ASS/ASL, but arginase acts in arginine catabolism (nitrogen use, ornithine supply), not a ureotelic cycle. MODIFY to GO:0006527, consistent with the yeast CAR1 review and the module note. PomBase GO-CAM also uses urea cycle — flag for curator.
 - No S. pombe evidence for the arginase–OTC "epiarginase" complex described for budding-yeast CAR1/ARG3; S. pombe OTC is mitochondrial, so this regulatory complex probably cannot form. Not asserted.
+
+
+## 2026-10-26 systematic arginase-pathway audit
+
+Reviewed every one of the 21 original annotations and all core functions using the review and annotation-reviewer workflows. Machine payloads, row order, evidence codes, qualifiers, source identifiers and WITH/FROM values were preserved. No NEW rows were added.
+
+Full PMID:20435771 results directly assay native urea production in single and double arginase mutants; car3 in that paper is current aru1/SPAC3H1.07. Iron regulates Car1, but deletion of aru1/car3 induces car1 approximately fivefold, so single-mutant activities cannot simply be summed to obtain wild-type partitioning. Full PMID:20460254 and 26075619 distinguish measured isotope conversion from the proposed detailed arginine re-synthesis route. The latter explicitly includes OTC Arg3 and defeats the old non-ureotelic objection to existing cycle terms. Native conversion is nearly eliminated, rather than universally abolished, by double deletion under the measured conditions. Cytosolic location is retained from combined evidence; the inaccessible 1994 full text is not claimed to contain a newly inspected fractionation experiment.
+
+Normal publication caching passed. Genuine Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota errors prevented a report. Manual source review is recorded here, with no fabricated provider-named research file. Abstract-only and bibliographic-only access are distinguished from full text; unknown target supplementary details are not treated as a contradiction. Logs are under `.cache/module-audit-logs/arginase-SCHPO-car1-*`.
+
+The initial focused validation passed. Record sections are backfilled, and final schema/term/reference validation, rendering and helper-history checks are recorded in the same log directory. Actions: ACCEPT 12, KEEP_AS_NON_CORE 4, MODIFY 5.

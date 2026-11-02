@@ -2,6 +2,14 @@
 
 UniProt P12684; HMG-CoA reductase 2, EC 1.1.1.34; ER/nuclear envelope; regulated ERAD substrate [UniProt:P12684].
 
+## 2026-10-24 PTHR10572 PAINT alignment
+
+- Re-ran `just fetch-gene yeast HMG2`; UniProt P12684, GOA, and the PTHR10572 cache were already current.
+- Falcon deep research was attempted, but no external research provider/API key was available after the wrapper extracted the UniProt context.
+- Searched for newer HMG2 literature. Recent results covered databases, older ERAD/Hmg2 regulation studies, or pathway-engineering uses rather than new native-function evidence that would change the GO calls.
+- PTHR10572 PAINT alignment: keep `GO:0004420`, `GO:0005789`, `GO:0006696`, and broad `GO:0008299` IBAs as sound; continue removing the stale `GO:0005778` peroxisomal-membrane IBA from eukaryotic node `PANTHER:PTN000060347`.
+- Tightened the peroxisomal `propagation_review` to trace the bad IBA to the proximate PAINT node rather than to the single human HMGCR seed, and replaced truncated UniProt `Reaction=` quotes with complete catalytic text.
+
 ## Evidence journal
 - Functional isozyme [PMID:2828155 "The two yeast genes for 3-hydroxy-3-methylglutaryl-coenzyme A (HMG-CoA) reductase, HMG1 and HMG2, each encode a functional isozyme."]; Hmg1 gives >=83% of activity [PMID:3526336].
 - Localisation: NE at native levels, peripheral ER when overexpressed [PMID:8744950 "increased levels of Hmg1p were concentrated in the nuclear envelope, whereas increased levels of Hmg2p were concentrated in the peripheral ER."]

@@ -62,3 +62,71 @@ Reactome R-HSA-4084982 concurs: "CMAS is ubiquitously expressed and localizes to
 - MF: GO:0008781 N-acylneuraminate cytidylyltransferase activity.
 - BP: GO:0006055 CMP-N-acetylneuraminate biosynthetic process.
 - Location: GO:0005634 nucleus (experimental; also detected nucleolus/nucleoplasm sub-compartments).
+
+## 2026-10-09 — weekly compliance pass
+
+Evidence-aware compliance (`just compliance-all`) had CMAS at 47.62 weighted.
+All nine annotation actions were left unchanged — the prior review's calls hold —
+and the pass added the missing justification and provenance.
+
+- **`review.reason` added to all 9 annotations.** Two are worth recording here
+  because the reasoning is more than "over-general / fine":
+
+  - **GO:0006054 `KEEP_AS_NON_CORE` (not MODIFY).** These are not simply parent
+    and child of one claim. GO:0006054 is about metabolism of
+    **N-acetylneuraminate**, CMAS's *substrate*; GO:0006055 is about biosynthesis
+    of **CMP-N-acetylneuraminate**, its *product*. CMAS genuinely participates in
+    both — it consumes the one and makes the other — so the UniPathway row
+    (UPA00628) is accurate at its own level of description, not a granularity
+    error. Non-core only because the product term is the sharper statement and
+    carries the IMP.
+  - **GO:0016020 `MARK_AS_OVER_ANNOTATED` is the right action here**, in contrast
+    to the GO:0005515 rows elsewhere in this batch: the defect *is* a claim
+    exceeding the evidence. The measurement (CMAS peptides in a membrane fraction)
+    stands; the inference to a membrane location does not. The authors' own stated
+    limitation makes the call checkable rather than merely plausible:
+    [PMID:19946888 "The remaining species were largely involved in cellular processes and molecular functions that could be predicted to be transiently associated with membranes."]
+    — only ~40% of their 1843 IDs were predicted plausible membrane proteins.
+
+- **Why the two nucleus-adjacent HDA rows get opposite treatment.** GO:0016020
+  (PMID:19946888) is flagged; GO:0005634 (PMID:21630459) is accepted. The
+  difference is convergence plus preparation quality — sperm nuclei were
+  [PMID:21630459 "sperm nuclei were obtained through CTAB treatment and isolated to over 99.9% purity without any tail fragments, acrosome or mitochondria"]
+  and the compartment is already established by low-throughput experiment
+  (UniProt Nucleus, ECO:0000269|PubMed:11602804). Cell-type caveat now recorded:
+  that observation is in mature spermatozoa, while the primary nuclear work is
+  somatic.
+
+- **`findings` added to all 9 bare references**, four of them on the UniProt
+  entry. Verbatim quotes everywhere a source is cached; the five GO_REF findings
+  are statement-only (documents not cached → quotes unverifiable). A second
+  finding was added to PMID:31121216 recording the *within-panel contrast* that
+  does the real work: CMP-sialic acid is only "dramatically reduced" in GNE and
+  NANS KO but **undetectable** in CMAS KO, which is what places CMAS at the single
+  committed step rather than merely in the pathway.
+
+- **`alternative_products` descriptions.** Isoform 2 (VSP_012764) lacks residues
+  264–434, the entire C-terminal half. Since the active enzyme is a dimer of
+  dimers, whether this truncation can tetramerize is an open question, now raised
+  explicitly rather than left implicit.
+
+- **4 `suggested_questions` and 3 `suggested_experiments`** where there were none.
+  The sharpest gap is the one UniProt itself sets up: the BC2 motif is "necessary
+  and sufficient for the nuclear localization and contains the catalytic active
+  site", yet [file:human/CMAS/CMAS-uniprot.txt "The localization in the nucleus is however not required for the enzyme
+      activity"]. So nuclear residence may be a consequence of the active site
+  overlapping an import signal and of no functional consequence — which is exactly
+  why `nucleus` is annotated as a location with **no** corresponding nuclear
+  process term. The proposed localization-restricted rescue would settle it.
+  Second real question: CMAS accepts Neu5Gc, which humans cannot synthesize
+  (CMAH inactivated), so its kinetic discrimination between Neu5Ac and Neu5Gc may
+  set how much dietary Neu5Gc enters human glycoconjugates.
+
+Result: 47.62 → **91.43** weighted, `just validate` clean (it was already clean
+before). Remaining gaps are deliberate: five GO_REF `findings[].supporting_text`
+slots, and `literature_support` on two rows that carry **no PMID at all** —
+GO:0005730 nucleolus (reference is the HPA curation `GO_REF:0000052`) and
+GO:0005654 nucleoplasm (reference is `Reactome:R-HSA-4084982`). Note also that
+PMID:11602804 (Lawrence et al. 2001), the primary experimental source for the
+activity, tissue specificity and nuclear location, is **not** in the publications
+cache; everything from it is quoted through the UniProt record.

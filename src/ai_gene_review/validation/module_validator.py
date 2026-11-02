@@ -213,6 +213,7 @@ class PaintAnnotationRow:
     negated: bool
     seeds: str
     source_path: Path
+    date: str = ""
 
     @property
     def uniprot_seed_accessions(self) -> Set[str]:
@@ -606,6 +607,7 @@ def load_paint_index(panther_dir: Path) -> PaintIndex:
                         negated=str(row.get("negated") or "").lower() == "true",
                         seeds=str(row.get("seeds") or ""),
                         source_path=tsv_path,
+                        date=str(row.get("date") or ""),
                     )
                 )
     _PAINT_INDEX_CACHE[cache_key] = index
@@ -2291,7 +2293,7 @@ def validate_executable_models(
                 )
     warnings = [
         f"Executable model {model_id}: its scenarios are not checked "
-        "(only module-derived Boolean models are simulated)"
+        "(only module-derived Boolean and agent-based models are simulated)"
         for model_id in unchecked_scenario_models(doc)
     ]
     logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]

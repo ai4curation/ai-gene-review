@@ -22,3 +22,42 @@ The core molecular/cellular role of VPS4B is ATP hydrolysis-driven ESCRT-III pol
 Generic `GO:0005515 protein binding` rows should not be retained as informative molecular functions. VPS4B interactions with ESCRT-III, VPS4A, VTA1, ZFYVE19/ANCHR, and high-throughput partners are useful context, but the curated function should focus on ATP-dependent ESCRT-III disassembly and complex binding when supported.
 
 Viral budding, exosome secretion, plasma membrane repair, cytokinesis/midbody, nuclear-envelope, and centrosome/spindle terms are real ESCRT-output contexts but should be marked non-core unless the row overstates a downstream phenotype. Autophagy rows remain conservative pending Falcon and direct human evidence.
+
+## 2026-10-25: inflammasome lead assessed (litscan #3920)
+
+A 2026 report proposes a non-ESCRT role for VPS4B at the ASC speck: Vps4B is
+described as a component of the NLRP3 and AIM2 inflammasomes that interacts
+endogenously with ASC and caspase-1, is recruited to the speck by Ca2+ signalling
+downstream of NLRP3/ASC polymerisation, and forms a ring encircling the ASC filament
+that disassembles and liberates the spent caspase-1 CARD, allowing continuous
+caspase-1 recruitment [PMID:42714851, "we identified the ATPase Vps4B as a central
+component of the inflammasome that endogenously interacts with ASC and caspase-1";
+PMID:42714851, "Vps4B forms a ring-like structure encircling the ASC filament and
+catalyzes the disassembly and liberation of the used caspase-1 CARD domain."].
+
+**No change made to this review.** The claimed activity is mechanistically continuous
+with the established core function - ATP-dependent disassembly of a protein polymer
+through the central pore of stacked VPS4 rings - but the evidence does not yet support
+an annotation here:
+
+- Single primary report, cached abstract-only (`full_text_available: false`), no
+  independent replication. GOA carries no inflammasome or pyroptosis row for VPS4B,
+  and VPS4B appears in no cached GO-CAM.
+- The functional unit is unsettled. UniProt records that VPS4B "Interacts with VPS4A;
+  the interaction suggests a heteromeric assembly with VPS4A" [UniProt:O75351,
+  CC:SUBUNIT], and ComplexPortal CPX-338 is the VPS4A/B complex; the abstract does not
+  address whether VPS4A is at the speck or redundant there.
+- No ATPase-dead separation of function is reported, so it is not established that the
+  inflammasome phenotype requires ATP hydrolysis by VPS4B rather than its presence.
+- Substrate selectivity is unexplained: the ring is placed on the ASC filament while
+  the substrate is said to be the caspase-1 CARD polymer.
+
+The assessment, the reopening conditions, and the admission path (a regulatory annoton
+on the `casp1_autoactivation` step) are recorded in
+`modules/canonical_nlrp3_inflammasome.yaml` - note (9) and a structured
+`knowledge_gaps` entry. That module, not `modules/nlr_signaling.yaml`, is the right
+home: `nlr_signaling` is the coarse sensor-layer sketch and delegates the NLRP3 branch.
+If the role is confirmed, the candidate terms to weigh are `GO:0140545 ATP-dependent
+protein disaggregase activity` (already proposed as NEW here for the ESCRT-III
+activity) or `GO:0051261 protein depolymerization`, with `GO:0072559 NLRP3
+inflammasome complex` as location - but only after replication.
