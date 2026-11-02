@@ -2,7 +2,8 @@
 
 Added as the monoderm exemplar of the LspA step in `modules/bacterial_lipoprotein_maturation.yaml`.
 
-- Provider deep research was not run for this gene in this session (usage-limited batch); the review relies on the
+- Provider deep research could not run: `just deep-research-falcon BACSU lspA` failed with a 403 authentication error
+  (2026-11-02), the only configured provider key, and no MOD description provider exists for BACSU. The review relies on the
   UniProt record and two cached primary papers, both abstract-only in the cache.
 - Cloned by complementing an E. coli lsp(ts) mutant; activity shown by pulse labelling in E. coli
   [PMID:9141696 "Activity of the B. subtilis SPase II was demonstrated by a pulse-labelling experiment in E. coli."].

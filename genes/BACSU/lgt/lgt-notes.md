@@ -2,7 +2,8 @@
 
 Added as the monoderm exemplar of the Lgt step in `modules/bacterial_lipoprotein_maturation.yaml`.
 
-- Provider deep research was not run for this gene in this session (usage-limited batch); the review relies on the
+- Provider deep research could not run: `just deep-research-falcon BACSU lgt` failed with a 403 authentication error
+  (2026-11-02), the only configured provider key, and no MOD description provider exists for BACSU. The review relies on the
   UniProt record and the two cached primary papers below. Both are abstract-only in the cache.
 - lgt inactivation abolishes lipid modification and signal peptide cleavage but is not lethal
   [PMID:10096076 "Inactivation of Igt in B. subtilis by a nonsense mutation (prs-11 mutation) or by disruption was shown here to abolish lipomodification of prelipoproteins completely"].
