@@ -14,6 +14,11 @@ Collects three kinds of case:
 
 Writes ``PAINT_REPORT.md``. It is a draft to send; nothing is posted anywhere.
 
+Sections 2-4 read git-ignored inputs (``ird_nodes.tsv``, ``ird_clade_members.tsv.gz``,
+``ird_fully_reannotated.tsv``), so the report cannot be regenerated from a clean
+checkout: run ``fetch_paint_ird.py`` and ``ird_seed_check.py`` first. The script stops
+rather than write a section empty.
+
 Usage:
     uv run python projects/IRD_EVIDENCE/paint_report.py
 """
@@ -21,6 +26,7 @@ Usage:
 from __future__ import annotations
 
 import csv
+import gzip
 import re
 import sys
 from pathlib import Path
@@ -84,6 +90,13 @@ def gene_cases(assessed: set[tuple[str, str]]) -> list[list[str]]:
 
     with (HERE / "ird_nodes.tsv").open() as fh:
         node_family = {r["ird_node"]: r["family"] for r in csv.DictReader(fh, delimiter="\t")}
+    members = HERE / "ird_clade_members.tsv.gz"
+    if not members.exists():
+        raise SystemExit(f"{members} is missing (it is git-ignored); run projects/IRD_EVIDENCE/fetch_paint_ird.py first")
+    with gzip.open(members, "rt") as fh:
+        clade: dict[str, set[str]] = {}
+        for r in csv.DictReader(fh, delimiter="\t"):
+            clade.setdefault(r["ird_node"], set()).add(r["leaf_node"])
     rows = []
     for path in sorted(ROOT.glob("genes/*/*/*-ai-review.yaml")):
         text = path.read_text()
@@ -102,8 +115,10 @@ def gene_cases(assessed: set[tuple[str, str]]) -> list[list[str]]:
                     continue
                 rows.append([
                     node_family.get(node, xref_family), node, f"{term.get('id')} {term.get('label', '')}", loss.get("evidence", ""),
+                    str(len(clade.get(node, ())) or "?"),
                     agreement, f"{doc.get('gene_symbol')} ({a.get('evidence_type')}:{review.get('action')})",
-                    first_sentences(review.get("reason", ""), 1), GENE_SUGGEST[agreement],
+                    " ".join(str(loss.get("argument") or first_sentences(review.get("reason", ""), 1)).split()),
+                    loss.get("suggestion") or GENE_SUGGEST[agreement],
                     str(path.relative_to(ROOT)),
                 ])
     return rows
@@ -132,7 +147,8 @@ def fully_reannotated() -> list[list[str]]:
         raise SystemExit(f"{path} is missing (it is git-ignored); run projects/IRD_EVIDENCE/ird_seed_check.py first")
     with path.open() as fh:
         return [
-            [r["family"], r["ird_node"], f"{r['go_id']} {r['go_label']}", r["ird_date"], r["kind"],
+            [r["family"], r["ird_node"], f"{r['go_id']} {r['go_label']}", r["ird_date"],
+             f"{r['clade_size']}/{r['clade_leaves']}", r["kind"],
              r["reannotated_by"].replace("|", "; ")]
             for r in csv.DictReader(fh, delimiter="\t")
         ]
@@ -166,7 +182,7 @@ def main() -> int:
         "From `propagation_review.paint_losses` in the gene reviews, for losses no family",
         "review has assessed. The quoted evidence is in each gene review.",
         "",
-        *table(["Family", "Node", "Blocked term", "Code", "Judged", "Gene (row)", "Why (from the review)", "Suggested", "Review"], genes),
+        *table(["Family", "Node", "Blocked term", "Code", "Clade (leaves)", "Judged", "Gene (row)", "Why (from the review)", "Suggested", "Review"], genes),
         "",
         f"## 3. Stale overrides: the blocked IBD is gone ({len(stale)})",
         "",
@@ -182,7 +198,7 @@ def main() -> int:
         "contradicts PAINT's own propagation: it should also block that term, or be retracted.",
         "Source: `ird_seed_check.py` (see `ird_seed_check.md`).",
         "",
-        *table(["Family", "IRD node", "Blocked term", "IRD date", "Kind", "IBA sources (node, term, where)"], full),
+        *table(["Family", "IRD node", "Blocked term", "IRD date", "Clade (checked/all)", "Kind", "IBA sources (node, term, where)"], full),
         "",
     ]
     OUT.write_text("\n".join(md))

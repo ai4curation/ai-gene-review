@@ -193,11 +193,12 @@ def main() -> int:
             c = line.split("\t")
             if len(c) > 8 and c[1] in accs and "NOT" not in c[3]:
                 leaf_pos[c[1]].add(c[4])
-                leaf_src[c[1]] += [(c[4], t.split(":")[-1]) for t in c[7].split("|") if "PTN" in t][:1]
+                leaf_src[c[1]] += [(c[4], t.split(":")[-1]) for t in c[7].split("|") if "PTN" in t]
     full_rows = []
     trees: dict[str, dict | None] = {}
     for r in ird:
-        members = [m for m in clade.get((r["ird_node"], r["go_id"]), []) if m["uniprot"]]
+        all_members = clade.get((r["ird_node"], r["go_id"]), [])
+        members = [m for m in all_members if m["uniprot"]]
         if not members or not all(leaf_pos.get(m["uniprot"], set()) & desc(r["go_id"]) for m in members):
             continue
         tree = trees.setdefault(r["family"], load_family(r["family"], ROOT / ".cache" / "panther_trees"))
@@ -207,14 +208,17 @@ def main() -> int:
         def where(src: str) -> str:
             if src == r["ird_node"]:
                 return "same node"
+            if not tree:
+                return "no tree"
             below = set(leaves_below(tree, src)) if tree else set()
             return "below" if below and below <= inside else "above"
 
         readders = sorted(f"{src} {gid} ({where(src)}{', same term' if gid == r['go_id'] else ''})" for src, gid in sources)
         full_rows.append({
             "family": r["family"], "ird_node": r["ird_node"], "go_id": r["go_id"], "go_label": r["go_label"],
-            "ird_date": r["date"], "clade_size": len(members), "reannotated_by": "|".join(readders),
-            "kind": next((k for k in ("below", "same node") if any(where(s) == k for s, _ in sources)), "above"),
+            "ird_date": r["date"], "clade_size": len(members), "clade_leaves": len(all_members),
+            "reannotated_by": "|".join(readders),
+            "kind": next((k for k in ("below", "same node", "no tree") if any(where(s) == k for s, _ in sources)), "above"),
         })
     with OUT_FULL.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(full_rows[0]) if full_rows else ["family"], delimiter="\t", lineterminator="\n")
@@ -235,6 +239,8 @@ def main() -> int:
         "",
         f"- IRD rows: {len(ird)}. Seed slots on their ancestral IBDs: {n_seeds} "
         f"({len(set().union(*ibd_seeds.values())) if ibd_seeds else 0} distinct seeds, {mapped} mapped to UniProt).",
+        f"- Clade members checked: {sum(1 for ms in clade.values() for m in ms if m['uniprot'])} of "
+        f"{sum(len(ms) for ms in clade.values())} (only leaves with a UniProt accession can match a seed).",
         *[f"- Not mapped: {n} {prefix} seeds ({reason[:120]})." for prefix, (n, reason) in UNMAPPABLE.items()],
         f"- **{len(seed_rows)} IRD rows ({100 * len(seed_rows) / len(ird):.1f}%) have at least one seed of the "
         f"blocked IBD inside their own clade**, in {len(by_family)} families.",
@@ -252,7 +258,7 @@ def main() -> int:
         "Every protein in the clade still gets the blocked term, or a term below it in GO (by",
         "is_a or part_of, the relations `analyze_ird.py` uses), as a positive IBA. The IRD",
         "therefore removes nothing a user can see. The source of each IBA is the PTN node in",
-        "the leaf GAF's with/from. Three kinds occur:",
+        "the leaf GAF's with/from (every PTN listed there). The kinds are:",
         "",
         f"- **Below** ({sum(r['kind'] == 'below' for r in full_rows)}): PAINT annotates the term again on a",
         "  node inside the IRD clade, overriding the IRD.",
@@ -260,6 +266,11 @@ def main() -> int:
         "  IBD for a more specific term, for example a mitochondrion IBD beside a NOT cytoplasm.",
         f"- **Above** ({sum(r['kind'] == 'above' for r in full_rows)}): an ancestral IBD carries a more specific",
         "  term that the IRD does not block.",
+        *([f"- **No tree** ({sum(r['kind'] == 'no tree' for r in full_rows)}): the family's PANTHER tree is not",
+           "  cached, so below and above cannot be told apart."] if any(r["kind"] == "no tree" for r in full_rows) else []),
+        "",
+        "Only clade members with a UniProt accession can be checked; the Clade column gives",
+        "checked/all leaves. A clade where few leaves are checked is weaker evidence.",
         "",
         "In each case the IRD contradicts annotations PAINT itself propagates: a gene cannot lack",
         "a process or location while having one of its subtypes or parts. Either the IRD should",
@@ -268,7 +279,7 @@ def main() -> int:
         "transport); those are listed but are weaker evidence of inconsistency.",
         "",
         *md_table(["Family", "IRD node", "Blocked term", "IRD date", "Clade", "Kind", "IBA sources (node, term, where)"],
-                  [[r["family"], r["ird_node"], f"{r['go_id']} {r['go_label']}", r["ird_date"], r["clade_size"],
+                  [[r["family"], r["ird_node"], f"{r['go_id']} {r['go_label']}", r["ird_date"], f"{r['clade_size']}/{r['clade_leaves']}",
                     r["kind"], r["reannotated_by"].replace("|", "; ")] for r in full_rows]),
         "",
     ]

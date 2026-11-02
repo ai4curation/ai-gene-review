@@ -11,7 +11,7 @@ def row(node: str, go: str, evidence: str, negated: bool) -> PaintAnnotationRow:
     """One local PAINT slice row."""
     return PaintAnnotationRow(
         family="PTHR1", node_curie=node, go_id=go, aspect="F", evidence=evidence,
-        negated=negated, seeds="PANTHER:PTN1", source_path=Path("unused"),
+        negated=negated, seeds="PANTHER:PTN1", source_path=Path("unused"), date="20260715",
     )
 
 
@@ -52,3 +52,12 @@ def test_wrong_term_or_evidence_warns() -> None:
     wrong_code = check(review_with({"node_id": "PANTHER:PTN2", "evidence": "IKR", "agreement": "AGREES"}))
     assert len(wrong_term) == 1 and "no IRD/IKR loss of GO:2" in wrong_term[0]
     assert len(wrong_code) == 1 and "records IRD, not IKR" in wrong_code[0]
+
+
+def test_wrong_date_warns_and_missing_date_is_not_checked() -> None:
+    """The date pins the PAINT release, so a declared date must match the slice when given."""
+    loss = {"node_id": "PANTHER:PTN2", "evidence": "IRD", "agreement": "AGREES"}
+    wrong = check(review_with({**loss, "date": "20250101"}))
+    assert len(wrong) == 1 and "dated 20260715, not 20250101" in wrong[0]
+    assert check(review_with({**loss, "date": "20260715"})) == []
+    assert check(review_with(loss)) == []

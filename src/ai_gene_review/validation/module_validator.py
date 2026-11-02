@@ -213,6 +213,7 @@ class PaintAnnotationRow:
     negated: bool
     seeds: str
     source_path: Path
+    date: str = ""
 
     @property
     def uniprot_seed_accessions(self) -> Set[str]:
@@ -606,6 +607,7 @@ def load_paint_index(panther_dir: Path) -> PaintIndex:
                         negated=str(row.get("negated") or "").lower() == "true",
                         seeds=str(row.get("seeds") or ""),
                         source_path=tsv_path,
+                        date=str(row.get("date") or ""),
                     )
                 )
     _PAINT_INDEX_CACHE[cache_key] = index

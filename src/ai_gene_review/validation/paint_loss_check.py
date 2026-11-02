@@ -3,7 +3,8 @@
 A row's ``review.propagation_review.paint_losses`` says that a PAINT IRD or IKR at a
 node now blocks the row's term on the gene's lineage. That is checkable against the
 family's ``interpro/panther/<PTHR>/<PTHR>-paint.tsv``: the node must carry a loss row
-for the same term, with the declared evidence code. Families without a local slice
+for the same term, with the declared evidence code and, when the review gives one, the
+same date (the date pins the PAINT release the review relied on). Families without a local slice
 cannot be checked and are skipped; a mismatch is a warning, since a slice can lag
 the PAINT release the review was written against.
 """
@@ -18,10 +19,11 @@ from ai_gene_review.validation.validation_report import ValidationReport, Valida
 LOSS_CODES = ("IRD", "IKR")
 
 
-def loss_problem(node: str, term: str, evidence: str, paint_index: PaintIndex) -> str | None:
+def loss_problem(node: str, term: str, evidence: str, paint_index: PaintIndex, date: str = "") -> str | None:
     """Why a declared loss disagrees with the local PAINT rows, or None if it agrees.
 
     Returns None as well when the node has no local rows at all (nothing to check).
+    An empty ``date`` is not compared.
     """
     rows = paint_index.get(node, [])
     if not rows:
@@ -32,6 +34,9 @@ def loss_problem(node: str, term: str, evidence: str, paint_index: PaintIndex) -
     codes = sorted({r.evidence for r in losses})
     if evidence not in codes:
         return f"{node} records {'/'.join(codes)}, not {evidence}, for {term}"
+    dates = sorted({r.date for r in losses if r.evidence == evidence and r.date})
+    if date and dates and date not in dates:
+        return f"{node} {evidence} for {term} is dated {'/'.join(dates)}, not {date}"
     return None
 
 
@@ -43,7 +48,10 @@ def check_paint_losses(data: dict[str, Any], report: ValidationReport, paint_ind
         prop = ((annotation.get("review") or {}).get("propagation_review") or {})
         term = (annotation.get("term") or {}).get("id", "")
         for j, loss in enumerate(prop.get("paint_losses") or []):
-            problem = loss_problem(str(loss.get("node_id", "")), term, str(loss.get("evidence", "")), paint_index)
+            problem = loss_problem(
+                str(loss.get("node_id", "")), term, str(loss.get("evidence", "")), paint_index,
+                str(loss.get("date") or ""),
+            )
             if problem:
                 report.add_issue(
                     ValidationSeverity.WARNING,

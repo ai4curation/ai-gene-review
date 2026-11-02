@@ -27,12 +27,12 @@ sent. Each case links the review that argues it, with verbatim quotes in that fi
 From `propagation_review.paint_losses` in the gene reviews, for losses no family
 review has assessed. The quoted evidence is in each gene review.
 
-| Family | Node | Blocked term | Code | Judged | Gene (row) | Why (from the review) | Suggested | Review |
-|---|---|---|---|---|---|---|---|---|
-| PTHR13194 | PTN000995776 | GO:0010257 NADH dehydrogenase complex assembly | IRD | CONTRADICTED | cia30 (IBA:ACCEPT) | NADH dehydrogenase complex assembly is the core function of CIA30. | Retract the IRD | genes/NEUCR/cia30/cia30-ai-review.yaml |
-| PTHR10454 | PTN000047958 | GO:0031265 CD95 death-inducing signaling complex | IRD | CONTRADICTED | CFLAR (IBA:ACCEPT) | c-FLIP is a component of the CD95 death-inducing signaling complex: the CD95/TRAILR-FADD DISC assembles by DED assembly with procaspase-8 and cFLIP (PMID:38710704), and FAS/CD95 signaling is one of the core death-receptor branches c-FLIP regulates. | Retract the IRD | genes/human/CFLAR/CFLAR-ai-review.yaml |
-| PTHR12929 | PTN000309189 | GO:0032217 riboflavin transmembrane transporter activity | IRD | CONTRADICTED | SLC52A1 (IBA:ACCEPT) | Riboflavin transmembrane transport is the defining activity of SLC52A1 (RFVT1/hRFT-1), measured directly in riboflavin uptake assays (IDA rows from PMID:20463145 and PMID:21854757). | Retract the IRD | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
-| PTHR12929 | PTN000309189 | GO:0032218 riboflavin transport | IRD | CONTRADICTED | SLC52A1 (IBA:ACCEPT) | SLC52A1 (RFVT1/hRFT-1) carries out riboflavin transport, measured directly in riboflavin uptake assays (IDA row from PMID:20463145; PMID:21854757). | Retract the IRD | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
+| Family | Node | Blocked term | Code | Clade (leaves) | Judged | Gene (row) | Why (from the review) | Suggested | Review |
+|---|---|---|---|---|---|---|---|---|---|
+| PTHR13194 | PTN000995776 | GO:0010257 NADH dehydrogenase complex assembly | IRD | 11 | CONTRADICTED | cia30 (IBA:ACCEPT) | N. crassa cia30 disruption mutants fail to form the membrane-arm assembly intermediate of complex I (PMID:9769214). The IRD clade is fungal CIA30/NDUFAF1 (11 proteins, including N. crassa cia30) and includes complex I-containing fungi. | Retract the IRD, or restrict it to a branch that has lost complex I. | genes/NEUCR/cia30/cia30-ai-review.yaml |
+| PTHR10454 | PTN000047958 | GO:0031265 CD95 death-inducing signaling complex | IRD | 6 | CONTRADICTED | CFLAR (IBA:ACCEPT) | The CD95/TRAILR-FADD DISC assembles with procaspase-8 and cFLIP (PMID:38710704). The IRD clade is mammalian CFLAR (6 proteins). The other CFLAR IRDs on this node (endopeptidase activity, macrophage differentiation, neuron apoptosis) agree with the gene review. | Retract the IRD for GO:0031265 only. | genes/human/CFLAR/CFLAR-ai-review.yaml |
+| PTHR12929 | PTN000309189 | GO:0032217 riboflavin transmembrane transporter activity | IRD | 4 | CONTRADICTED | SLC52A1 (IBA:ACCEPT) | Human SLC52A1 (RFVT1) transports riboflavin in direct assays (IDA, PMID:20463145 and PMID:21854757). The IRD node is the primate SLC52A1 clade (4 proteins), and it blocks both GO:0032217 riboflavin transporter activity and GO:0032218 riboflavin transport. | Retract the IRD for GO:0032217 and GO:0032218. | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
+| PTHR12929 | PTN000309189 | GO:0032218 riboflavin transport | IRD | 4 | CONTRADICTED | SLC52A1 (IBA:ACCEPT) | Human SLC52A1 (RFVT1) transports riboflavin in direct assays (IDA, PMID:20463145 and PMID:21854757). The IRD node is the primate SLC52A1 clade (4 proteins), and it blocks both GO:0032217 riboflavin transporter activity and GO:0032218 riboflavin transport. | Retract the IRD for GO:0032217 and GO:0032218. | genes/human/SLC52A1/SLC52A1-ai-review.yaml |
 
 ## 3. Stale overrides: the blocked IBD is gone (14)
 
@@ -63,25 +63,25 @@ blocked one) as a positive IBA, from the IRD node itself or an ancestor. The IRD
 contradicts PAINT's own propagation: it should also block that term, or be retracted.
 Source: `ird_seed_check.py` (see `ird_seed_check.md`).
 
-| Family | IRD node | Blocked term | IRD date | Kind | IBA sources (node, term, where) |
-|---|---|---|---|---|---|
-| PTHR10131 | PTN007421972 | GO:0007166 cell surface receptor signaling pathway | 20250411 | above | PTN000805720 GO:0033209 (above) |
-| PTHR10794 | PTN000082718 | GO:0034338 short-chain carboxylesterase activity | 20200313 | above | PTN000082647 GO:0008126 (above) |
-| PTHR11119 | PTN002476593 | GO:0015882 L-ascorbic acid transmembrane transport | 20241120 | above | PTN002595861 GO:0015229 (above) |
-| PTHR11610 | PTN000176957 | GO:0016042 lipid catabolic process | 20241120 | above | PTN000906454 GO:0019433 (above) |
-| PTHR11610 | PTN000176957 | GO:0016298 lipase activity | 20260528 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
-| PTHR11610 | PTN008325477 | GO:0016042 lipid catabolic process | 20241120 | above | PTN000906454 GO:0019433 (above) |
-| PTHR11610 | PTN008325477 | GO:0016298 lipase activity | 20260528 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
-| PTHR11958 | PTN002632768 | GO:0015813 L-glutamate transmembrane transport | 20250903 | above | PTN000238242 GO:0005313 (above) |
-| PTHR19321 | PTN004511774 | GO:0005819 spindle | 20230603 | above | PTN000448590 GO:1990023 (above) |
-| PTHR24056 | PTN000623365 | GO:0000307 cyclin-dependent protein kinase holoenzyme complex | 20260313 | above | PTN000623095 GO:1990508 (above) |
-| PTHR24221 | PTN000657226 | GO:0055085 transmembrane transport | 20250903 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24221 | PTN000657241 | GO:0055085 transmembrane transport | 20250903 | same node | PTN000657189 GO:0042626 (above); PTN000657241 GO:0042910 (same node) |
-| PTHR24221 | PTN000657258 | GO:0055085 transmembrane transport | 20250903 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24221 | PTN000657261 | GO:0055085 transmembrane transport | 20250903 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24221 | PTN001542468 | GO:0055085 transmembrane transport | 20250903 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24235 | PTN000662954 | GO:0007218 neuropeptide signaling pathway | 20250618 | above | PTN002538187 GO:0008188 (above) |
-| PTHR33694 | PTN008658623 | GO:0005737 cytoplasm | 20260828 | same node | PTN008658623 GO:0005739 (same node) |
-| PTHR43020 | PTN000228777 | GO:0035596 methylthiotransferase activity | 20260530 | above | PTN000228824 GO:0035597 (above) |
-| PTHR43020 | PTN000228777 | GO:0035600 tRNA methylthiolation | 20241121 | above | PTN000228824 GO:0035597 (above) |
-| PTHR48017 | PTN004585555 | GO:0003333 amino acid transmembrane transport | 20260828 | above | PTN001118955 GO:0015171 (above) |
+| Family | IRD node | Blocked term | IRD date | Clade (checked/all) | Kind | IBA sources (node, term, where) |
+|---|---|---|---|---|---|---|
+| PTHR10131 | PTN007421972 | GO:0007166 cell surface receptor signaling pathway | 20250411 | 3/3 | above | PTN000805720 GO:0033209 (above) |
+| PTHR10794 | PTN000082718 | GO:0034338 short-chain carboxylesterase activity | 20200313 | 1/1 | above | PTN000082647 GO:0008126 (above) |
+| PTHR11119 | PTN002476593 | GO:0015882 L-ascorbic acid transmembrane transport | 20241120 | 1/1 | above | PTN002595861 GO:0015229 (above) |
+| PTHR11610 | PTN000176957 | GO:0016042 lipid catabolic process | 20241120 | 9/9 | above | PTN000906454 GO:0019433 (above) |
+| PTHR11610 | PTN000176957 | GO:0016298 lipase activity | 20260528 | 9/9 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
+| PTHR11610 | PTN008325477 | GO:0016042 lipid catabolic process | 20241120 | 12/12 | above | PTN000906454 GO:0019433 (above) |
+| PTHR11610 | PTN008325477 | GO:0016298 lipase activity | 20260528 | 12/12 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
+| PTHR11958 | PTN002632768 | GO:0015813 L-glutamate transmembrane transport | 20250903 | 20/20 | above | PTN000238242 GO:0005313 (above) |
+| PTHR19321 | PTN004511774 | GO:0005819 spindle | 20230603 | 1/1 | above | PTN000448590 GO:1990023 (above) |
+| PTHR24056 | PTN000623365 | GO:0000307 cyclin-dependent protein kinase holoenzyme complex | 20260313 | 1/1 | above | PTN000623095 GO:1990508 (above) |
+| PTHR24221 | PTN000657226 | GO:0055085 transmembrane transport | 20250903 | 10/10 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24221 | PTN000657241 | GO:0055085 transmembrane transport | 20250903 | 12/12 | same node | PTN000657189 GO:0042626 (above); PTN000657241 GO:0042910 (same node) |
+| PTHR24221 | PTN000657258 | GO:0055085 transmembrane transport | 20250903 | 1/1 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24221 | PTN000657261 | GO:0055085 transmembrane transport | 20250903 | 1/1 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24221 | PTN001542468 | GO:0055085 transmembrane transport | 20250903 | 3/3 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24235 | PTN000662954 | GO:0007218 neuropeptide signaling pathway | 20250618 | 8/8 | above | PTN002538187 GO:0008188 (above) |
+| PTHR33694 | PTN008658623 | GO:0005737 cytoplasm | 20260828 | 54/54 | same node | PTN008658623 GO:0005739 (same node) |
+| PTHR43020 | PTN000228777 | GO:0035596 methylthiotransferase activity | 20260530 | 85/85 | above | PTN000228824 GO:0035597 (above) |
+| PTHR43020 | PTN000228777 | GO:0035600 tRNA methylthiolation | 20241121 | 85/85 | above | PTN000228824 GO:0035597 (above) |
+| PTHR48017 | PTN004585555 | GO:0003333 amino acid transmembrane transport | 20260828 | 31/31 | above | PTN001118955 GO:0015171 (above) |

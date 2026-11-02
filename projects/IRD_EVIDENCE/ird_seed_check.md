@@ -7,6 +7,7 @@ trees. Detail rows are in the git-ignored `ird_seed_in_clade.tsv` and
 ## 1. The IRD clade contains a seed of the IBD it blocks
 
 - IRD rows: 2538. Seed slots on their ancestral IBDs: 10532 (7393 distinct seeds, 7387 mapped to UniProt).
+- Clade members checked: 52660 of 52660 (only leaves with a UniProt accession can match a seed).
 - Not mapped: 3 JaponicusDB seeds (UniProt ID mapping rejected source JaponicusDB: {'url': 'http://rest.uniprot.org/idmapping/run', 'messages': ["The param).
 - **144 IRD rows (5.7%) have at least one seed of the blocked IBD inside their own clade**, in 113 families.
 
@@ -39,7 +40,7 @@ Families with the most such rows:
 Every protein in the clade still gets the blocked term, or a term below it in GO (by
 is_a or part_of, the relations `analyze_ird.py` uses), as a positive IBA. The IRD
 therefore removes nothing a user can see. The source of each IBA is the PTN node in
-the leaf GAF's with/from. Three kinds occur:
+the leaf GAF's with/from (every PTN listed there). The kinds are:
 
 - **Below** (0): PAINT annotates the term again on a
   node inside the IRD clade, overriding the IRD.
@@ -47,6 +48,9 @@ the leaf GAF's with/from. Three kinds occur:
   IBD for a more specific term, for example a mitochondrion IBD beside a NOT cytoplasm.
 - **Above** (18): an ancestral IBD carries a more specific
   term that the IRD does not block.
+
+Only clade members with a UniProt accession can be checked; the Clade column gives
+checked/all leaves. A clade where few leaves are checked is weaker evidence.
 
 In each case the IRD contradicts annotations PAINT itself propagates: a gene cannot lack
 a process or location while having one of its subtypes or parts. Either the IRD should
@@ -56,23 +60,23 @@ transport); those are listed but are weaker evidence of inconsistency.
 
 | Family | IRD node | Blocked term | IRD date | Clade | Kind | IBA sources (node, term, where) |
 |---|---|---|---|---|---|---|
-| PTHR10131 | PTN007421972 | GO:0007166 cell surface receptor signaling pathway | 20250411 | 3 | above | PTN000805720 GO:0033209 (above) |
-| PTHR10794 | PTN000082718 | GO:0034338 short-chain carboxylesterase activity | 20200313 | 1 | above | PTN000082647 GO:0008126 (above) |
-| PTHR11119 | PTN002476593 | GO:0015882 L-ascorbic acid transmembrane transport | 20241120 | 1 | above | PTN002595861 GO:0015229 (above) |
-| PTHR11610 | PTN000176957 | GO:0016042 lipid catabolic process | 20241120 | 9 | above | PTN000906454 GO:0019433 (above) |
-| PTHR11610 | PTN000176957 | GO:0016298 lipase activity | 20260528 | 9 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
-| PTHR11610 | PTN008325477 | GO:0016042 lipid catabolic process | 20241120 | 12 | above | PTN000906454 GO:0019433 (above) |
-| PTHR11610 | PTN008325477 | GO:0016298 lipase activity | 20260528 | 12 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
-| PTHR11958 | PTN002632768 | GO:0015813 L-glutamate transmembrane transport | 20250903 | 20 | above | PTN000238242 GO:0005313 (above) |
-| PTHR19321 | PTN004511774 | GO:0005819 spindle | 20230603 | 1 | above | PTN000448590 GO:1990023 (above) |
-| PTHR24056 | PTN000623365 | GO:0000307 cyclin-dependent protein kinase holoenzyme complex | 20260313 | 1 | above | PTN000623095 GO:1990508 (above) |
-| PTHR24221 | PTN000657226 | GO:0055085 transmembrane transport | 20250903 | 10 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24221 | PTN000657241 | GO:0055085 transmembrane transport | 20250903 | 12 | same node | PTN000657189 GO:0042626 (above); PTN000657241 GO:0042910 (same node) |
-| PTHR24221 | PTN000657258 | GO:0055085 transmembrane transport | 20250903 | 1 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24221 | PTN000657261 | GO:0055085 transmembrane transport | 20250903 | 1 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24221 | PTN001542468 | GO:0055085 transmembrane transport | 20250903 | 3 | above | PTN000657189 GO:0042626 (above) |
-| PTHR24235 | PTN000662954 | GO:0007218 neuropeptide signaling pathway | 20250618 | 8 | above | PTN002538187 GO:0008188 (above) |
-| PTHR33694 | PTN008658623 | GO:0005737 cytoplasm | 20260828 | 54 | same node | PTN008658623 GO:0005739 (same node) |
-| PTHR43020 | PTN000228777 | GO:0035596 methylthiotransferase activity | 20260530 | 85 | above | PTN000228824 GO:0035597 (above) |
-| PTHR43020 | PTN000228777 | GO:0035600 tRNA methylthiolation | 20241121 | 85 | above | PTN000228824 GO:0035597 (above) |
-| PTHR48017 | PTN004585555 | GO:0003333 amino acid transmembrane transport | 20260828 | 31 | above | PTN001118955 GO:0015171 (above) |
+| PTHR10131 | PTN007421972 | GO:0007166 cell surface receptor signaling pathway | 20250411 | 3/3 | above | PTN000805720 GO:0033209 (above) |
+| PTHR10794 | PTN000082718 | GO:0034338 short-chain carboxylesterase activity | 20200313 | 1/1 | above | PTN000082647 GO:0008126 (above) |
+| PTHR11119 | PTN002476593 | GO:0015882 L-ascorbic acid transmembrane transport | 20241120 | 1/1 | above | PTN002595861 GO:0015229 (above) |
+| PTHR11610 | PTN000176957 | GO:0016042 lipid catabolic process | 20241120 | 9/9 | above | PTN000906454 GO:0019433 (above) |
+| PTHR11610 | PTN000176957 | GO:0016298 lipase activity | 20260528 | 9/9 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
+| PTHR11610 | PTN008325477 | GO:0016042 lipid catabolic process | 20241120 | 12/12 | above | PTN000906454 GO:0019433 (above) |
+| PTHR11610 | PTN008325477 | GO:0016298 lipase activity | 20260528 | 12/12 | above | PTN000906454 GO:0004465 (above); PTN000906454 GO:0008970 (above) |
+| PTHR11958 | PTN002632768 | GO:0015813 L-glutamate transmembrane transport | 20250903 | 20/20 | above | PTN000238242 GO:0005313 (above) |
+| PTHR19321 | PTN004511774 | GO:0005819 spindle | 20230603 | 1/1 | above | PTN000448590 GO:1990023 (above) |
+| PTHR24056 | PTN000623365 | GO:0000307 cyclin-dependent protein kinase holoenzyme complex | 20260313 | 1/1 | above | PTN000623095 GO:1990508 (above) |
+| PTHR24221 | PTN000657226 | GO:0055085 transmembrane transport | 20250903 | 10/10 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24221 | PTN000657241 | GO:0055085 transmembrane transport | 20250903 | 12/12 | same node | PTN000657189 GO:0042626 (above); PTN000657241 GO:0042910 (same node) |
+| PTHR24221 | PTN000657258 | GO:0055085 transmembrane transport | 20250903 | 1/1 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24221 | PTN000657261 | GO:0055085 transmembrane transport | 20250903 | 1/1 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24221 | PTN001542468 | GO:0055085 transmembrane transport | 20250903 | 3/3 | above | PTN000657189 GO:0042626 (above) |
+| PTHR24235 | PTN000662954 | GO:0007218 neuropeptide signaling pathway | 20250618 | 8/8 | above | PTN002538187 GO:0008188 (above) |
+| PTHR33694 | PTN008658623 | GO:0005737 cytoplasm | 20260828 | 54/54 | same node | PTN008658623 GO:0005739 (same node) |
+| PTHR43020 | PTN000228777 | GO:0035596 methylthiotransferase activity | 20260530 | 85/85 | above | PTN000228824 GO:0035597 (above) |
+| PTHR43020 | PTN000228777 | GO:0035600 tRNA methylthiolation | 20241121 | 85/85 | above | PTN000228824 GO:0035597 (above) |
+| PTHR48017 | PTN004585555 | GO:0003333 amino acid transmembrane transport | 20260828 | 31/31 | above | PTN001118955 GO:0015171 (above) |

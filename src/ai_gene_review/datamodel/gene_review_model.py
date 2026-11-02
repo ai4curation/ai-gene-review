@@ -5607,6 +5607,8 @@ class PaintLoss(ConfiguredBaseModel):
                        'PaintLoss']} })
     date: Optional[str] = Field(default=None, description="""The loss row's date in PAINT IBD.gaf (YYYYMMDD).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
     agreement: PaintLossAgreementEnum = Field(default=..., description="""Whether this review's evidence supports the loss for this gene.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+    argument: Optional[str] = Field(default=None, description="""For a loss the review disputes (CONTRADICTED or TOO_BROAD), the case to put to PAINT curators, with its citations and the scope of the clade. Used in the IRD_EVIDENCE PAINT report in place of the row's reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+    suggestion: Optional[str] = Field(default=None, description="""The change to propose to PAINT for a disputed loss (for example \"Retract the IRD for GO:0031265 only\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
 
     @field_validator('node_id')
     def pattern_node_id(cls, v):
