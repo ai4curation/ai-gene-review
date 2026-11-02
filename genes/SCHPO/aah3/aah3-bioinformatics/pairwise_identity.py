@@ -4,7 +4,7 @@ Purpose: check how close the ISS donor for the 4-alpha-glucanotransferase
 annotation (UniProtKB:A2QTS4, AgtA, biochemically characterized in
 PMID:17496125) is to Aah3 (Q9Y7S9) and Aah1 (O74922).
 
-Run: uv run --with biopython python pairwise_identity.py
+Run: uv run --no-project --with biopython python pairwise_identity.py
 Sequences are fetched live from the UniProt REST API.
 """
 

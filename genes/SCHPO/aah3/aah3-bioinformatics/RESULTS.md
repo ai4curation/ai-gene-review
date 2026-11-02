@@ -13,4 +13,4 @@ Interpretation: Aah3 and Aah1 are each about 40% identical to AgtA over almost t
 and about 45% identical to each other. That is close enough for a family-level transfer within the
 GPI-anchored GH13 alpha-amylase-like group, but it does not make AgtA a one-to-one ortholog:
 UniProt places AgtA (PTHR10357:SF220), Aah3 (SF224) and Aah1 (SF215) in different PANTHER
-subfamilies. The transferred activity is a reasonable inference, not a demonstration.
+subfamilies (from the UniProt PANTHER cross-references, not computed by the script). The transferred activity is a reasonable inference, not a demonstration.
