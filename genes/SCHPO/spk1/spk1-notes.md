@@ -71,3 +71,20 @@ response MAPK cascade. [PMID:41844616]
 A 2026 PLOS Biology paper used phospho-Spk1 as a readout of pheromone MAPK
 activation while studying Cdc42 thresholds for fission-yeast mating and cell
 fusion; it did not change the Spk1 annotation decisions. [PMID:41855172]
+
+## 2026-11-02 PTHR24055 follow-up
+
+- `just fetch-gene SCHPO spk1` found the UniProt, GOA, and existing review
+  files already up to date. `just deep-research-falcon SCHPO spk1 --fallback
+  perplexity-lite` could not run because `agentapi` was not present in this
+  environment, so this journal records the manual literature update instead.
+- Rechecked the 2026 Sms1 scaffold and Cdc42-threshold papers already cached
+  for Spk1. The Sms1 paper adds pathway architecture, especially the cortical
+  scaffold that binds Spk1 and the rest of the pheromone MAPK cascade; the
+  Cdc42 paper uses phospho-Spk1 as a pathway readout. Neither warrants a new
+  GO process term for Spk1 beyond MAP kinase activity in the pheromone
+  response MAPK cascade.
+- Cleaned up policy drift in the generic kinase rows: `GO:0004672` and the
+  broad PTN000622075 `GO:0004674` IBA are true parents of the directly
+  supported MAP kinase activity, and the Rhea `GO:0106310` row represents only
+  the serine half of the dual-specificity MAPK reaction.

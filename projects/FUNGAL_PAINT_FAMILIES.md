@@ -110,9 +110,10 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
 ## Family 4: MAP Kinases
 
 `PTHR24055` includes broad MAPK-family PAINT placements for generic kinase
-activity and active compartments, plus fungal HOG/Sty1 stress-MAPK placements
-such as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
-stress-activated MAPK-cascade assertions.
+activity and active compartments, fungal HOG/Sty1 stress-MAPK placements such
+as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
+stress-activated MAPK-cascade assertions, and the fungal Spk1/Fus3 pheromone
+MAPK placement `PANTHER:PTN001172087`.
 
 - [x] `NEUCR/hog-1` - *Neurospora crassa* OS-2/HOG-1 stress MAPK; merged in PR
   #4570
@@ -121,6 +122,8 @@ stress-activated MAPK-cascade assertions.
 - [x] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; merged in PR #4703
 - [ ] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; drafted in this branch
+- [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
+  this branch
 
 ## Family 5: Fungal Glucanases
 
