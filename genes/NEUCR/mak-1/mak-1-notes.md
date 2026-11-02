@@ -13,9 +13,8 @@
   intracellular-signal-transduction rows are broad but fit MAK-1 as an active
   fungal MAPK.
 - The fungal `PANTHER:PTN001171896` MAP kinase activity placement is the most
-  specific PAINT catalytic assertion. It is seeded by fungal SLT2/MKC1/MPKA
-  and pheromone-response MAPKs, and is safe for MAK-1 because it only asserts
-  the shared terminal MAPK catalytic class, not a cell-wall- or
+  specific PAINT catalytic assertion. It is safe for MAK-1 because it only
+  asserts the shared terminal MAPK catalytic class, not a cell-wall- or
   pheromone-specific process.
 - Direct *N. crassa* literature supports a CWI/cell-fusion branch upstream of
   MAK-1. WSC-1 and HAM-7 are genetically upstream sensors whose double mutant
