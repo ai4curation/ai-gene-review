@@ -75,3 +75,28 @@ Deep research: falcon provider was out of credits (HTTP 402) at the time of this
 - GO:0042340 keratan sulfate proteoglycan catabolic process — the KS-degradation half of the core BP,
   supported by UniProt FUNCTION and the structure paper; Reactome models "Keratan sulfate degradation"
   (R-HSA-2022857) with GALNS.
+
+
+## 2026-11-02 — catalytic specificity and source reassessment
+
+The single GALNS 6-sulfatase activity covers both chondroitin GalNAc6S and keratan Gal6S. Direct human enzyme experiments distinguish synthetic substrate promiscuity from physiological glycan specificity: purified GALNS hydrolyzes 4-MU-sulfate with kcat 4.2/min and the coupled 4-MU-Gal6S substrate with kcat 228/min. The aryl reaction is real chemistry but is kept outside the defining physiological core. The product-soaked GalNAc crystal pose is nonproductive. Formylglycine maturation and calcium support the catalytic mechanism; they are not separate molecular functions (PMID:22940367).
+
+The original human kidney study measures chondroitin-6-sulfate oligosaccharide desulfation in crude extracts and corrects a 2.4% arylsulfatase B contribution from contaminating 4-sulfated substrate. It does not demonstrate GALNS 4-desulfation (PMID:820716). The selected original MCF-7 study reports changes in GALNS activity and total chondroitin sulfate after GALNS manipulation, but unchanged C4S and ASB activity; its explicit 4-MU-sulfate recipe belongs to ASB, with the GALNS protocol referred to prior work (PMID:18285341). GALNS is actually present among the cDNA activity assays in the SUMF study, although its detailed supplementary substrate recipe remains inaccessible (PMID:15962010).
+
+The earlier judgment on PMID:8325655 overstated what its abstract established. The abstract names a human 6-sulfatase and a fibroblast enzyme assay, but the full assay substrate was not recovered. The specific incoming 4-sulfatase assertion is now unresolved, without a wrong-gene claim. The old MISCITED finding remains historical. The broad sulfuric ester hydrolase annotation is refined to the directly supported 6-sulfatase child.
+
+Human GALNS/LAMP1 colocalization supports the lysosome annotations, and the normal Reactome R-HSA-1630304 reaction supplies the lysosomal keratan pathway context (PMID:30760748). The inherited keratan-catabolic proposal is retained because GALNS itself performs desulfation, supported by same-role comparator annotations and nonredundant typed ancestry. Its evidence/reference is explicitly revised from EXP/PMID:22940367 to TAS/Reactome:R-HSA-1630304: the former paper directly assays synthetic substrates. Defective-mutant event R-HSA-2263490 is kept distinct from the normal catalytic reaction.
+
+The urinary-vesicle occurrence is supported by the actual P34059 row in Supplemental Table 2 of PMID:23533145: sheet SI Table 2, row 319, 7/7/10/9 unique peptides. This supports non-core fraction association without inferring topology or biogenesis. It explicitly revisits the October 10 over-annotation decision; both that old review row and the preceding non-core journal wording remain historical. The neutrophil Reactome input/output sets likewise support contextual cargo locations, not GALNS-driven exocytosis.
+
+One canonical 522-residue sequence is declared. Signal removal and mature-chain processing are not alternative splice products. The exact target sequence and arylsulfatase IBD node were checked in the actual family tree, retaining the incoming/later donor difference as dated provenance. The source archive preserves all original contexts and historical quotation locators without duplicating the current judgments. The private proposal was subsequently reconciled with the genuine native acquisition documented below.
+
+## 2026-11-02: genuine native reconciliation
+
+The actual UniProt snapshot and 15-row, 16-column GOA export match the independently inspected inputs. A private genuine native seed resolves all 15 current source joins without overwriting the inherited review. The canonical sequence is 522 residues; signal processing does not create an alternative product. The original part_of atom is restored on native row 11. The retained keratan process remains a separate TAS/Reactome NEW.
+
+All 36 normal sources are present: 18 main files were reused unchanged and 18 previously missing files were acquired through native paths. All four active excerpts are exact native-cache substrings, preserving the two active inherited associations and all 29 historical associations through immutable locators. Source access notes continue to describe the actual reading scope, independently of cache availability. Scoped validation and rendering outcomes are pending.
+
+## 2026-11-02: scoped validation outcomes
+
+Default schema, ontology, reference and best-practice validation passed with zero advisories. Strict GOA reconciliation confirms all 15 source annotations, with the separate retained NEW preserved. The status audit computed COMPLETE while retaining the specific 4-sulfatase UNDECIDED judgment; the initial DRAFT mismatch remains in the execution record. Native EDIT history, final status and the private 16-row/one-core/13-reference render passed. All 36 scientific sources and the GO term cache remain unchanged by authored curation.
