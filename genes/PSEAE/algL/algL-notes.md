@@ -25,3 +25,7 @@ PMID8370530 is abstract-only in cache, with no full text successfully obtained. 
 Added a SUSPECTED PseudoCAP source defect with requested_change CHECK for GO:0004794. The action remains UNDECIDED because PMID:8370530 is abstract-only. No corrected value or shared mapping cause is guessed; an upstream curator should inspect the actual assay and mapping. This is a query, not a confirmed correction or a report already sent.
 
 The schema has no PseudoCAP resource enum; source_defects uses OTHER with PseudoCAP explicitly named in the explanation. The export therefore appears in reports/source-defects/OTHER.md, rather than a dedicated PseudoCAP report.
+
+## 2026-11-02 update: threonine-deaminase IDA row resolved
+
+Re-read the cached abstract of PMID:8370530 [PMID:8370530 "The AlgL protein was overproduced in Escherichia coli and purified. The purified protein was shown to have alginate lyase activity."]. The only enzyme assay the source describes is an alginate lyase assay on purified AlgL; no amino-acid deaminase assay is mentioned. The row is therefore changed from UNDECIDED to MODIFY → GO:0045135 poly(beta-D-mannuronate) lyase activity, keeping the IDA evidence but correcting the term. This is a term-mapping correction based on the assay the abstract names, not a removal based on absent discussion. The PseudoCAP source defect is upgraded to REPOINT with confidence PROBABLE (not CONFIRMED, because the full text is still unavailable). The earlier entries above describing the row as UNDECIDED are superseded by this update.
