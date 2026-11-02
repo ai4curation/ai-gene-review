@@ -197,6 +197,12 @@ fetch-panther-paint-all *args="":
 paint-review-coverage *args="":
     uv run python scripts/paint_review_coverage.py {{args}}
 
+# List PAINT losses (IRD/IKR) on one gene's PANTHER lineage, with the review's rows on
+# each blocked term. An IRD leaves no leaf annotation, so the GOA file never shows it.
+# Example: just paint-losses human SLC52A1
+paint-losses organism gene:
+    uv run python -m ai_gene_review.validation.gene_paint_losses {{organism}} {{gene}}
+
 # Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
 # `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
 # verdict or overwrites a curated field; lists losses still judged with a gain verdict.
@@ -300,6 +306,12 @@ export-source-defects *args="":
 # above covers defects in annotation records instead. See docs/ontology_changes.md.
 export-ontology-changes *args="":
     uv run python -m ai_gene_review.tools.export_ontology_changes {{args}}
+# Evaluate function requirement (NOT) rules: `acceptance` tests them against
+# experimental GOA (QuickGO + UniProt); `sweep` flags local GOA rows.
+# Writes reports/function-requirements/ (git-ignored; regenerate, never commit).
+# See projects/FUNCTION_REQUIREMENT_RULES.md
+function-requirements command *args="":
+    uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
@@ -333,6 +345,14 @@ litscan-module-member *args="":
 # Example: just deep-research human TP53 --provider perplexity
 deep-research organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
+
+# Curated MOD gene description (WormBase, FlyBase, SGD, MGI, RGD, ZFIN, Xenbase)
+# written verbatim as GENE-deep-research-<mod>.md; no genes = every gene folder.
+# Examples:
+#   just mod-description-deep-research worm fshr-1
+#   just mod-description-deep-research worm
+mod-description-deep-research organism *genes:
+    uv run ai-gene-review mod-description-deep-research {{organism}} {{genes}}
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
