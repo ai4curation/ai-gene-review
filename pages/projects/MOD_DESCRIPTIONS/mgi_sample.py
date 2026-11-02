@@ -2,7 +2,9 @@
 
 Reproduces the 2026-11-02 check behind "Mouse (MGI): not used" on the project page:
 a seeded random sample of mouse review folders, the MGI note the Alliance serves for
-each, and whether the note uses mutant-phenotype vocabulary.
+each, and whether the note uses mutant-phenotype vocabulary. ``phenotype_vocabulary``
+is a regex screen, not a verdict: the page's conclusion that the notes describe allele
+phenotypes rests on reading the committed note texts.
 
 Usage:
     uv run python projects/MOD_DESCRIPTIONS/mgi_sample.py --also Cd79a Cd79b \
