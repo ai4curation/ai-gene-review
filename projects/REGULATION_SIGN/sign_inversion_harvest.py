@@ -34,6 +34,7 @@ PAIRS = [
     ("agonist", "antagonist"),
     ("up-regulation", "down-regulation"),
     ("stimulat", "inhibit"),
+    ("ph elevation", "acidification"),
 ]
 
 
