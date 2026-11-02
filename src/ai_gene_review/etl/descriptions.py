@@ -521,6 +521,15 @@ def extract_mod_xref(uniprot_data: str, config: Dict[str, Any]) -> Optional[str]
     return xref
 
 
+def mod_curie(config: Dict[str, Any], xref: str) -> str:
+    """Prefix a bare MOD id from ``extract_mod_xref`` with the organism's MOD.
+
+    >>> mod_curie({"mod": "MGI"}, "106913")
+    'MGI:106913'
+    """
+    return f"{config['mod']}:{xref}"
+
+
 def extract_uniprot_id(uniprot_data: str) -> Optional[str]:
     """Extract the primary UniProt accession from the AC line.
 
@@ -730,7 +739,7 @@ def fetch_gene_descriptions(
 
     # Fetch Alliance description
     if mod_xref and config.get("mod"):
-        alliance_id = f"{config['mod']}:{mod_xref}"
+        alliance_id = mod_curie(config, mod_xref)
         try:
             alliance_data = fetch_alliance_description(alliance_id)
 

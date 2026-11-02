@@ -3,7 +3,7 @@ title: "MOD gene descriptions as review input"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [worm, yeast, DROME]
-autolink_exclude: [MOD, MODS, GET3]
+autolink_exclude: [MOD, MODS, GET3, EGF]
 ---
 
 # MOD gene descriptions as review input
@@ -25,6 +25,7 @@ deep-research source, scores it against our review, and acts on what it finds.
 | NEW annotation rows | 0 | 2 | 1 |
 
 What we learned:
+
 - **The MOD text is a recall checklist, not an authority.** Our review descriptions
   are usually more mechanistic and more current. The MOD text still names roles,
   phenotypes and regulators our reviews had missed. fshr-1's synaptic role is the
@@ -32,15 +33,14 @@ What we learned:
 - **SGD and FlyBase are the most accurate sources, WormBase the least.** SGD and
   FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
   often the more informative source, especially for fly.
-- **Most errors are stale or transferred text.** The 262 recorded defects in the
-  three MODs' and UniProt's description text are mostly of three kinds:
-  - claims later overturned (fly Gen does cut Holliday junctions);
-  - text carried over from another species (mammalian sterol sensing on fly SCAP);
-  - copy errors (Gurken named as the EGF receptor).
-
-  Each defect quotes the offending sentence, and `just export-source-defects` turns
-  them into per-resource reports. Filing those reports is a manual step that has
-  not been done yet.
+- **Most errors are stale, transferred or copied text, in both MOD and UniProt
+  descriptions.** The 262 recorded defects split 156 MOD and 106 UniProt. Typical
+  cases are a claim later overturned (FlyBase says amon cleaves Slit; Tolkin is the
+  Slit protease), text carried over from another species (UniProt gives fly SCAP the
+  mammalian sterol-sensing mechanism) and a copy error (UniProt names Gurken, another
+  ligand, as the receptor for Spitz). Each defect quotes the offending sentence, and
+  `just export-source-defects` turns them into per-resource reports. Filing those
+  reports is a manual step that has not been done yet.
 - **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
   NEW rows. Most gaps are mutant phenotypes, which show that the gene is needed,
   not that it does the work, so they become description sentences instead.
@@ -432,15 +432,19 @@ each other only.
 MGI's `MOD_provided_gene_description` is a summary of mutant phenotypes, not a
 description of what the gene does. In a random sample of 25 of the 221 mouse
 genes, 22 have text and all 22 describe allele phenotypes:
+
 - mouse/Src: "Homozygotes for a targeted null mutation exhibit growth retardation, failure of
   tooth eruption, osteopetrosis ...".
 - Ccne1: "Mice homozygous for disruptions in this gene display no abnormal phenotype."
 
-Cd79a and Cd79b share the same sentence word for word. Mutant phenotypes establish
+Cd79a and Cd79b, outside the sample, share the same sentence word for word. The sample
+and these two notes are in [mouse-mgi-sample.yaml](MOD_DESCRIPTIONS/mouse-mgi-sample.yaml),
+written by [mgi_sample.py](MOD_DESCRIPTIONS/mgi_sample.py). Mutant phenotypes establish
 necessity, not participation, so under the NEW bar they almost never support an
 annotation, and a worm- or fly-style review would mostly list phenotypes that are
 correctly left out. The mouse run was therefore stopped after the sample (2026-11-02),
-and no `-deep-research-mgi.md` files are written. The sample also exposed a latent bug,
+and `mod-description-deep-research` now skips MGI, so no `-deep-research-mgi.md` files
+are written. The sample also exposed a latent bug,
 now fixed: MGI's own UniProt line carries the prefix (`DR   MGI; MGI:106913;`), so the
 descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
 

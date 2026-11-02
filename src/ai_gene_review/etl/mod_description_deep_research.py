@@ -41,10 +41,15 @@ from ai_gene_review.etl.descriptions import (
     ORGANISM_CONFIG,
     extract_uniprot_id,
     extract_mod_xref,
+    mod_curie,
     fetch_alliance_description,
     looks_automated,
 )
-from ai_gene_review.mod_providers import MOD_PROVIDER, is_mod_description_file  # noqa: F401  (re-export)
+from ai_gene_review.mod_providers import (  # noqa: F401  (re-export)
+    MOD_PROVIDER,
+    UNUSED_MOD_NOTES,
+    is_mod_description_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +183,8 @@ def emit_mod_deep_research(
         return "skipped", None, f"no MOD provider configured for organism '{organism}'"
     if organism == "human":
         return "skipped", None, "human is out of scope (HGNC is not a MOD description source)"
+    if config["mod"] in UNUSED_MOD_NOTES:
+        return "skipped", None, f"not used: {UNUSED_MOD_NOTES[config['mod']]} (see projects/MOD_DESCRIPTIONS.md)"
     slug, mod_name = MOD_PROVIDER[config["mod"]]
 
     gene_dir = base / "genes" / organism / gene
@@ -187,8 +194,8 @@ def emit_mod_deep_research(
     uniprot_data = up_file.read_text(encoding="utf-8")
     xref = extract_mod_xref(uniprot_data, config)
     if not xref:
-        return "skipped", None, f"no {config.get('uniprot_xref')} or AGR cross-reference in UniProt entry"
-    mod_id = f"{config['mod']}:{xref}"
+        return "skipped", None, f"no {config['uniprot_xref']} or AGR cross-reference in UniProt entry"
+    mod_id = mod_curie(config, xref)
 
     data = fetch_alliance_description(mod_id)
     text = data.get("curated_synopsis")
