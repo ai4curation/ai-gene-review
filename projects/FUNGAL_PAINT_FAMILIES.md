@@ -58,7 +58,8 @@ Last updated: 2026-11-01
 cytosolic Hsp104-family disaggregases at `PANTHER:PTN007521008` and
 mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 
-- [x] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; open in PR #3692
+- [x] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; merged in PR
+  #3692
 - [x] `yeast/HSP78` - mitochondrial `Hsp104`/ClpB paralog; merged in PR #4519
 - [x] `SCHPO/hsp104` - fission yeast cytosolic `Hsp104` ortholog; merged in
   PR #4524
@@ -330,11 +331,11 @@ the NAD(+), L-lysine-forming `LYS1`/`lys3` branch and
 `LYS9`/`lys9` branch.
 
 - [x] `yeast/LYS1` - *S. cerevisiae* peroxisomal/cytosolic
-  LYS1-family enzyme; open in PR #5436
+  LYS1-family enzyme; merged in PR #5436
 - [x] `yeast/LYS9` - *S. cerevisiae* LYS9-family saccharopine reductase;
   merged in PR #5442
 - [x] `SCHPO/lys3` - fission-yeast LYS1-family member; merged in PR #5439
-- [x] `SCHPO/lys9` - fission-yeast LYS9-family member; open in PR #5445
+- [x] `SCHPO/lys9` - fission-yeast LYS9-family member; merged in PR #5445
 - [x] `CANAL/LYS1` - CGD-seeded *Candida albicans* LYS1-family member; merged
   in PR #5434
 - [x] `NEUCR/lys-4` - *Neurospora crassa* LYS1-family member; merged in PR
@@ -349,9 +350,9 @@ members sit in `PTHR43797:SF2`, and the current PAINT file places cytoplasm,
 `PANTHER:PTN002887184` node seeded by *S. cerevisiae* `MET17`,
 *S. pombe* `met17`, the CGD *C. albicans* `MET15` member, and bacterial MetY.
 
-- [x] `yeast/MET17` - *S. cerevisiae* bifunctional Met17/Met15 enzyme; open in
-  PR #5451
-- [x] `SCHPO/met17` - fission-yeast O-acetylhomoserine sulfhydrylase; open in
+- [x] `yeast/MET17` - *S. cerevisiae* bifunctional Met17/Met15 enzyme; merged
+  in PR #5451
+- [x] `SCHPO/met17` - fission-yeast O-acetylhomoserine sulfhydrylase; merged in
   PR #5450
 - [x] `CANAL/MET15` - CGD *Candida albicans* MET15 seed with 2024 direct
   CaMet15p biochemical evidence; merged in PR #5447
@@ -368,18 +369,18 @@ node seeded by a canonical sterol-pathway HMGR. The short AN1593 branch is an
 exception to the ER and ergosterol propagation, but retains the catalytic and
 broad isoprenoid-biosynthesis terms.
 
-- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; open in
+- [x] `yeast/HMG1` - *S. cerevisiae* major HMG-CoA reductase isozyme; merged in
   PR #5463
 - [x] `yeast/HMG2` - *S. cerevisiae* regulated minor HMG-CoA reductase isozyme;
   merged in PR #5464
 - [x] `SCHPO/hmg1` - essential fission-yeast HMG-CoA reductase; existing
-  exemplar; open in PR #5460
+  exemplar; merged in PR #5460
 - [x] `CANAL/HMG1` - Candida albicans long sterol-pathway HMG-CoA reductase;
   merged in PR #5454
 - [x] `ASPFU/hmg1` - Aspergillus fumigatus long sterol-pathway HMG-CoA
   reductase; merged in PR #5456
 - [x] `ASPFU/hmg2` - Aspergillus fumigatus Hmg1-related HMG-CoA reductase;
-  open in PR #5458
+  merged in PR #5458
 - [x] `EMENI/AN1593` - Aspergillus nidulans short pimaradiene-cluster
   HMG-CoA reductase; merged in PR #5459
 
@@ -391,13 +392,12 @@ broad isoprenoid-biosynthesis terms.
 
 - Cleaned the PTHR11638, PTHR11133, PTHR43797, PTHR43290, and PTHR10572
   ledger rows touched by this PR shepherding pass. The `yeast/HSP104`,
-  `yeast/LYS1`, `SCHPO/lys9`, `SCHPO/met17`, `yeast/MET17`, `ASPFU/hmg2`,
-  `SCHPO/hmg1`, and `yeast/HMG1` reviews are open in PRs #3692, #5436, #5445,
-  #5450, #5451, #5458, #5460, and #5463 respectively; `CANAL/LYS1`,
-  `SCHPO/lys3`, `yeast/LYS9`, `CANAL/MET15`, `EMENI/cysD`, `CANAL/HMG1`,
-  `ASPFU/hmg1`, `EMENI/AN1593`, `yeast/HMG2`, and `yeast/ERG12` have already
-  merged in PRs #5434, #5439, #5442, #5447, #5449, #5454, #5456, #5459, #5464,
-  and #5765.
+  `CANAL/LYS1`, `SCHPO/lys3`, `yeast/LYS1`, `yeast/LYS9`, `SCHPO/lys9`,
+  `CANAL/MET15`, `SCHPO/met17`, `yeast/MET17`, `EMENI/cysD`, `CANAL/HMG1`,
+  `ASPFU/hmg1`, `ASPFU/hmg2`, `EMENI/AN1593`, `SCHPO/hmg1`, `yeast/HMG1`,
+  `yeast/HMG2`, and `yeast/ERG12` reviews have merged in PRs #3692, #5434,
+  #5439, #5436, #5442, #5445, #5447, #5450, #5451, #5449, #5454, #5456,
+  #5458, #5459, #5460, #5463, #5464, and #5765.
 - Confirmed the PTHR19370 fungal NADH-cytochrome b5 reductase set is already
   complete across the MCR1, CBR1, and related CYC2-like branches, including
   the October MCR1/CBR1 follow-up PRs #5413-#5415 and #5419-#5423.
