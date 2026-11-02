@@ -395,6 +395,23 @@ each other only.
     orthologs (ey given PAX4, tin given NKX2-2), in
     [alliance-automated-regressions](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
 
+## Mouse (MGI): not used
+
+MGI's `MOD_provided_gene_description` is a summary of mutant phenotypes, not a
+description of what the gene does. In a random sample of 25 of the 221 mouse
+genes, 22 have text and all 22 describe allele phenotypes:
+- Src: "Homozygotes for a targeted null mutation exhibit growth retardation, failure of
+  tooth eruption, osteopetrosis ...".
+- Ccne1: "Mice homozygous for disruptions in this gene display no abnormal phenotype."
+
+Cd79a and Cd79b share the same sentence word for word. Mutant phenotypes establish
+necessity, not participation, so under the NEW bar they almost never support an
+annotation, and a worm- or fly-style review would mostly list phenotypes that are
+correctly left out. The mouse run was therefore stopped after the sample (2026-11-02),
+and no `-deep-research-mgi.md` files are written. The sample also exposed a latent bug,
+now fixed: MGI's own UniProt line carries the prefix (`DR   MGI; MGI:106913;`), so the
+descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
+
 ## Recommendations
 
 1. **Use the curated MOD description as an input, not as an authority.** This
@@ -404,8 +421,8 @@ each other only.
 2. **Treat a claim that appears only in the MOD text as a literature lead.**
    fshr-1 is the model case: the gap is a missed role, not wording.
 3. **Re-audit existing reviews** with the comparison script, starting with the
-   lowest-overlap genes, then repeat for mouse (MGI), whose Alliance records carry
-   the same note type.
+   lowest-overlap genes. The remaining Alliance MODs add nothing here: MGI's note is a
+   phenotype summary, RGD's is automated text, and ZFIN and Xenbase have none.
 4. The NCBI step hits rate limits (HTTP 429) on bulk runs. It should honour an
    `NCBI_API_KEY`, or back off and retry.
 
@@ -426,4 +443,4 @@ each other only.
 - [x] Yeast: score descriptions (890 COMPLETE)
 - [x] Yeast: act on gap and discrepancy findings (89 source defects, 249 reviews edited)
 - [x] Fly: fetch, score and act on findings (345 FlyBase files, 73 source defects, 124 reviews edited)
-- [ ] Mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
+- [x] Mouse (MGI): sampled and not used, because the note is a phenotype summary; rat (RGD) has only automated text; zebrafish and frog have none
