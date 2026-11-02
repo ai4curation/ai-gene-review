@@ -37,3 +37,12 @@ No additional PMIDs were fetched.
 - GO:0043165 outer membrane assembly -> KEEP_AS_NON_CORE (broader downstream process).
 - Bare GO:0005515 rows -> REMOVE per protein-binding policy (interactions with LptB, LptF, LptC are
   real intra-complex contacts captured by complex terms).
+
+## 2026-11-02 revision (PR review round)
+
+- GO:0043165 Gram-negative-bacterium-type cell outer membrane assembly changed from
+  KEEP_AS_NON_CORE to ACCEPT and added to core processes, so all seven E. coli Lpt
+  reviews treat the term the same way (each subunit is a required part of the machine
+  that builds the LPS outer leaflet).
+
+- Removed the stale statement that the P. putida orthologue review uses GO:0015221; it now uses contributes_to GO:0140332.

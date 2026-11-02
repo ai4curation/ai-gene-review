@@ -40,3 +40,10 @@
 - GO:0005515 (IPI, LptF/LptG): REMOVE per protein-binding policy; captured by
   ABC transporter complex membership.
 - No history record was added (task restricted edits to this folder).
+
+## 2026-11-02 revision (PR review round)
+
+- GO:0043165 Gram-negative-bacterium-type cell outer membrane assembly changed from
+  KEEP_AS_NON_CORE to ACCEPT and added to core processes, so all seven E. coli Lpt
+  reviews treat the term the same way (each subunit is a required part of the machine
+  that builds the LPS outer leaflet).
