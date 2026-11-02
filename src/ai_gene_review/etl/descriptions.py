@@ -491,6 +491,29 @@ def extract_uniprot_xref(uniprot_data: str, db: str) -> Optional[str]:
     return None
 
 
+def extract_mod_xref(uniprot_data: str, config: Dict[str, Any]) -> Optional[str]:
+    """Extract the MOD gene id for an organism config, falling back to the AGR line.
+
+    Unreviewed UniProt entries often lack the MOD's own DR line but carry
+    ``DR   AGR; <MOD>:<id>; -.``; the id is returned without the MOD prefix.
+
+    Examples:
+        >>> fly = {"uniprot_xref": "FlyBase", "mod": "FB"}
+        >>> extract_mod_xref("DR   FlyBase; FBgn0039153; GatB.", fly)
+        'FBgn0039153'
+        >>> extract_mod_xref("DR   AGR; FB:FBgn0033402; -.", fly)
+        'FBgn0033402'
+        >>> extract_mod_xref("DR   AGR; WB:WBGene00000099; -.", fly) is None
+        True
+    """
+    xref = extract_uniprot_xref(uniprot_data, config["uniprot_xref"]) if config.get("uniprot_xref") else None
+    if xref or not config.get("mod"):
+        return xref
+    prefix = f"{config['mod']}:"
+    agr = extract_uniprot_xref(uniprot_data, "AGR")
+    return agr[len(prefix):] if agr and agr.startswith(prefix) else None
+
+
 def extract_uniprot_id(uniprot_data: str) -> Optional[str]:
     """Extract the primary UniProt accession from the AC line.
 
@@ -695,9 +718,7 @@ def fetch_gene_descriptions(
             )
 
         # Extract cross-references for other APIs
-        xref_db = config.get("uniprot_xref")
-        if xref_db:
-            mod_xref = extract_uniprot_xref(uniprot_data, xref_db)
+        mod_xref = extract_mod_xref(uniprot_data, config)
         ncbi_gene_id = extract_uniprot_xref(uniprot_data, "GeneID")
 
     # Fetch Alliance description

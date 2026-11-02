@@ -12,6 +12,7 @@ import re
 from typing import Any, Literal, Protocol
 
 import yaml
+from ai_gene_review.validation.nd_policy import _cites_search
 from pydantic import BaseModel, ConfigDict, Field
 from linkml_runtime.utils.schemaview import SchemaView
 from linkml_data_qc.config import QCConfig
@@ -30,7 +31,7 @@ class AnnotationRule(BaseModel):
     model_config = ConfigDict(extra="forbid")
     evidence_types: list[str]
     actions: list[str]
-    support: Literal["literature_quote", "sourced_rationale"]
+    support: Literal["literature_quote", "sourced_rationale", "literature_search"]
 
 
 class GeneQCConfig(QCConfig):
@@ -101,6 +102,10 @@ class AnnotationSupportPlugin:
                         )
                         for s in support
                     )
+                elif rule.support == "literature_search":
+                    # The same test as the nd_policy warning: a publication, or
+                    # the deep-research or notes file recording the search.
+                    passed = has_text(review.get("reason")) and _cites_search(review)
                 else:
                     sources = (review.get("propagation_review") or {}).get(
                         "source_entities"
