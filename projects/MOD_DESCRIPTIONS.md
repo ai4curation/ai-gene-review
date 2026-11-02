@@ -400,7 +400,7 @@ each other only.
 MGI's `MOD_provided_gene_description` is a summary of mutant phenotypes, not a
 description of what the gene does. In a random sample of 25 of the 221 mouse
 genes, 22 have text and all 22 describe allele phenotypes:
-- Src: "Homozygotes for a targeted null mutation exhibit growth retardation, failure of
+- mouse/Src: "Homozygotes for a targeted null mutation exhibit growth retardation, failure of
   tooth eruption, osteopetrosis ...".
 - Ccne1: "Mice homozygous for disruptions in this gene display no abnormal phenotype."
 
