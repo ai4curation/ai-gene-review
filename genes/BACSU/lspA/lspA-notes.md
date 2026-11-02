@@ -11,3 +11,8 @@ Added as the monoderm exemplar of the LspA step in `modules/bacterial_lipoprotei
   non-essential in B. subtilis [PMID:10497172 "which, unlike SPase II of Escherichia coli, is not essential for viability"].
 - Decisions follow the E. coli and P. putida lspA reviews: generic endopeptidase (IBA) and proteolysis/membrane (InterPro IEA)
   are refined to aspartic-type endopeptidase activity, lipoprotein biosynthetic process and plasma membrane.
+- 2026-11-02 retry: `just deep-research BACSU lspA --provider perplexity` failed with "Provider 'perplexity' not available.
+  Available: falcon, openscientist, claude_code" (no Perplexity key in this environment). No provider-named deep-research
+  file exists for this gene.
+- An lspA-null strain is viable but impaired at temperature extremes and accumulates lipid-modified PrsA precursor
+  [PMID:9880550 "Cells lacking SPase II accumulated lipid-modified precursor and mature-like forms of PrsA"].

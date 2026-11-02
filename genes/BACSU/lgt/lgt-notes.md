@@ -13,3 +13,6 @@ Added as the monoderm exemplar of the Lgt step in `modules/bacterial_lipoprotein
   This is a downstream consequence of losing lipoprotein maturation (germinant-receptor C subunits are lipoproteins), so no
   germination process term is proposed: Lgt is necessary for, but does not do the work of, germination.
 - All six GOA rows (IBA from PTN000778741 and IEA) are accepted; the monoderm genetics supports the PAINT root placement.
+- 2026-11-02 retry: `just deep-research BACSU lgt --provider perplexity` failed with "Provider 'perplexity' not available.
+  Available: falcon, openscientist, claude_code" (no Perplexity key in this environment). No provider-named deep-research
+  file exists for this gene.
