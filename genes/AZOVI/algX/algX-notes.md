@@ -33,4 +33,4 @@ Reassessed the molecular-function relation: homology-based evidence does not mak
 
 ## Deep research availability, 2026-11-02
 
-No provider deep-research report exists for this gene. During the alginate O-acetylation module audit, `just deep-research-falcon PSEAE algI` was retried and failed with "403 Failed to authenticate"; earlier Falcon and Perplexity attempts for the KT2440 homologs also failed (see genes/PSEPK/algI/algI-notes.md). No deep-research file was written by hand. The review instead rests on cached primary publications, the UniProt record and the existing annotation reviews.
+No provider deep-research report exists for this gene. The only provider attempt for this gene is the original review's Falcon run with Perplexity-lite fallback, which failed as recorded above. It was not retried during the 2026-11-02 module audit, whose only retry was `just deep-research-falcon PSEAE algI` (403 authentication failure); for the KT2440 provider failures see genes/PSEPK/algI/algI-notes.md. No deep-research file was written by hand; the review rests on cached primary publications, the UniProt record and the existing annotation reviews.

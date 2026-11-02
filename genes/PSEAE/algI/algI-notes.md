@@ -24,4 +24,4 @@ Corrected the PMID:37797696 construct attribution: the negative surrogate acetyl
 
 ## Deep research availability, 2026-11-02
 
-No provider deep-research report exists for this gene. During the alginate O-acetylation module audit, `just deep-research-falcon PSEAE algI` was retried and failed with "403 Failed to authenticate"; earlier Falcon and Perplexity attempts for the KT2440 homologs also failed (see genes/PSEPK/algI/algI-notes.md). No deep-research file was written by hand. The review instead rests on cached primary publications, the UniProt record and the existing annotation reviews.
+No provider deep-research report exists for this gene. `just deep-research-falcon PSEAE algI` was run again for this gene on 2026-11-02 and failed with "falcon: 403 Failed to authenticate" (all providers failed), repeating the earlier failure recorded above. No deep-research file was written by hand; the review rests on cached primary publications, the UniProt record and the existing annotation reviews.
