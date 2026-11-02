@@ -35,3 +35,17 @@ Newly recovered [PMID:27789573](https://pubmed.ncbi.nlm.nih.gov/27789573/) Metho
 ## 2026-11-01 — scoped validation outcomes
 
 Default schema, ontology, reference and best-practice validation passed with zero advisories. Strict GOA reconciliation confirms all 66 incoming annotations, with no NEW assertion. The native status audit computed COMPLETE; its initial INITIALIZED mismatch is retained in the execution record, and only the computed status was applied. Native CREATE history and the private rendered review passed. The three remaining UNDECIDED localization judgments are preserved. All 33 scientific source files and the original machine files remain exact after authored curation. The generated GO-term-cache companion is accounted for separately from the scientific sources.
+
+## 2026-11-02 — receptor scope and directly checkable source distinctions
+
+Human beta2 receptor assays concern assembled channels, with beta2 contributing binding interfaces and pore structure ([PMID:29950725](https://pubmed.ncbi.nlm.nih.gov/29950725/)). The accepted receptor function and specific channel refinements retain this assembly scope; the original source relationships remain unchanged. The core contribution statement does not posit an autonomous native beta2 channel.
+
+The age-resolved mouse observations distinguish normal initial efferent innervation from later terminal degeneration and maintenance of sensory cells and neurons ([PMID:17021187](https://pubmed.ncbi.nlm.nih.gov/17021187/)). Short exact excerpts now anchor each of the four existing source-specific over-annotation judgments. A separate excerpt identifies CLPTM1 as the actor regulating receptor trafficking and transmission ([PMID:33234346](https://pubmed.ncbi.nlm.nih.gov/33234346/)). These additions preserve all actions and avoid repeating quotations in this journal.
+
+The human splice literature supplies two complementary observations: a 114-base-pair transcript insertion and brain expression ([PMID:7707873](https://pubmed.ncbi.nlm.nih.gov/7707873/)), and differing rundown of recombinant long- versus short-form receptors during repeated GABA stimulation ([PMID:16983389](https://pubmed.ncbi.nlm.nih.gov/16983389/)). The new reference findings remain abstract-scoped and do not equate historical product names with current accessions. Artificial beta2 homomers respond to histamine with a reported EC50 of 212 micromolar; the heteromer arm demonstrates modulation of GABA responses, preserving the contextual non-core interpretation ([PMID:18281286](https://pubmed.ncbi.nlm.nih.gov/18281286/)).
+
+The unresolved beta2-specific spine and transport-vesicle records remain access/attribution questions. The available evidence does not establish that those are field-wide biological unknowns, so no BIOLOGY knowledge-gap assertion is added. All earlier dated journal entries are preserved as the record of the evidence available at the time.
+
+## 2026-11-02 — follow-up validation outcomes
+
+Default validation and strict GOA reconciliation passed with zero advisories. All 66 original contexts and three UNDECIDED judgments remain; the status audit confirms COMPLETE. Native EDIT history, private rendering and scoped whitespace checks passed. The eleven current excerpts are exact cache substrings, with all per-paper totals at or below 25 words including repetitions. The 33 scientific sources, generated cache companion, original CREATE history and earlier journal prefix remain exact.
