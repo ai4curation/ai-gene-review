@@ -35,5 +35,8 @@ O69787 is the experimentally characterized BetC exemplar.
 
 ## Deep research
 
-`just deep-research RHIME betC --provider openscientist` was run on 2026-11-02; see
-below for its outcome.
+`just deep-research RHIME betC --provider openscientist` was run on 2026-11-02 and
+produced `betC-deep-research-openscientist.md`. Its identity checks, CXPXR motif
+location (C54) and no-TM hydropathy scan agree with the UniProt record. It incorrectly
+states "Although BetC itself has not been crystallized"; PMID:29458126 reports the
+2.8-Angstrom SmCS structure. Recorded as LOW_QUALITY in the review's reference_review.
