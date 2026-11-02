@@ -10,28 +10,60 @@ autolink_exclude: [MOD, MODS, GET3]
 
 **Bottom line:** model organism databases (MODs) publish hand-written gene
 descriptions, for example WormBase's paragraph for
-[rab-11.1](https://www.alliancegenome.org/gene/WB:WBGene00004274). Until this
-pilot the review workflow did not use them. A fetcher and sidecar format
-existed (`ai-gene-review fetch-descriptions`, `<gene>-descriptions.yaml`), but
-they had only been run on 118 yeast genes, and nothing in `fetch-gene` or the
-reviewer skills read the files. The fetcher had also stopped working: the
-Alliance API changed its response shape, and the worm cross-reference was
-parsed wrongly. Both are now fixed.
+[rab-11.1](https://www.alliancegenome.org/gene/WB:WBGene00004274). This project
+fetches them for every worm, yeast and fly gene we review, saves each as a
+deep-research source, scores it against our review, and acts on what it finds.
 
-A pilot on all 432 worm genes found that **374 (87%) have a curated WormBase
-description**. In the 16 genes read by hand, our review `description` is
-usually more mechanistic and more current. The WormBase text is still worth
-reading as a **recall checklist**, though: in 7 of the 16 pairs it
-names a phenotype, process or regulator that our review leaves out, and in one
-case (fshr-1) a whole functional role that our review never mentions.
+| | Worm (WormBase) | Yeast (SGD) | Fly (FlyBase) |
+|---|---|---|---|
+| Genes reviewed | 432 | 890 | 539 |
+| With a curated MOD description | 374 (87%) | 890 (100%) | 345 (64%) |
+| Median MOD text length (words) | 75 | 33 | 37 |
+| MOD text correctness, 1-5 (UniProt) | 4.2 (4.5) | 4.8 (4.6) | 4.7 (4.6) |
+| Description-text defects recorded (MOD + UniProt) | 100 (73 + 27) | 89 (44 + 45) | 73 (39 + 34) |
+| Reviews edited in the follow-up | about 60 | 249 | 124 |
+| NEW annotation rows | 0 | 2 | 1 |
+
+What we learned:
+- **The MOD text is a recall checklist, not an authority.** Our review descriptions
+  are usually more mechanistic and more current. The MOD text still names roles,
+  phenotypes and regulators our reviews had missed. fshr-1's synaptic role is the
+  clearest case: the worm review never mentioned it.
+- **SGD and FlyBase are the most accurate sources, WormBase the least.** SGD and
+  FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
+  often the more informative source, especially for fly.
+- **Most errors are stale or transferred text.** The 262 recorded defects in the
+  three MODs' and UniProt's description text are mostly of three kinds:
+  - claims later overturned (fly Gen does cut Holliday junctions);
+  - text carried over from another species (mammalian sterol sensing on fly SCAP);
+  - copy errors (Gurken named as the EGF receptor).
+
+  Each defect quotes the offending sentence, and `just export-source-defects` turns
+  them into per-resource reports. Filing those reports is a manual step that has
+  not been done yet.
+- **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
+  NEW rows. Most gaps are mutant phenotypes, which show that the gene is needed,
+  not that it does the work, so they become description sentences instead.
+- **The Alliance automated text is the weakest source.** It is generated from the
+  GO annotations under review, so it is never cited as evidence, and it scores lowest
+  on every species. Several automated texts have also lost content between releases,
+  listed in [alliance-automated-regressions](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
+- **No other MOD adds anything.** MGI's note is a phenotype summary, RGD's is
+  automated text, and ZFIN and Xenbase have none.
 
 **Decision (2026-10-30): treat the curated description as a deep-research
 source**, the same way as Affinage. It is written verbatim to
-`<gene>-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, `rgd`,
-`zfin`, `xenbase`). It is cited as a `file:` reference, and the reviewer's
-judgment goes in `references[].reference_review`. The source is sparse,
-uncited, undated and only partly trusted, but no new data structures or
-processes are needed for it. See [Deep-research integration](#deep-research-integration).
+`<gene>-deep-research-<mod>.md` (`wormbase`, `sgd`, `flybase`) by
+`just mod-description-deep-research`. It is cited as a `file:` reference, and the
+reviewer's judgment goes in `references[].reference_review`. The source is sparse,
+uncited, undated and only partly trusted, but no new data structures or processes
+are needed for it. See [Deep-research integration](#deep-research-integration).
+
+The work began with repairs. A fetcher and sidecar format existed
+(`ai-gene-review fetch-descriptions`, `<gene>-descriptions.yaml`). They had only been
+run on 118 yeast genes, nothing in `fetch-gene` or the reviewer skills read the
+files, and the fetcher had stopped working. The Alliance API had changed its response
+shape, and the worm cross-reference was parsed wrongly. Both are now fixed.
 
 ## Data and method
 
