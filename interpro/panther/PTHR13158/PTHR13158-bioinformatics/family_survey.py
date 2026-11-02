@@ -257,6 +257,8 @@ def main() -> None:
                 )
         if found == 0:
             print(f"   DROPPED: {name} (taxid {taxid}) returned no entry for either family")
+    if not para_rows:
+        raise SystemExit("No paralog entries returned for any organism; UniProt query failed?")
     with open(HERE / "nadk_paralogs.tsv", "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(para_rows[0].keys()), delimiter="\t")
         w.writeheader()
