@@ -26,3 +26,10 @@
 - Left abstract-only or source-mismatched rows unresolved for Sickle,
   DmIKKepsilon, dOmi, larval optic-neuropil, and larval-CNS-remodeling papers
   when the cached text did not verify a Reaper-specific assay.
+
+## Follow-up on UniProt FUNCTION (Dredd)
+
+- UniProt's only FUNCTION sentence says Reaper "acts on the effector Dredd". The support is induction of dredd RNA and Dredd processing,
+  plus genetic modulation [PMID:9740659 "Heterozygosity at the dredd locus suppressed apoptosis in transgenic models of reaper- and grim-induced cell killing"].
+  This is indirect; Dredd is now known mainly as the Imd-pathway caspase [PMID:11269502]. Recorded as a MISSING_STATEMENT on the
+  UniProt reference (FUNCTION omits DIAP1 antagonism). No annotation change.
