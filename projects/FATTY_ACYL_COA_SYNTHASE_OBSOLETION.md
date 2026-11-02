@@ -56,7 +56,9 @@ Reaction-level resources treat it that way:
 
 - Rhea has the equation as RHEA:22896, with no EC number linked and no
   UniProtKB entries annotated to it; a Rhea query for ec:2.3.1.86 returns
-  nothing.
+  nothing. Its stoichiometry also differs from the EC equation: "2n NADPH +
+  2n H(+) = a long-chain fatty acyl-CoA + n CO2 + 2n NADP(+) + n CoA + H2O",
+  where EC 2.3.1.86 has 4n H(+) and no water.
 - Swiss-Prot's S. cerevisiae FAS1 (P07149) and FAS2 (P19097) give the
   2.3.1.86 reaction as free text without a Rhea cross-reference, while every
   partial reaction they list carries one.
@@ -67,6 +69,18 @@ Reaction-level resources treat it that way:
 
 GO's own definition has also drifted from its source: it has "2n NADH + 2n
 NADPH" where the current EC equation uses NADPH only.
+
+### How the two FAS system terms differ
+
+| | GO:0004312 fatty acid synthase activity | GO:0004321 fatty-acyl-CoA synthase activity |
+|---|---|---|
+| EC | 2.3.1.85 (animal FAS system) | 2.3.1.86 (fungal FAS system) |
+| Reductant in GO definition | 2n NADPH | 2n NADH + 2n NADPH (EC now: NADPH only) |
+| Product | long-chain fatty acid + (n+1) CoA | long-chain acyl-CoA + n CoA |
+| Chain release | thioesterase hydrolyses acyl-ACP | MPT domain transfers acyl chain to CoA |
+
+The product is the only real difference, and it comes from the release step,
+which has no MF term of its own.
 
 ## Usage audit
 
@@ -103,10 +117,11 @@ Three independent routes put the term on proteins that are not fungal FAS:
 ### Expert curation already uses the other system term
 
 SGD (FAS1, FAS2; IMP) and PomBase (fas1, fas2; IDA) annotate fungal FAS to
-`GO:0004312 fatty acid synthase activity`, the animal system (EC 2.3.1.85,
-which releases free fatty acid), and InterPro2GO maps the fungal FAS families
-IPR003965 and IPR026025 to GO:0004312 as well. The EC distinction between the
-two systems is not being used.
+`GO:0004312 fatty acid synthase activity`, the animal system (EC 2.3.1.85),
+and InterPro2GO maps the fungal FAS families IPR003965 and IPR026025 to
+GO:0004312 as well. Strictly, that asserts a free fatty acid product, which
+fungal FAS does not make. The one distinction the EC split encodes is not
+being used.
 
 ## Proposal
 

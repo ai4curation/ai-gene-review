@@ -21,7 +21,7 @@ Ready to paste into a new [geneontology/go-ontology](https://github.com/geneonto
 **Why**
 
 1. **The source is a system, not a reaction.** GO:0004321 takes its definition from EC 2.3.1.86, whose accepted IUBMB name is "fatty-acyl-CoA synthase system" (alternative name "yeast fatty acid synthase"). The EC comment describes the fungal multienzyme complex of two subunits that together carry out EC 2.3.1.38, 2.3.1.39, 2.3.1.41, 1.1.1.100, 4.2.1.59, 1.3.1.10 and 1.1.1.279. The overall equation is the net of that cycle, run on an α6β6 complex: "The alpha and beta polypeptide chains form the six catalytic domains required for fatty acid synthesis" (PMID:17431175). No single gene product enables it, and each component step already has a GO MF term.
-2. **Reaction resources do not use it.** Rhea has the equation as RHEA:22896, but with no EC number and no UniProtKB entries annotated to it. Swiss-Prot's S. cerevisiae FAS1 (P07149) and FAS2 (P19097) give the 2.3.1.86 reaction as free text without a Rhea cross-reference, while each of their partial reactions carries one.
+2. **Reaction resources do not use it.** Rhea has the equation as RHEA:22896, but with no EC number and no UniProtKB entries annotated to it, and its stoichiometry differs from the EC equation ("2n NADPH + 2n H(+) = a long-chain fatty acyl-CoA + n CO2 + 2n NADP(+) + n CoA + H2O" against EC's "2n NADPH + 4n H(+)" with no water). Swiss-Prot's S. cerevisiae FAS1 (P07149) and FAS2 (P19097) give the 2.3.1.86 reaction as free text without a Rhea cross-reference, while each of their partial reactions carries one.
 3. **Most current annotations are on proteins that cannot perform it.** Of 17,305 annotations to GO:0004321, about 3,684 (21%) are on fungal FAS subunits. The rest:
 
    | Annotations | Proteins | Route |
@@ -35,8 +35,8 @@ Ready to paste into a new [geneontology/go-ontology](https://github.com/geneonto
    | 119 | Entries not resolved | EC2GO |
 
    Several routes arrive at this term independently, and each is a "synthase"/"synthetase" or system/reaction confusion.
-4. **Curators do not keep it apart from GO:0004312.** SGD (FAS1, FAS2; IMP, PMID:65153 and PMID:1100391) and PomBase (fas1, fas2; IDA, PMID:9693066) annotate fungal FAS to GO:0004312 *fatty acid synthase activity*, the animal reaction (EC 2.3.1.85, free fatty acid product). InterPro2GO maps the fungal FAS families IPR003965 and IPR026025 to GO:0004312 too. The EC split between the two systems is not used in practice.
-5. **The definition has drifted from its source.** GO's equation has "2n NADH + 2n NADPH"; the current EC 2.3.1.86 reaction uses NADPH only.
+4. **Curators do not keep it apart from GO:0004312.** The two system terms differ in one real respect, the product. GO:0004312 *fatty acid synthase activity* (EC 2.3.1.85, animal FAS) releases a free long-chain fatty acid, because the animal thioesterase hydrolyses the chain off ACP (hence n+1 CoA). GO:0004321 yields a long-chain acyl-CoA, because the fungal MPT domain transfers the chain to CoA (hence n CoA). Yet SGD (FAS1, FAS2; IMP, PMID:65153 and PMID:1100391) and PomBase (fas1, fas2; IDA, PMID:9693066) annotate fungal FAS to GO:0004312, asserting a free fatty acid product that fungal FAS does not make, and InterPro2GO maps the fungal FAS families IPR003965 and IPR026025 to GO:0004312 too. The one distinction the EC split encodes is not being used.
+5. **The definition has drifted from its source.** GO's equation has "2n NADH + 2n NADPH" (and 2n NAD+ among the products); the current EC 2.3.1.86 reaction uses NADPH only. Apart from this, the two GO definitions differ only in the product and the CoA count.
 
 **Proposal**
 
@@ -64,7 +64,7 @@ Ready to paste into a new [geneontology/go-ontology](https://github.com/geneonto
 
 The *S. pombe* model uses the term for what it does describe well, the activity of the whole FAS complex. If GO prefers to keep a complex-level term, an alternative to obsoletion is to redefine GO:0004321 explicitly as the activity of the fungal type I FAS complex, to be annotated with `contributes_to` on its subunits, and to remove the EC2GO and Rhea mappings that put it on single proteins.
 
-**One gap.** The fungal MPT domain's final transfer of the acyl chain from ACP to CoA, which is what makes the product an acyl-CoA, has no specific MF term; SGD uses the generic GO:0016409 palmitoyltransferase activity. A new term may be worth considering, but it is not needed for the obsoletion.
+**One gap.** The fungal MPT domain's final transfer of the acyl chain from ACP to CoA, which is what makes the product an acyl-CoA and the only thing that distinguishes GO:0004321 from GO:0004312, has no specific MF term; SGD uses the generic GO:0016409 palmitoyltransferase activity. A new term may be worth considering, but it is not needed for the obsoletion.
 
 **Related, not proposed here.** GO:0004312 follows EC 2.3.1.85, "fatty-acid synthase system", and so has the same character. In animals one multifunctional polypeptide performs the whole cycle, so an `enables` annotation is easier to defend, but its use on fungal FAS (item 4) shows the two system terms are not kept apart.
 
