@@ -35,7 +35,10 @@ from typing import IO, Protocol
 import yaml
 
 BENCHMARK_POLICY = Path("projects/BIOREASON_COMPARISON/benchmark-policy.yaml")
-"""Declares ``review_snapshot_commit`` / ``review_snapshot_date`` for the benchmark reports."""
+"""Declares ``review_snapshot_commit`` / ``review_snapshot_date`` for the BioReason/GO-GPT benchmark reports."""
+
+PROTNLM_SNAPSHOT = Path("projects/PROTNLM_EVALUATION/review-snapshot.yaml")
+"""Declares the review snapshot for the ProtNLM2 evaluation, refreshed independently of the BioReason one."""
 
 
 class SourceTree(Protocol):
@@ -228,23 +231,25 @@ class ReviewSnapshot:
         return self.commit[:10]
 
 
-def declared_review_snapshot(repo_root: Path) -> ReviewSnapshot:
-    """Read the review snapshot declared in the benchmark policy.
+def declared_review_snapshot(repo_root: Path, policy_path: Path = BENCHMARK_POLICY) -> ReviewSnapshot:
+    """Read the review snapshot declared in a snapshot policy file (the BioReason benchmark's by default).
 
     >>> snapshot = declared_review_snapshot(Path("."))
     >>> len(snapshot.commit), len(snapshot.date)
     (40, 10)
+    >>> len(declared_review_snapshot(Path("."), PROTNLM_SNAPSHOT).commit)
+    40
     """
-    policy = yaml.safe_load((repo_root / BENCHMARK_POLICY).read_text(encoding="utf-8"))
+    policy = yaml.safe_load((repo_root / policy_path).read_text(encoding="utf-8"))
     return ReviewSnapshot(
         commit=str(policy["review_snapshot_commit"]),
         date=str(policy["review_snapshot_date"]),
     )
 
 
-def review_snapshot_tree(repo_root: Path) -> GitSnapshot:
+def review_snapshot_tree(repo_root: Path, policy_path: Path = BENCHMARK_POLICY) -> GitSnapshot:
     """Reader for the repository as it was at the declared review snapshot."""
-    return git_snapshot(repo_root, declared_review_snapshot(repo_root).commit)
+    return git_snapshot(repo_root, declared_review_snapshot(repo_root, policy_path).commit)
 
 
 def commit_date(repo_root: Path, commit: str) -> str:

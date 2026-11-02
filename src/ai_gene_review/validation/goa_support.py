@@ -11,12 +11,20 @@ not checked; neither are ``references[].findings``, where a quoted GAF row is a
 statement about the GOA table itself. That is the one place a GOA quote can
 still appear, so keep such findings descriptive. Only dict items are inspected;
 the schema makes every ``supported_by`` item a mapping.
+
+Prediction reviews (``*-predictions*.yaml``) are checked too, by
+``prediction_evidence``. There the prediction, not the GOA row, is under review,
+but ``supported_by`` still has to show the predicted term is true or false; that
+it is already in GOA (a CNN or LSP assessment) is stated in the summary.
 """
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any, Iterator, List, Optional, Sequence, Tuple
+
+import yaml
 
 from ai_gene_review.validation.local_source_text import PROJECT_ROOT
 from ai_gene_review.validation.validation_report import (
@@ -140,3 +148,28 @@ def validate_goa_support(
             validation_category="BestPractices",
             check_type=GOA_SUPPORT_CHECK,
         )
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    """Check files for GOA support citations; exit 1 if any are found.
+
+    Lets ``validate-prediction-terms`` enforce the rule on its own, without
+    the full source-evidence check.
+    """
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("files", nargs="+", type=Path)
+    args = parser.parse_args(argv)
+    failed = False
+    for path in args.files:
+        report = ValidationReport(file_path=path, is_valid=True)
+        validate_goa_support(yaml.safe_load(path.read_text()), report, path)
+        for issue in report.issues:
+            print(f"{path}: {issue.path}: {issue.message}")
+            if issue.suggestion:
+                print(f"  {issue.suggestion}")
+        failed = failed or not report.is_valid
+    return int(failed)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

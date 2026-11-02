@@ -60,3 +60,8 @@ subunit; translation -> mitochondrial translation; small ribosomal subunit (IBA)
 mitochondrial small ribosomal subunit.
 KEEP_AS_NON_CORE: RNA binding; mitochondrial inner membrane (NAS).
 UNDECIDED: peroxisome (IDA, PMID:36164978).
+
+## SGD description follow-up: H2O2 relocalisation and sporulation
+
+- Vacuole on H2O2: in a high-throughput single-cell GFP screen of stress responses, Sws2-GFP moved to the vacuole lumen after H2O2, together with other mitoribosomal proteins [PMID:23509072 "Three of the proteins whose localization were altered (Sws2, Mrpl23, and Mrpl11) are components of mitochondrial ribosomes, therefore their elimination would enable a major and rapid down-regulation in mitochondrial proteome production."]. This reads as stress-induced removal of mitoribosomes (probably mitophagy-related turnover), not a vacuolar function, so it is not annotated.
+- Sporulation efficiency: the source of the SGD claim was not identified or checked. Respiratory competence is needed for sporulation, so a sporulation defect would be an expected indirect consequence of losing a mitoribosomal protein. Not annotated.

@@ -38,17 +38,21 @@ quote supports:
     cross-reference.
 ``uniprot_quote_existence_as_support``
     The quote is the protein existence (``PE``) line, cited for an ACCEPT or NEW
-    row or a core function. Existence says nothing about function; it can argue that an
-    annotation rests on prediction, but not support accepting one. An accepted
-    ND annotation needs evidence that the literature was searched instead.
+    row or a core function. Existence says nothing about function; it can argue
+    that an annotation rests on prediction, but not support accepting one. An
+    accepted ND annotation needs evidence that the literature was searched
+    instead.
 
 A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
 reported. Before matching, a quote loses any flat-file line codes and feature
 keys copied with it; feature ranges (``102..292``) are positions, not an
-ellipsis; and brackets the verbatim check treats as editorial are gaps, while
-literal notation such as ``[2Fe-2S]`` stays. Quotes that cannot be located are
-left to the verbatim check.
+ellipsis; brackets the verbatim check treats as editorial are gaps, while
+literal notation such as ``[2Fe-2S]`` stays; and a part left as a lone number
+(``?..649``) is dropped. While a part remains, dropping one can only make a
+flag more likely, since a flag must hold for every part; a quote left with no
+part is not located and is not flagged. Quotes that cannot be located are left to the
+verbatim check.
 Snapshot support covers embedded UniSave ``record_text`` flat files; JSON fields
 and computed observations are not classified as UniProt flat-file statements.
 """
@@ -66,6 +70,7 @@ import yaml
 from ai_gene_review.validation.local_source_text import (
     PROJECT_ROOT,
     _validator,
+    iter_local_quote_items,
     iter_local_quotes,
     resolve_local_source,
 )
@@ -77,6 +82,7 @@ from ai_gene_review.validation.validation_report import (
 UNVETTED_CHECK = "uniprot_quote_unvetted_prediction"
 FIELD_CHECK = "uniprot_quote_restating_field"
 EXISTENCE_CHECK = "uniprot_quote_existence_as_support"
+RECORD_SECTION_CHECK = "record_section_mismatch"
 
 #: Line codes that are labels for the entry rather than evidence about it:
 #: identifiers, names, gene names, taxonomy, keywords and the sequence.
@@ -200,6 +206,24 @@ class Statement:
         False
         """
         return self.field in RESTATING_FIELDS or (self.field == "DR" and self.topic in RESTATING_DR)
+
+    @property
+    def section(self) -> str:
+        """The ``record_section`` value for this statement.
+
+        The line code, followed for comments, features and cross-references by
+        the comment topic, feature key or database:
+
+        >>> Statement("CC", "CAUTION", "x", ()).section, Statement("FT", "BINDING", "x", ()).section
+        ('CC:CAUTION', 'FT:BINDING')
+        >>> Statement("DR", "Pfam", "x", ()).section, Statement("DE", "", "x", ()).section
+        ('DR:Pfam', 'DE')
+        >>> Statement("REF", "", "x", ()).section
+        'REF'
+        """
+        if self.field in ("CC", "FT", "DR") and self.topic:
+            return f"{self.field}:{self.topic}"
+        return self.field
 
 
 def _unvetted_label(evidence: str) -> Optional[str]:
@@ -402,6 +426,134 @@ def locate_quote(quote: str, path: Path) -> List[Statement]:
     return located
 
 
+#: File-name suffixes of UniProt records cached in the repository: a current
+#: flat file, and a snapshot of archived UniSave versions.
+UNIPROT_SOURCE_SUFFIXES = ("-uniprot.txt", "-record-evidence.yaml")
+
+
+def is_uniprot_source(path: Path) -> bool:
+    """True for a cached UniProt record, current or archived.
+
+    >>> is_uniprot_source(Path("TP53-uniprot.txt")), is_uniprot_source(Path("FRI-record-evidence.yaml"))
+    (True, True)
+    >>> is_uniprot_source(Path("TP53-notes.md"))
+    False
+    """
+    return path.name.endswith(UNIPROT_SOURCE_SUFFIXES)
+
+
+LOCATED, UNLOCATED, AMBIGUOUS, UNSEARCHABLE = "located", "unlocated", "ambiguous", "unsearchable"
+
+#: A quote that opens with a feature key and location, with or without the
+#: ``FT   `` line code (``FT   ACT_SITE  170``, ``TRANSIT  1..64``). The parsed
+#: statements keep the key as the topic, not as text, so it is matched there.
+_FEATURE_LEAD = re.compile(r"^\s*(?:FT {3})?([A-Z][A-Z0-9_]+) +(?=[<>?]?\d|\?)")
+
+
+def _feature_lead(quote: str, statements: Tuple[Statement, ...]) -> Optional[Tuple[str, str, str]]:
+    """``(key, location, rest)`` when *quote* opens with a feature key of this record."""
+    m = _FEATURE_LEAD.match(quote)
+    if not m or not any(s.field == "FT" and s.topic == m.group(1) for s in statements):
+        return None
+    location, *after = quote[m.end():].split(None, 1)
+    return m.group(1), location, after[0] if after else ""
+
+
+#: The ``...`` that joins the parts of a quote. The verbatim check splits on
+#: runs of two or more periods and treats ``\u2026`` as text; splitting here only
+#: on three or more keeps feature ranges (``1..64``) whole, and ``_quote_parts``
+#: then applies the verbatim check's rule within each part.
+_ELLIPSIS = re.compile(r"\.{3,}")
+
+
+def locate_sections(quote: str, path: Path) -> Tuple[str, List[str]]:
+    """``(status, sections)`` for a quote from UniProt record *path*.
+
+    ``sections`` are those of the statements the quote spans, each once, in
+    quote order; a line code copied with the quote (``CC   -!- CAUTION: ...``)
+    is ignored, as in ``locate_quote``. Each ``...``-separated part is located
+    on its own. The status is ``UNLOCATED`` when a part of the quote is not in
+    the record, and ``AMBIGUOUS`` when a part occurs in several places that lie
+    in different sections (a short quote such as ``Nucleus``, found in both a
+    keyword and a comment): the section is then not established, and no
+    sections are returned rather than a guess. A quote with nothing searchable
+    in it (a bare number) is ``UNSEARCHABLE``; a part with nothing searchable
+    is skipped, so ``LOCATED`` means every searchable part was found (the
+    verbatim check, not this function, establishes that the whole quote is in
+    the record).
+    """
+    statements, text, starts = _index(path)
+    sections: List[str] = []
+    for raw in _ELLIPSIS.split(quote):
+        status, found = _locate_part(raw, statements, text, starts)
+        if status == UNSEARCHABLE:
+            continue
+        if status != LOCATED:
+            return status, []
+        sections.extend(sec for sec in found if sec not in sections)
+    return (LOCATED, sections) if sections else (UNSEARCHABLE, [])
+
+
+def _locate_part(
+    raw: str, statements: Tuple[Statement, ...], text: str, starts: Tuple[int, ...]
+) -> Tuple[str, List[str]]:
+    """``(status, sections)`` for one ``...``-free part of a quote.
+
+    A part that opens with a feature key and location (with or without the
+    ``FT`` line code) is first matched against the record's features of that
+    key, since the key is the statement's topic rather than its text; failing
+    that, a longer part is searched as text without its leading key (it may
+    span several features). A further key later in the part is stripped only
+    when it keeps its ``FT`` line code.
+    """
+    feature = _feature_lead(raw, statements)
+    if feature is not None:
+        key, location, rest = feature
+        rest_parts = _quote_parts(rest)
+        normalize = _validator().normalize_text
+        matched = next(
+            (
+                s
+                for s in statements
+                if s.field == "FT"
+                and s.topic == key
+                and s.text.split()[:1] == [location]
+                and all(f" {p} " in f" {normalize(s.text)} " for p in rest_parts)
+            ),
+            None,
+        )
+        if matched is not None:
+            # no ambiguity check: every feature with this key has the same section
+            return LOCATED, [matched.section]
+        if not rest_parts:  # a key and location only, and no such feature
+            return UNLOCATED, []
+        # search the rest as text; the key is not text in the parsed record
+        raw = f"{location} {rest}"
+    parts = _quote_parts(raw)
+    if not parts:
+        return UNSEARCHABLE, []
+    sections: List[str] = []
+    for part in parts:
+        occurrences = _occurrences(part, statements, text, starts)
+        if not occurrences:
+            return UNLOCATED, []
+        candidates = {tuple(dict.fromkeys(s.section for s in o)) for o in occurrences}
+        if len(candidates) > 1:
+            return AMBIGUOUS, []
+        sections.extend(sec for sec in candidates.pop() if sec not in sections)
+    return LOCATED, sections
+
+
+def record_sections(quote: str, path: Path) -> Optional[List[str]]:
+    """The ``record_section`` values for a quote from UniProt record *path*.
+
+    None when the quote is not located or its section is ambiguous; see
+    ``locate_sections``.
+    """
+    status, sections = locate_sections(quote, path)
+    return sections if status == LOCATED else None
+
+
 def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, bool, List[Statement]]]:
     """``(unvetted, restating, existence, statements)`` for a quote, or None if not located.
 
@@ -441,11 +593,14 @@ def _accepts(data: Any, path: str) -> bool:
     """Whether the quote at *path* supports asserting a function: an ACCEPT or NEW row, or a core function.
 
     >>> data = {"existing_annotations": [{"review": {"action": "ACCEPT"}},
-    ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}}]}
+    ...                                  {"review": {"action": "MARK_AS_OVER_ANNOTATED"}},
+    ...                                  {"review": {"action": "NEW"}}]}
     >>> _accepts(data, "existing_annotations[0].review.supported_by[0].supporting_text")
     True
     >>> _accepts(data, "existing_annotations[1].review.supported_by[0].supporting_text")
     False
+    >>> _accepts(data, "existing_annotations[2].review.supported_by[0].supporting_text")
+    True
     >>> _accepts(data, "core_functions[0].supported_by[0].supporting_text")
     True
     >>> _accepts(data, "references[0].findings[0].supporting_text")
@@ -479,7 +634,7 @@ def quote_source_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[
     findings: List[QuoteFinding] = []
     for path, reference_id, quote in iter_local_quotes(data):
         source = resolve_local_source(reference_id, project_root)
-        if source is None or not source.name.endswith(("-uniprot.txt", "-record-evidence.yaml")):
+        if source is None or not is_uniprot_source(source):
             continue
         result = classify_quote(quote, source)
         if result is None:
@@ -525,8 +680,10 @@ def validate_uniprot_quote_sources(
                 )
             else:
                 suggestion = (
-                    "Cite evidence for the function itself; protein existence can support "
-                    "MARK_AS_OVER_ANNOTATED or UNDECIDED, not ACCEPT"
+                    "Cite evidence for the function itself. Protein existence can argue that "
+                    "an annotation rests on prediction (e.g. MARK_AS_OVER_ANNOTATED, "
+                    "KEEP_AS_NON_CORE, MODIFY, UNDECIDED); it cannot support an ACCEPT, a NEW "
+                    "or a core function"
                 )
         elif f.check_type == UNVETTED_CHECK:
             where = _describe(f.statements)
@@ -557,4 +714,74 @@ def validate_uniprot_quote_sources(
             suggestion=suggestion,
             validation_category="BestPractices",
             check_type=f.check_type,
+        )
+
+
+@dataclass(frozen=True)
+class RecordSectionFinding:
+    """A stated ``record_section`` that disagrees with the cited file.
+
+    ``expected`` is None when the cited source is not a database record.
+    """
+
+    path: str
+    reference_id: str
+    stated: Tuple[str, ...]
+    expected: Optional[Tuple[str, ...]]
+
+
+def _stated_sections(value: Any) -> Tuple[str, ...]:
+    if isinstance(value, str):
+        return (value,)
+    return tuple(str(v) for v in value or ())
+
+
+def record_section_findings(data: Any, project_root: Path = PROJECT_ROOT) -> List[RecordSectionFinding]:
+    """Stated ``record_section`` values that disagree with the cited local file.
+
+    A quote that cannot be located is left to the verbatim check, and one whose
+    section is ambiguous is not checked.
+    """
+    findings: List[RecordSectionFinding] = []
+    for path, reference_id, item in iter_local_quote_items(data):
+        stated = _stated_sections(item.get("record_section"))
+        if not stated:
+            continue
+        source = resolve_local_source(reference_id, project_root)
+        if source is None:
+            continue
+        if not is_uniprot_source(source):
+            findings.append(RecordSectionFinding(path, reference_id, stated, None))
+            continue
+        expected = record_sections(item["supporting_text"], source)
+        if expected is not None and list(stated) != expected:
+            findings.append(RecordSectionFinding(path, reference_id, stated, tuple(expected)))
+    return findings
+
+
+def validate_record_sections(
+    data: Any, report: ValidationReport, project_root: Path = PROJECT_ROOT
+) -> None:
+    """Warn when a stated ``record_section`` disagrees with the cited file."""
+    for f in record_section_findings(data, project_root):
+        stated = ", ".join(f.stated)
+        if f.expected is None:
+            message = (
+                f"record_section ({stated}) is set on a quote from {f.reference_id}, "
+                "which is not a database record"
+            )
+            suggestion = "Remove record_section; use reference_section_type for manuscript sections"
+        else:
+            message = (
+                f"record_section says {stated}, but the quote comes from "
+                f"{', '.join(f.expected)} in {f.reference_id}"
+            )
+            suggestion = "Run `just backfill-record-sections --fix` to correct it"
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            message,
+            path=f"{f.path}.record_section",
+            suggestion=suggestion,
+            validation_category="BestPractices",
+            check_type=RECORD_SECTION_CHECK,
         )
