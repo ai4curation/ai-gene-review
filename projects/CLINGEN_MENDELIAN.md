@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**679 of 2,876 genes are complete; 2,197 remain.**
-This checkpoint adds FXYD2, FXN and FYB1 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-679-2026-11-01-130235-utc) records the evidence and retained uncertainties.
+**684 of 2,876 genes are complete; 2,192 remain.**
+This checkpoint adds G6PC1, FZD4, G6PC3, G6PD and GAA after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-684-2026-11-01-193801-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3813,11 +3813,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **FUS** — HGNC:4010; [amyotrophic lateral sclerosis type 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b2e8f55b-371e-438f-8923-73ca9b7ec034-2021-10-12T183601.087Z) (MONDO:0011951; AD; Definitive).
 - [x] **FUT8** — HGNC:4019; [congenital disorder of glycosylation with defective fucosylation 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a593a104-5904-461f-956b-ad1e154df921-2024-05-15T170000.000Z) (MONDO:0020775; AR; Definitive).
 - [x] **FXN** — HGNC:3951; [Friedreich ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec3f674b-1e71-4254-a0f9-f8909becff59-2017-12-22T170000.000Z) (MONDO:0100339; AR; Definitive).
-- [ ] **FZD4** — HGNC:4042; [FZD4-related exudative vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2da74e15-54c4-405c-aa44-301f4717087d-2024-04-04T160000.000Z) (MONDO:1040041; AD; Definitive).
-- [ ] **G6PC1** — HGNC:4056; [glycogen storage disease I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_951fef4e-a9ac-400c-b94a-5d6531086d9f-2024-09-27T160000.000Z) (MONDO:0002413; AR; Definitive).
-- [ ] **G6PC3** — HGNC:24861; [autosomal recessive severe congenital neutropenia due to G6PC3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff1ec187-3779-4437-b17b-fa406fafc406-2024-08-07T170000.000Z) (MONDO:0012930; AR; Definitive).
-- [ ] **G6PD** — HGNC:4057; [G6PD deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_153ae203-3ae5-4cb3-bbf8-d72467700d8c-2023-06-23T160000.000Z) (MONDO:0005775; XL; Definitive); [anemia, nonspherocytic hemolytic, due to G6PD deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cb70a1c4-e861-4c45-adc6-9afc82f4a7a0-2023-06-23T160000.000Z) (MONDO:0010480; XL; Definitive).
-- [ ] **GAA** — HGNC:4065; [glycogen storage disease II](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0554320e-6a8f-4c39-be7f-99959a8341ee-2019-01-23T170000.000Z) (MONDO:0009290; AR; Definitive).
+- [x] **FZD4** — HGNC:4042; [FZD4-related exudative vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2da74e15-54c4-405c-aa44-301f4717087d-2024-04-04T160000.000Z) (MONDO:1040041; AD; Definitive).
+- [x] **G6PC1** — HGNC:4056; [glycogen storage disease I](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_951fef4e-a9ac-400c-b94a-5d6531086d9f-2024-09-27T160000.000Z) (MONDO:0002413; AR; Definitive).
+- [x] **G6PC3** — HGNC:24861; [autosomal recessive severe congenital neutropenia due to G6PC3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ff1ec187-3779-4437-b17b-fa406fafc406-2024-08-07T170000.000Z) (MONDO:0012930; AR; Definitive).
+- [x] **G6PD** — HGNC:4057; [G6PD deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_153ae203-3ae5-4cb3-bbf8-d72467700d8c-2023-06-23T160000.000Z) (MONDO:0005775; XL; Definitive); [anemia, nonspherocytic hemolytic, due to G6PD deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cb70a1c4-e861-4c45-adc6-9afc82f4a7a0-2023-06-23T160000.000Z) (MONDO:0010480; XL; Definitive).
+- [x] **GAA** — HGNC:4065; [glycogen storage disease II](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0554320e-6a8f-4c39-be7f-99959a8341ee-2019-01-23T170000.000Z) (MONDO:0009290; AR; Definitive).
 - [ ] **GABRA1** — HGNC:4075; [epilepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_60478d36-384e-4246-ba8a-730755d6f216-2024-09-03T170000.000Z) (MONDO:0005027; AD; Definitive).
 - [ ] **GABRB2** — HGNC:4082; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5589d3aa-cb45-4b9f-bf8e-2000d1a780bd-2024-01-16T050000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **GABRB3** — HGNC:4083; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9327dac-6f76-4881-8a23-ef2b210f92e7-2019-02-05T170000.000Z) (MONDO:0100062; AD; Definitive).
