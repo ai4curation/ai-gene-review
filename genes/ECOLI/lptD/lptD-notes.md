@@ -14,5 +14,5 @@ Review session 2026-10-24. No provider deep research was run (no `*-deep-researc
 ## Decisions
 - All 8 bare protein-binding IPI rows: REMOVE (policy; the interactions are real).
 - outer membrane: MODIFY to cell outer membrane. membrane organization: MODIFY to GO:0043165. The PSEPK orthologue used MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE; changed to follow the CLAUDE.md "general term -> MODIFY" rule.
-- GO:1990351: the IBA row (LptDE translocon) is ACCEPTed; the IDA row from PMID:29449493 is MODIFIED to GO:0062051, matching lptB. The validator warns that the same term has different actions; this is a deliberate per-row decision.
+- GO:1990351: both the IBA row (PTN001249597) and the IDA row from PMID:29449493 are MODIFIED to GO:0062051, matching lptB and lptE; core in_complex is GO:0062051. (An earlier draft ACCEPTed the IBA row; that split, and its validator warning, are gone.)
 - MF: NEW contributes_to GO:0015221. GO:0140332 was rejected because its definition describes aqueous-phase carriage, i.e. the LptA/LptC bridge.

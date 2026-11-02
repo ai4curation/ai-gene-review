@@ -13,4 +13,4 @@ Review session 2026-10-24. No provider deep research was run (no `*-deep-researc
 - LPS binding (IBA and IDA): ACCEPT. Core MF, plus NEW contributes_to GO:0015221 (the activity belongs to the LptDE complex).
 - 5 bare protein-binding rows: REMOVE.
 - outer membrane: MODIFY to cell outer membrane.
-- GO:1990351: IBA ACCEPT; IDA (PMID:29449493) MODIFY to GO:0062051 (same handling as lptD and lptB; leaves one validator warning).
+- GO:1990351: IBA and IDA (PMID:29449493) rows both MODIFIED to GO:0062051, same handling as lptD and lptB; core in_complex is GO:0062051. No validator warning remains.
