@@ -65,3 +65,11 @@ The retained GOA snapshot contains the GO:0120552 ARBA00095351 assertion. A sepa
 The 2025 U2OS binding judgment remains source-specific UNDECIDED [PMID:40205054]. The guide now records the exact IntAct/MINT endpoints, target filter, retrieval timestamps, counts, hashes and matching procedure. Both positive imported GOA pairs are preserved. Failure to recover the exact records in those dated responses is not evidence of nonbinding. Earlier BioPlex measurements remain positive corroboration in their own experimental contexts [PMID:28514442; PMID:33961781].
 
 The description again identifies the cubic 24-subunit E2 core and lipoyl Lys105. These are supported by the curated subunit model and the independently mapped lipoyl-domain construct, without assigning E1/E3 catalytic activities to DBT [PMID:22291014; PMID:11839747]. The PMID:11839747 full_text_unavailable flag describes the abstract-only standard cache; the separately accessed original Sample Preparation and selected Results remain explicitly documented in DBT-primary-source-notes.md. No original text, assay access, source object, action, quotation, product mapping or core function was withdrawn.
+
+## 2026-11-02 — PTHR43178 reference-protein pass
+
+- DBT is the reference protein for the PTHR43178 family review. The three bare GO:0005515 protein
+  binding IPI rows (PMID:28514442, PMID:33961781, PMID:40205054) were set to REMOVE under the
+  protein-binding policy (`src/ai_gene_review/validation/protein_binding_policy.py`). This replaces
+  the earlier KEEP_AS_NON_CORE/UNDECIDED actions; removal does not dispute the AP-MS associations.
+  The informative PPM1K-docking row (PMID:22291014) is unchanged.
