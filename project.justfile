@@ -1028,8 +1028,7 @@ validate-references file:
 # silently certifying an unchecked quotation. Caches remain regenerable context.
 [group('QC')]
 validate-predictions +files:
-    just validate-prediction-terms {{files}}
-    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+    just _validate-predictions true {{files}}
 
 # Every prediction review, including the BioReason/GO-GPT sidecars. Run by the
 # weekly/manual CI pass, the merge queue and on validation-infrastructure
@@ -1040,8 +1039,13 @@ validate-predictions-all:
     #!/usr/bin/env bash
     set -euo pipefail
     files=(genes/*/*/*predictions*.yaml)
-    just validate-prediction-terms "${files[@]}"
-    uv run python -m ai_gene_review.validation.prediction_evidence --require-excerpts --report reports/prediction-evidence.json "${files[@]}"
+    just _validate-predictions false "${files[@]}"
+
+# Shared by the two recipes above, so their checks cannot drift apart;
+# `fetch` (true/false) is the only difference.
+_validate-predictions fetch +files:
+    just validate-prediction-terms {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence {{ if fetch == "true" { "--fetch" } else if fetch == "false" { "" } else { error("fetch must be true or false") } }} --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Schema and term validation for prediction files. In a PredictionReview the only
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;
