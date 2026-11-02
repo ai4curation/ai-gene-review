@@ -711,3 +711,39 @@ def test_repair_does_not_write_an_out_of_scope_manual_override(actions):
 def test_scoped_registry_entries_require_category_and_rationale(fields):
     with pytest.raises(ValueError, match='assessment and rationale'):
         ManualOverride(annotation_action_exceptions=frozenset({'MARK_AS_OVER_ANNOTATED'}), **fields)
+
+
+@pytest.mark.parametrize('actions,species,gene,term,expected', [
+    ({'MARK_AS_OVER_ANNOTATED'}, 'human', 'FXN', 'GO:0004322', None),
+    ({'REMOVE'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED', 'REMOVE'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({f'{NEGATED_ACTION_PREFIX}ACCEPT'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negated_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED', f'{NEGATED_ACTION_PREFIX}ACCEPT'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED'}, 'mouse', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED'}, 'human', 'OTHER', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED'}, 'human', 'FXN', 'GO:0008198', 'nonnegative_assessment_vs_negative_AIGR'),
+])
+def test_fxn_measured_activity_adjudication_has_exact_scope(actions, species, gene, term, expected):
+    """Measured activity does not bypass contrary evidence or another identity."""
+    override = MANUAL_OVERRIDES[('human', 'FXN', 'GO:0004322')]
+    review = {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary}
+    conflicts = set(remaining_conflicts(term, review, {term}, actions, species=species, gene=gene))
+    if expected is None:
+        assert conflicts == set()
+    else:
+        assert expected in conflicts
+
+
+@pytest.mark.parametrize('change,expected', [
+    ({'assessment': 'NPI'}, 'manual_adjudication_category'),
+    ({'summary': 'Unreviewed physiological claim'}, 'manual_adjudication_rationale'),
+    ({'confidence_score': 1}, 'assessment_confidence'),
+])
+def test_fxn_measured_activity_adjudication_requires_reviewed_rationale(change, expected):
+    override = MANUAL_OVERRIDES[('human', 'FXN', 'GO:0004322')]
+    review = {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary}
+    review.update(change)
+    assert expected in set(remaining_conflicts(
+        'GO:0004322', review, {'GO:0004322'}, {'MARK_AS_OVER_ANNOTATED'},
+        species='human', gene='FXN',
+    ))

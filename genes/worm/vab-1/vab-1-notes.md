@@ -35,3 +35,10 @@
   / epidermal cell migration (phenotype-based; already covered by GO:0016331),
   regulation of insulin receptor signalling via DAF-18 (indirect, longevity/dauer phenotypes),
   gonadal sheath contraction (phenotype only).
+
+## Spermatheca development (UniProt statement, checked 2026-10-30)
+- UniProt says VAB-1 "Might play a role in spermatheca morphogenesis" (PMID:25529479). In that
+  paper vab-1 and vab-2 mutations enhance the reproductive phenotype of nhr-6 RNAi, giving spermathecae with fewer cells
+  [PMID:25529479 "nhr-6 RNAi in vab-1 and vab-2 mutants generated spermathecae with significantly reduced cell numbers"].
+  This is an enhancer interaction in a sensitized background. It is not a direct role, so no GO
+  term is proposed; it is noted here only.

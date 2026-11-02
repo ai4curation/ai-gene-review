@@ -19,3 +19,12 @@ Deep research: `wdb-deep-research-falcon.md` (falcon; completed after a wrapper 
 
 - Signal transduction (InterPro2GO) marked over-annotated.
 - Maintenance of sister chromatid cohesion -> maintenance of meiotic sister chromatid cohesion; meiotic spindle assembly -> regulation of spindle assembly (PP2A opposes Aurora B rather than building the spindle). Same treatment applied to tws/mts/Pp2A-29B rows from PMID:34297127.
+
+## 2026-11-01 follow-up: FlyBase and automated description gaps
+
+- Hedgehog: Wdb-PP2A dephosphorylates highly phosphorylated Smo; PpV controls Wdb stability
+  [PMID:33373452 "Consistent with the report that Wdb-mediated PP2A phosphatase activity (Wdb-PP2A) directly dephosphorylates highly phosphorylated Smo to prevent over-activation of Hh signaling"].
+- Akt/lipid storage: [PMID:18827008 "It alters lipid droplet size and expression of the lipid storage perilipin-like protein LSD2 in the Drosophila ovary, but not in epithelial cells of the eye imaginal discs."]
+- Both added to the description only; no NEW rows (the Smo dephosphorylation primary paper is not cached,
+  and the Akt role is covered by the existing insulin receptor signaling row). Lifespan not traced.
+- FlyBase text lacks the meiotic PP2A-B56 cohesion role; recorded as a MISSING_STATEMENT source defect.
