@@ -121,6 +121,8 @@ stress-activated MAPK-cascade assertions.
 - [x] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; merged in PR #4703
 - [ ] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; drafted in this branch
+- [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
+  filamentous-growth and cell-wall evidence; revalidated in this branch
 
 ## Family 5: Fungal Glucanases
 
