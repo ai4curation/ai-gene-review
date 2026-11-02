@@ -147,3 +147,7 @@ Withdrew the inherited GO:0010468 NEW proposal to UNDECIDED: PMID:28655819 measu
   experiment shows PedH itself doing regulatory work [PMID:30158283 "in which a functional PedH protein is an essential component, most likely by acting as a lanthanide sensor"].
 - Cited the falcon deep-research file for the active-site Asp/Ln3+ coordination point on the
   metal ion binding row.
+- 2026-11-02 (addendum): the falcon deep-research citation added above was dropped in PR review. The
+  GO:0046872 row it was attached to is already carried by primary evidence. The provider files were
+  read; they are simply not cited as support. This leaves the advisory "No annotations reference
+  available deep research files" warning on this gene, accepted deliberately.

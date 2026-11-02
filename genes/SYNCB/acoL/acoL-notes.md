@@ -52,3 +52,8 @@ Full PMID20508247 explains the TPP-bound hydroxyethyl intermediate and E2 lipoyl
   "is specific for acetoin and does not use pyruvate or α-ketoglutarate as substrate"].
 - Added NEW IDA GO:0045150 acetoin catabolic process from the purified-component reconstitution
   (PMID:1898934). The same row was added to acoA, acoB and acoC.
+- 2026-11-02 (addendum): strengthened the GO:0006103 reason in PR review with the shared-E3 point
+  [PMID:20508247 "The presence of an E3 subunit encoded in this cluster varies by species ( 256 ),
+  and in cases where it is absent, a common E3 is presumably shared between the AoDH and the
+  α-ketoacid dehydrogenases."]. P. carbinolicus is in the first group: acoL sits in the operon with
+  acoA, acoB and acoC [PMID:8110297], so it has no need of the housekeeping E3.

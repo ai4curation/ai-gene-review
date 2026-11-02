@@ -73,3 +73,18 @@ The description again identifies the cubic 24-subunit E2 core and lipoyl Lys105.
   protein-binding policy (`src/ai_gene_review/validation/protein_binding_policy.py`). This replaces
   the earlier KEEP_AS_NON_CORE/UNDECIDED actions; removal does not dispute the AP-MS associations.
   The informative PPM1K-docking row (PMID:22291014) is unchanged.
+
+## 2026-11-02 (addendum) — corrections to earlier entries above
+
+Two earlier statements in this file are superseded:
+
+- The 2026-10-16 line "The 2025 U2OS binding judgment remains source-specific UNDECIDED
+  [PMID:40205054]" no longer describes the review. That row, and the two BioPlex
+  GO:0005515 rows, are now REMOVE under the project's protein-binding policy: a bare
+  protein-binding annotation names no informative molecular function. This is a change of
+  action on an uninformative term, not a finding that the reported associations are false,
+  and none of the recorded IntAct/MINT provenance was withdrawn.
+- The 2026-11-02 line about citing the falcon deep-research file is also superseded: that
+  citation was dropped in review, because the GO:0043754 row it was added to is already
+  carried by primary evidence and the provider quote added nothing to it. The provider file
+  was read; it is simply not cited as support.

@@ -20,3 +20,8 @@ Completed the exact-case pedE source filenames using two-step git mv; all raw an
 ## 2026-11-02 — acetoin/butanediol module completion pass
 
 - Cited the falcon deep-research file for Ca2+/PQQ dependence on the calcium ion binding row.
+- 2026-11-02 (addendum): the falcon deep-research citation added above was dropped in PR review. The
+  GO:0005509 row it was attached to is already carried by primary evidence, and the provider quote
+  added nothing to it. The provider files were read; they are simply not cited as support. This
+  leaves the advisory "No annotations reference available deep research files" warning on this gene,
+  which is accepted deliberately rather than satisfied by a token citation.

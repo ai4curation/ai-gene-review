@@ -48,3 +48,11 @@ Full PMID20508247 explains the TPP-bound hydroxyethyl intermediate and E2 lipoyl
 - Added NEW IDA GO:0045150 acetoin catabolic process from the purified-component reconstitution
   [PMID:1898934 "resulted in a coenzyme A-dependent reduction of NAD"], so that the core-function
   process is reflected in existing_annotations.
+- 2026-11-02 (addendum): the GO:0004739 and GO:0006086 TreeGrafter rows moved from
+  MARK_AS_OVER_ANNOTATED to REMOVE in PR review. Three things coincide only in this organism: both
+  rows are electronic (PTN007511179); the purified reconstituted E1/E2/E3 system of P. carbinolicus
+  is specific for acetoin and does not use pyruvate [PMID:20508247 "is specific for acetoin and does
+  not use pyruvate or α-ketoglutarate as substrate"]; and the E1 alpha subunit is the component that
+  determines that specificity [PMID:20508247 "appears to be responsible for the substrate
+  specificity of AoDH"]. The AcoA proteins of B. subtilis, C. necator and KT2440 keep
+  MARK_AS_OVER_ANNOTATED, their evidence for the same conclusion being comparative.
