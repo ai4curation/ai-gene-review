@@ -1,0 +1,12 @@
+# lspA (Bacillus subtilis 168, Q45479) curation notes
+
+Added as the monoderm exemplar of the LspA step in `modules/bacterial_lipoprotein_maturation.yaml`.
+
+- Provider deep research was not run for this gene in this session (usage-limited batch); the review relies on the
+  UniProt record and two cached primary papers, both abstract-only in the cache.
+- Cloned by complementing an E. coli lsp(ts) mutant; activity shown by pulse labelling in E. coli
+  [PMID:9141696 "Activity of the B. subtilis SPase II was demonstrated by a pulse-labelling experiment in E. coli."].
+- Mutagenesis of 15 conserved residues; Asp-102 and Asp-129 proposed as catalytic, making SPase II an aspartic protease;
+  non-essential in B. subtilis [PMID:10497172 "which, unlike SPase II of Escherichia coli, is not essential for viability"].
+- Decisions follow the E. coli and P. putida lspA reviews: generic endopeptidase (IBA) and proteolysis/membrane (InterPro IEA)
+  are refined to aspartic-type endopeptidase activity, lipoprotein biosynthetic process and plasma membrane.

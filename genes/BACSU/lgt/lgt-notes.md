@@ -1,0 +1,14 @@
+# lgt (Bacillus subtilis 168, O34752) curation notes
+
+Added as the monoderm exemplar of the Lgt step in `modules/bacterial_lipoprotein_maturation.yaml`.
+
+- Provider deep research was not run for this gene in this session (usage-limited batch); the review relies on the
+  UniProt record and the two cached primary papers below. Both are abstract-only in the cache.
+- lgt inactivation abolishes lipid modification and signal peptide cleavage but is not lethal
+  [PMID:10096076 "Inactivation of Igt in B. subtilis by a nonsense mutation (prs-11 mutation) or by disruption was shown here to abolish lipomodification of prelipoproteins completely"].
+- Non-lipidated precursors are still translocated but partly released, lowering cell-bound PrsA and impairing secretion
+  [PMID:10096076 "there was release of both precursors from cells"].
+- gerF germination mutations map to lgt [PMID:9846746 "All known gerF mutations affecting Bacillus subtilis spore germination have been mapped"].
+  This is a downstream consequence of losing lipoprotein maturation (germinant-receptor C subunits are lipoproteins), so no
+  germination process term is proposed: Lgt is necessary for, but does not do the work of, germination.
+- All six GOA rows (IBA from PTN000778741 and IEA) are accepted; the monoderm genetics supports the PAINT root placement.
