@@ -2,7 +2,7 @@
 
 ## Sources read (2026-11-03)
 - Cached abstracts: PMID:2194570, PMID:3512525, PMID:3512526, PMID:3065456, PMID:27718375, PMID:39510372; PMID:18304323 (full text, per-protein table not included).
-- Deep research: falcon failed (403, key rejected); `just deep-research-openscientist ECOLI P17445 --alias betB` was started but had not finished when this review was written, so the review rests on the cached literature and UniProt.
+- Deep research: falcon failed (403, key rejected); `just deep-research-openscientist ECOLI P17445 --alias betB` produced `betB-deep-research-openscientist.md`, which agrees with the review (soluble cytoplasmic, K+-dependent homotetramer) and is cited on the cytosol row.
 
 ## Findings
 - "The dehydrogenase was found to be a tetramer with identical 55 kDa subunits." "The dehydrogenase was highly specific for betaine aldehyde." [PMID:2194570]

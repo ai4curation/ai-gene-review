@@ -2,7 +2,7 @@
 
 ## Sources read (2026-11-03)
 - Cached abstracts: PMID:1956285, PMID:17322201 (fetched), PMID:3512526, PMID:15919996, PMID:11967071.
-- Deep research: falcon failed (403); an OpenScientist run was started but had not finished when this review was written.
+- Deep research: falcon failed (403); `just deep-research-openscientist ECOLI P0ABC9 --alias betT` produced `betT-deep-research-openscientist.md`, consistent with the review (proton-driven, high-affinity, osmo-activated choline carrier); cited on the MF row.
 
 ## Findings
 - "betT encoding a proton-motive-force-driven, high-affinity transport system for choline" [PMID:1956285]
