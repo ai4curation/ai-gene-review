@@ -1186,7 +1186,9 @@ per-gene table and the upstream defect reports).
   pilus retraction ATPase. The paper (PMID:18174131) reports ATPase activity of
   purified PilB, PilT and PilU, and PseudoCAP gave PilB `GO:0016887` ATP
   hydrolysis activity from it on the same day: the PilU row is a one-digit id
-  slip. The clade's endonuclease IBA exists only because of it.
+  slip. The clade's endonuclease IBA exists only because of it. The same
+  GO:0016888 row was also put on fimT, a minor pilin the paper does not
+  describe; fimT seeds no node, so that copy does not propagate.
 - **hutI (PSEAE, PA5092)**, imidazolonepropionase activity on the LUCA-level
   node **PTN000505272** (sole seed, 52 leaves including human AMDHD1). The term
   is right, but the only seed is an IMP row on a 1967 pathway paper that

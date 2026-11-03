@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [arcA, arcD, aruC, braD, braF, ccmC, cif, cifR, cysB, dctP, dctQ, dgcB, dksA, eddB, estA, fimU, fleN, fliD, fpr, fur, gbuA, gltA, hfq, hom, hutF, hutH, hutI, lap, lasB, lasI, lhpL, liuC, lpxA, mgtE, motB, mucB, mucD, nirJ, nmoA, nrdJa, oprB, oprG, PA0692, PA0906, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1340, PA1341, PA1486, PA2280, PA2580, PA3697, PA3760, PA3891, PA4079, PA4503, PA4504, PA4505, PA4521, PA4624, PA5085, PA5208, PA5359, PA5377, PA5458, pchB, pelA, pfeA, phnB, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsC, pqsH, pscC, pslC, ptrB, pvdE, pvdH, Q9HTB8, relA, tgpA, thiI, thrB, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC]
+genes: [arcA, arcD, aruC, braD, braF, ccmC, cif, cifR, cysB, dctP, dctQ, dgcB, dksA, eddB, estA, fimU, fleN, fliD, fpr, fur, gbuA, gltA, hfq, hom, hutF, hutH, hutI, lap, lasB, lasI, lhpL, liuC, lpxA, mgtE, motB, mucB, mucD, nirJ, nmoA, nrdJa, oprB, oprG, PA0692, PA0906, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1340, PA1341, PA1486, PA2280, PA2580, PA3697, PA3760, PA3891, PA4079, PA4503, PA4504, PA4505, PA4521, PA4624, PA5085, PA5208, PA5359, PA5377, PA5458, pchB, pelA, pfeA, phnB, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsC, pqsH, pscC, pslC, ptrB, pvdE, pvdH, Q9HTB8, relA, tgpA, thiI, thrB, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC, fimT]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -153,8 +153,8 @@ lasB, which are given secretion-system terms for being secretion cargo).
 
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
 `source_defects` recorded in all PAO1 reviews into one report per resource in
-[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 114 for PseudoCAP (44
-wrong term, 42 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 1
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 116 for PseudoCAP (45
+wrong term, 42 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 2
 wrong gene product), 74 for PAINT/GO Central (44 wrong term, 16 other, 7
 missing negation, 6 wrong qualifier, 1 wrong reference), 5 for UniProt and 5
 for other resources (InterPro2GO mappings). They include defects from PAO1
@@ -169,8 +169,12 @@ review-as-IDA call turned out to have been made from an abstract (the full
 text, supplied by the user, later confirmed it). Of the 66, 18 dropped to
 SUSPECTED, 2 dropped from CONFIRMED to PROBABLE, 7 rose to CONFIRMED on a
 full-text read (lhpL, pilA, waaL), and 39 were unchanged; none was removed and
-no annotation action changed. The PseudoCAP report now stands at 16 CONFIRMED,
-59 PROBABLE and 39 SUSPECTED; the PAINT report at 4, 57 and 13. Full texts of
+no annotation action changed. Six more were then raised to CONFIRMED because
+the abstract states the decisive fact outright (PA1340 and PA2280: the paper
+is about another organism; cysB: CysB is a transcription factor whose mutant is
+an auxotroph; estA: an overexpression result coded IDA). With fimT added, the
+PseudoCAP report stands at 21 CONFIRMED, 56 PROBABLE and 39 SUSPECTED, and the
+PAINT report at 6, 55 and 13. Full texts of
 PMID:16030218 (Sha cluster), PMID:4290562 (hut genes), PMID:9224878 (pilA) and
 PMID:7768797 (oprB) would settle most of the SUSPECTED calls.
 
@@ -316,10 +320,14 @@ are committed. The research findings for the other two:
   glycolipid and lipid biosynthesis, and seeds a 960-leaf lipid biosynthesis IBD.
 - **Inflated evidence codes** (fleN): IDA on a paper that reports a sequence
   motif.
-- **Wrong GO id** (pilU): PseudoCAP entered GO:0016888 DNA endonuclease
+- **Wrong GO id** (pilU, fimT): PseudoCAP entered GO:0016888 DNA endonuclease
   activity, the id after GO:0016887 ATP hydrolysis activity, which it gave PilB
-  from the same paper on the same day. PAINT then used it as the only seed of
-  a node, so a pilus retraction ATPase clade inherits endonuclease activity.
+  and PilT from the same paper (PMID:18174131) on the same day. PAINT then used
+  the pilU row as the only seed of a node, so a pilus retraction ATPase clade
+  inherits endonuclease activity. The same GO:0016888 row also sits on fimT, a
+  minor pilin that the paper's abstract does not mention, so it looks copied
+  onto the wrong gene product as well; the fimT review asks for it to be
+  deleted. fimT seeds no node and receives no IBA.
 - **Wrong references** (ccmC, phzS): the cited PMID is a different paper
   (*E. coli* CcmABC biochemistry for ccmC; a crystallization note for phzS).
   The pilB/pilU paper looked like a mis-keyed neighbour of the ccmC paper but

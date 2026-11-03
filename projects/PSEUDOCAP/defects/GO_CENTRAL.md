@@ -129,7 +129,7 @@ The IBD of GO:0006868 L-glutamine transport at PTN000764525 has one seed, the Ps
 > We describe an ATP-binding cassette (ABC) transporter in Pseudomonas putida KT2440 that mediates the uptake of glutamate and aspartate.
 > — PMID:18310026
 
-## 9. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+## 9. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN008682975
 - **Subject:** UniProtKB:Q9I1J5
@@ -381,7 +381,7 @@ The IBD of GO:0004096 catalase activity at PTN001247822 (CcmC/heme exporter prot
 > The ccmC mutant was also found to accumulate porphyrins, and catalase production was undetectable, consistent with the increased sensitivity to hydrogen peroxide.
 > — PMID:18174132
 
-## 29. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 29. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002824317
 - **Subject:** UniProtKB:G3XCU6
