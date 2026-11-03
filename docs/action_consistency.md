@@ -114,6 +114,14 @@ RGA, WUS, Akt1), and its ancestor form on 11 reviews (22 row pairs; e.g. ARL6 NO
 membrane`, APP NOT `dendrite` vs `dendritic spine`). All stay WARNINGs until those are
 fixed, then can become ERRORs.
 
+The REMOVE-on-ancestor rule first fired on 304 REMOVE rows in 209 reviews. Exempting
+ND root-term rows and making hierarchical rules respect qualifiers left 210 rows in
+136 reviews. The 123 rows whose broad term was plainly true (redundant, removed for
+one row's weak evidence, or `cytoplasm`/`membrane` read as cytosol or integral
+membrane) were then changed to TOO_GENERAL, or to the action already on another row for
+the same term. The rest are judgement cases (ontology placements a review disputes,
+pseudoenzymes, unqualified `is_active_in` rows, process terms) and stay WARNINGs.
+
 ### Hierarchical rules and the ontology
 
 `DESCENDANT_OF` and `ANCESTOR_OF` rules use strict GO ancestry over `is_a` and
@@ -136,6 +144,11 @@ narrowed or retired, an unexempted ACCEPT/REMOVE pair is reported by both.
 
 ### Known limitations
 
+- Hierarchical rules compare rows only when the specific row's qualifier carries up to
+  the general row's (`located_in` a part is `located_in` the whole but not
+  `is_active_in` it; `contributes_to` does not entail `enables`). A row with no
+  `qualifier` is assumed to match, so older reviews that omit it can raise false
+  conflicts.
 - The pair rules compare each row's own `term.id`. MODIFY `proposed_replacement_terms`
   are not yet part of the relation graph, so a replacement term never takes part in a
   pair conflict. (The TOO_GENERAL precondition below does count them.)
