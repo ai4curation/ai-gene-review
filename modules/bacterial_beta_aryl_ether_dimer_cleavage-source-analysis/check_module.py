@@ -34,10 +34,21 @@ def walk(value):
 
 def main():
     panel = yaml.safe_load((DATA / "members.yaml").read_text())
+    canonical = {
+        term["proposed_name"]: term
+        for term in yaml.safe_load((DATA / "canonical-proposed-terms.yaml").read_text())
+    }
+    proposal_uses = []
     members, reviews = {}, {}
     for member in panel:
         path = ROOT / "genes" / member["organism"] / member["gene"] / (member["gene"] + "-ai-review.yaml")
         doc = yaml.safe_load(path.read_text())
+        for proposal in doc.get("proposed_new_terms", []):
+            name = proposal["proposed_name"]
+            assert name in canonical, (path, name)
+            for key, expected in canonical[name].items():
+                assert proposal.get(key) == expected, (path, name, key)
+            proposal_uses.append(name)
         accession = member["accession"]
         assert doc["id"] == accession
         taxon_id = doc["taxon"]["id"].split(":", 1)[1]
@@ -54,6 +65,8 @@ def main():
         )
         assert doc["status"] == "COMPLETE", (path, doc["status"])
         reviews[accession] = path
+    assert len(canonical) == 3 and len(proposal_uses) == 15
+    assert set(proposal_uses) == set(canonical)
     path = ROOT / "modules/bacterial_beta_aryl_ether_dimer_cleavage.yaml"
     doc = yaml.safe_load(path.read_text())
     used = {
@@ -113,6 +126,8 @@ def main():
         "activities": len(activities),
         "connections": len(connections),
         "references": len(doc.get("references", [])),
+        "canonical_proposed_terms": len(canonical),
+        "consistent_proposal_uses": len(proposal_uses),
         "distinct_source_quotes_checked": len(quoted),
         "findings": sum(
             len(ref.get("findings", [])) for ref in doc.get("references", [])

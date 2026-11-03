@@ -36,3 +36,13 @@ The proposed molecular function is GS-HPV glutathione-dependent deglutathionylas
 The required `just deep-research-falcon SPHPI ligG` attempt failed with HTTP 403 authentication failure from Edison (exit 1). The actual command log is `.cache/module-audit-logs/beta-aryl-syk-review/falcon-ligG.log`; no provider-named research report was fabricated. Manual research and exact cached primary-source quotations supply the review. Abstract-only papers are identified in the YAML findings; no experimental claim was rejected because its full text was inaccessible.
 
 Live QuickGO definitions were checked at https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0004364,GO:0016846,GO:0016616,GO:0046274,GO:0018502,GO:0005886,GO:0005737 . The response and term searches are saved under `.cache/module-audit-logs/beta-aryl-syk-review/`. GO:0046274 names breakdown of lignin polymers; the bounded dimer mechanism is kept explicit. GO:0005886 includes membrane-associated proteins, so soluble purification cannot refute peripheral membrane association. GO:0005737 is a compartment assertion, not a synonym for a soluble GST fold.
+
+## 2026-11-02 PR #5930 reviewer follow-up
+
+Addressed PR #5930 review item 5. Reassessment accepts GO:0005737 as a combined biological inference from the cytosolic GST classification, the solved omega-class fold, purification from clarified lysate, and native cellular GSH-recycling function (PMID:23058289, PMID:26940872, PMID:33244017). The previous requirement for an independent direct localization assay was too restrictive for this IEA compartment claim. These data do not individually establish native localization, and absence of an annotated signal peptide or membrane helix is not experimental evidence of absence. LigE remains UNDECIDED because its explicit curated peripheral inner-membrane assertion introduces a different unresolved localization claim; no blanket rule that soluble purification disproves membrane association is adopted.
+
+The proposed-term definitions, parents and justifications are unchanged in this follow-up; repository-wide canonicalization is handled separately. Raw sources and machine annotation fields are preserved.
+
+## 2026-11-03 — shared proposed-term definition
+
+PR5930 follow-up reconciles the shared proposed activity with the canonical definition, GO parent and chemistry-specific justification in `analysis/module_audits/bacterial_beta_aryl_ether_dimer_cleavage/canonical-proposed-terms.yaml`. Gene-specific evidence and stereoselectivity are retained. The broad parent is not substituted for the precise proposed activity; BaeAB subunits continue to contribute to the assembled complex rather than receiving standalone full activity.

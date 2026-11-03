@@ -26,3 +26,7 @@ PANTHER labels, when present, were compared verbatim with interpro/panther/panth
 ### Research provenance and verification
 
 A normal `just deep-research-falcon NOVAD Saro_2595` attempt failed with HTTP 403 authentication (missing, invalid or unauthorized key). No provider report was fabricated. Primary-literature reading supplies the evidence above; saved command logs record the failure. The primary studies were checked in cached PubMed/PMC full text, and all quoted findings were matched against those cached sources. Focused validation, rendering, raw-record preservation and a helper-generated history record are checked for this session.
+
+## 2026-11-03 — shared proposed-term definition
+
+PR5930 follow-up reconciles the shared proposed activity with the canonical definition, GO parent and chemistry-specific justification in `analysis/module_audits/bacterial_beta_aryl_ether_dimer_cleavage/canonical-proposed-terms.yaml`. Gene-specific evidence and stereoselectivity are retained. The broad parent is not substituted for the precise proposed activity; BaeAB subunits continue to contribute to the assembled complex rather than receiving standalone full activity.

@@ -51,3 +51,10 @@ halide-displacement or carbon-sulfur-elimination term would misstate the reactio
 Taxonomy JSON records are unedited UniProt API responses with URLs and hashes
 in `taxonomy/provenance.yaml`. They supplement, rather than rewrite, raw gene
 record taxon identifiers.
+
+The module checker also requires all fifteen proposed-function uses to match the
+three canonical definitions, parents and justifications. Gene-specific quotations
+and stereochemical roles remain separate. Official UniParc cross-reference
+responses and the reproducible lookup script are retained under LigN source
+analysis; no active UniProtKB equivalent was returned for any of the three
+archived exact sequences on 2026-11-03.
