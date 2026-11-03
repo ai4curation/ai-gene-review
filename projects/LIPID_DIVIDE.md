@@ -165,23 +165,43 @@ we could confirm, so they are not targets yet:
 - The promiscuous archaeal cardiolipin synthase (Exterkate et al. 2021).
 - *Ca.* Cloacimonadota ether-lipid genes (MAG-derived).
 
+## Modules
+
+Two modules have been built for this project:
+
+- [bacterial_phosphatidic_acid_synthesis](../modules/bacterial_phosphatidic_acid_synthesis.yaml):
+  the PlsX/PlsY and PlsB routes to lysophosphatidic acid, then PlsC to
+  phosphatidic acid, ending where the CDP-DAG modules begin. The modelled
+  chemistry stays G3P; the G1P capability of PlsY is a knowledge gap, confined
+  to the PlsY branch because PlsB is strictly G3P-specific.
+- [bacterial_heptaprenylglyceryl_ether_lipid](../modules/bacterial_heptaprenylglyceryl_ether_lipid.yaml):
+  the archaeal-type ether lipid route of Bacillales. EgsA supplies G1P, PcrB
+  forms the ether bond, an unassigned phosphatase and YvoF finish the carrier,
+  and LhaT transfers its acetyl group to lipoproteins. The unassigned
+  phosphatase and the unproven in vivo G1P supply are modelled as gaps rather
+  than asserted.
+
 ## Plan
 
 1. **Scoping (this page).** Done.
-2. **Fetch and review Part A** (`just fetch-gene BACSU egsA` and so on),
-   starting with BACSU egsA and pcrB. Question: do the GO rows say anything
-   about lipid biosynthesis, or only "glycerophospholipid metabolic process"?
-3. **Cache Rieche et al. 2026** (PMID:42286214) and review the Part B
-   acyltransferases. Decide, with the ENZYME_SPECIFICITY tiers, whether G1P
-   use is a physiological activity that warrants a proposed MF term.
+2. **Fetch and review Part A.** Fetched; egsA and pcrB reviews are deferred to
+   a later pass, with the evidence and planned actions recorded in their notes
+   files.
+3. **Part B acyltransferases: done.** plsY and plsC are reviewed and complete.
+   G1P use was recorded as a proposed term plus knowledge gaps, not as a
+   function: the near-equal in vitro result is from detergent, PlsY prefers G3P
+   in a membrane, no kinetics exist, and the in vivo G1P source is unidentified.
 4. **Check the A5FJK8 `GO:0000107` row** against the PANTHER node and the
    protein's own sequence. If it is wrong, record it as an error pattern,
    in the same form as [ARCHAEA annotation-patterns](ARCHAEA/annotation-patterns.md).
 5. **Ontology questions** for GO: process terms for archaeal-type
    (isoprenoid ether, G1P) membrane lipid biosynthesis and for
    membrane-spanning lipid (GDGT, brGDGT, iso-diabolic acid) biosynthesis.
-6. **Module (later):** a G1P/G3P backbone-choice module could link the
-   bacterial and archaeal halves once both sides are reviewed.
+6. **Modules: two built** (above). A G1P/G3P backbone-choice module could
+   still link the bacterial and archaeal halves once both sides are reviewed.
+7. **Follow-ups from the modules:** review YvoF (O34993) and LhaT/YpjA
+   (P54392), both uncharacterized or putative in UniProt; bacterial CdsA
+   (PA to CDP-DAG) is modelled in no bacterial module.
 
 ## Open questions
 
