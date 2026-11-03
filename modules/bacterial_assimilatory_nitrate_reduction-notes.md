@@ -117,3 +117,13 @@ The remaining nine UNDECIDED rows in member gene reviews were resolved, so all 2
 Each PANTHER family carried by a member now has a COMPLETE family review: PTHR21496, PTHR23515, PTHR30024, PTHR30151, PTHR32439, PTHR40562, PTHR42788, PTHR43105, PTHR43429 and PTHR43809. Each review assesses every PAINT node row, using the PANTHER reference-proteome PAINT GAF to see which members a node reaches. Assimilatory-versus-respiratory divergence is recorded in PTHR43105. There, the formate dehydrogenase node PTN000745948 reaches Synechocystis NarB (SF9), and the membrane node PTN008678681 reaches the cytoplasmic assimilatory enzymes; both are marked NEEDS_PRUNING. PANTHER's per-organism files disagree with UniProt for NasC (PTHR43742:SF2 versus PTHR43105:SF10) and NasD (PTHR43429:SF3 versus PTHR43809:SF1). The UniProt placements are kept and pinned in `interpro/panther/panther-members-overrides.tsv`, with reasons.
 
 In the module, complex subunits no longer carry free-text-only functions, since each one repeated the subunit role. Three participants are grounded on PANTHER subfamilies (NasA SF2, NarU SF6, NirA SF0) so that the family-review scopes apply. Scope stays CONCRETE, and no further organisms were added. A Klebsiella oxytoca NasFEDCBA route is a candidate for future work once its members are reviewed. Both validators now pass with 0 warnings, recommended-field compliance is 100%, and the status is COMPLETE.
+
+
+### PR #5928 review follow-up, 2026-11-03
+
+The NasC (P42434) member-index override was dropped. Its reason argued family-level placement but pinned subfamily PTHR43105:SF10, which PANTHER names for NuoG. The other assimilatory members sit in SF9, and PANTHER's own placement is PTHR43742:SF2 (ASSIMILATORY NITRATE REDUCTASE CATALYTIC SUBUNIT). UniProt's cross-reference and the InterPro-derived entries list come from the same HMM pipeline, and nasC has no IBA row from which a PAINT node could decide. With no checkable discriminator, both placements stay accepted and the membership warning stands. The NasD (P42435) override is kept on its InterPro sirohaem-site and NasD-like signatures, which NasB lacks.
+
+Further changes:
+- The narB and PP_1703 membrane rows now list all four PTN008678681 seeds and say that node is context, not their TreeGrafter source.
+- The PTHR23515 grounding quotes now carry the full source clause.
+- The two NirB NADP rows now explain the deliberate asymmetry with NasB and NasD.
