@@ -33,3 +33,9 @@ cytoplasm row stays at cytoplasm because, unlike E. coli, no cytosolic-fraction
 evidence exists for this strain. Experimental grounding for the conserved
 mechanism comes from the E. coli ortholog (PMID:1331806, PMID:1701272,
 PMID:7612669, PMID:11735405).
+
+Provenance for the 2026-11-02 changes: the bacterial SRP is the Ffh/4.5S RNA
+particle [PMID:1701272, "An antiserum to Ffh precipitated 4.5S RNA from E. coli
+extracts"] that recognizes nascent signal sequences [PMID:1279430, "interacts
+specifically with the signal sequence of a nascent secretory protein"], which
+supports the plasma-membrane-targeting SRP term GO:0048501.

@@ -27,3 +27,15 @@ cytoplasmic side), matching the experimentally grounded E. coli FtsY review
 (genes/ECOLI/ftsY), where in vivo imaging shows FtsY is almost exclusively
 membrane-bound [PMID:19912622, "the vast majority of FtsY was localized to the
 inner membrane"]. The cytoplasm row stays non-core.
+
+## 2026-11-03
+
+Phospholipid binding (GO:0005543), added to the E. coli FtsY review from direct
+evidence [PMID:19414018, "both helices bind to negatively charged
+phospholipids"], is not mirrored here. The KT2440 record has no curated
+lipid-binding statement: its A-domain annotations are only MobiDB-lite disorder
+and low-complexity regions. No family-level review establishes the lipid-binding
+helices across PTHR43134:SF1. The A domain is weakly conserved
+[PMID:18281057, "the weakly conserved N-terminal A-domain does not seem to be
+essential"], so transfer from E. coli would be a sequence inference this review
+cannot check.
