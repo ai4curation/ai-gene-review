@@ -168,10 +168,42 @@ def _isoform(curie: str) -> str | None:
     return accession if "-" in accession else None
 
 
+def _effective_qualifier(annotation: dict[str, Any]) -> str | None:
+    """Return the GO qualifier, honouring a recorded WRONG_QUALIFIER correction.
+
+    A review that diagnoses the source qualifier as wrong records the correction in
+    ``review.source_defects``; the corrected value is what the review asserts.
+
+    >>> _effective_qualifier({"qualifier": "enables"})
+    'enables'
+    >>> _effective_qualifier({"qualifier": "enables", "review": {"source_defects": [
+    ...     {"defect_type": "WRONG_QUALIFIER", "corrected_value": "contributes_to"}]}})
+    'contributes_to'
+    """
+    review = annotation.get("review") or {}
+    for defect in as_list(review.get("source_defects")):
+        if (
+            isinstance(defect, dict)
+            and defect.get("defect_type") == "WRONG_QUALIFIER"
+            and defect.get("corrected_value")
+        ):
+            return str(defect["corrected_value"])
+    return annotation.get("qualifier")
+
+
 def _assess_review(
-    review: dict[str, Any], curie: str, function_id: str, subclass_of: SubclassPredicate
+    review: dict[str, Any],
+    curie: str,
+    function_id: str,
+    subclass_of: SubclassPredicate,
+    in_complex: bool = False,
 ) -> tuple[str, str, str]:
-    """Assess one GO function against the review without interpreting free text."""
+    """Assess one GO function against the review without interpreting free text.
+
+    ``in_complex`` is true when the function is asserted on an active unit of a
+    modelled protein complex, where contribution (not independent enabling) is the
+    expected relationship.
+    """
     target_isoform = _isoform(curie)
     core = as_list(review.get("core_functions"))
     core_support = any(
@@ -198,7 +230,7 @@ def _assess_review(
         action = assessment.get("action")
         ann_term = _term_id(ann.get("term"))
         ann_isoform = ann.get("isoform")
-        contribution = ann.get("qualifier") == "contributes_to"
+        contribution = _effective_qualifier(ann) == "contributes_to"
         terms = (
             [_term_id(t) for t in as_list(assessment.get("proposed_replacement_terms"))]
             if action == "MODIFY"
@@ -260,6 +292,12 @@ def _assess_review(
             "ANNOTATION_SUPPORTED",
             "warning",
             "A retained annotation or curated replacement supports this function, but core_functions does not yet reflect it.",
+        )
+    if contributes and in_complex:
+        return (
+            "CONTRIBUTES_IN_COMPLEX",
+            "info",
+            "The review records contribution to this activity, matching the subunit's role as an active unit of the modelled complex.",
         )
     if contributes:
         return (
@@ -382,7 +420,11 @@ def gene_function_findings(
                         or {}
                     )
                 assessment = _assess_review(
-                    review_cache[path], curie, function_id, subclass_of
+                    review_cache[path],
+                    curie,
+                    function_id,
+                    subclass_of,
+                    in_complex=scope == "complex_unit",
                 )
             if row_scope == "family_representative" and assessment[0] == "CONTRADICTED":
                 assessment = (
