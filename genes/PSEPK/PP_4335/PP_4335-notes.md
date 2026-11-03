@@ -8,4 +8,4 @@ TrEMBL Q88EW7; MotD (MotB-like, PANTHER PTHR30329; MotB_plug + OmpA-like domains
 - [PMID:31452860 "The MotA4/MotB2 complex is anchored to the peptidoglycan (PG) layer through direct interactions of the C-terminal periplasmic domain of MotB with the PG layer"]
 
 Decisions: plasma membrane ACCEPT; membrane MODIFY -> GO:0005886. NEW: GO:0071977 IMP, GO:0120101 IC, GO:0015078 contributes_to IC (module stator MF). Not added: GO:0042834 peptidoglycan binding (MotB family inference only; no cached direct evidence for MotD) - left as a suggested question/experiment.
-Note: PANTHER subfamily PTHR30329:SF20 is labelled "EXPORTED PROTEIN"; family-level PTHR30329 is the stator family.
+Note: PANTHER subfamily PTHR30329:SF20 is labelled "EXPORTED PROTEIN" and holds Q88EW7. Family-level PTHR30329 is HETEROGENEOUS (OmpA-like peptidoglycan-binding domain proteins: OmpA, Pal, OprF and others as well as MotB/PomB/LafU/MotD stator anchors), so it is not itself a stator family; the module grounds MotD at SF20.
