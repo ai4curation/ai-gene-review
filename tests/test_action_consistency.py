@@ -483,7 +483,9 @@ def test_packaged_remove_ancestor_rule_exempts_protein_binding():
 def test_packaged_remove_ancestor_rule_exempts_nd_roots(root):
     roots = {"GO:0099999": frozenset({root})}
     data = hrows((root, "REMOVE", False), ("GO:0099999", "ACCEPT", False))
-    assert list(iter_conflicts(data, ancestors=lambda t: roots.get(t, frozenset()))) == []
+    assert (
+        list(iter_conflicts(data, ancestors=lambda t: roots.get(t, frozenset()))) == []
+    )
 
 
 def test_hierarchical_rules_need_an_ancestor_lookup():
@@ -593,3 +595,24 @@ def test_worked_examples_are_clean_with_real_go(gene):
     )
     data = yaml.safe_load(path.read_text())
     assert issues(data, ancestors=go_ancestors()) == []
+
+
+@pytest.mark.parametrize(
+    "q_spec,q_gen,conflict",
+    [
+        # located in a sub-compartment does not make the gene active in the whole
+        ("located_in", "is_active_in", False),
+        ("is_active_in", "located_in", True),
+        ("part_of", "located_in", True),
+        # a contributed activity is not one the gene enables
+        ("contributes_to", "enables", False),
+        ("enables", "enables", True),
+        ("colocalizes_with", "located_in", False),
+        (None, "is_active_in", True),
+    ],
+)
+def test_hierarchical_rules_respect_qualifiers(q_spec, q_gen, conflict):
+    spec = row("ACCEPT", term="GO:C", **({"qualifier": q_spec} if q_spec else {}))
+    gen = row("REMOVE", term="GO:A", qualifier=q_gen)
+    found = [c for c in iter_conflicts(doc(gen, spec), ancestors=toy) if c.term_id_2]
+    assert bool(found) is conflict
