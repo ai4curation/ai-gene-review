@@ -49,10 +49,16 @@ All original annotation payloads and row order are preserved. Focused validation
 
 ## 2026-11-03 module completion (aps_dependent_assimilatory_sulfate_reduction)
 
-Deleted the retired, non-GOA `GO:0050311 sulfite reductase (ferredoxin) activity` ISS proposal row.
+(Superseded in the PR #5934 review round: the row was restored, kept `retired: true`, with action REMOVE.) Deleted the retired, non-GOA `GO:0050311 sulfite reductase (ferredoxin) activity` ISS proposal row.
 It had been withdrawn earlier (left as `retired: true` / UNDECIDED for provenance) because
 [PMID:23794620 "it also remains possible that FprA transfers electrons directly to CysI."] leaves the
 immediate donor open, and FprA prefers flavodoxin in the cited biochemistry. The donor-neutral core
 function (GO:0016667, part of GO:0000103) and the open BIOLOGY knowledge gap already carry the
 conclusion; the withdrawn proposal remains visible in git history and in the history record for
 this session. The module's Pseudomonas Fpr-linked CysI annoton likewise asserts no donor-specific GO id.
+
+## 2026-11-03 PR #5934 review round
+
+Restored the retired GO:0050311 ISS proposal row instead of deleting it. It keeps `retired: true` and now
+has the decided action REMOVE, which withdraws the donor-specific proposal for provenance. The
+donor-neutral GO:0016667 core function is unchanged.

@@ -169,17 +169,19 @@ def wrong_qualifier_defect(corrected="contributes_to"):
 
 def test_recorded_contributes_to_correction_is_honoured(tmp_path):
     """An enables row whose review records a contributes_to correction is a contribution."""
+    core = [{"contributes_to_molecular_function": {"id": MF}}]
     ann = annotation("ACCEPT", qualifier="enables")
     ann["review"]["source_defects"] = [wrong_qualifier_defect()]
-    index = write_review(
-        tmp_path,
-        core=[{"contributes_to_molecular_function": {"id": MF}}],
-        annotations=[ann],
-    )
+    index = write_review(tmp_path, core=core, annotations=[ann])
     assert findings(module(), index)[0]["status"] == "CONTRIBUTES_ONLY"
-    # A different correction (or none) leaves the row as independent enabling.
+    # A different correction leaves the row as independent enabling.
     ann["review"]["source_defects"] = [wrong_qualifier_defect("located_in")]
-    index = write_review(tmp_path, annotations=[ann])
+    index = write_review(tmp_path, core=core, annotations=[ann])
+    assert findings(module(), index)[0]["status"] == "ANNOTATION_SUPPORTED"
+    # So does an unconfirmed correction.
+    unconfirmed = {**wrong_qualifier_defect(), "confidence": "PROBABLE"}
+    ann["review"]["source_defects"] = [unconfirmed]
+    index = write_review(tmp_path, core=core, annotations=[ann])
     assert findings(module(), index)[0]["status"] == "ANNOTATION_SUPPORTED"
 
 

@@ -169,22 +169,33 @@ def _isoform(curie: str) -> str | None:
 
 
 def _effective_qualifier(annotation: dict[str, Any]) -> str | None:
-    """Return the GO qualifier, honouring a recorded WRONG_QUALIFIER correction.
+    """Return the GO qualifier, honouring a confirmed WRONG_QUALIFIER correction.
 
     A review that diagnoses the source qualifier as wrong records the correction in
-    ``review.source_defects``; the corrected value is what the review asserts.
+    ``review.source_defects``. Only a CONFIRMED correction of the ``Qualifier`` slot
+    replaces the source value; a PROBABLE or SUSPECTED query, or a correction of
+    another slot, leaves the source qualifier in force.
 
     >>> _effective_qualifier({"qualifier": "enables"})
     'enables'
-    >>> _effective_qualifier({"qualifier": "enables", "review": {"source_defects": [
-    ...     {"defect_type": "WRONG_QUALIFIER", "corrected_value": "contributes_to"}]}})
+    >>> fix = {"defect_type": "WRONG_QUALIFIER", "slot": "Qualifier",
+    ...        "confidence": "CONFIRMED", "corrected_value": "contributes_to"}
+    >>> _effective_qualifier({"qualifier": "enables", "review": {"source_defects": [fix]}})
     'contributes_to'
+    >>> _effective_qualifier({"qualifier": "enables", "review": {"source_defects": [
+    ...     {**fix, "confidence": "PROBABLE"}]}})
+    'enables'
+    >>> _effective_qualifier({"qualifier": "enables", "review": {"source_defects": [
+    ...     {**fix, "slot": "With/From"}]}})
+    'enables'
     """
     review = annotation.get("review") or {}
     for defect in as_list(review.get("source_defects")):
         if (
             isinstance(defect, dict)
             and defect.get("defect_type") == "WRONG_QUALIFIER"
+            and str(defect.get("slot") or "").lower() == "qualifier"
+            and defect.get("confidence") == "CONFIRMED"
             and defect.get("corrected_value")
         ):
             return str(defect["corrected_value"])
