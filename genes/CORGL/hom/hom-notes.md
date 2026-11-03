@@ -38,3 +38,16 @@ The three GO:0004022 decisions reflect different inspected evidence, not differe
 These decisions are cross-referenced in the respective review reasons. The evidence code alone does not dictate the outcome: the reaction provenance, inspected source content, independent family/cofactor features and remaining uncertainty do. No native purified NADH/NADPH preference measurements are invented.
 
 The review suggestion that both cited experimental papers in fact assay NADPH is established only for the recovered1970 full text. The1991 abstract cannot support that conclusion. One structured `source_defects` entry therefore uses `WRONG_REFERENCE`, `confidence: SUSPECTED`, and `requested_change: CHECK` for the RHEA:15757 experimental evidence attachment. It has no corrected_value and is NOT_REPORTED. This is an exportable curator query about attribution, not a confirmed correction, a request to delete the NAD reaction, or an unsupported reassignment of both papers to NADPH-only chemistry. PMID4394351's strain and alternate-PDF identity remain documented in hom-source-analysis.md.
+
+## 2026-11-02 cofactor rows resolved (bacterial aspartate-to-threonine module completion)
+
+The two rows previously left UNDECIDED (GO:0004022 alcohol dehydrogenase (NAD+) activity, IEA via
+RHEA:15757; GO:0070403 NAD+ binding, ISS from yeast HOM6) are now KEEP_AS_NON_CORE. Basis: the
+UniProt CC:CATALYTIC ACTIVITY line curates the NAD-linked reaction for this target with ECO:0000269
+attachments, and the comparative bacterial survey [PMID:4391829 "In most of the bacteria examined,
+either nicotinamide adenine dinucleotide (NAD) or nicotinamide adenine dinucleotide phosphate can serve
+as a cofactor for this enzyme, though the relative activity with the two pyridine nucleotides varies
+widely."] makes dual cofactor use the expected behaviour of bacterial Hom enzymes. A web search for
+direct ATCC 13032 NADH/NADPH kinetics found none (a 2023 Food Science mutant study abstract did not
+state the cofactor). The NADPH-linked GO:0004412 activity remains the core function and the suspected
+citation source defect on the NAD reaction is unchanged.
