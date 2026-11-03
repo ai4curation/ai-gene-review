@@ -29,3 +29,10 @@ Changes from previous version: removed horse-specific wording that had been copi
 Relative: no characterised MYL10 ortholog beyond expression (mouse Myl10, PMID:1628631) and a CRISPR regeneration screen. Nearest characterised paralog by PAINT placement is human MYL2 (P10916), the experimental donor of the shared PTN000549442 node; no human MYL2 review exists in the repo.
 
 Family review interpro/panther/PTHR23049/PTHR23049-review.yaml groups MYL10 under a single generic "Myosin regulatory light chains" subfamily label without naming SF36 or separating sarcomeric from nonmuscle RLC branches; not a contradiction, but it under-resolves the placement. No modules/ files mention MYL10.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IBA (GO_REF:0000033, PTN002746160, is_active_in) and IDA (GO_REF:0000054, LIFEdb GFP fusion, located_in). Both stay KEEP_AS_NON_CORE.
+- IBA WITH/FROM is PTN002746160 plus Q9BUA6 itself: the node is grounded on the human LIFEdb fusion (expected, not circular). No PAINT table for PTHR23049 is cached. Mouse Myl10 (Q62082) has an independent MitoCarta HDA (PMID:18614015), checked via QuickGO 2026-11-03.
+- No transit peptide/TM, no sub-mitochondrial assay: stays at root.
+- is_active_in: no MYL10 activity is shown in mitochondria; joins the ORGANELLES is_active_in worklist.
