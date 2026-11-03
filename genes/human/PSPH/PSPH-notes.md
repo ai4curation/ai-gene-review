@@ -69,3 +69,14 @@ PSPH catalyzes the **last, irreversible step of de novo L-serine biosynthesis (t
 4. **Protein homodimerization activity (GO:0042803)** — obligate homodimer; dimerization is required for full catalytic activity.
 
 Localization: cytosol (GO:0005829).
+
+## 2026-11-03 completion pass (PTHR43344 reference protein for the bacterial aspartate-to-threonine module)
+
+Every row now has verbatim support. Action/reason consistency fixes: the three GO:0042802 identical
+protein binding IPI rows, the IBA cytoplasm row and the IDA GO:0006563 L-serine metabolic process row
+argued that a more specific term already carried by the gene was the informative one, so they are now
+MODIFY to GO:0042803 protein homodimerization activity, GO:0005829 cytosol and GO:0006564 L-serine
+biosynthetic process respectively (previously KEEP_AS_NON_CORE). The rat-transfer response rows stay
+MARK_AS_OVER_ANNOTATED, supported by the curated UniProt enzymatic FUNCTION statement. Status promoted to
+COMPLETE. No deep-research provider file exists for this gene; the review rests on cached publications
+and the UniProt record.
