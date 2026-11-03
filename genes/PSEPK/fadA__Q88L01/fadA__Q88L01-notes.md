@@ -89,3 +89,15 @@ actually supports (complex membership, not a new molecular function).
 The chain-length range over which the FadBA complex operates, relative to the
 other KT2440 thiolase paralogs, is not established by any record consulted here;
 it is carried in `suggested_questions` rather than asserted.
+
+## 2026-11 completion pass
+
+- References to GOA tables were removed from the review (a GOA file cannot
+  support the annotations it lists); the GO:0010124 REMOVE now cites the
+  FadA and PaaJ subfamily assignments and records a GO_CENTRAL source defect.
+  In the GOA row for the E. coli orthologue (P21151) the same term arrives as
+  an IBA from PAINT node PTN001823071, seeded for that term only by E. coli
+  PaaJ (P0C7L2).
+- The GO:0036125 NEW row is now ISS from the E. coli FadBA complex
+  (PMID:368024) rather than IEA.
+- Broad parents changed from MARK_AS_OVER_ANNOTATED to TOO_GENERAL.
