@@ -31,3 +31,8 @@ PMID:7868621 was read in the publisher PDF, although its canonical cache remains
 - GO:0055085 transmembrane transport: **MODIFY**. The nitrate uptake step is more informative than substrate-unspecified transmembrane transport and is already represented.
 
 No isolated-subunit catalytic claim is inferred from the ordinary machine relationship value. The native complex contribution is assessed on biology. All seeded rows and machine payloads remain intact; no redundant NEW row was introduced. Nitrogen-regulator induction is regulation of these enzymes, not a transcription-factor function of the enzymes. Provider authentication failures are recorded in the foundation; no provider report was invented.
+
+
+## Module completion pass, 2026-11-03
+
+Resolved the remaining UNDECIDED row so the review can be COMPLETE for the bacterial assimilatory nitrate reduction module. GO:0015113 nitrite transmembrane transporter activity and GO:0015707 nitrite transport (InterPro IEA): UNDECIDED -> MARK_AS_OVER_ANNOTATED. Nitrite use survives nasA loss, so nothing on the gene supports the family-level nitrite extension; it is not excluded.
