@@ -104,7 +104,7 @@ the existing reviews that violate it have been fixed.
 | TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
 | REMOVE | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a REMOVEd term is an ancestor of a term the review keeps |
 | REMOVE (term_1 exactly GO:0005515) | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | OK | exception: protein binding is tracked by its own policy |
-| REMOVE (term_1 exactly a root: GO:0003674, GO:0008150, GO:0005575) | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | OK | exception: an ND root row is superseded by any specific annotation |
+| REMOVE (term_1 exactly a root: GO:0003674, GO:0008150, GO:0005575) | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | OK | exception: ND root rows are judged by the ND policy (`nd_policy`), not by ancestry |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
 REMOVEd rows are mostly TAS, IDA, IMP and IPI); with the protein binding exception,
