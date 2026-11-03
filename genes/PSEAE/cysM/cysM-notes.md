@@ -30,3 +30,8 @@ the UniProt entry (PE 3, homology-inferred), and the local PTHR10314 PAINT table
 - PANTHER: PTHR10314:SF162 (CYSTEINE SYNTHASE B), same subfamily as E. coli
   CysM; IBA from PTN008497439. No PAINT loss on its lineage
   (`just paint-losses PSEAE cysM`).
+
+## 2026-11-03 PR #5929 review round
+
+- Cytoplasm -> cytosol MODIFY reason now states that the refinement is an inference from solubility plus the PAINT node, not a localization measurement.
+- The NEW PLP-binding row now leads with the one-PLP-per-monomer measurement.

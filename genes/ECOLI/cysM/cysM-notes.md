@@ -33,3 +33,7 @@ abstract-only except the interactome papers).
   by IDA), consistent with the sibling reviews in the module.
 - PANTHER: PTHR10314:SF162 (CYSTEINE SYNTHASE B) with P. aeruginosa and
   Salmonella CysM; P16703 is the seed of the CysM-type node PTN008497439.
+
+## 2026-11-03 PR #5929 review round
+
+- Cytoplasm -> cytosol MODIFY reason now states that the refinement is an inference from solubility plus the PAINT node, not a localization measurement.

@@ -21,3 +21,7 @@
   C-terminal isoleucine anchor and shows no functional CysK interaction.
 - Decisions follow the module sibling-consistency policy (cytoplasm MODIFY to
   cytosol; generic O-acetyltransferase parent TOO_GENERAL).
+
+## 2026-11-03 PR #5929 review round
+
+- Cytoplasm -> cytosol MODIFY reason now states that the refinement is an inference from solubility plus the PTHR42811 PAINT cytosol node, not a localization measurement.

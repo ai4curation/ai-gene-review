@@ -30,3 +30,18 @@ publications for every GOA row (all abstract-only except PMID:18304323).
   CYSTATHIONINE BETA-SYNTHASE and which also holds human CBS and yeast CYS4.
   The subfamily name does not describe CysK; PAINT's cysteine synthase node
   PTN000034535 (taxon:2) is the relevant bacterial node.
+
+## 2026-11-03 PR #5929 review round
+
+- Core function no longer asserts `in_complex: GO:0009333`. PMID:10993149
+  shows that complex formation lowers the maximum velocity of bound OASS-A
+  ["the maximum velocity for OASS-A was lowered"], so the productive
+  sulfhydrylase is free CysK; complex membership is a regulatory/structural
+  association. The GO:0009333 annotation rows stay ACCEPT.
+- Removed a duplicated references block (second copies of the UniProt and
+  PTHR10314 PAINT entries).
+- The CDI toxin-activation claim in the description is now sourced: PMID:22333533
+  ["tRNase that requires activation by the biosynthetic enzyme CysK (O-acetylserine
+  sulfhydrylase A)."] and PMID:27531961 ["CysK significantly increases
+  CdiA-CT(EC536) thermostability and is required for toxin interaction with tRNA
+  substrates."]; a suggested question was added.
