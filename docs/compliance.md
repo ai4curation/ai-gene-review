@@ -22,7 +22,7 @@ two contextual metrics. Each applicable annotation contributes one opportunity:
 | --- | --- | --- |
 | `literature_support` | Conclusive experimental/TAS decisions, including MODIFY, REMOVE and non-core decisions | At least one PMID/DOI support item with nonblank `supporting_text` or `supporting_text_fulltext` |
 | `inference_support` | Corrective or NEW inferred annotations, including IEA/IBA | Nonblank `review.reason` plus a support reference, an `additional_reference_ids` entry, or a propagation source with `source_id` |
-| `nd_search_support` | ACCEPTed ND rows | As `inference_support`: a nonblank `review.reason` plus a source recording the literature search (e.g. the deep-research file) |
+| `nd_search_support` | ACCEPTed ND rows | A nonblank `review.reason` plus a citation of the literature search, as the `nd_policy` warning requires: a PMID/DOI/PMC id, or the gene's deep-research or notes file. The UniProt record does not count |
 | `nd_stale_support` | ND rows marked REMOVE or MODIFY | As `literature_support`: a PMID/DOI quote from the literature on this gene that makes the ND stale |
 
 The two ND rules reward adherence to the evidence-code guideline (see
@@ -78,7 +78,7 @@ excluded_paths:
 A supplied config replaces the default policy; it is not merged into it. Start
 by copying the default. `annotation_rules` can add named metrics or adjust their
 applicability without Python changes. Available support modes are
-`literature_quote` and `sourced_rationale`. Overlapping rules intentionally count
+`literature_quote`, `sourced_rationale` and `literature_search`. Overlapping rules intentionally count
 as separate metrics, so use distinct applicability sets unless that is desired.
 `excluded_paths` removes raw schema checks by exact slot path or subtree (`.**`)
 before computed checks run. It affects both the numerator and denominator;
