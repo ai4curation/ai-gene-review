@@ -18,7 +18,7 @@ This file preserves small target subsets and source-specific interpretation from
 | 1876 | 2623 | 149473 | GATA1 | CCDC24 | 1 |
 | 1877 | 2623 | 386680 | GATA1 | KRTAP10-5 | 1 |
 
-The available Table S2, sheet `2B`, GATA1 library clone ORF6313 (row 17321; 1,008 nucleotides including its stop codon) translates to 335 residues, exactly matching current P15976-2. Sheet `2G` records genes rather than a clone assignment for each pair, so this library observation does not establish per-pair isoform specificity. Selected original Methods describe human ORFs assayed as yeast fusion proteins, retesting and identity checks. No pair-specific S2C orthogonal validation was identified for these nine pairs.
+The available Table S2, sheet `2B`, GATA1 library clone ORF6313 (row 17321; 1,008 nucleotides including its stop codon) translates to 335 residues, exactly matching current P15976-2. Sheet `2G` records genes rather than a clone assignment for each pair, so this library observation does not establish per-pair isoform specificity. Original Results 15–16, Methods 45 and supplementary Methods §3 describe human ORFs assayed as yeast fusion proteins. Every published positive pair underwent individual quadruplicate retesting, requiring at least 3/4 positive results, absence of autoactivation on counterselection and sequence-confirmed identities. The `screens_found` column counts discovery screens, not technical retests. No pair-specific S2C orthogonal validation was identified for these nine pairs. These validated binary contacts support partner-class binding terms for HOXA1 and HEXIM2; generic sibling removals concern informativeness rather than rejection of their positive assays.
 
 The retained later HuRI accession/ORF crosswalk corroborates eight incoming partner identities. This is an identity crosswalk, not a second independent interaction experiment:
 
@@ -33,7 +33,7 @@ The retained later HuRI accession/ORF crosswalk corroborates eight incoming part
 | Q96MH2 | uniprotkb:Q96MH2 | 12696 | 27265 | 124790 |
 | Q9BYQ4 | uniprotkb:Q9BYQ4 | 53991 | 2233 | 83899 |
 
-Q8TES7-6 remains unmapped by this retained crosswalk. It is not assigned to the remaining FBF1 gene row by elimination. The original accession and uncertainty remain explicit in the review. The current Q96JH8 context is conserved separately from the later Q96JH8-4/ORF54154 mapping to RADIL.
+The retained main [UniProt Q8TES7 record](https://www.uniprot.org/uniprotkb/Q8TES7/entry) directly identifies human FBF1, GeneID 85302/HGNC 24674, and declares Q8TES7-6 via VSP_041555/VSP_040770. Its interaction section explicitly lists that isoform with GATA1/P15976 (IntAct EBI-10244131/EBI-3909284). The exact retained record is Git blob `44f7089e7dd2765736b4d3fa1fd50347f14f88fb` at `genes/human/FBF1/FBF1-uniprot.txt`, entry 163 dated 2026-09-02, SHA256 `6924de9cd43e7cf1d4e0e7dc7424782155c41247017c997a27c3da4dbe5ed701`. This direct identity matches Table S2G row 1874; it is not an assignment by elimination. Exact sequence equivalence between the pair-specific 2014 clone and Q8TES7-6 remains unproven. The original accession suffix and positive assay remain intact when generic protein binding is removed. The current Q96JH8 context is conserved separately from the later Q96JH8-4/ORF54154 mapping to RADIL.
 
 ## NRF2 binary screen — PMID:32911434
 
