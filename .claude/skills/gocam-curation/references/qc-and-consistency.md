@@ -33,6 +33,8 @@ Record every specific issue observed (multivalued):
 | `ORPHAN_ACTIVITY` | no causal edges | causal-relations.md |
 | `MISSING_EVIDENCE` | no ECO code / reference | — |
 | `COMPLEX_SUBUNIT_REPRESENTATION` | wrong subunit/complex attribution | complexes.md |
+| `UNRESOLVED_COMPARTMENT` | `occurs_in` reaches no distinct compartment (e.g. chromatin) | compartments.md |
+| `NONADJACENT_COMPARTMENTS` | causal edge skips a compartment (e.g. cytosol → extracellular) | compartments.md |
 
 ## Consistency with the gene review — `GoCamConsistencyEnum`
 
@@ -54,6 +56,7 @@ How the activity relates to the gene's `genes/**/<gene>-ai-review.yaml` (join on
 - [ ] `has input` names the substrate/target-gene/effector/cargo — not a ligand or raw DNA.
 - [ ] Causal edges are direct/indirect as the mechanism warrants, pointing subject→object.
 - [ ] `occurs_in` and `part_of` present where known.
+- [ ] `just gocam-compartments` findings checked: no unexplained unresolved location or non-adjacent direct edge.
 - [ ] Every activity/edge has an ECO code + reference; claims have verbatim support.
 - [ ] Complex activities attributed to the right subunit(s).
 - [ ] `verdict`, any `qc_flags`, and `consistency` recorded for every activity.
