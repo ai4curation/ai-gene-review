@@ -188,3 +188,9 @@ The three short externally read receipts below are author notes, not normal publ
 - **PMID:24337748**, original Discussion: “identiﬁed by us by mass spectrometry (multisynthetase complex auxiliary component p43”. [Author-uploaded original](https://www.researchgate.net/publication/259322294_Guanylate_Binding_Protein_1-Mediated_Interaction_of_T_Cell_Antigen_Receptor_Signaling_with_the_Cytoskeleton), prior independently checked receipt retained, including the extracted ﬁ ligature. Figure 3D and Methods concern tagged-GBP1 Jurkat preparations and controls; direct binary interaction is not inferred.
 
 The coordinator independently accepted the biological delta and identified this narrower schema boundary. This source-shape correction preserves all actions and cores while making the provenance and cache limits explicit.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IEA (GO_REF:0000044, SL-0095), no qualifier; kept KEEP_AS_NON_CORE.
+- Check: UniProt "Endoplasmic reticulum {ECO:0000250|UniProtKB:P31230}" [file:human/AIMP1/AIMP1-uniprot.txt] is by similarity to mouse, but the human HeLa data in PMID:17525271 (Figure 2, recorded above) put endogenous AIMP1 in calnexin-positive ER as well as a smaller GM130 Golgi pool, so the microsomal fraction is backed by an ER marker. Abstract: "AIMP1 enhances gp96 dimerization and the interaction between gp96 and KDEL receptor-1 (KDELR-1)" [PMID:17525271].
+- No signal peptide or TM segment; how a cytosolic MSC component reaches luminal gp96 is unresolved, so membrane vs lumen cannot be called. Root only, no NEW row.
