@@ -730,9 +730,10 @@ def replace_gene_symbols(
     # Exclude very short symbols from prose auto-linking. One- and two-character gene
     # names are common enough in this repository to be valid review folders, but they
     # also collide with ordinary text such as "don't", author initials, and allele
-    # suffixes. Link those through explicit <gene> tags instead.
+    # suffixes. Link those through explicit <gene> tags instead. Purely numeric
+    # names (phage genes such as BPT7 "4.2") would turn scores into links.
     symbols = sorted(
-        (s for s in symbol_index.keys() if len(s) >= 3 and not s.isdigit()),
+        (s for s in symbol_index.keys() if len(s) >= 3 and not re.fullmatch(r"[\d.]+", s)),
         key=len,
         reverse=True,
     )
