@@ -189,3 +189,11 @@ Net: the most material, citable NEW additions are the receptor-turnover axis (FB
   activity" for the core NIX mitophagy-receptor MF instead of keeping a bespoke "mitophagy receptor
   activity" `proposed_new_terms` request. The cached PMID:20010802 primary paper directly supports the
   LC3/GABARAP-bridging role.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IBA (is_active_in, PTN000795991), IEA GO_REF:0000044 (SL-0095), IDA PMID:10381623. No ER sub-compartment row before this batch.
+- IBA: PAINT PTHR15186 PTN000795991 GO:0005783 IBD seeds O60238 (BNIP3L itself) and Q12983 (BNIP3); sound. A separate IBD for GO:0005789 sits at PTN002689498 (seed BNIP3 only; BNIP3L not under it).
+- Evidence: [PMID:10381623 "localizes in nuclear envelope, endoplasmic reticulum and mitochondria"] (abstract only); [PMID:19065046 "Endogenous cardiac NIX and recombinant NIX localize both to the mitochondria and to the ER/SR."] (mouse; fetched this batch); [PMID:19065046 "In genetic mouse models, cardiomyocyte ER/SR calcium stores are proportional to the level of expressed NIX."].
+- is_active_in verdict: the ER pool does act (ER/SR Ca2+ store control, ER-mitochondria crosstalk in cell death), so is_active_in is defensible for that secondary role; replaces the earlier statement that the qualifier overstates. Qualifier not changed.
+- Outcome: all three ER rows KEEP_AS_NON_CORE (consistent). NEW IC GO:0005789 added (TM 188-208, single-pass membrane protein, ER-face Ca2+ function, BNIP3 paralog IBD). MAM and nuclear envelope not asserted. core_functions unchanged.
