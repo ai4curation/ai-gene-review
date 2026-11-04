@@ -76,3 +76,12 @@ outside injecting acetaldehyde in [PMID:23585538].
   acylating-activity term already carries that chemistry and the pathway context is covered
   by ethanolamine catabolism; adding a biosynthesis process term would be redundant coverage
   rather than new information.
+
+## PR #5970 review round (2026-11-04)
+
+- Both GO:0031469 bacterial microcompartment rows (EXP PMID:27450681, IEA GO_REF:0000044)
+  changed from ACCEPT to MODIFY → GO:0031471 ethanolamine degradation polyhedral organelle
+  (is_a child of GO:0031469, checked in OLS), and core_functions.locations updated to match.
+  This aligns with the E. coli EutB/EutC reviews in the same PR; EutE has the strongest
+  direct evidence (EutE1-21 binding to the EutS shell protein). The lumen-versus-shell
+  distinction stays as the existing suggested_question about a BMC lumen term.

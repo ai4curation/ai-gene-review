@@ -19,3 +19,17 @@
 
 ## Deep research
 - No `-deep-research-<provider>.md` file was generated: the repo's deep-research providers are unavailable in this environment. Sources used: the cached publication above, the UniProt record (Q9ZAA1), the PANTHER/PAINT slices for PTHR43111, and GO definitions checked with oaklib (GO:0140087, GO:0004029, GO:0016491, GO:0006068).
+
+## PR #5970 review round (2026-11-04)
+
+- PAO1 carries a near-identical exaC paralog, PA4022 (Q9HX05), the first gene of the
+  PA4022-eat-eutBC ethanolamine-catabolic operon [PMID:27325678 "This pathway is encoded
+  by the PA4022-eat-eutBC operon and consists of a transport protein (Eat), an
+  ethanolamine-ammonia lyase (EutBC), and an acetaldehyde dehydrogenase (PA4022)."].
+  Pairwise identities (genes/PSEAE/PA4022/PA4022-bioinformatics/RESULTS.md): PA4022 vs
+  ExaC Q9ZAA1 98.2%, PA4022 vs PAO1 exaC/PA1984 (Q9I2C4) 98.4%, Q9ZAA1 vs PA1984 99.4%,
+  so Q9ZAA1 (strain ATCC 17933) is the ortholog of PA1984 and PA4022 is a paralog.
+  ExaC itself belongs to the ethanol-oxidation (exa) cluster; PA4022 is the
+  ethanolamine-pathway enzyme and now has its own review, with GO:0140087 inferred by ISS
+  from ExaC. The ethanolamine module uses both as representatives of the non-acylating
+  acetaldehyde-oxidation route.
