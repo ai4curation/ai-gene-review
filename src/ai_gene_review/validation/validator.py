@@ -34,6 +34,7 @@ from ai_gene_review.validation.action_consistency import (
     go_ancestors,
 )
 from ai_gene_review.validation.nd_policy import check_nd_policy
+from ai_gene_review.validation.paint_loss_check import check_paint_losses, has_paint_losses
 from ai_gene_review.validation.decomposition import (
     check_decomposition,
     go_is_a_ancestors,
@@ -510,6 +511,12 @@ def check_best_practices_rules(
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )
+    if has_paint_losses(data):
+        from ai_gene_review.validation.module_validator import load_paint_index
+
+        check_paint_losses(
+            data, report, load_paint_index(get_project_root() / "interpro" / "panther")
+        )
     if yaml_file is not None:
         # Source-level check: a folded scalar turns a newline into a space, so a
         # hyphenated compound split across lines renders as two words. Invisible to
