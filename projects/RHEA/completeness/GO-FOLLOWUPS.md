@@ -45,7 +45,22 @@ The GO edits themselves are staged as rows in [`../rhea2go.sssom.yaml`](../rhea2
    arginine demethylases (GO:0033746, GO:0033749). RHEA's reactions are on generic
    L-lysyl/arginyl-[protein], so the staged calls fall back to class terms.
 
+7b. **MraY and MurG terms have generic names but L-Lys-specific definitions.**
+   GO:0008963 phospho-N-acetylmuramoyl-pentapeptide-transferase activity (RHEA:21920) and
+   GO:0050511 undecaprenyldiphospho-muramoylpentapeptide beta-N-acetylglucosaminyltransferase
+   activity (RHEA:23192) are defined with the L-Lys stem peptide (Gram-positive form). The
+   meso-DAP forms GO:0051992 (RHEA:28386) and GO:0051991 (RHEA:31227) are siblings, not children.
+   InterPro2GO and UniRule put the Lys terms on DAP-type enzymes (E. coli MraY/MurG and most
+   Gram-negatives): 619 and 587 Swiss-Prot entries. Proposed fix: generalize the two definitions to
+   any muramoyl-pentapeptide (keep the RHEA:21920/23192 xrefs as `narrowMatch`) and put the Lys
+   and DAP forms underneath.
+
 ## InterPro2GO (via go-annotation / InterPro)
+
+9. **IPR020536 "ThiI, AANH domain" → GO:0004810 CCA tRNA nucleotidyltransferase activity.** This
+   is wrong. ThiI is tRNA 4-thiouridine synthase: RHEA:24176 → GO:0140741 tRNA-uracil-4
+   sulfurtransferase activity. 267 Swiss-Prot ThiI entries get the CCA-adding activity from
+   InterPro2GO alone. The mapping should move to GO:0140741.
 
 8. **IPR004803 "tRNA-guanine transglycosylase" → GO:0008479 tRNA-guanosine(34) queuine
    transglycosylase activity.** The family spans bacterial preQ1-dependent Tgt (RHEA:24104,
@@ -61,3 +76,58 @@ The GO edits themselves are staged as rows in [`../rhea2go.sssom.yaml`](../rhea2
   ammonia-dependent GO:0003921. Both are catalysed: the synthetase domain uses NH3. This is a
   `has_part` relationship GO does not state (GO:0003922 `has_part` GO:0003921?), not a wrong
   annotation.
+
+## Reported during batch 10 (top 200 reactions); not yet independently verified
+
+The subagents that curated batch 10 reported the items below. Each still needs to be checked
+against go-edit.obo before it becomes an issue. The `NoTermFound` rows in batch 10 carry the
+corresponding new-term proposals (77 reactions).
+
+**Mis-predicated or misplaced xrefs**
+- GO:0015385 sodium:proton antiporter has RHEA:29251 (1 Na+ : 2 H+) as `exactMatch`, but the
+  definition is 1:1, which is RHEA:29419.
+- GO:0140900 chloride:bicarbonate antiporter has RHEA:72203 (2 Cl- : 1 HCO3-) as `exactMatch`, but
+  the definition is 1:1, which is RHEA:72363.
+- GO:0033232 ABC-type D-methionine transporter has EC:7.4.2.11 as `exactMatch`, but that EC covers
+  both L- and D-Met. No L- or generic ABC methionine transporter MF exists.
+- Obsolete GO:0031679 NADH dehydrogenase (plastoquinone) has `replaced_by: GO:0008753`, which is
+  NADPH-specific (donor mismatch).
+
+**Definitions narrower than their name or EC xref**
+- GO:0008478 pyridoxal kinase (EC 2.7.1.35 also covers pyridoxine and pyridoxamine).
+- GO:0004731 purine-nucleoside phosphorylase (ribose-1P only).
+- GO:0046922 (Ser only; EC 2.4.1.221 covers Ser and Thr).
+- GO:0106251 (nucleoside only; it also lacks the EC:3.5.1.135 xref).
+- GO:0004789 (no carboxylated thiazole).
+- GO:0009383 rRNA (cytosine-C5-)-methyltransferase (small-subunit only).
+- GO:0004674 and GO:0008531 (ATP-only, which excludes ADP- or CTP-dependent members).
+- GO:0050290 sphingomyelin phosphodiesterase D (hydrolysis only; the Loxosceles enzymes cyclize).
+- GO:0010333 terpene synthase (says "cyclic", but has acyclic children).
+
+**Structure**
+- GO:0015349 thyroid hormone transporter is `is_a` secondary active transporter, which is wrong for
+  MCT8/MCT10.
+- GO:0140292 and GO:0140293 ADP-ribosyl-Ser/Glu hydrolases are under N-glycosyl hydrolase; these
+  bonds are O-glycosidic.
+- GO:0140171 (generic acceptor) is `is_a` GO:0004457 (NAD-specific).
+- There is no generic ferrochelatase parent.
+
+**Large missing activities (by Swiss-Prot weight)**
+- Proton-pumping NADH:quinone (generic and plastoquinone; 1,700–2,900 entries each).
+- RuBisCO oxygenase (697).
+- Acetyl-CoA carboxyltransferase EC 2.1.3.15 (980).
+- QueC preQ0 synthase EC 6.3.4.20 (520).
+- Bacterial preQ1 Tgt EC 2.4.2.29 (461).
+- Photosystem I plastocyanin:ferredoxin oxidoreductase (457).
+- Na+-NQR EC 7.2.1.1 (327).
+- TtcA, TrhO, RsmG m7G527.
+- DJ-1 nucleotide and nucleic-acid deglycase.
+- Protein UMPylase.
+
+**Native annotations that use the wrong chemistry**
+- GO:0008137 (ubiquinone, H+-pumping) on plastoquinone NDH entries.
+- GO:0008479 (queuine) on bacterial Tgt.
+- GO:0004325 (protoporphyrin) on coproporphyrin ferrochelatase HemH.
+- GO:0102067 on archaeal GGR.
+- Phosphodiesterase terms on cyclizing SMase D.
+- GO:0004126 (free cytidine) on APOBEC3.

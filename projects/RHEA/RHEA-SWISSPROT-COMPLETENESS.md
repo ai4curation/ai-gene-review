@@ -69,6 +69,29 @@ The `native_cand` column is a hint, not a mapping. Spot checks show it often nam
 and a side reaction of PPC decarboxylase gets the main activity. Every row still needs a check that
 the GO definition subsumes the reaction's participants.
 
+## Progress (staged in rhea2go.sssom.yaml)
+
+| Batch | Scope | Reactions | Notes |
+|---|---|---:|---|
+| 9 | edge cases: untyped, broadMatch-only, directional-only | 37 | includes 3 predicate corrections |
+| 10 | top 200 unmapped by Swiss-Prot entry count | 200 | 77 also flagged `NoTermFound` (new-term proposals); partial reactions mapped by their own chemistry |
+
+With the staged rows counted ([`projected_coverage.py`](completeness/projected_coverage.py)):
+
+| | Reactions | Entry–reaction pairs |
+|---|---:|---:|
+| covered in GO | 6,516 | 257,678 |
+| staged here | 353 | 48,163 |
+| still open | 7,294 | 28,972 |
+
+The open set is a long tail averaging about 4 entries per reaction. Candidate upstream issues,
+none filed yet, are in [`completeness/GO-FOLLOWUPS.md`](completeness/GO-FOLLOWUPS.md).
+
+**Partial-reaction policy.** A half-reaction of a multi-step enzyme gets the GO term that describes
+its own chemistry (often a class term), never `broadMatch` to the overall activity, which would be
+a part-of claim rather than is-a. Such rows have comments starting with `PARTIAL REACTION:`, so the
+policy can be revisited in one pass.
+
 ## Consistency of mapped reactions with native GO annotations
 
 For each GO xref RHEA:id → GO term *g* (exactMatch or narrowMatch), and each Swiss-Prot entry whose
