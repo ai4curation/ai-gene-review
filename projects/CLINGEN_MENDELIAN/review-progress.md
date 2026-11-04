@@ -7690,3 +7690,31 @@ The accepted closures cover **176 deduplicated paths**, including **129 deduplic
 This fixed window includes only GAD1, GAMT, GALNS and GALNT3. GAN and later acceptances are excluded. The prior 900,108-byte progress journal, 235 dated queue records and 160 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Scientific source files remain unchanged.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T052909Z-codex-2f5873.yaml).
+
+## Completion checkpoint 699 — 2026-11-04 18:53:34 UTC
+
+699 complete; 2,177 remaining out of 2,876 catalogue genes. This checkpoint publishes three independently accepted reviews after checkpoint 696 and adds no new gene completion credit.
+
+| Gene | Actual merge | Executed integration | Original / native seed / stored contexts | Review status |
+| --- | --- | --- | --- | --- |
+| [GAN](https://github.com/ai4curation/ai-gene-review/pull/5947) | [74c548ae](https://github.com/ai4curation/ai-gene-review/commit/74c548aea4a969f7b4351d357822ae673d02b180) | [run 41772300448](https://github.com/ai4curation/ai-gene-review/actions/runs/41772300448) | 32 / 32 / 32 | COMPLETE |
+| [GARS1](https://github.com/ai4curation/ai-gene-review/pull/5950) | [ba7d6080](https://github.com/ai4curation/ai-gene-review/commit/ba7d6080114180f97644122f885dcca6ea2388b8) | [run 41781433328](https://github.com/ai4curation/ai-gene-review/actions/runs/41781433328) | 51 / 51 / 51 | DRAFT |
+| [GANAB](https://github.com/ai4curation/ai-gene-review/pull/5949) | [7c35d1b6](https://github.com/ai4curation/ai-gene-review/commit/7c35d1b6b234943bf773fd13e300c996b279c8e3) | [run 41786437034](https://github.com/ai4curation/ai-gene-review/actions/runs/41786437034) | 39 / 38 / 39 | COMPLETE |
+
+Gigaxonin recognizes substrates for CUL3 ubiquitin ligase complexes, supporting cytoskeletal protein turnover. GARS1 attaches glycine to tRNA for cytosolic and mitochondrial translation. GANAB supplies glucosidase II catalytic activity during ER glycoprotein maturation. Product and construct limits, unresolved annotations and optional advisories remain in the accepted reviews; project completion does not change their computed status.
+
+The three genuine native seeds contained 121 rows. The reviews retain all 122 original contexts because GANAB's two distinct source assertions share one simplified parser key; restoring the omitted original is not NEW. There are no NEW annotations in this window.
+
+| Gene | Assessed references | Natural products | Extension atoms | Current quote occurrences |
+| --- | ---: | ---: | ---: | ---: |
+| GAN | 42 | 1 | 0 | 6 |
+| GARS1 | 55 | 2 | 0 | 7 |
+| GANAB | 26 | 3 | 2 | 5 |
+
+The reviews contain 123 reference assessments, four cores, six natural products, two literal extension atoms and 18 current quotation occurrences. No NOT or contributes_to qualifiers or inherited quotation associations occur in this window. Natural-product counts include the canonical sequence: GAN has no declared alternative-product list, GARS1 has two products from alternative initiation, and GANAB has three declared products. Engineered constructs are excluded, and a product count does not assign every function to every product.
+
+The accepted closures cover **155 deduplicated paths**, including **113 deduplicated scientific source paths**. Cumulative published payloads and actual parent deltas each cover **101 deduplicated paths**. These are unions, not sums. Shared scientific source bytes match across the accepted receipts. GARS1's actual delta omits PMID 24627108 because the identical source was already in its merge parent. All three actual merge-group suites and integration checks executed successfully; skipped routes and unresolved diagnostics remain explicit in their acceptance records.
+
+This fixed window includes only GAN, GARS1 and GANAB. GATA-family reviews, GATM and later acceptances are excluded. The prior 904,229-byte progress journal, 235 dated queue records and 161 earlier completion updates are preserved. Catalogue order changes only by checking these three genes and updating the count. Scientific source files remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T185334Z-codex-c26979.yaml).
