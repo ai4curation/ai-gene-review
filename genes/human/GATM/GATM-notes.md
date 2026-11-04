@@ -151,3 +151,8 @@ Native amendment outcome: Default validation, strict GOA matching, computed-stat
 The experimental broad amidinotransferase annotation is retained as non-core to keep its measured non-glycine chemistry machine-readable. This supersedes the prior refinement of that IDA row; the family-based refinement and single physiological core remain ([PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/), [source guide](GATM-source-guide.md)).
 
 The native result is DRAFT with one retained consistency advisory; the source-specific activity distinction is intentional. The [source guide](GATM-source-guide.md) records the checked outcome.
+
+
+## 2026-11-04: broad activity retained across both source contexts
+
+Independent human acceptor assays make the broad amidinotransferase term informative beyond glycine-specific catalysis. Both existing parent assertions are now non-core; this supersedes the earlier InterPro refinement and its source-specific action distinction. The family mapping alone does not establish the complete substrate range, and the single physiological core is unchanged ([PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/), [source guide](GATM-source-guide.md)).

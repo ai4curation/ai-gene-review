@@ -4,7 +4,7 @@ GATM is a mitochondrial amidinotransferase with one principal creatine-synthesis
 
 ## Catalytic and product evidence
 
-The current reference assessments distinguish purified human enzyme and recombinant constructs. The InterPro amidinotransferase parent is refined to the established glycine reaction. The experimental broad-parent annotation is retained as non-core because its acceptor panel demonstrates distinct measured breadth; no additional physiological core is inferred. PMID:9218780, PMID:9266688 and PMID:3800397 were read at authentic abstract scope. Selected original Methods/Results for [PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/) were inspected; its assay and construct limits are in the reference assessment, and its short anchor is centralized there.
+The current reference assessments distinguish purified human enzyme and recombinant constructs. Both broad amidinotransferase annotations retain measured acceptor breadth as non-core. The InterPro assignment is independently corroborated by the human acceptor panel; the family mapping alone does not establish its full substrate range. The glycine reaction remains the single physiological core. PMID:9218780, PMID:9266688 and PMID:3800397 were read at authentic abstract scope. Selected original Methods/Results for [PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/) were inspected; its assay and construct limits are in the reference assessment, and its short anchor is centralized there.
 
 [PMID:9148748](https://pubmed.ncbi.nlm.nih.gov/9148748/) was read through the [indexed original PDF](https://scispace.com/pdf/recombinant-expression-and-isolation-of-human-l-arginine-panc9v3rdq.pdf), pp. 771–775, including construct preparation, activity assay and cysteine-mutant results. No figure pixels were inspected. The original [ENA X86401.1 record](https://www.ebi.ac.uk/ena/browser/view/X86401.1) has CDS 506–1681 / CAA60153.1, matching the 391-residue product 2. This sequence record contains no localization assay. The natural-product and engineered-fragment distinctions are stated in the review rather than inferred from length alone.
 
@@ -75,6 +75,10 @@ The published UniProt text is byte-identical to the separately retained official
 
 Validation at bd33ed28: Default validation, strict GOA matching, computed-status audit, genuine EDIT history validation and private rendering pass. Computed review status remains COMPLETE, with zero annotation advisories. The only diagnostic is a dependency deprecation notice. All 35 normal source objects and the ontology cache remain unchanged. All fifteen current quote occurrences match unchanged source bytes; repeated occurrences stay within the aggregate budget.
 
-## Readiness follow-up: measured acceptor breadth
+## Historical readiness follow-up at d1283f06: measured acceptor breadth
 
 The IDA parent retains its experimental scope, while the family-based IEA refinement remains unchanged. Default validation and strict matching of all 37 GOA contexts pass. One intentional same-term action-consistency advisory remains: the experimental broad activity is non-core while the family mapping is refined. Computed status is DRAFT. History validation, status audit, rendering and preservation checks pass; all 35 source objects, the ontology cache and 15 quote occurrences remain unchanged. The preceding COMPLETE outcomes remain historical.
+
+## Gene-level breadth follow-up
+
+The broad IEA assertion now retains the same measured secondary chemistry as the IDA row, superseding the source-specific refinement above. Default validation and strict matching of all 37 GOA contexts pass with zero annotation advisories. Computed status is COMPLETE. History validation, final status audit, private rendering and preservation checks pass; all 35 source objects, the ontology cache and 15 aggregate quote occurrences remain unchanged. Preceding DRAFT and COMPLETE outcomes remain historical.
