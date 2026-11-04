@@ -9,3 +9,7 @@ ER/Golgi and plasma-membrane observations describe different experimental contex
 ## 2026-11-04 — Substrate specificity and experimental evidence
 
 The [manual synthesis](GBA2-deep-research-manual.md) records source sections, constructs and experimental limits behind the hydrolysis/transfer distinction and membrane-pool interpretation. GalCer analog hydrolysis remains a measured result, while its physiological contribution is unresolved; its existing annotation is now marked over-annotated and is no longer proposed as a replacement for generic hydrolase activity. Selective excerpts make the cached cytoskeletal, surface-activity and sterol-hydrolysis evidence directly checkable. The earlier notes remain intact.
+
+## 2026-11-04 — Curated reaction and compartment anchors
+
+The reviewed human record independently curates GalCer hydrolysis with its in-vitro lower-activity qualification, bile-acid glucosyl transfer and reported plasma-membrane localization/alternative topologies. These statements corroborate the inspected original assays without resolving physiological GalCer clearance or universal topology. Purified-human bile-acid glucoside cleavage is linked directly to PMID:9111029. The proposed glycoside-catabolism route to carbohydrate metabolism has no verified is_a/part_of path, so the carbohydrate assertion is retained on its measured chemistry. Reverse GlcCer formation and sterol-glucoside formation retain distinct product scope.
