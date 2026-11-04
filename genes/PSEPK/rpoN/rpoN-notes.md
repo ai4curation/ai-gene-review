@@ -9,3 +9,7 @@
   function; status set to COMPLETE.
 - DNA-binding transcription activator activity remains MARK_AS_OVER_ANNOTATED on both rows: activation of
   sigma-54 promoters is performed by bEBPs such as CbrB and NtrC, not by sigma-54 itself.
+- 2026-11-02 (Ntr module PR): the clause naming CbrB-activated crcZ/crcY promoters was moved out of the
+  core-function description, since sigma-54 serves many enhancer-binding-protein outputs; the crcZ/crcY
+  quotes stay in that core function's supported_by as examples of RpoN-dependent promoters, and the Cbr/Crc
+  output itself is modelled in MODULE:pseudomonad_cbr_crc_catabolite_control.
