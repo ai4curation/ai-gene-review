@@ -120,3 +120,18 @@ Checks performed:
 - Left alone (conservative): all EXP/IDA/IMP experimental annotations retained per their
   authors; no REMOVE issued; no existing-annotation term ids rewritten.
 </content>
+
+
+## Evidence reassessment — 2026-11-04
+
+The preceding journal is preserved verbatim as historical work. The current assessment reviews all 37 original contexts, including the thirteen distinct interaction partners that were previously summarized by one stored row. Current decisions and selected source locators are in the [source guide](GATM-source-guide.md).
+
+GATM performs the entry reaction of creatine synthesis. Purified human kidney enzyme supports dimer formation [PMID:3800397 "transamidinase is a dimer"]. Broader acceptor activity is retained within one catalytic synthesis, with the experimental readout and limits stated in the current reference assessment rather than treating side reactions as established physiological programs.
+
+The natural products and engineered proteins are distinguished in the current product descriptions. The older journal's “mature numbering” for Cys407 should be read as canonical precursor numbering. A missing targeting segment does not by itself establish cytoplasmic localization, and a changed catalytic region does not establish measured inactivity.
+
+The primary clinical paper includes actual cognitive assessments and biopsy atrophy. Learning or memory is therefore retained as a contextual function; atrophy remains a consequence of deficiency rather than a process performed by GATM. The thermogenesis interpretation separates the cold endpoint from the adrenergic rescue experiment and uses the verified directional erratum.
+
+Original target tables support the interaction and urinary-vesicle observations. Four binding partners permit informative class refinements; nine positive pairs remain uninformative generic binding assertions. The MitoCoP record includes GATM through literature rather than a new target proteomics measurement. These distinctions preserve positive observations without assigning unmeasured mechanisms.
+
+All fifteen inherited quote associations remain historical and traceable through the preserved review and Git locators. The three newly selected literal anchors are short and centralized; repeated quotations are not needed for source-linked support. Genuine native refresh matched all 37 contexts and three products without reseeding. All 35 source records are now present, including 14 missing-only acquisitions and 21 unchanged sources. Reference titles and the three short anchors match exactly. A genuine EDIT record documents this update. Default validation and strict GOA matching passed with zero annotation advisories; native status computation sets COMPLETE. The initial report-only status mismatch is retained as a diagnostic. All 35 source bytes and the ontology cache remain unchanged.
