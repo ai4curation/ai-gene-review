@@ -539,9 +539,10 @@ Screen by screen:
 Verified against QuickGO (queries saved in `CACAO/data/`). On `GO:0098672`,
 all 18 rows in GOA: CACAO's five 2018-2019 rows are all `involved_in`, its
 ten 2025-2026 rows are all `acts_upstream_of_or_within_positive_effect`, and
-UniProt's three 2026 rows are `involved_in`. `A0A220GHA5` is annotated by
-CACAO three times for that term — `involved_in` in 2018, `involved_in` in
-2019, hedged in 2025. Same gene, same programme, qualifier flipped.
+UniProt's three 2026 rows are `involved_in`. `A0A220GHA5` carries four CACAO rows on
+that term — `involved_in` in 2018 and 2019, hedged twice in 2025 (04-07 and
+04-10). Same gene, same programme, qualifier flipped. Those two 2025 rows are
+also why the hedged set is ten rows across nine accessions, not nine rows.
 `GO:0044659`'s experimental rows split the same way: 31 `involved_in` (18 of
 them CACAO's own) against 5 hedged rows, all CACAO and all dated 2025-02 to
 2026-03. `Q6TM71` and `Q9T1X2` each carry a hedged CACAO row beside a
@@ -617,13 +618,18 @@ pipelines:
 
 ### Two things batch 3 says the project should change
 
-1. **`SourceResourceEnum` has no `INTERPRO` value**, so 13 of batch 3's 27
+1. **`SourceResourceEnum` has no `INTERPRO` value**, so 7 of batch 3's 27
    defects are filed as `OTHER` with the resource named in the explanation,
-   as that value instructs. InterPro2GO is now the single largest source of
-   defects this project has found, so `just export-source-defects` cannot
-   produce the report that matters most. Adding `INTERPRO` (and probably
-   `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change touching
-   existing reviews, so it is recorded here rather than done in passing.
+   as that value instructs, and all 7 are genuinely InterPro2GO or PANTHER
+   (the other 20 split 15 `CACAO` and 5 `UNIPROT`). An earlier count of 13
+   here, and 14 in the batch-3 PR, was wrong: it included seven CACAO-row
+   defects that should have carried the existing `CACAO` value and now do, a
+   review catch on PR #5956. InterPro2GO is now the single largest *external*
+   source of defects this project has found, so `just export-source-defects`
+   cannot produce the report that matters most. Adding `INTERPRO` (and
+   probably `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change
+   touching existing reviews, so it is recorded here rather than done in
+   passing.
 2. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
    *child* of KW-0929 Antimicrobial. The XV and lysK reviews and the
    upstream report all name it wrongly. This strengthens the report: the
