@@ -31,3 +31,13 @@ Genuine history, targeted checks, private rendering and final status follow. Pub
 ## 2026-11-04 — Target checks and final candidate
 
 Target validation passed with one advisory that core GO:0003714 is not represented as an annotation row; strict GOA matching passed for all 74 original contexts. Computed status is DRAFT. The reviewed core is retained without adding a NEW annotation solely to suppress that advisory. All seven UNDECIDED judgments retain their individual evidence limits. The expected native INITIALIZED-to-DRAFT report-only exit 1 is preserved and resolved by recording the computed status. The dependency deprecation warning is separate. All 74 scientific sources and the term cache remain unchanged. Genuine CREATE history and private render/link/whitespace checks accompany this candidate. Publication and actual integration are not claimed.
+
+## 2026-11-04 — Molecular-function and disease-source follow-up
+
+Added a directly supported transcription corepressor MF assertion and explicit assessments for four already cached bibliography sources. Human GAND and fly neuronal phenotypes are distinguished in the biological summary. The source guide provides the compact current account.
+
+Reinspection of PMID:11756549 and PMID:16415179 supports corepressor recruitment while leaving the human DNA-recognition mechanism and precise punctate compartment unresolved. The inherited DNA-function judgments and four nuclear-speck uncertainties remain unchanged. The earlier workflow entries and all original contexts remain preserved; no source bytes were rewritten. Affected amendment checks are pending.
+
+## 2026-11-04 — Follow-up native outcomes
+
+Target validation passed without annotation advisories, and strict GOA matching passed for all 74 original contexts plus the declared NEW row. Computed review status is COMPLETE; seven source-specific UNDECIDED judgments remain. The prior DRAFT-to-COMPLETE report-only diagnostic is retained. The independently supported NEW molecular-function row resolves the former core-coverage advisory; it does not change the original 74 actions. Genuine EDIT history, private rendering/link checks and scoped authored whitespace accompany this amendment. All 74 source objects and the term cache are unchanged. Publication and renewed remote review/build are separate from these local results.
