@@ -212,3 +212,30 @@ Two things are new relative to the comparators:
 - What the two LysM repeats contribute is unknown. No binding or deletion
   experiment on phi29 gp15 has been published; the UniProt DOMAIN line is
   inference from the domain's general properties.
+
+## Addendum (2026-11-04, on review of PR #5956)
+
+Two corrections to the body above, both caught on review.
+
+**The qualifier count is twelve, not ten.** Line 122 says "all ten of phi29's
+2025-dated CACAO rows". Counted from the seven phi29 GOA files: gene 1 once
+(20250210), gene 2 three times (20250208, 20250210, 20250217), gene 3 four
+times (20250210 ×2, 20250224, 20250324), and genes 4, 6, 15 and 17 once each —
+twelve, all `acts_upstream_of_or_within_positive_effect`. The only pre-2025
+CACAO rows on those genes are gene 15's 20121116 `enables` and gene 6's four
+2017 rows using `enables`, `part_of` and `involved_in`, so the claim the
+sentence makes is right and in fact stronger: the flip is total across the
+2025 cohort. `15-ai-review.yaml` carries the corrected figure, which matters
+because `just export-source-defects` ships that `explanation` verbatim to
+CACAO.
+
+**PMID:820555's full text was obtained within this batch.** Line 120 states
+flatly that it could not be read. That is true of the attempts made for this
+gene but not of the batch's record: `genes/BPPH2/1/1-notes.md:124-133` records
+an OCR copy via a third-party aggregator and quotes its Discussion. No
+lysis-cistron sentence was recorded from that copy and it could not be
+re-obtained — Wiley returns HTTP 403 on every URL including the one Unpaywall
+lists as free, and the DIGITAL.CSIC copy sits behind a bot check that was not
+circumvented. So the `PROBABLE` rating on the `WRONG_GENE_PRODUCT` defect
+stands, but for that reason rather than the one line 120 gives; the YAML
+explanation states it correctly.

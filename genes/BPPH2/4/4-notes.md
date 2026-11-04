@@ -236,3 +236,13 @@ So the gene-14 attribution rests on the five secondary lines in
 sentences, which is why the `WRONG_GENE_PRODUCT` defect is rated `PROBABLE`.
 The abstract itself says only "A cistron, probably involved in the final lysis
 of the infected bacteria, has been found", without naming it.
+
+## Addendum, second (2026-11-04, on review of PR #5956)
+
+Line 131 says the hedged qualifier is on "all ten of" phi29's 2025-dated CACAO
+rows. It is twelve: gene 1 once, gene 2 three times, gene 3 four times, and
+genes 4, 6, 15 and 17 once each, all
+`acts_upstream_of_or_within_positive_effect`. The claim the sentence makes is
+unaffected and in fact stronger — the only pre-2025 CACAO rows on those genes
+use `enables`, `part_of` and `involved_in`, so the flip is total across the
+2025 cohort.

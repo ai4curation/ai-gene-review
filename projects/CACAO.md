@@ -678,7 +678,12 @@ pipelines:
    `just export-source-defects` in exactly the way the `INTERPRO` gap is.
    Raised on review of PR #5956, where an earlier version of this item
    misattributed `DUPLICATE_RECORD` to `SourceDefectTypeEnum`; the gap is
-   wider than that wording implied. The two gaps are one schema
+   wider than that wording implied. `SourceDefectCauseEnum` belongs in the
+   same conversation: batch 3 falls back to `cause: OTHER` repeatedly for
+   mechanisms that recur and are classifiable — a scope-wrong UniRule, a
+   label-read-definition-unread ontology mapping, a node emitting a specific
+   activity across a heterogeneous family — so the enum cannot name the very
+   patterns this project exists to count. All three gaps are one schema
    conversation.
 3. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
    *child* of KW-0929 Antimicrobial. The XV and lysK reviews and the
