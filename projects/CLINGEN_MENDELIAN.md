@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**692 of 2,876 genes are complete; 2,184 remain.**
-This checkpoint adds GABRB3, GALE, GALK1 and GALC after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-692-2026-11-04-041441-utc) records the evidence and retained uncertainties.
+**696 of 2,876 genes are complete; 2,180 remain.**
+This checkpoint adds GAD1, GAMT, GALNS and GALNT3 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-696-2026-11-04-052909-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3822,13 +3822,13 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **GABRB2** — HGNC:4082; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5589d3aa-cb45-4b9f-bf8e-2000d1a780bd-2024-01-16T050000.000Z) (MONDO:0100038; AD; Definitive).
 - [x] **GABRB3** — HGNC:4083; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9327dac-6f76-4881-8a23-ef2b210f92e7-2019-02-05T170000.000Z) (MONDO:0100062; AD; Definitive).
 - [x] **GABRG2** — HGNC:4087; [epilepsy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3a3176e9-ac0c-41fe-ae40-0750726c33d8-2020-01-21T170000.000Z) (MONDO:0005027; AD; Definitive).
-- [ ] **GAD1** — HGNC:4092; [obsolete early infantile epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20fdee08-81b0-4957-a18a-8f622e0ab054-2021-05-13T152239.014Z) (MONDO:0016021; AR; Definitive).
+- [x] **GAD1** — HGNC:4092; [obsolete early infantile epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20fdee08-81b0-4957-a18a-8f622e0ab054-2021-05-13T152239.014Z) (MONDO:0016021; AR; Definitive).
 - [x] **GALC** — HGNC:4115; [Krabbe disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d17202fb-89c4-4bf6-ad57-4b8c541dc808-2022-06-15T160000.000Z) (MONDO:0009499; AR; Definitive).
 - [x] **GALE** — HGNC:4116; [galactose epimerase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab7f5785-45a0-47dd-b646-6792c901d2d8-2023-09-29T160000.000Z) (MONDO:0009257; AR; Definitive).
 - [x] **GALK1** — HGNC:4118; [galactokinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ecd4568c-966e-4ac3-b3d2-b4ac119a7d80-2021-09-30T161317.166Z) (MONDO:0009255; AR; Definitive).
-- [ ] **GALNS** — HGNC:4122; [mucopolysaccharidosis type 4A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c58d08e9-dc6d-45fc-a21a-54be3bc438d9-2022-06-16T040000.000Z) (MONDO:0009659; AR; Definitive).
-- [ ] **GALNT3** — HGNC:4125; [tumoral calcinosis, hyperphosphatemic, familial, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bc60daf-72c4-4a3f-9d1c-96bffd8a9bc9-2024-02-06T170000.000Z) (MONDO:0100252; AR; Definitive).
-- [ ] **GAMT** — HGNC:4136; [guanidinoacetate methyltransferase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0a84d45-57f8-4763-b1c5-7a283cef5f71-2019-01-25T170000.000Z) (MONDO:0012999; AR; Definitive).
+- [x] **GALNS** — HGNC:4122; [mucopolysaccharidosis type 4A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c58d08e9-dc6d-45fc-a21a-54be3bc438d9-2022-06-16T040000.000Z) (MONDO:0009659; AR; Definitive).
+- [x] **GALNT3** — HGNC:4125; [tumoral calcinosis, hyperphosphatemic, familial, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bc60daf-72c4-4a3f-9d1c-96bffd8a9bc9-2024-02-06T170000.000Z) (MONDO:0100252; AR; Definitive).
+- [x] **GAMT** — HGNC:4136; [guanidinoacetate methyltransferase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0a84d45-57f8-4763-b1c5-7a283cef5f71-2019-01-25T170000.000Z) (MONDO:0012999; AR; Definitive).
 - [ ] **GAN** — HGNC:4137; [giant axonal neuropathy 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b9f65afa-5cb1-457e-abff-ab110145a32d-2022-02-10T021239.651Z) (MONDO:0009749; AR; Definitive).
 - [ ] **GANAB** — HGNC:4138; [polycystic kidney disease 3 with or without polycystic liver disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6392961-a64a-4818-903a-0bf88b32e736-2020-09-09T160000.000Z) (MONDO:0010916; AD; Definitive).
 - [ ] **GARS1** — HGNC:4162; [Charcot-Marie-Tooth disease type 2D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_168242d1-ef2e-486a-a45a-ed96187bd4d2-2023-01-10T170000.000Z) (MONDO:0011091; AD; Definitive).

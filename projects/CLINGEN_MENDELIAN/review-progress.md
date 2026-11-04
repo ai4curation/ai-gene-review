@@ -7660,3 +7660,33 @@ The reviews retain six structured extension atoms, one NOT context, one contribu
 All four linked actual merge-group runs executed their suites and integration checks successfully. Their acceptance receipts distinguish executed results from skipped steps and unresolved diagnostics. The accepted gene closures span 179 distinct paths, including 138 immutable scientific source paths; cumulative published payloads cover 129 paths and actual merge deltas cover 109. GABRB3's actual ontology cache preserves its parent rows and adds the authorized GO:0160001 row. This tracker changes no gene, source or ontology-cache bytes.
 
 The prior 896,068-byte progress journal, 235 dated queue records and 159 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Later acceptances, including GAD1, GAMT and GALNS, are outside this fixed checkpoint. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T041441Z-codex-475721.yaml).
+
+## Completion checkpoint 696 — 2026-11-04 05:29:09 UTC
+
+696 complete; 2,180 remaining out of 2,876 catalogue genes. This checkpoint publishes four independently accepted reviews after checkpoint 692 and adds no new gene completion credit.
+
+| Gene | Actual merge | Executed integration | Original / parsed / stored contexts | Review status |
+| --- | --- | --- | --- | --- |
+| [GAD1](https://github.com/ai4curation/ai-gene-review/pull/5896) | [abd3b7a9](https://github.com/ai4curation/ai-gene-review/commit/abd3b7a932e971869fcfc273b3b8e96a9233e8fa) | [run 41763694369](https://github.com/ai4curation/ai-gene-review/actions/runs/41763694369) | 50 / 50 / 50 | COMPLETE |
+| [GAMT](https://github.com/ai4curation/ai-gene-review/pull/5940) | [88dcd9a8](https://github.com/ai4curation/ai-gene-review/commit/88dcd9a8a247e2d9b2c131855e56f82d0379b363) | [run 41764895356](https://github.com/ai4curation/ai-gene-review/actions/runs/41764895356) | 18 / 18 / 18 | DRAFT |
+| [GALNS](https://github.com/ai4curation/ai-gene-review/pull/5899) | [fac06dd3](https://github.com/ai4curation/ai-gene-review/commit/fac06dd38e331e0fae222519307b5354f0378638) | [run 41767491587](https://github.com/ai4curation/ai-gene-review/actions/runs/41767491587) | 15 / 15 / 16 | COMPLETE |
+| [GALNT3](https://github.com/ai4curation/ai-gene-review/pull/5942) | [fa0d0b8b](https://github.com/ai4curation/ai-gene-review/commit/fa0d0b8b6542e5aaffe1b4e234db38482e2e0d12) | [run 41771214510](https://github.com/ai4curation/ai-gene-review/actions/runs/41771214510) | 35 / 35 / 35 | DRAFT |
+
+GAD1 produces GABA by decarboxylating glutamate; GAMT methylates guanidinoacetate to form creatine. Lysosomal GALNS removes sulfate groups during glycosaminoglycan breakdown. GALNT3 initiates protein O-glycosylation in the Golgi, including FGF23 glycosylation that limits proteolytic processing. Product-specific and experimental-construct limits remain in the accepted gene reviews.
+
+The 118 original GOA contexts correspond to 119 stored annotations: GALNS retains one separate NEW annotation. All four inherited targets used genuine no-seed native acquisition and a private parser projection from the actual native TSV. The parsed counts are not a claim of a seeded target-fetch command.
+
+| Gene | Assessed references | Natural products | Extension atoms | Current quote occurrences |
+| --- | ---: | ---: | ---: | ---: |
+| GAD1 | 32 | 4 | 0 | 7 |
+| GAMT | 14 | 2 | 0 | 6 |
+| GALNS | 17 | 1 | 1 | 9 |
+| GALNT3 | 23 | 2 | 3 | 11 |
+
+The reviews retain four structured extension atoms, 33 current quotation occurrences and nine natural products. They contain no NOT or contributes_to qualifiers in this window. Natural products count the canonical product and explicitly verified natural alternatives retained in each gene's source-evidence file; an absent alternative_products array does not erase the canonical product. Engineered constructs are excluded, and counting a product does not assign all functions to it. The 128 historical quotation associations remain traceable in the retained gene provenance; historical and current counts are not silently combined.
+
+The accepted closures cover **176 deduplicated paths**, including **129 deduplicated scientific source paths**. The cumulative published payloads and actual parent deltas each cover **95 deduplicated paths**. These are unions, not sums of the per-gene counts. Shared scientific source bytes are identical across the accepted receipts. All four actual merge-group runs executed their integration checks successfully; skipped steps and unresolved diagnostic limits remain explicit in the linked acceptance records.
+
+This fixed window includes only GAD1, GAMT, GALNS and GALNT3. GAN and later acceptances are excluded. The prior 900,108-byte progress journal, 235 dated queue records and 160 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Scientific source files remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T052909Z-codex-2f5873.yaml).
