@@ -33,8 +33,12 @@ Batch 3 is the only batch with no `NON_CORE` and no `REMOVE` CACAO row, and
 the only one chosen by screen rather than by CACAO row count, so its rates are
 not comparable with batches 1-2 on acceptance alone. The `REMOVE` column is
 scoped to CACAO rows like the rest of this table: batch 3 does carry 6
-`REMOVE` rows among its 101 review rows, all of them on IEA or InterPro2GO
-annotations rather than CACAO ones.
+`REMOVE` rows among its 101 review rows, and all six are IEA rows rather than
+CACAO ones — three InterPro2GO (`GO_REF:0000002`), one InterPro-plus-keyword
+(`GO_REF:0000120`), one UniProt keyword mapping (`GO_REF:0000043`) and one
+PANTHER TreeGrafter (`GO_REF:0000118`). The removals span three distinct
+pipelines, two of which `SourceResourceEnum` cannot name, which is a further
+argument for the first item below.
 
 Batch 1 accepted 42% of rows as written, batch 2 **67%**. The likeliest cause
 is literature depth rather than student quality: batch-1 genes (Ebola, RVFV,
@@ -660,12 +664,22 @@ pipelines:
    touching existing reviews, so it is recorded here rather than done in
    passing.
 2. **`SourceDefectTypeEnum` cannot express the same assertion entered
-   twice.** It has `DUPLICATE_RECORD` for a merged source *record*, but
-   A0A220GHA5's case is one claim re-entered three times from one paper with
-   one evidence code, which has to be described in prose on a
-   `WRONG_QUALIFIER` entry and is therefore invisible to
+   twice, and has no duplicate-related value at all.** Its thirteen values
+   are `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`,
+   `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`,
+   `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `WRONG_STATEMENT`,
+   `OUTDATED_STATEMENT`, `MISSING_STATEMENT`, `MISSING_ISOFORM` and `OTHER`.
+   `DUPLICATE_RECORD` exists in the schema but belongs to
+   `ReferenceReplacementReasonEnum`, a different slot on a different object
+   concerned with verified reference-identifier replacement, so it is not a
+   near-miss to extend. A0A220GHA5's case is one claim re-entered three times
+   from one paper with one evidence code, which therefore has to be described
+   in prose on a `WRONG_QUALIFIER` entry and is invisible to
    `just export-source-defects` in exactly the way the `INTERPRO` gap is.
-   Raised on review of PR #5956; the two gaps are one schema conversation.
+   Raised on review of PR #5956, where an earlier version of this item
+   misattributed `DUPLICATE_RECORD` to `SourceDefectTypeEnum`; the gap is
+   wider than that wording implied. The two gaps are one schema
+   conversation.
 3. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
    *child* of KW-0929 Antimicrobial. The XV and lysK reviews and the
    upstream report all name it wrongly. This strengthens the report: the
