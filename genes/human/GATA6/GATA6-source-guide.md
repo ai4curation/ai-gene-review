@@ -1,6 +1,6 @@
 # GATA6 source guide
 
-This guide makes the evidence behind the annotation reasons portable. The review contains 92 original contexts, one core synthesis, two natural initiation products and no NEW annotation. Full original records and actual native joins are retained in [the evidence archive](GATA6-evidence.yaml). Genuine fetching, the 92-row seed, source-title reconciliation and six native-cache quotation checks are complete; native codex history and targeted checks are complete.
+This guide makes the evidence behind the annotation reasons portable. The review contains 92 original contexts, one core synthesis, two natural initiation products and no NEW annotation. Full original records and actual native joins are retained in [the evidence archive](GATA6-evidence.yaml). Source assessments distinguish the material actually read from uninspected figures, supplements and constructs.
 
 ## Shared interpretation
 
@@ -34,7 +34,7 @@ A reference-only `supported_by` link refers to the same source assessment and sc
 
 ### PMID:9566909
 
-[9566909 original record](https://doi.org/10.1128/MCB.18.5.2901). Human HT29 observations differ from Xenopus promoter assays in quail cells. Antibody cross-reactivity limits specificity; preserved uncertainty concerns the human process, not a demonstrated absence.
+[9566909 original record](https://doi.org/10.1128/MCB.18.5.2901). Human expression/nuclear observations and Xenopus reporters address different claims. The proposed transition role remains unresolved; transcript decline is not functional exclusion.
 
 ### PMID:16199874
 
@@ -102,10 +102,20 @@ The official 595/449 sequences are independently verified by direct FASTA and co
 
 ## Acquisition and quotations
 
-The qualified union has 52 potential normal source paths: 39 publications, ten Reactome entries and three immutable family files. At actual base 796de36063a716a46451272f4f8d08fe7f69431f, 19 main objects were reused, one publication was copied byte-exactly from published GATA2, and 24 publications plus seven Reactome entries were acquired missing-only. The actual normal-source count is 51. R-HSA-983231 remains N-owned and unavailable after its retained endpoint failure. No duplicate fetch or synthetic cache was made. A source can have externally read original text while its normal cache is abstract-only or unavailable.
+The qualified union has 52 potential normal source paths: 39 publications, ten Reactome entries and three immutable family files. At actual base 796de36063a716a46451272f4f8d08fe7f69431f, 19 main objects were reused, one publication was copied byte-exactly from published GATA2, and 24 publications plus seven Reactome entries were acquired missing-only. The actual normal-source count is 51. R-HSA-983231 remains unavailable after its retained endpoint failure. No duplicate fetch or synthetic cache was made. A source can have externally read original text while its normal cache is abstract-only or unavailable.
 
-Six short supporting excerpts occur once each in the review. The ledger retains authentic source hashes and byte offsets, without repeating the excerpts here. All six excerpts now match actual native-cache bytes, with acquisition coordinates preserved separately. Newly native PMID20581743 and PMID22158542 text was read at the stated scope; no action or core change followed. No legacy GATA6 review, journal, history or quotation association was found in the qualified namespace.
+Seven short supporting excerpts occur once each in the review. The ledger retains authentic source hashes and byte offsets, without repeating the excerpts here. All seven excerpts match actual native-cache bytes, with acquisition coordinates preserved separately. PMID:20581743 and PMID:22158542 text was read at the stated scope. PMID:22158542 now also provides reference-only support for conserved DNA recognition, activation and the core synthesis. No legacy GATA6 review, journal, history or quotation association was found in the qualified namespace.
 
 ## Native check outcome
 
-Default validation passed without target advisories; strict GOA reconciliation retained all 92 originals. Computed status is COMPLETE, while the one source-specific UNDECIDED judgment remains explicit. Native history, private rendering, local links and authored whitespace checks passed. No publication or integration is claimed.
+Default validation passed without target advisories; strict GOA reconciliation retained all 92 originals. Computed status is COMPLETE, while the one source-specific UNDECIDED judgment remains explicit. Native history, private rendering, local links and authored whitespace checks passed. The follow-up also passed default validation without target advisories, strict reconciliation of all 92 contexts, status, native history, rendering/local links and authored whitespace checks. No integration is claimed.
+
+## Review clarifications
+
+The two PMID:33082341 excerpts now distinguish keratinocyte epidermal programming from sebocyte differentiation; the latter does not imply increased terminal lipid output. The seven excerpts total at most 15 words from any one source, including the two excerpts from that paper.
+
+The core retains nucleoplasm because the exact human GATA6 participant is present in the curated SFTPA promoter-binding event [R-HSA-5685296](https://reactome.org/content/detail/R-HSA-5685296), consistent with the HPA IDA and other nuclear evidence. The HPA images were not independently inspected. Nucleus is the enclosing compartment, not a competing localization.
+
+Both UniProt initiation products remain in `alternative_products`. The current `functional_isoforms.type` enum has no alternative-translation-initiation value; neither product is relabeled as a splice variant, cleavage product or modification state. Their existing functional descriptions retain the context-dependent comparison.
+
+The evidence archive uses repository-relative paths for current normal sources and stable checksums plus artifact names for historical private snapshots. Those snapshots are not bundled as public files; their hashes preserve identity without claiming that a local workstation path is a portable link. Primary source URLs and experimental locators remain in this guide.
