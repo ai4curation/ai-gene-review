@@ -41,3 +41,17 @@ All scientific judgments are unchanged. Genuine CREATE history and target checks
 ## 2026-11-04: target checks and finalization
 
 Target validation passed with zero annotation advisories; strict GOA matching passed for all 32 original contexts, and computed status is COMPLETE. The native INITIALIZED-versus-COMPLETE status mismatch and report-only exit1 are preserved, then resolved by recording the computed status. The dependency deprecation message is retained separately from annotation advisories. All 38 scientific sources remain byte-exact after acquisition. Genuine CREATE history, private rendering/link checks and scoped whitespace accompany the candidate; no publication or actual integration is claimed.
+
+## 2026-11-04 — Cytoskeletal specificity after review
+
+The current review refines cytoskeleton organization to intermediate-filament and microtubule cytoskeleton organization. Filament clearance and substrate-recruitment experiments establish GAN's contribution to intermediate-filament homeostasis; they do not make GAN a filament-disassembly enzyme or motor. The separate MAP1B cotransfection experiments measure resistance to colchicine-induced microtubule disassembly. This context-specific result supports the second process refinement without asserting direct tubulin binding (PMID:12147674, PMID:23585478, PMID:31944090, PMID:37043392, PMID:37903270).
+
+The cytoskeleton location is refined to microtubule cytoskeleton using direct localization observations. Mouse neuronal colocalization and the full-length COS-7 experiment are distinct from an isolated Kelch-domain construct on actin stress filaments. Intermediate-filament interactions alone are not localization evidence. The cytoplasm IDA remains the original source for that broader claim; the Reactome complex model supplies the added cytosol precision (PMID:12147674, PMID:19424503; Reactome:R-HSA-8952630).
+
+The single adaptor core now states both protein ubiquitination and intermediate-filament organization alongside proteasomal turnover. These describe the supported cellular work of substrate recruitment; the molecular activity remains unchanged. The two added process facets introduce no NEW annotation. Current totals are 14 ACCEPT, five MODIFY and 13 REMOVE across the same 32 original contexts. All six excerpts and 38 source files are unchanged.
+
+The family-version reconciliation question belongs with provenance: can the incoming PTHR24412 PAINT assertions and current PTHR45632 classification be reconciled in a common family release without losing the original assertions? It has been removed from the biological expert questions. Earlier dated journal entries remain intact; their source counts and future-work statements describe their recorded stage. The source guide now gives the current concise evidence account. Affected validation and a new EDIT history record will document this amendment.
+
+### Amendment checks
+
+Target validation passed with zero annotation advisories; strict matching preserved all 32 original contexts and status remains COMPLETE. All 38 source files and the term cache remain byte-exact. Genuine EDIT history, private rendering/link checks and scoped whitespace checks accompany this amendment. The retained dependency deprecation message is separate from annotation advisories; no publication or integration is claimed by these local checks.
