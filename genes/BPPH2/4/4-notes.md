@@ -212,3 +212,26 @@ are of a different gene product that is itself annotated from the same reference
 | GO:0001216 DNA-binding transcription activator activity | IDA | 8617213 | NEW | GOA carries no MF transcription-regulator term for p4 |
 | GO:0001217 DNA-binding transcription repressor activity | IDA | 8617213 | NEW | the repression side of the same activity |
 | GO:0070063 RNA polymerase binding | IPI | 8799127 | NEW | the alpha-CTD contact is the mechanism of both activities |
+
+## Addendum (2026-11-04, on review of PR #5956)
+
+The line above saying "PMID:820555 (1976) full text is unreachable" is true of
+this reviewer's attempts but is not the whole batch's record, and a reader who
+stops here will re-derive a contradiction that the review files have already
+resolved. A copy **was** obtained within batch 3: see
+`genes/BPPH2/1/1-notes.md:124-133`, which records an OCR copy via a third-party
+aggregator and quotes the Discussion sentence "Cistrons 1, 2, 3, 5, 6 and 17 are
+involved in phage-specific DNA synthesis (Fig. 13)."
+
+No lysis-cistron sentence was recorded from that copy, and it could not be
+re-obtained for this gene. Re-checked on 2026-11-04, including the
+Unpaywall-listed "free" URL `onlinelibrary.wiley.com/doi/pdfdirect/10.1111/
+j.1432-1033.1976.tb10512.x`, which returns HTTP 403 like the article, ePDF and
+DOI URLs; the DIGITAL.CSIC copy (hdl 10261/38080) sits behind a bot check that
+asks automated clients not to fetch it, which was not circumvented.
+
+So the gene-14 attribution rests on the five secondary lines in
+`genes/BPPH2/15/15-notes.md:87-109` and on none of the 1976 paper's own
+sentences, which is why the `WRONG_GENE_PRODUCT` defect is rated `PROBABLE`.
+The abstract itself says only "A cistron, probably involved in the final lysis
+of the infected bacteria, has been found", without naming it.

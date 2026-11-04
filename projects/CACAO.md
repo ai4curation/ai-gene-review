@@ -2,8 +2,8 @@
 title: "CACAO community annotations review"
 maturity: IN_PROGRESS
 tags: [EVALUATION]
-species: [STRP1, EBOZM, yeast, RVFVZ, BUNYW, BPPRD, PSEAE, BPP22, SHIFL, ECOLI, BPPH2, BPT4, BPT5, BPP1, BPPGK, 9CAUD, HHV8P, SENDZ, SINDV, SFVCP, SALTY, TRYCR, NOSB1, BACSU, LAMBD, human, mouse, rat, ARATH, DROME]
-genes: [pppL, VP35, VP40, GP, WHI3, NSS, N__P16494, XV, fabY, sieA, ipaH4.5, clpX, cha, STM3697, doc, acrIIA5, K3, K5, V__P69282, VPS74, APN1, lysK, gag, SWP7, acs, ybjN, D15, P03316, "3", "5.4"]
+species: [STRP1, EBOZM, yeast, RVFVZ, BUNYW, BPPRD, PSEAE, BPP22, SHIFL, ECOLI, BPPH2, BPT4, BPT5, BPP1, BPPGK, 9CAUD, HHV8P, SENDZ, SINDV, SFVCP, SALTY, TRYCR, NOSB1, BACSU, LAMBD, human, mouse, rat, ARATH, DROME, MYXXA, RHOCB, PSE14, BPG15]
+genes: [pppL, VP35, VP40, GP, WHI3, NSS, N__P16494, XV, fabY, sieA, ipaH4.5, clpX, cha, STM3697, doc, acrIIA5, K3, K5, V__P69282, VPS74, APN1, lysK, gag, SWP7, acs, ybjN, D15, P03316, "3", "5.4", "1", "2", "4", "15", "17", DMS3-25, DMS3-30, JBD30_035, GH15_072, PSPPH_4093, bchF, bchE, bchJ, actC, actA]
 ---
 
 # CACAO community annotations review
@@ -20,13 +20,18 @@ reviews accepted 263, kept 150 as non-core, modified 47, marked 20
 over-annotated, removed 9, left 7 undecided, and called 2 too general; 5 rows
 are absent from the review files, which predate them.
 
-**Result so far (30 microbial genes, 143 CACAO rows).**
+**Result so far (45 microbial genes, 167 CACAO rows).**
 
 | | rows | ACCEPT | MODIFY | NON_CORE | OVER_ANN | TOO_GEN | REMOVE |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Batch 1 (12 genes) | 71 | 30 | 21 | 11 | 7 | 1 | 1 |
 | Batch 2 (18 genes) | 72 | 48 | 12 | 6 | 4 | 0 | 2 |
-| Total | 143 | 78 | 33 | 17 | 11 | 1 | 3 |
+| Batch 3 (15 genes) | 24 | 15 | 8 | 0 | 1 | 0 | 0 |
+| Total | 167 | 93 | 41 | 17 | 12 | 1 | 3 |
+
+Batch 3 is the only batch with no `NON_CORE` and no `REMOVE` row, and the
+only one chosen by screen rather than by CACAO row count, so its rates are
+not comparable with batches 1-2 on acceptance alone.
 
 Batch 1 accepted 42% of rows as written, batch 2 **67%**. The likeliest cause
 is literature depth rather than student quality: batch-1 genes (Ebola, RVFV,
@@ -550,9 +555,15 @@ Verified against QuickGO (queries saved in `CACAO/data/`). On `GO:0098672`,
 all 18 rows in GOA: CACAO's five 2018-2019 rows are all `involved_in`, its
 ten 2025-2026 rows are all `acts_upstream_of_or_within_positive_effect`, and
 UniProt's three 2026 rows are `involved_in`. `A0A220GHA5` carries four CACAO rows on
-that term — `involved_in` in 2018 and 2019, hedged twice in 2025 (04-07 and
-04-10). Same gene, same programme, qualifier flipped. Those two 2025 rows are
-also why the hedged set is ten rows across nine accessions, not nine rows.
+that term, and three of them are the same assertion: `involved_in` in 2019
+and hedged twice in 2025 (04-07 and 04-10) all share `ECO:0007040`, IDA and
+PMID:28785032, differing only in qualifier and date. (Its fourth row is a
+separate assertion, `involved_in` in 2018 from PMID:30046034.) So this is one
+claim from one paper entered three times with the qualifier flipped on the
+re-entries, which makes it a duplicate annotation as well as a qualifier
+regression, and a sharper exhibit for the bulk fix than the counts alone.
+Those two 2025 rows are also why the hedged set is ten rows across nine
+accessions, not nine rows.
 `GO:0044659`'s experimental rows split the same way: 31 `involved_in` (18 of
 them CACAO's own) against 5 hedged rows, all CACAO and all dated 2025-02 to
 2026-03. `Q6TM71` and `Q9T1X2` each carry a hedged CACAO row beside a
