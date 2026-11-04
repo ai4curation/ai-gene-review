@@ -89,3 +89,7 @@ The current source assessment preserves measured alternative-substrate activity 
 The human tumor-cell nuclear pool is retained outside the single mitochondrial core; its metabolic contribution is distinct from CBP’s transfer reaction ([PMID:37198486](https://pubmed.ncbi.nlm.nih.gov/37198486/)). Natural long and short products are documented separately from mature-chain and engineered constructs. Product-specific gaps remain questions rather than inferred activities.
 
 All prior journal text, generated hypothesis artifacts, original review objects and history records remain preserved. The compact archive locates the old quotation associations and current complete source contexts; current reference assessments specify what was actually read.
+
+## 2026-11-04 — Process specificity and resolved assay scope
+
+The original protocol now resolves the beta-oxidation citation’s assay scope; the two associated process judgments are marked over-annotated. The separate rat-derived broad oxidation claim retains its uncertainty. Crotonyl-CoA formation remains a direct product-forming role: the ontology explicitly includes comparable amino-acid-catabolic intermediates in fatty-acyl-CoA biosynthesis. Amino-acid and acyl-CoA parent terms are refined through verified descendants, with lysine, hydroxylysine and tryptophan scope preserved. The four previous excerpts and all original machine fields remain unchanged.
