@@ -19,7 +19,15 @@ Reviewed as the E. coli exemplar of the hydratase and dehydrogenase steps in
   unsaturated substrates, but a genuine FadB activity).
 - GO:0016509 (long-chain, IBA) and GO:0018812 (the (2E)-specific child of
   GO:0004300, Rhea) are accepted as specific forms of the core activities.
-- GO:0008692 3-hydroxybutyryl-CoA epimerase is KEEP_AS_NON_CORE: PMID:8454629
-  shows it is a dehydration/rehydration by-product of the crotonase site.
+- GO:0008692 3-hydroxybutyryl-CoA epimerase is KEEP_AS_NON_CORE: through
+  dehydration/rehydration at the crotonase site (PMID:8454629) FadB lets
+  D-3-hydroxyacyl-CoA enter the spiral, and UniProt records from experiment
+  that FadB uses D-3-hydroxyacyl-CoA as a substrate. It is non-core because
+  the main spiral runs through the L isomer. (PR #5935 review: the earlier
+  "by-product" argument was replaced, as sharing an active site does not
+  decide whether an activity is kept.)
+- The GO:0004300 IEA row is sourced from Rhea 20724, the (3E) hydration, and
+  now quotes that reaction; GO:0018812 (Rhea 16105, (2E) only) is an is_a child
+  of GO:0004300, which stays the core term because it covers both reactions.
 - Generic parents (catalytic, oxidoreductase, lyase, lipid and fatty acid
   metabolic/catabolic process) are TOO_GENERAL.

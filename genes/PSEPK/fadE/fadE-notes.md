@@ -22,3 +22,10 @@
   reaction-class term and the module's term for this step.
 - GO:0016627 changed from MARK_AS_OVER_ANNOTATED to TOO_GENERAL (true but
   entailed by the accepted chain-length-specific activities).
+
+## 2026-11-04 PR #5935 review round
+
+- The cytoplasm reason now states what outweighs the Phobius helix (the E. coli
+  orthologue's identical hydrophobic stretch without a curated TM segment, and
+  soluble-fraction activity), and that the catalytic domains face the cytoplasm
+  on either topology.

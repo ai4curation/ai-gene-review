@@ -22,3 +22,13 @@
   child GO:0016509, matching E. coli FadB, whose dehydrogenase also acts on
   acetoacetyl-CoA; the GO:0016509 TreeGrafter row is still accepted.
 - Truncated UniProt quotes in the draft were replaced with complete sentences.
+
+## 2026-11-04 PR #5935 review round
+
+- GO:0008692 3-hydroxybutyryl-CoA epimerase changed from KEEP_AS_NON_CORE to
+  MARK_AS_OVER_ANNOTATED: the row is rule-assigned, there is no KT2440 assay,
+  and the deep-research summary of the KT2440 literature says the epimerase
+  role may not be physiologically relevant in Pseudomonas.
+- The GO:0004300 IEA row now quotes its own Rhea 20724 (3E) reaction; the
+  GO:0018812 reason now states that it is an is_a child of GO:0004300.
+- UniProt FUNCTION quotes now start at "Catalyzes the formation of".
