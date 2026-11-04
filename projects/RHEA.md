@@ -233,6 +233,15 @@ which adds batch 8: the cascade-step gaps, where GO holds a reaction's chemistry
 for one substrate (the leukotriene B4 ω-oxidation trio) and not for another on the
 same protein.
 
+## Completeness for Swiss-Prot reactions
+
+Target: every RHEA reaction used by a Swiss-Prot entry has an `exactMatch` or `narrowMatch` xref on a
+GO term. At go-ontology HEAD (2026-11-04), 6,516 of 14,163 such reactions are covered and 7,647 need a
+call. For the reactions already mapped, Swiss-Prot entries agree with their native (non-circular) GO MF
+annotations in about 87% of entry-mappings where the entry has any catalytic MF annotation. The disagreements sort into partial reactions,
+sibling-chemistry disagreements and ontology-structure gaps. See
+[RHEA-SWISSPROT-COMPLETENESS.md](RHEA/RHEA-SWISSPROT-COMPLETENESS.md).
+
 ## Curated new mappings (SSSOM)
 
 Filling the gaps is a curation deliverable, not just an audit. The curated
