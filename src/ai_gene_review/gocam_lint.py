@@ -915,11 +915,41 @@ def load_model(path: Path) -> Model:
     return Model(**yaml.load(path.read_text(), Loader=loader))
 
 
+#: Rules that compare models with one another, run by :func:`lint_paths` only.
+CORPUS_RULES: dict[str, str] = {
+    "near_duplicate_models": "Models whose (gene, MF) activity sets largely overlap.",
+}
+
+
+def check_rule_ids(rules: Iterable[str]) -> list[str]:
+    """Return the rule ids, failing fast on any that are not registered.
+
+    >>> check_rule_ids(["self_loop", "near_duplicate_models"])
+    ['self_loop', 'near_duplicate_models']
+    >>> check_rule_ids(["no_such_rule"])
+    Traceback (most recent call last):
+    ...
+    ValueError: unknown GO-CAM lint rule(s): no_such_rule
+    """
+    rules = list(rules)
+    unknown = [r for r in rules if r not in RULES and r not in CORPUS_RULES]
+    if unknown:
+        raise ValueError(f"unknown GO-CAM lint rule(s): {', '.join(unknown)}")
+    return rules
+
+
 def lint_model(model: Model, oracle: Optional[TermOracle] = None,
                rules: Optional[Iterable[str]] = None) -> list[Finding]:
-    """Run model-level rules; ontology rules are skipped without an oracle."""
+    """Run model-level rules; ontology rules are skipped without an oracle.
+
+    ``rules`` may include corpus rule ids, which are ignored here (they need
+    several models; see :func:`lint_paths`).
+    """
     view = ModelView.from_model(model)
-    selected = [RULES[r] for r in rules] if rules else list(RULES.values())
+    if rules is None:
+        selected = list(RULES.values())
+    else:
+        selected = [RULES[r] for r in check_rule_ids(rules) if r in RULES]
     out: list[Finding] = []
     for r in selected:
         if r.needs_ontology and oracle is None:
@@ -931,7 +961,7 @@ def lint_model(model: Model, oracle: Optional[TermOracle] = None,
 def lint_paths(paths: Iterable[Path], oracle: Optional[TermOracle] = None,
                rules: Optional[Iterable[str]] = None, corpus: bool = True) -> list[Finding]:
     """Lint several cached models, plus the corpus rule when ``corpus`` is set."""
-    rules = list(rules) if rules else None
+    rules = check_rule_ids(rules) if rules else None
     views, findings = [], []
     for p in sorted(paths):
         model = load_model(p)

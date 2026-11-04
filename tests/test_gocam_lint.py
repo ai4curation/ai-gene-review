@@ -164,3 +164,48 @@ def test_weak_anchors_yield(term, ancestors, expected):
 def test_lumen_to_extracellular_is_info():
     """Golgi processing followed by secretion is topologically continuous."""
     assert classify_crossing(frozenset({"C", "L"}), frozenset({"E"})) == "INFO"
+
+
+def test_corpus_rule_selectable():
+    """Naming the corpus rule must run it, not raise KeyError."""
+    from ai_gene_review.gocam_lint import lint_paths
+
+    paths = [GOCAMS / m / f"{m}-src.yaml" for m in ("62b4ffe300004525", "62b4ffe300004489")]
+    findings = lint_paths(paths, rules=["near_duplicate_models"])
+    assert {f.rule for f in findings} == {"near_duplicate_models"}
+    # a model-level run that names only the corpus rule runs no model rules
+    assert lint_model(_model("62b4ffe300004525"), rules=["near_duplicate_models"]) == []
+
+
+def test_unknown_rule_rejected():
+    with pytest.raises(ValueError, match="unknown GO-CAM lint rule"):
+        lint_model(_model("59cc772c00000000"), rules=["no_such_rule"])
+
+
+@pytest.mark.parametrize(
+    "args,message",
+    [
+        (["--rule", "no_such_rule", "59cc772c00000000"], "unknown GO-CAM lint rule"),
+        (["--min-severity", "LOUD", "59cc772c00000000"], "--min-severity must be one of"),
+    ],
+)
+def test_cli_rejects_bad_options(args, message):
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    result = CliRunner().invoke(app, ["gocam-lint", "--no-ontology", *args])
+    assert result.exit_code != 0
+    assert message in result.output
+
+
+def test_cli_corpus_rule_runs():
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    result = CliRunner().invoke(
+        app, ["gocam-lint", "--no-ontology", "--rule", "near_duplicate_models",
+              "62b4ffe300004525", "62b4ffe300004489"])
+    assert result.exit_code == 0, result.output
+    assert "near_duplicate_models" in result.output

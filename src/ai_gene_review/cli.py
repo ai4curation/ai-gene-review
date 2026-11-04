@@ -4236,9 +4236,11 @@ def gocam_lint(
     """
     from ai_gene_review.etl.gocam import normalize_gocam_id, src_path
     from ai_gene_review.gocam_lint import (
+        CORPUS_RULES,
         RULES,
         SEVERITY_ORDER,
         OakOracle,
+        check_rule_ids,
         lint_paths,
         write_findings_tsv,
     )
@@ -4247,8 +4249,19 @@ def gocam_lint(
         for r in RULES.values():
             tag = " [GO]" if r.needs_ontology else ""
             typer.echo(f"{r.id}{tag}: {r.description}")
-        typer.echo("near_duplicate_models: Models whose (gene, MF) activities largely overlap.")
+        for rid, desc in CORPUS_RULES.items():
+            typer.echo(f"{rid} [corpus]: {desc}")
         return
+    severity = min_severity.upper()
+    if severity not in SEVERITY_ORDER:
+        raise typer.BadParameter(
+            f"--min-severity must be one of {', '.join(SEVERITY_ORDER)}, not {min_severity!r}"
+        )
+    if rule_ids:
+        try:
+            check_rule_ids(rule_ids)
+        except ValueError as exc:
+            raise typer.BadParameter(f"{exc}; see --list-rules") from exc
     if model_ids:
         paths = [src_path(normalize_gocam_id(m), cache_dir) for m in model_ids]
         missing = [p for p in paths if not p.exists()]
@@ -4258,7 +4271,7 @@ def gocam_lint(
         paths = sorted(cache_dir.glob("*/*-src.yaml"))
     oracle = None if no_ontology else OakOracle()
     findings = lint_paths(paths, oracle, rule_ids, corpus=len(paths) > 1)
-    cutoff = SEVERITY_ORDER[min_severity.upper()]
+    cutoff = SEVERITY_ORDER[severity]
     findings = [f for f in findings if SEVERITY_ORDER[f.severity] <= cutoff]
     findings.sort(key=lambda f: (f.model_id, SEVERITY_ORDER[f.severity], f.rule))
     if output:

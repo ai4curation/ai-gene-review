@@ -45,6 +45,10 @@ fits, the `GoCamQcFlagEnum` value a reviewer would record.
 | `no_narrative` | no | No curator comment beyond automated changes | |
 | `near_duplicate_models` | no | Corpus rule: two models whose (gene, MF) activity sets overlap with Jaccard ≥ 0.6 | |
 
+Unknown `--rule` or `--min-severity` values are rejected with the list of
+valid choices. `near_duplicate_models` is a corpus rule: it runs only when
+several models are linted together.
+
 Connectivity rules count metabolite flow as well as causal edges: in pathway
 models, A `has output` X and B `has input` X links A to B. Gene-centric
 models, where every activity has the same enabler (MGI/SGD imports), are
@@ -92,8 +96,11 @@ the least severe pairing of faces decides the severity:
 
 ## Corpus results (November 2026)
 
-The run over 2,037 cached models (`reports/gocam-lint.tsv`) gave 10,021
-findings in 1,924 models; 757 models have at least one ERROR or WARNING.
+The run over 2,037 cached models gave 10,021 findings in 1,924 models; 757
+models have at least one ERROR or WARNING. The committed report,
+`reports/gocam-lint.tsv`, keeps only the 3,138 ERROR and WARNING findings
+(`just gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv`) so that
+it does not churn on every cache refresh; regenerate the INFO rows locally.
 
 | Severity | Rule | Count |
 |---|---|---|
