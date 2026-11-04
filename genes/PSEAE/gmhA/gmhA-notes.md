@@ -15,3 +15,31 @@ PMID18056714 specifically includes Pseudomonas GmhA structures (1X92 and 3BJZ) t
 Two IBA terms remain UNDECIDED: GO0032298 DNA-replication initiation stimulation and GO1990102 DnaA-DiaA complex, both from PTN000764072. This is not a donor-count or self-donor objection. Q9HVZ0 actually maps to PTHR30390:SF6, officially **DNAA INITIATOR-ASSOCIATING PROTEIN DIAA**, inside the mixed SIS GmhA/DiaA family. An experimentally supported GmhA catalytic role does not preclude a second DiaA-like role. PMID17699754 full text establishes E. coli DiaA-DnaA interactions and compares Pseudomonas GmhA structurally; it discusses the C-terminal Leu/Phe signature used to distinguish DiaA-like homologs. PMID26612680 full text likewise shows that sequence/structure assignments in this family can be ambiguous, with functional confirmation explicitly outstanding for its Colwellia protein. The consulted material did not establish or disprove a native PA4425-DnaA complex or replication stimulation. No blanket loss, misattribution, or proven dual-function claim is made. Resolving PAINT node placement and assaying PA4425 with cognate DnaA are specific follow-up needs.
 
 GmhA makes the common D,D-heptose-7-phosphate intermediate. It does not itself choose ADP versus GDP attachment, beta versus alpha kinase configuration, or the downstream D,D-to-L,D C6 inversion. The final Pseudomonas LPS donor must not be called D,D merely because GmhA produces a D,D intermediate.
+
+## 2026-11-02 — the two DiaA IBA rows stay UNDECIDED, deliberately
+
+Re-examined against the new `PTHR30390` family review. Both rows keep `UNDECIDED`;
+this is a decision, not an omission, and the reasons in the review now say so.
+
+The family review assesses node `PTN000764072` as `UNRESOLVED` for the GmhA
+isomerases that UniProt places in subfamily `SF6`, and records two things that bear
+directly on these rows:
+
+- `SF6`'s official name, **DNAA INITIATOR-ASSOCIATING PROTEIN DIAA**, is not a
+  function claim. PANTHER's own inventory puts the canonical E. coli GmhA (P63224) in
+  `SF7` PHOSPHOHEPTOSE ISOMERASE and E. coli DiaA (P66817) in `SF6`, while UniProt
+  assigns the Pseudomonas, Streptomyces and Methanococcus GmhA isomerases to `SF6`.
+  A subfamily label in this family therefore carries no activity.
+- The propagation is uneven: the PSEPK ortholog Q88N89 does not receive this IBA at
+  all, though it sits in the same subfamily.
+
+So the family-level analysis corroborates the uncertainty rather than resolving it.
+Q9HVZ0 carries the DiaA-labelled `SF6` placement and was structurally compared with
+DiaA, so an enzymatic GmhA identity does not by itself refute the annotation, and
+nothing available settles whether PA4425 forms a native DnaA complex. Only a
+DnaA-binding assay on a GmhA isomerase would close it.
+
+**Consequence, recorded deliberately.** This gene stays at 8 of 10 rows reviewed, so
+the ADP-heptose module reports 15/16 genes complete rather than 16/16. That is the
+honest outcome; forcing a verdict here to move the counter would assert something the
+evidence does not support.

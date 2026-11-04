@@ -98,3 +98,25 @@ Provider deep research was unavailable for this seeded MAP2K1 pass: Falcon requi
 `agentapi` on `PATH` in the parent environment, and the Perplexity/OpenAI fallbacks
 lacked API keys. This pass relied on the UniProt record, GOA-seeded review rows,
 cached PMID records, and cached Reactome summaries where present.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000117, ARBA:ARBA00026962) and TAS (PMID:19565474), both located_in, both
+UNDECIDED before. No sub-compartment rows.
+
+Checks:
+- ARBA00026962 (UniProt REST, 2026-11-03) pools condition sets from unrelated families; MEK1 matches the
+  IPR000719 + IPR050915 (MAP kinase kinase) set in Euarchontoglires. Unvetted, not used as support.
+- QuickGO: rodent orthologs carry only the same ARBA and TAS rows; no experimental MEK row to project from.
+- TAS source PMID:19565474 (Yao and Seger 2009 review) is abstract-only and never says "mitochondri".
+- Primary studies fetched: PMID:18545666 (Galli 2008, full text) [PMID:18545666 "mitochondrial subfractionation
+  showed that MAPKs colocalized with their cognates MEK1/2, MKK3 and MKK4 in the mitochondrial outer membrane and
+  in the intermembrane space"], in mouse cells [PMID:18545666 "LP07 cell line was derived from P07 lung tumor
+  spontaneously arisen in a BALB/c mouse"]; fraction purity by complex I/IV, LDH and PI only (no ER marker).
+  PMID:15030409 (Alonso 2004, rat brain, abstract-only) [PMID:15030409 "upstream phospho-MAPK/ERK kinases (MEK1/2)
+  were also"].
+- Both use MEK1/2 antibodies, so MEK1 cannot be separated from its paralog.
+
+Outcome: both rows UNDECIDED -> KEEP_AS_NON_CORE (minor, transient signalling pool with the ERK module;
+TRAF3/BRAF precedent). Stays at root: no transit peptide or anchor, sub-mitochondrial data split between OMM
+and IMS. Added PMID:18545666 and PMID:15030409 to references.
