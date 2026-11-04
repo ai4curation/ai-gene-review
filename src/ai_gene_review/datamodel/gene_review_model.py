@@ -761,6 +761,42 @@ class EvidenceType(str, Enum):
     """
 
 
+class PaintLossEvidenceEnum(str, Enum):
+    """
+    PAINT evidence codes that record a loss of function on a tree node.
+    """
+    IRD = "IRD"
+    """
+    Inferred from Rapid Divergence; blocks the ancestral IBD, emits no leaf annotation.
+    """
+    IKR = "IKR"
+    """
+    Inferred from Key Residues; propagates to leaves as NOT|IBA.
+    """
+
+
+class PaintLossAgreementEnum(str, Enum):
+    """
+    How a gene review's evidence relates to a PAINT loss on its lineage.
+    """
+    AGREES = "AGREES"
+    """
+    The review's evidence supports the loss for this gene.
+    """
+    CONTRADICTED = "CONTRADICTED"
+    """
+    The review has direct evidence that this gene keeps the function.
+    """
+    TOO_BROAD = "TOO_BROAD"
+    """
+    The loss is right for part of the clade but not for this gene's branch, as judged by the family review.
+    """
+    UNRESOLVED = "UNRESOLVED"
+    """
+    The review neither confirms nor refutes the loss for this gene.
+    """
+
+
 class PropagationRootCauseEnum(str, Enum):
     """
     Mechanical root-cause classification for propagated or inferred annotations. This distinguishes bad source annotations from bad propagation decisions and term-scoping issues.
@@ -2455,7 +2491,8 @@ class ReferenceProteomeAssessment(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
 
     @field_validator('reference_proteomes')
     def pattern_reference_proteomes(cls, v):
@@ -2517,7 +2554,8 @@ class AlternativeRecord(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
 
     @field_validator('id')
     def pattern_id(cls, v):
@@ -3252,7 +3290,8 @@ class Descriptor(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3329,7 +3368,8 @@ class ChemicalEntityDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3406,7 +3446,8 @@ class GeneDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3483,7 +3524,8 @@ class GeneProductDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3563,7 +3605,8 @@ class FamilyDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3640,7 +3683,8 @@ class AncestralNodeDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3717,7 +3761,8 @@ class DomainDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3794,7 +3839,8 @@ class CellularComponentDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3872,7 +3918,8 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3957,7 +4004,8 @@ class ComplexUnit(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4034,7 +4082,8 @@ class CellTypeDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4111,7 +4160,8 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4188,7 +4238,8 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4265,7 +4316,8 @@ class TaxonDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4349,7 +4401,8 @@ class MolecularFunctionDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4431,7 +4484,8 @@ class BiologicalProcessDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4508,7 +4562,8 @@ class RelationDescriptor(Descriptor):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4633,7 +4688,8 @@ class ModuleReview(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4748,7 +4804,8 @@ class ExecutableModel(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4858,7 +4915,8 @@ class ModelScenario(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
 
 
 class ScenarioSetting(ConfiguredBaseModel):
@@ -4967,7 +5025,8 @@ class ModuleNode(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5075,7 +5134,8 @@ class ModulePart(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5160,7 +5220,8 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5249,7 +5310,8 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5333,7 +5395,8 @@ class GoCamAssociation(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5576,7 +5639,8 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
@@ -5669,7 +5733,8 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5729,7 +5794,8 @@ class ModuleContext(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5809,7 +5875,8 @@ class ModuleConnection(ConfiguredBaseModel):
                        'GoCamActivityReview',
                        'ParticipantSelector',
                        'ModuleContext',
-                       'ModuleConnection']} })
+                       'ModuleConnection',
+                       'PaintLoss']} })
     chaining_status: Optional[ChainingStatusEnum] = Field(default=None, description="""Curator adjudication of reaction continuity across this connection: whether the upstream reaction's product is the downstream reaction's substrate. This is an explicit override for the (advisory, non-blocking) automated chaining check, so a known gap can be acknowledged rather than re-reported each run. Leave unset to let the automated check report its finding.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection']} })
     chaining_note: Optional[str] = Field(default=None, description="""Free-text explanation for the chaining_status, e.g. why a break is a genuine knowledge gap, or which GO/RHEA mapping is missing.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
@@ -5946,6 +6013,63 @@ class PropagationReview(ConfiguredBaseModel):
     residue_claims: Optional[list[ResidueClaim]] = Field(default=None, description="""Machine-checkable form of a residue-level argument, e.g. \"this protein lost the catalytic cysteine\". Optional and additive: the vast majority of existing reviews state such arguments only in review.reason prose, and those are grandfathered, never invalidated. Supply this whenever a NEW review rests on residue gain, loss, or retention, so a validator can resolve the claim against the actual sequences and contradict it.
 This exists because the argument is cheap to assert and hard to check. A survey of 17 \"lacks the catalytic residue\" claims in this repo found 4 where the site was fully intact -- CASP12 (truncated instead), LPA (activation junction), AZIN1 (lost substrate contacts, kept the catalytic Cys) and HSPA13 (a different domain). Each conclusion happened to survive for another reason, so nothing caught the faulty mechanism.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropagationReview']} })
     residue_claims_not_applicable: Optional[str] = Field(default=None, description="""Why this annotation's argument cannot be expressed as a residue claim, for cases that are genuinely not point-residue questions -- capping versus severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent rather than residues substituted (MEFV, RAD51C). Recording the reason keeps the escape valve honest rather than silent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropagationReview']} })
+    paint_losses: Optional[list[PaintLoss]] = Field(default=None, description="""PAINT losses (IRD or IKR) that now block this annotation's term on the gene's lineage. An IRD produces no leaf annotation, so a cached GOA file can still carry an IBA that a newer IRD has withdrawn; this records that fact, and whether the review agrees with the loss, in a form that can be queried and checked against the family's paint.tsv. `just paint-losses <org> <GENE>` lists the candidates.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropagationReview']} })
+
+
+class PaintLoss(ConfiguredBaseModel):
+    """
+    A PAINT loss on the gene's PANTHER lineage that blocks the annotated term, and the review's judgement of it.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    node_id: str = Field(default=..., description="""The PANTHER node carrying the IRD or IKR.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+    evidence: PaintLossEvidenceEnum = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
+                       'AlternativeRecord',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'PaintLoss']} })
+    date: Optional[str] = Field(default=None, description="""The loss row's date in PAINT IBD.gaf (YYYYMMDD).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+    agreement: PaintLossAgreementEnum = Field(default=..., description="""Whether this review's evidence supports the loss for this gene.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+    argument: Optional[str] = Field(default=None, description="""For a loss the review disputes (CONTRADICTED or TOO_BROAD), the case to put to PAINT curators, with its citations and the scope of the clade. Used in the IRD_EVIDENCE PAINT report in place of the row's reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+    suggestion: Optional[str] = Field(default=None, description="""The change to propose to PAINT for a disputed loss (for example \"Retract the IRD for GO:0031265 only\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+
+    @field_validator('node_id')
+    def pattern_node_id(cls, v):
+        pattern=re.compile(r"^PANTHER:PTN[0-9]+$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid node_id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid node_id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('date')
+    def pattern_date(cls, v):
+        pattern=re.compile(r"^[0-9]{8}$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid date format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid date format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class ResidueClaim(ConfiguredBaseModel):
@@ -7460,6 +7584,7 @@ ExistingAnnotation.model_rebuild()
 Review.model_rebuild()
 ConsistencyException.model_rebuild()
 PropagationReview.model_rebuild()
+PaintLoss.model_rebuild()
 ResidueClaim.model_rebuild()
 ResiduePosition.model_rebuild()
 ResidueMapping.model_rebuild()
