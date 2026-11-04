@@ -144,3 +144,10 @@ Formal cognitive testing is retained as a genuine AGAT-deficiency phenotype, whi
 Short exact cache excerpts now accompany the experimental claims. The four binding refinements cite the actual partner records as well as the interaction paper, without assigning partner activities or claiming orthogonal validation. The positive urinary-vesicle identification supports the non-core location independently of any extracellular enzymatic role. The description restores catalytic mechanism, expression and both recessive deficiency and dominant renal aggregation disease. See the [source guide](GATM-source-guide.md) for selected-source access and the [review](GATM-ai-review.yaml) for the evidence-linked reasons. All existing normal source bytes, original contexts, product sequences and previous journal text are preserved.
 
 Native amendment outcome: Default validation, strict GOA matching, computed-status audit, genuine EDIT history validation and private rendering pass. Computed review status remains COMPLETE, with zero annotation advisories. The only diagnostic is a dependency deprecation notice. All 35 normal source objects and the ontology cache remain unchanged.
+
+
+## 2026-11-04: measured secondary acceptor breadth
+
+The experimental broad amidinotransferase annotation is retained as non-core to keep its measured non-glycine chemistry machine-readable. This supersedes the prior refinement of that IDA row; the family-based refinement and single physiological core remain ([PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/), [source guide](GATM-source-guide.md)).
+
+The native result is DRAFT with one retained consistency advisory; the source-specific activity distinction is intentional. The [source guide](GATM-source-guide.md) records the checked outcome.
