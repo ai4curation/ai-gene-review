@@ -1,0 +1,19 @@
+# GBE1 source guide
+
+The review contains 27 original annotation contexts, one catalytic core and 30 reference assessments. No new annotation is proposed. The 702-residue canonical sequence is preserved; no alternative-product declaration was present. The review keeps source-specific uncertainty, including the unresolved cation-binding inference, and separates normal enzyme activity from disease-mutant models.
+
+Read the [biological notes](GBE1-notes.md), [selected external evidence](GBE1-external-evidence.md) and [compact provenance](GBE1-source-evidence.yaml) together. The provenance contains the lossless current raw context matrix, literal donor and extension fields, forecast ordering, canonical sequence, and stable Git locators for the inherited review and five history records. The single urine atom omitted by the parser is restored literally; it is not a biological NEW.
+
+## Scientific scope
+
+Original human catalytic, structural and interaction sources were read in the selected scopes recorded per reference. The remaining sequence-resource, proteomic-background and clinical sources were assessed from authentic abstracts; an available full-text flag does not imply that all sections or target tables were inspected. Reference assessments explicitly distinguish verified source identity from unresolved target-specific coverage.
+
+The actual PTHR43651 tree and alignment place human Q04446 at AN42/PTN002536026, below the activity/location IBD at PTN000040010 and the glycogen-biosynthesis IBD at PTN000040012. No target-path negative placement was found. Human self-evidence is legitimate grounding. The original [tree](https://data.pantherdb.org/PANTHER19.0/books/PTHR43651/tree.tree), [alignment](https://data.pantherdb.org/PANTHER19.0/books/PTHR43651/tree.mia), [FASTA](https://data.pantherdb.org/PANTHER19.0/books/PTHR43651/cluster.fasta) and [node attributes](https://data.pantherdb.org/PANTHER19.0/books/PTHR43651/attr.tab), with the IBD map, are pinned in the private reading packet; the literal incoming row dates remain unchanged despite a later retained IBD date.
+
+Specificity changes use actual ontology relations: GO:0003844 is_a GO:0003824; GO:0005978 is_a GO:0005977 and reaches GO:0005975 and GO:0006091 through is_a paths; GO:0005829 part_of GO:0005737; GO:0019899 is_a GO:0005515. Thus broad energy metabolism is compatible with glycogen synthesis. Cytosol precision is not a phylogenetic failure.
+
+Two new exact quotations are centralized: 8 whitespace words from PMID:26199317 in the core and 10 from PMID:8613547 in a reference finding. The 29 inherited quote associations remain available through immutable old-review Git locators, including ten whitespace-only matches; they are not silently repeated or treated as fresh endorsements. Current row supports are reference-only where repeated quotes would add no information.
+
+## Native reconciliation
+
+Genuine force/no-seed refresh reproduced all 27 original/native contexts and the 702-residue canonical sequence without replacing the inherited review. All 26 planned normal source records are present: 18 reused unchanged and eight acquired only because they were missing. All 23 native publication/Reactome titles and both exact excerpts match. Eleven publication caches are abstract-only; selected external original readings remain identified separately. The exact urine atom is restored at native context 25. The separately owned PTHR43651 family-review YAML remains unchanged. A genuine EDIT record documents this update. Default validation and strict matching of all 27 GOA contexts passed with zero annotation advisories. Native report-only calculation found COMPLETE; the inherited INITIALIZED scalar was reconciled to that result and the final audit passed. Cation binding remains UNDECIDED. History validation, whitespace checks and private rendering passed. All 26 source bytes and the ontology cache remain unchanged after acquisition.
