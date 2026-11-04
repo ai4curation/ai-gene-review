@@ -1,0 +1,41 @@
+# GANAB source guide
+
+GANAB catalyzes early ER N-glycan glucose trimming as the alpha subunit of glucosidase II. The review separates measured enzyme chemistry, curated ancestry, original target-table observations and client-protein phenotypes.
+
+## Chemistry, complexes and products
+
+[PMID:10929008](https://doi.org/10.1093/glycob/10.8.815) was read as an official abstract and selected original Results/Methods/captions from the author-hosted paper. Both human alpha forms work with beta; alpha1 D542 and alpha2 D564 are the corresponding catalytic positions in current Q14697-1 (944 aa) and Q14697-2 (966 aa). Both complexes cleave Glc1/Glc2 high-mannose substrates under the reported conditions; Glc3 was not cleaved in that assay. Single-human-subunit baculovirus preparations form human/insect heteroenzymes, so their activity does not establish an isolated human alpha-only enzyme. Retention-signal manipulation of beta affects secretion/ER retention. No whole-paper or original-image inspection is claimed.
+
+The current official GO:0106407 definition describes the Glc2-to-Glc1 transition. The measured final-glucose removal is also described in the core, without pretending that this term covers both steps. GO:0033919 instead names alpha-1,3-glucan polymer cleavage; its replacement is a source-substrate-based lateral correction, not a descendant refinement or a claim of target lineage loss. GO:0004573 describes Glc3 processing by glucosidase I and is not used for GANAB. The bounded ontology search did not recover a separate final-glucose term; that is not a claim of exhaustive absence. GO:0140277 is the direct ER-trimming process, performed by GANAB rather than merely acting on it.
+
+All three current products were independently matched to direct FASTA and coordinate reconstruction. Q14697-3 is a 52-aa product with a premature stop/NMD caution in UniProt, not a demonstrated miniature enzyme. Do not transfer activity or experimental engineered-mutant localization to it.
+
+## Human localization and disease work
+
+[PMID:33097077](https://doi.org/10.1186/s13023-020-01585-4): authentic full XML, selected WT/mutant Results/Figures 3–4 captions and Methods were read. Human N-terminal FLAG GANAB constructs were tested in HEK293/HeLa systems with GIIbeta/PDI localization reagents. WT distribution supports ER localization. Truncated/misspliced mutant patterns are not natural-product localization evidence; predicted activity effects are not a direct enzyme assay.
+
+[HPA target page](https://www.proteinatlas.org/ENSG00000089597-GANAB/subcellular): supported ER staining with HPA061426 in MCF-7, Rh30 and U2OS, with ER staining in serum-starved hTERT-RPE1. The textual record was read, not independently re-scored images. This organelle assay does not itself resolve lumen topology.
+
+The Golgi ISS donor P79403 is pig GANAB. Its direct ER/Golgi evidence is PMID:2404989; the authentic abstract and official donor record support a kidney tubular secretory-route distribution. The abstract does not independently identify the animal species; species comes from the official donor record. This is not direct human Golgi imaging. The donor's reverse human-derived melanosome inference is a separate source chain.
+
+[PMID:27259053](https://doi.org/10.1016/j.ajhg.2016.05.004): selected original functional Results/Figures 4–5 captions support effects on polycystin maturation and trafficking. The paper's 966-aa long and 944-aa short forms map to current -2/-1. Cilia still form despite loss of ciliary PC2, so neither GANAB cilium residence nor a direct transport function follows. Complete Methods/images/supplements were not read.
+
+[PMID:28375157](https://doi.org/10.1172/JCI90129): the normal cache and official PubMed record are abstract-only. Correct original routes failed, so the exact activity experiment remains unread; independent 10929008 establishes the activity refinement. The [official corrigendum](https://doi.org/10.1172/JCI96729) corrects mislabeled Pkd1 RT-PCR primers, not the GANAB findings. It was read directly. An initial wrong 90183 route is preserved privately as a failed lookup, not biological evidence.
+
+## Fraction proteomics and RNA contact
+
+The [portable original-table evidence](GANAB-external-evidence.md) gives the exact target joins and stable primary locators for melanosome, urinary/salivary vesicle and HeLa RNA-contact studies. Positive detection is retained with specific limits. Historical isoform names and accession rows are not substitutes for peptide mapping; neither vesicle topology/biogenesis nor a melanogenesis activity is asserted. RNA contact after UV crosslinking does not identify a regulatory mechanism.
+
+PMID:19946888 remains a source-specific uncertainty: its YTS membrane-proteome abstract is available, but the exact GANAB table was not recovered. Attempted spreadsheets are HTML errors. The membrane definition includes attached proteins, so known lumenal activity or lack of a TM segment does not establish that the annotation is false.
+
+## Reactome and phylogeny
+
+Official reactions 532667 and548890 pages explicitly use glucosidaseII complex 532671; component 532674 is human Q14697, chain29–944, in ER lumen. The viral models 9683663/9694364 and inhibitor-binding 9686790 reach this component through ER-alpha-glucosidase set 9682983. The CDH1 models 9932352/9932913 use the same catalyst and explicitly say the specific processing was not studied. Location is supported through actual membership and independent human evidence; modeled client functions are not assigned to GANAB. Old catalyst GO:0033919 labels in these records do not override the current chemical definition. Official HTML was read; failed ContentService and PathwayBrowser responses are not presented as JSON evidence.
+
+The reused authentic PTHR22762 tree/MSA maps exact 944-aa human AN77 to PTN002503652. PTN002734202/AN68 supports enzyme/complex inheritance; PTN000509742/AN3 supports N-glycan processing. Actual IBDs, donor records and conserved catalytic positions were checked. Human self-donor evidence is legitimate; no target-path loss/negation was found. Chemical term scope and process specificity are corrected independently of sound descent. The unrelated open family-review YAML remains excluded from native source scope.
+
+## Input conservation and acquisition boundary
+
+The official response and genuine 16-column export contain 39 original records. Two 10929008/GO0006491 IDA records differ in original source metadata but collapse into one native key, producing the actual 38-row seed. Both originals are represented in final 39, restoring one source record without a NEW annotation. Two literal extension atoms are restored on the urine and saliva rows. The compact source evidence contains original contexts, products and actual native joins; current judgments are only in the review YAML.
+
+The normal-source union is 34: 19 PMIDs, 12 Reactome records and 3 immutable family files. Fresh bounded ownership/base checks passed; 25 existing sources were reused unchanged and 9 missing sources were acquired without force. All native source bytes, 39 original joins, 3 product records and 5 exact quote locations passed reconciliation. Two 10929008 anchors use the genuine cache line breaks with identical words; the 27259053 title uses native typography, and its full original is now cached without expanding the selected reading claim. No normal source was manually rewritten. Brief quotations are centralized with reference-only reuse; repeated occurrences count toward the 25-word per-source aggregate. Default validation passed with zero curation advisories. Strict GOA matched all current originals, native history passed, and the status audit computes COMPLETE while the source-specific membrane judgment remains UNDECIDED. Private rendering, links and scoped whitespace checks passed.
