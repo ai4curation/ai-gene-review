@@ -32,3 +32,7 @@
 ## 2026-11-04 (PR #5936 review follow-up)
 
 - GO:0006072 changed to MODIFY toward GO:0046167, as for the E. coli ortholog. PMID:25827416 full text is now cached (PMC XML).
+
+## 2026-11-04 (PR #5936 second review round)
+
+- GO:0006072 -> GO:0046167 reason now cites the PAINT GO:0046167 IBD on the eukaryotic glycerol kinase node PTN000023394 as corroboration (not propagated to this bacterial protein).

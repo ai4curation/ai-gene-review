@@ -73,3 +73,7 @@
 ## 2026-11-04 (PR #5936 review follow-up)
 
 - GO:0006072 glycerol-3-phosphate metabolic process: KEEP_AS_NON_CORE changed to MODIFY toward GO:0046167 glycerol-3-phosphate biosynthetic process (product side), mirroring the glpD refinement to GO:0046168.
+
+## 2026-11-04 (PR #5936 second review round)
+
+- GO:0006072 -> GO:0046167 reason now cites the PAINT GO:0046167 IBD on the eukaryotic glycerol kinase node PTN000023394 as corroboration (not propagated to this bacterial protein).
