@@ -29,6 +29,7 @@ from ai_gene_review.validation.module_validator import (
     validate_family_members,
     validate_paint_ptns,
     validate_go_branches,
+    validate_leaf_grounding_completeness,
     validate_taxon_context,
     validate_terms,
     validate_module_file,
@@ -806,12 +807,25 @@ def _skip_label_resolver(curie):
     return ("unavailable", None, set())
 
 
-def test_validate_module_file_passes_conformant_module():
-    # erk_cascade's erk_relay bundle conforms EXACTly to mapk_relay, so with
-    # label checking skipped the file should validate with no errors.
-    result = validate_module_file(
-        MODULES_DIR / "erk_cascade.yaml", resolver=_skip_label_resolver
+def test_validate_module_file_passes_conformant_module(tmp_path):
+    # Keep the smoke test focused on conformance instead of any optional
+    # executable models declared by a full repository module.
+    template_doc = yaml.safe_load((MODULES_DIR / "mapk_relay.yaml").read_text())
+    (tmp_path / "mapk_relay.yaml").write_text(
+        yaml.safe_dump(template_doc), encoding="utf-8"
     )
+
+    conformant_doc = yaml.safe_load(yaml.safe_dump(template_doc))
+    conformant_doc["id"] = "MODULE:conformant_mapk_relay"
+    conformant_doc["title"] = "Conformant MAPK relay"
+    conformant_doc["module"]["id"] = "conformant_mapk_relay"
+    conformant_doc["module"]["conforms_to"] = [
+        {"template": "mapk_relay", "status": "EXACT"}
+    ]
+    path = tmp_path / "conformant_mapk_relay.yaml"
+    path.write_text(yaml.safe_dump(conformant_doc), encoding="utf-8")
+
+    result = validate_module_file(path, resolver=_skip_label_resolver)
     assert result.errors == [], "\n".join(result.errors)
 
 
@@ -898,6 +912,97 @@ def test_validate_module_file_flags_bad_module_ref(tmp_path, module_ref, message
     result = validate_module_file(path, resolver=_skip_label_resolver)
     assert not result.is_valid
     assert any("module_ref [stage" in e and message in e for e in result.errors), result.errors
+
+
+# --------------------------------------------------------------------------- #
+# Completed module completeness
+# --------------------------------------------------------------------------- #
+
+
+def test_validate_leaf_grounding_completeness_blocks_complete_uniprotless_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0004672",
+                                "label": "protein kinase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+        },
+    }
+
+    errors = validate_leaf_grounding_completeness(doc)
+
+    assert len(errors) == 1
+    assert "COMPLETE concrete modules" in errors[0]
+    assert "'root'" in errors[0]
+    assert "ANY_WITH_FUNCTION" in errors[0]
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"status": "DRAFT"},
+        {"status": "COMPLETE", "scope": "ABSTRACT"},
+    ],
+)
+def test_validate_leaf_grounding_completeness_allows_draft_or_abstract(patch):
+    doc = {
+        **patch,
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_PARTICIPANT",
+                        "description": "abstract participant",
+                    },
+                }
+            ],
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
+def test_validate_leaf_grounding_completeness_allows_intentionally_ungrounded_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0008757",
+                                "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+            "intentionally_ungrounded": True,
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
 
 
 # --------------------------------------------------------------------------- #
