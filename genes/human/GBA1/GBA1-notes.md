@@ -104,3 +104,14 @@ Detailed source/construct limits and the vesicle-fraction target row are central
 ### Neuronal inhibition study and correction
 
 Strong GCase inhibition can coexist with limited alpha-synuclein or proteolysis effects under the tested neuronal conditions. This does not negate the enzyme reaction or establish universal absence of downstream effects. The study has a figure-presentation correction, whose scope is described in the source guide. [PMID:23580063](https://pubmed.ncbi.nlm.nih.gov/23580063/); [2021 correction](https://doi.org/10.1371/journal.pone.0252975).
+
+
+## 2026-11-04 — Catalytic scope and process specificity after review
+
+GBA1 hydrolysis directly consumes glucosylceramide and produces ceramide, so these two nonredundant process facets now accompany the same lysosomal core. Subsequent reacylation remains the work of ceramide synthases. [PMID:19279011](https://pubmed.ncbi.nlm.nih.gov/19279011/).
+
+The measured C6-NBD-GalCer activity remains positive. Its roughly 200-fold difference is relative to GBA1's GlcCer-analog activity, not GALC. With [lysosomal GALC](https://www.uniprot.org/uniprotkb/P54803/entry) as the dedicated comparator, physiological GalCer clearance by GBA1 remains unestablished and this annotation is marked over-annotated. [PMID:32144204](https://pubmed.ncbi.nlm.nih.gov/32144204/).
+
+The barrier contribution is retained as tissue-specific non-core biology with direct extracellular lipid-processing support, while the membrane-potential annotation is refined to the mitochondrial endpoint actually measured. Neither change assigns GBA1 a hormone receptor or ion-pump activity. [PMID:9101438](https://pubmed.ncbi.nlm.nih.gov/9101438/); [PMID:23707074](https://pubmed.ncbi.nlm.nih.gov/23707074/). Twin-only firing comparisons leave GBA1-specific electrical causality unresolved despite accessible main text. [PMID:25456120](https://pubmed.ncbi.nlm.nih.gov/25456120/).
+
+The sterol-glycoside question is sharpened to causal consequences: bidirectional chemistry and substrate-dependent shifts are supported, whereas a disease contribution from altered glucosylcholesterol requires tests that separate it from glucosylceramide burden. [PMID:26724485](https://pubmed.ncbi.nlm.nih.gov/26724485/). Product 3 remains a suspected provenance concern for database checking, not an established wrong-gene assignment; product 4/5 questions remain limited by the selected evidence. [PMID:8294033](https://pubmed.ncbi.nlm.nih.gov/8294033/).
