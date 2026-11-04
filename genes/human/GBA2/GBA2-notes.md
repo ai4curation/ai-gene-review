@@ -5,3 +5,7 @@
 The evidence supports one main non-lysosomal glucosylceramidase role, with secondary chemistry and cellular consequences kept distinct. Direct original assays and their species/construct limits are summarized in the source guide and reference assessments ([PMID:17080196](https://pubmed.ncbi.nlm.nih.gov/17080196/); [PMID:26724485](https://pubmed.ncbi.nlm.nih.gov/26724485/); [PMID:32144204](https://pubmed.ncbi.nlm.nih.gov/32144204/)).
 
 ER/Golgi and plasma-membrane observations describe different experimental contexts rather than a resolved universal topology ([PMID:23250757](https://pubmed.ncbi.nlm.nih.gov/23250757/); [PMID:30308956](https://pubmed.ncbi.nlm.nih.gov/30308956/)). Smooth ER specificity remains unresolved. The three natural product sequences are verified; product-specific catalytic and localization differences remain open.
+
+## 2026-11-04 — Substrate specificity and experimental evidence
+
+The [manual synthesis](GBA2-deep-research-manual.md) records source sections, constructs and experimental limits behind the hydrolysis/transfer distinction and membrane-pool interpretation. GalCer analog hydrolysis remains a measured result, while its physiological contribution is unresolved; its existing annotation is now marked over-annotated and is no longer proposed as a replacement for generic hydrolase activity. Selective excerpts make the cached cytoskeletal, surface-activity and sterol-hydrolysis evidence directly checkable. The earlier notes remain intact.
