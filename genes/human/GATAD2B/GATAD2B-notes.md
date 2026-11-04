@@ -45,3 +45,7 @@ Target validation passed without annotation advisories, and strict GOA matching 
 ## 2026-11-04 — DNA-recognition source distinction
 
 Re-read the full PMID:11756549 Discussion and separated its canonical-GATA comparison from the non-GATA p66-family inference. The source guide centralizes this distinction and the human construct linkage. Positive DNA-row support now uses the actual ancestral evidence, and the expert question asks whether direct human recognition occurs. All actions remain unchanged. COMPLETE records completion of manual adjudication, including seven explicit UNDECIDED judgments; it does not mean that every biological uncertainty is resolved. Earlier journal entries remain historical.
+
+## 2026-11-04 — Histone-binding mechanism
+
+The direct human histone-tail interaction is now represented as a distinct MF within NuRD corepression ([PMID:16415179](https://pubmed.ncbi.nlm.nih.gov/16415179/)). The source guide and annotation retain the assay and paralog limits.
