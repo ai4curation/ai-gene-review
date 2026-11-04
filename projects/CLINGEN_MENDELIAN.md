@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**696 of 2,876 genes are complete; 2,180 remain.**
-This checkpoint adds GAD1, GAMT, GALNS and GALNT3 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-696-2026-11-04-052909-utc) records the evidence and retained uncertainties.
+**699 of 2,876 genes are complete; 2,177 remain.**
+This checkpoint adds GAN, GARS1 and GANAB after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-699-2026-11-04-185334-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3829,9 +3829,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **GALNS** — HGNC:4122; [mucopolysaccharidosis type 4A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c58d08e9-dc6d-45fc-a21a-54be3bc438d9-2022-06-16T040000.000Z) (MONDO:0009659; AR; Definitive).
 - [x] **GALNT3** — HGNC:4125; [tumoral calcinosis, hyperphosphatemic, familial, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7bc60daf-72c4-4a3f-9d1c-96bffd8a9bc9-2024-02-06T170000.000Z) (MONDO:0100252; AR; Definitive).
 - [x] **GAMT** — HGNC:4136; [guanidinoacetate methyltransferase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0a84d45-57f8-4763-b1c5-7a283cef5f71-2019-01-25T170000.000Z) (MONDO:0012999; AR; Definitive).
-- [ ] **GAN** — HGNC:4137; [giant axonal neuropathy 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b9f65afa-5cb1-457e-abff-ab110145a32d-2022-02-10T021239.651Z) (MONDO:0009749; AR; Definitive).
-- [ ] **GANAB** — HGNC:4138; [polycystic kidney disease 3 with or without polycystic liver disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6392961-a64a-4818-903a-0bf88b32e736-2020-09-09T160000.000Z) (MONDO:0010916; AD; Definitive).
-- [ ] **GARS1** — HGNC:4162; [Charcot-Marie-Tooth disease type 2D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_168242d1-ef2e-486a-a45a-ed96187bd4d2-2023-01-10T170000.000Z) (MONDO:0011091; AD; Definitive).
+- [x] **GAN** — HGNC:4137; [giant axonal neuropathy 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b9f65afa-5cb1-457e-abff-ab110145a32d-2022-02-10T021239.651Z) (MONDO:0009749; AR; Definitive).
+- [x] **GANAB** — HGNC:4138; [polycystic kidney disease 3 with or without polycystic liver disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6392961-a64a-4818-903a-0bf88b32e736-2020-09-09T160000.000Z) (MONDO:0010916; AD; Definitive).
+- [x] **GARS1** — HGNC:4162; [Charcot-Marie-Tooth disease type 2D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_168242d1-ef2e-486a-a45a-ed96187bd4d2-2023-01-10T170000.000Z) (MONDO:0011091; AD; Definitive).
 - [ ] **GATA1** — HGNC:4170; [GATA1-Related X-Linked Cytopenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ad980194-b275-4bbb-b3df-73c1a50d3eac-2020-05-27T040000.000Z) (MONDO:0100089; XL; Definitive).
 - [ ] **GATA2** — HGNC:4171; [GATA2 deficiency with susceptibility to MDS/AML](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7c0449f7-e20b-4610-95ad-896eee265492-2022-12-30T180000.000Z) (MONDO:0042982; AD; Definitive).
 - [ ] **GATA3** — HGNC:4172; [hypoparathyroidism-deafness-renal disease syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afb6e0d5-81a5-439a-a498-9edc8505a367-2019-06-18T160000.000Z) (MONDO:0007797; AD; Definitive).
