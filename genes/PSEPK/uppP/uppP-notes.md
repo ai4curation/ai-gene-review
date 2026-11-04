@@ -18,3 +18,12 @@
 - Periplasm-facing catalysis and a possible C55-P flippase role are
   ortholog-derived or speculative and are not asserted as Q88IY7 core
   functions.
+
+## 2026-11-02 completion pass
+
+- Membrane (GO:0016020) changed from MARK_AS_OVER_ANNOTATED to TOO_GENERAL: plasma
+  membrane is accepted and entails it.
+- Truncated UniProt and deep-research quotes completed; the NEW GO:0016094 row now also
+  cites the E. coli ortholog study [PMID:15778224 "The enzyme function is to synthesize the carrier lipid"].
+  Status set to COMPLETE.
+- Review round (PR #5923): proposed new term "undecaprenyl phosphate biosynthetic process" added and cross-referenced from the NEW GO:0016094 row; no GO:0016311 row exists on this gene.
