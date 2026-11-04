@@ -14,3 +14,7 @@
   peptidase/carboxypeptidase/periplasm rows are MODIFYed to GO:0061785,
   GO:0009002 and GO:0030288 in the same way across the PBP4 (E. coli, P.
   aeruginosa, P. putida) and PBP7 (E. coli, P. putida) reviews.
+
+## 2026-11-04, PR #5959 review follow-up
+
+- Recorded the GO:0006508 InterPro2GO removal (IPR001967, IPR018044) as a source_defect.

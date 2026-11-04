@@ -14,3 +14,9 @@
   peptidase/carboxypeptidase/periplasm rows are MODIFYed to GO:0061785,
   GO:0009002 and GO:0030288 in the same way across the PBP4 (E. coli, P.
   aeruginosa, P. putida) and PBP7 (E. coli, P. putida) reviews.
+
+## 2026-11-04, PR #5959 review follow-up
+
+- Added a NEW GO:0030288 row (IC): SignalP signal peptide 1..22 plus the
+  periplasmic peptidoglycan substrate. Core functions now declare the location.
+- Recorded the GO:0006508 InterPro2GO removal (IPR000667) as a source_defect.

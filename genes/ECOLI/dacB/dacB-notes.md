@@ -14,3 +14,10 @@
   peptidase/carboxypeptidase/periplasm rows are MODIFYed to GO:0061785,
   GO:0009002 and GO:0030288 in the same way across the PBP4 (E. coli, P.
   aeruginosa, P. putida) and PBP7 (E. coli, P. putida) reviews.
+
+## 2026-11-04, PR #5959 review follow-up
+
+- GO:0043093 FtsZ-dependent cytokinesis (IGI, PMID:16855223) was MODIFYed to
+  GO:0000920 septum digestion after cytokinesis. The phenotype is failure of
+  daughter-cell separation after constriction.
+- Recorded the GO:0006508 InterPro2GO removal (IPR000667) as a source_defect.
