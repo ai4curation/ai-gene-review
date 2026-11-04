@@ -7632,3 +7632,31 @@ The accepted closures cover 144 distinct paths, including 110 scientific source 
 All four actual merge-group runs executed their suites, target validation and aggregate checks successfully. Each also passed 12 example checks, 454 automation tests and 19 JavaScript tests. Their retained receipts distinguish warnings, deselections and skipped doctests from executed results. Ordinary PR suite skips, history-coverage skips, UniProt-save skips and full-upstream-PAINT skips receive no execution credit. Gene review uncertainties and optional follow-ups remain in the linked reviews and source guides; checkpoint completion means the curation was accepted and merged.
 
 The prior 891,197-byte progress journal, 235 dated queue records, 158 earlier completion updates and all prior project histories are preserved. Catalogue text and order change only by checking these four genes and updating the status count. GALE, GALNT3 and other pending reviews are excluded. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T023154Z-codex-b9b3bf.yaml).
+
+## Completion checkpoint 692 — 2026-11-04 04:14:41 UTC
+
+692 complete; 2,184 remaining out of 2,876 catalogue genes. This checkpoint publishes four independently accepted reviews after checkpoint 688 and adds no new gene credit.
+
+| Gene | Actual merge | Executed integration | Original / seeded / stored contexts | Review status |
+|---|---|---|---|---|
+| [GABRB3](https://github.com/ai4curation/ai-gene-review/pull/5884) | [db5df360](https://github.com/ai4curation/ai-gene-review/commit/db5df360e7cade3d09481b806cff8279886647df) | [run 41760048843](https://github.com/ai4curation/ai-gene-review/actions/runs/41760048843) | 97 / 97 / 97 | DRAFT |
+| [GALE](https://github.com/ai4curation/ai-gene-review/pull/5898) | [81b7e91b](https://github.com/ai4curation/ai-gene-review/commit/81b7e91b90e47a047a1170ce229f6d9fa1fa1a9f) | [run 41760051237](https://github.com/ai4curation/ai-gene-review/actions/runs/41760051237) | 18 / 18 / 19 | COMPLETE |
+| [GALK1](https://github.com/ai4curation/ai-gene-review/pull/5939) | [9d3ff448](https://github.com/ai4curation/ai-gene-review/commit/9d3ff448a399e372de3e48104dedc471cb6569b5) | [run 41760890259](https://github.com/ai4curation/ai-gene-review/actions/runs/41760890259) | 26 / 26 / 26 | DRAFT |
+| [GALC](https://github.com/ai4curation/ai-gene-review/pull/5890) | [9eaad1ba](https://github.com/ai4curation/ai-gene-review/commit/9eaad1ba25a68db4e91c760d8e625cfae5504409) | [run 41762276962](https://github.com/ai4curation/ai-gene-review/actions/runs/41762276962) | 20 / 19 / 20 | COMPLETE |
+
+GABRB3 contributes to assembled GABA-A receptor channels. GALE interconverts UDP-linked galactose and glucose sugars, including their N-acetyl derivatives; the reversible UDP-galactose supply direction remains explicit. GALK1 phosphorylates galactose, and lysosomal GALC hydrolyzes galactosyl lipids including psychosine. Acceptance records completion of the reviews, while their source-specific uncertainties and experimental-construct limits remain visible in the linked gene files.
+
+The 161 original contexts are represented by 162 stored annotations. GALC's 19-row seed omitted one genuine original context that was restored, bringing its current total to 20; that restoration is not NEW. GALE separately retains one inherited NAD-binding NEW alongside its 18 original contexts. GALK1's retired redundant inherited NEW remains preserved historically.
+
+| Gene | Assessed references | Natural products | Extension atoms | Current quote occurrences |
+|---|---|---|---|---|
+| GABRB3 | 41 | 4 | 2 | 13 |
+| GALE | 16 | 2 | 0 | 4 |
+| GALK1 | 29 | 1 | 1 | 8 |
+| GALC | 37 | 4 | 3 | 10 |
+
+The reviews retain six structured extension atoms, one NOT context, one contributes_to context and 35 current quotation occurrences. The eleven natural products remain distinct from experimental constructs; product counting does not assign every function to every product. GALC's corrected acceptance records 37 references and 37 assessments. Historical quotations and superseded projections remain available through each review's retained provenance.
+
+All four linked actual merge-group runs executed their suites and integration checks successfully. Their acceptance receipts distinguish executed results from skipped steps and unresolved diagnostics. The accepted gene closures span 179 distinct paths, including 138 immutable scientific source paths; cumulative published payloads cover 129 paths and actual merge deltas cover 109. GABRB3's actual ontology cache preserves its parent rows and adds the authorized GO:0160001 row. This tracker changes no gene, source or ontology-cache bytes.
+
+The prior 896,068-byte progress journal, 235 dated queue records and 159 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Later acceptances, including GAD1, GAMT and GALNS, are outside this fixed checkpoint. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T041441Z-codex-475721.yaml).
