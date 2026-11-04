@@ -2,7 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22]
 ---
 
 # Organelles
@@ -255,7 +255,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
       2026-10-20 run), starting with human; apply rules 3 and 4
   - [x] Batch 1: 20 human genes (2026-10-20)
   - [x] Batch 2: 20 human genes (2026-10-24)
-  - [x] Batch 3: 20 human genes (2026-10-25); 24 human genes remain
+  - [x] Batch 3: 20 human genes (2026-10-25)
+  - [x] Batch 4: the last 24 human genes (2026-11-03); human root-only list done
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Revise to "add, don't substitute" after PR #5208 review: synthesis
       root rows ACCEPT, sub-compartment as a NEW row; validator exemption
@@ -270,6 +271,65 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-03 (batch 4: the last 24 human genes)
+
+The remaining 24 human genes on the root-only mitochondrion list (MAP2K1 to
+TICAM1). None gained a compartment term; all 24 stay at the root. Eight
+changed action: MAP2K1, MAP2K2, MAPK1, MAPK3, PNPO and SCP2 went up to
+KEEP_AS_NON_CORE, and MOTS-c, humanin and NENF went down from ACCEPT to
+KEEP_AS_NON_CORE. The brief carried the batch 3 lessons (source defects,
+proteome rescue, contact sites) plus cautions for mitochondrially encoded
+peptides and for signalling genes recruited to the surface.
+
+| gene | outcome | evidence |
+|---|---|---|
+| MAP2K1 | root; IEA and TAS UNDECIDED to KEEP_AS_NON_CORE | mouse subfractionation puts MEK1/2 in outer membrane and IMS fractions (PMID:18545666); phospho-MEK1/2 in rat brain mitochondria (PMID:15030409); pan antibodies, no ER marker, recruited pool |
+| human/MAP2K2 | root; IEA and TAS UNDECIDED to KEEP_AS_NON_CORE | same evidence as MAP2K1; the antibodies cannot separate MEK2 from MEK1 |
+| MAPK1 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | projection from mouse cardiac IDA (PMID:11884367); ERK1/2 in outer membrane and IMS fractions (PMID:18545666); transient pool |
+| MAPK3 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | ~15% of ERK1 in purified HeLa mitochondria checked for ER markers, leaving on serum stimulation (PMID:19847302) |
+| MBTPS1 | root | fraction separated from ER and Golgi markers (PMID:35362222); proteinase K reading of matrix conflicts with ER/Golgi type I topology, one study |
+| MLDHR | root; rows stay ACCEPT | evidence is on the uORF peptide itself (PMID:33406399), not PTEN; no sub-mitochondrial assay |
+| <gene species="human" symbol="MT-RNR1__A0A0C5B5G6">MT-RNR1 (MOTS-c)</gene> | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE | organelle-level imaging of the endogenous peptide; its activities are nuclear and extracellular |
+| <gene species="human" symbol="MT-RNR2__Q8IVG9">MT-RNR2 (humanin)</gene> | root; 3 IDA and IEA ACCEPT to KEEP_AS_NON_CORE | organelle-level co-staining and uptake; activities are as an extracellular ligand and BAX sequestration in the cytosol |
+| MYL10 | root | IBA rests on a LIFEdb GFP fusion; mouse MitoCarta HDA is independent |
+| NENF | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | fractionation with mito, ER and MAM markers (PMID:31536960); soluble secreted protein, so no MAM membrane term |
+| NLRP3 | root | recruited via MAVS on activation; the authors call it a "mitochondrial/MAM fraction" (PMID:23582325) |
+| PFDN2 | root | UniProt curation from an abstract-only paper that names only URI; deferred; HPA is a second line |
+| PFDN4 | root | same URI paper (PMID:17936702) as PFDN2; deferred to the curator |
+| PNPO | root; IBA and HTP MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | MitoCoP (human, PMID:34800366) and MitoCarta3.0; PAINT seeds are plant and yeast mitochondrial orthologues; matrix vs IMS disagree |
+| PYCARD | root | activation-induced move to perinuclear ER/mitochondria clusters, no MAM marker (PMID:21124315) |
+| RRM2B | root; IEA stays MARK_AS_OVER_ANNOTATED | inferred from mtDNA replication; the enzyme supplies dNTPs from the cytosol (PMID:18997010) |
+| SCP2 | root; IEA, ISS and EXP MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE; source defect | EXP paper PMID:17157249 never mentions mitochondria (full text); pool stands on mouse PMID:26901662 and MitoCarta3.0 |
+| SHMT1 | root; IBA stays MARK_AS_OVER_ANNOTATED; source defect | PAINT node seeded only by SHMT2-type enzymes; recorded as MISSING_NEGATION for GO_CENTRAL |
+| SQSTM1 | root | projection from mouse CCCP colocalisation (PMID:32047033); recruited mitophagy pool |
+| STUB1 | root | stress-induced pool in rat neurons (PMID:29934347); no targeting sequence |
+| SYNE2 | root | immunogold EM paper is abstract-only (PMID:15671068); KASH anchor is in the nuclear envelope and SR |
+| TARDBP | root | protease-protected pool (PMID:28794432, PMID:33031745); matrix (mt-tRNA binding) and inner membrane (TIM22 import) lines disagree |
+| TAX1BP1 | root | virus-induced recruitment to MAVS (PMID:27736772) |
+| TICAM1 | root | poly I:C-induced recruitment of tagged TRIF (PMID:21703541) |
+
+What batch 4 showed:
+
+- **Signalling genes are the bulk of the tail.** Ten of the 24 (the four
+  MAPK-pathway kinases, NLRP3, PYCARD, SQSTM1, STUB1, TAX1BP1 and TICAM1)
+  reach mitochondria on a stimulus. All stay at the
+  root as non-core; none earns an outer-membrane term (TRAF3/BRAF precedent).
+- **Location is not activity.** Rule 2 cuts both ways: MOTS-c, humanin and
+  NENF are shown in mitochondria by direct assays, but their activities are
+  elsewhere, so the organelle is non-core rather than ACCEPT.
+- **Conflicting sub-compartment lines are common.** TARDBP, MAPK3, PNPO and
+  MBTPS1 each have a sub-mitochondrial assay, but the lines point to
+  different compartments, so rule 4 keeps them at the root.
+- **Two more source defects.** SCP2's EXP row cites a peroxisome paper, and
+  SHMT1 inherits an SHMT2-only PAINT node with no NOT on the SHMT1 clade.
+- **`is_active_in`:** four GO:0005739 rows carry it. MYL10, PNPO and
+  SHMT1 (all IBA) have no activity shown in the organelle; TAX1BP1's IDA is
+  defensible for its virus-induced pool. The first three join the
+  open-question worklist.
+- **To follow up:** the URI paper (PMID:17936702) behind PFDN2 and PFDN4 is
+  abstract-only; its full text would settle both. SYNE2's immunogold paper
+  likewise.
 
 ## 2026-10-25 (batch 3: 20 human genes)
 
