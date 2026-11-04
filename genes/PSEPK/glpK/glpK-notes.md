@@ -28,3 +28,7 @@
 - Open question: P. putida has no glucose PTS EIIA-Glc, so E. coli-style
   inducer exclusion cannot operate. Whether FBP inhibits this enzyme, as the
   HAMAP rule predicts, is untested.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- GO:0006072 changed to MODIFY toward GO:0046167, as for the E. coli ortholog. PMID:25827416 full text is now cached (PMC XML).

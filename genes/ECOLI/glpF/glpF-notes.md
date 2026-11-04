@@ -53,3 +53,7 @@ that GlpF performs an E. coli cellular mercury-response process.
 - GO:0071288 cellular response to mercury ion kept as REMOVE; added a
   WRONG_TERM source defect (UNIPROT).
 - Every row now has verbatim supported_by quotes; status set to COMPLETE.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- Cached PMID:11226336 (abstract). Its proteoliposome result (water permeability up to 10-fold over control liposomes) and the UniProt FT MUTAGEN 236..237 PL->FW quote (no detectable water or glycerol permeability; ECO:0000269 PubMed:11226336) now support both NOT-water REMOVE rows. The same weak-but-measurable water conduction is why the PTHR43829 family review withholds water channel activity from bacterial GlpF members.

@@ -46,3 +46,7 @@ The paper explicitly places PP_1076/GlpF in the `glpF-glpK-glpR-glpD` locus and 
   GO:0015254, GO:0005886 and GO:0015793, matching the E. coli review.
 - Added supported_by quotes to every row; ARBA content is not used as evidence.
   Status set to COMPLETE.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- PMID:25827416 full text is now cached; quotes previously attributed to this notes file now cite the PMID directly.

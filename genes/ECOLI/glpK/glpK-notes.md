@@ -69,3 +69,7 @@
   (PMID:11967071, a genome-wide mitomycin C array) should be deleted.
 - Every row now has verbatim supporting quotes. UniProt-derived quotes come
   from CC text carrying ECO:0000269 or from family DR lines.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- GO:0006072 glycerol-3-phosphate metabolic process: KEEP_AS_NON_CORE changed to MODIFY toward GO:0046167 glycerol-3-phosphate biosynthetic process (product side), mirroring the glpD refinement to GO:0046168.

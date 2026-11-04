@@ -80,3 +80,7 @@ actions:
   PTN002279478, with the PAINT IBD for GO:0046168 at PTN008531994).
 - Every row now has supported_by. Status set to COMPLETE. Added one suggested
   experiment.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- PMID:25827416 full text is now cached; quotes previously attributed to this notes file now cite the PMID directly. Added a suggested question recording that in_complex GO:0009331 is homology-based (about 57% identity to E. coli GlpD), with no KT2440 oligomerization assay.
