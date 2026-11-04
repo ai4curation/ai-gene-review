@@ -29,9 +29,12 @@ are absent from the review files, which predate them.
 | Batch 3 (15 genes) | 24 | 15 | 8 | 0 | 1 | 0 | 0 |
 | Total | 167 | 93 | 41 | 17 | 12 | 1 | 3 |
 
-Batch 3 is the only batch with no `NON_CORE` and no `REMOVE` row, and the
-only one chosen by screen rather than by CACAO row count, so its rates are
-not comparable with batches 1-2 on acceptance alone.
+Batch 3 is the only batch with no `NON_CORE` and no `REMOVE` CACAO row, and
+the only one chosen by screen rather than by CACAO row count, so its rates are
+not comparable with batches 1-2 on acceptance alone. The `REMOVE` column is
+scoped to CACAO rows like the rest of this table: batch 3 does carry 6
+`REMOVE` rows among its 101 review rows, all of them on IEA or InterPro2GO
+annotations rather than CACAO ones.
 
 Batch 1 accepted 42% of rows as written, batch 2 **67%**. The likeliest cause
 is literature depth rather than student quality: batch-1 genes (Ebola, RVFV,
@@ -637,7 +640,7 @@ pipelines:
   lysK's `Amidase_2`, which is legitimately shared with bacterial
   autolysins.
 
-### Two things batch 3 says the project should change
+### Three things batch 3 says the project should change
 
 1. **`SourceResourceEnum` has no `INTERPRO` value**, so 7 of batch 3's 29
    defects are filed as `OTHER` with the resource named in the explanation,
@@ -656,7 +659,14 @@ pipelines:
    probably `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change
    touching existing reviews, so it is recorded here rather than done in
    passing.
-2. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
+2. **`SourceDefectTypeEnum` cannot express the same assertion entered
+   twice.** It has `DUPLICATE_RECORD` for a merged source *record*, but
+   A0A220GHA5's case is one claim re-entered three times from one paper with
+   one evidence code, which has to be described in prose on a
+   `WRONG_QUALIFIER` entry and is therefore invisible to
+   `just export-source-defects` in exactly the way the `INTERPRO` gap is.
+   Raised on review of PR #5956; the two gaps are one schema conversation.
+3. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
    *child* of KW-0929 Antimicrobial. The XV and lysK reviews and the
    upstream report all name it wrongly. This strengthens the report: the
    mapping cannot be excused as a broad keyword that also covers host
@@ -703,15 +713,18 @@ route to distinguishing a student's reasoning from the annotation it
 produced, which is a real limit on what this project can conclude about the
 programme as opposed to about its output.
 
-**A hedged qualifier is not automatically a defect.** All ten of phi29's
-2025-dated CACAO rows use `acts_upstream_of_or_within_positive_effect`, where
-the programme's 2012-2017 rows use `involved_in`, `enables` or `part_of`, so
-screen 3's shape is a campaign-wide habit rather than a per-row judgement. On
-phi29 gene 17 the hedge turned out to fit the evidence better than
-`involved_in` would have: the support is a bulk nonsense-mutant screen, and
-the modern literature shows much of the sus17 replication defect is indirect.
-The taxonomy therefore needs to separate a regressed qualifier from an honest
-one, and screen-3 hits have to be judged on the evidence behind the row.
+**A hedged qualifier is not automatically a defect.** All twelve of phi29's
+2025-dated CACAO rows use `acts_upstream_of_or_within_positive_effect` —
+gene 1 once, gene 2 three times, gene 3 four times, and genes 4, 6, 15 and 17
+once each — while the only pre-2025 CACAO rows on those genes, gene 15's 2012
+row and gene 6's four 2017 rows, use `enables`, `part_of` and `involved_in`.
+So the flip is total across the 2025 cohort, which makes it a campaign-wide
+habit rather than a per-row judgement. On phi29 gene 17 the hedge nonetheless
+turned out to fit the evidence better than `involved_in` would have: the
+support is a bulk nonsense-mutant screen, and the modern literature shows much
+of the *sus17* replication defect is indirect. The taxonomy therefore needs to
+separate a regressed qualifier from an honest one, and screen-3 hits have to
+be judged on the evidence behind the row.
 
 ## 2026-10-29 (session 2: batch 2)
 

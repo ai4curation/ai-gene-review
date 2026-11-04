@@ -225,8 +225,9 @@ involved in phage-specific DNA synthesis (Fig. 13)."
 
 No lysis-cistron sentence was recorded from that copy, and it could not be
 re-obtained for this gene. Re-checked on 2026-11-04, including the
-Unpaywall-listed "free" URL `onlinelibrary.wiley.com/doi/pdfdirect/10.1111/
-j.1432-1033.1976.tb10512.x`, which returns HTTP 403 like the article, ePDF and
+Unpaywall-listed "free" URL
+`onlinelibrary.wiley.com/doi/pdfdirect/10.1111/j.1432-1033.1976.tb10512.x`,
+which returns HTTP 403 like the article, ePDF and
 DOI URLs; the DIGITAL.CSIC copy (hdl 10261/38080) sits behind a bot check that
 asks automated clients not to fetch it, which was not circumvented.
 
