@@ -87,3 +87,20 @@ binds directly to GCase"; PMID:24162852 "LIMP-2 shows a helical bundle where
 beta-glucocerebrosidase binds"], but the more meaningful curation target for the
 LIMP-2 interaction is scavenger receptor binding / lysosomal targeting rather than
 generic protein binding.
+
+
+## 2026-11-04 — Enzyme chemistry, cellular consequences and product uncertainty
+
+The principal function is acid glucosylceramide hydrolysis at the lysosomal lumenal lipid surface. Saposin-assisted substrate access and LIMP-2-mediated delivery explain the associated membrane and trafficking evidence without assigning GBA1 a transporter role. Ceramide salvage includes this cleavage, followed by reactions performed by other enzymes. [PMID:9201993](https://pubmed.ncbi.nlm.nih.gov/9201993/); [PMID:19279011](https://pubmed.ncbi.nlm.nih.gov/19279011/); [PMID:18022370](https://pubmed.ncbi.nlm.nih.gov/18022370/).
+
+Measured secondary glycoside chemistry is retained with substrate and assay limits. Its physiological contribution need not equal that of GlcCer turnover, and sterol-glycoside synthesis retains an explicit ontology definition/hierarchy question. [PMID:32144204](https://pubmed.ncbi.nlm.nih.gov/32144204/); [PMID:33361282](https://pubmed.ncbi.nlm.nih.gov/33361282/); [PMID:39395789](https://pubmed.ncbi.nlm.nih.gov/39395789/).
+
+Positive protein-clearance and organelle phenotypes do not by themselves identify the step by which GBA1 affects those processes. The direct protein-catabolism claims remain over-annotated, while regulatory effects are retained. The twin-derived neuronal firing attribution remains uncertain because electrical comparisons and rescue endpoints differ. Both original NOT contexts retain their experimental scope. [PMID:26392287](https://pubmed.ncbi.nlm.nih.gov/26392287/); [PMID:27378698](https://pubmed.ncbi.nlm.nih.gov/27378698/); [PMID:25456120](https://pubmed.ncbi.nlm.nih.gov/25456120/).
+
+All five official products remain represented. The early initiation comparison supports active long and short forms; the 263-residue product's pseudogene-linked citation and sequence differences require genomic reconciliation, not silent deletion or remapping. Product 4/5 functions remain unknown. [PMID:3687939](https://pubmed.ncbi.nlm.nih.gov/3687939/); [PMID:8294033](https://pubmed.ncbi.nlm.nih.gov/8294033/).
+
+Detailed source/construct limits and the vesicle-fraction target row are centralized in [the source guide](GBA1-source-guide.md). The prior GBA/GBA1 reviews, both journals and quotation associations remain preserved. Existing GlcCer catabolism plus location makes the old compartment-specific NTR unnecessary; the old lysosome-reformation NTR is retained historically, with mechanism now expressed as a research question. No new annotation is proposed.
+
+### Neuronal inhibition study and correction
+
+Strong GCase inhibition can coexist with limited alpha-synuclein or proteolysis effects under the tested neuronal conditions. This does not negate the enzyme reaction or establish universal absence of downstream effects. The study has a figure-presentation correction, whose scope is described in the source guide. [PMID:23580063](https://pubmed.ncbi.nlm.nih.gov/23580063/); [2021 correction](https://doi.org/10.1371/journal.pone.0252975).
