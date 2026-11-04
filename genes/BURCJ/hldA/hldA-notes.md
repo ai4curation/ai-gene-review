@@ -10,4 +10,30 @@ The split HldA/HldC system is distinguished from fused HldE. PANTHER labels cont
 
 Default Falcon research and perplexity-lite fallback were attempted concurrently with publication caching. Falcon returned HTTP403 and the fallback failed authentication/quota; no provider report was authored manually. Manual source review underlies these decisions. FEBA fetch was attempted but no local or reachable source was available for this organism.
 
-PMID:23256532 directly supports kinase chemistry and the homodimeric structure. Its full text states: “HldA and HldC are homologous to the N- and the C-terminal domains of HldE, respectively.” The cytosol annotation remains UNDECIDED because neither structural nor complementation evidence directly localizes the native protein. Two electronic nucleotidyltransferase claims are contradicted by the single kinase architecture.
+PMID:23256532 directly supports kinase chemistry and the homodimeric structure. Its full text states: “HldA and HldC are homologous to the N- and the C-terminal domains of HldE, respectively.” The cytosol annotation was UNDECIDED in this round because neither structural nor complementation evidence directly localizes the native protein; it is now ACCEPT (see the 2026-11-02 entry). Two electronic nucleotidyltransferase claims are contradicted by the single kinase architecture.
+
+## 2026-11-02 — cytosol resolved to ACCEPT
+
+GO:0005829 moves from `UNDECIDED` to `ACCEPT`, decided by the new `PTHR46969` family
+review rather than by any new experiment on J2315 HldA.
+
+The descent step is now stated explicitly in the review, because it is load-bearing.
+The GOA row is a `GO_REF:0000118` TreeGrafter assignment whose with/from is the graft
+node `PTN002931072`, not the PAINT node; the cytosol IBD for this family sits at
+`PTN000062036`. TreeGrafter transfers terms from PAINT-annotated ancestors, so the row
+asserts that `PTN002931072` lies at or below `PTN000062036`. That ancestry follows
+from the mechanism and is **not** checkable in the committed PAINT slice, which
+records IBD rows but no tree topology — the one unverified link in the argument.
+
+Granting it, the claim inherits experimental grounding, because `PTN000062036` is
+seeded by E. coli HldE itself, whose cytosol rows are IDA against the K-12
+biochemical-fractionation proteome [PMID:15911532] and the cytosolic abundance
+proteome [PMID:18304323]. Neither paper names HldE in the text available here, so
+they establish the experiments behind those IDA rows rather than target-specific
+peptide evidence; the per-protein assignment is the curator's. The row previously
+carried no `supported_by` at all and now cites both papers and the PAINT row.
+
+Independently of the propagation, HldA was purified and crystallized as a soluble
+enzyme and acts on cytoplasmic sugar phosphates, and no competing compartment is
+proposed for any member of the family. That native J2315 HldA was never localized
+directly limits the strength of the evidence, not the correctness of the compartment.
