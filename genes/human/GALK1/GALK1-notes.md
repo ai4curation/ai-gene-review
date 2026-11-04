@@ -49,3 +49,26 @@ of the Leloir pathway (first *committed* / phosphorylation step of galactose cat
 - carbohydrate phosphorylation GO:0046835 (IEA) -> KEEP_AS_NON_CORE (correct but generic BP subsumed by galactose catabolism).
 - protein binding GO:0005515 (IPI PMID:32296183, HuRI Y2H, PNRC2/Q9NPJ4) -> REMOVE (uninformative bare term; single HT Y2H interactor, no functional meaning for a soluble metabolic enzyme).
 </content>
+
+
+## 2026-11-02: current-context and primary-source reassessment
+
+The current official record retains human P51570/GALK1, 392 residues and no declared alternative products. All 26 current contexts are preserved; the old 27th object was an authored NEW ancestor of the already present Leloir-pathway term and is now retired as redundant, with its entire object and all 23 old quotation associations archived. The original membrane IDA is NOT|located_in and remains negated; a preliminary private shorthand calling it positive was corrected before manual decisions.
+
+The core remains ATP-dependent galactose phosphorylation in cytosol (PMID:7542884, PMID:12694189). Original human kinetics support ATP-first binding. NADH belongs to the coupled reporter assay. Selected original PMID:14596685 Results and Methods show robust 2-deoxygalactose activity in vitro; no physiological role is inferred. The human structure contains a nonhydrolysable ATP analogue and an engineered affinity-tag insertion (PMID:15590630). Crystal Cys391 dimers do not settle physiological assembly, and the earlier human study reports monomeric gel filtration with data not shown. The prior journal's categorical homodimer and absolute-specificity language is not carried forward.
+
+Original PMID:8908517 Results/Figure 3 caption and Methods support soluble, non-microsomal GALK1 in the tested translation system. This does not refute every peripheral association in other cells. The independent YTS positive membrane context remains unresolved because its target table is unrecovered (PMID:19946888). Original urinary-exosome Table 1 and the authentic expanded table positively name GALK1; the association is retained as non-core, with the urine atom and explicit one-peptide/fractionation limits (PMID:19056867). The HuRI pair with Q9NPJ4 is verified from three original assay records; removing generic protein binding does not deny that observation (PMID:32296183).
+
+Actual PAINT origins at AN0/PTN000048421 descend to the exact human AN489/PTN002470832 sequence, with no target-lineage activity loss. Typed ontology paths support the kinase, metabolic-process and cytoplasm refinements. Carbohydrate phosphorylation remains a true original process because no hierarchical path supports replacing it by the separately represented Leloir pathway. Official Reactome normal and mutant models are kept distinct, especially the FailedReaction 5610026 versus normalReaction 70355.
+
+All 21 PMID assessments distinguish authentic abstract scope, selected full original reading and bibliography-only sequence/proteomics provenance. The compact source guide and archive expose exact original contexts, target rows and source locators. Private four-excerpt checks match retained caches; genuine native acquisition, source partition/title/access reconciliation, urine-atom restoration and target validation remain pending. No canonical GALK1 or normal source file has been written at this stage.
+
+## 2026-11-02: genuine native reconciliation
+
+The actual no-seed refresh preserves the inherited review while reconciling all 26 raw contexts, all 16 export columns and the genuine private 26-row seed. Canonical P51570 remains 392 residues, with no declared alternative products. The NOT-membrane context remains negated; the original urine atom is restored at native row 25 with the schema-correct flat BFO part_of projection. Only the separately archived redundant NEW is retired.
+
+All 28 sources are present: 17 unchanged main sources, the exact published GALE R-HSA-70370 source and ten missing-only acquisitions. All 25 normal reference titles and four excerpts match their actual caches. New native PMID:10521295 full text was inspected selectively for mapping, variant and patient-activity context; no purified-mutant assay is inferred. Full-cache availability for the chromosome/proteome bibliography does not imply that target-specific tables were inspected. Existing external-original reading remains identified separately from normal abstract caches. Native EDIT history and targeted checks follow.
+
+## 2026-11-02: targeted checks and finalization
+
+Target validation passed with four advisories; strict GOA matching passed for all 26 original contexts, and the computed status is DRAFT. No NEW annotation was added. The advisories concern the current Leloir label versus an older cache label, optional propagation metadata, the differently signed membrane contexts, and one accepted row without a direct excerpt. They do not change the retained source-specific decisions. The initial INITIALIZED-versus-DRAFT status diagnostic is preserved and resolved by recording the computed status. All 28 scientific source files and the generated term cache remain unchanged after acquisition. Native EDIT history, private rendering/link checks and scoped whitespace checks accompany this candidate.
