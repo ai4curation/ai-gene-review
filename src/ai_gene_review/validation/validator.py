@@ -34,6 +34,7 @@ from ai_gene_review.validation.action_consistency import (
     go_ancestors,
 )
 from ai_gene_review.validation.nd_policy import check_nd_policy
+from ai_gene_review.validation.paint_loss_check import check_paint_losses, has_paint_losses
 from ai_gene_review.validation.decomposition import (
     check_decomposition,
     go_is_a_ancestors,
@@ -510,6 +511,12 @@ def check_best_practices_rules(
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )
+    if has_paint_losses(data):
+        from ai_gene_review.validation.module_validator import load_paint_index
+
+        check_paint_losses(
+            data, report, load_paint_index(get_project_root() / "interpro" / "panther")
+        )
     if yaml_file is not None:
         # Source-level check: a folded scalar turns a newline into a space, so a
         # hyphenated compound split across lines renders as two words. Invisible to
@@ -1016,14 +1023,20 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
-                    # A core function with a BIOLOGY gap on the MF aspect may be a contested
-                    # activity deliberately left out of the NEW rows. The gap need not be about
-                    # this term, so keep the issue but lower it to INFO and drop the NEW advice.
+                    # A BIOLOGY gap on the MF aspect may mark a contested activity deliberately
+                    # left out of the NEW rows. Read the core function's own gaps, and the
+                    # top-level gaps only when this is the review's only core function. The
+                    # gap need not be about this term, so keep the issue but lower it to
+                    # INFO and drop the NEW advice.
+                    candidate_gaps = list(core_func.get("knowledge_gaps") or [])
+                    if len(data["core_functions"]) == 1:
+                        candidate_gaps += data.get("knowledge_gaps") or []
                     has_mf_gap = any(
                         isinstance(gap, dict)
-                        and "BIOLOGY" in (gap.get("gap_kind") or [])
+                        and isinstance(gap.get("gap_kind"), list)
+                        and "BIOLOGY" in gap["gap_kind"]
                         and gap.get("dark_aspect") == "MF_DARK"
-                        for gap in core_func.get("knowledge_gaps") or []
+                        for gap in candidate_gaps
                     )
                     if not is_from_annotations and has_support:
                         report.add_issue(
@@ -1031,7 +1044,7 @@ def check_best_practices_rules(
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
                             path=f"core_functions[{i}].molecular_function",
                             suggestion=(
-                                "The core function has an MF_DARK knowledge gap; if that gap is about this "
+                                "The review has an MF_DARK knowledge gap; if that gap is about this "
                                 "activity, leaving it out of NEW rows is intended"
                                 if has_mf_gap
                                 else "Consider adding this term to existing_annotations with action: NEW if it's a novel annotation"

@@ -41,10 +41,15 @@ from ai_gene_review.etl.descriptions import (
     ORGANISM_CONFIG,
     extract_uniprot_id,
     extract_mod_xref,
+    mod_curie,
     fetch_alliance_description,
     looks_automated,
 )
-from ai_gene_review.mod_providers import MOD_PROVIDER, is_mod_description_file  # noqa: F401  (re-export)
+from ai_gene_review.mod_providers import (  # noqa: F401  (re-export)
+    MOD_PROVIDER,
+    UNUSED_MOD_NOTES,
+    is_mod_description_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +73,7 @@ def uniprot_gene_names(uniprot_data: str) -> set[str]:
 _GREEK = {
     "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon", "ζ": "zeta",
     "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa", "λ": "lambda", "μ": "mu",
-    "ν": "nu", "ξ": "xi", "ο": "omicron", "π": "pi", "ρ": "rho", "σ": "sigma",
+    "ν": "nu", "ξ": "xi", "ο": "omicron", "π": "pi", "ρ": "rho", "σ": "sigma", "ς": "sigma",
     "τ": "tau", "υ": "upsilon", "φ": "phi", "χ": "chi", "ψ": "psi", "ω": "omega",
 }
 
@@ -78,6 +83,8 @@ def _fold_symbol(name: str) -> str:
 
     >>> _fold_symbol("α-Man-Ia")
     'alpha-man-ia'
+    >>> _fold_symbol("Ψ-Σ")
+    'psi-sigma'
     >>> _fold_symbol("Hsp70Aa")
     'hsp70aa'
     """
@@ -176,6 +183,8 @@ def emit_mod_deep_research(
         return "skipped", None, f"no MOD provider configured for organism '{organism}'"
     if organism == "human":
         return "skipped", None, "human is out of scope (HGNC is not a MOD description source)"
+    if config["mod"] in UNUSED_MOD_NOTES:
+        return "skipped", None, f"not used: {UNUSED_MOD_NOTES[config['mod']]} (see projects/MOD_DESCRIPTIONS.md)"
     slug, mod_name = MOD_PROVIDER[config["mod"]]
 
     gene_dir = base / "genes" / organism / gene
@@ -186,7 +195,7 @@ def emit_mod_deep_research(
     xref = extract_mod_xref(uniprot_data, config)
     if not xref:
         return "skipped", None, f"no {config['uniprot_xref']} or AGR cross-reference in UniProt entry"
-    mod_id = xref if xref.startswith(f"{config['mod']}:") else f"{config['mod']}:{xref}"
+    mod_id = mod_curie(config, xref)
 
     data = fetch_alliance_description(mod_id)
     text = data.get("curated_synopsis")

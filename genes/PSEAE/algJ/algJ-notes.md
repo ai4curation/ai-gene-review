@@ -27,3 +27,7 @@ Corrected the PMID:37797696 construct attribution: the negative surrogate acetyl
 ## 2026-10-26 cross-species assay consistency
 
 PMID:25165982 directly assays both PaAlgJ79–379 and KT2440 PpAlgJ75–370 with comparable surrogate-substrate kinetics. Both reviews now retain NEW GO:0008126 for this measured capacity, while neither uses the assay as its core physiological MF. Native relay donor/acceptor chemistry remains unresolved; process and localization cores are retained. Original GOA rows are unchanged.
+
+## Deep research availability, 2026-11-02
+
+No provider deep-research report exists for this gene. No provider run was attempted for this gene, either in the original review (which, as recorded above, did not retry the outage beyond algI) or during the 2026-11-02 module audit, whose only retry was `just deep-research-falcon PSEAE algI` (403 authentication failure). For the corresponding KT2440 provider failures see genes/PSEPK/algI/algI-notes.md. No deep-research file was written by hand; the review rests on cached primary publications, the UniProt record and the existing annotation reviews.

@@ -84,3 +84,23 @@ The duplicate GO:0035094 response to nicotine row was kept as non-core,
 matching the already reviewed mouse/rat-supported nicotine response rows:
 nicotine is an upstream stimulus context that can recruit ERK signaling, not
 MAPK1's primary conserved function.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000107, Ensembl projection from mouse Mapk1 P63085) and TAS (PMID:19565474),
+both located_in, both MARK_AS_OVER_ANNOTATED before. No sub-compartment rows.
+
+Checks:
+- QuickGO (2026-11-03): mouse Mapk1 mitochondrion rows are MGI IDA PMID:11884367 and UniProt TAS PMID:19565474.
+  The IDA is Baines et al. 2002, abstract-only [PMID:11884367 "MAPK co-localized with cardiac mitochondria"];
+  projection not circular, ER control of the fraction not checkable.
+- TAS review PMID:19565474 is abstract-only and does not mention mitochondria.
+- Primary studies: PMID:18545666 (full text, mouse LP07) [PMID:18545666 "caused ERK2 retention in mitochondria"],
+  subfractionation to OMM and IMS (no ER marker); PMID:15030409 (rat brain, abstract-only) [PMID:15030409 "outer
+  membrane/intermembrane space fraction"]; PMID:19847302 (HeLa, ERK1, full text) with ER contamination indexes
+  [PMID:19847302 "5′ nucleotidase and glucose-6-phosphatase were determined in mitochondria from HeLa cells"].
+
+Outcome: both rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (minor stimulus-dependent pool; the earlier
+action read the term as a core-location claim). Stays at root: transient trafficking (TRAF3/BRAF precedent), no
+targeting signal, OMM vs IMS split, antibodies do not separate ERK1/ERK2. References added: PMID:11884367,
+PMID:18545666, PMID:15030409, PMID:19847302.
