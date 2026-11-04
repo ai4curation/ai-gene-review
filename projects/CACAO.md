@@ -499,10 +499,20 @@ professional MOD comparator on the same genes.
 
 ### Batch 3 results: what the screens actually caught
 
-24 CACAO rows judged across the 15 genes: **15 ACCEPT, 7 MODIFY, 1
-KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED, and no REMOVE or UNDECIDED at
-all**. 101 review rows in total, 27 `source_defects`, 6 `proposed_new_terms`.
-Of the 24 CACAO rows, 14 carry the hedged qualifier.
+24 CACAO rows judged across the 15 genes: **15 ACCEPT, 8 MODIFY,
+1 MARK_AS_OVER_ANNOTATED, and no REMOVE, UNDECIDED or KEEP_AS_NON_CORE at
+all**. 101 review rows in total — 39 ACCEPT, 35 MODIFY, 12 NEW, 6
+TOO_GENERAL, 6 REMOVE, 3 MARK_AS_OVER_ANNOTATED and, again, no
+KEEP_AS_NON_CORE anywhere — plus 29 `source_defects` and 6
+`proposed_new_terms`. Of the 24 CACAO rows, 14 carry the hedged qualifier.
+
+Two counting notes, because the batch's argument is that these figures are
+reproducible. The 24 counts GOA rows, not review entries: DMS3-25's two
+`GO:0051607` rows share a term, evidence code and reference and differ only in
+ECO subtype, so one review entry judges both, and counting entries gives 23.
+And batch 3 ends with **zero `KEEP_AS_NON_CORE` rows** — actC's `GO:0043937`
+was the last one and became a `MODIFY` on review of PR #5956, which is a more
+informative result than the single row the earlier tally reported.
 
 Screen by screen:
 
@@ -618,13 +628,18 @@ pipelines:
 
 ### Two things batch 3 says the project should change
 
-1. **`SourceResourceEnum` has no `INTERPRO` value**, so 7 of batch 3's 27
+1. **`SourceResourceEnum` has no `INTERPRO` value**, so 7 of batch 3's 29
    defects are filed as `OTHER` with the resource named in the explanation,
    as that value instructs, and all 7 are genuinely InterPro2GO or PANTHER
-   (the other 20 split 15 `CACAO` and 5 `UNIPROT`). An earlier count of 13
-   here, and 14 in the batch-3 PR, was wrong: it included seven CACAO-row
-   defects that should have carried the existing `CACAO` value and now do, a
-   review catch on PR #5956. InterPro2GO is now the single largest *external*
+   (the other 22 split 15 `CACAO` and 7 `UNIPROT`). Two earlier counts here
+   were wrong, both caught on review of PR #5956. The `OTHER` figure of 13,
+   and 14 in that PR's description, included seven CACAO-row defects that
+   should have carried the existing `CACAO` value and now do. And the total
+   of 27 missed two `source_defects` that sit on
+   `references[].reference_review` rather than on an annotation review —
+   DMS3-30's UniProt `MISSING_STATEMENT` and bchJ's `OUTDATED_STATEMENT` —
+   so any count of this corpus has to walk the whole document, not just
+   `existing_annotations`. InterPro2GO is now the single largest *external*
    source of defects this project has found, so `just export-source-defects`
    cannot produce the report that matters most. Adding `INTERPRO` (and
    probably `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change
