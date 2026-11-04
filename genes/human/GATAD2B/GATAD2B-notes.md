@@ -41,3 +41,7 @@ Reinspection of PMID:11756549 and PMID:16415179 supports corepressor recruitment
 ## 2026-11-04 — Follow-up native outcomes
 
 Target validation passed without annotation advisories, and strict GOA matching passed for all 74 original contexts plus the declared NEW row. Computed review status is COMPLETE; seven source-specific UNDECIDED judgments remain. The prior DRAFT-to-COMPLETE report-only diagnostic is retained. The independently supported NEW molecular-function row resolves the former core-coverage advisory; it does not change the original 74 actions. Genuine EDIT history, private rendering/link checks and scoped authored whitespace accompany this amendment. All 74 source objects and the term cache are unchanged. Publication and renewed remote review/build are separate from these local results.
+
+## 2026-11-04 — DNA-recognition source distinction
+
+Re-read the full PMID:11756549 Discussion and separated its canonical-GATA comparison from the non-GATA p66-family inference. The source guide centralizes this distinction and the human construct linkage. Positive DNA-row support now uses the actual ancestral evidence, and the expert question asks whether direct human recognition occurs. All actions remain unchanged. COMPLETE records completion of manual adjudication, including seven explicit UNDECIDED judgments; it does not mean that every biological uncertainty is resolved. Earlier journal entries remain historical.
