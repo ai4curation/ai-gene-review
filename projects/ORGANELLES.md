@@ -320,9 +320,12 @@ What ER batch 2 showed:
   has only a predicted TM and an overexpression assay, so it stays at the root.
 - **ER does not mean "secretory".** HMGB1 is secreted without passing through
   the ER; its pool is recruited by a viral protein.
-- **Unreadable sources mean UNDECIDED.** KEAP1, DLG4 and CAVIN1 rest on
-  ortholog papers whose full text could not be retrieved; each reason says
-  which result would settle it.
+- **Unreadable sources: defer to a curated human line, otherwise UNDECIDED.**
+  When the human UniProt entry carries a curated `ECO:0000269` ER line from a
+  paper we cannot read, the row stays KEEP_AS_NON_CORE on curator deference
+  (HADHB, IFIT2). When the row is only an ortholog projection whose donor
+  paper also cannot be read, it is UNDECIDED (KEAP1, DLG4, CAVIN1). Either
+  way the reason says which result would settle it.
 - **`is_active_in`:** one ER row carries it (KCNRG IBA), defensible because
   the channel-retention activity is proposed to act at the ER.
 - **Duplicate folder.** `genes/human/GBA` duplicates `genes/human/GBA1`
