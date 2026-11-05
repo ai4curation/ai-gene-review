@@ -107,3 +107,11 @@ Source access, construct distinctions and the earlier review's preserved evidenc
 ### Structural and variant assay scope
 
 The regulator complex combines human pancreatic GCK with rat GKRP; fructose 6-phosphate binds GKRP and favors the inhibited complex. Nearby GCK substitutions can produce opposite biochemical and glycemic effects, but modeled secretion thresholds do not fully explain clinical severity. These studies strengthen regulator and catalytic mechanisms without assigning every construct to a natural product. [PMID:23957911](https://pubmed.ncbi.nlm.nih.gov/23957911/); [PMID:19884385](https://pubmed.ncbi.nlm.nih.gov/19884385/).
+
+## 2026-11-05 sugar kinetics and functional scope
+
+The curated UniProt kinetics explicitly attributed to PMID:7742312 confirm efficient mannose turnover alongside glucose, and lower fructose catalytic efficiency under the reported conditions. The original kinetic tables remain unaccessed, but the numerical record is available and used; physiological GCK-dependent alternative-sugar flux remains a separate uncertainty. The values and conditions are centralized in [GCK-source-guide.md](GCK-source-guide.md).
+
+Glucose sensing remains a defining core property of the same concentration-responsive catalytic mechanism. The real Gck-dependent calcium phenotype supports upstream coupling, while assigning calcium import itself exceeds the demonstrated role (PMID:18477811). Broad hexokinase activity remains true through its accepted glucokinase child; this does not assert activity on every hexose or deny the measured alternative reactions. Earlier journal text remains historical.
+
+The mitochondrial-side term permits peripheral association rather than requiring the HK1/HK2 amino-terminal binding mechanism. The actual ancestral placement and mouse BAD-associated GCK complex remain compatible with a minor mitochondrial pool; neither establishes direct human membrane topology or GCK–VDAC binding (PMID:12931191; PMID:16542652). The newly assessed study is abstract-only in the normal cache, and its original full text was not recovered.
