@@ -13,3 +13,9 @@ Neuropathy genetics supplies disease context without converting every clinical c
 Partner-class binding capacity and native encounter are separate questions. The positive screen pairs remain, with explicit membrane-access limits for CLPP and compartment limits for selected other partners. The [selected source evidence](GDAP1-external-evidence.md#locally-checkable-partner-class-excerpts) now supplies compact curated or primary anchors; primary TAGLN2 and BOK studies replace the earlier partner-GO rationale without assigning their activities to GDAP1.
 
 The mitochondrial-fission core now uses only the mitochondrial outer membrane. Positive peroxisomal and liposome-deformation evidence remains in the [membrane source discussion](GDAP1-external-evidence.md#membrane-dynamics), with unresolved wild-type construct identity and translation-mixture limits. Three broad location terms are refined to established compartments. Native catalytic chemistry and endogenous ligand identity remain a biological question, distinct from those source-access limits.
+
+## 2026-11-05 — evidence attribution and peroxisomal provenance
+
+Partner-class source attribution is explicit in the [excerpt ledger](GDAP1-source-evidence.yaml): curated evidence arrays, absent per-field grades and selected primary-paper readings remain distinct. Those grades do not establish physiological contact with GDAP1.
+
+Cellular peroxisomal-fission evidence is positive [PMID:23628762](https://pubmed.ncbi.nlm.nih.gov/23628762/). The [provenance discussion](GDAP1-external-evidence.md#peroxisomal-role-and-annotation-provenance) supersedes the earlier combined caveat: translation mixture limits the separate membrane-bending experiment, while the new human-annotation decision remains deferred.
