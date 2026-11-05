@@ -84,3 +84,10 @@ HGNC:4241. 699 aa. EC 2.6.1.16. Reviewed from local files only (no deep-research
   but this is an indirect downstream/By-similarity role, not a core function of the enzyme;
   KEEP_AS_NON_CORE.
 - GO:0070062 extracellular exosome (HDA): KEEP_AS_NON_CORE.
+
+
+## 2026-11-05 — catalytic and context synthesis
+
+GFPT1 directly supplies the entry reaction for UDP-N-acetylglucosamine synthesis. The source-specific assay and natural-product distinctions are centralized in [selected evidence](GFPT1-external-evidence.md), with one catalytic core in the [review](GFPT1-ai-review.yaml).
+
+Clock regulation remains unresolved at the GFPT1-specific endpoint. Positive EV occurrence is retained separately from the conflicting literal pituitary-cell extension; the cell identifier has not been silently repaired. These contextual findings do not add a clock or extracellular catalytic core. Earlier decisions and quotation associations remain intact as historical material in the [archive](GFPT1-context-archive.json).
