@@ -15,3 +15,9 @@ Actual Falcon research was attempted with `just deep-research-falcon BACSU gdpP`
 The core is c-di-AMP hydrolysis, not its indirect envelope or stress phenotypes. A generic DHHA1-domain mapping does not establish a distinct nucleic-acid-binding role. Heme inhibition is characterized for Bacillus/Geobacillus proteins; ATPase activity is not generalized to S. aureus. pApA feedback was established for S. aureus GdpP and is not transferred to PgpH.
 
 Module membership: `MODULE:bacterial_c_di_amp_signaling`, `gdpp_pde_activity`.
+
+## 2026-11-05 — PR #5997 evidence follow-up
+
+The hydrolysis evidence supports the catalytic assignment: [PMID:19901023 "The DHH/DHHA1 domain hydrolyzes c-di-AMP and c-di-GMP to generate the linear dinucleotides 5'-pApA and 5'-pGpG."]
+
+Removed the hydrolysis quotation from the nucleic-acid-binding over-annotation judgment. The judgment assesses unsupported extension from DHHA1-domain membership; it is not a negative RNA-binding assay. The catalytic evidence remains on the catalytic assertion and core function.

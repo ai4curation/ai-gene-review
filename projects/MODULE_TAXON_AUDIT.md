@@ -458,3 +458,7 @@ Full just validate-all completed with exit 0 across 10300 reviews: zero errors, 
 ## 2026-11-04 — c-di-AMP PR #5997 published
 
 PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw sources; zero NEW and two explicit CpaA UNDECIDED claims. Full validation passed on 10300 reviews. Rebase onto f2068f974a preserved all 143 scoped blobs and 65 excluded local files; incoming GCK validation passed. Independent review, CI and actual merge remain pending.
+
+## 2026-11-04 — c-di-AMP review findings addressed
+
+PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.

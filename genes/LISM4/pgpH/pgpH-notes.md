@@ -8,6 +8,12 @@ Actual Falcon research was attempted with `just deep-research-falcon LISM4 pgpH`
 
 - [PMID:25583510 An HD-domain phosphodiesterase mediates cooperative hydrolysis of c-di-AMP to affect bacterial growth and virulence.] PubMed identity verified and cached full text examined, including HD-domain structural/biochemical evidence and 10403S genetic experiments.
 
-The core is c-di-AMP hydrolysis, not its indirect envelope or stress phenotypes. A generic DHHA1-domain mapping does not establish a distinct nucleic-acid-binding role. Heme inhibition is characterized for Bacillus/Geobacillus proteins; ATPase activity is not generalized to S. aureus. pApA feedback was established for S. aureus GdpP and is not transferred to PgpH.
+The core is c-di-AMP hydrolysis, not its indirect envelope or stress phenotypes. PgpH uses an HD domain rather than the GdpP DHH/DHHA1 architecture. Its ppGpp inhibition is supported by PMID:25583510; pApA feedback established for S. aureus GdpP is not transferred to PgpH.
 
 Module membership: `MODULE:bacterial_c_di_amp_signaling`, `pgph_pde_activity`.
+
+## 2026-11-05 — PR #5997 evidence follow-up
+
+The hydrolysis evidence supports the catalytic assignment: [PMID:25583510 "The PgpH HD domain bound c-di-AMP with a high affinity and hydrolyzed it into 5′-pApA."]
+
+Removed unrelated DHHA1 prose from these notes and retained the distinction between PgpH-specific evidence and GdpP regulation.

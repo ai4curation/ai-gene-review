@@ -18,11 +18,15 @@ def walk(x):
 
 def main():
     baseline=yaml.safe_load((DATA/'seed-baseline.yaml').read_text())
-    members={};reviews={};actions=Counter();row_count=0;raw_count=0
+    members={};reviews={};actions=Counter();row_count=0;raw_count=0;new_rows=[]
     for r in baseline['members']:
         p=ROOT/r['review_path'];d=yaml.safe_load(p.read_text());acc=r['accession'];reviews[acc]=p
-        original=r['original_annotations'];current=[{k:v for k,v in a.items() if k!='review'} for a in d.get('existing_annotations',[])]
+        original=r['original_annotations'];current=[{k:v for k,v in a.items() if k!='review'} for a in d.get('existing_annotations',[]) if a['review']['action']!='NEW']
         assert current==original,(p,'machine annotation payload changed')
+        for a in d.get('existing_annotations',[]):
+            if a['review']['action']=='NEW':
+                assert a['review'].get('supported_by'),(p,'new row lacks evidence')
+                new_rows.append({'review_path':r['review_path'],'term':a['term']['id']})
         row_count+=len(original)
         for path,digest in r['raw_sha256'].items():
             assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==digest,path
@@ -33,7 +37,10 @@ def main():
         assert re.search(r'NCBI_TaxID='+d['taxon']['id'].split(':')[1]+r'(?:\s|;)',raw),p
         families=re.findall(r'^DR   PANTHER; ([^;]+);',raw,re.M)
         if families:members[acc]=next((f for f in families if ':SF' in f),families[0])
-    assert not actions['PENDING'] and not actions['NEW']
+    assert not actions['PENDING']
+    planned=yaml.safe_load((DATA/'new-annotations.yaml').read_text())['annotations']
+    key=lambda a:(a['review_path'],a['term'])
+    assert sorted(new_rows,key=key)==sorted(planned,key=key),'Unplanned or missing new recommendation'
     p=ROOT/'modules'/(SLUG+'.yaml');d=yaml.safe_load(p.read_text())
     gene_proposal=yaml.safe_load(reviews['A0A0H2XFX6'].read_text())['proposed_new_terms'][0]
     module_proposal=next(p for n in walk(d['module']) for p in n.get('proposed_terms',[]) if p['proposed_name']=='pApA hydrolase activity')
@@ -49,6 +56,6 @@ def main():
     quoted.update((r['id'],f['supporting_text']) for r in d['references'] for f in r.get('findings',[]) if f.get('supporting_text'))
     for ref,q in quoted:assert quote_matches(q,ROOT/'publications'/(ref.replace(':','_')+'.md')),(ref,q)
     result=validate_module_file(p,member_index=members,gene_index=reviews)
-    report={'valid':result.is_valid,'errors':result.errors,'warnings':result.warnings,'members':len(reviews),'original_rows_preserved':row_count,'raw_sources_preserved':raw_count,'actions':dict(actions),'activities':len(annotons),'connections':len(connections),'references':len(d['references']),'findings':sum(len(r.get('findings',[])) for r in d['references']),'distinct_quotes_checked':len(quoted),'member_classifications':members}
+    report={'valid':result.is_valid,'errors':result.errors,'warnings':result.warnings,'members':len(reviews),'original_rows_preserved':row_count,'new_recommendations':len(new_rows),'raw_sources_preserved':raw_count,'actions':dict(actions),'activities':len(annotons),'connections':len(connections),'references':len(d['references']),'findings':sum(len(r.get('findings',[])) for r in d['references']),'distinct_quotes_checked':len(quoted),'member_classifications':members}
     (DATA/'validation-results.yaml').write_text(yaml.safe_dump(report,sort_keys=False,allow_unicode=True));print(json.dumps(report,indent=2));raise SystemExit(0 if result.is_valid else 1)
 if __name__=='__main__':main()
