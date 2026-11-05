@@ -25,3 +25,11 @@ Falcon deep research succeeded (genes/human/KIFAP3/KIFAP3-deep-research-falcon.m
 - No catalytic activity: [file:human/KIFAP3/KIFAP3-deep-research-falcon.md "no catalytic reaction or small-molecule transport substrate should be assigned to KAP3 itself"] — this supports the decision not to give KIFAP3 motor activity.
 - Chlamydomonas FLA3/KAP ortholog: [file:human/KIFAP3/KIFAP3-deep-research-falcon.md "its mutation dispersed KAP and the FLA10 motor from the basal-body/flagellar region"]; anterograde IFT frequency was reduced. This is ortholog evidence for a ciliary role.
 - APC-mediated mRNA cargo and KAP3-dependent activation of KIF3A/B by APC (Webb et al. 2025, reported in the deep research; not cached) would be a candidate non-ciliary cargo-adaptor role. Not used for annotations.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse P70188) and TAS (PMID:8900189), both KEEP_AS_NON_CORE, located_in.
+- Projection source (QuickGO): mouse Kifap3 has a single GO:0005783 annotation, MGI IDA from PMID:19384852 (fetched; full text). Pre-embedding immuno-EM of endogenous KAP3 in mouse photoreceptors [PMID:19384852 "Furthermore, KAP3 was localized along ER and Golgi membranes as well as tubulo-vesicular elements within the IS"].
+- TAS source is abstract only [PMID:8900189 "SMAP was ubiquitously expressed and highly concentrated at the endoplasmic reticulum area"].
+- KAP3 is the soluble cargo-binding kinesin-II subunit (no signal peptide, no TM): a recruited cytosolic-face pool, so it stays at the root with no ER-membrane row (cf. TRAF3, A1CF).
+- Outcome: root; both rows stay KEEP_AS_NON_CORE, reasons record the check.

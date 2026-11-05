@@ -55,3 +55,12 @@ HADHB is relevant to AD metabolic dysfunction through:
 3. **Lipid metabolism** - Dysregulated in AD brains
 
 The Recon3D error could affect metabolic modeling of AD brain metabolism.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and IDA (PMID:21527675); no qualifier recorded in the review; no ER sub-compartment rows.
+
+- UniProt: "Mitochondrion outer membrane {ECO:0000269|PubMed:21527675}. Endoplasmic reticulum {ECO:0000269|PubMed:21527675}." Both rows trace to the viperin/HCMV paper.
+- PMID:21527675 (Science 2011; abstract only, no PMC id): the abstract describes viperin relocalizing from the ER to mitochondria and binding the trifunctional protein there; it says nothing about an ER pool of HADHB itself, or about an ER marker. The existing reasons' "viral-induced localization" reading is therefore not established; noted in both reasons.
+- Topology: FT TRANSIT 1..33 (mitochondrion); no ER signal, TM or retention motif; any ER pool would be cytosolic-face; stays at root.
+- Outcome: both rows stay KEEP_AS_NON_CORE, deferring to the curator's full-text reading; UniProt curated location quote added. Close call with MARK_AS_OVER_ANNOTATED if the ER signal is fractionation cross-contamination (MAM), stated in the reasons.
