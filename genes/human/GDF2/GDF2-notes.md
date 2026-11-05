@@ -15,3 +15,9 @@ The [source guide](GDF2-source-guide.md) keeps construct, assay, erratum and tar
 ### Receptor recognition and redox state
 
 Direct binding to ALK1 supports mature BMP9 receptor recognition; receptor-domain NMR and docking remain distinct evidence. Covalent and noncovalent solution dimers retain signaling activity but differ in persistence and proteolytic susceptibility. These biochemical states do not establish additional natural splice products or endogenous clearance rates. [PMID:22799562](https://pubmed.ncbi.nlm.nih.gov/22799562/); [PMID:25237187](https://pubmed.ncbi.nlm.nih.gov/25237187/).
+
+## Receptor function and assay scope
+
+Direct ligand–ALK1 binding and receptor-mediated SMAD responses describe one extracellular signaling unit. [PMID:22799562](https://pubmed.ncbi.nlm.nih.gov/22799562/); [PMID:17068149](https://pubmed.ncbi.nlm.nih.gov/17068149/). Endothelial DNA-synthesis regulation does not make BMP9 replication machinery. [PMID:19366699](https://pubmed.ncbi.nlm.nih.gov/19366699/). Iron attribution and junction assembly remain narrower unresolved questions despite positive physiological and barrier responses. [PMID:39453386](https://pubmed.ncbi.nlm.nih.gov/39453386/); [PMID:32561494](https://pubmed.ncbi.nlm.nih.gov/32561494/).
+
+The current [YAML archive](GDF2-source-evidence.yaml) succeeds the unchanged historical JSON linked above. The [source guide](GDF2-source-guide.md) identifies the assays and the 4YCG description/sequence discrepancy.

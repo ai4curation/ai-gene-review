@@ -1,6 +1,6 @@
 # GDF2 source scope and context preservation
 
-The [review](GDF2-ai-review.yaml) contains 61 individually assessed current annotations and 37 reference assessments. Its six short excerpts are centralized in reference findings. Other annotation links identify the relevant source without repeating quotations. The [evidence archive](GDF2-source-evidence.json) records the original contexts, source hashes, phylogeny and projection limits. Genuine native acquisition and seeding are complete. All 61 actual indices and six cache excerpt locations are verified. Default validation and strict GOA checks passed without target advisories; computed COMPLETE status retains four scientific UNDECIDED judgments. Native codex CREATE history, private rendering, local links and authored whitespace checks passed.
+The [review](GDF2-ai-review.yaml) links each judgment to its supporting references. Six excerpts are centralized in reference findings. This guide identifies primary assay locations and limits. The current [YAML evidence archive](GDF2-source-evidence.yaml) preserves complete machine contexts and partial-projection semantics. The original [JSON archive](GDF2-source-evidence.json) remains unchanged as historical provenance and to preserve the original journal link.
 
 ## Products and functional scope
 
@@ -10,15 +10,15 @@ The official [Q9UK05 record](https://www.uniprot.org/uniprotkb/Q9UK05/entry) and
 
 ### PMID:17068149
 
-[17068149](https://doi.org/10.1182/blood-2006-07-034124). Human microvascular endothelial experiments used BMP9 with ALK1 perturbation/trapping. Scratch closure measures migration; WST-1 indirectly estimates viable-cell number. It does not trace division or separate survival from proliferation. Selected Methods, Results and Figure 5 caption were read; no image reanalysis was performed.
+[17068149](https://doi.org/10.1182/blood-2006-07-034124). Human microvascular endothelial experiments used BMP9 with ALK1 perturbation/trapping. Scratch closure measures migration; WST-1 indirectly estimates viable-cell number. It does not trace division or separate survival from proliferation. Figure 1 reports SMAD phosphorylation/ALK1 dependence; Figure 5A reports scratch closure and 5B the WST-1 response. Selected text/captions were read, not images.
 
 ### PMID:20406889
 
-[20406889](https://doi.org/10.1242/jcs.061556). Mouse allantoic, progenitor-derived and adult endothelial assays differ from human BMP9-transgene xenografts. Increased vascular area can be disorganized. Human HMVEC-d inhibition is reported without displayed data. Differentiation is confounded by cell yield. Selected Methods/Results/Discussion were read.
+[20406889](https://doi.org/10.1242/jcs.061556). Mouse allantoic, progenitor-derived and adult endothelial assays differ from human BMP9-transgene xenografts. Increased vascular area can be disorganized. Human HMVEC-d inhibition is reported without displayed data. Differentiation is confounded by cell yield. Figure 2 shows the allantoic vascular response; the Discussion identifies ALK1/endoglin induction and proposed feedback. Selected Methods/Results/Discussion were read.
 
 ### PMID:19366699
 
-[19366699](https://pmc.ncbi.nlm.nih.gov/articles/PMC2708876/). Recombinant human BMP9 was tested in human pulmonary/aortic endothelial cells. Receptor/SMAD perturbations, RNA responses and thymidine incorporation were inspected. The cache omits relevant Methods/Results despite its full-text flag. IL-8 ELISA methodology was recovered, but a positive protein result was not independently located. ENG dependence varies across assay settings.
+[19366699](https://pmc.ncbi.nlm.nih.gov/articles/PMC2708876/). Recombinant human BMP9 was tested in human pulmonary/aortic endothelial cells. Receptor/SMAD perturbations, RNA responses and thymidine incorporation were inspected. The cache omits relevant Methods/Results despite its full-text flag. IL-8 ELISA methodology was recovered, but a positive protein result was not independently located. Figures 2–3 report phosphorylation and ALK1-dependent transcript responses. The thymidine-incorporation Methods define the DNA-synthesis readout. ENG dependence varies across settings.
 
 ### PMID:32561494
 
@@ -30,7 +30,7 @@ The official [Q9UK05 record](https://www.uniprot.org/uniprotkb/Q9UK05/entry) and
 
 ### PMID:25751889
 
-[25751889](https://pubmed.ncbi.nlm.nih.gov/25751889/). Selected main text and deposition sequences identify mouse prodomain with human mature ligand in 4YCG. Literal entity descriptions conflict with coordinates; full supplementary methods were not inspected.
+[25751889](https://pubmed.ncbi.nlm.nih.gov/25751889/). Selected main text and deposition sequences identify mouse prodomain with human mature ligand in 4YCG. The [4YCG entity records](https://www.rcsb.org/structure/4YCG) label entity 1 as growth-factor domain and entity 2 as prodomain, opposite their sequence assignments. The reference assessment records this metadata issue for checking; full supplementary methods were not inspected.
 
 ### PMID:23972370
 
@@ -98,8 +98,12 @@ Thirteen source records contain 30 literal extension-atom occurrences. Ten singl
 
 Predicate identifiers were verified against official OLS property results: BFO:0000066 occurs in, BFO:0000050 part of, RO:0002233 has input and RO:0002629 directly positively regulates. The containing ontology name does not replace the CURIE namespace. Native predicate values use CURIE strings, as required by the current schema; their labels remain in the archive. Processed-chain target restoration uses the literal target identifier in the existing isoform slot, with the cleavage-product interpretation stated explicitly.
 
-## Source and execution boundary
+## Annotation scope
 
-The qualified union is 33 normal source paths: 28 PMIDs, two Reactome entries and three existing PTHR11848 files. Sixteen exact main objects are available and 17 publication paths are absent at the qualification boundary. The five added PMIDs supply already assessed bone, cartilage and iron evidence. Previous source plans and diagnostics remain private and unchanged. All 33 sources are now present: 16 reused unchanged and 17 acquired through the native missing-only helper. All six exact excerpts have verified native-cache byte offsets; original abstract locators remain archived.
+Current GO ancestry does not place positive regulation of gene expression (GO:0010628) above GO:0045944 through is_a/part_of; the latter does descend from GO:0045893. DNA-replication regulation does not imply membership in replication machinery. Iron-homeostasis and tight-junction-assembly uncertainties concern specific claims, not whether a source could be opened. GO:0060586 concerns extracellular body fluids and is not substituted for intracellular iron solely on the basis of hepcidin induction.
 
-No inherited GDF2 namespace, history or journal was present in the bounded alias survey. The completed same-worktree transition preserved the GCK branch and its actual-merge receipts, prior sources, refs, scratch and workspace links. Native history and affected check outcomes are recorded separately before publication.
+The single core uses BMP receptor binding as its molecular facet, alongside BMP signaling and positive SMAD signaling regulation. These two processes are not strict ancestors of one another. BMP receptor binding is not asserted to be an ontology descendant of cytokine activity. Cytokine activation remains explicit; growth-factor activity remains contextual because mitogenic responses vary between cell systems.
+
+The literal has_input GDF2 extensions describe input to the signaling process. They do not assert self-binding, and no source defect is inferred merely from the matching subject accession.
+
+Source acquisition and validation outcomes belong to the evidence archive and append-only native history. The historical JSON is retained once alongside its YAML successor to preserve the original journal link and complete provenance.
