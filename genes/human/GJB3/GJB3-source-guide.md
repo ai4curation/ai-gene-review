@@ -1,0 +1,7 @@
+# GJB3 source guide
+
+The [review](GJB3-ai-review.yaml) contains 26 distinct incoming contexts, one core and one natural product. The [companion](GJB3-external-evidence.md) gives source-specific biological scope; the [archive](GJB3-context-archive.json) retains original machine contexts and the exact 270-residue sequence. The [evidence manifest](GJB3-source-evidence.yaml) records counts and archive identity.
+
+The normal-source closure comprises 17 publications, two Reactome entries and three PTHR11984 files. The shared family files, R-HSA-190861, PMID:10757647 and PMID:19283857 were reused from independently preserved exact-byte handbacks. Their fetched titles and cache-availability metadata were checked against the genuine caches. External full-text access is described separately in reference notes.
+
+Genuine target fetch and 26-key seeding have completed. All 22 normal sources are present: eleven reused source files remain byte-exact and eleven missing sources were acquired. Actual fetched publication/Reactome titles and cache-availability flags are reconciled; qualified GO_REF titles are retained because the no-title-fetch stub contains placeholders. The sole ten-word quote has an exact native cache offset. Default validation, strict matching of all 26 GOA contexts, computed-status audit, history validation, private rendering and scoped whitespace passed. The computed status is COMPLETE, with zero annotation advisories. All 22 normal source files remain byte-exact after acquisition or reuse. No whole-repository or merge-group execution is claimed.
