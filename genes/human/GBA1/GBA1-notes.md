@@ -123,3 +123,13 @@ The DHT response has a time dependence: rat epidermal GCase activity is unchange
 GBA1 contributes ceramide-producing chemistry at a signaling control point; downstream phosphatases execute p38 dephosphorylation. This distinguishes its source-specific termination role from protein-phosphatase activity. [PMID:19279008](https://pubmed.ncbi.nlm.nih.gov/19279008/).
 
 The firing question remains unresolved at the level of the annotated GBA1 effect: the inspected twin MEA comparison holds the variant constant, while rescue measures different endpoints. This limits attribution without establishing universal absence of a conditional role. [PMID:25456120](https://pubmed.ncbi.nlm.nih.gov/25456120/). Galactosylcholesterol turnover is now posed separately from the glucosyl branch; direct transfer chemistry does not establish its physiological flux or disease consequences. [PMID:32144204](https://pubmed.ncbi.nlm.nih.gov/32144204/); [PMID:26724485](https://pubmed.ncbi.nlm.nih.gov/26724485/).
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse P17439) and ISS (GO_REF:0000024, P17439), both located_in; no ER sub-compartment rows; no is_active_in. genes/human/GBA (duplicate folder) not touched.
+
+- Source check: QuickGO shows mouse P17439's only ER annotation is IDA from PMID:27789271; mouse UniProt has no ER location line.
+- [PMID:27789271 "Double labeling immunogold TEM also showed that PGRN co-localized with GCase in the ER and lysosome"].
+- [PMID:40159502 "The GCase/LIMP-2 transport complex forms within the endoplasmic reticulum (ER) and travels through the trans-Golgi network to the lysosome together"].
+- GBA1 is a soluble lumenal lysosomal hydrolase (FT SIGNAL 1..39) with no KDEL-like motif; ER = biosynthetic transit where the LIMP-2 receptor complex assembles. ER retention of misfolded Gaucher mutants (PMID:18022370 abstract mentions an "endoplasmic reticulum retention mutant") is mutant quality control and not used as support.
+- Outcome: both rows stay KEEP_AS_NON_CORE; supporting_text quotes added to the two bare supported_by entries; dated reason sentence added. No NEW GO:0005788 (transit, not residence).

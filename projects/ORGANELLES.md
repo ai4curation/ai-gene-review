@@ -270,9 +270,66 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
   - [x] ER batch 1: 20 human genes (2026-11-04); 60 human genes remain on the
         root-only ER list (survey regenerated 2026-11-04)
+  - [x] ER batch 2: 20 human genes (2026-11-05); 40 human genes remain (39
+        distinct, since GBA duplicates GBA1)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-05 (ER batch 2: 20 human genes)
+
+The next 20 human genes on the root-only ER list (C18orf32 to KIFAP3). GBA was
+skipped: `genes/human/GBA` and `genes/human/GBA1` are two folders for the same
+accession (P04062), and only GBA1 was reviewed, so KIFAP3 made up the 20. Two
+genes gained an ER membrane row (C18orf32, C19orf12) and three changed action
+(CHRNA3, HMGB1, KEAP1). The brief carried the batch 1 rules, and the six
+optional review findings on batch 1 were fixed in the same PR (caveats on the
+BCL2L1 and BAK1 membrane rows, AHSA1's alternative stated, APEX1's quote
+extended, and isoform `source_defects` on ABCA7 and ATP7A).
+
+| gene | outcome | evidence |
+|---|---|---|
+| C18orf32 | root; rows stay ACCEPT; NEW GO:0005789 ER membrane (IC) | N-terminal hydrophobic anchor necessary and sufficient for ER and lipid-droplet targeting; endogenous protein only in ER-enriched and buoyant fractions; membrane ERAD by gp78/derlin-1 (PMID:29275994) |
+| C19orf12 | root; rows stay ACCEPT; NEW GO:0005789 ER membrane (IC) | one predicted TM and no signal peptide; endogenous protein in a marker-controlled ER fraction (PMID:26136767); MAM not asserted |
+| CAVIN1 | root; row stays UNDECIDED | UniProt ER line by similarity to rat, which rests on a curator inference; mouse source paper is abstract-only and about Fam198a export (PMID:30188967) |
+| CERKL | root | all ER data on overexpressed tagged constructs (PMID:19158957); soluble protein |
+| CGRRF1 | root; rows stay ACCEPT | partial PDI overlap of overexpressed V5-tagged protein (PMID:27485036); TM predicted only, so no membrane row |
+| CHRNA3 | root; IEA and ISS ACCEPT to KEEP_AS_NON_CORE | ERAD extraction of alpha3 by p97 shows a real quality-control pool (PMID:26265139); the channel acts at the plasma membrane |
+| DDX41 | root | soluble helicase co-fractionating with STING, microsomes and MAM (PMID:21892174); recruited pool |
+| DLG4 | root; rows stay UNDECIDED | sole mouse source is an abstract-only knockout paper that never shows the PSD-95 experiment (PMID:16814779) |
+| DNASE1L3 | root | endogenous protein in the ER of HT-29 cells, moving to the nucleus in apoptosis (PMID:23229555); secreted and no retention motif |
+| FGFR3 | root | direct immunofluorescence plus curated ER N-glycosylation of the wild type; type I receptor in transit |
+| FGFR4 | root | core-glycosylated FGFR4 held by ER-resident beta-Klotho (PMID:20683963); transit pool with direct evidence |
+| GBA1 | root | mouse immunogold with PGRN in ER and lysosome (PMID:27789271); GCase/LIMP-2 complex forms in the ER (PMID:40159502); soluble hydrolase in transit |
+| GLUD1 | root | overexpressed hGDH1-EGFP partly overlaps an ER marker (PMID:19448744); mitochondrial transit peptide |
+| HADHB | root | UniProt curated from an abstract-only paper whose abstract shows viperin, not HADHB, at the ER (PMID:21527675); deferred |
+| HMGB1 | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | SARS-CoV-2 ORF3a recruits HMGB1 to the ER (PMID:35239449); leaderless protein, recruited pool; the old reason's "secretory pathway" claim was wrong |
+| HSPA13 | root; row stays ACCEPT | ER-luminal proximity labelling and translocon binding show residence (PMID:36244454); signal peptide predicted only and no retention motif, so no lumen row |
+| IFIT2 | root | UniProt curated from PMID:21190939, whose localization data could not be retrieved; soluble TPR protein |
+| KCNRG | root; rows stay ACCEPT | "an ER-associated protein" retaining Kv1 channels (PMID:19968958, abstract only); PAINT node seeded by KCNRG itself |
+| KEAP1 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | sole mouse source's abstract calls Keap1 cytoplasmic (PMID:14517290); the old Nrf1 rationale is refuted (PMID:16687406) |
+| KIFAP3 | root | mouse immuno-EM of endogenous KAP3 along ER and Golgi membranes (PMID:19384852); soluble kinesin-II subunit |
+
+What ER batch 2 showed:
+
+- **The batch 1 rules held.** Transit pools with direct evidence stayed
+  non-core (FGFR3, FGFR4, GBA1, DNASE1L3), and no transit pool got a
+  topology-forced membrane row.
+- **The membrane line needs more than a predicted TM.** C18orf32 and C19orf12
+  have an ER-specific assay on the endogenous protein plus an anchor; CGRRF1
+  has only a predicted TM and an overexpression assay, so it stays at the root.
+- **ER does not mean "secretory".** HMGB1 is secreted without passing through
+  the ER; its pool is recruited by a viral protein.
+- **Unreadable sources: defer to a curated human line, otherwise UNDECIDED.**
+  When the human UniProt entry carries a curated `ECO:0000269` ER line from a
+  paper we cannot read, the row stays KEEP_AS_NON_CORE on curator deference
+  (HADHB, IFIT2). When the row is only an ortholog projection whose donor
+  paper also cannot be read, it is UNDECIDED (KEAP1, DLG4, CAVIN1). Either
+  way the reason says which result would settle it.
+- **`is_active_in`:** one ER row carries it (KCNRG IBA), defensible because
+  the channel-retention activity is proposed to act at the ER.
+- **Duplicate folder.** `genes/human/GBA` duplicates `genes/human/GBA1`
+  (same accession); it should be retired in a separate change.
 
 ## 2026-11-04 (ER batch 1: 20 human genes)
 
