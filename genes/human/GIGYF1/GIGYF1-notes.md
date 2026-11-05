@@ -59,3 +59,10 @@ GIGYF1 participates in cytosolic translation repression and selected mRNA decay.
 Growth-factor signaling is retained as contextual: the original GRB10-dependent effect used a mouse GIGYF1 fragment, while human signaling-complex association is independently documented (PMID:12771153; PMID:20878056). It does not establish universal receptor stimulation by full-length human GIGYF1.
 
 Earlier notes and the PN notes remain historical. The current synthesis preserves positive interaction records while removing generic binding labels that lack useful functional definition. It also separates the actual PAINT restriction on direct RNA-binding repression from inherited process/location assertions. Full assay and construct boundaries, including the unresolved NEK6 product crosswalk and 2020 resource-table accession, are centralized in [external evidence](GIGYF1-external-evidence.md). Current and historical source contexts are preserved in the [archive](GIGYF1-context-archive.json); no historical quote is silently discarded or reused as fresh endorsement.
+
+
+## 2026-11-05 — Adaptor mechanism and historical binding terminology
+
+The new GO:0030674 assessment and its source-specific assay limits are documented in [external evidence](GIGYF1-external-evidence.md). This specific child of GO:0060090 complements the translation-repressor assertion while retaining the existing source-specific interaction decisions.
+
+The earlier journal statement assigning GO:0008190 to 4EHP binding is superseded by the source-specific distinction between 4EHP/EIF4E2 and EIF4E1. The current GO:0031369 refinement retains the established 4EHP interaction without conflating these factors (PMID:28698298). The historical text is preserved. Named ComplexPortal assemblies and positive ZNF598 associations remain documented; neither alone supplies a contact-specific ligase-binding mechanism or an unverified GO complex identifier.

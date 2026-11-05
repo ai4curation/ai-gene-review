@@ -24,7 +24,11 @@ Human GIGYF1 rescue distinguishes WT from DDX6/GYF mutants. Broader RNA-IP/polys
 
 ## PMID:39018414 — Translation repression via eIF3
 
-Human GIGYF1 loss/rescue, recruitment assays and C-terminal mapping support 4EHP-independent repression involving eIF3–eIF4G1 disruption. These are cellular mechanism assays, not purified displacement or direct RNA-binding measurements. IFNB1 findings are stimulus-specific. Fragments and mutants are engineered reagents. [Original source](https://pmc.ncbi.nlm.nih.gov/articles/PMC466957/).
+Human-cell lysate recruitment assays and RNase-containing co-IP support GIGYF1-dependent TTP–eIF3 bridging (Figure 4E–I). TTP depletion and GYF mutation separate recruitment from eIF3 association. Engineered-reagent, stimulus and non-purified assay limits apply. [Original source](https://doi.org/10.1126/sciadv.adl5638).
+
+## Adaptor annotation scope
+
+GO:0030674 is the protein-macromolecule-specific child of GO:0060090. The source-specific adaptor annotation complements translation repression; it does not assign this mechanism to every screening pair. The ZNF598 associations and named ComplexPortal variants remain positive, without a demonstrated contact-specific ligase-recruitment function. The eIF3 interaction is informative, but a second generic initiation-factor-binding assertion would duplicate a term already retained for EIF4E2. ComplexPortal identifiers remain distinct from GO complex terms; no unverified GO identifier is supplied.
 
 ## PMID:38225382 — SNRPB proline-repeat recognition
 
