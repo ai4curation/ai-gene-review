@@ -50,3 +50,12 @@ Basis of NAS GO:1990261 (pre-mRNA catabolic process) and IDA GO:0032991 (complex
 - MF: GO:0008190 eukaryotic initiation factor 4E binding (binds 4EHP/EIF4E2) — well supported.
 - BP: GO:0045947 negative regulation of translational initiation; GO:0017148 negative regulation
   of translation; co-translational mRNA decay (GO:0006515 / mRNA catabolic).
+
+
+## 2026-11-05 — Translation repression and source-specific interactions
+
+GIGYF1 participates in cytosolic translation repression and selected mRNA decay. Human GIGYF1 activity involving eIF3 complements the 4EHP/DDX6 interaction pathway (PMID:39018414; PMID:28698298; PMID:31439631; PMID:33053355). The GYF domain recognizes proline-rich protein regions, including the experimentally tested SNRPB interface (PMID:38225382).
+
+Growth-factor signaling is retained as contextual: the original GRB10-dependent effect used a mouse GIGYF1 fragment, while human signaling-complex association is independently documented (PMID:12771153; PMID:20878056). It does not establish universal receptor stimulation by full-length human GIGYF1.
+
+Earlier notes and the PN notes remain historical. The current synthesis preserves positive interaction records while removing generic binding labels that lack useful functional definition. It also separates the actual PAINT restriction on direct RNA-binding repression from inherited process/location assertions. Full assay and construct boundaries, including the unresolved NEK6 product crosswalk and 2020 resource-table accession, are centralized in [external evidence](GIGYF1-external-evidence.md). Current and historical source contexts are preserved in the [archive](GIGYF1-context-archive.json); no historical quote is silently discarded or reused as fresh endorsement.
