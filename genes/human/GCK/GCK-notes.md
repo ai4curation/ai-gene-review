@@ -90,3 +90,20 @@ hepatic glucose uptake/glycogen synthesis in the liver
 - dismech alignment: Congenital_Isolated_Hyperinsulinism binds GO:0004340 glucokinase activity
   INCREASED on the GCK node, matching the AIGR core MF. Hyperinsulinemic_Hypoglycemia's
   "Lowered Beta-Cell Glucose Set-Point" node binds only GO:0050796 (DYSREGULATED) and no MF.
+
+
+## 2026-11-04 biological reassessment
+
+Human GCK directly phosphorylates glucose and contributes to its concentration-dependent coupling with insulin secretion. Human mutation studies distinguish a shifted secretory response from complete absence of insulin release, and reduced hepatic glycogen accumulation from glycogen-synthase activity (PMID:7742312; PMID:8132752; PMID:8878425). The three earlier repeated catalytic cores are consolidated into one activity with distinct glycolytic, secretory-regulatory and systemic homeostasis facets.
+
+Mannose and fructose phosphorylation are genuine enzymatic observations, but GCK-specific physiological alternative-sugar flux remains uncertain (PMID:7742312). The three natural products differ at the amino terminus; reported liver-mRNA translation differences do not prove that either liver protein is catalytically inactive (PMID:1871135; PMID:1354840).
+
+The mitochondrial assessment now incorporates the actual ancestral PAINT placement. It does not infer a target-specific loss from the short donor list or from comparison with other hexokinase anchors. Rat mitochondrial association remains positive but bounded localization evidence (PMID:16542652). Nuclear sequestration and cytosolic return remain distinct from active nuclear catalysis (PMID:10456334; PMID:24187134).
+
+Interaction refinements follow the partner's demonstrated molecular role, while generic screen positives remain real interactions even when their uninformative GO term is removed (PMID:11522786; PMID:32296183). The leptin response remains claim-specific uncertainty because the relevant donor experiment is not resolved by the available text (PMID:17470517). Gck-dependent calcium elevation places the enzyme upstream of stimulus–secretion coupling, not in the calcium-import machinery (PMID:18477811).
+
+Source access, construct distinctions and the earlier review's preserved evidence are documented in [GCK-source-guide.md](GCK-source-guide.md) and [GCK-evidence.json](GCK-evidence.json). Earlier journal entries above remain unchanged.
+
+### Structural and variant assay scope
+
+The regulator complex combines human pancreatic GCK with rat GKRP; fructose 6-phosphate binds GKRP and favors the inhibited complex. Nearby GCK substitutions can produce opposite biochemical and glycemic effects, but modeled secretion thresholds do not fully explain clinical severity. These studies strengthen regulator and catalytic mechanisms without assigning every construct to a natural product. [PMID:23957911](https://pubmed.ncbi.nlm.nih.gov/23957911/); [PMID:19884385](https://pubmed.ncbi.nlm.nih.gov/19884385/).
