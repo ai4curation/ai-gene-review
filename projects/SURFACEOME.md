@@ -255,6 +255,26 @@ Use a `part_of` extension only when GO lacks a specific term:
 - `RO:0002233` (has input) + a `UniProtKB:…` partner — substrate/partner context,
   the most common extension overall.
 
+**Generic `GO:0005886` row with a subdomain/topology-specific reason — `MODIFY`
+vs `ACCEPT`+`NEW`.** When a plasma-membrane row is correct but the evidence places
+the protein on a specific leaflet, subdomain or topological side, the batch uses
+one of two patterns, by this rule:
+
+- **`MODIFY` → the specific term** when that term *replaces* the generic claim —
+  the protein's whole PM pool is that subdomain, so the generic row is retired into
+  the refinement. Examples: inner-leaflet GTPases/kinases `GO:0005886` → `GO:0009898`
+  (KRAS etc.); a GPI ectoprotein's PM pool → `GO:0009897` (MSLN); STIM1's
+  PM-proximal pool → `GO:0140268` ER–PM contact site.
+- **`ACCEPT` the generic row + add a `NEW` specific row** when the generic PM
+  localization stays true on its own *and* the specific subdomain is an additional,
+  independently-supported finding the gene does not yet carry. Example: CA9, whose
+  bare `GO:0005886` rows are kept while a `NEW GO:0009897` external-side row records
+  the self-described ectoenzyme claim.
+
+The test is whether the specific term supersedes the generic one (one location,
+`MODIFY`) or sits beside it as a second claim (two locations, `ACCEPT`+`NEW`); a
+`MODIFY` replacement is a refinement of the same pool, never a second pool.
+
 The **stable_surface_attachment** set is already handled by the same
 specific-term-first logic and needs no extensions: C3 carries `cell surface`
 (covalent thioester attachment to target surfaces) as a core location; CRISP1 uses
@@ -351,13 +371,16 @@ The work is incomplete. In priority order:
    evidence rather than asserting the gene already carries the term), core_functions
    locations updated to match, and the IBA row given a
    `propagation_review` (`TERM_SCOPING_PROBLEM`). JAK2/JAK3/TYK2/GNAQ/GNB1 were
-   already done by the review agents. This makes them machine-distinguishable from
-   genuinely surface-exposed proteins (they fail both the outward-CC and the
-   PM-AND-TM-function rules once PM is re-pointed). **Still open:** the
-   transiently-recruited kinases BRAF, MAP2K1, AKT2, SYK, IKBKB, LRRK2 — the
-   inner-side call is softer there (they are recruited to the cytoplasmic face
-   rather than constitutively lipid-anchored), so they were deliberately left for a
-   separate judgement. Re-running §3/§4 scores after this change is a to-do.
+   already done by the review agents, and AKT2's three PM rows plus its
+   `core_functions.locations` were converted in the same pass (it is PH-recruited
+   but constitutively enough at the inner leaflet to resolve like BTK). This makes
+   them machine-distinguishable from genuinely surface-exposed proteins (they fail
+   both the outward-CC and the PM-AND-TM-function rules once PM is re-pointed).
+   **Still open:** the transiently-recruited kinases BRAF, MAP2K1, SYK, IKBKB,
+   LRRK2 — the inner-side call is softer there (they are recruited to the
+   cytoplasmic face rather than constitutively lipid-anchored), so they were
+   deliberately left for a separate judgement. Re-running §3/§4 scores after this
+   change is a to-do.
 4. **Expert-review the flagged review calls** in §4 (DLL3, LGR5, IZUMO4, F2,
    the source defects).
 5. **Optional:** compare against UniProt topology (`TOPO_DOM Extracellular`,
