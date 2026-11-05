@@ -15,3 +15,12 @@ The positive HuRI interactions remain recorded, even where generic binding is fu
 The canonical human protein has 283 residues. Mutant constructs, partner isoforms and historical translation bands are not additional natural GJB1 products. The original cloning and topology studies include rat junction material, and the older structural model uses truncated Cx43 density; none is presented as a direct full-length human atomic structure ([PMID:2875078](https://pubmed.ncbi.nlm.nih.gov/2875078/), [PMID:2460334](https://pubmed.ncbi.nlm.nih.gov/2460334/), [PMID:15383278](https://pubmed.ncbi.nlm.nih.gov/15383278/)).
 
 The [source guide](GJB1-source-guide.md) distinguishes original readings, cached availability, donor contexts and remaining uncertainty. It also identifies the metadata limits in the clinical bibliography.
+
+
+## 2026-11-05: interaction informativeness and unresolved identities
+
+All 44 generic HuRI protein-binding assertions are removed for lack of a specific functional interpretation. Their positive pairs and literal source identifiers remain preserved. The three partner-product discrepancies remain unresolved and are now represented as suspected issues requesting curator checking; no replacement accession or false interaction is asserted. The distinction is between the usefulness of the generic function term and the identity of the experimental product.
+
+The nervous-system-development assertion remains undecided. The source assessment now acknowledges the relevant regeneration result while keeping normal developmental participation unresolved. The accepted channel, transport, communication and structural assembly core is unchanged.
+
+The redundant replacement attached to the broad cell-communication term and the canonical-only alternative-products block were removed. The canonical 283-residue sequence and its verification remain in the evidence archive and the earlier notes. All original annotation fields, source bytes and four exact excerpts remain unchanged. The [source guide](GJB1-source-guide.md) records the current scope; the [evidence archive](GJB1-evidence.yaml) distinguishes initial preparation outcomes from the follow-up.
