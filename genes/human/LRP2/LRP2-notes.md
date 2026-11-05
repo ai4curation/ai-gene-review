@@ -136,3 +136,16 @@ family architecture should not be promoted to LRP2-specific binding or signaling
 claims. Human conclusions must distinguish direct human tissue/genetic evidence
 from conserved mechanisms demonstrated in mouse, rat, rabbit, canine, or mixed
 models.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse Lrp2 A2ARV4).
+
+- QuickGO (2026-11-05): mouse A2ARV4 carries GO:0005783 only as MGI IDA from PMID:15616221.
+- PMID:15616221 is a cubilin paper, abstract-only in the cache; the OUP PDF was not
+  retrievable. The abstract places cubilin "at the apical pole of the cells ... and had a
+  very similar distribution to megalin" [PMID:15616221]; no ER result is visible.
+- The human UniProt entry has no ER line. LRP2 is type I (signal 1-25, one TM), no ER retention motif.
+- Outcome: KEEP_AS_NON_CORE changed to UNDECIDED (projection whose donor paper cannot be read;
+  KEAP1/DLG4/CAVIN1 precedent). A megalin immuno-EM or ER-marker figure in PMID:15616221
+  would settle KEEP_AS_NON_CORE vs MARK_AS_OVER_ANNOTATED. No ER membrane row.
