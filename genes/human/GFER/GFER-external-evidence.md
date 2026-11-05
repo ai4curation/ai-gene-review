@@ -34,3 +34,9 @@ CHCHD4's [reviewed official FUNCTION](https://rest.uniprot.org/uniprotkb/Q8N4Q1.
 [HPA](https://www.proteinatlas.org/ENSG00000127554-GFER/subcellular) metadata reports enhanced mitochondrial and cytosolic staining; mitochondrial examples include HPA041227/U2OS and HPA063553/A-549/MCF-7. Image pixels were not examined. [UniProt P55789](https://www.uniprot.org/uniprotkb/P55789/entry) assigns long-product IMS and short-product cytoplasmic/secreted pools; this does not manufacture isoform-specific GOA fields or a newly verified secretion assay.
 
 Rat liver regeneration is within liver development: GO:0097421 is_a GO:0001889. [PMID:24880092](https://pubmed.ncbi.nlm.nih.gov/24880092/) abstract reports reduced proliferation plus increased apoptosis after rat knockdown; [PMID:8058770](https://pubmed.ncbi.nlm.nih.gov/8058770/) abstract reports positive recombinant rat125-residue ALR in a canine hepatotrophic assay. Full protocols remain unavailable. [PMID:7708779](https://pubmed.ncbi.nlm.nih.gov/7708779/) is the verified linked correction; its contents are unknown. The actual Tetrapoda IBD remains valid. The unresolved issue is regenerative participation versus general survival dependence, not adulthood, donor count or lack of direct human testing.
+
+## Additional primary support
+
+[PMID:19397338](https://pubmed.ncbi.nlm.nih.gov/19397338/): engineered human ALR oxidizes reduced MIA40 through the distal cysteine pair. Different substrates in the short/long cytochrome-c comparisons prevent a simple natural-product ranking.
+
+[PMID:19409522](https://pubmed.ncbi.nlm.nih.gov/19409522/): human wild-type cDNA improves patient-cell respiratory activity. This corroborates the mitochondrial relay but is not a direct import-rate or enzyme assay. Yeast variant tests are separate.
