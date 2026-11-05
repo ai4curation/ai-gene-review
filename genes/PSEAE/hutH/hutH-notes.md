@@ -75,3 +75,7 @@
 - Source defects: PSEUDOCAP WRONG_EVIDENCE_CODE (IMP should be IDA; CHECK, PROBABLE) on the
   MF IMP row. GO_CENTRAL MISSING_NEGATION for PA5093 at PTN002233700 (PROBABLE), recorded
   on the IBA MF row because PA5093 has no review in this repository.
+
+## Full-text check of PMID:4290562 (2026-11-05)
+
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810) was supplied by the user and read. Its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. Histidase is assayed directly, partly purified and characterised (about 210 kDa; Km for histidine 1.8 to 2 mM); no histidase-deficient structural mutant is described. The IMP-to-IDA WRONG_EVIDENCE_CODE defect is now CONFIRMED.

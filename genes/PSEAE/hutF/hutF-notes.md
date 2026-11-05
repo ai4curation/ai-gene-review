@@ -61,3 +61,7 @@
 - Source defects: PSEUDOCAP WRONG_REFERENCE CHECK (PROBABLE) on the IMP row, re-key
   to PMID:16475788; GO_CENTRAL CHECK (SUSPECTED) on PTN000138516 for re-anchoring the
   BP IBD and for the nematode leaves.
+
+## Full-text check of PMID:4290562 (2026-11-05)
+
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810) was supplied by the user and read. Its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. Step IV is measured only as crude-extract formiminoglutamate degradation (shared by HutF and HutE in PAO1) and there is no hutF mutant. The WRONG_REFERENCE defect on the IMP row is now CONFIRMED and the reference is marked MISCITED.

@@ -71,3 +71,7 @@ PseudoCAP seed supports the imidazolonepropionase IBAs on mammals too.
 - MODIFY to GO:0050480: hydrolase activity; hydrolase activity acting on C-N (non-peptide)
   bonds; same in cyclic amides (all IEA, correct but general).
 - KEEP_AS_NON_CORE: zinc ion binding, iron ion binding (HAMAP cofactor, Zn or Fe).
+
+## Full-text check of PMID:4290562 (2026-11-05)
+
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810) was supplied by the user and read. Its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. Steps I, II and IV are assayed; imidazolonepropionase (step III) is never assayed and there is no hutI mutant. Both WRONG_REFERENCE defects on the IMP rows are now CONFIRMED and the reference is marked MISCITED.
