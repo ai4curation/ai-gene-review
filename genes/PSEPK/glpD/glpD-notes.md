@@ -49,3 +49,38 @@ Source: `file:PSEPK/glpD/glpD-deep-research-openscientist.md`.
   target-specific oligomerization evidence or distinct GlpB/GlpC partners were
   found. The available evidence establishes a monotopic GlpD enzyme, not the
   composition of a molecular complex.
+
+## 2026-11-03 review completion (Claude, AI-assisted)
+
+Deep research was available: `glpD-deep-research-openscientist.md` (provider
+report, used only for locus context; its "six transmembrane" quote was not used).
+PMID:25827416 is abstract-only in the cache; full-text statements above were
+already recorded from PMC. The E. coli ortholog structure paper PMID:18296637
+(full text cached) was added as the experimental basis for ISS-level transfer.
+
+Changes, reviewed together with `genes/ECOLI/glpD` so shared terms get the same
+actions:
+
+- GO:0009331 glycerol-3-phosphate dehydrogenase (FAD) complex (IEA, UniRule
+  GO_REF:0000104): UNDECIDED -> ACCEPT. The GO definition explicitly covers "a
+  GlpD homodimer that functions in aerobic conditions", so no GlpB/GlpC partners
+  are needed. Q88NY0 is an aerobic GlpD (about 57% identical to P13035, same
+  PTHR11985:SF15 subfamily). The E. coli dimer interface helps form the active
+  site (PMID:18296637). The ECOLI IDA row on the same term is also ACCEPT.
+  Added `in_complex` GO:0009331 to core_functions.
+- GO:0006072 (IEA GO_REF:0000120): KEEP_AS_NON_CORE -> MODIFY to GO:0046168
+  (correct but general parent).
+- GO:0005886 plasma membrane NEW row: changed from ISS citing the deep-research
+  file to ISS with original_reference_id PMID:18296637 (ortholog P13035). It is
+  backed by the ortholog localization and bilayer-embedding quotes, the KT2440
+  "membrane-bound GlpD" statement, and the shared PANTHER subfamily.
+- GO:0004368 and GO:0046168 stay ACCEPT. Added vetted support (UniProt RuleBase
+  reaction, InterPro IPR000447, PANTHER lines, PMID:18296637,
+  PMID:25827416 abstract) and named the routes (Combined IEA; TreeGrafter
+  PTN002279478, with the PAINT IBD for GO:0046168 at PTN008531994).
+- Every row now has supported_by. Status set to COMPLETE. Added one suggested
+  experiment.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- PMID:25827416 full text is now cached; quotes previously attributed to this notes file now cite the PMID directly. Added a suggested question recording that in_complex GO:0009331 is homology-based (about 57% identity to E. coli GlpD), with no KT2440 oligomerization assay.

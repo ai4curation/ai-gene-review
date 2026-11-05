@@ -33,3 +33,20 @@ The paper explicitly places PP_1076/GlpF in the `glpF-glpK-glpR-glpD` locus and 
 
 - Accept glycerol channel activity, glycerol transmembrane transport, and plasma-membrane localization as core.
 - Mark generic channel, membrane, and transmembrane-transport parents as over-annotated because specific terms are present.
+
+## 2026-11-03 review completion
+
+- No deep-research provider file exists for this gene. Evidence: UniProt record
+  (unreviewed; family, InterPro and Phobius transmembrane features), the KT2440
+  pathway paper PMID:25827416 (full-text statements recorded above), and the
+  experimentally characterized E. coli ortholog (genes/ECOLI/glpF), reviewed
+  together for consistency.
+- Generic rows (GO:0015267 channel activity, GO:0016020 membrane, GO:0055085
+  transmembrane transport) changed from MARK_AS_OVER_ANNOTATED to MODIFY toward
+  GO:0015254, GO:0005886 and GO:0015793, matching the E. coli review.
+- Added supported_by quotes to every row; ARBA content is not used as evidence.
+  Status set to COMPLETE.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- PMID:25827416 full text is now cached; quotes previously attributed to this notes file now cite the PMID directly.
