@@ -76,13 +76,52 @@ CAUSAL_PREDICATES: dict[str, tuple[str, bool]] = {
     "RO:0012009": ("constitutively upstream of", False),
 }
 
+#: Predicates that pass material (a product used by the next activity) rather
+#: than regulate. A material-flow edge that skips compartments needs a transport
+#: step; a regulation edge may instead act on a protein that then relocates.
+INPUT_PREDICATES = frozenset({"RO:0002413", "RO:0012010"})
+
 AncestorFn = Callable[[str], Iterable[str]]
+
+#: Given a GO-CAM gene product id, the compartments it is known to occupy.
+ProteinLocationFn = Callable[[str], frozenset[str]]
+
+#: Given upstream and downstream activity ids, a module explanation (or None).
+EdgeExplainer = Callable[[str, str], Optional[Any]]
+
+#: Gene-review actions that reject an annotated location.
+REJECTING_ACTIONS = frozenset({"REMOVE", "MARK_AS_OVER_ANNOTATED"})
+#: Gene-review actions that keep an annotated location.
+KEEPING_ACTIONS = frozenset(
+    {"ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "TOO_GENERAL", "NEW"}
+)
 
 #: Hint attached when ``occurs_in`` is a cell type rather than a cellular component.
 CELL_TYPE_HINT = (
     "occurs_in names a cell type (CL), which says which cell but not where in it; "
     "add a cellular component."
 )
+
+
+class EdgeKind(str, Enum):
+    """What a causal edge passes from one activity to the next."""
+
+    REGULATION = "REGULATION"
+    INPUT = "INPUT"
+    OTHER = "OTHER"
+
+
+def edge_kind(predicate: str) -> EdgeKind:
+    """Classify a causal predicate.
+
+    >>> edge_kind("RO:0002413").value, edge_kind("RO:0002629").value, edge_kind("RO:9").value
+    ('INPUT', 'REGULATION', 'OTHER')
+    """
+    if predicate in INPUT_PREDICATES:
+        return EdgeKind.INPUT
+    if predicate in CAUSAL_PREDICATES:
+        return EdgeKind.REGULATION
+    return EdgeKind.OTHER
 
 
 class ResolutionStatus(str, Enum):
@@ -108,6 +147,10 @@ class EdgeStatus(str, Enum):
     BRIDGED = "BRIDGED"
     """Two membranes bordering the same space (contact site, vesicle docking)."""
     NONADJACENT = "NONADJACENT"
+    EXPLAINED = "EXPLAINED"
+    """Non-adjacent, but a module path through a transport step spells out the gap."""
+    RELOCATING = "RELOCATING"
+    """Non-adjacent regulation of a protein known to occupy a compartment next to the regulator."""
     INDETERMINATE = "INDETERMINATE"
     """At least one end has no resolvable location."""
 
@@ -340,10 +383,13 @@ class EdgeFinding:
     downstream_compartments: list[str]
     status: EdgeStatus
     distance: Optional[int]
+    kind: EdgeKind = EdgeKind.OTHER
+    explanation: Optional[dict[str, Any]] = None
+    downstream_protein_compartments: Optional[list[str]] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Return a YAML-friendly dict."""
-        return {
+        d: dict[str, Any] = {
             "upstream": self.upstream,
             "upstream_label": self.upstream_label,
             "downstream": self.downstream,
@@ -355,7 +401,13 @@ class EdgeFinding:
             "downstream_compartments": self.downstream_compartments,
             "status": self.status.value,
             "distance": self.distance,
+            "kind": self.kind.value,
         }
+        if self.explanation:
+            d["explanation"] = self.explanation
+        if self.downstream_protein_compartments:
+            d["downstream_protein_compartments"] = self.downstream_protein_compartments
+        return d
 
 
 @dataclass
@@ -381,13 +433,27 @@ class ModelCompartmentReport:
 
     @property
     def nonadjacent(self) -> list[EdgeFinding]:
-        """Causal edges that skip at least one compartment."""
+        """Causal edges that skip at least one compartment, with no explanation."""
         return [e for e in self.edges if e.status == EdgeStatus.NONADJACENT]
 
+    @property
+    def explained(self) -> list[EdgeFinding]:
+        """Non-adjacent edges that a module path spells out."""
+        return [e for e in self.edges if e.status == EdgeStatus.EXPLAINED]
+
+    @property
+    def relocating(self) -> list[EdgeFinding]:
+        """Non-adjacent regulation of a protein that can sit next to the regulator."""
+        return [e for e in self.edges if e.status == EdgeStatus.RELOCATING]
+
     def to_dict(self, all_rows: bool = False) -> dict[str, Any]:
-        """Return a YAML-friendly dict; by default only the problem rows."""
+        """Return a YAML-friendly dict; by default only the rows worth reading."""
         locs = self.locations if all_rows else self.unresolved
-        edges = self.edges if all_rows else self.nonadjacent
+        edges = (
+            self.edges
+            if all_rows
+            else self.nonadjacent + self.relocating + self.explained
+        )
         return {
             "model": self.model_id,
             "title": self.title,
@@ -396,6 +462,8 @@ class ModelCompartmentReport:
             "n_unresolved_locations": len(self.unresolved),
             "n_nonadjacent_edges": len(self.nonadjacent),
             "n_bridged_edges": len(self.bridged),
+            "n_relocating_edges": len(self.relocating),
+            "n_explained_edges": len(self.explained),
             "locations": [loc.to_dict() for loc in locs],
             "edges": [e.to_dict() for e in edges],
         }
@@ -405,8 +473,21 @@ def check_model(
     model: dict[str, Any],
     cm: CompartmentModel,
     ancestors: AncestorFn,
+    explainer: Optional[EdgeExplainer] = None,
+    protein_locations: Optional[ProteinLocationFn] = None,
 ) -> ModelCompartmentReport:
     """Run compartment QC over one cached GO-CAM model (gocam-py YAML as dict).
+
+    A non-adjacent edge is then refined, in this order:
+
+    1. ``EXPLAINED`` when ``explainer`` finds a module path through a transport
+       step between the two activities;
+    2. ``RELOCATING`` when the edge is a direct regulation (not material flow,
+       and not an indirect edge such as transcriptional control, which reaches
+       its target through gene expression) and ``protein_locations`` places the
+       downstream protein in a compartment the same as or adjacent to the
+       upstream activity: the regulator can reach the protein, which then does
+       its job elsewhere.
 
     >>> cm = CompartmentModel.load()
     >>> anc = {t: {t} for t in ["GO:0005829", "GO:0005576"]}
@@ -425,6 +506,13 @@ def check_model(
     >>> r = check_model(model, cm, lambda t: anc[t])
     >>> [(e.status.value, e.distance, e.direct) for e in r.nonadjacent]
     [('NONADJACENT', 2, True)]
+
+    If P2 is known to occur in the plasma membrane, it can meet P1 there:
+
+    >>> r = check_model(model, cm, lambda t: anc[t],
+    ...                 protein_locations=lambda gp: frozenset({"PLASMA_MEMBRANE"}))
+    >>> [(e.status.value, e.downstream_protein_compartments) for e in r.relocating]
+    [('RELOCATING', ['PLASMA_MEMBRANE'])]
     """
     labels = {o["id"]: o.get("label") for o in model.get("objects") or []}
     resolutions: dict[str, Resolution] = {}
@@ -460,6 +548,29 @@ def check_model(
             plabel, direct = CAUSAL_PREDICATES.get(pred, (None, None))
             status, dist = cm.edge_status(resolutions[up], resolutions[down])
             ug, dg = gene_of.get(up), gene_of.get(down)
+            kind = edge_kind(pred)
+            explanation = None
+            near: Optional[list[str]] = None
+            if status == EdgeStatus.NONADJACENT and explainer:
+                found = explainer(up, down)
+                if found is not None:
+                    status = EdgeStatus.EXPLAINED
+                    explanation = found.to_dict()
+            if (
+                status == EdgeStatus.NONADJACENT
+                and kind == EdgeKind.REGULATION
+                and direct
+                and protein_locations
+                and dg
+            ):
+                reachable = [
+                    c
+                    for c in sorted(protein_locations(dg))
+                    if _within_one(cm.distance(resolutions[up].compartments, {c}))
+                ]
+                if reachable:
+                    status = EdgeStatus.RELOCATING
+                    near = reachable
             edges.append(
                 EdgeFinding(
                     upstream=up,
@@ -473,6 +584,9 @@ def check_model(
                     downstream_compartments=sorted(resolutions[down].compartments),
                     status=status,
                     distance=dist,
+                    kind=kind,
+                    explanation=explanation,
+                    downstream_protein_compartments=near,
                 )
             )
     return ModelCompartmentReport(
@@ -481,6 +595,15 @@ def check_model(
         locations=locations,
         edges=edges,
     )
+
+
+def _within_one(distance: Optional[int]) -> bool:
+    """True for a known distance of 0 or 1.
+
+    >>> _within_one(0), _within_one(1), _within_one(2), _within_one(None)
+    (True, True, False, False)
+    """
+    return distance is not None and distance <= 1
 
 
 def oak_ancestor_fn(handle: str = "sqlite:obo:go") -> AncestorFn:
@@ -508,10 +631,95 @@ def check_cached_models(
     paths: Iterable[Path],
     ancestors: AncestorFn,
     cm: Optional[CompartmentModel] = None,
+    explainer: Optional[EdgeExplainer] = None,
+    protein_locations: Optional[ProteinLocationFn] = None,
 ) -> list[ModelCompartmentReport]:
     """Run :func:`check_model` over cached model files."""
     cm = cm or CompartmentModel.load()
-    return [check_model(yaml.safe_load(p.read_text()), cm, ancestors) for p in paths]
+    return [
+        check_model(
+            yaml.safe_load(p.read_text()), cm, ancestors, explainer, protein_locations
+        )
+        for p in paths
+    ]
+
+
+class ProteinLocationIndex:
+    """Where gene products are known to be, from their gene folders.
+
+    Uses the cellular-component rows of ``<GENE>-goa.tsv`` (not NOT-qualified),
+    dropping any term that the gene's review rejects (REMOVE or
+    MARK_AS_OVER_ANNOTATED, with no row keeping it). Each remaining term is
+    placed with :meth:`CompartmentModel.resolve`; only terms that resolve to a
+    single compartment count, so a broad term such as cytoplasm cannot make a
+    protein look adjacent to everything. Gene products without a gene folder
+    have no known location.
+    """
+
+    def __init__(self, genes_dir: Path, cm: CompartmentModel, ancestors: AncestorFn):
+        self.genes_dir = genes_dir
+        self.cm = cm
+        self.ancestors = ancestors
+        self._paths: Optional[dict[str, Path]] = None
+        self._cache: dict[str, frozenset[str]] = {}
+
+    def _goa_paths(self) -> dict[str, Path]:
+        if self._paths is None:
+            self._paths = {}
+            for p in sorted(self.genes_dir.glob("*/*/*-goa.tsv")):
+                with p.open() as fh:
+                    fh.readline()
+                    row = fh.readline().split("\t")
+                if len(row) > 1 and row[1]:
+                    self._paths.setdefault(row[1], p)
+        return self._paths
+
+    def _rejected_terms(self, goa_path: Path) -> set[str]:
+        review = goa_path.with_name(
+            goa_path.name.replace("-goa.tsv", "-ai-review.yaml")
+        )
+        if not review.exists():
+            return set()
+        doc = yaml.safe_load(review.read_text()) or {}
+        rejected: set[str] = set()
+        kept: set[str] = set()
+        for ann in doc.get("existing_annotations") or []:
+            tid = (ann.get("term") or {}).get("id")
+            action = (ann.get("review") or {}).get("action")
+            if not isinstance(tid, str) or not tid or ann.get("negated"):
+                continue
+            if action in REJECTING_ACTIONS:
+                rejected.add(tid)
+            elif action in KEEPING_ACTIONS:
+                kept.add(tid)
+        return rejected - kept
+
+    def __call__(self, gene_product: str) -> frozenset[str]:
+        """Return the single compartments a gene product is known to occupy."""
+        acc = gene_product.split(":", 1)[-1]
+        if acc in self._cache:
+            return self._cache[acc]
+        path = self._goa_paths().get(acc)
+        out: set[str] = set()
+        if path is not None:
+            rejected = self._rejected_terms(path)
+            with path.open() as fh:
+                header = fh.readline().rstrip("\n").split("\t")
+                col = {name: i for i, name in enumerate(header)}
+                for line in fh:
+                    row = line.rstrip("\n").split("\t")
+                    if row[col["GO ASPECT"]] != "cellular_component":
+                        continue
+                    if row[col["QUALIFIER"]].startswith("NOT"):
+                        continue
+                    term = row[col["GO TERM"]]
+                    if term in rejected:
+                        continue
+                    res = self.cm.resolve(term, self.ancestors)
+                    if res.status == ResolutionStatus.RESOLVED:
+                        out |= res.compartments
+        self._cache[acc] = frozenset(out)
+        return self._cache[acc]
 
 
 def summarize(reports: list[ModelCompartmentReport]) -> dict[str, Any]:
@@ -539,6 +747,8 @@ def summarize(reports: list[ModelCompartmentReport]) -> dict[str, Any]:
         "n_nonadjacent_direct_edges": sum(
             1 for r in reports for e in r.nonadjacent if e.direct
         ),
+        "n_models_with_relocating": sum(1 for r in reports if r.relocating),
+        "n_models_with_explained": sum(1 for r in reports if r.explained),
         "location_status": dict(sorted(status_counts.items())),
         "edge_status": dict(sorted(edge_counts.items())),
         "unresolved_terms": sorted(

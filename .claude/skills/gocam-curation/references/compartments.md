@@ -47,7 +47,9 @@ nuclear lumen (the envelope is between them).
 |---|---|
 | `SAME` / `ADJACENT` | physically possible as drawn |
 | `BRIDGED` | two membranes bordering the same space (ER membrane → Golgi membrane, outer → inner mitochondrial membrane); possible at a contact site or on vesicle docking, so lower priority |
-| `NONADJACENT` | the edge skips one or more compartments (`distance` = steps in the adjacency graph) |
+| `EXPLAINED` | the edge skips compartments, but a module pinned to both activities spells out the steps through a transport step; the report gives the module path. Not a lead |
+| `RELOCATING` | a direct regulation edge that skips compartments, where the downstream protein is known to sit next to the regulator (it is acted on there, then moves). Not a lead, but no module says how it moves yet |
+| `NONADJACENT` | the edge skips one or more compartments and nothing explains it (`distance` = steps in the adjacency graph) |
 | `INDETERMINATE` | an end is `UNRESOLVED` or `MISSING` |
 
 A `NONADJACENT` edge with a **direct** predicate (`directly positively/negatively
@@ -64,6 +66,19 @@ causes:
   the cytosol and the factor then enters the nucleus.
 - **A wrong `occurs_in`.** One end placed by default (e.g. cytoplasm for a
   luminal enzyme).
+
+**Regulation is not material flow.** A direct regulation edge means the two
+proteins touch; the downstream activity can still happen elsewhere afterwards
+(a STAT phosphorylated at the membrane binds DNA in the nucleus). A
+"directly provides input for" edge passes a molecule, which must cross every
+membrane in between, so a jump there means a missing transporter.
+
+**Prefer a module to a per-model flag** when the same jump recurs across many
+models. Write the missing steps into the module (reusing a transport module by
+`module_ref`), pin the GO-CAM activities at both ends with `gocam_associations`
+(`model` plus `activity`), and rerun the check: the edges become `EXPLAINED`.
+`karyopherin_nuclear_protein_import` and the JAK-STAT, BMP and TGF-beta modules
+are the worked example; see `projects/GOCAM_COMPARTMENTS.md`.
 
 An indirect edge (`indirectly ...`, `causally upstream of ...`) across
 compartments may be a deliberate summary of a transport step; record it in

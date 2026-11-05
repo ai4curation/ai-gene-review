@@ -14,12 +14,19 @@ in the same compartment or in compartments that share a boundary.
 `just gocam-compartments` checks both against a small, explicit spatial model: a
 disjoint set of compartments plus adjacency rules
 ([`gocam_compartments.yaml`](../src/ai_gene_review/data/gocam_compartments.yaml)).
-In the first run over all 2,036 cached production models, 338 models have at
-least one activity whose location reaches no compartment (chromatin is the
-largest group, 293 activities in 104 models), and 150 models have a causal edge
-between compartments that do not touch (139 of these edges use a *direct*
-predicate). Two new QC flags, `UNRESOLVED_COMPARTMENT` and
-`NONADJACENT_COMPARTMENTS`, record these findings in GO-CAM reviews.
+Over all 2,036 cached production models, 338 models have at least one activity
+whose location reaches no compartment (chromatin is the largest group, 293
+activities in 104 models). The most common compartment jump, a plasma-membrane
+receptor kinase or JAK directly activating a nuclear SMAD or STAT, is a GO-CAM
+convention rather than an error: the steps in between (release, SMAD4 or STAT
+pairing, nuclear import) are left out. **Modules now state those steps and are
+linked to the GO-CAM activities, so they explain the jump**: 62 of the 76 direct
+receptor → nucleus edges are explained by a module path through a nuclear
+import step ([Explaining edges with modules](#explaining-edges-with-modules)).
+What remains, 56 direct edges in 35 models, are review leads; most pass
+material (a metabolite or protein) across a membrane with no transporter in the
+model. Two QC flags, `UNRESOLVED_COMPARTMENT` and `NONADJACENT_COMPARTMENTS`,
+record confirmed findings in GO-CAM reviews.
 
 ## The two motivating cases
 
@@ -102,11 +109,28 @@ A causal edge is then classified by the distance between its two ends:
 | `SAME` | both activities in one compartment |
 | `ADJACENT` | they share a boundary |
 | `BRIDGED` | two membranes bordering the same space, e.g. ER membrane → Golgi membrane or outer → inner mitochondrial membrane; plausible at a membrane contact site or on vesicle docking, so reported at lower priority |
-| `NONADJACENT` | anything farther; the `NONADJACENT_COMPARTMENTS` flag |
+| `EXPLAINED` | farther apart, but a module linked to both activities has a path between them through a transport step (see below) |
+| `RELOCATING` | farther apart, but the edge is a direct regulation and the downstream protein is known (from its gene folder) to occupy a compartment the regulator touches: the regulator acts on the protein there, and the protein then does its job elsewhere |
+| `NONADJACENT` | anything else farther apart; a lead for the `NONADJACENT_COMPARTMENTS` flag |
 | `INDETERMINATE` | one end is unresolved or missing |
 
 For coarse locations the closest reading is used, so an edge is called
 non-adjacent only when no reading of the coarse term makes it adjacent.
+
+**Regulation and material flow are different.** "Directly regulates" in GO-CAM
+means the two proteins physically interact; it does not mean the two
+activities happen in the same place. JAK1 touches STAT3 at the membrane, and
+STAT3's `occurs_in` nucleus says where STAT3 does its own job, later. So a
+regulation edge can legitimately join distant compartments when the regulated
+protein moves. A material-flow edge ("directly provides input for": a product of
+one activity is the input of the next) is different: the molecule itself has to
+cross every membrane in between, so a jump means a transporter is missing from
+the model. `RELOCATING` therefore applies only to direct regulation edges, and
+only when the downstream protein's own curated locations (GOA cellular-component
+rows in its gene folder, minus any its review REMOVEs or marks as
+over-annotated) include a compartment next to the regulator. Indirect edges
+(transcriptional control and the like) reach their target through gene
+expression and are never relocating.
 
 ### Context hints
 
@@ -130,11 +154,66 @@ and the most specific wins.
 | cell division site | 17 | 5 | a region of the cell periphery |
 | (no hint) | 17 | 10 | |
 
+## Explaining edges with modules
+
+A GO-CAM model is a compressed account. A module can spell out what an edge
+compresses, and a module element can name the GO-CAM activities that realize it
+(`gocam_associations` with an `activity`). Put together, a module **explains** a
+GO-CAM edge A → B when:
+
+1. A is pinned to some module element and B to another;
+2. the module's `connections` lead from A's element to B's element (lifting each
+   to the nearest node that takes part in a connection; negative regulation
+   does not carry the signal); and
+3. the path goes through a `TRANSPORT_STEP` node.
+
+The checker reports the path and any module included under the transport step
+by `module_ref`. For the BMP4 model, for example:
+
+```yaml
+upstream_label: ACVR1 Hsap
+downstream_label: SMAD1 Hsap
+predicate_label: directly positively regulates
+status: EXPLAINED
+explanation:
+  module: bmp_signaling
+  path: [bmp_receptor_engagement, smad1_5_activation, smad_complex_nuclear_import,
+    bmp_transcriptional_output]
+  bridges: [smad_complex_nuclear_import]
+  via_modules: [karyopherin_nuclear_protein_import]
+```
+
+The pins are curated, not inferred: nothing matches genes to modules
+automatically, so an explanation is a curator's claim that this module is what
+the GO-CAM edge stands for.
+
+### What was curated
+
+| Module | Change | GO-CAM edges explained |
+|---|---|---|
+| [`karyopherin_nuclear_protein_import`](../modules/karyopherin_nuclear_protein_import.yaml) | **New.** Cargo-neutral import cycle: cargo recognition (importin-alpha/beta1 route, or a direct importin-beta-family route), passage through the pore, RanGTP release (RAN, RCC1), carrier return (RANGAP1, NTF2), and importin-alpha re-export (CSE1L, optional) | (included by the three below) |
+| [`jak_stat_signaling`](../modules/jak_stat_signaling.yaml) | The dimerization and import step is now two sub-steps: STAT release and dimerization (no other gene product), then STAT nuclear import by `module_ref`, citing importin-alpha5 for STAT1 and importin-alpha3 for STAT3 | 38 |
+| [`bmp_signaling`](../modules/bmp_signaling.yaml) | **New step**: R-SMAD/SMAD4 complex formation (SMAD4 had been listed only at the output) and SMAD nuclear import by `module_ref` (importin-7/8; the SMAD1 basic NLS motif) | 19 |
+| [`tgfb_smad_signaling`](../modules/tgfb_smad_signaling.yaml) | **New step**: SMAD2/3 nuclear import by `module_ref` (SMAD3 binds importin-beta1; both need importin-7/8) | 5 |
+
+So the answer to "does this jump involve other genes?" is now written down
+where it can be reused. Release and STAT dimerization are changes of state of
+the transcription factor itself. SMAD4 is a pathway-specific partner, absent
+from all 16 SMAD GO-CAMs in this set. Import uses shared machinery (importins
+and the Ran system), which GO-CAMs reasonably leave out and the import module
+supplies once.
+
+Only human GO-CAM activities are pinned. Mouse and fly models with the same
+pattern, and the activin and nodal receptor models (ACVR1B, ACVR1C → SMAD2/3),
+are left for the corresponding modules.
+
 ## First corpus run
 
 `just gocam-compartments -o projects/GOCAM_COMPARTMENTS/gocam-compartments-report.yaml`,
-2,036 cached production models, GO `releases/2026-07-26`. The full report lists
-every unresolved location and non-adjacent edge per model:
+2,036 cached production models, GO from `sqlite:obo:go`, with module pins from
+`modules/` and protein locations from `genes/`. The full report lists every
+unresolved location and every non-adjacent, relocating or explained edge per
+model:
 [gocam-compartments-report.yaml](GOCAM_COMPARTMENTS/gocam-compartments-report.yaml).
 
 | Activity location | Count |
@@ -150,15 +229,17 @@ every unresolved location and non-adjacent edge per model:
 | same compartment | 4,676 |
 | adjacent | 1,207 |
 | bridged (membrane–space–membrane) | 63 |
-| non-adjacent | 264 (139 with a direct predicate) |
+| explained by a module | 62 |
+| relocating | 21 |
+| non-adjacent | 181 (56 with a direct predicate: 33 material flow, 23 regulation) |
 | indeterminate | 2,956 |
 
-The largest groups of non-adjacent edges (upstream → downstream, all edges /
-direct edges):
+The largest groups of compartment jumps before modules and protein locations
+were taken into account (upstream → downstream, all edges / direct edges):
 
 | Upstream | Downstream | Edges | Direct | Usual missing step |
 |---|---|---|---|---|
-| plasma membrane | nucleus | 99 | 76 | the receptor or kinase acts on a cytosolic factor, which then enters the nucleus (JAK1 → STAT3 in `5f46c3b700002685`); 61 models |
+| plasma membrane | nucleus | 99 | 76 | the receptor or kinase acts on a cytosolic factor, which then enters the nucleus (JAK1 → STAT3 in `5f46c3b700002685`); 61 models. Of the 76 direct edges, 62 are now explained by modules and 11 (activin/nodal → SMAD2/3) are relocating |
 | nucleus | extracellular region | 21 | 3 | gene expression → secreted product, normally an indirect edge |
 | nucleus | plasma membrane | 16 | 0 | as above, for a membrane product |
 | cytoplasmic vesicle (coarse) | ER (coarse) | 11 | 11 | all in one *S. pombe* model (`693b3c0900004859`): COPII cargo receptors acting on Sec24; placing both ends in their membranes would make these bridged |
@@ -183,33 +264,33 @@ named. A finding the reviewer rejects (a deliberate summary edge, a location the
 evidence really cannot resolve) goes in `notes`, so the next reader knows it was
 checked.
 
-Most useful first are the 81 models with at least one **direct** edge between
-non-adjacent compartments. Only one of them has a review so far. The models with
-the most such edges:
+Explained and relocating edges are not leads: a module or the protein's own
+locations account for them. The leads are the 35 models with at least one
+**direct** edge that is still non-adjacent (one already has a review). The
+models with the most such edges:
 
 | Model | Title | Direct non-adjacent edges | Example |
 |---|---|---|---|
 | `693b3c0900004859` | ER to Golgi vesicle-mediated transport (*S. pombe*, partial) | 13 | yip1 → erv29 |
-| `66e382fb00002105` | BMP8A role in spermatogenesis via SMAD1, SMAD5 and SMAD9 (human) | 4 | BMPR1A → SMAD5 |
-| `626b20c100000025` | IL9-mediated signaling pathway (human) | 3 | JAK3 → STAT5A |
-| `62b4ffe300003747` | Response to IFN-beta, leading to JAK-STAT activation (human) | 3 | TYK2 → STAT1 |
-| `62d0afa500000298` | Gluconeogenesis 3 (mouse) | 3 | Slc25a12 → Got1 |
-| `645d887900001795` | BMP2 signaling pathway (human) | 3 | BMPR1A → SMAD9 |
-| `663d668500002824` | Activin E signaling pathway (human) | 3 | ACVR1C → SMAD2 |
-| `66e382fb00001232` | BMP4 signaling pathway (human) | 3 | BMPR1A → SMAD5 |
-| `66e382fb00001606` | Hepcidin induction by BMP6 signaling (human) | 3 | ACVR1 → SMAD1 |
-| `66e382fb00001786` | Hepcidin induction by BMP2/BMP6 complex signaling (human) | 3 | BMPR1A → SMAD5 |
+| `62d0afa500000298` | Gluconeogenesis 3 (mouse) | 3 | Slc25a12 → Got1 (material flow) |
 | `6796b94c00004996` | SARS-CoV-2 entry into host cell | 3 | ACAT1 → Spike protein S2 |
-| `69729a3800007453` | protein import into mitochondrial matrix (*S. pombe*) | 3 | tom40 → tim50 |
+| `69729a3800007453` | protein import into mitochondrial matrix (*S. pombe*) | 3 | tom40 → tim50 (material flow) |
+| `61e0e55600001225` | Gluconeogenesis 1 (mouse) | 2 | Slc25a10 → Mdh1 (material flow) |
+| `65692e7e00001822` | RNF115 inhibition of TLR transport to cell surface (human) | 2 | RAB13 → TLR4 |
+| `65bc474400000029` | ZDHHC4-mediated palmitoylation of MAVS via CPT1A (human) | 2 | ZDHHC4 → MAVS |
+| `59cc772c00000000` | IL1beta-mediated signaling pathway (human) | 1 | CASP1 → IL1B |
 
-Many of these follow one pattern: a receptor kinase at the plasma membrane
-directly activates a transcription factor whose activity is placed in the
-nucleus (BMP receptor → SMAD, JAK → STAT). The pattern runs across many models
-from the same curation groups, so it is probably a modelling convention, not a
-string of separate mistakes. One question to the curators settles all of them,
-for example whether the transcription factor's phosphorylation should be a
-cytosolic step with nuclear import modelled separately. A review should raise it
-as that question, not report one defect per model.
+Material-flow jumps are the strongest remaining leads: a mitochondrial carrier
+in the inner membrane "directly provides input for" a cytosolic enzyme, with the
+outer-membrane step (VDAC) not modelled. Several regulation jumps are trafficking
+models whose subject is a protein moving between membranes, where a module for
+the trafficking route would serve the same explanatory role the import module
+does for STATs and SMADs.
+
+A recurring pattern across many models is better answered once in a module
+than once per model in a review. The receptor → nuclear transcription factor
+pattern turned out to be a convention with a well-defined set of missing steps;
+writing them into modules settled it for 62 edges at once.
 
 Unresolved locations are second priority, because the biology is usually
 obvious. A review deals with them by noting the term that would state the
@@ -235,11 +316,17 @@ location (chromatin → `GO:0000228` nuclear chromosome).
 
 ## Possible next steps
 
-- Work through the review leads below, writing a GO-CAM review for each
+- Work through the review leads above, writing a GO-CAM review for each
   model taken up.
+- Give `activin_receptor_signaling` and `nodal_signaling` the same SMAD2/3
+  import step and pin their GO-CAM activities; that would explain the 11
+  relocating ACVR1B/ACVR1C → SMAD2/3 edges.
+- Write or extend modules for the material-flow jumps (mitochondrial metabolite
+  export through the outer membrane; pyruvate import), and pin them.
 - Report chromatin → nuclear chromosome upstream to the GO-CAM curators and to
   the Noctua form defaults; it is the single largest fixable group.
 - Consider face-aware membrane locations (`cytoplasmic side of plasma membrane`,
   `lumenal side of ER membrane`) as a refinement of the membrane compartments.
-- Apply the same model to module (`modules/`) connections, which have the same
-  spatial semantics.
+- Apply the compartment check to module connections themselves, which have the
+  same spatial semantics, so that a module cannot explain a jump with a path
+  that jumps too.
