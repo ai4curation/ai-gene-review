@@ -608,6 +608,16 @@ def test_worked_examples_are_clean_with_real_go(gene):
         ("contributes_to", "enables", False),
         ("enables", "enables", True),
         ("colocalizes_with", "located_in", False),
+        # the directional acts_upstream_of variants carry up to their parents
+        ("acts_upstream_of_positive_effect", "acts_upstream_of", True),
+        (
+            "acts_upstream_of_or_within_negative_effect",
+            "acts_upstream_of_or_within",
+            True,
+        ),
+        ("acts_upstream_of", "involved_in", False),
+        # involved_in says the gene is part of the process; acts_upstream_of says it is not
+        ("involved_in", "acts_upstream_of", False),
         (None, "is_active_in", True),
     ],
 )

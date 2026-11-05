@@ -456,6 +456,27 @@ _QUALIFIER_ENTAILS: Dict[str, FrozenSet[str]] = {
     "enables": frozenset({"involved_in", "acts_upstream_of_or_within"}),
     "contributes_to": frozenset({"involved_in", "acts_upstream_of_or_within"}),
     "involved_in": frozenset({"acts_upstream_of_or_within"}),
+    "acts_upstream_of": frozenset({"acts_upstream_of_or_within"}),
+    "acts_upstream_of_positive_effect": frozenset(
+        {
+            "acts_upstream_of",
+            "acts_upstream_of_or_within",
+            "acts_upstream_of_or_within_positive_effect",
+        }
+    ),
+    "acts_upstream_of_negative_effect": frozenset(
+        {
+            "acts_upstream_of",
+            "acts_upstream_of_or_within",
+            "acts_upstream_of_or_within_negative_effect",
+        }
+    ),
+    "acts_upstream_of_or_within_positive_effect": frozenset(
+        {"acts_upstream_of_or_within"}
+    ),
+    "acts_upstream_of_or_within_negative_effect": frozenset(
+        {"acts_upstream_of_or_within"}
+    ),
 }
 
 

@@ -148,7 +148,16 @@ narrowed or retired, an unexempted ACCEPT/REMOVE pair is reported by both.
   the general row's (`located_in` a part is `located_in` the whole but not
   `is_active_in` it; `contributes_to` does not entail `enables`). A row with no
   `qualifier` is assumed to match, so older reviews that omit it can raise false
-  conflicts.
+  conflicts. The directional `acts_upstream_of_*_effect` variants carry up to
+  `acts_upstream_of`/`acts_upstream_of_or_within`; `enables` does not carry to
+  `contributes_to`, which GO reserves for activity performed only as part of a complex.
+- Same-term rules do not look at qualifiers yet, so `ACCEPT located_in X` beside
+  `REMOVE is_active_in X` is still reported.
+- `action_2` of the REMOVE-on-ancestor rule leaves out MODIFY: a MODIFY row's own term
+  may be the reason it is modified, and its replacement terms are not in the relation
+  graph (below).
+- The ND root-term exception is keyed on the three root terms, not on the ND evidence
+  code; in practice root rows are ND.
 - The pair rules compare each row's own `term.id`. MODIFY `proposed_replacement_terms`
   are not yet part of the relation graph, so a replacement term never takes part in a
   pair conflict. (The TOO_GENERAL precondition below does count them.)
