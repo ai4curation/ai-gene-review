@@ -1,16 +1,18 @@
 # GFAP source guide
 
-The [evidence archive](GFAP-evidence.yaml) preserves the 279 original annotation objects, their forecast/native joins, the three extension atoms, product identities, ancestral assertions and interaction-source locators. Row numbers below are zero-based original raw indices. A partner-specific binding term describes the independently supported class of the bound protein; it does not transfer that partner's activity to GFAP.
+The [evidence archive](GFAP-evidence.yaml) preserves the 279 original annotation objects, their forecast/native joins, the three extension atoms, product identities, ancestral assertions and interaction-source locators. Row numbers below are zero-based original raw indices. Positive interaction records are distinct from the decision to retain an informative GFAP molecular function.
 
 ## Structural function and natural products
 
-The human sequence and intermediate-filament architecture are documented in [PMID2740350](https://pubmed.ncbi.nlm.nih.gov/2740350/), whose original scans were unavailable. Separate human assembly evidence supports the structural judgments when a historical source remains abstract-only.
+The human sequence and intermediate-filament architecture are documented in [PMID2740350](https://pubmed.ncbi.nlm.nih.gov/2740350/), whose original scans were unavailable. [PMID35511821](https://pubmed.ncbi.nlm.nih.gov/35511821/) directly tests purified recombinant human wild-type GFAP: dialysis, electron microscopy and sedimentation support filament assembly. Human-protein expression in rat astrocytes is a separate cellular experiment. Selected original assembly Methods/Results were read; images and supplements were not reanalyzed.
 
 [PMID12058025](https://pubmed.ncbi.nlm.nih.gov/12058025/) was read in selected original Methods, Results and captions. Human alpha and epsilon entered cellular filament networks, allowing heteromeric incorporation. Epsilon-tail binding involved presenilin fragments, not proof of a whole native complex. Engineered GFAP46/deletion reagents are not additional natural products.
 
 The authentic [PMID17203480](https://pubmed.ncbi.nlm.nih.gov/17203480/) abstract reports kappa homomer failure and disruption of alpha networks as kappa abundance rises. Pig developmental transcript ratios and proposed motility effects are separate. Full text was unavailable.
 
 The official inventory is alpha P14136-1, 432 residues; epsilon P14136-3, 431 residues; and kappa P14136-2, 438 residues. Display names 2 and 3 therefore do not match accession suffixes. All three direct FASTAs agree with the official sequence edits. Functional splice classes retain these mappings; no product-exclusive GO terms are invented.
+
+[PMID6371809](https://pubmed.ncbi.nlm.nih.gov/6371809/) was read in all five original scanned pages. Human glioma immunogold labeling places GFAP and vimentin in the same filaments; specificity controls support the identities. The result does not resolve a particular heterodimer or exclude separate protofibrils. This supplies functional context for the vimentin binding refinements. NEFL and KRT13 screen/PCA results do not independently establish comparable GFAP filament roles.
 
 ## Lysosomal regulation and other process evidence
 
@@ -22,7 +24,7 @@ Other donor evidence remains bounded: [16988027](https://pubmed.ncbi.nlm.nih.gov
 
 ## Interaction evidence and partner classification
 
-Positive interactions are preserved even when generic protein binding is removed for lack of functional information. Independently supported partner classes can justify a more informative binding term without proving a new regulatory effect, domain contact or physiological pathway. Experimental, curated-family and explicit similarity evidence are distinguished; a protein name or predicted GO label alone is insufficient. Archive field evidence arrays are record provenance, not a claim that every cited experiment supports every clause.
+Positive interactions and independent partner classifications remain preserved. Neither a credible interaction nor a correct partner class alone supplies a useful GFAP molecular function. The follow-up removes 134 generic binding annotations for informativeness; it does not classify them as artifacts. Four vimentin refinements remain because binding converges with independently demonstrated GFAP structural function. Binding terms do not require GFAP to activate its partner or perform its downstream function. Experimental, curated-family and similarity grades remain distinct in the archive; the earlier class-based judgments are historical provenance.
 
 | Source | Original evidence and limit |
 |---|---|
@@ -46,18 +48,16 @@ Reactome [1253321](https://reactome.org/content/detail/R-HSA-1253321) maps outpu
 
 Raw252 contains one conjunction: part_of enteric nervous system development AND results_in_movement_of migratory enteric neural crest cell. Raw253 contains part_of CMA. All three atoms are preserved as flat schema-supported predicate strings; there are no OR groups. BFO:0000050 is identified by its actual official IRI despite a malformed RO: short identifier in the OLS response.
 
-## Access and reproducibility
+GO:0005519 is current and nonobsolete in the retained official QuickGO response. GO:0019215 denotes interaction with an assembled intermediate filament, which is not interchangeable with binding an individual cytoskeletal protein. No assembled-filament binding term is substituted.
+
+## Access and source limits
 
 Each PMID has an explicit full_text_unavailable flag. False means selected authentic original access or an available genuine full cache; it does not mean an exhaustive reading. Papers16625196 and17974005 have available full caches but only their abstracts were assessed. True records abstract-only or no-abstract access. Every reference assessment states its actual scope; three no-abstract clinical entries remain UNVERIFIED.
 
 Five short exact excerpts occur once each in the reference findings. Their original XML-derived abstract bytes, offsets and word budgets are archived. All five native-cache byte offsets are now verified; four excerpts required whitespace-only line-wrap adaptations. Independent partner excerpts are deduplicated by record and field; all other field provenance uses identifiers, evidence arrays and content hashes rather than reproducing complete database text.
 
-The qualified normal-source union has 67 paths: 61 PMIDs, three Reactome caches and three family files. All 67 are now present: 23 inherited sources are unchanged and 44 were acquired through the native missing-only helpers. The genuine seed matches all 279 forecast machine records. Native history and affected check outcomes are recorded in the archive.
+The two assembly references have genuine native caches, bringing the source total to 69 while preserving all 67 original source files. PMID6371809 has an abstract-only cache; its scanned original pages supply the inspected full-paper evidence. PMID35511821 has full text, with selected assembly Methods and Results checked. Historical source counts, machine joins and check outcomes remain in the evidence archive and append-only history.
 
 ### Newly available selected full text
 
 Selected full text for [11567214](https://pubmed.ncbi.nlm.nih.gov/11567214/), [17043438](https://pubmed.ncbi.nlm.nih.gov/17043438/) and [20359319](https://pubmed.ncbi.nlm.nih.gov/20359319/) clarifies mutation and clinical context; the reference assessments state the inspected scope. [23828821](https://pubmed.ncbi.nlm.nih.gov/23828821/) distinguishes PAD2-treated human-brain GFAP from endogenous human-brain peptides. Citrullination identifies GFAP as a modified substrate and does not establish a new catalytic function. No images, raw spectra or supplementary experiments were independently inspected in these native readings.
-
-### Native check outcomes
-
-Default validation and strict GOA matching passed without target advisories. Computed COMPLETE status retains all six scientific UNDECIDED judgments. The genuine codex CREATE history, private rendering, local links and authored whitespace checks passed. Publication and integration acceptance remain separate.
