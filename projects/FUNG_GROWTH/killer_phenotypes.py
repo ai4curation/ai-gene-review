@@ -25,8 +25,18 @@ cell is a sharp, easily falsifiable claim: the organism lacks a working route
 for using that carbon source. It is the kind of phenotype that can confirm or
 contradict a GO annotation to a catabolic process or to an uptake transporter.
 
-Writes data/killer_phenotypes.tsv and data/carbon_source_summary.tsv, and
-prints the calls for the species that have gene reviews in this repository.
+Sister-plate rule. Pectin and xylan are each scored on more than one
+preparation (apple and citrus pectin; beechwood, birchwood and oat spelt
+xylan). A killer call on one of these plates is kept only if every sister
+plate scored for the same strain is also NO_GROWTH. A strain that grows, even
+weakly, on another preparation of the same polymer does have a route for
+using it, so the lone no-growth plate is more likely an artefact of that
+preparation or of the scoring. Rejected calls are written separately
+(--no-sister-check turns the rule off).
+
+Writes data/killer_phenotypes.tsv, data/killer_rejected_sister.tsv and
+data/carbon_source_summary.tsv, and prints the calls for the species that
+have gene reviews in this repository.
 """
 
 from __future__ import annotations
@@ -38,6 +48,13 @@ from pathlib import Path
 
 DATA = Path(__file__).parent / "data"
 BASELINE = "no carbon source"
+
+# Plates that are different preparations of the same polymer
+SISTERS = [
+    ["apple pectin 1% pH=6", "citrus pectin 1% pH=6"],
+    ["beechwood xylan 1%", "birchwood xylan 1%", "oat spelt xylan 1%"],
+]
+SISTER_OF = {p: [q for q in g if q != p] for g in SISTERS for p in g}
 
 # FUNG-GROWTH strain -> repository species folder with gene reviews
 REPO_STRAINS = {
@@ -71,6 +88,8 @@ def main() -> None:
                     help="fraction of same-genus strains that must GROW (genus comparator)")
     ap.add_argument("--genus-n", type=int, default=3,
                     help="minimum number of other same-genus strains rated (genus comparator)")
+    ap.add_argument("--no-sister-check", action="store_true",
+                    help="keep killer calls even when a sister plate of the same polymer shows growth")
     args = ap.parse_args()
 
     rows = list(csv.DictReader(open(DATA / "fung_growth_matrix.tsv"), delimiter="\t"))
@@ -105,7 +124,7 @@ def main() -> None:
     def genus(strain: str) -> str:
         return strain.split()[0].capitalize()
 
-    killers = []
+    killers, rejected = [], []
     for strain, strain_calls in calls.items():
         congeners = [o for o in calls if o != strain and genus(o) == genus(strain)]
         for s, (rating, base, c) in strain_calls.items():
@@ -119,20 +138,31 @@ def main() -> None:
                 basis.append("database")
             if len(peers) >= args.genus_n and g_frac >= args.min_genus:
                 basis.append("genus")
-            if basis:
-                killers.append((strain, REPO_STRAINS.get(strain, ""), s, rating, base,
-                                f"{counts[s]['GROWTH'] / n:.2f}",
-                                f"{peers.count('GROWTH')}/{len(peers)}" if peers else "", "+".join(basis)))
+            if not basis:
+                continue
+            sisters = [(q, strain_calls[q]) for q in SISTER_OF.get(s, []) if q in strain_calls]
+            sister_txt = "; ".join(f"{q}={r}/{b} {c2}" for q, (r, b, c2) in sisters)
+            row = (strain, REPO_STRAINS.get(strain, ""), s, rating, base,
+                   f"{counts[s]['GROWTH'] / n:.2f}",
+                   f"{peers.count('GROWTH')}/{len(peers)}" if peers else "", "+".join(basis), sister_txt)
+            if not args.no_sister_check and any(c2 != "NO_GROWTH" for _, (_, _, c2) in sisters):
+                rejected.append(row)
+            else:
+                killers.append(row)
     killers.sort(key=lambda k: (k[0], k[2]))
+    rejected.sort(key=lambda k: (k[0], k[2]))
 
-    with open(DATA / "killer_phenotypes.tsv", "w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
-        w.writerow(["strain", "repo_species", "carbon_source", "rating", "no_carbon_rating",
-                    "frac_strains_growing", "genus_peers_growing", "basis"])
-        w.writerows(killers)
+    header = ["strain", "repo_species", "carbon_source", "rating", "no_carbon_rating",
+              "frac_strains_growing", "genus_peers_growing", "basis", "sister_plates"]
+    for name, data in (("killer_phenotypes.tsv", killers), ("killer_rejected_sister.tsv", rejected)):
+        with open(DATA / name, "w", newline="") as fh:
+            w = csv.writer(fh, delimiter="\t")
+            w.writerow(header)
+            w.writerows(data)
 
     print(f"{len(calls)} strains with a no-carbon control; {len(common)} carbon sources used by "
-          f">= {args.min_users:.0%} of strains; {len(killers)} killer phenotypes")
+          f">= {args.min_users:.0%} of strains; {len(killers)} killer phenotypes "
+          f"({len(rejected)} more rejected by the sister-plate rule)")
     print("\nKiller phenotypes for strains with gene reviews in this repo:")
     for strain, folder in REPO_STRAINS.items():
         if strain not in calls:

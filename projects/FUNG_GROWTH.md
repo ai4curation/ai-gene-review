@@ -9,6 +9,7 @@ autolink_gene_symbols: false
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [SCHPO, yeast, CANAL, NEUCR, EMENI, ASPNG, ASPOR, HYPJE, MYCMD, PENCH, PYROR]
+genes: [BGL22, CAALFM_C301820WA]
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/GsyMpPX1wW2DxpyurEA5Ka
@@ -27,12 +28,13 @@ substrate that comparable fungi use. A killer phenotype is a sharp,
 falsifiable organism-level claim. It says the strain has no working route to
 use that carbon source, which bears directly on GO annotations to
 carbohydrate catabolic processes, CAZyme activities and sugar transporters.
-The first pass finds 299 killer calls across 153 strains, 5 of them in species
-with gene reviews here. One already agrees with a curation decision:
-*S. pombe* barely grows on starch, consistent with removing
-`carbohydrate catabolic process` from the alpha-amylase homologue aah1. Status:
-SCOPING. The data and scripts are in place, but no annotation has yet been
-changed on the strength of these phenotypes.
+With a rule that sister plates of the same polymer must agree, there are
+263 killer calls across 139 strains, 4 of them in species with gene reviews
+here. One agrees with an earlier curation decision: *S. pombe* barely grows
+on starch, consistent with removing `carbohydrate catabolic process` from the
+alpha-amylase homologue aah1. Joining the calls to GOA led to two new
+*C. albicans* reviews, BGL22 and CAALFM_C301820WA, which remove an
+electronic `cellulose catabolic process` row from each. Status: SCOPING.
 
 ## Data
 
@@ -63,11 +65,16 @@ added carbon):
 - A NO_GROWTH cell is a **killer** if comparable fungi do grow:
   - *database* basis: ≥ 75% of all rated strains GROW (13 carbon sources qualify);
   - *genus* basis: ≥ 50% of at least 3 other strains of the same genus GROW.
+- **Sister-plate rule:** pectin (apple, citrus) and xylan (beechwood,
+  birchwood, oat spelt) are each scored on more than one preparation. A
+  killer call on one of them is kept only if every sister plate scored for
+  that strain is also NO_GROWTH. Rejected calls go to
+  `FUNG_GROWTH/data/killer_rejected_sister.tsv` (36 calls).
 
-Outputs: `FUNG_GROWTH/data/killer_phenotypes.tsv` (299 calls: 112 database,
-145 genus, 42 both) and `FUNG_GROWTH/data/carbon_source_summary.tsv`. The
-substrates with the most killer calls are casein (35), cellobiose (30), apple
-pectin (23), soluble starch (17) and D-mannose (16).
+Outputs: `FUNG_GROWTH/data/killer_phenotypes.tsv` (263 calls: 94 database,
+135 genus, 34 both) and `FUNG_GROWTH/data/carbon_source_summary.tsv`. The
+substrates with the most killer calls are casein (35), cellobiose (30),
+soluble starch (17), D-mannose (16) and citrus pulp (14).
 
 The carbon-source summary also shows which plates carry little information.
 Crystalline cellulose (7% of strains GROW), D-glucuronic acid (13%) and
@@ -79,11 +86,11 @@ substrates are excluded from the database basis.
 
 | Strain | Repo dir | No-carbon | Killer phenotypes |
 |---|---|---|---|
-| *Schizosaccharomyces pombe* 972h- | SCHPO | 0 | alfalfa meal, apple pectin, cellobiose |
-| *Saccharomyces cerevisiae* S288C | yeast | 2 | apple pectin, cellobiose |
+| *Schizosaccharomyces pombe* 972h- | SCHPO | 0 | alfalfa meal, cellobiose |
+| *Saccharomyces cerevisiae* S288C | yeast | 2 | cellobiose |
 | *Candida albicans* SC5314 | CANAL | 1 | cellobiose |
-| *Ustilago maydis* | MYCMD | 4 | cellobiose, citrus pectin, soluble starch, sugar beet pulp |
-| *Penicillium rubens* Wisconsin 54-1255 | PENCH | 0 | birchwood xylan |
+| *Ustilago maydis* | MYCMD | 4 | cellobiose, soluble starch, sugar beet pulp |
+| *Penicillium rubens* Wisconsin 54-1255 | PENCH | 0 | none (birchwood xylan rejected: grows on beechwood and oat spelt xylan) |
 | *Neurospora crassa* OR74A, *Aspergillus nidulans* FGSC A4, *A. niger* CBS 513.88, *A. oryzae* RIB40, *Trichoderma reesei*, *Pyricularia oryzae* Guy11 | NEUCR, EMENI, ASPNG, ASPOR, HYPJE, PYROR | 0 | none |
 
 Other informative cells that do not meet either killer rule:
@@ -132,27 +139,28 @@ Full write-up: [killer calls joined to GOA](FUNG_GROWTH/GOA_JOIN.md).
   in the right namespace (`data/carbon_source_go_map.tsv`,
   `data/carbon_source_go_activity_map.tsv`).
 - `FUNG_GROWTH/goa_join.py` pulls 1,865 QuickGO annotations to those terms
-  for the 11 species and flags 60 rows (29 gene products, 40 IEA) where the
+  for the 11 species and flags 21 rows (12 gene products, 11 IEA) where the
   plate is a killer call (`data/goa_killer_flags.tsv`).
 - `cellobiose catabolic process` is unused in all 11 species, and
   `starch catabolic process` is unused in *U. maydis*, so the target pairs
   meet GO through hydrolase activities instead.
 - *S. cerevisiae* has no cellobiose-implying annotation, which agrees with
-  its plate. The clearest review candidate is two *C. albicans* GH3
-  β-glucosidases (BGL22, CAALFM_C301820WA) with IEA `cellulose catabolic
-  process` from a UniPathway mapping.
-- Three flag sets (*P. rubens* birchwood xylan, *U. maydis* citrus pectin,
-  *S. cerevisiae* apple pectin) rest on plates contradicted by a sister plate
-  of the same polymer and should be discounted.
+  its plate.
+- Two *C. albicans* GH3 β-glucosidases carried IEA `cellulose catabolic
+  process` from a UniPathway mapping, in an organism with no cellulase and
+  no cellobiose assimilation (also shown across 215 strains, PMID:7007420).
+  New reviews `genes/CANAL/BGL22` and `genes/CANAL/CAALFM_C301820WA` remove
+  that row and keep the β-glucosidase activity.
+- The sister-plate rule removed the flag sets on *P. rubens* birchwood xylan,
+  *U. maydis* citrus pectin and *S. cerevisiae* apple pectin, all of which
+  were contradicted by another preparation of the same polymer.
 
 ## Next steps
 
-- Review the *C. albicans* BGL22 and CAALFM_C301820WA cellulose-catabolism
-  rows as gene reviews, after checking the literature on cellobiose
-  assimilation.
-- Require agreement across sister plates (pectin ×2, xylan ×3) before
-  calling a killer phenotype.
 - Read the *U. maydis* growth curves before using its calls: its no-carbon
   score of 4 leaves little room on the 0–10 scale.
+- Decide whether the *S. pombe* GH3 protein SPBC1683.04 needs a review like
+  the *C. albicans* pair (it has no cellulose process row, so the case is
+  weaker).
 - Ask the FUNG-GROWTH curators whether ratings of 0 on a 0-baseline plate
   are true zero growth or unscored cells, and source the ΔnoxR/ΔracA plates.
