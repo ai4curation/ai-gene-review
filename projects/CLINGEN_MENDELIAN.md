@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**715 of 2,876 genes are complete; 2,161 remain.**
-This checkpoint adds GCH1, GCK, GCSH, GDF2, GDAP1 and GEMIN5 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-715-2026-11-05-085845-utc) records the evidence and retained uncertainties.
+**720 of 2,876 genes are complete; 2,156 remain.**
+This checkpoint adds GFER, GFI1B, GFAP, GFPT1 and GGCX after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-720-2026-11-05-143342-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3848,11 +3848,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **GDAP1** — HGNC:15968; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c6d93637-02f5-4f5d-b7a9-17356f084149-2020-07-28T144211.873Z) (MONDO:0015626; SD; Definitive).
 - [x] **GDF2** — HGNC:4217; [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2d2e83fa-0af1-450f-af9c-5c61d4bc3106-2022-05-26T221514.154Z) (MONDO:0015924; AD; Definitive); [telangiectasia, hereditary hemorrhagic, type 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_00608fb7-3483-495a-8f9e-76aabb4b1dc0-2026-09-02T160000.000Z) (MONDO:0014217; AD; Moderate).
 - [x] **GEMIN5** — HGNC:20043; [neurodevelopmental disorder with cerebellar atrophy and motor dysfunction](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_51809985-ee18-429f-b804-96e7decb3d08-2023-09-06T160000.000Z) (MONDO:0859152; AR; Definitive).
-- [ ] **GFAP** — HGNC:4235; [Alexander disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1da6d658-360e-4097-95a9-0b6838638e31-2024-01-10T170000.000Z) (MONDO:0008752; AD; Definitive).
-- [ ] **GFER** — HGNC:4236; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_494b0327-da1a-4b06-9563-2b846ce561a3-2023-09-28T040000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **GFI1B** — HGNC:4238; [platelet-type bleeding disorder 17](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_62841ea9-5bd8-4250-ab41-31d7cf82d2e3-2019-11-27T170000.000Z) (MONDO:0008553; AD; Definitive).
-- [ ] **GFPT1** — HGNC:4241; [congenital myasthenic syndrome 12](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a8f8af21-a5dc-41aa-9bd3-b38c3a98d55c-2024-07-03T160000.000Z) (MONDO:0012518; AR; Definitive).
-- [ ] **GGCX** — HGNC:4247; [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ac82a47-d6c3-4cbb-ae29-b6044a9a624e-2025-09-08T160000.000Z) (MONDO:0015924; AD; Moderate); [vitamin K-dependent clotting factors, combined deficiency of, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_87ceae1d-b329-4c29-b6f2-8a94a127204e-2021-02-24T175200.635Z) (MONDO:0010187; AR; Definitive).
+- [x] **GFAP** — HGNC:4235; [Alexander disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1da6d658-360e-4097-95a9-0b6838638e31-2024-01-10T170000.000Z) (MONDO:0008752; AD; Definitive).
+- [x] **GFER** — HGNC:4236; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_494b0327-da1a-4b06-9563-2b846ce561a3-2023-09-28T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **GFI1B** — HGNC:4238; [platelet-type bleeding disorder 17](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_62841ea9-5bd8-4250-ab41-31d7cf82d2e3-2019-11-27T170000.000Z) (MONDO:0008553; AD; Definitive).
+- [x] **GFPT1** — HGNC:4241; [congenital myasthenic syndrome 12](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a8f8af21-a5dc-41aa-9bd3-b38c3a98d55c-2024-07-03T160000.000Z) (MONDO:0012518; AR; Definitive).
+- [x] **GGCX** — HGNC:4247; [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ac82a47-d6c3-4cbb-ae29-b6044a9a624e-2025-09-08T160000.000Z) (MONDO:0015924; AD; Moderate); [vitamin K-dependent clotting factors, combined deficiency of, type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_87ceae1d-b329-4c29-b6f2-8a94a127204e-2021-02-24T175200.635Z) (MONDO:0010187; AR; Definitive).
 - [ ] **GIGYF1** — HGNC:9126; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84218a5a-897e-4b3a-a40d-4aee0ae58f79-2023-09-14T160000.000Z) (MONDO:0100038; AD; Definitive).
 - [ ] **GIPC3** — HGNC:18183; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e5feebe1-59a9-4e28-ad85-aec5cad6b54e-2017-08-22T160000.000Z) (MONDO:0019497; AR; Definitive).
 - [ ] **GJB1** — HGNC:4283; [Charcot-Marie-Tooth disease X-linked dominant 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fcacd858-2376-4cc0-983a-156145e36595-2020-01-14T170000.000Z) (MONDO:0010549; XL; Definitive).
