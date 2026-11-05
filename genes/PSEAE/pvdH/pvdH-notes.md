@@ -70,3 +70,16 @@ for the sibling gene pvdA produced no output before hitting a 15-minute limit,
 so no provider route was usable. No `-deep-research-*.md` file was fabricated. The review rests on the cached publications (both abstract-only, as
 recorded in `full_text_unavailable`) and on the curated domain/family
 cross-references in the UniProt record.
+
+## PseudoCAP IBA-seed assessment
+
+Audit added 2026-10-28 (PseudoCAP IBA-seed project, worklist rank 78). The
+review itself was not rewritten.
+
+| PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
+|---|---|---|---|---|---|---|
+| PTN002461253 (PTHR43552) | GO:0008483 transaminase activity | 1 (sole seed) | 11 (9 taxa) | GO:0008483, IDA, PMID:15317763 (PseudoCAP) | SOUND | The seed is a direct enzyme assay on PvdH purified from PAO1 [PMID:15317763 "PvdH was found to catalyze an aminotransferase reaction, interconverting aspartate beta-semialdehyde and l-2,4-diaminobutyrate."], not a mutant phenotype. The node term is the broad parent, and it suits a clade whose 11 PAINT leaves are all class-III PLP aminotransferases (EctB proteins, Dat P44951, SCO5799, a GabT-annotated archaeal member, and Chlamydomonas and Nitrosopumilus homologues). The broad term cannot overreach on substrate. PvdH's own data support the specific child GO:0045303, so the PseudoCAP row is under-specific but not wrong. That is a granularity point, already handled by MODIFY. Neither a PSEUDOCAP nor a GO_CENTRAL defect is needed. This matches the PTHR43552 family review. |
+
+Row consistency: all three GO:0008483 rows (IBA, IDA, IEA) are `MODIFY` to
+GO:0045303, which agrees with a SOUND verdict on the seed: the claim is true,
+and only its precision is at issue.
