@@ -4,7 +4,8 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [arcA, arcD, aruC, braD, braF, ccmC, cif, cifR, cysB, dctP, dctQ, dgcB, dksA, eddB, estA, fimU, fleN, fliD, fpr, fur, gbuA, gltA, hfq, hom, hutF, hutH, hutI, lap, lasB, lasI, lhpL, liuC, lpxA, mgtE, motB, mucB, mucD, nirJ, nmoA, nrdJa, oprB, oprG, PA0692, PA0906, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1340, PA1341, PA1486, PA2280, PA2580, PA3697, PA3760, PA3891, PA4079, PA4503, PA4504, PA4505, PA4521, PA4624, PA5085, PA5208, PA5359, PA5377, PA5458, pchB, pelA, pfeA, phnB, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsC, pqsH, pscC, pslC, ptrB, pvdE, pvdH, Q9HTB8, relA, tgpA, thiI, thrB, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC, fimT]
+genes: [arcA, arcD, aruC, braD, braF, ccmC, cif, cifR, cysB, dctP, dctQ, dgcB, dksA, eddB, estA, fimU, fleN, fliD, fpr, fur, gbuA, gltA, hfq, hom, hutF, hutH, hutI, lap, lasB, lasI, lhpL, liuC, lpxA, mgtE, motB, mucB, mucD, nirJ, nmoA, nrdJa, oprB, oprG, PA0692, PA0906, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1340, PA1341, PA1486, PA2280, PA2580, PA3697, PA3760, PA3891, PA4079, PA4503, PA4504, PA4505, PA4521, PA4624, PA5085, PA5208, PA5359, PA5377, PA5458, pchB, pelA, pfeA, phnB, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsC, pqsH, pscC, pslC, ptrB, pvdH, Q9HTB8, relA, tgpA, thiI, thrB, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC, fimT]
+autolink_exclude: [III, PTS, pvdE, katA, fruB, ptsP, ampD, caiX, dgcA]
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -17,15 +18,16 @@ annotations, which reach many other proteins as IBAs, so an error in a seed is
 copied to every descendant. Of 471 PAO1 proteins that seed an IBD, 398 have a
 PseudoCAP annotation supporting at least one seeding; for 139 node terms (109
 proteins) the PAO1 protein is the only seed. We reviewed all 109 of those
-proteins; three review files (pvdE, pqsA, PA2403) are still to be written. For 21 genes the seed is wrong or
+proteins: 106 have full reviews, and the review files for pvdE, pqsA and PA2403
+are still to be written. For 21 genes the seed is wrong or
 is an indirect mutant phenotype, and the IBD it supports should be withdrawn or
 repointed. Examples are catalase activity on a heme exporter (ccmC), lipid
 biosynthesis on an esterase (estA), DNA endonuclease activity from a mistyped
-GO id (pilU), and signal transduction on a signal synthase (lasI). For 24 the
+GO id (pilU), and signal transduction on a signal synthase (lasI). For 23 the
 seed is right for PAO1 but the node carries the term to proteins or lineages it
 does not fit. For 30 the claim is true but the PseudoCAP row misstates the
-evidence code, qualifier or reference, and 32 are sound. The reviews record 114
-defects for PseudoCAP and 74 for PAINT, written up in
+evidence code, qualifier or reference, and 32 are sound. The reviews record 116
+defects for PseudoCAP and 75 for PAINT, written up in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
 
 ## Why start with IBA seeds
@@ -116,25 +118,26 @@ produces one report for PseudoCAP and one for PAINT.
 
 ## Results: tier 1 (sole seeds)
 
-All 109 tier 1 proteins have been assessed; the review files for pvdE, pqsA and
-PA2403 still need writing (see below). pvdE is classified from its committed
-notes and seed assessment. Each gene is classified by the outcome for
+All 109 tier 1 proteins have been assessed, and 106 have full reviews. The
+review files for pvdE, pqsA and PA2403 still need writing (see below), so they
+are tallied separately; pvdE's notes and seed assessment (seed sound, node too
+broad) are committed. Each gene is classified by the outcome for
 its sole-seeded node terms. Leaf IBA counts are the worklist's
 reference-proteome counts for those terms, so they are lower bounds.
 
 | Outcome | Genes | Leaf IBAs |
 |---|---:|---:|
 | Seed wrong or indirect: the IBD should be withdrawn or repointed | 21 | 1,481 |
-| Seed right for PAO1, but the node term does not fit its clade | 24 | 804 |
+| Seed right for PAO1, but the node term does not fit its clade | 23 | 664 |
 | Claim true, but the seed row's evidence code, qualifier or reference is wrong | 30 | 1,043 |
 | Sound | 32 | 1,433 |
-| Review not yet written (pqsA, PA2403) | 2 | 11 |
+| Review file not yet written (pvdE, pqsA, PA2403) | 3 | 151 |
 | **Total** | **109** | **4,772** |
 
 - **Withdraw or repoint (21):** estA, ccmC, pilU, pilM, pilN, wbpD, PA0920,
   liuC, PA5377, lasI, PA3697, cysB, ptrB, PA5208, PA1340, lhpL, znuC, phnB,
   pslC, motB, nrdJa.
-- **Node does not fit the clade (24):** pvdE, PA5458, PA3760, mgtE, aruC, gbuA,
+- **Node does not fit the clade (23):** PA5458, PA3760, mgtE, aruC, gbuA,
   mucB, pchB, nirJ, fpr, fur, nmoA, tgpA, dctQ, PA4503, PA4504, pqsC, wzm,
   phzC1, thiI, pelA, xcpV, braF, PA5359.
 - **Fix the seed row, keep the IBD (30):** fleN, hutI, hutF, hom, thrB, PA3891,
@@ -153,7 +156,7 @@ lasB, which are given secretion-system terms for being secretion cargo).
 
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
 `source_defects` recorded in all PAO1 reviews into one report per resource in
-[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 115 for PseudoCAP (45
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 116 for PseudoCAP (46
 wrong term, 41 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 2
 wrong gene product), 75 for PAINT/GO Central, 5 for UniProt and 11 for other
 resources (mostly InterPro2GO mappings). They include defects from PAO1
@@ -180,7 +183,7 @@ directly, so hutH's IMP should be IDA), PMID:7768797 (oprB's evidence is
 whole-cell uptake in mutant and overexpressing strains, so IMP) and
 PMID:9224878 (its Fig. 1 is a pilA mutant twitching assay, so pilA's IMP
 stands and that defect was removed). The PseudoCAP report now stands at 36
-CONFIRMED, 55 PROBABLE and 24 SUSPECTED, and the PAINT report at 6, 56 and
+CONFIRMED, 56 PROBABLE and 24 SUSPECTED, and the PAINT report at 6, 56 and
 13.
 
 ### Per-gene verdicts

@@ -86,7 +86,6 @@ genes:
   - estA
   - lap
   - fleN
-  - pvdE
   - pqsH
   - PA5458
   - pilU
@@ -109,6 +108,7 @@ genes:
   - fur
   - mucB
   - phzC1
+autolink_exclude: [III, PTS, pvdE, fruB, ptsP]
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -128,7 +128,7 @@ from experimentally studied proteins to their relatives, and they make up a
 large share of GO for most genomes. Working from gene reviews, we catalogued
 where those transfers go wrong and why: 16 recurring failure patterns (such as
 pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
-wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
+wrong-paralog and cross-kingdom transfers) plus one positive control, 79 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
 failure modes, per-source status) that reviews now use; 691 gene reviews
 carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
@@ -1147,17 +1147,17 @@ found by reviewing the seeds of one annotation source, which is what the
 [PSEUDOCAP](PSEUDOCAP.md) project does for *P. aeruginosa* PAO1: 398 PAO1
 proteins carry a PseudoCAP annotation that supports an IBD seeding (522 node
 terms, 51,455 leaf IBAs), and for 139 node terms (4,772 leaf IBAs) the PAO1
-protein is the sole seed. All 109 of those proteins have now been reviewed:
-for 21 the seed is wrong or an indirect phenotype and the IBD should be
-withdrawn or repointed, for 24 the seed is right but the node term does not fit
+protein is the sole seed. Of those 109 proteins, 106 have full reviews (the
+review files for pvdE, pqsA and PA2403 are still to be written): for 21 the seed is wrong or an indirect phenotype and the IBD should be
+withdrawn or repointed, for 23 the seed is right but the node term does not fit
 the clade, for 30 the claim is true but the seed row misstates its evidence,
 qualifier or reference, and 32 are sound (see [PSEUDOCAP](PSEUDOCAP.md) for the
 per-gene table and the upstream defect reports).
 
 **Examples:**
-- **ccmC (PSEAE, PA1477)**, `GO:0004096` catalase activity on node
+- **PSEAE/ccmC (PA1477)**, `GO:0004096` catalase activity on node
   **PTN001247822** (sole seed, 143 leaf IBAs in 59 taxa, including back onto
-  ccmC). CcmC is the six-helix heme-handling membrane subunit of the cytochrome
+  PSEAE/ccmC). The protein is the six-helix heme-handling membrane subunit of the cytochrome
   c maturation system and has no catalase domain. The PseudoCAP IMP row records
   that a *ccmC* mutant has no detectable catalase, which follows from losing
   heme delivery to the heme catalases. The row also cites the wrong paper
@@ -1230,7 +1230,7 @@ per-gene table and the upstream defect reports).
   is PA1268); an importer ATPase's EDTA growth defect given "response to zinc
   ion" (znuC, a node reaching ~1,455 GOA rows); and a seed paper from another
   species in which the gene was never tested (PA1340, *P. putida*).
-- **The node-side counterpart.** For 24 genes the seed is right for PAO1 but
+- **The node-side counterpart.** For 23 genes the seed is right for PAO1 but
   the node is the whole family: salicylate synthesis on the chorismate mutase
   root (pchB), heme d1 synthesis on an archaeal radical SAM clade (nirJ),
   siderophore repression on Fur proteins of bacteria without siderophores
@@ -1245,7 +1245,7 @@ per-gene table and the upstream defect reports).
 
 **Lesson**: when an IBA looks wrong but the node placement looks right, read
 the seed rows behind the IBD. Seed-side errors seen so far: indirect
-phenotypes (ccmC, estA), a mistyped GO id (pilU), inflated evidence codes
+phenotypes (PSEAE/ccmC, estA), a mistyped GO id (pilU), inflated evidence codes
 (fleN), and anchors that predate the gene (hutI). An IMP seed for a molecular-function term is the
 first thing to check: ask whether the mutant lost the activity because the gene
 does it, or because the gene is needed upstream (cofactor supply, export,
@@ -1581,7 +1581,7 @@ The row is `GO_REF:0000033` with `WITH/FROM` `PANTHER:PTN001247822|UniProtKB:Q9I
 | acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
 | DNAH12 / Dnah12 | human, mouse | **Ortholog split across PANTHER families** (human PTHR46532, mouse PTHR10676 in PANTHER 19): human gets no IBA, while mouse inherits inner dynein arm assembly (PTN008951089). Mouse also over-inherits microtubule motor activity, although DNAH12 lacks a microtubule-binding domain | MEDIUM | COMPLETE |
 | ccmC | SHEON | Phenotype-derived MF as IBD seed: catalase activity from a PseudoCAP IMP phenotype row, propagated by PTHR30071 node PTN001247822 to its descendant leaves | HIGH | DRAFT |
-| ccmC | PSEAE | **Seed-side error**: catalase activity IBD (PTN001247822, sole seed, 143 leaves) seeded by a PseudoCAP IMP mutant phenotype on a heme exporter; seed also cites the wrong PMID | HIGH | COMPLETE |
+| PSEAE/ccmC | PSEAE | **Seed-side error**: catalase activity IBD (PTN001247822, sole seed, 143 leaves) seeded by a PseudoCAP IMP mutant phenotype on a heme exporter; seed also cites the wrong PMID | HIGH | COMPLETE |
 | estA | PSEAE | **Seed-side error**: lipid biosynthetic process IBD (PTN005219546, sole seed, 960 leaves) seeded by a rhamnolipid-deficiency phenotype of an outer-membrane esterase | HIGH | COMPLETE |
 | pilU | PSEAE | **Seed-side error**: DNA endonuclease IBD (PTN000766390, sole seed) from a PseudoCAP GO id slip (GO:0016888 for GO:0016887) on a pilus ATPase | HIGH | COMPLETE |
 | hutI | PSEAE | Seed-side: LUCA imidazolonepropionase IBD (PTN000505272, reaches AMDHD1) anchored only on a 1967 paper that predates the gene | LOW | COMPLETE |
@@ -1764,7 +1764,7 @@ should not.
 12. **Don't inherit a paralog's compartment/complex**: family members share folds but not localization or complex membership — verify the protein actually occupies the annotated complex/compartment (EIF4E2, ALDH1L1, PEX2)
 13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
 14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
-15. **Check the seeds, not only the node**: an IBD is only as good as the experimental rows it rests on. When one seed carries a node, especially an IMP row for a molecular function, confirm the paper shows the gene's own activity rather than a downstream mutant phenotype (ccmC catalase; see patterns 16 and 17 and [PSEUDOCAP](PSEUDOCAP.md))
+15. **Check the seeds, not only the node**: an IBD is only as good as the experimental rows it rests on. When one seed carries a node, especially an IMP row for a molecular function, confirm the paper shows the gene's own activity rather than a downstream mutant phenotype (PSEAE/ccmC catalase; see patterns 16 and 17 and [PSEUDOCAP](PSEUDOCAP.md))
 
 ## Quality Indicators
 
