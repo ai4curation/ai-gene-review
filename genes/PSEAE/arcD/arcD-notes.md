@@ -52,3 +52,36 @@
   UNIPROT WRONG_REFERENCE CHECK (SUSPECTED) on the EXP MF row citing PMID:2158926,
   which proposes but does not measure antiport; GO_CENTRAL CHECK (SUSPECTED) for
   C. trachomatis AaxC under PTN000208945.
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN000208945 fetched with `projects/PSEUDOCAP/panther_tree.py node
+PTN000208945 --depth 5` (PANTHER `treeinfo` for PTHR42770).
+
+**PTN000208945: SPECIATION, Eubacteria, 16 leaves** (PTHR42770:SF4 13, SF14 3).
+
+| child node | event / taxon | leaves | subfamilies | content | verdict for GO:0043858 |
+|---|---|---|---|---|---|
+| PTN001718796 | SPECIATION Firmicutes | 7 | SF4 4, SF14 3 | *C. botulinum* ArcD, *S. aureus*, and the Bacillales duplication PTN005129255 (B. subtilis YvsH group SF14, *B. cereus* pair SF4) | Arg/Orn antiporters; term plausible |
+| PTN000926691 | LEAF *Chlamydia trachomatis* | 1 | SF4 | AaxC, arginine/agmatine antiporter | the one doubtful leaf |
+| PTN000208950 | SPECIATION Proteobacteria | 8 | SF4 | *Bradyrhizobium* pair PTN000208951; Gammaproteobacteria PTN000208954 (*Vibrio*; PAO1 duplication PTN002449612 = ArcD PTN002449614 + PA1194 PTN002449613; Enterobacteriaceae YdgI clade PTN001718809) | includes the seed; term correct |
+
+Conclusions:
+
+- **There is no chlamydial subclade.** *C. trachomatis* is the only chlamydial member of
+  the tree and its leaf, PTN000926691, attaches directly to the annotated node. The
+  earlier request for "a NOT for the chlamydial subclade" is retargeted to that single
+  leaf -- either NOT GO:0043858 there, or GO:0043862 arginine:agmatine antiporter
+  activity.
+- **The IBD cannot be relocated.** Bacterial arginine/ornithine antiporters sit in both
+  of the other children (Firmicutes and Proteobacteria), so the smallest clade covering
+  them is PTN000208945 itself. A leaf-level correction is the only option.
+- The PAO1 paralog PA1194 (Q9I4E4, leaf PTN002449613) is ArcD's immediate duplication
+  sister (node PTN002449612), which is why it inherits the same term; the suggested
+  proteoliposome assay on PA1194 remains the way to test that.
+
+Defect raised SUSPECTED -> PROBABLE: the propagation path and the exact correction
+target are now verified against the tree, but whether *C. trachomatis* AaxC itself
+excludes ornithine still rests on the *C. pneumoniae* ortholog (PMID:18790867), which
+topology cannot settle. No annotation actions changed (the GO:0043858 IBA stays ACCEPT,
+correct for ArcD itself).

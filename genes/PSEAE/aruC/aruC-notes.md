@@ -82,3 +82,41 @@ it is the paper's central finding.
 - KEEP_AS_NON_CORE: pyridoxal phosphate binding (IEA).
 - Source defect: GO_CENTRAL CHECK (SUSPECTED) on the PTN000241318 arginine
   biosynthesis IBD for LysJ-type and DABA-aminotransferase leaves.
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN000241318 fetched with `projects/PSEUDOCAP/panther_tree.py node
+PTN000241318 --depth 3 / --leaves / --contains` (PANTHER `treeinfo` for PTHR11986).
+
+**PTN000241318: SPECIATION, Eubacteria, 37 leaves** (SF79 22, SF113 10, SF122 3,
+SF112 2). Children:
+
+| child node | event / taxon | leaves | subfamilies | content | verdict for GO:0006526 |
+|---|---|---|---|---|---|
+| PTN007555578 | SPECIATION Terrabacteria | 9 | SF79 | Actinobacteria + Bacillales ArgD, plus A9WB46 *Chloroflexus* LysJ (leaf PTN002633799) and Q93S10 *S. coelicolor* DABA-AT (leaf PTN000241321, in duplication PTN002279532 with a genuine ArgD Q9L1A4) | mostly ArgD; two leaf exceptions |
+| PTN000241323 | LEAF *Thermotoga* | 1 | SF79 | argD | ArgD |
+| PTN002485558 | DUPLICATION *Deinococcus* | 2 | SF79 | Q9RUH1 putative OAT; Q9RW75 LysJ (leaf PTN000241310) | one leaf exception |
+| PTN002279535 | SPECIATION Cyanobacteria | 3 | SF79 | argD (+ HGT to *Thalassiosira*) | ArgD |
+| PTN000241327/28, PTN000944780/82, PTN000241329 | LEAF singletons | 5 | SF79 | *Leptospira*, *Bacteroides*, *Rhodopirellula*, *Dictyoglomus*, *Aquifex* argD | ArgD |
+| PTN002279539 | DUPLICATION Proteobacteria | 17 | SF79/113/122/112 | holds AruC (PTN002279553), the Enterobacteriaceae AstC clade PTN001736444 (3), the ArgD clade PTN001736449 (3) and the PatA clade PTN001736429 (2, already NOT-annotated) | ArgD/AstC |
+
+Conclusions:
+
+- **No ArgD-only subnode exists.** Acetylornithine aminotransferases occur in every
+  child clade, so arginine biosynthesis is the plesiomorphic state of PTN000241318
+  and the IBD is at the right node. The earlier suggestion of relocating it is
+  withdrawn.
+- The non-biosynthetic leaves do **not** form a clade. The smallest clade containing
+  both LysJ leaves (Q9RW75, A9WB46) is PTN000241318 itself; the DABA-AT leaf's
+  smallest clade (PTN002279532) also contains a genuine ArgD. So any negation must be
+  at the three individual leaves PTN000241310, PTN002633799 and PTN000241321.
+- The catabolic AstC trio is a clean clade (PTN001736444, Enterobacteriaceae, 3
+  leaves, SF113) but should **not** be negated: AruC itself is the same
+  dual-specificity succinylornithine/acetylornithine aminotransferase serving both
+  pathways, so negating succinylornithine transaminases for arginine biosynthesis
+  would be the mirror-image error.
+
+Defect updated: GO_CENTRAL MISSING_NEGATION on PTN000241318 raised SUSPECTED ->
+PROBABLE, retargeted from "subclades / move the IBD" to the three named leaves. The
+remaining uncertainty is biological (whether LysJ-type and DABA-AT leaves retain any
+ACOAT activity), which topology cannot settle.

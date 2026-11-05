@@ -76,3 +76,40 @@ SCO4384, Chloroflexus Caur_1565 and the choanoflagellate *Monosiga brevicollis*.
 |---|---|---|---|---|---|---|
 | PTN001733227 | GO:0046247 terpene catabolic process | 1 (sole) | 13 (10 taxa) | GO:0046247, IMP, PMID:16820476 (PseudoCAP) | OVER-SPECIFIC | For PAO1 the claim holds (liu mutants cannot use acyclic terpenes, PMID:18625020; the Atu pathway enters the Liu pathway at methylcrotonyl-CoA, PMID:16272386), though GO:0016100 monoterpenoid catabolic process is the accurate term. But terpenoid catabolism is an organism-level pathway context (an Atu pathway feeding the leucine pathway), not a property of the hydratase. It is not inherited by the clade: Mycobacterium, Bacillus PksH, Coxiella, Xanthomonas, Streptomyces, Chloroflexus and Monosiga have no Atu pathway, and even P. putida, with a Liu pathway, cannot grow on acyclic terpenes. The IBD should be withdrawn. |
 | PTN001733227 | GO:0004490 methylglutaconyl-CoA hydratase activity | 1 (sole) | 13 (10 taxa) | GO:0004490, IMP, PMID:16517656 (PseudoCAP) | UNVERIFIABLE | The seed is a mutant-based MF inference from an abstract-only paper that does not mention liuC or a hydratase assay. The activity is very likely right for LiuC by pathway logic. The node term is too specific for the clade: it includes AtuE (a different substrate, isohexenylglutaconyl-CoA) and B. subtilis PksH, an experimentally characterised polyketide-pathway dehydratase acting on a carrier-protein-bound HMG group rather than on HMG-CoA. A generic hydro-lyase/enoyl-CoA hydratase term, or a node restricted to LiuC orthologs, would be safer. |
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN001733227 fetched with `projects/PSEUDOCAP/panther_tree.py node
+PTN001733227 --depth 4 / --leaves / --contains` (PANTHER `treeinfo` for PTHR42964).
+
+**PTN001733227: SPECIATION, placed at LUCA, 13 leaves, all PTHR42964:SF1.**
+
+| child node | event / taxon | leaves | subfamilies | content | verdict |
+|---|---|---|---|---|---|
+| PTN000941888 | LEAF *Monosiga brevicollis* | 1 | SF1 | enoyl-CoA hydratase | no Liu/Atu pathway |
+| PTN000234935 | SPECIATION Eubacteria | 12 | SF1 | all bacteria | — |
+| └ PTN008092237 | SPECIATION Terrabacteria | 4 | SF1 | *B. subtilis* PksH (bacillaene dehydratase), *Chloroflexus*, *M. tuberculosis* EchA7, *S. coelicolor* | substrates not 3-methylglutaconyl-CoA |
+| └ PTN000234939 | SPECIATION Proteobacteria | 8 | SF1 | *Bradyrhizobium* bll0116 + PTN001733230 | — |
+| &nbsp;&nbsp;&nbsp;└ PTN001733230 | SPECIATION Gammaproteobacteria | 7 | SF1 | Coxiella pair PTN001733228, *Shewanella* LiuC, Xanthomonas pair PTN002873558 (one a p-hydroxycinnamoyl-CoA hydratase/lyase), PAO1 pair PTN002452381 | narrowest clade holding all three MG-CoA hydratases; still heterogeneous |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└ PTN002452381 | DUPLICATION *P. aeruginosa* | 2 | SF1 | AtuE (PTN002452382) + LiuC (PTN002452383) | the only clade in which acyclic terpenoid catabolism holds |
+
+Conclusions:
+
+- The node's event placement is **LUCA**, so both IBDs assert their term as ancestral
+  to all life. For a substrate-specific crotonase activity, and still more for a
+  pathway context that depends on an organism having an Atu cluster, that is not
+  supportable.
+- **LiuC's own sister leaf is AtuE**, a hydratase with a different substrate
+  (`--contains Q9I298,Q9HZV7` -> PTN002452381, 2 leaves). The smallest clade holding
+  the three methylglutaconyl-CoA hydratases of the family (PAO1 Q9I298, *Shewanella*
+  Q8EFS1, *Coxiella* Q83CX5) is PTN001733230, which also holds AtuE, *Coxiella* PksH
+  and the two *Xanthomonas* enzymes. So there is **no LiuC-ortholog-only subnode**;
+  GO:0004490 belongs at the leaves, and the node should carry a generic enoyl-CoA
+  hydratase/hydro-lyase term.
+- For GO:0046247 the tree does supply one defensible target: PTN002452381, the PAO1
+  LiuC/AtuE duplication pair, since both participate in acyclic terpene utilisation in
+  P. aeruginosa. Everything above that is over-propagation.
+
+Both defects raised to CONFIRMED (GO:0004490 SUSPECTED -> CONFIRMED, GO:0046247
+PROBABLE -> CONFIRMED). Annotation actions unchanged: ACCEPT on the GO:0004490 IBA
+(correct for this gene) and MODIFY to GO:0016100 on the GO:0046247 rows.
