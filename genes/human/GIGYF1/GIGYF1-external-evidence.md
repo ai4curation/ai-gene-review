@@ -24,11 +24,11 @@ Human GIGYF1 rescue distinguishes WT from DDX6/GYF mutants. Broader RNA-IP/polys
 
 ## PMID:39018414 — Translation repression via eIF3
 
-Human-cell lysate recruitment assays and RNase-containing co-IP support GIGYF1-dependent TTP–eIF3 bridging (Figure 4E–I). TTP depletion and GYF mutation separate recruitment from eIF3 association. Engineered-reagent, stimulus and non-purified assay limits apply. [Original source](https://doi.org/10.1126/sciadv.adl5638).
+Human-cell lysate recruitment assays and RNase-containing co-IP support GIGYF1-dependent TTP–eIF3 bridging (Figure 4E–I). TTP depletion reduces joint GIGYF1/eIF3 recruitment to RNA; the GYF mutant retains eIF3 association while reducing TTP binding and target-RNA recruitment. Engineered-reagent, stimulus and non-purified assay limits apply. [Original source](https://doi.org/10.1126/sciadv.adl5638).
 
 ## Adaptor annotation scope
 
-GO:0030674 is the protein-macromolecule-specific child of GO:0060090. The source-specific adaptor annotation complements translation repression; it does not assign this mechanism to every screening pair. The ZNF598 associations and named ComplexPortal variants remain positive, without a demonstrated contact-specific ligase-recruitment function. The eIF3 interaction is informative, but a second generic initiation-factor-binding assertion would duplicate a term already retained for EIF4E2. ComplexPortal identifiers remain distinct from GO complex terms; no unverified GO identifier is supplied.
+GO:0030674 is the protein-macromolecule-specific child of GO:0060090. The source-specific adaptor annotation complements translation repression; it does not assign this mechanism to every screening pair. The ZNF598 associations and named ComplexPortal variants remain positive, without a demonstrated contact-specific ligase-recruitment function. The mapped eIF3 and EIF4E2 contacts are distinct. Another GO:0031369 assertion would add evidence for a different partner without adding term-level coverage; the eIF3 contact remains explicit in the adaptor mechanism. No narrower eIF3-binding term was established by the bounded search. ComplexPortal identifiers remain distinct from GO complex terms; no unverified GO identifier is supplied.
 
 ## PMID:38225382 — SNRPB proline-repeat recognition
 

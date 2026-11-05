@@ -66,3 +66,7 @@ Earlier notes and the PN notes remain historical. The current synthesis preserve
 The new GO:0030674 assessment and its source-specific assay limits are documented in [external evidence](GIGYF1-external-evidence.md). This specific child of GO:0060090 complements the translation-repressor assertion while retaining the existing source-specific interaction decisions.
 
 The earlier journal statement assigning GO:0008190 to 4EHP binding is superseded by the source-specific distinction between 4EHP/EIF4E2 and EIF4E1. The current GO:0031369 refinement retains the established 4EHP interaction without conflating these factors (PMID:28698298). The historical text is preserved. Named ComplexPortal assemblies and positive ZNF598 associations remain documented; neither alone supplies a contact-specific ligase-binding mechanism or an unverified GO complex identifier.
+
+## 2026-11-05: recruitment-assay clarification
+
+TTP depletion reduces joint recruitment of GIGYF1 and eIF3 to target RNA. The GYF mutant instead retains eIF3 association while reducing TTP interaction and target recruitment. These complementary assay results support selective bridging (PMID:39018414). The independently mapped eIF3 and EIF4E2 contacts remain distinct; retaining the adaptor mechanism does not require a second assertion of the same general binding term.
