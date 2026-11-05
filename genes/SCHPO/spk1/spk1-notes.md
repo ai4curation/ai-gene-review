@@ -84,7 +84,13 @@ fusion; it did not change the Spk1 annotation decisions. [PMID:41855172]
   Cdc42 paper uses phospho-Spk1 as a pathway readout. Neither warrants a new
   GO process term for Spk1 beyond MAP kinase activity in the pheromone
   response MAPK cascade.
+  The Sms1 study also reports that phosphorylated Spk1 is enriched in the
+  membrane fraction of mating cells, but a membrane fractionation signal plus
+  scaffold co-IP is too indirect to support a new plasma-membrane or mating
+  projection-tip location for Spk1 itself.
 - Cleaned up policy drift in the generic kinase rows: `GO:0004672` and the
   broad PTN000622075 `GO:0004674` IBA are true parents of the directly
-  supported MAP kinase activity, and the Rhea `GO:0106310` row represents only
-  the serine half of the dual-specificity MAPK reaction.
+  supported MAP kinase activity. The Rhea `GO:0106310` row is not an ancestor
+  of MAP kinase activity and instead records a correct, non-core
+  L-seryl-protein phosphorylation import; UniProt records the matching threonyl
+  reaction, but GOA has no `GO:0106311` row.
