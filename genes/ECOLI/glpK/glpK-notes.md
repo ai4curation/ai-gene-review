@@ -33,3 +33,47 @@
   those papers were left `UNDECIDED` rather than cited without inspectable
   evidence unless the core glycerol kinase claim was independently supported by
   later literature.
+
+## 2026-11-03 review completion (Claude (AI-assisted))
+
+- No `glpK-deep-research-*.md` file exists for this gene; the only provider
+  content is the OpenScientist zinc hypothesis report in
+  `glpK-hypotheses/function-hypothesis-go-0008270/`. Its PDB ligand census was
+  spot-checked against RCSB: 1BWF has ATF + MG, 1GLC has ADP, G3H, MG and ZN,
+  1GLD has ADP, G3H and MN. Zinc occurs only in the GlpK-EIIA-Glc complexes.
+- Full-text retrieval attempts for PMID:5335908 (JBC PDF, 403), PMID:13930693
+  (PMC221136 and PNAS PDF, reCAPTCHA/403) and PMID:8432702 (PMC193024,
+  reCAPTCHA) all failed; Europe PMC full-text XML returned server errors.
+- The former UNDECIDED rows were resolved:
+  - protein binding IPI PMID:21697552 (partner YqjD, P64581, an inner-membrane
+    protein of unknown function): REMOVE under the protein-binding policy. No
+    informative MF can be drawn from one high-throughput cross-link.
+  - cytosol IDA PMID:8432702 and glycerol catabolic process IMP PMID:13930693:
+    ACCEPT, deferring to the EcoCyc curators. The claims are clearly correct and
+    are supported independently, although the specific assays could not be seen.
+  - identical protein binding IPI PMID:16858726: KEEP_AS_NON_CORE, the same
+    action as the PMID:9817843 row. Self-association is established (UniProt
+    SUBUNIT "Homotetramer and homodimer (in equilibrium)"; IntAct
+    self-interaction, NbExp=2).
+  - metal ion binding IDA PMID:5335908: KEEP_AS_NON_CORE. The 1967 paper
+    predates the 1994 discovery of the zinc site. The structures show Mg or Mn
+    bound with the nucleotide and zinc only at the EIIA-Glc interface, so the
+    generic metal term is as precise as the evidence allows.
+- Correct-but-general terms were changed to MODIFY: carbohydrate metabolic
+  process and glycerol metabolic process (IDA, IMP) now point to GO:0019563.
+  Kinase activity and phosphotransferase activity, alcohol group as acceptor
+  now point to GO:0004370.
+- Phosphorylation (GO:0016310) stays KEEP_AS_NON_CORE because GO has no
+  glycerol-specific descendant.
+- Source defect recorded: the EcoliWiki DNA damage response IEP row
+  (PMID:11967071, a genome-wide mitomycin C array) should be deleted.
+- Every row now has verbatim supporting quotes. UniProt-derived quotes come
+  from CC text carrying ECO:0000269 or from family DR lines.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- GO:0006072 glycerol-3-phosphate metabolic process: KEEP_AS_NON_CORE changed to MODIFY toward GO:0046167 glycerol-3-phosphate biosynthetic process (product side), mirroring the glpD refinement to GO:0046168.
+
+## 2026-11-04 (PR #5936 second review round)
+
+- GO:0006072 -> GO:0046167 reason now cites the PAINT GO:0046167 IBD on the eukaryotic glycerol kinase node PTN000023394 as corroboration (not propagated to this bacterial protein).

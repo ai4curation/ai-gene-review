@@ -48,7 +48,7 @@ PSPH catalyzes the **last, irreversible step of de novo L-serine biosynthesis (t
 
 - Core BP: **L-serine biosynthetic process (GO:0006564)**, IMP from PMID:14673469 (disease variants reduce activity and cause serine deficiency), plus IBA and IEA. Well supported.
 - L-serine is a precursor for protein synthesis, other amino acids (e.g. glycine), nucleotide metabolism, glutathione, and phospholipids; it can be racemized to D-serine, an NMDA-receptor co-agonist neuromodulator [file:human/PSPH/PSPH-uniprot.txt "L-serine can then be used ... or can be racemized to D-serine, a neuromodulator"; PMID:12213811 "HPSP regulates the levels of glycine and d-serine, the putative co-agonists for the glycine site of the NMDA receptor in the brain"].
-- GO:0006563 "L-serine metabolic process" (IDA, PMID:15291819) is a correct-but-more-general parent of the biosynthetic process; kept as non-core (redundant with GO:0006564).
+- GO:0006563 "L-serine metabolic process" (IDA, PMID:15291819) is a correct-but-more-general parent of the biosynthetic process; refined by MODIFY to GO:0006564 (see the 2026-11-03 completion pass below).
 
 ## Disease
 
@@ -69,3 +69,18 @@ PSPH catalyzes the **last, irreversible step of de novo L-serine biosynthesis (t
 4. **Protein homodimerization activity (GO:0042803)** — obligate homodimer; dimerization is required for full catalytic activity.
 
 Localization: cytosol (GO:0005829).
+
+## 2026-11-03 completion pass (PTHR43344 reference protein for the bacterial aspartate-to-threonine module)
+
+Every row now has verbatim support. Action/reason consistency fixes: the three GO:0042802 identical
+protein binding IPI rows, the IBA cytoplasm row and the IDA GO:0006563 L-serine metabolic process row
+argued that a more specific term already carried by the gene was the informative one, so they are now
+MODIFY to GO:0042803 protein homodimerization activity, GO:0005829 cytosol and GO:0006564 L-serine
+biosynthetic process respectively (previously KEEP_AS_NON_CORE). The rat-transfer response rows stay
+MARK_AS_OVER_ANNOTATED with no supported_by quote: the argument is that they are Ensembl Compara
+(GO_REF:0000107) transfers of rat response phenotypes with no human data, recorded in the row reasons and
+the GO_REF:0000107 reference review; an enzymatic FUNCTION quote briefly added here did not bear on that
+claim and was removed (PR #5927 review). The GO:0006563 refinement is supported by the UniProt CC:PATHWAY
+statement alone. Status promoted to
+COMPLETE. No deep-research provider file exists for this gene; the review rests on cached publications
+and the UniProt record.
