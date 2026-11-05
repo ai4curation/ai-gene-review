@@ -29,3 +29,16 @@
   - Catalytic D226A mutant abolishes Notch-related (egg-laying) function (Ashkavand et al. 2025, not cached).
   - Gamma-secretase-independent restraint of ER-to-mitochondria calcium transfer (Norman lab 2020-2025, not cached); supports keeping the calcium ion homeostasis IBA as non-core.
   - sel-12 ubiquitous; hop-1 low in larvae, needed in adult germline; spr-5 loss derepresses hop-1 and suppresses sel-12.
+
+## spr-2 / SET regulation (2026-10-30)
+
+- WormBase says "sel-12 presenilin activity and/or levels are likely regulated by the SET/NAP
+  protein sub-family member encoded by spr-2". The source is the spr screen
+  [PMID:11114162 "We identified four spr (suppressor of presenilin) genes by reverting the
+  egg-laying defective phenotype caused by a null allele of the sel-12 presenilin gene."].
+- Suppression needs the second presenilin [PMID:11114162 "loss of spr-2 activity suppresses
+  the egg-laying defective phenotype of different sel-12 alleles and requires activity of the
+  hop-1 presenilin gene, suggesting that suppression is accomplished by elevating presenilin
+  activity rather than by bypassing the need for presenilin activity"]. Because the screen used
+  a sel-12 null, the regulated presenilin is HOP-1, not SEL-12. Added to the description as
+  genetic context; no annotation.

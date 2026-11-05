@@ -37,3 +37,12 @@ Research provenance: the existing real research reports and curated primary/publ
 ## 2026-10-26 root-organelle policy follow-up
 
 Retain the supported secondary mitochondrial organelle assertion as KEEP_AS_NON_CORE under the explicit root-organelle exception. Its separately supported intermembrane-space location remains unchanged; no new activity or annotation row is introduced. Source support is the target-specific import/localization result in PMID:22984289.
+
+## 2026-11-03 Golgi membrane rows (APS sulfate-reduction module completion, PR #5934)
+
+TRX1 and TRX2 Golgi membrane rows got different actions (TRX1 MARK_AS_OVER_ANNOTATED; TRX2
+KEEP_AS_NON_CORE). That difference is about where each citation comes from, not about the biology.
+UniProt attributes TRX2's peripheral Golgi localization to the genome-wide GFP survey (PMID:14562095),
+which is a direct observation. TRX1's Golgi statement cites the mitochondrial IMS proteome
+(PMID:22984289), whose full text has no Golgi data; that is recorded as a WRONG_REFERENCE source defect.
+The two paralogs are not claimed to differ in localization.

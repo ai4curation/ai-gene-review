@@ -1,0 +1,163 @@
+id: https://ai4curation.io/ai-gene-review/schema/function_requirement_rules
+name: function_requirement_rules
+title: Function Requirement (NOT) Rules Schema
+description: >-
+  Sidecar LinkML schema for curated *function requirement rules*: statements of the
+  form "a protein that enables GO term T has at least one of these features", whose
+  contrapositive is the useful part -- a protein with none of them is unlikely to
+  enable T. A rule can also name *excluding* features: a protein carrying one of them
+  is unlikely to enable T even if it has a required feature (a malonate decarboxylase
+  beta subunit carries the acetyl-CoA carboxyltransferase domain, but not acetyl-CoA
+  carboxylase activity).
+
+  These rules generalize the residue-level ``FunctionRequirement`` of family reviews
+  (``family_review.yaml``) to domain, fold and sequence-feature level, across families.
+  Each rule is tested against every protein with an experimental (ECO:0000269 and
+  descendants) ``enables`` annotation to its term in GOA; a rule that flags such a
+  protein must either be refined, list the case as an expected exception, or argue that
+  the experimental annotation is itself wrong. A rule violation in a gene review is a
+  prompt to justify the action, never an automatic REMOVE.
+
+  Rules are stored in ``rules/function_requirements/function-requirement-rules.yaml``
+  and evaluated by ``ai_gene_review.tools.function_requirements``.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  frr: https://ai4curation.io/ai-gene-review/function_requirement_rules/
+  GO: http://purl.obolibrary.org/obo/GO_
+  InterPro: https://www.ebi.ac.uk/interpro/entry/InterPro/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+imports:
+  - linkml:types
+
+default_prefix: frr
+default_range: string
+
+classes:
+  FunctionRequirementRuleSet:
+    tree_root: true
+    description: A collection of function requirement rules.
+    attributes:
+      rules:
+        range: FunctionRequirementRule
+        multivalued: true
+        inlined_as_list: true
+        required: true
+
+  FunctionRequirementRule:
+    description: >-
+      A GO term together with the features at least one of which a protein must carry
+      to enable it, and optionally features that exclude it.
+    attributes:
+      id:
+        identifier: true
+        pattern: "^FRR:[0-9]{4}$"
+        description: Stable rule identifier, e.g. FRR:0001.
+      title:
+        required: true
+        description: Short human-readable statement of the rule.
+      term:
+        range: GOTerm
+        inlined: true
+        required: true
+        description: The GO term the rule constrains.
+      include_descendants:
+        range: boolean
+        required: true
+        description: Whether the rule also applies to is_a descendants of the term.
+      exempt_terms:
+        range: GOTerm
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Subtrees (each term and its is_a descendants) the rule does not cover, for
+          descendants whose GO convention differs, e.g. primary active transporters,
+          whose peripheral catalytic subunits correctly carry ``enables``.
+      qualifiers:
+        multivalued: true
+        required: true
+        description: >-
+          GO qualifiers the rule applies to, usually only ``enables``. A non-catalytic
+          subunit of a complex that has the activity is correctly annotated
+          ``contributes_to``, so such rows are outside most rules.
+      requires_any_of:
+        range: Feature
+        multivalued: true
+        inlined_as_list: true
+        description: The protein must carry at least one of these features.
+      requires_transmembrane_segment:
+        range: boolean
+        description: >-
+          The protein must have at least one UniProt TRANSMEM feature (alpha-helical
+          or beta-stranded). Combined with ``requires_any_of`` by OR.
+      excluded_by_any_of:
+        range: Feature
+        multivalued: true
+        inlined_as_list: true
+        description: Carrying any of these features argues against the term.
+      strength:
+        range: RuleStrengthEnum
+        required: true
+      rationale:
+        required: true
+        description: Why the requirement holds, mechanistically.
+      expected_exceptions:
+        description: >-
+          Known classes of genuine positives the feature list does not cover, and why
+          the rule is kept anyway.
+      status:
+        range: RuleStatusEnum
+        required: true
+      supported_by:
+        range: SupportingText
+        multivalued: true
+        inlined_as_list: true
+
+  Feature:
+    description: A sequence feature, identified by its InterPro entry.
+    attributes:
+      id:
+        required: true
+        pattern: "^IPR[0-9]{6}$"
+        description: InterPro entry accession.
+      label:
+        required: true
+        description: InterPro entry name, verbatim from InterPro.
+
+  GOTerm:
+    attributes:
+      id:
+        required: true
+        pattern: "^GO:[0-9]{7}$"
+      label:
+        required: true
+
+  SupportingText:
+    attributes:
+      reference_id:
+        required: true
+      supporting_text:
+        required: true
+
+enums:
+  RuleStrengthEnum:
+    permissible_values:
+      REQUIRED:
+        description: >-
+          No known protein enables the term without one of the features. A violation
+          is a strong case against the annotation, or a sign the row should be
+          ``contributes_to``.
+      ADVISORY:
+        description: >-
+          The feature list covers most genuine positives, but the activity is known to
+          arise on other scaffolds. A violation flags the row for review.
+
+  RuleStatusEnum:
+    permissible_values:
+      PILOT:
+        description: Drafted and acceptance-tested, not yet wired into validation.
+      ACTIVE:
+        description: Used by gene review validation.
+      RETIRED:
+        description: Withdrawn; kept for provenance.

@@ -104,3 +104,37 @@ residues ~433–543 (FT DOMAIN 433..543).
 - Mass-spec "membrane" (HDA, NK-cell membrane proteome) and mitochondrion IEA/ISS
   are non-core / likely over-annotations for a peroxisomal matrix + cytosolic
   lipid-transfer protein.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000044, SL-0173), ISS (GO_REF:0000024, WITH UniProtKB:P32020)
+and EXP (PMID:17157249), all located_in. No mitochondrial sub-compartment rows.
+
+Checks:
+- UniProt P22307: [Isoform SCP2] Mitochondrion tagged ECO:0000269|PubMed:17157249 and
+  ECO:0000250|UniProtKB:P32020; [Isoform SCPx] peroxisome only.
+- PMID:17157249 (Stanley et al. 2006, full text cached incl. Experimental Procedures): the
+  string "mitochondri" never occurs. Its only cell experiment is GFP fused to mature SCP2
+  [PMID:17157249 "the bulk of GFP-SCP2 remained in the cytosol and only a few peroxisomes were detected by characteristic punctate fluorescence"],
+  and the leader is described as cleaved in peroxisomes
+  [PMID:17157249 "processed into its mature form (mSCP2) by proteolytic cleavage of a 20 residue leader sequence after translocation into peroxisomes"].
+  The earlier summary that this paper describes a mitochondrial transit peptide was wrong.
+  Recorded as a source defect (WRONG_REFERENCE, UNIPROT, PROBABLE: supplement unseen).
+- The ISS donor P32020 is mouse (not rat as the old summary said). UniProt REST (2026-11-03):
+  P32020 [Isoform SCP2] Mitochondrion {ECO:0000269|PubMed:11003606, PubMed:26901662}.
+  PMID:26901662 (mouse MA-10 cells, full text cached):
+  [PMID:26901662 "SCP2 was found in the total protein extract and in the mitochondrial fraction, but less in the cytosolic fraction"]
+  [PMID:26901662 "These results suggest that SCPX is a peroxisomal protein, whereas SCP2 is likely to be strongly associated with the mitochondria."]
+  but the crude 11,000 g fraction was checked for catalase only, not an ER marker, and
+  [PMID:26901662 "the N-terminal mitochondrial targeting sequence is not powerful enough to localize the SCPX and SCP2 proteins to the mitochondria"].
+  QuickGO also lists mouse HDA rows (PMID:14651853, PMID:18614015).
+- MitoCarta3.0: SCP2 listed; evidence "Rickettsial homolog, mito protein domain+";
+  SubMitoLocalization "MIM"; MSMS "50-75crude", 9 tissues; HPA "Peroxisomes (Supported)".
+
+Outcome: all three rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE. The earlier reason
+("not a core site") argued non-core, not over-annotation; the minor mitochondrial pool of
+isoform SCP2 has mouse fractionation/imaging, mouse proteomes and MitoCarta3.0. The EXP row
+keeps the same action because the claim stands on that other evidence, and carries the
+source defect. Added PMID:26901662 to references; revised the PMID:17157249 review note.
+Stay at the root: MitoCarta's "MIM" is the only sub-mitochondrial line and the presequence
+was shown non-functional.

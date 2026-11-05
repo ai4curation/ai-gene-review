@@ -6,3 +6,6 @@
 - Cytosolic pool recruited to nucleus after DSBs; activity-dependent [PMID:20231875 "recruited from the cytosol to the nucleus upon DNA damage induction"; "This function of fumarase depends on its enzymatic activity"].
 
 Curation: protein binding rows removed (policy). Core: TCA fumarase (matrix) + DSB-repair role of cytosolic/nuclear pool.
+
+## Description follow-up (SGD text)
+- SGD says Fum1 is "phosphorylated in mitochondria". UniProt records a phosphothreonine at residue 428 from a large-scale mitochondrial phosphoproteome [file:yeast/FUM1/FUM1-uniprot.txt "/note=\"Phosphothreonine\""; evidence ECO:0007744|PubMed:17761666]. PMID:17761666 (Reinders et al. 2007, abstract only) analysed highly purified mitochondria [PMID:17761666 "We identified 80 phosphorylation sites in 48 different proteins."]; the abstract does not name Fum1. No functional consequence is known, so this is noted as peripheral and not added to the description or annotations.

@@ -1,0 +1,30 @@
+# Bacillus subtilis 168 GltA review
+
+## Biological synthesis
+
+GltA P39812 (BSU18450) is the large GOGAT chain. The type-2 amidotransferase domain hydrolyzes glutamine; the FMN-associated synthase center reductively aminates2-oxoglutarate using the resulting ammonia. GltB supplies reducing equivalents from NADPH. Full native-species PMID:34931064 explicitly assigns FMN and the[3Fe–4S] cluster to GltA, and two[4Fe–4S] clusters to GltB. The source measures NADPH-dependent GltAB activity and distinguishes GltAB heterodimers from GudB6–GltA6B6 counter-enzyme assemblies. It does not support blindly repeating the UniProt similarity note describing four active heterodimers as the constitutive assembly.
+
+The structure and inhibition study uses NCIB3610, whose GudB is active; strain168 GudB is cryptic. GltA directly contacts and inhibits GudB in that native related strain, including a catalytically inactive GltA mutant that separates binding from futile-cycle effects. This is a real moonlighting mechanism, but not enough to assert a normal168 physiological GudB-inhibitory core. It is recorded as an explicit question about168 after gudB activation. Native GOGAT catalytic transfer to the exact168 protein is supported by independent CDD/InterPro domains and the UniProt structure cross-reference; the strain boundary is not concealed.
+
+## Annotation and family decisions
+
+All8 original rows remain. NADPH-GOGAT is ACCEPT as a component contribution, not autonomous GltA NADPH oxidation. Generic GOGAT, redox and CH–NH2-donor reaction classes refine to the already supported specific GOGAT activity. The core distinguishes direct glutamine hydrolysis from contribution to the complete NADPH-linked reaction. Existing assimilation-cycle and glutamate-biosynthetic rows remain ACCEPT: GltA performs the chemistry, not merely an upstream necessity. No redundant NEW process is introduced.
+
+PTHR11938:SF133 is officially GLUTAMATE SYNTHASE (NADH). The actual native NADPH assay outweighs inference from a family name; neither family ID nor label is rewritten to force a cofactor story. CDD GltS_FMN, GltS, gltB_C and InterPro IPR017932 GATase_2_dom support the architecture. PTN000234342 supports conserved broad GOGAT chemistry across its descendants; its taxon-diverse donors are not a donor-count objection. Native physiological PMID:18326565 distinguishes anabolic GOGAT from RocG/GudB1 catabolism and from an introduced E. coli GDH route.
+
+## Source access and preservation
+
+Audit date: 2026-10-27. Exact-target identities are the immutable strain168 UniProt records; no GOA or UniProt file was changed. Every seeded annotation row is retained with its term, evidence, original reference, qualifier and supporting entities unchanged. No NEW annotation is introduced, so no comparator-based gap assertion is made. Term definitions and ancestry were checked through QuickGO; snapshots and focused logs are under `.cache/module-audit-logs/ammonia-bacsu-review/`. Canonical PMID fetches and the normal reference fetcher produced the cited caches; none was hand-written. Provider, publication and fitness acquisition attempts were already recorded under `.cache/module-audit-logs/ammonia-acquisition/`; failed providers are not evidence.
+
+The native primary regulatory full texts PMID:18195355, PMID:24158439, PMID:25691471 and PMID:35778410 were read. The native GltAB primary full text PMID:34931064 was read, including its strain, biochemical, structural and cofactor details. PMID:11719184, PMID:12139611, PMID:17001076, PMID:18331450, PMID:21435182, PMID:23535029 and PMID:8093698 were available as abstracts. Publisher recovery for12139611,17001076,18331450,21435182,23535029 returned403. The PMC196239 URL recovery provides the accessible scanned-article page/abstract, not a new asserted full transcription. No inaccessible experimental annotation is rejected because its abstract foregrounds a partner.
+
+PMID:22625175 is an abstract-only regulatory review, useful for synthesis but not a substitute for primary evidence. Primary PMID:18326565 (PMC2395005) and PMID:9829940 (PMC107716) are cached as abstracts. Normal PMC XML-page recovery returned browser challenges; EuropePMC fullTextXML recovery returned500 for both. The accessible PMC107716 web text was checked for methods and strain context, but no hand-built cache was manufactured. The abstract18326565 explicitly distinguishes native anabolic failure of RocG/GudB1 from heterologous E. coli GDH rescue; this supports a physiological conclusion under the studied conditions, not chemical irreversibility. In vitro reductive amination at high ammonium in the older study does not demonstrate effective native assimilation.
+
+## Focused validation interpretation
+
+The explicit core glutaminase subactivity (GltA) and NADPH-GOGAT complex membership (both chains) can trigger advisory requests for additional annotation rows. They are supported core context, but the review does not manufacture NEW assertions just to silence warnings. All machine rows remain intact. The GltA generic-GOGAT IBA has structured metadata after inspection of the actual PTN000234342 PAINT IBD row; native NADPH evidence supplies its target refinement.
+
+
+## 2026-10-28 — PR #5696 review follow-up
+
+The glutamine-hydrolysis and ammonia-channel mechanism remains in the biological description and core-function prose. The machine-readable core now records contribution to GO:0004355 glutamate synthase (NADPH) activity, with the native small chain required for NADPH input, rather than a separate GO:0004359 glutaminase activity. This policy is applied to all four reviewed large chains; the inherited PSEPK standalone proposal is archived, and no new rows are added to fill coverage warnings. Direct E. coli partial-activity evidence (PMID:770440) remains valid and retained.

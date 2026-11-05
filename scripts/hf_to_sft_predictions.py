@@ -323,7 +323,10 @@ def build_prediction_review(
         "references": [
             {
                 "id": SOURCE_REFERENCE_ID,
-                "title": "BioReason-Pro (Fallahpour et al. 2026)",
+                "title": (
+                    "BioReason-Pro: Advancing Protein Function Prediction "
+                    "with Multimodal Biological Reasoning"
+                ),
             }
         ],
         "source_documents": ["huggingface.co/datasets/wanglab/protein_catalogue"],

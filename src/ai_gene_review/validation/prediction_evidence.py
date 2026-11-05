@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import re
+from typing import Any, Iterable
 
 import yaml
 
@@ -24,17 +25,71 @@ from ai_gene_review.validation.validation_report import ValidationReport, Valida
 SCORES = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
 
 
+EXTERNAL_SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*://")
+# Bare hosts written without a scheme; scripts/hf_to_sft_predictions.py writes the only one.
+EXTERNAL_HOSTS = ("huggingface.co/",)
+
+
+def is_external_source(source: str) -> bool:
+    """Whether a ``source_documents`` entry names a remote resource, not a repo file.
+
+    >>> is_external_source("huggingface.co/datasets/wanglab/protein_catalogue")
+    True
+    >>> is_external_source("https://example.org/data.tsv")
+    True
+    >>> is_external_source("genes/SCHPO/pmp20/pmp20-goa.tsv")
+    False
+    >>> is_external_source("pmp20-bioreason-rl-predictions.md")
+    False
+    >>> is_external_source("SPAC8E11.10-hypotheses/x/openscientist.md")
+    False
+    """
+    return bool(EXTERNAL_SCHEME.match(source)) or source.startswith(EXTERNAL_HOSTS)
+
+
 def source_path(reference_id: str, root: Path) -> Path | None:
     """Resolve supported reference identifiers without network access."""
     if reference_id.startswith("file:"):
         relative = reference_id.removeprefix("file:")
         gene_path = root / "genes" / relative
         return gene_path if gene_path.is_file() else root / relative
+    reference_id = canonical_reference_id(reference_id)
     if reference_id.startswith("PMID:"):
         return root / "publications" / f"PMID_{reference_id[5:]}.md"
     if reference_id.startswith("DOI:"):
         return root / "publications" / f"DOI_{reference_id[4:].replace('/', '_')}.md"
     return None
+
+
+def canonical_reference_id(reference_id: str) -> str:
+    """Upper-case a PMID or DOI prefix; other identifiers are returned unchanged.
+
+    >>> canonical_reference_id("doi:10.64898/2026.03.19.712954")
+    'DOI:10.64898/2026.03.19.712954'
+    >>> canonical_reference_id("pmid:123")
+    'PMID:123'
+    >>> canonical_reference_id("file:SCHPO/pmp20/x.md")
+    'file:SCHPO/pmp20/x.md'
+    """
+    prefix, sep, local = reference_id.partition(":")
+    if sep and prefix.upper() in ("PMID", "DOI"):
+        return f"{prefix.upper()}:{local}"
+    return reference_id
+
+
+def referenced_pmids(documents: Iterable[dict[str, Any]]) -> set[str]:
+    """PMIDs listed under ``references``, in canonical form, for ``--fetch``.
+
+    >>> sorted(referenced_pmids([{"references": [{"id": "pmid:42"}, {"id": "PMID:7"},
+    ...                                          {"id": "doi:10.1/x"}]}]))
+    ['PMID:42', 'PMID:7']
+    """
+    return {
+        canonical_reference_id(ref["id"])
+        for document in documents
+        for ref in document.get("references", [])
+        if canonical_reference_id(ref["id"]).startswith("PMID:")
+    }
 
 
 def local_quote_matches(quote: str, text: str) -> bool:
@@ -82,18 +137,18 @@ def validate_prediction_evidence(
                   "references")
             continue
         texts[ref_id] = source.read_text()
-        if ref_id.startswith(("PMID:", "DOI:")):
+        if canonical_reference_id(ref_id).startswith(("PMID:", "DOI:")):
             if validator is None:
                 error("Reference validation dependency unavailable", "references")
                 continue
-            result = validator.validate_title(ref_id, ref["title"])
+            result = validator.validate_title(canonical_reference_id(ref_id), ref["title"])
             if not result.is_valid:
                 error(f"Publication title mismatch: {ref_id}: {result.message}", "references")
             else:
                 report.metadata["verified_titles"] += 1
 
     for source in data.get("source_documents", []):
-        if not (root / source).is_file():
+        if not is_external_source(source) and not (root / source).is_file():
             error(f"Source document unavailable: {source}", "source_documents")
 
     for i, prediction in enumerate(data.get("predictions", [])):
@@ -122,7 +177,7 @@ def validate_prediction_evidence(
             if ref_id.startswith("file:"):
                 matched = local_quote_matches(quote, texts[ref_id])
             elif validator is not None:
-                matched = validator.validate(quote, ref_id).is_valid
+                matched = validator.validate(quote, canonical_reference_id(ref_id)).is_valid
             else:
                 matched = False
             if matched:
@@ -146,11 +201,7 @@ def main() -> int:
     if args.fetch:
         from ai_gene_review.etl.publication import cache_publication
 
-        pmids: set[str] = set()
-        for path in args.files:
-            data = yaml.safe_load(path.read_text())
-            pmids.update(ref["id"] for ref in data.get("references", [])
-                         if ref["id"].startswith("PMID:"))
+        pmids = referenced_pmids(yaml.safe_load(path.read_text()) for path in args.files)
         for pmid in sorted(pmids):
             cache = source_path(pmid, args.project_root)
             if cache is not None and not cache.is_file():

@@ -3796,6 +3796,45 @@ def fetch_descriptions_bulk(
 
 
 @app.command()
+def mod_description_deep_research(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., worm, fly, yeast, mouse)")
+    ],
+    genes: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="Gene folder name(s) (default: every gene of the organism)"),
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Write even when the Alliance record names a different gene"),
+    ] = False,
+    delay: Annotated[
+        float,
+        typer.Option("--delay", "-d", help="Delay between API calls in seconds"),
+    ] = 0.3,
+):
+    """Write each gene's curated MOD description as GENE-deep-research-<mod>.md.
+
+    The file is a verbatim copy of the MOD's hand-written gene description
+    (Alliance MOD_provided_gene_description); judge it in the review's
+    references[].reference_review.
+
+    Examples:
+        ai-gene-review mod-description-deep-research worm fshr-1
+        ai-gene-review mod-description-deep-research worm
+    """
+    from ai_gene_review.etl.mod_description_deep_research import emit_organism
+
+    results = emit_organism(organism, genes=genes, force=force, delay=delay)
+    for status, names in sorted(results.items()):
+        typer.echo(f"{status}: {len(names)}")
+        if status in ("blocked", "error"):
+            typer.echo("  " + ", ".join(names))
+    if results.get("blocked") or results.get("error"):
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def descriptions_status(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., yeast, human)")

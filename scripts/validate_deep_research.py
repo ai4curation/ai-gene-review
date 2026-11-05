@@ -15,6 +15,7 @@ import yaml
 PROVIDER_FILE_RE = re.compile(r".+-deep-research-(?P<provider>.+)\.md$")
 FRONTMATTER_PROVIDERS = {
     "asta",
+    "claude-code",
     "cyberian",
     "falcon",
     "openai",

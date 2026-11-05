@@ -50,3 +50,8 @@ The overexpression phenotype supports an osmoprotection role but does not replac
   authored core process now use GO:0031456 (glycine betaine biosynthetic process), the
   term the bacterial_choline_to_glycine_betaine_biosynthesis module grounds the same
   step on. The evidence and reasoning are unchanged.
+
+## 2026-11-03 completion pass
+- GO:0016491 MARK_AS_OVER_ANNOTATED -> MODIFY to GO:0008802; GO:0046872 KEEP_AS_NON_CORE -> MODIFY to GO:0030955 potassium ion binding (HAMAP MF_00804: "Binds 2 potassium ions per subunit"). Both match E. coli BetB (P17445).
+- Q88CW7 has only a family-level PANTHER cross-reference (PTHR11699); E. coli and P. aeruginosa BetB are in PTHR11699:SF228, but KT2440 BetB is not asserted there.
+- Status set to COMPLETE.

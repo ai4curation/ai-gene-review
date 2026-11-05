@@ -186,7 +186,9 @@ records. Notes fields may carry review-process context where appropriate.
 Validate sidecars with `just validate-predictions <file> [<file> ...]`. This checks
 the PredictionReview schema, score/category agreement, source paths, publication
 titles, and supporting excerpts, fetching missing PMID caches. CI runs the same
-check for changed sidecars and publishes `prediction-evidence-validation` results.
+check for changed sidecars and publishes `prediction-evidence-validation` results;
+`just validate-predictions-all` checks every prediction file, as the weekly, merge-queue
+and validation-infrastructure CI runs do.
 The recipe requires excerpts for every supporting-source entry, and local-file
 excerpt segments must follow source order without reusing the same passage.
 Missing source text cannot be certified as verified. The check tests citation

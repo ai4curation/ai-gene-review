@@ -2,19 +2,22 @@
 """Collect structured source-database defects for upstream reporting.
 
 Reviews record defects that live in a *source* record, not in this repository,
-under ``source_defects`` (see ``docs/source_defects.md``). They appear in two
+under ``source_defects`` (see ``docs/source_defects.md``). They appear in these
 places:
 
 * ``existing_annotations[].review.source_defects`` in gene reviews
   (``genes/*/*/*-ai-review.yaml``), where the defective record is the GOA/MOD
   annotation row described by the enclosing ``existing_annotations`` entry;
+* ``references[].reference_review.source_defects`` in gene reviews, where the
+  defect is in a cited source's own text (a MOD gene description, a UniProt
+  FUNCTION comment);
 * ``functional_isoforms[].source_defects`` in gene reviews, where the defect is in
   the source's record of an isoform (e.g. a literature isoform missing from the
   reviewed UniProt entry); the row's ``term_id`` carries the functional isoform id;
 * ``activity_reviews[].source_defects`` in GO-CAM reviews
   (``gocams/*/*-review.yaml``), where it is the GO-CAM activity.
 
-This module flattens both into one row per defect and renders a Markdown report
+This module flattens them all into one row per defect and renders a Markdown report
 per responsible resource (the thing that is actually sent upstream).
 
 >>> row = _row(
@@ -95,7 +98,7 @@ def _row(source_path: str, context: dict[str, Any], defect: dict[str, Any]) -> d
 
 
 def gene_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
-    """Yield defect rows from a gene review's existing annotations and functional isoforms."""
+    """Yield defect rows from a gene review's annotations, references and functional isoforms."""
     data = _load(path)
     if not data:
         return
@@ -111,6 +114,15 @@ def gene_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
                 "evidence_type": ann.get("evidence_type", ""),
                 "original_reference_id": ann.get("original_reference_id", ""),
                 "qualifier": ann.get("qualifier", ""),
+            }
+            yield _row(str(path.relative_to(root)), context, defect)
+    for ref in data.get("references") or []:
+        for defect in (ref.get("reference_review") or {}).get("source_defects") or []:
+            context = {
+                "gene_symbol": data.get("gene_symbol", ""),
+                "subject_id": f"UniProtKB:{data.get('id', '')}",
+                "original_reference_id": ref.get("id", ""),
+                "term_label": ref.get("title", ""),
             }
             yield _row(str(path.relative_to(root)), context, defect)
     for isoform in data.get("functional_isoforms") or []:
@@ -175,7 +187,12 @@ def _describe_change(r: dict[str, str]) -> str:
         return f"delete the record asserting {asserted}"
     if action == "ADD":
         where = f" ({r['slot']})" if r["slot"] else ""
+        if not corrected:
+            return f"add the content described in the explanation to {asserted}{where}"
         return f"add {corrected}{label} to {asserted}{where}"
+    if action == "CHECK" and r.get("defect_type", "").endswith("_STATEMENT"):
+        where = f" in {r['slot']}" if r["slot"] else ""
+        return f'revise "{asserted}"{where} (see explanation)'
     if action == "CHECK":
         return f"check {asserted} (alternatives in the explanation)"
     if corrected:

@@ -32,3 +32,7 @@ IPR034657 â€” Alginate O-acetyltranferase AlgJ (official spelling); IPR031811 â€
 ## Intrinsic activity versus complex contribution follow-up
 
 Reassessed the contributes_to relation separately from AlgX. Pseudomonas AlgJ assays in PMID:25165982 demonstrate surrogate acetylesterase chemistry and catalytic-site requirements, but the physiological relay donor/recipient and complete transfer reaction remain unresolved. Specific AlgJ-family identity supports the modification-system role, not a demonstrated terminal polymer O-acetyltransferase activity. Removed the contributes_to acetyltransferase core field and retained the supported process/location core; uncertainty is explicit in prose. No negative catalytic claim and no new hydrolase or transferase annotation is inferred from an artificial-substrate assay. This supersedes the earlier generic note equating unresolved target activity with subunit contribution. All three seeded rows are unchanged.
+
+## Deep research availability, 2026-11-02
+
+No provider deep-research report exists for this gene. The only provider attempt for this gene is the original review's Falcon run with Perplexity-lite fallback, which failed as recorded above. It was not retried during the 2026-11-02 module audit, whose only retry was `just deep-research-falcon PSEAE algI` (403 authentication failure); for the KT2440 provider failures see genes/PSEPK/algI/algI-notes.md. No deep-research file was written by hand; the review rests on cached primary publications, the UniProt record and the existing annotation reviews.

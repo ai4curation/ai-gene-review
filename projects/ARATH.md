@@ -564,9 +564,8 @@ Last updated: 2026-10-20
 - [ ] Add deep research for the 85 reviews that have none
 - [ ] File the draft reports in [upstream-reports.md](ARATH/upstream-reports.md)
       (GO-CAM HAM1/SCL27; TAIR SUR1, F4JLB7/RIC7, GSTF6) and record the tickets
-- [ ] Bring OST1 in line with SnRK2.2/SnRK2.3: they MODIFY protein kinase
-      activity (GO:0004672) and kinase activity (GO:0016301) to GO:0004674,
-      while OST1 ACCEPTs GO:0004672 and marks GO:0016301 over-annotated
+- [x] Bring OST1 in line with SnRK2.2/SnRK2.3: all three now MODIFY protein
+      kinase activity (GO:0004672) and kinase activity (GO:0016301) to GO:0004674
 - [ ] Re-run the corpus statistics after the 2026-10-19 additions
 
 ## Phase 3: modules
@@ -677,3 +676,16 @@ L1 than L2, PMID:32311173; mutants show mtLPD1 predominant in photorespiration,
 PMID:41990722) is now cited in the photorespiration module. GGAT2's
 photorespiration row rests on enzyme activity, leaf peroxisome peptides and
 expression only; no ggat2 mutant has been described.
+
+## 2026-10-24
+
+- OST1: the four general kinase MF rows now MODIFY to GO:0004674, matching SnRK2.2 and SnRK2.3.
+- OpenScientist checked the two single-study potassium channel inhibitor calls. Neither finding
+  has been independently replicated. For CBL10/AKT1 the in-planta data are overexpression-only,
+  so AKT1 inhibition was dropped from CBL10's core functions. For SLAC1/KAT1, slac1
+  loss-of-function shows reduced rather than increased inward K+ current (PMID:23126621). Both
+  keep their MODIFY rows with caveats. SLAC1's KAT1 row uses GO:0070320 (inward rectifier
+  potassium channel inhibitor activity), matching CBL10's AKT1 row; its AKT2 row stays on
+  GO:0019870 because AKT2 also has non-rectifying gating modes (PMID:16316977). Reports are in
+  each gene's `-hypotheses/` folder.
+

@@ -127,3 +127,11 @@ against their cached titles: PMID:8893006 (Oprm1 knockout), PMID:10617462
   attenuated by presynaptic mu opioid receptors (MORs) activation"].
 - Ethanol: [PMID:10869404 "In no case did knockout mice show evidence of
   ethanol self-administration"].
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of OPRM1 was made in PR #5350. This review (#5042) is kept
+as the base. Ported from #5350: PMID:42870023 (Deutsch et al. 2026, Nat Struct Mol
+Biol), which used mouse μOR coupled to human Gαi1β1γ2 and shows that agonist efficacy
+is encoded in how fast the Gi α-helical domain opens for GDP release [PMID:42870023 "Mean dwell times in this high-FRET state (τhigh) depended strongly on ligand efficacy"]. Added as a reference, with two suggested questions and one suggested
+experiment on whether this holds for human OPRM1 and its N40D variant.

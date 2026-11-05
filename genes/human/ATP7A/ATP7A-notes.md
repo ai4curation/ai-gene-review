@@ -89,3 +89,11 @@ The four retained associations remain PDZD11/AIPP1, SOD3, COMMD1 and dopamine be
 All 116 original source and review objects, six alternative products and the single copper-transport core remain unchanged. The unresolved source-specific annotations and the Cu(II) action are not revised by this clarification.
 
 This addendum clarifies the authority and exclusion criterion for the existing decisions. It adds no primary-source reading, biological assertion or new annotation adjudication. Earlier journal entries and validation results remain historical; this clarification does not claim reviewer approval or PR completion.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 EXP (PMID:9467005) and IEA (GO_REF:0000044, SL-0095). No ER sub-compartment rows.
+- The IEA keyword comes from the isoform-specific UniProt line "SUBCELLULAR LOCATION: [Isoform 5]: Endoplasmic reticulum {ECO:0000269|PubMed:9467005}" [file:human/ATP7A/ATP7A-uniprot.txt]; the mapping drops the isoform restriction.
+- PMID:9467005 (abstract only): exon 10 skipping deletes TM3-TM4; the exon 10-skipped product is a low-level natural splice form, and [PMID:9467005 "the minor form (as the only form in this family with OHS) is co-localized with the endoplasmic reticulum-resident BiP protein (GRP78)"]; [PMID:9467005 "endoplasmic reticulum localization only of a variant ATP7A protein is insufficient to effect normal copper transport"].
+- Real minor pool with an ER marker, but not where copper pumping acts: both rows stay KEEP_AS_NON_CORE; dated ORGANELLES sentence and supported_by added.
+- Sub-compartment: the variant keeps 6 of 8 TM helices, so ER membrane is likely, but nothing resolves membrane vs lumen and it is a retained deletion form; one line, stay at root.
