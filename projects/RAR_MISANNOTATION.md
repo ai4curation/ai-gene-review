@@ -187,7 +187,12 @@ IBA is low quality.
 - [x] Family check of PTN000917496 (MBF / worm cec-10), from domain and pairwise evidence; the PANTHER tree was not re-inferred.
 - [x] Read the full text of PMID:12937276 for the npp-20 IMP row.
 - [x] Chicken `cerebral cortex development`: reviewed in BTBD3.
-- [ ] Raise with GO: taxon constraints on `GO:0030907`/`GO:0033309` (Fungi), `GO:0044548` (Chordata) and a narrower one for `GO:0021987`; an IRD on PTN000917496; and review of the IPR002956 and IPR037893 InterPro2GO mappings.
+- [x] Write the upstream requests in the repo's structured formats (2026-11-05):
+  - Taxon constraints TPV-004 to TPV-007 in [proposed_taxon_constraints.yaml](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.yaml): MBF and SBF complexes only in Fungi, S100 protein binding only in Chordata, cerebral cortex development never in Aves. The IRD on PTN000917496 is recorded with TPV-004.
+  - InterPro2GO verdicts in [interpro2go.sssom.yaml](INTERPRO/interpro2go.sssom.yaml): narrow IPR037893 → S100 protein binding by taxon, and narrow IPR002956 → sevenless binding and visual perception to the BOSS family.
+  - The COPII coat structural-constituent term is a `proposed_new_terms` entry in the npp-20 review.
+  - The LPXD1 UniProt disruption-phenotype error is a `source_defects` entry in the LPXD1 review.
+- [ ] Submit these to GO, InterPro and UniProt (status is PROPOSED in each file).
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
 - [ ] Rerun RAR on current GOA for our reviewed species (script not yet written).
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
