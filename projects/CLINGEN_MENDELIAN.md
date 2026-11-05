@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**709 of 2,876 genes are complete; 2,167 remain.**
-This checkpoint adds GATAD2B, GATM, GBE1, GBA2, GBA1 and GCDH after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-709-2026-11-05-035846-utc) records the evidence and retained uncertainties.
+**715 of 2,876 genes are complete; 2,161 remain.**
+This checkpoint adds GCH1, GCK, GCSH, GDF2, GDAP1 and GEMIN5 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-715-2026-11-05-085845-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3842,12 +3842,12 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **GBA2** — HGNC:18986; [complex hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ecc960c-5410-4ad8-ab77-bca41145f5e2-2024-05-02T160000.000Z) (MONDO:0015150; AR; Definitive).
 - [x] **GBE1** — HGNC:4180; [glycogen storage disease due to glycogen branching enzyme deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3f01d412-0f6d-4a0f-88db-b55b2af4a0a2-2023-09-21T160000.000Z) (MONDO:0009292; AR; Definitive).
 - [x] **GCDH** — HGNC:4189; [glutaryl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_33a2c95e-a057-4b93-b97e-27b6597516e5-2019-11-08T170000.000Z) (MONDO:0009281; AR; Definitive).
-- [ ] **GCH1** — HGNC:4193; [GTP cyclohydrolase I deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ed6c1e6c-5856-48aa-aa8f-47328e6b09eb-2020-12-11T200937.286Z) (MONDO:0100184; SD; Definitive).
-- [ ] **GCK** — HGNC:4195; [hyperinsulinism due to glucokinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f11594cd-9107-4a45-86af-4e464417ce50-2026-06-17T160000.000Z) (MONDO:0011236; AD; Definitive); [monogenic diabetes](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8a4a40fe-471c-4e9a-a28b-7db3a21cffa6-2026-06-02T160000.000Z) (MONDO:0015967; SD; Definitive).
-- [ ] **GCSH** — HGNC:4208; [multiple mitochondrial dysfunctions syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d360db9d-24e7-415e-b4bc-59a2c6231189-2026-01-09T170000.000Z) (MONDO:0957382; AR; Definitive).
-- [ ] **GDAP1** — HGNC:15968; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c6d93637-02f5-4f5d-b7a9-17356f084149-2020-07-28T144211.873Z) (MONDO:0015626; SD; Definitive).
-- [ ] **GDF2** — HGNC:4217; [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2d2e83fa-0af1-450f-af9c-5c61d4bc3106-2022-05-26T221514.154Z) (MONDO:0015924; AD; Definitive); [telangiectasia, hereditary hemorrhagic, type 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_00608fb7-3483-495a-8f9e-76aabb4b1dc0-2026-09-02T160000.000Z) (MONDO:0014217; AD; Moderate).
-- [ ] **GEMIN5** — HGNC:20043; [neurodevelopmental disorder with cerebellar atrophy and motor dysfunction](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_51809985-ee18-429f-b804-96e7decb3d08-2023-09-06T160000.000Z) (MONDO:0859152; AR; Definitive).
+- [x] **GCH1** — HGNC:4193; [GTP cyclohydrolase I deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ed6c1e6c-5856-48aa-aa8f-47328e6b09eb-2020-12-11T200937.286Z) (MONDO:0100184; SD; Definitive).
+- [x] **GCK** — HGNC:4195; [hyperinsulinism due to glucokinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f11594cd-9107-4a45-86af-4e464417ce50-2026-06-17T160000.000Z) (MONDO:0011236; AD; Definitive); [monogenic diabetes](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8a4a40fe-471c-4e9a-a28b-7db3a21cffa6-2026-06-02T160000.000Z) (MONDO:0015967; SD; Definitive).
+- [x] **GCSH** — HGNC:4208; [multiple mitochondrial dysfunctions syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d360db9d-24e7-415e-b4bc-59a2c6231189-2026-01-09T170000.000Z) (MONDO:0957382; AR; Definitive).
+- [x] **GDAP1** — HGNC:15968; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c6d93637-02f5-4f5d-b7a9-17356f084149-2020-07-28T144211.873Z) (MONDO:0015626; SD; Definitive).
+- [x] **GDF2** — HGNC:4217; [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2d2e83fa-0af1-450f-af9c-5c61d4bc3106-2022-05-26T221514.154Z) (MONDO:0015924; AD; Definitive); [telangiectasia, hereditary hemorrhagic, type 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_00608fb7-3483-495a-8f9e-76aabb4b1dc0-2026-09-02T160000.000Z) (MONDO:0014217; AD; Moderate).
+- [x] **GEMIN5** — HGNC:20043; [neurodevelopmental disorder with cerebellar atrophy and motor dysfunction](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_51809985-ee18-429f-b804-96e7decb3d08-2023-09-06T160000.000Z) (MONDO:0859152; AR; Definitive).
 - [ ] **GFAP** — HGNC:4235; [Alexander disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1da6d658-360e-4097-95a9-0b6838638e31-2024-01-10T170000.000Z) (MONDO:0008752; AD; Definitive).
 - [ ] **GFER** — HGNC:4236; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_494b0327-da1a-4b06-9563-2b846ce561a3-2023-09-28T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **GFI1B** — HGNC:4238; [platelet-type bleeding disorder 17](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_62841ea9-5bd8-4250-ab41-31d7cf82d2e3-2019-11-27T170000.000Z) (MONDO:0008553; AD; Definitive).
