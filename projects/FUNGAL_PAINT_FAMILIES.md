@@ -137,7 +137,7 @@ MAPK placement `PANTHER:PTN001172087`.
   drafted in PR #5883
 - [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
   drafted in this branch
-- [x] `EMENI/mpkC` - *Aspergillus nidulans* SakA/HogA-like stress MAPK with
+- [ ] `EMENI/mpkC` - *Aspergillus nidulans* SakA/HogA-like stress MAPK with
   PbsB-dependent nuclear accumulation during development and osmotic or
   oxidative stress; drafted in this branch
 
