@@ -98,6 +98,8 @@ from ai_gene_review.etl.panther_families import (
     load_subfamily_counts,
     member_index_path,
 )
+from ai_gene_review.validation.quote_check import Outcome as QuoteOutcome
+from ai_gene_review.validation.quote_check import check_document
 from ai_gene_review.validation.supporting_text import (
     LITERATURE_PREFIXES,
     build_supporting_text_validator,
@@ -1994,11 +1996,11 @@ def validate_module_file(
     errors.extend(title_errors)
     warnings.extend(title_warnings)
 
-    # Supporting-text snippets: every EvidenceItem literature quote (PMID/DOI
-    # source_id paired with supporting_text) must be a verbatim (normalized)
-    # substring of the cached publication. Mismatches block; unfetchable or
-    # uncached references degrade to advisory warnings.
-    st_errors, st_warnings = validate_supporting_text(doc)
+    # Supporting-text quotes: every supporting_text, whatever it cites (PMID/DOI
+    # against publications/, file:/Reactome: against the local source), must be a
+    # verbatim (normalized) substring of its source. Failures block unless listed
+    # in conf/quote_check_baseline.yaml; unreadable sources are summarised.
+    st_errors, st_warnings = validate_supporting_text(doc, yaml_file=path)
     errors.extend(st_errors)
     warnings.extend(st_warnings)
 
@@ -2009,37 +2011,6 @@ def validate_module_file(
         ungrounded_families=count_ungrounded_families(doc),
         function_conformance=function_conformance,
     )
-
-
-def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
-    """Yield ``(source_id, supporting_text)`` for every EvidenceItem-like dict.
-
-    An EvidenceItem is recognised structurally as any mapping carrying both a
-    ``source_id`` and a non-empty ``supporting_text``. Only literature sources
-    (``PMID:``/``DOI:``) are yielded, since only those have a fetchable text to
-    check the quote against.
-
-    >>> doc = {"evidence": [{"source_id": "PMID:1", "supporting_text": "x"},
-    ...                     {"source_id": "GO:0001", "supporting_text": "y"}]}
-    >>> list(iter_evidence_snippets(doc))
-    [('PMID:1', 'x')]
-    """
-    if isinstance(obj, dict):
-        source_id = obj.get("source_id")
-        supporting_text = obj.get("supporting_text")
-        if (
-            isinstance(source_id, str)
-            and isinstance(supporting_text, str)
-            and supporting_text.strip()
-        ):
-            prefix = source_id.split(":", 1)[0].upper()
-            if prefix in LITERATURE_PREFIXES:
-                yield (source_id, supporting_text)
-        for value in obj.values():
-            yield from iter_evidence_snippets(value)
-    elif isinstance(obj, list):
-        for item in obj:
-            yield from iter_evidence_snippets(item)
 
 
 def iter_evidence_go_terms(obj: object) -> Iterator[Tuple[str, str]]:
@@ -2114,64 +2085,58 @@ def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
 def validate_supporting_text(
     doc: object,
     publications_dir: Optional[Path] = None,
+    yaml_file: Optional[Path] = None,
 ) -> Tuple[List[str], List[str]]:
-    """Verify every EvidenceItem literature quote against the cached publication.
+    """Verify every ``supporting_text`` quote in a module against its source.
 
-    Uses ``linkml-reference-validator``'s own ``SupportingTextValidator`` (the
-    same normalize + deterministic-substring matcher gene reviews use), reading
-    from the ``publications/`` cache. Returns ``(errors, warnings)``:
+    Quotes are found by ``quote_check.iter_quotes``: ``EvidenceItem.source_id``,
+    ``reference_id`` (``knowledge_gaps[].provenance``, ``supported_by``) and
+    ``references[].findings``. Until #6021 only ``source_id`` quotes citing a PMID
+    or DOI were read, so ``file:`` / ``Reactome:`` quotes and every
+    ``reference_id`` / ``findings`` quote passed unchecked.
 
-    - a quote that is not a substring of the fetched/cached publication is an
-      **error** (blocks validation);
-    - a quote that *cannot be checked* -- uncached, unfetchable, or a crash in the
-      checker -- is now also an **error**. It was previously a warning, "advisory so
-      offline runs do not hard-fail", but that made an unverified quote
-      indistinguishable from a verified one, which is the only distinction this check
-      draws. The gene-review side made the same change in
-      ``validate_reference_finding_supporting_text``.
+    Returns ``(errors, warnings)``:
 
-    The second element of the tuple is therefore always empty today. It is kept so the
-    ``(errors, warnings)`` shape matches the sibling validators and callers that unpack
-    it, not because a warning case is expected.
+    - a quote not found in its source, or whose source is missing, uncached or
+      could not be read, is an **error** (a crash while checking is not a pass);
+    - a failure listed in ``conf/quote_check_baseline.yaml`` is a **warning**;
+    - quotes whose source has no readable text (``url``, ``GO:``, ``PMCID:``, a
+      quote with no reference id) are summarised in one **warning**, so the output
+      never implies they were verified.
 
-    The check is a no-op (returns empty) when the reference validator is not
-    installed, so it degrades gracefully.
+    A no-op when the reference validator is not installed.
     """
     if not isinstance(doc, dict):
         return [], []
-    snippets = list(iter_evidence_snippets(doc))
-    if not snippets:
-        return [], []
-
     validator, _ = build_supporting_text_validator(publications_dir)
     if validator is None:
         return [], []
 
     errors: List[str] = []
     warnings: List[str] = []
-    # A snippet must be deterministically checkable against the cache, and a failure to
-    # match is an error -- the same rule the gene-review validator applies in
-    # validate_reference_finding_supporting_text. Both paths used to downgrade the
-    # uncheckable cases to warnings, which made an unverified quote indistinguishable
-    # from a verified one; that is the only distinction either check exists to draw.
-    # A crash while checking is likewise not a pass: it skips validation for reasons
-    # unrelated to whether the quote is correct.
-    for source_id, supporting_text in snippets:
-        try:
-            result = validator.validate(supporting_text, source_id)
-        except Exception as exc:  # noqa: BLE001 - external publication service
-            errors.append(
-                f"Supporting text could not be checked ({source_id}): fetch failed: "
-                f"{type(exc).__name__}: {exc}"
-            )
+    unchecked: Dict[str, int] = {}
+    for result in check_document(doc, yaml_file, validator=validator):
+        ref = result.quote.reference_id
+        if result.outcome is QuoteOutcome.VERIFIED:
             continue
-        if result.is_valid:
+        if result.outcome is QuoteOutcome.UNCHECKED:
+            prefix = ref.split(":", 1)[0] if ref else "(no reference id)"
+            unchecked[prefix] = unchecked.get(prefix, 0) + 1
             continue
-        message = str(getattr(result, "message", "") or "")
-        if is_unfetchable(message):
-            errors.append(f"Supporting text could not be checked ({source_id}): {message}")
+        if result.outcome is QuoteOutcome.UNRESOLVED:
+            message = f"Supporting text could not be checked ({ref}) at {result.quote.path}: {result.detail}"
         else:
-            errors.append(f"Supporting text mismatch ({source_id}): {message}")
+            message = f"Supporting text mismatch ({ref}) at {result.quote.path}: {result.detail}"
+        if result.baselined:
+            warnings.append(f"{message} (known failure, listed in conf/quote_check_baseline.yaml)")
+        else:
+            errors.append(message)
+    if unchecked:
+        summary = ", ".join(f"{k}: {v}" for k, v in sorted(unchecked.items()))
+        warnings.append(
+            f"{sum(unchecked.values())} supporting_text quote(s) cite a source with no "
+            f"readable text and were not verified ({summary})"
+        )
     return errors, warnings
 
 
