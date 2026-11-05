@@ -4,11 +4,13 @@ The [review](GFPT1-ai-review.yaml) separates the catalytic function from interac
 
 ## Human catalysis and products
 
-[PMID:32019926](https://doi.org/10.1038/s41467-020-14524-5), selected original Methods/Results: human isoform 2 has an internal His6 insertion between Gly299/Asp300 and Sf21 expression. Glutamate and glucosamine-6-phosphate have separate coupled readouts; UDP-GlcNAc interference restricts inhibition measurement to the former. Phosphosugar crystal identity is ambiguous; specificity rests on substrate kinetics.
+[PMID:32019926](https://doi.org/10.1038/s41467-020-14524-5), selected original Methods/Results: human isoform 2 has an internal His6 insertion between Gly299/Asp300 and Sf21 expression. Glutamate and glucosamine-6-phosphate have separate coupled readouts; UDP-GlcNAc interference restricts inhibition measurement to the former. The inspected phosphosugar identity is ambiguous; substrate kinetics and separately curated features support specificity. The reported human structure forms an asymmetric homodimer.
 
 [PMID:35229715](https://doi.org/10.7554/eLife.69223), selected original Methods/Results: recombinant human GFPT1 is an assayed comparator despite the title. Human GFPT2 activity independently establishes the partner class considered during interaction review. Mouse embryonic-stem-cell findings are separate from human GFPT1 physiology.
 
 [PMID:11679416](https://pubmed.ncbi.nlm.nih.gov/11679416/) reports a muscle-enriched splice insertion and a recombinant kinetic comparison; the complete reagent crosswalk is unresolved. The official 699/681-residue sequences are distinct from engineered tagged reagents. [PMID:1460020](https://pubmed.ncbi.nlm.nih.gov/1460020/), original main text inspected through an [indexed author-paper mirror](https://www.academia.edu/80674302/Molecular_cloning_cDNA_sequence_and_bacterial_expression_of_human_glutamine_fructose_6_phosphate_amidotransferase), establishes recombinant human chemistry. OCR and uninspected figure pixels limit fine numeric claims.
+
+The [official Q06210 record](GFPT1-uniprot.txt) lists F6P BINDING features at 394/395/439–441/444 with ECO:0000305/PMID:19059404 and ECO:0007744/PDB:2ZJ3. These are curated inference/structure annotations, not a newly inspected F6P-binding experiment. UDP-GlcNAc is a separate directly supported feedback ligand. No specific UDP-GlcNAc-binding GO descendant was established in the bounded term search. Engineered tags and mutants remain assay reagents, not additional natural products.
 
 ## GFPT2 interaction
 
@@ -21,7 +23,7 @@ The positive association and the partner's catalytic class are different evidenc
 
 ## Clock and EV boundaries
 
-[PMID:23395176](https://doi.org/10.1016/j.cmet.2012.12.015), selected authentic original main text: GFAT1 knockdown was tested for clock-gene transcript changes in human U2OS-B6 cells. The oscillatory reporter experiment manipulates OGT; mouse Gfat1 has a reported approximately 12-hour expression pattern. Supplements were not inspected. The exact mouse donor is real, but GFPT1-specific rhythm regulation remains unresolved.
+[PMID:23395176](https://doi.org/10.1016/j.cmet.2012.12.015), selected original main text: human U2OS-B6 GFAT1 knockdown reduces Bmal1/Cry1 expression. GFPT1 supplies hexosamine intermediates; OGT performs clock-protein modification. The rhythmic reporter targets OGT, while mouse Gfat1 itself varies at approximately 12 hours. This supports contextual regulation without establishing GFPT1-specific period/phase effects. Supplementary assays and figure pixels were not inspected.
 
 [PMID:20458337](https://www.researchgate.net/publication/44588150_MHC_class_II-associated_proteins_in_B-cell_exosomes_and_potential_functional_implications_for_exosome_biogenesis), original Methods/Results: human RN B-cell EV preparation; [ExoCarta experiments 79/80](https://www.exocarta.org/credits/gene_summary?gene_id=2673) separately identify GFPT1/Q06210 by MS. Original peptide tables remain inaccessible. [CL:0000639](https://www.ebi.ac.uk/ols4/ontologies/cl/classes/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FCL_0000639) is a pituitary basophil. Preserve this conflicting literal extension; no presumed B-cell replacement is made.
 
