@@ -153,11 +153,10 @@ lasB, which are given secretion-system terms for being secretion cargo).
 
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
 `source_defects` recorded in all PAO1 reviews into one report per resource in
-[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 116 for PseudoCAP (45
-wrong term, 42 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 2
-wrong gene product), 74 for PAINT/GO Central (44 wrong term, 16 other, 7
-missing negation, 6 wrong qualifier, 1 wrong reference), 5 for UniProt and 5
-for other resources (InterPro2GO mappings). They include defects from PAO1
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 115 for PseudoCAP (45
+wrong term, 41 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 2
+wrong gene product), 75 for PAINT/GO Central, 5 for UniProt and 11 for other
+resources (mostly InterPro2GO mappings). They include defects from PAO1
 reviews made before this project.
 
 Confidence follows the rule in [REVIEW_PROTOCOL](PSEUDOCAP/REVIEW_PROTOCOL.md):
@@ -172,11 +171,17 @@ full-text read (lhpL, pilA, waaL), and 39 were unchanged; none was removed and
 no annotation action changed. Six more were then raised to CONFIRMED because
 the abstract states the decisive fact outright (PA1340 and PA2280: the paper
 is about another organism; cysB: CysB is a transcription factor whose mutant is
-an auxotroph; estA: an overexpression result coded IDA). With fimT added, the
-PseudoCAP report stands at 21 CONFIRMED, 56 PROBABLE and 39 SUSPECTED, and the
-PAINT report at 6, 55 and 13. Full texts of
-PMID:16030218 (Sha cluster), PMID:4290562 (hut genes), PMID:9224878 (pilA) and
-PMID:7768797 (oprB) would settle most of the SUSPECTED calls.
+an auxotroph; estA: an overexpression result coded IDA). The user then
+supplied four full texts, which settled 16 more calls on 2026-11-05:
+PMID:16030218 (the only sha mutant is the PA1054 insertion, so the ten IMP
+evidence-code defects on PA1055-PA1059 are CONFIRMED), PMID:4290562 (step III
+is never assayed and there is no hutI or hutF mutant; histidase is assayed
+directly, so hutH's IMP should be IDA), PMID:7768797 (oprB's evidence is
+whole-cell uptake in mutant and overexpressing strains, so IMP) and
+PMID:9224878 (its Fig. 1 is a pilA mutant twitching assay, so pilA's IMP
+stands and that defect was removed). The PseudoCAP report now stands at 36
+CONFIRMED, 55 PROBABLE and 24 SUSPECTED, and the PAINT report at 6, 56 and
+13.
 
 ### Per-gene verdicts
 

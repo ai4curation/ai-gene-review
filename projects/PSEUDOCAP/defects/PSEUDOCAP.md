@@ -1,6 +1,6 @@
 # Source-record defects for PSEUDOCAP
 
-116 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+115 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
@@ -52,7 +52,7 @@ PA1054 (ShaAB) is the large subunit of the six-subunit Sha/Mrp Na+/H+ antiporter
 > In previous studies, none of the Mrp antiporters exhibited antiport activity with MrpA or MrpD alone.
 > — PMID:29218041
 
-## 5. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 5. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R9 enables GO:0015385 sodium:proton antiporter activity (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -60,7 +60,7 @@ PA1054 (ShaAB) is the large subunit of the six-subunit Sha/Mrp Na+/H+ antiporter
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1055/PA1055-ai-review.yaml`
 
-enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1055 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1055 mutant phenotype, so IMP looks wrong for PA1055; the full text was not read and could show otherwise. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. Please check the full text. This row is the sole seed of the PAINT IBD at PTN002160376 (24 leaf IBAs).
+enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1055 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (supplied by the user, read 2026-11-05) confirms that the only sha mutant constructed is the PA1054 insertion; there is no PA1055 mutant, so IMP does not apply to PA1055. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. The full text shows both, with antiport measured in everted membrane vesicles of TO114 carrying the cluster. This row is the sole seed of the PAINT IBD at PTN002160376 (24 leaf IBAs).
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -78,7 +78,7 @@ PA1055 (ShaC) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 > Antiport activity requires hetero-oligomeric complexes of all six or seven hydrophobic Mrp proteins (MrpA-MrpG).
 > — PMID:20624916
 
-## 7. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 7. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R9 involved_in GO:0035725 sodium ion transmembrane transport (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -86,12 +86,12 @@ PA1055 (ShaC) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1055/PA1055-ai-review.yaml`
 
-involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1055 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1055 mutant phenotype (full text not read). Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
+involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1055 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (read 2026-11-05) confirms there is no PA1055 mutant; the only sha mutant constructed is the PA1054 insertion. Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
 
 > Disruption of PA1054 resulted in severe Na+ sensitivity during growth and decreased Na+ efflux activity.
 > — PMID:16030218
 
-## 8. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 8. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R8 enables GO:0015385 sodium:proton antiporter activity (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -99,7 +99,7 @@ involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1055 cites 
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1056/PA1056-ai-review.yaml`
 
-enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1056 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1056 mutant phenotype, so IMP looks wrong for PA1056; the full text was not read and could show otherwise. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. Please check the full text. This row is one of two seeds of the PAINT IBD at PTN001865541 (16 leaf IBAs).
+enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1056 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (supplied by the user, read 2026-11-05) confirms that the only sha mutant constructed is the PA1054 insertion; there is no PA1056 mutant, so IMP does not apply to PA1056. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. The full text shows both, with antiport measured in everted membrane vesicles of TO114 carrying the cluster. This row is one of two seeds of the PAINT IBD at PTN001865541 (16 leaf IBAs).
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -117,7 +117,7 @@ PA1056 (ShaD) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. No Mrp an
 > In previous studies, none of the Mrp antiporters exhibited antiport activity with MrpA or MrpD alone.
 > — PMID:29218041
 
-## 10. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 10. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R8 involved_in GO:0035725 sodium ion transmembrane transport (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -125,12 +125,12 @@ PA1056 (ShaD) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. No Mrp an
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1056/PA1056-ai-review.yaml`
 
-involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1056 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1056 mutant phenotype (full text not read). Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
+involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1056 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (read 2026-11-05) confirms there is no PA1056 mutant; the only sha mutant constructed is the PA1054 insertion. Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
 
 > Disruption of PA1054 resulted in severe Na+ sensitivity during growth and decreased Na+ efflux activity.
 > — PMID:16030218
 
-## 11. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 11. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R7 enables GO:0015385 sodium:proton antiporter activity (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -138,7 +138,7 @@ involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1056 cites 
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1057/PA1057-ai-review.yaml`
 
-enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1057 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1057 mutant phenotype, so IMP looks wrong for PA1057; the full text was not read and could show otherwise. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. Please check the full text. This row is the sole seed of the PAINT IBD at PTN002160407 (20 leaf IBAs).
+enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1057 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (supplied by the user, read 2026-11-05) confirms that the only sha mutant constructed is the PA1054 insertion; there is no PA1057 mutant, so IMP does not apply to PA1057. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. The full text shows both, with antiport measured in everted membrane vesicles of TO114 carrying the cluster. This row is the sole seed of the PAINT IBD at PTN002160407 (20 leaf IBAs).
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -156,7 +156,7 @@ PA1057 (ShaE) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 > The results extended indications that MrpE is required for normal membrane levels of other Mrp proteins and for complex formation.
 > — PMID:20624916
 
-## 13. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 13. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R7 involved_in GO:0035725 sodium ion transmembrane transport (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -164,12 +164,12 @@ PA1057 (ShaE) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1057/PA1057-ai-review.yaml`
 
-involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1057 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1057 mutant phenotype (full text not read). Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
+involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1057 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (read 2026-11-05) confirms there is no PA1057 mutant; the only sha mutant constructed is the PA1054 insertion. Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
 
 > Disruption of PA1054 resulted in severe Na+ sensitivity during growth and decreased Na+ efflux activity.
 > — PMID:16030218
 
-## 14. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 14. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R6 enables GO:0015385 sodium:proton antiporter activity (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -177,7 +177,7 @@ involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1057 cites 
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1058/PA1058-ai-review.yaml`
 
-enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1058 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1058 mutant phenotype, so IMP looks wrong for PA1058; the full text was not read and could show otherwise. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. Please check the full text. This row is the sole seed of the PAINT IBD at PTN002162906 (19 GO_Central leaf IBAs).
+enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1058 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (supplied by the user, read 2026-11-05) confirms that the only sha mutant constructed is the PA1054 insertion; there is no PA1058 mutant, so IMP does not apply to PA1058. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. The full text shows both, with antiport measured in everted membrane vesicles of TO114 carrying the cluster. This row is the sole seed of the PAINT IBD at PTN002162906 (19 GO_Central leaf IBAs).
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -195,7 +195,7 @@ PA1058 (ShaF) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 > Antiport activity requires hetero-oligomeric complexes of all six or seven hydrophobic Mrp proteins (MrpA-MrpG).
 > — PMID:20624916
 
-## 16. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 16. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R6 involved_in GO:0035725 sodium ion transmembrane transport (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -203,12 +203,12 @@ PA1058 (ShaF) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1058/PA1058-ai-review.yaml`
 
-involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1058 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1058 mutant phenotype (full text not read). Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
+involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1058 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (read 2026-11-05) confirms there is no PA1058 mutant; the only sha mutant constructed is the PA1054 insertion. Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
 
 > Disruption of PA1054 resulted in severe Na+ sensitivity during growth and decreased Na+ efflux activity.
 > — PMID:16030218
 
-## 17. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 17. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R5 enables GO:0015385 sodium:proton antiporter activity (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -216,7 +216,7 @@ involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1058 cites 
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1059/PA1059-ai-review.yaml`
 
-enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1059 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1059 mutant phenotype, so IMP looks wrong for PA1059; the full text was not read and could show otherwise. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. Please check the full text. This row is the sole seed of the PAINT IBD at PTN002162936 (19 GO_Central leaf IBAs).
+enables GO:0015385 sodium:proton antiporter activity (IMP) on PA1059 cites Kosono et al. 2005 (PMID:16030218). The abstract reports a disruption of PA1054 only, and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (supplied by the user, read 2026-11-05) confirms that the only sha mutant constructed is the PA1054 insertion; there is no PA1059 mutant, so IMP does not apply to PA1059. If the antiport was measured in membranes of TO114 carrying the cluster, IDA (as contributes_to) would fit; if only growth complementation, IGI. The full text shows both, with antiport measured in everted membrane vesicles of TO114 carrying the cluster. This row is the sole seed of the PAINT IBD at PTN002162936 (19 GO_Central leaf IBAs).
 
 > We disrupted PA1054 (a shaA homologue gene) and determined its effect on Na+ tolerance during growth, Na+ efflux, and pathogenicity in mice.
 > — PMID:16030218
@@ -234,7 +234,7 @@ PA1059 (ShaG) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 > Antiport activity requires hetero-oligomeric complexes of all six or seven hydrophobic Mrp proteins (MrpA-MrpG).
 > — PMID:20624916
 
-## 19. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 19. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I4R5 involved_in GO:0035725 sodium ion transmembrane transport (IMP, PMID:16030218)
 - **Field:** Evidence_Code
@@ -242,7 +242,7 @@ PA1059 (ShaG) is one of six subunits of the Sha/Mrp Na+/H+ antiporter. Mrp antip
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/PA1059/PA1059-ai-review.yaml`
 
-involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1059 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The abstract reports no PA1059 mutant phenotype (full text not read). Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
+involved_in GO:0035725 sodium ion transmembrane transport (IMP) on PA1059 cites Kosono et al. 2005 (PMID:16030218), which reports a mutant of PA1054 only (reduced Na+ efflux) and complementation of E. coli TO114 by the whole PA1054-PA1059 cluster. The full text (read 2026-11-05) confirms there is no PA1059 mutant; the only sha mutant constructed is the PA1054 insertion. Please check the evidence code (IGI or IDA for the cluster-level data). The process itself is appropriate for this subunit.
 
 > Disruption of PA1054 resulted in severe Na+ sensitivity during growth and decreased Na+ efflux activity.
 > — PMID:16030218
@@ -750,50 +750,50 @@ involved_in GO:0009088 (IDA) on PA3736 hom cites PMID:10220164, whose abstract c
 > In P. aeruginosa, threonine auxotrophy is observed only when both thrB and thrH are simultaneously inactivated.
 > — PMID:10220164
 
-## 62. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 62. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU77 involved_in GO:0006548 L-histidine catabolic process (IMP, PMID:4290562)
 - **Field:** DB:Reference
 - **Change:** check PMID:4290562 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/hutF/hutF-ai-review.yaml`
 
-involved_in GO:0006548 (IMP) on PA5106 hutF cites Lessie and Neidhardt 1967. Its abstract reports a pooled capacity to degrade formiminoglutamate (step IV), which in PAO1 is provided by both HutF/HutG and HutE (PA3175), and the mutants it mentions are urocanase-deficient, auxotrophic and repression mutants. No hutF mutant appears in the abstract, and the study predates any gene assignment; the full text (scanned PMC276695) could not be retrieved (rechecked 2026-10-29), so this rests on what the abstract does not say and is flagged as SUSPECTED. Please check the full text; if no hutF-specific mutant is reported, re-key the annotation to PMID:16475788 (IDA, direct enzymology placing PA5106 in the hut pathway). The annotation is biologically correct. This row is the sole seed of the PANTHER IBD at PTN000138516.
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810; supplied by the user, read 2026-11-05) measures step IV only as formiminoglutamate degradation by crude extracts, an activity that in PAO1 comes from both HutF/HutG and HutE (PA3175), and its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants; there is no hutF mutant. The IMP for GO:0006548 on PA5106 therefore has no support in this paper. Please re-key it to PMID:16475788 (direct enzymology placing PA5106 in the hut pathway, IDA). The annotation is biologically correct. This row is the sole seed of the PANTHER IBD at PTN000138516.
 
 > Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine
 > — PMID:4290562
 
-## 63. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 63. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU85 enables GO:0004397 histidine ammonia-lyase activity (IMP, PMID:4290562)
 - **Field:** Evidence_Code
 - **Change:** check ECO:0000315 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/hutH/hutH-ai-review.yaml`
 
-enables GO:0004397 (IMP) on PA5098 hutH cites Lessie and Neidhardt 1967. The abstract reports a direct assay and partial purification of P. aeruginosa histidase (MW 210,000; Km 2 mM) rather than the phenotype of a histidase mutant; the mutants it mentions are urocanase-deficient, auxotrophic and catabolite-repression mutants. On that positively stated assay IDA fits better than IMP, unless the full text (scanned PMC276695, not retrievable; rechecked 2026-10-29) describes a histidase-deficient mutant. The companion IMP for GO:0006548 rests on the same paper. The annotation itself is correct.
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810; supplied by the user, read 2026-11-05) assays histidase directly in crude extracts, partly purifies it about 10-fold, and characterises it (molecular weight about 210,000 by sucrose gradient; Km for histidine 1.8 to 2 mM; inhibition by pyrophosphate). It describes no histidase- deficient structural mutant; its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. The evidence for GO:0004397 on PA5098 is therefore a direct assay, so IDA rather than IMP. The companion IMP for GO:0006548 rests on the same paper. The annotation itself is correct.
 
 > The molecular weight of partially purified histidase was estimated at 210,000 by sucrose gradient centrifugation.
 > — PMID:4290562
 
-## 64. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 64. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU91 involved_in GO:0006548 L-histidine catabolic process (IMP, PMID:4290562)
 - **Field:** DB:Reference
 - **Change:** check PMID:4290562 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/hutI/hutI-ai-review.yaml`
 
-involved_in GO:0006548 (IMP) on PA5092 hutI cites Lessie and Neidhardt 1967. Its abstract reports histidase, urocanase and FIGLU-degrading activities (steps I, II and IV) and urocanase-deficient, auxotrophic and catabolite-repression mutants. The abstract does not mention imidazolonepropionase (step III) or a mutant lacking it, and as a pre-cloning study it cannot identify a mutation in PA5092. This rests on what the abstract omits: the full text (scanned PMC276695) could not be retrieved (rechecked 2026-10-29), so the call is SUSPECTED. Please check the full text. If no step III mutant is described, the IMP should be withdrawn, or re-keyed to a paper with a genetically defined hutI mutant. The annotation is biologically correct, so ISS/IBA-level support from the HutI family would be the honest alternative. This row is the sole seed of the PANTHER IBD at PTN000505272.
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810; supplied by the user, read 2026-11-05) assays histidase (step I), urocanase (step II) and formiminoglutamate degradation (step IV) in crude extracts and partly purifies histidase. It never assays imidazolonepropionase (step III), and its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression; there is no hutI mutant, and the study predates any gene assignment. The IMP for GO:0006548 on PA5092 therefore has no support in this paper. Please withdraw it or re-key it to a paper with a genetically defined hutI mutant. The annotation is biologically correct, so ISS or IBA support from the HutI family would be the honest alternative. This row is the sole seed of the PANTHER IBD at PTN000505272.
 
 > Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine
 > — PMID:4290562
 
-## 65. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 65. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU91 enables GO:0050480 imidazolonepropionase activity (IMP, PMID:4290562)
 - **Field:** DB:Reference
 - **Change:** check PMID:4290562 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/hutI/hutI-ai-review.yaml`
 
-enables GO:0050480 imidazolonepropionase activity (IMP) on PA5092 hutI cites Lessie and Neidhardt 1967, whose abstract reports only histidase, urocanase and FIGLU-degrading activities (steps I, II, IV). The abstract mentions no imidazolonepropionase assay and no hutI mutant, and the study predates any assignment of a mutation to PA5092. The call rests on that silence, with the full text (scanned PMC276695) unretrievable (rechecked 2026-10-29), so it is SUSPECTED. Please check the full text. If step III was not assayed in a genetically defined hutI mutant, withdraw the IMP (the function is better supported by ISS/IBA to the HutI family). This row is the sole seed of the PANTHER IBD at PTN000505272 (52 leaf IBAs).
+The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810; supplied by the user, read 2026-11-05) assays steps I, II and IV of histidine degradation but never imidazolonepropionase (step III), and describes no hutI mutant. The IMP for GO:0050480 on PA5092 therefore has no support in this paper; please withdraw it or re-key it. The function is better supported by ISS or IBA to the HutI family. This row is the sole seed of the PANTHER IBD at PTN000505272 (52 leaf IBAs).
 
 > Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine
 > — PMID:4290562
@@ -954,15 +954,15 @@ enables GO:0004748 (ribonucleoside-diphosphate reductase activity, thioredoxin d
 > The results revealed that CTP is the preferred substrate with a >60-fold higher activity compared to CDP
 > — PMID:26225432
 
-## 79. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 79. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q51485 involved_in GO:0008643 carbohydrate transport (IDA, PMID:7768797)
 - **Field:** Evidence_Code
-- **Change:** check ECO:0000314 (alternatives in the explanation)
+- **Change:** ECO:0000314 → ECO:0000315
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/oprB/oprB-ai-review.yaml`
 
-GO:0008643 carbohydrate transport for OprB (PA3186, Q51485) is annotated IDA to PMID:7768797. The evidence the abstract describes is initial sugar uptake by whole cells of an interposon oprB mutant and an OprB overexpressing strain compared with wild type, which is a mutant phenotype (IMP). Only the abstract was read, so if the full text also has a direct assay (for example with purified OprB) IDA would stand; please check. The claim is sound, and the specific substrates (glucose, mannitol, fructose, glycerol) could be annotated with the substrate-specific transmembrane transport terms. This row is the sole seed of the PAINT IBD at PTN002209977.
+GO:0008643 carbohydrate transport for OprB (PA3186, Q51485) is annotated IDA to PMID:7768797. The full text (read 2026-11-05) measures initial sugar uptake by whole cells of an interposon oprB mutant, complemented and OprB overexpressing strains, and wild type, with arginine uptake as a control; it contains no assay with purified OprB. A mutant and overexpression phenotype is IMP in GO, so please change the evidence code to IMP. The claim is sound, and the specific substrates (glucose, mannitol, fructose, glycerol) could be annotated with the substrate-specific transmembrane transport terms. This row is the sole seed of the PAINT IBD at PTN002209977.
 
 > Using interposon mutagenesis, we have generated strains of Pseudomonas aeruginosa which lack or overexpress the substrate-selective OprB porin of this species.
 > — PMID:7768797
@@ -1019,19 +1019,7 @@ involved_in GO:0043107 (IDA, PMID:12933890) on PA4525 pilA: the paper examines t
 > we examined their twitching motility qualitatively by examination of colony morphology
 > — PMID:12933890
 
-## 84. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
-
-- **Record:** UniProtKB:P04739 involved_in GO:0043107 type IV pilus-dependent motility (IMP, PMID:9224878)
-- **Field:** Evidence_Code
-- **Change:** ECO:0000315 → ECO:0000304 (TAS)
-- **Recorded in:** `genes/PSEAE/pilA/pilA-ai-review.yaml`
-
-involved_in GO:0043107 (IMP, PMID:9224878) on PA4525 pilA: the abstract of Alm and Mattick 1997 (Gene 192:89-98) reads as a review of genes involved in type-4 fimbrial biogenesis and function, in which case TAS would be the appropriate code. PubMed does not index it as a review, it comes from a laboratory that generated many of the mutants, and only the abstract was read, so it may report primary mutant data; please check. The term is correct.
-
-> Thus far over 30 genes have been characterized
-> — PMID:9224878
-
-## 85. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 84. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P22608 involved_in GO:0043107 type IV pilus-dependent motility (IDA, PMID:1671384)
 - **Field:** DB:Reference
@@ -1044,7 +1032,7 @@ involved_in GO:0043107 type IV pilus-dependent motility (IDA) on PA4526 pilB cit
 > The function of the other two accessory proteins, PilB and PilC, appears to be restricted to pilus biogenesis, and strains carrying mutations in their respective genes do not show an export defect.
 > — PMID:1671384
 
-## 86. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 85. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P22608 involved_in GO:0043683 type IV pilus assembly (IDA, PMID:1671384)
 - **Field:** Evidence_Code
@@ -1054,7 +1042,7 @@ involved_in GO:0043107 type IV pilus-dependent motility (IDA) on PA4526 pilB cit
 
 involved_in GO:0043683 type IV pilus assembly (IDA) on PA4526 pilB cites Strom et al. 1991 (PMID:1671384), a pilD paper whose abstract restates, from Nunn, Bergman and Lory 1990 (PMID:1971619), that pilB is required for assembly of pili. The underlying evidence is a mutant phenotype (no pili), which is IMP, and the primary data are in PMID:1971619. Please check the evidence code and reference.
 
-## 87. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 86. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P22610 located_in GO:0005886 plasma membrane (IDA, PMID:9466269)
 - **Field:** DB:Reference
@@ -1067,7 +1055,7 @@ located_in GO:0005886 plasma membrane (IDA) on PA4528 pilD cites Kagami et al. 1
 > These proteins, in addition to the pilin subunit, are cleaved and methylated by the PilD/XcpA prepilin peptidase
 > — PMID:9466269
 
-## 88. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 87. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P22610 involved_in GO:0009297 pilus assembly (IDA, PMID:9668097)
 - **Field:** Evidence_Code
@@ -1077,7 +1065,7 @@ located_in GO:0005886 plasma membrane (IDA) on PA4528 pilD cites Kagami et al. 1
 
 involved_in GO:0009297 pilus assembly (IDA) on PA4528 pilD cites Pepe and Lory 1998 (PMID:9668097). The pilus-assembly evidence in the abstract is from PilD Gly95/Lys96 variants expressed in P. aeruginosa, i.e. a mutant phenotype (IMP). The term could also be the more specific GO:0043683 type IV pilus assembly. Please check.
 
-## 89. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 88. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P22610 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:1588814)
 - **Field:** GO_ID
@@ -1087,7 +1075,7 @@ involved_in GO:0009297 pilus assembly (IDA) on PA4528 pilD cites Pepe and Lory 1
 
 part_of GO:0015627 type II protein secretion system complex (IDA) on PA4528 pilD cites Bally et al. 1992 (PMID:1588814), whose abstract shows that XcpA/PilD processes the pseudopilins XcpT-W in vivo. That supports a role in type II secretion (processing of secretion apparatus components), not membership of the secretion complex (the full text was not available to check for complex data); PilD is the prepilin peptidase shared with the type IV pilus system. Please consider replacing it with involved_in GO:0015628 protein secretion by the type II secretion system (e.g. IMP, PMID:1671384) or deleting it.
 
-## 90. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 89. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD28 located_in GO:0044096 type IV pilus (IMP, PMID:7565110)
 - **Field:** GO_ID
@@ -1099,7 +1087,7 @@ located_in GO:0044096 type IV pilus (IMP, PMID:7565110) on PA5044 pilM records t
 > PilM-P were found to be required for fimbrial biogenesis
 > — PMID:7565110
 
-## 91. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 90. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD30 located_in GO:0044096 type IV pilus (IMP, PMID:7565110)
 - **Field:** GO_ID
@@ -1111,7 +1099,7 @@ located_in GO:0044096 type IV pilus (IMP, PMID:7565110) on PA5043 pilN records t
 > PilM-P were found to be required for fimbrial biogenesis
 > — PMID:7565110
 
-## 92. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 91. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P24559 located_in GO:0044096 type IV pilus (TAS, PMID:20595000)
 - **Field:** GO_ID
@@ -1123,7 +1111,7 @@ located_in GO:0044096 type IV pilus (TAS, PMID:20595000) on PA0395 pilT: GO:0044
 > Type IV pili are bacterial extracellular filaments
 > — PMID:20595000
 
-## 93. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 92. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCX3 enables GO:0016888 DNA endonuclease activity, producing 5'-phosphomonoesters (IDA, PMID:18174131)
 - **Field:** GO_ID
@@ -1136,7 +1124,7 @@ enables GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters" (
 > Assay of purified 6xHis-tagged PilB, PilT and PilU from P. aeruginosa showed that all three proteins have ATPase activities in vitro.
 > — PMID:18174131
 
-## 94. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 93. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I0Q0 enables GO:0004497 monooxygenase activity (IDA, PMID:20662781)
 - **Field:** GO_ID
@@ -1149,7 +1137,7 @@ The PseudoCAP IDA row for PA2587/pqsH from PMID:20662781 (Schertzer et al. 2010)
 > we show that PqsH catalyses the terminal step in PQS production, synthesizing PQS in vitro using the substrates 2-heptyl-4-quinolone (HHQ), NADH and oxygen
 > — PMID:20662781
 
-## 95. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 94. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I1N6 involved_in GO:0044010 single-species biofilm formation (IDA, PMID:19659934)
 - **Field:** Evidence_Code
@@ -1161,7 +1149,7 @@ GO:0044010 single-species biofilm formation for PslC (PA2233, Q9I1N6) from PMID:
 > The same eleven strains that were deficient in attachment likewise did not produce detectable levels of Psl.
 > — PMID:19659934
 
-## 96. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 95. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XDA6 involved_in GO:1900378 positive regulation of secondary metabolite biosynthetic process (IMP, PMID:16109947)
 - **Field:** GO_ID
@@ -1174,7 +1162,7 @@ involved_in GO:1900378 positive regulation of secondary metabolite biosynthetic 
 > Therefore, PtrB is a new TTSS repressor that coordinates TTSS repression and pyocin synthesis under the stress of DNA damage.
 > — PMID:16109947
 
-## 97. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 96. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU66 involved_in GO:0052837 thiazole biosynthetic process (IDA, PMID:9209060)
 - **Field:** Evidence_Code
@@ -1189,7 +1177,7 @@ involved_in GO:0052837 thiazole biosynthetic process (IDA) on PA5118 cites Webb,
 > thiI is a 1,449-bp open reading frame located at minute 9.65 on the S. typhimurium chromosome
 > — PMID:9209060
 
-## 98. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 97. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P29364 enables GO:0004413 homoserine kinase activity (IDA, PMID:10220164)
 - **Field:** Evidence_Code
@@ -1201,7 +1189,7 @@ enables GO:0004413 (IDA) on PA5495 thrB cites Patte et al. 1999, whose abstract 
 > In P. aeruginosa, threonine auxotrophy is observed only when both thrB and thrH are simultaneously inactivated.
 > — PMID:10220164
 
-## 99. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 98. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P29364 involved_in GO:0009088 L-threonine biosynthetic process (IDA, PMID:10220164)
 - **Field:** Evidence_Code
@@ -1213,7 +1201,7 @@ involved_in GO:0009088 (IDA) on PA5495 thrB cites Patte et al. 1999, whose abstr
 > In P. aeruginosa, threonine auxotrophy is observed only when both thrB and thrH are simultaneously inactivated.
 > — PMID:10220164
 
-## 100. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 99. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0009243 O antigen biosynthetic process (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -1226,7 +1214,7 @@ waaL (PA4999) is annotated IMP to GO:0009243 O antigen biosynthetic process (PMI
 > The completed chains are covalently attached to lipid A core by the O-antigen ligase, WaaL.
 > — PMID:15838026
 
-## 101. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 100. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0009297 pilus assembly (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -1236,7 +1224,7 @@ waaL (PA4999) is annotated IMP to GO:0009243 O antigen biosynthetic process (PMI
 
 waaL (PA4999) is annotated IMP to GO:0009297 pilus assembly from PMID:15838026. The O-antigen ligase does not participate in pilus assembly; the twitching/pilus defect of the O-antigen-less mutant is an indirect envelope phenotype. Please remove (or capture as a phenotype rather than a GO process). Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 102. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 101. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 enables GO:0016874 ligase activity (IDA, PMID:17697256)
 - **Field:** GO_ID
@@ -1249,7 +1237,7 @@ waaL (PA4999) is annotated IDA to GO:0016874 ligase activity citing PMID:1769725
 > E. coli and Pseudomonas aeruginosa WaaL proteins cannot catalyze ATP hydrolysis in vitro
 > — PMID:21983211
 
-## 103. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 102. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0043107 type IV pilus-dependent motility (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -1259,7 +1247,7 @@ waaL (PA4999) is annotated IDA to GO:0016874 ligase activity citing PMID:1769725
 
 waaL (PA4999) is annotated IMP to GO:0043107 type IV pilus-dependent motility from PMID:15838026. The twitching defect of the O-antigen ligase mutant is an indirect consequence of altered LPS/envelope, not participation of WaaL in motility. Please remove. Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 104. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 103. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0044780 bacterial-type flagellum assembly (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -1269,7 +1257,7 @@ waaL (PA4999) is annotated IMP to GO:0043107 type IV pilus-dependent motility fr
 
 waaL (PA4999) is annotated IMP to GO:0044780 bacterial-type flagellum assembly from PMID:15838026. Reduced flagellation of the O-antigen-less mutant is an indirect envelope phenotype; WaaL does not participate in flagellum assembly. Please remove. Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 105. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 104. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0071977 bacterial-type flagellum-dependent swimming motility (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -1279,7 +1267,7 @@ waaL (PA4999) is annotated IMP to GO:0044780 bacterial-type flagellum assembly f
 
 waaL (PA4999) is annotated IMP to GO:0071977 bacterial-type flagellum-dependent swimming motility from PMID:15838026. The motility defect of the O-antigen ligase mutant is indirect (envelope/LPS), and waaL deletion in PA14 and PAK did not abolish swimming (PMID:29059582). Please remove. Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 106. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 105. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD01 involved_in GO:0006065 UDP-glucuronate biosynthetic process (EXP, PMID:16102001)
 - **Field:** GO_ID
@@ -1295,7 +1283,7 @@ wbpD (PA3156) is annotated EXP to GO:0006065 UDP-glucuronate biosynthetic proces
 > we confirm that WbpD catalyzes the acetylation of UDP-GlcNAc(3NH(2))A to give UDP-GlcNAc(3NAc)A
 > — PMID:19348502
 
-## 107. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+## 106. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB9 enables GO:0016757 glycosyltransferase activity (IMP, PMID:9680202)
 - **Field:** DB:Reference
@@ -1308,7 +1296,7 @@ GO:0016757 glycosyltransferase activity for wbpY (PA5448) is annotated IMP to PM
 > NMR spectroscopic analysis of the WbpY reaction product showed that WbpY transferred one D-Rha residue in α1-3 linkage
 > — PMID:35166992
 
-## 108. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 107. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P35818 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1318,7 +1306,7 @@ GO:0016757 glycosyltransferase activity for wbpY (PA5448) is annotated IMP to PM
 
 GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
-## 109. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 108. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00512 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1328,7 +1316,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 
 GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
-## 110. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 109. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00513 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1341,7 +1329,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 111. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 110. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00516 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:8331069)
 - **Field:** Reference
@@ -1354,7 +1342,7 @@ GO:0015627 for XcpV (PA3099, Q00516) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 112. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 111. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00516 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1367,7 +1355,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 113. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 112. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00517 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:8331069)
 - **Field:** Reference
@@ -1380,7 +1368,7 @@ GO:0015627 for XcpW (PA3098, Q00517) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 114. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 113. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00517 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1393,7 +1381,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 115. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 114. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00518 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -1406,7 +1394,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 116. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 115. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT73 involved_in GO:0010043 response to zinc ion (IMP, PMID:24086521)
 - **Change:** GO:0010043 → GO:0071578 (zinc ion import across plasma membrane)
