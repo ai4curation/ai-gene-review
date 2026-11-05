@@ -39,6 +39,7 @@ import yaml
 
 REPO = Path(__file__).resolve().parents[3]
 INVOLVED_IN = " involved in "
+BIOLOGICAL_REGULATION = "GO:0065007"
 
 # UniProt species code / repo folder -> suffix used in gocams/index.tsv gene_label
 INDEX_SPECIES = {
@@ -157,6 +158,31 @@ def decomposition(
     of live GO terms, returns that split, marked ``source: label_split`` (a
     heuristic: GO asserts no ``part_of`` here). A differentia filler that is
     itself an "involved in" term is flagged ``nested``.
+
+    A logical definition with no ``part_of`` differentia, no nested filler, and
+    either no differentia at all (a grouping class) or the bare genus
+    ``biological regulation`` (a plain regulation term) is flagged
+    ``label_only``: the "involved in Y" is in the label but not in the
+    definition, so there is no Y to decompose away (for example, GO:1901030 is
+    just ``positively_regulates`` GO:0097345 MOMP, which GO already defines as part
+    of the apoptotic signaling pathway). A specific genus that ``regulates`` Y
+    (GO:0071631 *mating pheromone secretion involved in positive regulation of
+    conjugation*) is not label-only: there, Y is real context.
+
+    >>> terms = {"GO:2": GoTerm(id="GO:2", name="momp"),
+    ...          "GO:3": GoTerm(id="GO:3", name="x"), "GO:4": GoTerm(id="GO:4", name="y")}
+    >>> reg = GoTerm(id="GO:1", name="positive regulation of momp involved in y",
+    ...              intersection_of=[(None, "GO:0065007"), ("positively_regulates", "GO:2")])
+    >>> decomposition(terms, reg)["label_only"]
+    True
+    >>> xy = GoTerm(id="GO:5", name="x involved in y",
+    ...             intersection_of=[(None, "GO:3"), ("part_of", "GO:4")])
+    >>> decomposition(terms, xy)["label_only"]
+    False
+    >>> sec = GoTerm(id="GO:6", name="x involved in positive regulation of y",
+    ...              intersection_of=[(None, "GO:3"), ("positively_regulates", "GO:4")])
+    >>> decomposition(terms, sec)["label_only"]
+    False
     """
     if t.intersection_of:
         genus = [g for rel, g in t.intersection_of if rel is None]
@@ -182,6 +208,15 @@ def decomposition(
     else:
         return None
     out["nested"] = any(INVOLVED_IN in d["label"] for d in out["differentia"])
+    out["label_only"] = (
+        out["source"] == "logical_definition"
+        and not out["nested"]
+        and all(d["relation"] != "part_of" for d in out["differentia"])
+        and (
+            not out["differentia"]
+            or out.get("genus", {}).get("id") == BIOLOGICAL_REGULATION
+        )
+    )
     return out
 
 
@@ -604,8 +639,18 @@ def main() -> None:
         ),
     }
 
+    label_only_ids = {
+        i for i, t in inv.items() if (decomposition(terms, t) or {}).get("label_only")
+    }
+    for a in authored:
+        if a["term"].split()[0] in label_only_ids:
+            a["label_only"] = True
+    summary["review_annotations"]["rows_label_only"] = sum(
+        r["term"]["id"] in label_only_ids for r in ann_rows
+    )
     summary["authored_precomposed"] = {
         "uses": len(authored),
+        "uses_label_only": sum(bool(a.get("label_only")) for a in authored),
         "genes": len({a["gene"] for a in authored if "gene" in a}),
         "modules": len({a["module"] for a in authored if "module" in a}),
         "by_slot": dict(Counter(a["slot"] for a in authored).most_common()),
