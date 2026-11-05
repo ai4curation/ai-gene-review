@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**699 of 2,876 genes are complete; 2,177 remain.**
-This checkpoint adds GAN, GARS1 and GANAB after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-699-2026-11-04-185334-utc) records the evidence and retained uncertainties.
+**703 of 2,876 genes are complete; 2,173 remain.**
+This checkpoint adds GATA2, GATA1, GATA3 and GATA6 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-703-2026-11-04-210529-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3832,10 +3832,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **GAN** — HGNC:4137; [giant axonal neuropathy 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b9f65afa-5cb1-457e-abff-ab110145a32d-2022-02-10T021239.651Z) (MONDO:0009749; AR; Definitive).
 - [x] **GANAB** — HGNC:4138; [polycystic kidney disease 3 with or without polycystic liver disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6392961-a64a-4818-903a-0bf88b32e736-2020-09-09T160000.000Z) (MONDO:0010916; AD; Definitive).
 - [x] **GARS1** — HGNC:4162; [Charcot-Marie-Tooth disease type 2D](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_168242d1-ef2e-486a-a45a-ed96187bd4d2-2023-01-10T170000.000Z) (MONDO:0011091; AD; Definitive).
-- [ ] **GATA1** — HGNC:4170; [GATA1-Related X-Linked Cytopenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ad980194-b275-4bbb-b3df-73c1a50d3eac-2020-05-27T040000.000Z) (MONDO:0100089; XL; Definitive).
-- [ ] **GATA2** — HGNC:4171; [GATA2 deficiency with susceptibility to MDS/AML](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7c0449f7-e20b-4610-95ad-896eee265492-2022-12-30T180000.000Z) (MONDO:0042982; AD; Definitive).
-- [ ] **GATA3** — HGNC:4172; [hypoparathyroidism-deafness-renal disease syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afb6e0d5-81a5-439a-a498-9edc8505a367-2019-06-18T160000.000Z) (MONDO:0007797; AD; Definitive).
-- [ ] **GATA6** — HGNC:4174; [GATA6-related congenital heart disease with or without pancreatic agenesis or neonatal diabetes](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a7a0fdd7-f796-4921-95b6-709fd859b6d3-2026-02-25T170000.000Z) (MONDO:0100540; AD; Definitive); [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a0153e88-f3f1-4767-b325-f245ec2f907d-2026-02-20T170000.000Z) (MONDO:0005021; AD; Limited).
+- [x] **GATA1** — HGNC:4170; [GATA1-Related X-Linked Cytopenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ad980194-b275-4bbb-b3df-73c1a50d3eac-2020-05-27T040000.000Z) (MONDO:0100089; XL; Definitive).
+- [x] **GATA2** — HGNC:4171; [GATA2 deficiency with susceptibility to MDS/AML](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7c0449f7-e20b-4610-95ad-896eee265492-2022-12-30T180000.000Z) (MONDO:0042982; AD; Definitive).
+- [x] **GATA3** — HGNC:4172; [hypoparathyroidism-deafness-renal disease syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afb6e0d5-81a5-439a-a498-9edc8505a367-2019-06-18T160000.000Z) (MONDO:0007797; AD; Definitive).
+- [x] **GATA6** — HGNC:4174; [GATA6-related congenital heart disease with or without pancreatic agenesis or neonatal diabetes](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a7a0fdd7-f796-4921-95b6-709fd859b6d3-2026-02-25T170000.000Z) (MONDO:0100540; AD; Definitive); [dilated cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a0153e88-f3f1-4767-b325-f245ec2f907d-2026-02-20T170000.000Z) (MONDO:0005021; AD; Limited).
 - [ ] **GATAD2B** — HGNC:30778; [severe intellectual disability-poor language-strabismus-grimacing face-long fingers syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5fb40641-ec79-4fee-9111-d38d2062c15b-2022-03-18T040000.000Z) (MONDO:0014034; AD; Definitive).
 - [ ] **GATM** — HGNC:4175; [AGAT deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d63bfeff-882d-400f-af17-277a702fd09b-2019-03-08T170000.000Z) (MONDO:0012996; AR; Definitive); [Fanconi renotubular syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6fd7df41-d1c7-415b-aac5-6308f039927d-2026-04-30T040000.000Z) (MONDO:0024525; AD; Moderate).
 - [ ] **GBA1** — HGNC:4177; [Gaucher disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fbc5a876-f97e-4f9c-be99-664e2f6c8470-2020-06-24T160000.000Z) (MONDO:0018150; AR; Definitive); [Parkinson disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9201c03f-10de-447c-9b84-194f14b549b6-2022-05-03T134810.206Z) (MONDO:0005180; AD; Definitive).

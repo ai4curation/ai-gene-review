@@ -264,3 +264,39 @@ redundant core assertion was added.
 ## 2026-10-26 approved-review citation residuals
 
 Replaced the silverchair CDN URL reference/source identifier with canonical PMID:11319255 plus the already committed reproducible MET5 source-analysis artifact for full-text quotations. The bibliographic title remains the exact PMID title. The primary Results quotation is now accompanied by the Figure 3F/G legend identifying yeast P47169 (Met5) and Met10; the old pombe accession is still not equated to current sir1. This repairs citation identity and target traceability without changing any activity, family/member, compartment, reaction or connection. The artifact SHA256 was verified against the existing normally fetched publisher cache; no publication cache was edited. Gene-level FMN evidence received the same identifying legend without action or payload changes.
+
+
+## 2026-11-03 promotion to COMPLETE
+
+Generalization: the module was already species-neutral (Bacteria, Fungi, Viridiplantae context; E. coli,
+P. putida KT2440, P. aeruginosa, M. tuberculosis, S. cerevisiae, S. pombe and Arabidopsis exemplars), so
+no taxonomic rescoping was needed. `scope: CONCRETE` is set because every leaf grounds to representative
+proteins.
+
+Gene reviews: all 29 grounded accessions have COMPLETE reviews with no PENDING/UNDECIDED rows. The last
+16 UNDECIDED rows (APR1, APS1, SIR, TRX1, TRX2, fpr-I, PSEPK cysI) were resolved; the decisions follow
+sibling precedent for the same proteomic papers and are recorded in each gene's review and notes. A new
+full-text paper, PMID:25601874, shows ATPS1 (APS1) GFP fusions are exclusively plastidic, which settles
+the APS1 NOT-cytosol row. UniProt `enables GO:0004783` rows on the CysI, MET5 and sir1 hemoproteins carry a
+WRONG_QUALIFIER source defect (should be contributes_to), and the generic oxidoreductase rows on CysI and
+MET5 now refine to donor-neutral GO:0016667 rather than to the complex-level GO:0004783.
+
+Families: new reviews for PTHR43196 (CysD; the archaeal SF2 PAPS-reductase-fold proteins wrongly inherit
+the CysD IBAs), PTHR46482 (APS reductases; donor follows domain architecture within SF9), PTHR32439
+(heterogeneous; P. putida CysI sits in SF9 with CobG and DsrA), PTHR47878 (Fpr; the heme-catabolism IBA
+reaches E. coli K-12, which has no heme oxygenase) and PTHR23115 (translation-factor GTPases; CysN shares
+SF170 with eEF1A). Existing reviews for PTHR42700, PTHR11055, PTHR46509, PTHR46115, PTHR19384 and
+PTHR11493 were reused unchanged.
+
+Module grounding: CysN and bacterial CysH selectors moved from InterPro IPR011779/IPR011798 to the
+integrated NCBIfam signatures TIGR02034/TIGR02055 (carried by every representative; names checked in the
+InterPro API). The APS-kinase and PAPS-reductase family selectors gained the PAINT ancestral nodes
+PTN000114732 and PTN000591370, matching maintainer PR #5076. That PR's extra PTHR11055 subfamilies (plant
+APK2/APK4 and animal PAPSS1/PAPSS2) were not adopted, because plant sulfation APKs and animal PAPS
+synthesis are outside this module's scope. PTHR46115 for the thioredoxins was not adopted either, because
+the member index places those representatives in PTHR10438:SF468. The Pseudomonas CysI annoton now carries
+GO:0016667, consistent with its gene review.
+
+Conformance code: `module_function_conformance` now honours a recorded WRONG_QUALIFIER correction to
+contributes_to, and reports a contribution on an active unit of a modelled complex as
+CONTRIBUTES_IN_COMPLEX (info) instead of asking whether the participant should be a complex.

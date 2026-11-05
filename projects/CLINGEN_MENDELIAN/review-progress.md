@@ -7718,3 +7718,33 @@ The accepted closures cover **155 deduplicated paths**, including **113 deduplic
 This fixed window includes only GAN, GARS1 and GANAB. GATA-family reviews, GATM and later acceptances are excluded. The prior 904,229-byte progress journal, 235 dated queue records and 161 earlier completion updates are preserved. Catalogue order changes only by checking these three genes and updating the count. Scientific source files remain unchanged.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T185334Z-codex-c26979.yaml).
+
+## Completion checkpoint 703 — 2026-11-04 21:05:29 UTC
+
+703 complete; 2,173 remaining out of 2,876 catalogue genes. This checkpoint publishes four independently accepted reviews after checkpoint 699 and adds no new gene completion credit.
+
+| Gene | Accepted ordinal | Actual merge | Executed integration | Original / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | --- |
+| [GATA2](https://github.com/ai4curation/ai-gene-review/pull/5952) | 700 | [cb5d8224](https://github.com/ai4curation/ai-gene-review/commit/cb5d82247a3157e9df3d840454fff707e245ac97) | [run 41892284745](https://github.com/ai4curation/ai-gene-review/actions/runs/41892284745) | 118 / 118 | DRAFT |
+| [GATA1](https://github.com/ai4curation/ai-gene-review/pull/5953) | 701 | [50ac2889](https://github.com/ai4curation/ai-gene-review/commit/50ac2889d34563d04ddc36b087ce39c5c11060aa) | [run 41892444528](https://github.com/ai4curation/ai-gene-review/actions/runs/41892444528) | 120 / 120 | DRAFT |
+| [GATA3](https://github.com/ai4curation/ai-gene-review/pull/5960) | 702 | [16d5fc72](https://github.com/ai4curation/ai-gene-review/commit/16d5fc728de92527207c560f220f24d2d4136ead) | [run 41892578431](https://github.com/ai4curation/ai-gene-review/actions/runs/41892578431) | 197 / 198 | DRAFT |
+| [GATA6](https://github.com/ai4curation/ai-gene-review/pull/5962) | 703 | [a59a136e](https://github.com/ai4curation/ai-gene-review/commit/a59a136e68bb73ec45f34ddbba22b32338cdc1a3) | [run 41899592105](https://github.com/ai4curation/ai-gene-review/actions/runs/41899592105) | 92 / 92 | COMPLETE |
+
+These GATA-family transcription factors bind regulatory DNA and control cell-type-specific gene expression. Their accepted reviews distinguish the shared transcriptional mechanism from lineage and developmental effects; GATA3 also retains direct nucleosome binding. Natural products, engineered constructs and unresolved evidence remain distinguished. Project completion does not change the reviews' computed status.
+
+All 527 current original contexts are conserved. GATA2, GATA1 and GATA6 contributed 330 genuine native seed rows. GATA3 underwent force/no-seed refresh: its 197 originals include two distinct source assertions sharing one simplified parser key, and its retained inherited NEW produces 198 stored rows. Thus the window has 526 parser keys, 527 original contexts and 528 stored rows. GATA3's 77 source-retired contexts and 181 historical quotation associations remain archived; retirement does not refute their biology.
+
+| Gene | Assessed references | Natural products | Flat extension atoms | Current review quote occurrences |
+| --- | ---: | ---: | ---: | ---: |
+| GATA2 | 63 | 2 | 23 | 6 |
+| GATA1 | 54 | 3 | 8 | 7 |
+| GATA3 | 92 | 2 | 4 | 7 |
+| GATA6 | 52 | 2 | 3 | 7 |
+
+The reviews contain 261 reference assessments, five cores, nine natural products, 38 flat extension atoms and 27 current review quotation occurrences. No NOT or contributes_to qualifiers occur in this window. GATA2 also preserves all 31 literal extension atoms within their original groups, including raw context 76's four OR alternatives; they are not split into invented annotations. Product counts include displayed natural sequences and exclude engineered constructs; they do not assign every function to every product.
+
+The accepted closures cover **294 deduplicated paths**, including **229 deduplicated scientific source paths**. Cumulative published payloads and actual parent deltas each cover **156 deduplicated paths**. These are unions, not sums. Shared scientific source bytes match across accepted receipts. Actual deltas omit identical sources already present in their respective parents: three for GATA1, one for GATA3 and one for GATA6. Derived ontology-cache convergence is recorded separately and preserves the actual parent content. All four actual merge-group suites and required integration checks executed successfully; skipped routes, warnings and unresolved diagnostics remain explicit in the acceptance records.
+
+This fixed window includes only GATA2, GATA1, GATA3 and GATA6. GATM, GBE1 and later acceptances are excluded. The prior 908,026-byte progress journal, 235 dated queue records and 162 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Scientific source files remain unchanged. The native history links the four accepted gene PRs and separates symbols from accepted ordinals.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T210529Z-codex-1034b2.yaml).
