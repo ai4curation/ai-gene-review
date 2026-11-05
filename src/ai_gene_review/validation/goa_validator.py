@@ -1518,16 +1518,13 @@ class GOAValidator:
             qualifiers = qualifiers_by_tuple.get(tuple_key)
             if not qualifiers or len(qualifiers) != 1:
                 continue
-            # Insert one line after original_reference_id (or evidence_type), at
-            # that key's indentation, so no existing line changes.
-            anchor = next(
-                (k for k in ("original_reference_id", "evidence_type")
-                 if k in getattr(ann, "key_marks", {})),
-                None,
-            )
-            if anchor is None:
+            # Insert one line after original_reference_id, at that key's
+            # indentation, so no existing line changes. (A row matched on GOA's
+            # reference always has that key.)
+            key_marks: Dict[Any, Tuple[int, int]] = getattr(ann, "key_marks", {})
+            if "original_reference_id" not in key_marks:
                 continue
-            line, column = ann.key_marks[anchor]
+            line, column = key_marks["original_reference_id"]
             qualifier = next(iter(qualifiers))
             inserts.append((line + 1, " " * column + f"qualifier: {qualifier}"))
             ann["qualifier"] = qualifier
