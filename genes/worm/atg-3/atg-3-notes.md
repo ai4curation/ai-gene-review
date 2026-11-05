@@ -15,3 +15,4 @@
 - NEW GO:0061739 (ATG-3 catalyses the transfer to PE; comparator: yeast Atg3 GO:0006501 IDA/IMP, human ATG7 GO:0061739 IDA).
 - Nucleophagy, glycophagy, mitochondrion autophagy IBAs kept as non-core.
 - macroautophagy "IDA" from PMID:23530068 is really a mutant phenotype, but the term is right; accepted.
+- Round 3 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-05): the NEW row and the core-function directly_involved_in now use the genus GO:0006501 C-terminal protein lipidation instead of the precomposed GO:0061739; the autophagosome-assembly context is carried by GO:0000045 in the core functions and by metazoan_autophagosome_biogenesis.

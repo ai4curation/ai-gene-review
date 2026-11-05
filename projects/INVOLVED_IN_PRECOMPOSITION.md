@@ -122,7 +122,7 @@ here.
 | rows where a GO-CAM of the same gene realizes Y | 31 |
 | rows where a same-symbol GO-CAM in another species realizes Y | 22 (lower bound: the script maps 12 species folders to GO-CAM index labels, and rows in the other folders get no same-symbol hit) |
 | rows whose gene is named in a module | 689 |
-| rows on label-only terms (no Y in the logical definition; see round 3) | 27 |
+| rows on label-only terms (Y entailed by the regulated process; see round 3) | 11 |
 
 Figures refreshed 2026-11-05, after merging `main`; they are a snapshot, and
 `data/summary.yaml` is authoritative. The first snapshot
@@ -251,7 +251,7 @@ saying where Y went:
 | **B. BP `part_of` BP** | 586 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
 | **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
 | **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition. |
-| **E. label-only** | 27 (current) | The label says "involved in Y", but the logical definition has no `part_of` and no nested filler, so there is no Y to remove (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
+| **E. label-only** | 11 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
 
 Outcomes:
 
@@ -443,22 +443,35 @@ GO:1901028 lists "regulation of MOMP" as an EXACT synonym. **Outcome: keep
 every row; no decomposition.** The BH3-only, BCL-2 and BAK rows are judged
 on their own evidence as before.
 
-This is a new triage class, **E. label-only**: an "involved in" label whose
-logical definition has no `part_of` and no nested filler. The inventory now
-flags these terms, their rows (`rows_label_only`) and their authored uses
-(`label_only: true`, `uses_label_only`), so they no longer count as
-decomposition work. The rule is: no `part_of`, no nested filler, and either no
-differentia (a grouping class) or the bare genus *biological regulation*.
-Eight live GO terms qualify. Besides the three MOMP regulation terms
-(GO:1901028/29/30), they are two grouping classes (GO:0003006 *developmental
-process involved in reproduction* and GO:0022412, class D-ii), and three
-regulation terms whose regulated process is itself context-specific
-(GO:0051946/GO:0051951 on glutamate reuptake, GO:0061081 on myeloid leukocyte
-cytokine production). A specific genus that `regulates` Y is not label-only:
-GO:0071631 *mating pheromone secretion involved in positive regulation of
-conjugation with cellular fusion* has a real Y. GO's synonyms on GO:1901030 and
-GO:1901029 call the context-free phrase BROAD, which disagrees with the
-logical definition; that is upstream ticket 4.
+This is a new triage class, **E. label-only**: a regulation term whose
+"involved in Y" is entailed by its own definition. The rule tests that
+entailment directly: the genus is the bare *biological regulation*, there is no
+`part_of` differentia and no nested filler, and Y (the label text after
+"involved in") is an `is_a`/`part_of` ancestor of the regulated process. The
+inventory flags these terms, their rows (`rows_label_only`) and their authored
+uses (`label_only: true`, `uses_label_only`), so they no longer count as
+decomposition work. Four live GO terms qualify: the three MOMP regulation terms
+(GO:1901028/29/30) and GO:0061081 *positive regulation of myeloid leukocyte
+cytokine production involved in immune response*, whose regulated process
+GO:0061082 is_a GO:0002367 *cytokine production involved in immune response*.
+
+Not class E:
+
+- **Grouping intersections.** GO:0003006 *developmental process involved in
+  reproduction* is defined as `GO:0022414 reproductive process and GO:0032502
+  developmental process`, and GO:0022412 likewise. Y is in the axiom as a
+  second genus, not as a `part_of`, so these stay class D-ii. The inventory
+  records only the first genus of such two-genus definitions.
+- **Regulation terms whose Y is not entailed.** GO:0051946/GO:0051951
+  *(positive) regulation of glutamate uptake involved in transmission of nerve
+  impulse* regulate GO:0051935 glutamate reuptake, which has no ancestor
+  labelled "transmission of nerve impulse".
+- **A specific genus that `regulates` Y.** GO:0071631 *mating pheromone
+  secretion involved in positive regulation of conjugation with cellular
+  fusion* has a real Y.
+
+GO's synonyms on GO:1901030 and GO:1901029 call the context-free phrase BROAD,
+which disagrees with the logical definition; that is upstream ticket 5.
 
 ### GO:0061739 *protein lipidation involved in autophagosome assembly* → GO:0006501 *C-terminal protein lipidation*
 
@@ -469,7 +482,7 @@ logical definition; that is upstream ticket 4.
 | human and HORSE ATG3 | 3 | MODIFYs from protein ubiquitination / protein targeting to membrane now target the genus. |
 | worm atg-3, atg-7 | 2 | Reviewer-proposed NEW rows now on the genus. |
 | core functions (ATG3 ×2, ATG7, atg-3, atg-7) | 5 | `directly_involved_in` GO:0061739 → GO:0006501; each already lists GO:0000045 *autophagosome assembly*. |
-| `metazoan_autophagosome_biogenesis` | 3 annotons | The E1, E2 and E3-like annotons' process is now the genus; the module is the context. The `atg8_conjugation` node keeps GO:0061739 as its concept, because a node concept maps the step to its exact GO class rather than annotating a gene. |
+| `metazoan_autophagosome_biogenesis` | 3 annotons | The E1, E2 and E3-like annotons' process is now the genus; the module is the context. The `atg8_conjugation` node keeps GO:0061739 as its concept, because a node concept maps the step to its exact GO class rather than annotating a gene. If GO obsoletes GO:0061739, the concept becomes GO:0006501, with the step's ATG8 substrate stated in the node description. |
 
 Why the decomposition is safe: every ATG3/ATG7 review already accepts
 GO:0000045 and lists it in its core functions, so the context is carried

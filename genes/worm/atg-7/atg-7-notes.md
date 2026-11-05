@@ -18,3 +18,4 @@
 - NEW GO:0061739 protein lipidation involved in autophagosome assembly (ATG-7 catalyses a step; comparator: human ATG7 IDA, yeast Atg7 GO:0006501 IDA/IMP).
 - Yeast/Dicty-specific IBAs (PMN, nitrogen starvation) and mitophagy kept as non-core.
 - Atg12 activation for worm ATG-7 rests on phylogeny only (no worm biochemistry found).
+- Round 3 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-05): the NEW row and the core-function directly_involved_in now use the genus GO:0006501 C-terminal protein lipidation instead of the precomposed GO:0061739; the autophagosome-assembly context is carried by GO:0000045 in the core functions and by metazoan_autophagosome_biogenesis.

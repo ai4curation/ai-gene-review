@@ -159,22 +159,32 @@ def decomposition(
     heuristic: GO asserts no ``part_of`` here). A differentia filler that is
     itself an "involved in" term is flagged ``nested``.
 
-    A logical definition with no ``part_of`` differentia, no nested filler, and
-    either no differentia at all (a grouping class) or the bare genus
-    ``biological regulation`` (a plain regulation term) is flagged
-    ``label_only``: the "involved in Y" is in the label but not in the
-    definition, so there is no Y to decompose away (for example, GO:1901030 is
-    just ``positively_regulates`` GO:0097345 MOMP, which GO already defines as part
-    of the apoptotic signaling pathway). A specific genus that ``regulates`` Y
-    (GO:0071631 *mating pheromone secretion involved in positive regulation of
-    conjugation*) is not label-only: there, Y is real context.
+    A regulation term is flagged ``label_only`` when the "involved in Y" in its
+    label is entailed by its own definition: the genus is the bare
+    ``biological regulation``, there is no ``part_of`` differentia and no nested
+    filler, and Y (the label text after "involved in") is the label of an
+    is_a/part_of ancestor of the regulated process. Then there is no Y to
+    decompose away: GO:1901030 is ``positively_regulates`` GO:0097345 MOMP, and
+    GO:0097345 is itself ``part_of`` GO:0097190 apoptotic signaling pathway. A
+    grouping class with no differentia is not label-only (its Y is real but
+    missing from the axiom), and neither is a specific genus that ``regulates``
+    Y (GO:0071631 *mating pheromone secretion involved in positive regulation
+    of conjugation*).
 
-    >>> terms = {"GO:2": GoTerm(id="GO:2", name="momp"),
-    ...          "GO:3": GoTerm(id="GO:3", name="x"), "GO:4": GoTerm(id="GO:4", name="y")}
+    >>> terms = {"GO:2": GoTerm(id="GO:2", name="momp", part_of=["GO:4"]),
+    ...          "GO:3": GoTerm(id="GO:3", name="x"), "GO:4": GoTerm(id="GO:4", name="y"),
+    ...          "GO:7": GoTerm(id="GO:7", name="z")}
     >>> reg = GoTerm(id="GO:1", name="positive regulation of momp involved in y",
     ...              intersection_of=[(None, "GO:0065007"), ("positively_regulates", "GO:2")])
     >>> decomposition(terms, reg)["label_only"]
     True
+    >>> unentailed = GoTerm(id="GO:8", name="positive regulation of z involved in y",
+    ...              intersection_of=[(None, "GO:0065007"), ("positively_regulates", "GO:7")])
+    >>> decomposition(terms, unentailed)["label_only"]
+    False
+    >>> grouping = GoTerm(id="GO:9", name="x involved in y", intersection_of=[(None, "GO:3")])
+    >>> decomposition(terms, grouping)["label_only"]
+    False
     >>> xy = GoTerm(id="GO:5", name="x involved in y",
     ...             intersection_of=[(None, "GO:3"), ("part_of", "GO:4")])
     >>> decomposition(terms, xy)["label_only"]
@@ -208,16 +218,29 @@ def decomposition(
     else:
         return None
     out["nested"] = any(INVOLVED_IN in d["label"] for d in out["differentia"])
-    out["label_only"] = (
-        out["source"] == "logical_definition"
-        and not out["nested"]
-        and all(d["relation"] != "part_of" for d in out["differentia"])
-        and (
-            not out["differentia"]
-            or out.get("genus", {}).get("id") == BIOLOGICAL_REGULATION
-        )
-    )
+    out["label_only"] = label_only(terms, t, out)
     return out
+
+
+def label_only(terms: dict[str, GoTerm], t: GoTerm, dec: dict) -> bool:
+    """Whether a decomposition's "involved in Y" is entailed by its regulated process.
+
+    See :func:`decomposition` for the rule and examples.
+    """
+    if (
+        dec["source"] != "logical_definition"
+        or dec["nested"]
+        or dec.get("genus", {}).get("id") != BIOLOGICAL_REGULATION
+        or not dec["differentia"]
+        or any(d["relation"] == "part_of" for d in dec["differentia"])
+        or INVOLVED_IN not in t.name
+    ):
+        return False
+    y = t.name.removeprefix("obsolete ").split(INVOLVED_IN, 1)[1]
+    return any(
+        y in {label(terms, a) for a in ancestors(terms, d["id"])}
+        for d in dec["differentia"]
+    )
 
 
 def pattern_of(
