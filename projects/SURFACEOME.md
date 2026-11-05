@@ -257,23 +257,29 @@ Use a `part_of` extension only when GO lacks a specific term:
 
 **Generic `GO:0005886` row with a subdomain/topology-specific reason — `MODIFY`
 vs `ACCEPT`+`NEW`.** When a plasma-membrane row is correct but the evidence places
-the protein on a specific leaflet, subdomain or topological side, the batch uses
-one of two patterns, by this rule:
+the protein on a specific leaflet, subdomain or topological side, the deciding
+question is whether the specific term **corrects** the generic one or merely **adds
+resolution** to it:
 
-- **`MODIFY` → the specific term** when that term *replaces* the generic claim —
-  the protein's whole PM pool is that subdomain, so the generic row is retired into
-  the refinement. Examples: inner-leaflet GTPases/kinases `GO:0005886` → `GO:0009898`
-  (KRAS etc.); a GPI ectoprotein's PM pool → `GO:0009897` (MSLN); STIM1's
-  PM-proximal pool → `GO:0140268` ER–PM contact site.
-- **`ACCEPT` the generic row + add a `NEW` specific row** when the generic PM
-  localization stays true on its own *and* the specific subdomain is an additional,
-  independently-supported finding the gene does not yet carry. Example: CA9, whose
-  bare `GO:0005886` rows are kept while a `NEW GO:0009897` external-side row records
-  the self-described ectoenzyme claim.
+- **`MODIFY` → the specific term** when the generic term is uninformative or
+  actively misleading about topology/accessibility, so it should be *retired* into
+  the specific one. This covers the uninformative parent `GO:0016020` membrane →
+  the real CC term (MSLN → `GO:0009897`), the inner-leaflet correction where bare
+  `plasma membrane` wrongly implies surface exposure (`GO:0005886` → `GO:0009898`;
+  KRAS and the inner-leaflet set), and the "not in the PM at all" case (`GO:0005886`
+  → `GO:0140268` ER–PM contact site; STIM1).
+- **`ACCEPT` the generic row + add a `NEW` specific row** when `GO:0005886` is
+  correct and surface-consistent and the subdomain simply adds resolution the gene
+  does not yet carry. The generic rows (often several, from independent EXP/IEA/
+  Reactome sources) stay `ACCEPT`, and the subdomain is a `NEW` row. Examples: **CA9**
+  (bare `GO:0005886` kept, `NEW GO:0009897` external side for the ectoenzyme) and
+  **GUCY2C** (four `GO:0005886` rows kept, `NEW GO:0016324` apical plasma membrane
+  for the brush-border receptor).
 
-The test is whether the specific term supersedes the generic one (one location,
-`MODIFY`) or sits beside it as a second claim (two locations, `ACCEPT`+`NEW`); a
-`MODIFY` replacement is a refinement of the same pool, never a second pool.
+So the test is not "one location vs two" — an `is_a` subdomain such as apical or
+external-side PM is still inside the generic PM, yet is recorded `ACCEPT`+`NEW`. The
+test is **does the specific term correct a wrong/empty generic (→ `MODIFY`) or add
+surface detail to a correct one (→ `ACCEPT`+`NEW`)**.
 
 The **stable_surface_attachment** set is already handled by the same
 specific-term-first logic and needs no extensions: C3 carries `cell surface`
