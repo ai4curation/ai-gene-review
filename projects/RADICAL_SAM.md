@@ -508,7 +508,7 @@ should drive the deviation count to zero.
 
 ## What the IBAs got right, and where they reach too deep
 
-18 IBA rows carry a `propagation_review`. Sorted by what the review concluded:
+19 IBA rows carry a `propagation_review`. Sorted by what the review concluded:
 
 - **4 are propagation failures** (`PROPAGATION_BAD`). Two are the same node:
   `PANTHER:PTN000358281` places porphyrin biosynthesis deep enough to reach both
@@ -516,9 +516,12 @@ should drive the deviation count to zero.
   experimentally to lack that chemistry. moaA's is `ROLE_CONFLATION` — MoaC's
   cPMP-synthase activity transferred from the MOCS1 fusion proteins, which have a
   MoaC domain that *E. coli* MoaA does not. CDK5RAP1's is a compartment mismatch.
-- **9 are scoping problems** (`TERM_SCOPING_PROBLEM`), mostly
+- **10 are scoping problems** (`TERM_SCOPING_PROBLEM`), mostly
   `GRANULARITY_MISMATCH`: the node is placed correctly and the term is simply
   more general than the gene warrants. These became `MODIFY`, not `REMOVE`.
+  *E. coli* epmB is a clean example: the KamA node `PTN000776770` is placed
+  correctly, but its intramolecular aminotransferase term is more general than
+  the gene's (R)-beta-lysine-forming chemistry.
 - **4 are no failure at all**, recorded to show the node was checked and holds.
 - **1 is unresolved** (TYW1B), where the sequence argues against the inherited
   activity but nothing has been tested.
