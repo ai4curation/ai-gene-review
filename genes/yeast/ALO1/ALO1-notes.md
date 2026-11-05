@@ -91,3 +91,10 @@
   activity, D-erythroascorbate biosynthesis, FAD cofactor binding,
   oxidative-stress physiology, mitochondrial/outer-membrane localization, and the
   2025 Myo2-linked mitochondrial-inheritance role.
+
+## Follow-up on the SGD description (2026-11-01)
+
+- The SGD description notes that alo1 null cells incorporate noncanonical amino acids at amber (TAG)
+  codons more efficiently. This is confirmed by a genome-wide deletion screen [PMID:36346914 "deletion
+  of each of these genes enhances ncAA incorporation efficiency without loss of fidelity for a number of
+  conditions"]. No mechanism is known; it is a peripheral screen phenotype, so no annotation was added.

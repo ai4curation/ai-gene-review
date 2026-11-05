@@ -196,3 +196,17 @@ UniProt/PANTHER placement inspected: `PTHR10218:SF73`. Broad G-alpha family PTHR
 ## PR #5582 follow-up, 2026-10-26
 
 Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of GNAI2 was made in PR #5350. This review is kept as the
+base. Ported from #5350:
+
+- Seven `protein binding` IPI rows changed from REMOVE to MODIFY: three with GPCR
+  partners (OPRM1, CXCR5 ×2) → GO:0001664 G protein-coupled receptor binding, and four
+  with Gβ or Gγ partners → GO:0031683 G-protein beta/gamma-subunit complex binding.
+- NEW GO:0010855 adenylate cyclase inhibitor activity (IDA, PMID:8119955), whose
+  abstract names Gi alpha 2 among the inhibitors of adenylyl cyclase types V and VI.
+  Human GNAI1 carries the same term by IDA from the same paper.
+
+PMID:42870023 (Deutsch et al. 2026) used only human Gαi1, so it is not cited here.

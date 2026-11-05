@@ -144,6 +144,8 @@ class Annotation:
     - KEYWORD: with keyword info
     - PATHWAY: with pathway text
     - DB_REFERENCE: GO terms and other database references
+    - PROTEIN_DESCRIPTION: protein names and EC numbers, kept as the raw
+      UniProt ``proteinDescription`` object
 
     Example:
         >>> ann = Annotation(
@@ -162,6 +164,7 @@ class Annotation:
     db_reference: Optional[DBReference] = None
     pathway: Optional[str] = None
     text: Optional[str] = None
+    protein_description: Optional[dict] = None
 
 
 @dataclass
@@ -387,6 +390,10 @@ def _parse_annotation(ann_data: dict) -> Annotation:
             properties=props
         )
 
+    # Protein names and EC numbers are kept verbatim
+    if "proteinDescription" in ann_data:
+        annotation.protein_description = ann_data["proteinDescription"]
+
     # Parse comment-based annotations
     comment = ann_data.get("comment", {})
     if comment:
@@ -453,6 +460,9 @@ def _annotation_to_json(ann: Annotation) -> dict:
                 for k, v in ann.db_reference.properties.items()
             ]
         }
+
+    if ann.protein_description is not None:
+        result["proteinDescription"] = ann.protein_description
 
     if ann.comment_type or ann.reaction or ann.subcellular_location:
         comment: dict = {}

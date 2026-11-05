@@ -35,7 +35,7 @@ Like the horse cohort, this benchmark is constructed **after the predictions wer
 | UNC | 14 | Evidence does not yet validate or refute the claim |
 | **Total** | **50** | **GO claims only** |
 
-Counts are as of the 2026-10-24 review snapshot (commit `1ca4af83c6`); see the [cross-cohort results](benchmark-results.md). The two COR calls are IKKepsilon protein phosphorylation, established by direct substrate-phosphorylation experiments but absent as a process term from its GOA, and CG31606 extracellular region, inferred from a cleavable signal peptide on a protein with only ND annotations.
+Counts are as of the 2026-10-29 review snapshot (commit `ac95c69686`); see the [cross-cohort results](benchmark-results.md). The two COR calls are IKKepsilon protein phosphorylation, established by direct substrate-phosphorylation experiments but absent as a process term from its GOA, and CG31606 extracellular region, inferred from a cleavable signal peptide on a protein with only ND annotations.
 
 The 13 function paragraphs are assessed claim by claim in separate linked reviews; they are not assigned an artificial single GO score. CNN records established prior biology, not independently verified membership in the model's training data. [Validation summary](fly-benchmark/validation-summary.json) and [prediction evidence checks](fly-benchmark/prediction-evidence-validation.json) accompany the coverage audit.
 

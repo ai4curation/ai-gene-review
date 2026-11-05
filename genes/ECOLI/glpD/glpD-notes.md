@@ -20,3 +20,37 @@ The Kistler and Lin physiology should be read as a distinction between the parti
 - `GO:0005886` is the specific location. Broad `cytoplasm` and `membrane` IEAs are less precise than the experimentally supported bacterial plasma membrane association.
 - `GO:0009331`, `GO:0042803`, `GO:0071949`, and `GO:0009055` capture real complex, assembly, cofactor, and electron-transfer aspects of GlpD, but only the quinone-dependent dehydrogenase activity is the compact core molecular function.
 - The generic Dam and AzuC `GO:0005515` rows do not add useful molecular-function annotations. The Dam hits come from high-throughput AP-MS datasets with no specific GlpD mechanism in the local evidence [PMID:15690043; PMID:19402753]. The AzuC row reports a real interaction that modulates GlpD activity [PMID:35239434], but the interaction still points back to GlpD's established dehydrogenase activity.
+
+## 2026-11-03 review completion (Claude, AI-assisted)
+
+No deep-research provider file exists for this gene. The review rests on the
+cached publications: PMID:18296637 and PMID:35239434 (full text), and
+PMID:340460, PMID:4945192, PMID:5321485 and PMID:15690043 (abstract only). It
+was reviewed together with `genes/PSEPK/glpD`.
+
+- GO:0009331 (IDA PMID:18296637): ACCEPT kept. The GO definition explicitly
+  includes "a GlpD homodimer that functions in aerobic conditions". The PSEPK IEA
+  row on the same term was moved from UNDECIDED to ACCEPT to match.
+- GO:0005515 IPI PMID:15690043 (Dam): UNDECIDED -> REMOVE under the bare
+  protein-binding policy. The AP-MS method is quoted from the abstract, and the
+  Dam pair is in UniProt's INTERACTION comment (NbExp=3). The other two
+  protein-binding rows stay REMOVE, now with supported_by.
+- GO:0004368 IEA (GO_REF:0000120): replaced the DR GO-line quote with the
+  UniProt CATALYTIC ACTIVITY, InterPro IPR000447 and PMID:18296637 quotes.
+- GO:0005737 cytoplasm (IEA, from UniProt SubCell "Cytoplasm"):
+  MARK_AS_OVER_ANNOTATED -> MODIFY to GO:0005886. GlpD has a soluble pool but
+  is fully active only on the cytoplasmic membrane (PMID:35239434), into which
+  it embeds about 12-15 Å (PMID:18296637). Recorded a UniProt source defect on
+  the SUBCELLULAR LOCATION line.
+- GO:0016020 membrane (ARBA): MARK_AS_OVER_ANNOTATED -> MODIFY to GO:0005886.
+- GO:0006072 (InterPro2GO): MARK_AS_OVER_ANNOTATED -> MODIFY to GO:0046168.
+- GO:0019563 glycerol catabolic process (UniPathway): KEEP_AS_NON_CORE ->
+  ACCEPT. GlpD catalyzes a step of the GlpF/GlpK/GlpD glycerol degradation
+  route, and GO:0046168 is not a descendant of it. Added to
+  core_functions.directly_involved_in.
+- GO:0009055 electron transfer activity (IDA PMID:340460): KEEP_AS_NON_CORE ->
+  MARK_AS_OVER_ANNOTATED. The assayed "electron transfer" is GlpD's own
+  G3P:acceptor oxidoreduction, already captured by GO:0004368, not a carrier
+  function.
+- All other actions kept, with quotes completed. Status set to COMPLETE, the
+  resolved Dam suggested question replaced, and one suggested experiment added.

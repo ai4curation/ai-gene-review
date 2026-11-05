@@ -1,0 +1,7 @@
+# GlnA proposal retirement and membrane-source trace
+
+The exact inherited reviewer-authored ammonia-assimilation proposal is archived in `retired-proposals.json`. It is omitted from the active review because the original nitrogen-utilization GOA row now refines to the same supported cycle. No machine GOA row was removed, and no negative biological judgment is implied.
+
+The repository PAINT source `interpro/panther/PTHR43407/PTHR43407-paint.tsv` places GO:0016020 at PTN000464923, seeded by MGI:MGI:2672844. Identity checked against https://www.informatics.jax.org/marker/MGI%3A2672844 and https://www.ncbi.nlm.nih.gov/gene/266744 on 2026-10-26: this is mouse Lgsn/lengsin. Full PMID:18178558 Results and Fig.9 show lens-fiber membrane/cytoskeletal association. The phylogenetic annotation is not rejected from donor count; its specialized localization evidence and the unresolved bacterial counterpart are distinguished.
+
+A publisher abstract for Sallal et al. (2000), DOI10.1002/(SICI)1521-4028(200005)40:2<127::AID-JOBM127>3.0.CO;2-K, reports E. coli GS activity associated with purified cytoplasmic membranes. BRENDA identifies ATCC11775, not K-12 or KT2440. Normal publisher HTML/PDF fetches returned403; normal DOI retrieval produced metadata only. Thus the paper is an access-limited comparative lead, not a cached target-localization experiment. It reinforces why no transmembrane segment is not evidence of no peripheral association.

@@ -386,7 +386,7 @@ are committed. The research findings for the other two:
   single seed. PA3760's N-acetylglucosamine transport seed sits on a general
   PTS Enzyme I node that also holds PtsI and the nitrogen-PTS PtsP.
 
-These are catalogued for PAINT as pattern 16 of [IBA_REVIEW](IBA_REVIEW.md).
+These are catalogued for PAINT as pattern 17 of [IBA_REVIEW](IBA_REVIEW.md), next to the closely related pattern 16 (a phenotype-derived molecular function as an IBD seed, worked through on the same ccmC node from the *Shewanella* side).
 
 ## Plan
 

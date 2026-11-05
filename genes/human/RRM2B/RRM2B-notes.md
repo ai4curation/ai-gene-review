@@ -121,3 +121,18 @@ Considered but deliberately left alone (not confident improvements):
   experimental annotations whose full text we have not read; over-annotated is the correct
   conservative call. Left as-is.
 </content>
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Row: GO:0005739 IEA (GO_REF:0000108, logical inference from mtDNA replication),
+located_in, MARK_AS_OVER_ANNOTATED. No sub-compartment rows.
+
+Checks:
+- The inference rule turns a process (mtDNA replication) into a location; RRM2B supplies
+  dNTPs from the cytosol [PMID:18997010 "find in all cases that ribonucleotide reductase resides in the cytosol"]
+  [PMID:18997010 "suggesting that the deoxynucleotides produced by the enzyme diffuse into the nucleus or are transported into mitochondria"].
+- UniProt Q7LG56 curates only [file:human/RRM2B/RRM2B-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm. Nucleus."];
+  no transit peptide; not in MitoCarta3.0 (MitoCarta2.0 score -5.3); HPA "Nucleoplasm".
+
+Outcome: MARK_AS_OVER_ANNOTATED kept (REMOVE would also be defensible as an electronic
+over-propagation); reason records the check. Stay at the root (no mitochondrial location).

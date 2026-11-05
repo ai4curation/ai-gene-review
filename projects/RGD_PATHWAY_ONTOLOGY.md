@@ -106,10 +106,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 90 |
-| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 14 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 24 |
-| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 9 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 107 |
+| `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 23 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 7 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -268,7 +268,7 @@ otherwise match every module under it.
 | Only a broader GO term (`no_specific_go_term`) | 8 |
 | No GO process term at all (`no_specific_go_term`) | 1 |
 
-The 14 new candidates:
+The 14 new candidates, all modelled in the fourth set below:
 
 | PW | Pathway | Curated human genes | GO | Predicate |
 |----|---------|--------------------:|----|-----------|
@@ -308,8 +308,10 @@ the triage cannot link it to either pathway.
 The five `related_module_only` pathways are spliceosome, mRNA nuclear export and
 p53 signaling, whose only matches are Drosophila or *C. elegans* modules, and
 calcium-mediated signaling (matched by `t_cell_receptor_signaling`). The fifth,
-renin-angiotensin, matches `kallikrein_kinin_cascade` only because that module's
-notes discuss `GO:0002003` angiotensin maturation.
+renin-angiotensin, matched `kallikrein_kinin_cascade` only because that module's
+notes discuss `GO:0002003` angiotensin maturation. It is now `has_module` by gene
+overlap with the angiotensin II module, which does not model the cascade (see the
+fourth set).
 
 The 9 `no_specific_go_term` pathways show where GO is coarser than PW. For the
 receptor pathways both GO branches were checked: `... receptor signaling
@@ -340,7 +342,8 @@ pathway` and `cellular response to <ligand> stimulus`.
   molecular functions under `GO:0140993` histone modifying activity.
 
 These are candidates for GO term requests, or for modules grounded on molecular
-functions rather than on a process term.
+functions rather than on a process term. The V2 vasopressin and AT2 branches have
+since left the tier, because the fourth-set modules cite them as evidence; 7 remain.
 
 ### Pilot: SREBP signaling
 
@@ -571,6 +574,146 @@ These modules turned up more possible upstream errors:
   ubiquitination part of maintenance methylation. Its source, PMID:40680746,
   raises a role in DNMT1 recruitment only as a possibility.
 
+### Fourth set: the 14 curated-mapping candidates
+
+The 14 candidates from the curated mappings became 13 modules. Angiotensin II
+signaling and its AT1 and AT2 branches share one module, and so do vasopressin
+signaling and its V2 branch. The triage re-run moves all 14 to `has_module`, and
+the AT2 and V2 branches leave `no_specific_go_term`, because the modules cite
+them as evidence.
+
+- **Hormone receptors.**
+  - [`modules/angiotensin_ii_receptor_signaling.yaml`](../modules/angiotensin_ii_receptor_signaling.yaml)
+    ([PW:0000244](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000244.yaml),
+    [PW:0000527](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000527.yaml),
+    [PW:0000528](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000528.yaml)) treats the
+    two receptors as a variant set off one ligand. AT1 signals through Gq/11-PLC
+    and JAK2/TYK2, with GRK/beta-arrestin desensitisation and AGTRAP/ARAP1
+    trafficking. AT2 signals through Gi-linked SHP-1/MKP-1 phosphatases and
+    MTUS1/ZBTB16. AGT is only the ligand source: the proteases of the cascade
+    belong to a separate renin-angiotensin pathway, PW:0000492, which this module
+    does not model.
+  - [`modules/vasopressin_receptor_signaling.yaml`](../modules/vasopressin_receptor_signaling.yaml)
+    ([PW:0000491](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000491.yaml),
+    [PW:0000713](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000713.yaml)) has a V1a/V1b
+    Gq/11-PLC arm and a renal V2 arm. The V2 arm runs through Gs, ADCY6, cAMP and
+    AKAP-anchored PKA to AQP2 exocytosis with STX3/STX4. AQP2 is a participant,
+    because it performs the water transport.
+  - Four Gs-coupled modules share one structure: ligand, receptor, Gs, then
+    adenylyl cyclase and PKA by reference to `gpcr_camp_pka_signaling`, then
+    GRK/beta-arrestin termination.
+    [`modules/crh_receptor_signaling.yaml`](../modules/crh_receptor_signaling.yaml)
+    ([PW:0000493](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000493.yaml)) covers CRH
+    and the urocortins on CRHR1/CRHR2.
+    [`modules/beta_adrenergic_signaling.yaml`](../modules/beta_adrenergic_signaling.yaml)
+    ([PW:0000794](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000794.yaml)) covers
+    ADRB1/ADRB2, including the PKA-dependent switch to Gi.
+    [`modules/pth_receptor_signaling.yaml`](../modules/pth_receptor_signaling.yaml)
+    ([PW:0001135](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001135.yaml)) adds the PTH1R
+    Gq arm, by reference to `gpcr_plc_calcium_pkc_signaling`, and NHERF/ezrin
+    control of coupling.
+    [`modules/glucagon_receptor_signaling.yaml`](../modules/glucagon_receptor_signaling.yaml)
+    ([PW:0000676](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000676.yaml)) covers GCGR
+    with ADCY5/ADCY6.
+- **Signalling cassettes and sensors.**
+  - [`modules/camp_pka_signal_transduction.yaml`](../modules/camp_pka_signal_transduction.yaml)
+    ([PW:0000543](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000543.yaml)) is the shared
+    cAMP/PKA core: ADCY1-10, the PKA holoenzymes, AKAP anchoring (including EZR)
+    and PDE termination. The receptor step refers to `gpcr_camp_pka_signaling`.
+    EPAC, CNG channels and the PKA substrates are out of scope.
+  - [`modules/ampk_energy_sensing.yaml`](../modules/ampk_energy_sensing.yaml)
+    ([PW:0000542](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000542.yaml)) has the AMPK
+    heterotrimer with family subunit choices, LKB1 and CAMKK upstream kinases
+    and the Thr172 phosphatases as variant sets, and the TSC1-TSC2 GAP relay to
+    mTORC1. The phosphorylated substrates (raptor, ACC1/2, TBC1D1, HMGCR) are
+    outputs, and CPT1A is a reference to `carnitine_shuttle`.
+  - [`modules/hif_oxygen_sensing.yaml`](../modules/hif_oxygen_sensing.yaml)
+    ([PW:0000360](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000360.yaml)) models all 20
+    RGD genes: the EGLN and HIF1AN dioxygenases as the oxygen sensors,
+    VHL-mediated degradation, and HIF-alpha/ARNT transcription with
+    CREBBP/EP300.
+  - [`modules/hair_cell_mechanotransduction.yaml`](../modules/hair_cell_mechanotransduction.yaml)
+    ([PW:0001503](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001503.yaml)) runs from the
+    CDH23/PCDH15 tip link and the USH1 upper density to the TMC1/TMC2 channel,
+    MYO1C adaptation and the VGLUT3/otoferlin ribbon synapse. The channel
+    subunits TMC1, TMC2, LHFPL5, TMIE and CIB2 are not on RGD's list; without
+    them the module has no transducer. Twelve bundle-building genes are left
+    for a stereocilium-organization module, and POTEI is a probable orthology
+    artefact from rat actin.
+- **DNA damage, NAD and glucose uptake.**
+  - [`modules/atm_dsb_signaling.yaml`](../modules/atm_dsb_signaling.yaml)
+    ([PW:0001361](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001361.yaml)) covers MRN
+    sensing, KAT5-dependent ATM activation, the H2AX-MDC1-RNF8-RNF168 chromatin
+    cascade and the BRCA1-A complex. The BRCA1-A subunits UIMC1, ABRAXAS1,
+    BABAM1, BABAM2 and BARD1 are added. CHK2 and p53 are outputs.
+  - [`modules/nad_consumption.yaml`](../modules/nad_consumption.yaml)
+    ([PW:0002581](RGD_PATHWAY_ONTOLOGY/pathways/PW_0002581.yaml)) groups the
+    three NAD+-cleaving enzyme classes, sirtuins, PARPs and CD38/BST1/SARM1, and
+    cites the three sub-pathways PW:0002582-PW:0002584. ZC3HAV1, a catalytically
+    inactive PARP, is left out.
+  - [`modules/glut4_insulin_stimulated_glucose_uptake.yaml`](../modules/glut4_insulin_stimulated_glucose_uptake.yaml)
+    ([PW:0000639](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000639.yaml)) takes AKT2
+    from `insulin_receptor_signaling`. It then models the TBC1D4/TBC1D1 RabGAPs
+    and DENND4C, a RAB10 (adipocyte) or RAB8A/RAB13 (muscle) choice, vesicle
+    motors, an optional RAC1-PAK1-ARP2/3 actin step, STX4/SNAP23/VAMP2 fusion
+    and SLC2A4. Of RGD's 54 genes, AKT1, IRAP (LNPEP, which is cargo) and the
+    contested CAP-CBL-TC10 arm are left out; the last is a knowledge gap.
+    `GO:0044381` is placed only on SLC2A4, since no trafficking protein carries
+    it in human, mouse or rat GOA.
+
+Two triage observations came out of this set. PW:0000492 renin-angiotensin
+cascade is now `has_module` only because all 21 angiotensin II module genes are
+in its gene list, although the module leaves its proteases out. This is the
+loose gene-overlap case described above, and the cascade is still unmodelled.
+The `best_gocam` leads for PW:0000639 (`63d320cd00001536`, RAC1 degradation in
+migration) and PW:0000244 (`67f85f2b00004426`, a C5a receptor model) are
+gene-overlap ties with no relation to the pathway.
+
+Possible upstream errors found in this set:
+
+- **GOA, catalytic terms on non-catalytic proteins.**
+  - STRADA has `GO:0004672` protein kinase activity by IDA from PMID:12805220,
+    which calls STRAD a pseudokinase.
+  - PRKAB2, a non-catalytic AMPK subunit, has `GO:0004679` by IDA.
+  - CAMKK2 has `GO:0004713` protein tyrosine kinase activity by TAS.
+  - Most mono-ADP-ribosyltransferase PARPs (PARP3, 4, 6, 8, 10-12, 14-16,
+    TIPARP) carry `GO:0003950` poly-ADP-ribosyltransferase activity by IBA and
+    sometimes IDA. This looks like a PAINT node at the family root and is worth
+    an IBA review.
+- **GOA, conflicts and odd rows.**
+  - SAT2 has both `enables` and `NOT|enables` `GO:0004145` by IDA.
+  - SIRT7 has protein methyltransferase activity (`GO:0008276`, IDA). The
+    module does not adopt it.
+  - PARP14 has an IEA row for `GO:0019677` that looks over-propagated.
+  - `GO:1904117` cellular response to vasopressin has a CDC6 IEA row.
+- **GOA, missing terms.** In each case below the term is missing in human GOA.
+  - SNX13 has no GTPase activator activity, though its Gs-alpha GAP activity is
+    annotated as a process.
+  - ATM has `GO:0035979` only by ISS/IEA.
+  - RIF1, TBC1D4, TBC1D1, STX4, VAMP2 and MYO1C have no experimental molecular
+    function.
+  - AQP2 has no `GO:0070295` renal water absorption.
+  - No oxygen sensor (EGLN1-3, VHL, HIF1AN) carries `GO:0097411`. This may be
+    the convention of annotating sensors to regulation of the pathway.
+  - CD38/BST1 have no `GO:0019677`.
+- **GO-CAM.**
+  - `68d5ebd600000330`, a GCGR-to-Gi model, gives the GCGR activity
+    adenylate cyclase-activating `GO:0007189` while its GNAI1 activity uses the
+    inhibiting `GO:0007193`.
+  - In `617b481400000460`, the KAT5 node is typed as bare protein binding.
+  - In `65a1f4f800000487`, H2AX regulates NBN directly and skips MDC1.
+  - In `696022cd00000603`, a SIRT3 activity is part of mitochondrial fusion,
+    which does not fit the model's TCA-cycle title.
+  - PTH1R (`67c10cc400004508`) and CRHR2 (`69729a3800007299`) are typed with
+    generic receptor terms although specific ones carry IDA rows.
+- **GO term placement.** `GO:0141156` cAMP/PKA signal transduction is carried in
+  human GOA by effectors and three AKAPs, but by no cyclase, PKA subunit or PDE.
+  The module places it on the cyclase, PKA and AKAP steps, reading the absence as
+  the term being new.
+- **Coverage gaps.** No GO-CAM models the hair-cell channel, the oxygen
+  sensors, the AT1 JAK/STAT arm, the AT2 branch or GLUT4 translocation. Most
+  members of these modules have no gene review; the modules' notes list them.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -582,9 +725,11 @@ These modules turned up more possible upstream errors:
   Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
-- Model the 14 new candidates from the curated mappings. PKA and
-  beta-adrenergic signaling should extend `gpcr_camp_pka_signaling`, and
-  angiotensin II via AT1 sits under angiotensin II signaling.
+- Model the renin-angiotensin cascade (PW:0000492), which is `has_module` only
+  by gene overlap with the angiotensin II module.
+- Reconcile `gpcr_camp_pka_signaling` with the fuller
+  `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
+  compact module's cyclase and PKA steps.
 - Raise the missing bradykinin (kinin) receptor signalling and CaMKII signalling
   terms with GO, or record them as `proposed_new_terms` in the modules that need
   them.
@@ -596,7 +741,9 @@ These modules turned up more possible upstream errors:
   pathway, and the DNA repair pathways listed under Module seeds).
 - Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
   receptors in the adult synapse, and a human PAR/Crumbs/Scribble polarity module
-  (the PKC module mentions the PAR complex only through the atypical PKCs).
+  (the PKC module mentions the PAR complex only through the atypical PKCs), and a
+  stereocilium-organization module for the bundle genes left out of hair-cell
+  mechanotransduction.
 - Repeat the completeness measure with rat and mouse GO-CAMs. The index holds
   59 rat and 2,209 mouse activity rows.
 
@@ -613,6 +760,7 @@ These modules turned up more possible upstream errors:
 - [x] Map `needs_go_mapping` seeds (all 28, in `data/pw_go_curated.sssom.yaml`)
 - [x] Gene reviews for SREBP pathway members
 - [x] Model the `candidate` seeds (9 of the 10 from the 2026-10-20 triage, in the second and third sets; IL-10 left the queue by gene overlap)
+- [x] Model the 14 candidates from the curated mappings (13 modules, fourth set)
 
 ## Notes
 
@@ -638,3 +786,9 @@ Hand-curated GO mappings for the 28 `needs_go_mapping` seeds
 (`data/pw_go_curated.sssom.yaml`). Fourteen became candidates, five match only
 other-taxon or GO-term modules, and 9 have only a broad GO term or none
 (new tier `no_specific_go_term`).
+
+### 2026-10-28
+
+Fourth set of 13 modules for the 14 curated-mapping candidates. The re-run
+leaves no candidates: 107 `has_module`, 23 `related_module_only` and 7
+`no_specific_go_term`.

@@ -153,8 +153,8 @@ def validate_goa_support(
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Check files for GOA support citations; exit 1 if any are found.
 
-    For files no fuller validator covers, such as BioReason/GO-GPT prediction
-    sidecars (see ``validate-prediction-terms``).
+    Lets ``validate-prediction-terms`` enforce the rule on its own, without
+    the full source-evidence check.
     """
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("files", nargs="+", type=Path)
