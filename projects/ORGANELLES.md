@@ -314,6 +314,15 @@ What ER batch 3 showed:
 - **Retention without a motif.** PRDX4 has no KDEL-type signal, but protease
   protection, topology and a lumenal partner (Ero1) agree on the lumen. A
   retention motif is one line, not a requirement.
+- **When the sub-compartment enters `core_functions`.** Only when an assay
+  places the activity itself there, not when it is inferred from the protein's
+  location (rule 6). PRDX4 qualifies: it is shown consuming H2O2 made by the
+  lumenal oxidase Ero1. POFUT1 does not yet: O-fucosylation is shown in the ER,
+  so its core location stays at the root even though its NEW lumen row is
+  well supported.
+- **A new membrane row refines generic membrane rows.** Once PGRMC2 has
+  GO:0005789, its GO:0016020 membrane rows are correct but too general, so they
+  become MODIFY to the ER membrane term rather than staying ACCEPT.
 - **Isoform-restricted ER locations are common.** NPHS2, SCP2 and SLC22A5 join
   ABCA7 and ATP7A: UniProt ties the ER to one splice form, often a retained
   quality-control product, while the GO rows carry no isoform. Each now has a
