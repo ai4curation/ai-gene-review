@@ -18,7 +18,7 @@ The official [Q9UK05 record](https://www.uniprot.org/uniprotkb/Q9UK05/entry) and
 
 ### PMID:19366699
 
-[19366699](https://pmc.ncbi.nlm.nih.gov/articles/PMC2708876/). Recombinant human BMP9 was tested in human pulmonary/aortic endothelial cells. Receptor/SMAD perturbations, RNA responses and thymidine incorporation were inspected. The cache omits relevant Methods/Results despite its full-text flag. IL-8 ELISA methodology was recovered, but a positive protein result was not independently located. Figures 2–3 report phosphorylation and ALK1-dependent transcript responses. The thymidine-incorporation Methods define the DNA-synthesis readout. ENG dependence varies across settings.
+[Original main text](https://pmc.ncbi.nlm.nih.gov/articles/PMC2708876/), Experimental Procedures, “Thymidine Incorporation”: 18 hours of BMP9 exposure preceded a six-hour labeling period, followed by bulk scintillation counting. Cell-number normalization was not stated. Figures 2–3 and selected Results identify phosphorylation and transcript responses. These original-text locators are outside the partial cache. IL-8 protein methodology alone does not establish a positive protein result. No figure pixels were inspected.
 
 ### PMID:32561494
 
@@ -100,10 +100,12 @@ Predicate identifiers were verified against official OLS property results: BFO:0
 
 ## Annotation scope
 
-Current GO ancestry does not place positive regulation of gene expression (GO:0010628) above GO:0045944 through is_a/part_of; the latter does descend from GO:0045893. DNA-replication regulation does not imply membership in replication machinery. Iron-homeostasis and tight-junction-assembly uncertainties concern specific claims, not whether a source could be opened. GO:0060586 concerns extracellular body fluids and is not substituted for intracellular iron solely on the basis of hepcidin induction.
+Current GO ancestry does not place positive regulation of gene expression (GO:0010628) above GO:0045944 through is_a/part_of; the latter does descend from GO:0045893. The retained DNA-replication regulation claim is limited to the population response. It does not assert per-cell replication control. WST-1 instead fails to measure the cell-size increase meant by GO cell growth; these are different readout/definition comparisons. Iron-homeostasis and tight-junction-assembly uncertainties concern specific claims, not whether a source could be opened. GO:0060586 concerns extracellular body fluids and is not substituted for intracellular iron solely on the basis of hepcidin induction.
 
-The single core uses BMP receptor binding as its molecular facet, alongside BMP signaling and positive SMAD signaling regulation. These two processes are not strict ancestors of one another. BMP receptor binding is not asserted to be an ontology descendant of cytokine activity. Cytokine activation remains explicit; growth-factor activity remains contextual because mitogenic responses vary between cell systems.
+The single core uses cytokine activity, a receptor-ligand activity, alongside BMP signaling and positive SMAD signaling regulation. Receptor recognition is its mechanism, not a separate duplicated core. This follows Decision 4 in the current [ligand guidance](https://github.com/ai4curation/ai-gene-review/blob/34bc185a94094f323d3cafc3bab373a75363d819/projects/LIGANDS_IN_SIGNALING.md). The three generic-binding replacements retain the experimentally supported BMP-receptor partner class. The two core processes are not strict ancestors of one another; growth-factor activity remains contextual.
 
 The literal has_input GDF2 extensions describe input to the signaling process. They do not assert self-binding, and no source defect is inferred merely from the matching subject accession.
 
 Source acquisition and validation outcomes belong to the evidence archive and append-only native history. The historical JSON is retained once alongside its YAML successor to preserve the original journal link and complete provenance.
+
+GO:0032924 is defined by an extracellular ligand engaging an activin receptor and downstream signaling. It is not restricted to activin-family ligands. The current official definition and the ActRIIA perturbation result support the retained pathway assignment.
