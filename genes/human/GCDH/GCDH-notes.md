@@ -93,3 +93,7 @@ All prior journal text, generated hypothesis artifacts, original review objects 
 ## 2026-11-04 — Process specificity and resolved assay scope
 
 The original protocol now resolves the beta-oxidation citation’s assay scope; the two associated process judgments are marked over-annotated. The separate rat-derived broad oxidation claim retains its uncertainty. Crotonyl-CoA formation remains a direct product-forming role: the ontology explicitly includes comparable amino-acid-catabolic intermediates in fatty-acyl-CoA biosynthesis. Amino-acid and acyl-CoA parent terms are refined through verified descendants, with lysine, hydroxylysine and tryptophan scope preserved. The four previous excerpts and all original machine fields remain unchanged.
+
+## 2026-11-05 — Broad-process redundancy and oxidation scope
+
+Acyl-CoA metabolism is true but already entailed by the retained, more specific product-forming process, so its judgment becomes TOO_GENERAL. The separate rat-derived oxidation context remains unresolved after considering the selected additional primary literature. Its broader scope is not decided by overreach of the iterative beta-oxidation child. Direct crotonyl-CoA production, the single catalytic core, both natural products and all original contexts remain unchanged. One short introductory clause supplements the inherited process rationale without repeating or replacing the existing assay excerpt.
