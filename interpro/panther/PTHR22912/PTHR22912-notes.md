@@ -9,3 +9,10 @@ The full native locus study PMID:10368162 identifies AcoL's putative FAD-binding
 SF219 was added only to the existing GO:0004148 and GO:0050660 applicability lists and documented as a subfamily with its exact representative. The existing SthA distinction and all other accepted subfamilies remain intact. The primary does not report purified Bacillus AcoL catalysis; native acetoin-system association does not prove shared usage by OGDH, PDH or other complexes. The individual gene review preserves this distinction. Family metadata's unchecked LLM description was not used as evidence.
 
 Propagation verification: a targeted live QuickGO query on 2026-10-26 independently confirmed that O34324 has GO_Central IBA rows for both GO:0004148 and GO:0050660 with PANTHER:PTN000530299 in with/from. This explicitly links this leaf to that inherited assertion; it was not inferred merely because AcoL belongs to PTHR22912. The cached PAINT IBD records identify the node and its experimental descendant seeds. Annotation data are used here only to trace the existing inference, not as functional supporting evidence; the primary sequence analysis supplies that evidence. No complete tree reconstruction or universal statement about unobserved SF219 descendants is claimed.
+
+## 2026-11-02 — acetoin/butanediol module pass
+
+- The PTN000530299 (GO:0006103 2-oxoglutarate metabolic process) node stays SOUND for the
+  housekeeping E3s. The acetoin-system E3s AcoL (B. subtilis O34324, SF219; Syntrophotalea
+  Q60154, SF151) inherit it by IBA/TreeGrafter, and both gene reviews now mark that row
+  MARK_AS_OVER_ANNOTATED rather than UNDECIDED.

@@ -16,3 +16,16 @@ condenses putrescine and aspartate β-semialdehyde into carboxyspermidine in
 an NADPH-dependent manner"]
 
 No direct KT2440 PP_2928 enzyme assay is available, so the assignment remains ISS.
+
+## 2026-11-02 (module curation: bacterial_carboxyspermidine_biosynthesis)
+
+- Added verbatim quotes to the two NEW rows and the core function: V. cholerae
+  genetics showing the CANSDH uses putrescine to make carboxyspermidine
+  [PMID:19196710 "it increasingly uses putrescine as a substrate and forms
+  carboxyspermidine, which is then converted to spermidine by CANSDC"] and the
+  comparative-genomics result that CASDH/CASDC orthologues cluster with
+  putrescine-biosynthesis genes [PMID:22025614].
+- The PTHR43796 family review (interpro/panther/PTHR43796/PTHR43796-review.yaml)
+  now records SF2 as the CASDH/CANSDH subfamily, with V. cholerae Q9KRL3
+  (VC_1624; genes/VIBCH/VC_1624) as the experimentally characterized reference.
+- No GOA rows exist for Q88IS1; both annotations remain NEW ISS inferences.

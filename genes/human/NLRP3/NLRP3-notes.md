@@ -185,3 +185,9 @@ Five, each a distinct mechanistic step rather than five names for one thing:
 Deliberately **not** core: molecular sensor activity (see above), bare protein binding (24 IPI
 annotations, MARK_AS_OVER_ANNOTATED), apoptotic process (NAS, a relic of the "Apaf1-like" naming
 era - NLRP3's death modality is pyroptosis), and the entire Th2/transcription cluster.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (GO_REF:0000120, ARBA + SL-0173), EXP (PMID:21124315), IDA (PMID:23582325); all located_in; all stay KEEP_AS_NON_CORE.
+- Recruitment on activation, not residence: [PMID:23582325 "NLRP3 was predominantly cytosolic in untreated, resting BMDMs and localized to the mitochondrial fraction upon activation with nigericin"], via MAVS. Fraction prepared with a kit or by Wieckowski; authors themselves describe the earlier Zhou result as [PMID:23582325 "NLRP3 has been shown to localize to the mitochondrial/MAM fraction upon activation"], so mitochondrion vs MAM is unresolved. PMID:21124315 is abstract-only in cache.
+- No anchor or transit peptide. TRAF3/BRAF precedent: stays at root, no GO:0005741 or GO:0044233 added.

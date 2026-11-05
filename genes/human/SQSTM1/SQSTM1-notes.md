@@ -61,3 +61,10 @@ Action policy applied:
 - bare protein binding GO:0005515 (~55 IPI): KEEP_AS_NON_CORE (uninformative but experimental — never REMOVE).
 - Ensembl ortholog-transfer IEA GO_REF:0000107 (temperature homeostasis, ischemia, brown fat, energy homeostasis, synapse/glutamatergic synapse, sperm midpiece, LTP, mitochondrion, Lewy body): KEEP_AS_NON_CORE (mouse-grounded, peripheral). Mitochondrion IEA over-broad but plausible.
 - GO:0043065 apoptosis (Reactome NRIF TAS), GO:0045944 pos reg transcription (Reactome NRIF), GO:0046578 reg Ras signaling (NAS): indirect/historical, KEEP_AS_NON_CORE.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (GO_REF:0000107, Ensembl projection from mouse Q64337), located_in. No sub-compartment rows. Action stays KEEP_AS_NON_CORE; reason extended to record the check.
+- Projection source: mouse Sqstm1 has one mitochondrion row, a UniProt IDA from PMID:32047033 (QuickGO, 2026-11-03), not circular, no NOT row dropped. In that paper p62 is recruited to depolarised mitochondria [PMID:32047033 "over 80% of VDAC1 WT or K274R-expressing cells showed colocalization of p62/SQSTM1 with the mitochondria when treated with CCCP"]; human data agree [PMID:20098416 "the autophagic adaptor p62/SQSTM1 is recruited to mitochondrial clusters"].
+- UniProt gives no mitochondrial location for human SQSTM1 (autophagosome, cytosol, PML body, late endosome, lysosome...).
+- Outcome: root only. Recruited cargo-receptor pool on ubiquitinated outer-membrane proteins (TRAF3/BRAF precedent); no anchor or transit peptide, so GO:0005741 not added.

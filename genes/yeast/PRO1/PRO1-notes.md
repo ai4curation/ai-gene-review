@@ -7,3 +7,15 @@
 - Moonlighting claim: GK activity required for ribophagy, genetic interaction with UBP3 [PMID:27442630 "indicating that GK activity is indispensable for ribophagy"]; abstract-only, mechanism unknown (may be via proline/metabolite). Kept as non-core.
 - IPI with HSP82 from Hsp90 interactome screen [PMID:15766533]; uninformative protein binding.
 - RNA binding IEA is InterPro2GO from the PUA domain only; no evidence of RNA binding for any ProB.
+
+## 2026-11-02 completion pass (module bacterial_glutamate_to_p5c_biosynthesis)
+
+- Literature search: cached publications for every GOA reference were read
+  (full text where `full_text_available: true`), together with the SGD
+  description (`PRO1-deep-research-sgd.md`). No other deep-research provider
+  file exists and no provider API keys were available in this session.
+- Cytoplasm rows reworded: the high-throughput assays resolve "cytoplasm", which
+  is correct; cytosol is carried separately by the targeted GFP IDA.
+- Cofactor/co-substrate binding rows (ATP binding for PRO1, NADP binding for PRO2)
+  are KEEP_AS_NON_CORE, matching the E. coli and P. putida proB/proA reviews.
+- PUA-derived RNA binding IEA changed to REMOVE, matching the E. coli and P. putida proB reviews [PMID:16337196 "We propose that the PUA domain modulates the function of the AAK domain"].
