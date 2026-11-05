@@ -272,14 +272,24 @@ resolution** to it:
   correct and surface-consistent and the subdomain simply adds resolution the gene
   does not yet carry. The generic rows (often several, from independent EXP/IEA/
   Reactome sources) stay `ACCEPT`, and the subdomain is a `NEW` row. Examples: **CA9**
-  (bare `GO:0005886` kept, `NEW GO:0009897` external side for the ectoenzyme) and
+  (bare `GO:0005886` kept, `NEW GO:0009897` external side for the ectoenzyme),
   **GUCY2C** (four `GO:0005886` rows kept, `NEW GO:0016324` apical plasma membrane
-  for the brush-border receptor).
+  for the brush-border receptor) and **MUC16** (the IEA PM row kept `ACCEPT`, `NEW
+  GO:0016324` apical PM added).
 
 So the test is not "one location vs two" — an `is_a` subdomain such as apical or
 external-side PM is still inside the generic PM, yet is recorded `ACCEPT`+`NEW`. The
-test is **does the specific term correct a wrong/empty generic (→ `MODIFY`) or add
-surface detail to a correct one (→ `ACCEPT`+`NEW`)**.
+sharp discriminator is **what each row's own evidence can resolve**: `MODIFY` when
+the same evidence that supports the generic row already fixes the specific term (the
+lipid anchor, the TM topology, the contact-site mechanism — so the generic row is
+simply refined, and leaving it unrefined would misstate the location, as for the
+inner-leaflet and contact-site sets); `ACCEPT`+`NEW` when the generic rows rest on
+evidence that cannot resolve the subdomain (IBA/IEA/HDA family or proteome calls)
+while the subdomain is established by its own, independently-cited evidence (CA9's
+`NEW GO:0009897` is IDA-grounded beside IBA/IEA/HDA generic rows). Refining those
+generic rows would overstate what their evidence shows, so they stay `ACCEPT` and
+the resolved subdomain is added as `NEW`. The "correct vs wrong/empty generic"
+reading above is the same call stated by outcome rather than by evidence.
 
 The **stable_surface_attachment** set is already handled by the same
 specific-term-first logic and needs no extensions: C3 carries `cell surface`
