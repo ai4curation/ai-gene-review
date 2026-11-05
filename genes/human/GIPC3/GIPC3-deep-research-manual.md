@@ -13,7 +13,7 @@ ORF 54149 has partial DNA identification. Three method projections (MI:0397/MI:1
 
 ## MYO6 binding and orthology
 
-Table S1 identifies mouse GIPC3 constructs; HeLa is the host. Purified pulldown establishes MYO6 recognition; MYO18A mapping uses cellular NanoSPD/deletion assays. Simultaneous bridging and force transmission remain models. Results describe an HA tag, whereas purified-protein Methods specify MBP; that discrepancy is retained.
+Mouse constructs bind MYO6 in purified pulldowns and MYO18A in cellular assays. Simultaneous force coupling remains a model. Results report HA tagging; Methods specify MBP.
 
 Original locators: [final article](https://pmc.ncbi.nlm.nih.gov/articles/PMC10234109/), MYO6 Results, purification/pulldown Methods, Figure 3 and supplementary Table S1 (page 9). Other supplementary panels were not inspected.
 
@@ -24,7 +24,9 @@ The [official Ensembl orthology response](https://rest.ensembl.org/homology/id/h
 | Human Q8TF64 | ENSG00000179855.10 | ENSP00000493901.2 |
 | Mouse Q8R5M0 | ENSMUSG00000034872.7 | ENSMUSP00000049236.6 |
 
-This is the orthology basis for ISO; it is separate from direct biochemical evidence and does not establish a human assay. The current mouse GO snapshot contains ND roots, so the proposal uses the original experiment rather than an existing donor GO annotation. [GO:0070853](https://www.ebi.ac.uk/QuickGO/term/GO:0070853) denotes myosin VI binding. No separate adaptor, biological-process or localization annotation is proposed.
+This verifies orthology, not direct human activity. The proposed [GO:0070853](https://www.ebi.ac.uk/QuickGO/term/GO:0070853) ISO annotation requires prior mouse IPI curation. The retained donor snapshot has ND roots only. The [GO annotation guide](https://pmc.ncbi.nlm.nih.gov/articles/PMC3706743/), WITH/FROM section, calls for an experimental donor annotation; changing ISO to ISS would not resolve that omission. The current [GORULE:0000038](https://github.com/geneontology/go-site/blob/master/metadata/rules/gorule-0000038.md) is proposed, report-only and soft, not a hard validation gate. The prerequisite here is a conservative curation ordering.
+
+Mouse localization is not directly established in human hair cells. Broader myosin binding would add no independent GO coverage.
 
 ## Human genetics and products
 
@@ -32,4 +34,4 @@ This is the orthology basis for ISO; it is separate from direct biochemical evid
 
 [PMID:21660509](https://pmc.ncbi.nlm.nih.gov/articles/PMC3303183/) reports seven human variant families, six with LOD scores above 3. Original Methods and Table 1 concern clinical evaluation, linkage and sequencing; no construct assay was performed. Mouse and GIPC1 mechanisms in its Discussion are cited background.
 
-[PMID:11836571](https://doi.org/10.3892/ijo.20.3.577) remains abstract-only: human fetal-lung cloning and RNA expression establish identity, while related-protein signaling examples do not establish GIPC3 pathways. The official human record specifies one 312-residue product. Engineered mouse deletions and patient variants are not additional natural products.
+[PMID:11836571](https://doi.org/10.3892/ijo.20.3.577) remains abstract-only: human fetal-lung cloning and RNA expression establish identity, while related-protein signaling examples do not establish GIPC3 pathways. The official human record specifies one 312-residue product; its AAC24304.1 warning concerns a separate erroneous genomic prediction. Engineered mouse deletions and patient variants are not additional natural products.
