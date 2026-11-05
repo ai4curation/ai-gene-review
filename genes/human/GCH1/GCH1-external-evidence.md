@@ -22,3 +22,11 @@ The [Human Protein Atlas GCH1 page](https://www.proteinatlas.org/ENSG00000131979
 The official Reactome graph was checked through every relevant component edge. R-HSA-1474146 uses catalyst 1474128, human decamer 1474144, dimer 1474143 and GCH1 entity 1474127, resolving to P30793 residues 1–250 in cytosol. R-HSA-1474158 contains the same target in input/output complexes. Its inhibitory catalyst 9959889 instead resolves through 1474155/1474159 to P30047 GCHFR. These are model-supported locations, not newly inspected microscopy experiments.
 
 The exact PANTHER19.0 source URLs, target path and sequence hashes are in [the evidence inventory](GCH1-source-evidence.yaml). The unqualified inherited review is preserved unchanged through [the historical archive](GCH1-context-archive.json); its absent qualifiers remain unknown.
+
+## LPS endpoints and complex specificity
+
+[PMID:7678411, indexed original](https://pdfs.semanticscholar.org/4ce7/a625a2788a854c08778b200a06d1e4f9774e.pdf?skipShowableCheck=true) Methods/Results describe HUVEC passages 3–8, 24-hour enzyme/pterin measurements and increased activity after LPS. Indexed dose typography is ambiguous; no figure pixels were inspected. The separate [PMID:15604419 Results](https://doi.org/10.1161/01.RES.0000153669.24827.DF) report absent protein induction, with data not shown. Endpoint differences do not explain the discrepancy. UniProt's collective induction bibliography does not override either experiment.
+
+[GO:0034615 GCH1 complex](https://www.ebi.ac.uk/QuickGO/term/GO:0034615) represents the catalytic assembly, with verified is_a paths to protein-containing complex through catalytic complex and intracellular protein-containing complex. Human homodecamer structures support this refinement; GFRP binding does not require inventing another complex term.
+
+[PMID:17704208](https://pubmed.ncbi.nlm.nih.gov/17704208/) is available here as an authentic abstract: it distinguishes laminar from oscillatory shear and CK2 alpha-prime from the separate astrocyte alpha-subunit pair. Its phosphorylation endpoint is not an additional direct interaction assay for P68400. Full Methods were not inspected.
