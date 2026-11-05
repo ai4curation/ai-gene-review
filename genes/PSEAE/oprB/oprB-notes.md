@@ -12,8 +12,10 @@ provider was used.
   carbohydrate-selective outer-membrane porin; Pfam PF04966 OprB, InterPro
   IPR007049 Carb-sel_porin_OprB, TCDB 1.B.19.1.1, PANTHER PTHR37944 "PORIN B".
   Signal peptide 1-31 confirmed by N-terminal sequencing (UniProt, PMID:8132494).
-- Wylie and Worobec 1995 (PMID:7768797; abstract only in the cache; the PubMed
-  MCP returned no full text for PMC176988):
+- Wylie and Worobec 1995 (PMID:7768797; abstract only in the cache; full text
+  supplied by the user and read 2026-11-05: whole-cell radiolabelled uptake in
+  oprB interposon mutant, complemented and overexpressing strains, no assay on
+  purified OprB, so the PseudoCAP IDA should be IMP; defect CONFIRMED):
   - [PMID:7768797 "Using interposon mutagenesis, we have generated strains of
     Pseudomonas aeruginosa which lack or overexpress the substrate-selective OprB
     porin of this species."]
@@ -52,7 +54,7 @@ a reasonable family-level claim.
 
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
-| PTN002209977 | GO:0008643 carbohydrate transport | 1 (sole) | 10 (5 taxa) | GO:0008643, IDA, PMID:7768797 (PseudoCAP) | SOUND | Uptake of glucose, mannitol, fructose and glycerol (not arginine) tracks OprB loss and overexpression; OprB is the channel. Evidence is better coded IMP. The node term is a general family-level property of OprB-family carbohydrate-selective porins and suits this small clade. |
+| PTN002209977 | GO:0008643 carbohydrate transport | 1 (sole) | 10 (5 taxa) | GO:0008643, IDA, PMID:7768797 (PseudoCAP) | SOUND | Uptake of glucose, mannitol, fructose and glycerol (not arginine) tracks OprB loss and overexpression; OprB is the channel. Evidence should be IMP (full text checked). The node term is a general family-level property of OprB-family carbohydrate-selective porins and suits this small clade. |
 
 Defects filed: PSEUDOCAP WRONG_EVIDENCE_CODE (IDA -> IMP, CHECK) on the
 experimental row. No GO_CENTRAL defect.
