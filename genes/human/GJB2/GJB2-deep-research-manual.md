@@ -4,15 +4,18 @@ Connexin-26 supplies the subunits of an intercellular channel. Its single channe
 
 ## Selected primary evidence
 
-The review holds the short verbatim anchors; this page gives their assay context without repeating them. Full-cache availability and actual reading scope are separate: selected original sections are not a claim to have inspected every figure or supplement.
+Source excerpts appear in the review; the separately accessed calcium-wave passage is reproduced here and cited from its annotation. Full-cache availability and actual reading scope are separate: selected original sections are not a claim to have inspected every figure or supplement.
 
-- [PMID:12767933](https://pubmed.ncbi.nlm.nih.gov/12767933/): accessible abstract and publisher fragments distinguish human pIRES/EYFP constructs from stable mouse expression. Full Methods remain unavailable.
-- [PMID:21094651](https://pmc.ncbi.nlm.nih.gov/articles/PMC3026138/), Results, functional analysis and Methods: WT human Cx26 was tested in paired Xenopus oocytes and HeLa cells; M34A/deletion preparations are separate. The quoted assembly clause includes WT and mutant GFP-4C fusions. Alexa598/568 labels conflict in the text; no wavelength is silently corrected.
-- [PMID:16849369](https://pubmed.ncbi.nlm.nih.gov/16849369/): selected original Methods/Results distinguish human WT and M34T HeLa constructs, including bicistronic and fluorescent fusions. WT calcium-signal experiments controlled extracellular ATP; variant membrane targeting is not proof of normal function.
+- [PMID:12767933](https://pubmed.ncbi.nlm.nih.gov/12767933/): abstract/publisher fragments distinguish human pIRES/EYFP constructs from stable mouse expression.
+- [PMID:21094651](https://pmc.ncbi.nlm.nih.gov/articles/PMC3026138/), functional Results/Methods: human WT assays used paired Xenopus oocytes and HeLa cells. Plaque imaging includes WT/mutant GFP-4C constructs; M34A/deletion structural preparations are distinct. Conflicting Alexa598/568 labels remain unresolved.
+- [PMID:16849369](https://pmc.ncbi.nlm.nih.gov/articles/PMC2829448/), Results, “Intercellular calcium waves”: in human WT-expressing HeLa monolayers, mechanical stimulation was “consistently followed by the intercellular spreading of a calcium wave”. Extracellular apyrase controlled ATP-mediated effects. Selected Methods distinguish bicistronic/fused constructs and WT/M34T; this original passage was accessed separately from the abstract-only cache.
 - [PMID:17551008](https://pubmed.ncbi.nlm.nih.gov/17551008/): selected original text concerns Sf9-expressed human M34A with a C-terminal extension and reconstituted membrane crystals.
 - [PMID:19340074](https://pubmed.ncbi.nlm.nih.gov/19340074/): authentic abstract and official supplementary text were read, with topology/interface panels inspected. Main Methods were unavailable.
 - [PMID:26753910](https://pubmed.ncbi.nlm.nih.gov/26753910/), selected Results/Methods: human C211S/C218S-His6 protein was expressed in Sf9 and purified from mixed membranes. Calcium contacts are structural observations; electrostatic permeation effects also rely on computation.
 - [PMID:19384972](https://pubmed.ncbi.nlm.nih.gov/19384972/): only the authentic abstract was accessible. Tagged WT/variant findings do not identify the uninspected host, tag position or images.
+
+- [PMID:17660464](https://pubmed.ncbi.nlm.nih.gov/17660464/), dye-transfer Methods/Results and Figure 4 caption: WT-Cx26-EGFP in HeLa supported Lucifer-yellow/neurobiotin coupling; V84M made plaques without transfer. This is functional channel evidence, separate from promoter-reporter assays. Figure pixels and supplements were not inspected.
+- [PMID:19864490](https://pubmed.ncbi.nlm.nih.gov/19864490/), Results on consortin perturbation and Methods: mouse recombinant and rat stable-expression Cx26 preparations are distinct. Cx26 is cargo; intracellular accumulation does not establish ERGIC localization. Knockdown did not significantly reduce Cx26 surface plaques. Selected text was read without figure-pixel or supplement inspection.
 
 ## Interactome and product limits
 
@@ -100,7 +103,7 @@ Raw indices refer to the dated exact source objects in the archive. Forecast ind
 | 49 | 61 | GO:0016264 | GO_REF:0000033 | ACCEPT |
 | 50 | 62 | GO:0016264 | PMID:12767933 | ACCEPT |
 | 51 | 65 | GO:0048839 | GO_REF:0000033 | UNDECIDED |
-| 52 | 66 | GO:0055085 | PMID:12767933 | KEEP_AS_NON_CORE |
+| 52 | 66 | GO:0055085 | PMID:12767933 | ACCEPT |
 | 53 | 68 | GO:1990349 | GO_REF:0000033 | ACCEPT |
 | 54 | 71 | GO:1990349 | GO_REF:0000107 | ACCEPT |
 | 55 | 69 | GO:1990349 | PMID:12767933 | ACCEPT |
