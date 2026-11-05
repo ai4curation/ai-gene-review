@@ -11,14 +11,16 @@ Swiss-Prot reactions.
 
 **Filed (2026-11-05):**
 - [geneontology/go-ontology#32884](https://github.com/geneontology/go-ontology/pull/32884): PR with
-  batch 9 and items 1–4 below.
+  batch 9 and items 1–4 below. **Closed unmerged** (too large, and not yet backed by
+  gene reviews); to be resubmitted as small, review-backed PRs.
 - [geneontology/go-ontology#32882](https://github.com/geneontology/go-ontology/issues/32882):
   MraY/MurG definitions (item 7b).
 - [geneontology/go-ontology#32883](https://github.com/geneontology/go-ontology/issues/32883): NTR for
   preQ1 Tgt, EC 2.4.2.29 (item 8). E. coli Tgt's own IDA is on the queuine term, so this is a missing
   GO term first; the IPR004803 and UniRule fixes follow from it.
 - [geneontology/go-annotation#6646](https://github.com/geneontology/go-annotation/issues/6646):
-  ThiI InterPro2GO (item 9).
+  ThiI InterPro2GO (item 9). Backed by the reviews genes/ECOLI/thiI, genes/BACSU/thiI and
+  genes/SHESA/thiI, which record it as a `source_defects` entry on the GO:0004810 row.
 
 The remaining items are drafts awaiting approval.
 The GO edits themselves are staged as rows in [`../rhea2go.sssom.yaml`](../rhea2go.sssom.yaml).

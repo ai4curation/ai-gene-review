@@ -87,6 +87,21 @@ With the staged rows counted ([`projected_coverage.py`](completeness/projected_c
 The open set is a long tail averaging about 4 entries per reaction. Candidate upstream issues,
 none filed yet, are in [`completeness/GO-FOLLOWUPS.md`](completeness/GO-FOLLOWUPS.md).
 
+**Rules for GO PRs** (set by the project lead, 2026-11-05, after
+[geneontology/go-ontology#32884](https://github.com/geneontology/go-ontology/pull/32884)
+was closed as too large):
+
+1. **Small PRs.** One coherent unit a reviewer can check in a sitting: one reaction family,
+   one corrected term, or a handful of xrefs.
+2. **The PR description carries the evidence.** For each RHEA xref: the reaction equation
+   (a reaction figure or rendered equation where possible), the GO definition it is
+   compared with, and why the predicate is exact or narrow.
+3. **Backed by gene reviews.** Every mapping in a PR is backed by a merged or open
+   ai-gene-review review of at least one Swiss-Prot enzyme carrying the reaction, linked
+   from the PR.
+
+Staged batches 9 and 10 stay here until they can be split and backed this way.
+
 **Partial-reaction policy.** A half-reaction of a multi-step enzyme gets the GO term that describes
 its own chemistry (often a class term), never `broadMatch` to the overall activity, which would be
 a part-of claim rather than is-a. Such rows have comments starting with `PARTIAL REACTION:`, so the
