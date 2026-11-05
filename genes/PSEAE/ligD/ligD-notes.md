@@ -43,10 +43,37 @@ Other IBDs at this node that ligD receives but does not seed:
 - GO:0006269 DNA replication, synthesis of primer (seed P9WNV3 only, MTBBASE
   IDA PMID:16023671): LigD Pol has in vitro primase-like activity, but LigD acts
   in NHEJ DSB repair, not chromosomal replication. The node term does not suit
-  the clade. MARK_AS_OVER_ANNOTATED with a GO_CENTRAL CHECK (SUSPECTED: the
-  Mtb paper was not read).
+  the clade. MARK_AS_OVER_ANNOTATED with a GO_CENTRAL CHECK (now PROBABLE
+  after the tree check below; the Mtb paper was still not read).
 
-No PSEUDOCAP defects. One GO_CENTRAL defect (GO:0006269, SUSPECTED).
+No PSEUDOCAP defects. One GO_CENTRAL defect (GO:0006269, PROBABLE).
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN001627042 in PTHR42705 fetched with
+`projects/PSEUDOCAP/panther_tree.py node PTN001627042 --depth 5`. The node is a
+**SPECIATION** node (LUCA), 15 leaves, PTHR42705:SF2 12 + SF3 3.
+
+| Child node | Event | Leaves | Subfamilies | Contents | Verdict |
+|---|---|---|---|---|---|
+| PTN005127089 | SPECIATION (Eukaryota) | 2 | SF2 | *Monosiga* MONBRDRAFT_36321 "DNA ligase D", *Gossypium* LOC107941224 "DNA ligase (ATP)" | LigD-type ligase |
+| PTN000048875 | SPECIATION (Eubacteria) | 13 | SF2 10, SF3 3 | the two clades below | LigD-type ligases |
+| &nbsp;&nbsp;PTN008085115 | SPECIATION (Terrabacteria) | 7 | SF2 4, SF3 3 | PTN000048869 (DUPLICATION, 6: *Streptomyces* SCO5308/SCO6709/SCO6498 + **Mtb LigD P9WNV3**), **B. subtilis LigD O34398** | NHEJ LigD + *Streptomyces* ligase paralogs |
+| &nbsp;&nbsp;PTN005127091 | SPECIATION (Proteobacteria) | 6 | SF2 | *Bradyrhizobium* bll6773; PTN005127092 (Gammaproteobacteria, 5: *Coxiella* CBU_1934, two *Xanthomonas* ligases, and PTN005127093 HORIZ_TRANSFER with *Ricinus* RCOM_0053280 and **PAO1 LigD Q9I1X7**) | NHEJ LigD |
+
+Verdict: the clade is **homogeneous** - every leaf is a LigD-type or
+ATP-dependent DNA ligase, the two fully named ones (Mtb, B. subtilis) are
+bifunctional NHEJ proteins, and there is no replicative primase or DnaG-type
+enzyme anywhere below the node. So the concern is not a node-placement problem
+that a narrower clade would solve: GO:0006269 is the wrong kind of term for the
+whole family, and the fix is to remove the IBD rather than move it. The two
+activity IBDs at the same node (GO:0003910, GO:0003887) and the GO:0006303 NHEJ
+IBD do suit the clade and already cover what the primase assay shows.
+
+Confidence raised SUSPECTED -> PROBABLE: the tree is primary data and settles
+that relocation is not the remedy, but whether the Mtb seed paper
+(PMID:16023671) describes something genuinely replicative was not checked, and
+only reading it would settle that.
 
 ## Review decisions
 

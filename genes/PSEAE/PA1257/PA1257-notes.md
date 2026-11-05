@@ -43,8 +43,38 @@ L-cystine transport by IBA from PTN000770175, whose only seed for both terms is 
 binding-protein-dependent systems substrate choice is set largely by the periplasmic binding
 protein, which differs between operons; the cystine IBD therefore probably spans permeases of
 different specificity. No assay has tested PA1257 with cystine, so this is not a refutation:
-both rows are MARK_AS_OVER_ANNOTATED with a GO_CENTRAL CHECK defect, SUSPECTED, recorded on
-the GO:0015184 row.
+both rows are MARK_AS_OVER_ANNOTATED with a GO_CENTRAL CHECK defect, now CONFIRMED after the tree
+check below, recorded on the GO:0015184 row.
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN000770175 in PTHR30614 fetched with `projects/PSEUDOCAP/panther_tree.py node
+PTN000770175 --depth 5` and `--contains`. The node is a **SPECIATION** node (Proteobacteria),
+18 leaves, all PTHR30614:SF0.
+
+| Child node | Event | Leaves | Subfamilies | Contents | Verdict |
+|---|---|---|---|---|---|
+| PTN002826365 / PTN002826366 / PTN001577545 | LEAF | 1 each | SF0 | *H. pylori* HP_0939, *N. meningitidis* NMB0788, *G. sulfurreducens* GSU0799 ("amino acid ABC transporter permease") | specificity unknown |
+| PTN002826367 | DUPLICATION | 2 | SF0 | *Bradyrhizobium* blr2225, blr3310 | specificity unknown |
+| PTN000770168 | SPECIATION (Gammaproteobacteria) | 13 | SF0 | the four clades below | mixed |
+| &nbsp;&nbsp;PTN008625440 | HORIZ_TRANSFER | 4 | SF0 | *B. subtilis* TcyB, *B. cereus* BC_0873 (cystine), *S. aureus* SAOUHSC_02698, *H. influenzae* HI_1079 | cystine for the two named |
+| &nbsp;&nbsp;PTN008625441 | HORIZ_TRANSFER | 2 | SF0 | *B. subtilis* YxeN, *V. cholerae* VC_0009 | specificity unknown |
+| &nbsp;&nbsp;**PTN002413080** | DUPLICATION | 3 | SF0 | **PA1257, PA1258, PA0313** (PA0313 = YecS-like L-cysteine system permease) | hydroxyproline operon for PA1257/PA1258 |
+| &nbsp;&nbsp;**PTN002024099** | SPECIATION (Enterobacteriaceae) | 4 | SF0 | *E. coli* TcyL (the seed), *Salmonella* YecS and STM1636, *Yersinia* YecS | cystine/YecS throughout |
+
+Verdict: the earlier concern holds and is now CONFIRMED on primary data. The node is not a clade of
+cystine permeases: it mixes permeases of several specificities across two horizontal transfers and
+three lineage-specific duplications. `--contains P0AFT2,Q7CQB5,A0A380PDF6,Q8ZPA0` returns
+PTN002024099, i.e. every cystine/YecS-named enterobacterial member sits in that one 4-leaf clade, so
+the cystine-specific support stops there. `--contains P0AFT2,P42200` and `--contains P0AFT2,Q9I6H8`
+both return the whole 13-leaf PTN000770168, confirming that the other cystine-named leaves (*B.
+subtilis* TcyB, PAO1 PA0313) are not monophyletic with TcyL and so cannot be gathered into a single
+narrower cystine node. `--contains Q9I486,Q9I487` returns PTN002413080, the *Pseudomonas* duplication
+that produced the hydroxyproline permeases.
+
+Recommendation recorded in the defect: move the GO:0015184 / GO:0015811 IBDs down to
+**PTN002024099**, and if a term is wanted at PTN000770175 use GO:0015424 ABC-type amino acid
+transporter activity (plus GO:0006865 for the process), which the node's composition supports.
 
 ## Annotation decisions
 

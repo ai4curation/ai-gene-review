@@ -32,3 +32,19 @@ PTN002446181 GO:0015627 (XcpV/GspI seed): 49 proteins; T2SS-named=14, T4P/MSHA/T
   split, so T2SS terms are propagated to type IV pilus minor pilins.
 
 Caveat: classification is by name only and does not establish function.
+
+## Correction, 2026-11-05: the GspI/PilV reading above is wrong
+
+The last bullet was written from the QuickGO leaf list. The PANTHER tree itself
+(`projects/PSEUDOCAP/panther_tree.py node PTN002446181`) shows PTN002446181 is
+the root of PTHR38779, a SPECIATION node over 12 reference leaves that are all
+subfamily SF2; no PilV or MshD leaf is in the tree. The extra proteins counted
+above, NGO_0453 among them, are non-reference members grafted to the family by
+sequence, so the "GspI/PilV split" was a naming artefact of counting leaves
+rather than reading the topology.
+
+The real fault is narrower: the IBD sits one node above PTN002215342
+(Proteobacteria, 10 leaves), which holds every T2SS-named leaf including XcpV,
+while the root also covers two deep generic prepilins. The xcpV review now asks
+for both IBDs to be moved to PTN002215342, and its defects are CONFIRMED rather
+than SUSPECTED on that basis.
