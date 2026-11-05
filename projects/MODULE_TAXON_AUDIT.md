@@ -454,3 +454,7 @@ PR #5930 completion is now recorded from the actual merge and retained content p
 ## 2026-11-04 — c-di-AMP validation completed
 
 Full just validate-all completed with exit 0 across 10300 reviews: zero errors, 109 advisory ontology-label issues, 51 advisory reference issues, and 27990 best-practice warnings. Ontology/reference warning paths were checked against starting main and remain unchanged. All 54 pathway files with PMID references passed. Scope remains 17 reviews, 89 original rows, 34 raw sources and zero NEW annotations. Publication, independent review, CI and actual merge remain pending.
+
+## 2026-11-04 — c-di-AMP PR #5997 published
+
+PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw sources; zero NEW and two explicit CpaA UNDECIDED claims. Full validation passed on 10300 reviews. Rebase onto f2068f974a preserved all 143 scoped blobs and 65 excluded local files; incoming GCK validation passed. Independent review, CI and actual merge remain pending.
