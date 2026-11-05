@@ -284,17 +284,28 @@ argues a more specific term is supported is the mismatch CLAUDE.md forbids. Only
 a row whose evidence genuinely stops at the generic term stays `ACCEPT`, with the
 subdomain added as a separately-grounded `NEW` row.
 
-**Known deviation to normalize (GUCY2C, MUC16).** Both currently sit in the
-`ACCEPT`+`NEW` form but do *not* meet the test above: each bundles a
-subdomain-resolving quote onto its generic rows (GUCY2C's five `GO:0005886` rows
-share one `supported_by` anchor that includes PMID:11950846 *"targeting of GCC to
-the apical cell surface"*, and the lead row is `EXP`; MUC16's IEA PM row names the
-apical surface), so the reason argues apical while the row stays `ACCEPT`. By the
-per-row rule the evidence-bearing row (the `EXP` row for GUCY2C, the IEA row for
-MUC16) should `MODIFY` to `GO:0016324`, or the apical quote should move to the
-`NEW` row and off the generic ones. The IBA/IEA/Reactome rows that assert
-plasma membrane only at their own level stay `ACCEPT`. This normalization is a
-flagged follow-up, not yet applied.
+**Open policy call — GUCY2C and MUC16 (curation lead to decide).** Both sit in
+the `ACCEPT`+`NEW` form while bundling a subdomain-resolving quote onto their
+generic rows: GUCY2C's five `GO:0005886` rows share one `supported_by` anchor
+that includes PMID:11950846 *"targeting of GCC to the apical cell surface"* (the
+lead row is `EXP`), and MUC16's IEA PM row names the apical surface. There are two
+defensible readings, and the project has not yet chosen between them:
+
+1. **Blanket CLAUDE.md rule** — a row whose own supporting evidence fixes the
+   subdomain should `MODIFY`, so the evidence-bearing row (GUCY2C's `EXP` row,
+   MUC16's IEA row) → `GO:0016324`, or the apical quote moves off the generic
+   rows and onto the `NEW` row.
+2. **`ACCEPT`-at-own-resolution as a sanctioned exception** — for a multi-source
+   CC term the `ACCEPT` is a judgement about what each row's *source* established
+   at its own level (the IBA/IEA/Reactome rows legitimately assert only plasma
+   membrane), not a claim the term is as precise as the biology allows; the
+   apical subdomain is then added as a separate `NEW` row on its own evidence.
+   Under this reading the reasons should say "accepted at the resolution this
+   row's assay supports" rather than "apical is proposed as a more specific term."
+
+Reading 2 is arguably better than the blanket rule for multi-source CC rows, but
+it is a deliberate exception and needs the lead's sign-off before the page states
+it as settled convention. Until then this is flagged, not applied.
 
 The **stable_surface_attachment** set is already handled by the same
 specific-term-first logic and needs no extensions: C3 carries `cell surface`
