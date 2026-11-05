@@ -56,7 +56,7 @@ How the activity relates to the gene's `genes/**/<gene>-ai-review.yaml` (join on
 - [ ] `has input` names the substrate/target-gene/effector/cargo — not a ligand or raw DNA.
 - [ ] Causal edges are direct/indirect as the mechanism warrants, pointing subject→object.
 - [ ] `occurs_in` and `part_of` present where known.
-- [ ] `just gocam-compartments` findings checked: no unexplained unresolved location or non-adjacent direct edge.
+- [ ] Each `just gocam-compartments` lead checked against the evidence, and either flagged with the missing step named or dismissed in `notes`.
 - [ ] Every activity/edge has an ECO code + reference; claims have verbatim support.
 - [ ] Complex activities attributed to the right subunit(s).
 - [ ] `verdict`, any `qc_flags`, and `consistency` recorded for every activity.

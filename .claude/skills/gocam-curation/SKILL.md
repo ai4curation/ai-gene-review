@@ -44,9 +44,10 @@ For each activity, work through these and record the outcome in the
 4. **Complexes** — right active subunit vs complex term.
    → `references/complexes.md`
 5. **Context & evidence** — `occurs_in`, `part_of`, ECO + reference present.
-   Run `just gocam-compartments <model_id>`: every `occurs_in` should resolve to
-   one distinct compartment, and causal edges should join the same or adjacent
-   compartments. → `references/compartments.md`
+   `just gocam-compartments <model_id>` lists leads: `occurs_in` terms that
+   reach no distinct compartment, and causal edges between compartments that do
+   not touch. Check each against the evidence before flagging it.
+   → `references/compartments.md`
 6. **Verdict, QC flags, and consistency with the gene review** — the controlled
    vocabularies and the final checklist.
    → `references/qc-and-consistency.md`
@@ -72,7 +73,7 @@ you hit that case. They map directly onto the schema enums (`GoCamClaimVerdictEn
 
 ```bash
 just seed-gocam-review <model_id>      # one PENDING entry per cached annoton
-just gocam-compartments <model_id>     # location / adjacency findings to fold in
+just gocam-compartments <model_id>     # location / adjacency leads to check
 # ... assess each activity using this skill ...
 just validate-gocam-review gocams/<model_id>/<model_id>-review.yaml
 ```

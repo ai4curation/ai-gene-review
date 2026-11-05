@@ -172,6 +172,49 @@ Indirect edges across compartments can be deliberate summaries ("this
 transcription factor indirectly increases secretion of X"), so the strong signal
 is the direct ones.
 
+## Review leads
+
+The report is a list of leads for GO-CAM reviews. It does not write reviews or
+fill in QC flags. A finding is a question about the model: a reviewer opens the
+model, reads the evidence behind the edge or location, and decides whether there
+is a real problem. Only that judgement goes into a review, as
+`UNRESOLVED_COMPARTMENT` or `NONADJACENT_COMPARTMENTS` with the missing step
+named. A finding the reviewer rejects (a deliberate summary edge, a location the
+evidence really cannot resolve) goes in `notes`, so the next reader knows it was
+checked.
+
+Most useful first are the 81 models with at least one **direct** edge between
+non-adjacent compartments. Only one of them has a review so far. The models with
+the most such edges:
+
+| Model | Title | Direct non-adjacent edges | Example |
+|---|---|---|---|
+| `693b3c0900004859` | ER to Golgi vesicle-mediated transport (*S. pombe*, partial) | 13 | yip1 → erv29 |
+| `66e382fb00002105` | BMP8A role in spermatogenesis via SMAD1, SMAD5 and SMAD9 (human) | 4 | BMPR1A → SMAD5 |
+| `626b20c100000025` | IL9-mediated signaling pathway (human) | 3 | JAK3 → STAT5A |
+| `62b4ffe300003747` | Response to IFN-beta, leading to JAK-STAT activation (human) | 3 | TYK2 → STAT1 |
+| `62d0afa500000298` | Gluconeogenesis 3 (mouse) | 3 | Slc25a12 → Got1 |
+| `645d887900001795` | BMP2 signaling pathway (human) | 3 | BMPR1A → SMAD9 |
+| `663d668500002824` | Activin E signaling pathway (human) | 3 | ACVR1C → SMAD2 |
+| `66e382fb00001232` | BMP4 signaling pathway (human) | 3 | BMPR1A → SMAD5 |
+| `66e382fb00001606` | Hepcidin induction by BMP6 signaling (human) | 3 | ACVR1 → SMAD1 |
+| `66e382fb00001786` | Hepcidin induction by BMP2/BMP6 complex signaling (human) | 3 | BMPR1A → SMAD5 |
+| `6796b94c00004996` | SARS-CoV-2 entry into host cell | 3 | ACAT1 → Spike protein S2 |
+| `69729a3800007453` | protein import into mitochondrial matrix (*S. pombe*) | 3 | tom40 → tim50 |
+
+Many of these follow one pattern: a receptor kinase at the plasma membrane
+directly activates a transcription factor whose activity is placed in the
+nucleus (BMP receptor → SMAD, JAK → STAT). The pattern runs across many models
+from the same curation groups, so it is probably a modelling convention, not a
+string of separate mistakes. One question to the curators settles all of them,
+for example whether the transcription factor's phosphorylation should be a
+cytosolic step with nuclear import modelled separately. A review should raise it
+as that question, not report one defect per model.
+
+Unresolved locations are second priority, because the biology is usually
+obvious. A review deals with them by noting the term that would state the
+location (chromatin → `GO:0000228` nuclear chromosome).
+
 ## Limitations
 
 - The model is topological, not geometric. A membrane protein is placed in its
@@ -192,8 +235,8 @@ is the direct ones.
 
 ## Possible next steps
 
-- Fold the findings into `GoCamReview` stubs: `seed-gocam-review` could
-  pre-fill `UNRESOLVED_COMPARTMENT` / `NONADJACENT_COMPARTMENTS` from this check.
+- Work through the review leads below, writing a GO-CAM review for each
+  model taken up.
 - Report chromatin → nuclear chromosome upstream to the GO-CAM curators and to
   the Noctua form defaults; it is the single largest fixable group.
 - Consider face-aware membrane locations (`cytoplasmic side of plasma membrane`,

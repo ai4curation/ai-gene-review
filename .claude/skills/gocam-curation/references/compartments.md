@@ -2,7 +2,7 @@
 
 Every activity's `occurs_in` should place it in one distinct compartment, and
 causally connected activities should be in the same or adjacent compartments.
-Run the automated check first:
+The automated check finds leads for you to investigate:
 
 ```bash
 just gocam-compartments <model_id>
@@ -14,13 +14,22 @@ extracellular region, plasma membrane, cytosol, nuclear envelope, nuclear lumen,
 and the membrane and lumen of each organelle (plus chloroplast, periplasm and
 the bacterial outer membrane). Background: `projects/GOCAM_COMPARTMENTS.md`.
 
+**A finding is a lead, not a verdict.** Never copy the check's output into a
+review as flags. For each finding, read the model's evidence for that edge or
+location and decide. Record a QC flag only when you agree, and name the missing
+step. When you reject a finding (a deliberate summary edge, a location the
+evidence cannot resolve), say so in `notes` so it is not reopened. When the same
+pattern recurs across models (receptor kinase → nuclear transcription factor),
+treat it as a possible curation convention: raise it once as a question, not as
+one defect per model.
+
 ## Location status
 
 | Status | Meaning | What to do |
 |---|---|---|
 | `RESOLVED` | the term sits in one compartment | nothing |
 | `COARSE` | the term spans several (cytoplasm, mitochondrion, nucleus) | fine when the evidence cannot resolve further; note it if the mechanism fixes the side |
-| `UNRESOLVED` | no path reaches any compartment (chromatin, cytoskeleton, a complex term) | flag `UNRESOLVED_COMPARTMENT`; the report's `hint` gives the usual location and, where one exists, a term that states it (chromatin → `GO:0000228` nuclear chromosome) |
+| `UNRESOLVED` | no path reaches any compartment (chromatin, cytoskeleton, a complex term) | check what the evidence locates; if the location is real but unstated, flag `UNRESOLVED_COMPARTMENT`. The report's `hint` gives the usual location and, where one exists, a term that states it (chromatin → `GO:0000228` nuclear chromosome) |
 | `MISSING` | no `occurs_in` | flag `MISSING_LOCATION` |
 
 `UNRESOLVED` is a finding about the model, not about the biology. The location is
@@ -43,8 +52,9 @@ nuclear lumen (the envelope is between them).
 
 A `NONADJACENT` edge with a **direct** predicate (`directly positively/negatively
 regulates`, `directly provides input for`) is the strong signal: direct action
-needs contact. Flag `NONADJACENT_COMPARTMENTS` on the upstream activity and say
-which step is missing. Typical causes:
+needs contact. Check the cited evidence. If it confirms a skipped step, flag
+`NONADJACENT_COMPARTMENTS` on the upstream activity and name the step. Typical
+causes:
 
 - **Secretion skipped.** CASP1 (cytosol) → IL1B cytokine activity (extracellular
   region) in `59cc772c00000000`: CASP1 cleaves pro-IL-1β in the cytosol; release
