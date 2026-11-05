@@ -4,7 +4,7 @@
 
 ## Human channel assays — PMID:16549784
 
-Human Cx31 expressed in HeLa/Neuro2a cells showed intercellular currents, dye passage and gating; wild-type protein localized at cell contacts. Heterotypic pairing with human Cx26/Cx30/Cx32 differs from mixed-subunit connexons. Cx45 is rodent, with inconsistent rat/mouse labeling. Reporter constructs are engineered reagents. Main text/captions were read; images and supplement were not. ([PMID:16549784](https://pubmed.ncbi.nlm.nih.gov/16549784/)).
+Human Cx31 in HeLa/Neuro2a cells supported coupling, dye passage and gating. Heterotypic pairing is not mixed-connexon assembly; Cx45 species labeling is inconsistent. Reporters are engineered. Main text/captions, not images/supplement, were read. ([PMID:16549784](https://pubmed.ncbi.nlm.nih.gov/16549784/)).
 
 ## Interaction evidence
 
@@ -45,3 +45,44 @@ The actual [PTHR11984 family](https://www.pantherdb.org/panther/family.do?clsAcc
 ## Access limits
 
 For [PMID:9704026](https://pubmed.ncbi.nlm.nih.gov/9704026/), authentic metadata and abstract were read but full original access was unsuccessful. HEK denotes E6/E7 human keratinocytes in that paper; transcript lengths do not establish alternative protein products. Existing NAS assertions are evaluated with independent support without alleging absent experiments.
+## Source excerpts and target records
+
+These are excerpts of the named original sources, not independent experiments performed for this review. Source locations and hashes are in the evidence manifest.
+
+### Human Protein Atlas
+
+The retained [GJB3 subcellular table](https://www.proteinatlas.org/ENSG00000188910-GJB3/subcellular) gives antibody, cell line, RNA nTPM and localization in that order:
+
+```text
+HPA074472
+HaCaT
+94.1
+Vesicles
+Cell Junctions
+
+HPA074472
+A-431
+87.9
+Cell Junctions
+```
+
+The numbers are RNA expression values, not localization confidence or channel activity. The [vesicle dictionary](https://www.proteinatlas.org/humanproteome/subcellular/vesicles) describes punctate cytoplasmic staining without a demonstrated organelle identity. No image pixels were inspected.
+
+### UniProt subunit account
+
+[O75712, SUBUNIT](https://www.uniprot.org/uniprotkb/O75712/entry), with the original ECO:0000250 attribution:
+
+> A connexon is composed of a hexamer of connexins.
+
+This is a curated inference by similarity, not a new human stoichiometry measurement.
+
+### BioPlex target row
+
+The [original 293T network](https://bioplex.hms.harvard.edu/data/BioPlex_293T_Network_10K_Dec_2019.tsv), line 34725 including the header as line 1, contains:
+
+```tsv
+"GeneA"	"GeneB"	"UniprotA"	"UniprotB"	"SymbolA"	"SymbolB"	"pW"	"pNI"	"pInt"
+"2707"	"51449"	"O75712"	"Q9UHG3"	"GJB3"	"PCYOX1"	5.39910554694665e-6	0.0458946405471317	0.954099960347321
+```
+
+This is the measured association used for the PCYOX1 row; it does not establish a direct interface or physiological cargo relationship.
