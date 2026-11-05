@@ -197,9 +197,47 @@ is never assayed and there is no hutI or hutF mutant; histidase is assayed
 directly, so hutH's IMP should be IDA), PMID:7768797 (oprB's evidence is
 whole-cell uptake in mutant and overexpressing strains, so IMP) and
 PMID:9224878 (its Fig. 1 is a pilA mutant twitching assay, so pilA's IMP
-stands and that defect was removed). The PseudoCAP report now stands at 36
-CONFIRMED, 56 PROBABLE and 24 SUSPECTED, and the PAINT report at 6, 56 and
-13.
+stands and that defect was removed). The PseudoCAP report stood at 36
+CONFIRMED, 56 PROBABLE and 24 SUSPECTED at the end of tier 1, and the PAINT
+report at 6, 56 and 13. After tier 2 and the tree check (below) the totals are
+96, 126 and 50 for PseudoCAP and 32, 83 and 1 for PAINT.
+
+### Checked against the tree
+
+Node-level calls were first made from the PAINT leaf list, which says what a node
+reaches but not how the clade is shaped. [`panther_tree.py`](PSEUDOCAP/panther_tree.py)
+now pulls the family's real topology from the PANTHER `treeinfo` service and reports a
+node's event type, its subfamily composition, every leaf, and the smallest clade holding
+a given set of accessions. The trees for 103 of the 105 nodes we filed against were
+fetched this way; the other two (hutH, pfeS) were resolved by hand, and pfeS turned out
+not to sit in the family UniProt assigns it.
+
+Every defect that had been left SUSPECTED pending the tree was re-examined on 2026-11-05.
+The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **32 CONFIRMED,
+83 PROBABLE and 1 SUSPECTED**. The check does three different things:
+
+- **It names the target.** A request to move an IBD can now give the node to move it to:
+  astA's dihydrolase term to PTN000764522 (the node is a duplication whose two children
+  are exactly the AstB and AstA/AruG subfamilies), xcpV's two T2SS terms to PTN002215342,
+  pfeA's colicin receptor to PTN002012591, thrB's homoserine kinase to PTN002326066,
+  hutF's two terms to PTN000138520, PA1257's cystine transport to PTN002024099.
+- **It shows when there is no target.** For fur the family is homogeneous but siderophore
+  production does not track the topology, so the fix is to retype the node term rather
+  than move it. For PA4088 the gene sits in a *Pseudomonas* duplication whose third member
+  is PAO1's own HemL, so no HemL-only subclade exists and the remedy became a leaf-level
+  divergence note. For ligD and aruC the clade is uniform, so the term is either right or
+  wrong family-wide: ligD's became a withdrawal request, and aruC's "move it" half was
+  dropped.
+- **It refutes.** hutI's 52 leaves really are all imidazolonepropionases, so that breadth
+  objection was withdrawn and the defect narrowed to its citation. PA4521's clade is a
+  clean one-ortholog-per-organism group, so the breadth objection was withdrawn entirely
+  and only the unverified seed remains — the one defect still SUSPECTED, waiting on the
+  full text of PMID:9835532. arcA's flagged leaves mostly survived scrutiny: three of four
+  are arginine deiminases whose names lag, leaving one archaeal duplication pair.
+  xcpV is the sharpest case: our own leaf-count analysis had read the node as spanning the
+  GspI/PilV split, but no PilV leaf is in the tree at all — the extra proteins were
+  non-reference members grafted by sequence. That conclusion is corrected in
+  `genes/PSEAE/xcpV/xcpV-bioinformatics/RESULTS.md`.
 
 ### Per-gene verdicts
 
@@ -515,7 +553,8 @@ polysaccharide output and never assays phosphomannomutase.
    (PMID:9466253) has no reference defect, while the similar xcpW and xcpV rows
    (PMID:8331069) do.
 3. Send the PseudoCAP and PAINT reports upstream, starting with the 21
-   withdraw-or-repoint cases.
+   withdraw-or-repoint cases. The PAINT report now names a target node for each
+   relocatable IBD (see "Checked against the tree").
 4. ~~Tier 2 (289 proteins that share each node with other seeds).~~ Done for
    284; the five Xcp/Hxc genes above still need review files.
 5. Reconcile tier-2 inconsistencies between parallel batches: MODIFY versus

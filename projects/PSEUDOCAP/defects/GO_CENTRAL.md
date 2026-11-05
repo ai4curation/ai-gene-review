@@ -130,14 +130,14 @@ PTN002162936 (PTHR34703 root, Mrp/Mnh/Pha subunit G family, 19 GO_Central leaf I
 > Antiport activity requires hetero-oligomeric complexes of all six or seven hydrophobic Mrp proteins (MrpA-MrpG).
 > — PMID:20624916
 
-## 9. OTHER (SUSPECTED, NOT_REPORTED)
+## 9. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000770175
 - **Subject:** UniProtKB:Q9I487
 - **Change:** check GO:0015184 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/PA1257/PA1257-ai-review.yaml`
 
-The IBDs for GO:0015184 L-cystine transmembrane transporter activity and GO:0015811 L-cystine transport at PTN000770175 rest on E. coli TcyL alone and propagate to P. aeruginosa PA1257 (Q9I487). PA1257 is the permease of the PA1256-PA1257-PA1260 ABC system, which Johnson et al. 2008 (PMID:18833300) found necessary for growth on hydroxy-L-proline and induced by it. Please check whether the node contains permeases of different specificity; if so, move the cystine IBDs down to the TcyL subclade, or use the broader GO:0015424 ABC-type amino acid transporter activity at this node. This defect covers the GO:0015811 row as well.
+The IBDs for GO:0015184 L-cystine transmembrane transporter activity and GO:0015811 L-cystine transport at PTN000770175 rest on E. coli TcyL alone and propagate to P. aeruginosa PA1257 (Q9I487). PA1257 is the permease of the PA1256-PA1257-PA1260 ABC system, which Johnson et al. 2008 (PMID:18833300) found necessary for growth on hydroxy-L-proline and induced by it. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05 and confirms that the node spans permeases of different specificity. PTN000770175 is a SPECIATION node (Proteobacteria) with 18 leaves, all PTHR30614:SF0. Its children are three single-organism leaves (H. pylori HP_0939, N. meningitidis NMB0788, G. sulfurreducens GSU0799), a Bradyrhizobium DUPLICATION (PTN002826367, 2 leaves) and a Gammaproteobacteria SPECIATION clade (PTN000770168, 13 leaves). That clade is itself heterogeneous: two HORIZ_TRANSFER subtrees (PTN008625440, 4 leaves, carrying B. subtilis TcyB and B. cereus BC_0873 cystine permeases plus H. influenzae HI_1079; PTN008625441, 2 leaves, B. subtilis YxeN and V. cholerae VC_0009), a Pseudomonas-specific DUPLICATION (PTN002413080, 3 leaves: PA1257, PA1258 and PA0313, the latter annotated as the YecS L-cysteine system permease), and an Enterobacteriaceae SPECIATION clade (PTN002024099, 4 leaves). Every cystine/YecS-named enterobacterial member - the seed TcyL (P0AFT2), Salmonella YecS (Q7CQB5) and STM1636 (Q8ZPA0), Yersinia YecS (A0A380PDF6) - falls inside PTN002024099: `--contains P0AFT2,Q7CQB5,A0A380PDF6,Q8ZPA0` returns exactly that node. The cystine-specific support therefore stops at PTN002024099, while PA1257 sits two duplication events away in a clade whose members include the hydroxyproline permeases. Please move both cystine IBDs down to PTN002024099 and, if a term is wanted at PTN000770175, use the broader GO:0015424 ABC-type amino acid transporter activity (with GO:0006865 amino acid transport for the process), which the mixed composition of the node does support. This defect covers the GO:0015811 row as well.
 
 > Knockouts in these genes affected growth on hydroxy-L-proline as a carbon source, and expression of all three genes was induced by hydroxy-L-proline (Table 2 and 3).
 > — PMID:18833300
@@ -259,14 +259,14 @@ The IBD for GO:0005886 plasma membrane at PTN001953445 (PTHR43117, about 31 leaf
 
 The IBD for GO:0031459 ABC-type glycine betaine transporter activity at PTN001953060 (PTHR43117, about 23 leaf IBAs in 18 taxa) has one seed, P. aeruginosa PA3891 (Q9HXC2), through a PseudoCAP IDA citing PMID:17660277. In that paper PA3891 was only identified as a PAO1 genomic clone that restored growth of a P. syringae opuCA mutant on 0.5 M NaCl with betaine or choline. Uptake and specificity assays were done on the P. syringae DC3000 OpuC transporter (ATPase Q87WH5, PSPTO_4575). The node term is plausible for the clade. Please re-seed the IBD with Q87WH5 if it lies within PTN001953060, or with another experimentally characterised OpuC-type ATPase, so that the node does not rest on complementation evidence alone.
 
-## 19. WRONG_STATEMENT (SUSPECTED, NOT_REPORTED)
+## 19. WRONG_STATEMENT (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000241400
 - **Subject:** UniProtKB:Q9HWU0
 - **Change:** revise "GO:0042286" (see explanation)
 - **Recorded in:** `genes/PSEAE/PA4088/PA4088-ai-review.yaml`
 
-The PAINT IBD of GO:0042286 at PTN000241400 is seeded by E. coli HemL and PA4088. The node also contains PAO1 HemL (PA3977) and a divergent lineage (PA4088, PA5523, B. japonicum blr6632 and blr3552) about 18-31% identical to HemL, versus 66% between HemL orthologs; P. aeruginosa and B. japonicum thus each carry a canonical HemL plus paralogs. If the PA4088 seed is set aside (see the PSEUDOCAP defect on the EXP row), nothing supports GSAM activity for the paralog lineage. Please consider placing the IBD on the canonical HemL subclade, or adding a NOT/loss at the PA4088/PA5523 subclade. Based on pairwise identity, not on the PANTHER tree topology, which was not inspected.
+The PAINT IBD of GO:0042286 at PTN000241400 is seeded by E. coli HemL and PA4088. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN000241400 is a SPECIATION node (Proteobacteria) with 15 leaves, all PTHR43713:SF3, 13 of them named hemL. Its children are three hemL leaves (H. pylori, N. meningitidis, G. sulfurreducens), a Bradyrhizobium DUPLICATION (PTN000241402, 2 leaves: blr6632, blr3552) and a Gammaproteobacteria SPECIATION clade (PTN000241405, 10 leaves). The earlier reading, that PA4088, PA5523, blr6632 and blr3552 form one divergent lineage, is not supported by the tree: PA4088 and PA5523 sit inside a Pseudomonas-specific DUPLICATION (PTN002463962, 3 leaves) whose third member is PAO1 HemL (P48247), and the smallest clade holding PA4088 and E. coli HemL is PTN000241405. There is therefore no HemL-only subclade to move the IBD to, and the node itself is the right home for the GSAM term. What the tree does show is a recent lineage-specific duplication in which one copy kept the hemL name and annotation while PA4088 and PA5523 diverged to about 27% identity and are named only "probable aminotransferase". Please record that divergence on the paralog branches instead: a NOT or loss at PTN002463963 (PA4088) and PTN002463964 (PA5523). PROBABLE rather than CONFIRMED because the topology settles where a correction belongs, not whether PA4088 has lost GSAM activity; the full text of PMID:29684343 (see the PSEUDOCAP defect on the EXP row) could still report an assay.
 
 > | E. coli HemL vs PA4088 | 26.9 |
 > — file:PSEAE/PA4088/PA4088-bioinformatics/RESULTS.md
@@ -320,21 +320,21 @@ The IBD of GO:0071916 dipeptide transmembrane transporter activity at PTN0007666
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA4521/PA4521-ai-review.yaml`
 
-The IBD of GO:0046677 response to antibiotic at PTN002214697 (PTHR38684 AmpE; 7 leaf IBAs in 7 taxa) has a single seed, a PseudoCAP IMP on P. aeruginosa PA4521 citing Langaee et al. 1998 (PMID:9835532), whose abstract reports cloning of ampDE and complementation by ampD only. Whether AmpE is needed for beta-lactamase induction is contested (PMID:2607970 versus PMID:2691840), P. aeruginosa data suggest only an indirect role (PMID:16251318), and the E. coli leaf has no AmpR. Please check the seed and consider withdrawing this phenotype-level IBD; the plasma membrane IBD at the node is sound.
+The IBD of GO:0046677 response to antibiotic at PTN002214697 (PTHR38684 AmpE; 7 leaf IBAs in 7 taxa) has a single seed, a PseudoCAP IMP on P. aeruginosa PA4521 citing Langaee et al. 1998 (PMID:9835532), whose abstract reports cloning of ampDE and complementation by ampD only. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05 and does not support a clade-breadth objection, so that part of the earlier concern is withdrawn. PTN002214697 is a SPECIATION node of 7 leaves, all in subfamily PTHR38684:SF1 and all AmpE orthologs, one per organism, with a single internal speciation (PTN002214702, Enterobacteriaceae, 3 leaves) and no duplication anywhere below it; the node is exactly the gammaproteobacterial AmpE orthology group and both the PA4521 leaf (PTN002446049) and the E. coli AmpE leaf (PTN002214704) hang directly from it. The doubt is therefore entirely about the assertion, not its scope: whether AmpE is needed for beta-lactamase induction is contested (PMID:2607970 versus PMID:2691840), P. aeruginosa data suggest only an indirect role (PMID:16251318), and the E. coli leaf has no AmpR, so a broad phenotype term propagated from one unverified seed may be wrong for every leaf rather than for some of them. Reading the full text of PMID:9835532 to see whether an ampE mutant was assayed is what would settle this; topology cannot. Please check the seed and consider withdrawing this phenotype-level IBD; the plasma membrane IBD at the node is sound.
 
 > The ampD product transcomplemented Escherichia coli ampD mutants to wild-type beta-lactamase expression.
 > — PMID:9835532
 
-## 24. OTHER (SUSPECTED, NOT_REPORTED)
+## 24. OTHER (CONFIRMED, NOT_REPORTED)
 
-- **Record:** PTN001279639
+- **Record:** PANTHER:PTN001279639
 - **Subject:** UniProtKB:Q9HU50
 - **Field:** GO_ID
 - **Change:** check GO:0007165 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA5134/PA5134-ai-review.yaml`
 
-The PAINT IBD for signal transduction on PTN001279639 rests on three seeds. The PA5134 seed cites PMID:24928312, a Staphylococcus aureus CtpA paper (CONFIRMED wrong reference), so UniProtKB:Q9HU50 should be dropped from the WITH/FROM. The other two seeds, B. subtilis CtpB and P. aeruginosa Prc, are sound for their own proteins, but they sit in different CTP subfamilies; placing the term at their common ancestor propagates it to CtpA-type members and to E. coli Prc/Tsp, which have no signalling role on record. Suggest checking whether the term belongs on the CtpB and Prc subfamily nodes instead. SUSPECTED because the full clade membership was not inspected.
+The PAINT IBD for signal transduction on PTN001279639 rests on three seeds. The PA5134 seed cites PMID:24928312, a Staphylococcus aureus CtpA paper (CONFIRMED wrong reference), so UniProtKB:Q9HU50 should be dropped from the WITH/FROM - not because a gene in its own WITH/FROM is circular, which it is not, but because that seed annotation is itself defective. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05 and confirms the scoping problem. PTN001279639 is a DUPLICATION node with 58 leaves spanning three subfamilies (PTHR32060:SF22 9, SF29 2, SF30 47) and exactly two children: PTN004918760 (SPECIATION, Eubacteria, 9 leaves, all SF22 - the Prc/tail-specific protease branch, holding P. aeruginosa Prc Q9HYY3 and, in PTN002078873, E. coli Prc/Tsp P23865) and PTN008644010 (SPECIATION, Eubacteria, 49 leaves, SF29+SF30 - the CtpA branch). The two sound seeds straddle that duplication: `--contains Q9HYY3,P23865` returns PTN000786025 (Gammaproteobacteria Prc, 8 leaves, SF22), while B. subtilis CtpB (O35002) is SF29 in the 2-leaf Bacillus clade PTN002078920 inside PTN008644010. PA5134 is SF30, in the Gammaproteobacteria clade PTN002078922 (6 leaves). The term is therefore asserted at the family root to cover two seeds in different subfamilies, and propagates to all 58 leaves, including the entire SF30 CtpA clade and E. coli Prc/Tsp, for which no signalling role is on record. Please move the term to the clades that support it: PTN000786025 (or PTN004918760) for the Prc lineage and PTN002078920 for CtpB, and remove it from PTN001279639.
 
 ## 25. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
@@ -497,14 +497,14 @@ The IBD of GO:0009276 Gram-negative-bacterium-type cell wall on PTN002019137 (se
 > This analysis identifies AmpD of P. aeruginosa as the cytoplasmic protease for commitment to the cell-wall recycling events and for the reversal of the activation of the antibiotic-resistance pathway.
 > — PMID:23510438
 
-## 37. OTHER (SUSPECTED, NOT_REPORTED)
+## 37. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN005338738
 - **Subject:** UniProtKB:P13981
 - **Change:** check GO:0016990 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/arcA/arcA-ai-review.yaml`
 
-The GO:0016990 arginine deiminase activity IBD at PTN005338738 (23 leaf IBAs, sole seed P. aeruginosa ArcA P13981) is soundly seeded, but the node spans the whole PTHR47271 family. Some leaves are much shorter than canonical ~410 aa ADIs and are not annotated as ADIs: B. subtilis YkgA (O34497, 286 aa, Swiss-Prot "Uncharacterized protein YkgA", DDAH family), Methanosarcina acetivorans Q8TSK4 (335 aa), Saccharolobus solfataricus Q97TX4 (341 aa) and Korarchaeum cryptofilum B1L3J0 (annotated as an N-dimethylarginine dimethylaminohydrolase). B. subtilis 168 uses arginase, not the ADI pathway. Please check whether these pentein-superfamily members belong below the ADI node or need NOT annotations. Not verified by sequence analysis in this review.
+The GO:0016990 arginine deiminase activity IBD at PTN005338738 (23 leaf IBAs, sole seed P. aeruginosa ArcA P13981) is soundly seeded, but the node spans the whole PTHR47271 family and its event is a SPECIATION placed at LUCA, so the IBD asserts arginine deiminase activity as ancestral to all life. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05 and narrows the concern considerably. The node has two children, PTN005338739 (Archaea-Eukaryota, 10 leaves, SF2) and PTN008715727 (DUPLICATION, 13 leaves), the latter splitting into the SF3 clade PTN008715728 (3 leaves, holding the seed P13981 with Bradyrhizobium and Streptomyces ArcA) and the SF2 bacterial clade PTN000978201 (10 leaves). Of the four leaves flagged earlier, three do not survive the check. Methanosarcina acetivorans Q8TSK4 and Halobacterium salinarum F2Z681 are a Euryarchaeota pair (PTN005338745) and both are named arginine deiminase in UniProt, as is Saccharolobus solfataricus Q97TX4, so the "not annotated as ADIs" ground does not apply to them and length alone is weak evidence. B. subtilis YkgA (O34497) is the duplication-free sister of B. cereus ArcA (Q81II1) within the Bacillus node PTN002933241, inside a Bacillales clade (PTN001763879) whose other members are the S. aureus and L. monocytogenes ArcA enzymes; the topology therefore argues that YkgA is an orthologous ADI whose Swiss-Prot name merely lags, not an over-propagation, even though B. subtilis 168 itself uses arginase. What remains is the Korarchaeum cryptofilum duplication pair PTN008230056 (2 leaves), whose members are named N-dimethylarginine dimethylaminohydrolase (B1L3J0) and amidinotransferase (B1L477) and are the only leaves of the node whose names point to a different pentein activity. Please check whether PTN008230056 needs a NOT for GO:0016990, and whether a LUCA-level node is the right place for a substrate-specific pentein activity at all. The Trichomonas vaginalis triplet PTN009208904, named only "amidinotransferase family protein", is not flagged here, since trichomonads do run an arginine dihydrolase pathway. Not verified by sequence or assay in this review.
 
 > The structure exhibits similarity to other arginine-modifying or substituted arginine-modifying enzymes such as dimethylarginine dimethylaminohydrolase (DDAH)
 > — PMID:14701825
@@ -535,14 +535,14 @@ The PTN000764469 IBD of GO:0000256 allantoin catabolic process rests on a single
 > PATHWAY: Amino-acid degradation; L-arginine degradation via ADI pathway.
 > — file:PSEAE/arcC/arcC-uniprot.txt
 
-## 40. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
+## 40. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000208945
 - **Subject:** UniProtKB:P18275
 - **Change:** check UniProtKB:O84379 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/arcD/arcD-ai-review.yaml`
 
-The GO:0043858 arginine:ornithine antiporter activity IBD at PTN000208945 (sole seed P. aeruginosa ArcD P18275, 16 leaf IBAs) is soundly seeded, but it propagates to Chlamydia trachomatis AaxC (O84379, CT_374). The C. pneumoniae ortholog AaxC was shown to exchange L-arginine for agmatine in a decarboxylase-coupled system and to be resistant to L-ornithine. Chlamydiae lack the ADI pathway. Please consider a NOT for the chlamydial subclade, or GO:0043862 arginine:agmatine antiporter activity based on the C. pneumoniae data. The C. trachomatis protein itself was not assayed for ornithine exchange.
+The GO:0043858 arginine:ornithine antiporter activity IBD at PTN000208945 (sole seed P. aeruginosa ArcD P18275, 16 leaf IBAs) is soundly seeded, but it propagates to Chlamydia trachomatis AaxC (O84379, CT_374). The C. pneumoniae ortholog AaxC was shown to exchange L-arginine for agmatine in a decarboxylase-coupled system and to be resistant to L-ornithine. Chlamydiae lack the ADI pathway. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05 and sharpens the request. PTN000208945 is a SPECIATION node at the Eubacteria level with 16 leaves in two subfamilies (SF4 13, SF14 3) and three children: PTN001718796 (Firmicutes, 7 leaves, Clostridium/Staphylococcus/Bacillus arginine-ornithine antiporters and the B. subtilis YvsH group), the single leaf PTN000926691 (C. trachomatis AaxC) and PTN000208950 (Proteobacteria, 8 leaves, holding ArcD at PTN002449614 with its PAO1 paralog PA1194 at PTN002449613, plus Vibrio and the Enterobacteriaceae YdgI clade PTN001718809). There is no chlamydial subclade: C. trachomatis is the only chlamydial representative in the tree and its leaf attaches directly to the annotated node, so the correction must be made at the leaf PTN000926691, either as NOT GO:0043858 or by annotating GO:0043862 arginine:agmatine antiporter activity there. The IBD cannot be relocated instead, because the bacterial arginine-ornithine antiporters it covers sit in both of the other children, whose smallest common clade is PTN000208945 itself. What topology cannot settle is the biology: the C. trachomatis protein itself was not assayed for ornithine exchange, and the call rests on the C. pneumoniae ortholog.
 
 > The chlamydial AaxC transporter was resistant to cadaverine, L-lysine and L-ornithine, which inhibit the E. coli AdiC antiporter.
 > — PMID:18790867
@@ -564,14 +564,14 @@ The PAINT IBD on PTN004744913 asserts GO:0004358 (acetyl-L-ornithine donor, the 
 > Reaction=L-glutamate + acetyl-CoA = N-acetyl-L-glutamate + CoA + H(+)
 > — file:PSEAE/argA/argA-uniprot.txt
 
-## 42. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
+## 42. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000241318
 - **Subject:** UniProtKB:O30508
 - **Change:** check UniProtKB:Q9RW75 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/aruC/aruC-ai-review.yaml`
 
-PTN000241318 (PTHR11986, ArgD/AstC clade) carries an IBD of GO:0006526 L-arginine biosynthetic process whose only seed is P. aeruginosa AruC (O30508). A NOT at PTN001736429 already excludes the PatA putrescine aminotransferases. Other leaves still inheriting the term include LysJ-type [LysW]-aminoadipate semialdehyde transaminases (Q9RW75 Deinococcus radiodurans, A9WB46 Chloroflexus aurantiacus), a diaminobutyrate-pyruvate aminotransferase (Q93S10, Streptomyces coelicolor SCO6279) and the catabolic AstC succinylornithine transaminases (P77581, Q8ZPV2, Q8D0D7). Please check whether the LysJ and diaminobutyrate-aminotransferase subclades should carry NOT annotations for arginine biosynthesis (and for GO:0003992), or whether the IBD should sit on an ArgD-only subnode. This does not affect AruC.
+PTN000241318 (PTHR11986) is a SPECIATION node at the Eubacteria level holding 37 leaves in four subfamilies (SF79 22, SF113 10, SF122 3, SF112 2); topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. It carries an IBD of GO:0006526 L-arginine biosynthetic process whose only seed is P. aeruginosa AruC (O30508). The tree withdraws the "move the IBD" option: biosynthetic acetylornithine aminotransferases sit in every child clade (PTN007555578 Terrabacteria 9 leaves; the Thermotoga, Leptospira, Bacteroides, Rhodopirellula, Aquifex and Dictyoglomus singletons; PTN002279535 Cyanobacteria 3 leaves; PTN002279539 Proteobacteria 17 leaves), so arginine biosynthesis is the plesiomorphic state of the node and no ArgD-only subnode exists. The derived, non-biosynthetic activities are scattered single leaves, which is where any NOT has to go: PTN000241310 (Q9RW75, Deinococcus radiodurans LysJ) and PTN002633799 (A9WB46, Chloroflexus aurantiacus LysJ) lie in different child clades, their smallest common clade being PTN000241318 itself, and PTN000241321 (Q93S10, Streptomyces coelicolor diaminobutyrate-pyruvate aminotransferase) sits in a Streptomyces duplication, PTN002279532, whose third member (Q9L1A4) is a genuine ArgD. A NOT at PTN001736429 (Enterobacteriaceae, 2 leaves) already covers the PatA putrescine aminotransferases. The catabolic AstC leaves do form a clean clade, PTN001736444 (Enterobacteriaceae, 3 leaves), but they should not be negated: AruC itself is the same dual-specificity succinylornithine/acetylornithine aminotransferase and serves both pathways, so an AstC negation would risk the mirror-image error. Please check instead whether NOT GO:0006526 (and NOT GO:0003992) belong at the three leaves PTN000241310, PTN002633799 and PTN000241321. This does not affect AruC.
 
 > this explains the enzyme's dual role in arginine biosynthesis and catabolism
 > — PMID:16593724
@@ -742,7 +742,7 @@ The IBD of GO:1900376 regulation of secondary metabolite biosynthetic process at
 > The A2 and A4 mutants expressed higher levels of siderophores in iron-deficient media and in iron-replete media.
 > — PMID:8885270
 
-## 56. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 56. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002112483
 - **Subject:** UniProtKB:Q03456
@@ -750,7 +750,7 @@ The IBD of GO:1900376 regulation of secondary metabolite biosynthetic process at
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/fur/fur-ai-review.yaml`
 
-The IBD of GO:1900705 negative regulation of siderophore biosynthetic process at PTN002112483 rests only on the PseudoCAP IMP of P. aeruginosa Fur (Q03456, PMID:8885270), which is sound for P. aeruginosa. The 12 leaves include Fur of Neisseria meningitidis (P0A0S8), Helicobacter pylori (O25671) and Coxiella burnetii (Q83C33), bacteria not known to synthesise siderophores, for which the term describes no real process. Consider a node-level term such as negative regulation of DNA-templated transcription or a regulation-of-iron-uptake term, and restrict the siderophore term to leaves (or subclades) of siderophore producers (E. coli, Yersinia, Vibrio, Pseudomonas, Shewanella, Xanthomonas).
+Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN002112483 is a SPECIATION node (Proteobacteria) in PTHR33202 with 12 leaves, all subfamily PTHR33202:SF2 and all bona fide Fur orthologues, and four children: the single leaves PTN002848967 (Helicobacter pylori O25671), PTN002848968 (Neisseria meningitidis P0A0S8) and PTN002112491 (Geobacter sulfurreducens Q74DD7), and PTN002112492 (SPECIATION, Gammaproteobacteria; 9 leaves, containing Coxiella Q83C33, Haemophilus P44561, Shewanella Q8EFN3, Vibrio P0C6C8, Xanthomonas Q8PAL3, P. aeruginosa Q03456 and the Enterobacteriaceae clade PTN002112501 with Salmonella, Yersinia and E. coli). So the IBD of GO:1900705 negative regulation of siderophore biosynthetic process, whose sole seed is the PseudoCAP IMP of P. aeruginosa Fur (Q03456, PMID:8885270) and which is sound for P. aeruginosa, is not a family-heterogeneity problem: the family is homogeneous, and the term instead depends on a trait of the organism, whether it makes a siderophore at all. The tree shows that trait does not follow the topology. The non-producers are not a clade (H. pylori, N. meningitidis and G. sulfurreducens are three separate basal children, while Coxiella and Haemophilus sit inside the gammaproteobacterial clade), and the smallest clade holding the producers P0A9A9, P33086, P0C6C8, Q8EFN3, Q8PAL3 and Q03456 is PTN002112492, which still carries Coxiella and Haemophilus. There is therefore no child node this IBD can be moved to. Please retype the node-level IBD to something true of every Fur orthologue, such as negative regulation of DNA-templated transcription or a regulation-of-iron-import term, and keep GO:1900705 as leaf-level annotations on the siderophore producers that have their own evidence.
 
 > The A2 and A4 mutants expressed higher levels of siderophores in iron-deficient media and in iron-replete media.
 > — PMID:8885270
@@ -767,26 +767,26 @@ PTN000501197 carries an IBD of GO:0009244 lipopolysaccharide core region biosynt
 > indicating the involvement of GalU in P. aeruginosa LPS core synthesis
 > — PMID:12044687
 
-## 58. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
+## 58. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN004253691
 - **Subject:** UniProtKB:Q9I3S3
 - **Change:** check UniProtKB:Q9I6K2 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/gbuA/gbuA-ai-review.yaml`
 
-PTN004253691 (PTHR11358) carries an IBD of GO:0006527 L-arginine catabolic process whose only seed is P. aeruginosa GbuA (Q9I3S3), where it is correct. The node also contains P. aeruginosa GpuA (Q9I6K2), a guanidinopropionase with no activity on arginine that serves 3-guanidinopropionate utilisation, and the vertebrate AGMAT orthologs (e.g. human Q9BSE5), now characterised as guanidino acid hydrolases that turn arginine over only inefficiently. Their physiological substrates (3-guanidinopropionate, taurocyamine, 4-guanidinobutyrate) are not intermediates of an arginine catabolic pathway in those organisms. Please consider moving the IBD to a GbuA-only subnode or adding NOT annotations for GpuA and the vertebrate subclade.
+PTN004253691 (PTHR11358) is a HORIZ_TRANSFER node holding 34 leaves, all in subfamily SF26 (topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05): P. aeruginosa GpuA (Q9I6K2, leaf PTN002260450) as sister to everything else, P. aeruginosa GbuA (Q9I3S3, leaf PTN002260452) nested inside the animal clade through a second HORIZ_TRANSFER node PTN004253692, and 32 animal AGMAT guanidino acid hydrolases (Deuterostomia clade PTN000144490, 30 leaves, plus the Nematostella duplication PTN000888144, 2 leaves). The IBD of GO:0006527 L-arginine catabolic process at this node has GbuA as its only seed, where it is correct. The tree shows the two Pseudomonas enzymes are not sisters, so there is no bacterial guanidinobutyrase subnode to move the IBD to: the smallest clade containing GbuA alone is its own leaf. GpuA is a guanidinopropionase with no activity on arginine, serving 3-guanidinopropionate utilisation, and the vertebrate AGMAT orthologs (e.g. human Q9BSE5) are characterised as guanidino acid hydrolases whose physiological substrates (taurocyamine, 4-guanidinobutyrate, agmatine) are not intermediates of an arginine catabolic pathway in those organisms; arginine itself is turned over only inefficiently. Please either withdraw the clade-level IBD and keep GO:0006527 as a leaf annotation on PTN002260452, or add NOT GO:0006527 at the three nodes that cover the other 33 leaves without touching GbuA: PTN002260450 (GpuA), PTN000144490 (Deuterostomia, 30) and PTN000888144 (Nematostella, 2).
 
 > We demonstrate here that the enzyme efficiently hydrolyzed linear guanidino acids such as TC and GBA, whereas GPA and arginine were turned over less efficiently
 > — PMID:36543883
 
-## 59. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 59. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN004253691
 - **Subject:** UniProtKB:Q9I3S3
 - **Change:** add NOT GO:0047972 (NOT guanidinopropionase activity on GbuA (PA1421)) to UniProtKB:Q9I3S3
 - **Recorded in:** `genes/PSEAE/gbuA/gbuA-ai-review.yaml`
 
-PTN004253691 (PTHR11358) carries a GO:0047972 guanidinopropionase activity IBD seeded by human AGMAT (Q9BSE5) and P. aeruginosa GpuA (Q9I6K2). It propagates to P. aeruginosa GbuA (Q9I3S3), whose purified enzyme shows no activity with 3-guanidinopropionate (PMID:12029055; also stated in the UniProt entry, citing PMID:21600989). Please add NOT GO:0047972 at the GbuA leaf.
+PTN004253691 (PTHR11358) is a HORIZ_TRANSFER node holding 34 leaves, all in subfamily SF26: two P. aeruginosa enzymes and 32 animal AGMAT guanidino acid hydrolases (topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05). It carries a GO:0047972 guanidinopropionase activity IBD seeded by human AGMAT (Q9BSE5) and P. aeruginosa GpuA (Q9I6K2). The two seeds sit on opposite sides of the tree: GpuA is leaf PTN002260450, the sister of all 33 other leaves, while human AGMAT lies inside the Deuterostomia clade PTN000144490 (30 leaves), so their smallest common clade is PTN004253691 itself. The IBD therefore cannot be relocated to any node that excludes P. aeruginosa GbuA (Q9I3S3), which is leaf PTN002260452, nested between the GpuA branch and the deuterostome clade through a second HORIZ_TRANSFER node, PTN004253692 (31 leaves). A leaf-level NOT is the only available fix, and the activity is excluded by direct assay of the purified enzyme (no activity with 3-guanidinopropionate, PMID:12029055; also stated in the UniProt entry, citing PMID:21600989). Please add NOT GO:0047972 at PTN002260452.
 
 > No enzyme activity was detected with other guanidino compounds, including arginine, agmatine, 3-guanidinopropionate, and guanidinoacetate.
 > — PMID:12029055
@@ -804,14 +804,14 @@ The IBA assigns P. aeruginosa Gmd (Q51366) to GO:0042351 'de novo' GDP-L-fucose 
 > P. aeruginosa GMD is bifunctional, and can catalyze both GDP-d-mannose 4,6-dehydration and the subsequent reduction reaction to produce GDP-D-rhamnose.
 > — PMID:19459932
 
-## 61. OTHER (SUSPECTED, NOT_REPORTED)
+## 61. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000138516
 - **Subject:** UniProtKB:Q9HU77
 - **Change:** check UniProtKB:Q9HU77 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/hutF/hutF-ai-review.yaml`
 
-The GO:0006548 L-histidine catabolic process IBD at PTN000138516 has one seed, the PseudoCAP IMP of P. aeruginosa PA5106 (hutF) to PMID:4290562. That 1967 abstract measures a pooled FIGLU-degrading capacity in extracts, which in PAO1 is provided by both HutF and HutE (PA3175), and describes no hutF mutant. The term is correct for HutF; please re-anchor the IBD on PMID:16475788 (direct enzymology of PA5106 and placement in the hut pathway). Separately, the node's three nematode leaves (C. elegans cpin-1 Q20166, C. briggsae A8Y0T4, Pristionchus A0A2A6BT36) lack the HutF family signatures (InterPro IPR010252, NCBIfam TIGR02022, HutF_N) that the bacterial leaves carry; please check whether the GO:0006548 and GO:0050416 IBAs should apply to them.
+Tree topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN000138516 is the LUCA SPECIATION root of PTHR11271:SF48 and has exactly two children: PTN000884852 (SPECIATION, Rhabditida-Chromadorea; 3 nematode cpin-1 leaves, C. elegans Q20166, C. briggsae A8Y0T4, Pristionchus A0A2A6BT36) and PTN000138520 (SPECIATION, Eubacteria; 5 leaves, including Q9HU77). The bacterial leaves carry the HutF-type amidohydrolase signatures (InterPro IPR010252, NCBIfam TIGR02022, HutF_N); the three nematode leaves do not, and no histidine-degradation route is known for them. Asserting GO:0006548 L-histidine catabolic process and GO:0050416 formimidoylglutamate deiminase activity at the LUCA node therefore propagates both terms into a whole clade with no support for either. Please move the two IBDs down to PTN000138520 (Eubacteria, 5 leaves). Within that clade only Q9HU77 is a characterised formimidoylglutamate deiminase (the other four leaves are annotated chlorohydrolase or hydrolase: Q9KZ77, Q89GV1, Q8PAA5, Q9ZC76), so if the family evidence does not extend beyond the gammaproteobacteria the narrower anchors are PTN001681702 (Gammaproteobacteria, 3 leaves) or the Q9HU77 leaf PTN002462020. Separately, the sole seed of the GO:0006548 IBD is the PseudoCAP IMP to PMID:4290562, whose full text contains no hutF mutant; please re-anchor that IBD on PMID:16475788.
 
 > Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine
 > — PMID:4290562
@@ -819,14 +819,14 @@ The GO:0006548 L-histidine catabolic process IBD at PTN000138516 has one seed, t
 > The protein Pa3175 is dislocated from the hut operon and was shown to catalyze the hydrolysis of N-formimino-L-glutamate to formamide and L-glutamate.
 > — PMID:16475788
 
-## 62. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 62. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002233700
 - **Subject:** UniProtKB:Q9HU85
 - **Change:** add NOT GO:0004397 (NOT histidine ammonia-lyase activity (and NOT L-histidine catabolic process) on PA5093) to UniProtKB:Q9HU90
 - **Recorded in:** `genes/PSEAE/hutH/hutH-ai-review.yaml`
 
-PTN000796665 (PTHR10362, bacterial histidase) carries IBDs of GO:0004397 histidine ammonia-lyase activity and GO:0006548 L-histidine catabolic process, seeded by P. aeruginosa PA5098 (hutH). Under PTN002233699 the node includes a PAO1-specific duplicate, PA5093 (UniProtKB:Q9HU90, leaf PTN002233700), which now receives both IBAs. PA5093 has no Ala-Ser-Gly MIO-forming tripeptide (residues aligned to the P. putida motif are gapped) and is only about 40% identical to PA5098 or P. putida HutH. It corresponds to the HutH1 paralog of P. fluorescens SBW25, which lacks the active-site residues and cannot complement a histidase mutant (PMID:17717196). Please add NOT annotations for these terms at the PA5093 leaf (or at a node covering the HutH1-type clade if other members are present).
+Topology checked with projects/PSEUDOCAP/panther_tree.py (--family PTHR10362, no seed of this node has a PANTHER cross-reference) on 2026-11-05. PTN000796665 (SPECIATION, Eubacteria; 21 leaves) is the node carrying the IBDs of GO:0004397 histidine ammonia-lyase activity and GO:0006548 L-histidine catabolic process, seeded by P. aeruginosa PA5098 (hutH, Q9HU85). The path from it to the PA5093 leaf runs PTN000796665 -> PTN000796672 (SPECIATION, Proteobacteria; 11 leaves) -> PTN001621799 (SPECIATION, Gammaproteobacteria; 10 leaves) -> PTN002233699, which is a DUPLICATION node with exactly two leaves, both P. aeruginosa and both PTHR10362:SF7: PTN002233700 (Q9HU90 PA5093, "probable histidine/phenylalanine ammonia-lyase") and PTN002233701 (Q9HU85 hutH, "histidine ammonia-lyase"). The IBAs on PA5093 therefore come from a terminal in-paralog duplication of the seeded gene itself, and PA5093 has no MIO-forming Ala-Ser-Gly tripeptide (the aligned residues are gapped), is only about 40% identical to PA5098, and corresponds to the HutH1 paralog of P. fluorescens SBW25, which lacks the active-site residues and cannot complement a histidase mutant (PMID:17717196). Because the duplication is P. aeruginosa-specific there is no HutH1-type clade in this tree to annotate: please add the NOT annotations for both terms at the PA5093 leaf PTN002233700.
 
 > Analysis of the deduced amino acid sequences of hutH 1 and hutH 2 showed that HutH 1 lacks the conserved Ala–Ser–Gly active site residues
 > — PMID:17717196
@@ -837,14 +837,14 @@ PTN000796665 (PTHR10362, bacterial histidase) carries IBDs of GO:0004397 histidi
 > PA5093 (Q9HU90), the second HutH-like gene in the PAO1 hut locus, has no Ala-Ser-Gly tripeptide anywhere
 > — file:PSEAE/hutH/hutH-bioinformatics/RESULTS.md
 
-## 63. OTHER (SUSPECTED, NOT_REPORTED)
+## 63. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000505272
 - **Subject:** UniProtKB:Q9HU91
 - **Change:** check UniProtKB:Q9HU91 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/hutI/hutI-ai-review.yaml`
 
-The IBDs of GO:0050480 imidazolonepropionase activity and GO:0006548 L-histidine catabolic process at PTN000505272 (PTHR42752, LUCA) have one seed: the PseudoCAP IMP annotations of P. aeruginosa PA5092 (hutI) to PMID:4290562. That 1967 paper's abstract covers histidase, urocanase and FIGLU degradation (steps I, II, IV) but not step III, and it predates gene assignment. The node terms are very likely correct (HutI family, HAMAP MF_00372; B. subtilis HutI structure PMID:16990261). However, the 52 leaf IBAs, including mammalian AMDHD1, rest on a seed that does not visibly support them. Please consider re-anchoring the IBD on any experimentally characterized HutI/AMDHD1. No change to the node terms is requested.
+Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN000505272 is the LUCA SPECIATION root of PTHR42752 with two children, PTN000505273 (SPECIATION, Archaea-Eukaryota; 36 leaves) and PTN000505310 (SPECIATION, Eubacteria; 16 leaves). All 52 leaves are subfamily PTHR42752:SF1 and all are named imidazolonepropionase or probable imidazolonepropionase (bacterial HutI plus eukaryotic AMDHD1). So the node breadth and the node terms GO:0050480 imidazolonepropionase activity and GO:0006548 L-histidine catabolic process are sound, and this request is about the IBD's evidence anchor only, not its placement or its terms. Its one seed is the PseudoCAP IMP of P. aeruginosa PA5092 (hutI) to PMID:4290562, whose full text (read 2026-11-05) assays steps I, II and IV in crude extracts, never step III, and describes no hutI mutant; it therefore supports neither term for PA5092 nor, through it, the 52 leaf IBAs. Please re-anchor the IBD on an experimentally characterised descendant already in the clade, for example B. subtilis HutI P42084 (structure and activity, PMID:16990261) or human AMDHD1 Q96NU7. No change to the node terms is requested.
 
 > Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine
 > — PMID:4290562
@@ -877,7 +877,7 @@ PTN002433936 (PTHR33442, 9 reference leaves in 7 organisms; 35 GOA rows in with/
 > We herein demonstrated that PaLhpL gene (PA1255; Fig. 1d) in the L-hydroxyproline gene cluster encodes a bifunctional dehydratase and 2-epimerase toward trans-3-hydroxy-L-proline as the leading candidate
 > — PMID:27929065
 
-## 66. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 66. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001627042
 - **Subject:** UniProtKB:Q9I1X7
@@ -886,9 +886,9 @@ PTN002433936 (PTHR33442, 9 reference leaves in 7 organisms; 35 GOA rows in with/
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/ligD/ligD-ai-review.yaml`
 
-The IBD for GO:0006269 DNA replication, synthesis of primer at PTN001627042 (LigD clade, 15 leaf IBAs) rests on M. tuberculosis LigD (P9WNV3, MTBBASE IDA, PMID:16023671). LigD polymerase/primase activity has been shown in vitro, but LigD functions in Ku-dependent NHEJ repair of double-strand breaks, not in chromosomal replication. The process term does not suit the clade; consider removing the IBD (the activity is covered by GO:0003887 and the role by GO:0006303). The Mtb paper was not read here, hence SUSPECTED.
+The IBD for GO:0006269 DNA replication, synthesis of primer at PTN001627042 (LigD clade, 15 leaf IBAs) rests on M. tuberculosis LigD (P9WNV3, MTBBASE IDA, PMID:16023671). LigD polymerase/primase activity has been shown in vitro, but LigD functions in Ku-dependent NHEJ repair of double-strand breaks, not in chromosomal replication. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN001627042 is a SPECIATION node (LUCA) with 15 leaves in two subfamilies (PTHR42705:SF2 12, SF3 3) and two children: PTN005127089 (SPECIATION, Eukaryota, 2 leaves: Monosiga MONBRDRAFT_36321 "DNA ligase D" and Gossypium LOC107941224) and PTN000048875 (SPECIATION, Eubacteria, 13 leaves), which holds the Terrabacteria clade PTN008085115 (7 leaves, including Mtb LigD P9WNV3 and B. subtilis LigD O34398, plus the Streptomyces SF2/SF3 duplication PTN000048869) and the Proteobacteria clade PTN005127091 (6 leaves, with P. aeruginosa LigD Q9I1X7 reached through the HORIZ_TRANSFER node PTN005127093). Every leaf is a LigD-type or ATP-dependent DNA ligase; the two with full names are both bifunctional NHEJ proteins, and no leaf is a replicative primase or a DnaG-type enzyme. The clade is thus homogeneous, which means the term cannot be rescued by moving it to a subclade: the mismatch is between the term and the whole family. Please remove this IBD (the activity is already covered by the GO:0003887 IBD at the same node and the role by GO:0006303 non-recombinational repair). PROBABLE rather than CONFIRMED because the topology settles that relocation is not the fix, while the Mtb seed paper PMID:16023671 was still not read and could report a replication-linked assay.
 
-## 67. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 67. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001733227
 - **Subject:** UniProtKB:Q9I298
@@ -896,9 +896,9 @@ The IBD for GO:0006269 DNA replication, synthesis of primer at PTN001627042 (Lig
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/liuC/liuC-ai-review.yaml`
 
-The IBD of GO:0004490 methylglutaconyl-CoA hydratase activity at PTN001733227 has one seed, the PseudoCAP IMP of P. aeruginosa LiuC (Q9I298) to PMID:16517656, a mutant-based inference with no reported enzyme assay. The 13 leaves include P. aeruginosa AtuE (Q9HZV7), which hydrates isohexenylglutaconyl-CoA in the acyclic terpene pathway, and B. subtilis PksH (P40805), which UniProt records (ECO:0000269) as dehydrating an HMG group tethered to the carrier protein PksL in bacillaene biosynthesis, not HMG-CoA. Consider a generic enoyl-CoA hydratase/hydro-lyase term at this node, or moving GO:0004490 to a node confined to LiuC orthologs.
+The IBD of GO:0004490 methylglutaconyl-CoA hydratase activity at PTN001733227 has one seed, the PseudoCAP IMP of P. aeruginosa LiuC (Q9I298) to PMID:16517656, a mutant-based inference with no reported enzyme assay. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN001733227 is a SPECIATION node placed at LUCA, with 13 leaves all in PTHR42964:SF1, splitting into the Monosiga brevicollis leaf PTN000941888 and the Eubacteria clade PTN000234935 (12 leaves), which divides into Terrabacteria PTN008092237 (4 leaves; B. subtilis PksH, Chloroflexus, Actinomycetales) and Proteobacteria PTN000234939 (8 leaves). Placing a substrate-specific crotonase activity at a LUCA node is not supportable, and the tree shows the support stops at the leaf; LiuC's own sister is P. aeruginosa AtuE (Q9HZV7, leaf PTN002452382, duplication node PTN002452381), which hydrates isohexenylglutaconyl-CoA instead, and B. subtilis PksH (P40805) is recorded by UniProt (ECO:0000269) as dehydrating an HMG group tethered to the carrier protein PksL in bacillaene biosynthesis, not HMG-CoA. Even the smallest clade holding the three methylglutaconyl-CoA hydratases of the family (Q9I298, Shewanella Q8EFS1, Coxiella Q83CX5) is PTN001733230 (SPECIATION, Gammaproteobacteria, 7 leaves), which also contains AtuE, Coxiella PksH and the two Xanthomonas enzymes (one a p-hydroxycinnamoyl-CoA hydratase/lyase). There is therefore no node confined to LiuC orthologs above the LiuC leaf PTN002452383. Please put a generic enoyl-CoA hydratase/hydro-lyase term at PTN001733227 and keep GO:0004490 as a leaf-level annotation on the characterised LiuC leaves.
 
-## 68. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 68. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001733227
 - **Subject:** UniProtKB:Q9I298
@@ -906,7 +906,7 @@ The IBD of GO:0004490 methylglutaconyl-CoA hydratase activity at PTN001733227 ha
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/liuC/liuC-ai-review.yaml`
 
-The IBD of GO:0046247 terpene catabolic process at PTN001733227 rests on one seed, the PseudoCAP IMP of P. aeruginosa LiuC (Q9I298) to PMID:16820476. LiuC is a 3-methylglutaconyl-CoA hydratase of leucine catabolism; it takes part in acyclic terpenoid catabolism in P. aeruginosa only because the Atu pathway feeds methylcrotonyl-CoA into the Liu pathway. That context is not inherited by the clade, whose 13 leaves are mostly in organisms with no Atu pathway (M. tuberculosis EchA7, B. subtilis PksH, Coxiella, Xanthomonas, Streptomyces, Chloroflexus, Monosiga); even P. putida, which has a Liu pathway, cannot grow on acyclic terpenes. Please withdraw the IBD. (For PAO1 the more accurate term would be GO:0016100 monoterpenoid catabolic process.)
+The IBD of GO:0046247 terpene catabolic process at PTN001733227 rests on one seed, the PseudoCAP IMP of P. aeruginosa LiuC (Q9I298) to PMID:16820476. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN001733227 is a SPECIATION node placed at LUCA, with 13 leaves all in PTHR42964:SF1, splitting into the Monosiga brevicollis leaf PTN000941888 and the Eubacteria clade PTN000234935 (12 leaves; Terrabacteria PTN008092237, 4, and Proteobacteria PTN000234939, 8). An IBD at a LUCA node asserts that acyclic terpenoid utilisation is ancestral to all life, which it is not; LiuC is a 3-methylglutaconyl-CoA hydratase of leucine catabolism and takes part in terpenoid catabolism in P. aeruginosa only because the Atu pathway feeds methylcrotonyl-CoA into the Liu pathway. That context is not inherited by the clade, whose other leaves are in organisms with no Atu pathway (M. tuberculosis EchA7, B. subtilis PksH, Coxiella, Xanthomonas, Streptomyces, Chloroflexus, Monosiga); even P. putida, which has a Liu pathway, cannot grow on acyclic terpenes. Please withdraw the IBD. The one subnode for which a terpenoid-catabolic assertion would hold is PTN002452381, the P. aeruginosa DUPLICATION pair (2 leaves) of LiuC (PTN002452383) and AtuE (PTN002452382), both of which act in acyclic terpene utilisation in PAO1. (For PAO1 the more accurate term would be GO:0016100 monoterpenoid catabolic process.)
 
 > P. fluorescens, but not P. putida, could grow on acyclic terpenes (citronellol and citronellate), while both species were able to utilize leucine and isovalerate
 > — PMID:16820476
@@ -1076,16 +1076,16 @@ The GO:0019213 deacetylase activity IBD at PTN002441861 (3 leaf IBAs) rests only
 > The deacetylase domain of PaPelA (residues 520–804) has previously been predicted to have structural similarity to CE4 enzymes (18, 33).
 > — PMID:40120681
 
-## 81. OTHER (SUSPECTED, NOT_REPORTED)
+## 81. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000763909
 - **Subject:** UniProtKB:Q05098
 - **Change:** check GO:0042912 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/pfeA/pfeA-ai-review.yaml`
 
-The GO:0042912 colicin transmembrane transporter activity IBD at PTN000763909 (seeded by E. coli FepA P05825) propagates to P. aeruginosa PfeA (Q05098). Colicin B/D uptake through FepA is documented in E. coli; we found no evidence that PfeA transports colicins. Consider moving the IBD to an enterobacterial child node or adding NOT for PfeA.
+Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN000763909 is a SPECIATION node (Gammaproteobacteria) in PTHR30069 with 3 leaves, all subfamily PTHR30069:SF51, and exactly two children: the P. aeruginosa leaf PTN002409317 (Q05098 PfeA) and PTN002012591 (SPECIATION, Enterobacteriaceae; 2 leaves, E. coli FepA P05825 and S. typhimurium FepA Q8ZR40). The GO:0042912 colicin transmembrane transporter activity IBD is seeded by E. coli FepA, and colicin B/D uptake is a documented property of enterobacterial FepA only; no evidence shows PfeA admits colicins, and colicins B and D are not known to act on P. aeruginosa. Because the colicin-receptor leaves form one clean child clade, moving this IBD from PTN000763909 to PTN002012591 keeps both FepA IBAs and removes the only unsupported leaf IBA (PfeA). The sibling GO:0042930 enterobactin transport IBD is correct at PTN000763909 and should stay there.
 
-## 82. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 82. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002463889
 - **Subject:** UniProtKB:Q04804
@@ -1093,7 +1093,7 @@ The GO:0042912 colicin transmembrane transporter activity IBD at PTN000763909 (s
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/pfeS/pfeS-ai-review.yaml`
 
-PAINT IBD GO:0009927 histidine phosphotransfer kinase activity at PTN002463889, seeded only by Arabidopsis AT2G17820. The node also covers classical bacterial sensor kinases (E. coli BaeS, M. tuberculosis PrrB, P. aeruginosa PfeS) whose domain architecture (HAMP-HisKA-HATPase, no HPt domain) cannot carry an HPt shuttle activity. Requested change: withdraw the IBD or move it to a node restricted to HPt-containing members. PROBABLE: the AT2G17820 seed evidence was not read.
+Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. The node could not be resolved from its seeds automatically; it is in PTHR43711 (not PTHR45436, which is the PANTHER family UniProt cross-references for Q04804 - the two sources disagree, and PANTHER's own tree is what PAINT propagates on). PTN002463889 is the family's LUCA SPECIATION node: 200 leaves spread over ten subfamilies (SF1:80, SF26:42, SF31:43, SF28:19, SF32:4, SF15:3, SF29:3, SF13:2, SF18:2, SF30:2), with two children, PTN001976854 (SPECIATION, Archaea-Eukaryota; 65 leaves, SF1:60, SF15:3, SF18:2) and PTN002463899 (DUPLICATION; 135 leaves, all bacterial). The GO:0009927 histidine phosphotransfer kinase activity IBD is seeded only by Arabidopsis AT2G17820 (AHK1, Q9SXL4), which sits sixteen nodes deep inside the eukaryotic child PTN001976854, while P. aeruginosa PfeS (Q04804) is in the bacterial child, at PTN002463899 -> PTN008117710 -> PTN008117711 -> PTN008684377 -> PTN002536215. So a single plant hybrid-kinase seed is propagated across the whole bacterial half of the family, which includes E. coli BaeS (P30847), E. coli RcsC (P0DMC5) and M. tuberculosis PrrB (P9WGK7) as well as PfeS. PfeS has no HPt domain and no receiver domain: its architecture is HK_sensor-HAMP-HisKA-HATPase_c (Pfam PF16750, PF00672, PF00512, PF02518), so it cannot carry an HPt shuttle activity. Requested change: withdraw the IBD; if it is retained it must be moved at least to PTN001976854, which excludes every bacterial leaf, and better to a node restricted to HPt-domain-containing members. No such clade exists on the bacterial side of this tree.
 
 > PF00512; HisKA
 > — file:PSEAE/pfeS/pfeS-uniprot.txt
@@ -1362,14 +1362,14 @@ The IBD of GO:0052837 thiazole biosynthetic process at PTN001804941, the root of
 > proteins annotated as ThiI based on containing only the AANH and THUMP domains are unlikely to be involved in thiazole synthesis and would be better annotated as 4-thiouridine sulfurtransferases
 > — PMID:21724998
 
-## 104. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
+## 104. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001464661
 - **Subject:** UniProtKB:P29364
 - **Change:** check UniProtKB:O34640 (alternatives in the explanation)
 - **Recorded in:** `genes/PSEAE/thrB/thrB-ai-review.yaml`
 
-The GO:0004413 homoserine kinase activity and GO:0009088 L-threonine biosynthetic process IBDs at PTN001464661 have one seed, the PseudoCAP IDA rows of P. aeruginosa ThrB (P29364) to PMID:10220164, whose abstract shows genetics but no ThrB enzyme assay. The node also propagates both terms to B. subtilis AmiN/YerI (O34640), shown experimentally to phosphorylate the antibiotic amicoumacin A in an organism that has a GHMP-family ThrB, and to uncharacterised Synechocystis sll1119 and Deinococcus DR_0394. Please check whether these leaves should carry NOT annotations, or whether the IBD belongs at a narrower type II HSK node.
+Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN001464661 is a SPECIATION node (Eubacteria) in PTHR21064 with 10 leaves, all subfamily PTHR21064:SF6, and five children: PTN007684856 (SPECIATION, Terrabacteria; 3 leaves: Chloroflexus A9WJ27 and the Bacillus clade PTN001843206 with B. subtilis AmiN O34640 and B. cereus Q81HY9), the single leaves PTN001843208 (Deinococcus Q9RXC1, uncharacterised), PTN002326065 (Synechocystis P73341, uncharacterised) and PTN001843209 (Fusobacterium Q8RF07, named homoserine kinase), and PTN002326066 (SPECIATION, Proteobacteria; 4 leaves: P. aeruginosa ThrB P29364, Neisseria Q4W557, Bradyrhizobium Q89UU4, Xanthomonas Q8PCP9). Every leaf with evidence of homoserine kinase function sits in PTN002326066, the smallest clade holding P29364, Q4W557 and Q89UU4; the one leaf with its own experimental activity, AmiN, phosphorylates amicoumacin A and sits in a separate child clade in an organism that has an unrelated GHMP-family ThrB. Please move the GO:0004413 homoserine kinase activity and GO:0009088 L-threonine biosynthetic process IBDs from PTN001464661 to PTN002326066, which drops the Terrabacteria clade (including O34640, where a NOT annotation would otherwise be needed) and the two uncharacterised leaves. The smallest clade holding both P29364 and the Fusobacterium leaf is PTN001464661 itself, so if FN0922 is a genuine type II homoserine kinase it needs its own IBD at PTN001843209 rather than retention of the Eubacteria-level node.
 
 > B. subtilis 168 has an amiN homolog (yerI) that also phosphorylates Ami, mediating natural B. subtilis resistance to the drug.
 > — PMID:30181282
@@ -1487,7 +1487,7 @@ The IBD of GO:0043709 cell adhesion involved in single-species biofilm formation
 
 The IBD of GO:0004713 protein tyrosine kinase activity at PTN000794252 is seeded by the E. coli BY-kinases Wzc (P76387) and Etk (P38134). The same node's plasma-membrane IBD lists Wzz1 (PAO1 PA3160, G3XCY2), Wzz2 (PA0938, Q9I520) and E. coli FepE (P26266) among its seeds, which are PCP-1 chain-length regulators. Their sequences end shortly after the second TM helix (Wzz1 is 348 aa with TM2 at 319-343) and lack the cytoplasmic Walker A/B tyrosine-autokinase domain, so they cannot have this activity. Please move the kinase IBD to the Wzc/Etk (PCP-2a) subclade or add NOT for the PCP-1 branch.
 
-## 114. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 114. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002446181
 - **Subject:** UniProtKB:Q00516
@@ -1495,12 +1495,12 @@ The IBD of GO:0004713 protein tyrosine kinase activity at PTN000794252 is seeded
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpV/xcpV-ai-review.yaml`
 
-The IBD of GO:0015627 type II protein secretion system complex at PTN002446181 (PTHR38779) has one seed, the PseudoCAP IDA of P. aeruginosa XcpV (Q00516, PMID:8331069). The term is right for XcpV, but of the 49 leaves receiving the IBA in current QuickGO only 14 are named as T2SS proteins (GspI and relatives), while 14 are named type IV pilus PilV, MSHA MshD or pilin, including Neisseria gonorrhoeae PilV (NGO_0453), and 21 carry only a generic prepilin-type domain name. The node appears to span the GspI/PilV split. Please check the node placement and move the IBD to a node confined to T2SS GspI proteins, or add NOT annotations for the PilV clade. Name-based classification only; not verified on the tree.
+The IBD of GO:0015627 type II protein secretion system complex at PTN002446181 (PTHR38779) has one seed, the PseudoCAP IDA of P. aeruginosa XcpV (Q00516, PMID:8331069). The term is right for XcpV, but of the 49 leaves receiving the IBA in current QuickGO only 14 are named as T2SS proteins (GspI and relatives), while 14 are named type IV pilus PilV, MSHA MshD or pilin, including Neisseria gonorrhoeae PilV (Q5F9E5, NGO_0453), and 21 carry only a generic prepilin-type domain name. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05, and it reframes the problem. PTN002446181 is the root of PTHR38779: a SPECIATION node (Eubacteria) with 12 reference-proteome leaves, all PTHR38779:SF2, and three children - two deep single leaves that are not T2SS proteins (PTN002446182, Aquifex aeolicus ppdD3 "Pilin"; PTN002409471, Thermodesulfovibrio yellowstonii THEYE_A0597, a bare prepilin-type cleavage/methylation domain) and PTN002215342 (SPECIATION, Proteobacteria, 10 leaves), which contains every T2SS-named leaf in the tree: Geobacter GspI, Shewanella GspI, Vibrio EpsI, the Xanthomonas duplication PTN002215341 (XpsI, XcsI, XcsJ), the Pseudomonas duplication PTN002446183 (XcpV Q00516 and PA0680), and the Enterobacteriaceae pair PTN002215349 (E. coli GspI, Yersinia YPO0811). So the earlier reading, that the node spans a GspI/PilV split, is not what the tree shows: there is no PilV or MshD leaf in the reference tree, and the PilV/MshD proteins that carry the IBA are non-reference members grafted into the family by sequence (TreeGrafter), which the tree cannot place. The node-level problem that remains is real and narrower: the IBD sits at the family root, one node above the clade that supports it, so it covers the two deep generic prepilin branches as well as the GspI clade. Please move both this IBD and the GO:0015628 IBD down to PTN002215342, which is confined to T2SS minor pseudopilins; the grafted PilV/MshD members, being divergent, should then attach outside the annotated clade. If any of them still receive the term after the move, their PTHR38779:SF2 assignment is the next thing to check, not the node placement.
 
-> The node appears to span the GspI/PilV split, so T2SS terms are propagated to type IV pilus minor pilins.
+> PTN002446181 GO:0015627 (XcpV/GspI seed): 49 proteins; T2SS-named=14, T4P/MSHA/TCP-named=14, generic/other=21
 > — file:PSEAE/xcpV/xcpV-bioinformatics/RESULTS.md
 
-## 115. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 115. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002446181
 - **Subject:** UniProtKB:Q00516
@@ -1508,9 +1508,9 @@ The IBD of GO:0015627 type II protein secretion system complex at PTN002446181 (
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/xcpV/xcpV-ai-review.yaml`
 
-The IBD of GO:0015628 protein secretion by the type II secretion system at PTN002446181 (PTHR38779) has one seed, the PseudoCAP IDA of XcpV (Q00516) citing the review PMID:9818381. The term is right for XcpV, but the node's leaves include proteins named type IV pilus PilV, MSHA MshD or pilin (14 of 49, including Neisseria gonorrhoeae PilV NGO_0453). Please check the node placement and confine the IBD to T2SS GspI proteins, and re-seed it with a primary reference (PMID:30346996, IMP).
+The IBD of GO:0015628 protein secretion by the type II secretion system at PTN002446181 (PTHR38779) has one seed, the PseudoCAP IDA of XcpV (Q00516) citing the review PMID:9818381. The term is right for XcpV, but 14 of the 49 proteins receiving the IBA are named type IV pilus PilV, MSHA MshD or pilin (including Neisseria gonorrhoeae PilV Q5F9E5/NGO_0453). The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05: PTN002446181 is the root of PTHR38779, a SPECIATION node (Eubacteria) of 12 reference leaves, all SF2, whose two deepest branches are generic prepilins (Aquifex ppdD3, Thermodesulfovibrio THEYE_A0597) and whose third child PTN002215342 (SPECIATION, Proteobacteria, 10 leaves) contains every T2SS-named leaf, XcpV among them. No PilV or MshD protein is a leaf of the tree; those are non-reference members grafted into the family by sequence. Please move the IBD down to PTN002215342 together with the GO:0015627 IBD, and re-seed it with a primary reference (PMID:30346996, IMP). Detail and the leaf table are in the defect recorded on the GO:0015627 IBA row.
 
-> The node appears to span the GspI/PilV split, so T2SS terms are propagated to type IV pilus minor pilins.
+> PTN002446181 GO:0015627 (XcpV/GspI seed): 49 proteins; T2SS-named=14, T4P/MSHA/TCP-named=14, generic/other=21
 > — file:PSEAE/xcpV/xcpV-bioinformatics/RESULTS.md
 
 ## 116. WRONG_TERM (PROBABLE, NOT_REPORTED)
