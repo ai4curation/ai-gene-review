@@ -6,11 +6,11 @@ This page records source and construct limits behind the annotation reasons. Ori
 
 [PMID:16172208](https://doi.org/10.1083/jcb.200507087), selected Results/Methods: mouse constructs and endogenous assays support outer-membrane topology and fission. A human host cell does not change the construct species. [PMID:21753178](https://pubmed.ncbi.nlm.nih.gov/21753178/), Methods, fusion Results and Figure 3 caption: dominant human variants impair fusion; this does not by itself identify normal GDAP1 as performing membrane merger. Neither paper's figure pixels or supplements were inspected.
 
-[PMID:23628762](https://pubmed.ncbi.nlm.nih.gov/23628762/), selected original main text: depletion/rescue and targeting experiments connect GDAP1 to peroxisomal morphology and PEX19 delivery. Mouse neuronal assays are distinguished from transient cell experiments whose construct species is not fully resolved without the supplement. The existing location assertions do not add an import-catalysis annotation to the cargo.
+[PMID:23628762](https://pubmed.ncbi.nlm.nih.gov/23628762/), selected original main text: mouse N1E115 depletion/rescue and Drp1/Mff dependence support a contribution to peroxisomal fission, with PEX19-mediated targeting. The wild-type rescue construct species is unresolved in the inspected main text; named human truncations do not resolve it. Peroxisomal evidence is retained separately from the mitochondrial-fission core, and targeting does not imply import catalysis by the cargo.
 
 ## Construct-dependent biochemical evidence
 
-[PMID:27841286](https://doi.org/10.1038/srep36930), original Results, Methods and Table 1: human Sf21-derived T288X conjugates glutathione to selected model substrates, while T318X does not under the tested conditions. Full-length protein deforms organelle-like liposomes; catalytic coupling was not established. These are engineered proteins, distinct from the two natural products.
+[PMID:27841286](https://doi.org/10.1038/srep36930), original Results, Methods and Table 1: human Sf21-derived T288X conjugates glutathione to selected model substrates, while T318X does not under the tested conditions. Reticulocyte-translated full-length protein deforms mitochondrial/peroxisomal lipid-mixture liposomes, unlike pure phosphatidylcholine, with HD1scr, T288X and untreated controls. This is translation mixture, not purified full-length reagent, and deformation is not completed scission. Exact wild-type reagent species/sequence and catalytic coupling remain unresolved. These are engineered proteins, distinct from the two natural products.
 
 [PMID:32274853](https://doi.org/10.1096/fj.202000110R), selected original biochemical and cellular sections: mouse fragments lack detectable glutathione binding by thermal stabilization/calorimetry. Human-protein overexpression in HeLa changes morphology; this is distinct from a native human catalytic assay or an assertion of universal inactivity.
 
@@ -66,10 +66,44 @@ This page records source and construct limits behind the annotation reasons. Ori
 | 39 | BAIAP2 / Q9UQB8-6 | NN1.0 row 3722; NN1.0ext row 8142 | GO:0005519 |
 | 40 | MRFAP1 / Q9Y605 | NN1.0 row 6579; NN1.0ext row 15142 | — |
 
+## Locally checkable partner-class excerpts
+
+The following short source excerpts establish partner class; the interaction sources remain HuRI (two refined pairs) and Haenig (15 refined pairs). They do not establish native colocalization or a physiological consequence. UniProt excerpts come from curated FUNCTION, SIMILARITY or CATALYTIC ACTIVITY text, never DR GO lines. Source hashes and exact local offsets are recorded in [source evidence](GDAP1-source-evidence.yaml). The retained official JSON response SHA256 is `8cf7d5b6c1682abb64c51c4ced8b36cc0d53df77e32fa514ba7bbbcb88de4b21`; pointers below identify its literal fields. Isoform and clone limits in the interaction table remain unchanged.
+
+| Native index | Source | Selected source location | Exact short excerpt |
+|---|---|---|---|
+| 3 | ABHD16A / [O95870](https://rest.uniprot.org/uniprotkb/O95870.json) | FUNCTION; `/results/23/comments/0/texts/0/value` | “Also has monoacylglycerol lipase activity” |
+| 5 | CLCN7 / [P51798](https://rest.uniprot.org/uniprotkb/P51798.json) | FUNCTION; `/results/15/comments/0/texts/0/value` | “exchange of chloride ions against protons” |
+| 11 | BIRC5 / [O15392](https://rest.uniprot.org/uniprotkb/O15392.json) | FUNCTION; `/results/13/comments/0/texts/0/value` | “participates in the organization of the center spindle” |
+| 14 | HOXC4 / [P09017](https://rest.uniprot.org/uniprotkb/P09017.json) | FUNCTION; `/results/2/comments/0/texts/0/value` | “Sequence-specific transcription factor” |
+| 15 | PIK3R1 / [P27986](https://rest.uniprot.org/uniprotkb/P27986.json) | SIMILARITY; `/results/28/comments/17/texts/0/value` | “Belongs to the PI3K p85 subunit family” |
+| 16 | TAGLN2 / [PMID:25869671](https://pmc.ncbi.nlm.nih.gov/articles/PMC4395477/) | Results, TAGLN2 actin-association subsection; XML paragraph 13 | “TAGLN2 associates with F-actin” |
+| 17 | ATXN3 / [P54252](https://rest.uniprot.org/uniprotkb/P54252.json) | FUNCTION; `/results/29/comments/0/texts/0/value` | “Deubiquitinating enzyme involved in protein homeostasis maintenance” |
+| 21 | CLPP / [Q16740](https://rest.uniprot.org/uniprotkb/Q16740.json) | FUNCTION; `/results/19/comments/0/texts/0/value` | “Protease component of the ClpXP complex that cleaves peptides” |
+| 25 | FOXR1 / [Q6PIV2](https://rest.uniprot.org/uniprotkb/Q6PIV2.json) | FUNCTION; `/results/25/comments/0/texts/0/value` | “Transcription factor which acts as both an activator and a repressor” |
+| 28 | ZDHHC17 / [Q8IUH5](https://rest.uniprot.org/uniprotkb/Q8IUH5.json) | FUNCTION; `/results/26/comments/0/texts/0/value` | “Palmitoyltransferase that catalyzes the addition of palmitate” |
+| 29 | IQUB / [Q8NA54](https://rest.uniprot.org/uniprotkb/Q8NA54.json) | FUNCTION; `/results/36/comments/0/texts/0/value` | “Adapter protein that anchors the radial spoke 1 (RS1) complex” |
+| 32 | OPTN / [Q96CV9](https://rest.uniprot.org/uniprotkb/Q96CV9.json) | FUNCTION; `/results/6/comments/0/texts/0/value` | “Mechanistically, recruits TBK1 at the Golgi apparatus” |
+| 33 | MAP3K5 / [Q99683](https://rest.uniprot.org/uniprotkb/Q99683.json) | FUNCTION; `/results/17/comments/0/texts/0/value` | “Serine/threonine kinase which acts as an essential component” |
+| 38 | DDX20 / [Q9UHI6](https://rest.uniprot.org/uniprotkb/Q9UHI6.json) | CATALYTIC ACTIVITY; `/results/32/comments/1/reaction/name` | “ATP + H2O = ADP + phosphate + H(+)” |
+| 39 | EVL / [Q9UI08](https://rest.uniprot.org/uniprotkb/Q9UI08.json) | FUNCTION; `/results/11/comments/0/texts/0/value` | “EVL enhances actin nucleation and polymerization” |
+| 40 | BOK / [PMID:26949185](https://pmc.ncbi.nlm.nih.gov/articles/PMC5018360/) | Results paragraph P29 | “BOK is a pore-forming protein” |
+| 41 | BAIAP2 / [Q9UQB8](https://rest.uniprot.org/uniprotkb/Q9UQB8.json) | FUNCTION; `/results/35/comments/0/texts/0/value` | “Necessary for CDC42-mediated reorganization of the actin cytoskeleton” |
+
+[PMID:25869671](https://doi.org/10.1083/jcb.201407130), selected Results and cloning/cosedimentation Methods: human full-length TAGLN2 constructs associate with actin structures, and recombinant His-tagged protein cosediments with F-actin. Mouse endogenous localization is a separate observation. Neither establishes GDAP1 actin activity. Original XML SHA256: `446c2d28c8e7ea1734de802b5e46dec1a31c3354fa94699654bdde3db03c2935`.
+
+[PMID:26949185](https://doi.org/10.1016/j.cell.2016.02.026), Results P28–29 and Methods P40–41: recombinant BOKΔC-8xHIS permeabilizes Ni-coupled large unilamellar vesicles, with lipid-only and total-release controls. Exact recombinant species/sequence is unresolved in the inspected main Methods; human HCT116 loss experiments are separate cellular evidence. No natural full-length human channel preparation or GDAP1 pore activity is inferred. Original HTML SHA256: `9d417a345ec885b2a9d882ce5c48ca8fdd8ef02af059a55e1b9b0a97b760d845`. Neither paper's figure pixels or supplements were inspected.
+
+CLPP's mature matrix location is separated from GDAP1's usual cytosol-facing domain; its assay interaction does not resolve native access. HOXC4's nuclear location similarly leaves native encounter unresolved. FOXR1 has curated cytoplasmic as well as nuclear localization; IQUB's axonemal association is not a demonstrated membrane-separated lumen. No relocalization mechanism is assumed for any pair.
+
 ## Location and donor limits
 
 [MitoCoP, PMID:34800366](https://pubmed.ncbi.nlm.nih.gov/34800366/), supplementary Table S2 A row404/B row366, identifies the GDAP1 protein group; assay classifications support mitochondrial occurrence and integral association without unique isoform resolution. HPA metadata supports mitochondria plus cytosol; image pixels were not independently read.
 
-Reactome [9603775](https://reactome.org/content/detail/R-HSA-9603775), [9603784](https://reactome.org/content/detail/R-HSA-9603784) and [9603804](https://reactome.org/content/detail/R-HSA-9603804) were traced through every component/member edge to human Q8TB36 residues 1–358: cytosolic entity9603796 and membrane entity9603788. Additional9603798 remains unverified pending genuine native retrieval.
+Reactome [9603775](https://reactome.org/content/detail/R-HSA-9603775), [9603784](https://reactome.org/content/detail/R-HSA-9603784) and [9603804](https://reactome.org/content/detail/R-HSA-9603804) were traced through every component/member edge to human Q8TB36 residues 1–358: cytosolic entity9603796 and membrane entity9603788. The genuine cached [9603798](https://reactome.org/content/detail/R-HSA-9603798) model summary was also read during native reconciliation; its model-level support is distinct from a new primary experiment.
 
 [PMID:21630459](https://pubmed.ncbi.nlm.nih.gov/21630459/) is an authentic sperm-nucleus proteomics source, but its target-level evidence remains uninspected. The sperm extension is retained. [PMID:25449168](https://pubmed.ncbi.nlm.nih.gov/25449168/) is a genuine rat INS-1 abundance-response source; human regulation and mechanistic participation are not established by that observation.
+
+## Scope of a possible membrane-bending annotation
+
+GO:0180020 is molecular-function membrane bending activity; GO:0097753 is a biological process. The positive liposome-deformation result is retained, but no human-specific experimental NEW is added without resolving the wild-type reagent identity and the translation-mixture limitation. Human OPA1/CHMP2A/CHMP3 show that the MF is used for physical deformation; its absence on selected membrane-shaping comparators does not prove a GDAP1 annotation gap. No GDAP1 GO-CAM entry was found in the inspected index. This evidence-access question is separate from the biological uncertainty about native catalysis and ligand identity.
