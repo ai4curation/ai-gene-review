@@ -38,3 +38,12 @@ The RNA-binding capture annotation from PMID:22681889 and cytoplasm annotation f
 Six short exact cached quotations support the decisive DNA-versus-RNA substrate result, ATP hydrolysis, cytosolic accumulation, splicing perturbation and direct RNA association ([PMID:35613581](https://pubmed.ncbi.nlm.nih.gov/35613581/), [PMID:25920683](https://pubmed.ncbi.nlm.nih.gov/25920683/), [PMID:36229594](https://pubmed.ncbi.nlm.nih.gov/36229594/)). Biological findings are recorded separately from access assessments. The unnecessary concentration detail was removed from the RNA-unwinding rationale; the positive/negative substrate conclusion is unchanged.
 
 The [source guide](DDX41-source-guide.md) now quotes and links the curated human NKAP corepressor record. The retained GO:0001222 refinements identify the bound partner class; they do not assign a transcription-repression mechanism to DDX41. The two functional cores remain RNA-associated spliceosomal processing and DNA remodeling linked to cGAS/STING signaling. The spliceosomal core uses an encompassing complex term because the cited studies cover more than one spliceosomal stage. No NEW annotation, natural alternative product or existing source-field change is introduced.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse Q91VN6), `located_in`; no ER sub-compartment rows.
+
+- QuickGO: mouse Q91VN6 GO:0005783 is IDA from PMID:21892174 (Zhang et al. 2011, full text cached).
+- [PMID:21892174 "DDX41 and STING did not localize together with nuclear staining; instead, DDX41 localized together with STING and the endoplasmic reticulum"]; the authors add that this "suggested that the DDX41-STING complex was located in the cytosol". Unstimulated D2SC cells: co-fractionation with microsome, MAM and mitochondrial fractions; after poly(dA:dT) [PMID:21892174 "there was lower expression of DDX41 and STING in the endoplasmic reticulum and mitochondria and higher expression of DDX41 and STING in endosomes"].
+- DDX41 has no signal peptide or TM segment: a soluble helicase recruited by the ER-membrane adaptor STING.
+- Outcome: KEEP_AS_NON_CORE held, at the root (recruited cytosolic pool, AMBRA1/BRSK2 rule). No ER membrane or MAM row: recruitment to the surface is not a membrane location. Added the two quotes to supported_by.
