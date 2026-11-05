@@ -450,3 +450,7 @@ The incoming and approved tracker journals are identical and are retained in ful
 ## 2026-11-04 — beta-aryl merge verified; c-di-AMP audit started
 
 PR #5930 completion is now recorded from the actual merge and retained content proof, superseding its stale requested-changes snapshot. All 153 scoped blobs match the approved head. The next authorized module is bacterial c-di-AMP signaling; its isolated checkout starts at published main `bcead031369d8739c819091f3348deb68b24f321`. Initial research checks receptor-specific effects, cyclase compartments, degradation chemistry and taxonomic scope before choosing further exemplars. Other inventory rows and dated evidence are retained; this is not a fresh global status survey or a restart of the paused all-module goal.
+
+## 2026-11-04 — c-di-AMP validation completed
+
+Full just validate-all completed with exit 0 across 10300 reviews: zero errors, 109 advisory ontology-label issues, 51 advisory reference issues, and 27990 best-practice warnings. Ontology/reference warning paths were checked against starting main and remain unchanged. All 54 pathway files with PMID references passed. Scope remains 17 reviews, 89 original rows, 34 raw sources and zero NEW annotations. Publication, independent review, CI and actual merge remain pending.
