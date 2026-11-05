@@ -268,28 +268,33 @@ resolution** to it:
   `plasma membrane` wrongly implies surface exposure (`GO:0005886` → `GO:0009898`;
   KRAS and the inner-leaflet set), and the "not in the PM at all" case (`GO:0005886`
   → `GO:0140268` ER–PM contact site; STIM1).
-- **`ACCEPT` the generic row + add a `NEW` specific row** when `GO:0005886` is
-  correct and surface-consistent and the subdomain simply adds resolution the gene
-  does not yet carry. The generic rows (often several, from independent EXP/IEA/
-  Reactome sources) stay `ACCEPT`, and the subdomain is a `NEW` row. Examples: **CA9**
-  (bare `GO:0005886` kept, `NEW GO:0009897` external side for the ectoenzyme),
-  **GUCY2C** (four `GO:0005886` rows kept, `NEW GO:0016324` apical plasma membrane
-  for the brush-border receptor) and **MUC16** (the IEA PM row kept `ACCEPT`, `NEW
-  GO:0016324` apical PM added).
+- **`ACCEPT` the generic row + add a `NEW` specific row** only when the generic
+  row's *own* evidence cannot resolve the subdomain while the subdomain is
+  established by separate, independently-cited evidence. The clean case is **CA9**:
+  its `GO:0005886` rows are IBA/IEA/HDA calls that cannot distinguish inner from
+  outer leaflet, so they stay `ACCEPT`, and a `NEW GO:0009897` external-side row
+  carries its own IDA citation. Here the generic rows are not arguing for the
+  specific term — a different line of evidence is.
 
-So the test is not "one location vs two" — an `is_a` subdomain such as apical or
-external-side PM is still inside the generic PM, yet is recorded `ACCEPT`+`NEW`. The
-sharp discriminator is **what each row's own evidence can resolve**: `MODIFY` when
-the same evidence that supports the generic row already fixes the specific term (the
-lipid anchor, the TM topology, the contact-site mechanism — so the generic row is
-simply refined, and leaving it unrefined would misstate the location, as for the
-inner-leaflet and contact-site sets); `ACCEPT`+`NEW` when the generic rows rest on
-evidence that cannot resolve the subdomain (IBA/IEA/HDA family or proteome calls)
-while the subdomain is established by its own, independently-cited evidence (CA9's
-`NEW GO:0009897` is IDA-grounded beside IBA/IEA/HDA generic rows). Refining those
-generic rows would overstate what their evidence shows, so they stay `ACCEPT` and
-the resolved subdomain is added as `NEW`. The "correct vs wrong/empty generic"
-reading above is the same call stated by outcome rather than by evidence.
+The sharp discriminator is **what each row's own evidence resolves**, applied
+per row: if the evidence supporting a generic row already fixes the subdomain
+(a lipid anchor, a TM topology, a contact-site mechanism, or a quote that names
+the subdomain), that row is `MODIFY`, because `ACCEPT`-ing it while the reason
+argues a more specific term is supported is the mismatch CLAUDE.md forbids. Only
+a row whose evidence genuinely stops at the generic term stays `ACCEPT`, with the
+subdomain added as a separately-grounded `NEW` row.
+
+**Known deviation to normalize (GUCY2C, MUC16).** Both currently sit in the
+`ACCEPT`+`NEW` form but do *not* meet the test above: each bundles a
+subdomain-resolving quote onto its generic rows (GUCY2C's five `GO:0005886` rows
+share one `supported_by` anchor that includes PMID:11950846 *"targeting of GCC to
+the apical cell surface"*, and the lead row is `EXP`; MUC16's IEA PM row names the
+apical surface), so the reason argues apical while the row stays `ACCEPT`. By the
+per-row rule the evidence-bearing row (the `EXP` row for GUCY2C, the IEA row for
+MUC16) should `MODIFY` to `GO:0016324`, or the apical quote should move to the
+`NEW` row and off the generic ones. The IBA/IEA/Reactome rows that assert
+plasma membrane only at their own level stay `ACCEPT`. This normalization is a
+flagged follow-up, not yet applied.
 
 The **stable_surface_attachment** set is already handled by the same
 specific-term-first logic and needs no extensions: C3 carries `cell surface`
