@@ -270,11 +270,16 @@ resolution** to it:
   → `GO:0140268` ER–PM contact site; STIM1).
 - **`ACCEPT` the generic row + add a `NEW` specific row** only when the generic
   row's *own* evidence cannot resolve the subdomain while the subdomain is
-  established by separate, independently-cited evidence. The clean case is **CA9**:
-  its `GO:0005886` rows are IBA/IEA/HDA calls that cannot distinguish inner from
-  outer leaflet, so they stay `ACCEPT`, and a `NEW GO:0009897` external-side row
-  carries its own IDA citation. Here the generic rows are not arguing for the
-  specific term — a different line of evidence is.
+  established by separate, independently-cited evidence. The intended case is one
+  where the **quoted** evidence on each generic row stops at the generic term —
+  e.g. CA9's `GO:0005886` rows quote only *"Human carbonic anhydrase IX (CA IX) is
+  an integral membrane protein"*, which does not fix inner vs outer leaflet — while
+  a `NEW GO:0009897` external-side row carries its own topology evidence. (CA9 is
+  not a fully clean exemplar: its generic rows are a mix of IBA/IDA/IEA/TAS, and
+  their shared *reason* argues the ectoenzyme topology directly, so it carries the
+  same `ACCEPT`-while-arguing-the-subdomain tension as GUCY2C and MUC16 below — see
+  the open policy call. The distinction the page intends lives in what each row's
+  **quoted** evidence resolves, not in its reason prose.)
 
 The sharp discriminator is **what each row's own evidence resolves**, applied
 per row: if the evidence supporting a generic row already fixes the subdomain
