@@ -23,3 +23,35 @@ The prior lateral MODIFY of GO:0085029 is superseded by KEEP_AS_NON_CORE after i
 ## PR #5552 follow-up, 2026-10-26
 
 Hyaluronan-specific propagation is treated consistently as REMOVE across the three Alg8 reviews; supported alginate roles remain independently represented. Live UniProt PANTHER cross-references show that SF12 itself contains S. pyogenes HasA P0C0H0 (hyaluronan chemistry; PMID:8276791) and NodC P04340/P26024, in addition to the three Alg8 proteins. The SF12 label MANNURONAN SYNTHASE is therefore not a substrate-specific selector. GO:0085029 was checked live: matrix aggregation/arrangement/bonding, with no animal restriction. Retained the evidence gradient: Pa target-specific architecture, KT2440 related-strain inference, Azotobacter over-annotation without a comparable matrix-architecture result. Substituting a biofilm term would change the biological claim rather than simply refine it.
+
+## PseudoCAP IBA-seed assessment (tier 2, 2026-11-05)
+
+Audit only; the existing review was not rewritten. Seed paper PMID:18524915 is
+abstract-only in the cache and the PubMed MCP did not return PMC full text.
+
+The abstract shows target-specific catalytic evidence, not just a phenotype:
+[PMID:18524915 "mutants defective in Alg8 or Alg44 did not secrete polymer or alginate fragments"];
+[PMID:18524915 "all of the predicted active site residues in the widely spaced D, DxD, D, LxxRW motif were required for polymerization activity in vivo"].
+
+Seeds of PTN000530809 (`.cache/paint/IBD.gaf`, column 8): GO:0000271 is seeded by
+MGI:109599, MGI:107821, MGI:106590 (mouse Has1, Has2, Has3) and Q52463 (Alg8). The
+hyaluronan terms (GO:0050501, GO:0030213) and GO:0085029 at the same node are seeded
+only by vertebrate HAS proteins.
+
+| PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale | other seeds | IBD stands without this seed? |
+|---|---|---|---|---|---|---|---|---|
+| PTN000530809 | GO:0000271 polysaccharide biosynthetic process | 4 | 85 (31 taxa) | GO:0042121 alginic acid biosynthetic process, IMP, PMID:18524915 (PseudoCAP) | SOUND | Active-site alanine substitutions abolish polymerization in vivo, so Alg8 itself makes the polymer. The broad node term suits a glycosyltransferase-2 clade that makes several polysaccharides. | Mouse Has1, Has2, Has3 (hyaluronan synthases) | Yes. Hyaluronan synthesis is polysaccharide biosynthesis. No GO_CENTRAL defect on this term. |
+
+Node-level problem found during the audit (not on the seeded term): the hyaluronan IBDs at
+the same node are placed too high. Leaves of PTN000530809 carrying the GO:0050501 IBA
+(from `.cache/paint/leaf.gaf.gz`) include, besides vertebrate HAS genes:
+O67594 alg, Q9FBM8 SCO5051, Q52463 alg8, Q97YM4 nodC-like, P26024 nodC
+and fungal (AFUA_8G02320, SNOG_10021, SS1G_06158) and Entamoeba (EHI_044840, EHI_170480)
+proteins. NodC makes chitooligosaccharides and Alg8 makes mannuronan, so the hyaluronan
+terms do not suit this clade. Recorded once, as a GO_CENTRAL CHECK defect (PROBABLE) on the
+GO:0050501 IBA row; it covers the GO:0030213 row too. The existing REMOVE actions on both
+hyaluronan rows are unchanged.
+
+Not changed: the GO:0000271 IBA row is MODIFY to GO:0042121; under the later tier-2
+convention it would be TOO_GENERAL (GO:0042121 is_a GO:0000271 and is accepted here). The
+claim is the same either way, so it was left as is.
