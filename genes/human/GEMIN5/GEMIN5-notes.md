@@ -71,3 +71,8 @@ Cap recognition and ribosome binding are now represented as direct molecular act
 Selected primary excerpts and partner FUNCTION, SUBUNIT and SIMILARITY comments make the evidence easier to inspect. The prior 194 quote associations remain archived; repeated historical quotations are not restored wholesale. Both positive thesis membrane-fraction rows remain distinct from the unavailable final journal supplement. Source-specific RNA and nuclear-body judgments retain their biological scope.
 
 The viral RNA-binding context is refined to mRNA 5′-UTR binding after checking the official RNAcentral IRES identity, the GO definition and the original substrate study. The 462-nucleotide record remains distinct from the short d5/d5ss reagents. This refinement does not add a viral process or a new core activity.
+
+
+## 2026-11-05 — Local excerpts for qualified judgments
+
+Compact source excerpts now accompany the independent mRNA-binding support, the viral IRES region, the separately accessed thesis membrane-fraction row, gem localization and Sm-core assembly. The thesis excerpt quotes the local account of an independently inspected source; it is not presented as a recovered journal supplement. Source-specific judgments and all four direct molecular activities are unchanged.
