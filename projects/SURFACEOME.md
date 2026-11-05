@@ -345,8 +345,11 @@ The work is incomplete. In priority order:
 3. **Inner-leaflet proteins → cytoplasmic-side term (partly done).** The clean
    lipid-anchored set — **KRAS, NRAS, RAC1, RHOA, LYN, HCK, BTK** — has been
    refined: every `GO:0005886` plasma-membrane existing-annotation row MODIFYed to
-   `GO:0009898` cytoplasmic side of plasma membrane (a descendant the gene already
-   carries), core_functions locations updated to match, and the IBA row given a
+   `GO:0009898` cytoplasmic side of plasma membrane (supported by each gene's
+   inner-leaflet lipid-anchoring/recruitment evidence; several of these genes did
+   not already carry a separate `GO:0009898` GOA row, so the reasons cite that
+   evidence rather than asserting the gene already carries the term), core_functions
+   locations updated to match, and the IBA row given a
    `propagation_review` (`TERM_SCOPING_PROBLEM`). JAK2/JAK3/TYK2/GNAQ/GNB1 were
    already done by the review agents. This makes them machine-distinguishable from
    genuinely surface-exposed proteins (they fail both the outward-CC and the
