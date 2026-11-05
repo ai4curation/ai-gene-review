@@ -2,7 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2]
 ---
 
 # Organelles
@@ -268,9 +268,72 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [x] Add the policy to CLAUDE.md (2026-10-25, after batches 1 and 2); the
       annotation-reviewer guidance still to do
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
+  - [x] ER batch 1: 20 human genes (2026-11-04); 60 human genes remain on the
+        root-only ER list (survey regenerated 2026-11-04)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-04 (ER batch 1: 20 human genes)
+
+The first endoplasmic reticulum (GO:0005783) batch: the first 20 human genes
+alphabetically (A1CF to BRSK2) on the regenerated root-only ER list, which now
+has 80 human genes. Four gained a sub-compartment term: AGR3 the ER lumen,
+and BAK1, BCL2L1 and BNIP3L the ER membrane. Five rows changed action. The
+brief adapted the mitochondrion policy to the ER: biosynthetic transit is not
+residence, retention motifs are positive evidence, topology decides membrane
+vs lumen, microsomes are not ER without a marker, and overexpressed
+constructs can be retained artefactually.
+
+| gene | outcome | evidence |
+|---|---|---|
+| A1CF | root | UniProt by similarity from rodent immuno-EM: a minor pool on the cytosolic face of rough ER (PMID:12881431) |
+| ABCA4 | root | wild-type in calnexin-positive vesicles with "some" ER staining; ER retention is strongest for misfolded mutants (PMID:29847635) |
+| ABCA7 | root | ER location is for isoform 2 only, which lacks TM1; canonical type I is at the plasma membrane (PMID:14592415) |
+| ADIPOQ | root | endogenous protein partly overlaps GRP94 in 3T3-L1 adipocytes and insulin speeds its ER export (PMID:10444069); transit pool, no retrieval motif |
+| AGR3 | NEW GO:0005788 ER lumen (IC) | cleaved signal peptide and no TM; C-terminal QSEL motif whose deletion sends it to the Golgi (PMID:18086916) |
+| AHCY | root | overexpressed mCherry fusion against GFP-calreticulin only (PMID:28647132) |
+| AHSA1 | root | curated from an abstract that calls the transient ER association "preliminary" (PMID:11554768) |
+| AIMP1 | root | HeLa staining with calnexin and GM130 markers (PMID:17525271); route to luminal gp96 unresolved |
+| AMBRA1 | root; rows stay ACCEPT | moves from dynein to calnexin-positive ER on starvation, where it nucleates autophagosomes (PMID:20921139); recruited, so no membrane term |
+| APEX1 | root | SET complex "associated with the endoplasmic reticulum" (PMID:12524539); minor pool of a nuclear enzyme |
+| ASB11 | root; rows stay ACCEPT | ER-associated E3 whose substrates (ribophorin 1, BIK) are ER membrane proteins (PMID:24337577, abstract only) |
+| ATP1A1 | root; ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | rat source paper shows assembly in transit and retention only when export is blocked (PMID:18768923) |
+| ATP1A2 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | mouse source: overexpressed wild-type "slightly" ER, FHM2 mutant retained and degraded (PMID:21731499) |
+| ATP2B2 | root; IEA UNDECIDED to MARK_AS_OVER_ANNOTATED | mouse source is a CHO overexpression paper: retained PMCA "normally inactive", no ER marker (PMID:17234811) |
+| ATP7A | root | exon-10-skipped isoform without TM3-4 co-localises with BiP (PMID:9467005); quality-control retention of a natural splice form |
+| BACE2 | root | type I protease seen in its biosynthetic ER pool (PMID:11423558); no retention motif |
+| human/BAK1 | NEW GO:0005789 ER membrane (IC) | tail anchor without signal peptide; endogenous Bak in the calnexin-positive fraction free of COX IV and Tom40; ER-targeted Bak depletes ER Ca2+ (PMID:12847083, mouse) |
+| BCL2L1 | root; IEA ACCEPT to KEEP_AS_NON_CORE; NEW GO:0005789 ER membrane (IC) | tail anchor, cytoplasmic side; ER fractionation (PMID:17428862) and reticulon partners (PMID:11126360) |
+| BNIP3L | root; NEW GO:0005789 ER membrane (IC) | tail anchor; endogenous cardiac NIX at ER/SR sets SR Ca2+ stores (PMID:19065046, mouse) |
+| BRSK2 | root | soluble kinase recruited to the ER under tunicamycin stress (PMID:22713462) |
+
+What ER batch 1 showed:
+
+- **Where transit stops being a location.** Direct evidence on the gene
+  itself (ABCA4, BACE2) or the endogenous protein in its native cell
+  (ADIPOQ) keeps a biosynthetic ER pool as KEEP_AS_NON_CORE. A synthesis row
+  whose source shows only transit, or retention of an overexpressed or
+  mutant protein (ATP1A1, ATP1A2, ATP2B2), is MARK_AS_OVER_ANNOTATED.
+- **Topology does not force a sub-compartment on a transit pool.** ABCA4,
+  ABCA7 and BACE2 would be in the ER membrane if they resided there, but they
+  only pass through, so no GO:0005789 row: a NEW row would claim residence.
+- **Tail anchors are the ER counterpart of the TM line.** A tail-anchored
+  protein with no signal peptide cannot be lumenal, so with one ER-specific
+  assay (a marker-controlled fraction, an ER Ca2+ function, ER-membrane
+  partners) it earns GO:0005789 (BAK1, BCL2L1, BNIP3L). No MAM was asserted;
+  none of the sources had a MAM marker.
+- **Retention plus signal peptide means lumen.** AGR3's KDEL-like motif,
+  shown necessary by deletion, plus a soluble signal-peptide chain is the
+  lumenal case.
+- **Recruited cytosolic pools stay at the root,** as on mitochondria (A1CF,
+  AHSA1, AMBRA1, APEX1, BRSK2). AMBRA1 stays core because its autophagy
+  function is shown at the ER.
+- **`is_active_in`:** three ER rows carry it. AGR3 IBA and ATP1A2 IEA have no
+  activity shown in the ER and join the open-question worklist; BNIP3L IBA is
+  defensible for its Ca2+-store role.
+- **For the Golgi batches:** ATP1A1's Golgi ISS row has the same rat source and
+  the same transit logic.
 
 ## 2026-11-03 (batch 4: the last 24 human genes)
 

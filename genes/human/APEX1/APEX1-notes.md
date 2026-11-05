@@ -12,3 +12,10 @@
 - Outcome: two NEW IC rows, GO:0005758 mitochondrial intermembrane space (main pool) and GO:0005759 mitochondrial matrix (minor pool, where mtBER acts). The earlier fractionation paper behind the "majority in IMS" claim was not read directly, hence IC.
 - Note on form: older work proposed an N-terminally truncated (NLS-less) form enters mitochondria; PMID:25956655 states full-length APE1 is present in mitochondria. The IEA row summary keeps the older wording.
 - core_functions.locations left at nucleus: the core functions there are written for nuclear BER/redox; mitochondrial BER is real but not yet a separate core function entry.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and TAS (PMID:12524539), no qualifier; both kept KEEP_AS_NON_CORE.
+- Check: UniProt location line "Endoplasmic reticulum." is untagged, and the note "Colocalized with calreticulin in the endoplasmic reticulum." sits in a note block carrying only {ECO:0000250} [file:human/APEX1/APEX1-uniprot.txt]. The human basis is Fan et al. 2003 (abstract-only cache): Ape1 "is contained in the SET complex, a macromolecular complex of 270-420 kDa that is associated with the endoplasmic reticulum" [PMID:12524539]. TAS curator had the full text.
+- No signal peptide or TM segment; nuclear BER enzyme with a minor ER-associated (SET complex, cytosolic face) pool. Root only, no NEW row.
+- Replaced title-only supported_by quotes on both ER rows with the abstract sentence and the UniProt note.
