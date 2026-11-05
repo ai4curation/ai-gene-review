@@ -38,3 +38,25 @@ Both target rows and their table context were visually checked. The current offi
 The six current Reactome contexts have explicit human Q8TEQ6 participant paths. R-HSA-191763 is snRNP–Snurportin complex formation; cap hypermethylation is R-HSA-191784. The nuclear-envelope location of import event R-HSA-191830 is not assigned to GEMIN5: its input and output target leaves are cytosolic and nucleoplasmic, respectively. TGS1 and methylosome catalytic roles remain separate.
 
 For large-scale RNA-binding and interaction screens, source-level assay evidence is distinguished from exact target-table verification and from orthogonal physiological validation. In particular, the PMID:22658674 target-table subset was not independently inspected. Historical generated research and old quote associations remain provenance, not fresh verification of their claims.
+
+## Partner records and disputed-row anchors
+
+The annotation-level excerpts are taken from these official record sections. The source ledger stores the retained record hash, version, JSON field and every annotation using that class; the excerpts are not repeated here.
+
+| Record | Section | Scope |
+| --- | --- | --- |
+| [DDX20 Q9UHI6](https://www.uniprot.org/uniprotkb/Q9UHI6/entry) | SIMILARITY; Pfam DEAD/Helicase_C cross-references | DEAD-box enzyme family supports the partner-class refinement, not helicase catalysis by GEMIN5. |
+| [eIF4E P06730](https://www.uniprot.org/uniprotkb/P06730/entry) | SIMILARITY | eIF4E family identity complements the direct interaction assay. |
+| [GEMIN2 O14893](https://www.uniprot.org/uniprotkb/O14893/entry) | FUNCTION | Sm-assembly organization does not establish a protein-folding chaperone class. |
+| [GEMIN4 P57678](https://www.uniprot.org/uniprotkb/P57678/entry) | SUBUNIT | SMN-complex membership supports its assembly role. |
+| [SmB P14678](https://www.uniprot.org/uniprotkb/P14678/entry) | SUBUNIT | An snRNP subunit is distinguished from the complete RNA–protein particle. |
+| [SmE P62304](https://www.uniprot.org/uniprotkb/P62304/entry), [SmD1 P62314](https://www.uniprot.org/uniprotkb/P62314/entry), [SmD2 P62316](https://www.uniprot.org/uniprotkb/P62316/entry), [SmD3 P62318](https://www.uniprot.org/uniprotkb/P62318/entry) | SIMILARITY | Sm-family identity does not itself establish a specific functional binding replacement. |
+| [SMN Q16637](https://www.uniprot.org/uniprotkb/Q16637/entry) | FUNCTION; gene list | The assembly-backbone role is distinct from a signaling scaffold; this accession covers SMN1/SMN2. |
+
+For the specific gem refinement, the original PMID:11714716 Figure 2 localization experiments and its abstract identify SMN-colocalizing gems. The broader HPA row does not independently distinguish gems from other nuclear bodies. For the viral substrate, PMID:34424823 Results, Figure 2 and Table 1 identify d5/d5ss binding by engineered RBS1 constructs. This positive RNA-binding result is not evidence for a natural truncated product or for the exact identity of the incoming RNAcentral reagent. The PMID:16739988 Methods and Figures 4–6 separate recombinant direct binding from reticulocyte/cap-resin and cellular experiments.
+
+## Viral IRES substrate identity
+
+The official [RNAcentral URS0002318D25 record](https://rnacentral.org/api/v1/rna/URS0002318D25/?format=json) identifies a 462-nucleotide FMDV type-C IRES in taxon 12116. In [PMID:23221641](https://pmc.ncbi.nlm.nih.gov/articles/PMC3553989/), the final Introduction paragraph places the recognized IRES domain upstream of the initiator codon. The Constructs and RNA synthesis Methods, Figure 1 caption and Results on domain-5/C-terminal binding distinguish the RNA segments and purified-protein assays from BHK-21 extract photocrosslinking. Those selected original sections were read from NCBI BioC; figure pixels and supplements were not inspected.
+
+Together with the later d5/d5ss experiments in PMID:34424823, this supports [mRNA 5′-UTR binding, GO:0048027](https://www.ebi.ac.uk/QuickGO/term/GO:0048027). It does not establish that the full RNAcentral sequence equals either short reagent, nor does it convert the engineered protein fragments into natural products.

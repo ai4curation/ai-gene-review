@@ -62,3 +62,12 @@ GEMIN5 has two coherent functional units: snRNA recognition coupled to SMN-depen
 The translation evidence has distinct directions and conditions. Direct SMN 3′-UTR recognition accompanies positive transcript-specific effects, whereas other experiments support repression of broader protein synthesis. Simplified SMN assemblies can work without GEMIN5 even though cellular substrate recognition and recruitment involve it. These observations do not identify GEMIN5 as a spliceosomal catalyst. [PMID:25911097; PMID:27507887; PMID:18984161]
 
 Positive interaction evidence is retained independently of annotation specificity. The direct eIF4E result and the later negative tagged-cell coimmunoprecipitation result are both represented. The membrane-fraction association is non-core: exact target rows were recovered in an author thesis, but the final journal supplement remained unavailable. The source guide and manual evidence page give the portable thesis locator, exact tables and fractionation limits. [PMID:16739988; PMID:19750007; PMID:19946888]
+
+
+## 2026-11-05 — Direct functions and source anchors
+
+Cap recognition and ribosome binding are now represented as direct molecular activities alongside snRNA recognition and SMN-mRNA 3′-UTR binding. These are four activities within two biological systems, RNA-substrate selection/assembly and translation control. The cap activity is not forced into an obligatory SMN complex or a separately asserted decay process; ribosome binding does not mean structural membership or a demonstrated stalling mechanism.
+
+Selected primary excerpts and partner FUNCTION, SUBUNIT and SIMILARITY comments make the evidence easier to inspect. The prior 194 quote associations remain archived; repeated historical quotations are not restored wholesale. Both positive thesis membrane-fraction rows remain distinct from the unavailable final journal supplement. Source-specific RNA and nuclear-body judgments retain their biological scope.
+
+The viral RNA-binding context is refined to mRNA 5′-UTR binding after checking the official RNAcentral IRES identity, the GO definition and the original substrate study. The 462-nucleotide record remains distinct from the short d5/d5ss reagents. This refinement does not add a viral process or a new core activity.
