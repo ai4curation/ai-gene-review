@@ -15,8 +15,6 @@ that scope, and complete individual member gene reviews. Follow each PR through
 review, checks and merge. A module is not finished merely because its YAML validates
 or its existing status says COMPLETE.
 
-
-
 ## Coverage and completion criteria
 
 [Inventory](MODULE_TAXON_AUDIT/inventory.json) records the initial 702-module universe
@@ -44,15 +42,16 @@ For each module, record evidence that all of the following are satisfied:
 ## Status
 
 - [ ] `bacterial_carboxyspermidine_biosynthesis`: [PR #6089](https://github.com/ai4curation/ai-gene-review/pull/6089) has 18 COMPLETE reviews preserving 64 seeded rows and 36 raw sources. Its reviewed science at `20037c495a` was approved with successful CI. Integration with published main preserves the science; renewed review, CI and actual merge remain pending.
-- [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
-- [x] `bacterial_divisome_peptidoglycan_transpeptidation`: [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) merged as `1970e159b929a11ec02b0bc86e64cebae7cf4c9e` at 2026-11-06T15:47:31Z. All 125 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6123-merged-content.json).
+- [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
+
+- [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
 - [x] `bacterial_assimilatory_nitrate_reduction`: [PR #5740](https://github.com/ai4curation/ai-gene-review/pull/5740) merged as `62f214ee641ee2c662c58c8e40a6eeba6a39c7f0` at 2026-10-30T06:46:53Z. All 209 scoped source/curation/history blobs match the approved head; 21 member reviews are COMPLETE with no PENDING annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5740-merged-content.json). PR #5928 is a separate family-review follow-up.
 - [x] `bacterial_aspartate_to_threonine_biosynthesis`: [PR #5858](https://github.com/ai4curation/ai-gene-review/pull/5858) merged as `225589950bb458a00b76f46024480ac6f68b76a6` at 2026-11-01T23:27:51Z after approval of `f074ad3642687ea4d2bb6eeb02757e2028e8b37e` and passing required/queue checks. All 152 scoped blobs match the approved head; 20 reviews, 192 machine rows and 40 raw sources are preserved. Final 193 rows include one restored inherited authored proposal; two others remain retired.
 - [x] `bacterial_beta_aryl_ether_dimer_cleavage`: [PR #5930](https://github.com/ai4curation/ai-gene-review/pull/5930) merged as `22ee0c020b11a0455c6e75da1a36fb59af729954` at 2026-11-03T05:26:24Z after approval of `f54046b04cea6bb86bc49c9d38e5f06776aabaef` and passing head/queue checks. All 153 scoped blobs match the approved head; 16 COMPLETE reviews, nine original annotation rows and 32 raw sources are preserved, with no NEW annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5930-merged-content.json).
 - [x] `bacterial_c_di_amp_signaling`: [PR #5997](https://github.com/ai4curation/ai-gene-review/pull/5997) merged as `ad87fb94656fdac3baab05c26d9f22af6549607a` at 2026-11-05T07:10:18Z after approval of `46450254fe474862ee723803c4347d875f34d8b0` and passing head/queue checks. All 166 scoped blobs match the approved head; 17 COMPLETE reviews preserve 89 original rows and 34 raw sources, with nine NEW annotations and two explicit UNDECIDED claims. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5997-merged-content.json).
-- [x] `bacterial_c_di_gmp_signaling`: [PR #6062](https://github.com/ai4curation/ai-gene-review/pull/6062) merged as `70ad66f4836ff10f81b94a3ba82576eeb7577bd5` at 2026-11-06T13:52:27Z. All 159 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6062-merged-content.json).
+- [ ] `bacterial_c_di_gmp_signaling`: Audit in progress on 17 reference proteins spanning Pseudomonadota, Bacillota and Spirochaetota. Reworked local/global signalling, optional DdpA context, verified family selectors and gene reviews; Scoped validation is complete; the full run reports only 19 documented pre-existing citation failures outside this module. [PR #6062](https://github.com/ai4curation/ai-gene-review/pull/6062) is open; independent review, CI and actual merge remain pending. The original nitrate audit PR #5740 is verified merged; follow-up PR #5928 is tracked separately.
 
 - [x] `bacterial_ammonia_assimilation`: [PR #5696](https://github.com/ai4curation/ai-gene-review/pull/5696) merged as `fc3465b477b55d7ee05ffcb7eb4c15e315967029` at 2026-10-28T20:07:15Z. All 126 scoped source/curation/history blobs match the approved head; 12 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5696-merged-content.json).
 
@@ -69,7 +68,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `aliphatic_glucosinolate_myrosinase_defense`: [PR #5550](https://github.com/ai4curation/ai-gene-review/pull/5550) merged as `75d569bf94a697ed142f0f1397736819563b8d74`. All 187 scoped files from the 208-file paginated PR match the approved head; 35 reviews, 453 rows and 31 curated references are verified.
 - [x] `androgen_receptor_signaling`: [PR #5554](https://github.com/ai4curation/ai-gene-review/pull/5554). Merged PR #5554 as 70a5964a22d14e7972cfb43fe02095aa4cb8a7c1 at 2026-10-26T15:23:25Z after current-head approval and successful queue checks. All 270 scoped science, source and history blobs match approved head 93ce23a1a7d136ce286372b29b6e3174abc45979. Fifteen reviews and 1,683 original rows are preserved.
 - [x] `anti_crispr_suppression`: [PR #5555](https://github.com/ai4curation/ai-gene-review/pull/5555). Merged PR #5555 as aa66b5213685b58a3a8c3d5503aa1c44411c9b5e at 2026-10-26T17:25:40Z, after exact-head approval of 76b0361126d8dbe5cf7c170acf34d289426c9c2e. All 114 scoped approved science/source/history blobs match the actual merge; 13 reviews, 42 final rows, 26 raw sources verified.
-- [x] `apoptotic_execution_phase`: [PR #5558](https://github.com/ai4curation/ai-gene-review/pull/5558) merged as `6cea7bd0a5c9ed4fa53bd44e7c9cafd4185e338a` at 2026-10-27T18:54:34Z; its 185 scoped blobs match the reviewed head ([merge proof](MODULE_TAXON_AUDIT/proofs/pr5558-merged-content.json)). [DIABLO follow-up #6124](https://github.com/ai4curation/ai-gene-review/pull/6124) merged as `fd782f231a5593f3aa27e21150286d650a7f6def` at 2026-11-06T14:53:24Z ([follow-up proof](MODULE_TAXON_AUDIT/proofs/pr6124-merged-content.json)). All 16 member reviews are COMPLETE with 1,608 reviewed rows and no PENDING. The later module term decomposition is from merged #5565; the [completion-panel proof](MODULE_TAXON_AUDIT/proofs/apoptotic-execution-completion-panel.json) verifies that scope.
+- [ ] `apoptotic_execution_phase`: [PR #5558](https://github.com/ai4curation/ai-gene-review/pull/5558) merged as `6cea7bd0a5c9ed4fa53bd44e7c9cafd4185e338a` at 2026-10-27T18:54:34Z. All 185 scoped source/curation/history blobs match the approved head; 16 member reviews have no PENDING decisions. DIABLO still has DRAFT metadata; a module-specific follow-up remains before audit completion. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5558-merged-content.json).
 - [x] `aps_dependent_assimilatory_sulfate_reduction`: [PR #5560](https://github.com/ai4curation/ai-gene-review/pull/5560). Merged as `6349c3ef3ea2c8604949502686281dde0c0aaa7a` after approval and passing checks. All 226 scoped curation, history and source files match approved head `8553f16ce5`. The audit covers 29 member reviews, 496 rows, 28 curated references and five qualified connections.
 - [x] `arginine_biosynthesis`: [PR #5563](https://github.com/ai4curation/ai-gene-review/pull/5563). PR #5563 merged as bfd5d651c11e41f1c509f167bb15a003c2da4bc3 at 2026-10-26T16:46:07Z, after approval of b4971234e3c94371d017b6ea69791c636e4b730f. All 276 scoped approved science, source and history blobs are identical in the merge. The module has 43 reviewed members and 555 annotation rows; the shared CAR1 comparator is included in the wider content proof.
 - [x] `arginine_catabolism_arginase_pathway`: [PR #5566](https://github.com/ai4curation/ai-gene-review/pull/5566). Merged PR #5566 as bb5f066dbaf3d5d968bde928c8852ea0d4062408 at 2026-10-26T17:52:57Z, after exact-head approval of 90bdd63dec857b055c5f9f9a03fd5a15c7209bec. All 144 scoped approved science/source/history blobs match the actual merge; 18 reviews, 359 final rows, 36 raw sources verified. The correct total is 357 original rows plus two supported ARGAH matrix proposals, giving 359 final rows.
@@ -85,7 +84,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after verified merge reconciliation: 777 modules; 37 COMPLETE, 1 PR_OPEN, 0 IN_PROGRESS and 739 NOT_STARTED. Other rows retain their dated evidence; this is not a fresh global PR survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 2 PR_OPEN, 0 IN_PROGRESS and 738 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -530,6 +529,35 @@ The divisome review follow-up completed full validation on 10,555 reviews. The 1
 
 Integrated published main `fd782f231a` with the validated PR #6123 head `4b65e56304`. All 158 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
 
+## 2026-11-06: Replication PR #6117 review follow-up
+
+Eleven reviewed genes preserve 131 annotation payloads, nine inherited NEW actions,
+22 raw files and 49 referenced sources. HolD model/construct coordinates and
+source-specific mapping defects are structured; generic binding policy is applied
+consistently. Epsilon proofreading is refined to DNA-specific exonuclease activity
+in the genes and module. Focused checks and all 97 pathway cases pass. Fresh full
+validation, publication of the follow-up, independent review/CI and actual merge
+remain outstanding.
+
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `c27aa23b93` with the validated PR #6117 head `05b701415a`. All 575 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+
+## 2026-11-06 — replication proposal refinements
+
+PR #6117 round 2 refines two proposals authored within this PR, with both prior versions archived and independently verified against git and the pristine seed: HolD now uses DNA-templated DNA replication, while Bacillus DnaB has separate single- and double-stranded DNA-binding activities. Three DnaQ exonuclease rows refine directly to DNA-specific proofreading activity. DnaB membrane evidence explicitly distinguishes wild-type enrichment from mutant DnaD recruitment. Four focused review validations, renders and histories pass without curation warnings. All 1,067 original seed rows, including two inherited NEW rows, and 104 raw sources remain preserved across 52 COMPLETE reviews; the final count is 1,082 rows. The module remains unchanged. The capacity checker recognizes only the two independently verified DNA-binding descendant relationships and passes 100 cases, including removal and one-way entailment controls. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
+
+
+## 2026-11-06 — Replication round2 validated
+
+Replication round2 completed full validation on 10,653 reviews. The17 reference errors are the exact known errors in16 unrelated yeast reviews; all22 relevant inputs equal the pinned base. Schema and terms pass; best practices report zero errors, and all54 PMID-bearing pathways pass. All588 scoped files match validated science commit 2ea0e902c55f0b3ddd219f8bb03511fca3b4b130. The 52 completed reviews preserve 1,067 pristine annotation rows (1,065 machine rows and two inherited proposals) and104 raw files;15 added rows yield1,082 current rows. Two proposals authored by this PR were revised with exact archives, distinguished from original seeds. The100 capacity cases pass, including one-way GO DNA-binding descendant entailment. Renewed independent review, CI and actual merge remain pending for PR#6117.
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6117 head `8df6fabd8d`. All 588 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
 ## 2026-11-06 — carboxyspermidine PR6089 review follow-up
 
 The review requested substrate-scope, annotation-action, native-process evidence, source-defect and rationale corrections. Ten member reviews were updated and pass focused validation. Eight authored isomer-specific spermine/thermospermine BP rows were withdrawn while supported molecular activities and positive native context remain. All 64 original payloads and36 raw sources are preserved; nine authored proposals remain alongside five inherited NEW rows. The 22 compiler cases pass. The prior full validation has 19 independently proved pre-existing reference errors. This branch records the actual CHANGES_REQUESTED verdict on5324e9e7a9; the local follow-up needs fresh review and CI after publication.
@@ -555,3 +583,7 @@ Evidence: [Cysteine merge evidence](MODULE_TAXON_AUDIT/proofs/pr6120-merged-cont
 ## 2026-11-06 — completion evidence links restored
 
 Restore merge commits, timestamps and clickable merged-content proof links for the c-di-GMP, cysteine, divisome and apoptotic-execution completion bullets. Recheck all five linked PR merges against the live GitHub API, retain the separate DIABLO and completion-panel evidence, place displaced checkboxes under Status, and repair three dropped spaces in this branch's journal. This is project prose and rendering only; the inventory and all scientific/source content remain unchanged.
+
+## 2026-11-06 — PR #6089 integration with published main
+
+Integrated published main `488d370561` with the validated PR #6089 head `f112c3e0a5`. All 173 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row and four previously reviewed completion records, which are also retained verbatim from the approved head; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
