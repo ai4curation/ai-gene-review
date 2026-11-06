@@ -569,3 +569,7 @@ Comparative OPG science and focused validation are complete: 11 COMPLETE gene re
 ## 2026-11-06 — PR #2142 integration with published main
 
 Integrated published main `039e2ef630` with the validated PR #2142 head `79b979a1fa`. All 169 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All eleven scoped gene reviews pass focused validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — OPG review follow-up validation
+
+PR #2142 review fixes passed a fresh full-corpus validation on frozen science head 05230b5e38d6a055164e2825c0c0b8016f9304a8: 10,683 reviews, zero blocking errors and 54 pathway files. All 183 scoped files remained byte-identical through the run. The beta-glucan rows retain independently supported claims; Caulobacter synthesis support remains explicitly inferred; the OpgG hydrolysis proposals distinguish biochemical capability from unresolved physiological relevance. A subsequent import/hash-helper formatting fix addresses the CI lint failure without changing lineage assertions; both lint and the complete lineage check pass. Renewed review, CI and actual merge remain pending.

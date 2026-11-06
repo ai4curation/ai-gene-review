@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Verify the scoped proof against immutable source snapshots (run from repo root)."""
 from pathlib import Path
-import gzip, hashlib, json, collections, yaml
+import gzip
+import hashlib
+import json
+import collections
+import yaml
 here=Path(__file__).resolve().parent
 proof=yaml.safe_load((here/'lineage-proof.yaml').read_text())
-sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def sha(p):
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 for path,expected in proof['source_hashes'].items():
     assert sha(path)==expected, path
 path=Path('.cache/panther_trees/PTHR43867.json.gz')
