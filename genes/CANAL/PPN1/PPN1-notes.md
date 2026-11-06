@@ -1,0 +1,5 @@
+# CANAL PHM5 / PPN1 review notes
+
+- `just fetch-gene CANAL PPN1` initially hit a UniProt 429. An older literature accession, `P76067`, resolves to a C. albicans Ppn1-like protein but has no current GOA rows for SC5314. The SC5314 record behind `CGD:CAL0000182615` is `A0A1D8PQR0`, with `PHM5`, `CAALFM_C700980WA`, `orf19.7016`, and `C7_00980W_A` identifiers and the current `PTHR10340:SF55` cross-reference.
+- Manual searches for `CAL0000182615`, `A0A1D8PQR0`, `C7_00980W_A`, and `orf19.7016 PPN1` found the 2022 C. albicans `ppn1Delta ppx1Delta` genetics paper, but no C. albicans PHM5/Ppn1 purified-enzyme assay.
+- The 2022 C. albicans paper supports PHM5/PPN1 involvement in polyphosphate catabolism through redundant genetics with PPX1 and PPN1 reintegration. It should not be projected into PHO pathway activation, filamentous growth, stress resistance, or virulence GO rows for PHM5 because those phenotypes are downstream consequences of blocking polyphosphate mobilization in a double mutant.
