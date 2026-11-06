@@ -152,6 +152,32 @@ def residue_table():
             row.append(f"{seqs[k][q-1]}{q}" if q else "-")
         print(label + "\t" + "\t".join(row))
 
+    # Sequence windows around the aligned beta3-lysine and catalytic-loop positions, and each
+    # entry's review status and protein-existence level, so that per-homologue statements in
+    # RESULTS.md (e.g. a missing VAxK motif or an HKD loop) can be checked against this output.
+    windows = {label: pos for label, pos in sites.items()
+               if label.startswith(("beta3 Lys", "HRD Asp", "catalytic-loop Asn", "DFG Asp"))}
+    print("\nSequence windows (aligned position marked in brackets; 8 residues either side):")
+    for k in names:
+        print(f"{k} ({COMPARATORS[k]}; {entry_status(COMPARATORS[k])})")
+        for label, pos in windows.items():
+            q = maps[k].get(pos)
+            if not q:
+                print(f"  {label}: -")
+                continue
+            s = seqs[k]
+            lo, hi = max(q - 9, 0), min(q + 8, len(s))
+            print(f"  {label}: {lo + 1}-{hi} {s[lo:q-1]}[{s[q-1]}]{s[q:hi]}")
+
+
+def entry_status(acc):
+    url = f"https://rest.uniprot.org/uniprotkb/{acc}.txt"
+    with urllib.request.urlopen(url, timeout=60) as fh:
+        text = fh.read().decode()
+    reviewed = "reviewed" if text.split("\n", 1)[0].split()[2].startswith("Reviewed") else "unreviewed"
+    pe = next((l[5:].strip().rstrip(";") for l in text.splitlines() if l.startswith("PE   ")), "PE ?")
+    return f"{reviewed}, PE {pe}"
+
 
 if __name__ == "__main__":
     main()
