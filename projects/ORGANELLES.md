@@ -272,9 +272,73 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         root-only ER list (survey regenerated 2026-11-04)
   - [x] ER batch 2: 20 human genes (2026-11-05); 40 human genes remain (39
         distinct, since GBA duplicates GBA1)
+  - [x] ER batch 3: 20 human genes (2026-11-05); 20 human genes remain (19
+        distinct)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-05 (ER batch 3: 20 human genes)
+
+The next 20 human genes on the root-only ER list (LOXL2 to SLC22A5). Three
+gained an ER lumen row (POFUT1, PRDX4) or ER membrane row (PGRMC2); four
+changed action (LRP2, NENF, PARK7, RIPK2). Four of the genes (NENF, NLRP3,
+PYCARD, SCP2) had their mitochondrion rows reviewed in mitochondrion batch 4,
+and the ER calls were kept consistent with them.
+
+| gene | outcome | evidence |
+|---|---|---|
+| LOXL2 | root | endogenous LOXL2 mainly in calnexin-positive ER, read by the authors as precursor awaiting export (PMID:28332555); soluble and secreted |
+| LRP2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | sole mouse donor is a cubilin paper, abstract-only, with no ER result (PMID:15616221) |
+| LRP5 | root | curated from an abstract-only variant paper (PMID:25920554); MESD is its ER chaperone (PMID:12581525); receptor in transit |
+| LRP6 | root | GRP94-dependent ER exit (PMID:23572575) and MESD chaperoning show a wild-type transit pool; the curated line comes from a variant paper (PMID:26387593) |
+| human/MTMR9 | root | "Partially localizes to the endoplasmic reticulum" (PMID:19038970), curator deference; soluble pseudophosphatase |
+| NENF | root; IBA, IEA and IDA ACCEPT to KEEP_AS_NON_CORE | endogenous protein in a marker-controlled ER fraction (PMID:31536960); secreted, no retention motif, so a transit pool |
+| NLRP3 | root | mouse NLRP3 on the ER with ASC brought from mitochondria (PMID:23502856); soluble NLR bound to membranes by a polybasic linker (PMID:34861190) |
+| NPHS2 | root; isoform `source_defects` | ER location is for the Pod-short isoform retained in the ER (PMID:23648087); canonical podocin is at the plasma membrane |
+| NRXN1 | root; ISS stays MARK_AS_OVER_ANNOTATED | mouse source shows PDZ-dependent ER/Golgi exit and inactive retention signals (PMID:19036990) |
+| NT5C3A | root | interferon-induced p36 co-stains with PDI (PMID:8557639); one line toward membrane, so no membrane row |
+| PARK7 | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | endogenous DJ-1 in a marker-controlled ER fraction (PMID:31536960); soluble, surface-associated pool |
+| human/PCK1 | root | AKT-phosphorylated PCK1 moves to the ER (PMID:32322062); recruited cytosolic enzyme |
+| PGRMC2 | root; NEW GO:0005789 ER membrane (IC) | single predicted TM and no signal peptide; endogenous staining of central ER and nuclear envelope in three cell types (PMID:27754849), no named ER marker |
+| PINK1 | root | endogenous PINK1 in marker-controlled ER fractions (PMID:31536960); the IEA's ARBA source is no longer in UniProt |
+| POFUT1 | root; NEW GO:0005788 ER lumen (IC) | signal peptide, no TM, C-terminal RDEF retention motif; "soluble protein ... retained in the ER by a KDEL-like sequence" (PMID:15653671) |
+| PRDX4 | root; NEW GO:0005788 ER lumen (IC) | cleaved signal peptide; protease-protected like calnexin's lumenal domain and retained without a motif (PMID:18052930); removes Ero1-derived H2O2 (PMID:20627953) |
+| PYCARD | root | activation-induced move to perinuclear ER/mitochondria clusters (PMID:21124315); recruited adaptor |
+| RIPK2 | root; EXP and IEA ACCEPT to KEEP_AS_NON_CORE | endogenous RIPK2 in a PDI-positive ER fraction where ZNRF4 degrades it (PMID:28656966); a regulatory recruited pool |
+| SCP2 | root; isoform `source_defects` | mouse source is overexpressed SCP-2 in L-cells (PMID:11003606); soluble PTS1 protein |
+| SLC22A5 | root; isoform `source_defects` | ER location is for the OCTN2VT splice form retained in the ER (PMID:17509700) |
+
+What ER batch 3 showed:
+
+- **Retention without a motif.** PRDX4 has no KDEL-type signal, but protease
+  protection, topology and a lumenal partner (Ero1) agree on the lumen. A
+  retention motif is one line, not a requirement.
+- **When the sub-compartment enters `core_functions`.** Only when an assay
+  places the activity itself there, not when it is inferred from the protein's
+  location (rule 6). PRDX4 qualifies: it is shown consuming H2O2 made by the
+  lumenal oxidase Ero1. POFUT1 does not yet: O-fucosylation is shown in the ER,
+  so its core location stays at the root even though its NEW lumen row is
+  well supported.
+- **A new membrane row refines generic membrane rows.** Once PGRMC2 has
+  GO:0005789, its GO:0016020 membrane rows are correct but too general, so they
+  become MODIFY to the ER membrane term rather than staying ACCEPT.
+- **Isoform-restricted ER locations are common.** NPHS2, SCP2 and SLC22A5 join
+  ABCA7 and ATP7A: UniProt ties the ER to one splice form, often a retained
+  quality-control product, while the GO rows carry no isoform. Each now has a
+  `source_defects` entry.
+- **Shared fractionation papers need one reading.** PMID:31536960 (marker-
+  controlled mito, ER and MAM fractions) underlies NENF, PARK7 and PINK1. All
+  three are read as real but non-core ER pools, with no MAM row.
+- **The membrane bar.** PGRMC2's membrane row rests on a predicted TM plus
+  endogenous ER-pattern staining without a marker. It is the weakest membrane
+  row so far, above CGRRF1 (overexpressed construct) and below C18orf32 and
+  C19orf12 (marker-controlled fractions).
+- **`is_active_in`:** POFUT1 IBA (O-fucosylation shown in the ER) and PRDX4
+  IBA (peroxidase acting on Ero1 H2O2) are justified; PGRMC2 IBA is soft.
+- **For later checks:** NRXN1's ISS rows on GO:0031965, GO:0031982 and
+  GO:0043025 repeat a wrong claim that mouse Nrxn1 has no experimental
+  annotation.
 
 ## 2026-11-05 (ER batch 2: 20 human genes)
 

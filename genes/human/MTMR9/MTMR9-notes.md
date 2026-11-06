@@ -68,3 +68,16 @@ The falcon report attributes ERGIC/Golgi localization and VSVG/WNT3A secretion e
 ### Relative
 The closest characterised relative by phylogeny is mouse Mtmr9 (Q9Z2D0), the ortholog in the same PANTHER subfamily PTHR10807:SF56 (the catalytic loop is identical). It has experimental data on MTMR7 binding and macropinocytosis/ruffles. The repo has no mouse Mtmr9 review.
 No module or GO-CAM in the repo contains MTMR9.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 EXP (PMID:19038970) and IEA (GO_REF:0000044, SL-0095).
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:19038970}" and "Partially localizes
+  to the endoplasmic reticulum (PubMed:19038970)" [file:human/MTMR9/MTMR9-uniprot.txt].
+  PMID:19038970 is abstract-only in the cache; PMC2629094 full text could not be retrieved.
+  The abstract's cell work uses MTMR6/MTMR9 co-expression.
+- MTMR9 has no TM segment or signal peptide: a soluble pseudophosphatase, so any ER pool is
+  a cytosolic-face, recruited pool.
+- Outcome: both rows stay KEEP_AS_NON_CORE on curator deference (HADHB/IFIT2 precedent),
+  dated reasons added; stays at the root, no ER membrane row.
