@@ -42,3 +42,8 @@ The family membership refresh, module schema/biological validators, all 17 focus
 The full-corpus reference check reports 19 existing quote-matching failures in 17 yeast reviews, all outside this module. Both affected publication caches (PMID:18701704 and PMID:18719252), every affected review and the schema/configuration/wrapper/lockfile exactly match the audit base commit. A focused replay on those unchanged files reproduces exit 1. The file/blob evidence is in `analysis/module_audits/bacterial_c_di_gmp_signaling/preexisting-reference-failures.yaml`; these unrelated reviews are not changed here. This limitation must not be reported as a passing full-corpus run.
 
 Final whole-corpus run: schema and ontology checks passed, best-practices validation completed on 10,550 reviews with zero errors and 28,000 advisory warnings, and all 54 pathway files containing PMID references passed. The overall command exited 1 solely because of the 19 documented pre-existing reference failures. All 17 scoped reviews, module schema/biological checks, 24 production-compiler cases, 19 history records, rendering and Ruff passed.
+
+
+## PR #6062 review follow-up — 2026-11-06
+
+Updated seven representative protein labels from the frozen UniProt RecName fields, retaining readable gene/strain names in preferred_term. Corrected the BdcA finding and step evidence to distinguish increased c-di-GMP on overexpression from the motility-only deletion result, and retained the catalytic-mutant stability limitation.

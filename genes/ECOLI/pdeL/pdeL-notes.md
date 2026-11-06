@@ -11,3 +11,8 @@ PMID:26553851 full text was inspected online at https://pmc.ncbi.nlm.nih.gov/art
 PdeL activation mutants reduce biofilm formation, but this does not establish universal activity of wild-type PdeL in standard conditions; the downstream biofilm process is retained non-core.
 
 Falcon deep research was attempted with the standard recipe and failed with HTTP 403 authentication. No provider report was authored manually. This review uses primary-source retrieval and cached papers. Original GOA annotation payloads and UniProt/GOA files were preserved.
+
+
+## PR #6062 review follow-up — 2026-11-06
+
+Corrected the evidence scope of the plasma-membrane IBA assessment: the accessible PMID:26553851 abstract establishes transcriptional autoregulation, not soluble/cytoplasmic localization. Added its exact result quote and qualified the architecture-based concern in the reason and propagation review. No replacement compartment is asserted.

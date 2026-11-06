@@ -33,3 +33,8 @@ uv run python -m ai_gene_review.validation.gene_paint_losses BACSU motI
 ```
 
 The name MotI is used because PMID:29196522 renames DgrA to reflect motility inhibition. The mechanism is a MotA clutch; it is not assumed to be identical to the enterobacterial YcgR brake. QuickGO was queried on 2026-11-05: GO:0098772 molecular function regulator activity describes non-covalent regulation of a target; GO:0140659 is explicitly cytoskeletal and is not appropriate for the bacterial flagellar motor. The regulator MF adds the experimentally established output not captured by ligand binding alone. The MotI-delta4 crystallographic construct is an engineered truncation, not a native isoform.
+
+
+## PR #6062 review follow-up — 2026-11-06
+
+Refined the authored NEW regulatory activity and matching core to GO:0140678 molecular function inhibitor activity. PMID:29196522 directly supports non-covalent MotA inhibition; the sequence-identical NCIB 3610-to-168 transfer remains explicit. Original GOA rows and raw sources are unchanged.

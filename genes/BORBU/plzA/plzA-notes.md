@@ -19,3 +19,8 @@ The standard `just fetch-gene` scaffold and its raw UniProt/GOA files were pinne
 `just deep-research-falcon BORBU plzA` was attempted on 2026-11-05 and failed with HTTP 403 (authentication/access failure). There is no provider-authored report; these are manual research notes. Logs are under `.cache/module-audit-logs/c-di-gmp-20261105/`. `just paint-losses BORBU plzA` was also run. PANTHER lineage losses could not be assessed because the accession is absent from the locally available family tree (or, for PlzA, no PANTHER family is present); this is an unavailable check, not evidence that no loss exists. The seeded rows contain no IBA.
 
 The module boundary is synthesis, degradation and receptor occupancy. Tick survival, mammalian infection, motility and nucleic-acid regulation are informative gene-level outputs, not assertions that every bacterial representative shares those outputs. No new biological-process annotations were manufactured from necessity or infection phenotypes.
+
+
+## PR #6062 review follow-up — 2026-11-06
+
+Retained the directly assayed RNA-folding-chaperone and DNA-binding NEW rows, but removed them from core_functions. Cyclic-di-GMP binding remains the established core. The description, annotation reasons and existing questions distinguish in vitro capability from unresolved native targets, physiological significance and assay-dependent ligand effects.

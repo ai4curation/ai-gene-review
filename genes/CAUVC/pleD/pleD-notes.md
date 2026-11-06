@@ -11,3 +11,8 @@ The fractionation result states “the PleD response regulator is a soluble cyto
 The four generic protein-binding rows are refined to phosphorelay response regulator activity because the kinase interactions transfer regulatory phosphate; they are not evidence that PleD is itself a kinase. Product-binding feedback is separately supported [PMID:17697997, “An allosteric c-di-GMP-binding mode”].
 
 Falcon deep research was attempted with the standard recipe and failed with HTTP 403 authentication. No provider report was authored manually. This review uses primary-source retrieval and cached papers. Original GOA annotation payloads and UniProt/GOA files were preserved.
+
+
+## PR #6062 review follow-up — 2026-11-06
+
+Replaced the historical-background quotation supporting the NEW allosteric cyclic-di-GMP-binding row with PMID:17697997's own structural result: crosslinking the DGC domains and noncompetitive product inhibition. The sequence-identity transfer and annotation scope are unchanged.
