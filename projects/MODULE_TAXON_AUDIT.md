@@ -88,7 +88,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 5 PR_OPEN, 3 IN_PROGRESS and 736 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 4 PR_OPEN, 3 IN_PROGRESS and 736 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -660,4 +660,10 @@ Integration proof: [validated-head-main5-integration.json](../analysis/module_au
 
 ## 2026-11-06 — DsbAB merged content verified
 
-Verified actual merge of DsbAB PR6129 at 8daf92bfc82949aa53b6998152522545fe073b64 against approved head 5bb80f75d37eb5b9a08dcf9e54c31c70a49e3bba. All201 scoped files are byte-identical, including curated science and sources. Marked only this module COMPLETE; no other audit status changed. Shared tracker files are excluded from the science equivalence proof.
+Verified actual merge of DsbAB PR6129 at 8daf92bfc82949aa53b6998152522545fe073b64 against approved head 5bb80f75d37eb5b9a08dcf9e54c31c70a49e3bba. All 201 scoped files are byte-identical, including curated science and sources. Marked only this module COMPLETE; no other audit status changed. Shared tracker files are excluded from the science equivalence proof.
+
+## 2026-11-06 — chemotaxis review U1 ledger reconciliation
+
+Correct the current ledger snapshot after recording the DsbAB merge: 777 modules comprise 34 COMPLETE, 4 PR_OPEN, 3 IN_PROGRESS and 736 NOT_STARTED. The prior line described the preceding integration commit and was stale after the completion update. Fix spacing in current DsbAB prose and inventory text, retain append-only historical records, and link the earlier main4 integration proof. No gene review, module, family, source evidence or scientific validation input changes.
+
+Earlier integration evidence: [main4 proof](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main4-integration.json).
