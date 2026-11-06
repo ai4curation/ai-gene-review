@@ -37,3 +37,19 @@ some records have atypical architecture or conflicting process annotations.
   bacterial_cysteine_biosynthesis_via_o_acetylserine module. UniProt's
   `DR GO; GO:0006535` line is a stale cross-reference, not support for a new
   term (PR #3105).
+
+## 2026-11-03 completion pass (cysteine biosynthesis module promotion)
+
+- Generic parent rows (catalytic, transferase, O-acetyltransferase activity)
+  moved from KEEP_AS_NON_CORE to TOO_GENERAL: the review's own accepted
+  reaction-specific MF entails them, so keeping them as "non-core" misdescribed
+  the judgement. Actions now match the sibling E. coli and P. aeruginosa
+  reviews written for the same module.
+- No provider deep-research run was possible in this session (no provider API
+  keys); the review rests on the UniProt record, PAINT data for the PANTHER
+  family, and the cached Pseudomonas literature already cited.
+- Status set to COMPLETE.
+- Cytoplasm row changed to MODIFY -> cytosol (GO:0005829): the PTHR42811 PAINT
+  node PTN000602332 carries cytosol (IBD), withdrawn only for plant organellar
+  SATs (IRD at PTN000602385), and Q88PL0 has no membrane or signal features. The
+  record's own SUBCELLULAR LOCATION line is ARBA-derived and no longer cited.

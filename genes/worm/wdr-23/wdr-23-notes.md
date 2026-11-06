@@ -119,3 +119,12 @@ ProtNLM2 output and prediction-evidence files were not opened or used for this s
   (UniProt PANTHER xref and the entries CSV both give PTHR19847:SF7 for P90794).
 - Module: `modules/nrf_oxidative_stress_response.yaml` (CUL-4/DDB-1/WDR-23 step in the nematode
   SKN-1 branch).
+
+## Mn-induced CEP degeneration (UniProt PIRNR text, checked 2026-10-30)
+- The UniProt FUNCTION line "Required for dopaminergic CEP neuron degeneration in response to Mn(2+)"
+  matches Settivari et al. 2013. There, knockdown of the SKN-1 inhibitor WDR-23 makes worms
+  resistant to Mn-induced dopamine neuron degeneration
+  [PMID:23721876 "decreases in gene expression of the SKN-1 inhibitor WDR-23 or the GSTπ-binding cell death activator JNK/JNK-1 result in an increase in resistance to the metal"].
+  The effect is indirect. Loss of WDR-23 releases SKN-1, which induces the neuroprotective GST-1.
+  It follows from the SKN-1 substrate-receptor role already in the review, and it was not tested on
+  the D2030.9d product, so no annotation is proposed.

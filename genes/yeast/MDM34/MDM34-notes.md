@@ -54,3 +54,7 @@ against `publications/PMID_*.md`.
 - Generic protein binding (GO:0005515) IPI rows: REMOVE (interactions real, captured by complex terms).
 - No NEW annotations proposed: candidate terms (e.g. phospholipid binding) are descendants of terms
   the genes already carry.
+
+## Description follow-up (SGD text)
+- SGD says ERMES "may" coordinate mtDNA replication and growth. Mdm34 loss causes nucleoid loss [PMID:14981098 "Lack of Mmm2p causes a defect in mitochondrial shape and loss of mitochondrial DNA (mtDNA) nucleoids."], but ERMES mtDNA defects are suppressed by VPS13 gain-of-function alleles and look secondary [PMID:26370498 "The fact that it suppresses ERMES mtDNA defects indicates that these are secondary to the loss of a primary ERMES function."]. No replication-coordination role is added.
+- SGD says ERMES co-localizes with peroxisomes and with concentrated areas of pyruvate dehydrogenase. Cohen et al. 2014 found peroxisomes at specific mitochondrial subdomains [PMID:24722918 "peroxisomes are not randomly distributed in cells but are rather localized to specific mitochondrial subdomains such as mitochondria-ER junctions and sites of acetyl-CoA synthesis."]. This is spatial context for peroxisome positioning, peripheral to Mdm34 function.

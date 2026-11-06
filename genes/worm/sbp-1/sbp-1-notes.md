@@ -31,3 +31,14 @@
 - ER membrane (IEA + ISS): consistent with two predicted TM helices and SREBP family
   biology; accepted as the precursor location, but no worm-specific experimental evidence.
 - No NEW process terms proposed (CLAUDE.md NEW bar).
+
+## Follow-up: description-source comparison (2026-10-30)
+
+- UniProt FUNCTION names a role in the response to simulated microgravity with MDT-15
+  (PubMed:32448509). Checked against the cached abstract [PMID:32448509 "RNAi knockdown of
+  sbp-1 or mdt-15 induced a susceptibility to toxicity of simulated microgravity"; "intestinal
+  MDT-15 acted upstream of SBP-1 to regulate the response to simulated microgravity"]. The
+  claim is accurate, but it is a single RNAi stress-sensitivity study in which SBP-1 acts
+  through its usual lipogenic target FAT-6. It is a context for the core MDT-15/SBP-1
+  lipogenic activity, not a separate function, so it is not added to the description or as
+  an annotation.

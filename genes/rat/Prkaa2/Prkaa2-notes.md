@@ -210,3 +210,15 @@ with PMID:15695819, PMID:18079111 and the OpenScientist report as support) was k
 recent and more informative one; the rest of the row ordering and formatting follows the
 re-review branch. Both cached sources are abstract-only, so the full-text check listed under
 open questions still applies.
+
+## 2026-10-28 - adaptor-activity follow-up corrected to UNDECIDED
+
+The singleton sidecar audit supersedes both the 2026-10-10 conclusion and the
+2026-10-17 merge note above. The GO:0030674 `protein-macromolecule adaptor
+activity` row is now UNDECIDED, and the OpenScientist sidecar reference_review
+is HIGH/DISPUTED. The beta-scaffold misassignment case is plausible, but the
+PMID:15695819 cache is abstract-only while the row is an RGD IDA whose curator
+read the full paper. The cached abstract itself reports that deleting beta
+Ile-270 blocks beta-gamma association only without alpha, and that alpha can
+restore beta-gamma binding, so the full text and curator rationale are needed
+before the Prkaa2 alpha-subunit row can be removed confidently.

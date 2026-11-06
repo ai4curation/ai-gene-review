@@ -234,3 +234,43 @@ The deep research focused primarily on OASS (CysK/CysM) and CBS subfamilies. The
 
 ---
 *Analysis performed 2026-01-06*
+
+## 2026-11-03 re-review for the bacterial cysteine biosynthesis module
+
+Subfamily membership was read from the PANTHER 19.0 organism classification
+files (`.cache/panther/PTHR19.0_*`) and node recipients from the PAINT UniProt
+GAF (`.cache/panther/gene_association.paint_uniprot.gaf.gz`, column 8 carries
+the PTN node), for example
+
+```
+zcat .cache/panther/gene_association.paint_uniprot.gaf.gz | awk -F'\t' '$2=="O69652"{print $2,$3,$5,$8}'
+```
+
+Findings:
+
+- PTHR10314:SF194 (named CYSTATHIONINE BETA-SYNTHASE) is not a CBS-only
+  subfamily. Besides human CBS P35520 and yeast CYS4 P32582 it holds the
+  bacterial cysteine synthase A proteins: E. coli CysK P0ABK5, Salmonella CysK
+  P0A1E3, B. subtilis CysK P37887, M. tuberculosis CysK1 P9WP55 and CysK2
+  Q79FV4, and P. aeruginosa CysK Q9I0D3.
+- PTHR10314:SF162 (CYSTEINE SYNTHASE B) holds E. coli CysM P16703,
+  P. aeruginosa CysM Q9I526, Salmonella CysM P29848 and M. tuberculosis CysM
+  P9WP53.
+- PTHR10314:SF5 (THREONINE SYNTHASE 1, CHLOROPLASTIC) holds the threonine
+  synthases B. subtilis ThrC P04990, M. tuberculosis ThrC P9WG59 and
+  Arabidopsis TS1 Q9S7B5. PTN000741516 is this threonine-synthase clade: its
+  IBDs are threonine synthase activity and threonine biosynthesis (seeds
+  P9WG59 and AT4G29840), and its recipients include P04990 and P9WG59. The
+  IRD for GO:0019344 at PTN000741516 therefore prunes cysteine biosynthesis
+  from threonine synthases, not from the cysteine desulfhydrases.
+- The SF135 cysteine desulfhydrase M. tuberculosis Cds1 O69652 still receives
+  the GO:0019344 IBA from PTN000034104 in the current PAINT GAF, so the
+  over-propagation described above is not repaired by any IRD.
+- PTN000034668 (IRD, GO:0019344, taxon Eukaryota) is not resolved to a clade in
+  the slice. Its likely recipients are the eukaryotic SF35 (MITOCHONDRIAL
+  CYSTEINE SYNTHASE-RELATED) proteins: yeast MCY1 P53206, S. pombe cys12
+  P87131, N. crassa cys-12 Q7SHQ1 and Arabidopsis At1g55880 Q6NKY5 all receive
+  the PTN000034104 cytoplasm IBA but no GO:0019344 IBA.
+- B. subtilis MccA O05393 (SF242, O-ACETYLSERINE DEPENDENT CYSTATHIONINE
+  BETA-SYNTHASE) is the only seed of PTN008497437, which carries both GO:0004122
+  and GO:0004124.

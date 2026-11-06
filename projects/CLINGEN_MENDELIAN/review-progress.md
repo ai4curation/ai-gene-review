@@ -7349,3 +7349,470 @@ Both actual integrations executed 12 example checks, 4,452 unit tests (86 desele
 The accepted logs retain dependency deprecations and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. FMR1's advisories include retained generic binding and source-context action differences; they are disclosed with the accepted review. No accepted gene validators were rerun for this checkpoint.
 
 Object verification covers 22 FMO3 and 93 FMR1 gene/history/source objects, including 14 and 85 normal sources. Their 86 payload paths are distinct, with no parent-identical no-ops. The tracker preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 150 prior completion updates, 233 prior project histories and the complete 842,774-byte progress prefix. The two queue files remain exact mirrors. The nine existing PR #4518 history/generated/slides overlaps were reviewed at their exact unchanged head and base; none owns the four tracker files or accepted sources. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-31T071824Z-codex-71f1e3.yaml).
+
+## Completion checkpoint 661 — 2026-10-31 17:03:31 UTC
+
+**661 complete; 2,215 remaining out of 2,876 catalogue genes.** This checkpoint records the independently verified actual merges of FNIP1, FN1 and FOXC1. It publishes their existing completion credit; it does not create additional gene credit or change the scientific reviews. All three retain DRAFT status with their documented uncertainties.
+
+FNIP1 has two defined activities: inhibition of the Hsp90 ATPase cycle as a cochaperone, and participation in the FLCN–FNIP1 complex that activates RagC/D GTP hydrolysis and connects lysosomal nutrient sensing to TORC1 signaling. Purified-complex activity does not establish FNIP1-alone catalysis. Three natural products are preserved, without assigning full-length activity to the shorter products; the historical 508-aa expression construct is not identical to the current short natural product. The review retains 58 original and exported contexts in 56 stored annotations, seven original extension atoms, 26 references and two cores. Its 17 ACCEPT, 22 KEEP_AS_NON_CORE, 12 MODIFY and five TOO_GENERAL decisions preserve source-specific client and donor limits. Three source-defect records document the B-cell apoptosis direction issue without claiming that an upstream report was filed. See the [FNIP1 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FNIP1/FNIP1-source-guide.md), [accepted PR #5774](https://github.com/ai4curation/ai-gene-review/pull/5774), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/42d4505b354fc6123752ec5d2bc210e0d85e34e2) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41185923466).
+
+FN1 encodes fibronectin, a secreted matrix scaffold with distinct integrin, collagen, heparin and proteoglycan recognition activities. The five cores distinguish matrix assembly from defined ligand-binding assays, retain soluble plasma versus assembled-matrix contexts, and avoid transferring fragment behavior to all 17 natural products. Fusion-specific FN1–ALK localization is not treated as unqualified localization of native fibronectin. The review contains 235 stored annotations: 223 current typed contexts, 11 historical source-only contexts and one retained authored NEW annotation. The current 222 original QuickGO contexts produce 219 exporter rows; preserved OR alternatives account for one-to-many typed contexts, so there is no invented single raw-action total. The original 226-row sibling GOA file and additive 219-row snapshot remain separate. Final actions are 53 ACCEPT, 120 KEEP_AS_NON_CORE, 24 MODIFY, 12 MARK_AS_OVER_ANNOTATED, three TOO_GENERAL, 22 UNDECIDED and one retained NEW. The 149 original quotation associations are preserved as 134 active and 15 archived associations; no new quotations were added. There are 156 references. See the [FN1 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FN1/FN1-source-guide.md), [accepted PR #5772](https://github.com/ai4curation/ai-gene-review/pull/5772), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/dd9848b126597f02de39ae5ae91c5a135bad96d5) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41191146052).
+
+FOXC1 recognizes regulatory DNA and activates transcription. A second core captures its binding to GLI2 and enhancement of GLI2 DNA-binding activity in the tested human cancer-cell system; the proposed allosteric opening remains a model. The inhibitory region attenuates activation-domain-driven reporter output without establishing a separate full-length repressor mechanism. Its 143 original and exported contexts map to 141 stored annotations with all three original extension atoms preserved. Final actions are 38 ACCEPT, 44 KEEP_AS_NON_CORE, 38 TOO_GENERAL, six MODIFY and 15 UNDECIDED, with 45 references and two cores. The unresolved annotations retain their exact source-access or assay limitations. Three probable, unreported source queries distinguish corneal evidence from the ocular-lens transparency term. No alternative products, NEW annotations or quotations were introduced. See the [FOXC1 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXC1/FOXC1-source-guide.md), [accepted PR #5775](https://github.com/ai4curation/ai-gene-review/pull/5775), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/abe94af9a4fe17c0183dad08d01e1670400d6def) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41199318948).
+
+All three actual merge-group runs completed their validation, suite and aggregate jobs successfully. The unit suites, doctests, examples, automation checks and type checks below actually executed.
+
+| Actual integration | Unit tests / deselected / warnings | Doctests / skipped / warnings | Examples | Python / JavaScript automation tests | Type-checked files |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FNIP1 | 4,452 / 86 / 9 | 284 / 37 / 8 | 12 | 444 / 19 | 295 |
+| FN1 | 4,506 / 86 / 9 | 284 / 37 / 8 | 12 | 454 / 19 | 295 |
+| FOXC1 | 4,506 / 86 / 9 | 284 / 37 / 8 | 12 | 454 / 19 | 295 |
+
+| Actual integration | Gene-review schemas | History records / history tests | Modules / module warnings | Family reviews | Target advisories |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FNIP1 | 9,928 | 19,641 / 42 | 741 / 2,277 | 750 | 10 |
+| FN1 | 9,928 | 19,645 / 42 | 741 / 2,277 | 750 | 53 |
+| FOXC1 | 9,929 | 19,648 / 42 | 741 / 2,277 | 750 | 7 |
+
+The accepted logs retain dependency deprecations and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. FN1 used the complete validation route; its separate merge-queue-only schema step was skipped, not counted as another execution. Target advisories remain disclosed in the accepted reviews. Local preparation checks tracker preservation, history and rendering without rerunning gene reviews.
+
+Object verification covers 30 FNIP1, 173 FN1 and 50 FOXC1 objects: 252 distinct objects comprising 209 normal sources, 37 gene/history files and six accepted FN1 infrastructure files. Their 81 published payload paths are distinct, with no parent-identical no-ops. The tracker preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 151 prior completion updates, 234 prior project histories and the complete 847,624-byte progress prefix. The two queue files remain exact mirrors. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-31T170331Z-codex-09be30.yaml).
+
+## Completion checkpoint 665 — 2026-10-31 21:21:06 UTC
+
+**665 complete; 2,211 remaining out of 2,876 catalogue genes.** This checkpoint records the independently verified actual merges of FOXE1, FOXC2, FOXE3 and FOXG1. It publishes their existing completion credit and adds no new gene credit. FOXE1, FOXE3 and FOXG1 have COMPLETE review status; FOXC2 remains DRAFT with six disclosed advisories. Review status does not erase the source-specific uncertainties retained in the annotations.
+
+FOXE1 recognizes regulatory DNA and regulates Pol II transcription in thyroid and craniofacial development. Human promoter binding, chromatin occupancy and reporter assays support this activity; regulatory effects depend on promoter, cofactors and abundance. Rat ortholog experiments provide a separate promoter-specific repression context. Its 56 original and exported contexts remain 56 stored annotations: 23 ACCEPT, 12 KEEP_AS_NON_CORE, 14 TOO_GENERAL, three MODIFY, three UNDECIDED and one MARK_AS_OVER_ANNOTATED. The review contains one core and 24 references. Gene-level support is distinguished from verification of inaccessible individual assays. See the [FOXE1 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXE1/FOXE1-source-guide.md), [accepted PR #5784](https://github.com/ai4curation/ai-gene-review/pull/5784), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/dc0c48fb996e6b9dc9584d0fe9447ca96b41ea70) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41229533241).
+
+FOXC2 has two defined transcriptional activities. Its DNA-binding activator activity includes human lymphatic endothelial chromatin and enhancer evidence. Separately, purified human domains and transfected-cell experiments support NFAT1/NFATC2-dependent corepression, with DNA-enhanced contact and an NFAT element requirement. The endogenous tissue and target range of that mechanism remain unresolved; cooperation with NFATC1 in lymphatic vessels is a distinct context. The 62 original and exported contexts remain 62 source-backed annotations, alongside one authored NEW annotation, giving 63 stored annotations. Final actions are 22 ACCEPT, 20 KEEP_AS_NON_CORE, 14 TOO_GENERAL, three MODIFY, three UNDECIDED and one NEW. The original extension conjunction retains both atoms. There are two cores and 28 references. See the [FOXC2 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXC2/FOXC2-source-guide.md), [accepted PR #5783](https://github.com/ai4curation/ai-gene-review/pull/5783), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/760359b3c0f66cb58566e080294ffed6f73cdfdd) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41232419130).
+
+FOXE3 regulates transcription and coordinates lens epithelial proliferation and the timing of lens-fiber differentiation. Human DNAJB1 chromatin, promoter and RNA experiments establish a tested positive regulatory context; they do not establish the sign of regulation at every target. Mouse studies support maintenance of epithelial proliferation and restraint of premature fiber differentiation, while later fiber maturation is also affected. Its 42 original and exported contexts remain 42 stored annotations: 15 ACCEPT, 12 KEEP_AS_NON_CORE, 11 TOO_GENERAL, two MODIFY and two UNDECIDED. The single core incorporates the specific lens-regulatory processes, with 14 references. Human and mouse evidence and the unresolved source-specific assays remain distinguished. See the [FOXE3 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXE3/FOXE3-source-guide.md), [accepted PR #5787](https://github.com/ai4curation/ai-gene-review/pull/5787), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/c0868e52a068f054f6296a93c53de22d82a821df) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41238115103).
+
+FOXG1 recognizes regulatory DNA and regulates Pol II transcription through context-dependent partner interactions. Human evidence supports repression-associated regulation involving TLE and KDM5B; endogenous promoter association and perturbation results complement motif-selection and engineered reporter assays. Neural developmental roles and observations in human brain tumor-initiating cells retain their distinct model scopes. Its 19 original and exported contexts remain 19 stored annotations: eight ACCEPT, five TOO_GENERAL and six MODIFY, with one core and 14 references. Specific binding refinements preserve the tested partner and assay limits. See the [FOXG1 source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXG1/FOXG1-source-guide.md), [accepted PR #5788](https://github.com/ai4curation/ai-gene-review/pull/5788), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/9c3576ababaec9a1a4d5cf96a86801db70b5ff50) and [executed integration](https://github.com/ai4curation/ai-gene-review/actions/runs/41239285474).
+
+All four reviews preserve their original source records and contain no alternative-product assertions or quotation associations. This tracker changes none of their scientific content. All four actual merge-group runs completed their validation, suite and aggregate jobs successfully. Each executed 4,566 unit tests (86 deselected; nine warnings), 287 doctests (37 skipped; eight warnings), 12 examples, 454 Python automation tests, 19 JavaScript tests and type checking of 299 files.
+
+| Actual integration | Gene-review schemas | History records / history tests | Modules / module warnings | Family reviews | Target advisories |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FOXE1 | 9,937 | 19,909 / 42 | 744 / 2,287 | 751 | 0 |
+| FOXC2 | 9,938 | 19,912 / 42 | 744 / 2,287 | 751 | 6 |
+| FOXE3 | 9,939 | 19,914 / 42 | 744 / 2,287 | 751 | 0 |
+| FOXG1 | 9,940 | 19,916 / 42 | 744 / 2,287 | 751 | 0 |
+
+The accepted logs retain dependency deprecations and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. Local checkpoint checks cover tracker preservation, history and rendering without rerunning gene reviews.
+
+Object verification covers 28 FOXE1, 32 FOXC2, 19 FOXE3 and 20 FOXG1 objects: 91 distinct objects comprising 58 normal sources and 33 gene/history files. Their 77 published payload paths are distinct, with no parent-identical no-ops. The tracker preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 152 prior completion updates, 235 prior project histories and the complete 854,366-byte progress prefix. The two queue files remain exact mirrors. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-31T212106Z-codex-144198.yaml).
+
+## Completion checkpoint 669 — 2026-11-01 02:34:51 UTC
+
+**669 complete; 2,207 remaining out of 2,876 catalogue genes.** This checkpoint publishes the independently verified actual merges of FOXJ1, FOXN1, FOXP1 and FOXRED1. Their completion credit was already accepted; this tracker adds no new gene credit and changes none of their scientific content.
+
+FOXJ1 is a nuclear Pol II activator supporting motile-cilium assembly and lung ciliated-cell differentiation. Human airway basal-cell gene transfer and variant-cell experiments retain their distinct endpoints; gene transfer alone is not presented as proof of complete multiciliated-cell maturation. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXJ1/FOXJ1-source-guide.md), [PR #5790](https://github.com/ai4curation/ai-gene-review/pull/5790), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/5a04fb413ca65be5a79f9aff525bc330b248a105) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41242610536).
+
+FOXN1 is a nuclear Pol II activator with characteristic roles in keratinocyte differentiation and thymic epithelial morphogenesis. Effects on developing T cells retain the epithelial-niche context and source-specific limits. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXN1/FOXN1-source-guide.md), [PR #5804](https://github.com/ai4curation/ai-gene-review/pull/5804), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/25438c2915d82e1f560dc88f6c9ec521ea482648) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41248850949).
+
+FOXP1 regulates Pol II transcription through sequence-specific DNA recognition and partner recruitment, including SMRT-associated repression. Activation at particular targets, including FBXL7, remains a distinct experimental context. Seven declared natural products are preserved; tested protein fragments are not treated as natural isoforms. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXP1/FOXP1-source-guide.md), [PR #5806](https://github.com/ai4curation/ai-gene-review/pull/5806), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/00ba9ef8fc8dc545a95a63d582896fb3632db50d) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41252252799).
+
+FOXRED1 supports middle-to-late mitochondrial complex I assembly, with inner-membrane association. Its flavoprotein fold and manual similarity annotations remain mechanistic clues; a specific catalytic reaction or FAD-binding activity has not been demonstrated. Three natural products and the complete inherited review remain preserved. See the [source guide](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/FOXRED1/FOXRED1-source-guide.md), [PR #5807](https://github.com/ai4curation/ai-gene-review/pull/5807), [actual merge](https://github.com/ai4curation/ai-gene-review/commit/8ea767d4511b9f37a4644f7e2a07277f8e621900) and [integration run](https://github.com/ai4curation/ai-gene-review/actions/runs/41262211067).
+
+| Review | Original / exported contexts | Native seed | Final stored | Status / advisories | References |
+| --- | ---: | ---: | ---: | --- | ---: |
+| FOXJ1 | 72 / 72 | 71 | 71 | DRAFT / 1 | 22 |
+| FOXN1 | 40 / 40 | 40 | 40 | DRAFT / 8 | 19 |
+| FOXP1 | 79 / 79 | 74 | 77 | COMPLETE / 0 | 38 |
+| FOXRED1 | 10 / 10 | No new seed | 10 | COMPLETE / 0 | 11 |
+
+FOXJ1 preserves its original collision provenance and two extension atoms. FOXP1 separates three annotation-scope pairs from the native seed while retaining two provenance-only collisions and all 14 extension atoms. FOXRED1's archived twelve-row prior review retains two retired NEW assertions. All 16 original quote associations remain recoverable: 10 active and six historical, with their original reference and section associations. These four accepted reviews introduce no new quotations or current NEW annotations. Each has one core; DRAFT and COMPLETE status do not replace the recorded source-access limits.
+
+All four actual merge-group runs completed their validation, full suite and aggregate jobs successfully. Each executed 287 doctests (37 skipped; eight warnings), 12 examples, 454 Python automation tests, 19 JavaScript tests and type checking of 299 files. Unit runs each deselected 86 tests and reported nine warnings.
+
+| Actual integration | Unit tests | Gene-review schemas | Histories / history tests | Modules / module warnings | Family reviews |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FOXJ1 | 4,566 | 9,942 | 19,920 / 42 | 744 / 2,287 | 751 |
+| FOXN1 | 4,566 | 9,943 | 19,923 / 42 | 744 / 2,287 | 751 |
+| FOXP1 | 4,572 | 9,961 | 19,955 / 42 | 744 / 2,287 | 751 |
+| FOXRED1 | 4,572 | 9,963 | 19,964 / 42 | 746 / 2,288 | 751 |
+
+The accepted logs retain dependency warnings and an ignored SQLAlchemy destructor error. History-coverage checking, saving downloaded UniProt sequences and full upstream PAINT verification were scoped skips. Local checkpoint checks cover tracker preservation, the new history record and private rendering without rerunning gene reviews.
+
+The four accepted closures contain 116 distinct objects: 81 normal sources and 35 gene/history files, with 87 distinct published payload paths and no parent-identical no-ops. This checkpoint preserves all 2,876 catalogue identities and association text, 235 dated queue objects, 153 prior completion updates, 236 prior project histories and the entire 861,304-byte progress prefix. The queue mirrors remain identical. Provenance is recorded in the [new Codex project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T023451Z-codex-f69c8d.yaml).
+
+## Completion checkpoint 673 — 2026-11-01 06:29:20 UTC
+
+673 complete; 2,203 remaining out of 2,876 catalogue genes. This publishes the four independently accepted completions after checkpoint 669; it adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → stored | Status; annotation advisories |
+|---|---|---|---|
+| [FOXP2](https://github.com/ai4curation/ai-gene-review/pull/5808) | [merge 697bac83](https://github.com/ai4curation/ai-gene-review/commit/697bac83b0b3069170ab9b9991bb995d165e6aac); [run 41264900872](https://github.com/ai4curation/ai-gene-review/actions/runs/41264900872) | 72/72 → 70 → 72 | DRAFT; 9 |
+| [FRMPD4](https://github.com/ai4curation/ai-gene-review/pull/5812) | [merge d0211172](https://github.com/ai4curation/ai-gene-review/commit/d02111725e1eb12de835628a96d5a297921e1862); [run 41267878385](https://github.com/ai4curation/ai-gene-review/actions/runs/41267878385) | 76/76 → 76 → 76 | DRAFT; 7 |
+| [FRRS1L](https://github.com/ai4curation/ai-gene-review/pull/5814) | [merge a5fe7128](https://github.com/ai4curation/ai-gene-review/commit/a5fe7128c6a3683871c12f43b3f32bab8b3880b4); [run 41273013978](https://github.com/ai4curation/ai-gene-review/actions/runs/41273013978) | 13/13 → 13 → 13 | COMPLETE; 0 |
+| [FTL](https://github.com/ai4curation/ai-gene-review/pull/5818) | [merge a623939c](https://github.com/ai4curation/ai-gene-review/commit/a623939cf1a290393b0c3de27d79bf936294b6b9); [run 41277830293](https://github.com/ai4curation/ai-gene-review/actions/runs/41277830293) | 73/73 → 73 → 73 | DRAFT; 35 |
+
+FOXP2 retains both scope-distinct source pairs as separate rows, including all 11 nucleus extension atoms. Its nine UniProt product declarations include eight verified sequences and one unresolved product sequence; declaration does not establish an isoform-specific function. FRMPD4 retains 22 UNDECIDED interaction contexts where censored or unquantified fragment data do not establish the exact binding claim. Its portable audit preserves all 713 target workbook rows and all 53 source-specific joins. FRRS1L retains four UNDECIDED contexts, including the sampled synapse-localization uncertainty. FTL retains two source-specific UNDECIDED contexts, the original urine atom and five exact cached quotations linked to their claims. Its 35 advisories comprise 34 generic-binding contexts and the structural core term absent from the existing annotation list; no NEW annotation was added to suppress that warning.
+
+| Gene | Actions | References / assessed | Cores | Verified objects / normal sources / PR payload |
+|---|---|---|---|---|
+| FOXP2 | ACCEPT: 12, KEEP_AS_NON_CORE: 22, TOO_GENERAL: 16, MODIFY: 22 | 32 / 24 | 1 | 35 / 27 / 17 |
+| FRMPD4 | MODIFY: 39, KEEP_AS_NON_CORE: 8, UNDECIDED: 22, ACCEPT: 6, TOO_GENERAL: 1 | 19 / 14 | 2 | 34 / 17 / 23 |
+| FRRS1L | ACCEPT: 6, KEEP_AS_NON_CORE: 2, MODIFY: 1, UNDECIDED: 4 | 13 / 8 | 1 | 19 / 11 / 19 |
+| FTL | TOO_GENERAL: 6, KEEP_AS_NON_CORE: 44, ACCEPT: 20, MARK_AS_OVER_ANNOTATED: 1, UNDECIDED: 2 | 58 / 57 | 3 | 63 / 55 / 26 |
+
+The combined accepted closure contains 144 distinct objects, including 103 normal sources. The four PR payloads contain 85 distinct paths. Shared sources have identical object identities; no infrastructure change is credited to these gene payloads. Original source objects, native seed mappings and current reviewed annotations are checked separately.
+
+All four actual merge-group runs completed the suite, validation and aggregate jobs successfully. Their executed counts are retained below and in the queue mirror.
+
+| Gene | Unit tests | Doctests | Schemas | Modules (warnings) | History records + tests | Families |
+|---|---|---|---|---|---|---|
+| FOXP2 | 4572 | 287 | 9964 | 746 (2288) | 19966 + 42 | 751 |
+| FRMPD4 | 4577 | 295 | 9965 | 746 (2288) | 19985 + 42 | 751 |
+| FRRS1L | 4577 | 295 | 9966 | 747 (2409) | 19992 + 42 | 751 |
+| FTL | 4577 | 295 | 9967 | 747 (2291) | 19997 + 42 | 751 |
+
+Each actual run also passed 12 example checks, 454 automation tests and 19 JavaScript tests. FOXP2 checked 299 mypy source files; the later three checked 302. Each suite retained 86 deselections and nine unit-test warnings, plus 37 skipped doctests and eight doctest warnings. Dependency deprecations and the nonfatal SqlImplementation destructor diagnostic are retained in the raw-log evidence. The PR-only history-coverage step, saved-UniProt step and full-upstream PAINT step were skipped as explicitly recorded; this does not erase the executed history validation, family validation or full suite.
+
+The 867,103-byte progress prefix, all 237 existing project histories, 235 original queue records and 154 earlier completion updates remain unchanged. Catalogue text/order is preserved apart from checking these four completed genes. The project policy now permits concise, verified source-backed snippets and reference-only entries when appropriate, replacing the obsolete blanket prohibition without altering the separate generic-binding instruction.
+
+Local tracker checks cover the exact five-path delta, source/object preservation, queue equality, the new native history record and private rendered checkpoint links. They do not substitute for the actual integration results above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T062920Z-codex-663640.yaml).
+
+## Completion checkpoint 676 — 2026-11-01 09:43:00 UTC
+
+676 complete; 2,200 remaining out of 2,876 catalogue genes. This publishes three independently accepted completions after checkpoint 673 and adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → current stored | Status; annotation advisories |
+|---|---|---|---|
+| [FUCA1](https://github.com/ai4curation/ai-gene-review/pull/5823) | [merge 02e13917](https://github.com/ai4curation/ai-gene-review/commit/02e139172e8606d247bb1f4eececa0150cfc0cac); [run 41281010527](https://github.com/ai4curation/ai-gene-review/actions/runs/41281010527) | 25/25 → 26 → 26 | DRAFT; 4 |
+| [FTSJ1](https://github.com/ai4curation/ai-gene-review/pull/5822) | [merge d50aed9c](https://github.com/ai4curation/ai-gene-review/commit/d50aed9c524e82b63cc6b60a3d4faec6e5c27efd); [run 41282642404](https://github.com/ai4curation/ai-gene-review/actions/runs/41282642404) | 40/40 → 40 → 40 | DRAFT; 1 |
+| [FUT8](https://github.com/ai4curation/ai-gene-review/pull/5826) | [merge d068d105](https://github.com/ai4curation/ai-gene-review/commit/d068d105b9f1724e63190efcf551676cf391fdc9); [run 41286874138](https://github.com/ai4curation/ai-gene-review/actions/runs/41286874138) | 29/29 → 29 → 29 | DRAFT; 1 |
+
+FUCA1 preserves 25 original GOA contexts and the urine extension atom. Its inherited review contained 26 records: the mouse IMP glycoprotein-catabolism assertion remains in the historical archive, while the current 26th row is a separately justified human IC assertion. These are distinct assertions with distinct evidence. All 29 inherited quote associations remain traceable: 26 active and three historical; no new quotation was added. The two lysosome annotations are retained as core locations.
+
+FTSJ1 preserves 40 original contexts and two documented product sequences, 329 and 327 residues; the sequence difference does not establish a functional difference. Its three catalytic cores distinguish Cm32, Gm34 and Cm34. Three translation annotations are marked over-annotated because FTSJ1 modifies tRNA rather than executing ribosomal translation. The neurogenesis annotation is refined to neuron projection morphogenesis with the pharmacological attribution limits retained. Eight verified quotations belong to the whole PR; its final morphology amendment added none.
+
+FUT8 preserves 29 original contexts, the parotid-gland atom and four documented product sequences. Its core is N-glycan core fucosylation. Three removed process assertions have reaction-level contradictions documented alongside their ontology or Reactome provenance; the developmental and broad oligosaccharide contexts remain non-core. Five brief verified quotations support the resolved review points. Product 2 (308 residues, Retinal) is distinguished from product 4 (169 residues, Retina-1/Retina-2); the latter's inactivity comment is not transferred to the former.
+
+| Gene | Current actions | References / assessed | Cores | Objects / normal sources / PR payload |
+|---|---|---|---|---|
+| FUCA1 | ACCEPT: 15, KEEP_AS_NON_CORE: 8, TOO_GENERAL: 2, NEW: 1 | 18 / 18 | 1 | 27 / 15 / 7 |
+| FTSJ1 | ACCEPT: 20, MARK_AS_OVER_ANNOTATED: 3, KEEP_AS_NON_CORE: 3, TOO_GENERAL: 13, MODIFY: 1 | 35 / 35 | 3 | 38 / 29 / 23 |
+| FUT8 | ACCEPT: 14, KEEP_AS_NON_CORE: 4, TOO_GENERAL: 8, REMOVE: 3 | 25 / 25 | 1 | 31 / 23 / 22 |
+
+The combined accepted closure contains 91 distinct objects, including 62 normal sources. The three PR payloads contain 52 distinct paths. Shared sources have identical object identities. The 94 original GOA contexts are separated from the one authored IC annotation; historical seed reviews and final reviews are joined by their actual stored indices. Full authored source evidence remains in each gene's accepted review and source archive.
+
+All three actual merge-group runs completed the suite, validation and aggregate jobs successfully. The executed counts are preserved below and in the queue mirror.
+
+| Gene | Unit tests | Doctests | Schemas | Modules (warnings) | History records + tests | Families |
+|---|---|---|---|---|---|---|
+| FUCA1 | 4577 | 295 | 9967 | 747 (2291) | 19999 + 42 | 751 |
+| FTSJ1 | 4577 | 295 | 9968 | 747 (2291) | 20002 + 42 | 751 |
+| FUT8 | 4596 | 298 | 9976 | 747 (2291) | 20036 + 42 | 751 |
+
+Each run also passed 12 example checks, 454 automation tests and 19 JavaScript tests. FUCA1 and FTSJ1 checked 302 mypy source files and retained 86 unit-test deselections; FUT8 checked 303 files and retained 89 deselections. Each suite reported nine unit-test warnings, 37 skipped doctests and eight doctest warnings. Recorded dependency and destructor diagnostics remain in the actual logs. The explicitly skipped PR-only history-coverage, saved-UniProt and full-upstream PAINT steps are listed in the queue evidence; the suite, history, module and family checks above actually executed.
+
+The 872,512-byte progress prefix, all 238 existing project histories, 235 original queue records and 155 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking these three completed genes. The current quotation and generic-binding policies are unchanged.
+
+Local tracker checks cover the exact five-path delta, accepted object preservation, queue equality, native history and private rendered checkpoint links. They do not substitute for the completed integration runs above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T094300Z-codex-7c19c2.yaml).
+
+## Completion checkpoint 679 — 2026-11-01 13:02:35 UTC
+
+679 complete; 2,197 remaining out of 2,876 catalogue genes. This publishes three independently accepted completions after checkpoint 676 and adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → current stored | Status; annotation advisories |
+|---|---|---|---|
+| [FXYD2](https://github.com/ai4curation/ai-gene-review/pull/5828) | [merge df3df230](https://github.com/ai4curation/ai-gene-review/commit/df3df230778f928fa437e99d67cdc2d858bc761a); [run 41294795127](https://github.com/ai4curation/ai-gene-review/actions/runs/41294795127) | 25/25 → 25 → 25 | COMPLETE; 0 |
+| [FXN](https://github.com/ai4curation/ai-gene-review/pull/5827) | [merge 2d87d72a](https://github.com/ai4curation/ai-gene-review/commit/2d87d72ac8cb78f9b0a1d5bee0fb531587bdf7f7); [run 41302726137](https://github.com/ai4curation/ai-gene-review/actions/runs/41302726137) | 92/92 → 92 → 92 | DRAFT; 20 |
+| [FYB1](https://github.com/ai4curation/ai-gene-review/pull/5830) | [merge ce6b1910](https://github.com/ai4curation/ai-gene-review/commit/ce6b191094181b90d0b948c55c812cd5f10a76b0); [run 41304269937](https://github.com/ai4curation/ai-gene-review/actions/runs/41304269937) | 35/35 → 35 → 37 | DRAFT; 10 |
+
+FXYD2 preserves 25 original GOA contexts, 16 extension atoms and two documented product sequences. Its core is regulation of the sodium/potassium ATPase complex; this does not attribute ATP hydrolysis or independent ion translocation to FXYD2. Four source-specific UNDECIDED judgments remain in the accepted COMPLETE review. Five verified quotations are counted over the whole PR, including the initial excerpt and four additions. The generated GO cache companion is distinct from the 28 scientific sources; its accepted actual state includes eight upstream rows and the one approved GO:1903406 addition.
+
+FXN preserves 92 original GOA contexts, five extension atoms and three documented products. Its core remains the iron-sulfur assembly machinery, with conditional biochemical results distinguished from a defining physiological iron-oxidation role. The entire inherited 79-record review remains archived. All 68 inherited quotation associations are traceable: 20 active and 48 historical, with six additional current gene quotations. The separate prediction review contains 17 predictions and 19 quote occurrences representing 16 distinct excerpts from 13 sources; those are not additional GOA annotations. Two accepted prediction-code companion files remain part of the immutable accepted closure.
+
+FYB1 preserves 35 original contexts and adds two separately justified process annotations: protection of SKAP1 from degradation and positive regulation of integrin-mediated cell adhesion in T cells. The evidence retains the binding-dependent protection and engineered membrane-targeting limits. Its 37 current rows, three documented product sequences and nine verified quote associations remain distinct counts; the initial two quotations and seven follow-up additions belong to the same accepted PR. The core remains an intracellular signaling adaptor, with context-specific domain and lipid binding refinements preserved.
+
+| Gene | Current actions | References / assessed | Cores | Objects / normal sources / PR payload |
+|---|---|---|---|---|
+| FXYD2 | UNDECIDED: 4, ACCEPT: 9, TOO_GENERAL: 4, KEEP_AS_NON_CORE: 4, MODIFY: 4 | 28 / 27 | 1 | 37 / 28 / 29 |
+| FXN | MARK_AS_OVER_ANNOTATED: 2, MODIFY: 1, KEEP_AS_NON_CORE: 38, ACCEPT: 33, UNDECIDED: 10, TOO_GENERAL: 8 | 49 / 49 | 1 | 86 / 65 / 40 |
+| FYB1 | MODIFY: 6, KEEP_AS_NON_CORE: 14, UNDECIDED: 3, TOO_GENERAL: 2, ACCEPT: 10, NEW: 2 | 50 / 50 | 1 | 55 / 47 / 30 |
+
+The combined accepted closure contains 176 distinct objects, including 138 normal scientific sources and three explicit generated-cache/code companions. The three PR payloads contain 99 distinct paths. Shared sources have identical object identities. The 152 original GOA contexts are separated from FYB1's two authored annotations; FXN's prediction reviews remain separate. Historical seed judgments and current reviews are joined through the actual source mappings. The tracker does not alter any gene, source, prediction or companion object.
+
+All three actual merge-group runs completed the suite, validation and aggregate jobs successfully. Executed counts are preserved below and in the queue mirror.
+
+| Gene | Unit tests | Doctests | Schemas | Modules (warnings) | History records + tests | Families |
+|---|---|---|---|---|---|---|
+| FXYD2 | 4602 | 298 | 9981 | 747 (2291) | 20059 + 42 | 751 |
+| FXN | 4613 | 298 | 9981 | 747 (2291) | 20065 + 42 | 751 |
+| FYB1 | 4613 | 298 | 9982 | 747 (2291) | 20067 + 42 | 751 |
+
+Each run also passed 12 example checks, 454 automation tests and 19 JavaScript tests, and checked 303 mypy source files. Each retained 89 unit-test deselections, nine unit-test warnings, 37 skipped doctests and eight doctest warnings. Recorded dependency and destructor diagnostics remain in the actual logs. Explicit skipped-step records are preserved in the queue evidence; the suite, schema, history, module and family checks above actually executed.
+
+The 878,077-byte progress prefix, all 239 existing project histories, 235 original queue records and 156 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking these three completed genes. The current quotation and generic-binding policies are unchanged.
+
+Local tracker checks cover the exact five-path delta, accepted object preservation, queue equality, native history and private rendered checkpoint links. They do not substitute for the completed integration runs above. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T130235Z-codex-451d90.yaml).
+
+## Completion checkpoint 684 — 2026-11-01 19:38:01 UTC
+
+684 complete; 2,192 remaining out of 2,876 catalogue genes. This publishes five independently accepted completions after checkpoint 679 and adds no new gene credit.
+
+| Gene | Actual merge and integration | Original/exported → native → current stored | Status; annotation advisories |
+|---|---|---|---|
+| [G6PC1](https://github.com/ai4curation/ai-gene-review/pull/5833) | [merge f12e63ef](https://github.com/ai4curation/ai-gene-review/commit/f12e63efc295f16deb6b8eb90ac00afe7c6fa1e8); [run 41315587697](https://github.com/ai4curation/ai-gene-review/actions/runs/41315587697) | 40/40 → 40 → 40 | DRAFT; 3 |
+| [FZD4](https://github.com/ai4curation/ai-gene-review/pull/5831) | [merge ab56cfad](https://github.com/ai4curation/ai-gene-review/commit/ab56cfad0209e5d269e58370b11b25d042a52f5d); [run 41316538776](https://github.com/ai4curation/ai-gene-review/actions/runs/41316538776) | 134/134 → 134 → 134 | DRAFT; 8 |
+| [G6PC3](https://github.com/ai4curation/ai-gene-review/pull/5834) | [merge a93774f2](https://github.com/ai4curation/ai-gene-review/commit/a93774f2166724827c83bb9c1dcd7a57aa4ebd70); [run 41325704845](https://github.com/ai4curation/ai-gene-review/actions/runs/41325704845) | 17/17 → 17 → 18 | COMPLETE; 0 |
+| [G6PD](https://github.com/ai4curation/ai-gene-review/pull/5836) | [merge 9067107a](https://github.com/ai4curation/ai-gene-review/commit/9067107a8339c84b4ba22d6154fed8b38e2ac0e1); [run 41325713373](https://github.com/ai4curation/ai-gene-review/actions/runs/41325713373) | 66/66 → 66 → 66 | DRAFT; 4 |
+| [GAA](https://github.com/ai4curation/ai-gene-review/pull/5838) | [merge 3c6145f2](https://github.com/ai4curation/ai-gene-review/commit/3c6145f27c93c4e1fa82b25292686d3da3ef60b2); [run 41328147496](https://github.com/ai4curation/ai-gene-review/actions/runs/41328147496) | 45/45 → 45 → 45 | COMPLETE; 0 |
+
+G6PC1's core describes ER-luminal glucose-6-phosphate hydrolysis and the terminal glucose-production step. Its 40 current contexts, two product sequences and 28 reference assessments remain distinct from the inherited 39-record review and 42 quotation associations preserved in the archive. Two active core quotations are retained. One source-specific UNDECIDED judgment remains.
+
+FZD4's two cores distinguish Wnt reception from Norrin-dependent retinal vascular signaling. Its 134 original contexts, six extension atoms, one canonical sequence, 60 reference assessments and eight active quotations are preserved. Seventeen source-specific UNDECIDED judgments remain, including the ATRA-response context; experimental species, constructs and interaction-participant limits remain explicit.
+
+G6PC3 has 17 original contexts and one separately justified cellular-detoxification annotation. Its two cores distinguish physiological 1,5-anhydroglucitol-6-phosphate detoxification from the demonstrated glucose-6-phosphate catalytic capability. The physiological contribution of the latter remains unresolved; rat microsomal transport does not quantify human G6PC3-dependent glucose flux. Four current quotation associations and all 23 historical associations are retained separately.
+
+G6PD's core is NADP+-dependent glucose-6-phosphate oxidation in the cytosolic pentose-phosphate pathway. All 66 original contexts, three documented products and 39 reference assessments remain intact. The urine extension is preserved in the original-context archive with its raw64/native62 join; it is not a restored structured field in the current annotation. Seven active quote occurrences remain distinct from 52 inherited associations, of which six remain associated with current claims and 46 are historical-only.
+
+GAA's two cores describe complementary alpha-1,4 and alpha-1,6 glucan hydrolysis during lysosomal glycogen degradation. Its 45 original contexts, canonical 952-residue product and restored urine atom are preserved. The full prior 45-record review and all 55 inherited quotation associations remain archived. Two current core snippets and four selected-table file snippets have distinct source locators; none of these counts creates an extra annotation.
+
+| Gene | Current actions | References / assessed | Cores | Objects / scientific sources / PR payload |
+|---|---|---|---|---|
+| G6PC1 | ACCEPT: 26, KEEP_AS_NON_CORE: 7, TOO_GENERAL: 5, MARK_AS_OVER_ANNOTATED: 1, UNDECIDED: 1 | 28 / 28 | 1 | 69 / 56 / 43 |
+| FZD4 | KEEP_AS_NON_CORE: 36, UNDECIDED: 17, TOO_GENERAL: 8, ACCEPT: 57, MODIFY: 16 | 60 / 60 | 2 | 90 / 80 / 43 |
+| G6PC3 | ACCEPT: 11, KEEP_AS_NON_CORE: 4, TOO_GENERAL: 2, NEW: 1 | 18 / 18 | 2 | 40 / 29 / 27 |
+| G6PD | ACCEPT: 36, KEEP_AS_NON_CORE: 19, UNDECIDED: 6, TOO_GENERAL: 2, MODIFY: 2, MARK_AS_OVER_ANNOTATED: 1 | 39 / 39 | 1 | 115 / 104 / 74 |
+| GAA | KEEP_AS_NON_CORE: 19, UNDECIDED: 1, MODIFY: 6, ACCEPT: 18, MARK_AS_OVER_ANNOTATED: 1 | 27 / 27 | 2 | 93 / 79 / 61 |
+
+The combined accepted closure contains 387 distinct objects, including 328 normal scientific source paths. The five cumulative PR payloads contain 248 distinct paths. Shared sources have matching byte/hash/blob identities. The 302 original contexts remain distinct from 303 current annotations, including G6PC3's single NEW row. Eight original extension atoms are preserved: seven are represented structurally in current reviews and G6PD's one urine atom remains in its archive. No gene or source object is changed by this tracker update.
+
+| Gene | Unit tests | Doctests | Modules | History records + tests | Families |
+|---|---|---|---|---|---|
+| G6PC1 | 4613 | 298 | 747 | 20070 + 42 | 751 |
+| FZD4 | 4613 | 298 | 747 | 20074 + 42 | 751 |
+| G6PC3 | 4658 | 305 | 748 | 20673 + 42 | 751 |
+| G6PD | 4658 | 305 | 748 | 20675 + 42 | 751 |
+| GAA | 4658 | 305 | 748 | 20677 + 42 | 751 |
+
+These are actual executed integration results. Every run also passed 12 example checks and 454 automation tests. G6PC1 and FZD4 checked 303 mypy source files; G6PC3, G6PD and GAA checked 309 and validated all 605 prediction reviews. The source receipts retain unit/doctest warnings, deselections and skipped doctests. History-coverage, UniProt-save and full-upstream-PAINT workflow steps were skipped and receive no execution credit.
+
+G6PD's suite executed successfully in attempt 1. After an OLS service timeout, validation and the aggregate job executed successfully in attempt 2; GitHub's copied suite record in attempt 2 is not a second suite execution. G6PC3 and GAA's retained `gh` logs lacked step labels. Their actual job-step metadata and complete original logs were read directly; the stopped parser attempts remain preserved and are not reported as collector passes.
+
+The 883,943-byte progress prefix, all 240 prior project histories, 235 dated queue records and 157 earlier completion updates remain unchanged. Catalogue text and order are preserved apart from checking the five completed genes. The current quotation and generic-binding policies are unchanged.
+
+Local checks cover the exact five-path tracker delta, queue equality, preserved accepted objects, native history and private rendered checkpoint links. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-01T193801Z-codex-479f15.yaml).
+
+## Completion checkpoint 688 — 2026-11-04 02:31:54 UTC
+
+688 complete; 2,188 remaining out of 2,876 catalogue genes. This publishes four independently accepted completions after checkpoint 684 and adds no new gene credit.
+
+| Gene | Actual merge | Executed integration | Original / native / stored contexts | Review status |
+|---|---|---|---|---|
+| [GABBR2](https://github.com/ai4curation/ai-gene-review/pull/5866) | [b89135d9](https://github.com/ai4curation/ai-gene-review/commit/b89135d957068000f0eac9919c9d75a41bf474c5) | [run 41363318390](https://github.com/ai4curation/ai-gene-review/actions/runs/41363318390) | 49 / 49 / 49 | DRAFT |
+| [GABRB2](https://github.com/ai4curation/ai-gene-review/pull/5882) | [fb5f6b99](https://github.com/ai4curation/ai-gene-review/commit/fb5f6b99db907d27875e157c92962a4ce6e41492) | [run 41370719583](https://github.com/ai4curation/ai-gene-review/actions/runs/41370719583) | 66 / 66 / 66 | COMPLETE |
+| [GABRA1](https://github.com/ai4curation/ai-gene-review/pull/5871) | [67dfb006](https://github.com/ai4curation/ai-gene-review/commit/67dfb006440d5ad0d40d3f243ed9f61f930abccd) | [run 41377341759](https://github.com/ai4curation/ai-gene-review/actions/runs/41377341759) | 66 / 66 / 66 | DRAFT |
+| [GABRG2](https://github.com/ai4curation/ai-gene-review/pull/5887) | [83d42fb1](https://github.com/ai4curation/ai-gene-review/commit/83d42fb1648debaeb3d812acc7f2d0a75e0e81fe) | [run 41755090303](https://github.com/ai4curation/ai-gene-review/actions/runs/41755090303) | 74 / 74 / 74 | DRAFT |
+
+GABBR2 supplies the G-protein-coupling subunit of the GABA-B heterodimer; GABBR1 supplies orthosteric GABA recognition. GABRA1, GABRB2 and GABRG2 contribute to assembled GABA-A chloride channels. Gamma2 contributes the alpha/gamma benzodiazepine interface rather than the beta/alpha orthosteric GABA interface. These are accepted gene reviews, not claims that every source-specific uncertainty has been resolved.
+
+| Gene | Current annotation actions | Assessed references | Natural products | Extension atoms / contributes_to contexts | Current quote occurrences |
+|---|---|---|---|---|---|
+| GABBR2 | MODIFY: 14, ACCEPT: 29, KEEP_AS_NON_CORE: 3, UNDECIDED: 3 | 35 | 1 | 2 / 1 | 3 |
+| GABRB2 | MODIFY: 9, ACCEPT: 42, UNDECIDED: 3, REMOVE: 1, MARK_AS_OVER_ANNOTATED: 4, KEEP_AS_NON_CORE: 7 | 40 | 4 | 1 / 4 | 11 |
+| GABRA1 | MODIFY: 11, ACCEPT: 47, UNDECIDED: 3, KEEP_AS_NON_CORE: 5 | 36 | 1 | 3 / 3 | 13 |
+| GABRG2 | MODIFY: 11, ACCEPT: 47, REMOVE: 4, UNDECIDED: 1, KEEP_AS_NON_CORE: 11 | 31 | 3 | 0 / 2 | 4 |
+
+All 255 original contexts remain distinct and are represented by 255 stored annotations; this batch adds no NEW annotation. The six structured extension atoms, ten contributes_to relationships and 31 current quotation occurrences remain in the accepted reviews. Canonical-only GABBR2 and GABRA1 each count as one natural product despite having no alternative_products list. The four beta2 and three gamma2 product records remain distinct from engineered experimental constructs; counting a product does not establish every annotated activity for that product.
+
+The accepted closures cover 144 distinct paths, including 110 scientific source paths with identical bytes wherever shared. Their cumulative published payloads and actual merge deltas each cover 118 distinct paths, although the per-gene deltas differ. GABRA1 and GABRG2's actual shared ontology cache equals their respective actual parent, retaining the intended term rows and earlier rows; the older whole-cache versions remain in the published commits. No gene, source or cache file is changed by this tracker update.
+
+| Gene | Unit tests | Doctests | History records + tests |
+|---|---|---|---|
+| GABBR2 | 4680 | 308 | 21131 + 42 |
+| GABRB2 | 4680 | 308 | 21177 + 42 |
+| GABRA1 | 4681 | 308 | 21190 + 42 |
+| GABRG2 | 5356 | 320 | 21871 + 42 |
+
+All four actual merge-group runs executed their suites, target validation and aggregate checks successfully. Each also passed 12 example checks, 454 automation tests and 19 JavaScript tests. Their retained receipts distinguish warnings, deselections and skipped doctests from executed results. Ordinary PR suite skips, history-coverage skips, UniProt-save skips and full-upstream-PAINT skips receive no execution credit. Gene review uncertainties and optional follow-ups remain in the linked reviews and source guides; checkpoint completion means the curation was accepted and merged.
+
+The prior 891,197-byte progress journal, 235 dated queue records, 158 earlier completion updates and all prior project histories are preserved. Catalogue text and order change only by checking these four genes and updating the status count. GALE, GALNT3 and other pending reviews are excluded. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T023154Z-codex-b9b3bf.yaml).
+
+## Completion checkpoint 692 — 2026-11-04 04:14:41 UTC
+
+692 complete; 2,184 remaining out of 2,876 catalogue genes. This checkpoint publishes four independently accepted reviews after checkpoint 688 and adds no new gene credit.
+
+| Gene | Actual merge | Executed integration | Original / seeded / stored contexts | Review status |
+|---|---|---|---|---|
+| [GABRB3](https://github.com/ai4curation/ai-gene-review/pull/5884) | [db5df360](https://github.com/ai4curation/ai-gene-review/commit/db5df360e7cade3d09481b806cff8279886647df) | [run 41760048843](https://github.com/ai4curation/ai-gene-review/actions/runs/41760048843) | 97 / 97 / 97 | DRAFT |
+| [GALE](https://github.com/ai4curation/ai-gene-review/pull/5898) | [81b7e91b](https://github.com/ai4curation/ai-gene-review/commit/81b7e91b90e47a047a1170ce229f6d9fa1fa1a9f) | [run 41760051237](https://github.com/ai4curation/ai-gene-review/actions/runs/41760051237) | 18 / 18 / 19 | COMPLETE |
+| [GALK1](https://github.com/ai4curation/ai-gene-review/pull/5939) | [9d3ff448](https://github.com/ai4curation/ai-gene-review/commit/9d3ff448a399e372de3e48104dedc471cb6569b5) | [run 41760890259](https://github.com/ai4curation/ai-gene-review/actions/runs/41760890259) | 26 / 26 / 26 | DRAFT |
+| [GALC](https://github.com/ai4curation/ai-gene-review/pull/5890) | [9eaad1ba](https://github.com/ai4curation/ai-gene-review/commit/9eaad1ba25a68db4e91c760d8e625cfae5504409) | [run 41762276962](https://github.com/ai4curation/ai-gene-review/actions/runs/41762276962) | 20 / 19 / 20 | COMPLETE |
+
+GABRB3 contributes to assembled GABA-A receptor channels. GALE interconverts UDP-linked galactose and glucose sugars, including their N-acetyl derivatives; the reversible UDP-galactose supply direction remains explicit. GALK1 phosphorylates galactose, and lysosomal GALC hydrolyzes galactosyl lipids including psychosine. Acceptance records completion of the reviews, while their source-specific uncertainties and experimental-construct limits remain visible in the linked gene files.
+
+The 161 original contexts are represented by 162 stored annotations. GALC's 19-row seed omitted one genuine original context that was restored, bringing its current total to 20; that restoration is not NEW. GALE separately retains one inherited NAD-binding NEW alongside its 18 original contexts. GALK1's retired redundant inherited NEW remains preserved historically.
+
+| Gene | Assessed references | Natural products | Extension atoms | Current quote occurrences |
+|---|---|---|---|---|
+| GABRB3 | 41 | 4 | 2 | 13 |
+| GALE | 16 | 2 | 0 | 4 |
+| GALK1 | 29 | 1 | 1 | 8 |
+| GALC | 37 | 4 | 3 | 10 |
+
+The reviews retain six structured extension atoms, one NOT context, one contributes_to context and 35 current quotation occurrences. The eleven natural products remain distinct from experimental constructs; product counting does not assign every function to every product. GALC's corrected acceptance records 37 references and 37 assessments. Historical quotations and superseded projections remain available through each review's retained provenance.
+
+All four linked actual merge-group runs executed their suites and integration checks successfully. Their acceptance receipts distinguish executed results from skipped steps and unresolved diagnostics. The accepted gene closures span 179 distinct paths, including 138 immutable scientific source paths; cumulative published payloads cover 129 paths and actual merge deltas cover 109. GABRB3's actual ontology cache preserves its parent rows and adds the authorized GO:0160001 row. This tracker changes no gene, source or ontology-cache bytes.
+
+The prior 896,068-byte progress journal, 235 dated queue records and 159 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Later acceptances, including GAD1, GAMT and GALNS, are outside this fixed checkpoint. [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T041441Z-codex-475721.yaml).
+
+## Completion checkpoint 696 — 2026-11-04 05:29:09 UTC
+
+696 complete; 2,180 remaining out of 2,876 catalogue genes. This checkpoint publishes four independently accepted reviews after checkpoint 692 and adds no new gene completion credit.
+
+| Gene | Actual merge | Executed integration | Original / parsed / stored contexts | Review status |
+| --- | --- | --- | --- | --- |
+| [GAD1](https://github.com/ai4curation/ai-gene-review/pull/5896) | [abd3b7a9](https://github.com/ai4curation/ai-gene-review/commit/abd3b7a932e971869fcfc273b3b8e96a9233e8fa) | [run 41763694369](https://github.com/ai4curation/ai-gene-review/actions/runs/41763694369) | 50 / 50 / 50 | COMPLETE |
+| [GAMT](https://github.com/ai4curation/ai-gene-review/pull/5940) | [88dcd9a8](https://github.com/ai4curation/ai-gene-review/commit/88dcd9a8a247e2d9b2c131855e56f82d0379b363) | [run 41764895356](https://github.com/ai4curation/ai-gene-review/actions/runs/41764895356) | 18 / 18 / 18 | DRAFT |
+| [GALNS](https://github.com/ai4curation/ai-gene-review/pull/5899) | [fac06dd3](https://github.com/ai4curation/ai-gene-review/commit/fac06dd38e331e0fae222519307b5354f0378638) | [run 41767491587](https://github.com/ai4curation/ai-gene-review/actions/runs/41767491587) | 15 / 15 / 16 | COMPLETE |
+| [GALNT3](https://github.com/ai4curation/ai-gene-review/pull/5942) | [fa0d0b8b](https://github.com/ai4curation/ai-gene-review/commit/fa0d0b8b6542e5aaffe1b4e234db38482e2e0d12) | [run 41771214510](https://github.com/ai4curation/ai-gene-review/actions/runs/41771214510) | 35 / 35 / 35 | DRAFT |
+
+GAD1 produces GABA by decarboxylating glutamate; GAMT methylates guanidinoacetate to form creatine. Lysosomal GALNS removes sulfate groups during glycosaminoglycan breakdown. GALNT3 initiates protein O-glycosylation in the Golgi, including FGF23 glycosylation that limits proteolytic processing. Product-specific and experimental-construct limits remain in the accepted gene reviews.
+
+The 118 original GOA contexts correspond to 119 stored annotations: GALNS retains one separate NEW annotation. All four inherited targets used genuine no-seed native acquisition and a private parser projection from the actual native TSV. The parsed counts are not a claim of a seeded target-fetch command.
+
+| Gene | Assessed references | Natural products | Extension atoms | Current quote occurrences |
+| --- | ---: | ---: | ---: | ---: |
+| GAD1 | 32 | 4 | 0 | 7 |
+| GAMT | 14 | 2 | 0 | 6 |
+| GALNS | 17 | 1 | 1 | 9 |
+| GALNT3 | 23 | 2 | 3 | 11 |
+
+The reviews retain four structured extension atoms, 33 current quotation occurrences and nine natural products. They contain no NOT or contributes_to qualifiers in this window. Natural products count the canonical product and explicitly verified natural alternatives retained in each gene's source-evidence file; an absent alternative_products array does not erase the canonical product. Engineered constructs are excluded, and counting a product does not assign all functions to it. The 128 historical quotation associations remain traceable in the retained gene provenance; historical and current counts are not silently combined.
+
+The accepted closures cover **176 deduplicated paths**, including **129 deduplicated scientific source paths**. The cumulative published payloads and actual parent deltas each cover **95 deduplicated paths**. These are unions, not sums of the per-gene counts. Shared scientific source bytes are identical across the accepted receipts. All four actual merge-group runs executed their integration checks successfully; skipped steps and unresolved diagnostic limits remain explicit in the linked acceptance records.
+
+This fixed window includes only GAD1, GAMT, GALNS and GALNT3. GAN and later acceptances are excluded. The prior 900,108-byte progress journal, 235 dated queue records and 160 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Scientific source files remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T052909Z-codex-2f5873.yaml).
+
+## Completion checkpoint 699 — 2026-11-04 18:53:34 UTC
+
+699 complete; 2,177 remaining out of 2,876 catalogue genes. This checkpoint publishes three independently accepted reviews after checkpoint 696 and adds no new gene completion credit.
+
+| Gene | Actual merge | Executed integration | Original / native seed / stored contexts | Review status |
+| --- | --- | --- | --- | --- |
+| [GAN](https://github.com/ai4curation/ai-gene-review/pull/5947) | [74c548ae](https://github.com/ai4curation/ai-gene-review/commit/74c548aea4a969f7b4351d357822ae673d02b180) | [run 41772300448](https://github.com/ai4curation/ai-gene-review/actions/runs/41772300448) | 32 / 32 / 32 | COMPLETE |
+| [GARS1](https://github.com/ai4curation/ai-gene-review/pull/5950) | [ba7d6080](https://github.com/ai4curation/ai-gene-review/commit/ba7d6080114180f97644122f885dcca6ea2388b8) | [run 41781433328](https://github.com/ai4curation/ai-gene-review/actions/runs/41781433328) | 51 / 51 / 51 | DRAFT |
+| [GANAB](https://github.com/ai4curation/ai-gene-review/pull/5949) | [7c35d1b6](https://github.com/ai4curation/ai-gene-review/commit/7c35d1b6b234943bf773fd13e300c996b279c8e3) | [run 41786437034](https://github.com/ai4curation/ai-gene-review/actions/runs/41786437034) | 39 / 38 / 39 | COMPLETE |
+
+Gigaxonin recognizes substrates for CUL3 ubiquitin ligase complexes, supporting cytoskeletal protein turnover. GARS1 attaches glycine to tRNA for cytosolic and mitochondrial translation. GANAB supplies glucosidase II catalytic activity during ER glycoprotein maturation. Product and construct limits, unresolved annotations and optional advisories remain in the accepted reviews; project completion does not change their computed status.
+
+The three genuine native seeds contained 121 rows. The reviews retain all 122 original contexts because GANAB's two distinct source assertions share one simplified parser key; restoring the omitted original is not NEW. There are no NEW annotations in this window.
+
+| Gene | Assessed references | Natural products | Extension atoms | Current quote occurrences |
+| --- | ---: | ---: | ---: | ---: |
+| GAN | 42 | 1 | 0 | 6 |
+| GARS1 | 55 | 2 | 0 | 7 |
+| GANAB | 26 | 3 | 2 | 5 |
+
+The reviews contain 123 reference assessments, four cores, six natural products, two literal extension atoms and 18 current quotation occurrences. No NOT or contributes_to qualifiers or inherited quotation associations occur in this window. Natural-product counts include the canonical sequence: GAN has no declared alternative-product list, GARS1 has two products from alternative initiation, and GANAB has three declared products. Engineered constructs are excluded, and a product count does not assign every function to every product.
+
+The accepted closures cover **155 deduplicated paths**, including **113 deduplicated scientific source paths**. Cumulative published payloads and actual parent deltas each cover **101 deduplicated paths**. These are unions, not sums. Shared scientific source bytes match across the accepted receipts. GARS1's actual delta omits PMID 24627108 because the identical source was already in its merge parent. All three actual merge-group suites and integration checks executed successfully; skipped routes and unresolved diagnostics remain explicit in their acceptance records.
+
+This fixed window includes only GAN, GARS1 and GANAB. GATA-family reviews, GATM and later acceptances are excluded. The prior 904,229-byte progress journal, 235 dated queue records and 161 earlier completion updates are preserved. Catalogue order changes only by checking these three genes and updating the count. Scientific source files remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T185334Z-codex-c26979.yaml).
+
+## Completion checkpoint 703 — 2026-11-04 21:05:29 UTC
+
+703 complete; 2,173 remaining out of 2,876 catalogue genes. This checkpoint publishes four independently accepted reviews after checkpoint 699 and adds no new gene completion credit.
+
+| Gene | Accepted ordinal | Actual merge | Executed integration | Original / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | --- |
+| [GATA2](https://github.com/ai4curation/ai-gene-review/pull/5952) | 700 | [cb5d8224](https://github.com/ai4curation/ai-gene-review/commit/cb5d82247a3157e9df3d840454fff707e245ac97) | [run 41892284745](https://github.com/ai4curation/ai-gene-review/actions/runs/41892284745) | 118 / 118 | DRAFT |
+| [GATA1](https://github.com/ai4curation/ai-gene-review/pull/5953) | 701 | [50ac2889](https://github.com/ai4curation/ai-gene-review/commit/50ac2889d34563d04ddc36b087ce39c5c11060aa) | [run 41892444528](https://github.com/ai4curation/ai-gene-review/actions/runs/41892444528) | 120 / 120 | DRAFT |
+| [GATA3](https://github.com/ai4curation/ai-gene-review/pull/5960) | 702 | [16d5fc72](https://github.com/ai4curation/ai-gene-review/commit/16d5fc728de92527207c560f220f24d2d4136ead) | [run 41892578431](https://github.com/ai4curation/ai-gene-review/actions/runs/41892578431) | 197 / 198 | DRAFT |
+| [GATA6](https://github.com/ai4curation/ai-gene-review/pull/5962) | 703 | [a59a136e](https://github.com/ai4curation/ai-gene-review/commit/a59a136e68bb73ec45f34ddbba22b32338cdc1a3) | [run 41899592105](https://github.com/ai4curation/ai-gene-review/actions/runs/41899592105) | 92 / 92 | COMPLETE |
+
+These GATA-family transcription factors bind regulatory DNA and control cell-type-specific gene expression. Their accepted reviews distinguish the shared transcriptional mechanism from lineage and developmental effects; GATA3 also retains direct nucleosome binding. Natural products, engineered constructs and unresolved evidence remain distinguished. Project completion does not change the reviews' computed status.
+
+All 527 current original contexts are conserved. GATA2, GATA1 and GATA6 contributed 330 genuine native seed rows. GATA3 underwent force/no-seed refresh: its 197 originals include two distinct source assertions sharing one simplified parser key, and its retained inherited NEW produces 198 stored rows. Thus the window has 526 parser keys, 527 original contexts and 528 stored rows. GATA3's 77 source-retired contexts and 181 historical quotation associations remain archived; retirement does not refute their biology.
+
+| Gene | Assessed references | Natural products | Flat extension atoms | Current review quote occurrences |
+| --- | ---: | ---: | ---: | ---: |
+| GATA2 | 63 | 2 | 23 | 6 |
+| GATA1 | 54 | 3 | 8 | 7 |
+| GATA3 | 92 | 2 | 4 | 7 |
+| GATA6 | 52 | 2 | 3 | 7 |
+
+The reviews contain 261 reference assessments, five cores, nine natural products, 38 flat extension atoms and 27 current review quotation occurrences. No NOT or contributes_to qualifiers occur in this window. GATA2 also preserves all 31 literal extension atoms within their original groups, including raw context 76's four OR alternatives; they are not split into invented annotations. Product counts include displayed natural sequences and exclude engineered constructs; they do not assign every function to every product.
+
+The accepted closures cover **294 deduplicated paths**, including **229 deduplicated scientific source paths**. Cumulative published payloads and actual parent deltas each cover **156 deduplicated paths**. These are unions, not sums. Shared scientific source bytes match across accepted receipts. Actual deltas omit identical sources already present in their respective parents: three for GATA1, one for GATA3 and one for GATA6. Derived ontology-cache convergence is recorded separately and preserves the actual parent content. All four actual merge-group suites and required integration checks executed successfully; skipped routes, warnings and unresolved diagnostics remain explicit in the acceptance records.
+
+This fixed window includes only GATA2, GATA1, GATA3 and GATA6. GATM, GBE1 and later acceptances are excluded. The prior 908,026-byte progress journal, 235 dated queue records and 162 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Scientific source files remain unchanged. The native history links the four accepted gene PRs and separates symbols from accepted ordinals.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T210529Z-codex-1034b2.yaml).
+
+## Completion checkpoint 709 — 2026-11-05 03:58:46 UTC
+
+709 complete; 2,167 remaining out of 2,876 catalogue genes. This catch-up records six independently accepted reviews after checkpoint 703 and grants no additional completion credit.
+
+| Gene | Accepted ordinal | Actual merge | Executed integration | Original / stored contexts | Status |
+| --- | ---: | --- | --- | ---: | --- |
+| [GATAD2B](https://github.com/ai4curation/ai-gene-review/pull/5961) | 704 | [07b1560b](https://github.com/ai4curation/ai-gene-review/commit/07b1560b18b5c1dbec8ba14bc7c6866ff0343485) | [run 41910098291](https://github.com/ai4curation/ai-gene-review/actions/runs/41910098291) | 74 / 76 | COMPLETE |
+| [GATM](https://github.com/ai4curation/ai-gene-review/pull/5963) | 705 | [4b7ce2de](https://github.com/ai4curation/ai-gene-review/commit/4b7ce2de9b9a0c2d4442b453ad2e4c0fa628dcc3) | [run 41914007905](https://github.com/ai4curation/ai-gene-review/actions/runs/41914007905) | 37 / 37 | COMPLETE |
+| [GBE1](https://github.com/ai4curation/ai-gene-review/pull/5966) | 706 | [cea5eb4b](https://github.com/ai4curation/ai-gene-review/commit/cea5eb4b4fa6c38e0186d940931909cf3c3e36cc) | [run 41923730354](https://github.com/ai4curation/ai-gene-review/actions/runs/41923730354) | 27 / 28 | COMPLETE |
+| [GBA2](https://github.com/ai4curation/ai-gene-review/pull/5967) | 707 | [aa59c86d](https://github.com/ai4curation/ai-gene-review/commit/aa59c86d8572d94fe848002df4cffc7ff513efd0) | [run 41927365263](https://github.com/ai4curation/ai-gene-review/actions/runs/41927365263) | 53 / 53 | COMPLETE |
+| [GBA1](https://github.com/ai4curation/ai-gene-review/pull/5968) | 708 | [c94e28bd](https://github.com/ai4curation/ai-gene-review/commit/c94e28bd668b3f81d67edfdaa9fe3461fc293afd) | [run 41940610293](https://github.com/ai4curation/ai-gene-review/actions/runs/41940610293) | 96 / 96 | COMPLETE |
+| [GCDH](https://github.com/ai4curation/ai-gene-review/pull/5972) | 709 | [ac55b7d2](https://github.com/ai4curation/ai-gene-review/commit/ac55b7d2f604993bd93d091dba3375feff376a7c) | [run 41953219963](https://github.com/ai4curation/ai-gene-review/actions/runs/41953219963) | 25 / 25 | COMPLETE |
+
+The six reviews preserve 312 original contexts and contain 315 current rows, including three supported NEW molecular functions. GBA2 retains both pairs of source-ID/date assertions that its 51-row seed collapsed; they remain 53 original contexts. GATM used a force/no-seed refresh, so its 37 originals are not described as genuine seed rows.
+
+The committed reviews contain 225 reference assessments, six cores, 15 natural products and 46 current review quotation occurrences. Product counts include displayed natural sequences and exclude engineered constructs; they do not imply equal activity across products. Eight flat extension atoms, two NOT contexts and one contributes_to qualifier are retained. GBA1 separately preserves seven literal atom occurrences and two OR groups; its four flat atoms include a shared consequence of an OR expression.
+
+Accepted closures cover 398 deduplicated paths, including 306 scientific source paths. The cumulative published payloads cover 227 deduplicated paths, and actual parent deltas cover 226. Identical shared sources already present in the actual parent are explicitly retained: R-HSA-9976102 for GATAD2B and PMID33361282 for GBA1. These figures are unions rather than sums.
+
+All six actual merge-group suites and required integration checks executed successfully. Their accepted receipts retain skipped routes, warnings and unresolved corpus diagnostics. Historical evidence and earlier project records remain unchanged. This checkpoint is fixed to accepted ordinals 704–709; GCH1 and later acceptances are outside its scope.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-05T035846Z-codex-1465e0.yaml).
+
+## Completion checkpoint 715 — 2026-11-05 08:58:45 UTC
+
+715 complete; 2,161 remaining out of 2,876 catalogue genes. This catch-up records six independently accepted reviews after checkpoint 709 and grants no additional completion credit.
+
+| Gene | Accepted ordinal | Actual merge | Executed integration | Original / stored contexts | Status |
+| --- | ---: | --- | --- | ---: | --- |
+| [GCH1](https://github.com/ai4curation/ai-gene-review/pull/5976) | 710 | [bcead031](https://github.com/ai4curation/ai-gene-review/commit/bcead031369d8739c819091f3348deb68b24f321) | [run 41957380148](https://github.com/ai4curation/ai-gene-review/actions/runs/41957380148) | 71 / 71 | DRAFT |
+| [GCK](https://github.com/ai4curation/ai-gene-review/pull/5980) | 711 | [37e83e3c](https://github.com/ai4curation/ai-gene-review/commit/37e83e3c2378b980becbeee4187b990e0643158b) | [run 41969819517](https://github.com/ai4curation/ai-gene-review/actions/runs/41969819517) | 86 / 86 | COMPLETE |
+| [GCSH](https://github.com/ai4curation/ai-gene-review/pull/5986) | 712 | [34bc185a](https://github.com/ai4curation/ai-gene-review/commit/34bc185a94094f323d3cafc3bab373a75363d819) | [run 41974409149](https://github.com/ai4curation/ai-gene-review/actions/runs/41974409149) | 28 / 28 | COMPLETE |
+| [GDF2](https://github.com/ai4curation/ai-gene-review/pull/5996) | 713 | [2fb8b13e](https://github.com/ai4curation/ai-gene-review/commit/2fb8b13e0949a7e8f9c66a7f76f436c3a4d0c9f3) | [run 41988851330](https://github.com/ai4curation/ai-gene-review/actions/runs/41988851330) | 61 / 61 | COMPLETE |
+| [GDAP1](https://github.com/ai4curation/ai-gene-review/pull/5998) | 714 | [e8b41e0c](https://github.com/ai4curation/ai-gene-review/commit/e8b41e0ccf2b801da71b34272c3a5b740f93c9fa) | [run 41990175310](https://github.com/ai4curation/ai-gene-review/actions/runs/41990175310) | 61 / 61 | COMPLETE |
+| [GEMIN5](https://github.com/ai4curation/ai-gene-review/pull/6002) | 715 | [61459f7d](https://github.com/ai4curation/ai-gene-review/commit/61459f7ddc509fdd6e6fbaec853e01b493c0ebca) | [run 41992363005](https://github.com/ai4curation/ai-gene-review/actions/runs/41992363005) | 73 / 73 | DRAFT |
+
+The six reviews preserve all 380 original contexts in 380 current rows, with no NEW annotations. GCH1 retains both original contexts collapsed into one of its 70 native seed keys; GEMIN5 retains both pairs collapsed by its 71-key seed. These are 71 and 73 originals respectively, not added assertions.
+
+The committed reviews contain 355 reference assessments, nine cores and 70 current quotation occurrences. Twelve natural sequences or precursors are counted, including displayed products; engineered constructs are excluded. GDF2 additionally records one mature BMP9 cleavage product, separately from its single precursor. GCSH's processed chain is not another splice isoform. The product counts do not imply equal activity across products. All 23 flat extension atoms and GCH1's one NOT context are retained.
+
+Accepted closures cover 377 deduplicated paths, including 269 normal scientific source paths. Cumulative published payloads and actual parent deltas each cover 175 deduplicated paths; these figures are unions rather than sums. GCSH's 25 normal target sources remain distinct from its 53 dependency-reference paths: 52 immutable dependency references and the authored GCSH review. The full GCSH closure has 68 objects; the dependency paths are not 53 unchanged source caches. GEMIN5's 11 official UniProt JSON excerpt placements retain their source provenance separately from its 16 local source placements.
+
+All six actual merge-group suites and required integration checks executed successfully. GCH1 and GEMIN5 retain computed DRAFT status and their reviewed advisories; acceptance does not erase unresolved scientific questions, skipped routes or corpus warnings. Historical evidence and earlier project records remain unchanged. This checkpoint is fixed to accepted ordinals 710–715; GFER and later acceptances are outside its scope.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-05T085845Z-codex-37a18d.yaml).
+
+## Completion checkpoint 720 — 2026-11-05 14:33:42 UTC
+
+720 complete; 2,156 of 2,876 remain. This checkpoint records five independently accepted actual merges after checkpoint 715: GFER, GFI1B, GFAP, GFPT1 and GGCX. It publishes their existing credit and adds no new gene acceptance. GIGYF1 and later acceptances belong to a subsequent checkpoint.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Original / stored contexts | References / assessments | Core functions | Natural products | Current review quotes |
+| --- | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| GFER | 716 | [#6010](https://github.com/ai4curation/ai-gene-review/pull/6010) | [7de769bf](https://github.com/ai4curation/ai-gene-review/commit/7de769bfcba6a88f7aa9706a8295dd5f96e1525a) | [41999350735](https://github.com/ai4curation/ai-gene-review/actions/runs/41999350735) | 27 / 27 | 37 / 37 | 1 | 2 | 8 |
+| GFI1B | 717 | [#6011](https://github.com/ai4curation/ai-gene-review/pull/6011) | [2b437ead](https://github.com/ai4curation/ai-gene-review/commit/2b437ead1f91e24741dd7c01cf7bef67cde593e4) | [42003936094](https://github.com/ai4curation/ai-gene-review/actions/runs/42003936094) | 21 / 21 | 33 / 33 | 1 | 2 | 13 |
+| GFAP | 718 | [#6013](https://github.com/ai4curation/ai-gene-review/pull/6013) | [b1a4b490](https://github.com/ai4curation/ai-gene-review/commit/b1a4b490dc78bf7ebecfe6ae441e5b5759124254) | [42017473920](https://github.com/ai4curation/ai-gene-review/actions/runs/42017473920) | 279 / 279 | 74 / 74 | 1 | 3 | 5 |
+| GFPT1 | 719 | [#6014](https://github.com/ai4curation/ai-gene-review/pull/6014) | [684b4fd4](https://github.com/ai4curation/ai-gene-review/commit/684b4fd43ea51a689e0838eaefd1e9e861c7be97) | [42018676529](https://github.com/ai4curation/ai-gene-review/actions/runs/42018676529) | 30 / 30 | 40 / 40 | 1 | 2 | 4 |
+| GGCX | 720 | [#6015](https://github.com/ai4curation/ai-gene-review/pull/6015) | [3bec32ba](https://github.com/ai4curation/ai-gene-review/commit/3bec32baf2e9461b4920d0928be3769df65e30b2) | [42037746017](https://github.com/ai4curation/ai-gene-review/actions/runs/42037746017) | 39 / 39 | 42 / 42 | 1 | 2 | 5 |
+
+The five accepted reviews preserve 396 original contexts in 396 stored rows, with zero NEW annotations, 226 reference assessments, five cores, 11 natural products and 35 current structured review quote occurrences. Nine flat extension atoms remain: three in GFAP, one in GFPT1 and five in GGCX. No NOT or contributes_to contexts occur in this window. Natural-product counts exclude engineered assay constructs and do not assign identical functions to every splice product. Quote counts concern the current review YAML, including repeated placements; companion evidence and historical quotations remain separate.
+
+The accepted object closures contain 41/32/79/47/49 paths respectively, including 28/23/69/35/39 normal sources. Published and actual-parent payloads contain 19/25/55/16/36 paths. Their deduplicated unions are 232 closure paths, 181 normal-source paths and 151 published/actual-parent paths. These union counts are distinct from the per-gene sums; shared sources are counted once in a union. GGCX's final amendment child count does not replace its full 36-path actual merge scope.
+
+GFER, GFPT1 and GGCX retain computed DRAFT status and accepted uncertainty. GFER keeps its unresolved extracellular and liver-development contexts, official-term/cache-label discrepancy and inherited research-source advisory. GFPT1 retains 30 original contexts restored from 29 seed keys: its unqualified extracellular-exosome context is non-core, while the separate literal CL:0000639 pituitary-basophil context remains UNDECIDED with its documented source mismatch. GGCX retains 39 originals restored from 38 seed keys, its five extension atoms and its source-sensitive annotation advisory. GFI1B and GFAP are COMPLETE. Acceptance does not remove these distinctions.
+
+All five actual merge-group suites, required schema validation and aggregate gates executed successfully. Ordinary PR runs that skipped the suite were not used as integration evidence. Existing corpus warnings, declared test deselections/skips and source-access limitations remain recorded in the accepted receipts; this checkpoint does not re-adjudicate them. Earlier catalogue order, queue records, completion updates, journal bytes and scientific source objects remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-05T143342Z-codex-833bb6.yaml).

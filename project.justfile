@@ -197,6 +197,12 @@ fetch-panther-paint-all *args="":
 paint-review-coverage *args="":
     uv run python scripts/paint_review_coverage.py {{args}}
 
+# List PAINT losses (IRD/IKR) on one gene's PANTHER lineage, with the review's rows on
+# each blocked term. An IRD leaves no leaf annotation, so the GOA file never shows it.
+# Example: just paint-losses human SLC52A1
+paint-losses organism gene:
+    uv run python -m ai_gene_review.validation.gene_paint_losses {{organism}} {{gene}}
+
 # Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
 # `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
 # verdict or overwrites a curated field; lists losses still judged with a gain verdict.
@@ -291,6 +297,13 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Evaluate function requirement (NOT) rules: `acceptance` tests them against
+# experimental GOA (QuickGO + UniProt); `sweep` flags local GOA rows.
+# Writes reports/function-requirements/ (git-ignored; regenerate, never commit).
+# See projects/FUNCTION_REQUIREMENT_RULES.md
+function-requirements command *args="":
+    uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
@@ -323,6 +336,14 @@ litscan-module-member *args="":
 # Example: just deep-research human TP53 --provider perplexity
 deep-research organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
+
+# Curated MOD gene description (WormBase, FlyBase, SGD, MGI, RGD, ZFIN, Xenbase)
+# written verbatim as GENE-deep-research-<mod>.md; no genes = every gene folder.
+# Examples:
+#   just mod-description-deep-research worm fshr-1
+#   just mod-description-deep-research worm
+mod-description-deep-research organism *genes:
+    uv run ai-gene-review mod-description-deep-research {{organism}} {{genes}}
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -1007,8 +1028,7 @@ validate-references file:
 # silently certifying an unchecked quotation. Caches remain regenerable context.
 [group('QC')]
 validate-predictions +files:
-    just validate-prediction-terms {{files}}
-    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+    just _validate-predictions true {{files}}
 
 # Every prediction review, including the BioReason/GO-GPT sidecars. Run by the
 # weekly/manual CI pass, the merge queue and on validation-infrastructure
@@ -1019,8 +1039,13 @@ validate-predictions-all:
     #!/usr/bin/env bash
     set -euo pipefail
     files=(genes/*/*/*predictions*.yaml)
-    just validate-prediction-terms "${files[@]}"
-    uv run python -m ai_gene_review.validation.prediction_evidence --require-excerpts --report reports/prediction-evidence.json "${files[@]}"
+    just _validate-predictions false "${files[@]}"
+
+# Shared by the two recipes above, so their checks cannot drift apart;
+# `fetch` (true/false) is the only difference.
+_validate-predictions fetch +files:
+    just validate-prediction-terms {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence {{ if fetch == "true" { "--fetch" } else if fetch == "false" { "" } else { error("fetch must be true or false") } }} --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Schema and term validation for prediction files. In a PredictionReview the only
 # bound slot is `taxon`, so the term phase checks the taxon id and label only;
@@ -2423,6 +2448,22 @@ rules-export *args="":
 #   just rules-validate --all -v
 rules-validate *args="":
     uv run ai-gene-review rules-validate {{args}}
+
+# Validate curated rules (rules/curated/CR-*.yaml): schema, then semantic checks
+# (anchored condition sets, exclusion-only module conditions, known modules).
+validate-curated-rules:
+    for f in rules/curated/CR-*.yaml; do uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C CuratedRule "$f" || exit 1; done
+    uv run python -m ai_gene_review.curated_rules check rules/curated/CR-*.yaml
+
+# Report UniProtKB match counts for curated rules (network). Example:
+#   just count-curated-rules rules/curated/CR-0004.yaml
+count-curated-rules *files="rules/curated/CR-*.yaml":
+    uv run python -m ai_gene_review.curated_rules check {{files}} --count
+
+# Evaluate a module-context detector on UniProt proteomes (cached; network for new ones).
+# Example: just evaluate-module-context rules/curated/context/ubiquitin_transfer_relay.yaml UP000008243 --rule rules/curated/CR-0003.yaml
+evaluate-module-context detector *args="":
+    uv run python -m ai_gene_review.context_oracle {{detector}} {{args}}
 
 # Sync a single rule review YAML file with analysis data (automatically analyzes first if needed)
 # This populates the `entries` field in the review YAML with pairwise overlap data

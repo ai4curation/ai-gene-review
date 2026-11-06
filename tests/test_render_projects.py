@@ -427,6 +427,18 @@ class TestReplaceGeneSymbols:
         assert "[DAF-16](../../genes/worm/daf-16/daf-16-ai-review.html)" in result
         assert warnings == []
 
+    def test_numeric_symbols_do_not_link_scores(self):
+        """Purely numeric gene names (phage genes such as BPT7 ``4.2``) never link.
+
+        Project pages quote scores like 4.2 and 4.5, which must stay plain text.
+        """
+        index = {"4.2": ["BPT7"], "4.5": ["BPT7"], "gp4.5": ["BPT7"]}
+        result, warnings = replace_gene_symbols("Correctness 4.2 (UniProt 4.5); gp4.5", index)
+
+        assert "Correctness 4.2 (UniProt 4.5)" in result
+        assert "[gp4.5](../../genes/BPT7/gp4.5/gp4.5-ai-review.html)" in result
+        assert warnings == []
+
     def test_case_variants_do_not_link_common_words(self):
         """Words that share a symbol's letters must not be auto-linked.
 

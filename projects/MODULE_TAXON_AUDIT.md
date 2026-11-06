@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-29
+last_reviewed: 2026-11-04
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -40,6 +40,10 @@ For each module, record evidence that all of the following are satisfied:
    merged. Record its number and merge commit before marking the audit complete.
 
 ## Status
+
+- [x] `bacterial_aspartate_to_threonine_biosynthesis`: [PR #5858](https://github.com/ai4curation/ai-gene-review/pull/5858) merged as `225589950bb458a00b76f46024480ac6f68b76a6` at 2026-11-01T23:27:51Z after approval of `f074ad3642687ea4d2bb6eeb02757e2028e8b37e` and passing required/queue checks. All 152 scoped blobs match the approved head; 20 reviews, 192 machine rows and 40 raw sources are preserved. Final 193 rows include one restored inherited authored proposal; two others remain retired.
+- [x] `bacterial_beta_aryl_ether_dimer_cleavage`: [PR #5930](https://github.com/ai4curation/ai-gene-review/pull/5930) merged as `22ee0c020b11a0455c6e75da1a36fb59af729954` at 2026-11-03T05:26:24Z after approval of `f54046b04cea6bb86bc49c9d38e5f06776aabaef` and passing head/queue checks. All 153 scoped blobs match the approved head; 16 COMPLETE reviews, nine original annotation rows and 32 raw sources are preserved, with no NEW annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5930-merged-content.json).
+- [ ] `bacterial_c_di_amp_signaling`: Seventeen complete reviews preserve 89 original rows and 34 raw sources; zero NEW rows and two explicit CpaA UNDECIDED claims. Module, 37 capacity cases and 176 regression tests pass. All six required PAINT lineage checks succeeded with no IRD/IKR losses. Full validate-all is running; publication/review/CI remain pending.
 
 - [ ] `bacterial_ammonia_assimilation`: Audit 30 has started in an isolated verified worktree. Twelve normally seeded members cover Pseudomonas putida, Escherichia coli, Bacillus subtilis and Azospirillum brasilense; the baseline contains 126 rows and 24 raw sources. PSEPK glnA/gltB/gltD reviews and focused checks are complete (19 rows after one redundant authored proposal retirement); the other nine reviews and cross-lineage module reconstruction remain in progress. No full validation or PR yet.
 
@@ -442,3 +446,19 @@ Restored all six heading-bearing historical blocks from polar commit 0ca553b979 
 Seventeen member reviews contain 484 active rows, preserving 483 original annotation payloads; 34 raw sources and the NRT1.1 consolidation of Q05085 are preserved. All 224 scoped scientific/source/history paths are unchanged by this integration. Pinned GitHub snapshot 2026-10-29T14:51:06.922623+00:00: PR #5579 is OPEN at 30a3cf7f6644f25698db78ec16c2779dd8867292, with APPROVED review 5670621005 submitted at 2026-10-27T16:23:33Z and successful required checks on that head. The merge of main bb749eff8b133cccae14d5b91f202f5b03167630 prepared here requires fresh review and CI after publication; the prior approval does not cover the integration commit.
 
 The incoming and approved tracker journals are identical and are retained in full, including all headings. All 715 module identities and the 714 unrelated inventory rows are preserved. This refresh is limited to the polar row; other rows retain their explicitly dated incoming evidence. The ledger remains at 25 COMPLETE, 3 PR_OPEN, 2 IN_PROGRESS and 685 NOT_STARTED. These are ledger counts, not a fresh global GitHub survey. A new append-only project history records the integration.
+
+## 2026-11-04 — beta-aryl merge verified; c-di-AMP audit started
+
+PR #5930 completion is now recorded from the actual merge and retained content proof, superseding its stale requested-changes snapshot. All 153 scoped blobs match the approved head. The next authorized module is bacterial c-di-AMP signaling; its isolated checkout starts at published main `bcead031369d8739c819091f3348deb68b24f321`. Initial research checks receptor-specific effects, cyclase compartments, degradation chemistry and taxonomic scope before choosing further exemplars. Other inventory rows and dated evidence are retained; this is not a fresh global status survey or a restart of the paused all-module goal.
+
+## 2026-11-04 — c-di-AMP validation completed
+
+Full just validate-all completed with exit 0 across 10300 reviews: zero errors, 109 advisory ontology-label issues, 51 advisory reference issues, and 27990 best-practice warnings. Ontology/reference warning paths were checked against starting main and remain unchanged. All 54 pathway files with PMID references passed. Scope remains 17 reviews, 89 original rows, 34 raw sources and zero NEW annotations. Publication, independent review, CI and actual merge remain pending.
+
+## 2026-11-04 — c-di-AMP PR #5997 published
+
+PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw sources; zero NEW and two explicit CpaA UNDECIDED claims. Full validation passed on 10300 reviews. Rebase onto f2068f974a preserved all 143 scoped blobs and 65 excluded local files; incoming GCK validation passed. Independent review, CI and actual merge remain pending.
+
+## 2026-11-04 — c-di-AMP review findings addressed
+
+PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.

@@ -1,0 +1,843 @@
+---
+title: "CACAO community annotations review"
+maturity: IN_PROGRESS
+tags: [EVALUATION]
+species: [STRP1, EBOZM, yeast, RVFVZ, BUNYW, BPPRD, PSEAE, BPP22, SHIFL, ECOLI, BPPH2, BPT4, BPT5, BPP1, BPPGK, 9CAUD, HHV8P, SENDZ, SINDV, SFVCP, SALTY, TRYCR, NOSB1, BACSU, LAMBD, human, mouse, rat, ARATH, DROME, MYXXA, RHOCB, PSE14, BPG15]
+genes: [pppL, VP35, VP40, GP, WHI3, NSS, N__P16494, XV, fabY, sieA, ipaH4.5, clpX, cha, STM3697, doc, acrIIA5, K3, K5, V__P69282, VPS74, APN1, lysK, gag, SWP7, acs, ybjN, D15, P03316, "3", "5.4", "1", "2", "4", "15", "17", DMS3-25, DMS3-30, JBD30_035, GH15_072, PSPPH_4093, bchF, bchE, bchJ, actC, actA]
+---
+
+# CACAO community annotations review
+
+**Bottom line:** CACAO (Community Assessment of Community Annotation with
+Ontologies) is the GONUTS/Texas A&M course-based curation programme in which
+student teams wrote experimental GO annotations from the literature, refereed
+by competing teams and instructors. GOA carries 4,373 annotations with
+`assigned_by: CACAO` on 2,987 gene products from 658 taxa (snapshot
+2026-10-28). They are almost all experimental (2,268 IDA, 1,952 IMP, 86 IGI)
+and mostly biological process (2,438 BP, 1,034 MF, 901 CC). Gene reviews
+already exist for 281 of these gene products, covering 503 CACAO rows. Those
+reviews accepted 263, kept 150 as non-core, modified 47, marked 20
+over-annotated, removed 9, left 7 undecided, and called 2 too general; 5 rows
+are absent from the review files, which predate them.
+
+**Result so far (45 microbial genes, 167 CACAO rows).**
+
+| | rows | ACCEPT | MODIFY | NON_CORE | OVER_ANN | TOO_GEN | REMOVE |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Batch 1 (12 genes) | 71 | 30 | 21 | 11 | 7 | 1 | 1 |
+| Batch 2 (18 genes) | 72 | 48 | 12 | 6 | 4 | 0 | 2 |
+| Batch 3 (15 genes) | 24 | 15 | 8 | 0 | 1 | 0 | 0 |
+| Total | 167 | 93 | 41 | 17 | 12 | 1 | 3 |
+
+Batch 3 is the only batch with no `NON_CORE` and no `REMOVE` CACAO row, and
+the only one chosen by screen rather than by CACAO row count, so its rates are
+not comparable with batches 1-2 on acceptance alone. The `REMOVE` column is
+scoped to CACAO rows like the rest of this table: batch 3 does carry 6
+`REMOVE` rows among its 101 review rows, and all six are IEA rows rather than
+CACAO ones — three InterPro2GO (`GO_REF:0000002`), one InterPro-plus-keyword
+(`GO_REF:0000120`), one UniProt keyword mapping (`GO_REF:0000043`) and one
+PANTHER TreeGrafter (`GO_REF:0000118`). The removals span three distinct
+pipelines, two of which `SourceResourceEnum` cannot name, which is a further
+argument for the first item below.
+
+Batch 1 accepted 42% of rows as written, batch 2 **67%**. The likeliest cause
+is literature depth rather than student quality: batch-1 genes (Ebola, RVFV,
+ClpX, WHI3) each draw on many papers, often with later work contradicting the
+annotated one, while most batch-2 genes rest on one or two well-characterized
+studies. If that holds, the predictor of a CACAO error is how much literature
+has accumulated since the annotation, not who made it.
+
+**The errors are mostly not CACAO's.** On batch-2 genes the defective rows
+were far more often from InterPro2GO, UniProt keywords, ARBA, IntAct, RHEA,
+HAMAP, CAFA and UniRule than from students. Three genes (chagasin, STM3697,
+P1 Doc) had every CACAO row sound while carrying real defects from automated
+pipelines; LysK is the sharpest case, where the students picked the
+host-directed interspecies term and InterPro2GO plus a UniProt keyword did
+not. Two batch-1 patterns catalogued as student failures turned out to arrive
+by those routes too. A project framed as auditing student work is in practice
+measuring the whole annotation supply chain, and CACAO is not the weakest link
+in it.
+
+**What does fail is provenance, not biology.** Batch 2's recurring problem is
+not a wrong claim but a wrong basis for a right claim: the wrong paper cited
+(APN1, Gag), the wrong gene's paper (T4 gp5.4), the wrong isolate's
+experiments (Gag), the wrong qualifier (AcrIIA5), the wrong evidence code
+(SWP7, D15), an artefact paper read as positive evidence (Gag), or a
+superseded mechanism (P1 Doc). These are invisible to any check that compares
+terms, and they are exactly what downstream automated inference propagates.
+
+**Counting caveat.** Action tallies measure term correctness, not annotation
+correctness, and the two come apart. Two of T4 gp5.4's four misattributed
+rows name the virion baseplate, which is independently true of gp5.4, so an
+inventory scores them as successes while their stated evidence is about a
+different protein. Treat the ACCEPT column as a floor on error, not a
+measure of it.
+
+**Microbes first.** Microbial proteins (bacteria, archaea, viruses and phages,
+fungi and protists) carry 2,166 CACAO rows on 1,617 gene products, half the
+corpus, but only 116 of them are reviewed, against 151 of 1,107 animal
+proteins. They are also where the judged rows fail hardest: 8 of the 9
+CACAO removals so far are on microbial genes, out of 199 microbial rows
+judged (137 accepted, 20 non-core, 21 modified, 4 over-annotated, 8 removed,
+2 undecided, 2 too general, 5 missing). For many of these proteins, notably
+phage and virus proteins, the CACAO row is the only experimental GO
+annotation, so an error there is not diluted by other curation. The review
+order is therefore microbes first, ranked by CACAO row count; the animal and
+plant genes follow.
+
+The question for this project is whether CACAO rows fail in a characteristic
+way that differs from professional curation, and how often. After two batches
+the taxonomy has eighteen shapes, grouped below. Only the
+first was expected; the rest were found by reading papers against term
+definitions. Several arrive from automated pipelines as often as from
+students, so the taxonomy classifies *annotation* failures, not CACAO ones.
+
+**Wrong claim about the biology**
+
+- **Phenotype read as process.** An effect several steps downstream of the
+  gene's activity, annotated as the process itself: `positive regulation of
+  cyclase activity` on MAPK3, MAPK8 and MAPK14 from one paper
+  (PMID:22027397); WHI3 `positive regulation of translation` from a
+  protein-level change; clpX `cell division` from a genetic interaction the
+  authors read as modulation.
+- **Precursor supply read as pathway participation.** The variant a
+  pleiotropic metabolic knockout produces: fabY starves many pathways of
+  acyl-ACP, and each downstream product became its own process term (quorum
+  sensing, siderophore biosynthesis, lipid A biosynthesis), none of them a
+  step FabY performs.
+- **Sign inverted.** The term asserts the opposite of the result. pppL
+  `positive regulation by symbiont of entry into host` rests on an adherence
+  proxy while the invasion data show the mutant is sixfold *more* invasive;
+  Bunyamwera NSs carries both `viral gene expression` and `negative
+  regulation of viral genome replication` from one figure showing ~10x *more*
+  viral protein, so the two rows contradict each other.
+- **Wrong arm of a bidirectional pathway.** Five rows on `GO:0039502
+  suppression of type I interferon signalling` whose papers assay interferon
+  *production*: VP35 once (its companion paper explicitly shows VP35 cannot
+  block receptor signalling, which is VP24's job), RVFV NSs twice, Bunyamwera
+  NSs twice. **The shape is not uniformly an ontology gap**, and the three
+  reviews resolve it three ways for good reasons. For VP35 the right terms
+  already existed (`GO:0039540` RIG-I and `GO:0039548` IRF3, the
+  mechanism-specific induction-side terms), so that row is an ordinary
+  term-choice error. The two NSs proteins antagonise no sensor or IRF at all
+  — IRF-3, NF-kappaB and AP-1 all activate normally and the lesion is a
+  global block on host RNA polymerase II — so no existing term fits them, and
+  the gap is specifically the absence of a **mechanism-agnostic production
+  term**, a symbiont-mediated counterpart of `GO:0032480`. The RVFV NSs review
+  files that term as `proposed_new_terms`; the Bunyamwera rows go to
+  `GO:0052170` for now and say they should move to the new term if GO creates
+  it. The gap is also not CACAO's fault: UniProt IDA rows and KW-1114 IEA
+  rows land on `GO:0039502` the same way.
+- **Right pathway, wrong molecular step.** ipaH4.5 `symbiont-mediated
+  suppression of host translation` where the readout is an NF-kB reporter and
+  cytokine output: host gene expression, not translation. The term is a
+  sibling inside the correct neighbourhood, the paper is the right paper and
+  the evidence code fits, so only the term definition catches it.
+- **Own-process term for a host-directed activity.** PRD1 endolysin
+  `cell wall disassembly`, which is an organism disassembling *its own* wall;
+  a phage has none. The interspecies branch (GO:0052009) is where it belongs.
+  Likely systematic across phage and effector annotations.
+- **Parent-level restatement.** The same experiment annotated twice, once at
+  the specific term and once at its ancestor: sieA `regulation of viral entry`
+  beside `superinfection exclusion`; VP40 `host cell membrane` three times
+  where every assay is plasma-membrane specific. True, redundant, and
+  `MODIFY` rather than a failure.
+- **Mechanism paper read as a localization.** The mirror image of
+  phenotype-as-process, found on Ebola GP: an IDA cellular-component row
+  whose paper images only host machinery (clathrin, transferrin, Eps15) and
+  never localizes the viral protein at all.
+- **Actor substitution across the host/symbiont boundary.** KSHV K3 and K5
+  both carry `endocytosis involved in viral entry` from the same paper: what
+  is endocytosed is the *host* lectin the ligase destroys, and the entry
+  effect is the lectin's. The mirror of the own-process shape above. (The two
+  reviews first treated it differently — K5 removed the row, K3 repointed it —
+  and the split was resolved in K3's favour on review: K5's own paper shows it
+  drives DC-SIGN endocytosis in the dynasore-washout assay, with the RING-CH
+  mutant as comparator, so both genes now MODIFY to GO:0044077 and both file
+  the CACAO defect. Removing would have dropped a real claim, since neither of
+  K5's remaining rows from that paper carries it.)
+- **Overexpression-only phenotype on a mutant-phenotype code.** YbjN
+  `negative regulation of cell growth`, where ~20x overexpression slows
+  growth and the deletion grows like wild type. Distinct from
+  phenotype-as-process: the asserted phenotype does not exist.
+- **Heterologous-system localization read as a host location.** Sindbis 6K at
+  the plasma membrane, assayed in frog oocytes; phi29 p3 in the *host cell
+  nucleus*, assayed in mammalian cells when the host is *B. subtilis*, which
+  has no nucleus.
+- **Reaction run backwards read as a second enzyme class.** Acs annotated as
+  a protein-lysine *deacetylase*: the claim is in the abstract, but the term's
+  parent demands hydrolysis and Acs is a ligase running its own transfer in
+  reverse. Likely recurs wherever a reversible-enzyme paper says a substrate
+  was "demodified by X".
+
+**Wrong term for a right claim**
+
+Two shapes catalogued before batch 1 did not recur in it: **one paper applied
+to genes it does not assay** (PMID:25313396 for fliH, fliY and swrD; see
+[BACSU](BACSU.md)) and **single-assay localization** (SNAP23 mitochondrion,
+KRT19 plasma membrane). Every batch-1 paper was about its gene.
+
+- **Structure-blind term for a structure-specific activity.** T5 D15
+  `double-stranded DNA endonuclease` sits on a different branch from the
+  flap-endonuclease terms, so no ancestor/descendant redundancy check flags
+  it, yet the bare reading is contradicted by a later paper. Our own tooling
+  cannot see this class.
+- **Wrong parent structure.** Sindbis `icosahedral viral capsid, spike`: the
+  right assembly under the wrong parent, since alphavirus spikes sit in the
+  envelope. Driven by a real gap — GO has no envelope-spike term.
+- **No term exists to correct it.** YbjN's inverted `pilus assembly` cannot be
+  repaired: GO's pilus regulation terms cover only type IV pili. A wrong row
+  that needs ontology work, not a re-term.
+
+**Wrong provenance for a right claim** (batch 2's dominant group)
+
+- **Over-harvesting one paper.** APN1's four rows all cite one 2003 paper;
+  three name activities it does not assay but the protein genuinely has, each
+  shown in a *different* paper. SGD curated the same paper and took exactly
+  one term, sourcing the rest properly — a direct professional comparator on
+  identical input.
+- **Adjacent-locus identifier confusion.** All four T4 gp5.4 rows come from
+  papers about gp5, the product of the neighbouring gene; "gp5"/"gp 5"
+  resolved to the entry named `5.4`. Numeric phage gene names make this cheap
+  to audit and easy to commit.
+- **Right term, wrong paper.** Gag's chromatin row cites a paper with no
+  chromatin assay; the result is in another paper from the same lab.
+- **Artefact paper read as positive evidence.** Another Gag row cites a paper
+  that demonstrates its own nuclear signal is a fixation artefact.
+- **Cross-isolate experimental transfer.** All four Gag rows put IDA/IMP on
+  the chimpanzee isolate from prototype-foamy-virus experiments; ISS is the
+  right code. UniProt virus entries are isolate-level while the literature
+  works in reference strains, so this should recur across CACAO's virus rows.
+- **Wrong qualifier, right term.** AcrIIA5's 2025 row uses
+  `acts_upstream_of_or_within_positive_effect` for a process the protein
+  executes; the same group's earlier rows use `involved_in`. Queryable
+  corpus-wide without reading anything.
+- **One assay under two evidence codes.** SWP7's adhesion row submitted as
+  both IDA and IMP three weeks apart, where no mutant can exist
+  (microsporidia are untransformable). Unlike parent-level restatement, the
+  term is identical.
+- **Mechanism superseded, term unaffected.** P1 Doc's translation-suppression
+  row rests on a 30S-occlusion mechanism later overturned; the term asserts
+  the outcome, so the row survives for a reason the student did not intend.
+  Recorded as a `finding_review`, not an action change.
+
+**A CACAO error does not stay put.** VP40's `intracellular transport of virus`
+row, which has no transport assay behind it, has already seeded an
+inter-ontology IEA (GO_REF:0000108), and K5's repointed viral-entry row is
+also restated by an ARBA rule, so the correction has to reach two rows. Two of
+143 rows examined have been amplified downstream, so error rates counted on
+CACAO rows alone understate the footprint.
+
+**Two near-misses on the curator-deference rule.** AcrIIA5 cites a paper whose
+title and abstract are about a different anti-CRISPR protein (AcrIIA6); only
+the full text shows this protein was co-assayed. VPS74 cites a mammalian
+GOLPH3 paper that contains a genuine yeast panel. Both would have been
+recorded as wrong-gene errors from the abstract alone, so batch 1's
+"paper not about the gene" counts should be re-checked against full text.
+
+CACAO annotations are experimental, so the
+[curator-deference rule](../CLAUDE.md) applies: the student read the full
+text, and a `REMOVE` needs the paper itself, not its abstract. The GONUTS wiki
+(`gowiki.tamu.edu`) keeps a page per paper and per protein for CACAO
+annotations (the ALDH4A1 review used both), and is the first thing to check
+when the cached publication is abstract-only. **That check is permanently
+gone.** Through batches 1 and 2 gowiki.tamu.edu served only "This site is
+temporarily offline while we perform upgrades"; as of 2026-11-01 it returns
+HTTP 410 with a page reading "GONUTS, the GO wiki, has been retired", and
+the Internet Archive has no snapshot of the relevant pages. The programme's
+own record of what each student read, and of the evidence they entered, is
+therefore unrecoverable. Every row in this project is judged from the cited
+paper alone, and a row whose cache is abstract-only has to be decided on
+what can be read rather than deferred to a re-check that will never come.
+
+## Project files
+
+- [`CACAO/data/cacao-quickgo-2026-10-28.tsv`](CACAO/data/cacao-quickgo-2026-10-28.tsv):
+  QuickGO download of every annotation with `assignedBy=CACAO`.
+- [`CACAO/data/taxon-groups.yaml`](CACAO/data/taxon-groups.yaml): each of the
+  658 taxa assigned to a broad group (Bacteria, Archaea, Viruses, Fungi,
+  Metazoa, Viridiplantae, Other eukaryote) from its UniProt taxonomy lineage.
+  Regenerate with `uv run python projects/CACAO/scripts/fetch_taxon_groups.py`.
+- [`CACAO/cacao-inventory.yaml`](CACAO/cacao-inventory.yaml): per gene review,
+  the action given to each CACAO row, matched on term, evidence code and
+  reference; counts by group; and the top 100 unreviewed microbial gene
+  products by CACAO row count. Regenerate with
+  `uv run python projects/CACAO/scripts/cacao_inventory.py`.
+- [`CACAO/batch3-screens.yaml`](CACAO/batch3-screens.yaml): the three
+  screens that chose batch 3, one per batch-2 failure shape that can be looked
+  for without reading papers — numerically-named genes sharing a cited paper,
+  references spanning sibling taxa, and non-standard qualifiers. Regenerate
+  with `uv run python projects/CACAO/scripts/batch3_screens.py`.
+
+## Coverage
+
+| Group | CACAO rows | Gene products | Reviewed |
+|-------|-----------:|--------------:|---------:|
+| Metazoa | 1,847 | 1,107 | 151 |
+| Bacteria | 1,238 | 975 | 34 |
+| Viruses (incl. phages) | 612 | 409 | 54 |
+| Viridiplantae | 360 | 263 | 14 |
+| Fungi | 236 | 170 | 28 |
+| Other eukaryotes (protists) | 56 | 42 | 0 |
+| Archaea | 24 | 21 | 0 |
+
+Top taxa:
+
+| Taxon | CACAO rows | Gene products without a review |
+|-------|-----------:|-------------------------------:|
+| *Homo sapiens* (human) | 741 | 346 |
+| *Mus musculus* (mouse) | 672 | 320 |
+| *Bacillus subtilis* 168 (BACSU) | 160 | 98 |
+| *Escherichia coli* K-12 (ECOLI) | 156 | 102 |
+| *Arabidopsis thaliana* (ARATH) | 144 | 94 |
+| *Rattus norvegicus* (rat) | 107 | 75 |
+| *Saccharomyces cerevisiae* (yeast) | 106 | 45 |
+| *Drosophila melanogaster* (DROME) | 73 | 37 |
+| *Oryza sativa* japonica | 70 | 43 |
+| Phage T4 (BPT4) | 48 | 21 |
+
+## Approach
+
+1. Review microbial genes first, those with the most CACAO rows at the top,
+   so each review judges several student annotations at once. Batch 1 is
+   every unreviewed microbial gene product with at least five CACAO rows.
+   Most microbial proteins carry only one or two CACAO rows (1,174 of the
+   1,501 unreviewed have one), so later batches should group them by
+   organism or by cited paper rather than by row count. Animal and plant
+   genes come after.
+2. Use the standard workflow (`just fetch-gene`, deep research, the
+   annotation-reviewer agent). In each review, note in the CACAO rows'
+   `reason` what the cited paper shows and, where the cache is abstract-only,
+   say so: GONUTS is retired, so there is no student record to fall back on.
+3. After each batch, rerun the inventory script and update the counts and
+   failure shapes above.
+4. Once enough rows are judged, compare the CACAO acceptance rate with that of
+   experimental rows from other groups on the same genes.
+
+---
+# STATUS
+
+Snapshot 2026-11-01: 350/2,987 CACAO gene products reviewed; 710/4,373 rows
+judged. Batches 1 and 2 complete and merged (#5724) except phage phi29 p6
+(blocked, below). **Batch 3 complete**: all 15 genes validate with 0 errors,
+101 review rows, 24 CACAO rows judged. Not yet merged.
+
+## Batch 1: microbes, at least five CACAO rows
+
+Organism codes are UniProt mnemonics, for `just fetch-gene <CODE> <gene>`.
+Counts are total review rows / CACAO rows.
+
+- [x] STRP1 pppL (Q99YM9), *Streptococcus pyogenes* M1 SP-STP, 13/8
+- [x] EBOZM VP35 (Q05127), Zaire ebolavirus, 32/8
+- [x] EBOZM VP40 (Q05128), Zaire ebolavirus, 34/6
+- [x] yeast WHI3 (P34761), 33/6
+- [x] RVFVZ NSS (P21698), Rift Valley fever virus, 24/6
+- [x] BUNYW N (P16494, entry NSS_BUNYW), Bunyamwera virus, 9/6
+- [x] BPPRD XV (P13559), phage PRD1 endolysin P15, 15/6
+- [x] PSEAE fabY (Q9HU15), *Pseudomonas aeruginosa* PAO1, 11/5
+- [x] BPP22 sieA (Q38674), phage P22 superinfection exclusion, 7/5
+- [x] EBOZM GP (Q05320), Zaire ebolavirus glycoprotein, 33/5
+- [x] SHIFL ipaH4.5 (P18009), *Shigella flexneri*, 13/5
+- [x] ECOLI clpX (P0A6H1), 36/5
+- [ ] BPPH2 6 (P03685), phage phi29 nucleoid protein p6, 5 CACAO rows —
+  **blocked** — tracked in issue #5733. Notes are written
+  (`genes/BPPH2/6/6-notes.md`) but two attempts to write the review YAML were
+  stopped by a safety classifier, in two sessions. Needs a human to look at
+  the notes and finish or drop the gene.
+
+## Upstream reports from batches 1 and 2
+
+Recorded as `source_defects` / `proposed_new_terms`; run
+`just export-source-defects` for the per-resource reports.
+
+Batch 3 added two pipeline-level reports with their own pages, both reached
+from a sound CACAO row on the gene being reviewed. Each is one mis-stated
+source annotation amplified by an automatic pipeline; verify both with
+`uv run python projects/CACAO/scripts/upstream_checks.py`.
+
+- [ ] **InterPro**: delete the `GO:0019685` mapping from IPR005969,
+  IPR005970, IPR005971 and IPR009905. All four are light-independent
+  (bacterio)chlorophyll families, all four already carry their correct terms,
+  and the four lines account for all 3,731 GOA annotations on the term.
+  **GO**, separately and lower priority: rename the term, whose "dark
+  reaction" label invited exactly this misreading, and generalise its
+  definition, which describes only the Calvin cycle although C4 and CAM
+  photosynthesis are also children.
+  [Report](CACAO/upstream-interpro2go-dark-reaction.md).
+- [ ] **SGD, then GO Central, then PANTHER**: `Q12177`'s `GO:0004029` IDA
+  states the wrong reaction — its paper reports an NADH-dependent aldehyde
+  *reductase*, which makes an alcohol, while `GO:0004029` is defined as
+  making a carboxylate. Re-term it to `GO:0004022` (or `GO:0018455`), then
+  correct the PAINT IBD at PTN002449572 (63 IBA rows) and the PANTHER node
+  association behind PTN005180820 (1,324 TreeGrafter rows). Also ask PANTHER
+  whether a node spanning SF6 and SF9 should assert a specific catalytic
+  activity at all. [Report](CACAO/upstream-panther-aldh-propagation.md).
+
+- [ ] GO: no symbiont-mediated counterpart of GO:0032480 *interferon
+  production*. Filed once, in the RVFV NSs review, with three cases: RVFV NSs
+  and Bunyamwera NSs, whose four `GO:0039502` rows need it, and Sendai virus
+  V, which needs it with no mis-annotated row at all, since nothing was put on
+  `GO:0039502` there. VP35's fifth row is covered by existing induction-side
+  terms. Sendai V is sensor-directed, so the request now also asks the editors
+  whether a production term should coexist with the sensor-specific terms on
+  one gene.
+- [ ] **This repo, not GO:** `GOCellularLocationEnum` cannot express
+  GO:0055036 virion membrane or GO:0019031 viral envelope in
+  `core_functions.locations`, which is where a virion surface protein's
+  activity happens (found on GP). Checked against OLS: both sit under
+  GO:0044423 *virion component*, a direct child of GO:0005575 outside the
+  GO:0110165 *cellular anatomical entity* branch the enum materialises from
+  (`src/ai_gene_review/schema/gene_review.yaml`), so GO is self-consistent
+  and the fix is to add GO:0044423 as a second source node here. The GP review
+  now states the omission in its core-function description rather than
+  substituting a host-cell term.
+- [ ] GO/EBI: UniProt keyword KW-0081 maps phage endolysins to GO:0042742
+  *defense response to bacterium*, inverting the interaction direction (XV).
+- [ ] UniProt: P18009 AltName "Probable RING-type E3 ubiquitin transferase"
+  contradicts its own NEL domain and Cys379 active site (ipaH4.5).
+- [ ] CAFA: ClpX assigned to GO:0009376 HslUV complex from an SspB/ClpXP
+  paper; an IBA rests on that row (clpX).
+- [ ] GO Central: the IBD on PANTHER node PTN000137358 asserts GO:0051301
+  *cell division*, but its donor evidence is FtsZ modulation, so the node
+  term should be GO:0051302 *regulation of cell division* — correcting every
+  IBA inherited from it, not just clpX's row.
+- [ ] RVFV NSs GO:0039689 row contradicted by its own cited abstract.
+- [ ] UniProt: KW-1114 maps to type I interferon suppression, but the keyword
+  is interferon-class neutral; KSHV K3 and K5 both target the type II
+  receptor. Affects every entry carrying the keyword.
+- [ ] InterPro: IPR002502/IPR036505 and IPR018110 map muralytic and
+  enolase-superfamily domains to own-process metabolic terms
+  (GO:0009253, GO:0009063) with no taxon constraint (LysK, STM3697).
+- [ ] UniProt: phi29 p3 carries four keyword rows from a superseded
+  attribution — the peptidoglycan hydrolase is tail protein gp13 (P15132).
+- [ ] UniProt: P1 Doc has a DNA-binding keyword the literature contradicts,
+  and a RHEA serine-kinase mapping where the only acceptor shown is a
+  threonine.
+- [ ] GONUTS/CACAO: T4 gp5.4's four rows belong on P16009 (gp5); AcrIIA5's
+  2025 row has the wrong qualifier; SWP7 and D15 each have a wrong evidence
+  code; Gag's four rows need ISS, not IDA/IMP.
+- [ ] GO: no envelope-spike CC term (Sindbis); no pilus-assembly regulation
+  terms outside type IV (YbjN); no host-cell-nucleoid term (phi29 p3); no
+  microsporidian exospore or endospore terms (SWP7); no term for SieA's
+  activity (batch 1).
+- [ ] GO, lower priority: should `GO:0106310` *protein serine kinase activity*
+  carry a usage comment pointing at `GO:0004674`, or be merged into it as
+  `GO:0106311` *protein threonine kinase activity* already was? A serine child
+  with no threonine sibling is what led `GO_REF:0000116` to project the seryl
+  half of EC 2.7.11.1 onto P1 Doc, whose only demonstrated acceptor is a
+  threonine (Doc; the CSNK2A1 review raises the same question).
+
+## Batch 2: microbes, four CACAO rows — all 18 complete
+
+Total review rows / CACAO rows. Folder names follow the CLAUDE.md conventions
+for entries with no usable gene symbol.
+
+- [x] TRYCR cha (Q966X9), *T. cruzi* chagasin, 11/4 — all 4 sound
+- [x] SALTY STM3697 (Q8ZL58), L-talarate/galactarate dehydratase, 12/4 — all 4 sound
+- [x] BPP1 doc (Q06259), phage P1 Doc toxin, 16/4 — all 4 sound
+- [x] 9CAUD acrIIA5 (A0A220GHA5), phage D4276 anti-CRISPR, 6/3 — all 3 sound
+- [x] BPPH2 3 (P03681), phi29 terminal protein p3, 17/4 — all 4 sound
+- [x] HHV8P K3 (P90495), KSHV MIR1, 21/4
+- [x] HHV8P K5 (P90489), KSHV MIR2, 23/4
+- [x] SENDZ V__P69282 (P69282), Sendai virus V, 14/4
+- [x] yeast VPS74 (Q06385), 39/4
+- [x] yeast APN1 (P22936), 21/4
+- [x] BPPGK lysK (Q6Y7T6), phage K endolysin, 16/4
+- [x] SFVCP gag (Q87039), simian foamy virus Gag, 22/4
+- [x] NOSB1 SWP7 (B3STP1), *Nosema bombycis* spore wall protein, 11/4
+- [x] ECOLI acs (P27550), acetyl-CoA synthetase, 16/4
+- [x] ECOLI ybjN (P0AAY6), 8/4
+- [x] BPT5 D15 (P06229), phage T5 flap endonuclease, 38/4
+- [x] SINDV P03316 (P03316), structural polyprotein, 50/4
+- [x] BPT4 5.4 (P39234), baseplate puncturing device, 8/4 — all 4 misattributed
+
+## Batch 3: three screens, 15 genes
+
+Ranking by CACAO row count is exhausted (1,174 of the 1,501 unreviewed
+microbial gene products carry a single row), so batch 3 is chosen by screen
+instead. Each of the three batch-2 failure shapes that can be looked for
+*without reading papers* was turned into a query over the snapshot
+(`projects/CACAO/scripts/batch3_screens.py`, output in
+`projects/CACAO/batch3-screens.yaml`), and the batch is five genes from each.
+The point is to make the batch a test of the taxonomy rather than a list: if
+these shapes are real, the screens should enrich for them, and if they are
+not, that is the more useful result.
+
+**Screen 1, adjacent-locus confusion (the T4 gp5.4 shape).** 71 gene products
+carry a numeric symbol; 55 are unreviewed, and **33 share a cited PMID with
+another numerically-named gene in the same organism**, which is exactly the
+configuration that misattributed all four of gp5.4's rows. The sharpest
+cluster is phage phi29, where one paper (PMID:820555, mutants in six genes
+fail to synthesise phage DNA) is cited across most of the numbered genes —
+including gene 3, whose row this project already accepted under curator
+deference. Reviewing its siblings tests whether that deference was right.
+
+**Screen 2, cross-isolate transfer (the Gag shape).** 95 references are cited
+by CACAO rows on more than one taxon, but **taxon count alone is a bad
+screen**: the widest spans 25 taxa and is a comparative study that
+legitimately annotates each one. The discriminator is taxonomic proximity, so
+the candidate set is references spanning 2–4 taxa whose organism names look
+like isolates of one species group — 24 of them, mostly same-species strain
+pairs. Some may not be transfers at all but one organism annotated under two
+taxon ids, which is a different defect worth recording either way.
+
+**Screen 3, wrong qualifier (the AcrIIA5 shape).** 63 rows carry a qualifier
+outside `involved_in` / `enables` / `part_of` / `located_in`, 43 of them on
+unreviewed genes, and nearly all are
+`acts_upstream_of_or_within_positive_effect`. The striking thing is the
+composition: the list is dominated by **phage anti-CRISPR and
+host-interaction proteins**, the same family where AcrIIA5's regressed
+qualifier was found. That makes it a direct replication test rather than a
+fresh screen.
+
+- [x] **Group A — adjacent locus, phage phi29 numbered genes.** BPPH2 1
+  (P03679, DNA replication protein), 2 (P03680, DNA polymerase), 4 (P03682,
+  late genes activator p4), 15 (P11187, endolysin), 17 (P03686, DNA
+  replication protein). Gene 4 also tests the *partner-mutant IMP* pattern
+  that the blocked p6 notes flagged but could not confirm, since p6's
+  transcription rows rest on p4 mutants.
+- [x] **Group B — wrong qualifier, phage host-interaction proteins.** 9CAUD
+  DMS3-25 (A0SMN5) and DMS3-30 (A0SMP0), 9CAUD JBD30_035 (L7P7M1), BPG15
+  GH15_072 (I6P9Q0, holin), PSE14 PSPPH_4093 (Q48EH2). A0SMP0 is a double
+  hit: it is also in screen 2, on a paper spanning phages D3112 and DMS3.
+- [x] **Group C — cross-isolate and taxon-id pairs.** RHOCB bchF (P26165),
+  bchE (P26168) and bchJ (P26169), all from one paper cited across two
+  *Rhodobacter capsulatus* taxon ids; MYXXA actC (Q93P57) and actA (Q93P59),
+  from a paper cited across *Myxococcus xanthus* and its DK1622 strain.
+
+Still open for later batches: the remaining bacteria by organism (941
+unreviewed gene products), where *E. coli* and *B. subtilis* give a
+professional MOD comparator on the same genes.
+
+### Batch 3 results: what the screens actually caught
+
+24 CACAO rows judged across the 15 genes: **15 ACCEPT, 8 MODIFY,
+1 MARK_AS_OVER_ANNOTATED, and no REMOVE, UNDECIDED or KEEP_AS_NON_CORE at
+all**. 101 review rows in total — 39 ACCEPT, 35 MODIFY, 12 NEW, 6
+TOO_GENERAL, 6 REMOVE, 3 MARK_AS_OVER_ANNOTATED and, again, no
+KEEP_AS_NON_CORE anywhere — plus 29 `source_defects` and 6
+`proposed_new_terms`. Of the 24 CACAO rows, 14 carry the hedged qualifier.
+
+Two counting notes, because the batch's argument is that these figures are
+reproducible. The 24 counts GOA rows, not review entries: DMS3-25's two
+`GO:0051607` rows share a term, evidence code and reference and differ only in
+ECO subtype, so one review entry judges both, and counting entries gives 23.
+And batch 3 ends with **zero `KEEP_AS_NON_CORE` rows** — actC's `GO:0043937`
+was the last one and became a `MODIFY` on review of PR #5956, which is a more
+informative result than the single row the earlier tally reported.
+
+Screen by screen:
+
+- **Screen 1, adjacent locus: 2 of 5.** Genes 1, 2 and 17 are genuinely
+  among PMID:820555's DNA-synthesis cistrons, so the deference extended to
+  gene 3 in batch 1 was right. The slip is confined to the paper's *lysis*
+  half, which landed on genes 4 and 15 and missed gene 14 (P11188, the
+  holin), the gene that carries no CACAO row. Two reviewers reached that
+  independently and by different arguments — gene 15's from the sus14 mutant
+  literature, gene 4's from the fact that a gene-4 nonsense mutant makes
+  almost no A3 transcript and so cannot give the normal-or-larger burst
+  after artificial lysis that the paper reports. Both filed
+  `WRONG_GENE_PRODUCT` with REPOINT to P11188 at PROBABLE confidence, which
+  is the right confidence: the 1976 full text could not be obtained (Wiley
+  403; the DIGITAL.CSIC copy sits behind a bot check that asks agents not to
+  fetch, and was not circumvented), so the conclusion rests on secondary
+  sources.
+- **Screen 2, cross-isolate transfer: 0 of 5, and the explanation is
+  benign.** Three reviewers converged on it. The two-taxon signature on
+  PMID:8158642 sits entirely on bchM, whose `BCHM_RHOCA` is a 1992
+  species-level entry never re-filed into the SB1003 proteome; 1061 is the
+  species node *above* the 272942 strain node, not a sibling isolate. For
+  the *Myxococcus* pair, DK1622 is the reference strain and both ids denote
+  one locus. **The screen's discriminator should be inverted**: check
+  whether the outlier accession has `OrderedLocusNames` or sits in a
+  reference proteome, which separates UniProt entry vintage from a real
+  isolate difference in one lookup.
+- **Screen 3, wrong qualifier: 5 of 5 — the one screen that found a real
+  CACAO problem**, and it turns out to be datable rather than per-row. See
+  below.
+
+### The hedged qualifier is a 2025 process change, not a curation judgement
+
+Verified against QuickGO (queries saved in `CACAO/data/`). On `GO:0098672`,
+all 18 rows in GOA: CACAO's five 2018-2019 rows are all `involved_in`, its
+ten 2025-2026 rows are all `acts_upstream_of_or_within_positive_effect`, and
+UniProt's three 2026 rows are `involved_in`. `A0A220GHA5` carries four CACAO rows on
+that term, and three of them are the same assertion: `involved_in` in 2019
+and hedged twice in 2025 (04-07 and 04-10) all share `ECO:0007040`, IDA and
+PMID:28785032, differing only in qualifier and date. (Its fourth row is a
+separate assertion, `involved_in` in 2018 from PMID:30046034.) So this is one
+claim from one paper entered three times with the qualifier flipped on the
+re-entries, which makes it a duplicate annotation as well as a qualifier
+regression, and a sharper exhibit for the bulk fix than the counts alone.
+Those two 2025 rows are also why the hedged set is ten rows across nine
+accessions, not nine rows.
+`GO:0044659`'s experimental rows split the same way: 31 `involved_in` (18 of
+them CACAO's own) against 5 hedged rows, all CACAO and all dated 2025-02 to
+2026-03. `Q6TM71` and `Q9T1X2` each carry a hedged CACAO row beside a
+UniProt `involved_in` row for the identical term and paper.
+
+So it is neither a per-row judgement nor a CACAO convention — CACAO's own
+earlier rows use `involved_in`. It is a change in the 2025 campaign's
+practice, covering at least 15 rows across these two terms, and it is
+fixable in bulk.
+
+**But a hedge is not automatically wrong.** Two batch-3 rows went the other
+way: phi29 gene 17, where the support is a bulk nonsense-mutant screen and
+much of the *sus17* replication defect is indirect, and phi29 gene 1, where
+p1 loss severely impairs but does not abolish replication. The taxonomy
+needs to separate a *regressed* qualifier from an *honest* one, and the
+2025 date gives a usable prior rather than a verdict.
+
+### The errors batch 3 found are mostly not CACAO's
+
+This is batch 2's conclusion holding up under a deliberately adversarial
+selection. Three screens built to catch student mistakes mostly caught
+pipelines:
+
+- **`GO:0019685` "photosynthesis, dark reaction" is the carbon-fixation
+  grouping term** — its `is_a` children are the Calvin cycle, C4 and CAM
+  photosynthesis — and InterPro2GO maps light-independent
+  (bacterio)chlorophyll families to it: the label read, the definition
+  unread. QuickGO returns **3,731 annotations on the term and every one is
+  IEA from GO_REF:0000002 by InterPro**; there is no other use of it in
+  GOA. All four interpro2go entries using it are light-independent
+  chlorophyll families. Invisible to any ancestor or descendant check,
+  because the term is neither too broad nor too narrow but a different
+  pathway. Written up, with the requested deletions and a separate request
+  to GO about the term's label and definition, in
+  [its report](CACAO/upstream-interpro2go-dark-reaction.md).
+- **Experimental annotations stranded off the reference proteome.** UniProt
+  holds two unmerged entries per *Myxococcus* act locus: the AF350253
+  submission set (taxon 34) and the DK1622 genome set (taxon 246197).
+  `Q93P57` and `Q1D7F7` are byte-identical, 437 aa, same md5, same RefSeq
+  accession. All three experimental rows sit on `Q93P57`, which is in no
+  proteome, while `Q1D7F7` — the reference-proteome entry — carries only an
+  InterPro IEA. The same holds for actA (`Q93P59` vs `Q1D7F9`, verified
+  against UniProt REST). The operon's rows scattered across both sets
+  because `actB` is a `GN Name` only on the genome side and `actC` only on
+  the submission side, so a student following gene names lands wherever the
+  names happen to be.
+- **A reductase annotated as a dehydrogenase, amplified 1,387-fold.** actC
+  carries `GO:0004029` aldehyde dehydrogenase (NAD+) from TreeGrafter node
+  PTN005180820, and has no ALDH fold at all. Tracing it found a single seed:
+  of the 56 proteins in GOA with an experimental `GO:0004029`, exactly one is
+  in PTHR48079 — `Q12177` (yeast YLL056C), whose IDA cites a paper titled
+  "...encodes a novel protein with aldehyde **reductase** activity". A
+  reductase makes an alcohol; `GO:0004029` is defined as making a
+  carboxylate. PAINT then propagated the term to 63 proteins and TreeGrafter
+  to 1,324 across 1,277 taxa, all of them extended-SDR epimerases and
+  dehydratases. Written up in
+  [its report](CACAO/upstream-panther-aldh-propagation.md).
+- **An ontology fix that left its own motivating rows behind.**
+  `GO:0140181` was created 2025-06-12 with PMID:18836083 as its definition
+  xref — two months after the PSPPH_4093 rows citing that paper — and has
+  **zero annotations**. The rows and the term come from the same source and
+  were never joined. Queryable corpus-wide and worth a screen of its own.
+- **A withdrawn activity surviving in nomenclature rather than in
+  annotations.** GOA carries no MF for bchJ, so no action can correct
+  anything, yet the superseded 4-vinyl reductase assignment persists in the
+  UniProt `DE` block and in the Pfam family name PF02830 "V4R". Term-level
+  audits cannot see this; only `source_defects` catches it.
+- **Scope-wrong UniRule.** phi29 gp15's `GO:0009253` arrives via HAMAP
+  MF_04110 / UniRule `ENDOLYSIN_T4`, a rule whose entire scope is phage
+  endolysins, so its assertion is wrong for *all* of its targets — unlike
+  lysK's `Amidase_2`, which is legitimately shared with bacterial
+  autolysins.
+
+### Three things batch 3 says the project should change
+
+Two of the three are now done, in PR #5984. The detail is kept because the
+counts and the mechanism names are the project's record of how the gaps were
+found, and because two of the figures here were themselves corrections.
+
+1. **`SourceResourceEnum` had no `INTERPRO` value** — **done in #5984**,
+   which added `INTERPRO`, `PANTHER`, `COMPLEX_PORTAL`, `ENSEMBL`, `NCBI`,
+   `ENZYME`, `DISPROT`, `HPA`, `CAFA` and `GOC`. Counting the whole corpus
+   before filling the gap changed its size: of the 200 defects filed
+   `resource: OTHER`, **137** named a resource with no enum value (InterPro
+   84, Complex Portal 24, Ensembl 9, NCBI/RefSeq 5, DisProt 4, CAFA 4, EC 3,
+   HPA 2, PANTHER 1, GOC 1), and a further ~31 were **misfiled** onto `OTHER`
+   when a value already existed (CACAO 18, CollecTF 5, EcoliWiki 3,
+   PseudoCAP 3, RGD 2) — so part of the pile was never a schema gap at all.
+   Batch 3's own 7 are re-filed; the remaining ~130 that now have a home are
+   a separate migration. As batch 3 recorded it: 7 of its 29
+   defects were filed as `OTHER` with the resource named in the explanation,
+   as that value instructed, and all 7 were genuinely InterPro2GO or PANTHER
+   (the other 22 split 15 `CACAO` and 7 `UNIPROT`). Two earlier counts here
+   were wrong, both caught on review of PR #5956. The `OTHER` figure of 13,
+   and 14 in that PR's description, included seven CACAO-row defects that
+   should have carried the existing `CACAO` value and now do. And the total
+   of 27 missed two `source_defects` that sit on
+   `references[].reference_review` rather than on an annotation review —
+   DMS3-30's UniProt `MISSING_STATEMENT` and bchJ's `OUTDATED_STATEMENT` —
+   so any count of this corpus has to walk the whole document, not just
+   `existing_annotations`. InterPro2GO is now the single largest *external*
+   source of defects this project has found, so `just export-source-defects`
+   cannot produce the report that matters most. Adding `INTERPRO` (and
+   probably `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change
+   touching existing reviews, so it was recorded here rather than done in
+   passing.
+2. **`SourceDefectTypeEnum` could not express the same assertion entered
+   twice, and had no duplicate-related value at all** — **done in #5984**,
+   which added `DUPLICATE_ASSERTION`, named so as not to collide with the
+   `ReferenceReplacementReasonEnum` value discussed below. The same PR added
+   five `SourceDefectCauseEnum` values for the mechanisms this item names:
+   `SCOPE_OVER_REACH` (the scope-wrong rule), `LABEL_WITHOUT_DEFINITION`
+   (label read, definition unread), `OVER_PROPAGATION` (a node emitting one
+   activity across a heterogeneous family), plus
+   `SPECULATION_AS_ASSERTION` and `PRACTICE_CHANGE`. That enum was the
+   worst of the three: **315 of 451** cause values were `OTHER`, because all
+   five existing values were gene-identity confusions and a pipeline defect
+   had nowhere to go. As batch 3 recorded it, its thirteen values
+   are `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`,
+   `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`,
+   `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `WRONG_STATEMENT`,
+   `OUTDATED_STATEMENT`, `MISSING_STATEMENT`, `MISSING_ISOFORM` and `OTHER`.
+   `DUPLICATE_RECORD` exists in the schema but belongs to
+   `ReferenceReplacementReasonEnum`, a different slot on a different object
+   concerned with verified reference-identifier replacement, so it is not a
+   near-miss to extend. A0A220GHA5's case is one claim re-entered three times
+   from one paper with one evidence code, which therefore has to be described
+   in prose on a `WRONG_QUALIFIER` entry and is invisible to
+   `just export-source-defects` in exactly the way the `INTERPRO` gap is.
+   Raised on review of PR #5956, where an earlier version of this item
+   misattributed `DUPLICATE_RECORD` to `SourceDefectTypeEnum`; the gap is
+   wider than that wording implied. `SourceDefectCauseEnum` belongs in the
+   same conversation: batch 3 falls back to `cause: OTHER` repeatedly for
+   mechanisms that recur and are classifiable — a scope-wrong UniRule, a
+   label-read-definition-unread ontology mapping, a node emitting a specific
+   activity across a heterogeneous family — so the enum could not name the
+   very patterns this project exists to count. All three gaps were one schema
+   conversation, and #5984 closed the first two of them.
+3. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
+   *child* of KW-0929 Antimicrobial. The XV and lysK reviews and the
+   upstream report all name it wrongly. This strengthens the report: the
+   mapping cannot be excused as a broad keyword that also covers host
+   defence peptides, so `GO:0042742` can simply be dropped from KW-0081 and
+   left on KW-0929.
+
+## Later: animals and plants (top by CACAO row count)
+
+mouse Reln (20), Shank3 (18), Sirt6 (14), Nlgn3 (13), Wnt5a (11), Pafah1b1
+(9), Zbtb20 (8); rat Nlgn1 (9); human GOLPH3 (6), PLAUR (6).
+
+## Follow-ups on existing reviews
+
+- [ ] Add the 5 CACAO rows missing from existing reviews (phage T4 genes 9,
+  11 and 18, lambda stf, phi6 P9); four have no evidence code in GOA.
+- [ ] Resolve the 7 `UNDECIDED` CACAO rows (DNM1L, CASK, APC, Gpdh1, Sirt5,
+  and fliH x2). The plan was to use the GONUTS records; those are gone, so
+  each has to be decided from the paper's full text, or left UNDECIDED with
+  the unavailability stated as the reason.
+- [ ] Re-check batch 1's "paper not about the gene" judgments against full
+  text where it exists. Two batch-2 near-misses (AcrIIA5, whose cited paper's
+  title is about a different anti-CRISPR, and VPS74, whose mammalian GOLPH3
+  paper contains a real yeast panel) would both have been recorded as
+  wrong-gene errors from the abstract alone.
+
+# NOTES
+
+## 2026-11-01 (session 3: batch 3)
+
+Batch 3 selected by three deterministic screens rather than by row count, so
+that each gene tests a predicted failure shape instead of sampling at random.
+The screens and the fifteen genes are described under "Batch 3" above.
+
+**GONUTS has been retired.** gowiki.tamu.edu now returns HTTP 410 behind a
+page titled "GONUTS, the GO wiki, has been retired", pointing at
+geneontology.org instead; the Internet Archive has no snapshot of the CACAO
+paper or protein pages. Through the first two batches the site served a
+"temporarily offline while we perform upgrades" notice, so the plan had been
+to revisit abstract-only rows once it came back. That is no longer possible,
+and the three follow-ups above that depended on it have been rewritten: the
+programme's own record of what each student read is gone for good, and every
+row has to stand or fall on the cited paper. This also removes the only
+route to distinguishing a student's reasoning from the annotation it
+produced, which is a real limit on what this project can conclude about the
+programme as opposed to about its output.
+
+**A hedged qualifier is not automatically a defect.** All twelve of phi29's
+2025-dated CACAO rows use `acts_upstream_of_or_within_positive_effect` —
+gene 1 once, gene 2 three times, gene 3 four times, and genes 4, 6, 15 and 17
+once each — while the only pre-2025 CACAO rows on those genes, gene 15's 2012
+row and gene 6's four 2017 rows, use `enables`, `part_of` and `involved_in`.
+So the flip is total across the 2025 cohort, which makes it a campaign-wide
+habit rather than a per-row judgement. On phi29 gene 17 the hedge nonetheless
+turned out to fit the evidence better than `involved_in` would have: the
+support is a bulk nonsense-mutant screen, and the modern literature shows much
+of the *sus17* replication defect is indirect. The taxonomy therefore needs to
+separate a regressed qualifier from an honest one, and screen-3 hits have to
+be judged on the evidence behind the row.
+
+## 2026-10-29 (session 2: batch 2)
+
+All 18 batch-2 genes reviewed, validating with 0 errors; 349 review rows, 72
+CACAO rows judged (48 ACCEPT, 11 MODIFY, 6 non-core, 4 over-annotated, 3
+REMOVE; revised on PR review to 12 MODIFY / 2 REMOVE, see the summary
+table). Acceptance rose from 42% to 67%, and the taxonomy grew from 8 shapes
+to 18, now grouped by what is actually wrong: the claim, the term, or the
+provenance. See the summary for the two conclusions that matter — most
+defective rows on these genes come from automated pipelines rather than
+students, and batch 2's own failures are provenance failures.
+
+Hypotheses carried into batch 2 from batch 1, and how they fared:
+
+- *Endolysins mistake host-directed for own-process terms* — **wrong about
+  the culprit.** LysK's CACAO rows chose correctly; InterPro2GO and a UniProt
+  keyword did not.
+- *Virus rows confuse the two interferon arms* — **not confirmed.** Sendai V's
+  papers assay production and nobody annotated signalling. The GO gap is real
+  (confirmed twice) but does not reliably produce the error.
+- *Paralogous ligases invite mis-attribution (K3/K5)* — **not confirmed.**
+  Both papers assay their protein with its own mutant series.
+- *Promiscuous screen-derived enzymes over-annotate (STM3697)* — **wrong.**
+  Dual substrate use in one active site, replicated independently.
+- *Central-metabolism knockouts spawn downstream process terms (fabY shape)*
+  — **not present in acs**, which catalyses the entry step of both pathways.
+
+Four of five transferred hypotheses came back negative. Worth stating because
+the agents tested them rather than confirming them; a framing handed to a
+reviewer is a prediction, not a finding.
+
+## 2026-10-29
+
+Batch 1 reviewed: 12 of 13 genes complete and validating with 0 errors, 260
+review rows, 71 CACAO rows judged. One gene (phage phi29 p6) is blocked as
+above. Results and the eight-shape failure taxonomy are in the summary.
+
+Method notes for later batches:
+
+- **GONUTS is offline**, so the student-evidence check that the plan relies on
+  is unavailable. Revisit the abstract-only rows when it returns.
+  (Superseded 2026-11-01: it is retired, not offline, and will not return.)
+- **No deep-research provider keys in this container**, so reviews were done
+  from cached publications plus PubMed/PMC and web search. Recorded in each
+  notes file; no `-deep-research-*.md` files were created.
+- **Re-fetching upgrades the cache.** Two pppL papers went from abstract-only
+  to full text on a forced re-fetch; worth doing routinely before judging.
+- **Do not run corpus-wide cache scripts.** `scripts/warm_reference_cache.py`
+  ignores `--help` and starts warming everything; a run during batch 1
+  rewrote 20 unrelated `publications/` files, stripping cached full text.
+  They were restored, but the damage was briefly committed.
+
+## 2026-10-28
+
+Project started. Downloaded all 4,373 CACAO annotations from QuickGO and
+matched them to the 9,353 existing gene reviews by UniProt accession. 281
+gene products already reviewed; their CACAO rows were judged in passing,
+not as a CACAO-focused audit. Actions on those rows: ACCEPT 263,
+KEEP_AS_NON_CORE 150, MODIFY 47, MARK_AS_OVER_ANNOTATED 20, REMOVE 9,
+UNDECIDED 7, TOO_GENERAL 2, not in review 5.
+
+The nine removals: swrD, fliY (PMID:25313396), phage T4 E lysozyme GO:0003796,
+yeast HAP4 GO:0098803, LRO1 GO:0046027 (ISO), spoVAD GO:0031160, ECOLI traB
+GO:0016887, lambda Rz1 GO:0045861, ARATH DELTA-OAT GO:0051646. Each should be
+rechecked before the failure taxonomy is fixed. The GONUTS records this
+originally meant to consult are gone, so the recheck has to go to the papers.
+
+Later the same day, at the user's request, the review order was switched to
+microbes first. Added `fetch_taxon_groups.py`, which assigns every taxon to a
+broad group from its UniProt lineage, and extended the inventory with
+per-group counts and a ranked list of unreviewed microbial gene products.
+Batch 1 is now the 13 microbial proteins with five or more CACAO rows; the
+animal batch moved to the end of the queue.

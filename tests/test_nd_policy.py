@@ -5,8 +5,13 @@ import pytest
 from ai_gene_review.validation.nd_policy import iter_nd_policy_violations
 
 
-def nd(action, nd_case=None, term="GO:0003674", evidence="ND"):
+SEARCH = "file:human/X/X-deep-research-falcon.md"
+
+
+def nd(action, nd_case=None, term="GO:0003674", evidence="ND", searched=True):
     review = {"action": action}
+    if searched:
+        review["additional_reference_ids"] = [SEARCH]
     if nd_case:
         review["nd_case"] = nd_case
     return {"term": {"id": term}, "evidence_type": evidence, "review": review}
@@ -77,3 +82,35 @@ def test_accept_with_replacement_terms_is_reported():
     row = nd("ACCEPT", "INFERABLE")
     row["review"]["proposed_replacement_terms"] = [{"id": "GO:0016787", "label": "hydrolase activity"}]
     assert fields(row) == [(0, "proposed_replacement_terms")]
+
+
+@pytest.mark.parametrize("reference_id", [
+    "PMID:12345", "DOI:10.1000/x", "PMC:PMC1", SEARCH,
+    "file:DROME/CG42763/CG42763-notes.md",
+    "file:human/X/X-deep-research-manual.md",
+])
+@pytest.mark.parametrize("slot", ["supported_by", "additional_reference_ids"])
+def test_accept_citing_a_search_passes(reference_id, slot):
+    row = nd("ACCEPT", searched=False)
+    row["review"][slot] = (
+        [{"reference_id": reference_id}] if slot == "supported_by" else [reference_id])
+    assert fields(row) == []
+
+
+@pytest.mark.parametrize("supported_by", [
+    [],
+    [{"reference_id": "file:human/X/X-uniprot.txt", "supporting_text": "PE   1: Evidence at protein level;"}],
+])
+def test_accept_without_a_search_is_reported(supported_by):
+    """The UniProt record, or the protein's existence level, is not a literature search."""
+    row = nd("ACCEPT", searched=False)
+    row["review"]["supported_by"] = supported_by
+    assert fields(row) == [(0, "supported_by")]
+
+
+def test_search_rule_applies_only_to_accept():
+    assert fields(nd("REMOVE", "STALE", searched=False)) == []
+
+
+def test_search_rule_ignores_non_nd_rows():
+    assert fields(nd("ACCEPT", term="GO:0016787", evidence="IBA", searched=False)) == []
