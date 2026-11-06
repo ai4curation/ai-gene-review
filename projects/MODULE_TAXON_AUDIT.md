@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_chemotaxis_signal_transduction`: Original 22 member reviews audited; cross-species literature and receiver-family reassessment curated. Bacillus, Helicobacter and Sinorhizobium panels are in progress; alternative model integration and sodium-stator exemplars remain pending. No module-specific PR published.
+
 - [x] `bacterial_aspartate_to_threonine_biosynthesis`: [PR #5858](https://github.com/ai4curation/ai-gene-review/pull/5858) merged as `225589950bb458a00b76f46024480ac6f68b76a6` at 2026-11-01T23:27:51Z after approval of `f074ad3642687ea4d2bb6eeb02757e2028e8b37e` and passing required/queue checks. All 152 scoped blobs match the approved head; 20 reviews, 192 machine rows and 40 raw sources are preserved. Final 193 rows include one restored inherited authored proposal; two others remain retired.
 - [x] `bacterial_beta_aryl_ether_dimer_cleavage`: [PR #5930](https://github.com/ai4curation/ai-gene-review/pull/5930) merged as `22ee0c020b11a0455c6e75da1a36fb59af729954` at 2026-11-03T05:26:24Z after approval of `f54046b04cea6bb86bc49c9d38e5f06776aabaef` and passing head/queue checks. All 153 scoped blobs match the approved head; 16 COMPLETE reviews, nine original annotation rows and 32 raw sources are preserved, with no NEW annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5930-merged-content.json).
 - [ ] `bacterial_c_di_amp_signaling`: Seventeen complete reviews preserve 89 original rows and 34 raw sources; zero NEW rows and two explicit CpaA UNDECIDED claims. Module, 37 capacity cases and 176 regression tests pass. All six required PAINT lineage checks succeeded with no IRD/IKR losses. Full validate-all is running; publication/review/CI remain pending.
@@ -462,3 +464,8 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+
+## 2026-11-06 — chemotaxis comparative audit started
+
+The original E. coli/Pseudomonas panel has 22 completed reviews, with 318 historical rows (21 inherited authored proposals) and 44 raw sources recorded before editing. One inherited generic CheW adaptor proposal is archived and replaced by a specific receptor-complex adaptor proposal; all machine rows and raw sources are preserved. The module remains DRAFT while Bacillus, Helicobacter and Sinorhizobium alternatives are reviewed and integrated. The former plant-only PTHR43228 phosphatase verdict is now unresolved after reaction-level examination. This changes only the chemotaxis inventory row; every other row retains its dated evidence. Ledger counts at this checkpoint are 27 COMPLETE, 3 IN_PROGRESS, 681 NOT_STARTED, 4 PR_OPEN; these are not a fresh survey of GitHub PR states.

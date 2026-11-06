@@ -33,3 +33,16 @@
 
 ### Consistency with genes/PSEPK/cheY
 - Both reviews ACCEPT GO:0000160 and use GO:0000156 plus chemotaxis as the core. PSEPK has no cytosol row and so ACCEPTs cytoplasm. Here a supported cytosol row exists, so cytoplasm is MODIFIED to cytosol, following the brief.
+
+
+## 2026-11-06 taxonomic module audit
+
+Restored both regulation-of-chemotaxis rows to ACCEPT: GO regulation does not require an external pathway component. Retained the motor C-ring association in core locations and clarified that it is transient. GO:0009433 is an anatomical component rather than a member of the protein-containing-complex branch, so the initial proposed move to in_complex was not appropriate. Changed the three acetylation claims to UNDECIDED: self-catalysis would count as work, but the original 2006 full text was not recovered and the catalytic/native contribution remains unresolved. Retained the family-supported rejection of histidine phosphatase over-propagation.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.
+
+PMID20398208 full text was read at https://onlinelibrary.wiley.com/doi/full/10.1111/j.1365-2958.2010.07148.x; the normal publication cache remains abstract-only. Its experiments acetylate CheY chemically, and its discussion distinguishes those experiments from the earlier self-acetylation claim. PMID16630631 full text remained inaccessible after normal refetch and publisher attempts. The review therefore makes no definitive catalytic inference from that abstract alone.
+
+### Reassessment of the PAINT histidine-phosphatase claim
+
+GO:0101006 is now UNDECIDED, superseding the earlier REMOVE. Receiving phosphate on Asp57 does not exclude net hydrolysis of a donor phosphohistidine after intrinsic CheY dephosphorylation. PMID2832069 describes CheA dephosphorylation by CheY; PMID7623663 (normally fetched, abstract-only) directly reports intrinsic CheY autohydrolysis. No target-specific loss or PAINT IRD/IKR was found. Removed the categorical plant-only source defect and marked the propagation interpretation unresolved. The family TOO_DEEP judgement has been reported to the module owner for reassessment; family files are outside this agent scope. The response-regulator core remains unchanged.

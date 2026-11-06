@@ -36,3 +36,10 @@ localization; no additional PMIDs were needed beyond the GOA set.
 Core function: GO:0060090 molecular adaptor activity (module MF supported). GO:0030674
 protein-macromolecule adaptor activity is a more specific child that also fits; GO:0060090 used
 to match the module annoton.
+
+
+## 2026-11-06 taxonomic module audit
+
+Refined all five existing adaptor replacements and core MF from molecular adaptor activity to GO:0030159 signaling receptor complex adaptor activity, verified against current QuickGO definition. Direct receptor/kinase bridging and assembly assays support this specificity. Qualified broad homologue-output wording.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.

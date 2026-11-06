@@ -30,3 +30,12 @@
 - GO:0000155 phosphorelay sensor kinase activity is an is_a CHILD of GO:0004673 (earlier note had this backwards). Its definition puts signal detection on the kinase; CheA is receptor-controlled [PMID:40197389 "methylated MCPs and the coupling protein CheW activate CheA autophosphorylation"]. MODIFY -> GO:0004673 (same as E. coli CheA).
 - GO:0016772 MODIFY -> GO:0004673; GO:0007165 TOO_GENERAL (ancestor of accepted GO:0000160); GO:0005737 ACCEPT (no KT2440 localization data for a more specific term).
 - Removed six non-verbatim falcon quotes (baseline-listed) and the DE-name quote. Status COMPLETE.
+
+
+## Taxon/module audit, 2026-11-06
+
+The official supplement explicitly maps the cheA deletion to PP_4338 and lists cheA constructs/primers. This agrees with the CheA2 chemotaxis mutant in PMID:30761113 and separates this kinase from CheA1/Wsp-like output. Current QuickGO GO:0000155 describes histidine phosphorylation in response to signal detection; it does not demand direct ligand binding by CheA. ACCEPT GO:0000155, refine the broad kinase/transferase rows to it, and align the core. MCP sensing and CheW coupling remain distinct activities. CheY construct identity remains unresolved in the supplement.
+
+Source anchor: [file:PSEPK/cheA/cheA-source-analysis/PMID40197389-supp1.txt "Unmarked cheA (PP_4338) deletion mutant"]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
