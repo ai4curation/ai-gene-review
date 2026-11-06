@@ -28,3 +28,15 @@
 - Falcon deep research completed on 2026-05-13 and independently reinforced the existing review model: the target is human UniProt P06280 GLA/alpha-galactosidase A, a lysosomal enzyme whose primary molecular function is alpha-galactosidase activity and whose pathway context is lysosomal glycosphingolipid degradation [file:human/GLA/GLA-deep-research-falcon.md "Primary molecular function.** Lysosomal **α‑galactosidase A** (EC **3.2.1.22**) that removes terminal **α‑galactose** from glycoconjugates"; file:human/GLA/GLA-deep-research-falcon.md "Pathway/process.** Lysosomal glycosphingolipid degradation; defects lead to Fabry disease pathophysiology"].
 - The Falcon report adds recent-review support that Fabry disease biochemistry is described in terms of Gb3/GL-3 plus downstream lyso-Gb3 accumulation, but this does not change the core GO curation from lysosomal alpha-galactosidase activity and glycosphingolipid catabolic process [file:human/GLA/GLA-deep-research-falcon.md "deficiency causes accumulation of **Gb3** and **lyso-Gb3** in Fabry disease"].
 - Falcon also corroborates treating M6PR/sortilin/megalin receptor evidence as trafficking or therapeutic-enzyme uptake rather than as the core enzyme function [file:human/GLA/GLA-deep-research-falcon.md "Additional uptake routes reported in kidney cells include **sortilin** and **megalin**."].
+
+
+## 2026-11-06 — current annotation reassessment
+
+All 58 current annotations were individually reviewed with the literal machine contexts retained. The detailed evidence scope is in [GLA-evidence.md](GLA-evidence.md). This entry supersedes earlier judgments without altering the preceding journal.
+
+Correction: the earlier rejection of cytoplasm equated it with cytosol. GO:0005737 includes organelles; the two current cytoplasm assertions are compatible with the biology and are marked too general, while root lysosome annotations remain accepted. The catalytic core now also recognizes directly demonstrated oligosaccharide turnover. Dimerization is retained as observed, without a universal requirement across enzyme preparations.
+
+Generic-binding removals preserve positive associations and do not allege wrong genes or experimental failures. Cargo uptake is not receptor activity. The inherited provider report is unchanged; primary support and its limits are documented separately. The prior 43 review objects, 28 references and 50 quote associations remain recoverable using the preserved-history manifest and original Git blob. Four earlier curation histories remain intact.
+
+
+Native preparation also preserves the later main-branch cytoplasm correction from commit 66c8c42c and its 2026-11-03 curation history. Five prior GLA histories remain intact. The fresh native seed reproduces all 58 reviewed contexts and all 16 exported fields; the single 429-residue product is unchanged. Source acquisition added only missing records and preserved every existing cache.
