@@ -38,3 +38,10 @@ cached publications and the UniProt record. No `-deep-research-*.md` file exists
 - GO:0046274 lignin catabolic process (UniPathway IEA) = KEEP_AS_NON_CORE (acts on lignin-monomer-derived
   intermediates, not the polymer).
 - Proposed CHA-specific aldolase term (same proposed_name as galC review).
+
+
+## 2026-11-06 comparative source and annotation audit
+
+PMID:12486039 full text directly identifies CHA→pyruvate+oxaloacetate by ESI-MS, secondary oxaloacetate decarboxylation, magnesium dependence, and a homohexamer. Current GO:0047443 includes CHA cleavage explicitly; the short HMG name is not evidence of a different target reaction. Retain directly demonstrated secondary OAA decarboxylase as non-core. HMG formation is curated from PMID:29658701, whose protected cache is abstract-only; do not invent its assay conditions. Retain historical gallate NEW and the PCA pathway assertion. Replace polymer-level lignin scope with the chemically defined lower PCA pathway.
+
+Research: the normal default Falcon attempt failed with HTTP403 authentication; manual evidence assessment is recorded here, without a fabricated provider report. All original non-review annotation payloads, order and inherited NEW actions are retained; no new annotation row was added. Sources were not refreshed. Current ontology responses and pre-edit proofs are in the ignored gallate-20261106/gene-review audit cache.

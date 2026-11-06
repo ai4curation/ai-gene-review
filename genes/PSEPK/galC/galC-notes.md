@@ -1,0 +1,8 @@
+# galC review notes
+
+
+## 2026-11-06 comparative source and annotation audit
+
+Current official QuickGO GO:0047443 definition explicitly includes CHA cleavage to pyruvate and oxaloacetate, not only the HMG reaction in the short label. The exact response and provenance are in galC-source-analysis. The redundant top-level CHA new-term request was retired into retired-cha-term-proposal.yaml; no annotation row was withdrawn. Broad true MF/BP rows are refined to the demonstrated activity/process. PMID:21219457 assays recombinant GalC extracts and identifies the native pathway in KTGAL; purified GalC-specific kinetics and physiological HMG flux are not inferred.
+
+Research: protected genuine provider reports were read as leads and remain byte-identical. All original non-review annotation payloads, order and inherited NEW actions are retained; no new annotation row was added. Sources were not refreshed. Current ontology responses and pre-edit proofs are in the ignored gallate-20261106/gene-review audit cache.

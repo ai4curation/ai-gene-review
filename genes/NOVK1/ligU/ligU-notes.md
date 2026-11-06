@@ -36,3 +36,10 @@ cached publications and the UniProt record. No `-deep-research-*.md` file exists
 - NEW GO:0016863 (MF, existing parent term) and NEW GO:0019617 protocatechuate catabolic process, meta-cleavage
   (BP; LigU catalyses a step of the PCA 4,5-cleavage pathway per PMID:29658701).
 - Gallate catabolic process not asserted for KA1: no gallate data for this strain.
+
+
+## 2026-11-06 comparative source and annotation audit
+
+PMID:31339729 explicitly identifies KA1 LigU and supplies independent target-grounded structural/mechanistic evidence; normal fetch initially returned429, then succeeded with abstract-only cache. PDB6P3J entity1 maps Q0KJL4 and contains the complete unchanged 357-aa target within its 365-aa expression construct. This supports the curated KA1 attribution of PMID:29658701 despite its SYK-6 title; that older protected cache remains abstract-only and no purported full-methods reading is claimed. Both historical IDA NEW rows are retained. The core now uses the existing substrate-specific NTR. Polymer-defined lignin BP is laterally replaced with the demonstrated lower PCA pathway. A complete native KA1 gallate route is not established by this single enzyme.
+
+Research: the normal default Falcon attempt failed with HTTP403 authentication; manual evidence assessment is recorded here, without a fabricated provider report. All original non-review annotation payloads, order and inherited NEW actions are retained; no new annotation row was added. Sources were not refreshed. Current ontology responses and pre-edit proofs are in the ignored gallate-20261106/gene-review audit cache.
