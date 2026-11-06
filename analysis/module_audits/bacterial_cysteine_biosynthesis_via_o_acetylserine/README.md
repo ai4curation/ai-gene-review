@@ -8,7 +8,7 @@ assert that every bacterium or every member of either protein family has this ro
 Eighteen curated references supply 30 findings and evidence on each reaction and
 the OAS connection. Comparative reviews (PMID:36148777, PMID:38257399 and
 PMID:38931847) are reconciled with primary studies rather than used to erase
-substrate and lineage differences. The source-analysis directory records the
+substrate and lineage differences. This audit directory records the
 comparative findings, exact family placements and member evidence. Sources available
 only as abstracts are identified in the reference reviews and gene notes; full-text
 claims use independently inspected primary evidence. No acquired full articles or
@@ -69,4 +69,6 @@ All 16 targeted gene reviews and their histories passed. Module schema, semantic
 validation, rendering, checker lint and three structure/sequence comparisons pass.
 The three module advisories transparently reflect unresolved broad PTHR10314
 function scope. Final family checks pass with zero conflicts and four unresolved cases, recorded
-separately following independent scientific review. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. A dedicated PR, external review/CI and actual merge remain pending. Module status COMPLETE describes the curated artifact, not completion of the project audit.
+separately following independent scientific review. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. PR [#6120](https://github.com/ai4curation/ai-gene-review/pull/6120) is open; external review, successful CI and actual merge remain pending. Module status COMPLETE describes the curated artifact, not completion of the project audit.
+
+The three evidence YAML artifacts were relocated here without byte changes so the recursive module schema check sees only ModuleReview documents. Earlier histories preserve their original target fields and record the current comparative-evidence location through `target.superseded_by`, as specified in `docs/history.md`. Historical proofs remain tied to their original commits and paths.
