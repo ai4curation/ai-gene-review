@@ -478,3 +478,29 @@ Published the 17-member, three-phyla audit after scoped checks passed and full v
 ## 2026-11-06 — PR #6108 integration with published main
 
 Integrated published main `db69104296` with the approved PR #6108 head `b4d51143d1`. All 154 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged approved row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06: O-acetylserine cysteine synthesis audit
+
+The bacterial OAS/sulfide module now has 18 curated references, 30 findings, two
+required reactions and three terminal alternatives. Sixteen completed gene reviews
+span six species, including Mtb CysM as an OPS/CysO negative comparator; 15 proteins
+represent the native OAS-route panel. Family and PAINT scope are qualified where
+substrates diverge, and the Campylobacter placement has no invented PTN. The 59-case
+capacity/preservation check passes with 158 historical rows, 32 raw files and three
+provider artifacts preserved; one supported MF proposal brings the row total to 159.
+Targeted gene, module and family validation pass. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. PR #6120 is open. The five-gene and family review follow-up passes focused checks and all 59 capacity cases; fresh full validation, renewed external review, CI and actual merge remain pending. See
+[audit evidence](../analysis/module_audits/bacterial_cysteine_biosynthesis_via_o_acetylserine/README.md).
+
+
+## 2026-11-06 — cysteine follow-up full validation
+
+The PR #6120 scientific follow-up full run finished on 10,544 reviews, with zero best-practice errors and 54 referenced pathways passing. Its 17 reference errors match the previous run exactly and affect 16 unrelated yeast reviews; all 22 relevant inputs are identical to the pinned base. All 189 scoped publication files match the validated commit. Renewed review, CI and actual merge remain required.
+
+
+## 2026-11-06 — cysteine integration with published main
+
+Merged published main aabe4b253646e535bd700a8588e4982e20b873cc into approved cysteine head 2c755dd910f283d69d047aad656baf091e19b834. All189 scoped scientific/source/proof paths outside the three shared tracker/index files remain byte-identical. The777-row inventory keeps every incoming row unchanged except this cysteine audit row, which remains exactly the reviewed version. Both dated project journals are retained; last_reviewed is2026-11-06. No validation implementation changed in the incoming merge. The prior full run validates immutable cysteine science; fresh CI and review gate the integration commit. Four generated local caches were preserved in an exact-path stash and separately hashed backups.
+
+## 2026-11-06 — PR #6108 integration with published main
+
+Integrated published main `fd782f231a` with the validated PR #6108 head `8a615d00af`. All 156 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
