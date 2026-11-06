@@ -29,3 +29,12 @@ The fructose-dependent transfer of phosphate from FruB to the nitrogen-related
 PTS is experimentally supported, but it is treated as a regulatory side branch
 rather than the core FruB function. Broad kinase and transferase annotations
 were marked over-annotated because GO:0008965 captures the direct reaction.
+
+
+## 2026-11-06 comparative fructose-PTS review
+
+Reviewed all original annotation rows and complete biological scope. Payloads, row order and source bytes are preserved. Broad true terms were refined rather than called over-annotated. No new GO annotation is proposed solely to fill a pathway diagram. Current GO definitions were checked against QuickGO; net phosphohistidine-donor transport and the immediate phosphocysteine step are compatible descriptions of one group-translocation mechanism.
+
+A genuine default Falcon attempt failed with HTTP403; no provider report was fabricated. The review is based on cached primary literature, curated source statements and sequence/domain evidence.
+
+The target sequence order is EIIA (2–142), HPr (282–372), then the EI region; phosphate flows EI→HPr→EIIA. PTHR46244:SF6 membership alone cannot establish fusion architecture because the subfamily includes standalone EI proteins. Native phosphorylation states in PMID18296519 support conditional cross-talk with the nitrogen-related PTS; direct purified partner rates remain unresolved.
