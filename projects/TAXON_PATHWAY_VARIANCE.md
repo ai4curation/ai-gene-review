@@ -161,12 +161,13 @@ All three were requested in
 [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689)
 (2026-10-05), with the briefing as the supporting analysis. GO added them on
 2026-11-03: `neverin:6231` on GO:0007259 and GO:0046425 in commit
-[98389d1](https://github.com/geneontology/go-ontology/commit/98389d1bd9ea9c7e60b5a4420b7cf61c9ce5b0be),
+[98389d1](https://github.com/geneontology/go-ontology/commit/98389d1bd9ea9c7e60b5a4420b7cf61c9ce5b0be)
+([PR #32857](https://github.com/geneontology/go-ontology/pull/32857)),
 and `onlyin:33208` on GO:0007259 in commit
 [fed722d](https://github.com/geneontology/go-ontology/commit/fed722deb9e08f121365216c338db4cc08fac3e0)
-(PR #32861) after a reviewer noticed it had been missed. The Nematoda constraints were
-taken at phylum level, not the *Caenorhabditis* fallback. The same commit renamed the
-regulation terms to "regulation of cell surface receptor signaling pathway via JAK-STAT"
+([PR #32861](https://github.com/geneontology/go-ontology/pull/32861)) after a reviewer
+noticed it had been missed. The Nematoda constraints were taken at phylum level, not the
+*Caenorhabditis* fallback. Commit 98389d1 also renamed the regulation terms to "regulation of cell surface receptor signaling pathway via JAK-STAT"
 (go-ontology#14167). Each proposal's `submission` block in the YAML records the issue,
 the commits and the dates.
 
@@ -178,6 +179,9 @@ would remove the conflict. If it stays, request the re-parenting there.
 
 ## To do
 
+- [ ] Follow [go-ontology#27064](https://github.com/geneontology/go-ontology/issues/27064).
+  If GO:0007260 is not obsoleted, ask there for it to be re-parented under GO:0097696
+  (the TPV-003 prerequisite), since it now inherits only-in Metazoa by part_of.
 - [ ] Gene reviews for the six members of
   [dicty_jak_independent_stat_signaling](../modules/dicty_jak_independent_stat_signaling.yaml)
   that have none yet: Pyk2 (`splB`, UniProtKB:P18161), Pyk3 (UniProtKB:Q54I36),
