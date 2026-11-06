@@ -104,3 +104,61 @@ residues ~433–543 (FT DOMAIN 433..543).
 - Mass-spec "membrane" (HDA, NK-cell membrane proteome) and mitochondrion IEA/ISS
   are non-core / likely over-annotations for a peroxisomal matrix + cytosolic
   lipid-transfer protein.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000044, SL-0173), ISS (GO_REF:0000024, WITH UniProtKB:P32020)
+and EXP (PMID:17157249), all located_in. No mitochondrial sub-compartment rows.
+
+Checks:
+- UniProt P22307: [Isoform SCP2] Mitochondrion tagged ECO:0000269|PubMed:17157249 and
+  ECO:0000250|UniProtKB:P32020; [Isoform SCPx] peroxisome only.
+- PMID:17157249 (Stanley et al. 2006, full text cached incl. Experimental Procedures): the
+  string "mitochondri" never occurs. Its only cell experiment is GFP fused to mature SCP2
+  [PMID:17157249 "the bulk of GFP-SCP2 remained in the cytosol and only a few peroxisomes were detected by characteristic punctate fluorescence"],
+  and the leader is described as cleaved in peroxisomes
+  [PMID:17157249 "processed into its mature form (mSCP2) by proteolytic cleavage of a 20 residue leader sequence after translocation into peroxisomes"].
+  The earlier summary that this paper describes a mitochondrial transit peptide was wrong.
+  Recorded as a source defect (WRONG_REFERENCE, UNIPROT, PROBABLE: supplement unseen).
+- The ISS donor P32020 is mouse (not rat as the old summary said). UniProt REST (2026-11-03):
+  P32020 [Isoform SCP2] Mitochondrion {ECO:0000269|PubMed:11003606, PubMed:26901662}.
+  PMID:26901662 (mouse MA-10 cells, full text cached):
+  [PMID:26901662 "SCP2 was found in the total protein extract and in the mitochondrial fraction, but less in the cytosolic fraction"]
+  [PMID:26901662 "These results suggest that SCPX is a peroxisomal protein, whereas SCP2 is likely to be strongly associated with the mitochondria."]
+  but the crude 11,000 g fraction was checked for catalase only, not an ER marker, and
+  [PMID:26901662 "the N-terminal mitochondrial targeting sequence is not powerful enough to localize the SCPX and SCP2 proteins to the mitochondria"].
+  QuickGO also lists mouse HDA rows (PMID:14651853, PMID:18614015).
+- MitoCarta3.0: SCP2 listed; evidence "Rickettsial homolog, mito protein domain+";
+  SubMitoLocalization "MIM"; MSMS "50-75crude", 9 tissues; HPA "Peroxisomes (Supported)".
+
+Outcome: all three rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE. The earlier reason
+("not a core site") argued non-core, not over-annotation; the minor mitochondrial pool of
+isoform SCP2 has mouse fractionation/imaging, mouse proteomes and MitoCarta3.0. The EXP row
+keeps the same action because the claim stands on that other evidence, and carries the
+source defect. Added PMID:26901662 to references; revised the PMID:17157249 review note.
+Stay at the root: MitoCarta's "MIM" is the only sub-mitochondrial line and the presequence
+was shown non-functional.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and ISS (GO_REF:0000024, WITH UniProtKB:P32020),
+both located_in, both KEEP_AS_NON_CORE. No ER sub-compartment rows. Mitochondrion rows from
+batch 4 untouched.
+
+Checks:
+- UniProt P22307: "[Isoform SCP2]: ... Endoplasmic reticulum {ECO:0000250|UniProtKB:P32020}";
+  "[Isoform SCPx]: Peroxisome" only. So both ER rows rest on mouse P32020.
+- UniProt REST P32020 (2026-11-05): [Isoform SCP2] "Endoplasmic reticulum {ECO:0000269|PubMed:11003606}"
+  (sole source; the 2016 paper PMID:26901662 supports Mitochondrion/Peroxisome/Cytoplasm only,
+  and only cites earlier ER pools).
+- PMID:11003606 (abstract-only, mouse L-cell fibroblasts stably overexpressing SCP-2):
+  [PMID:11003606 "Indirect immunofluorescence double labeling and laser scanning confocal microscopy detected SCP-2 in peroxisomes > endoplasmic reticulum > mitochondria > lysosomes."]
+  plus SCP-2 stimulation of microsomal phosphatidic acid synthesis in vitro.
+- Soluble protein, PTS1 -AKL, no signal peptide/TM: any ER pool is on the cytosolic face.
+
+Outcome: actions unchanged (KEEP_AS_NON_CORE), close call against MARK_AS_OVER_ANNOTATED
+(overexpression-only localization) stated in the ISS reason. ISS summary corrected (donor is
+mouse, not rat). Isoform restriction recorded as a source defect (Gene_Product_Form_ID ->
+P22307-2) on the ISS row. Stays at the root. Added PMID:11003606 to references.
+core_functions[1] still lists GO:0005783 for the lipid-transfer function; left as is (the
+microsomal transfer data are the functional link), but worth a second look.

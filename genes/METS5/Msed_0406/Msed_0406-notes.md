@@ -1,86 +1,130 @@
-# Msed_0406 (A4YDT1, HBCL1_METS5) curation notes
+# Msed_0406 (A4YDT1, HBCL1_METS5) notes
 
-## 2026-11-02 session
+Automated deep research was unavailable for this review. The notes below come from
+my own reading of the cached full texts (PMID:23258541, PMID:24532060), the UniProt
+record, PubMed searches (E-utilities: "Msed_0406", "Msed_0394",
+"Metallosphaera sedula 4-hydroxybutyrate CoA ligase") and the RCSB PDB entry 8BIQ.
+No `-deep-research-*.md` file was created.
 
-### Sources and limits
+## Identity
 
-- Deep research: no provider was available in this environment. `scripts/deep_research_wrapper.py`
-  reported "Provider 'perplexity' not available. Available: openscientist, claude_code" and
-  "Provider 'asta' not available". No `-deep-research-<provider>.md` file was written; the review
-  rests on the UniProt record, the two Kelly-lab papers and PANTHER/PAINT data.
-- PMID:23258541 (Hawkins et al. 2013, JBC) is cached abstract-only (PMC3567653 is not in the PMC
-  open-access subset; an eutils PMC fetch returned only front matter). The kinetics below are taken
-  from the curated UniProt record, whose statements cite PubMed:23258541 with ECO:0000269 and were
-  therefore read from the full text by UniProt curators.
-- PMID:24532060 (Hawkins et al. 2014, AEM) fetched this session; abstract-only.
-- Structure paper for PDB 8BIQ/8BIT: "Adapting an acyl CoA ligase from Metallosphaera sedula for
-  lactam formation by structure-guided protein engineering", Front. Catal. 2024,
-  doi:10.3389/fctls.2024.1360129 (from the PDBe publications API). No PMID found; not cited in
-  the review.
+- 564 aa class I adenylate-forming (ANL superfamily) acyl-CoA synthetase; Pfam
+  PF00501 + PF13193; PANTHER PTHR43605:SF10 ("acyl-CoA synthetase medium chain family
+  member 3"), CDD cd05972 MACS_like.
+- Paralog Msed_0394 (A4YDR9, HBCL2). Msed_1353 is the conserved Sulfolobales
+  acetate/propionate-CoA synthetase; Msed_1456 is the 3-hydroxypropionyl-CoA
+  synthetase of the same cycle.
+- Crystal structures 8BIQ (with acetyl-AMP, 2.8 A, four chains) and 8BIT; primary
+  citation Capra et al. 2024 Front Catal 4 (doi:10.3389/fctls.2024.1360129), an
+  engineering paper on lactam formation. No PMID was found for it, so it is not cited
+  as a reference.
 
-### What the protein is
+## Biochemistry (Hawkins et al. 2013)
 
-- UniProt RecName "4-hydroxybutyrate--CoA ligase 1", EC 6.2.1.40, with acetate, butyrate and
-  propionate CoA-ligase AltNames, all with ECO:0000269 PubMed:23258541.
-- AMP-forming ligase (Pfam PF00501 AMP-binding, PF13193 AMP-binding_C; CDD cd05972 MACS_like;
-  PANTHER PTHR43605:SF10). Same subfamily as P. putida PP_2213 and B. subtilis YtcI.
-- UniProt FUNCTION: [file:METS5/Msed_0406/Msed_0406-uniprot.txt "Involved in the
-  3-hydroxypropionate/4-hydroxybutyrate cycle which incorporates carbon dioxide into cellular
-  carbon. Catalyzes the ligation of coenzyme A (CoA) to 4-hydroxybutyrate (4HB)."]
+- Identified as the missing 4HB-CoA ligase of the 3HP/4HB cycle
+  [PMID:23258541 "Recombinant versions of these enzymes catalyzed the ligation of
+  CoA to 4HB"]; product confirmed by HPLC [PMID:23258541 "For both enzymes, the
+  production of 4HB-CoA from 4HB and CoA was confirmed using reversed-phase HPLC."]
+- Paralog comparison: similar Km for 4HB, different rates [PMID:23258541 "K m values
+  of 1.9 and 1.5 m m for Msed_0406 and Msed_0394, respectively"]. Conclusion:
+  [PMID:23258541 "Conclusion: Msed_0406 is likely the physiologically relevant enzyme
+  in the cycle."] and [PMID:23258541 "It is likely that Msed_0406 is more effective at
+  catalyzing the ligation of CoA to 4HB in vivo than Msed_0394."]
+- Substrate profile of Msed_0406: kcat/Km propionate 43,000 > butyrate 26,000 >
+  valerate 7,500 > acetate/3HP 3,200 > 4HB 910 M-1 s-1 [PMID:23258541 "this enzyme
+  works best on propionate"]; the authors call it [PMID:23258541 "primarily a
+  promiscuous propionate-CoA synthetase"]. Substrate range is C2-C5 only
+  [PMID:23258541 "Both Msed_0394 and Msed_0406 were found to have activity on a broad
+  range of small organic acid substrates of up to five carbons in length."]
+- Msed_0394 (HBCL2) prefers butyrate (kcat/Km 3,700) and valerate; 4HB is its
+  poorest substrate (160) and Vmax on 4HB is ~8x lower than Msed_0406.
+- Both genes are constitutively expressed (<2-fold change autotrophy vs heterotrophy),
+  but in the top quartile of the transcriptome [PMID:23258541 "Msed_0406 and Msed_0394
+  were both constitutively transcribed"].
+- Open question raised by the authors [PMID:23258541 "It is not clear why two
+  synthetases would be required, or whether both of them are necessary for autotrophic
+  growth."]. No knockout exists.
+- 4HB has no other known role in crenarchaeal metabolism [PMID:23258541 "it is
+  unlikely to have any other role in crenarchaeal metabolism outside of carbon
+  fixation"].
 
-### Physiological substrate
+## Pathway reconstitution (Hawkins et al. 2014)
 
-- [PMID:23258541 "transcriptomic analysis of cells grown under strict H(2)-CO(2) autotrophy was
-  consistent with the involvement of Msed_0406 and Msed_0394"]
-- [PMID:23258541 "Recombinant versions of these enzymes catalyzed the ligation of CoA to 4HB"]
-  Msed_0406 is ~8-fold faster than Msed_0394 (1.69 vs 0.22 umol/min/mg).
-- [PMID:24532060 "the final four enzymes of the 3HP/4HB cycle, 4-hydroxybutyrate-CoA ligase (AMP
-  forming) (Msed_0406), 4-hydroxybutyryl-CoA dehydratase (Msed_1321), ... were produced
-  recombinantly in Escherichia coli, combined in vitro, and shown to convert 4HB to acetyl-CoA"]
-- [PMID:24532060 "flux between the succinate and acetyl-CoA branches in the 3HP/4HB pathway is
-  governed by 4-hydroxybutyrate-CoA ligase"]
-- Kinetics from UniProt (kcat / Km, computed here, s-1 mM-1): propionate 16.2/0.38 = 43;
-  butyrate 8.4/0.32 = 26; valerate 5.6/0.74 = 7.6; acetate 6.4/2.03 = 3.2; 3HB 2.6/0.81 = 3.2;
-  4HB 1.8/2.0 = 0.9. In vitro the enzyme is a broad short-chain (C2-C5) acyl-CoA synthetase, and
-  4HB is its poorest measured substrate.
-- Verdict: the physiological substrate is 4HB. The argument is pathway context, not kinetics:
-  4HB is a cycle intermediate that must be activated; Msed_0406 is induced under autotrophy; the
-  reconstituted four-enzyme segment runs from 4HB; and no other cycle step needs free acetate,
-  propionate or butyrate activation (propionyl-CoA is made from acryloyl-CoA, acetyl-CoA by the
-  thiolase). M. sedula has a conserved acetate/propionate synthetase, Msed_1353
-  [PMID:23258541 "the acetate/propionate synthetase (Msed_1353), an enzyme that is highly
-  conserved among the Sulfolobales"], which can be named as the cell's enzyme for those two
-  reactions.
+- Msed_0406, Msed_1321, Msed_0399 and Msed_0656 were combined in vitro and converted
+  4HB to acetyl-CoA [PMID:24532060 "were produced recombinantly in Escherichia coli ,
+  combined in vitro , and shown to convert 4HB to acetyl-CoA"].
+- Msed_0394 is dismissed for the cycle [PMID:24532060 "Given the kinetic properties of
+  the other enzymes of the pathway, it is unlikely that Msed_0394 plays a significant
+  role in the cycle."]
+- The 2 mM Km for 4HB makes this a rate-limiting step [PMID:24532060 "The high
+  Michaelis-Menten constant (2 mM) for Msed_0406 on 4HB indicates that intracellular
+  levels of 4HB must be high to overcome the activity barrier."]
 
-### Annotation decisions (summary)
+## Pathway context
 
-- GO:0004321 fatty-acyl-CoA synthase (TreeGrafter IEA): REMOVE; synthase/synthetase confusion from
-  PAINT IBD on PTN001944787 (only seed RGD Acsm4, PMID:12709059 reporting ligase activity). Source
-  defect against GO_CENTRAL, as in PP_2213.
-- GO:0006633 fatty acid biosynthetic process (IEA): REMOVE. Msed_0406 activates 4HB in a pathway
-  that cleaves the C4 unit to two acetyl-CoA; it forms no fatty acid. The IBD's mammalian seeds
-  (Acsm1, Acsm3, PMID:11470804) point to oxidation: [PMID:11470804 "acyl-CoAs produced by MACS1
-  and Sa protein are utilized mainly for oxidation."]. Differs from PP_2213 (MARK_AS_OVER_ANNOTATED)
-  because here the process the enzyme does take part in is known and is not fatty acid synthesis.
-- GO:0006637 acyl-CoA metabolic process: ACCEPT (forms 4-hydroxybutyryl-CoA).
-- GO:0015645 fatty acid ligase: MODIFY -> GO:0031955 short-chain fatty acid-CoA ligase activity.
-- GO:0031956 medium-chain (C6-C12) fatty acid-CoA ligase (IDA + IEA): MODIFY -> GO:0031955. All
-  measured substrates are C2-C5. Caveat: full text not read; if the paper also assayed C6+ acids
-  the medium-chain term would be a genuine side activity.
-- GO:0003987 acetyl-CoA synthetase and GO:0050218 propionate-CoA ligase (IDA + IEA):
-  MARK_AS_OVER_ANNOTATED. Real, kinetically respectable in vitro activities; no evidence they are
-  used in vivo; Msed_1353 is the conserved acetate/propionate enzyme. Not REMOVE: the activity is
-  not noise (higher than with 4HB), and the IDA rows rest on a full text not read here.
-- GO:0016020 membrane (SubCell IEA from a predicted TM helix 105-125): REMOVE. The segment is a
-  helix inside the N-terminal ANL domain in the crystal structure (FT HELIX 107..119 from 8BIQ) of
-  the full-length (2-564) protein; ANL superfamily ACSM enzymes are soluble. Source defect against
-  UniProt (PROBABLE).
-- NEW GO:0015977 carbon fixation (IDA, PMID:24532060). Participation test: Msed_0406 itself
-  catalyses a cycle step (4HB + CoA + ATP -> 4HB-CoA). Comparator check: other M. sedula cycle
-  enzymes carry carbon-fixation terms in QuickGO (2026-11-02): Msed_1456 GO:0043427 IDA
-  PMID:18165310; Msed_1353 GO:0043427 IEA. GO:0043427 "carbon fixation by 3-hydroxypropionate
-  cycle" is defined as the Chloroflexus cycle ending in glyoxylate, and the 4HB branch is not part
-  of it, so the parent GO:0015977 is used and a 3HP/4HB-cycle term is proposed.
-- No GO term exists for 4-hydroxybutyrate-CoA ligase (EC 6.2.1.40; RHEA:23128): QuickGO search
-  "4-hydroxybutyrate" and "hydroxybutyrate-CoA ligase" returned no such term. Proposed as a new
-  term; used as proposed_molecular_function in core_functions.
+- Cycle discovery [PMID:18079405 "This intermediate was reduced to 4-hydroxybutyrate
+  and converted into two acetyl-CoA molecules via 4-hydroxybutyryl-CoA dehydratase."]
+- In the cycle, propionyl-CoA is made from 3-hydroxypropionyl-CoA (dehydratase +
+  acryloyl-CoA reductase), not from free propionate, and acetyl-CoA is regenerated by
+  thiolysis. So the acetate and propionate activities are not cycle steps. They are
+  real in-vitro activities with no demonstrated physiological role.
+
+## GO assessment
+
+- Physiological activity: 4-hydroxybutyrate-CoA ligase (EC 6.2.1.40, RHEA:23128). GO
+  has no term (OLS/QuickGO searches for "4-hydroxybutyrate", "hydroxybutyrate-CoA
+  ligase", "4-hydroxybutanoyl-CoA" returned none). Precedent: GO:0043955
+  3-hydroxypropionyl-CoA synthetase activity exists for the neighbouring Msed_1456
+  step. Propose a new term.
+- GO:0031956 medium-chain fatty acid-CoA ligase activity is defined for C6-C12 acids.
+  The IDA and IEA rows came from EC 6.2.1.2 / RHEA:48340 (butyrate, valerate). Msed_0406
+  has no measured activity on C6 or longer, so GO:0031955 short-chain fatty acid-CoA
+  ligase activity (fewer than 6 C; parent of GO:0050218) is the correct term. This is
+  an EC-to-GO naming mismatch: EC 6.2.1.2 is named "butanoate--CoA ligase" /
+  medium-chain acyl-CoA ligase with a C4-C11 range, whereas GO medium-chain means C6-C12.
+- GO:0004321 fatty-acyl-CoA synthase activity is the fatty acid synthase reaction
+  (EC 2.3.1.86, acetyl-CoA + malonyl-CoA + NAD(P)H), not an acyl-CoA synthetase.
+  "Synthase" vs "synthetase" mix-up in the PANTHER TreeGrafter node (PTN008683229).
+  Remove.
+- GO:0006633 fatty acid biosynthetic process: archaeal membranes are isoprenoid ether
+  lipids. The enzyme activates short acids; it plays no part in fatty acid synthesis.
+  Mammalian ACSM-seeded TreeGrafter propagation. Remove.
+- GO:0016020 membrane: from a predicted TM helix (105-125), inside the N-terminal ANL
+  domain core. The enzyme was purified from the soluble fraction of E. coli lysates and
+  crystallised without a membrane. Remove.
+- Process: NEW GO:0015977 carbon fixation (as in Msed_0709); the enzyme catalyses a
+  cycle step, so it passes the participation test. Reuse the proposed term name
+  "carbon fixation by 3-hydroxypropionate/4-hydroxybutyrate cycle". GO:0043427 is the
+  Chloroflexus glyoxylate-releasing bicycle, so it is not used.
+
+## 2026-11-06: merge with the parallel PTHR43605 review (ai4curation/ai-gene-review#5900)
+
+A second review of this gene was written independently on the PTHR43605 branch
+(the PP_2213 / rat Acsm4 GO:0004321 investigation) and reached the same calls on
+GO:0004321, GO:0006633, GO:0016020, the GO:0031955 refinements, NEW GO:0015977
+and both proposed terms. On merge this review was kept as the base, and two
+upstream `source_defects` were ported from the parallel one:
+
+- GO:0004321: GO_CENTRAL defect on PAINT node PTN001944787, the PTHR43605 root
+  IBD whose only seed is the RGD Acsm4 IDA [PMID:12709059 "Recombinant O-MACS
+  protein tagged with c-Myc and His6 demonstrated an acyl-CoA synthetase activity
+  for fatty acid activation"]. Reported as geneontology/go-annotation#6642; the
+  family is reviewed in `interpro/panther/PTHR43605/PTHR43605-review.yaml`.
+- GO:0016020: UNIPROT defect on the predicted TRANSMEM 105..125, which the
+  record's own structures (PDB 8BIQ, 8BIT) place in a helix of the N-terminal
+  ANL domain.
+
+Calls where the parallel review differed, left as they are here:
+
+- GO:0003987 acetyl-CoA synthetase and GO:0050218 propionate-CoA ligase (IDA,
+  IEA): the parallel review used MARK_AS_OVER_ANNOTATED rather than
+  KEEP_AS_NON_CORE. Its argument: in vitro catalytic efficiency (kcat/Km from
+  the UniProt kinetics) is highest for propionate and lowest for
+  4-hydroxybutyrate, no cycle step needs free acetate or propionate activated,
+  and M. sedula has a conserved acetate/propionate synthetase, Msed_1353
+  [PMID:23258541 "the acetate/propionate synthetase (Msed_1353), an enzyme that
+  is highly conserved among the Sulfolobales"]. Under the promiscuous-activity
+  tiers in projects/ENZYME_SPECIFICITY.md this is a judgement between "genuine
+  secondary activity" and "in vitro activity of unknown relevance".
+- GO:0006637 acyl-CoA metabolic process: the parallel review used ACCEPT
+  rather than KEEP_AS_NON_CORE.

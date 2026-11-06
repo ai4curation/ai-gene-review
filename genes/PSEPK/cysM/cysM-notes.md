@@ -15,3 +15,15 @@
   not resolve the contribution of CysM versus CysK
   [PMID:10482527, "substantial levels of O-acetylserine sulfhydrylase
   (cysteine synthase) activity."].
+
+## 2026-11-03 completion pass (cysteine biosynthesis module promotion)
+
+- Generic parent rows (catalytic, transferase, O-acetyltransferase activity)
+  moved from KEEP_AS_NON_CORE to TOO_GENERAL: the review's own accepted
+  reaction-specific MF entails them, so keeping them as "non-core" misdescribed
+  the judgement. Actions now match the sibling E. coli and P. aeruginosa
+  reviews written for the same module.
+- No provider deep-research run was possible in this session (no provider API
+  keys); the review rests on the UniProt record, PAINT data for the PANTHER
+  family, and the cached Pseudomonas literature already cited.
+- Status set to COMPLETE.

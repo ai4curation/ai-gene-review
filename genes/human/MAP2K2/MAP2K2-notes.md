@@ -22,3 +22,25 @@ The human reference supplies mechanistic evidence for the corresponding selected
 - New description and two core functions (MAPKK activity in the ERK1/2 cascade, cytosol; scaffold protein binding to KSR1/DLG1).
 
 **Relative.** Closest experimentally characterised relative by placement: mouse Map2k2 (Q63932), same MEK2 subfamily (PTHR47448:SF3 in the PANTHER entries list; source of UniProt's "By similarity" ERK1/2 statement). No mouse Map2k2 review exists in the repo. Paralog MAP2K1 (Q02750, different subfamily) has a complete review at `genes/human/MAP2K1/`. Module: `modules/erk_cascade.yaml` (mek_kinase annoton lists P36507).
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000117, ARBA:ARBA00026962) and TAS (PMID:19565474), both located_in, both
+UNDECIDED before. No sub-compartment rows.
+
+Checks:
+- ARBA00026962 (UniProt REST, 2026-11-03) pools condition sets from unrelated families; MEK2 matches the
+  IPR000719 + IPR050915 (MAP kinase kinase) set in Euarchontoglires. Unvetted, not used as support.
+- QuickGO: rodent orthologs carry only the same ARBA and TAS rows; no experimental MEK row to project from.
+- TAS source PMID:19565474 (Yao and Seger 2009 review) is abstract-only and never says "mitochondri".
+- Primary studies fetched: PMID:18545666 (Galli 2008, full text) [PMID:18545666 "mitochondrial subfractionation
+  showed that MAPKs colocalized with their cognates MEK1/2, MKK3 and MKK4 in the mitochondrial outer membrane and
+  in the intermembrane space"], in mouse cells [PMID:18545666 "LP07 cell line was derived from P07 lung tumor
+  spontaneously arisen in a BALB/c mouse"]; fraction purity by complex I/IV, LDH and PI only (no ER marker).
+  PMID:15030409 (Alonso 2004, rat brain, abstract-only) [PMID:15030409 "upstream phospho-MAPK/ERK kinases (MEK1/2)
+  were also"].
+- Both use MEK1/2 antibodies, so MEK2 cannot be separated from its paralog.
+
+Outcome: both rows UNDECIDED -> KEEP_AS_NON_CORE (minor, transient signalling pool with the ERK module;
+TRAF3/BRAF precedent). Stays at root: no transit peptide or anchor, sub-mitochondrial data split between OMM
+and IMS. Added PMID:18545666 and PMID:15030409 to references.

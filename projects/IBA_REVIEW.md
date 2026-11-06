@@ -3,7 +3,7 @@ title: "IBA Annotation Quality Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR, SHEON]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR, PSEAE, SHEON]
 genes:
   - DNAH12
   - cao-1
@@ -83,6 +83,32 @@ genes:
   - gei-17
   - sta-1
   - ccmC
+  - estA
+  - lap
+  - fleN
+  - pqsH
+  - PA5458
+  - pilU
+  - hutI
+  - wbpD
+  - PA3760
+  - pilM
+  - PA1055
+  - PA1057
+  - thiI
+  - PA0920
+  - liuC
+  - lasI
+  - cysB
+  - ptrB
+  - lhpL
+  - znuC
+  - pchB
+  - nirJ
+  - fur
+  - mucB
+  - phzC1
+autolink_exclude: [III, PTS, pvdE, fruB, ptsP]
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -100,9 +126,9 @@ manifest:
 **Bottom line:** IBA annotations transfer GO terms along PANTHER family trees
 from experimentally studied proteins to their relatives, and they make up a
 large share of GO for most genomes. Working from gene reviews, we catalogued
-where those transfers go wrong and why: 15 recurring failure patterns (such as
+where those transfers go wrong and why: 16 recurring failure patterns (such as
 pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
-wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
+wrong-paralog and cross-kingdom transfers) plus one positive control, 79 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
 failure modes, per-source status) that reviews now use; 691 gene reviews
 carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
@@ -1109,6 +1135,123 @@ as a secondary function.
 
 **Lesson**: ask what kind of claim the seed row makes before arguing about where the node sits. An experimental evidence code is not an aspect warrant — `IMP` grounds "needed for", and only an assay grounds "does". A sole-seed IBD inherits the seed's weaknesses exactly, so read the donor's own row, its evidence code, and its sibling rows from the same reference before treating a family-wide MF as a phylogenetic judgement at all.
 
+### 17. Seed-Side Errors Found by Auditing One Source: the PseudoCAP Sweep
+
+**The Problem**: Pattern 16 is the clearest case of a wider class. Patterns 1-15 are errors in where a node sits or what it passes
+down; this one is upstream of the tree: the experimental annotation that PAINT
+used as a seed is itself wrong, so the IBD is wrong even at a correctly placed
+node. The commonest form is an IMP row that turns a mutant phenotype into the
+gene's own function. It matters most when the bad row is the node's **only**
+seed, because then nothing else holds the IBD up. Seed-side errors are best
+found by reviewing the seeds of one annotation source, which is what the
+[PSEUDOCAP](PSEUDOCAP.md) project does for *P. aeruginosa* PAO1: 398 PAO1
+proteins carry a PseudoCAP annotation that supports an IBD seeding (522 node
+terms, 51,455 leaf IBAs), and for 139 node terms (4,772 leaf IBAs) the PAO1
+protein is the sole seed. Of those 109 proteins, 106 have full reviews (the
+review files for pvdE, pqsA and PA2403 are still to be written): for 21 the seed is wrong or an indirect phenotype and the IBD should be
+withdrawn or repointed, for 23 the seed is right but the node term does not fit
+the clade, for 30 the claim is true but the seed row misstates its evidence,
+qualifier or reference, and 32 are sound (see [PSEUDOCAP](PSEUDOCAP.md) for the
+per-gene table and the upstream defect reports).
+
+**Examples:**
+- **PSEAE/ccmC (PA1477)**, `GO:0004096` catalase activity on node
+  **PTN001247822** (sole seed, 143 leaf IBAs in 59 taxa, including back onto
+  PSEAE/ccmC). The protein is the six-helix heme-handling membrane subunit of the cytochrome
+  c maturation system and has no catalase domain. The PseudoCAP IMP row records
+  that a *ccmC* mutant has no detectable catalase, which follows from losing
+  heme delivery to the heme catalases. The row also cites the wrong paper
+  (PMID:16824107, *E. coli* CcmABC biochemistry; the phenotypes match the
+  *P. aeruginosa* mutant paper PMID:18174132). The same node's plasma membrane
+  and cytochrome c biosynthesis IBDs rest on *E. coli* seeds and are sound, so
+  the fix is to drop the one term from the node, not to move the node.
+- **estA (PSEAE, PA5112)**, `GO:0008610` lipid biosynthetic process on
+  **PTN005219546** (sole seed, 960 leaf IBAs in 51 taxa). EstA is an
+  outer-membrane autotransporter esterase. The seed rows (UniProt IMP lipid
+  biosynthesis, PseudoCAP IMP glycolipid biosynthesis, both PMID:17631636)
+  record that an *estA* deletion makes little rhamnolipid; the biosynthetic
+  steps are RhlA/B/C and EstA has no activity on their acyl-CoA substrates. The
+  same node's carboxylic ester hydrolase IBD is sound (active-site Ser mutant,
+  kinetics), so again one term should come off a well-placed node.
+- **fleN (PSEAE, PA1454)**, `GO:0005524` ATP binding on **PTN000344128**
+  (sole seed, 149 leaf IBAs in 75 taxa). The term is true (FleN structures with
+  an ATP analogue, PMID:28065505), but the seed is an IDA row on a paper
+  (PMID:10629180) that only reports an ATP-binding sequence motif. The IBD is
+  right for the wrong reason, and needs re-seeding with real evidence before
+  the PseudoCAP row is corrected to ISM.
+- **pvdE (PSEAE, PA2397)**, `GO:0042626` ATPase-coupled transmembrane
+  transporter activity on **PTN000656738** (sole seed, 140 leaf IBAs). The seed
+  is sound (the full-length exporter's mutant fails to move the pyoverdine
+  precursor to the periplasm), but only 6 of the 140 leaves have a
+  transmembrane domain; 126 are stand-alone nucleotide-binding subunits
+  (EcfA/CbiO, ModF, FtsE, plant ABCI). A transporter activity seeded from a
+  fused TMD-NBD exporter does not fit a node made mostly of NBD-only proteins:
+  the term belongs on the PvdE/SyrD clade, or as `contributes_to`.
+- **PA5458 (PSEAE)**, an O-antigen-modifying acyltransferase (PMID:23341552),
+  sole seed of two process IBDs. `GO:0009103` LPS biosynthetic process on
+  **PTN000546841** reaches 31 leaves, 15 in organisms with no LPS (the
+  peptidoglycan O-acetyltransferase OatA of *S. aureus* and *Listeria*,
+  mycobacteria, *Streptomyces*); `GO:0000271` polysaccharide biosynthetic
+  process on **PTN000546715** reaches 113 leaves, 109 of them nematode and
+  oomycete proteins. The seed is fine; the nodes carry a lineage-specific
+  process past the lineage (compare pattern 14).
+- **pqsH (PSEAE, PA2587)**, `GO:0004497` monooxygenase activity on
+  **PTN008173107** (sole seed, 297 leaf IBAs). The seed is sound (purified
+  enzyme, PMID:20662781) and the generic term suits the node, which is the
+  PTHR45934 root. But about 294 of the leaves are plant FAD monooxygenases
+  below a horizontal-transfer node, so a whole plant clade's MF IBA rests on one
+  bacterial enzyme. Sound today; fragile if the seed is ever revised.
+- **pilU (PSEAE, PA0396)**, `GO:0016888` DNA endonuclease activity, producing
+  5'-phosphomonoesters on **PTN000766390** (sole seed). PilU is a PilT-like
+  pilus retraction ATPase. The paper (PMID:18174131) reports ATPase activity of
+  purified PilB, PilT and PilU, and PseudoCAP gave PilB `GO:0016887` ATP
+  hydrolysis activity from it on the same day: the PilU row is a one-digit id
+  slip. The clade's endonuclease IBA exists only because of it. The same
+  GO:0016888 row was also put on fimT, a minor pilin the paper does not
+  describe; fimT seeds no node, so that copy does not propagate.
+- **hutI (PSEAE, PA5092)**, imidazolonepropionase activity on the LUCA-level
+  node **PTN000505272** (sole seed, 52 leaves including human AMDHD1). The term
+  is right, but the only seed is an IMP row on a 1967 pathway paper that
+  predates the gene and does not describe step III. Right answer, no anchor.
+- **thiI (PSEAE, PA5118)**, `GO:0052837` thiazole biosynthetic process on
+  **PTN001804941** (sole seed, 25 leaves). The seed paper (PMID:9209060) is a
+  *Salmonella* genetics study coded as a P. aeruginosa IDA. The node is the ThiI
+  family root, which is mostly short, rhodanese-less ThiI proteins (Firmicutes,
+  archaea) that make tRNA 4-thiouridine but not thiazole; the rhodanese domain is
+  what thiazole synthesis needs (PMID:21724998, PMID:22773787). A seed-side error
+  and a sub-activity loss (pattern 8) at once.
+- **More seed-side cases from the full tier 1 sweep.** A signal synthase given
+  signal transduction (lasI; GO's process starts at reception, quorum sensing is
+  the right term); a transcriptional activator's auxotrophy given the pathway
+  itself (cysB, cysteine biosynthesis); a type III secretion repressor given
+  positive regulation of secondary metabolism with no such phenotype in the
+  paper (ptrB); a 4-hydroxyproline epimerase seed on a protein that Swiss-Prot
+  records experimentally as lacking that activity (lhpL; PAO1's real epimerase
+  is PA1268); an importer ATPase's EDTA growth defect given "response to zinc
+  ion" (znuC, a node reaching ~1,455 GOA rows); and a seed paper from another
+  species in which the gene was never tested (PA1340, *P. putida*).
+- **The node-side counterpart.** For 23 genes the seed is right for PAO1 but
+  the node is the whole family: salicylate synthesis on the chorismate mutase
+  root (pchB), heme d1 synthesis on an archaeal radical SAM clade (nirJ),
+  siderophore repression on Fur proteins of bacteria without siderophores
+  (fur), polysaccharide regulation on sigmaE-regulating RseB orthologs (mucB),
+  and phenazine biosynthesis on housekeeping DAH7P synthases, including PAO1's
+  own PA2843 (phzC1). These are pattern 14 or pattern 8 errors whose single
+  seed makes them easy to trace.
+- **Control: lap (PSEAE, PA2939)**, `GO:0006508` proteolysis on
+  **PTN000254534** (sole seed, 272 leaf IBAs in 109 taxa) is SOUND: the
+  PseudoCAP IDA (PMID:11533066) assays the purified aminopeptidase directly.
+  A sole seed is a reason to look, not a verdict.
+
+**Lesson**: when an IBA looks wrong but the node placement looks right, read
+the seed rows behind the IBD. Seed-side errors seen so far: indirect
+phenotypes (PSEAE/ccmC, estA), a mistyped GO id (pilU), inflated evidence codes
+(fleN), and anchors that predate the gene (hutI). An IMP seed for a molecular-function term is the
+first thing to check: ask whether the mutant lost the activity because the gene
+does it, or because the gene is needed upstream (cofactor supply, export,
+regulation). Record a wrong seed twice, as a `source_defects` item for the
+seed's own resource and one for `GO_CENTRAL` naming the PTN node.
+
 ## Featured Examples
 
 ### Epe1 - Pseudo-Demethylase
@@ -1438,6 +1581,28 @@ The row is `GO_REF:0000033` with `WITH/FROM` `PANTHER:PTN001247822|UniProtKB:Q9I
 | acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
 | DNAH12 / Dnah12 | human, mouse | **Ortholog split across PANTHER families** (human PTHR46532, mouse PTHR10676 in PANTHER 19): human gets no IBA, while mouse inherits inner dynein arm assembly (PTN008951089). Mouse also over-inherits microtubule motor activity, although DNAH12 lacks a microtubule-binding domain | MEDIUM | COMPLETE |
 | ccmC | SHEON | Phenotype-derived MF as IBD seed: catalase activity from a PseudoCAP IMP phenotype row, propagated by PTHR30071 node PTN001247822 to its descendant leaves | HIGH | DRAFT |
+| PSEAE/ccmC | PSEAE | **Seed-side error**: catalase activity IBD (PTN001247822, sole seed, 143 leaves) seeded by a PseudoCAP IMP mutant phenotype on a heme exporter; seed also cites the wrong PMID | HIGH | COMPLETE |
+| estA | PSEAE | **Seed-side error**: lipid biosynthetic process IBD (PTN005219546, sole seed, 960 leaves) seeded by a rhamnolipid-deficiency phenotype of an outer-membrane esterase | HIGH | COMPLETE |
+| pilU | PSEAE | **Seed-side error**: DNA endonuclease IBD (PTN000766390, sole seed) from a PseudoCAP GO id slip (GO:0016888 for GO:0016887) on a pilus ATPase | HIGH | COMPLETE |
+| hutI | PSEAE | Seed-side: LUCA imidazolonepropionase IBD (PTN000505272, reaches AMDHD1) anchored only on a 1967 paper that predates the gene | LOW | COMPLETE |
+| wbpD | PSEAE | Seed-side: UDP-glucuronate biosynthesis IBD (PTN001292385, sole seed) from a PseudoCAP row placing a UDP-ManNAc3NAcA-pathway acetyltransferase in the wrong pathway | MEDIUM | COMPLETE |
+| PA3760 | PSEAE | Seed sound, node too broad: N-acetylglucosamine transport (PTN000532509) on a general PTS Enzyme I node (PtsI, PtsP, FruB) | MEDIUM | COMPLETE |
+| pilM | PSEAE | Seed-side: type IV pilus CC IBD (PTN001286216, sole seed) from an IMP 'no pili' phenotype recorded as located_in; node also reaches EutJ | MEDIUM | COMPLETE |
+| PA1055 / PA1057 | PSEAE | Seed-side: Na+/H+ antiporter activity IBDs seeded as IMP `enables` on subunits that were never mutated; complex activity, should be contributes_to | MEDIUM | COMPLETE |
+| thiI | PSEAE | Seed-side + sub-activity loss: thiazole IBD (PTN001804941, sole seed) from a Salmonella paper coded IDA, placed on a root of rhodanese-less ThiI | MEDIUM | COMPLETE |
+| PA0920 | PSEAE | Seed-side: phospholipid homeostasis IBD (PTN002162750) is a consequence of A-PG synthesis; node includes fungal sterol glycyltransferases | MEDIUM | COMPLETE |
+| liuC | PSEAE | Seed-side: terpene catabolic process IBD (PTN001733227) true for PAO1 only through pathway context the other leaves lack | MEDIUM | COMPLETE |
+| lasI | PSEAE | Seed-side: signal transduction IBD (PTN002217335) on a LuxI-family signal synthase; quorum sensing is the right term | MEDIUM | COMPLETE |
+| cysB | PSEAE | Seed-side: L-cysteine biosynthesis IBD (PTN002824317) from the auxotrophy of a mutant of the pathway's activator; all 10 leaves are CysB/Cbl regulators | MEDIUM | COMPLETE |
+| ptrB | PSEAE | Seed-side: positive regulation of secondary metabolism IBD (PTN002215317); paper shows PtrB represses type III secretion | MEDIUM | COMPLETE |
+| lhpL | PSEAE | Seed-side: 4-hydroxyproline epimerase IBD (PTN002433936) on a protein experimentally shown to lack that activity | HIGH | COMPLETE |
+| znuC | PSEAE | Seed-side: response to zinc ion IBD (PTN001952271, ~1,455 GOA rows) from an EDTA growth defect of an importer ATPase | MEDIUM | COMPLETE |
+| pchB, nirJ, fur, mucB, phzC1 | PSEAE | Seed sound, node is the whole family: gene-specific roles (salicylate, heme d1, siderophore repression, alginate regulation, phenazines) propagated to family members without them | MEDIUM | COMPLETE |
+| lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
+| fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
+| pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |
+| PA5458 | PSEAE | Seed sound; LPS (PTN000546841) and polysaccharide (PTN000546715) biosynthesis IBDs reach non-LPS bacteria and eukaryotes | MEDIUM | COMPLETE |
+| pqsH | PSEAE | Seed sound; one bacterial seed carries ~294 plant monooxygenase IBAs across an HGT node (PTN008173107) | LOW | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 
@@ -1599,6 +1764,7 @@ should not.
 12. **Don't inherit a paralog's compartment/complex**: family members share folds but not localization or complex membership — verify the protein actually occupies the annotated complex/compartment (EIF4E2, ALDH1L1, PEX2)
 13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
 14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
+15. **Check the seeds, not only the node**: an IBD is only as good as the experimental rows it rests on. When one seed carries a node, especially an IMP row for a molecular function, confirm the paper shows the gene's own activity rather than a downstream mutant phenotype (PSEAE/ccmC catalase; see patterns 16 and 17 and [PSEUDOCAP](PSEUDOCAP.md))
 
 ## Quality Indicators
 

@@ -31,3 +31,13 @@ No ProtNLM2 files were consulted.
 ### Relative
 - Closest characterised relative by phylogeny: human PCSK2 (P16519), same PANTHER subfamily SF13 and a donor at PAINT node PTN000082858. No genes/human/PCSK2 review exists in the repo.
 - Modules mentioning PCSK2: modules/leptin_melanocortin_signaling.yaml, modules/beta_cell_glucose_stimulated_insulin_secretion.yaml (mammalian; amon not a member).
+
+## 2026-11-01 follow-up: Slit cleavage (FlyBase and UniProt descriptions)
+
+- FlyBase says amon "directly cleaves sli protein"; UniProt cites one study for and one against.
+  Ordan and Volk 2016 reported attenuated Slit cleavage in amon mutants
+  [PMID:27628033 "The screen led to the identification of the Drosophila homolog of pheromone convertase 2 (PC2), Amontillado (Amon), as an essential protease for Slit cleavage."],
+  but Kellermeyer et al. 2020 could not reproduce it and identified Tolkin as the Slit protease
+  [PMID:32994163 "We found that two independent mutant alleles of amon cleaved Slit normally"].
+- Disputed and not direct, so it is not added to the review description or annotations. FlyBase text
+  recorded as a WRONG_STATEMENT source defect.

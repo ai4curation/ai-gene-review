@@ -336,3 +336,10 @@ PMID:12590576, PMID:15024124 and PMID:19177456 are promoted from notes-only sour
 The existing GO:0071269 IC row now also quotes the machine-record pathway step directly. Its evidence type and provenance remain unchanged. All source-specific exosome/melanosome judgments are retained. `DRAFT` is intentional because the schema defines COMPLETE as having no validation warnings, while the legitimate differing exosome actions produce an advisory. The earlier genuine Falcon/fallback attempts failed before provider contact because dependency DNS resolution failed; the lack of a provider artifact is documented provenance, and no report is fabricated to satisfy a filename convention. No new source cache is needed for these changes.
 
 The independent read-only peer checked the human structure, formal term, no ancestor/descendant overlap and the 2009 WT-versus-mutant attribution; no blocker was found. Full targeted validation passed with only the previously justified exosome-action advisory. All 36 current supporting excerpts match their local source text; original reference identities, source fields, two alternative products, raw records and prior histories are preserved. The recursive authored PMID/DOI/Reactome census remains source-closed.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and EXP (PMID:28647132), both located_in, both kept KEEP_AS_NON_CORE.
+- Check: UniProt "Endoplasmic reticulum {ECO:0000269|PubMed:28647132}" [file:human/AHCY/AHCY-uniprot.txt], so the IEA rests on the same paper as the EXP row. The ER evidence is mCherry-AHCY with GFP-calreticulin in HEK293T (overexpressed fusion, Fig. 6F of the author manuscript; the cached abstract only states "Endogenous AHCY is located both in cytoplasm and the nucleus." [PMID:28647132]).
+- No signal peptide or TM segment in the UniProt record; soluble cytosolic tetramer. One weak line, no topology: stayed at the root, no NEW ER membrane/lumen row.
+- Outcome: actions unchanged; dated ORGANELLES sentence added to both reasons.

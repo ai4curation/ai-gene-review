@@ -265,3 +265,74 @@ def test_missing_statement_add_renders_without_corrected_value() -> None:
     assert _describe_change(row) == (
         "add the content described in the explanation to WB:WBGene1 (MOD_provided_gene_description)"
     )
+
+
+# --- docs/source_defects.md must list the enum values the schema defines -------
+#
+# docs/source_defects.md tabulates the permissible values of SourceDefectTypeEnum
+# and SourceDefectCauseEnum. Those rows were generated from the schema, but
+# "generated once" is not "cannot drift": before this test the defect_type row
+# had silently fallen three values behind (WRONG_STATEMENT, OUTDATED_STATEMENT,
+# MISSING_STATEMENT). This asserts the invariant instead of claiming it.
+
+SCHEMA_PATH = Path(__file__).resolve().parents[1] / "src/ai_gene_review/schema/gene_review.yaml"
+DOCS_PATH = Path(__file__).resolve().parents[1] / "docs/source_defects.md"
+
+
+def _schema_enum_values(enum_name: str) -> list[str]:
+    import yaml
+
+    schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
+    return list(schema["enums"][enum_name]["permissible_values"])
+
+
+def _docs_table_row(field: str) -> str:
+    for line in DOCS_PATH.read_text(encoding="utf-8").splitlines():
+        if line.startswith(f"| `{field}` |"):
+            return line
+    raise AssertionError(f"no table row for `{field}` in {DOCS_PATH.name}")
+
+
+@pytest.mark.parametrize(
+    ("field", "enum_name"),
+    [
+        ("defect_type", "SourceDefectTypeEnum"),
+        ("cause", "SourceDefectCauseEnum"),
+    ],
+)
+def test_docs_table_lists_every_schema_enum_value(field: str, enum_name: str) -> None:
+    """Every permissible value appears in the docs row for that field."""
+    row = _docs_table_row(field)
+    missing = [v for v in _schema_enum_values(enum_name) if f"`{v}`" not in row]
+    assert not missing, (
+        f"docs/source_defects.md `{field}` row is missing {missing}; "
+        f"regenerate it from {enum_name} rather than editing it by hand"
+    )
+
+
+def test_docs_table_invents_no_enum_values() -> None:
+    """The docs rows name no value the schema does not define."""
+    import re
+
+    for field, enum_name in [
+        ("defect_type", "SourceDefectTypeEnum"),
+        ("cause", "SourceDefectCauseEnum"),
+    ]:
+        row = _docs_table_row(field)
+        quoted = set(re.findall(r"`([A-Z][A-Z_]+)`", row))
+        unknown = quoted - set(_schema_enum_values(enum_name))
+        assert not unknown, f"docs `{field}` row names non-schema values {sorted(unknown)}"
+
+
+def test_source_resource_enum_has_the_pipeline_values_reports_route_on() -> None:
+    """The resources that the largest defect groups name are nameable.
+
+    export_source_defects keys one report per `resource` string, so a resource
+    with no enum value gets no report. InterPro and PANTHER are pipelines whose
+    defects affect every protein inheriting a mapping, which is why they are
+    distinct from the MOD values and from GO_CENTRAL.
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC"):
+        assert expected in values, f"SourceResourceEnum lost {expected}"
+    assert "GO_CENTRAL" in values, "PANTHER must not have replaced GO_CENTRAL"
