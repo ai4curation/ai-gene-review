@@ -18,3 +18,12 @@
 - GO:0016491 (InterPro2GO, IPR023753) MODIFY -> the proposed term. GO:0051536 (IPR001041) REMOVE:
   characterised TSOX contains only NAD+, FAD, FMN and a SoxD zinc [PMID:11902668, "The enzyme was found to contain 1 mol of non-covalently-bound NAD+, 1 mol of non-covalently-bound FAD, and 1 mol of covalent FMN."].
 - SoxA is in PANTHER PTHR43757 (aminomethyltransferase/GcvT), the same family as yeast GCV1.
+
+
+## Independent module audit — 2026-11-06
+
+All six rows reviewed. Retain folate-process participation, cytoplasm/complex membership, rejection of the unsupported Fe-S mapping, and the NTR refinement of broad redox activity. SoxA handles folate/NAD in the assembled enzyme, not full independent oxidation. The proposed folate-forming activity is now explicitly a collective reaction; core uses contribution to the oxygen-dependent parent.
+
+Chemistry/assembly sources: [PMID:9185627] heterotetramer-specific folate coupling; [PMID:16934831] full-text flavin mechanism and folate-free imine hydrolysis; [PMID:15914915] publisher full PDF, p955, scoped excerpt in `genes/PSEPK/soxB/soxB-source-analysis/assembly-evidence.md`. [PMID:35266867] is KT2440 pathway background, not purification of KT2440 SoxABDG. The schema lacks a proposed-contribution slot; this is an ontology representation question, not an unresolved biological activity.
+
+All original annotation payloads and inherited NEW rows retained unchanged. No NEW rows added. Raw UniProt/GOA and existing provider artifacts preserved. Existing OpenScientist report preserved and reviewed alongside primary evidence; no provider refresh.

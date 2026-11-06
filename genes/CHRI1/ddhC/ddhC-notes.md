@@ -38,3 +38,13 @@ abstract) and PMID:22675587 (genome paper, full text cached).
   toward TMA, histamine, GB and choline cites PubMed:22675587, the genome
   paper, which has no assays. This is recorded as a source defect
   (PROBABLE, repoint to PMID:32631860).
+
+
+## 2026-11-06 comparative module audit
+
+Persistent marker DMG-CHRI1-ddhC-20261106. Reviewed every original row, inherited proposal, core and cited source. Default Falcon was attempted normally because no provider artifact existed; HTTP403 authentication/access failure is logged. These are manual notes, not a fabricated provider report.
+
+- Separated measured dual-substrate chemistry from the proposed ferredoxin/ETF relay; core and generic MF replacement now GO0016645.
+- Retained both inherited NEW rows and the conditional ferredoxin-specific term proposal; no new assertion added.
+
+Original machine payloads, inherited NEW rows and raw files are protected by original-members-baseline.json. PMID32631860 is now full text; its assay scope is documented in ../ddhC/ddhC-source-analysis/identity-and-assay-scope.md.

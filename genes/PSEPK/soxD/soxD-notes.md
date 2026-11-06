@@ -15,3 +15,12 @@
 - Core function uses proposed_molecular_function "sarcosine oxidase (5,10-methylenetetrahydrofolate-forming) activity"
   (EC 1.5.3.24, RHEA:70455; proposed parent GO:0016647), in_complex GO:0032921, location cytoplasm.
 - Earlier draft NEW contributes_to GO:0008115 rows were dropped (the qualifier issue is a source defect).
+
+
+## Independent module audit — 2026-11-06
+
+All five rows reviewed. Zinc binding and structural membership support contribution to assembled enzyme chemistry, not autonomous catalysis. Preserve inherited complex/location/zinc proposals and folate-process participation. The latter rests on structural work in the catalytic assembly, not merely a knockout phenotype. Product partition in native KT2440 is unknown.
+
+Chemistry/assembly sources: [PMID:9185627] heterotetramer-specific folate coupling; [PMID:16934831] full-text flavin mechanism and folate-free imine hydrolysis; [PMID:15914915] publisher full PDF, p955, scoped excerpt in `genes/PSEPK/soxB/soxB-source-analysis/assembly-evidence.md`. [PMID:35266867] is KT2440 pathway background, not purification of KT2440 SoxABDG. The schema lacks a proposed-contribution slot; this is an ontology representation question, not an unresolved biological activity.
+
+All original annotation payloads and inherited NEW rows retained unchanged. No NEW rows added. Raw UniProt/GOA and existing provider artifacts preserved. Default Falcon research genuinely attempted; failed with HTTP 403 authentication/access error. Manual source assessment is recorded here; no provider report was fabricated.

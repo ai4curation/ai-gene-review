@@ -462,3 +462,15 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+## 2026-11-06: dimethylglycine and sarcosine alternatives
+
+The bacterial module now distinguishes DgcA-associated oxidation from oxygen-dependent,
+THF-coupled DMGO, and models complete SoxABDG activity at the complex. Nineteen curated
+references provide23findings. Twenty-two complete gene reviews preserve96historical/seed
+rows, including28inheritedNEW, and44raw files plus six provider artifacts. No new rows
+were authored. All125capacity/chemistry/preservation cases pass. The historical C-83
+sarcosine dehydrogenase remains a visible gene/family identity gap, so the module stays
+DRAFT despite the completed reviews of all identified members. Full validation, a
+dedicated PR, external review/CI and actual merge remain pending.
+See [audit evidence](../analysis/module_audits/bacterial_dimethylglycine_sarcosine_catabolism/README.md).

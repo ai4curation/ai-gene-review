@@ -29,3 +29,16 @@
   from IPR001041) was REMOVEd on this basis.
 - NEW rows: part_of GO:0032921 for all four; NAD+ binding (SoxA); FAD and FMN
   binding (SoxB); zinc ion binding (SoxD).
+
+
+## 2026-11-06 comparative module audit
+
+Persistent marker DMG-CORS9-soxG-20261106. Reviewed every original row, inherited proposal, core and cited source. Default Falcon was attempted normally because no provider artifact existed; HTTP403 authentication/access failure is logged. These are manual notes, not a fabricated provider report.
+
+- Retained all original actions and inherited NEW rows, including SoxA Fe-S rejection.
+- Moved the full-complex proposed THF reaction out of autonomous subunit core MF; retained its top-level term proposal and represented conserved oxidative contribution with GO0016647.
+- Confirmed PDB chain/accession/construct boundaries independently via PDBe/SIFTS.
+
+Original machine payloads, inherited NEW rows and raw files are protected by original-members-baseline.json. Source limitations are explicit: many original primary citations remain abstract-only, with curated UniProt evidence and direct deposited structure mappings used for corroboration. No inaccessible experimental annotation was rejected merely for missing full text.
+
+Full PMID15914915 was subsequently acquired by the PSEPK reviewer from the official J-STAGE publisher PDF. Its scoped assembly-evidence.md excerpt documents flavin-free, unstable isolated beta/beta-delta constructs. This supports complex-level contributions without proving all possible isolated-beta preparations inactive.
