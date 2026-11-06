@@ -9,3 +9,8 @@ The full PMC text of PMID:26553851 was inspected online (https://pmc.ncbi.nlm.ni
 The UniProt disruption text says “80% reduced concentrations of c-di-GMP” for a pdeH deletion. This conflicts with the primary measurements of elevated c-di-GMP in the deletion and is not used as support. The curated review follows the primary papers.
 
 Falcon deep research was attempted with the standard recipe and failed with HTTP 403 authentication. No provider report was authored manually. This review uses primary-source retrieval and cached papers. Original GOA annotation payloads and UniProt/GOA files were preserved.
+
+
+## PR #6062 second follow-up — 2026-11-06
+
+Follow-up review corrected the unsupported attribution of soluble/cytoplasmic localization to the abstract-only PMID:26553851 cache. The membrane IBA concern is now explicitly based on the curated EAL-domain architecture, with a verbatim UniProt domain quote, and does not claim direct localization evidence or assert a substitute compartment.

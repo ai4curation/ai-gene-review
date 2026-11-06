@@ -47,3 +47,8 @@ Final whole-corpus run: schema and ontology checks passed, best-practices valida
 ## PR #6062 review follow-up — 2026-11-06
 
 Updated seven representative protein labels from the frozen UniProt RecName fields, retaining readable gene/strain names in preferred_term. Corrected the BdcA finding and step evidence to distinguish increased c-di-GMP on overexpression from the motility-only deletion result, and retained the catalytic-mutant stability limitation.
+
+
+## PR #6062 second follow-up — 2026-11-06
+
+Normalized the three remaining gene/strain-style representative labels to frozen UniProt RecNames, retaining readable preferred_term values. Added a biological knowledge gap for PlzA endogenous nucleic-acid targets and physiological output; no receptor-class-wide output is inferred.
