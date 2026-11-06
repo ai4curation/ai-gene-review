@@ -484,7 +484,8 @@ activity` term when enough evidence is present.
   existing review to recheck in this fungal-family context
 - [x] `SCHPO/imt1` - fission-yeast IPC mannosyltransferase in the Imt1
   subfamily; drafted in this branch
-- [ ] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog
+- [x] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog;
+  re-reviewed in PR #6112
 - [ ] `SCHPO/SPAC17G8.11c` - fission-yeast imt3, an SF20 imt paralog
 - [ ] `CGD:CAL0000176496` - CGD-seeded *Candida albicans* IPC mannosyltransferase
 - [ ] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
@@ -501,6 +502,10 @@ activity` term when enough evidence is present.
   `PTN001285482` PAINT assertions are sound for the fission-yeast
   Imt1/Imt2/Imt3 trio, with the generic mannosyltransferase IBD marked too broad
   because the exact `GO:0103064` IPC mannosyltransferase term already exists.
+- Added `SCHPO/SPCC4F11.04c`: both `PTN001285482` PAINT assertions are sound
+  for the fission-yeast Imt2 paralog. SPCC4F11.04c lacks the exact
+  `GO:0103064` row in GOA, so the review proposes that exact term as `NEW`
+  and treats the generic mannosyltransferase IBA as too broad.
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
