@@ -445,10 +445,10 @@ to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 - [x] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog; merged in PR #6037
 - [x] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member; merged in PR
   #6038
-- [x] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; reviewed in
-  PR #6039
-- [x] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; reviewed in PR
-  #6040
+- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; review open
+  in PR #6039
+- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; review open in
+  PR #6040
 
 ## Family 20: Sec2 Rab GEFs
 
