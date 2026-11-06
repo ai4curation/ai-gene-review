@@ -646,9 +646,23 @@ pipelines:
 
 ### Three things batch 3 says the project should change
 
-1. **`SourceResourceEnum` has no `INTERPRO` value**, so 7 of batch 3's 29
-   defects are filed as `OTHER` with the resource named in the explanation,
-   as that value instructs, and all 7 are genuinely InterPro2GO or PANTHER
+Two of the three are now done, in PR #5984. The detail is kept because the
+counts and the mechanism names are the project's record of how the gaps were
+found, and because two of the figures here were themselves corrections.
+
+1. **`SourceResourceEnum` had no `INTERPRO` value** — **done in #5984**,
+   which added `INTERPRO`, `PANTHER`, `COMPLEX_PORTAL`, `ENSEMBL`, `NCBI`,
+   `ENZYME`, `DISPROT`, `HPA`, `CAFA` and `GOC`. Counting the whole corpus
+   before filling the gap changed its size: of the 200 defects filed
+   `resource: OTHER`, **137** named a resource with no enum value (InterPro
+   84, Complex Portal 24, Ensembl 9, NCBI/RefSeq 5, DisProt 4, CAFA 4, EC 3,
+   HPA 2, PANTHER 1, GOC 1), and a further ~31 were **misfiled** onto `OTHER`
+   when a value already existed (CACAO 18, CollecTF 5, EcoliWiki 3,
+   PseudoCAP 3, RGD 2) — so part of the pile was never a schema gap at all.
+   Batch 3's own 7 are re-filed; the remaining ~130 that now have a home are
+   a separate migration. As batch 3 recorded it: 7 of its 29
+   defects were filed as `OTHER` with the resource named in the explanation,
+   as that value instructed, and all 7 were genuinely InterPro2GO or PANTHER
    (the other 22 split 15 `CACAO` and 7 `UNIPROT`). Two earlier counts here
    were wrong, both caught on review of PR #5956. The `OTHER` figure of 13,
    and 14 in that PR's description, included seven CACAO-row defects that
@@ -661,10 +675,20 @@ pipelines:
    source of defects this project has found, so `just export-source-defects`
    cannot produce the report that matters most. Adding `INTERPRO` (and
    probably `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change
-   touching existing reviews, so it is recorded here rather than done in
+   touching existing reviews, so it was recorded here rather than done in
    passing.
-2. **`SourceDefectTypeEnum` cannot express the same assertion entered
-   twice, and has no duplicate-related value at all.** Its thirteen values
+2. **`SourceDefectTypeEnum` could not express the same assertion entered
+   twice, and had no duplicate-related value at all** — **done in #5984**,
+   which added `DUPLICATE_ASSERTION`, named so as not to collide with the
+   `ReferenceReplacementReasonEnum` value discussed below. The same PR added
+   five `SourceDefectCauseEnum` values for the mechanisms this item names:
+   `SCOPE_OVER_REACH` (the scope-wrong rule), `LABEL_WITHOUT_DEFINITION`
+   (label read, definition unread), `OVER_PROPAGATION` (a node emitting one
+   activity across a heterogeneous family), plus
+   `SPECULATION_AS_ASSERTION` and `PRACTICE_CHANGE`. That enum was the
+   worst of the three: **315 of 451** cause values were `OTHER`, because all
+   five existing values were gene-identity confusions and a pipeline defect
+   had nowhere to go. As batch 3 recorded it, its thirteen values
    are `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`,
    `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`,
    `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `WRONG_STATEMENT`,
@@ -682,9 +706,9 @@ pipelines:
    same conversation: batch 3 falls back to `cause: OTHER` repeatedly for
    mechanisms that recur and are classifiable — a scope-wrong UniRule, a
    label-read-definition-unread ontology mapping, a node emitting a specific
-   activity across a heterogeneous family — so the enum cannot name the very
-   patterns this project exists to count. All three gaps are one schema
-   conversation.
+   activity across a heterogeneous family — so the enum could not name the
+   very patterns this project exists to count. All three gaps were one schema
+   conversation, and #5984 closed the first two of them.
 3. **`KW-0081` is "Bacteriolytic enzyme", not "Antimicrobial"** — it is a
    *child* of KW-0929 Antimicrobial. The XV and lysK reviews and the
    upstream report all name it wrongly. This strengthens the report: the

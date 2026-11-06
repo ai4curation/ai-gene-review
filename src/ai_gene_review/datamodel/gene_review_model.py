@@ -206,6 +206,10 @@ class SourceDefectTypeEnum(str, Enum):
     """
     An isoform established in the literature is not among the isoforms of the reviewed UniProt entry. asserted_value is the entry (UniProtKB:Q96PV0); corrected_value names a sequence that carries the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
     """
+    DUPLICATE_ASSERTION = "DUPLICATE_ASSERTION"
+    """
+    One assertion is present more than once in a source's annotation set: the same gene product, term, reference and evidence code entered repeatedly, differing only in incidentals such as date or qualifier. Distinct from ReferenceReplacementReasonEnum's DUPLICATE_RECORD, which is about two reference records for one paper. asserted_value names the duplicated rows (dates or qualifiers that distinguish them) and requested_change is DELETE_ROW for the copies to retire; the explanation says which row to keep and why.
+    """
     OTHER = "OTHER"
     """
     Any other source-record defect; describe it in the explanation.
@@ -274,6 +278,46 @@ class SourceResourceEnum(str, Enum):
     """
     PINC curation group (assigned_by PINC in GOA).
     """
+    INTERPRO = "INTERPRO"
+    """
+    InterPro, including the InterPro2GO mappings behind GO_REF:0000002 and the signature descriptions those mappings are drawn from. The fix is to the entry's GO mapping or its description, not to any gene's annotation.
+    """
+    PANTHER = "PANTHER"
+    """
+    A PANTHER family or ancestral-node GO association, as propagated by UniProt's TreeGrafter (GO_REF:0000118). Distinct from GO_CENTRAL, which is PAINT's own IBD/IBA curation: a term can be wrong on a PANTHER node without PAINT asserting it, and the two are fixed in different places.
+    """
+    COMPLEX_PORTAL = "COMPLEX_PORTAL"
+    """
+    Complex Portal curation of macromolecular complexes.
+    """
+    ENSEMBL = "ENSEMBL"
+    """
+    An Ensembl gene build or its gene model, including models propagated into UniProt TrEMBL.
+    """
+    NCBI = "NCBI"
+    """
+    NCBI Gene or RefSeq records and their gene models.
+    """
+    ENZYME = "ENZYME"
+    """
+    The ExPASy ENZYME / EC nomenclature record, e.g. a transferred or deleted EC class still cited as live.
+    """
+    DISPROT = "DISPROT"
+    """
+    DisProt curation of intrinsically disordered regions.
+    """
+    HPA = "HPA"
+    """
+    Human Protein Atlas, including its antibody-based localisations.
+    """
+    CAFA = "CAFA"
+    """
+    A CAFA challenge annotation set.
+    """
+    GOC = "GOC"
+    """
+    The GO Consortium's ontology editors, for a defect in a term itself - its label, definition, or placement in the graph - rather than in any annotation using it.
+    """
     OTHER = "OTHER"
     """
     Name the resource in the explanation.
@@ -303,6 +347,26 @@ class SourceDefectCauseEnum(str, Enum):
     CONTAMINANT = "CONTAMINANT"
     """
     A common affinity-purification contaminant recorded as a real partner.
+    """
+    OVER_PROPAGATION = "OVER_PROPAGATION"
+    """
+    An annotation was propagated beyond the clade, family or node where its evidence holds - a single seed spread across a heterogeneous family, or a node association emitted to every descendant. The fix is at the seed or the node, not on the rows that inherit it.
+    """
+    SCOPE_OVER_REACH = "SCOPE_OVER_REACH"
+    """
+    A mapping or rule correct for some members of a signature or family was applied to members outside that scope, most often across a taxon boundary (e.g. an own-process term applied to the viral members of a family whose bacterial members it fits).
+    """
+    LABEL_WITHOUT_DEFINITION = "LABEL_WITHOUT_DEFINITION"
+    """
+    A term was chosen from its label while its definition says something else, including near-miss labels that sit in unrelated parts of the graph (nucleoside vs nucleotide binding; "dark reaction" read as "light-independent").
+    """
+    SPECULATION_AS_ASSERTION = "SPECULATION_AS_ASSERTION"
+    """
+    A hedged statement in the source - "may function as", "probable", a family description's surviving speculation - was promoted into an asserted annotation.
+    """
+    PRACTICE_CHANGE = "PRACTICE_CHANGE"
+    """
+    A curation programme's convention changed, so a dated cohort of rows shares a defect that is not a per-row judgement (e.g. a qualifier used consistently across one campaign's output). Fixable in bulk, and the explanation should give the date range and row count.
     """
     OTHER = "OTHER"
     UNKNOWN = "UNKNOWN"

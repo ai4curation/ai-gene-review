@@ -56,3 +56,14 @@ The independent [PMID:19501188](https://pubmed.ncbi.nlm.nih.gov/19501188/) abstr
 The PPM1A refinements remain at AP-MS complex-association resolution: two of the three BioPlex records are spoke-expanded, and the U2OS network is another AP-MS context. No separate low-throughput orthogonal binary assay was verified. The original machine records remain literal in [CERKL-source-evidence.json](CERKL-source-evidence.json); no phosphatase activation, substrate assignment or intrinsic CERKL catalysis is inferred.
 
 For sphingolipid binding, [PMID:23501591](https://pubmed.ncbi.nlm.nih.gov/23501591/) Figure 8 actually uses human CERKLa-containing HEK293T lysate, despite the retained mouse-donor IEA. Positive sphingomyelin and monohexosylceramides are distinguished from negative ceramide, lactosylceramide, GM1 and free fatty acids; retinoic-acid signal was also present with empty-vector lysate. A curator question records the human-source opportunity without fabricating a source annotation or a purified binary interaction. The survival core preserves the intervening clarification of 300 micromolar hydrogen peroxide over 12–24 hours; the annotation reason retains the stronger-dose, later-time and other-stimulus limitations. No additional core activity or process annotation is proposed.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000044, SL-0095), KEEP_AS_NON_CORE (unchanged).
+
+Checks:
+- UniProt location for the displayed isoform is "Cytoplasm. Nucleus, nucleolus."; ER appears only in "[Isoform 2]: Cytoplasm. Nucleus, nucleolus. Golgi apparatus, trans-Golgi network. Endoplasmic reticulum." with no evidence tag [file:human/CERKL/CERKL-uniprot.txt].
+- PMID:19158957 (full text) tested several isoforms: "neither a unique localization pattern nor a restricted subcellular localization could be ascribed to any CERKL isoform"; Figure 4E calnexin overlap in transfected cells ("mainly ER and Golgi"); HA-tagged CERKLa in PDI-containing sucrose fractions that also carry Golgi markers. So the isoform-2 restriction is UniProt's, and no source_defects entry was recorded.
+- No signal peptide, TM or retention motif; all ER data are on overexpressed tagged constructs; PMID:24498393 sees aggregates partly around the ER without marker colocalization.
+
+Outcome: KEEP_AS_NON_CORE kept (precedent AHCY, ER batch 1), with a dated ORGANELLES sentence; close call with MARK_AS_OVER_ANNOTATED stated in the reason. No sub-compartment (cytosolic-face pool).
