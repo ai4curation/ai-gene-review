@@ -23,8 +23,14 @@ Manual web searches on 2026-11-06 did not find a direct ant-1/NCU08111
 biochemical or deletion paper. The relevant Neurospora PRMT genetics paper is
 PMID:24260473; it experimentally studied the type I/II PRMTs amt-1, amt-3 and
 skb-1, while mentioning NCU08111 only as a putative type IV PRMT whose enzymatic
-properties had not been determined. NCBI Gene and commercial ORF/protein pages
-repeat the Rmt2 assignment but do not provide experimental ant-1 evidence.
+properties had not been determined. The paper also notes that inactivating the
+F. graminearum homolog had no observable phenotype; that cautions against
+transferring cellular phenotypes to ant-1, although it does not argue against
+the fungal-node protein arginine N5-methyltransferase activity because
+NCU08111/Q7SCW9 carries the RMT2/SAM_RMT2 domain signatures rather than the
+classical type I/II PRMT domains studied in that paper. NCBI Gene and commercial
+ORF/protein pages repeat the Rmt2 assignment but do not provide experimental
+ant-1 evidence.
 
 I therefore did not add Neurospora-specific biological-process rows. Direct
 tests of Rpl12 arginine methylation, ribosome biogenesis, or translational
