@@ -29,7 +29,8 @@
   CGD's `GO:0070319` Golgi-to-plasma-membrane transport vesicle row.
 - The same Caballero-Lima paper directly supports a new
   `GO:0003729 mRNA binding` assertion: SEC2 mRNA is enriched in Sec2p RIPs and
-  Sec2p cross-links to oligo-dT-purified mRNA. This is left out of
-  `core_functions` because the paper leaves the downstream role of that binding
-  unresolved between translational autoregulation, reinforcing Spitzenkorper
-  localization, and allowing Sec2 recycling from vesicles back to the Golgi.
+  Sec2p cross-links to oligo-dT-purified mRNA, while the S584E phosphomimetic
+  loses SEC2 mRNA association. This MF is left out of `core_functions` because
+  the paper leaves the downstream role of that binding unresolved between
+  translational autoregulation, reinforcing Spitzenkorper localization, and
+  allowing Sec2 recycling from vesicles back to the Golgi.
