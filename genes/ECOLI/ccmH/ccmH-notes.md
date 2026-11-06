@@ -28,3 +28,14 @@
 - GO:0017004 rows: MODIFY -> GO:0018063 cytochrome c-heme linkage (is_a descendant of GO:0017004).
 - membrane (ARBA IEA): MODIFY -> plasma membrane.
 - Fetched PMID:7635817 (UniProt RX) for context.
+
+
+## 2026-11-06 system I comparative reassessment
+
+Contributes thiol-disulfide substrate handling to the CcmF-associated heme-ligation machinery. The E. coli evidence is distinguished from heterologous ortholog assays and engineered expression constructs.
+
+Specific reassessment: Contributes thiol-disulfide substrate handling to the CcmF-associated heme-ligation machinery. Net reductase chemistry and the exact cysteine-substrate relay remain unresolved for this protein.
+
+PMID:9914305 mutant/thiol-rescue evidence supports redox involvement; PMID:24397552 supports synthase contribution in engineered E. coli CcmFGH-only. PMID:28634234 assigns direct reduction to R. capsulatus CcmG and stereospecific mixed-disulfide chemistry to CcmH, so a net CcmH reductase reaction remains unresolved.
+
+Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.

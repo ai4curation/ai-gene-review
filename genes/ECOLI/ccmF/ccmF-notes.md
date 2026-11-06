@@ -20,3 +20,12 @@ This review is therefore based on the cached publications and the UniProt record
 - Heme transmembrane transporter activity (IEA): REMOVE (no evidence of transport; heme arrives on holo-CcmE in the periplasm). Heme transport (IEA): MARK_AS_OVER_ANNOTATED.
 - Quinol:heme oxidoreductase (GO:0016679, IDA): KEEP_AS_NON_CORE because the in vivo donor is unresolved; IBA GO:0016491 MODIFY to GO:0016679.
 - Cytochrome complex assembly: MODIFY to GO:0018063; membrane: MODIFY to plasma membrane.
+
+
+## 2026-11-06 system I comparative reassessment
+
+Binds heme and contributes the membrane catalytic platform for covalent heme attachment to apocytochrome CXXCH motifs. The E. coli evidence is distinguished from heterologous ortholog assays and engineered expression constructs.
+
+Specific reassessment: Binds heme and contributes the membrane catalytic platform for covalent heme attachment to apocytochrome CXXCH motifs.
+
+Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.

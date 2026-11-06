@@ -37,3 +37,16 @@
 - ABC transporter complex NAS kept as non-core (complex membership real, transport not shown).
 - Nine bare protein-binding IPI rows removed per policy (interactions with CcmA, CcmD,
   CcmE are real).
+
+
+## 2026-11-06 system I comparative reassessment
+
+Binds heme in the periplasmic WWD site and positions it for covalent loading onto the CcmE chaperone. The E. coli evidence is distinguished from heterologous ortholog assays and engineered expression constructs.
+
+Read the full 2023 E. coli structures (PMID:37626034), 2025 CcmB efflux work (PMID:40026579) and CcmCD crosslink mapping (PMID:40167305). The studies disagree about the heme conduit. ATP-dependent holo-CcmE release and covalent loading remain supported; heme contact, engineered overexpression, and proposed channel models are distinguished from purified vectorial transport. Broad intracellular heme handoff is not equivalent to membrane translocation. The 2025 review PMID:40460019 is abstract-only and is not used to settle this disagreement.
+
+Specific reassessment: Binds heme in the periplasmic WWD site and positions it for covalent loading onto the CcmE chaperone.
+
+Catalase source PMID:18174132 is abstract-only; publisher full-text endpoint returned403. Its explicit loss-of-catalase-production phenotype does not establish intrinsic CcmC catalase. Catalase and dependent oxidant-detoxification rows are UNDECIDED, without donor-count or invented negative-assay arguments.
+
+Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.
