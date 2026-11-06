@@ -51,7 +51,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: IN_PROGRESS. Nine member reviews cover 160 original annotation rows; eight curated references include three reviews. Module participant integration and validation remain pending. Existing structural inventory fields still describe the original participants; no completion, publication or merge is claimed.
+- [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
 - [x] `bacterial_aspartate_to_threonine_biosynthesis`: [PR #5858](https://github.com/ai4curation/ai-gene-review/pull/5858) merged as `225589950bb458a00b76f46024480ac6f68b76a6` at 2026-11-01T23:27:51Z after approval of `f074ad3642687ea4d2bb6eeb02757e2028e8b37e` and passing required/queue checks. All 152 scoped blobs match the approved head; 20 reviews, 192 machine rows and 40 raw sources are preserved. Final 193 rows include one restored inherited authored proposal; two others remain retired.
 - [x] `bacterial_beta_aryl_ether_dimer_cleavage`: [PR #5930](https://github.com/ai4curation/ai-gene-review/pull/5930) merged as `22ee0c020b11a0455c6e75da1a36fb59af729954` at 2026-11-03T05:26:24Z after approval of `f54046b04cea6bb86bc49c9d38e5f06776aabaef` and passing head/queue checks. All 153 scoped blobs match the approved head; 16 COMPLETE reviews, nine original annotation rows and 32 raw sources are preserved, with no NEW annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5930-merged-content.json).
@@ -495,3 +495,7 @@ The divisome audit is published as [PR #6123](https://github.com/ai4curation/ai-
 ## 2026-11-06 — divisome review follow-up
 
 PR6123 review follow-up preserves all160 original machine rows, two inherited NEW rows and19raw/provider files; adds two experimentally supported enzyme-activator rows. Nine focused validations, renders and histories pass, as do57capacity/evidence controls. Target-specific support, wall-organization actions, FtsW flippase scope, official locus symbols and one InterPro defect are corrected. The rendered project evidence link now points to the live PR. Fresh full validation and renewed review/CI remain required.
+
+## 2026-11-06 — divisome review fixes validated
+
+The divisome review follow-up completed full validation on 10,555 reviews. The 17 reference errors are exactly the previously recorded errors in 16 unrelated yeast reviews; all 22 relevant inputs equal the pinned base. Schema and term checks pass, best practices report zero errors, and all 54 PMID-bearing pathways pass. All 161 scoped files matched validated science commit ab9b9b9ea919d6c8efa9e541bdade882f0207741. The nine member reviews preserve 160 original machine rows, two inherited NEW rows and 19 raw/provider files, adding two directly supported enzyme-activator annotations. The 57 scoped capacity/evidence checks pass. Renewed external review, CI and actual merge remain pending for PR #6123.

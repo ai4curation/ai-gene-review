@@ -17,3 +17,7 @@ Focused gene, family, module and history checks pass. Fourteen module advisories
 ## Review follow-up
 
 Nine gene reviews now preserve 160 machine rows and two inherited proposals, adding only two directly supported enzyme-activator annotations (StPBP2x and SaPBP1). The follow-up corrects wall-organization actions, target-specific evidence, FtsW flippase scope, locus symbols and an InterPro defect. All 27 focused checks and 57 capacity/evidence controls pass. Nineteen raw/provider files are unchanged; 12 nonblocking advisories are documented. A fresh full validation is required before publication.
+
+## Review follow-up validation
+
+The divisome review follow-up completed full validation on 10,555 reviews. The 17 reference errors are exactly the previously recorded errors in 16 unrelated yeast reviews; all 22 relevant inputs equal the pinned base. Schema and term checks pass, best practices report zero errors, and all 54 PMID-bearing pathways pass. All 161 scoped files matched validated science commit ab9b9b9ea919d6c8efa9e541bdade882f0207741. The nine member reviews preserve 160 original machine rows, two inherited NEW rows and 19 raw/provider files, adding two directly supported enzyme-activator annotations. The 57 scoped capacity/evidence checks pass. Renewed external review, CI and actual merge remain pending for PR #6123.
