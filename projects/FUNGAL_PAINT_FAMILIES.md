@@ -478,8 +478,9 @@ PomBase `imt` paralogs, a CGD *Candida albicans* member, and the
 prefer the exact `GO:0103064 inositol phosphorylceramide mannosyltransferase
 activity` term when enough evidence is present.
 
-- [ ] `yeast/SUR1` - *S. cerevisiae* Csg2-dependent IPC mannosyltransferase;
-  existing review to recheck in this fungal-family context
+- [x] `yeast/SUR1` - *S. cerevisiae* Csg2-dependent IPC mannosyltransferase;
+  the `PTN001285482` IBAs are sound, with the generic MF IBA modified to the
+  exact EC-backed `GO:0103064` row
 - [ ] `yeast/CSH1` - *S. cerevisiae* Csh1-Csg2 IPC mannosyltransferase;
   existing review to recheck in this fungal-family context
 - [x] `SCHPO/imt1` - fission-yeast IPC mannosyltransferase in the Imt1
@@ -519,6 +520,11 @@ activity` term when enough evidence is present.
   ARBA mapping, so the generic PAINT and CGD MF rows are modified to that
   activity, and the downstream M(IP)2C ARBA row is treated as an overextension
   from Mit1's direct IPC-to-MIPC step.
+- Added `yeast/SUR1`: the SGD Sur1 seed also supports both `PTN001285482`
+  IBA rows. The review keeps Sur1-Csg2 complex membership, modifies generic
+  sphingolipid-process parents to exact MIPC biosynthesis, and treats M(IP)2C
+  rows as downstream overextensions because Ipt1, not Sur1, converts MIPC to
+  M(IP)2C.
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
