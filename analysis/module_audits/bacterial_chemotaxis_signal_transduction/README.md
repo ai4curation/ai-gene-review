@@ -55,6 +55,9 @@ one unconfigured Pfam label namespace, and three family-function scope warnings.
 The latter are retained because the existing family scope vocabulary cannot express
 the CheA eukaryotic IRD exclusion or the mixed FliN/FliY catalytic architecture.
 Those warnings do not negate the experimentally supported exemplar functions.
-Full-corpus validation is still running; module publication and actual merge remain
-outstanding. See `audit-progress.yaml` for the recorded stage and the separate
+Full-corpus validation finished across 10,559 reviews. Schema, ontology, best-practices
+and 54 pathway-reference checks pass. Its exit status is 1 because of 19 reference
+errors in 17 unchanged yeast reviews; `preexisting-reference-failures.yaml` records
+the exact errors and 23 unchanged input blobs. There are 27,993 best-practice
+advisories. Module publication, remote review/CI and actual merge remain outstanding. See `audit-progress.yaml` for the recorded stage and the separate
 preservation and capacity reports for reproducible results.
