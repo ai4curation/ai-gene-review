@@ -471,7 +471,8 @@ What ER batch 2 showed:
 - **`is_active_in`:** one ER row carries it (KCNRG IBA), defensible because
   the channel-retention activity is proposed to act at the ER.
 - **Duplicate folder.** `genes/human/GBA` duplicates `genes/human/GBA1`
-  (same accession); it should be retired in a separate change.
+  (same accession); it should be retired in a separate change. Done in
+  #6088, which removes the GBA folder and points its history at GBA1.
 
 ## 2026-11-04 (ER batch 1: 20 human genes)
 
