@@ -122,9 +122,9 @@ stress-activated MAPK-cascade assertions.
 - [x] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; merged in PR #4703
 - [x] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; merged in PR #5868
-- [ ] `yeast/FUS3` - budding-yeast pheromone MAPK; drafted in PR #5872
+- [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
-  drafted in PR #5885
+  merged in PR #5885
 - [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
   filamentous-growth and cell-wall evidence; revalidated in this branch
 
@@ -424,8 +424,8 @@ refining the root oxidoreductase transfer.
   #4741
 - [x] `EMENI/mcr1` - *Aspergillus nidulans* mitochondrial MCR1-family member;
   merged in PR #5415
-- [ ] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
-  the (+)-asperlin cluster; drafted in PR #5873
+- [x] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
+  the (+)-asperlin cluster; merged in PR #5873
 
 ## Family 19: Rmt2/GAMT Methyltransferases
 
