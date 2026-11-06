@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_fructose_pts_catabolism`: 16 member reviews, 11 curated references, three family reviews and 49 scoped capacity checks integrated. Focused checks and all full-validation stages complete after an ontology-service retry; dedicated PR and actual merge pending.
+- [ ] `bacterial_fructose_pts_catabolism`: [PR #6144](https://github.com/ai4curation/ai-gene-review/pull/6144) open; 16 completed reviews, 11 references, three family reviews and 49 capacity checks. All validation stages complete after a corpus-wide ontology retry; independent review, CI and actual merge pending.
 
 - [ ] `bacterial_fatty_acid_beta_oxidation`: Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
 
@@ -90,7 +90,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 5 PR_OPEN, 4 IN_PROGRESS and 735 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 6 PR_OPEN, 3 IN_PROGRESS and 735 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -665,3 +665,7 @@ The fructose audit completed validation across 10695 reviews on science 51a5b37a
 Integrated published main `577501df51` with the validated fructose audit head `c5063e9747`. All 196 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. The original full run stopped its term stage on an OLS read timeout. All other stages completed without blocking findings, and a complete 10695-file term retry processed every file with 116 advisory GO label warnings and no blocking errors. All 196 frozen inputs were verified unchanged before closeout; the two logs and raw exit codes are retained in full-validation.json. A dedicated PR, independent review and CI must still gate actual merge.
 
 Integration proof: [validated-head-integration.json](../analysis/module_audits/bacterial_fructose_pts_catabolism/validated-head-integration.json).
+
+## 2026-11-06 — fructose PR #6144 published
+
+Published the validated comparative fructose audit as PR #6144. The current inventory now reflects all sixteen completed reviews and the module representative panel, rather than the initial five-review snapshot. The full-validation proof preserves both the ontology-service timeout and the complete retry with advisory labels; the integration proof preserves 196 scoped files against main 577501df51. Existing historical-outcome regression passes. Gene, module and family science is unchanged; independent review, CI and actual merge remain required.
