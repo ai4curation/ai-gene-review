@@ -55,5 +55,6 @@ and kept Spo13's GEF as the core molecular activity.
 
 The UniProt SubCell `GO:0005816 spindle pole body` row is a true parent of the
 direct meiotic SPB rows, so it is modified to `GO:0035974`. The broad
-`GO:0030437 ascospore formation` row is retained as too general because the
-same 2008 study supports the more specific SPB-remodeling process.
+`GO:0030437 ascospore formation` row is modified to the descendant
+`GO:0031322 ascospore-type prospore-specific spindle pole body remodeling`
+because the same 2008 study supports the more specific SPB-remodeling process.
