@@ -46,6 +46,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
+| `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 
 ---
 
@@ -444,9 +445,31 @@ to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 - [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
 - [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
 
+## Family 20: Sec2 Rab GEFs
+
+`PTHR14430` contains a broad Opisthokonta `PANTHER:PTN000374167`
+guanyl-nucleotide exchange factor node, a fungal `PANTHER:PTN001024876`
+cell-tip active-location node, and a separate animal `PANTHER:PTN002683547`
+cytosol node. The next pass should keep the fungal Sec2 branch separate from
+animal Rabin3/Rab8 GEFs while checking the fission-yeast duplication into
+vegetative `sec2` and sporulation-specific `spo13`.
+
+- [x] `yeast/SEC2` - *S. cerevisiae* Sec4 Rab GEF; drafted in this branch
+- [ ] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member
+- [ ] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
+- [ ] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
+- [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
+
 ---
 
 # NOTES
+
+## 2026-11-06
+
+- Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
+  review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
+  cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
+  PAINT node stays outside the fungal clade.
 
 ## 2026-11-01
 
