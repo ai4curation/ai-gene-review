@@ -22,9 +22,10 @@ applies, and the checks here keep action, case and knowledge gaps consistent:
 - ``TRUE_GAP`` and ``EXISTENCE`` need a ``BIOLOGY`` knowledge gap whose
   ``dark_aspect`` matches the ND aspect (or ``WHOLLY_DARK``);
 - ``ACCEPT`` needs evidence that the literature was searched: a cited
-  publication (PMID, DOI, PMC), or a quote from the gene's own deep-research
-  or notes file recording the search. The UniProt record or the protein's
-  existence level is not a search;
+  publication (PMID, DOI, PMC), or a ``supporting_text`` quote from the
+  gene's own deep-research or notes file recording the search (not a MOD gene
+  description). The UniProt record or the protein's existence level is not a
+  search;
 - ``nd_case`` on a non-ND row is a mistake.
 
 Severity is WARNING, like the protein-binding policy: the checks guide
@@ -34,9 +35,9 @@ re-review and do not block legacy files.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 from ai_gene_review.mod_providers import is_mod_description_file
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 #: ND annotations are only made to the three root terms (GORULE:0000011).
 ROOT_ASPECT = {
@@ -301,8 +302,10 @@ def iter_nd_policy_violations(
                 index,
                 "supported_by",
                 "ND row is ACCEPTed without evidence that the literature was searched",
-                "Cite the search in supported_by: quote the gene's own deep-research or "
-                "notes file where it records the queries and their result (when a search "
+                "Cite the search in supported_by: quote, in supporting_text, the gene's "
+                "own deep-research or notes file (not a MOD gene description such as "
+                "-deep-research-flybase.md) where it records the queries and their result "
+                "(when a search "
                 "finds nothing there is no paper to cite), or cite the publications that "
                 "were checked (PMID, DOI). The UniProt record or the protein's existence "
                 "level does not show that the literature has no function to annotate",
