@@ -78,7 +78,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 1 PR_OPEN, 2 IN_PROGRESS and 741 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after DnaK publication: 777 modules; 33 COMPLETE, 2 PR_OPEN, 1 IN_PROGRESS and 741 NOT_STARTED. Other rows retain dated evidence; this is not a fresh global GitHub survey.
 
 ## Notes
 
@@ -479,7 +479,7 @@ Six original reviews (159 historical rows and 27 protected files) are being
 revisited, with Mtb and Thermus comparisons to qualify the three-role cycle.
 Exact protein identities and assay-host provenance are checked before extrapolation.
 Module/family integration, validation, a dedicated PR and actual merge remain
-outstanding. See [audit progress](../analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/audit-progress.yaml).
+outstanding. See [audit progress](https://github.com/ai4curation/ai-gene-review/blob/c99f6fcf564af250fb346babab970651d86dd295/analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/audit-progress.yaml).
 
 
 ## 2026-11-06 — DnaK comparative mechanism integrated
@@ -493,3 +493,7 @@ The DnaK/DnaJ/GrpE audit full run finished on 10,589 reviews, with zero best-pra
 ## 2026-11-06 — DnaK prepublication integration with published main
 
 Integrated published main `db69104296` with the validated DnaK closure head `2e594d73ea`. All 242 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — DnaK PR #6125 published
+
+Published the comparative DnaK/DnaJ/GrpE audit as PR #6125. Fourteen complete gene reviews preserve 227 historical rows and 43 protected sources; six supported molecular-function additions yield 233 current rows. Full validation is terminal with 17 proven pre-existing citation errors outside the scoped audit, zero best-practice errors and 54 referenced pathways passing. Independent review, CI and actual merge remain pending.
