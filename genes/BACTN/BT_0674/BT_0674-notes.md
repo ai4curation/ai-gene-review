@@ -44,3 +44,11 @@ polyamine activity supports that distinction; no target-specific negative
 meso-diaminopimelate assay is claimed. `just paint-losses BACTN BT_0674` found
 no IRD or IKR on this lineage. The IBD is evaluated by branch scope, not number
 of donor proteins.
+
+## 2026-11-06 — PR6089 reaction-specificity follow-up
+
+Narrowed the proposed term, both MODIFY replacements, and the core's proposed MF from the dual carboxyspermidine/carboxynorspermidine activity to `carboxyspermidine decarboxylase activity`. The accessible PMID27118128 evidence supports the carboxyspermidine reaction, while the family name is not evidence that this target also turns over carboxynorspermidine. That alternative activity remains untested/unverified in the accessible evidence, not disproven. Original annotation payloads and actions are unchanged (three MODIFY, two REMOVE); no NEW claims were added. The PMID27118128 reference assessment now records this specificity limit.
+
+EDO61992.1 in PMID39887002 is explicitly the Clostridium leptum construct, not BT_0674/Q8A9Z1. PMID40074085 supplementary Table S1 labels EDO61992 CAPADC, whereas the structural paper calls it CASDC. This is a comparative-source naming conflict relevant to those papers' reference assessments; it does not establish a CAPADC function for BT_0674. The latter currently cites neither paper, and no new functional transfer was made from them.
+
+Inspected the unchanged `BT_0674-source-analysis/PMID27118128-figure1.gif`: its displayed label is CASDC (BT_0674). The source URL, retrieval date, checksum, and factual identity observation already exist in README.md/provenance.json. The local binary is a convenient frozen visual record but is not strictly needed to reproduce the locus-identification check: the public publisher figure can be retrieved from that exact URL and checked against the recorded checksum. This statement does not guarantee permanent publisher availability. No source artifact was changed or deleted.

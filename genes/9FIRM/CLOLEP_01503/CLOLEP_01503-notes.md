@@ -42,3 +42,7 @@ endogenous norspermidine pathway is established. NEW IDA PLP binding is
 justified by direct target crystallography, not an ARBA cofactor keyword.
 No separate generic homodimerization row is proposed: assembly supports the
 catalytic mechanism without requiring another core function.
+
+## 2026-11-06 — structured assessment of the CASDC/CAPADC naming discrepancy
+
+PMID39887002 Methods identifies EDO61992.1 as its crystallized CASDC; PMID40074085 Table S1 calls the same EDO61992 protein CAPADC. The reference_review records now expose that discrepancy. Structural evidence remains reliable for the PLP-dependent fold and Lys43 cofactor site, while reconstructed agmatine-route activity supports the functional assignment. No substrate-specific kinetics or native flux is inferred from the structural paper title. Annotation payloads, actions and core functions are unchanged.

@@ -28,3 +28,15 @@ The putrescine and DAP kinetic comparison in PMID:37437886 replaces the obsolete
 Three candidates have no asserted core: BT_4612, Cj0172c and HP_1507. The HP_1507 structural comparison finds missing NADP-proximal N-terminal residues in the short 26695 reference; this warrants withholding transfer, not claiming inactivity. Native C. jejuni 81116 CASDH deletion raises spermidine, and the 81116 CASDC biochemical construct was repaired to E184 while the current A8FNH9 canonical sequence contains K184. These details prevent a strain name or family label from substituting for actual assay identity.
 
 The two related family reviews were reconciled with these results: SF4 activity is not asserted, family-wide spermidine participation is unresolved, and SF1 gene cores use reaction-specific proposals. Experimental capability on additional substrates is retained in findings without declaring it a conserved native core.
+
+## 2026-11-06 — PR6089 scientific review follow-up
+
+CAMJ8 now consistently represents its measured dual-substrate decarboxylase activity and retains homodimerization as non-core. BT_0674 is restricted to its demonstrated carboxyspermidine reaction. The different proposal scopes reflect measured substrate evidence, not inconsistent use of family names. The ontology may ultimately provide a shared disjunctive term, but this audit does not infer an unassayed substrate panel from that possibility.
+
+Eight authored spermine/thermospermine BP proposals were withdrawn from the four alphaproteobacterial reviews. Positive native tetraamine context is now cited, including DFMO-associated accumulation and the absence of the competing canonical enzymes, but native pools were not isomer-resolved and these data do not establish each locus's isomer-specific flux. Supported tetraamine molecular activities remain.
+
+HP_1507 now records a SUSPECTED start-site issue without claiming a corrected gene model. CAMJ8 exposes the UniProt kinetic-note discrepancy as a structured source defect. Vibrio rationale blocks are annotation-specific. The exact EDO61992 CASDC/CAPADC naming discrepancy is recorded in the relevant reference assessments. The BT_0674 publisher figure is retrievable from its recorded URL with a pinned hash, without bundling the image in the PR.
+
+The three uncertain upstream candidates still assert no core functions. Cj0172c already has a machine-supplied catalytic row to adjudicate, and its qualified homology-based replacement does not imply a demonstrated native pathway. BT_4612 and HP_1507 have no seeded rows: conservatively declining NEW assertions is not a contradictory judgment about an existing annotation.
+
+All64 seeded payloads, five inherited NEW rows and36 raw sources remain unchanged. Nine new proposals remain after withdrawal of eight authored rows. The22 production compiler cases still pass. Fresh review and CI are required after publication of this follow-up; the earlier requested-changes verdict is not approval.

@@ -87,3 +87,8 @@ exists [PMID:37878710, "the genes encoding CASDH from A. tumefaciens (Atu4170)
 and CANSDH from V. cholerae (VC1624)"]. The two inherited NEW process assertions
 remain supported by catalytic participation and C6709 genetics. No additional
 biofilm, virulence, CAPA or tetramine assertion is justified.
+
+
+## PR #6089 requested revisions — 2026-11-06
+
+Removed the misplaced CANSDC/Q9KRL4 specificity caveat from all three reasons. Q9KRL3 is CANSDH: its own evidence combines C6709 native genetics/metabolites with purified VC1624 substrate generation in PMID37878710. Quantitative synthase substrate preference remains unmeasured. Both inherited NEW process proposals and the original MF decision are unchanged. Machine annotation payloads, inherited NEW assertions and raw UniProt/GOA files were preserved; no new annotation rows were added. Existing research/provider records were not refreshed.

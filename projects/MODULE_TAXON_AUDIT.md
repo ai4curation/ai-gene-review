@@ -464,3 +464,7 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+## 2026-11-06 — carboxyspermidine PR6089 review follow-up
+
+The review requested substrate-scope, annotation-action, native-process evidence, source-defect and rationale corrections. Ten member reviews were updated and pass focused validation. Eight authored isomer-specific spermine/thermospermine BP rows were withdrawn while supported molecular activities and positive native context remain. All64 original payloads and36 raw sources are preserved; nine authored proposals remain alongside five inherited NEW rows. The22 compiler cases pass. The prior full validation has19 independently proved pre-existing reference errors. This branch records the actual CHANGES_REQUESTED verdict on5324e9e7a9; the local follow-up needs fresh review and CI after publication.

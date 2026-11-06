@@ -98,3 +98,8 @@ homodimerization are inferred from C. jejuni A8FNH9, not directly measured on
 Q9KRL4. The earlier notes' "C. jejuni/V. cholerae CANSDC" structural wording was
 imprecise: PDB 3N29 is C. jejuni [PMID:39887002]. The existing experimentally
 grounded biofilm annotation remains KEEP_AS_NON_CORE as a downstream phenotype.
+
+
+## PR #6089 requested revisions — 2026-11-06
+
+Replaced generic pasted reasons with annotation-specific evidence and action rationales. Distinguished the two LysA-propagation defects, inferred PLP/assembly/location, the catalytic refinements, native C6709 process evidence transferred to N16961, and the downstream biofilm phenotype. No annotation actions changed. Machine annotation payloads, inherited NEW assertions and raw UniProt/GOA files were preserved; no new annotation rows were added. Existing research/provider records were not refreshed.
