@@ -23,6 +23,14 @@ MODULE = ROOT / "modules" / (SLUG + ".yaml")
 CONTRACT = AUDIT / "endpoint-contract.yaml"
 ENTAILMENT = AUDIT / "go-entailment.json"
 PROPOSED = "acyl-CoA dehydrogenase activity (acceptor unspecified)"
+# Each curated substrate-specific proposal entails acyl-CoA dehydrogenation.
+# The source profile still controls allowed substrates; this is not all-chain flux.
+PROPOSED_VARIANTS = {
+    PROPOSED,
+    "long-chain fatty acyl-CoA dehydrogenase activity (acceptor unspecified)",
+    "medium-chain fatty acyl-CoA dehydrogenase activity (acceptor unspecified)",
+    "butyryl-CoA dehydrogenase activity (acceptor unspecified)",
+}
 PARTS = {
     "bacterial_acyl_coa_dehydrogenation", "bacterial_enoyl_coa_hydration",
     "bacterial_hydroxyacyl_coa_oxidation", "bacterial_ketoacyl_coa_thiolysis",
@@ -48,10 +56,13 @@ def structural_contract(module):
     assert all(not p.get("optional", False) for p in parts)
     leaves = {a["id"]: a for a in annotons(module["module"])}
     assert len(leaves) == 10
-    for name in ["fade_acyl_coa_dehydrogenase_activity", "pao1_fade1_fade2", "bacillus_fade"]:
+    for name in ["fade_acyl_coa_dehydrogenase_activity", "pao1_fade1_fade2"]:
         function = leaves[name]["function"]
         assert not function.get("term"), "An unknown physiological acceptor acquired an ETF-specific GO assertion"
         assert function["preferred_term"] == PROPOSED
+    # Bacillus is a distinct inferred ETF-linked realization, not a generic rule
+    # requiring purified reconstitution in every organism.
+    assert leaves["bacillus_fade"]["function"]["term"]["id"] == "GO:0003995"
     return leaves
 
 
@@ -111,7 +122,8 @@ def evaluate(case, module, contract, records):
         doc = records[acc]["document"]
         if atom.function_ids:
             return set(atom.function_ids) <= supported_terms(doc)
-        return any(core.get("proposed_molecular_function") == PROPOSED
+        declared = {term["proposed_name"] for term in doc.get("proposed_new_terms", [])}
+        return any(core.get("proposed_molecular_function") in (PROPOSED_VARIANTS & declared)
                    for core in doc.get("core_functions", []))
 
     for name in profile["roles"]:

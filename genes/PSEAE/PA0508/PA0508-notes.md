@@ -17,3 +17,7 @@ Pa10348 proteomics, PA14 fatty-acid-growth mutants/reporters and PAO1 Galleria m
 Both broad redox rows MODIFY to the shared acceptor-unspecified acyl-CoA dehydrogenase proposal. GO0052890 does not explicitly assert ETF; flavin-dependent chemistry is retained, not disproven. FAD binding is KEEP_AS_NON_CORE because it is an integral cofactor supporting catalysis. No membrane location is inferred solely from a homologous CII domain. The unreviewed database 3-methylmercaptopropionyl-CoA label is not established by this paper; ordinary fatty-acyl-CoA assays do not exclude additional sulfur-substrate activity.
 
 Default Falcon was genuinely attempted and failed HTTP403; no provider report was fabricated. All seed payloads and raw files remain untouched. Focused validation, render, source/sequence checks and helper history are recorded in the ignored pao1-dehydrogenases audit directory.
+
+## 2026-11-06 — PR6136 substrate and acceptor dimensions
+
+Chain-resolved proposed activities retain the supported substrate classes independently of the unresolved net acceptor. Bound FAD is not evidence that the net reaction uses a flavin acceptor. Artificial-acceptor turnover, native growth and exact strain/construct evidence remain distinct. See the round1 source adjudication for ontology and primary-source comparisons.

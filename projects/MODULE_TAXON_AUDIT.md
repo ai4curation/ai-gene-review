@@ -565,3 +565,9 @@ Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven
 ## 2026-11-06 — beta-oxidation prepublication integration
 
 Integrated current main 488d370561caf677da6e0c8ef94d5b0c7f4cb374 before beta-oxidation full validation, retaining the reviewed module, nineteen gene reviews, eight family reviews and their source artifacts. Shared tracker rows retain every incoming module except this audit's updated row. Main includes PR5975's citation corrections and warning-level annotation-consistency checks; the fresh full-corpus run will test the integrated implementation.
+
+## 2026-11-06 — beta-oxidation review corrections
+
+PR6136 review corrections preserve chain-length specificity independently of acceptor identity, accept target-specific inferred Bacillus ETF coupling, distinguish bound FAD from a net flavin acceptor, fix direct palmitate/C4 support, clarify hydratase conventions and remove description-level curation framing. All 217 current row payloads, prior NEW actions and 40 raw/provider files remain unchanged. Eleven revised gene reviews, one family review and the module require renewed focused/full validation, review, CI and merge.
+
+[Source adjudication](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-source-adjudication.md) records the decisions and remaining assay limits.

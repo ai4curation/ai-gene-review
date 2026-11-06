@@ -9,3 +9,9 @@ LT2 identity is verified from authoritative UniProt and the 2006 genomic constru
 Phenylacetate participation is UNDECIDED: a dedicated PaaJ and the canonical FadA role are not proof of exclusion. The exact GOA phenylacetate node assertion is missing from the frozen PAINT snapshot, so no categorical source defect or evolutionary loss is asserted. Thiolase chemistry and beta-oxidation core remain supported. Bare protein binding is removed only where present under the repository policy.
 
 All six PAINT lineage checks found no IRD/IKR losses. Broad true terms are refined rather than rejected. No new biological-process annotations were manufactured, and no additional annotation rows were needed for this audit. Specific core complex/location roles can be inferred without claiming new target-specific localization measurements. Full acquisition files remain ignored; scoped quotations and source hashes are in ECOLI/fadE/fadE-source-analysis/enterobacterial-evidence.md.
+
+## 2026-11-06 — PR6136 description scope
+
+Moved source-assessment wording out of the standalone description. Prior source-qualified summary retained here:
+
+FadA is the beta-subunit 3-ketoacyl-CoA thiolase of the cytoplasmic FadBA fatty acid oxidation complex in Salmonella Typhimurium LT2. It catalyzes CoA-dependent cleavage of a 3-oxoacyl-CoA to acetyl-CoA and an acyl-CoA shortened by two carbons. LT2 FadBA cooperates with LT2 FadE to improve intermediate clearance in E. coli gene-exchange experiments; these experiments do not identify a separate FadA-specific rate advantage or establish the fate of every substrate under all conditions.
