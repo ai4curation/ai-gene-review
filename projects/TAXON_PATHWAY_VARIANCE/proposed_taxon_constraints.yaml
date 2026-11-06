@@ -6,13 +6,22 @@
 #   go_term:                 {id, label}
 #   constraint:              never_in_taxon | only_in_taxon
 #   taxon:                   {id, label}
-#   existing_go_constraint:  what GO already asserts on the term or its ancestors, or null
+#   existing_go_constraint:  what GO already asserts on the term or its ancestors: null (none),
+#                            or a list of {constraint, taxon} (TPV-004 onward)
+#   conservative_alternative: optional narrower or weaker option, with its rationale
 #   evidence:                list of {reference_id, supporting_text} (verbatim quotes)
-#   blocks:                  annotations the constraint would remove (gene, term, evidence, source node)
+#   blocks:                  annotations the constraint would remove (gene, protein, organism,
+#                            evidence, and source_node for IBA or source_id for other sources)
 #   would_wrongly_block:     members of the taxon that do have the presupposed component, or []
 #   prerequisites:           ontology changes needed before the constraint can be applied:
-#                            {kind, term, change, reason, status: NOT_REQUESTED | REQUESTED | DONE}
+#                            {kind, term, change, reason, status: NOT_REQUESTED | REQUESTED | DONE,
+#                            notes (optional, e.g. when the prerequisite has been overtaken)}
+#   in_repo_agreement:       reviews in this repo that reach the same conclusion
+#   notes:                   free text (counts, caveats, matching upstream fixes)
 #   status:                  PROPOSED | SUBMITTED | ACCEPTED | REJECTED
+#   submission:              once SUBMITTED: {tracker_issue (URL), submitted (date),
+#                            resolved (date), resolution (as GO implemented it), commits
+#                            (URLs), pull_requests (URLs), notes}
 #   source:                  where in this repo the case was found
 proposals:
 - id: TPV-001
@@ -85,12 +94,24 @@ proposals:
   - interpro/panther/PTHR11801/PTHR11801-review.yaml (GO:0007259 SUBFAMILY_ONLY, nematode
     subfamilies excluded; PTN000927860 TOO_DEEP)
   - interpro/panther/PTHR45807/PTHR45807-review.yaml (member exception for A0A914YCL6)
-  status: PROPOSED
+  status: ACCEPTED
+  submission:
+    tracker_issue: https://github.com/geneontology/go-ontology/issues/32689
+    submitted: 2026-10-05
+    resolved: 2026-11-03
+    resolution: >-
+      Added as is_a: neverin:6231 (Nematoda) on GO:0007259 in src/ontology/go-edit.obo, with
+      a term_tracker_item pointing to #32689. The OWL diff on go-ontology#32857 confirms the
+      added axiom on GO_0007259 ("SubClassOf never in Nematoda").
+    commits:
+    - https://github.com/geneontology/go-ontology/commit/98389d1bd9ea9c7e60b5a4420b7cf61c9ce5b0be
+    pull_requests:
+    - https://github.com/geneontology/go-ontology/pull/32857
   source: modules/c_elegans_jak_independent_stat_signaling.yaml
 - id: TPV-002
   go_term:
     id: GO:0046425
-    label: regulation of receptor signaling pathway via JAK-STAT
+    label: regulation of cell surface receptor signaling pathway via JAK-STAT
   constraint: never_in_taxon
   taxon:
     id: NCBITaxon:6231
@@ -136,7 +157,22 @@ proposals:
   - genes/worm/gei-17/gei-17-ai-review.yaml (REMOVE)
   - interpro/panther/PTHR10782/PTHR10782-review.yaml (member exception for GEI-17, PTN000845825
     NEEDS_PRUNING)
-  status: PROPOSED
+  status: ACCEPTED
+  submission:
+    tracker_issue: https://github.com/geneontology/go-ontology/issues/32689
+    submitted: 2026-10-05
+    resolved: 2026-11-03
+    resolution: >-
+      Added as is_a: neverin:6231 (Nematoda) on GO:0046425, with a term_tracker_item pointing
+      to #32689. The same commit renamed GO:0046425 to "regulation of cell surface receptor
+      signaling pathway via JAK-STAT" (old label kept as an exact synonym) and renamed
+      GO:0046426 and GO:0046427 likewise, under go-ontology#14167. The regulation children
+      carry no constraint of their own and inherit this one by is_a. go_term.label above is
+      the current label; the proposal was filed under the old one.
+    commits:
+    - https://github.com/geneontology/go-ontology/commit/98389d1bd9ea9c7e60b5a4420b7cf61c9ce5b0be
+    pull_requests:
+    - https://github.com/geneontology/go-ontology/pull/32857
   source: interpro/panther/PTHR10782/PTHR10782-review.yaml
 - id: TPV-003
   go_term:
@@ -204,8 +240,9 @@ proposals:
   would_wrongly_block:
   - term: GO:0007260 tyrosine phosphorylation of STAT protein
     reason: GO:0007260 is part_of GO:0007259, but Dictyostelium STATc is tyrosine phosphorylated
-      without a JAK, by the TKL kinase Pyk2 (PMID:22699506). If the constraint propagates
-      over part_of, it would forbid a correct annotation.
+      without a JAK, by the TKL kinase Pyk2 (PMID:22699506). GO's taxon-constraint
+      reasoning propagates over part_of, so the accepted constraint now forbids this correct
+      annotation (see the prerequisite and submission notes below).
   - term: GO:0042531 (positive regulation of tyrosine phosphorylation of STAT protein)
     reason: Cholera toxin subunits (UniProtKB:P01555, P01556; Vibrio cholerae) carry IDA annotations
       that would conflict if the constraint propagates through regulates and part_of.
@@ -218,12 +255,213 @@ proposals:
       receptor signaling pathway via STAT.
     reason: Dictyostelium STATc is tyrosine phosphorylated without a JAK (PMID:22699506),
       so an only_in_taxon Metazoa constraint on GO:0007259 would wrongly forbid GO:0007260
-      in Dictyostelium if it propagates over part_of.
+      in Dictyostelium, because it propagates over part_of.
     status: NOT_REQUESTED
+    notes: >-
+      Overtaken: GO applied the constraint without this change. GO:0007260 is already listed
+      for obsoletion in go-ontology#27064, which would remove the conflict. If it is not
+      obsoleted, request the re-parenting on #27064.
   in_repo_agreement:
   - interpro/panther/PTHR11801/PTHR11801-review.yaml (PTN000927860 TOO_DEEP; Dictyostelium
     subfamilies excluded)
   - interpro/panther/PTHR45807/PTHR45807-review.yaml (family rooted at Eumetazoa)
   - genes/DICDI/statA and genes/DICDI/statC (JAK-STAT IBA modified to GO:0097696)
-  status: PROPOSED
+  status: ACCEPTED
+  submission:
+    tracker_issue: https://github.com/geneontology/go-ontology/issues/32689
+    submitted: 2026-10-05
+    resolved: 2026-11-03
+    resolution: >-
+      Added as is_a: onlyin:33208 (Metazoa) on GO:0007259, alongside the TPV-001 neverin:6231,
+      merged in go-ontology#32861. The GO:0007260 prerequisite below was not part of the
+      change.
+    commits:
+    - https://github.com/geneontology/go-ontology/commit/fed722deb9e08f121365216c338db4cc08fac3e0
+    pull_requests:
+    - https://github.com/geneontology/go-ontology/pull/32861
+    notes: >-
+      The constraint was first missed (only neverin:6231 landed in 98389d1). A reviewer caught
+      this and it was added in a second commit. GO accepted the Metazoa constraint without
+      the GO:0007260 prerequisite. The automated review on #32861 says GO:0007260 "is
+      `part_of` GO:0007259, so it now inherits only-in Metazoa too" and that "GO:0007260
+      is already an obsoletion candidate, though, so this may resolve itself". GO:0007260
+      is listed for obsoletion in go-ontology#27064 (open), but OLS still shows it as live.
+      If it stays live, any Dictyostelium annotation to it now violates the constraint.
   source: projects/IBA_REVIEW.md section 14 (statA/statC) and interpro/panther/PTHR11801/PTHR11801-review.yaml
+- id: TPV-004
+  go_term:
+    id: GO:0030907
+    label: MBF transcription complex
+  constraint: only_in_taxon
+  taxon:
+    id: NCBITaxon:4751
+    label: Fungi
+  existing_go_constraint:
+  - constraint: only_in_taxon
+    taxon:
+      id: NCBITaxon:2759
+      label: Eukaryota
+  evidence:
+  - reference_id: PMID:27162172
+    supporting_text: We were unable to find any eukaryotic homologs of SBF or Whi5 outside of fungi
+  - reference_id: PMID:27162172
+    supporting_text: While we did not find either of the fungal regulators (SBF and Whi5) outside of
+      Fungi, we did find animal-like cell cycle regulators in Archaeplastida, Amoebozoa, SAR, Haptophyta,
+      Cryptophyta, Excavata and Metazoa
+  blocks:
+  - gene: cec-10
+    protein: UniProtKB:Q9N4L7
+    organism: Caenorhabditis elegans
+    evidence: IBA
+    source_node: PANTHER:PTN000917496
+  - protein: UniProtKB:A7S410
+    organism: Nematostella vectensis
+    evidence: IBA
+    source_node: PANTHER:PTN000917496
+  - description: 41 TreeGrafter IEAs on animal Swi6/Cdc10-family ankyrin proteins (corals, sea anemones,
+      molluscs, annelids, a brachiopod, a priapulid, a beetle) and one plant (Carpinus fangiana), from
+      PTN000917496, PTN001541507, PTN002887935, PTN000917511 and PTN002466252
+  would_wrongly_block: []
+  notes: Counts are exact-term non-NOT annotations in QuickGO on 2026-11-05 (4,809 total, 43 outside
+    Fungi). The constraint fixes the symptom; the cause is PAINT node PTN000917496, whose MBF IBDs sit
+    above metazoan members of PTHR43828 that lack the KilA-N/APSES DNA-binding domain. An IRD on the
+    metazoan branch (or moving the IBD to the fungal subfamily) is the matching PAINT change.
+  in_repo_agreement:
+  - genes/worm/cec-10/cec-10-ai-review.yaml (REMOVE; propagation_review LINEAGE_OR_TAXON_MISMATCH)
+  status: PROPOSED
+  source: projects/RAR_MISANNOTATION.md (Wei et al. 2020, PMID:32470107, Table S3)
+- id: TPV-005
+  go_term:
+    id: GO:0033309
+    label: SBF transcription complex
+  constraint: only_in_taxon
+  taxon:
+    id: NCBITaxon:4751
+    label: Fungi
+  existing_go_constraint:
+  - constraint: only_in_taxon
+    taxon:
+      id: NCBITaxon:2759
+      label: Eukaryota
+  - constraint: never_in_taxon
+    taxon:
+      id: NCBITaxon:4895
+      label: Schizosaccharomyces
+  evidence:
+  - reference_id: PMID:27162172
+    supporting_text: We were unable to find any eukaryotic homologs of SBF or Whi5 outside of fungi
+  blocks:
+  - description: 41 TreeGrafter IEAs, the same animal and plant Swi6/Cdc10-family proteins and PANTHER
+      nodes as TPV-004
+  would_wrongly_block: []
+  notes: 5,482 exact-term annotations in QuickGO on 2026-11-05, 41 outside Fungi. Kept separate from
+    TPV-004 because the two complexes are distinct terms with separate constraints today. cec-10 lost its
+    SBF IBA after the 2019-06-03 release that Wei et al. analysed, but the TreeGrafter IEAs remain.
+  in_repo_agreement:
+  - genes/worm/cec-10/cec-10-ai-review.yaml (MBF terms removed on the same grounds)
+  status: PROPOSED
+  source: projects/RAR_MISANNOTATION.md (Wei et al. 2020, PMID:32470107, Table S3)
+- id: TPV-006
+  go_term:
+    id: GO:0044548
+    label: S100 protein binding
+  constraint: only_in_taxon
+  taxon:
+    id: NCBITaxon:7711
+    label: Chordata
+  existing_go_constraint:
+  - constraint: never_in_taxon
+    taxon:
+      id: NCBITaxon:4751
+      label: Fungi
+  evidence:
+  - reference_id: PMID:27764152
+    supporting_text: All S100 hits were within vertebrates, with the exception of four hits from the
+      tunicate Oikopleura dioica.
+  - reference_id: PMID:27764152
+    supporting_text: The presence of S100 proteins in tunicates and vertebrates (Olfactores), but not
+      other chordates, suggests that the first S100 arose in the last common ancestor of tunicates and
+      vertebrates
+  - reference_id: PMID:18275604
+    supporting_text: There is no evidence for S100 proteins in invertebrates
+  blocks:
+  - gene: CG3226
+    protein: UniProtKB:Q9W3Y3
+    organism: Drosophila melanogaster
+    evidence: IEA (InterPro2GO)
+    source_id: InterPro:IPR037893
+  - description: 1,194 InterPro2GO IEAs from IPR037893 (Calcyclin-binding protein, CS domain) on CacyBP/SIP
+      orthologs in plants, invertebrates and apicomplexans
+  would_wrongly_block: []
+  notes: 5,596 exact-term annotations in QuickGO on 2026-11-05, 1,194 outside Chordata, all InterPro2GO.
+    The S100 family is Olfactores-specific (tunicates plus vertebrates); Chordata is the conservative
+    choice, and the tighter clade would block nothing more (no cephalochordate rows are affected). The
+    matching mapping change keeps IPR037893 -> GO:0044548 but narrows it to chordates, as a broadMatch row
+    in projects/INTERPRO/interpro2go.sssom.yaml, replaced by curated rule CR-0005 (rules/curated/).
+  in_repo_agreement:
+  - genes/DROME/CG3226/CG3226-ai-review.yaml (REMOVE)
+  status: PROPOSED
+  source: projects/RAR_MISANNOTATION.md (Wei et al. 2020, PMID:32470107, Table S4)
+- id: TPV-007
+  go_term:
+    id: GO:0021987
+    label: cerebral cortex development
+  constraint: never_in_taxon
+  taxon:
+    id: NCBITaxon:8782
+    label: Aves
+  existing_go_constraint:
+  - constraint: only_in_taxon
+    taxon:
+      id: NCBITaxon:33213
+      label: Bilateria
+  evidence:
+  - reference_id: PMID:23027930
+    supporting_text: Our findings establish that the layer 4 input and the layer 5 output cell types
+      are conserved across the amniotes, but are organized into very different architectures, forming
+      nuclei in birds, cortical areas in reptiles, and cortical layers in mammals.
+  - reference_id: PMID:26154980
+    supporting_text: the six-layered neocortex structure could hardly be more dissimilar in appearance
+      from the nuclear organization that is so conspicuous in the dorsal telencephalon of birds and other
+      reptiles
+  blocks:
+  - gene: BTBD3
+    protein: UniProtKB:F1NI11
+    organism: Gallus gallus
+    evidence: IBA
+    source_node: PANTHER:PTN002908884
+  - gene: KIF14
+    protein: UniProtKB:A0A8V0YLM5
+    organism: Gallus gallus
+    evidence: IBA
+    source_node: PANTHER:PTN002790778
+  - gene: NTRK2
+    protein: UniProtKB:Q91987
+    organism: Gallus gallus
+    evidence: ISS
+    source_id: UniProtKB:P15209
+  - description: 1,756 IEAs on bird proteins (1,521 TreeGrafter, 212 Ensembl Compara, 23 InterPro2GO)
+  would_wrongly_block: []
+  notes: 9,287 exact-term annotations in QuickGO on 2026-11-05, 1,759 in Aves; the 24 is_a/part_of
+    descendants of GO:0021987 would also be excluded in birds. GO defines the cerebral cortex as "the
+    outer layered region of the telencephalon"; the avian dorsal pallium is nuclear, not layered.
+    Reptiles have cortical areas, so the constraint is never_in_taxon Aves rather than only_in_taxon
+    Mammalia. Hippocampus development (GO:0021766) is not under GO:0021987 and is unaffected.
+    GO:0021987 is part_of GO:0021543 pallium development, which stays available for birds, and the
+    homology of avian pallial regions to neocortex is debated (PMID:39946453 argues for convergence),
+    so this is the least certain of the four RAR proposals. The strongest argument against a hard
+    constraint is the main clause of the PMID:23027930 quote, that the layer 4 and layer 5 cell types are
+    conserved across amniotes, so only the layered architecture, not the cell types, is absent from
+    birds. Uberon (checked 2026-11-06) puts no only_in or never_in constraint on UBERON:0000956
+    cerebral cortex; it asserts present_in_taxon NCBITaxon:117569 (Hyperoartia), with a note on
+    convergent lamination in hagfishes, so Uberon also treats the cortex by its layered structure.
+  conservative_alternative:
+    constraint: none
+    rationale: Leave GO:0021987 unconstrained and fix the bird annotations at their sources instead,
+      moving them to GO:0021543 pallium development (the PAINT node PTN002908884, the TreeGrafter and
+      Ensembl Compara rows). This avoids GO taking a position on avian pallial homology, at the cost
+      of no automatic block on future bird annotations.
+  in_repo_agreement:
+  - genes/CHICK/BTBD3/BTBD3-ai-review.yaml (MODIFY to GO:0021543 pallium development)
+  status: PROPOSED
+  source: projects/RAR_MISANNOTATION.md (Wei et al. 2020, PMID:32470107, Table S4)
