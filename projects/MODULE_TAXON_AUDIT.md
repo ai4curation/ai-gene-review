@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flavonoid_degradation`: 21 member reviews, nine curated references and Pseudomonadota scope; full validation PASS at 48ae00aa44. Dedicated audit PR and actual merge pending.
+- [ ] `bacterial_flavonoid_degradation`: [PR #6140](https://github.com/ai4curation/ai-gene-review/pull/6140) open; 21 member reviews, nine curated references, Pseudomonadota scope and full validation PASS. Review, CI and actual merge pending.
 
 - [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
 
@@ -88,7 +88,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 4 PR_OPEN, 3 IN_PROGRESS and 736 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 5 PR_OPEN, 2 IN_PROGRESS and 736 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -638,10 +638,14 @@ Integrate seven independently verified USDA110 comparisons with fourteen existin
 
 ## 2026-11-06 — flavonoid full-validation closeout
 
-Full validation at 48ae00aa44d310c22de47fa2d50f71ff6f59739c completed with exit0 on 2026-11-06T21:31:35Z. All258 frozen files remain unchanged. The10691-review corpus has zero blocking errors;115 term advisories and52 reference advisories persist, with all31 reference-advisory files outside this21-gene panel. Best-practices validation reports zero errors and27775 warnings;54 pathway-reference checks pass. Scoped schema, semantic, rendering, history and compiler checks already pass. Scientific limits on late reaction assignments, FdeD/H dependence, FdeG evidence access and comparator native flux remain explicit. Dedicated PR and actual merge are still pending.
+Full validation at 48ae00aa44d310c22de47fa2d50f71ff6f59739c completed with exit 0 on 2026-11-06T21:31:35Z. All 258 frozen files remain unchanged. The 10691-review corpus has zero blocking errors; 115 term advisories and 52 reference advisories persist, with all 31 reference-advisory files outside this 21-gene panel. Best-practices validation reports zero errors and 27775 warnings; 54 pathway-reference checks pass. Scoped schema, semantic, rendering, history and compiler checks already pass. Scientific limits on late reaction assignments, FdeD/H dependence, FdeG evidence access and comparator native flux remain explicit. Dedicated PR and actual merge are still pending.
 
 ## 2026-11-06 — PR #6140 integration with published main 096c918920
 
 Integrated published main `096c918920` with the validated PR #6140 head `9f5e80dcd5`. All 258 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row and the previously verified OPG completion record retained verbatim from the approved head; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits and the unrelated GJB3 review; validation implementation is unchanged. The corresponding OPG completion bullet is also preserved; incoming completion records and all dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
 
 Integration proof: [validated-head-integration.json](../analysis/module_audits/bacterial_flavonoid_degradation/validated-head-integration.json).
+
+## 2026-11-06 — flavonoid PR #6140 published
+
+Opened PR #6140 after full validation passed at science commit 48ae00aa44. Integrated main 096c918920 with 258 scoped files unchanged relative to the validated publication head; no validation implementation changed. Preserved the previously verified OPG completion row and bullet because the incoming shared ledger had reverted them to IN_PROGRESS. Updated this audit to PR_OPEN and recomputed the ledger counts from the inventory. Review, CI and actual merge remain pending.
