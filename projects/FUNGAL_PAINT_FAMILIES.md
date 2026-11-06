@@ -493,8 +493,9 @@ activity` term when enough evidence is present.
 - [x] `CANAL/MIT1` - CGD-seeded *Candida albicans* IPC mannosyltransferase;
   review the `PTN001285482` IBAs as sound, accept exact EC-backed
   `GO:0103064`, and prune broad/downstream ARBA process calls
-- [ ] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
-  mannosyltransferase PAINT seed
+- [x] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
+  mannosyltransferase PAINT seed; the `PTN001285482` IBAs are sound, with the
+  generic MF row and older AspGD generic IMP rows replaced by exact `GO:0103064`
 
 ---
 
@@ -525,6 +526,11 @@ activity` term when enough evidence is present.
   sphingolipid-process parents to exact MIPC biosynthesis, and keeps M(IP)2C
   rows as non-core downstream context because Ipt1, not Sur1, converts MIPC
   to M(IP)2C.
+- Added `ASPFU/Q4WDG6`: the A. fumigatus Af293 MitA seed also supports both
+  `PTN001285482` PAINT rows. The review keeps the MIPC-biosynthesis IBA, treats
+  generic mannosyltransferase/transferase rows as older stand-ins for
+  `GO:0103064`, and keeps only the generic membrane call because no direct
+  MitA Golgi-localization paper was found.
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
