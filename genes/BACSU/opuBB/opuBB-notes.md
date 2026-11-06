@@ -18,4 +18,4 @@ PAINT inspection: cached IBD.gaf and PANTHER trees place OpuBA below PTN00195306
 
 Retain GO0055085 as ACCEPT alongside choline transport: cargo transport GO0015871 is not an is_a/part_of descendant of membrane-crossing GO0055085. No suitable choline-specific transmembrane-transport BP was found. The choline-specific MF and membrane-subunit contribution remain separate. Summaries now state component roles rather than repeat reasons.
 
-All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.
+All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/round1-ontology-evidence.yaml.

@@ -18,4 +18,4 @@ PAINT inspection: cached IBD.gaf and PANTHER trees place OpuBA below PTN00195306
 
 Replaced the duplicated summary for complex membership with a subunit-specific summary; complex architecture and ATPase/contributes_to assignments remain supported.
 
-All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.
+All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/round1-ontology-evidence.yaml.

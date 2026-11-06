@@ -18,7 +18,7 @@ PAINT PTN001246788 propagates TauA sulfate-starvation physiology into SF44. The 
 
 Retain GO0055085 as ACCEPT: OpuBC contributes substrate capture to membrane import, while choline transport records cargo. GO0015871 is not a descendant of GO0055085 and GO0015220 is MF, not a BP substitute. The ligand-binding and transporter-contribution summaries are distinct from their detailed evidence.
 
-All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.
+All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/round1-ontology-evidence.yaml.
 
 ## PR6108 round2 follow-up
 
