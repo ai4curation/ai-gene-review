@@ -1,7 +1,7 @@
 ---
 title: "Taxon Pathway Variance"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-10
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
 species: [worm, DROME, human, DICDI, CHICK]
@@ -14,6 +14,9 @@ genes:
   - statA
   - statC
   - JAK1
+  - cec-10
+  - CG3226
+  - BTBD3
 ---
 
 # Taxon Pathway Variance
