@@ -118,3 +118,7 @@ Restored 7 existing GO:0005739 rows to ACCEPT under the informative root-organel
 - Row 58: The published abstract establishes mitochondrial storage and release of SMAC into cytosol during apoptosis; the complete original was not recovered. This supports the existing organelle claim. The mature-DIABLO Reactome entity independently places the release-competent 56–239 chain in IMS, but that separate evidence does not require replacement of mitochondrion or turn the abstract into a topology assay.
 
 This bounded follow-up reused the prior genuine research-provider attempts and cached/source-analysis evidence; provider failure logs remain in `.cache/module-audit-logs/execution-deep-human-DIABLO.log`. Independent annotation-reviewer consultation agreed with retaining root-organelle claims and their separate finer localization evidence.
+
+## 2026-11-05 — completion metadata follow-up
+
+The systematic review and organelle-policy follow-up merged in PR #5558, but the top-level status remained DRAFT. Verified that the current review is byte-identical to that merged assessment: all 83 annotations have decisions and reasons, no PENDING or UNDECIDED rows remain, and the core function and source/isoform qualifications are present. Set status to COMPLETE. All other review fields, supporting evidence, raw UniProt/GOA sources and earlier notes are preserved. This closes a metadata omission; it introduces no new biological assertion.
