@@ -162,13 +162,15 @@ def cites_search(
     ids = [s.get("reference_id") for s in support] + list(review.get("additional_reference_ids") or [])
     if any(isinstance(i, str) and i.startswith(LITERATURE_PREFIXES) for i in ids):
         return True
-    folders = None if gene_dir else _own_folders(data)
+    folders: Set[str] = set() if gene_dir else _own_folders(data)
 
     def own(reference_id: str) -> bool:
         ref_dir = _ref_dir(reference_id)
         if not ref_dir:
             return False
-        return ref_dir == gene_dir if gene_dir else ref_dir.split("/")[1] in folders
+        if gene_dir:
+            return ref_dir == gene_dir
+        return ref_dir.split("/")[1] in folders
 
     return any(
         isinstance(s.get("reference_id"), str)
@@ -305,8 +307,8 @@ def iter_nd_policy_violations(
                 "Cite the search in supported_by: quote, in supporting_text, the gene's "
                 "own deep-research or notes file (not a MOD gene description such as "
                 "-deep-research-flybase.md) where it records the queries and their result "
-                "(when a search "
-                "finds nothing there is no paper to cite), or cite the publications that "
+                "(when a search finds nothing there is no paper to cite), or cite the "
+                "publications that "
                 "were checked (PMID, DOI). The UniProt record or the protein's existence "
                 "level does not show that the literature has no function to annotate",
             )
