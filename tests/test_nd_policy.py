@@ -153,9 +153,9 @@ def test_both_file_path_forms(reference_id, passes):
     assert (fields(row) == []) is passes
 
 
-def test_organism_code_does_not_widen_the_own_folders():
-    """A self UniProt reference in the genes/ form names the gene's folder, not the organism."""
-    doc = {"gene_symbol": "ALG14", "id": "Q1", "references": [{"id": "file:genes/CANAL/ALG14/ALG14-uniprot.txt"}]}
+def test_same_organism_gene_is_not_the_genes_own():
+    """file:genes/ORG/GENE/... is read as the gene folder, so another gene of the organism fails."""
+    doc = {"gene_symbol": "ALG14", "id": "Q1"}
     other = {"supported_by": [{"reference_id": "file:genes/CANAL/ERG9/ERG9-notes.md", "supporting_text": "x"}]}
     own = {"supported_by": [{"reference_id": "file:genes/CANAL/ALG14/ALG14-notes.md", "supporting_text": "x"}]}
     assert not cites_search(other, doc)
@@ -205,3 +205,12 @@ def test_validator_uses_the_review_path_without_goa(tmp_path, monkeypatch):
     report = validate_gene_review(review, check_goa=False, check_supporting_text=False)
     assert not [i for i in report.issues if i.check_type == "nd_policy"
                 and "literature was searched" in i.message]
+
+
+@pytest.mark.parametrize("mod", ["sgd", "flybase", "wormbase"])
+def test_mod_gene_description_is_not_a_search_record(mod):
+    """MOD gene descriptions are curator-written summaries, not a record of a literature search."""
+    row = nd("ACCEPT", searched=False)
+    row["review"]["supported_by"] = [
+        {"reference_id": f"file:yeast/X/X-deep-research-{mod}.md", "supporting_text": "Protein of unknown function"}]
+    assert fields(row) == [(0, "supported_by")]

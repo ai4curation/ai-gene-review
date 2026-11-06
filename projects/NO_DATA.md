@@ -289,12 +289,18 @@ search, so we cannot meaningfully propose one. These rows should become
      cite a publication (PMID, DOI, PMC), or quote in `supported_by` the gene's
      own deep-research or notes file where it records the queries and their
      result (a search that finds nothing has no paper to cite), as DROME/CG42763
-     does. The quote is what the verbatim check confirms, so a bare file
-     citation, a file in `additional_reference_ids` or another gene's file does
-     not count. The UniProt record, or its protein-existence (`PE`) line, is not
+     does. The quote goes in `supporting_text`, the field the verbatim check
+     confirms (`supporting_text_fulltext` is not checked and does not count), so
+     a bare file citation, a file in `additional_reference_ids`, another gene's
+     file, or a MOD gene description (`-deep-research-sgd/-flybase/-wormbase`,
+     curator text rather than a search) does not count. A publication id needs
+     no quote: a paper checked and found silent on the aspect has no line to
+     quote, and the id is checkable on its own. The UniProt record, or its protein-existence (`PE`) line, is not
      a search. Any verbatim line of the gene's own file passes, so the check
      narrows the loophole rather than closing it: the quote should be the
-     line that records the search. On 2026-11-06 this flags 210 of 321
+     line that records the search. Quotes listed in
+     `conf/local_quote_baseline.yaml` only warn when not verbatim, so for those
+     few the check does not confirm the file says it. On 2026-11-06 this flags 210 of 321
      accepted ND rows in 150 reviews, mostly rows the re-action pass converted.
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites

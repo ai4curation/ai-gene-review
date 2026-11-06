@@ -34,6 +34,8 @@ re-review and do not block legacy files.
 from __future__ import annotations
 
 from pathlib import Path
+
+from ai_gene_review.mod_providers import is_mod_description_file
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 #: ND annotations are only made to the three root terms (GORULE:0000011).
@@ -119,8 +121,12 @@ def cites_search(
 ) -> bool:
     """Whether an ND review cites the literature search; shared by the warning and the score.
 
-    A publication (PMID, DOI, PMC) counts wherever it is cited. A file recording
-    the search (deep research or notes) counts only when it is the gene's own and
+    A publication (PMID, DOI, PMC) counts wherever it is cited, unquoted: a
+    paper that was checked and says nothing about the aspect has no line to
+    quote, and its id is checkable on its own. A file recording
+    the search (deep research or notes; not a MOD gene description such as
+    ``-deep-research-sgd.md``, which is curator text, not a search) counts only
+    when it is the gene's own and
     is quoted in ``supporting_text``, the field the verbatim local-quote check
     reads (``supporting_text_fulltext`` is never checked, so it does not count);
     a nonblank quote need not be about the search, so this narrows the loophole
@@ -145,6 +151,8 @@ def cites_search(
     False
     >>> cites_search({"supported_by": [quoted]}, gene, gene_dir="DROME/Y")
     False
+    >>> cites_search({"supported_by": [dict(quoted, reference_id="file:yeast/X/X-deep-research-sgd.md")]}, gene)
+    False
     >>> cites_search({"supported_by": [{"reference_id": "file:human/X/X-uniprot.txt",
     ...                                 "supporting_text": "PE   1: Evidence at protein level;"}]}, gene)
     False
@@ -164,6 +172,7 @@ def cites_search(
     return any(
         isinstance(s.get("reference_id"), str)
         and any(m in s["reference_id"] for m in SEARCH_RECORD_MARKERS)
+        and not is_mod_description_file(s["reference_id"])
         and own(s["reference_id"])
         and has_text(s.get("supporting_text"))
         for s in support
