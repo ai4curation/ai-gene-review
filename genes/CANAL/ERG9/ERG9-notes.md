@@ -1,7 +1,7 @@
 # ERG9 notes
 
 ERG9 is the C. albicans member of the canonical fungal squalene synthase lineage. The local
-UniProt record places P78589 in `PANTHER:PTHR11626:SF2` (`SQUALENE SYNTHASE`), and the
+UniProt record places A0A1D8PI71 in `PANTHER:PTHR11626:SF2` (`SQUALENE SYNTHASE`), and the
 PTHR11626 family review treats SF2 as the active squalene synthase subfamily while calling
 out Arabidopsis SQS2 and Botryococcus SSL members as exceptions outside this canonical
 Candida case [file:genes/CANAL/ERG9/ERG9-uniprot.txt, "DR   PANTHER; PTHR11626:SF2; SQUALENE SYNTHASE; 1."],
@@ -19,16 +19,11 @@ It supports ERG9 belonging to the late sterol response rather than directly prov
 or localization: ERG9 and ERG11 transcripts increased under lovastatin/fluconazole during
 mid-logarithmic growth [PMID:14653518].
 
-The 2026 GOA refresh pruned the older CGD ISS and plasma-membrane IDA rows, leaving nine
-current rows. I kept the refreshed GO_REF:0000120 rows that combine UniProt's InterPro/Rhea/EC
-inferences with `PANTHER:PTN002614878`, but treated that PTN as unaudited in this local
-snapshot because PTHR11626 currently caches `PTN001700951`, `PTN000179294`, and
-`PTN000907895` instead.
-
-The current ISS activity row now cites `UniProtKB:P25340`, which is S. cerevisiae Erg4
-instead of Erg9. The assertion remains correct for C. albicans ERG9 because SF2 contains
-active fungal squalene synthases, but the donor provenance is recorded as a source-side
-miscitation.
+The review remains anchored to the C. albicans SC5314 reference-proteome entry
+`A0A1D8PI71`. A transient 2026-11-06 refetch pulled the older P78589/ERG9_CANAX
+entry from strain ATCC 10259 / CBS 5796 instead; that entry is not in the SC5314
+reference proteome, lacks CGD locus cross-references, and is not used here as a
+machine-readable alternative counterpart.
 
 Newer-literature search:
 
