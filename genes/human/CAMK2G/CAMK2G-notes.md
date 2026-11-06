@@ -6,7 +6,7 @@ No deep-research provider was available in this environment, so the search was d
 
 - Cached all GOA-cited PMIDs (`just fetch-gene-pmids human CAMK2G`): 9060999, 9240463,
   15294044, 19946888, 20668654, 22939624, 30184290, 32707033, 33961781, 35271311, 40205054.
-- Fetched the papers behind the UniProt record and the module context: PMID:16690701
+- Fetched the papers behind the UniProt record and the STAT1 context: PMID:16690701
   (muscle CaMKII), PMID:14722083 (four-isoform comparison), PMID:11972023 (STAT1 Ser727).
 - Web search "gammaCaMKII shuttles Ca2+/CaM to the nucleus CREB" found PMID:25303525
   (Ma et al. 2014 Cell) and the follow-up PMID:29934532 (Cohen et al. 2018 Nat Commun);
@@ -22,14 +22,16 @@ No deep-research provider was available in this environment, so the search was d
   [PMID:29934532 "elimination of γCaMKII prevents activity-dependent expression of key genes
   (BDNF, c-Fos, Arc), inhibits persistent synaptic strengthening, and impairs spatial memory in vivo"].
 - STAT1: [PMID:11972023 "These results indicate that there is a specific interaction between
-  Stat1 and the ubiquitous members of the CaMKII family, i.e., CaMKIIγ/δ."] This bears on the
-  module `calmodulin_camkii_stat1_potentiation` and on GO-CAM 62b4ffe300004489, whose kinase
-  node is enabled by CAMK2A (recorded there as a source defect).
+  Stat1 and the ubiquitous members of the CaMKII family, i.e., CaMKIIγ/δ."] The GO-CAM built
+  from this paper, `gocams/62b4ffe300004489/62b4ffe300004489-src.yaml`, has its kinase node
+  (activity 62b4ffe300004580) enabled by CAMK2A (UniProtKB:Q9UQM7). That is recorded in this
+  review as a WRONG_GENE_PRODUCT source defect (resource GO_CAM) on the GO:0042501 NEW row. (A
+  STAT1 module and GO-CAM review are proposed in ai4curation/ai-gene-review#5904; context only.)
 
 ## Decisions
 
 - GO:0004723 calcium-dependent phosphatase (NAS, PMID:9060999): REMOVE; the paper describes
-  a kinase and has no phosphatase data.
+  a kinase and has no phosphatase data. Recorded as a WRONG_TERM source defect (UniProt).
 - ER membrane and endocytic vesicle membrane: over-annotated (Reactome compartments of
   the substrate, or an assumed location).
 - Calmodulin binding is ACCEPT (core) here, unlike CAMK2A, because of the gamma-specific

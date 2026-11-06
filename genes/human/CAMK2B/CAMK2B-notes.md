@@ -11,8 +11,11 @@ Sources checked, 2026-11-04:
   holoenzymes), PMID:16690701 (CaMKII in human skeletal muscle during exercise),
   PMID:19996366 (CaMKII and F-actin in spine structural plasticity), PMID:29560374
   (CAMK2A/CAMK2B de novo variants), PMID:11972023 (CaMKII and STAT1 Ser727).
-- Context: `modules/calmodulin_camkii_stat1_potentiation.yaml`,
-  `gocams/62b4ffe300004489/62b4ffe300004489-review.yaml`, `genes/human/CAMK2A` review.
+- Context only: the `genes/human/CAMK2A` review, and the STAT1 module and GO-CAM review proposed
+  in ai4curation/ai-gene-review#5904 (not used as evidence here).
+- Fetched after PR review: PMID:9768845 (Shen et al. 1998, CaMKIIbeta as an F-actin targeting
+  module) and PMID:17404223 (Okamoto et al. 2007, CaMKII as an F-actin-bundling protein), the
+  primary rodent papers behind the actin rows.
 
 ## Findings
 
@@ -40,8 +43,10 @@ Sources checked, 2026-11-04:
   thus coupling functional and structural plasticity in dendritic spines"].
 - These primary data are rodent (rat hippocampal neurons); the human annotations rest on ISS
   from rat Camk2b and on reviews. No actin binding/bundling annotation is in GOA for human
-  CAMK2B, so the review adds NEW actin filament binding and actin filament bundle assembly
-  rows. Participation test: the beta subunit itself crosslinks the filaments (it does the
+  CAMK2B, so the review adds NEW actin filament binding (ISS, PMID:9768845) and actin filament
+  bundle assembly (ISS, PMID:17404223) rows, both with rat Camk2b UniProtKB:P08413 as donor
+  [PMID:9768845 "CaMKIIbeta is bound to F-actin in dendritic spines and cell cortex while
+  CaMKIIalpha is largely a cytosolic enzyme"]. Participation test: the beta subunit itself crosslinks the filaments (it does the
   work), so this is not a substrate/necessity case.
 
 ### Neuronal development and disease
@@ -61,8 +66,9 @@ Sources checked, 2026-11-04:
 - R-HSA-9948087 places CAMK2 on the ER membrane by assumption ("We assume the interaction
   happens in the ER"); for CAMK2B the experimentally supported membrane is the SR membrane,
   a subtype of ER membrane.
-- Endocytic vesicle membrane and nucleoplasm Reactome rows have no beta-specific support;
-  left UNDECIDED, consistent with the CAMK2A review.
+- Endocytic vesicle membrane rows (ARBA IEA and Reactome TAS): MARK_AS_OVER_ANNOTATED (revised
+  from UNDECIDED after PR review, matching CAMK2G); the Reactome compartment is that of the GluA1
+  substrate, not the kinase. The nucleoplasm Reactome row stays UNDECIDED.
 
 ### STAT1 (module context)
 - PMID:11972023 identifies the ubiquitous gamma/delta isoforms as the STAT1-interacting

@@ -26,9 +26,18 @@ No deep-research provider was available, so the search was by hand:
   binds GTP-Cdc42 via an SH3-adjacent sequence -- that is ACK/TNK2, not Pyk2 (no SH3 domain,
   [PMID:7499242 "lacks ... SH2 and SH3 domains"]). Term ACCEPTed on other evidence; reference
   flagged as probable mis-citation in reference_review.
-- GO:0042976 activation of Janus kinase activity (IMP, PMID:8670418): UNDECIDED. The paper is about
-  c-Jun N-terminal kinase (JNK), not Janus kinase (JAK) -- possible term confusion. Covered by the
-  JNK cascade row instead.
+- GO:0042976 activation of Janus kinase activity (IMP, PMID:8670418): REMOVE (revised after PR
+  review). The paper is about c-Jun N-terminal kinase (JNK), not Janus kinase (JAK) [PMID:8670418
+  "Pyk2 represents a cell type-specific, stress-sensitive mediator of the JNK signaling pathway."];
+  a JNK/JAK term-selection error, recorded as a WRONG_TERM source defect (UniProt) pointing to
+  GO:0046330, which the review keeps from the same paper.
+- GO:0004715 TAS reference PMID:8497321 is also recorded as a WRONG_REFERENCE source defect (PINC).
+- Presynapse (GO:0098793) and regulation of PSD assembly (GO:0099151), both Compara IEA from mouse:
+  KEEP_AS_NON_CORE (revised from UNDECIDED). The mouse SynGO source paper PMID:28555636 (Giralt et al.
+  2017, cached) shows Pyk2 in presynaptic terminals by immunogold EM [PMID:28555636 "Pyk2-positive
+  immunogold particles were found in both presynaptic elements and dendritic spines"] and fewer PSDs in
+  the knockout [PMID:28555636 "the lack of Pyk2 leads to a decrease in PSD-95 at synapses and a
+  decreased number of PSDs and spines"].
 - GO:0030546 signaling receptor activator activity (ISS): MARK_AS_OVER_ANNOTATED -- Pyk2 regulates
   NMDA receptors indirectly via Src, it is not a receptor ligand/activator.
 - ~18 bare protein-binding IPI rows: REMOVE per policy, except SRC/SRC-family and FYN rows, which
@@ -36,8 +45,8 @@ No deep-research provider was available, so the search was by hand:
 
 ## Module / GO-CAM context
 
-The module `calmodulin_camkii_stat1_potentiation` keeps Pyk2 as an optional, inhibitor-only relay:
-the only evidence placing Pyk2 in the interferon-STAT1 branch is that the Pyk2 inhibitor Tyrphostin
+The module `calmodulin_camkii_stat1_potentiation` (proposed in ai4curation/ai-gene-review#5904,
+context only) keeps Pyk2 as an optional, inhibitor-only relay. Independently of it: the only evidence placing Pyk2 in the interferon-STAT1 branch is that the Pyk2 inhibitor Tyrphostin
 A9 blocks STAT1 phosphorylation (PMID:35568036), with no genetic test. This review likewise does not
 assert any interferon-pathway annotation for PTK2B; recorded as a knowledge gap and a suggested
 experiment. The STAT3 binding seen in lung cancer (PMID:38844957) is unrelated to the STAT1 branch.

@@ -10,9 +10,8 @@ Sources checked, 2026-11-04:
   cardiac papers are abstract-only in the cache.
 - Additional papers fetched: PMID:14722083 (isoform comparison), PMID:16690701 (skeletal muscle
   exercise), PMID:11972023 (CaMKII gamma/delta and STAT1 Ser727).
-- Context: `modules/calmodulin_camkii_stat1_potentiation.yaml`,
-  `gocams/62b4ffe300004489/62b4ffe300004489-review.yaml`, `genes/human/CAMK2A` and
-  `genes/human/CAMK2B` reviews.
+- Context only: the `genes/human/CAMK2A` and `genes/human/CAMK2B` reviews, and the STAT1 module
+  and GO-CAM review proposed in ai4curation/ai-gene-review#5904 (not used as evidence here).
 
 ## Findings
 
@@ -61,3 +60,11 @@ Sources checked, 2026-11-04:
   Stat1 and the ubiquitous members of the CaMKII family, i.e., CaMKIIγ/δ."]. The antibodies and
   purification did not separate gamma from delta, so no delta-specific NEW annotation is
   proposed; recorded as a suggested question.
+
+## Revision after PR review (ai4curation/ai-gene-review#5945)
+
+- Added a second core function for the nuclear deltaB branch: deltaB phosphorylates HDAC4 Ser210
+  and promotes its nuclear export, relieving MEF2 repression in cardiomyocytes [PMID:17179159
+  "These results demonstrate that CaMKIIdeltaB preferentially targets HDAC4, and this involves
+  serine 210."]. Process term is GO:0046827 positive regulation of protein export from nucleus,
+  the MODIFY replacement for the GO:0060341 row; location nucleus.
