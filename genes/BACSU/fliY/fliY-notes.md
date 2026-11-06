@@ -25,3 +25,19 @@ Extension evidence [PMID:1447979 Identification and characterization of FliY, a 
 All pre-edit rows, original actions and source hashes are frozen in `.cache/module-audit-logs/chemotaxis-20261106/round1-bacillus-baseline.json`. No machine annotation payload or inherited authored proposal payload was changed. Every summary in this gene is now claim-specific.
 
 Removed CheC-specific phosphatase-stimulation quotes and copied CheC reasons from FliY. PMID12920116 directly reports FliY CheY-P hydrolysis; PMID14749334 distinguishes constitutive FliY turnover from CheC adaptation. PMID30455280 supplies physical switch-assembly evidence for the structural/location claims, with strain3610/PY79 versus reference168 scope explicit.
+
+
+## 2026-11-06 SFT prediction follow-up for PR6100 CI
+
+All nine BioReason-Pro SFT predictions were independently assessed against primary findings. The GO:0044780 flagellum-assembly verdict changes from NPI to CNN: FliY supplies physical C-ring/switch assemblies, while motor-assembly complementation and the assembly-mutant evidence support participation beyond necessity alone. GO:0071978 swarming changes from LSP to CNN: swarming is a supported contextual behavior, not a less-specific version of general regulation of motility. Both claims are already annotated, so they are not novel predictions. The reference sequence is strain 168; the 2015/2019 native structural and swarming experiments used 3610-derived constructs/backgrounds. Conserved protein-role inference is retained without claiming a literal 168 swarming experiment or identical assay sequence.
+
+Publisher full text of Calvo and Kearns, PMID:25313396, DOI:10.1128/JB.02324-14, was read at https://journals.asm.org/doi/10.1128/jb.02324-14 on 2026-11-06. The normal publication cache is abstract-only and was not changed. Two short verbatim excerpts from the publisher article:
+
+- Methods, strain construction: “All strains are in the 3610 background unless otherwise noted.”
+- Figure 4 caption: “Mutations in the fla-che operon abolish swarming motility.”
+
+Figure 4 identifies DS5384 as the fliY mutant. The Results infer FliY among proteins needed for hook-basal-body completion. That conclusion is distinct from the smaller set sufficient for FlgM secretion. PMID:30455280 provides complementary physical interaction/cross-link evidence and rescue of E.coli motor assembly by the FliY C-terminal region; its intact switch architecture remains an experimentally constrained model. Neither paper is relabeled as an experiment on the strain 168 reference accession.
+
+The other seven categories remain unchanged. Phosphatase and dephosphorylation are supported directly by PMID:12920116; basal-body LSP is justified by the existing more-specific C-ring annotation and verified ontology ancestry. Cytoplasm remains CNN: UniProt already specifies the cytoplasmic side by curated similarity, and PMID:30455280 measures soluble as well as flagellar membrane-associated FliY. C-ring is not a GO is_a/part_of descendant of cytoplasm in the retrieved QuickGO ancestry, so that is not used as an LSP argument. The cell-septum NPI retains the positive flagellar structural/localization evidence; speculative model-error explanations involving SpoA/FtsZ and claims about training membership were removed. The report's network/domain checks are supportive analyses, not independent microscopy or exhaustive exclusion of all secondary localization. Frozen GO:0071977 COR and GO:0009374 NPI ontology-pair judgments, including the raw mismatched labels, remain fixed.
+
+No raw prediction ID, label, aspect, method, version or source-reference metadata changed. The main gene review, raw sources, provider artifacts and module science remain byte-identical. Detailed pre-edit hashes, per-row payload comparisons, validation logs and manifest are under `.cache/module-audit-logs/chemotaxis-20261106/fliy-prediction-ci/`.
