@@ -520,3 +520,7 @@ Integrated published main `cd3a5e061f` with the validated DsbAB audit head `8111
 ## 2026-11-06 — DsbAB PR published
 
 Published the independently validated DsbAB comparative audit as PR #6129. Normal auto-merge is enabled; independent review, CI, merge-queue checks and actual merge remain required. This is the49th new PR in the session; adopted existing PRs are excluded.
+
+## 2026-11-06 — DsbAB review follow-up validated
+
+DsbAB PR #6129 follow-up passed nine focused gene validations and a fresh full run on `2edeb4ad91`. The 10,627-review corpus has zero best-practices errors; its 17 reference errors in 16 unrelated yeast reviews are proven pre-existing by 22 base-identical inputs. All 190 scoped files match the validated scientific commit. Three same-PR authored sequence-transfer proposals were explicitly archived and corrected to ISS; upstream payloads remain unchanged. Renewed independent review, CI and actual merge remain required.
