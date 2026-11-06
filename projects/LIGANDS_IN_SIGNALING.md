@@ -329,9 +329,12 @@ validators.
   `PANTHER:PTHR24023` `COLLAGEN ALPHA`, restricted to these chains), collagen X for DDR2
   (`PANTHER:PTHR15427:SF48`). Drosophila Multiplexin, known only from a genetic interaction, is in
   the notes and the knowledge gap, not a ligand variant (the same bar that keeps Toll-2 out of
-  the neurotrophin module). Receptor: DDR1, DDR2
-  and fly Ddr (DDR subfamilies of `PANTHER:PTHR24416`, PAINT node `PTN002400507`), *protein tyrosine
-  kinase collagen receptor activity* (`GO:0038062`). Downstream effectors and the other collagen
+  the neurotrophin module). Receptor: DDR1 and DDR2
+  (DDR subfamilies of `PANTHER:PTHR24416`, PAINT node `PTN002400507`), *protein tyrosine
+  kinase collagen receptor activity* (`GO:0038062`). Fly Ddr is not a representative: its gene
+  review finds dipteran Ddr is a predicted pseudokinase (lost catalytic lysine, catalytic-loop
+  asparagine and DFG aspartate) with an unconserved collagen pocket, while Tribolium DDR and
+  *C. elegans* ddr-2 keep all three kinase residues (the honeybee model keeps two; *C. elegans* ddr-1 one). Downstream effectors and the other collagen
   receptors (integrins, GP6, LAIR1, which belong to *collagen-activated signaling pathway*) are
   boundary notes. GOA gaps recorded in the notes: in human only COL4A2 and COL4A6 are on the
   pathway (IBA) and no collagen has a ligand-activity MF; in fly no collagen is on the pathway.
@@ -492,9 +495,12 @@ validators.
 
 1. **More modules**, pan-species, ligand step first, using the decisions in section 2. The queue
    from the gap check is done (collagen-DDR and fly Toll-6/7 neurotrophin were the last two).
-   Gene reviews are still missing for most of their members (NT1, spz5, Toll-6, kek6, DDR1 and
-   fly Ddr; DDR2 and Toll-7 have reviews), and the collagen reviews have no ligand-activity core
-   function.
+   All receptor and ligand members of both modules now have gene reviews (DDR1, fly Ddr, NT1,
+   spz5, Toll-6 and kek6 were added after the modules). The NT1 and spz5 reviews move the ligands
+   onto neurotrophin signaling pathway, and the Toll-6 review removes the Roundabout-binding IBA
+   from the Slit PAINT node. The fly Ddr review predicts a pseudokinase and gives Ddr's core role
+   as wrapping-glia axon ensheathment, so fly Ddr was dropped as a module representative. The
+   collagen reviews still have no ligand-activity core function.
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an

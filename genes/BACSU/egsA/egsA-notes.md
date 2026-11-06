@@ -85,3 +85,56 @@
   G1P-PG, and the ether bond is made by PcrB.
 - Ontology gap: no GO term for sn-glycerol 1-phosphate biosynthesis (there is
   GO:0046167 glycerol-3-phosphate biosynthetic process). Proposed as new term.
+
+## Review pass 2026-11-06: resolving the GO:0006650 question
+
+The earlier plan justified `MODIFY GO:0006650 -> GO:0046474` with "G1P feeds
+HepGP, which is itself a glycerophospholipid". That reason is not usable: the
+same notes record that no egsA-deletion lipidomics ties this enzyme's output to
+HepG/Ac-HepG or to the G1P-backbone PG. The action is retained but re-grounded,
+on two things that are demonstrated and one structural observation.
+
+1. **The lipid framing is not what this row decides.** `GO:0046474` is an `is_a`
+   descendant of `GO:0006650` (checked: ancestors of GO:0046474 include
+   GO:0006650). Both terms assert involvement in glycerophospholipid metabolism;
+   the child adds only direction. Keeping the parent would not avoid the
+   undemonstrated flux, it would only state it more vaguely. If the flux were the
+   problem, the right action would be `MARK_AS_OVER_ANNOTATED` on the lipid
+   wording, not a refinement of it.
+2. **Direction is demonstrated without reference to any downstream lipid.**
+   KM 8.1 uM for DHAP and 16 uM for NADH against 1370 uM for G1P
+   [file:BACSU/egsA/egsA-uniprot.txt "KM=8.1 uM for DHAP", "KM=1370 uM for G1P"],
+   i.e. about 170-fold against the oxidative side. The enzyme is a reductase that
+   forms glycerophosphate.
+3. **Comparator check (per CLAUDE.md's `NEW`/convention guidance, applied here to
+   a refinement).** E. coli GpsA (P0A6S7), the stereochemical mirror of EgsA and
+   likewise a precursor-supplying NAD(P) glycerophosphate dehydrogenase, carries
+   `GO:0046474` by IMP from PMID:4591941, PMID:4597451 and PMID:4914567 and by
+   IBA, alongside its own precursor term `GO:0046167` (QuickGO annotation query,
+   2026-11-06). So treating a glycerophosphate dehydrogenase as `involved_in`
+   glycerophospholipid biosynthesis is GO's own convention, not an inference we
+   are inventing. GpsA holding *both* terms is also what shows the ontology gap:
+   the G1P enzymes can only hold the lipid term.
+
+Option (b), keeping `GO:0006650` until a G1P process term exists, was rejected:
+CLAUDE.md forbids `ACCEPT`/`KEEP_AS_NON_CORE` while arguing a term is too
+general, the term is not as precise as the evidence allows (direction is known),
+and an ontology gap is recorded in `proposed_new_terms`, not by parking a row on
+a less specific existing term.
+
+Ontology gap verified: a QuickGO ontology search for "glycerol-1-phosphate"
+(2026-11-06) returns only MF terms (GO:0050492, GO:0106357, GO:0106358,
+GO:0000121, GO:0120536) and no process term at any level, while GO:0046167
+(G3P biosynthesis, under GO:0006072) exists for the other enantiomer. Proposed
+`sn-glycerol 1-phosphate biosynthetic process` under `GO:0090407`.
+
+Also verified in this pass: neither `egsA` nor `araM` occurs anywhere in the
+Komazin 2025 full text [PMID:40626731], so its screen is silent on EgsA rather
+than counter-evidence; the hits are stated as [PMID:40626731 "Only pcrB, yvoF,
+and ypjA fully suppressed TLR2 activity, indicating these genes are strictly
+required for Ac-LP synthesis."]. The Rieche 2026 second-G1P-route statement is
+the authors' reading of Caforio et al. 2018, not new data here
+[PMID:42286214 "At present, there is no other mechanism of G1P biosynthesis
+known"]. Guldan 2008, Sa-Nogueira 1997, Mota 1999, Guldan 2011, Linde 2016,
+Palyzova 2022 and the lipid-divide review remain abstract-only in the cache, so
+the araM knockout result is still unverified.
