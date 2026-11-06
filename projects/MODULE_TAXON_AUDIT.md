@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
+
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
 - [x] `bacterial_assimilatory_nitrate_reduction`: [PR #5740](https://github.com/ai4curation/ai-gene-review/pull/5740) merged as `62f214ee641ee2c662c58c8e40a6eeba6a39c7f0` at 2026-10-30T06:46:53Z. All 209 scoped source/curation/history blobs match the approved head; 21 member reviews are COMPLETE with no PENDING annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5740-merged-content.json). PR #5928 is a separate family-review follow-up.
@@ -524,3 +526,32 @@ The divisome review follow-up completed full validation on 10,555 reviews. The 1
 ## 2026-11-06 — PR #6123 integration with published main
 
 Integrated published main `fd782f231a` with the validated PR #6123 head `4b65e56304`. All 158 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06: Replication PR #6117 review follow-up
+
+Eleven reviewed genes preserve 131 annotation payloads, nine inherited NEW actions,
+22 raw files and 49 referenced sources. HolD model/construct coordinates and
+source-specific mapping defects are structured; generic binding policy is applied
+consistently. Epsilon proofreading is refined to DNA-specific exonuclease activity
+in the genes and module. Focused checks and all 97 pathway cases pass. Fresh full
+validation, publication of the follow-up, independent review/CI and actual merge
+remain outstanding.
+
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `c27aa23b93` with the validated PR #6117 head `05b701415a`. All 575 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+
+## 2026-11-06 — replication proposal refinements
+
+PR #6117 round 2 refines two proposals authored within this PR, with both prior versions archived and independently verified against git and the pristine seed: HolD now uses DNA-templated DNA replication, while Bacillus DnaB has separate single- and double-stranded DNA-binding activities. Three DnaQ exonuclease rows refine directly to DNA-specific proofreading activity. DnaB membrane evidence explicitly distinguishes wild-type enrichment from mutant DnaD recruitment. Four focused review validations, renders and histories pass without curation warnings. All 1,067 original seed rows, including two inherited NEW rows, and 104 raw sources remain preserved across 52 COMPLETE reviews; the final count is 1,082 rows. The module remains unchanged. The capacity checker recognizes only the two independently verified DNA-binding descendant relationships and passes 100 cases, including removal and one-way entailment controls. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
+
+
+## 2026-11-06 — Replication round2 validated
+
+Replication round2 completed full validation on 10,653 reviews. The17 reference errors are the exact known errors in16 unrelated yeast reviews; all22 relevant inputs equal the pinned base. Schema and terms pass; best practices report zero errors, and all54 PMID-bearing pathways pass. All588 scoped files match validated science commit 2ea0e902c55f0b3ddd219f8bb03511fca3b4b130. The 52 completed reviews preserve 1,067 pristine annotation rows (1,065 machine rows and two inherited proposals) and104 raw files;15 added rows yield1,082 current rows. Two proposals authored by this PR were revised with exact archives, distinguished from original seeds. The100 capacity cases pass, including one-way GO DNA-binding descendant entailment. Renewed independent review, CI and actual merge remain pending for PR#6117.
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6117 head `8df6fabd8d`. All 588 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
