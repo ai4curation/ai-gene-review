@@ -41,9 +41,9 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [x] `bacterial_fatty_acid_beta_oxidation`: [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136) merged as `20043f67a6ed802902f84a968aa57c88a8ca3a8f` on 2026-11-06T22:09:45Z. All 294 scoped files match the approved head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6136-merged-content.json).
-
 - [ ] `bacterial_fused_puta_proline_catabolism`: eleven member reviews, sixteen references and broad family/chemistry scope pass focused and full validation; dedicated PR and actual merge pending.
+
+- [x] `bacterial_fatty_acid_beta_oxidation`: [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136) merged as `20043f67a6ed802902f84a968aa57c88a8ca3a8f` on 2026-11-06T22:09:45Z. All 294 scoped files match the approved head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6136-merged-content.json).
 
 - [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
 
@@ -628,6 +628,30 @@ Integrated published main `488d370561` with the validated PR #6129 head `b0d6392
 
 Integrated published main `fb8e3ee95b` with the validated PR #6129 head `68b726ee20`. All 201 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG audit; validation implementation is unchanged. The reviewed DsbA/DsbB mechanistic distinctions and source evidence from the approved head are preserved. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
 
+## 2026-11-06 — comparative beta-oxidation audit
+
+Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
+
+## 2026-11-06 — beta-oxidation prepublication integration
+
+Integrated current main 488d370561caf677da6e0c8ef94d5b0c7f4cb374 before beta-oxidation full validation, retaining the reviewed module, nineteen gene reviews, eight family reviews and their source artifacts. Shared tracker rows retain every incoming module except this audit's updated row. Main includes PR5975's citation corrections and warning-level annotation-consistency checks; the fresh full-corpus run will test the integrated implementation.
+
+## 2026-11-06 — beta-oxidation review corrections
+
+PR6136 review corrections preserve chain-length specificity independently of acceptor identity, accept target-specific inferred Bacillus ETF coupling, distinguish bound FAD from a net flavin acceptor, fix direct palmitate/C4 support, clarify hydratase conventions and remove description-level curation framing. All 217 current row payloads, prior NEW actions and 40 raw/provider files remain unchanged. Eleven revised gene reviews, one family review and the module require renewed focused/full validation, review, CI and merge.
+
+[Source adjudication](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-source-adjudication.md) records the decisions and remaining assay limits.
+
+## 2026-11-06 — beta-oxidation revised science validated
+
+The round1 full-corpus run passed on `f063b332b1c5aa1ff7b1ac043f43586bd51819a4`: 10,688 reviews, zero blocking errors and all 54 PMID-bearing pathways. All 290 frozen files were unchanged after the run. The 52 reference advisories in 31 files are outside this nineteen-member panel; the audit does not claim to repair them. Eleven revised reviews and the preserved 217 annotation payloads are covered by the new run. PR #6136 is ready for renewed external review and CI; actual merge remains pending.
+
+## 2026-11-06 — PR #6136 integration with DsbAB merge 8daf92bfc8
+
+Integrated published main `8daf92bfc8` with the validated PR #6136 head `b6811b89d6`. All 294 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [round1-main-integration.json](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-main-integration.json).
+
 ## 2026-11-06 — fused PutA comparative audit started
 
 Begin the comparative fused-PutA audit from published main 5f8f3b5c5e. Preserve the five existing gene reviews with 143 annotation rows and 16 raw/provider files. The existing module has three gamma-proteobacterial PutA exemplars, all with regulatory RHH domains. Check the catalytic architecture against non-regulatory type A and B proteins, including directly studied Bradyrhizobium, Geobacter, Sinorhizobium and Corynebacterium proteins. Verify exact experimental strains and sequences before assigning accessions; do not generalize sodium-coupled uptake from a catalytic PutA exemplar alone. Search comparative reviews and primary studies, reassess family selection and taxon scope, complete gene consultation, validate and open one dedicated PR; actual merge remains required.
@@ -635,7 +659,6 @@ Begin the comparative fused-PutA audit from published main 5f8f3b5c5e. Preserve 
 ## 2026-11-06 — beta-oxidation merge verified
 
 PR #6136 actually merged as 20043f67a6ed802902f84a968aa57c88a8ca3a8f at 2026-11-06T22:09:45Z. Independently compared Git object IDs for all 294 scoped scientific, source and audit files against approved head 8855038e451a9da8d72a499dc27db9e39598ea80; every blob is identical. Record the beta-oxidation audit as COMPLETE with a linked proof. The recorded full validation remains passing with its disclosed corpus advisories. Shared project metadata is excluded from the 294-file comparison and is updated here; unrelated inventory rows remain unchanged.
-
 
 ## 2026-11-06 — fused PutA cross-lineage integration
 
@@ -650,3 +673,9 @@ Bacterial scope is retained because the characterized catalytic architecture spa
 ## 2026-11-06 — PutA full validation complete
 
 PutA full validation passed on 5d01f7ba96fea3f93ec5a0fd61cfdcf212ef2a9b across 10701 reviews, with all 195 frozen inputs unchanged. Schema, term, reference and best-practice stages have no blocking errors; all 54 pathway-reference checks pass. There are 120 term-label advisories, 53 reference advisories and 27771 best-practice warnings. The eight panel term-label advisories match the current QuickGO GO:0003842 label; the validator cache has the earlier label. The eleven-member panel preserves 198 original/seed annotation payloads, its one historical NEW row and 28 raw/provider files. Sixteen curated references, including two comparative reviews, support the three steps. All 44 capacity checks and six mechanism mutations pass; module semantic validation has zero warnings. These checks do not establish native matched-system flux for component-only or inferred exemplars. Main integration, a dedicated PR, independent review, CI and actual merge remain required.
+
+## 2026-11-06 — PutA audit integration with published main d2e41f09fb
+
+Integrated published main `d2e41f09fb` with the validated PutA audit head `5f9ddc95a4`. All 196 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's validated row and the independently verified beta-oxidation completion row. All dated journals are preserved. Validation implementation is unchanged. The full run covered 10701 reviews and all 195 frozen inputs were verified unchanged before closeout; full-validation.json records its complete outcome and advisories. A dedicated PR, independent review and fresh CI still gate actual merge.
+
+Integration proof: [validated-head-integration.json](../analysis/module_audits/bacterial_fused_puta_proline_catabolism/validated-head-integration.json).
