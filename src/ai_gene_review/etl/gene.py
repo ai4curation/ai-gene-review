@@ -385,11 +385,26 @@ def _primary_gene_name(uniprot_data: str) -> Optional[str]:
     'hglS'
     >>> _primary_gene_name("ID   X\nDE   RecName: Full=Protein SHMOOSE;\n") is None
     True
+
+    Many bacterial entries carry no ``Name=`` at all, only an ordered locus tag.
+    The locus tag is the identifier of record for those genes -- it is what the
+    review folder is named after -- so prefer it over falling back to the
+    accession:
+
+    >>> _primary_gene_name("GN   OrderedLocusNames=PA1107 {ECO:0000313};\n")
+    'PA1107'
+    >>> _primary_gene_name("GN   OrderedLocusNames=At5g03810;\n")
+    'At5g03810'
     """
     match = re.search(r"^GN   Name=([^;{]+)", uniprot_data, re.MULTILINE)
-    if not match:
-        return None
-    return match.group(1).strip() or None
+    if match and match.group(1).strip():
+        return match.group(1).strip()
+    locus = re.search(
+        r"^GN   .*?OrderedLocusNames=([^;{,]+)", uniprot_data, re.MULTILINE
+    )
+    if locus and locus.group(1).strip():
+        return locus.group(1).strip()
+    return None
 
 
 def fetch_gene_data(
