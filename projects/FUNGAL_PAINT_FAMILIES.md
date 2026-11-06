@@ -126,7 +126,7 @@ MAPK placement `PANTHER:PTN001172087`.
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
   drafted in PR #5885
 - [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
-  #5886
+  PR #5886
 
 ## Family 5: Fungal Glucanases
 
