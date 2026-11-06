@@ -43,5 +43,5 @@ they describe sporulation-specific reuse of the Sec2 module.
 
 The CACAO row to `GO:0090619` is biologically plausible but cites
 PMID:27630562, which is a human cerebral perfusion MRI paper. I kept the
-localization by modifying it to the PomBase term `GO:0035974` and recorded a
-confirmed CACAO `WRONG_REFERENCE` source defect rather than deleting the row.
+sporulation-specific localization as non-core and recorded a confirmed CACAO
+`WRONG_REFERENCE` source defect rather than deleting the row.

@@ -474,7 +474,7 @@ vegetative `sec2` and sporulation-specific `spo13`.
 - Added `SCHPO/sec2`: both PTHR14430 PAINT rows are sound for the long
   fission-yeast Sec2 paralog. The CACAO meiotic-spindle-pole row cites an
   unrelated human cerebral perfusion PMID, so the review keeps the plausible
-  localization by modifying it to PomBase's GO:0035974 row and records a CACAO
+  sporulation-specific localization as non-core and records a CACAO
   `WRONG_REFERENCE` source defect.
 
 ## 2026-11-01
