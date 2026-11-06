@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -462,3 +462,16 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+## 2026-11-06: O-acetylserine cysteine synthesis audit
+
+The bacterial OAS/sulfide module now has 18 curated references, 30 findings, two
+required reactions and three terminal alternatives. Sixteen completed gene reviews
+span six species, including Mtb CysM as an OPS/CysO negative comparator; 15 proteins
+represent the native OAS-route panel. Family and PAINT scope are qualified where
+substrates diverge, and the Campylobacter placement has no invented PTN. The 59-case
+capacity/preservation check passes with 158 historical rows, 32 raw files and three
+provider artifacts preserved; one supported MF proposal brings the row total to 159.
+Targeted gene, module and family validation passes. Full validation, a dedicated PR,
+external review/CI and actual merge remain pending. See
+[audit evidence](../analysis/module_audits/bacterial_cysteine_biosynthesis_via_o_acetylserine/README.md).

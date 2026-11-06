@@ -47,3 +47,12 @@
   keys); the review rests on the UniProt record, PAINT data for the PANTHER
   family, and the cached Pseudomonas literature already cited.
 - Status set to COMPLETE.
+
+
+## Comparative cysteine-route audit (2026-11-06)
+
+All five original payloads, including the inherited PLP-binding NEW, preserved. Strengthened the specific synthase rationale with the target NCBIfam cysK model and RuleBase-backed reaction; S-313 extract activity is species-level and PAO1 assays are comparative. The genuine OpenScientist report and PDF/HTML artifacts are unchanged. Its conclusion asserting endogenous CSC formation and CDI toxin activation overreaches its evidence, and its reference review now explicitly flags that defect. The PAO1 negative CysE-peptide result argues against generic CSC assumptions but is not a direct negative experiment on Q88E95. No moonlighting or thiosulfate activity is transferred.
+
+Existing genuine OpenScientist research and its artifacts were used as secondary evidence and preserved byte-for-byte.
+
+Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.

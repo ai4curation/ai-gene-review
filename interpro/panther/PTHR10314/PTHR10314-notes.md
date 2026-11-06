@@ -274,3 +274,97 @@ Findings:
 - B. subtilis MccA O05393 (SF242, O-ACETYLSERINE DEPENDENT CYSTATHIONINE
   BETA-SYNTHASE) is the only seed of PTN008497437, which carries both GO:0004122
   and GO:0004124.
+
+
+## 2026-11-06: CysM substrate scope and PAINT assertion audit
+
+The current compact-tree descendant check, recorded in
+`modules/bacterial_cysteine_biosynthesis_via_o_acetylserine-source-analysis/family-placement-audit.yaml`,
+shows that P9WP53 maps to PTN002232520 in SF162 and descends from PTN008497439.
+This is positive membership evidence, not a reclassification from the gene name.
+The E. coli P16703 seed and PAO1 Q9I526 OAS/sulfide activity remain valid positive evidence.
+Thiosulfate-dependent S-sulfocysteine production is a different complete reaction.
+
+PMID18842002 measures slow OAS aminoacrylate formation and strong OPS/CysO-COSH
+preference. The independently inspected PMID18799456 primary excerpt and construct
+limits are preserved in `genes/MYCTU/cysM/cysM-source-analysis/18799456-assay-scope.md`.
+Its tested recombinant protein contains Thr2Ala and a residual GSH prefix; OAS plus
+sodium sulfide gave no detected cysteine, without a formal detection limit. Neither
+that result nor slow first-half-reaction chemistry proves zero intrinsic OAS turnover
+for native P9WP53. Conversely, these measurements do not establish the complete
+GO:0004124 reaction or a native OAS route. The node assessment and broader term scope
+are therefore UNRESOLVED, while positive seeds and all PAINT node metadata are retained.
+
+The family-root cysteine-biosynthesis BP cannot establish ancestral OAS-specific
+chemistry. That unsupported inference was removed without denying demonstrated
+cysteine synthase activities in the relevant members. No PAINT table, seed set,
+provider report or raw member file was changed.
+
+### Archived scope-carving entries
+
+These exact prior GO:0004124 member exceptions are preserved for provenance.
+Their functional distinctions remain valid, but the active UNRESOLVED scope no
+longer makes a family-wide assertion from which to carve exceptions.
+
+```yaml
+  member_exceptions:
+  - member:
+      id: UniProtKB:P32582
+      label: Cystathionine beta-synthase
+      gene_symbol: CYS4
+      organism: Saccharomyces cerevisiae
+      gene_review: genes/yeast/CYS4/CYS4-ai-review.yaml
+    exception_reason: >-
+      Cystathionine beta-synthase; it receives the CBS IBA from PTN000034107 and no cysteine synthase
+      IBA.
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR10314/PTHR10314-paint.tsv
+      supporting_text: "PTHR10314\tPTN000034107\tGO:0004122\tF\tIBD\tfalse"
+  - member:
+      id: UniProtKB:P9WG59
+      label: Threonine synthase
+      gene_symbol: thrC
+      organism: Mycobacterium tuberculosis H37Rv
+    exception_reason: >-
+      Threonine synthase in the SF5 clade, where PAINT places threonine synthase activity and
+      negates cysteine biosynthesis.
+    lost_in_clade_node_id: PANTHER:PTN000741516
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR10314/PTHR10314-paint.tsv
+      supporting_text: "PTHR10314\tPTN000741516\tGO:0004795\tF\tIBD\tfalse"
+  - member:
+      id: UniProtKB:O69652
+      label: L-cysteine desulfhydrase Cds1
+      gene_symbol: cds1
+      organism: Mycobacterium tuberculosis H37Rv
+      gene_review: genes/MYCTU/cds1/cds1-ai-review.yaml
+    exception_reason: >-
+      SF135 cysteine desulfhydrase that degrades rather than synthesises cysteine; the slice has no
+      PAINT node for this clade, so no lost_in_clade node is given.
+    supported_by:
+    - reference_id: file:genes/MYCTU/cds1/cds1-ai-review.yaml
+      supporting_text: catalyzes L-cysteine CATABOLISM, not biosynthesis
+```
+
+
+## 2026-11-06: MccA biochemical activity versus node scope
+
+Persistent audit marker: `CYSTEINE-MCCA-SUBSTRATE-SCOPE-20261106`.
+
+PMID17056751 is cached with its primary abstract (full_text_available:false), which
+explicitly reports purified recombinant YrhA/MccA OAS-thiol-lyase activity at 75-fold
+lower activity than CysK and atypical OAS-plus-homocysteine cystathionine synthesis.
+The former supports the seed molecular function even if it is secondary in vivo;
+physiological prominence is not a prerequisite for biochemical activity. The
+PTN008497437 GO:0004124 overall assessment remains UNRESOLVED about the breadth
+of phylogenetic propagation, not about whether the cited seed activity was observed.
+
+QuickGO GO:0004122 was checked on 2026-11-06: its reaction uses L-serine and
+L-homocysteine, producing cystathionine and water. OAS-dependent MccA chemistry
+cannot establish this exact serine-dependent reaction merely through the CBS name.
+The GO:0004122 assessment remains substrate-specifically UNRESOLVED. The prior
+statement that there was no cached MccA biochemistry was incorrect and is superseded.
+The broad phrase every CBS was narrowed to reviewed canonical serine-dependent CBS
+proteins, leaving the atypical SF242 MccA distinction explicit. All PAINT node ids,
+assertions, dates and seeds were preserved; no new MccA gene review or native OAS
+route claim was created.
