@@ -471,6 +471,5 @@ references provide23findings. Twenty-two complete gene reviews preserve96histori
 rows, including28inheritedNEW, and44raw files plus six provider artifacts. No new rows
 were authored. All125capacity/chemistry/preservation cases pass. The historical C-83
 sarcosine dehydrogenase remains a visible gene/family identity gap, so the module stays
-DRAFT despite the completed reviews of all identified members. Full validation, a
-dedicated PR, external review/CI and actual merge remain pending.
+DRAFT despite the completed reviews of all identified members. Full validation is terminal: 10,553 reviews; 17 reference errors in 16 unrelated yeast reviews; 22 relevant inputs identical to the pinned base; zero best-practice errors and 27,708 warnings. A dedicated PR, external review/CI and actual merge remain pending.
 See [audit evidence](../analysis/module_audits/bacterial_dimethylglycine_sarcosine_catabolism/README.md).
