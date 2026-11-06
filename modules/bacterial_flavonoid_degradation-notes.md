@@ -23,3 +23,9 @@ Current KEGG single-gene queries corroborate the missing PP_3199 assignment: no 
 [PMID31265361](https://pubmed.ncbi.nlm.nih.gov/31265361/) adds an independent alphaproteobacterial locus experiment. Publisher Results and Figure 8 text were accessible through the indexed full text (direct fetch returned403). ORS285 deletion of BRAD285_V2_3671-3680 abolished the reported naringenin/apigenin degradation phenotype; naringenin growth stimulation persisted. This is whole-locus evidence, not an assignment of every late enzyme or proof of USDA110 activity. The cached abstract is unchanged and separately records growth stimulation.
 
 The module now places FdeD and FdeH in optional unresolved context parts, retains six chemical steps with explicit late-step uncertainty, and adds all seven USDA110 proteins as qualified comparisons. Optionality avoids an unsupported mandatory conjunction; it does not claim native dispensability.
+
+## 2026-11-06 — review follow-up
+
+The ORS285 degradation statement now has an explicit file evidence entry tracing the separately accessed Results/Figure 8, while the PMID evidence stays within the cached abstract. All three FdeB reviews now distinguish broad hydrolase architecture from unresolved ester specificity and unproven native process participation; the model retains R13077 as a hypothesized reaction role only. PP_3198/FdeD no longer asserts process participation without an established step. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md`.
+
+The participation reassessment was extended to every inherited process proposal: nine B/D/H/I/J rows are explicitly retired, while the experimentally grounded FdeE/FdeC process proposals and qualified PSEPK donor transfers remain active. Source payloads and ordering are preserved. See the complete proposal table in the follow-up preservation proof.

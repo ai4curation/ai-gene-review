@@ -15,3 +15,7 @@ Research: genuine default-provider Falcon request (`just deep-research BRADU bll
 Core synthesis retains only supported reaction classes/cofactor properties. No precise molecular-function core is supplied for uncharacterized cupin/epimerase candidates solely to fill the module.
 
 PAINT: normal lineage-loss query found no IRD/IKR. Cached IBD and actual seed were inspected; broad family function is retained and no evolutionary loss is claimed.
+
+## 2026-11-06 — comparative review follow-up
+
+Reassessed the PR #6140 review requests against the original row payloads and independent sources. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md` for the mapping, family and participation decisions. All original rows remain in their original order; inherited proposals that lack positive participation evidence are withdrawn by review action rather than deleted. No raw UniProt, GOA or provider artifact was edited.

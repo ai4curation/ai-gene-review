@@ -13,3 +13,7 @@
   experimental characterization of PP_3205 exists."]. Its localization,
   regulation, metal, and catalytic-motif claims remain unverified and were not
   converted into annotations.
+
+## 2026-11-06 — late-component participation reassessment
+
+The inherited GO:0046275 proposal is withdrawn and explicitly `retired: true`: the FAH fold and similarity to unassayed Hsero_1011 do not establish either proposed R13078/R13079 transformation. Locus induction, whole-operon phenotypes and similarity to another unassayed candidate do not establish this product's individual step. Original source fields and row position are preserved; retirement records curator withdrawal, not an upstream GOA disappearance. The former process-only core block is removed, and the unresolved role remains a knowledge gap. The same-role BRADU comparator bll6422 likewise asserts no process annotation. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md`.

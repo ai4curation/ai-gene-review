@@ -21,3 +21,7 @@
 ## 2026-11-06 — comparative fde audit
 
 Read the 2013 full paper through its author-uploaded copy; its fdeA mutation is probably polar. Preserve the distinction between locus-level inference and exact catalytic assignment. See modules/bacterial_flavonoid_degradation-notes.md for source access and comparative boundaries.
+
+## 2026-11-06 — late-component participation reassessment
+
+The inherited GO:0046275 proposal is withdrawn and explicitly `retired: true`: cupin membership and an associated locus do not identify its catalytic, structural or accessory contribution. Locus induction, whole-operon phenotypes and similarity to another unassayed candidate do not establish this product's individual step. Original source fields and row position are preserved; retirement records curator withdrawal, not an upstream GOA disappearance. The former process-only core block is removed, and the unresolved role remains a knowledge gap. The same-role BRADU comparator bll6423 likewise asserts no process annotation. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md`.

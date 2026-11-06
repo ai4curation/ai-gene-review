@@ -23,3 +23,7 @@
   asserted because the donor is also uncharacterized for R13076 and the
   epimerase/dehydratase fold does not establish carbon-carbon hydrolase
   chemistry. The exact R13076 activity remains a proposed term and knowledge gap.
+
+## 2026-11-06 — late-component participation reassessment
+
+The inherited GO:0046275 proposal is withdrawn and explicitly `retired: true`: the epimerase/dehydratase fold and similarity to unassayed Hsero_1012 do not establish the proposed oxaloacetate-releasing R13076 reaction. Locus induction, whole-operon phenotypes and similarity to another unassayed candidate do not establish this product's individual step. Original source fields and row position are preserved; retirement records curator withdrawal, not an upstream GOA disappearance. The former process-only core block is removed, and the unresolved role remains a knowledge gap. The same-role BRADU comparator bll6421 likewise asserts no process annotation. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md`.

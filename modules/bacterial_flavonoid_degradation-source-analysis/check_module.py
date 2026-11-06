@@ -4,6 +4,8 @@ The production compiler evaluates exact reviewed exemplars. These scenarios test
 whether uncertain partners accidentally become requirements and whether the
 proposed late chemical steps silently disappear. No scenario is a knockout
 prediction or a demonstration of substrate specificity in an untested species.
+All three FdeB reviews leave ester specificity and native pathway participation
+unresolved; assigning a candidate carrier here does not assert either activity.
 """
 
 from copy import deepcopy
@@ -96,7 +98,7 @@ def main():
     result = {"status": "PASS", "coverage_only": True,
               "native_complete_catabolism_inferred_from_coverage": False,
               "case_count": len(results), "cases": results, "mutations_rejected": caught,
-              "limits": "Exact exemplars test modeled coverage. HERSS entry assays and whole-locus phenotypes do not establish every late carrier; PSEPK/BRADU substrate specificity remains inferred."}
+              "limits": "Exact exemplars test modeled coverage. HERSS entry assays and whole-locus phenotypes do not establish every late carrier; PSEPK/BRADU substrate specificity remains inferred. All three FdeB representatives have unresolved bond specificity and native process participation; their inclusion is proposed-role coverage only."}
     OUTPUT.write_text(json.dumps(result, indent=2) + "\n")
     print(f"PASS: {len(results)} coverage checks; {len(caught)} mutations rejected")
 
