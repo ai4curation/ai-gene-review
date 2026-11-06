@@ -896,6 +896,27 @@ the existing reviews that violate it have been fixed.</p>
 <td>OK</td>
 <td>the TOO_GENERAL term is more general than a kept term</td>
 </tr>
+<tr>
+<td>REMOVE</td>
+<td>ANCESTOR_OF</td>
+<td>[ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL]</td>
+<td>WARNING</td>
+<td>a REMOVEd term is an ancestor of a term the review keeps</td>
+</tr>
+<tr>
+<td>REMOVE (term_1 exactly GO:0005515)</td>
+<td>ANCESTOR_OF</td>
+<td>[ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL]</td>
+<td>OK</td>
+<td>exception: protein binding is tracked by its own policy</td>
+</tr>
+<tr>
+<td>REMOVE (term_1 exactly a root: GO:0003674, GO:0008150, GO:0005575)</td>
+<td>ANCESTOR_OF</td>
+<td>[ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL]</td>
+<td>OK</td>
+<td>exception: ND root rows are judged by the ND policy (<code>nd_policy</code>), not by ancestry</td>
+</tr>
 </tbody>
 </table>
 <p>When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
@@ -905,6 +926,13 @@ RGA, WUS, Akt1), and its ancestor form on 11 reviews (22 row pairs; e.g. ARL6 NO
 <code>cilium</code> vs <code>axoneme</code>, DNM1L NOT <code>endoplasmic reticulum</code> vs <code>endoplasmic reticulum
 membrane</code>, APP NOT <code>dendrite</code> vs <code>dendritic spine</code>). All stay WARNINGs until those are
 fixed, then can become ERRORs.</p>
+<p>The REMOVE-on-ancestor rule first fired on 304 REMOVE rows in 209 reviews. Exempting
+ND root-term rows and making hierarchical rules respect qualifiers left 210 rows in
+136 reviews. The 123 rows whose broad term was plainly true (redundant, removed for
+one row's weak evidence, or <code>cytoplasm</code>/<code>membrane</code> read as cytosol or integral
+membrane) were then changed to TOO_GENERAL, or to the action already on another row for
+the same term. The rest are judgement cases (ontology placements a review disputes,
+pseudoenzymes, unqualified <code>is_active_in</code> rows, process terms) and stay WARNINGs.</p>
 <h3 id="hierarchical-rules-and-the-ontology">Hierarchical rules and the ontology</h3>
 <p><code>DESCENDANT_OF</code> and <code>ANCESTOR_OF</code> rules use strict GO ancestry over <code>is_a</code> and
 <code>part_of</code> (a positive annotation to <code>axoneme</code> entails <code>cilium</code>). They need the GO
@@ -923,6 +951,20 @@ whatever paper the row cites. Until the reviews it flags are fixed and the old c
 narrowed or retired, an unexempted ACCEPT/REMOVE pair is reported by both.</p>
 <h3 id="known-limitations">Known limitations</h3>
 <ul>
+<li>Hierarchical rules compare rows only when the specific row's qualifier carries up to
+  the general row's (<code>located_in</code> a part is <code>located_in</code> the whole but not
+  <code>is_active_in</code> it; <code>contributes_to</code> does not entail <code>enables</code>). A row with no
+  <code>qualifier</code> is assumed to match, so older reviews that omit it can raise false
+  conflicts. The directional <code>acts_upstream_of_*_effect</code> variants carry up to
+  <code>acts_upstream_of</code>/<code>acts_upstream_of_or_within</code>; <code>enables</code> does not carry to
+  <code>contributes_to</code>, which GO reserves for activity performed only as part of a complex.</li>
+<li>Same-term rules do not look at qualifiers yet, so <code>ACCEPT located_in X</code> beside
+  <code>REMOVE is_active_in X</code> is still reported.</li>
+<li><code>action_2</code> of the REMOVE-on-ancestor rule leaves out MODIFY: a MODIFY row's own term
+  may be the reason it is modified, and its replacement terms are not in the relation
+  graph (below).</li>
+<li>The ND root-term exception is keyed on the three root terms, not on the ND evidence
+  code; in practice root rows are ND.</li>
 <li>The pair rules compare each row's own <code>term.id</code>. MODIFY <code>proposed_replacement_terms</code>
   are not yet part of the relation graph, so a replacement term never takes part in a
   pair conflict. (The TOO_GENERAL precondition below does count them.)</li>
