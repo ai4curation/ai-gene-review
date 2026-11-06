@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flavonoid_degradation`: comparative science integrated; 21 member reviews, nine curated references and Pseudomonadota scope. Focused/full validation, dedicated audit PR and merge pending.
+- [ ] `bacterial_flavonoid_degradation`: 21 member reviews, nine curated references and Pseudomonadota scope; full validation PASS at 48ae00aa44. Dedicated audit PR and actual merge pending.
 
 - [x] `osmoregulated_periplasmic_glucan_biosynthesis`: [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142) merged at `fb8e3ee95b`; 179 scoped files verified identical to the approved head.
 
@@ -585,3 +585,7 @@ Start comparative flavonoid audit from merged PR5971. Freeze fourteen existing r
 ## 2026-11-06 — flavonoid comparative science integration
 
 Integrate seven independently verified USDA110 comparisons with fourteen existing reviews, preserving all 45 pre-existing/seed annotation rows, inherited NEW actions and 48 raw/provider files. Curate three review articles and six primary studies, including independent ORS285 whole-locus evidence. Scope to Pseudomonadota with explicit sampling limits. Separate unresolved FdeD/FdeH context from the six chemical roles; preserve untested late assignments as hypotheses. Forty-four production-compiler coverage checks pass and four mutations are rejected. Dedicated PR, full-corpus validation and actual merge remain pending.
+
+## 2026-11-06 — flavonoid full-validation closeout
+
+Full validation at 48ae00aa44d310c22de47fa2d50f71ff6f59739c completed with exit0 on 2026-11-06T21:31:35Z. All258 frozen files remain unchanged. The10691-review corpus has zero blocking errors;115 term advisories and52 reference advisories persist, with all31 reference-advisory files outside this21-gene panel. Best-practices validation reports zero errors and27775 warnings;54 pathway-reference checks pass. Scoped schema, semantic, rendering, history and compiler checks already pass. Scientific limits on late reaction assignments, FdeD/H dependence, FdeG evidence access and comparator native flux remain explicit. Dedicated PR and actual merge are still pending.
