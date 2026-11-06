@@ -20,3 +20,8 @@ All ten seed rows were reviewed. The three bare protein-binding IPI claims are M
 PR2143 round-15 IMPORTANT1: changed GO:0006011 from MODIFY to ACCEPT because catalytic BcsA directly consumes UDP-alpha-D-glucose. QuickGO definition checked on 2026-11-06: reactions involving this substrate; cellulose biosynthesis is a separate product-process assertion, not a descendant replacement. Retained both process descriptions in the core. All original annotation payloads and source artifacts are unchanged; no NEW rows were added.
 
 Evidence: PMID:39394223 describes a UDP-glucose-using GT domain and inner-membrane extrusion through the BcsA transmembrane-domain/BcsB tail-anchor pore; PMID:23222542 directly assays purified 2.4.1 BcsAB with UDP-Glc. The substrate is acted upon by catalytic BcsA itself, distinguishing these annotations from noncatalytic BcsB. Current GO definition saved in `.cache/module-audit-logs/cellulose-20261105/bcsa-followup-GO0006011.json`. Focused gene validation and baseline preservation checks passed; logs and before/after hashes are in the same audit directory under `bcsa-followup-*`.
+
+
+## 2026-11-06 — round 16 panel consistency follow-up
+
+The full-panel check found that accepting donor metabolism had also removed the only row-level cellulose-process assertion here. Add a direct-assay NEW cellulose biosynthesis row alongside the accepted UDP-glucose metabolism row, retaining the existing core summary and all machine payloads.

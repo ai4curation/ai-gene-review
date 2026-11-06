@@ -34,3 +34,8 @@ The primary2024 Sarcina study [PMID:38750617](https://pubmed.ncbi.nlm.nih.gov/38
 ## 2026-11-06 — PR2143 round15 follow-up
 
 Clarified source-strain prose. Considered GO:0016899: its definition additionally requires a CH-OH donor. Hydrogen peroxide production establishes an oxygen-linked redox reaction but not which functional group of the bifunctional glycolaldehyde substrate is oxidized, or the unknown physiological donor. Retain the broad core oxidoreductase claim until the donor/product chemistry justifies that refinement; the module now uses the exact name Radical copper oxidase GlxA.
+
+
+## 2026-11-06 — round 16 follow-up
+
+Correct prose spacing around strain, sequence and figure identifiers; quoted source text and annotation decisions are unchanged.

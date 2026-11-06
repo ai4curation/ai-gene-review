@@ -15,3 +15,8 @@ Actions: five ACCEPT, three MODIFY (membrane→plasma membrane; generic hexosylt
 ### Follow-up primary-text access
 
 After the initial validation, the primary main text of PMID16920715 was readable in its [author-hosted ResearchGate copy](https://www.researchgate.net/publication/6866942_The_PilZ_domain_is_a_receptor_for_the_second_messenger_c-di-GMP_The_PilZ_domain_protein_YcgR_controls_motility_in_enterobacteria). Methods identify PCR amplification of the BcsA1 C-terminal PilZ fragment and a C-terminal His tag; strain/primer tables remain in the inaccessible supplement. Results report a 30 uM dissociation constant for this isolated domain, not full-length BcsA. The earlier access limitation therefore narrows to exact strain and construct sequence mapping. The normal publication cache remains untouched and abstract-only. Annotation actions and the catalytic core are unchanged.
+
+
+## 2026-11-06 — round 16 follow-up
+
+The accepted UDP-glucose metabolism claim now appears explicitly in the catalytic core, consistent across all five catalytic BcsA reviews carrying that term.

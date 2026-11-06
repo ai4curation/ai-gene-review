@@ -26,3 +26,8 @@ Normal fetch completed for the active record before review. The pristine documen
 ## 2026-11-06 — PR2143 round15 follow-up
 
 Clarified spaces in source-strain and sequence-length prose. The module now labels A0ABM5R5V5 with its exact submitted name, Glycosyl transferase, and explicitly states that admission through GO:0016760 uses this evidence-backed review proposal rather than frozen GOA alone.
+
+
+## 2026-11-06 — round 16 follow-up
+
+Correct prose spacing around strain, sequence and figure identifiers; quoted source text and annotation decisions are unchanged.

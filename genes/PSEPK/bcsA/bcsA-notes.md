@@ -10,3 +10,8 @@ Shared source distinctions: PMID:23222542 and PMID:24704788 examine Rhodobacter 
 Normally fetched PMID:33563593 now has full text. PMID:19400787 remains abstract-only after normal force-fetch; accessible claims are supplemented by later full-text structures, so lack of its full text does not prevent the present inference. Root fetched PMID:39394223 full text. The full 2015 review PMID:26077867 was checked for architecture diversity. Reviews PMID:38688160, PMID:41617292 and PMID:39319708 were available as abstracts only and do not justify additional target molecular claims.
 
 The target has CelA/Cell_synth_A, GT2 and PilZ signatures; RuleBase features predict multiple membrane helices. Retained specific UDP-forming cellulose synthase activity and plasma-membrane location, refined broader terms as before, and changed c-di-GMP binding from KEEP_AS_NON_CORE to ACCEPT because it is integral to synthase regulation. [PMID:24704788, "BcsA’s C-terminal PilZ domain binds an intercalated c-di-GMP dimer".] No new annotation rows. Removed ARBA-only localization and bare EC-name support in favor of independent features and primary homolog evidence. The exact KT2440 topology, enzyme kinetics and native polymer output remain untested in the sources checked.
+
+
+## 2026-11-06 — round 16 follow-up
+
+Retain the catalytic UDP-glucose metabolism claim and add an explicitly inferred cellulose biosynthesis row, preserving product-process coverage without laterally replacing a true term. The target signature plus homolog biochemistry supports participation; direct target enzymology remains unavailable.

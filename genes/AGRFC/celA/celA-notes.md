@@ -21,3 +21,8 @@ The current organism is Agrobacterium fabrum C58 (NCBITaxon176299), historically
 Ontology and scope check
 
 Live QuickGO definitions/ancestors were checked and saved as agrobacterium-term-checks.json and agrobacterium-parents-comparators.json in the audit cache. Cellulose synthase (UDP-forming), GO0016760, is below cellulose synthase and hexosyltransferase; plasma membrane is below membrane. Cellulose biosynthesis and UDP-glucose metabolism are not ancestor/descendant processes. No target accessions occur in gocams/index.tsv. No NEW row is needed for CelA's already-covered catalytic function. CelB's replacement is a role correction based on structural participation, not a new assertion based on necessity. Adhesion, virulence and biofilm changes are not promoted to direct functions of these proteins.
+
+
+## 2026-11-06 — round 16 follow-up
+
+The accepted UDP-glucose metabolism claim now appears explicitly in the catalytic core, consistent across all five catalytic BcsA reviews carrying that term.

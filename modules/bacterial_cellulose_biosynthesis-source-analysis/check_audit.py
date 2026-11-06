@@ -39,6 +39,7 @@ def main():
     actions = Counter()
     preserved = inherited = added = raw_count = 0
     no_core = []
+    donor_process_checked = []
     for member in baseline["members"]:
         review = read(ROOT / member["review_path"])
         assert review["status"] == "COMPLETE", member["review_path"]
@@ -83,6 +84,19 @@ def main():
             for slot in ["molecular_function", "contributes_to_molecular_function"]:
                 if core.get(slot):
                     functions.add(core[slot]["id"])
+        # Compare the same catalytic claim across the panel, not just rows
+        # within one review. Product-pathway coverage must survive refinement.
+        catalytic_core = any(core.get("molecular_function", {}).get("id") == "GO:0016760"
+                             for core in review.get("core_functions", []))
+        if catalytic_core:
+            donor_rows = [row for row in rows if row["term"]["id"] == "GO:0006011"]
+            if donor_rows:
+                assert all(row["review"]["action"] == "ACCEPT" for row in donor_rows)
+                core_processes = {term["id"] for core in review.get("core_functions", [])
+                                  for term in core.get("directly_involved_in", [])}
+                assert "GO:0006011" in core_processes, member["review_path"]
+                assert {"GO:0030244", "GO:0090540"} & functions, member["review_path"]
+                donor_process_checked.append(member["review_path"])
         raw_functions = {a["payload"]["term"]["id"] for a in member["annotations"]
                          if a["prior_action"] != "NEW"}
         records[member["accession"]] = {"families": families, "functions": functions,
@@ -91,6 +105,7 @@ def main():
         if not review.get("core_functions"):
             no_core.append(member["review_path"])
     provider_proof = read(AUDIT / "provider-source-preservation.yaml")
+    assert len(donor_process_checked) == 5
     for path, digest in provider_proof["files"].items():
         assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest, path
     nodes = {n["id"]: n for n in walk(module["module"]) if "id" in n}
@@ -260,6 +275,7 @@ def main():
         "actions": dict(actions),
         "reviews_without_asserted_core": no_core,
         "production_compiler_cases": len(cases),
+        "catalytic_donor_process_consistency": donor_process_checked,
         "limitation": "Reviewed-panel machinery coverage; unresolved native routes are abduction targets, not biological negatives.",
     }
     (AUDIT / "integration-checks.yaml").write_text(
