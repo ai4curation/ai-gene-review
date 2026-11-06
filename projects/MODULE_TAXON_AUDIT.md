@@ -43,6 +43,8 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_flavonoid_degradation`: [PR #6140](https://github.com/ai4curation/ai-gene-review/pull/6140) open; 21 member reviews, nine curated references, Pseudomonadota scope and full validation PASS. Review, CI and actual merge pending.
 
+- [ ] `bacterial_fatty_acid_beta_oxidation`: Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
+
 - [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
 
 - [x] `osmoregulated_periplasmic_glucan_biosynthesis`: [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142) merged at `fb8e3ee95b`; 179 scoped files verified identical to the approved head.
@@ -88,7 +90,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 5 PR_OPEN, 2 IN_PROGRESS and 736 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 6 PR_OPEN, 2 IN_PROGRESS and 735 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -626,6 +628,30 @@ Integrated published main `488d370561` with the validated PR #6129 head `b0d6392
 
 Integrated published main `fb8e3ee95b` with the validated PR #6129 head `68b726ee20`. All 201 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG audit; validation implementation is unchanged. The reviewed DsbA/DsbB mechanistic distinctions and source evidence from the approved head are preserved. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
 
+## 2026-11-06 — comparative beta-oxidation audit
+
+Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
+
+## 2026-11-06 — beta-oxidation prepublication integration
+
+Integrated current main 488d370561caf677da6e0c8ef94d5b0c7f4cb374 before beta-oxidation full validation, retaining the reviewed module, nineteen gene reviews, eight family reviews and their source artifacts. Shared tracker rows retain every incoming module except this audit's updated row. Main includes PR5975's citation corrections and warning-level annotation-consistency checks; the fresh full-corpus run will test the integrated implementation.
+
+## 2026-11-06 — beta-oxidation review corrections
+
+PR6136 review corrections preserve chain-length specificity independently of acceptor identity, accept target-specific inferred Bacillus ETF coupling, distinguish bound FAD from a net flavin acceptor, fix direct palmitate/C4 support, clarify hydratase conventions and remove description-level curation framing. All 217 current row payloads, prior NEW actions and 40 raw/provider files remain unchanged. Eleven revised gene reviews, one family review and the module require renewed focused/full validation, review, CI and merge.
+
+[Source adjudication](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-source-adjudication.md) records the decisions and remaining assay limits.
+
+## 2026-11-06 — beta-oxidation revised science validated
+
+The round1 full-corpus run passed on `f063b332b1c5aa1ff7b1ac043f43586bd51819a4`: 10,688 reviews, zero blocking errors and all 54 PMID-bearing pathways. All 290 frozen files were unchanged after the run. The 52 reference advisories in 31 files are outside this nineteen-member panel; the audit does not claim to repair them. Eleven revised reviews and the preserved 217 annotation payloads are covered by the new run. PR #6136 is ready for renewed external review and CI; actual merge remains pending.
+
+## 2026-11-06 — PR #6136 integration with DsbAB merge 8daf92bfc8
+
+Integrated published main `8daf92bfc8` with the validated PR #6136 head `b6811b89d6`. All 294 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [round1-main-integration.json](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-main-integration.json).
+
 ## 2026-11-06 — flavonoid comparative audit and OPG merge verification
 
 Start comparative flavonoid audit from merged PR5971. Freeze fourteen existing reviews,34annotation rows and34source files; inspect three review articles and the 2013/2016/2024 primary evidence. A live KEGG census places all50 complete seven-KO coassignments in Pseudomonadota without proving pathway activity. Correct the unsupported exclusion of UDP-glucose epimerase activity in Hsero_1012 to UNDECIDED and qualify the FdeD reaction position while preserving all inherited NEW rows. Record independent full-text access for four HERSS reviews. Seven newly seeded BRADU comparisons are being reviewed separately. OPG PR2142 actually merged and179scoped files match its approved head; mark that module COMPLETE. Flavonoid module science, validation, dedicated PR, review,CI and merge remain pending.
@@ -649,3 +675,9 @@ Integration proof: [validated-head-integration.json](../analysis/module_audits/b
 ## 2026-11-06 — flavonoid PR #6140 published
 
 Opened PR #6140 after full validation passed at science commit 48ae00aa44. Integrated main 096c918920 with 258 scoped files unchanged relative to the validated publication head; no validation implementation changed. Preserved the previously verified OPG completion row and bullet because the incoming shared ledger had reverted them to IN_PROGRESS. Updated this audit to PR_OPEN and recomputed the ledger counts from the inventory. Review, CI and actual merge remain pending.
+
+## 2026-11-06 — PR #6140 integration with published main 577501df51
+
+Integrated published main `577501df51` with the validated PR #6140 head `b12b932c33`. All 261 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row and the previously verified OPG completion record retained verbatim from the validated head; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits and the beta-oxidation audit; validation implementation is unchanged. The corresponding OPG completion bullet is also preserved; incoming completion records and all dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [validated-head-main2-integration.json](../analysis/module_audits/bacterial_flavonoid_degradation/validated-head-main2-integration.json).
