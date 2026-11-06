@@ -33,5 +33,8 @@ New Falcon attempts failed with HTTP403 and are documented as manual research.
 Focused gene, history and module checks pass. Five module advisories are retained:
 one official PANTHER/UniProt classification disagreement for OpuBD and four
 family-scope warnings. Characterized substrate-restricted activities are not
-asserted family-wide merely to silence those warnings. Full-corpus validation,
-publication, remote review/CI and actual merge remain pending.
+asserted family-wide merely to silence those warnings.
+
+Full-corpus validation finished across 10,543 reviews. Schema, ontology and best-practices have zero blocking errors, and all 54 pathway files with PMIDs pass. Exit status 1 is solely due to 19 reference errors in 17 unrelated yeast reviews. The committed failure inventory proves all 23 review/source/configuration inputs are unchanged from the audit base. The run retains 52 reference advisories and 27,994 best-practice warnings repository-wide, plus 115 ontology label advisories in 109 files.
+
+Publication, remote review/CI and actual merge remain pending.
