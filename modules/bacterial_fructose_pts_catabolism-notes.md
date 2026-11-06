@@ -129,3 +129,29 @@ ATP-dependent tested system separately.
 
 Machine-readable coordinates, extracted supplement rows, source URLs and checksums:
 [deinococcus-sequence-bridge.json](../analysis/module_audits/bacterial_fructose_pts_catabolism/deinococcus-sequence-bridge.json).
+
+## 2026-11-06 — architecture-qualified family selection and 16-member panel
+
+The module now includes all 16 completed member reviews: four fused FruB relays
+and six each of the FruA/FruK component comparators. All 148 original/seed
+annotation payloads are preserved and no NEW annotations were added. The two
+Deinococcus component reviews retain the native-donor uncertainty.
+
+The family selectors now require the actual activity and domain architecture.
+Current UniProt and PANTHER evidence confirms that PTHR46244:SF6 also contains
+standalone E. coli PtsI; PTHR30505 includes mannosyl-glycerate MngA and separate
+Haloferax EIIB/EIIC components; PTHR46566 includes 6-phosphofructokinase and
+D-tagatose-1-phosphate kinase activities. These are specific controls against
+claiming capacity from a family hit. Curated source snapshots and provenance are
+in the audit's family-controls directory. Their experimental annotations point
+to primary studies, including PMID:22493022, PMID:14645248 and PMID:26159072.
+The archaeal controls demonstrate PTS capacity with a different architecture;
+they must never be described as evidence that archaea lack PTS.
+
+Removed the unproven claim that fusion makes every relay transfer intramolecular.
+Added the eight curated references and their findings, plus source-level support
+on individual reactions and connections. The Bacteria context remains a
+mechanistic envelope with explicit lineage/strain limits, not universal capacity.
+Schema validation and module semantics pass provisionally. PANTHER membership
+index refresh, final family reviews, endpoint/compiler checks, final rendering,
+full validation and a dedicated PR are still required.
