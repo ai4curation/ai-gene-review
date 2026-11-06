@@ -11,7 +11,8 @@ For each decision the script restores the ND row as it was before the pass
 edits only that row's review block:
 
 - ``STALE``: the earlier REMOVE/MODIFY stays; ``nd_case: STALE`` is added.
-- ``ACCEPT``: action becomes ACCEPT and the reason is rewritten. The summary
+- ``ACCEPT``: action becomes ACCEPT and the reason is rewritten; ``quotes``,
+  when given, become its ``supported_by`` (the record of the literature search). The summary
   is rewritten when the earlier action was MODIFY (it argued for the
   replacement) or it says the ND is obsolete (``SUMMARY_CONFLICT``), or as
   ``rewrite_summary`` in the table says; otherwise it is kept. ``proposed_replacement_terms`` and
@@ -24,7 +25,8 @@ edits only that row's review block:
 The restore step reads the pre-pass rows from git, so re-running needs those
 commits to be reachable (it is not possible after a squash merge).
 
-Run from the repository root, then ``just backfill-record-sections`` on the
+Pass gene prefixes (e.g. ``mouse/Krtap``) to apply only those decisions. Run
+from the repository root, then ``just backfill-record-sections`` on the
 changed reviews to restore ``record_section`` on restored UniProt quotes:
     uv run python projects/NO_DATA/scripts/apply_acceptance_rule.py
 """
@@ -45,9 +47,12 @@ from ruamel.yaml import YAML
 ROOT = Path(__file__).resolve().parents[3]
 DECISIONS = ROOT / "projects" / "NO_DATA" / "data" / "nd-decisions.yaml"
 
-#: The commit before each pass touched a review: the first pass (2026-10-24)
-#: and the follow-up over reviews merged from main (2026-10-26).
-ORIGINAL_COMMITS = ("589ca34bd", "d2fa590c5")
+#: The commit before each pass touched a review: the first pass (2026-10-24),
+#: the follow-up over reviews merged from main (2026-10-26), and the mouse
+#: Krtap reviews (2026-11-06, from main after the squash merge of PR 5416; the
+#: two earlier commits are no longer on main, so re-run those genes only from a
+#: clone that still has them).
+ORIGINAL_COMMITS = ("589ca34bd", "d2fa590c5", "ce73640bac")
 
 ROOT_ASPECT = {"GO:0003674": "MF", "GO:0008150": "BP", "GO:0005575": "CC"}
 ASPECT_NAME = {"MF": "molecular function", "BP": "biological process", "CC": "cellular component"}
@@ -65,6 +70,7 @@ GENERATED_NEW_ROW = ("proposed during the NO_DATA re-action pass",
 #: earlier action; they are not carried into the NEW row's reason.
 ND_CLAUSE = re.compile(
     r"\bND\b|placeholder|superseded|out of date|outdated|\bearlier\b"
+    r"|\broot (?:term|row|annotation|MF|BP|CC)\b"
     r"|\b(?:MODIFY|REMOVE|KEEP_AS_NON_CORE|TOO_GENERAL|UNDECIDED|MARK_AS_OVER_ANNOTATED)\b",
     re.I,
 )
@@ -112,14 +118,21 @@ def new_row_reason(label: str, evidence: str, old_reason: str, inherit: bool) ->
     Sentences of the earlier reason are inherited only when it argued for this one
     term (``inherit``), and never those about the ND row or the earlier action.
 
+    >>> new_row_reason("x", "ISS", "The ND row records Y, but family data establish X.", True)[-24:]
+    'Family data establish X.'
     >>> new_row_reason("x activity", "ISS", "Known in S. pombe (Apc2). The ND is stale.", True)
     'X activity is inferred for this gene product (ISS), not shown for it experimentally; \
 the ND row for the aspect therefore stays (projects/NO_DATA.md). Known in S. pombe (Apc2).'
     """
+    text = " ".join(old_reason.split())
+    # Keep the argument of a sentence that opens on the ND row ("The ND row
+    # records that ..., but KAP-family literature establishes ...").
+    text = re.sub(r"\bThe ND (?:row|placeholder)[^.]*?, but (\w)", lambda m: m.group(1).upper(), text)
     kept = [
         # On a NEW row the term is no longer a replacement for anything.
-        re.sub(r"\b([Tt])he replacement\b", lambda m: f"{m.group(1)}he term", s)
-        for s in SENTENCE_END.split(" ".join(old_reason.split()))
+        re.sub(r"\breplacement for the (?:uninformative )?root(?: term)?\b", "term",
+               re.sub(r"\b([Tt])he replacement\b", lambda m: f"{m.group(1)}he term", s))
+        for s in SENTENCE_END.split(text)
         if inherit and s and not ND_CLAUSE.search(s)
     ]
     head = (
@@ -227,7 +240,15 @@ def core_function_report(decisions: list[dict], aspect_of) -> list[str]:
     return out
 
 
-def main() -> None:
+def dump_quotes(quotes: list, child: str, rt: YAML) -> list[str]:
+    """A ``supported_by`` section for ``quotes``, indented for a review block."""
+    buf = io.StringIO()
+    rt.dump({"supported_by": quotes}, buf)
+    return [f"{child}{ln.rstrip()}\n" for ln in buf.getvalue().splitlines()]
+
+
+def main(only: list[str]) -> None:
+    """Apply the decisions; with ``only``, just the genes named (or prefixed) there."""
     from ai_gene_review.validation.action_consistency import go_ancestors
 
     ancestors = go_ancestors()
@@ -241,6 +262,8 @@ def main() -> None:
     decisions = yaml.safe_load(DECISIONS.read_text())["decisions"]
     by_file: dict[str, dict[str, dict]] = defaultdict(dict)
     for d in decisions:
+        if only and not any(d["gene"].startswith(prefix) for prefix in only):
+            continue
         organism, gene = d["gene"].split("/")
         by_file[f"genes/{organism}/{gene}/{gene}-ai-review.yaml"][d["term"]] = d
 
@@ -305,9 +328,7 @@ def main() -> None:
                     replace["reason"] = folded("reason", f"{earlier} NO_DATA re-check: {d['note']}".strip(), child)
                 if d.get("quotes"):
                     quotes = list(o_review.get("supported_by") or []) + d["quotes"]
-                    buf = io.StringIO()
-                    rt.dump({"supported_by": quotes}, buf)
-                    replace["supported_by"] = [f"{child}{ln.rstrip()}\n" for ln in buf.getvalue().splitlines()]
+                    replace["supported_by"] = dump_quotes(quotes, child, rt)
                 out.append("".join(rewrite_review(block, set(), replace, "STALE")))
                 continue
             aspect = d["aspect"]
@@ -361,6 +382,9 @@ def main() -> None:
             }
             if rewrite:
                 replace["summary"] = folded("summary", summary_text(aspect), child)
+            if d.get("quotes"):
+                # The record of the literature search that the ACCEPT rests on.
+                replace["supported_by"] = dump_quotes(d["quotes"], child, rt)
             out.append("".join(rewrite_review(block, drop, replace, nd_case)))
             additions.extend(new_rows)
         if additions:
@@ -380,4 +404,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    main(sys.argv[1:])
