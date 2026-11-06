@@ -1,14 +1,15 @@
 # DnaK/DnaJ/GrpE comparative audit
 
-Work is in progress. The boundary is productive client refolding through J-protein
-assistance, the DnaK ATP cycle and GrpE nucleotide exchange. ClpB disaggregation
-and RpoH feedback are separate processes. Thermus DafA is being assessed as an
-inhibitory assembly regulator rather than a required folding factor.
+The module retains three required roles: J-protein client assistance, ATP-dependent DnaK remodeling and GrpE nucleotide exchange. Canonical J-protein ATPase activation and Thermus DnaJ2 client handoff are alternative implementations with distinct experimental support. Only DnaK carries ATP hydrolysis products. ClpB disaggregation, RpoH feedback and ATP-independent native-protein protection are outside this cycle. Repeated cycles may be needed; a cycle does not guarantee a folded client.
 
-The reference catalog separates full text, abstract-only evidence and retrieval
-context. Mtb and Thermus comparisons add exact protein identities and explicit
-assay-host distinctions to the original E. coli/Pseudomonas panel. Historical
-Thermus kinetics and Tetragenococcus coupling assays require qualified scope.
+Fourteen completed gene reviews cover E. coli, Pseudomonas putida, Mycobacterium tuberculosis and Thermus thermophilus. All 227 historical annotation payloads, three inherited NEW decisions and 43 raw/provider/prediction files are preserved. Six evidence-backed molecular-function additions bring the panel to 233 rows; no new process annotation is introduced. Fourteen claims remain UNDECIDED where available evidence does not establish the experimental assertion.
 
-The normal Falcon module request failed authentication (403); no substitute
-provider report was written. Module integration and full validation remain pending.
+Thirteen curated module references include three comparative reviews and twenty mined findings. Primary studies support individual activities and six connections. The catalog distinguishes full text from abstract-only evidence. Mycobacterial donor-strain uncertainty and M. smegmatis cellular assays remain separate from Mtb protein reconstitution. Thermus deposited sequences are bridged to the HB8 representatives without relabeling the source strain, and 30 C refolding assays are not presented as growth-temperature measurements. Failed Falcon requests produced no fabricated provider reports.
+
+Two family reviews preserve all original PAINT nodes and seeds. GrpE exchange has evolutionary support, while heterogeneous DnaJ family-wide functional grants remain unresolved. Verified PTHR43096:SF52 grounds Thermus DnaJ2. DnaK remains PTHR19375 because two representatives resolve only to that family; an SF184 assignment for the other two does not establish it for the entire panel. Family membership alone never establishes compatible coupling. DafA has no established PANTHER mapping: its MerR-like domain is not evidence for a DNA-binding role.
+
+Thermus DafA is an optional inhibitory context. The modern occupied 2:2:2 assembly and DnaJ G/F autoinhibition are distinct mechanisms. DafA gene presence alone does not veto productive capacity; an explicitly occupied inhibitory state does. Five curated compatible cycles ground the reviewed panel, including alternative Mtb J1/J2 support without asserting identical yields or all-client interchangeability. Pseudomonas is a curated ortholog inference, not a purified KT2440 assay.
+
+The checker uses production module topology plus independent exact-member, reviewed-core, family, chemistry and compatibility conditions. It passes 173 capacity/topology controls, two documentary assay controls and three structural mutations, and verifies 82 module/architecture quotations. The documentary Tetragenococcus negative and E. coli-DnaK heterologous positive prevent treating same-species identity as sufficient or cross-species identity as disqualifying. These controls evaluate the scoped evidence and mechanism; they do not predict whole-genome capacity or universally successful refolding.
+
+Focused gene/family validation and preservation checks pass. Module schema, semantic validation, capacity checks, renders and histories pass. Four advisories remain: two proposed-function comparison limits and two unresolved broad DnaJ-family grants. Full-corpus validation, dedicated publication, independent review, CI and actual merge remain required. Artifact status COMPLETE records the integrated curation; the overall project remains in progress.

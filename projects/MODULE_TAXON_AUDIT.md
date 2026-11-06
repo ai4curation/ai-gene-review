@@ -470,3 +470,8 @@ revisited, with Mtb and Thermus comparisons to qualify the three-role cycle.
 Exact protein identities and assay-host provenance are checked before extrapolation.
 Module/family integration, validation, a dedicated PR and actual merge remain
 outstanding. See [audit progress](../analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/audit-progress.yaml).
+
+
+## 2026-11-06 — DnaK comparative mechanism integrated
+
+Fourteen complete reviews preserve 227 historical rows and 43 protected sources, with six supported molecular-function additions. Thirteen curated references, including three reviews, provide twenty findings. The module separates canonical J-protein activation from Thermus client handoff, assigns ATP hydrolysis only to DnaK and places DafA in optional inhibitory context. The production-topology and curated-compatibility checker passes 178 controls and 82 quotation checks. Final validation, dedicated PR review, CI and actual merge remain required. All unrelated inventory rows remain unchanged.
