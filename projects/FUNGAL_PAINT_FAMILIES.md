@@ -45,6 +45,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
+| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
 
 ---
 
@@ -119,9 +120,13 @@ stress-activated MAPK-cascade assertions.
 - [x] `CANAL/HOG1` - *Candida albicans* HOG stress MAPK; merged in PR #4565
 - [x] `SCHPO/sty1` - fission yeast Sty1/Spc1 stress MAPK; merged in PR #4573
 - [x] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; merged in PR #4703
-- [ ] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
-  MAPK; drafted in this branch
-- [ ] `yeast/FUS3` - budding-yeast pheromone MAPK; drafted in PR #5872
+- [x] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
+  MAPK; merged in PR #5868
+- [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
+- [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
+  merged in PR #5885
+- [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
+  filamentous-growth and cell-wall evidence; revalidated in this branch
 
 ## Family 5: Fungal Glucanases
 
@@ -419,8 +424,25 @@ refining the root oxidoreductase transfer.
   #4741
 - [x] `EMENI/mcr1` - *Aspergillus nidulans* mitochondrial MCR1-family member;
   merged in PR #5415
-- [ ] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
-  the (+)-asperlin cluster; drafted in PR #5873
+- [x] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
+  the (+)-asperlin cluster; merged in PR #5873
+
+## Family 19: Rmt2/GAMT Methyltransferases
+
+`PTHR32379` contains a broad eukaryotic root with cytoplasmic/nuclear
+localization and generic SAM-dependent methyltransferase placements, a vertebrate
+`PANTHER:PTN001285367` GAMT node for guanidinoacetate N-methyltransferase
+activity and creatine biosynthesis, and a fungal `PANTHER:PTN001285370` Rmt2
+node for protein arginine N5-methyltransferase activity. The official PANTHER
+family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
+to keep the GAMT branch separate from Rpl12/RMT2 methylation.
+
+- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  drafted in this branch
+- [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
+- [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
+- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
+- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
 
 ---
 
