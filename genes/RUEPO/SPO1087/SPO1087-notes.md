@@ -30,3 +30,7 @@ The mapped betT::Gm mutant reduces growth-coupled medium choline depletion by 84
 The official [NCBI COG1292 entry](https://www.ncbi.nlm.nih.gov/research/cog/cog/COG1292/) names the group “Choline-glycine betaine transporter”; this broad family assignment supports candidacy, not exact substrate. The methodological COS exclusion is a scope limitation, not positive choline transport evidence. The module should retain SPO1087 only as optional candidate context. No molecular-function core is asserted pending a nonpolar deletion/complementation and direct uptake measurement.
 
 The generic gene validator requires active non-GOA annotations to be NEW; rather than misrepresent an unresolved proposal as asserted, the exact prior row is archived outside active existing_annotations. This leaves one active membrane-location NEW and no machine rows for this previously unannotated protein.
+
+## PR6105 provenance follow-up (2026-11-06)
+
+The standard record-section backfill identified the membrane-architecture quote as `FT:TRANSMEM` and the transporter-family cross-reference as `DR:eggNOG`. The module now gives the optional BetT candidate a free-text transmembrane-transporter descriptor with no GO identifier, cargo or coupling assertion. This records the inferred candidate activity class while retaining the unresolved choline/COS specificity and the production checker's exclusion of BetT as evidence for the required COS-import step. The active membrane-location NEW and the archived withdrawn choline-transporter proposal are unchanged.
