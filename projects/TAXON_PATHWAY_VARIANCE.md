@@ -1,10 +1,10 @@
 ---
 title: "Taxon Pathway Variance"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-10
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
-species: [worm, DROME, human, DICDI]
+species: [worm, DROME, human, DICDI, CHICK]
 genes:
   - sta-1
   - sta-2
@@ -14,6 +14,9 @@ genes:
   - statA
   - statC
   - JAK1
+  - cec-10
+  - CG3226
+  - BTBD3
 ---
 
 # Taxon Pathway Variance
@@ -154,8 +157,15 @@ REJECTED), and where in this repo the case was found.
 | TPV-001 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | worm STAT IBAs from PTN000927860 | direct evidence is for *C. elegans* |
 | TPV-002 | GO:0046425 regulation of receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | gei-17 and nematode PIAS/PTPN2 IBAs, ~100 IEAs | stated separately in case constraints do not propagate over regulates |
 | TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa (fallback: never in Dictyostelia) | Dictyostelium STAT IBAs; non-animal IEAs | ontology prerequisite (see YAML) |
+| TPV-004 | GO:0030907 MBF transcription complex | only_in_taxon | Fungi | worm cec-10 and *Nematostella* IBAs from PTN000917496; 41 animal and plant TreeGrafter IEAs | pairs with an IRD on PTN000917496 |
+| TPV-005 | GO:0033309 SBF transcription complex | only_in_taxon | Fungi | the same 41 TreeGrafter IEAs | kept separate from TPV-004 |
+| TPV-006 | GO:0044548 S100 protein binding | only_in_taxon | Chordata | fly CG3226 and 1,194 InterPro2GO IEAs from IPR037893 | pairs with narrowing the IPR037893 mapping |
+| TPV-007 | GO:0021987 cerebral cortex development | never_in_taxon | Aves | chicken BTBD3 and KIF14 IBAs, NTRK2 ISS, 1,756 IEAs | avian pallium homology is debated; least certain |
 
-GO has no taxon constraint on any of these terms today (checked in QuickGO and OLS).
+GO has no taxon constraint on the TPV-001 to TPV-003 terms today (checked in QuickGO and OLS).
+TPV-004 to TPV-007 tighten constraints GO already has (Eukaryota, never in Fungi, Bilateria); each
+YAML entry records the existing one. They come from the [RAR_MISANNOTATION](RAR_MISANNOTATION.md)
+re-examination of Wei et al. 2020, and the counts are exact-term QuickGO annotations on 2026-11-05.
 
 TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
 `prerequisites` entry in the YAML; not yet requested.
