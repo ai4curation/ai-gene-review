@@ -70,7 +70,7 @@ result; it says nothing about the normal function of Ddr and is not used for ann
 - Kinase domain: fly Ddr lacks the beta3 lysine (Ala789), catalytic-loop Asn (Ser897) and
   DFG Asp (Ser910); same three losses in D. virilis and Anopheles. Tribolium DDR and
   C. elegans ddr-2 retain all three; the Apis predicted model (A0A7M7MKP6) keeps the catalytic-loop
-  Asn and DFG Asp but has Pro674 at the beta3 lysine, and C. elegans ddr-1 is degenerate at all three. Dipteran Ddr is predicted to be a pseudokinase. This is the
+  Asn and DFG Asp but has Pro674 at the beta3 lysine, and C. elegans ddr-1 keeps only the catalytic-loop Asn (and lacks the HRD Asp). Dipteran Ddr is predicted to be a pseudokinase. This is the
   main finding of the review and drives the kinase-activity decisions.
 - DS domain: Trp52/Asp69 of the DDR2 collagen pocket are not conserved in any invertebrate
   DDR (fly His128, Gly146). Insects have no fibrillar collagen; the module already records
