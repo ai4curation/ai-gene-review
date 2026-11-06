@@ -462,3 +462,12 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+
+## 2026-11-06 — DsbA/DsbB comparative audit started
+
+The next module audit begins from pinned main `ee3ce5f10c138b64413d054c3755e2fce95cb2c6`. Five original E. coli/P. putida reviews contain 49 historical annotation rows and ten frozen raw files. Comparative review literature and Pseudomonas PA14 reconstitution studies will guide additional sampling, family grounding and the boundary between DsbB-dependent oxidation and alternative redox systems. No completed review or module integration is claimed at this starting checkpoint.
+
+## 2026-11-06 — DsbAB member and comparative evidence checkpoint
+
+The DsbAB audit has13complete gene reviews across E. coli, KT2440, PA14, Bacillus168 and exact-sequence Campylobacter proteins;78original payloads and26raw files are preserved, with9supported additions. Four family reviews assess six actual PAINT assertions and pass49grounding/25quotation checks, retaining unresolved broad-family scope. Thirteen curated references include four reviews and23source-checked findings. Exact81116DsbB remains an explicit archived-accession gap. Module integration, full validation, publication and actual merge are still outstanding.
