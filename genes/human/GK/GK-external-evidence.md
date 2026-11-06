@@ -4,7 +4,7 @@ The annotation-specific decisions use the source limits below. Native cache avai
 
 ## Human enzyme and correction
 
-The purified human preparation uses an ATP/glycerol assay coupled through PK/LDH. PEP belongs to that coupling system. L13943.1 maps to P32189-1; the full tagged construct is unavailable. Bacterial 1GLF is not a human structure.
+The purified human enzyme was assayed through PK/LDH coupling. PEP is a coupling reagent; L13943.1 identifies the isoform 1 template.
 
 Source: PMID:37021775. Original Methods and Results; DOI [10.1042/BSR20222258](https://doi.org/10.1042/BSR20222258).
 
@@ -16,13 +16,13 @@ Source: PMID:37860917. Complete correction text; DOI [10.1042/BSR-2022-2258_COR]
 
 ## Named splice forms
 
-The compared forms differ in distribution. Full constructs remain unavailable; the separate splice event limits transfer to other products.
+Construct and imaging access limits remain; the named forms do not represent every product.
 
 Source: PMID:15845384. Abstract and selected publisher passages; DOI [10.1016/j.bbrc.2005.03.143](https://doi.org/10.1016/j.bbrc.2005.03.143).
 
 ## Patient enzyme evidence
 
-Original patient measurements establish enzyme deficiency and glycerol excess. The reported apparent triglyceride elevation is not a triglyceride-flux assay. Clinical severity does not define another normal GK function.
+Patient measurements establish enzyme deficiency and glycerol excess; apparent triglyceride elevation does not establish altered triglyceride flux.
 
 Source: PMID:8651297. Original pages 1205–1211, especially Table 1 and Results/Discussion; [PMC1915081](https://pmc.ncbi.nlm.nih.gov/articles/PMC1915081/).
 
@@ -70,6 +70,6 @@ Source: Reactome:R-HSA-75109. Official pathway event list; [R-HSA-75109](https:/
 
 ## Product identity and ancestry
 
-Official names: P32189-3 GK+EX18; P32189-4 GK-EX18. All four sequences are archived. Location and topology evidence grades remain explicit.
+Official mappings are P32189-3(GK+EX18) and P32189-4(GK-EX18). Four product sequences are archived.
 
 The inspected PTHR10196 tree places the exact human sequence below the activity IBD at AN0 and the four process/location IBDs at AN364. Literal donor sets, including self-donors, are retained. A cytosol IRD on the target path limits inherited canonical-product localization; independent product-aware human evidence is assessed separately.
