@@ -59,5 +59,5 @@ Full-corpus validation finished across 10,559 reviews. Schema, ontology, best-pr
 and 54 pathway-reference checks pass. Its exit status is 1 because of 19 reference
 errors in 17 unchanged yeast reviews; `preexisting-reference-failures.yaml` records
 the exact errors and 23 unchanged input blobs. There are 27,993 best-practice
-advisories. Module publication, remote review/CI and actual merge remain outstanding. See `audit-progress.yaml` for the recorded stage and the separate
+advisories. [PR #6100](https://github.com/ai4curation/ai-gene-review/pull/6100) is open; remote review/CI and actual merge remain outstanding. See `audit-progress.yaml` for the recorded stage and the separate
 preservation and capacity reports for reproducible results.
