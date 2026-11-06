@@ -43,6 +43,8 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_flavonoid_degradation`: 21 member reviews, nine curated references and Pseudomonadota scope; full validation PASS at 48ae00aa44. Dedicated audit PR and actual merge pending.
 
+- [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
+
 - [x] `osmoregulated_periplasmic_glucan_biosynthesis`: [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142) merged at `fb8e3ee95b`; 179 scoped files verified identical to the approved head.
 
 - [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
@@ -86,7 +88,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 3 PR_OPEN, 3 IN_PROGRESS and 737 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 4 PR_OPEN, 3 IN_PROGRESS and 736 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -576,6 +578,54 @@ Integrated published main `039e2ef630` with the validated PR #2142 head `79b979a
 
 PR #2142 review fixes passed a fresh full-corpus validation on frozen science head 05230b5e38d6a055164e2825c0c0b8016f9304a8: 10,683 reviews, zero blocking errors and 54 pathway files. All 183 scoped files remained byte-identical through the run. The beta-glucan rows retain independently supported claims; Caulobacter synthesis support remains explicitly inferred; the OpgG hydrolysis proposals distinguish biochemical capability from unresolved physiological relevance. A subsequent import/hash-helper formatting fix addresses the CI lint failure without changing lineage assertions; both lint and the complete lineage check pass. Renewed review, CI and actual merge remain pending.
 
+## 2026-11-06 — DsbA/DsbB comparative audit started
+
+The next module audit begins from pinned main `ee3ce5f10c138b64413d054c3755e2fce95cb2c6`. Five original E. coli/P. putida reviews contain 49 historical annotation rows and ten frozen raw files. Comparative review literature and Pseudomonas PA14 reconstitution studies will guide additional sampling, family grounding and the boundary between DsbB-dependent oxidation and alternative redox systems. No completed review or module integration is claimed at this starting checkpoint.
+
+## 2026-11-06 — DsbAB member and comparative evidence checkpoint
+
+The DsbAB audit has13complete gene reviews across E. coli, KT2440, PA14, Bacillus168 and exact-sequence Campylobacter proteins;78original payloads and26raw files are preserved, with9supported additions. Four family reviews assess six actual PAINT assertions and pass49grounding/25quotation checks, retaining unresolved broad-family scope. Thirteen curated references include four reviews and23source-checked findings. Exact81116DsbB remains an explicit archived-accession gap. Module integration, full validation, publication and actual merge are still outstanding.
+
+## 2026-11-06 — comparative DsbAB mechanism integrated
+
+Integrated DsbB-dependent oxidative folding across three bacterial phyla with two required roles, explicit alternative relays, and optional PA14 DsbA2 biochemical context. Fourteen completed gene reviews preserve 78 original rows and 28 raw sources; fourteen supported additions yield 92 current rows. Official archived 81116 DsbB identity is bridged without fabricated raw data or family IDs. Fourteen references, including four reviews, provide 24 findings. Eight curated compatible pairs and 75 scoped controls retain assay, compartment and family-scope limits. Full validation, dedicated PR, independent review, CI and actual merge remain required.
+
+## 2026-11-06 — DsbAB comparative audit validated
+
+Full validation completed on 10,590 reviews. The 17 reference errors are the exact previously recorded errors in 16 unrelated yeast reviews; all 22 relevant inputs equal the pinned base. Schema and term checks pass, best practices report zero errors, and all 54 PMID-bearing pathways pass. All 170 scoped files matched validated science commit 3cc137856140e62b4f4a5c678ee689d0ec148698. Fourteen completed gene reviews preserve 78 original rows (including two inherited NEW rows), 28 raw files and the explicit UniSave archive; fourteen supported additions yield 92 current rows. Four family reviews preserve six PAINT assertions. Four review articles and ten primary papers provide 24 module findings. The 75 capacity/mutation cases and 95 evidence quotes pass. A dedicated PR, independent review, CI and actual merge remain required.
+
+## 2026-11-06 — DsbAB audit integration with published main
+
+Integrated published main `cd3a5e061f` with the validated DsbAB audit head `81119764e6`. All 168 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — DsbAB PR published
+
+Published the independently validated DsbAB comparative audit as PR #6129. Normal auto-merge is enabled; independent review, CI, merge-queue checks and actual merge remain required. This is the49th new PR in the session; adopted existing PRs are excluded.
+
+## 2026-11-06 — DsbAB review follow-up validated
+
+DsbAB PR #6129 follow-up passed nine focused gene validations and a fresh full run on `2edeb4ad91`. The 10,627-review corpus has zero best-practices errors; its 17 reference errors in 16 unrelated yeast reviews are proven pre-existing by 22 base-identical inputs. All 190 scoped files match the validated scientific commit. Three same-PR authored sequence-transfer proposals were explicitly archived and corrected to ISS; upstream payloads remain unchanged. Renewed independent review, CI and actual merge remain required.
+
+## 2026-11-06 — PR #6129 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6129 head `aafe54e3d5`. All 188 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6129 tracker placement and tally
+
+Correct the shared project page after integration for PR #6129: place the bacterial_dsbab_oxidative_folding checkbox under Status and derive the displayed audit-state tally from all 777 inventory rows. This changes project prose and its rendering only; the inventory and all curated science/source files remain unchanged from 14cc2fc9ef7075abfa6bddce9556b222327bab42.
+
+## 2026-11-06 — PR #6129 round2 full validation completed
+
+The bacterial_dsbab_oxidative_folding PR #6129 round2 review follow-up completed a fresh full-corpus run on 5fc26f0eaccdc9050295cc6a0c111dbf198628f0. Schema, terms, best practices and all54 pathway checks passed. The only17 blocking errors are the known16 unrelated yeast citation reviews; their22 relevant inputs equal the pinned base, and all197 frozen publication files matched the tested head. Current main already fixes these citations in merged PR5975. Integrating that main, publishing the reviewed fixes, renewed review/CI and actual merge remain pending.
+
+## 2026-11-06 — PR #6129 integration with published main
+
+Integrated published main `488d370561` with the validated PR #6129 head `b0d63928fa`. All 199 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6129 integration with published main
+
+Integrated published main `fb8e3ee95b` with the validated PR #6129 head `68b726ee20`. All 201 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG audit; validation implementation is unchanged. The reviewed DsbA/DsbB mechanistic distinctions and source evidence from the approved head are preserved. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
 ## 2026-11-06 — flavonoid comparative audit and OPG merge verification
 
 Start comparative flavonoid audit from merged PR5971. Freeze fourteen existing reviews,34annotation rows and34source files; inspect three review articles and the 2013/2016/2024 primary evidence. A live KEGG census places all50 complete seven-KO coassignments in Pseudomonadota without proving pathway activity. Correct the unsupported exclusion of UDP-glucose epimerase activity in Hsero_1012 to UNDECIDED and qualify the FdeD reaction position while preserving all inherited NEW rows. Record independent full-text access for four HERSS reviews. Seven newly seeded BRADU comparisons are being reviewed separately. OPG PR2142 actually merged and179scoped files match its approved head; mark that module COMPLETE. Flavonoid module science, validation, dedicated PR, review,CI and merge remain pending.
@@ -589,3 +639,9 @@ Integrate seven independently verified USDA110 comparisons with fourteen existin
 ## 2026-11-06 — flavonoid full-validation closeout
 
 Full validation at 48ae00aa44d310c22de47fa2d50f71ff6f59739c completed with exit0 on 2026-11-06T21:31:35Z. All258 frozen files remain unchanged. The10691-review corpus has zero blocking errors;115 term advisories and52 reference advisories persist, with all31 reference-advisory files outside this21-gene panel. Best-practices validation reports zero errors and27775 warnings;54 pathway-reference checks pass. Scoped schema, semantic, rendering, history and compiler checks already pass. Scientific limits on late reaction assignments, FdeD/H dependence, FdeG evidence access and comparator native flux remain explicit. Dedicated PR and actual merge are still pending.
+
+## 2026-11-06 — PR #6140 integration with published main 096c918920
+
+Integrated published main `096c918920` with the validated PR #6140 head `9f5e80dcd5`. All 258 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row and the previously verified OPG completion record retained verbatim from the approved head; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits and the unrelated GJB3 review; validation implementation is unchanged. The corresponding OPG completion bullet is also preserved; incoming completion records and all dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [validated-head-integration.json](../analysis/module_audits/bacterial_flavonoid_degradation/validated-head-integration.json).
