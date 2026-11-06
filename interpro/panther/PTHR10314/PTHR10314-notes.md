@@ -279,7 +279,7 @@ Findings:
 ## 2026-11-06: CysM substrate scope and PAINT assertion audit
 
 The current compact-tree descendant check, recorded in
-`modules/bacterial_cysteine_biosynthesis_via_o_acetylserine-source-analysis/family-placement-audit.yaml`,
+`analysis/module_audits/bacterial_cysteine_biosynthesis_via_o_acetylserine/family-placement-audit.yaml`,
 shows that P9WP53 maps to PTN002232520 in SF162 and descends from PTN008497439.
 This is positive membership evidence, not a reclassification from the gene name.
 The E. coli P16703 seed and PAO1 Q9I526 OAS/sulfide activity remain valid positive evidence.
@@ -368,3 +368,14 @@ The broad phrase every CBS was narrowed to reviewed canonical serine-dependent C
 proteins, leaving the atypical SF242 MccA distinction explicit. All PAINT node ids,
 assertions, dates and seeds were preserved; no new MccA gene review or native OAS
 route claim was created.
+
+
+## 2026-11-06 PR6120 round 1: explicit scope comparison
+
+The [structured scope proof](PTHR10314-source-analysis/round1-go0004124-scope.yaml) restores the three historical GO:0004124 exception objects unchanged and records P9WP53 separately as an over-annotated member assignment, with its assay and construct limits. This supersedes the earlier prose-only archive as the machine-readable comparison artifact; it does not silently grant activity to the family.
+
+The frozen compact tree resolves the bacterial CysK node PTN000034535 to 40 leaves (36 SF194, two SF102, two SF191), the CysM node PTN008497439 to 25 SF162 leaves, and the eukaryotic OAS-TL node PTN000034468 to 420 leaves in 28 subfamilies. The CBS node PTN000034107 contains 69 SF194 leaves and six SF243 leaves. Thus SF194 cannot substitute for the CysK node: a single yeast exception would still leave human CBS P35520 and other CBS proteins inside a false whole-subfamily grant. No OAS-TL subfamily identifier is guessed.
+
+The current checker only computes positive coverage for FAMILY_WIDE/SUBFAMILY_ONLY (family_gene_crosscheck.py:367), rejects member_exceptions under UNRESOLVED (line 439), and rejects an exception outside the selected subfamilies (line 475). Restoring Cds1/SF135 as an exception under SF194/SF162 would therefore be contradictory. The production join sees family-only raw crossreferences for CYS4, MYCTU Cds1 and MYCTU CysM, so the proof distinguishes its missing-subfamily result from a read-only overlay of verified tree membership. The linked proof includes executable read-only counterexamples and actual current gene actions so the unresolved family boundary cannot hide the target-specific disagreements. No validation semantics were changed.
+
+P9WP53's OAS/free-sulfide assignment is over-annotated; slow OAS aminoacrylate formation in PMID18842002 is not a demonstrated weak complete reaction. PMID18799456 reports no detected complete product under the tested conditions, with the documented recombinant construct and detection limits. These observations justify challenging an inherited OAS assignment but do not establish an evolutionary loss or exactly zero residual turnover. NEEDS_PRUNING explicitly asserts a loss (family_review.yaml:811), so that stronger node verdict is not adopted. The E. coli P16703 and PAO1 Q9I526 positive activities remain supported; UNRESOLVED at the mixed node is limited to its retention boundary.

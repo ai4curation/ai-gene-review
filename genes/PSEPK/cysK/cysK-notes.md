@@ -56,3 +56,8 @@ All five original payloads, including the inherited PLP-binding NEW, preserved. 
 Existing genuine OpenScientist research and its artifacts were used as secondary evidence and preserved byte-for-byte.
 
 Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.
+
+
+## 2026-11-06 PR #6120 round-1 follow-up
+
+Removed the provider sentence that merely repeats the UniProt name/EC label from the GO:0004124 ACCEPT support. Added the already inspected NCBIfam TIGR01139 CysK assignment beside the RuleBase-backed catalytic reaction. The provider file remains byte-identical and its reference assessment now distinguishes label repetition from independent evidence. Target-specific experimental and strain limitations remain unchanged.

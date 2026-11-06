@@ -54,3 +54,8 @@ The OAS+sulfide reaction, cysteine synthase complex, cytosol localization, homod
 Default Falcon research was attempted normally with --provider falcon and failed with HTTP403. No provider report was fabricated; this section records manual review.
 
 Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.
+
+
+## 2026-11-06 PR #6120 round-1 follow-up
+
+Retained the existing NEW GO:0170054 row and its direct purified-protein support [PMID:22333533, "Equimolar mixtures of CysK-His 6 and CdiA-CT were able to cleave purified tRNA"]. Removed only the toxin-activation core entry: the evidence shows exploitation of a recipient biosynthetic protein, not a selected beneficial function of recipient CysK. This does not deny molecular activation or convert the NEW row to a different action. The matched UniProt strain quote is explicitly CC:FUNCTION. The activator role is not RNase catalysis or a broad CDI process, and prior GOA absence is not labeled an oversight solely from omission.

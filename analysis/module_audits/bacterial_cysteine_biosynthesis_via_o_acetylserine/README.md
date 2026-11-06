@@ -72,3 +72,22 @@ function scope. Final family checks pass with zero conflicts and four unresolved
 separately following independent scientific review. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. PR [#6120](https://github.com/ai4curation/ai-gene-review/pull/6120) is open; external review, successful CI and actual merge remain pending. Module status COMPLETE describes the curated artifact, not completion of the project audit.
 
 The three evidence YAML artifacts were relocated here without byte changes so the recursive module schema check sees only ModuleReview documents. Earlier histories preserve their original target fields and record the current comparative-evidence location through `target.superseded_by`, as specified in `docs/history.md`. Historical proofs remain tied to their original commits and paths.
+
+## PR review follow-up, 2026-11-06
+
+The duplicate CysM proposed term is merged with its supporting evidence. The
+supported E. coli CysK toxin-activation NEW row remains, with its contextual
+activity removed from the biosynthetic core. Both Mtb CysM OAS/free-sulfide rows
+are marked over-annotated without claiming zero residual turnover or a proven
+evolutionary loss. The negative B. subtilis CBS assay now has an exportable
+CAFA source-defect record. KT2440 support uses NCBIfam rather than a repeated
+protein label in a provider report. All historical row payloads and raw sources
+remain intact.
+
+The family comparison preserves three historical exception objects and adds the
+qualified Mtb CysM case. Its exact tree demonstrates why granting all SF194 would
+incorrectly include CBS proteins. The coarse family and mixed-node verdicts remain
+UNRESOLVED; the explicit member comparisons preserve their distinct judgments.
+Five focused gene checks, family checks and all 59 capacity cases pass. The full
+corpus result above describes the prior revision; fresh validation of this
+scientific follow-up and renewed external review remain pending.
