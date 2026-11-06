@@ -34,3 +34,8 @@ Default Falcon was genuinely attempted and failed with HTTP403 authentication; n
 ## PR6121 round-1 comparative correction (2026-11-06)
 
 GO:0015886 MODIFY→ACCEPT: broad intracellular handoff is supported independently of unresolved membrane crossing; distinguish E. coli functional reconstruction from KT2440 ortholog inference. The prior lateral replacement discarded a supported trafficking process on an incorrect membrane-crossing interpretation. GO:0015232 and the ligation judgments remain separate. All original annotation payloads and source bytes are preserved.
+
+
+## 2026-11-06: PR6121 round-2 location-evidence audit
+
+Replaced chemistry-only support on location rows 11 and added matching locational evidence to location-bearing cores. E. coli CcmF topology is supported by the primary topological and mutational analysis. The membrane assignment does not depend on assuming that every heme-ligation catalyst is membrane bound. Annotation actions and every original non-review payload, including historical NEW rows, remain unchanged. Full prior reviews and source hashes were frozen before editing in the round2-location cache; the durable preservation proof records comparison to published head 044f9278bcea364ad66bccc221fdfc78132ba4eb.

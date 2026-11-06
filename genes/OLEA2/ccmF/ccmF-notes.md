@@ -21,3 +21,8 @@ Additional evidence checks: exact primary-source excerpts, corrected detection l
 - GO:0015232 MARK_AS_OVER_ANNOTATED: G20 CcmF heme handling does not establish a membrane-crossing transporter.
 
 Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.
+
+
+## 2026-11-06: PR6121 round-2 location-evidence audit
+
+Replaced chemistry-only support on location rows 2 and added matching locational evidence to location-bearing cores. The current G20 reference protein has 14 Phobius-predicted transmembrane helices. These target-specific features support membrane insertion; conserved CcmF architecture and characterized ortholog topology support assignment to the bacterial inner membrane. This is a topology/ortholog inference, not a direct native G20 localization experiment or an exact experimental map of every predicted helix. The evidence does not establish periplasmic orientation from transmembrane segments alone. ARBA-only location prose and heme-chemistry phenotypes are not used as location evidence. Annotation actions and every original non-review payload, including historical NEW rows, remain unchanged. Full prior reviews and source hashes were frozen before editing in the round2-location cache; the durable preservation proof records comparison to published head 044f9278bcea364ad66bccc221fdfc78132ba4eb.

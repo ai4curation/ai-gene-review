@@ -13,3 +13,8 @@ Falcon was genuinely attempted with the normal default provider and failed authe
 Which physical partners and conformational transitions explain the alternate CcmD requirement?
 
 Additional evidence checks: exact primary-source excerpts, corrected detection limits, current GO parent relationships and same-role process comparators are preserved in the shared source analysis. CcmI has no direct binding MF assignment.
+
+
+## 2026-11-06: PR6121 round-2 core location evidence
+
+Added explicit membrane-anchor and comparative topology evidence to the location-bearing core, previously supported only by maturation phenotypes. The target Phobius-predicted membrane anchor supports membrane insertion; assignment to the inner membrane is inferred from the alternate CcmD role in the G20 maturation cassette and characterized CcmD architecture. The E. coli topology experiment does not directly map the G20 protein or establish its exact orientation. All annotation payloads and actions are unchanged. Pre-edit text is frozen against published head044f9278 in round2-location/additional-unchanged-records.json.

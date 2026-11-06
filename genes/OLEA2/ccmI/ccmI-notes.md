@@ -13,3 +13,8 @@ Falcon was genuinely attempted with the normal default provider and failed authe
 Does CcmI bind G20 apocytochromes directly, and how do substrate identity and growth conditions affect its contribution?
 
 Additional evidence checks: exact primary-source excerpts, corrected detection limits, current GO parent relationships and same-role process comparators are preserved in the shared source analysis. CcmI has no direct binding MF assignment.
+
+
+## 2026-11-06: PR6121 round-2 core location evidence
+
+Added explicit membrane-anchor and comparative topology evidence to the location-bearing core, previously supported only by maturation phenotypes. The target Phobius membrane anchor and TPR architecture support membrane association, with inner-membrane context inferred from the G20 maturation cassette and characterized CcmI proteins. Rhodobacter CcmI has two membrane helices whereas this target has one predicted helix; no identical topology, direct native G20 localization or target periplasmic orientation is asserted from this comparison. All annotation payloads and actions are unchanged. Pre-edit text is frozen against published head044f9278 in round2-location/additional-unchanged-records.json.

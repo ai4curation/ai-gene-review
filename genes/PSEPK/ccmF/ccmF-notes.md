@@ -17,3 +17,8 @@ Default Falcon was genuinely attempted and failed with HTTP403 authentication; n
 ## PR6121 round-1 comparative correction (2026-11-06)
 
 GO:0015886 MODIFY→ACCEPT: broad intracellular handoff is supported independently of unresolved membrane crossing; distinguish E. coli functional reconstruction from KT2440 ortholog inference. The prior lateral replacement discarded a supported trafficking process on an incorrect membrane-crossing interpretation. GO:0015232 and the ligation judgments remain separate. All original annotation payloads and source bytes are preserved.
+
+
+## 2026-11-06: PR6121 round-2 location-evidence audit
+
+Replaced chemistry-only support on location rows 0, 3 and added matching locational evidence to location-bearing cores. Target Phobius transmembrane features support a multipass protein; the E. coli CcmF topology study supplies independent ortholog evidence for the inner-membrane architecture. Predicted target helix boundaries are not treated as experimentally resolved. This KT2440 location is an explicit conserved-architecture inference, not a direct native KT2440 localization assay. Annotation actions and every original non-review payload, including historical NEW rows, remain unchanged. Full prior reviews and source hashes were frozen before editing in the round2-location cache; the durable preservation proof records comparison to published head 044f9278bcea364ad66bccc221fdfc78132ba4eb.

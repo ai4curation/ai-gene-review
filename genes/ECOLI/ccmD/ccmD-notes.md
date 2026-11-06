@@ -46,3 +46,8 @@ Read the full 2023 E. coli structures (PMID:37626034), 2025 CcmB efflux work (PM
 Specific reassessment: Supports assembly and release of heme-loaded CcmE within the CcmABCD membrane machinery. CcmCD heme-acceptance contacts provide an additional proposed role, without proving a conserved individual transport activity.
 
 Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.
+
+
+## 2026-11-06: PR6121 round-2 location-evidence audit
+
+Replaced chemistry-only support on location rows 7 and added matching locational evidence to location-bearing cores. CcmD topology was examined directly in the cytoplasmic membrane: an N-out/C-in protein with one transmembrane segment. The membrane refinement rests on this location evidence rather than holo-CcmE release. Annotation actions and every original non-review payload, including historical NEW rows, remain unchanged. Full prior reviews and source hashes were frozen before editing in the round2-location cache; the durable preservation proof records comparison to published head 044f9278bcea364ad66bccc221fdfc78132ba4eb.
