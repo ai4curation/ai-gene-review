@@ -19,3 +19,7 @@ GO:0016672 now represents the quinone-coupled catalytic core, with one authored 
 PMID:24327342 Figure2A shows slow background DsbA1 fluorescence change, no acceleration on quinone addition, and rapid oxidation on DsbB1 addition; the text reports analogous B2 behavior. Figure2B/C supplies individual substrate-dependent initial-velocity curves (apparent Km 8.1 micromolar for dsbB1), and AMS confirms DsbA1 cysteine oxidation. Figure5 includes DsbA2-alone and DsbA2-plus-quinone negative controls. These support a curated inference of quinone-coupled catalysis; they are not direct measurements of quinone redox state or equilibrium binding affinity. The inspected figures do not display a DsbB-containing minus-quinone comparison.
 
 Partial purification and the distinct main-text versus TextS2 expression/preparation descriptions remain explicit; no homogeneous preparation or exact preparation-to-figure reconciliation is invented. The assay uses 30 micromolar decylubiquinone, which does not identify a particular native quinone. DsbA2 oxidation remains in-vitro capacity, not a demonstrated native A2 pathway. The earlier primary identity/source analysis remains unchanged.
+
+## PR6129 evidence follow-up (2026-11-06)
+
+Added a primary activity-result quote to GO0015035 alongside the retained preparation-method quote. The B1 fluorescence decrease is a result, not merely evidence of preparation. No action, source payload or original experimental caveat changed.

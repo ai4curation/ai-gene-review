@@ -17,3 +17,7 @@ PMID:20713508 and PMID:22882210 explicitly warn that detergent-resistant fractio
 ## Curation outcome
 
 All original annotation payloads are preserved. No annotations added; protein folding and reversible protein-disulfide redox activity retained, membrane refined to plasma membrane, raft rows unresolved.
+
+## PR6129 evidence follow-up (2026-11-06)
+
+Retained the membrane-raft rows as UNDECIDED because the exact compartment mapping and target-specific location remain unresolved, not because full main text was inaccessible. This is not a conclusion that the proteins cannot associate with bacterial microdomains. The reviewer's claimed precedent is not identical: SecA refers to PMID27362352 partial flotillin colocalization, and SecY currently ACCEPTs PMID23651456 DRM/FloT evidence. No gene-action changes.

@@ -9,3 +9,7 @@ PMID:25181355 supports native client function: dsbB disruption left AstA activit
 PMID:32203539 reports C8J_1298 redox changes in several dsb mutants, including dsbB. This does not establish a direct DsbB-C8J_1298 reaction or isomerase activity. Its correction of the older DsbA1 motility attribution also prevents propagating that phenotype as a generic Dsb-system role.
 
 The default Falcon attempt failed because the empty live record could not populate required template variables. A subsequent just-recipe extra-argument attempt failed at argument parsing. Calling the same normal wrapper with structured arguments and explicitly archived identity context reached Falcon and failed HTTP403 authentication. No provider report was fabricated; the raw file was never altered to satisfy the research template. Manual primary-source review supplies the evidence.
+
+## PR6129 evidence follow-up (2026-11-06)
+
+Added a structured UniProt OTHER/ADD/PROBABLE record-coverage request anchored to archived A8FLS4/ENA/UniParc evidence. This does not assert an accidental deletion, invent a live accession, or copy historical annotations into the live seed. Existing three NEW assertions and their evidence codes remain unchanged.

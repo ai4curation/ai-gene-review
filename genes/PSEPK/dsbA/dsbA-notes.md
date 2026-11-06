@@ -27,3 +27,7 @@ The exact target is Q88RK2, Pseudomonas putida KT2440, with locus PP_0127. PMID:
 The sequence has DsbA-specific CDD cd03019 and Pfam PF01323, an export signal, and the active-site cysteine pair. The UniProt similarity sentence is ARBA-only; it was replaced as support by independent domain classification, without editing the raw record. The oxidative-folding mechanism is inferred from characterized E. coli DsbA; native KT2440 substrate and membrane-partner preferences remain unknown. The historical protein-folding NEW assertion is retained unchanged in its machine fields and supported as direct catalytic participation, not necessity.
 
 Current action counts: {"KEEP_AS_NON_CORE": 1, "MODIFY": 3, "NEW": 1}.
+
+## PR6129 record-section follow-up (2026-11-06)
+
+Ran the normal backfill-record-sections helper on this gene only. It derived DR:CDD for both CDD quotes from the frozen UniProt flat file (two additions; zero mismatches). No biological action, payload or source byte changed.

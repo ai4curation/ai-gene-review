@@ -11,3 +11,7 @@ Full primary PMID:24327342 separates native PA14 deletion/AMS redox phenotypes f
 Current QuickGO GO:0015035 defines reversible protein thiol/disulfide exchange and descends from GO:0015036 and GO:0016491. Its name does not exclude physiological oxidation. No native cellular process gap is manufactured. DsbA2 receives only one missing direct molecular-function proposal; its unknown physiological role remains explicit. Other genes use supported broad-row refinement. Signal/TM annotations support localization inference but do not constitute direct mapping of every boundary.
 
 Text S2 was recovered from the genuine EuropePMC supplementary archive. All four genes were PCR-amplified from PA14 genomic DNA and sequence-checked. See `../dsbA/dsbA-source-analysis/identity-and-assay-scope.md` for mature-chain DsbA constructs and separate DsbB expression/preparation contexts; complete source files stay ignored.
+
+## PR6129 evidence follow-up (2026-11-06)
+
+Removed the unanchored core GO0006457 process assertion, while retaining direct protein-substrate disulfide chemistry and native PA14 scope. No NEW BP was manufactured for validator coverage. The same-role upstream search returned zero rows; repository Ecoli/Pputida DsbA and BdbD entries are authored proposals, not positive GOA convention. This does not deny that DsbA1 performs oxidative-folding chemistry. Also corrected core wording to regeneration of the oxidized active site.
