@@ -459,7 +459,8 @@ vegetative `sec2` and sporulation-specific `spo13`.
   drafted in this branch
 - [x] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member;
   drafted in this branch
-- [ ] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
+- [x] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog;
+  drafted in this branch
 - [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
 
 ---
@@ -480,6 +481,10 @@ vegetative `sec2` and sporulation-specific `spo13`.
 - Added `SCHPO/spo13`: the short meiotic Sec2-family Ypt2 GEF. No PTHR14430
   PAINT IBA rows are propagated to this SF4 paralog; the fungal cell-tip PAINT
   node remains confined to the long Sec2 branch.
+- Added `CANAL/SEC2`: both PTHR14430 PAINT rows are sound for the full-length
+  Candida Sec2 ortholog. The cell-tip IBA is especially well grounded because
+  the CGD row for this gene is one of the two experimental seeds for the fungal
+  PTN001024876 node.
 
 ## 2026-11-01
 
