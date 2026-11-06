@@ -461,7 +461,8 @@ vegetative `sec2` and sporulation-specific `spo13`.
   drafted in this branch
 - [x] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog;
   drafted in this branch
-- [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
+- [x] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member;
+  drafted in this branch
 
 ---
 
@@ -485,6 +486,11 @@ vegetative `sec2` and sporulation-specific `spo13`.
   Candida Sec2 ortholog. The cell-tip IBA is especially well grounded because
   the CGD row for this gene is one of the two experimental seeds for the fungal
   PTN001024876 node.
+- Added `ASPFU/sec2`: the long *Aspergillus fumigatus* Sec2 ortholog inherits
+  the PTHR14430 Rab-GEF and fungal cell-tip IBA rows. A 2025 knockout paper is
+  direct to A. fumigatus `sec2` and reports hyphal-tip, autophagy, cell-wall,
+  and virulence phenotypes, but it does not support adding new process
+  annotations for those downstream outputs.
 
 ## 2026-11-01
 
