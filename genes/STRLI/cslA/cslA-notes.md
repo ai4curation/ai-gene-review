@@ -31,3 +31,9 @@ Clarified spaces in source-strain and sequence-length prose. The module now labe
 ## 2026-11-06 — round 16 follow-up
 
 Correct prose spacing around strain, sequence and figure identifiers; quoted source text and annotation decisions are unchanged.
+
+## PR2143 round17: bacterial process specificity
+
+Authored construct/reference-title prose spacing is corrected without changing verbatim supporting text. No process row is added: the native TK24 product uncertainty and the same-sequence purified-complex evidence remain separate.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

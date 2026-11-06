@@ -17,3 +17,13 @@ The generic BcsB/BcsC branch now carries positive sampled-lineage contexts. Two 
 Round15 follow-up adds two explicit frozen-GOA controls: RKN E5RST0 and TK24 A0ABM5R5V5 are admitted by reviewed biochemical refinements, while unchanged GOA alone remains insufficient. The 27 cases make this dependency visible. Catalytic BcsA UDP-glucose metabolism is retained consistently, and AcsD has an explicit noncatalytic core summary. All original payloads and sources remain unchanged.
 
 Round16 follow-up checks all five catalytic BcsA donor-metabolism claims across the panel. Each retains GO:0006011 and includes it in the catalytic core. PSEPK and CERS4 also retain product-pathway coverage through separately supported NEW cellulose-process rows; the E. coli specific process row and existing AGRFC/KOMXY rows remain. All 88 original payloads are preserved, yielding 101 current rows. Fresh full-corpus validation is pending after these focused checks.
+
+## Round17 specificity and provenance
+
+The bacterial subtype GO:0090540 is now used consistently for all already-supported process claims and module concepts. It adds bacterial context to GO:0030244, without adding a native-output or fibril criterion; purified CERS4 IDA and PSEPK homology inference remain distinct. The frozen target RuleBase statement and explicit ISS donor are restored. Official IPR044846 metadata supports the existing label.
+
+The immutable historical ledger contains 87 machine payloads and one historical authored PP_2634 proposal. The machine payloads remain unchanged. The latter proposal is archived as exact original YAML and refined under a checker exception pinned to its accession, path, index and both exact payloads. Thirteen additional authored proposals remain separately counted; three existing terms are refined, and no rows are added or deleted. Current total: 101 rows. All 42 raw files, 12 provider artifacts and 178 scoped source files remain unchanged.
+
+Thirteen gene validations, 14 new history validations, module/schema checks, 27 capacity cases, five catalytic donor/product checks, six checker controls, rendering and diff checks pass. The five catalytic checks require GO:0090540 in both reviewed functions and their cores. Detailed results and hashes are in `round17-followup.yaml`.
+
+The pre-round17 full run terminated with exit 1 at science commit 04a28f01332c3ffc6900650249d5fe7c6bf2db8c, reproducing the same 19 reference errors in 17 unrelated unchanged yeast reviews. All 23 source/validation-input blobs in the preexisting proof were rechecked. This run does not validate the subsequent round17 edits; a fresh full run is pending and owned by the parent agent. See `round16-fullrun-terminal.json`.

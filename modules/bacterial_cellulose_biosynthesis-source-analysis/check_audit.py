@@ -37,7 +37,18 @@ def main():
     module = read(ROOT / "modules/bacterial_cellulose_biosynthesis.yaml")
     records = {}
     actions = Counter()
-    preserved = inherited = added = raw_count = 0
+    preserved = inherited = refined_authored = added = raw_count = 0
+    archive_path = AUDIT / "round17-PP2634-original-annotation.yaml"
+    assert hashlib.sha256(archive_path.read_bytes()).hexdigest() == "b379ce2176ec5198da65a43176448b1159be90d1247a0861ab10baedfbcae1ec"
+    archived_row = read(archive_path)["existing_annotations"][0]
+    archived_payload = {k: v for k, v in archived_row.items() if k != "review"}
+    expected_original = {"term": {"id": "GO:0030244", "label": "cellulose biosynthetic process"},
+                         "evidence_type": "ISS", "original_reference_id": "PMID:19400787",
+                         "qualifier": "involved_in"}
+    assert archived_payload == expected_original
+    assert archived_row["review"]["action"] == "NEW"
+    expected_refinement = dict(expected_original, term={"id": "GO:0090540",
+                               "label": "bacterial cellulose biosynthetic process"})
     no_core = []
     donor_process_checked = []
     for member in baseline["members"]:
@@ -47,12 +58,20 @@ def main():
         assert review["taxon"] == member["taxon"]
         rows = review.get("existing_annotations", [])
         assert len(rows) >= len(member["annotations"])
-        for seed, row in zip(member["annotations"], rows):
-            assert {k: v for k, v in row.items() if k != "review"} == seed["payload"]
-            preserved += 1
+        for index, (seed, row) in enumerate(zip(member["annotations"], rows)):
+            payload = {k: v for k, v in row.items() if k != "review"}
             if seed["prior_action"] == "NEW":
+                # One historical authored proposal, never a general machine-payload exception.
+                assert member["review_path"] == "genes/PSEPK/PP_2634/PP_2634-ai-review.yaml"
+                assert member["accession"] == "Q88JL5" and index == 0
+                assert seed["payload"] == archived_payload == expected_original
+                assert payload == expected_refinement
                 assert row["review"]["action"] == "NEW"
                 inherited += 1
+                refined_authored += 1
+            else:
+                assert payload == seed["payload"], (member["review_path"], index)
+                preserved += 1
         for row in rows:
             assert row["review"]["action"] != "PENDING"
             actions[row["review"]["action"]] += 1
@@ -95,7 +114,8 @@ def main():
                 core_processes = {term["id"] for core in review.get("core_functions", [])
                                   for term in core.get("directly_involved_in", [])}
                 assert "GO:0006011" in core_processes, member["review_path"]
-                assert {"GO:0030244", "GO:0090540"} & functions, member["review_path"]
+                assert "GO:0090540" in functions, member["review_path"]
+                assert "GO:0090540" in core_processes, member["review_path"]
                 donor_process_checked.append(member["review_path"])
         raw_functions = {a["payload"]["term"]["id"] for a in member["annotations"]
                          if a["prior_action"] != "NEW"}
@@ -106,6 +126,7 @@ def main():
             no_core.append(member["review_path"])
     provider_proof = read(AUDIT / "provider-source-preservation.yaml")
     assert len(donor_process_checked) == 5
+    assert (preserved, inherited, refined_authored, added, raw_count) == (87, 1, 1, 13, 42)
     for path, digest in provider_proof["files"].items():
         assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest, path
     nodes = {n["id"]: n for n in walk(module["module"]) if "id" in n}
@@ -267,7 +288,10 @@ def main():
     records["A0ABM5R5V5"]["functions"] = saved_functions
     result = {
         "complete_reviews": len(records),
-        "preserved_seed_rows": preserved,
+        "preserved_machine_seed_rows": preserved,
+        "historical_seed_rows": preserved + inherited,
+        "archived_refined_historical_authored_rows": refined_authored,
+        "historical_authored_archive": str(archive_path.relative_to(ROOT)),
         "inherited_new_rows": inherited,
         "new_rows": added,
         "preserved_raw_files": raw_count,

@@ -10,3 +10,11 @@ Shared source distinctions: PMID:23222542 and PMID:24704788 examine Rhodobacter 
 Normally fetched PMID:33563593 now has full text. PMID:19400787 remains abstract-only after normal force-fetch; accessible claims are supplemented by later full-text structures, so lack of its full text does not prevent the present inference. Root fetched PMID:39394223 full text. The full 2015 review PMID:26077867 was checked for architecture diversity. Reviews PMID:38688160, PMID:41617292 and PMID:39319708 were available as abstracts only and do not justify additional target molecular claims.
 
 The target signal peptide (1-25), C-terminal membrane anchor (727-745) and PF03170 support the periplasmic partner. [PMID:23222542, "BcsB is a periplasmic protein that is anchored to the inner membrane via a single, C-terminal TM-helix."] BcsA houses the demonstrated direct c-di-GMP switch. The UniProt BcsB name and CC:FUNCTION direct-binding claim are flagged for source review, without modifying the raw record. Retained the three original row actions with stronger structural participation support. No NEW MF or contributes_to synthase annotation was forced: the structural accessory role is clear, but the exact KT2440 complex-function contribution and assembly remain inferred. No direct BcsB c-di-GMP claim is added.
+
+## PR2143 round17: bacterial process specificity
+
+BcsB supports the synthase complex rather than catalysing donor metabolism. Refine its authored process replacement and core process; native KT2440 architecture/output remain inferred.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

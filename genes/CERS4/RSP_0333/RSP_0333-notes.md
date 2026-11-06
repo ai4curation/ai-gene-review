@@ -25,3 +25,11 @@ Evidence: PMID:39394223 describes a UDP-glucose-using GT domain and inner-membra
 ## 2026-11-06 — round 16 panel consistency follow-up
 
 The full-panel check found that accepting donor metabolism had also removed the only row-level cellulose-process assertion here. Add a direct-assay NEW cellulose biosynthesis row alongside the accepted UDP-glucose metabolism row, retaining the existing core summary and all machine payloads.
+
+## PR2143 round17: bacterial process specificity
+
+PMID:23222542 reconstitutes a purified BcsAB complex and identifies the synthesized beta-1,4-glucan. Retain IDA for that bacterial process capacity. The bacterial subtype adds no native-output, intact-cell or fibril criterion; native output/export and fibril production remain unestablished.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

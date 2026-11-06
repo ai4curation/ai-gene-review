@@ -29,3 +29,11 @@ Four original rows were reviewed. Plasma membrane and PilZ-associated cyclic-di-
 One NEW IMP row proposes GO:0030244 cellulose biosynthetic process. Participation is catalytic polymerization, not simply necessity for aggregation or use as a substrate. The parental process describes cellulose formation. QuickGO comparator check on 2026-11-05 found E. coli BcsA P37653 with GO:0030244 IBA and its GO:0090540 descendant by IMP; Pseudomonas BcsA Q88JL4 had no matching BP rows. This supports the annotation convention for synthase catalysts without treating an absence as evidence of oversight. No existing/proposed BP ancestor or descendant is duplicated.
 
 QuickGO verified GO:0016760 and GO:0030244 definitions and active status. The similarly numbered GO:0004107 is chorismate synthase and was not used. Official PANTHER name for PTHR43867:SF2 was read from panther.obo and agrees with the frozen sequence's family cross-reference.
+
+## PR2143 round17: bacterial process specificity
+
+The RKN genetic and product evidence supports bacterial cellulose formation. Refine the authored process/core and correct the previous biofilm-specific description: GO:0090540 supplies bacterial context. Preserve RKN induction conditions and its distinction from BP1 comparator proteins.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

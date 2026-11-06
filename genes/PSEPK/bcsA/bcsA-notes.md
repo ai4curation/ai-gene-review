@@ -15,3 +15,11 @@ The target has CelA/Cell_synth_A, GT2 and PilZ signatures; RuleBase features pre
 ## 2026-11-06 — round 16 follow-up
 
 Retain the catalytic UDP-glucose metabolism claim and add an explicitly inferred cellulose biosynthesis row, preserving product-process coverage without laterally replacing a true term. The target signature plus homolog biochemistry supports participation; direct target enzymology remains unavailable.
+
+## PR2143 round17: bacterial process specificity
+
+BcsA catalyses polymerization. Restore its frozen UniProt CC:PATHWAY quote jointly attributed to RuleBase RU365020 and ARBA00005186: curated-rule evidence is not ARBA-only evidence. The ISS donor is now machine-readable as UniProtKB:Q3J125. This supports inferred KT2440 capacity, not target enzymology or demonstrated native output.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

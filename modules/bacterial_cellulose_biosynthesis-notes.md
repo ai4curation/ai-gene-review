@@ -74,3 +74,9 @@ The full 10,553-review validation completed with exit 1 solely for 19 reference-
 
 
 Final independent biological review found no blocker at the declared reviewed-panel scope. The sampled generic BcsB/BcsC branch now explicitly names Pseudomonas, Cereibacter and Komagataeibacter contexts. The 25-case production-compiler replay includes two external-oracle contract controls: family matches alone admit an E. coli BC bypass; enforcing the declared context rejects it. This is not a claim that the compiler itself enforces taxa or that BcsQ is dispensable throughout those genera. Streptomyces positive capacity remains limited to the characterized complex and does not establish native extracellular cellulose production or direct membrane-translocation evidence.
+
+## PR2143 round17: bacterial process specificity
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+All already-asserted generic cellulose process concepts, replacements and cores are refined consistently across the reviewed bacterial panel. CERS4 purified-complex capacity remains distinct from native output. Restore PSEPK BcsA RuleBase evidence and explicit ISS donor; retain the current official IPR044846 label with scoped metadata provenance. The five catalytic donor/product checks require GO:0090540 in reviewed functions and core processes. The immutable 88-row ledger comprises 87 unchanged machine payloads plus one exactly archived/refined historical PP_2634 proposal; the 13 additional NEW rows remain separate and their count is unchanged. No CslA/GlxA process proposal is manufactured.

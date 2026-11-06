@@ -16,3 +16,11 @@ The same paper explicitly says the importance of the spiral passageways requires
 ## 2026-11-06 — PR2143 round15 follow-up
 
 Added an explicit core-function summary of noncatalytic glucan organization, using the retained cellulose-biosynthetic-process assertion and structural glucan contacts. No new annotation or forced molecular-function term was added.
+
+## PR2143 round17: bacterial process specificity
+
+AcsD supplies noncatalytic glucan organization to the bacterial cellulose machinery. Refine its original process using MODIFY and its structural core process. This does not assert polymerase chemistry or obligatory crystallization; improve ATCC spacing only in authored prose.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

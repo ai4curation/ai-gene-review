@@ -20,3 +20,11 @@ After the initial validation, the primary main text of PMID16920715 was readable
 ## 2026-11-06 — round 16 follow-up
 
 The accepted UDP-glucose metabolism claim now appears explicitly in the catalytic core, consistent across all five catalytic BcsA reviews carrying that term.
+
+## PR2143 round17: bacterial process specificity
+
+Refine the original general process using MODIFY and the authored core process. Preserve the distinction between operon genetics, curated chemistry and isolated-subunit assays; improve ATCC spacing only in authored prose.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

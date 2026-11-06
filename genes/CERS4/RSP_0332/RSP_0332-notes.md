@@ -15,3 +15,11 @@ QuickGO term definitions were checked: GO:0016760 describes the UDP-glucose-depe
 All six seed rows were reviewed and preserved. The three bare protein-binding IPI rows are REMOVE solely because the generic term is uninformative; the real BcsA interaction is explicitly retained. BcsB has no glycosyltransferase active site. One qualified NEW row records `contributes_to` GO:0016760, supported by purified-component reconstitution and truncation of the membrane-associated BcsB region. This preserves the original enables payloads and does not misleadingly assign independent synthase activity to BcsB. The core uses `contributes_to_molecular_function`. Cellulose process participation is already represented by refinement of the original UDP-glucose process row, so no redundant NEW process was added.
 
 The RuleBase-derived direct c-di-GMP binding name/function is flagged as a probable UniProt source defect; the same complex places the direct sensor on BcsA. No BcsB ligand-binding row is proposed. Mg-binding sites derived from crystal structures were inspected in the raw record but do not independently establish a distinct biological molecular function. Native export geometry and the physiological importance of the large periplasmic region beyond the minimal active membrane region remain open.
+
+## PR2143 round17: bacterial process specificity
+
+The purified BcsAB experiment supports BcsB structural participation, without assigning BcsA catalysis to BcsB. Refine its replacement/core process to the bacterial subtype; native organism output remains unestablished.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

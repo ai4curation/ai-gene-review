@@ -26,3 +26,11 @@ Live QuickGO definitions/ancestors were checked and saved as agrobacterium-term-
 ## 2026-11-06 — round 16 follow-up
 
 The accepted UDP-glucose metabolism claim now appears explicitly in the catalytic core, consistent across all five catalytic BcsA reviews carrying that term.
+
+## PR2143 round17: bacterial process specificity
+
+CelA performs bacterial glucan polymerization. Refine the original generic process using MODIFY and refine authored cores, preserving the C58-versus-A1045 strain and construct distinctions.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.
