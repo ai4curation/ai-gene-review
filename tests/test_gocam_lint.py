@@ -196,7 +196,19 @@ def test_cli_rejects_bad_options(args, message):
 
     result = CliRunner().invoke(app, ["gocam-lint", "--no-ontology", *args])
     assert result.exit_code != 0
-    assert message in result.output
+    assert message in _plain(result.output)
+
+
+def _plain(text: str) -> str:
+    """Rich error panel as plain text: drop ANSI codes and box borders, unwrap lines.
+
+    CI sets FORCE_COLOR, so the panel is coloured and wrapped at the runner's width.
+    """
+    import re
+
+    text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    text = re.sub(r"[│╭╮╰╯─]", " ", text)
+    return " ".join(text.split())
 
 
 def test_cli_corpus_rule_runs():
