@@ -15,6 +15,12 @@ CGD/GO_Central/UniProt/InterPro, the reviewed UniProt classification, the local
 PANTHER membership and PAINT rows, and the S. cerevisiae experimental literature
 that seeds the fungal PAINT node.
 
+2026-11-06 web searches for direct `Candida albicans` MON1/Ypt7/Ccz1 literature
+again found only orthology-derived MON1 entries and product pages, not new
+Candida-specific Mon1-Ccz1 functional studies. The 2026 S. cerevisiae VINE/Ypt10
+and Pdr16 lipid-droplet papers broaden the budding-yeast Mon1-Ccz1 regulatory
+contexts but do not change the Candida inference.
+
 Wang et al. established the direct yeast source evidence for the fungal PAINT
 vacuolar-delivery rows: "Both Mon1 and Ccz1 are required for protein delivery
 through the Cvt pathway and other vacuole trafficking processes including the
@@ -43,5 +49,7 @@ interface, has highest activity on membranes" [PMID:24413168].
   retain the generic InterPro longin-domain process.
 - `GO:0032585 multivesicular body membrane`: ACCEPT as a conserved prevacuolar
   endosome location.
-- CGD ND rows on `molecular_function` and `cellular_component`: REMOVE as stale
-  root placeholders because specific MF and CC assertions now exist for MON1.
+- CGD ND rows on `molecular_function` and `cellular_component`: ACCEPT under
+  `projects/NO_DATA.md`, because the available MF and CC assertions for this
+  species are inferred from orthologs or family membership rather than direct
+  C. albicans MON1 literature.
