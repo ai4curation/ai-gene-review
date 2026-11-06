@@ -219,3 +219,16 @@ Three annotations relied on a curator's reading of full text not in the cache
 morphogenesis). None was left UNDECIDED: in each case the asserted function is independently
 established for GLI3 elsewhere in the same record, so the standing rule is to ACCEPT (or, for
 the developmental outcome, KEEP_AS_NON_CORE) and defer, not to second-guess.
+
+
+## 2026-11-06: current-context and primary-evidence re-review
+
+The current review contains 125 manually adjudicated source contexts: 74 ACCEPT, 14 TOO_GENERAL, 14 KEEP_AS_NON_CORE, 11 MODIFY, 6 REMOVE and 6 UNDECIDED; no NEW annotation is proposed. Generic-binding removals retain the truth of supported physical associations.
+
+The genuine seed projection has 124 rows because it collapses two Zic1 contexts. Both current rows are restored separately; raw rows 14 and 15 retain their nuclear extension atoms. Source qualifiers, grouped WITH/FROM values, curator identities and dates remain recoverable. The retained GOA and current private projection are byte-identical; this is not a claim that the retained file was downloaded again.
+
+Earlier blanket wording about both GLI3 products following the same trafficking route is superseded by the product-specific current description and rationales. Historical construct coordinates remain construct labels. The original notes above remain unchanged as an audit record.
+
+The context archive preserves the original 124-row review and all 190 quote associations. Thirty associations are historical-only where the old excerpt does not establish the precise current assertion; 160 remain active. The source guide records actual reading limits, and the evidence sidecar preserves the full current raw contexts and source ownership scope.
+
+The unresolved judgments concern the specific transcriptional assay, one digit-development source, two negative thymocyte-differentiation transfers, the nuclear-speck identity and the exact part_of-axoneme relation. They do not imply an unknown core molecular function.
