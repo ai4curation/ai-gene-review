@@ -51,3 +51,10 @@ The shorter isoform (VEGF121) lacks heparin binding:
 
 - PMID:15520188 - VEGF165B anti-angiogenic properties
 - Original VEGF papers describing isoform differences
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IEA (GO_REF:0000044, SL-0095). Kept KEEP_AS_NON_CORE; summary and reason rewritten, quotes added.
+- Source: UniProt "[Isoform L-VEGF189]: Endoplasmic reticulum {ECO:0000269|PubMed:11731620}" (with Golgi). The other isoform lines (VEGF121, VEGF165, VEGF189) say Secreted. The displayed sequence (P15692-13) is L-VEGF189, so the row is not on the wrong isoform, and no source_defects entry was made.
+- PMID:11731620 (Huez et al. 2001) was fetched and is abstract-only. In transfected COS-7 cells: [PMID:11731620 "The AUG-initiated form and the COOH cleavage product of the L-VEGF are both secreted. In contrast, the large isoform and its NH2 fragment present an intracellular localization."] The abstract does not name the ER.
+- Decision: KEEP_AS_NON_CORE on curator deference (curated line from an unread full text). MARK_AS_OVER_ANNOTATED is the close alternative: overexpression data, and the classical isoforms only transit the ER. No lumen row: VEGFA is a secreted protein with no retention signal.
