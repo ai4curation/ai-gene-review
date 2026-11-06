@@ -21,6 +21,6 @@
   `osmosensory signaling pathway`, and `cellular response to oxidative stress`.
   The PAINT node is the fungal HOG/Sty1 stress-MAPK node, and A. nidulans MpkC
   is in the inherited SakA/MpkC branch.
-- Accepted the SGD:HOG1 ISA to `cellular hyperosmotic response`, but with a
-  caution in the rationale: MpkC is a minor PbsB-dependent stress branch, not
-  the principal A. nidulans osmoadaptation MAPK.
+- Kept the SGD:HOG1 ISA to `cellular hyperosmotic response` as non-core:
+  MpkC is a minor PbsB-dependent stress branch, not the principal A. nidulans
+  osmoadaptation MAPK.
