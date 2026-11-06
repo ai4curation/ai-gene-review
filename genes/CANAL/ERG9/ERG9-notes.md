@@ -19,7 +19,17 @@ It supports ERG9 belonging to the late sterol response rather than directly prov
 or localization: ERG9 and ERG11 transcripts increased under lovastatin/fluconazole during
 mid-logarithmic growth [PMID:14653518].
 
-The plasma-membrane IDA row from PMID:19824013 should stay unresolved until the full
-proteomics table is inspected. The abstract describes a subproteomic plasma-membrane
-enrichment workflow, but it does not show whether ERG9 was a robust plasma-membrane resident
-or a carryover ER-membrane hit in a membrane fraction.
+The review remains anchored to the C. albicans SC5314 reference-proteome entry
+`A0A1D8PI71`. A transient 2026-11-06 refetch pulled the older P78589/ERG9_CANAX
+entry from strain ATCC 10259 / CBS 5796 instead; that entry is not in the SC5314
+reference proteome, lacks CGD locus cross-references, and is not used here as a
+machine-readable alternative counterpart.
+
+Newer-literature search:
+
+- `just deep-research-falcon CANAL ERG9` failed because `agentapi` is not installed; no
+  `ERG9-deep-research-falcon.md` was created.
+- Web/PubMed searches on 2026-11-06 did not find newer papers directly assaying C. albicans
+  ERG9. PMID:40852982 identified S. cerevisiae ERG9 repression as a ferulic-acid-resistance
+  determinant and tested ferulic-acid/fluconazole synergy in C. albicans, but it does not
+  provide direct C. albicans ERG9 enzymology or localization evidence.
