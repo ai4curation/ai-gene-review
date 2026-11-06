@@ -27,3 +27,10 @@ Annotation stance:
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the prior wording described the TRAPP-component context as PN-specific and interpreted TRAPPC5 through TRAPP/TRAPPII/TRAPPIII complex membership and ER-Golgi trafficking rather than a broad autophagy process annotation.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IEA (GO_REF:0000044, SL-0095), located_in, ACCEPT.
+- Check: UniProt line "Endoplasmic reticulum {ECO:0000250}" names no source; mouse Q9CQA1 is also ECO:0000250; yeast Trs31p (Q03337) is listed at the cis-Golgi network and ER (UniProt REST, 2026-11-06). No assay places TRAPPC5 itself at the ER.
+- The claim holds by TRAPP core membership with TRAPPC3 [PMID:21525244 "C3, a core component of the complex, localizes to the transitional ER"; PMID:16880271 "Immuno-EM in NRK cells confirmed that mBet3p (5-nm gold particles) resides on the tER region labeled with Sec31p (10-nm gold particles)."].
+- Outcome: kept ACCEPT with the check recorded; stays at root (one line, soluble peripheral subunit, no TM or signal peptide).
