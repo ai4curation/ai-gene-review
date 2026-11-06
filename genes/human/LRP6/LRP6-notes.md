@@ -59,3 +59,19 @@ Three sources were marked `UNVERIFIED` rather than overruled:
 - PMID:34896607: identifier/title cached, but no abstract or full text is locally available.
 
 GO_REF records were reviewed as annotation-method provenance, not as independent evidence for LRP6 biology. Reactome records were bounded to their cached event participants, species, and wording. No review conclusion relies on title-only inference when the relevant experimental detail is absent.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000044, SL-0095).
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:26387593}"; note "Released from the
+  endoplasmic reticulum on palmitoylation. Mono-ubiquitination retains it in the endoplasmic
+  reticulum in the absence of palmitoylation." [file:human/LRP6/LRP6-uniprot.txt].
+- PMID:26387593 (oligodontia) abstract: the A19V variant "results in altered glycosylation
+  and improper subcellular localization of the protein"; full text not downloadable
+  (PMC4596913), so the ER finding may be of the variant.
+- Wild-type biosynthetic pool shown on the gene: "Without grp94, LRP6 fails to export from
+  the ER to the cell surface" [PMID:23572575]; MESD is an ER chaperone for LRP5/6 [PMID:12581525].
+- Outcome: stays KEEP_AS_NON_CORE (transit pool with direct evidence; ABCA4/BACE2 precedent),
+  alternative MARK_AS_OVER_ANNOTATED stated. No ER membrane row. Added references
+  PMID:12581525, PMID:26387593 and the UniProt file.
