@@ -1557,7 +1557,7 @@ GO:0070063 RNA polymerase binding (IDA) for dksA PA4723 cites PMID:21255113, who
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/estA/estA-ai-review.yaml`
 
-PseudoCAP IMP glycolipid biosynthetic process on EstA (O33407, PA5112) from PMID:17631636 records reduced rhamnolipid in an estA deletion mutant. EstA is a surface-exposed outer-membrane carboxylesterase and the step it affects is unknown, so this is a necessity phenotype rather than participation in rhamnolipid biosynthesis. Please check the full text; if no biosynthetic step is attributed to EstA, remove the row or replace it with a regulation-type term. It supports the PAINT lipid biosynthetic process IBD at PTN005219546 (960 leaf IBAs).
+PseudoCAP IMP glycolipid biosynthetic process on EstA (O33407, PA5112) from PMID:17631636 records reduced rhamnolipid in an estA deletion mutant. EstA is a surface-exposed outer-membrane carboxylesterase and the step it affects is unknown, so the evidence supports necessity, not participation; rhamnolipid output may be several steps downstream of whatever EstA does. The term names the affected product correctly, so this is an over-annotation of the relation rather than a wrong term. The smallest change that fits the evidence is the qualifier: involved_in overstates it, and acts_upstream_of_or_within is the GO relation for a mutant phenotype whose mechanism is not established. Removing the row, or replacing it with a regulation-type term, would also be defensible if the full text attributes no step to EstA. It is the sole seed of the PAINT lipid biosynthetic process IBD at PTN005219546 (960 leaf IBAs).
 
 ## 128. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
