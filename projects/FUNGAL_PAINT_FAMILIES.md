@@ -438,7 +438,7 @@ node for protein arginine N5-methyltransferase activity. The official PANTHER
 family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
 to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 
-- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+- [x] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
   drafted in this branch
 - [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
 - [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
@@ -471,6 +471,12 @@ assertions inherited from non-fungal branches.
 
 ## 2026-11-06
 
+- Started `PTHR32379` with `yeast/RMT2`; the review accepts the fungal
+  `PTN001285370` protein-arginine N5-methyltransferase IBA, keeps the broader
+  `PTN001282244` nucleus/cytoplasm IBAs because they agree with direct Rmt2
+  localization, and records that the official PANTHER
+  `GUANIDINOACETATE N-METHYLTRANSFERASE` labels span both fungal Rmt2 enzymes
+  and the separate vertebrate GAMT/creatine-biosynthesis node.
 - Started `PTHR10340`, separating the fungal Ppn1 polyphosphatase clade from
   the metazoan sphingomyelinase/SMPDL3-like branches named by the official
   PANTHER family label. The first `yeast/PPN1` review accepts the fungal
