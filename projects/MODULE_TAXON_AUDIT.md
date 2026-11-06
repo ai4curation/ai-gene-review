@@ -41,7 +41,9 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
+- [ ] `bacterial_flagellar_assembly_export`: Comparative audit started: 27 roles, 28 exemplar appearances, 19 existing reviews and nine missing PSEPK reviews to seed. Review literature and native PSEPK, Salmonella and Vibrio evidence are being assessed; family grounding, taxon synthesis and complete gene reviews remain in progress.
+
+- [x] `bacterial_chromosomal_dna_replication`: PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) merged at 2026-11-06T17:59:52Z (`a4c122693a2144f1ca5a90efb520e78760e0f1dd`). All 569 scoped files match the reviewed head and current main; all 52 member reviews are COMPLETE with 1,082 rows and no PENDING. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6117-merged-content.json); [current-main panel](MODULE_TAXON_AUDIT/proofs/pr6117-current-main-panel.json).
 
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
@@ -555,3 +557,7 @@ Replication round2 completed full validation on 10,653 reviews. The17 reference 
 ## 2026-11-06 — PR #6117 integration with published main
 
 Integrated published main `1970e159b9` with the validated PR #6117 head `8df6fabd8d`. All 588 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — flagellar audit started; replication merge verified
+
+Started the flagellar assembly/export comparative audit from published main. The initial member baseline preserves 129 annotation rows and 57 raw/provider files. The gene reviewers own disjoint export and structural panels, while the module synthesis checks ion coupling, stator alternatives and regulation against direct species evidence. Separately verified PR #6117 at merge a4c122693a2144f1ca5a90efb520e78760e0f1dd and current main 488d370561caf677da6e0c8ef94d5b0c7f4cb374: all 569 scoped files are identical and all 52 reviews are COMPLETE with 1,082 rows and no pending actions. The linked proofs support the replication completion record; flagellar work remains in progress.
