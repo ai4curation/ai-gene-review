@@ -42,3 +42,10 @@
   listed in it in `.cache/panther/panther-members-19.0.tsv`; SF7 also contains
   uncharacterized mycobacterial and Mycoplasma transporters (Rv1999c, MPN_095), so the
   ethanolamine-permease grounding belongs to IPR004757, not SF7 or PTHR42770.
+
+
+## 2026-11-06 comparative re-audit
+
+PP_0544 remains an explicitly inferred KT2440 ethanolamine permease based on IPR004757/TIGR00908 and eutBC neighborhood. Those clues are related, because the family model itself used gene-neighborhood evidence; they are not two independent transport assays. Full PMID27325678 confirms PAO1 delta-eat growth is normal at pH 7.0 and 20 mM ethanolamine, whereas the distinct EatR/PA4021 regulator is required. Neither phenotype is a direct PP_0544 transport assay. The negative growth requirement does not exclude transport at limiting uncharged substrate or different pH. Existing substrate-specific refinements are retained as predictions, with no asserted coupling ion, substrate charge or universal uptake requirement. The core remains a panel candidate rather than an experimentally confirmed native flux witness.
+
+A normal Falcon research attempt failed with HTTP 403 authentication/access error; no provider report was fabricated. Review evidence comes from the primary sources, frozen UniProt/domain records and explicitly identified comparative inference. Original GOA/UniProt files and upstream row payloads are preserved. Source refreshes used only the normal publication fetch command; separately acquired full articles remain ignored, with small exact excerpts and provenance retained beside the reviews.

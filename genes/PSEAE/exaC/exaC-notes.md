@@ -33,3 +33,10 @@
   ethanolamine-pathway enzyme and now has its own review, with GO:0140087 inferred by ISS
   from ExaC. The ethanolamine module uses both as representatives of the non-acylating
   acetaldehyde-oxidation route.
+
+
+## 2026-11-06 comparative re-audit
+
+The target Q9ZAA1 is the ATCC17933/633 ExaC record (raw UniProt reference strain), not PAO1 PA1984/Q9I2C4. PMID22267508 directly measured recombinant PA1984 and created exaC/hdhA single/double PAO1 disruptions; therefore previous species-wide claims of no ExaC kinetics or deletion tests were false. Those measurements remain comparative for Q9ZAA1, whose exact detailed assays could not be recovered from abstract-only PMID10075429. Its curated experimental acetaldehyde activity and ethanol-pathway participation remain accepted. General ALDH/redox parents now MODIFY to the specific measured reaction. Hydrazone activity is not silently asserted as a direct result for the ATCC17933 protein. The suggested mechanistic control uses Cys301; Glu262 is not the catalytic cysteine.
+
+A normal Falcon research attempt failed with HTTP 403 authentication/access error; no provider report was fabricated. Review evidence comes from the primary sources, frozen UniProt/domain records and explicitly identified comparative inference. Original GOA/UniProt files and upstream row payloads are preserved. Source refreshes used only the normal publication fetch command; separately acquired full articles remain ignored, with small exact excerpts and provenance retained beside the reviews.

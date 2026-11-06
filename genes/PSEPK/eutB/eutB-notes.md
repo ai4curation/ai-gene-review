@@ -17,3 +17,11 @@
     (`genes/PSEPK/eutC/eutC-bioinformatics/RESULTS.md`: zero PF00936/PF03319/IPR000249/IPR004992 proteins in
     UP000000556; E. coli control positive). Cytosol (TreeGrafter IEA) ACCEPT now cites the same analysis.
 - Status set to COMPLETE.
+
+## 2026-11-06 native-location and source-scope follow-up
+
+The earlier “must act as a free cytoplasmic enzyme” interpretation exceeds the shell inventory. Zero detected conventional shell signatures (with E. coli positive control) support the bounded rejection of conventional BMC annotations, but do not directly locate active KT2440 EutBC. The inventory and raw output remain unchanged historical sources. PMID:19762342 concerns E. coli, including a truncated construct with altered solubility; PMID:20519496 assigns the catalytic barrel to EutB and cofactor-contact support to EutC in an E. coli structure. Neither establishes native KT2440 localization or kinetics. Conserved activities remain accepted with explicit homolog inference.
+
+EutB cytosol is now UNDECIDED and omitted from the core locations. Catalytic activity remains assigned to EutB within the assembled enzyme.
+
+All historical annotation payloads and source/provider bytes are preserved; no NEW rows were added.

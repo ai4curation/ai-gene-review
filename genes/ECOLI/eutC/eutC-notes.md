@@ -29,3 +29,9 @@
 - GO:0031471 KEEP_AS_NON_CORE (E. coli encodes the shell; targeting peptide on EutC; contested);
   GO:0031469 -> MODIFY to GO:0031471.
 - Core: contributes_to GO:0008851, in complex GO:0009350, process GO:0046336.
+
+## 2026-11-06 localization and subunit follow-up
+
+This entry supersedes the earlier localization counterview and qualifier certainty above. The 2013 Salmonella external-EutBC statement is a model prediction, not an established E. coli location. PMID:35785499 reports native LT2 immunogold compartment association; PMID:41032589 reports native LT2 cargo/shell imaging and EutQ-mediated encapsulation. Neither is a native E. coli assay. PMID:27450681 explicitly used Salmonella LT2 proteins in a heterologous E. coli host. E. coli MC4100 cytosol proteomics (PMID:18304323, EutB) supports the inherited location annotation through curator-reviewed tables not independently recovered here, but fractionation does not identify the site of ethanolamine-induced catalytic flux. Thus no E. coli compartment flux location is imposed on the core. The specific BMC row remains a conditional inferred non-core location; the broad BMC row remains refined to it.
+
+EutB retains catalytic-subunit enables within the holoenzyme, without implying autonomous turnover. EutC contributes_to in the core reflects its cofactor-interface role. Its three source-specific enables concerns are PROBABLE, not CONFIRMED: the source convention must be checked, and neither isolated inactivity nor an active-site barrel in its partner automatically determines the qualifier. The original payloads, including enables, are preserved. Exact structural support remains PMID:20519496: “The active site is in the (beta/alpha)(8) barrel of the alpha-subunit; the beta-subunit covers the lower part of the cobalamin that is bound in the interface of the alpha- and beta-subunits.” No NEW annotations or action changes were made. Existing source caches were not refreshed.

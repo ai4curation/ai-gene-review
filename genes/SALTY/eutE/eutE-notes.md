@@ -85,3 +85,10 @@ outside injecting acetaldehyde in [PMID:23585538].
   This aligns with the E. coli EutB/EutC reviews in the same PR; EutE has the strongest
   direct evidence (EutE1-21 binding to the EutS shell protein). The lumen-versus-shell
   distinction stays as the existing suggested_question about a BMC lumen term.
+
+
+## 2026-11-06 modern LT2 spatial evidence follow-up
+
+The preceding historical notes are retained as session provenance. Their statement that EutBC is outside the compartment is superseded: PMID35785499 immunogold and PMID41032589 native LT2 fluorescence/encapsulation-peptide experiments support EutBC cargo incorporation with EutE. The2013 paper explicitly proposed an exterior model from genetics; that is now labeled historical in the review, including its finding and retained verbatim quote. The native EutQ cargo interface and recombinant EutS targeting experiments are distinguished.
+
+All eight original annotation payloads and raw files are preserved. GO0006091 is restored to ACCEPT because true energy/precursor metabolism is not replaced by an unrelated ethanolamine-process term. The broad oxidoreductase row now MODIFYs to existing GO0008774. No NEW rows are added. Strain14028s knockout evidence, LT2 reference identity and recombinant SeEutE assay context are explicitly separated. A genuine default Falcon attempt returned403; no provider report was fabricated. The obsolete proposed experiment asserting activity only inside the compartment was corrected to test targeting-dependent pathway performance independently of intrinsic chemistry.

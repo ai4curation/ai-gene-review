@@ -19,3 +19,11 @@
     EutK) and 1 vertex protein (EutN)) shows KT2440 encodes no shell protein, so the HAMAP-derived
     microcompartment location is over-propagated.
 - Status set to COMPLETE.
+
+## 2026-11-06 native-location and source-scope follow-up
+
+The earlier “must act as a free cytoplasmic enzyme” interpretation exceeds the shell inventory. Zero detected conventional shell signatures (with E. coli positive control) support the bounded rejection of conventional BMC annotations, but do not directly locate active KT2440 EutBC. The inventory and raw output remain unchanged historical sources. PMID:19762342 concerns E. coli, including a truncated construct with altered solubility; PMID:20519496 assigns the catalytic barrel to EutB and cofactor-contact support to EutC in an E. coli structure. Neither establishes native KT2440 localization or kinetics. Conserved activities remain accepted with explicit homolog inference.
+
+EutC retains its contribution-qualified core and accepted reaction. The combined UniProt GO_REF:0000120 qualifier caution is PROBABLE, not CONFIRMED, with exact mapping components recorded. The correction rests on the inferred small-subunit role, not a rule that enables requires autonomous isolated-subunit activity.
+
+All historical annotation payloads and source/provider bytes are preserved; no NEW rows were added.
