@@ -41,7 +41,9 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `osmoregulated_periplasmic_glucan_biosynthesis`: Comparative OPG science and focused validation are complete: 11 COMPLETE gene reviews, 91 original annotation payloads preserved, 96 current rows, 28 unchanged raw/provider sources, 13 literature references including two reviews, 18 findings, seven parts and eight annotons, two family reviews, 24 endpoint cases and ten mutation cases. The full-corpus run completed on science commit 074427cc8340be71f9fbdeea8440f551bdbea6b0 with schema, term, best-practice and pathway checks passing. Its 17 blocking reference errors in 16 unrelated yeast reviews exactly match the known baseline; all 22 relevant inputs are identical to the pinned base. These are addressed separately in PR #6134. Publication of this comparative revision to adopted PR #2142, renewed review, CI and actual merge remain pending. [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142).
+- [ ] `bacterial_flavonoid_degradation`: comparative follow-up in progress; fourteen existing reviews frozen, seven alphaproteobacterial comparison reviews seeded, literature and taxon scope under audit.
+
+- [x] `osmoregulated_periplasmic_glucan_biosynthesis`: [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142) merged at `fb8e3ee95b`; 179 scoped files verified identical to the approved head.
 
 - [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
 
@@ -84,7 +86,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 3 PR_OPEN, 3 IN_PROGRESS and 738 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 3 PR_OPEN, 3 IN_PROGRESS and 737 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -573,3 +575,9 @@ Integrated published main `039e2ef630` with the validated PR #2142 head `79b979a
 ## 2026-11-06 — OPG review follow-up validation
 
 PR #2142 review fixes passed a fresh full-corpus validation on frozen science head 05230b5e38d6a055164e2825c0c0b8016f9304a8: 10,683 reviews, zero blocking errors and 54 pathway files. All 183 scoped files remained byte-identical through the run. The beta-glucan rows retain independently supported claims; Caulobacter synthesis support remains explicitly inferred; the OpgG hydrolysis proposals distinguish biochemical capability from unresolved physiological relevance. A subsequent import/hash-helper formatting fix addresses the CI lint failure without changing lineage assertions; both lint and the complete lineage check pass. Renewed review, CI and actual merge remain pending.
+
+## 2026-11-06 — flavonoid comparative audit and OPG merge verification
+
+Start comparative flavonoid audit from merged PR5971. Freeze fourteen existing reviews,34annotation rows and34source files; inspect three review articles and the 2013/2016/2024 primary evidence. A live KEGG census places all50 complete seven-KO coassignments in Pseudomonadota without proving pathway activity. Correct the unsupported exclusion of UDP-glucose epimerase activity in Hsero_1012 to UNDECIDED and qualify the FdeD reaction position while preserving all inherited NEW rows. Record independent full-text access for four HERSS reviews. Seven newly seeded BRADU comparisons are being reviewed separately. OPG PR2142 actually merged and179scoped files match its approved head; mark that module COMPLETE. Flavonoid module science, validation, dedicated PR, review,CI and merge remain pending.
+
+[Verified OPG merge content](MODULE_TAXON_AUDIT/proofs/pr2142-merged-content.json) records all 179 compared files.

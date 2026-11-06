@@ -17,3 +17,7 @@
   FdeE). Only FdeE has been assayed biochemically; only fdeA, fdeC, fdeE, fdeG and fdeR
   have been mutated.
 - Context: written for the module `modules/bacterial_flavonoid_degradation.yaml`.
+
+## 2026-11-06 — comparative fde audit
+
+Read the 2013 full paper through its author-uploaded copy; its fdeA mutation is probably polar. Preserve the distinction between locus-level inference and exact catalytic assignment. See modules/bacterial_flavonoid_degradation-notes.md for source access and comparative boundaries.

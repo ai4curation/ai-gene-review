@@ -8,3 +8,7 @@
 - The OpenScientist run ended with a DNS connection failure and produced no
   research artifact. The review therefore uses the fetched records, KEGG
   mapping, primary pathway paper, and a reproducible ortholog comparison.
+
+## 2026-11-06 — comparative fde audit
+
+Read the 2013 full paper through its author-uploaded copy; its fdeA mutation is probably polar. Preserve the distinction between locus-level inference and exact catalytic assignment. See modules/bacterial_flavonoid_degradation-notes.md for source access and comparative boundaries.
