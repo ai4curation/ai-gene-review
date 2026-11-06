@@ -121,12 +121,36 @@ synthesis — the same G1P pool may feed ester-linked G1P-PG. This matches the
 `egsA-notes.md` plan, which proposes `MODIFY` to `GO:0046474` (not `GO:0008611`)
 for the gene itself, precisely because the ether bond is PcrB's work.
 
-## Consistency with the (deliberately stubbed) gene reviews
+## Consistency with the gene reviews
 
-`genes/BACSU/egsA` and `genes/BACSU/pcrB` have worked notes files but their
-`-ai-review.yaml` files are still `status: INITIALIZED` stubs with every row
-`action: PENDING`. **Neither was edited.** The module was written to match the
-planned actions in those notes:
+**Update (2026-11-06, PR #6063).** Both reviews are now complete
+(`status: COMPLETE`), so the section below is a record of the module's original
+rationale rather than current state. The plan table is left as written, but two
+of its rows were superseded when the reviews were done:
+
+- **`pcrB: MODIFY GO:0046474/GO:0006650 -> GO:0008611`** was reversed. The
+  review keeps `GO:0046474` and adds `GO:0008611` *beside* it as a NEW IDA row,
+  because `GO:0008611` is not a descendant of `GO:0046474` (its parents are
+  `GO:0008610`, `GO:0046485`, `GO:0046504`), so replacing would have discarded a
+  true claim rather than refining one. The module's own assertion of
+  `GO:0008611` on the PcrB step is unaffected.
+- **`pcrB NEW non-core GO:0042158`** was dropped. PcrB contributes no atom to
+  the modified lipoprotein: LhaT performs the transfer, the acetyl group comes
+  from acetyl-CoA via YvoF, and HepG is regenerated. The deletion phenotype is
+  necessity, not participation, evidence. The module's placement of
+  `GO:0042158` on LhaT alone was therefore right, and the gene review now
+  agrees with it.
+
+The validation record near the end of this file also predates those reviews:
+`module_validator` now reports **1 warning**, not 3, because the two
+`FUNCTION_UNREVIEWED` coverage notices cleared once the gene reviews gained
+`core_functions`. The remaining warning is the unadjudicated PANTHER family
+review.
+
+`genes/BACSU/egsA` and `genes/BACSU/pcrB` had worked notes files but their
+`-ai-review.yaml` files were still `status: INITIALIZED` stubs with every row
+`action: PENDING` when this module was built. **Neither was edited then.** The
+module was written to match the planned actions in those notes:
 
 | Notes plan | Module |
 |---|---|
@@ -265,8 +289,9 @@ Checked via the OLS MCP on 2026-11-03:
 
 ## Follow-ups for the user
 
-1. Complete `genes/BACSU/egsA` and `genes/BACSU/pcrB` reviews from their notes;
-   that clears the two `FUNCTION_UNREVIEWED` notices.
+1. ~~Complete `genes/BACSU/egsA` and `genes/BACSU/pcrB` reviews from their
+   notes; that clears the two `FUNCTION_UNREVIEWED` notices.~~ **Done, PR
+   #6063.** Both notices cleared; the validator now reports 1 warning.
 2. Create `genes/BACSU/yvoF` (O34993) and a folder for *lhaT*/*ypjA* (P54392).
    LhaT is the more valuable of the two: a membrane enzyme with a brand-new
    function, a donor GO cannot currently express, and a documented
