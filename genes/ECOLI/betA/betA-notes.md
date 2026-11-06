@@ -15,3 +15,14 @@
 - GO:0008802 (NAD+ betaine-aldehyde dehydrogenase) IEA is REMOVED. It is NAD-specific, BetA's acceptor is respiratory, and purified BetA lacks the activity. UniProt P17444 attributes BetB's NAD kinetics to BetA; recorded as source_defects. The same call is applied to P. putida BetA (Q88CW6), which gets the same HAMAP MF_00750 propagation.
 - Generic rows (membrane, GO:0016614) are MODIFIED to the specific terms the gene carries.
 - Osmotic-stress IEP/IMP rows are non-core.
+
+
+## 2026-11-06 comparative choline/betaine module audit
+
+Retained choline dehydrogenase and rejection of the electronic NAD-specific aldehyde reaction. The original source explicitly separates membrane electron-transfer activity from soluble NAD-dependent aldehyde oxidation. The 2024 purified Ecoli preparation failed to oxidize aldehyde under the tested conditions; its accessible abstract does not establish exact strain/accession or all assay conditions. The 2022 Acinetobacter full publisher article uses PMS, not NAD. Removed the categorical FAD/no-NAD inference; retained source-defect flags and the inherited glycine-betaine process proposal.
+
+Existing genuine OpenScientist research was inspected and preserved; no replacement provider report was authored.
+
+All original machine row fields and raw UniProt/GOA files were preserved, with inherited NEW assertions tracked separately from this audit (zero added rows). The six-target baseline has 55 rows, three inherited NEW, twelve raw-file hashes and four provider-report hashes. Reusable check: `.cache/module-audit-logs/choline-betaine-20261106/check-original-six.py`; report `original-six-preservation.json`. Focused gene validation passed with no curation warnings. Ecoli BetT/BetA/BetB PAINT loss checks found no IRD/IKR. Status remains COMPLETE because review decisions are complete; unresolved biological/source claims are explicitly qualified.
+
+Normal force-fetches of PMIDs39510372,34431198,3512525,3512526,2194570,17322201,27718375,26913973 did not recover full text; the first fetch of PMID18156257 also remained abstract-only. PMID34431198 full publisher text was read externally (https://enviromicro-journals.onlinelibrary.wiley.com/doi/10.1111/1462-2920.15741), including assay methods and preparation purity. Source distinctions: A. baumannii ATCC19606 HMPREF0010_01460 with a recombinant His tag; PMS serves as primary acceptor and oxygen measures its reoxidation. These data are comparative, not assays of either original BetA target. No publication cache was manually edited.
