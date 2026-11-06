@@ -1,6 +1,6 @@
 ---
 title: "Alliance automated description regressions"
-species: [worm]
+species: [worm, yeast, DROME]
 autolink_exclude: [DPM1]
 ---
 
@@ -80,3 +80,31 @@ against, so most of these are omissions, not before/after losses.
 - **IMD2, IMD3, IMD4:** the automated text omits IMP dehydrogenase activity
   although GOA has those rows (IBA, IEA, RCA). There is no RefSeq copy to compare,
   so this is an omission by the generator, not a loss.
+
+## Fly candidates
+
+Found during the fly follow-up (texts fetched 2026-11-01, quoted from
+`genes/DROME/<gene>/<gene>-descriptions.yaml`).
+
+- **Mtpalpha (FB:FBgn0028479):** the RefSeq copy (Jun 2026) says "Involved in fatty
+  acid beta-oxidation and response to starvation"; the current automated text says
+  "Involved in fatty acid beta-oxidation". GOA still has the response to starvation row.
+- **IKKepsilon (FB:FBgn0086657):** the RefSeq copy (Jul 2025) lists "antiviral innate
+  immune response; cell maturation; and cytoskeleton organization"; the current text
+  lists "cell maturation; cytoskeleton organization; and sensory organ development".
+  GOA still has the antiviral innate immune response row, so the summary may have
+  dropped it only by choosing three "several processes" examples.
+- **Mon1, GatC:** a process (neuromuscular junction development) or activity
+  (glutaminyl-tRNA synthase) in the RefSeq copy is gone from the current text. Neither
+  is in GOA any more, so these are not regressions.
+
+### Ortholog names
+
+Two automated texts, and their RefSeq copies, name a human ortholog that the gene
+reviews disagree with. The ortholog sentence comes from the Alliance orthology data,
+not from GO, so check the orthology call itself before filing:
+
+- **ey (FB:FBgn0005558):** "Orthologous to human PAX4 (paired box 4)", with diabetes
+  disease associations; ey is the Pax6 ortholog.
+- **tin (FB:FBgn0004110):** "Orthologous to human NKX2-2 (NK2 homeobox 2)"; tinman is
+  the Nkx2-5 ortholog.

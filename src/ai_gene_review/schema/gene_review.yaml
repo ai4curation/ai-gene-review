@@ -2030,6 +2030,50 @@ classes:
           severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent
           rather than residues substituted (MEFV, RAD51C). Recording the reason keeps
           the escape valve honest rather than silent.
+      paint_losses:
+        range: PaintLoss
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          PAINT losses (IRD or IKR) that now block this annotation's term on the gene's
+          lineage. An IRD produces no leaf annotation, so a cached GOA file can still
+          carry an IBA that a newer IRD has withdrawn; this records that fact, and
+          whether the review agrees with the loss, in a form that can be queried and
+          checked against the family's paint.tsv. `just paint-losses <org> <GENE>`
+          lists the candidates.
+
+  PaintLoss:
+    description: >-
+      A PAINT loss on the gene's PANTHER lineage that blocks the annotated term, and
+      the review's judgement of it.
+    attributes:
+      node_id:
+        range: string
+        required: true
+        pattern: "^PANTHER:PTN[0-9]+$"
+        description: The PANTHER node carrying the IRD or IKR.
+      evidence:
+        range: PaintLossEvidenceEnum
+        required: true
+      date:
+        range: string
+        pattern: "^[0-9]{8}$"
+        description: The loss row's date in PAINT IBD.gaf (YYYYMMDD).
+      agreement:
+        range: PaintLossAgreementEnum
+        required: true
+        description: Whether this review's evidence supports the loss for this gene.
+      argument:
+        range: string
+        description: >-
+          For a loss the review disputes (CONTRADICTED or TOO_BROAD), the case to put to
+          PAINT curators, with its citations and the scope of the clade. Used in the
+          IRD_EVIDENCE PAINT report in place of the row's reason.
+      suggestion:
+        range: string
+        description: >-
+          The change to propose to PAINT for a disputed loss (for example "Retract the
+          IRD for GO:0031265 only").
 
   ResidueClaim:
     description: >-
@@ -2486,6 +2530,16 @@ classes:
         range: TaxonomicScopeAssessment
         inlined: true
         description: Assessment of taxonomic restriction appropriateness
+      annotation_assessments:
+        range: RuleAnnotationAssessment
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Per-consequent assessments: one entry for each GO term, protein name,
+          EC number or catalytic activity the rule assigns, recording whether it
+          is correct for the proteins the rule matches, with example proteins.
+          This is the structured record of a rule problem, for example a naming
+          rule whose conditions also match a paralog with a different function.
       confidence:
         range: float
         minimum_value: 0.0
@@ -2518,6 +2572,21 @@ classes:
         multivalued: true
         inlined_as_list: true
         description: GO terms assigned by this rule
+      protein_name_annotations:
+        range: RuleProteinNameAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Protein names and EC numbers assigned by this rule (UniProt
+          proteinDescription consequents). Naming rules produce no GO rows
+          directly, but a wrong name or EC number can propagate into GO via
+          EC2GO and into downstream curation.
+      catalytic_activity_annotations:
+        range: RuleCatalyticActivityAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Catalytic activity statements (Rhea reactions) assigned by this rule.
       ipr2go_redundancy:
         range: InterPro2GORedundancy
         inlined: true
@@ -2640,6 +2709,262 @@ classes:
       aspect:
         range: string
         description: GO aspect (F, P, or C)
+
+  RuleProteinNameAnnotation:
+    description: >-
+      A protein name assigned by a rule (UniProt proteinDescription).
+      A naming rule may assign only an EC number with no full name text;
+      UniProt then displays a name derived from the EC number.
+    attributes:
+      name_type:
+        range: RuleProteinNameTypeEnum
+        description: Which name slot the rule fills
+      full_name:
+        range: string
+        description: The full name text, if the rule gives one
+      short_names:
+        range: string
+        multivalued: true
+        description: Short names assigned with the full name
+      ec_numbers:
+        range: string
+        multivalued: true
+        description: EC numbers attached to this name (e.g., 1.2.1.75)
+
+  RuleCatalyticActivityAnnotation:
+    description: A catalytic activity (reaction) assigned by a rule
+    attributes:
+      reaction_name:
+        range: string
+        description: The reaction as written by UniProt
+      rhea_id:
+        range: string
+        description: Rhea reaction CURIE (e.g., RHEA:26446)
+        pattern: "^RHEA:[0-9]+$"
+      ec_number:
+        range: string
+        description: EC number of the reaction, if given
+
+  RuleAnnotationAssessment:
+    description: >-
+      Assessment of one consequent of a rule (a GO term, protein name, EC
+      number or catalytic activity) against the proteins the rule matches.
+    attributes:
+      annotation_kind:
+        range: RuleAnnotationKindEnum
+        required: true
+        description: What kind of consequent is assessed
+      value:
+        range: string
+        required: true
+        description: >-
+          The consequent itself: a GO id, a name text, an EC number, or a Rhea id
+      label:
+        range: string
+        description: Human-readable label (e.g., GO term label or reaction name)
+      assessment:
+        range: RuleAnnotationAssessmentEnum
+        required: true
+        description: Whether the consequent is correct for the matched proteins
+      matched_protein_count:
+        range: integer
+        minimum_value: 0
+        description: Number of proteins the rule annotates with this consequent
+      incorrect_protein_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of those proteins for which the consequent is judged incorrect
+          (state how this was determined in notes)
+      correct_examples:
+        range: string
+        multivalued: true
+        description: UniProt accessions for which the consequent is correct
+      incorrect_examples:
+        range: string
+        multivalued: true
+        description: UniProt accessions for which the consequent is incorrect
+      gene_reviews:
+        range: string
+        multivalued: true
+        description: >-
+          Paths of gene reviews in this repository that document the problem
+          (e.g., genes/METS5/Msed_1700/Msed_1700-ai-review.yaml)
+      discriminating_features:
+        range: string
+        multivalued: true
+        description: >-
+          Signatures that separate correct from incorrect matches and could be
+          added as rule conditions (e.g., CDD:cd23940)
+      notes:
+        range: string
+        description: Reasoning for the assessment
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Supporting text from literature or files
+
+  CuratedRule:
+    description: >-
+      An annotation rule curated in this repository (rules/curated/). It couples the
+      sequence-feature logic (domains, families, CDD models) with taxon and module-context
+      conditions in one auditable rule, and records which external annotation source
+      (an InterPro2GO mapping, an ARBA or UniRule rule) it replaces. A rule fires for a
+      protein when ANY condition set holds; a condition set holds when ALL its conditions
+      hold. See rules/curated/README.md.
+    slots:
+      - id
+      - description
+      - references
+    slot_usage:
+      id:
+        description: Rule identifier, CR- followed by four digits (e.g., CR-0001)
+        pattern: "^CR-[0-9]{4}$"
+    attributes:
+      title:
+        range: string
+        required: true
+        description: Short name of the rule
+      status:
+        range: CuratedRuleStatusEnum
+        required: true
+        description: Lifecycle status of the rule
+      condition_sets:
+        range: CuratedRuleConditionSet
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        description: Condition sets, OR-ed together
+      go_annotations:
+        range: RuleGOAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: GO terms the rule assigns
+      protein_name_annotations:
+        range: RuleProteinNameAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: Protein names and EC numbers the rule assigns
+      catalytic_activity_annotations:
+        range: RuleCatalyticActivityAnnotation
+        multivalued: true
+        inlined_as_list: true
+        description: Catalytic activities the rule assigns
+      replaces:
+        range: ReplacedAnnotationSource
+        multivalued: true
+        inlined_as_list: true
+        description: External annotation sources this rule is proposed to replace
+      gene_reviews:
+        range: string
+        multivalued: true
+        description: Gene reviews in this repository that motivate or test the rule
+      validation_runs:
+        range: CuratedRuleValidationRun
+        multivalued: true
+        inlined_as_list: true
+        description: Records of checking the rule against UniProtKB
+      notes:
+        range: string
+        description: Curator notes, open questions and known limitations
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Supporting text for the rule's biology
+
+  CuratedRuleConditionSet:
+    description: A conjunction of conditions; all must hold for the set to hold
+    attributes:
+      number:
+        range: integer
+        required: true
+        minimum_value: 1
+        description: 1-based condition set number
+      conditions:
+        range: CuratedRuleCondition
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        description: Conditions in this set (all must hold)
+      notes:
+        range: string
+        description: What this condition set captures
+
+  CuratedRuleCondition:
+    description: >-
+      One condition of a curated rule. Sequence-feature and taxon conditions are tested
+      on the protein. MODULE_CONTEXT conditions are tested on the protein's organism or
+      other context and are exclusion-only: the condition fails only when the module is
+      evaluated as unsatisfiable in that context, and holds when it is satisfiable or not
+      evaluated. A missing component may be a detection gap, so absence of evidence never
+      makes a module condition fail.
+    attributes:
+      condition_type:
+        range: CuratedRuleConditionTypeEnum
+        required: true
+        description: Kind of condition
+      value:
+        range: string
+        required: true
+        description: >-
+          The tested identifier: an InterPro, Pfam, PANTHER, CDD or NCBIfam accession, a
+          CATH FunFam id, an NCBITaxon CURIE, or a MODULE: id
+      label:
+        range: string
+        description: Human-readable label
+      negated:
+        range: boolean
+        description: If true the condition holds when the feature is absent (not allowed for MODULE_CONTEXT)
+      notes:
+        range: string
+
+  ReplacedAnnotationSource:
+    description: An external annotation source a curated rule is proposed to replace
+    attributes:
+      source_type:
+        range: AnnotationSourceTypeEnum
+        required: true
+      source_id:
+        range: string
+        required: true
+        description: >-
+          The source: an InterPro entry for INTERPRO2GO (e.g., InterPro:IPR005024), or a
+          rule id for ARBA or UNIRULE (e.g., ARBA:ARBA00067001)
+      consequent:
+        range: string
+        description: What the source assigns (GO id, EC number or Rhea id)
+      review_record:
+        range: string
+        description: >-
+          Where this repository records the problem with the source (e.g., a row in
+          projects/INTERPRO/interpro2go.sssom.yaml or a rule review YAML)
+      notes:
+        range: string
+
+  CuratedRuleValidationRun:
+    description: >-
+      A check of the rule against UniProtKB, comparing the proteins it matches with the
+      proteins the replaced source annotates
+    attributes:
+      run_date:
+        range: string
+        required: true
+        description: Date of the run (YYYY-MM-DD)
+      uniprot_query:
+        range: string
+        description: The UniProt query equivalent to the rule's sequence and taxon conditions
+      matched_count:
+        range: integer
+        minimum_value: 0
+        description: UniProtKB entries the rule matches (module conditions not applied)
+      replaced_source_count:
+        range: integer
+        minimum_value: 0
+        description: UniProtKB entries the replaced source covers
+      notes:
+        range: string
 
   # ============== Rule Analysis Classes ==============
 
@@ -3134,6 +3459,16 @@ enums:
           of the reviewed UniProt entry. asserted_value is the entry
           (UniProtKB:Q96PV0); corrected_value names a sequence that carries
           the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
+      DUPLICATE_ASSERTION:
+        description: >-
+          One assertion is present more than once in a source's annotation set:
+          the same gene product, term, reference and evidence code entered
+          repeatedly, differing only in incidentals such as date or qualifier.
+          Distinct from ReferenceReplacementReasonEnum's DUPLICATE_RECORD, which
+          is about two reference records for one paper. asserted_value names the
+          duplicated rows (dates or qualifiers that distinguish them) and
+          requested_change is DELETE_ROW for the copies to retire; the
+          explanation says which row to keep and why.
       OTHER:
         description: Any other source-record defect; describe it in the explanation.
 
@@ -3178,6 +3513,40 @@ enums:
         description: MTBBASE curation of Mycobacterium tuberculosis genes.
       PINC:
         description: PINC curation group (assigned_by PINC in GOA).
+      INTERPRO:
+        description: >-
+          InterPro, including the InterPro2GO mappings behind GO_REF:0000002 and
+          the signature descriptions those mappings are drawn from. The fix is to
+          the entry's GO mapping or its description, not to any gene's annotation.
+      PANTHER:
+        description: >-
+          A PANTHER family or ancestral-node GO association, as propagated by
+          UniProt's TreeGrafter (GO_REF:0000118). Distinct from GO_CENTRAL, which
+          is PAINT's own IBD/IBA curation: a term can be wrong on a PANTHER node
+          without PAINT asserting it, and the two are fixed in different places.
+      COMPLEX_PORTAL:
+        description: Complex Portal curation of macromolecular complexes.
+      ENSEMBL:
+        description: >-
+          An Ensembl gene build or its gene model, including models propagated
+          into UniProt TrEMBL.
+      NCBI:
+        description: NCBI Gene or RefSeq records and their gene models.
+      ENZYME:
+        description: >-
+          The ExPASy ENZYME / EC nomenclature record, e.g. a transferred or
+          deleted EC class still cited as live.
+      DISPROT:
+        description: DisProt curation of intrinsically disordered regions.
+      HPA:
+        description: Human Protein Atlas, including its antibody-based localisations.
+      CAFA:
+        description: A CAFA challenge annotation set.
+      GOC:
+        description: >-
+          The GO Consortium's ontology editors, for a defect in a term itself -
+          its label, definition, or placement in the graph - rather than in any
+          annotation using it.
       OTHER:
         description: Name the resource in the explanation.
 
@@ -3194,6 +3563,35 @@ enums:
         description: Primers, probes or constructs in the paper map to a different locus.
       CONTAMINANT:
         description: A common affinity-purification contaminant recorded as a real partner.
+      OVER_PROPAGATION:
+        description: >-
+          An annotation was propagated beyond the clade, family or node where its
+          evidence holds - a single seed spread across a heterogeneous family, or
+          a node association emitted to every descendant. The fix is at the seed
+          or the node, not on the rows that inherit it.
+      SCOPE_OVER_REACH:
+        description: >-
+          A mapping or rule correct for some members of a signature or family was
+          applied to members outside that scope, most often across a taxon
+          boundary (e.g. an own-process term applied to the viral members of a
+          family whose bacterial members it fits).
+      LABEL_WITHOUT_DEFINITION:
+        description: >-
+          A term was chosen from its label while its definition says something
+          else, including near-miss labels that sit in unrelated parts of the
+          graph (nucleoside vs nucleotide binding; "dark reaction" read as
+          "light-independent").
+      SPECULATION_AS_ASSERTION:
+        description: >-
+          A hedged statement in the source - "may function as", "probable",
+          a family description's surviving speculation - was promoted into an
+          asserted annotation.
+      PRACTICE_CHANGE:
+        description: >-
+          A curation programme's convention changed, so a dated cohort of rows
+          shares a defect that is not a per-row judgement (e.g. a qualifier used
+          consistently across one campaign's output). Fixable in bulk, and the
+          explanation should give the date range and row count.
       OTHER: {}
       UNKNOWN: {}
 
@@ -3553,6 +3951,28 @@ enums:
       IEA:
         description: Inferred from Electronic Annotation
         meaning: ECO:0000501
+
+  PaintLossEvidenceEnum:
+    description: PAINT evidence codes that record a loss of function on a tree node.
+    permissible_values:
+      IRD:
+        description: Inferred from Rapid Divergence; blocks the ancestral IBD, emits no leaf annotation.
+      IKR:
+        description: Inferred from Key Residues; propagates to leaves as NOT|IBA.
+
+  PaintLossAgreementEnum:
+    description: How a gene review's evidence relates to a PAINT loss on its lineage.
+    permissible_values:
+      AGREES:
+        description: The review's evidence supports the loss for this gene.
+      CONTRADICTED:
+        description: The review has direct evidence that this gene keeps the function.
+      TOO_BROAD:
+        description: >-
+          The loss is right for part of the clade but not for this gene's branch, as
+          judged by the family review.
+      UNRESOLVED:
+        description: The review neither confirms nor refutes the loss for this gene.
 
   PropagationRootCauseEnum:
     description: >-
@@ -3973,6 +4393,94 @@ enums:
         description: Association-Rule-Based Annotator rule (automatically mined)
       UNIRULE:
         description: Expert-curated UniRule
+
+  CuratedRuleStatusEnum:
+    description: Lifecycle status of a curated rule
+    permissible_values:
+      DRAFT:
+        description: Being written; a condition may still lack the data needed to evaluate it
+      PROPOSED:
+        description: Complete and checked; proposed to replace the listed sources
+      ACTIVE:
+        description: In use for annotation
+      RETIRED:
+        description: No longer used
+
+  CuratedRuleConditionTypeEnum:
+    description: Kind of condition in a curated rule
+    permissible_values:
+      INTERPRO:
+        description: InterPro entry (e.g., IPR005024)
+      PFAM:
+        description: Pfam family (e.g., PF03357)
+      PANTHER:
+        description: PANTHER family or subfamily
+      FUNFAM:
+        description: CATH FunFam (e.g., 3.40.50.720:FF:000411)
+      CDD:
+        description: NCBI Conserved Domain Database model (e.g., cd23940)
+      NCBIFAM:
+        description: NCBIfam model (e.g., NF041005, TIGR00978)
+      TAXON:
+        description: Organism lineage includes this NCBITaxon (e.g., NCBITaxon:2759)
+      MODULE_CONTEXT:
+        description: >-
+          A module (MODULE: id) that must not be unsatisfiable in the organism or context
+          (exclusion-only)
+
+  AnnotationSourceTypeEnum:
+    description: Kind of external annotation source
+    permissible_values:
+      INTERPRO2GO:
+        description: An InterPro2GO mapping (GO_REF:0000002)
+      ARBA:
+        description: A UniProt ARBA rule
+      UNIRULE:
+        description: A UniProt UniRule
+      OTHER:
+        description: Any other source
+
+  RuleProteinNameTypeEnum:
+    description: Which UniProt protein name slot a rule fills
+    permissible_values:
+      RECOMMENDED:
+        description: Recommended name
+      ALTERNATIVE:
+        description: Alternative name
+      SUBMISSION:
+        description: Submitted name (TrEMBL)
+
+  RuleAnnotationKindEnum:
+    description: Kind of rule consequent
+    permissible_values:
+      GO_TERM:
+        description: A GO annotation
+      PROTEIN_NAME:
+        description: A protein name text
+      EC_NUMBER:
+        description: An EC number (in a name or a catalytic activity)
+      CATALYTIC_ACTIVITY:
+        description: A catalytic activity (Rhea reaction)
+      KEYWORD:
+        description: A UniProt keyword
+      OTHER:
+        description: Any other consequent
+
+  RuleAnnotationAssessmentEnum:
+    description: Assessment of a rule consequent against the proteins it matches
+    permissible_values:
+      CORRECT:
+        description: Correct for all or nearly all matched proteins
+      PARTIALLY_CORRECT:
+        description: >-
+          Correct for an identifiable subset of the matched proteins and
+          incorrect for another (typically paralogs the conditions do not separate)
+      INCORRECT:
+        description: Incorrect for most matched proteins
+      TOO_GENERAL:
+        description: True but less specific than the evidence supports
+      UNDECIDED:
+        description: Not enough evidence to decide
 
   RuleReviewStatusEnum:
     description: Status of the rule review

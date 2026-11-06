@@ -41,3 +41,12 @@ kinetics. Its claim that an adjacent ABC transporter imports choline-O-sulfate
 is not adopted: PP_0075 has SLC26A/SulP-STAS architecture, no cognate local ABC
 ATPase is established, and neither PP_0075 nor PP_0076 has a target-specific
 transport assay.
+
+## 2026-11-02 completion (choline-O-sulfate module curation)
+
+- GO:0008484 sulfuric ester hydrolase activity changed from KEEP_AS_NON_CORE to
+  MODIFY -> GO:0047753 (correct but general; consistent with S. meliloti ortholog
+  O69787, reviewed in genes/RHIME/betC).
+- Cytoplasm row now supported by the betC deletion phenotype (intact COS accumulates
+  inside cells) and the choline-sulfatase InterPro signature.
+- Status set to COMPLETE.
