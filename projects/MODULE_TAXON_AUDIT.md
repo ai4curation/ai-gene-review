@@ -476,3 +476,7 @@ PR #6121 follow-up reconciles heme handoff versus transmembrane transport across
 ## 2026-11-06 — cytochrome follow-up full validation
 
 The PR #6121 scientific follow-up full run finished on 10,548 reviews, with zero best-practice errors and 54 referenced pathways passing. Its 17 reference errors match the previous run exactly and affect 16 unrelated yeast reviews; all 22 relevant inputs are identical to the pinned base. All 307 scoped publication files match the validated commit. Renewed review, CI and actual merge remain required.
+
+## 2026-11-06 — cytochrome maturation location follow-up validated
+
+Round 2 full validation completed on 10,548 reviews: 17 exact known reference errors in 16 unrelated yeast reviews, all 22 inputs identical to the pinned base, zero best-practice errors and all 54 PMID-bearing pathways passing. All 342 scoped files matched science commit 7641af14dc before metadata closure. Seventeen gene reviews now use claim-specific topology/location evidence, including two core-only location repairs; 233 annotation rows, 58 raw files and six provider files remain unchanged. Publication, renewed independent review/CI and actual merge remain pending.

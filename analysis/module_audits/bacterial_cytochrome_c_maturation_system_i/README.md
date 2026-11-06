@@ -31,3 +31,7 @@ Thirteen gene reviews now apply one broad heme-handoff interpretation while dist
 
 
 The scientific follow-up full run finished on 10,548 reviews. All 307 publication-manifest files match validated commit `6b9e19aa58271a05c09964839266abb6b1ccf5b7`. Schema/term checks and all 54 referenced pathways pass; best practices report zero errors and 28,002 warnings. The 17 reference errors in 16 unrelated yeast reviews exactly match the prior run, with all 22 relevant inputs independently identical to pinned base. See `round1-fullrun-terminal.json`. Publication of the follow-up, renewed review, CI and actual merge remain required.
+
+## Round 2 validation closure
+
+Round 2 full validation completed on 10,548 reviews: 17 exact known reference errors in 16 unrelated yeast reviews, all 22 inputs identical to the pinned base, zero best-practice errors and all 54 PMID-bearing pathways passing. All 342 scoped files matched science commit 7641af14dc before metadata closure. Seventeen gene reviews now use claim-specific topology/location evidence, including two core-only location repairs; 233 annotation rows, 58 raw files and six provider files remain unchanged. Publication, renewed independent review/CI and actual merge remain pending.
