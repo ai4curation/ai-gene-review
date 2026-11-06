@@ -48,6 +48,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`ASPFU/rmt2`/`EMENI/rmt2` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 | `PTHR32385` MANNOSYL PHOSPHORYLINOSITOL CERAMIDE SYNTHASE | fungal IPC mannosyltransferase node | `SUR1`/`CSH1`/`imt1`/`imt2`/`imt3`/`MIT1`/`Q4WDG6` |
+| `PTHR13027` SAND PROTEIN-RELATED | eukaryotic and fungal Mon1-Ccz1/Ypt7 GEF nodes | `MON1`/`mon1`/`MON1`/`apg-13`/`ASPFU/mon1`/`EMENI/mon1` |
 
 ---
 
@@ -501,6 +502,26 @@ activity` term when enough evidence is present.
   mannosyltransferase PAINT seed; the `PTN001285482` IBAs are sound, with the
   generic MF row and older AspGD generic IMP rows replaced by exact `GO:0103064`
 
+## Family 22: Mon1-Ccz1 Rab7 GEF Subunits
+
+`PTHR13027` contains the conserved Mon1/SAND family. PAINT places the
+`contributes_to` guanyl-nucleotide exchange factor activity on the eukaryotic
+`PANTHER:PTN000315021` node, Mon1-Ccz1 complex membership on the
+Opisthokonta `PANTHER:PTN000315023` node with a fungal IRD branch, and fungal
+vacuole-membrane and vacuolar-protein-targeting rows on
+`PANTHER:PTN000989606`. The first pass should keep Mon1 separate from the Ccz1
+subunit and from upstream Vps21/Ypt10 regulators while checking direct
+stationary-phase lipid-droplet, Cvt/autophagy, and endosomal-maturation
+evidence for the budding-yeast seed.
+
+- [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1/Ypt7 GEF subunit; rechecked in
+  PTHR13027 after 2026 VINE/Ypt10 and lipid-droplet papers
+- [ ] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows
+- [ ] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member
+- [ ] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member
+- [ ] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member
+- [ ] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member
+
 ---
 
 # NOTES
@@ -561,6 +582,12 @@ activity` term when enough evidence is present.
   direct to A. fumigatus `sec2` and reports hyphal-tip, autophagy, cell-wall,
   and virulence phenotypes, but it does not support adding new process
   annotations for those downstream outputs.
+- Started `PTHR13027`, the Mon1/SAND family. The existing `yeast/MON1` review
+  already accepted the fungal `PTN000989606` vacuole-membrane and
+  vacuolar-protein-targeting IBAs, the eukaryotic `PTN000315021`
+  `contributes_to` GEF row, and the Opisthokonta `PTN000315023` Mon1-Ccz1
+  complex row; newer 2026 papers add VINE/Ypt10 upstream regulation and a
+  stationary-phase Pdr16-lipid-droplet context without changing those GO calls.
 
 ## 2026-11-01
 
