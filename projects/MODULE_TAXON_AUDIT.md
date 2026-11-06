@@ -15,7 +15,6 @@ that scope, and complete individual member gene reviews. Follow each PR through
 review, checks and merge. A module is not finished merely because its YAML validates
 or its existing status says COMPLETE.
 
-
 ## Coverage and completion criteria
 
 [Inventory](MODULE_TAXON_AUDIT/inventory.json) records the initial 702-module universe
@@ -43,6 +42,8 @@ For each module, record evidence that all of the following are satisfied:
 ## Status
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
+
+- [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
 
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
@@ -83,7 +84,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 3 IN_PROGRESS, 739 NOT_STARTED, 2 PR_OPEN. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 3 PR_OPEN, 3 IN_PROGRESS and 738 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -528,6 +529,35 @@ The divisome review follow-up completed full validation on 10,555 reviews. The 1
 
 Integrated published main `fd782f231a` with the validated PR #6123 head `4b65e56304`. All 158 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
 
+## 2026-11-06: Replication PR #6117 review follow-up
+
+Eleven reviewed genes preserve 131 annotation payloads, nine inherited NEW actions,
+22 raw files and 49 referenced sources. HolD model/construct coordinates and
+source-specific mapping defects are structured; generic binding policy is applied
+consistently. Epsilon proofreading is refined to DNA-specific exonuclease activity
+in the genes and module. Focused checks and all 97 pathway cases pass. Fresh full
+validation, publication of the follow-up, independent review/CI and actual merge
+remain outstanding.
+
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `c27aa23b93` with the validated PR #6117 head `05b701415a`. All 575 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+
+## 2026-11-06 — replication proposal refinements
+
+PR #6117 round 2 refines two proposals authored within this PR, with both prior versions archived and independently verified against git and the pristine seed: HolD now uses DNA-templated DNA replication, while Bacillus DnaB has separate single- and double-stranded DNA-binding activities. Three DnaQ exonuclease rows refine directly to DNA-specific proofreading activity. DnaB membrane evidence explicitly distinguishes wild-type enrichment from mutant DnaD recruitment. Four focused review validations, renders and histories pass without curation warnings. All 1,067 original seed rows, including two inherited NEW rows, and 104 raw sources remain preserved across 52 COMPLETE reviews; the final count is 1,082 rows. The module remains unchanged. The capacity checker recognizes only the two independently verified DNA-binding descendant relationships and passes 100 cases, including removal and one-way entailment controls. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
+
+
+## 2026-11-06 — Replication round2 validated
+
+Replication round2 completed full validation on 10,653 reviews. The17 reference errors are the exact known errors in16 unrelated yeast reviews; all22 relevant inputs equal the pinned base. Schema and terms pass; best practices report zero errors, and all54 PMID-bearing pathways pass. All588 scoped files match validated science commit 2ea0e902c55f0b3ddd219f8bb03511fca3b4b130. The 52 completed reviews preserve 1,067 pristine annotation rows (1,065 machine rows and two inherited proposals) and104 raw files;15 added rows yield1,082 current rows. Two proposals authored by this PR were revised with exact archives, distinguished from original seeds. The100 capacity cases pass, including one-way GO DNA-binding descendant entailment. Renewed independent review, CI and actual merge remain pending for PR#6117.
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6117 head `8df6fabd8d`. All 588 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
 ## 2026-11-06 — adopted ethanolamine comparative audit integrated
 
 The comparative ethanolamine audit now contains22 completed reviews (20 positive members and2 negative comparators),224 original rows and226 current rows, with47 raw/provider files preserved. One existing-PR-authored PA4022 evidence revision is archived and two new molecular-function rows are supported. Five exact EutB/EutC pairs span Pseudomonadota and Bacillota. Twenty literature references, including three reviews, plus two scoped primary-source records supply58 findings. The eight-part module preserves required deamination plus an oxidative fate; uptake, parallel reduction, cofactor recycling, reactivation and LT2 cargo scaffolding have explicit scope.79 capacity cases,8 mutations and153 module/profile quotations pass. PSEPK/pta is a related family-crosscheck correction that remains DRAFT, not an additional completed member. Full validation and publication to adopted PR5970, renewed review/CI and actual merge remain required.
@@ -547,3 +577,7 @@ Correct the shared project page after integration for PR #5970: place the bacter
 ## 2026-11-06 — PR #5970 round1 full validation completed
 
 The bacterial_ethanolamine_uptake_catabolism PR #5970 round1 review follow-up completed a fresh full-corpus run on ffafeb78851a39226167dce82b5c2cb59e40be74. Schema, terms, best practices and all54 pathway checks passed. The only17 blocking errors are the known16 unrelated yeast citation reviews; their22 relevant inputs equal the pinned base, and all452 frozen publication files matched the tested head. Current main already fixes these citations in merged PR5975. Integrating that main, publishing the reviewed fixes, renewed review/CI and actual merge remain pending.
+
+## 2026-11-06 — PR #5970 integration with published main
+
+Integrated published main `488d370561` with the validated PR #5970 head `46d8264f6a`. All 455 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
