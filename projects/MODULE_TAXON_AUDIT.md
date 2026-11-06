@@ -15,7 +15,6 @@ that scope, and complete individual member gene reviews. Follow each PR through
 review, checks and merge. A module is not finished merely because its YAML validates
 or its existing status says COMPLETE.
 
-- [ ] `bacterial_cellulose_biosynthesis`: [PR #2143](https://github.com/ai4curation/ai-gene-review/pull/2143) science `3cdca2d091` is APPROVED. Twenty-one completed reviews, 27 capacity cases and five catalytic consistency checks pass. Fresh full validation across 10,553 reviews reproduces exactly the 19 documented unrelated reference errors; all 23 underlying blobs and scientific inputs are unchanged, and every other phase has zero blocking errors. The 87 machine payloads and 42 raw sources remain unchanged; one historical authored proposal is archived/refined and 13 additional proposals give 101 current rows. Metadata closure publication, current-head review/CI and actual merge remain pending.
 
 ## Coverage and completion criteria
 
@@ -42,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
    merged. Record its number and merge commit before marking the audit complete.
 
 ## Status
+
+- [ ] `bacterial_cellulose_biosynthesis`: [PR #2143](https://github.com/ai4curation/ai-gene-review/pull/2143) science `3cdca2d091` is APPROVED. Twenty-one completed reviews, 27 capacity cases and five catalytic consistency checks pass. Fresh full validation across 10,553 reviews reproduces exactly the 19 documented unrelated reference errors; all 23 underlying blobs and scientific inputs are unchanged, and every other phase has zero blocking errors. The 87 machine payloads and 42 raw sources remain unchanged; one historical authored proposal is archived/refined and 13 additional proposals give 101 current rows. Metadata closure publication, current-head review/CI and actual merge remain pending.
 
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
@@ -82,7 +83,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 2 PR_OPEN, 2 IN_PROGRESS and 740 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 2 IN_PROGRESS, 739 NOT_STARTED, 3 PR_OPEN. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -546,3 +547,7 @@ Integrated published main `db69104296` with the approved PR #2143 head `a6a75ca3
 ## 2026-11-06 — PR #2143 integration with published main
 
 Integrated published main `1970e159b9` with the validated PR #2143 head `afa272c536`. All 258 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #2143 tracker placement and tally
+
+Correct the shared project page after integration for PR #2143: place the bacterial_cellulose_biosynthesis checkbox under Status and derive the displayed audit-state tally from all 777 inventory rows. This changes project prose and its rendering only; the inventory and all curated science/source files remain unchanged from 1bea5fd775373af484646091e092770dd5f4b034.
