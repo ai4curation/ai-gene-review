@@ -83,6 +83,8 @@ def main():
             for slot, target in [('molecular_function', enabled), ('contributes_to_molecular_function', contributes)]:
                 if core.get(slot):
                     target.add(core[slot]['id'])
+            if core.get('proposed_molecular_function'):
+                enabled.add(core['proposed_molecular_function'])
         panel[review['id']] = dict(accession=review['id'], families=families,
                                    enabled=enabled, contributes=contributes,
                                    bacterial=bool(re.search(r'^OC   Bacteria;', raw, re.M)))
@@ -99,11 +101,13 @@ def main():
     units = nodes['opub_transport_activity']['participant']['protein_complex']['active_units']
     assert len(units) == 4
     scoped = read(AUDIT / 'curated-substrate-capabilities.yaml')
-    scope_key = lambda item: tuple(item[k] for k in ['function', 'substrate', 'acceptor'])
+    def scope_key(item):
+        return tuple(item[k] for k in ['function', 'substrate', 'acceptor'])
     requirements = {}
     for ident, required in scoped['required_scopes'].items():
         annoton = nodes[ident]
-        assert required['function'] == annoton['function']['term']['id']
+        assert required['function'] == annoton['function'].get('term', {}).get(
+            'id', annoton['function'].get('preferred_term'))
         substrates = {x['preferred_term'] for x in annoton['function']['substrates']}
         assert {required['substrate'], required['acceptor']} <= substrates
         requirements[ident] = scope_key(required)
@@ -114,7 +118,10 @@ def main():
         assert gene['id'] == accession
         for activity in entry['scopes']:
             cores = [c for c in gene['core_functions']
-                     if c.get('molecular_function', {}).get('id') == activity['function']]
+                     if c.get('proposed_molecular_function') == activity['function']]
+            proposals = [p for p in gene.get('proposed_new_terms', [])
+                         if p['proposed_name'] == activity['function']]
+            assert len(proposals) == 1 and proposals[0].get('supported_by')
             assert cores
             sources = {x['reference_id'] for c in cores for x in c.get('supported_by', [])}
             assert set(activity['references']) <= sources
@@ -132,8 +139,10 @@ def main():
             for record in available:
                 if enforce_taxon and not record['bacterial']:
                     continue
-                if atom.node_id in requirements and requirements[atom.node_id] not in record['scoped_activities']:
-                    continue
+                if atom.node_id in requirements:
+                    required = requirements[atom.node_id]
+                    if required not in record['scoped_activities'] or required[0] not in record['enabled']:
+                        continue
                 if record['accession'] in drop_roles:
                     continue
                 if not family_scan or not atom.family_ids:
@@ -194,7 +203,7 @@ def main():
     check('CodA two separately evidenced activities cover oxidation', oxidation, {'Q7X2H8'}, True)
     check('CodA alone does not identify a native importer', root, {'Q7X2H8'}, False)
     check('CodA choline oxidase term alone cannot imply aldehyde oxidation', oxidation,
-          {'Q7X2H8'}, False, masks=('GO:0004031',))
+          {'Q7X2H8'}, False, masks=('betaine-aldehyde:oxygen oxidoreductase activity',))
     check('CodA aldehyde activity alone cannot imply first oxidation', oxidation,
           {'Q7X2H8'}, False, masks=('GO:0033713',))
     check('NAD BetB activity cannot satisfy oxygen-dependent CodA role',
@@ -203,7 +212,9 @@ def main():
           'betb_glycine_betaine_formation', {'Q7X2H8'}, False)
     check('GbsB recognized without GMC family', 'choline_dehydrogenation', {'P71017'}, True)
     check('BetA recognized without typeIII family', 'choline_dehydrogenation', {'P17444'}, True)
-    fungal = deepcopy(panel['Q7X2H8']); fungal['accession'] = 'SYNTHETIC_NONBACTERIAL_CODA'; fungal['bacterial'] = False
+    fungal = deepcopy(panel['Q7X2H8'])
+    fungal['accession'] = 'SYNTHETIC_NONBACTERIAL_CODA'
+    fungal['bacterial'] = False
     check('Family and activity alone do not enforce Bacteria scope', 'coda_complete_oxidation',
           set(), True, family_scan=True, synthetic=(fungal,), enforce_taxon=False)
     check('Taxon oracle excludes nonbacterial same-family activity', 'coda_complete_oxidation',
@@ -213,6 +224,8 @@ def main():
     generic = deepcopy(panel['Q7X2H8'])
     generic['accession'] = 'SYNTHETIC_GENERIC_ALDEHYDE_OXIDASE'
     generic['scoped_activities'] = set()
+    generic['enabled'].discard('betaine-aldehyde:oxygen oxidoreductase activity')
+    generic['enabled'].add('GO:0004031')
     check('Same family and generic GO4031 do not establish betaine-aldehyde oxidation',
           'coda_complete_oxidation', set(), False, family_scan=True, synthetic=(generic,))
     (AUDIT / 'integration-checks.yaml').write_text(yaml.safe_dump(dict(status='PASS', **dict(totals),

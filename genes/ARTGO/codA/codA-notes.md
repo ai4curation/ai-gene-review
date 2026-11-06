@@ -19,3 +19,9 @@ Two catalytic cores represent the two real chemical steps. FAD binding supports 
 ## Family scope
 
 Frozen UniProt PTHR11552:SF152 has official name OXIDASE (CODA), PUTATIVE (AFU_ORTHOLOGUE AFUA_8G04090)-RELATED. PTHR11552 is GLUCOSE-METHANOL-CHOLINE  GMC  OXIDOREDUCTASE. Family/domain classification alone is insufficient for choline substrate, oxygen acceptor or dual-step capacity. Exact target biochemistry is the grounding.
+
+## PR6108 round1 evidence and ontology follow-up
+
+The second oxidation now uses proposed_molecular_function and a supported top-level proposed term for betaine-aldehyde:oxygen oxidoreductase activity; the broad original oxidoreductase row refines to GO0033713 plus the matching NTR. GO0004031 remains the proposed parent, not a substrate-specific core assertion. A GOC source_defect requests clarification of the first-reaction GO definition versus broader EC mapping and a precise second-reaction term. The broad term is chemically compatible irrespective of AOX family usage; the issue is specificity, not a claim that CodA belongs to the wrong chemical class. The module uses an identifier-free named function and the oracle requires the proposed core plus independent primary sources.
+
+All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.

@@ -13,3 +13,9 @@ PMID21658392 (Pittelkow et al.,2011) directly measures OpuBC/choline binding (Kd
 Transport activities are attributed to the assembled importer. The core uses contributes_to_molecular_function GO0033266; OpuBA additionally supplies ATP hydrolysis, and OpuBC directly binds choline. Broad membrane/process/complex terms are refined in place. Missing complex membership and membrane-subunit contribution MF are proposed conservatively; no NEW biological-process row is manufactured from a deletion phenotype.
 
 PAINT PTN001246788 propagates TauA sulfate-starvation physiology into SF44. The existing PTHR30024 family review already scopes GO0009970 to the sulfur-scavenging branches and excludes OpuBC/OpuCC. REMOVE here agrees with that phylogenetic judgment and directly characterized choline recognition; the claim is not rejected merely because an abstract omits sulfur.
+
+## PR6108 round1 evidence and ontology follow-up
+
+Retain GO0055085 as ACCEPT: OpuBC contributes substrate capture to membrane import, while choline transport records cargo. GO0015871 is not a descendant of GO0055085 and GO0015220 is MF, not a BP substitute. The ligand-binding and transporter-contribution summaries are distinct from their detailed evidence.
+
+All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.

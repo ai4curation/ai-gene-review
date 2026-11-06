@@ -26,3 +26,9 @@ All original machine row fields and raw UniProt/GOA files were preserved, with i
 Normal force-fetches of PMIDs39510372,34431198,3512525,3512526,2194570,17322201,27718375,26913973 did not recover full text; the first fetch of PMID18156257 also remained abstract-only. PMID34431198 full publisher text was read externally (https://enviromicro-journals.onlinelibrary.wiley.com/doi/10.1111/1462-2920.15741), including assay methods and preparation purity. Source distinctions: A. baumannii ATCC19606 HMPREF0010_01460 with a recombinant His tag; PMS serves as primary acceptor and oxygen measures its reoxidation. These data are comparative, not assays of either original BetA target. No publication cache was manually edited.
 
 The committed source artifact is the verbatim betT table-row excerpt and retrieval provenance. The complete retrieved PDF and text are retained in the local audit cache; the curation decision and original annotation payload are unchanged.
+
+## PR6108 round1 evidence and ontology follow-up
+
+Current QuickGO ancestry confirms the existing ACCEPT decision for GO0055085. Choline transport is a separate cargo process, and the search found no appropriate choline-specific transmembrane-transport BP descendant. GO0015220 remains the specific MF. OpuB reviews are brought into the same interpretation.
+
+All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.
