@@ -96,3 +96,35 @@ No `-deep-research-*.md` file was created.
   cycle step, so it passes the participation test. Reuse the proposed term name
   "carbon fixation by 3-hydroxypropionate/4-hydroxybutyrate cycle". GO:0043427 is the
   Chloroflexus glyoxylate-releasing bicycle, so it is not used.
+
+## 2026-11-06: merge with the parallel PTHR43605 review (ai4curation/ai-gene-review#5900)
+
+A second review of this gene was written independently on the PTHR43605 branch
+(the PP_2213 / rat Acsm4 GO:0004321 investigation) and reached the same calls on
+GO:0004321, GO:0006633, GO:0016020, the GO:0031955 refinements, NEW GO:0015977
+and both proposed terms. On merge this review was kept as the base, and two
+upstream `source_defects` were ported from the parallel one:
+
+- GO:0004321: GO_CENTRAL defect on PAINT node PTN001944787, the PTHR43605 root
+  IBD whose only seed is the RGD Acsm4 IDA [PMID:12709059 "Recombinant O-MACS
+  protein tagged with c-Myc and His6 demonstrated an acyl-CoA synthetase activity
+  for fatty acid activation"]. Reported as geneontology/go-annotation#6642; the
+  family is reviewed in `interpro/panther/PTHR43605/PTHR43605-review.yaml`.
+- GO:0016020: UNIPROT defect on the predicted TRANSMEM 105..125, which the
+  record's own structures (PDB 8BIQ, 8BIT) place in a helix of the N-terminal
+  ANL domain.
+
+Calls where the parallel review differed, left as they are here:
+
+- GO:0003987 acetyl-CoA synthetase and GO:0050218 propionate-CoA ligase (IDA,
+  IEA): the parallel review used MARK_AS_OVER_ANNOTATED rather than
+  KEEP_AS_NON_CORE. Its argument: in vitro catalytic efficiency (kcat/Km from
+  the UniProt kinetics) is highest for propionate and lowest for
+  4-hydroxybutyrate, no cycle step needs free acetate or propionate activated,
+  and M. sedula has a conserved acetate/propionate synthetase, Msed_1353
+  [PMID:23258541 "the acetate/propionate synthetase (Msed_1353), an enzyme that
+  is highly conserved among the Sulfolobales"]. Under the promiscuous-activity
+  tiers in projects/ENZYME_SPECIFICITY.md this is a judgement between "genuine
+  secondary activity" and "in vitro activity of unknown relevance".
+- GO:0006637 acyl-CoA metabolic process: the parallel review used ACCEPT
+  rather than KEEP_AS_NON_CORE.
