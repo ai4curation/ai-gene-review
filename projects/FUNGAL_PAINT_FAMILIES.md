@@ -481,8 +481,8 @@ activity` term when enough evidence is present.
 - [x] `yeast/SUR1` - *S. cerevisiae* Csg2-dependent IPC mannosyltransferase;
   the `PTN001285482` IBAs are sound, with the generic MF IBA modified to the
   exact EC-backed `GO:0103064` row
-- [ ] `yeast/CSH1` - *S. cerevisiae* Csh1-Csg2 IPC mannosyltransferase;
-  existing review to recheck in this fungal-family context
+- [x] `yeast/CSH1` - *S. cerevisiae* Csh1-Csg2 IPC mannosyltransferase;
+  rechecked in the PTHR32385 context with both `PTN001285482` IBA rows sound
 - [x] `SCHPO/imt1` - fission-yeast IPC mannosyltransferase in the Imt1
   subfamily; drafted in this branch
 - [x] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog;
@@ -531,6 +531,11 @@ activity` term when enough evidence is present.
   generic mannosyltransferase/transferase rows as older stand-ins for
   `GO:0103064`, and keeps only the generic membrane call because no direct
   MitA Golgi-localization paper was found.
+- Rechecked `yeast/CSH1`: the final PTHR32385 member also keeps the
+  `PTN001285482` MIPC-biosynthesis IBA and modifies the generic MF IBA to the
+  exact `GO:0103064` activity. Newer Csh1 N-glycan and ethanol-stress papers
+  sharpen substrate-specificity and downstream phenotype context without adding
+  a new direct process annotation.
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
