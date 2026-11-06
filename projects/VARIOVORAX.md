@@ -16,7 +16,11 @@ genes:
 - fetP
 - gcd
 - ppk
+- ppx
 - czcA3
+- czcB
+- czcC
+- czcD
 - ssuD
 - acd
 - pqqA
@@ -27,7 +31,15 @@ genes:
 - VPARA_00790
 - bfrD1
 - tonB
+- exbB4
+- exbD5
+- ureA
+- ureB
 - ureC
+- ureD
+- ureE
+- ureF
+- ureG
 - tauD1
 autolink_gene_symbols: false
 ---
@@ -41,12 +53,12 @@ Members of the betaproteobacterial genus ***Variovorax*** (`NCBITaxon:34072`, fa
 1. **Keystone Rhizosphere Chemical Signaling & Plant Growth Promotion:**
    - **Auxin (IAA) Homeostasis (`iad` Operon):** In complex root microbiomes, diverse bacteria secrete indole-3-acetic acid (IAA) or stimulate host auxin/ethylene signaling, triggering severe root growth inhibition (RGI). A single genus — *Variovorax* — is both necessary and sufficient to reverse microbiome-induced RGI across phylogenetically diverse bacterial communities via a conserved **indole-3-acetic acid degradation (`iad`) operon** (Finkel et al. 2020, PMID:32999461; Conway et al. 2022, PMID:36266335; Ma et al. 2023, PMID:37459330).
    - **Ethylene Stress Buffering (`acdS`) & Nitrile/Amide Crosstalk (`amiE`):** *Variovorax* strains co-express pyridoxal 5'-phosphate (PLP)-dependent **1-aminocyclopropane-1-carboxylate (ACC) deaminase (`acdS`)**, which cleaves the immediate precursor of plant ethylene into 2-oxobutanoate and ammonia, dampening stress-induced ethylene spikes in colonized roots (Han et al. 2011, PMID:21183664; Finkel et al. 2020, PMID:32999461). Concurrently, aliphatic amidase (`amiE`) hydrolyzes rhizosphere short-chain aliphatic amides into organic acids and bioavailable ammonium.
-   - **Organosulfur & Urea Nutrient Mobilization (`ssuD`, `tauD1`, `acd`, `ureC`):** Under sulfate limitation in the rhizosphere, *Variovorax* mineralizes aliphatic sulfonates via the $\text{FMNH}_2$-dependent alkanesulfonate monooxygenase (`ssuD`) and taurine via the $\text{Fe(II)}$/2-oxoglutarate-dependent taurine dioxygenase (`tauD1`, `VPARA_23370`, EC 1.14.11.17), while cleaving 3-sulfinopropanoyl-CoA via 3-sulfinopropanoyl-CoA desulfinase (`acd`, EC 3.13.1.4) to supply inorganic sulfite and propionyl-CoA (Eichhorn et al. 1997, PMID:9287300; Bruland et al. 2009, PMID:19001372; Schürmann et al. 2013, PMID:24317404). Simultaneously, cytoplasmic nickel-dependent urease (`ureC`, `Vapar_4243`, EC 3.5.1.5) hydrolyzes urea into ammonium and carbonate/bicarbonate, supplying assimilable nitrogen and elevating local pH to promote microbially induced carbonate precipitation (Carter et al. 2009, PMID:20046957; Han et al. 2011, PMID:21183664).
+   - **Organosulfur & Urea Nutrient Mobilization (`ssuD`, `tauD1`, `acd`, `ureA`, `ureB`, `ureC`, `ureD`, `ureE`, `ureF`, `ureG`):** Under sulfate limitation in the rhizosphere, *Variovorax* mineralizes aliphatic sulfonates via the $\text{FMNH}_2$-dependent alkanesulfonate monooxygenase (`ssuD`) and taurine via the $\text{Fe(II)}$/2-oxoglutarate-dependent taurine dioxygenase (`tauD1`, `VPARA_23370`, EC 1.14.11.17), while cleaving 3-sulfinopropanoyl-CoA via 3-sulfinopropanoyl-CoA desulfinase (`acd`, EC 3.13.1.4) to supply inorganic sulfite and propionyl-CoA (Eichhorn et al. 1997, PMID:9287300; Bruland et al. 2009, PMID:19001372; Schürmann et al. 2013, PMID:24317404). Simultaneously, cytoplasmic nickel-dependent urease — assembled as a $(\text{UreABC})_3$ trimer of heterotrimers (`ureA` `Vapar_4240`, `ureB` `Vapar_4242`, `ureC` `Vapar_4243`, EC 3.5.1.5) and matured by the `UreD`-`UreF`-`UreG` activation complex (`ureD` `Vapar_3971`, `ureF` `VPARA_50930`, `ureG` `Vapar_4248`) and nickel metallochaperone `UreE` (`ureE` `VPARA_50940`) — hydrolyzes urea into ammonium and carbonate/bicarbonate, supplying assimilable nitrogen and elevating local pH to promote microbially induced carbonate precipitation (Park et al. 1994, PMID:7909161; Soriano & Hausinger 1999, PMID:10500143; Carter et al. 2009, PMID:20046957; Han et al. 2011, PMID:21183664).
 
-2. **PQQ Biosynthesis, Quinoprotein Oxidation, TonB-Dependent Siderophore Import & Heavy-Metal Homeostasis:**
+2. **PQQ Biosynthesis, Quinoprotein Oxidation, TonB-ExbB-ExbD Siderophore Import & Heavy-Metal Homeostasis:**
    - **Coenzyme PQQ Biosynthesis (`pqqA`, `pqqB`, `pqqC`, `pqqD`, `pqqE`) & Periplasmic Quinoprotein Dehydrogenases (`gcd`, `VPARA_00790`):** *Variovorax paradoxus* synthesizes pyrroloquinoline quinone (PQQ) de novo from a ribosomally synthesized precursor peptide (`pqqA`, `Vapar_3057`) via the radical SAM peptide cross-linker `pqqE` (`VPARA_00920`) and its peptide chaperone `pqqD` (`VPARA_00930`), the $\text{Fe(II)}$-dependent oxygenase/hydroxylase `pqqB` (`VPARA_00950`), and the cofactorless ring-closing oxidase `pqqC` (`VPARA_00940`) (Klinman & Bonnot 2014, PMID:24050525; Latham et al. 2015, PMID:25667491). PQQ powers membrane-bound glucose dehydrogenase (`gcd`, `VPARA_65850`) for periplasmic D-gluconate production (mineral acidolysis) as well as periplasmic PQQ-dependent alcohol/methanol dehydrogenase (`VPARA_00790`, EC 1.1.2.7), a candidate lanthanide-associated XoxF/ExaF-like dehydrogenase (Keltjens et al. 2014, PMID:24912846; Good et al. 2016, PMID:27285220).
-   - **TonB-Energized Ferric-Siderophore Import (`tonB`, `bfrD1`) & Cytosolic Iron Trafficking (`fetP`):** Outer-membrane TonB-dependent ferric-siderophore receptor `bfrD1` (`VPARA_25830`, `A0A0H2M677`) partners with the adjacent inner-membrane proton-motive-force energy transducer `tonB` (`VPARA_25820`, `A0A0H2M2E3`) to import extracellular ferric-siderophore chelates (such as photoreactive lipopeptide variobactins; Johnston et al. 2015, PMID:26412281; Noinaj et al. 2010, PMID:20420522), while the cytosolic YggX-family protein `fetP` (`Vapar_2982`, `C5CNX5`) mediates intracellular $\text{Fe}^{2+}$ homeostasis.
-   - **Intracellular Polyphosphate Synthesis (`ppk`) & Inner-Membrane RND Cation Efflux (`czcA3`):** Polyphosphate kinase 1 (`ppk`, `VPARA_28600`, `A0A0H2M4T4`) polymerizes the terminal $\gamma$-phosphate of ATP into long-chain inorganic polyphosphate (`polyP`), while the inner-membrane HME-RND proton/cation antiporter subunit (`czcA3`, `VPARA_44890`, `A0A0H2MBF7`) drives transmembrane export of monoatomic metal cations.
+   - **TonB-ExbB-ExbD-Energized Ferric-Siderophore Import (`exbD5`, `exbB4`, `tonB`, `bfrD1`) & Cytosolic Iron Trafficking (`fetP`):** Encoded in the syntenic four-gene `exbD5-exbB4-tonB-bfrD1` (`VPARA_25800-VPARA_25830`) operon, the inner-membrane pentameric proton-channel stator `exbB4` (`VPARA_25810`, `A0A0H2MHH3`) and dimeric proton-coupling Asp23 rotor `exbD5` (`VPARA_25800`, `A0A0H2M1F3`) harvest the cytoplasmic-membrane proton-motive force and energize the periplasm-spanning transducer `tonB` (`VPARA_25820`, `A0A0H2M2E3`) to open the outer-membrane TonB-dependent ferric-siderophore receptor `bfrD1` (`VPARA_25830`, `A0A0H2M677`) for uptake of ferric-siderophore chelates (Noinaj et al. 2010, PMID:20420522; Johnston et al. 2015, PMID:26412281; Braun et al. 2023, PMID:37219427), while the cytosolic YggX-family protein `fetP` (`Vapar_2982`, `C5CNX5`) mediates intracellular $\text{Fe}^{2+}$ homeostasis.
+   - **Intracellular Polyphosphate Turnover (`ppk`, `ppx`) & Tripartite CzcCBA / CDF CzcD Heavy-Metal Efflux (`czcA3`, `czcB`, `czcC`, `czcD`):** Polyphosphate kinase 1 (`ppk`, `VPARA_28600`, `A0A0H2M4T4`) polymerizes the terminal $\gamma$-phosphate of ATP into long-chain inorganic polyphosphate (`polyP`) while exopolyphosphatase (`ppx`, `VPARA_10490`, `A0A0H2MBK5`, EC 3.6.1.11) processively hydrolyzes terminal orthophosphate residues to balance intracellular polyP turnover (Nikel et al. 2013, PMID:23687963). Across the cell envelope, the inner-membrane CDF antiporter `czcD` (`VPARA_15480`, `A0A0H2M558`) exports cytoplasmic $\text{Zn}^{2+}$/$\text{Co}^{2+}$/$\text{Cd}^{2+}$ into the periplasm, while the tripartite HME-RND efflux complex — inner-membrane RND antiporter `czcA3` (`VPARA_44890`, `A0A0H2MBF7`), periplasmic 10-His membrane-fusion adaptor `czcB` (`VPARA_44900`, `A0A0H2LX82`), and outer-membrane factor channel `czcC` (`VPARA_44910`, `A0A0H2M0U4`) — extrudes divalent heavy-metal cations across the outer membrane (Anton et al. 1999, PMID:10559151; Nies 2003, PMID:12829273).
 
 ---
 
@@ -128,15 +140,15 @@ flowchart TD
 ### Pathway Modules
 
 - **[`bacterial_iad_auxin_catabolism`](../modules/bacterial_iad_auxin_catabolism.html)** — *Variovorax* `iad` operon-mediated oxidative indole-3-acetic acid (IAA) catabolism (`iadR`, `iadC`, `iadD`, `iadE`) and microbiome root growth inhibition reversal.
-- **[`variovorax_metallophore_metal_homeostasis`](../modules/variovorax_metallophore_metal_homeostasis.html)** — Functional grouping (`BIOLOGICAL_PROCESS`) of four independent *Variovorax* metabolic and metal-homeostasis activities: periplasmic PQQ-dependent D-glucose oxidation (`gcd`), cytosolic YggX-family iron trafficking (`fetP`), cytoplasmic inorganic polyphosphate synthesis (`ppk`), and inner-membrane HME-RND monoatomic metal cation efflux (`czcA3`).
-- **[`bacterial_tonb_siderophore_import`](../modules/bacterial_tonb_siderophore_import.html)** — Conserved Gram-negative two-part transport pathway (`TRANSPORT_PATHWAY`) coupling inner-membrane TonB proton-motive-force energy transduction (`tonB`, `VPARA_25820`) to outer-membrane TonB-dependent ferric-siderophore uptake (`bfrD1`, `VPARA_25830`).
+- **[`variovorax_metallophore_metal_homeostasis`](../modules/variovorax_metallophore_metal_homeostasis.html)** — Functional grouping (`BIOLOGICAL_PROCESS`) of four independent *Variovorax* metabolic and metal-homeostasis subsystems: periplasmic PQQ-dependent D-glucose oxidation (`gcd`), cytosolic YggX-family iron trafficking (`fetP`), cytoplasmic inorganic polyphosphate polymerization and hydrolytic turnover (`ppk`, `ppx`), and trans-envelope tripartite HME-RND (`czcA3`, `czcB`, `czcC`) plus inner-membrane CDF (`czcD`) heavy-metal cation efflux.
+- **[`bacterial_tonb_siderophore_import`](../modules/bacterial_tonb_siderophore_import.html)** — Conserved Gram-negative three-part transport pathway (`BIOLOGICAL_PROCESS`) coupling the inner-membrane ExbB-ExbD proton-channel motor (`exbB4`, `VPARA_25810`; `exbD5`, `VPARA_25800`) and periplasm-spanning TonB energy transducer (`tonB`, `VPARA_25820`) to outer-membrane TonB-dependent ferric-siderophore uptake (`bfrD1`, `VPARA_25830`).
 - **Cross-Species Reusable Modules Linked to *Variovorax* Reviews:**
   - **[`pqq_biosynthesis`](../modules/pqq_biosynthesis.html)** — De novo PQQ biosynthetic pathway (`pqqA`, `pqqB`, `pqqC`, `pqqD`, `pqqE`).
-  - **[`urease_biogenesis_urea_hydrolysis`](../modules/urease_biogenesis_urea_hydrolysis.html)** — Cytoplasmic nickel-dependent urease biogenesis and urea hydrolysis (`ureC`).
+  - **[`urease_biogenesis_urea_hydrolysis`](../modules/urease_biogenesis_urea_hydrolysis.html)** — Cytoplasmic nickel-dependent urease biogenesis and urea hydrolysis (`ureA`, `ureB`, `ureC`, `ureD`, `ureE`, `ureF`, `ureG`).
   - **[`taurine_uptake_and_desulfonation`](../modules/taurine_uptake_and_desulfonation.html)** — Taurine import and $\text{Fe(II)}$/2-oxoglutarate-dependent oxygenolytic desulfonation (`tauD1`).
   - **[`bacterial_alkanesulfonate_uptake_desulfonation`](../modules/bacterial_alkanesulfonate_uptake_desulfonation.html)** — $\text{FMNH}_2$-dependent alkanesulfonate monooxygenase desulfonation (`ssuD`).
 
-### Curated *Variovorax* Genes (22 Genes across Tranches 1 & 2)
+### Curated *Variovorax* Genes (34 Genes across Tranches 1, 2 & 3)
 
 | Organism | Gene Symbol | UniProt ID | Locus Tag | Protein / Function | Tranche / Batch | Review Link |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -162,6 +174,18 @@ flowchart TD
 | `VARPD` | `tonB` | `A0A0H2M2E3` | `VPARA_25820` | Inner-membrane proton-motive-force energy transducer TonB | Tranche 2B (Siderophore Import) | [VARPD/tonB](../genes/VARPD/tonB/tonB-ai-review.html) |
 | `VARPS` | `ureC` | `C5CY00` | `Vapar_4243` | Nickel-dependent urease catalytic subunit alpha (EC 3.5.1.5) | Tranche 2B (Urea Hydrolysis & MICP) | [VARPS/ureC](../genes/VARPS/ureC/ureC-ai-review.html) |
 | `VARPD` | `tauD1` | `A0A0H2MHV8` | `VPARA_23370` | Fe(II)/2-oxoglutarate-dependent taurine dioxygenase (EC 1.14.11.17) | Tranche 2B (Taurine Desulfonation) | [VARPD/tauD1](../genes/VARPD/tauD1/tauD1-ai-review.html) |
+| `VARPS` | `ureA` | `C5CXZ7` | `Vapar_4240` | Urease gamma structural subunit (100 aa) | Tranche 3A (Urease Complex) | [VARPS/ureA](../genes/VARPS/ureA/ureA-ai-review.html) |
+| `VARPS` | `ureB` | `C5CXZ9` | `Vapar_4242` | Urease beta structural subunit (101 aa) | Tranche 3A (Urease Complex) | [VARPS/ureB](../genes/VARPS/ureB/ureB-ai-review.html) |
+| `VARPS` | `ureD` | `C5CVT2` | `Vapar_3971` | Urease accessory apoprotein chaperone UreD (276 aa) | Tranche 3A (Urease Maturation) | [VARPS/ureD](../genes/VARPS/ureD/ureD-ai-review.html) |
+| `VARPD` | `ureE` | `A0A0H2LU38` | `VPARA_50940` | Urease nickel-binding metallochaperone UreE (200 aa) | Tranche 3A (Urease Maturation) | [VARPD/ureE](../genes/VARPD/ureE/ureE-ai-review.html) |
+| `VARPD` | `ureF` | `A0A0H2LZ72` | `VPARA_50930` | Urease GTPase-gating accessory protein UreF (223 aa) | Tranche 3A (Urease Maturation) | [VARPD/ureF](../genes/VARPD/ureF/ureF-ai-review.html) |
+| `VARPS` | `ureG` | `C5CY05` | `Vapar_4248` | Urease SIMIBI-class G3E GTPase metallochaperone UreG (216 aa) | Tranche 3A (Urease Maturation) | [VARPS/ureG](../genes/VARPS/ureG/ureG-ai-review.html) |
+| `VARPD` | `exbB4` | `A0A0H2MHH3` | `VPARA_25810` | Inner-membrane ExbB pentameric proton-channel stator subunit (238 aa) | Tranche 3B (TonB-ExbB-ExbD Motor) | [VARPD/exbB4](../genes/VARPD/exbB4/exbB4-ai-review.html) |
+| `VARPD` | `exbD5` | `A0A0H2M1F3` | `VPARA_25800` | Inner-membrane ExbD Asp23 proton-coupling rotor subunit (137 aa) | Tranche 3B (TonB-ExbB-ExbD Motor) | [VARPD/exbD5](../genes/VARPD/exbD5/exbD5-ai-review.html) |
+| `VARPD` | `czcB` | `A0A0H2LX82` | `VPARA_44900` | Periplasmic CzcB 10-His membrane-fusion adaptor protein (455 aa) | Tranche 3B (CzcCBA & CzcD Efflux) | [VARPD/czcB](../genes/VARPD/czcB/czcB-ai-review.html) |
+| `VARPD` | `czcC` | `A0A0H2M0U4` | `VPARA_44910` | Outer-membrane CzcC efflux factor channel subunit (445 aa) | Tranche 3B (CzcCBA & CzcD Efflux) | [VARPD/czcC](../genes/VARPD/czcC/czcC-ai-review.html) |
+| `VARPD` | `czcD` | `A0A0H2M558` | `VPARA_15480` | Inner-membrane CzcD CDF Zn(2+)/Co(2+)/Cd(2+) antiporter (320 aa) | Tranche 3B (CzcCBA & CzcD Efflux) | [VARPD/czcD](../genes/VARPD/czcD/czcD-ai-review.html) |
+| `VARPD` | `ppx` | `A0A0H2MBK5` | `VPARA_10490` | Cytosolic exopolyphosphatase Ppx (EC 3.6.1.11, 506 aa) | Tranche 3B (PolyP Turnover) | [VARPD/ppx](../genes/VARPD/ppx/ppx-ai-review.html) |
 
 ---
 

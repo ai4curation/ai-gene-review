@@ -91,3 +91,39 @@ Following UniProt's 2026_02 reference proteome policy ([PROTEOME_REMOVAL](../PRO
   - [`modules/bacterial_tonb_siderophore_import.yaml`](../../modules/bacterial_tonb_siderophore_import.html) (`MODULE:bacterial_tonb_siderophore_import` — new module anchored on `tonB` and `bfrD1`)
   - [`modules/urease_biogenesis_urea_hydrolysis.yaml`](../../modules/urease_biogenesis_urea_hydrolysis.html) (`MODULE:urease_biogenesis_urea_hydrolysis` — linked to `ureC`)
   - [`modules/taurine_uptake_and_desulfonation.yaml`](../../modules/taurine_uptake_and_desulfonation.html) (`MODULE:taurine_uptake_and_desulfonation` — linked to `tauD1`)
+
+---
+
+## 4. Tranche 3 Curation Batches (Nickel Urease Structural & Maturation Complex, ExbB-ExbD Siderophore-Import Stator, Tripartite CzcCBA & CzcD Heavy-Metal Efflux, and Exopolyphosphatase Ppx)
+
+### Batch 3A: Nickel-Dependent Urease Structural (`ureA`, `ureB`) & Maturation Accessory Complex (`ureD`, `ureE`, `ureF`, `ureG`)
+
+Completes the cytoplasmic bacterial urease holoenzyme (`(UreABC)3`) and `UreD`-`UreF`-`UreG`/`UreE` metallocenter activation machinery around `ureC` (`C5CY00`, `Vapar_4243`):
+
+| Role in Complex | Gene Symbol | UniProt / Locus | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Gamma structural chain | `ureA` | `C5CXZ7` (`VARPS`, `Vapar_4240`) | Urease subunit gamma (100 aa, HAMAP `MF_00739`) | Trimer-interface structural subunit of `(UreABC)3` | `GO:0005198` (structural molecule activity), `GO:0035550`, `GO:0043419`, `GO:0005737` |
+| Beta structural chain | `ureB` | `C5CXZ9` (`VARPS`, `Vapar_4242`) | Urease subunit beta (101 aa, HAMAP `MF_01954`) | Non-catalytic beta chain of `(UreABC)3` | `GO:0005198`, `GO:0035550`, `GO:0043419`, `GO:0005737` |
+| Apoprotein scaffold | `ureD` | `C5CVT2` (`VARPS`, `Vapar_3971`) | Urease accessory protein UreD (276 aa, HAMAP `MF_01384`) | Binds apo-UreABC and recruits UreF/UreG | `GO:0018237` (urease activator activity), `GO:0044183`, `GO:0043419`, `GO:0005737` |
+| Nickel metallochaperone | `ureE` | `A0A0H2LU38` (`VARPD`, `VPARA_50940`) | Urease accessory protein UreE (200 aa, HAMAP `MF_00822`) | Dimeric Ni(2+) donor with 15-His C-terminal tail (residues 148-200) | `GO:0016151` (nickel cation binding), `GO:0051604` (protein maturation), `GO:0043419`, `GO:0005737` |
+| GTPase-gating scaffold | `ureF` | `A0A0H2LZ72` (`VARPD`, `VPARA_50930`) | Urease accessory protein UreF (223 aa, HAMAP `MF_01385`) | Docks UreG onto UreD-apourease and gates GTP hydrolysis | `GO:0018237`, `GO:0030695` (GTPase regulator activity), `GO:0043419`, `GO:0005737` |
+| SIMIBI G3E GTPase | `ureG` | `C5CY05` (`VARPS`, `Vapar_4248`) | Urease accessory protein UreG (216 aa, HAMAP `MF_01389`) | P-loop (`24-GPVGSGKT-31`) + `Cys72-Pro73-His74` Ni(2+)-binding site | `GO:0003924` (GTPase activity), `GO:0016151`, `GO:0005525`, `GO:0043419`, `GO:0005737` |
+
+- **Linked Module:** [`modules/urease_biogenesis_urea_hydrolysis.yaml`](../../modules/urease_biogenesis_urea_hydrolysis.html) (`MODULE:urease_biogenesis_urea_hydrolysis`)
+
+---
+
+### Batch 3B: ExbB-ExbD Proton-Channel Motor (`exbB4`, `exbD5`), Tripartite CzcCBA & CzcD Heavy-Metal Efflux (`czcB`, `czcC`, `czcD`), and Exopolyphosphatase (`ppx`)
+
+| Role | Gene Symbol | UniProt / Locus | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| ExbB pentameric stator | `exbB4` | `A0A0H2MHH3` (`VARPD`, `VPARA_25810`) | Biopolymer transport protein ExbB4 (238 aa, Pfam `PF01618`) | 3-TM inner-membrane proton-channel pore (`exbD5-exbB4-tonB-bfrD1` operon) | `GO:0015078` (proton transmembrane transporter activity), `GO:1902600`, `GO:0015891`, `GO:0005886`, `GO:0098797` |
+| ExbD proton-coupling rotor | `exbD5` | `A0A0H2M1F3` (`VARPD`, `VPARA_25800`) | Biopolymer transport protein ExbD5 (137 aa, Pfam `PF02472`) | Single-pass type II inner-membrane dimer with conserved TM `Asp23` | `GO:0015078`, `GO:1902600`, `GO:0015891`, `GO:0005886`, `GO:0030288`, `GO:0098797` |
+| RND periplasmic adaptor | `czcB` | `A0A0H2LX82` (`VARPD`, `VPARA_44900`) | Cobalt-zinc-cadmium resistance protein CzcB (455 aa, `TIGR01730`) | N-terminal 10-His metal-binding region (41-121) + 4 CzcB/CusB domains | `GO:0015562` (efflux transmembrane transporter activity), `GO:0046914`, `GO:0098655`, `GO:0030288`, `GO:0005886` |
+| Outer-membrane efflux duct | `czcC` | `A0A0H2M0U4` (`VARPD`, `VPARA_44910`) | Outer membrane protein CzcC (445 aa, Pfam `PF02321`, `PTHR30203`) | Sec signal peptide (1-20) + two OEP repeats forming trimeric outer-membrane tunnel | `GO:0015562`, `GO:0008324`, `GO:0098655`, `GO:0009279` (cell outer membrane) |
+| Inner-membrane CDF pump | `czcD` | `A0A0H2M558` (`VARPD`, `VPARA_15480`) | Cadmium, cobalt and zinc/H(+)-K(+) antiporter CzcD (320 aa, `TIGR01297`) | 6-TM CDF antiporter with Site A (`His59, His62, His188, Asp192`) + 15-His loop (152-179) | `GO:0005385` (zinc ion transmembrane transporter activity), `GO:0071577`, `GO:0006882`, `GO:0005886` |
+| PolyP depolymerization | `ppx` | `A0A0H2MBK5` (`VARPD`, `VPARA_10490`) | Exopolyphosphatase Ppx (EC 3.6.1.11, 506 aa, `PTHR30005:SF14`) | ASKHA catalytic domain (`PF02541`, P1 `11-DLGSNSFR-18`, P2 `142-DIGGRSTE-149`) + C-terminal polyP-binding domain (`PF21447`) | `GO:0004309` (exopolyphosphatase activity), `GO:0006798` (polyphosphate catabolic process), `GO:0005829` |
+
+- **Updated Modules:**
+  - [`modules/bacterial_tonb_siderophore_import.yaml`](../../modules/bacterial_tonb_siderophore_import.html) (`MODULE:bacterial_tonb_siderophore_import` — expanded with `exbB4` and `exbD5` proton-channel motor step)
+  - [`modules/variovorax_metallophore_metal_homeostasis.yaml`](../../modules/variovorax_metallophore_metal_homeostasis.html) (`MODULE:variovorax_metallophore_metal_homeostasis` — expanded with `ppx` polyP turnover and `czcB`, `czcC`, `czcD` heavy-metal efflux)
