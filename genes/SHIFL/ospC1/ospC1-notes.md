@@ -13,9 +13,11 @@ Sources checked:
 - Every PMID cited by the GOA rows, fetched into `publications/`:
   PMID:16988276, PMID:23684308, PMID:32657447, PMID:34409271, PMID:34671164,
   PMID:35338844, PMID:35568036.
-- Context files read for mechanism (not edited):
-  `modules/calmodulin_camkii_stat1_potentiation.yaml`,
-  `gocams/62b4ffe300005467/62b4ffe300005467-review.yaml`.
+- Context read for mechanism (not edited): a calmodulin/CaMKII pathway module
+  and reviews of the two OspC GO-CAMs, proposed in ai4curation/ai-gene-review#5904
+  and not part of this branch; nothing in this review rests on them. The cached
+  models themselves, `gocams/62b4ffe300005467/62b4ffe300005467-src.yaml` and
+  `gocams/62b4ffe300005437/62b4ffe300005437-src.yaml`, are on main and were read.
 - GO term checks against the local GO build (OakOracle / oaklib `sqlite:obo:go`),
   2026-11-04: labels and definitions of GO:0005516, GO:0030430, GO:0042025,
   GO:0005576, GO:0052029, GO:0075135, GO:0052041, GO:0140740, GO:0140311,
@@ -112,17 +114,14 @@ that paper (`publications/PMID_34409271.md`, `full_text_available: true`) does
 not contain the string "OspC1" anywhere; it is an OspC3 study. The location claim
 is nevertheless true and directly shown elsewhere (PMID:16988276). The same
 mis-keyed reference appears in GO-CAM gomodel:62b4ffe300005467, where
-`gocams/62b4ffe300005467/62b4ffe300005467-review.yaml` already records it as a
-WRONG_REFERENCE source defect on the `occurs_in` assertion — consistent with the
-OspC1 model having been cloned from the OspC3 model 62b4ffe300005437. Recorded
-here as a `source_defects` entry on the row, with the row itself accepted.
+PMID:34409271 carries the `ECO:0000314` `occurs_in` evidence — consistent with
+the OspC1 model having been cloned from the OspC3 model 62b4ffe300005437.
+Recorded here as a `source_defects` entry on the row, with the row itself
+accepted.
 
-## Relation to the module and GO-CAMs (context only)
+## Calmodulin binding versus sequestration
 
-`modules/calmodulin_camkii_stat1_potentiation.yaml` models OspC1 and OspC3 as two
-REALIZER variants of one optional regulatory step and retypes the effector
-activity from `GO:0005516` to `GO:0140311 protein sequestering activity`. This
-review keeps the IDA `GO:0005516` row (the binding is directly assayed and the
+This review keeps the IDA `GO:0005516` row (the binding is directly assayed and the
 partner is informative) and adds `GO:0140311` as a NEW row, since the paper's own
 conclusion is sequestration of the apo form and that is the claim with mechanistic
 content. OspC2 is the family's informative negative and would merit a NOT

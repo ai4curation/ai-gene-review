@@ -15,9 +15,10 @@ Sources checked:
 - The GOA-cited publication PMID:1510448 (abstract-only in the cache).
 - Fetched for context: PMID:8852545 (review of the mechanism), PMID:1556077
   (operon control), PMID:7873524 (VanX, the enzyme VanY works in series with).
-- Context read but not edited:
-  `modules/glycopeptide_resistance_depsipeptide.yaml`,
-  `gocams/671ae02600002832/671ae02600002832-review.yaml`.
+- Context read but not edited: a glycopeptide-resistance pathway module and a
+  review of the vanA-operon GO-CAM, both proposed in
+  ai4curation/ai-gene-review#5904 and not part of this branch; nothing in this
+  review rests on them.
 - GO relations checked against the local GO build, 2026-11-04: `GO:0008233
   peptidase activity` and `GO:0008237 metallopeptidase activity` are both `is_a`
   ancestors of `GO:0009046 zinc D-Ala-D-Ala carboxypeptidase activity`;

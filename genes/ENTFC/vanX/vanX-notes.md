@@ -19,9 +19,10 @@ Sources checked:
   fetched: PMID:7873524 (purification and kinetics), PMID:1556077 (operon
   control), PMID:8852545 (review). PMID:7854121 and PMID:9702193, also cited by
   UniProt, were not needed beyond what the record states.
-- Context read but not edited:
-  `modules/glycopeptide_resistance_depsipeptide.yaml`,
-  `gocams/671ae02600002832/671ae02600002832-review.yaml`.
+- Context read but not edited: a glycopeptide-resistance pathway module and a
+  review of the vanA-operon GO-CAM, both proposed in
+  ai4curation/ai-gene-review#5904 and not part of this branch; nothing in this
+  review rests on them.
 - GO relations checked against the local GO build, 2026-11-04: `GO:0016805
   dipeptidase activity` is an `is_a` ancestor of `GO:0160237 D-Ala-D-Ala
   dipeptidase activity`; `GO:0008237 metallopeptidase activity` is **not**;
@@ -78,5 +79,5 @@ Nothing in GOA connects vanX to antibiotic resistance, and the record has no
 cellular-component annotation at all. `GO:0046677 response to antibiotic` and
 `GO:0005829 cytosol` are added as `NEW` rows; the cytosol inference rests on the
 absence of any membrane-targeting feature together with the compartment of the
-substrate pool, and both terms are the ones used for this annoton in
-`modules/glycopeptide_resistance_depsipeptide.yaml`.
+substrate pool, and `GO:0046677` is the most specific resistance-response term GO
+offers.

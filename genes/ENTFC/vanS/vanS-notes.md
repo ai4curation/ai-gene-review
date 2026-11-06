@@ -17,9 +17,10 @@ Sources checked:
   abstract-only) and PMID:30677074 (full text available and read).
 - Fetched for the activation question: PMID:28511809 (full text), the paper on
   the other side of it, and PMID:1556077 for the in vivo genetics.
-- Context read but not edited:
-  `modules/glycopeptide_resistance_depsipeptide.yaml`,
-  `gocams/671ae02600002832/671ae02600002832-review.yaml`.
+- Context read but not edited: a glycopeptide-resistance pathway module and a
+  review of the vanA-operon GO-CAM, both proposed in
+  ai4curation/ai-gene-review#5904 and not part of this branch; nothing in this
+  review rests on them.
 - GO relations checked against the local GO build, 2026-11-04: `GO:0000155
   phosphorelay sensor kinase activity` is an `is_a` **descendant** of `GO:0004673
   protein histidine kinase activity`; `GO:0016772` is an ancestor of
@@ -52,8 +53,8 @@ with a constitutively-active-type mutant behaving as predicted:
 
 ## The activation signal is contested, and the review does not take a side
 
-This is the point the GO-CAM review of gomodel:671ae02600002832 flags, and it is
-why no small-molecule activator is asserted here.
+The primary literature is split on this point, which is why no small-molecule
+activator is asserted here.
 
 Against direct activation, with full-length protein in two solubilisation
 systems:
@@ -94,9 +95,7 @@ directly tests.
 - **`GO:0016036 cellular response to phosphate starvation` is removed.** It comes
   from the same PANTHER node as three correct rows, but it is an
   over-propagation: UniProt places VanS in PANTHER:PTHR45453, whose official name
-  is PHOSPHATE REGULON SENSOR PROTEIN PHOR, and the module records exactly this,
-  declining to assert a PANTHER term for VanS because the family is the PhoR
-  one. VanS senses a glycopeptide signal and controls a resistance operon; the
+  is PHOSPHATE REGULON SENSOR PROTEIN PHOR. VanS senses a glycopeptide signal and controls a resistance operon; the
   phosphate regulon is a different system, and PMID:8664263 shows VanS does not
   even transfer phosphate to PhoB at a physiologically meaningful rate. The
   phosphate-starvation process term is inherited from the family's dominant
@@ -106,8 +105,9 @@ directly tests.
   membrane`, the only membrane this organism has and the term already annotated
   from PANTHER.
 
-The GO-CAM model attaches vancomycin as a small-molecule activator (RO:0012001,
-CHEBI:28001) with direct-assay evidence from PMID:8494882, a paper that assayed
-only the VanS cytosolic domain and never tested vancomycin. That defect is
-already recorded in `gocams/671ae02600002832/671ae02600002832-review.yaml`, so it
-is not duplicated here as a `source_defects` entry; it is raised as a question.
+The development GO-CAM model gomodel:671ae02600002832 attaches vancomycin as a
+small-molecule activator (RO:0012001, CHEBI:28001) with direct-assay evidence
+from PMID:8494882, a paper that assayed only the VanS cytosolic domain and never
+tested vancomycin. That defect is recorded here as a `source_defects` entry on
+the `GO:0000155` row (resource `GO_CAM`, `requested_change: CHECK`) and is also
+raised as a question.

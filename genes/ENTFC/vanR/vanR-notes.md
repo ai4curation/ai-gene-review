@@ -19,9 +19,10 @@ Sources checked:
   kinetics), PMID:30677074 (full-length VanS, including the phosphatase arm).
   PMID:8161518 and PMID:1320585, also cited by UniProt, were not retrieved; what
   the review uses from them is only what the curated record states.
-- Context read but not edited:
-  `modules/glycopeptide_resistance_depsipeptide.yaml`,
-  `gocams/671ae02600002832/671ae02600002832-review.yaml`.
+- Context read but not edited: a glycopeptide-resistance pathway module and a
+  review of the vanA-operon GO-CAM, both proposed in
+  ai4curation/ai-gene-review#5904 and not part of this branch; nothing in this
+  review rests on them.
 - GO relations checked against the local GO build, 2026-11-04: `GO:0003677 DNA
   binding` is an `is_a` ancestor of `GO:0000976 transcription cis-regulatory
   region binding`; `GO:0006355` is an ancestor of `GO:0045893 positive regulation
@@ -75,21 +76,19 @@ judged against the primary literature and the curated record.
   than an independent localisation finding, and no VanR-DNA complex has been
   characterised structurally in this organism.
 - `GO:0005737 cytoplasm` is refined to `GO:0005829 cytosol`, which is already
-  annotated from the PANTHER node and which the module uses.
+  annotated from the PANTHER node.
 
 Two things are missing from GOA and are proposed as `NEW` rows. First,
 `GO:0001216 DNA-binding transcription activator activity`: VanR's molecular
 function is not only to receive a phosphoryl group but to activate transcription
 through its OmpR/PhoB-type DNA-binding domain, and `GO:0000156` does not entail
-that (the two terms are unrelated in the hierarchy). This is the typing used for
-VanR in `modules/glycopeptide_resistance_depsipeptide.yaml` and in
-gomodel:671ae02600002832. Second, `GO:0046677 response to antibiotic`, which no
-gene of the cluster carries.
+that (the two terms are unrelated in the hierarchy). Second, `GO:0046677
+response to antibiotic`, which no gene of the cluster carries.
 
-The GO-CAM model represents VanR twice with the same gene product, function and
-process, splitting the kinase and phosphatase edges between the two copies, so
-that the inhibitory branch regulates a node with no outgoing edges; and it gives
-the activity `has_input UniProtKB:Q05709`, the VanH protein, where the targets
-are really the operon's genes. Both points are already recorded in
-`gocams/671ae02600002832/671ae02600002832-review.yaml` and in the module, so they
-are not duplicated here as source defects.
+The development GO-CAM model gomodel:671ae02600002832 represents VanR twice with
+the same gene product, function and process, splitting the kinase and phosphatase
+edges between the two copies, so that the inhibitory branch regulates a node with
+no outgoing edges; and it gives the activity `has_input UniProtKB:Q05709`, the
+VanH protein, where the targets are really the operon's genes. Both points are
+recorded here as `source_defects` entries (resource `GO_CAM`,
+`requested_change: CHECK`) on the `GO:0001216` row.

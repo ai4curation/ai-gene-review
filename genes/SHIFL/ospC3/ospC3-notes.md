@@ -19,9 +19,11 @@ Sources checked:
   (CALM binds bacterial OspC3), R-HSA-9956624 (OspC3 ADP-riboxanates CASP4),
   R-HSA-9956667 (CASP4 binds CALM:OspC3), R-HSA-9640148 (Infection with
   Enterobacteria).
-- Context read but not edited: `modules/calmodulin_camkii_stat1_potentiation.yaml`,
-  `gocams/62b4ffe300005437/62b4ffe300005437-review.yaml`,
-  `gocams/62b4ffe300005467/62b4ffe300005467-review.yaml`.
+- Context read but not edited: a calmodulin/CaMKII pathway module and reviews of
+  the two OspC GO-CAMs, proposed in ai4curation/ai-gene-review#5904 and not part
+  of this branch; nothing in this review rests on them. The cached models
+  themselves, `gocams/62b4ffe300005437/62b4ffe300005437-src.yaml` and
+  `gocams/62b4ffe300005467/62b4ffe300005467-src.yaml`, are on main and were read.
 - GO checks against the local GO build (oaklib `sqlite:obo:go`), 2026-11-04:
   `GO:0052041` is an `is_a` child of `GO:0052040` and a descendant of
   `GO:0051701`; `GO:0140886` is an `is_a` child of `GO:0052029`; `GO:0044164

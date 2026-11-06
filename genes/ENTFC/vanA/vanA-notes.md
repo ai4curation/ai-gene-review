@@ -18,9 +18,10 @@ Sources checked:
 - Additional papers fetched for the operon context: PMID:1556077 (VanS-VanR
   control of the operon), PMID:8852545 (review of the mechanism), PMID:7873524
   (VanX).
-- Context read but not edited:
-  `modules/glycopeptide_resistance_depsipeptide.yaml`,
-  `gocams/671ae02600002832/671ae02600002832-review.yaml`.
+- Context read but not edited: a glycopeptide-resistance pathway module and a
+  review of the vanA-operon GO-CAM, both proposed in
+  ai4curation/ai-gene-review#5904 and not part of this branch; nothing in this
+  review rests on them.
 - GO relations checked against the local GO build, 2026-11-04: `GO:0016881
   acid-amino acid ligase activity` is an `is_a` ancestor of `GO:0008716
   D-alanine-D-alanine ligase activity` but **not** of `GO:0160220
@@ -78,7 +79,6 @@ of a step in it: it supplies the side chain terminus that MurF adds to the
 precursor. What is missing from GOA is any antibiotic-response term, even though
 the whole point of the gene is inducible glycopeptide resistance and UniProt
 records `INDUCTION: By vancomycin, mediated by VanS/VanR`. `GO:0046677 response
-to antibiotic` is added as a `NEW` row; it is the process term the
-GO-CAM model of this cluster (gomodel:671ae02600002832) and
-`modules/glycopeptide_resistance_depsipeptide.yaml` both use, and GO has no
-glycopeptide-resistance-specific child.
+to antibiotic` is added as a `NEW` row: it is the most specific available term,
+since GO has no glycopeptide-resistance-specific child, and functionally
+equivalent resistance enzymes already carry it in this repository.

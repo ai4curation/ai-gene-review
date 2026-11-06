@@ -16,9 +16,10 @@ Sources checked:
 - The two GOA-cited publications: PMID:1931965 and PMID:9605319 (both
   abstract-only in the cache).
 - Fetched for operon context: PMID:1556077, PMID:8852545, PMID:1503450.
-- Context read but not edited:
-  `modules/glycopeptide_resistance_depsipeptide.yaml`,
-  `gocams/671ae02600002832/671ae02600002832-review.yaml`.
+- Context read but not edited: a glycopeptide-resistance pathway module and a
+  review of the vanA-operon GO-CAM, both proposed in
+  ai4curation/ai-gene-review#5904 and not part of this branch; nothing in this
+  review rests on them.
 - GO relations checked against the local GO build, 2026-11-04:
   `GO:0047809 D-lactate dehydrogenase activity` and `GO:0140175 (2R)-2-hydroxyacid
   dehydrogenase (NAD+) activity` are both `is_a` ancestors of `GO:0008720
@@ -82,7 +83,6 @@ Nothing in GOA connects vanH to antibiotic resistance, although the gene is
 cotranscribed with vanA and vanX under VanS-VanR control and all three are
 required
 [PMID:1556077 "The distal part of the van cluster encodes VanH, VanA, and a third enzyme, VanX, all of which are necessary for resistance."].
-`GO:0046677 response to antibiotic` is proposed as a `NEW` row; it is the process
-term used for this annoton in
-`modules/glycopeptide_resistance_depsipeptide.yaml` and across
-gomodel:671ae02600002832, and GO has no glycopeptide-specific child.
+`GO:0046677 response to antibiotic` is proposed as a `NEW` row: it is the most
+specific available term, since GO has no glycopeptide-specific child, and
+functionally equivalent resistance enzymes already carry it in this repository.
