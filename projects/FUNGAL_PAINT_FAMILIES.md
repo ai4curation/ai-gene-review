@@ -486,7 +486,7 @@ activity` term when enough evidence is present.
   subfamily; drafted in this branch
 - [ ] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog
 - [ ] `SCHPO/SPAC17G8.11c` - fission-yeast imt3, an SF20 imt paralog
-- [ ] `CANAL/MIT1` - CGD-seeded *Candida albicans* IPC mannosyltransferase
+- [ ] `CGD:CAL0000176496` - CGD-seeded *Candida albicans* IPC mannosyltransferase
 - [ ] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
   mannosyltransferase PAINT seed
 

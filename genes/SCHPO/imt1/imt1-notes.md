@@ -9,8 +9,7 @@
 
 ## 2026-11 newer-literature scan
 
-- Search hit PMID:37792890, a 2023 fission-yeast MIPC/cell-wall study, as newer S. pombe sphingolipid literature. Its full text explicitly places Imt1, Imt2, and Imt3 at the Golgi IPC-to-MIPC step and reports that `imt1D` and `imt2D`, unlike `imt3D`, do not suppress `css1-3`, consistent with distinct IPC-subspecies preferences. This refines the older interchangeability framing but does not justify new downstream `css1` phenotype/process annotations for Imt1.
-- Search hit the 2026 inositol-starvation paper by Sanchez et al. as broader fission-yeast inositol-metabolism context. It does not appear to revise Imt1's direct IPC mannosyltransferase role.
+- Search hit PMID:37792890, a 2023 fission-yeast MIPC/cell-wall study, as newer S. pombe sphingolipid literature. Its full text explicitly places Imt1, Imt2, and Imt3 at the Golgi IPC-to-MIPC step and reports that `imt1Δ` and `imt2Δ`, unlike `imt3Δ`, do not suppress `css1-3`, consistent with distinct IPC-subspecies preferences. This refines the older interchangeability framing but does not justify new downstream `css1` phenotype/process annotations for Imt1.
 
 ## Decisions
 
