@@ -68,3 +68,9 @@ Action policy applied:
 - Projection source: mouse Sqstm1 has one mitochondrion row, a UniProt IDA from PMID:32047033 (QuickGO, 2026-11-03), not circular, no NOT row dropped. In that paper p62 is recruited to depolarised mitochondria [PMID:32047033 "over 80% of VDAC1 WT or K274R-expressing cells showed colocalization of p62/SQSTM1 with the mitochondria when treated with CCCP"]; human data agree [PMID:20098416 "the autophagic adaptor p62/SQSTM1 is recruited to mitochondrial clusters"].
 - UniProt gives no mitochondrial location for human SQSTM1 (autophagosome, cytosol, PML body, late endosome, lysosome...).
 - Outcome: root only. Recruited cargo-receptor pool on ubiquitinated outer-membrane proteins (TRAF3/BRAF precedent); no anchor or transit peptide, so GO:0005741 not added.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and EXP (PMID:22178386). Mitochondrion rows from batch 4 untouched.
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:22178386}". PMID:22178386 is abstract-only; it is about the ER-resident E3 ligase TRIM13, which interacts with p62 in ER-stress autophagy; the p62 location assay is not stated in the abstract.
+- Outcome: both stay KEEP_AS_NON_CORE on curator deference; p62 is soluble, so the ER pool is recruited on the cytosolic face (consistent with the recruited mitochondrial pool call); root only, no membrane/lumen row.

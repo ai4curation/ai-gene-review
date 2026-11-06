@@ -145,3 +145,11 @@ assertions and supporting evidence are preserved.
 - PMID:32296183: KEEP_AS_NON_CORE -> REMOVE
 - PMID:32814053: KEEP_AS_NON_CORE -> REMOVE
 - PMID:33961781: KEEP_AS_NON_CORE -> REMOVE
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IBA (GO_REF:0000033, is_active_in). No ER sub-compartment row before this check.
+- IBA check: PAINT PTN000273522 ER IBD seeds are PomBase SPBC32F12.01c (Css1) and SGD S000000821 (Isc1) (interpro/panther/PTHR16320/PTHR16320-paint.tsv).
+- Human evidence: overexpressed nSMase1 in HEK293 [PMID:10681556 "The enzyme colocalized with marker proteins of the endoplasmic reticulum and the Golgi apparatus in immunocytochemistry."] (abstract only; fetched this session); removing the TM domains kills activity [PMID:10681556 "the removal of one or both putative transmembrane domains lead to the complete loss of enzymatic activity of human nSMase1 expressed in HEK293 cells"]; endogenous phospho-nSMase1 in Jurkat [PMID:25168245 "Phosphorylated nSMase1 co-localized with the ER marker calnexin"]. The Jurkat microsomal fraction was checked only with pan-cadherin.
+- Topology: UniProt TRANSMEM 330-350 and 354-374 (ECO:0000255), "Multi-pass membrane protein".
+- Outcome: IBA stays ACCEPT (is_active_in reasonable but soft: activated form at the ER, no ER-fraction activity assay). NEW GO:0005789 ER membrane (IC, PMID:10681556) beside the root. core_functions left at the ER root.
