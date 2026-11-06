@@ -155,3 +155,36 @@ mechanistic envelope with explicit lineage/strain limits, not universal capacity
 Schema validation and module semantics pass provisionally. PANTHER membership
 index refresh, final family reviews, endpoint/compiler checks, final rendering,
 full validation and a dedicated PR are still required.
+
+## 2026-11-06 — final family and mechanism boundaries
+
+The three family reviews explicitly distinguish EI relay architecture, transporter
+substrate/domain composition and kinase substrate-phosphate position. Family-wide
+term partitions and PAINT placements remain unresolved where not established; no
+source count is used to invalidate an IBA. Local file quotes are independently
+checked because the family reference wrapper skips them.
+
+The 2025 Azospirillum study describes FruA as EIIBC, and its current record
+annotates one EIIB domain. The module therefore requires fused EIIB/EIIC, while
+recording duplicated EIIB-like regions where supported. This supersedes the
+earlier universal two-EIIB requirement; a second functional phosphotransfer
+site cannot be inferred from protein length or two predicted cysteines.
+FruB and FruK use their broader grounded PANTHER families together with explicit
+architecture and substrate constraints, since subfamily names do not delimit
+these properties.
+
+The production circuit passes 49 scoped evidence-coverage checks and rejects seven
+mutations. An explicit audit oracle enforces the documented same-protein
+architecture, substrate specificity and matched-system evidence; the production
+compiler itself does not enforce free-text fusion descriptors. Separate archaeal
+EIIB/EIIC proteins cannot substitute for one fused transporter. Real archaeal
+1-PFK and secondary TagK 1-PFK activity remain positive component controls.
+Failure of a cross-species mixed set means no asserted matched-system evidence,
+not impossibility of heterologous complementation. These are coverage checks,
+not native-flux measurements.
+
+All 16 gene reviews and 148 original/seed rows are complete, with zero NEW rows
+and 34 raw/provider files unchanged. Eleven references include two review
+articles and nine primary studies. Final taxon reasoning is recorded in
+final-taxon-scope.json; the earlier Pseudomonadota proposal remains an explicitly
+unapplied historical artifact. Full validation and the dedicated PR remain pending.
