@@ -327,7 +327,9 @@ validators.
   activity* (`GO:0048018`), since no child term fits a structural collagen acting as a ligand:
   fibrillar collagens I-III for both receptors and collagen IV for DDR1 (both in
   `PANTHER:PTHR24023` `COLLAGEN ALPHA`, restricted to these chains), collagen X for DDR2
-  (`PANTHER:PTHR15427:SF48`), and Drosophila Multiplexin as a candidate only. Receptor: DDR1, DDR2
+  (`PANTHER:PTHR15427:SF48`). Drosophila Multiplexin, known only from a genetic interaction, is in
+  the notes and the knowledge gap, not a ligand variant (the same bar that keeps Toll-2 out of
+  the neurotrophin module). Receptor: DDR1, DDR2
   and fly Ddr (DDR subfamilies of `PANTHER:PTHR24416`, PAINT node `PTN002400507`), *protein tyrosine
   kinase collagen receptor activity* (`GO:0038062`). Downstream effectors and the other collagen
   receptors (integrins, GP6, LAIR1, which belong to *collagen-activated signaling pathway*) are
@@ -490,8 +492,9 @@ validators.
 
 1. **More modules**, pan-species, ligand step first, using the decisions in section 2. The queue
    from the gap check is done (collagen-DDR and fly Toll-6/7 neurotrophin were the last two).
-   Gene reviews are still missing for most of their members (NT1, spz5, Toll-6, kek6, DDR1, DDR2,
-   fly Ddr), and the collagen reviews have no ligand-activity core function.
+   Gene reviews are still missing for most of their members (NT1, spz5, Toll-6, kek6, DDR1 and
+   fly Ddr; DDR2 and Toll-7 have reviews), and the collagen reviews have no ligand-activity core
+   function.
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an
