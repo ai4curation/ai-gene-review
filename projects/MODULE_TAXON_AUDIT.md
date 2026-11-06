@@ -471,3 +471,8 @@ The bacterial System I module now distinguishes canonical CcmG-supported/CcmFH m
 ## 2026-11-06 — cytochrome review corrections
 
 PR #6121 follow-up reconciles heme handoff versus transmembrane transport across the audited taxa, supports membrane locations with topology, and retains the distinct CcmE covalent intermediates. Thirteen focused gene validations and five supplemental reference-finding checks pass; all 151 capacity cases still pass. All original annotation payloads and raw/provider sources are preserved. Fresh full-corpus validation, current-head external review and CI remain pending; no merge is claimed.
+
+
+## 2026-11-06 — cytochrome follow-up full validation
+
+The PR #6121 scientific follow-up full run finished on 10,548 reviews, with zero best-practice errors and 54 referenced pathways passing. Its 17 reference errors match the previous run exactly and affect 16 unrelated yeast reviews; all 22 relevant inputs are identical to the pinned base. All 307 scoped publication files match the validated commit. Renewed review, CI and actual merge remain required.
