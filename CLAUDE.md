@@ -233,9 +233,9 @@ BIOLOGY knowledge gap whose `dark_aspect` matches the ND aspect. What counts as
 literature on the gene: a bare protein-binding IPI does not (it identifies no function,
 so it does not make an MF ND stale); a paper on an ortholog does not, however strong;
 an `NAS` or Reactome `TAS` row on the gene itself does. An accepted ND must cite the
-search: the deep-research file, the notes file recording the queries and their
-result, or the publications checked (PMID, DOI, PMC); the UniProt record is not a
-search. The `nd_policy` check warns on deviations, and the
+search: the publications checked (PMID, DOI, PMC), or a `supported_by` quote from
+the gene's own deep-research or notes file where it records the queries and their
+result; the UniProt record is not a search. The `nd_policy` check warns on deviations, and the
 compliance score credits an accepted ND that cites the literature search. See
 `projects/NO_DATA.md` for the case taxonomy.
 

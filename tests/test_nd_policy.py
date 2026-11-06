@@ -6,19 +6,20 @@ from ai_gene_review.validation.nd_policy import iter_nd_policy_violations
 
 
 SEARCH = "file:human/X/X-deep-research-falcon.md"
+GENE = {"gene_symbol": "X", "id": "P12345"}
 
 
 def nd(action, nd_case=None, term="GO:0003674", evidence="ND", searched=True):
     review = {"action": action}
     if searched:
-        review["additional_reference_ids"] = [SEARCH]
+        review["additional_reference_ids"] = ["PMID:1"]
     if nd_case:
         review["nd_case"] = nd_case
     return {"term": {"id": term}, "evidence_type": evidence, "review": review}
 
 
 def fields(*annotations, **doc):
-    data = {"existing_annotations": list(annotations), **doc}
+    data = {**GENE, "existing_annotations": list(annotations), **doc}
     return [(i, f) for i, f, _, _ in iter_nd_policy_violations(data)]
 
 
@@ -84,17 +85,40 @@ def test_accept_with_replacement_terms_is_reported():
     assert fields(row) == [(0, "proposed_replacement_terms")]
 
 
-@pytest.mark.parametrize("reference_id", [
-    "PMID:12345", "DOI:10.1000/x", "PMC:PMC1", SEARCH,
-    "file:DROME/CG42763/CG42763-notes.md",
-    "file:human/X/X-deep-research-manual.md",
-])
+@pytest.mark.parametrize("reference_id", ["PMID:12345", "DOI:10.1000/x", "PMC:PMC1"])
 @pytest.mark.parametrize("slot", ["supported_by", "additional_reference_ids"])
-def test_accept_citing_a_search_passes(reference_id, slot):
+def test_accept_citing_a_publication_passes(reference_id, slot):
     row = nd("ACCEPT", searched=False)
     row["review"][slot] = (
         [{"reference_id": reference_id}] if slot == "supported_by" else [reference_id])
     assert fields(row) == []
+
+
+@pytest.mark.parametrize("reference_id,supporting_text,passes", [
+    (SEARCH, "no study of X was found", True),
+    ("file:DROME/X/X-notes.md", 'PubMed (esearch "X": 0 records)', True),
+    ("file:human/X/X-deep-research-manual.md", "no study of X was found", True),
+    ("file:human/P12345/P12345-notes.md", "no study of X was found", True),
+    # a search file must be quoted, so the verbatim check confirms it records a search
+    (SEARCH, None, False),
+    (SEARCH, "  ", False),
+    # and must be the gene's own
+    ("file:human/Y/Y-deep-research-falcon.md", "no study of Y was found", False),
+])
+def test_search_file_must_be_quoted_and_the_genes_own(reference_id, supporting_text, passes):
+    row = nd("ACCEPT", searched=False)
+    support = {"reference_id": reference_id}
+    if supporting_text is not None:
+        support["supporting_text"] = supporting_text
+    row["review"]["supported_by"] = [support]
+    assert (fields(row) == []) is passes
+
+
+def test_search_file_in_additional_reference_ids_does_not_count():
+    """additional_reference_ids carry no quote, so a file there cannot show a search."""
+    row = nd("ACCEPT", searched=False)
+    row["review"]["additional_reference_ids"] = [SEARCH]
+    assert fields(row) == [(0, "supported_by")]
 
 
 @pytest.mark.parametrize("supported_by", [

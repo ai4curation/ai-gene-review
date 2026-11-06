@@ -286,18 +286,19 @@ search, so we cannot meaningfully propose one. These rows should become
      or `WHOLLY_DARK`), on the row, the gene or a core function;
    - `nd_case` on a non-ND row;
    - `ACCEPT` without evidence that the literature was searched: the row must
-     cite a publication (PMID, DOI, PMC), the deep-research file, or the notes
-     file recording the queries and their result (a search that finds nothing
-     has no paper to cite). The UniProt record, or its protein-existence (`PE`)
-     line, is not a search. A notes citation should quote the queries and
-     their result, as DROME/CG42763 does, since the check sees only the file
-     name. On 2026-11-01 this flags 206 of 311 accepted ND
-     rows in 147 reviews; 197 of them cite nothing, mostly rows the re-action
-     pass converted.
+     cite a publication (PMID, DOI, PMC), or quote in `supported_by` the gene's
+     own deep-research or notes file where it records the queries and their
+     result (a search that finds nothing has no paper to cite), as DROME/CG42763
+     does. The quote is what the verbatim check confirms, so a bare file
+     citation, a file in `additional_reference_ids` or another gene's file does
+     not count. The UniProt record, or its protein-existence (`PE`) line, is not
+     a search. On 2026-11-06 this flags 215 of 321 accepted ND rows in 153
+     reviews, mostly rows the re-action pass converted.
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites
    the literature search the same way the warning requires: a publication, or
-   the deep-research or notes file (not the UniProt record). The pass
+   a quote from the gene's own deep-research or notes file (not the UniProt
+   record). The pass
    adds no such citation itself: the credit is for a search a reviewer records,
    so the rows the pass converted score 0 until one is.
    `nd_stale_support` credits a `REMOVE`d or `MODIFY`d ND only for a PMID/DOI

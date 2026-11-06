@@ -22,9 +22,9 @@ applies, and the checks here keep action, case and knowledge gaps consistent:
 - ``TRUE_GAP`` and ``EXISTENCE`` need a ``BIOLOGY`` knowledge gap whose
   ``dark_aspect`` matches the ND aspect (or ``WHOLLY_DARK``);
 - ``ACCEPT`` needs evidence that the literature was searched: a cited
-  publication (PMID, DOI, PMC) or the gene's deep-research or notes file
-  recording the search. The UniProt record or the protein's existence level
-  is not a search;
+  publication (PMID, DOI, PMC), or a quote from the gene's own deep-research
+  or notes file recording the search. The UniProt record or the protein's
+  existence level is not a search;
 - ``nd_case`` on a non-ND row is a mistake.
 
 Severity is WARNING, like the protein-binding policy: the checks guide
@@ -76,24 +76,80 @@ def _gaps(data: Dict[str, Any], review: Dict[str, Any]) -> List[Dict[str, Any]]:
     return gaps
 
 
-def _cites_search(review: Dict[str, Any]) -> bool:
-    """Whether a review cites a publication or a file recording the literature search.
+def _own_folders(data: Dict[str, Any]) -> set:
+    """Folder names that are the review's own gene folder.
 
-    >>> _cites_search({"supported_by": [{"reference_id": "PMID:1"}]})
+    The gene symbol, the accession, ``SYMBOL__ACCESSION`` (an alternative-ORF
+    peptide that shares its host's symbol), and the folder of the review's own
+    UniProt or GOA file, which also covers folders named after a synonym.
+
+    >>> sorted(_own_folders({"gene_symbol": "rad51", "id": "P36601", "references": [
+    ...     {"id": "file:SCHPO/rhp51/rhp51-uniprot.txt"}]}))
+    ['P36601', 'rad51', 'rad51__P36601', 'rhp51']
+    """
+    symbol, accession = data.get("gene_symbol"), data.get("id")
+    folders = {f for f in (symbol, accession, f"{symbol}__{accession}") if f}
+    for ref in data.get("references") or []:
+        ref_id = ref.get("id") if isinstance(ref, dict) else None
+        if isinstance(ref_id, str) and ref_id.startswith("file:") and ref_id.endswith(
+            ("-uniprot.txt", "-goa.tsv")
+        ):
+            parts = ref_id.removeprefix("file:").split("/")
+            if len(parts) >= 3:
+                folders.add(parts[1])
+    return folders
+
+
+def _own_folder(reference_id: str, data: Dict[str, Any]) -> bool:
+    """Whether a ``file:ORG/FOLDER/...`` reference is in the review's own gene folder.
+
+    >>> _own_folder("file:yeast/AIM33/AIM33-notes.md", {"gene_symbol": "AIM33", "id": "Q04516"})
     True
-    >>> _cites_search({"additional_reference_ids": ["file:human/X/X-deep-research-falcon.md"]})
+    >>> _own_folder("file:human/MIEF1__L0R8F8/x-notes.md", {"gene_symbol": "MIEF1", "id": "L0R8F8"})
     True
-    >>> _cites_search({"supported_by": [{"reference_id": "file:DROME/X/X-notes.md"}]})
-    True
-    >>> _cites_search({"supported_by": [{"reference_id": "file:human/X/X-uniprot.txt"}]})
+    >>> _own_folder("file:yeast/PGA3/PGA3-notes.md", {"gene_symbol": "AIM33", "id": "Q04516"})
     False
     """
-    ids = [s.get("reference_id") for s in review.get("supported_by") or [] if isinstance(s, dict)]
-    ids += list(review.get("additional_reference_ids") or [])
+    parts = reference_id.removeprefix("file:").split("/")
+    return len(parts) >= 3 and parts[1] in _own_folders(data)
+
+
+def cites_search(review: Dict[str, Any], data: Dict[str, Any]) -> bool:
+    """Whether an ND review cites the literature search; shared by the warning and the score.
+
+    A publication (PMID, DOI, PMC) counts wherever it is cited. A file recording
+    the search (deep research or notes) counts only when it is the gene's own and
+    is quoted in ``supported_by``, so the verbatim check confirms what it says.
+
+    >>> gene = {"gene_symbol": "X", "id": "P1"}
+    >>> cites_search({"supported_by": [{"reference_id": "PMID:1"}]}, gene)
+    True
+    >>> cites_search({"additional_reference_ids": ["DOI:10.1/x"]}, gene)
+    True
+    >>> quoted = {"reference_id": "file:DROME/X/X-notes.md", "supporting_text": "0 records"}
+    >>> cites_search({"supported_by": [quoted]}, gene)
+    True
+    >>> cites_search({"supported_by": [{"reference_id": "file:DROME/X/X-notes.md"}]}, gene)
+    False
+    >>> cites_search({"additional_reference_ids": ["file:human/X/X-deep-research-falcon.md"]}, gene)
+    False
+    >>> cites_search({"supported_by": [dict(quoted, reference_id="file:DROME/Y/Y-notes.md")]}, gene)
+    False
+    >>> cites_search({"supported_by": [{"reference_id": "file:human/X/X-uniprot.txt",
+    ...                                 "supporting_text": "PE   1: Evidence at protein level;"}]}, gene)
+    False
+    """
+    support = [s for s in review.get("supported_by") or [] if isinstance(s, dict)]
+    ids = [s.get("reference_id") for s in support] + list(review.get("additional_reference_ids") or [])
+    if any(isinstance(i, str) and i.startswith(LITERATURE_PREFIXES) for i in ids):
+        return True
     return any(
-        isinstance(i, str)
-        and (i.startswith(LITERATURE_PREFIXES) or any(m in i for m in SEARCH_RECORD_MARKERS))
-        for i in ids
+        isinstance(s.get("reference_id"), str)
+        and any(m in s["reference_id"] for m in SEARCH_RECORD_MARKERS)
+        and _own_folder(s["reference_id"], data)
+        and isinstance(s.get("supporting_text"), str)
+        and s["supporting_text"].strip()
+        for s in support
     )
 
 
@@ -210,16 +266,16 @@ def iter_nd_policy_violations(
                 "Use REMOVE (STALE) or MODIFY (ONTOLOGY_BLOCKED), or correct nd_case",
             )
 
-        if action == "ACCEPT" and not _cites_search(review):
+        if action == "ACCEPT" and not cites_search(review, data):
             yield (
                 index,
                 "supported_by",
                 "ND row is ACCEPTed without evidence that the literature was searched",
-                "Cite the search: the deep-research file, or the notes file recording the "
-                "queries and their result (when a search finds nothing there is no paper "
-                "to cite), or the publications that were checked (PMID, DOI). The UniProt "
-                "record or the protein's existence level does not show that the "
-                "literature has no function to annotate",
+                "Cite the search in supported_by: quote the gene's own deep-research or "
+                "notes file where it records the queries and their result (when a search "
+                "finds nothing there is no paper to cite), or cite the publications that "
+                "were checked (PMID, DOI). The UniProt record or the protein's existence "
+                "level does not show that the literature has no function to annotate",
             )
 
         if action == "ACCEPT" and review.get("proposed_replacement_terms"):
