@@ -83,7 +83,8 @@ def main():
             for slot in ["molecular_function", "contributes_to_molecular_function"]:
                 if core.get(slot):
                     functions.add(core[slot]["id"])
-        records[member["accession"]] = {"families": families, "functions": functions}
+        records[member["accession"]] = {"families": families, "functions": functions,
+                                         "genus": review["taxon"]["label"].split()[0]}
         if not review.get("core_functions"):
             no_core.append(member["review_path"])
     provider_proof = read(AUDIT / "provider-source-preservation.yaml")
@@ -97,16 +98,24 @@ def main():
     for ident in unknown:
         assert ident in nodes and not nodes[ident].get("participant")
     cases = []
+    scoped_route = nodes["bcsB_bcsC_envelope_route"]
+    allowed_genera = {item["term"]["label"] for item in scoped_route["context"]["taxa"]}
+    assert allowed_genera == {"Pseudomonas", "Cereibacter", "Komagataeibacter"}
+    scoped_annotons = {item["id"] for item in walk(scoped_route) if "participant" in item}
 
     def check(
-        name, present, expected, node=None, interpretation="panel machinery coverage"
+        name, present, expected, node=None, interpretation="panel machinery coverage",
+        family_scan=False, enforce_context=True
     ):
         def holds(atom):
             if atom.node_id in unknown:
                 return False
-            candidates = set(atom.representative_uniprots) & set(present)
+            candidates = set(present) if family_scan else set(atom.representative_uniprots) & set(present)
             for accession in candidates:
                 record = records[accession]
+                if (enforce_context and atom.node_id in scoped_annotons
+                        and record["genus"] not in allowed_genera):
+                    continue
                 if atom.family_ids and not set(atom.family_ids) & record["families"]:
                     continue
                 if not set(atom.domain_ids) <= record["families"]:
@@ -130,6 +139,12 @@ def main():
             }
         )
 
+    check("Family-only Ecoli BC matches the generic route without context", {"P37652", "P37650"},
+          True, "bcsB_bcsC_envelope_route", family_scan=True, enforce_context=False,
+          interpretation="Negative control: family predicates alone do not enforce taxon applicability")
+    check("External context oracle rejects Ecoli bypass of its BcsQ route", {"P37652", "P37650"},
+          False, "bcsB_bcsC_envelope_route", family_scan=True,
+          interpretation="Context-oracle contract, not a claim that the compiler enforces taxa")
     polymerase = "bcsA_cellulose_polymerization_step"
     check("KT2440 reviewed ABC architecture", {"Q88JL4", "Q88JL3", "Q88JL1"}, True)
     check(
