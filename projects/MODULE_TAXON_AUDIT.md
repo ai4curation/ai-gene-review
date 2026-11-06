@@ -488,3 +488,6 @@ The [divisome audit](../analysis/module_audits/bacterial_divisome_peptidoglycan_
 ## 2026-11-06 — divisome full validation attribution
 
 The divisome full run finished on 10,555 reviews. Schema and term checks pass; best practices report zero errors, and all 54 pathways with PMID references pass. The run exits nonzero for 17 reference errors in 16 unrelated yeast reviews. The audit verifies the exact failures and all 22 affected inputs against pinned base `f0306d4de38a86ed077b066841167cc071bd56fe`; none is introduced by this module. All 144 scoped scientific files match validated commit `579fdd34fec0c49c471e899244dcb6abf4473a83`. Publication, independent review, CI and actual merge remain outstanding.
+
+
+The divisome audit is published as [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123). Auto-merge is enabled through the normal review, CI and merge queue gates. Publication does not count as completed module-audit work; actual merge remains required.
