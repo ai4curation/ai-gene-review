@@ -5,8 +5,8 @@
 - **Gene Symbol / Locus Tag:** `tauD1` / `VPARA_23370`
 - **Organism:** *Variovorax paradoxus* strain TBEA6 (`NCBITaxon:34073`)
 - **Sequence & Active-Site Architecture:**
-  - Full-length TauD/TfdA-like $\text{Fe(II)}$/$\alpha$-ketoglutarate-dependent dioxygenase domain (`Pfam:PF02668`, residues 23–294; `InterPro:IPR003819`, `PANTHER:PTHR30468:SF1`) [UniProtKB:A0A0H2MHV8, "DE   SubName: Full=Alpha-ketoglutarate-dependent taurine dioxygenase {ECO:0000313|EMBL:KLN56395.1};"].
-  - Conserves the canonical mononuclear non-heme $\text{Fe(II)}$ 2-His-1-carboxylate facial triad (`WHTD` motif at residues 105–108: His106 and Asp108, plus distal His262 in `HFTNFH` at residues 257–262) and the 2-oxoglutarate/sulfonate-binding Arg residues.
+  - Full-length TauD/TfdA-like $\text{Fe(II)}$/$\alpha$-ketoglutarate-dependent dioxygenase domain (`Pfam:PF02668`, residues 23–294; `InterPro:IPR003819`, `PANTHER:PTHR30468:SF1`) [UniProtKB:A0A0H2MHV8, "FT   DOMAIN          23..294"].
+  - Conserves the canonical mononuclear non-heme $\text{Fe(II)}$ 2-His-1-carboxylate facial triad (`WHTD` motif at residues 117–120: `His118` and `Asp120` in `113-YENSWHTD-120`, plus distal `His278` in `273-NRSTQHYA-280`, corresponding to `His99`, `Asp101`, and `His255` in *E. coli* TauD) and the 2-oxoglutarate/sulfonate-binding Arg residues.
 
 ## 2. Pathway Context & Module Linkage
 - **Existing Reusable Module:** [`modules/taurine_uptake_and_desulfonation.yaml`](file:///Users/cjm/orca/workspaces/ai-gene-review/aigr-variovorax/modules/taurine_uptake_and_desulfonation.yaml) (`MODULE:taurine_uptake_and_desulfonation`).

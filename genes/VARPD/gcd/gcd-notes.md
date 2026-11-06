@@ -23,5 +23,4 @@
 - `GO:0016614` (`oxidoreductase activity, acting on CH-OH group of donors`, IEA via InterPro) -> **TOO_GENERAL** (subsumed by the accepted child term `GO:0008876` `quinoprotein glucose dehydrogenase activity`).
 
 ## Proposed New Annotations
-- `GO:0005886` (`plasma membrane`, `IC`) — `located_in`, supported by the 5 transmembrane helices (`FT_TRANSMEM`) and `NCBIfam:TIGR03074` in `UniProtKB:A0A0H2LUW4`.
-- `GO:0019595` (`D-gluconate metabolic process`, `IC`) — `involved_in`, supported by `InterPro:IPR017511` and `NCBIfam:TIGR03074` in `UniProtKB:A0A0H2LUW4`.
+- `GO:0019521` (`D-gluconate metabolic process`, `IC`) — `involved_in`, supported by `InterPro:IPR017511` and `NCBIfam:TIGR03074` in `UniProtKB:A0A0H2LUW4` (while `GO:0016020` `membrane` is refined via `MODIFY` to `GO:0005886` `plasma membrane`).
