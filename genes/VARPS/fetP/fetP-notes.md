@@ -1,11 +1,12 @@
-# Curation Notes for *Variovorax paradoxus* S110 `fetP` (`C5CNX5`, `YGGX_VARPS`, `Vapar_2982`)
+# Curation Notes for *Variovorax paradoxus* S110 `fetP` (`C5CNX5`, `FETP_VARPS`, `Vapar_2982`)
 
 ## Overview
-- **UniProt Accession:** `C5CNX5` (`YGGX_VARPS`)
+- **UniProt Accession:** `C5CNX5` (`FETP_VARPS`)
 - **Ordered Locus Name:** `Vapar_2982`
 - **Gene Symbol:** `fetP`
 - **Organism:** *Variovorax paradoxus* S110 (`NCBITaxon:543728`)
-- **Protein Function:** Probable cytosolic $\text{Fe}^{2+}$-trafficking protein (`FetP` / `YggX`, 90 aa) that binds intracellular ferrous iron and protects iron-sulfur (`[Fe-S]`) cluster enzymes (such as the Rieske `[2Fe-2S]` dioxygenase system `IadC–IadD/IadE` and metabolic dehydratases) from Fenton-mediated oxidative damage.
+- **Protein Function:** Probable cytosolic $\text{Fe}^{2+}$-trafficking protein (`FetP` / `YggX`, 90 aa) predicted via HAMAP rule `MF_00686` (`InterPro:IPR007457`) to mediate intracellular iron transactions between iron acquisition and iron-requiring processes such as synthesis and repair of `[Fe-S]` clusters.
+- **Disambiguation Note:** `Vapar_2982` (`C5CNX5`) bears the gene symbol `fetP` in UniProt via the YggX Fe(2+)-trafficking family rule (`HAMAP-Rule:MF_00686`) and is distinct from the uncurated periplasmic FetP-like cupredoxin (`Vapar_3862` / `C5CUI1`) encoded adjacent to the variobactin siderophore locus.
 
 ## Literature & Domain Evidence
 1. **Genomic Context in *Variovorax paradoxus* S110 (`PMID:21183664`, `UniProtKB:C5CNX5`):**
