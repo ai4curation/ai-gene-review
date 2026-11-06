@@ -37,6 +37,6 @@ Focused gene/module/history checks and rendering pass.
 
 Before round1 follow-up, full-corpus validation finished across 10,542 reviews. Schema, ontology and best-practices have zero blocking errors, and all 54 pathway files with PMIDs pass. Exit status 1 is solely due to 19 reference errors in 17 unrelated yeast reviews. The committed failure inventory proves all 23 review/source/configuration inputs are unchanged from the audit base. There are 115 ontology label advisories, 52 reference advisories and 27,996 best-practice warnings repository-wide.
 
-Round1 focused checks pass. A fresh full-corpus validation is pending after these corrections. The capacity predicates distinguish enabled activities from explicit contributes_to corrections and reject the unresolved SPO1087 cargo candidate. KT2440 intact-COS uptake physiology supports the import role without assigning a native BetC compartment or claiming compartment-resolved flux.
+Round1 focused checks pass. The fresh full-corpus validation on cb46f285c4 completed with exactly the same 19 reference errors in 17 unrelated yeast reviews; all 23 underlying input blobs are unchanged. Schema, ontology, best-practices and 54 pathway checks pass. The capacity predicates distinguish enabled activities from explicit contributes_to corrections and reject the unresolved SPO1087 cargo candidate. KT2440 intact-COS uptake physiology supports the import role without assigning a native BetC compartment or claiming compartment-resolved flux.
 
-PR #6105 is open. Remote review/CI and actual merge remain pending.
+PR #6105 science commit cb46f285c4 is approved. The completion ledger and an AST-identical checker formatting fix are recorded; current-head review/CI and actual merge remain pending.

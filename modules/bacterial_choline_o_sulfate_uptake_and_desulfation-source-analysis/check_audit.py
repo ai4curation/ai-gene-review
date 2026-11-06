@@ -180,7 +180,8 @@ def main():
         check('OpuC family match without curated role ' + accession, uptake, opuc, False, drop_roles=(accession,))
         check('Individual OpuC subunit cannot import independently ' + accession, uptake, {accession}, False)
     # Synthetic same-family ATPase control is not an invented biological member.
-    fake = deepcopy(panel['O34992']); fake['accession'] = 'SYNTHETIC_SAME_FAMILY_ATPASE'
+    fake = deepcopy(panel['O34992'])
+    fake['accession'] = 'SYNTHETIC_SAME_FAMILY_ATPASE'
     check('Related-family ATPase cannot replace the OpuCA role', uptake,
           opuc - {'O34992'}, False, synthetic=(fake,))
     for accession in ['Q88RQ2', 'O69787', 'Q5LUH1']:
