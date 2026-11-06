@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -76,7 +76,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [ ] `bacterial_alkyl_hydroperoxide_reductase`: Fifteen member reviews preserve 258 original annotation rows and 30 raw sources; recorded full validation passed with 9,242 reviews, zero errors and 54 pathway checks. Pinned GitHub snapshot 2026-10-27T16:06:35.159856+00:00: PR #5595 is OPEN at 41e8b30b69f09d0bafcd50178b019e32b394b13e with reviewDecision REVIEW_REQUIRED. Its latest submitted review 5670221625, submitted at 2026-10-27T15:57:16Z on older head d911d7aa8b66c0c22d5ccbcaadbaa285e1ac84d6, is now DISMISSED. The earlier approval is historical and does not apply to the new head. Review and CI for the published prose follow-up remain pending; CI below is pinned to 41e8b30b69f09d0bafcd50178b019e32b394b13e.
 - [ ] `bacterial_aminoacyl_trna_charging`: Audit 29 has 42 completed member drafts spanning eight bacterial taxon codes, 386 active rows after four redundant authored proposals were retired, and 84 preserved raw sources. The revised module has 20 required output roles, 40 activities and five continuity edges; 44 assembly/context cases pass. Final independent scientific QA and source attachment are in progress; full validation and publication remain pending.
-- [ ] Remaining 685 modules are NOT_STARTED. 25 of 715 audits are complete; 5 remain active (3 open PRs and 2 audits in progress).
+- [ ] This checkout records 681 modules NOT_STARTED, 27 COMPLETE and 7 active (4 PR_OPEN and 3 IN_PROGRESS). These are ledger counts from dated evidence, not a fresh global GitHub survey. The cellulose audit adopts PR #2143; its expanded changes are not yet published.
 
 ## Notes
 
@@ -462,3 +462,7 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+## 2026-11-06 — cellulose cross-taxon audit
+
+Twenty-one member reviews complete; 17 module references curated; 23 production compiler cases and focused module validation pass. Full validation is running. Existing PR #2143 is adopted; this expanded audit has not yet been pushed. The scope includes Pseudomonas, Rhodobacter, Agrobacterium, E. coli, Komagataeibacter, cyanobacteria and Streptomyces. All 88 original annotation payloads and 42 raw files are preserved; 11 new proposals are separate from one inherited NEW. Native strain output and unresolved envelope mechanisms remain explicitly qualified. This update changes only the cellulose inventory row; all other rows retain their dated evidence.

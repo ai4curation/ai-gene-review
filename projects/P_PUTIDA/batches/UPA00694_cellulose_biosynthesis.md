@@ -54,3 +54,5 @@ reusable Gram-negative BcsA/BcsB/BcsC cellulose synthase/export module with PSEP
 representative UniProt exemplars. Kept PP_2634 as BcsQ/YhjQ accessory context
 and left broader bcs-locus hydrolase/editing factors for a later accessory-module
 pass.
+
+2026-11-06 comparative audit: all four KT2440 reviews are COMPLETE. The bacterial module now distinguishes BcsB/BcsC, enterobacterial intact-BcsQ, unresolved typeIII and cyanobacterial envelope mechanisms, and the monoderm CslA–GlxA complex. The cross-taxon panel contains 21 completed reviews and 17 curated module references. BcsB sequence-family names do not establish direct c-di-GMP binding, and the KT2440 PP_2634 nucleotide chemistry remains unresolved. Local module and 23 capacity checks pass; repository-wide validation and publication of this update to PR #2143 remain pending. Existing raw sources and provider reports are preserved. The merge checklist remains open until an actual merge.
