@@ -46,7 +46,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
-| `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/ENPP IRD pruning | `PPN1`/`ppn1`/`PPN1`/`epp-1` |
+| `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/SMPDL3 IRD pruning | `PPN1`/`PPN1`/`PPN1`/`ppn1`/`epp-1` |
 
 ---
 
@@ -457,8 +457,9 @@ assertions inherited from non-fungal branches.
 
 - [x] `yeast/PPN1` - *S. cerevisiae* endo/exopolyphosphatase anchor; drafted in
   this branch
-- [ ] `CANGA/PPN1` - CGD *Candida glabrata* seed for the fungal polyphosphate
+- [ ] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
   catabolic-process node
+- [ ] `CANGA/PPN1` - CGD *Candida glabrata* Ppn1-family member
 - [ ] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog
 - [ ] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
 
@@ -469,13 +470,15 @@ assertions inherited from non-fungal branches.
 ## 2026-11-06
 
 - Started `PTHR10340`, separating the fungal Ppn1 polyphosphatase clade from
-  the metazoan sphingomyelinase/ENPP-like branches named by the official
+  the metazoan sphingomyelinase/SMPDL3-like branches named by the official
   PANTHER family label. The first `yeast/PPN1` review accepts the fungal
   `PTN000818947` endopolyphosphatase, exopolyphosphatase, fungal-type vacuole,
   and polyphosphate-catabolism IBAs; treats the S. cerevisiae self-seed in the
   PAINT `WITH/FROM` column as direct experimental grounding rather than
-  circular support; and records the newer 2025 polyphosphate-engineering and
-  FRET-assay papers without changing the core GO conclusions.
+  circular support; fixes the second polyphosphate-catabolism seed as a
+  `CGD:CAL*` *Candida albicans* seed rather than the CANGA member; and records
+  the newer 2025 polyphosphate-engineering and FRET-assay papers without
+  changing the core GO conclusions.
 
 ## 2026-11-01
 
