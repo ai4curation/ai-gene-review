@@ -462,3 +462,11 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+## 2026-11-06: DnaK/DnaJ/GrpE comparative audit started
+
+Six original reviews (159 historical rows and 27 protected files) are being
+revisited, with Mtb and Thermus comparisons to qualify the three-role cycle.
+Exact protein identities and assay-host provenance are checked before extrapolation.
+Module/family integration, validation, a dedicated PR and actual merge remain
+outstanding. See [audit progress](../analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/audit-progress.yaml).
