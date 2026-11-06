@@ -19,3 +19,7 @@ GbsB is a soluble typeIII alcohol-dehydrogenase-family protein, not a GMC/BetA h
 Replaced irrelevant GbsA support on GbsB core/process/location claims with the actual gbsB deletion precursor-rescue and radiolabeled-conversion passages, and the primary soluble-family statement. The reviewer suggested a GbsA homodimer quote for GbsB location; that would repeat the gene mismatch and is deliberately not used. Cytoplasmic localization remains an inference, not direct imaging. The metal uncertainty now quotes the primary sequence comparison and its explicit uncertainty. The description states the biology, while cofactor-evidence limits remain in review reasons and gaps.
 
 All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.
+
+## PR6108 round2 follow-up
+
+Remove one exact duplicate reference entry. Shorten five repeated native-genetics quotes to the operative differential precursor-rescue comparison. The complete original excerpt and its provenance remain unchanged at their existing shared path, preserving the radiolabeled-conversion context for both GbsA and GbsB. No biochemical or uncertainty judgment changes.

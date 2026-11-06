@@ -17,3 +17,7 @@ Transport activities are attributed to the assembled importer. The core uses con
 Retain GO0055085 as ACCEPT alongside cargo transport, consistently with BetT and the other OpuB subunits. GO0015871 is not a membrane-crossing descendant; no suitable choline-specific transmembrane BP exists in the checked ontology. The choline-specific MF and membrane-subunit contribution remain precise. Summaries no longer duplicate their reasons.
 
 All original machine and authored annotation payloads remain unchanged. Exact primary excerpts and source provenance are in BACSU/gbsB/gbsB-source-analysis/round1-primary-excerpts.txt; official term checks are in modules/bacterial_choline_to_glycine_betaine_biosynthesis-source-analysis/round1-ontology-evidence.yaml.
+
+## PR6108 round2 follow-up
+
+Add GO0015871 as a NEW IC process anchored in the actual membrane-translocation component supplied by OpuBD and the demonstrated native OpuB choline uptake. Same-role cargo-transport conventions were checked against MalF/P02916 and RbsC/P0AGI1. These annotation states are a convention check, not target support. Current GO ancestry keeps cargo-specific GO0015871 distinct from membrane-crossing GO0055085; no existing/replacement BP duplicates it. Preserve all earlier assay-strain and construct limits.

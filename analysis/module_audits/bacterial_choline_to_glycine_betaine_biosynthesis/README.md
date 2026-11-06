@@ -25,7 +25,7 @@ manual judgment to the reviewed core and primary sources. Synthetic controls
 test this distinction and taxon filtering; they do not assert native proteins.
 
 All 94 historical rows, 26 raw UniProt/GOA files and four provider artifacts are
-preserved. Eleven newly added annotations give 105 current rows, including three
+preserved. Thirteen newly added annotations give 107 current rows, including three
 inherited proposals. Six unresolved claims remain explicit; COMPLETE means the
 curation decisions are finished, not that every biological question is settled.
 New Falcon attempts failed with HTTP403 and are documented as manual research.
@@ -43,4 +43,10 @@ Published [PR #6108](https://github.com/ai4curation/ai-gene-review/pull/6108); r
 
 Claim-linked GbsA/GbsB quotes now distinguish tested substrates, native precursor genetics, soluble-family inference and metal uncertainty. The three untested GbsA aminoaldehyde activities remain UNDECIDED; the full paper does not measure them. BetT and OpuB retain membrane-crossing GO:0055085 alongside cargo transport, which is not its descendant. CodA has a supported proposed second-reaction MF and a GOC mapping-scope query. The older BetA second-activity claim is explicitly DISPUTED with the later purified-enzyme study linked.
 
-Nine changed genes, ten new helper histories, module/schema, checker lint, 43 capacity cases, render and diff checks pass. All 105 published annotation payloads remain unchanged (94 historical plus 11 added); no archive exception is needed. Twenty-six raw files, four provider artifacts and all 91 checked source files are preserved. The earlier full run does not validate these subsequent edits; the parent owns a fresh full run. See `round1-followup.yaml` and `round1-preservation.json`.
+Nine changed genes, ten new helper histories, module/schema, checker lint, 43 capacity cases, render and diff checks pass. All 105 published annotation payloads remain unchanged (94 historical plus 11 added); no archive exception is needed. Twenty-six raw files, four provider artifacts and all 91 checked source files are preserved. The subsequent round1 full run on f639eff0aeb29247c7b7b3d9ce36d8290ee9bf92 is now terminal:10,543 reviews, the same19 reference errors in17 unrelated yeast reviews,23 base-identical inputs and24 unchanged science files. Schema, ontology, best-practices and54 pathway checks passed;27,996 best-practice advisories remain. See `round1-fullrun-terminal.json` for exact tuples and the log hash. See `round1-followup.yaml` and `round1-preservation.json`.
+
+## PR6108 round2 follow-up
+
+OpuBC and OpuBD now explicitly propose GO:0015871 through substrate-capture and membrane-translocation participation. The current ontology keeps cargo transport distinct from membrane crossing. Same-role MalE/RbsB and MalF/RbsC annotation conventions are recorded in `round2-transport-evidence.yaml`; primary target studies remain the biological support. One duplicate GbsB reference was removed and five repeated quotes shortened; the complete shared excerpts and provenance are unchanged.
+
+All105 prior payloads,26 raw files,four provider artifacts and91 checked sources are preserved; two new IC process rows give107 current annotations. Three focused gene checks,checker lint and43capacity cases pass. The completed round1 run predates these edits; round2 full validation is NOT_STARTED and parent-owned. Renewed review/CI and actual merge remain pending. See `round2-followup.yaml` and `round2-preservation.json`.
