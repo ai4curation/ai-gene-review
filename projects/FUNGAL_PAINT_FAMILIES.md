@@ -517,7 +517,8 @@ evidence for the budding-yeast seed.
 - [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1/Ypt7 GEF subunit; rechecked in
   PTHR13027 after 2026 VINE/Ypt10 and lipid-droplet papers
 - [ ] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows
-- [ ] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member
+- [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member; rechecked
+  against PTHR13027 after the yeast/MON1 refresh
 - [ ] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member
 - [ ] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member
 - [ ] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member
@@ -588,6 +589,11 @@ evidence for the budding-yeast seed.
   `contributes_to` GEF row, and the Opisthokonta `PTN000315023` Mon1-Ccz1
   complex row; newer 2026 papers add VINE/Ypt10 upstream regulation and a
   stationary-phase Pdr16-lipid-droplet context without changing those GO calls.
+- Rechecked `CANAL/MON1` as the *Candida albicans* `PTHR13027:SF7` ortholog.
+  Its four IBA rows still match the fungal `PTN000989606`, eukaryotic
+  `PTN000315021`, and Opisthokonta `PTN000315023` placements; the only review
+  edits cite the no-direct-Candida-literature search for CGD's accepted `ND`
+  placeholders.
 
 ## 2026-11-01
 
