@@ -128,7 +128,7 @@ MAPK placement `PANTHER:PTN001172087`.
   MAPK; merged in PR #5868
 - [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
 - [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
-  #5886
+  PR #5886
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
   merged in PR #5885
 - [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
