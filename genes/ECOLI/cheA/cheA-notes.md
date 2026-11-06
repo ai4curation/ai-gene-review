@@ -46,4 +46,4 @@ QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor 
 
 Purified CheA autophosphorylation and preferential transfer to CheY/CheB are established by PMID:3280143 and PMID:16176121; PMID:1326408 separates receptor ligand binding from CheA kinase regulation.
 
-This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in modules/bacterial_chemotaxis_signal_transduction-source-analysis/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.
+This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in analysis/module_audits/bacterial_chemotaxis_signal_transduction/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.

@@ -47,4 +47,4 @@ QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor 
 
 PMID:40197389 demonstrates CheA autophosphorylation and CheY phosphotransfer; its supplement identifies PP_4338. PMID:30761113 places this paralog in KT2440 flagellar chemotaxis.
 
-This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in modules/bacterial_chemotaxis_signal_transduction-source-analysis/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.
+This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in analysis/module_audits/bacterial_chemotaxis_signal_transduction/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.

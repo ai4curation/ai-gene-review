@@ -27,4 +27,4 @@ QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor 
 
 PMID:9485379 establishes the kinase and forward/reverse phosphotransfer in the RU lineage. The current 1021 record differs at five positions from deposited RU11/001 CheA; the qualitative role is inferred from the ortholog and conserved architecture, without transferring quantitative RU measurements.
 
-This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in modules/bacterial_chemotaxis_signal_transduction-source-analysis/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.
+This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in analysis/module_audits/bacterial_chemotaxis_signal_transduction/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.
