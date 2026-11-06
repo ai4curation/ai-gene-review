@@ -37,6 +37,14 @@ def main():
     baseline = read(AUDIT / 'seed-baseline.yaml')
     doc = read(ROOT / 'modules' / (SLUG + '.yaml'))
     panel, totals, actions, hashes = {}, Counter(), Counter(), {}
+    withdrawn = read(ROOT / 'genes/RUEPO/SPO1087/SPO1087-source-analysis/prior-choline-transport-proposal.yaml')
+    assert withdrawn['review_path'] == 'genes/RUEPO/SPO1087/SPO1087-ai-review.yaml'
+    assert withdrawn['accession'] == 'Q5LUG7'
+    assert withdrawn['original_row']['review']['action'] == 'NEW'
+    withdrawn_payload = {k: v for k, v in withdrawn['original_row'].items() if k != 'review'}
+    assert withdrawn_payload == {
+        'term': {'id': 'GO:0015220', 'label': 'choline transmembrane transporter activity'},
+        'evidence_type': 'IMP', 'original_reference_id': 'PMID:26058574'}
     for member in baseline['members']:
         path = ROOT / member['review_path']
         review = read(path)
@@ -44,6 +52,10 @@ def main():
         assert review['id'] == member['accession']
         assert review['taxon'] == member['taxon']
         rows = review.get('existing_annotations', [])
+        if member['review_path'] == withdrawn['review_path']:
+            assert not any({k: v for k, v in row.items() if k != 'review'} == withdrawn_payload
+                           for row in rows), 'The withdrawn cargo proposal must not remain asserted'
+            totals['withdrawn_authored_proposals'] += 1
         seeds = member['annotations']
         assert len(rows) >= len(seeds)
         for seed, row in zip(seeds, rows):
@@ -74,8 +86,15 @@ def main():
         for row in rows:
             if 'NOT' in row.get('qualifier', ''):
                 continue
-            target = contributes if row.get('qualifier') == 'contributes_to' else enabled
             decision = row['review']
+            qualifier = row.get('qualifier', 'enables')
+            corrections = {defect['corrected_value'] for defect in decision.get('source_defects', [])
+                           if defect['defect_type'] == 'WRONG_QUALIFIER'
+                           and defect.get('asserted_value') == qualifier}
+            if corrections:
+                assert corrections == {'contributes_to'} and qualifier == 'enables'
+                qualifier = 'contributes_to'
+            target = contributes if qualifier == 'contributes_to' else enabled
             if decision['action'] in {'ACCEPT', 'NEW', 'KEEP_AS_NON_CORE'}:
                 target.add(row['term']['id'])
             elif decision['action'] == 'MODIFY':
@@ -90,6 +109,13 @@ def main():
     for name, digest in providers.items():
         assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest, name
     totals['provider_artifacts_preserved'] = len(providers)
+    assert totals['withdrawn_authored_proposals'] == 1
+    assert totals['genuinely_added_NEW'] == 11
+    assert 'GO:0015220' not in panel['Q5LUG7']['enabled']
+    assert 'GO:0031459' not in panel['O34992']['enabled']
+    assert 'GO:0031459' in panel['O34992']['contributes']
+    assert not {'GO:0031459', 'GO:0033266'} & panel['O32243']['enabled']
+    assert {'GO:0031459', 'GO:0033266'} <= panel['O32243']['contributes']
     nodes = {n['id']: n for n in walk(doc['module']) if 'id' in n}
     representatives = {n['id'].split(':', 1)[1] for n in walk(doc['module'])
                        if str(n.get('id', '')).startswith('UniProtKB:')}
@@ -125,6 +151,11 @@ def main():
                 return True
             return False
         def predicate(atom):
+            if atom.node_id == 'ruegeria_bett_candidate':
+                # Verified locus/family plausibility is not evidence that this
+                # protein transports the proposed cargo; the insertion phenotype
+                # remains confounded by downstream betA polarity.
+                return False
             if atom.node_id == 'unresolved_cos_import_activity':
                 # Only direct intact-accumulation physiology is admitted. COS
                 # growth alone cannot distinguish transport from external cleavage.
@@ -165,7 +196,9 @@ def main():
           physiology='KT2440 intact COS accumulation; PMID:17116241')
     check('Physiological uptake does not substitute for BetC hydrolysis', SLUG,
           {'Q88RQ3', 'Q88RQ4'}, False, physiology='KT2440 intact COS accumulation; PMID:17116241')
-    check('Ruegeria BetT choline activity does not establish COS import', uptake, {'Q5LUG7'}, False)
+    check('Ruegeria BetT candidate does not establish COS import', uptake, {'Q5LUG7'}, False)
+    check('Ruegeria locus and family evidence do not resolve choline cargo',
+          'ruegeria_bett_candidate_context', {'Q5LUG7'}, False)
     check('Ruegeria utilization does not establish intact intracellular uptake', SLUG,
           {'Q5LUH1', 'Q5LUG7'}, False, physiology='Ruegeria COS growth; PMID:26058574')
     check('KT2440 physiology cannot be transferred to Ruegeria', SLUG,

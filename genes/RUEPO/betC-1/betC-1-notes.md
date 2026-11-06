@@ -17,3 +17,10 @@ The official 2015 supplement and genomic/protein deposits are preserved in `betC
 ## Provider and validation
 
 The normal Falcon command was attempted for this gene and failed with HTTP 403 authentication. Its actual stdout/stderr are logged under `.cache/module-audit-logs/choline-sulfate-20261106/falcon-RUEPO-betC-1.log`. No provider report was fabricated; these are manual research notes. The original annotation payloads and raw hashes are checked again after review, and focused review/history validation is recorded in the same log directory.
+
+
+## PR6105 round1 evidence-scope reassessment (2026-11-06)
+
+The TreeGrafter inference is not contradicted. However, the DSS-3 studies establish the metabolic role by native genetics and regulation, without fractionation, localization or a direct intracellular COS hydrolysis measurement. The soluble sulfatase architecture does not by itself locate the enzyme on one side of the cytoplasmic membrane. Retain the original row but leave the exact compartment undecided rather than manufacture localization evidence or assign a core location. The same standard applies to the Sinorhizobium comparator. KT2440 mutant accumulation of intact COS is stronger physiological context but still does not resolve the sulfatase compartment; neither comparator supplies direct localization evidence for DSS-3.
+
+The cytoplasm row is retained as UNDECIDED, and no activity location is asserted in core_functions. Molecular-function verdicts, original annotation payloads, raw sources and genuine provider research remain unchanged. No publication cache was refreshed.
