@@ -289,8 +289,9 @@ Checked via the OLS MCP on 2026-11-03:
 
 ## Follow-ups for the user
 
-1. Complete `genes/BACSU/egsA` and `genes/BACSU/pcrB` reviews from their notes;
-   that clears the two `FUNCTION_UNREVIEWED` notices.
+1. ~~Complete `genes/BACSU/egsA` and `genes/BACSU/pcrB` reviews from their
+   notes; that clears the two `FUNCTION_UNREVIEWED` notices.~~ **Done, PR
+   #6063.** Both notices cleared; the validator now reports 1 warning.
 2. Create `genes/BACSU/yvoF` (O34993) and a folder for *lhaT*/*ypjA* (P54392).
    LhaT is the more valuable of the two: a membrane enzyme with a brand-new
    function, a donor GO cannot currently express, and a documented
