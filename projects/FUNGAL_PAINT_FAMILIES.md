@@ -457,7 +457,7 @@ assertions inherited from non-fungal branches.
 
 - [x] `yeast/PPN1` - *S. cerevisiae* endo/exopolyphosphatase anchor; drafted in
   this branch
-- [ ] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
+- [x] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
   catabolic-process node
 - [x] `CANGA/PPN1` - CGD *Candida glabrata* ortholog reviewed against the
   fungal polyphosphate catabolic-process node
@@ -499,6 +499,12 @@ assertions inherited from non-fungal branches.
   vacuole and membrane rows to fungal-type vacuole or fungal-type vacuole
   membrane, and recording that literature searches found no direct N. crassa
   EPP-1 deletion, localization, or purified-enzyme paper.
+- Drafted `CANAL/PPN1`; it resolves the SC5314 CGD member to UniProt
+  `A0A1D8PQR0`/PHM5, accepts the fungal Ppn1 endopolyphosphatase,
+  exopolyphosphatase, fungal-type vacuole, and polyphosphate-catabolism IBAs
+  from `PTN000818947`, accepts the CGD genetics-based
+  polyphosphate-catabolism annotation, and narrows broad predicted vacuole and
+  membrane rows to the fungal vacuolar membrane.
 
 ## 2026-11-01
 
