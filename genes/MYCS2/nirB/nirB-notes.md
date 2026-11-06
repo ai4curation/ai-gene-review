@@ -9,3 +9,8 @@ Specific target NCBIfam/PIRSF assignments identify NirB despite an ARBA-only fer
 [DOI:10.1186/1471-2164-14-301 "the nitrite reductase NirBD enzyme is up regulated by GlnR in nitrogen limitation"] This primary study uses mc2 155 WT/ΔglnR and provides regulatory context, not purified enzyme specificity. Its historical NarGHJI attribution is superseded for aerobic nitrate assimilation by the direct NasN studies. PMID24266988 uses SMR5/MH1 and must retain that strain distinction. PMID19332834 reports the direct nirB loss phenotype in M. tuberculosis, not this M. smegmatis target.
 
 PIRSR supports the siroheme/[4Fe-4S] catalytic center and PIRNR supports FAD. NADP-specific binding remains UNDECIDED because the general pyridine-nucleotide domain does not resolve donor preference. The separate BFD-like domain suggests a further two-iron center; its occupancy is unverified, not asserted absent. The specific four-iron refinement is therefore bounded to the supported site. No NEW rows or native purified kinetics were added.
+
+
+## Module completion pass, 2026-11-03
+
+Resolved the remaining UNDECIDED row so the review can be COMPLETE for the bacterial assimilatory nitrate reduction module. GO:0050661 NADP binding (UniRule/InterPro IEA): UNDECIDED -> MARK_AS_OVER_ANNOTATED. The coenzyme has not been measured for this ortholog; characterized family members (E. coli NirB, Bacillus NasDE) use NADH, so NAD binding is not proposed either.
