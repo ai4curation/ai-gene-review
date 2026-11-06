@@ -126,6 +126,14 @@ def index_nodes(root):
     return nodes, annotons
 
 
+def entails(required, asserted):
+    """Apply only the two checked is_a edges documented in the audit evidence."""
+    expanded = set(asserted)
+    if expanded & {'GO:0003697', 'GO:0003690'}:
+        expanded.add('GO:0003677')
+    return set(required) <= expanded
+
+
 def oracle(annotons, available, *, allow_in_vitro_gap_filling=False):
     def matching(atom, complex_functions=()):
         for record in available:
@@ -137,7 +145,7 @@ def oracle(annotons, available, *, allow_in_vitro_gap_filling=False):
                 continue
             if not set(atom.domain_ids) <= record['identifiers']:
                 continue
-            if not set(atom.function_ids) <= record['enabled']:
+            if not entails(atom.function_ids, record['enabled']):
                 continue
             if not set(complex_functions) <= record['contributes']:
                 continue
@@ -204,6 +212,15 @@ def capacity(doc, panel):
         check(node+' supported implementation',node,genes,True)
         for g in genes:
             check(node+' missing '+g,node,[x for x in genes if x!=g],False)
+    bacillus_loading = ['BACSU/dnaD', 'BACSU/dnaB', 'BACSU/dnaI']
+    check('Specific ssDNA binding entails DNA binding', 'bacillus_helicase_loading',
+          bacillus_loading, True, masks=['GO:0003690', 'GO:0003677'])
+    check('Specific dsDNA binding entails DNA binding', 'bacillus_helicase_loading',
+          bacillus_loading, True, masks=['GO:0003697', 'GO:0003677'])
+    check('Bacillus loading still requires demonstrated DNA engagement', 'bacillus_helicase_loading',
+          bacillus_loading, False, masks=['GO:0003697', 'GO:0003690', 'GO:0003677'])
+    assert not entails({'GO:0003697'}, {'GO:0003677'})
+    assert not entails({'GO:0003690'}, {'GO:0003697'})
     check('DnaC name does not equate Bacillus helicase and E. coli loader','dnac_helicase_loading',['BACSU/dnaC'],False)
     check('DnaB name does not equate accessory and helicase','fork_unwinding_protection',['BACSU/dnaB','BACSU/ssbA'],False)
     for node,gene in [('dnac_helicase_loading','ECOLI/dnaC'),('dcia_helicase_loading','VIBCH/dciA')]:

@@ -17,3 +17,11 @@ No PANTHER/InterPro membership was present in the frozen target record; do not i
 - Distinguish predicted native positions 31–291 from the assayed initiator-free insert 32–291; retain inherited NEW GO:0006260 and refine the core process only.
 
 All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.
+
+
+## PR6117 second review round, 2026-11-06
+
+- Refined the PR-authored NEW replication proposal from GO:0006260 to GO:0006261; the exact former row is archived.
+- Clarified PROBABLE UniProt source-defect language while retaining the 291-residue model, predicted 261-residue native protein (31–291 with initiator Met), and 260-residue experimental insert (32–291) distinction.
+
+The earlier use of “inherited NEW” described inheritance from a review-round snapshot, not upstream main or machine GOA. Independent git ancestry and the pristine seed baseline establish that the HolD replication and Bacillus DnaB DNA-binding proposals were authored in 47acac27a0. Their complete initial and pre-revision rows are preserved in `analysis/module_audits/bacterial_chromosomal_dna_replication/round2-authored-proposal-revisions.yaml`; only the two explicitly authorized authored proposals are revised. The pristine seed baseline, all machine payloads and raw/source files remain frozen. No native N-terminal measurement is newly asserted.

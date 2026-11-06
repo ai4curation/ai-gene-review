@@ -44,3 +44,11 @@ Moved the ontology-only helicase-loading term question from knowledge_gaps to su
 - Replace generic location rationales with fractionation evidence distinguishing cytoplasmic and membrane-associated pools.
 
 All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.
+
+
+## PR6117 second review round, 2026-11-06
+
+- Replaced the PR-authored NEW GO:0003677 parent with nonredundant sibling GO:0003697 and GO:0003690 proposals; the exact former row is archived.
+- Added direct abstract-qualified PMID:15186423 support to three plasma-membrane rows, distinguishing DnaB enrichment from mutant-specific DnaD recruitment.
+
+The earlier use of “inherited NEW” described inheritance from a review-round snapshot, not upstream main or machine GOA. Independent git ancestry and the pristine seed baseline establish that the HolD replication and Bacillus DnaB DNA-binding proposals were authored in 47acac27a0. Their complete initial and pre-revision rows are preserved in `analysis/module_audits/bacterial_chromosomal_dna_replication/round2-authored-proposal-revisions.yaml`; only the two explicitly authorized authored proposals are revised. The pristine seed baseline, all machine payloads and raw/source files remain frozen. No native N-terminal measurement is newly asserted.

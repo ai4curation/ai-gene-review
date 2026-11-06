@@ -35,3 +35,10 @@ The initial over-annotation judgment on GO:0071897 was reconsidered after compar
 - Refine machine exonuclease row and core to DNA-specific GO:0008296; retain the original term payload.
 
 All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.
+
+
+## PR6117 second review round, 2026-11-06
+
+- Updated broad exonuclease MODIFY replacements directly to GO:0008296, matching the core DNA-specific proofreading activity without an intermediate GO:0008408 step.
+
+The earlier use of “inherited NEW” described inheritance from a review-round snapshot, not upstream main or machine GOA. Independent git ancestry and the pristine seed baseline establish that the HolD replication and Bacillus DnaB DNA-binding proposals were authored in 47acac27a0. Their complete initial and pre-revision rows are preserved in `analysis/module_audits/bacterial_chromosomal_dna_replication/round2-authored-proposal-revisions.yaml`; only the two explicitly authorized authored proposals are revised. The pristine seed baseline, all machine payloads and raw/source files remain frozen. No native N-terminal measurement is newly asserted.

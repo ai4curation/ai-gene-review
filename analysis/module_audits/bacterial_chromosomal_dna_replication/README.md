@@ -25,3 +25,7 @@ explicit coverage advisories. The epsilon module annoton now uses DNA-specific
 The prior full-corpus result above is historical. Fresh full validation of these
 scientific corrections, renewed independent review/CI and actual merge remain
 pending. See round1-followup.yaml and round1-gene-review-proof.yaml.
+
+## Round 2 proposal specificity
+
+PR #6117 round 2 refines two proposals authored within this PR, with both prior versions archived and independently verified against git and the pristine seed: HolD now uses DNA-templated DNA replication, while Bacillus DnaB has separate single- and double-stranded DNA-binding activities. Three DnaQ exonuclease rows refine directly to DNA-specific proofreading activity. DnaB membrane evidence explicitly distinguishes wild-type enrichment from mutant DnaD recruitment. Four focused review validations, renders and histories pass without curation warnings. All 1,067 original seed rows, including two inherited NEW rows, and 104 raw sources remain preserved across 52 COMPLETE reviews; the final count is 1,082 rows. The module remains unchanged. The capacity checker recognizes only the two independently verified DNA-binding descendant relationships and passes 100 cases, including removal and one-way entailment controls. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
