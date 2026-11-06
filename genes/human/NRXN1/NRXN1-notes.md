@@ -39,3 +39,11 @@
 
 ### P58400 (beta entry) GOA comparison (reference only, not reviewed)
 - The beta entry has overlapping ISS rows from rat Nrxn1 beta (P0DI97) for synapse assembly, clustering terms, adhesion, NLGN binding, plus IDA rows from PMID:22750515 (FGFR1 binding / neurite outgrowth) and PMID:26078884 (DISC1/Kal-7/Rac1 signalosome gene-expression and kinase-cascade terms). It also carries the behaviour IMP rows from a beta signal-peptide variant paper (PMID:17034946). If the beta entry is reviewed, the same patient-phenotype considerations apply, and the signalling-cascade IDAs from 26078884 would need separate assessment.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 ISS (GO_REF:0000024, from mouse Q9CS84, BHF-UCL 2015); stays MARK_AS_OVER_ANNOTATED; reason corrected.
+- The old reason said mouse GOA had no experimental annotation to the term. Wrong: QuickGO (2026-11-05) shows mouse Nrxn1 IDA GO:0005783 from BHF-UCL, PMID:19036990 (same date, 20150313); rat Q63372 carries the same ISS/ISO chain.
+- Donor paper (fetched, abstract only): [PMID:19036990 "We also observed that exit of neurexins from the ER/Golgi and correct targeting require their PDZ-binding motif at the C terminus, whereas two presumptive ER retention signals are inactive."] Epitope-tagged neurexins in cultured neurons: biosynthetic transit, ER accumulation of PDZ-motif mutants. ATP1A1/ATP1A2 transit precedent -> MARK_AS_OVER_ANNOTATED; KEEP_AS_NON_CORE would need wild-type endogenous neurexin shown in an ER pool.
+- No GO:0005789 (type I protein in transit).
+- Not edited (outside brief scope, flag): the same incorrect "current mouse GOA carries no experimental annotation" sentence is on the ISS rows for GO:0031965 nuclear membrane, GO:0031982 vesicle and GO:0043025 neuronal cell body; whether mouse has IDA rows for those terms from PMID:19036990 too should be checked in a follow-up.
