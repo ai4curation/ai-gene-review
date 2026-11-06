@@ -2,7 +2,7 @@
 
 import pytest
 
-from ai_gene_review.validation.nd_policy import iter_nd_policy_violations
+from ai_gene_review.validation.nd_policy import cites_search, iter_nd_policy_violations
 
 
 SEARCH = "file:human/X/X-deep-research-falcon.md"
@@ -138,3 +138,79 @@ def test_search_rule_applies_only_to_accept():
 
 def test_search_rule_ignores_non_nd_rows():
     assert fields(nd("ACCEPT", term="GO:0016787", evidence="IBA", searched=False)) == []
+
+
+@pytest.mark.parametrize("reference_id,passes", [
+    ("file:CANAL/X/X-notes.md", True),
+    ("file:genes/CANAL/X/X-notes.md", True),
+    ("file:CANAL/Y/Y-notes.md", False),
+    ("file:genes/CANAL/Y/Y-notes.md", False),
+])
+def test_both_file_path_forms(reference_id, passes):
+    """file:ORG/GENE/... and file:genes/ORG/GENE/... name the same file."""
+    row = nd("ACCEPT", searched=False)
+    row["review"]["supported_by"] = [{"reference_id": reference_id, "supporting_text": "0 records"}]
+    assert (fields(row) == []) is passes
+
+
+def test_same_organism_gene_is_not_the_genes_own():
+    """file:genes/ORG/GENE/... is read as the gene folder, so another gene of the organism fails."""
+    doc = {"gene_symbol": "ALG14", "id": "Q1"}
+    other = {"supported_by": [{"reference_id": "file:genes/CANAL/ERG9/ERG9-notes.md", "supporting_text": "x"}]}
+    own = {"supported_by": [{"reference_id": "file:genes/CANAL/ALG14/ALG14-notes.md", "supporting_text": "x"}]}
+    assert not cites_search(other, doc)
+    assert cites_search(own, doc)
+
+
+@pytest.mark.parametrize("gene_dir,passes", [("SCHPO/rhp51", True), ("SCHPO/rad3", False)])
+def test_review_path_gives_the_exact_folder(gene_dir, passes):
+    """With the review's folder known, a synonym-named folder is recognised exactly."""
+    doc = {"gene_symbol": "rad51", "id": "P36601"}
+    review = {"supported_by": [{"reference_id": "file:SCHPO/rhp51/rhp51-notes.md", "supporting_text": "x"}]}
+    assert cites_search(review, doc, gene_dir) is passes
+
+
+def test_fulltext_quote_does_not_count_for_a_search_file():
+    """supporting_text_fulltext is never checked against the file, so it cannot show a search."""
+    review = {"supported_by": [{"reference_id": "file:CANAL/X/X-notes.md", "supporting_text_fulltext": "0 records"}]}
+    assert not cites_search(review, GENE)
+
+
+def test_fallback_does_not_borrow_an_orthologs_folder():
+    """With no path, a cited ortholog UniProt file does not make its folder the gene's own."""
+    doc = {"gene_symbol": "Map2k4", "id": "Q6AXP2",
+           "references": [{"id": "file:human/MAP2K4/MAP2K4-uniprot.txt"}]}
+    review = {"supported_by": [{"reference_id": "file:human/MAP2K4/MAP2K4-notes.md", "supporting_text": "x"}]}
+    assert not cites_search(review, doc)
+
+
+def test_validator_uses_the_review_path_without_goa(tmp_path, monkeypatch):
+    """check_goa=False must not drop the review path: the own-folder test stays exact."""
+    import yaml
+    from ai_gene_review.validation import validate_gene_review
+
+    gene_dir = tmp_path / "genes" / "SCHPO" / "rhp51"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "rhp51-notes.md").write_text("No study of rhp51 was found.\n")
+    review = gene_dir / "rhp51-ai-review.yaml"
+    row = {"term": {"id": "GO:0003674", "label": "molecular_function"}, "evidence_type": "ND",
+           "original_reference_id": "GO_REF:0000015",
+           "review": {"action": "ACCEPT", "reason": "x", "supported_by": [
+               {"reference_id": "file:SCHPO/rhp51/rhp51-notes.md",
+                "supporting_text": "No study of rhp51 was found."}]}}
+    review.write_text(yaml.safe_dump({"id": "P36601", "gene_symbol": "rad51",
+                                      "taxon": {"id": "NCBITaxon:4896", "label": "S. pombe"},
+                                      "existing_annotations": [row]}))
+    monkeypatch.setattr("ai_gene_review.validation.local_source_text.PROJECT_ROOT", tmp_path)
+    report = validate_gene_review(review, check_goa=False, check_supporting_text=False)
+    assert not [i for i in report.issues if i.check_type == "nd_policy"
+                and "literature was searched" in i.message]
+
+
+@pytest.mark.parametrize("mod", ["sgd", "flybase", "wormbase"])
+def test_mod_gene_description_is_not_a_search_record(mod):
+    """MOD gene descriptions are curator-written summaries, not a record of a literature search."""
+    row = nd("ACCEPT", searched=False)
+    row["review"]["supported_by"] = [
+        {"reference_id": f"file:yeast/X/X-deep-research-{mod}.md", "supporting_text": "Protein of unknown function"}]
+    assert fields(row) == [(0, "supported_by")]
