@@ -523,7 +523,8 @@ evidence for the budding-yeast seed.
   against PTHR13027 with no IBA action changes
 - [x] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member;
   rechecked against PTHR13027 with no IBA action changes
-- [ ] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member
+- [x] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member; rechecked
+  against PTHR13027 with no IBA action changes
 
 ---
 
@@ -605,6 +606,11 @@ evidence for the budding-yeast seed.
   member. The PAINT IBA decisions remain sound against the Aspergillus MonA and
   Fusarium FgMon1 literature; the review only needed a `PMID:12364329` quote
   normalized to the exact cached text.
+- Rechecked `EMENI/mon1`, the *A. nidulans* `PTHR13027:SF7` MonA ortholog. Its
+  existing review already paired the Aspergillus MonA deletion paper with the
+  yeast and Fusarium Mon1 seeds; the 2026 follow-up search did not find a newer
+  direct MonA paper or an Aspergillus Ccz1/Rab7 assay, so the IBA and ISS
+  decisions still stand.
 
 ## 2026-11-01
 
