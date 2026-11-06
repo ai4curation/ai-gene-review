@@ -28,7 +28,7 @@ large-scale and skipped, as are bare protein-binding rows.
 
 >>> own = GeneRecord("P1", "9606", frozenset({"PTHR1"}), frozenset({"ABC1"}), frozenset())
 >>> other = CitingEntry("P2", "ABC2", "9606", frozenset({"PTHR1"}))
->>> score_lead(own, [other], named_in_abstract=False)
+>>> score_lead(own, [other], abstract_names_gene=False)
 (6, 'same_taxon_paralog;few_citing_entries;gene_not_named_in_abstract')
 """
 
@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import urllib.parse
 from collections import Counter
@@ -58,11 +59,15 @@ UNIPROT_STREAM = "https://rest.uniprot.org/uniprotkb/stream"
 # paper: both are curated from a specific publication, so both can be attached to
 # the wrong gene. High-throughput papers are skipped.
 LITERATURE_CODES = frozenset({"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "TAS", "NAS"})
-# A paper cited by more reviewed entries than this is treated as large-scale.
+# A paper cited by more reviewed entries than this, after entries for the annotated
+# gene itself are dropped, is treated as large-scale.
 MAX_CITING_ENTRIES = 20
 BATCH_SIZE = 40
 # Bare protein binding is removed by policy regardless of gene, so it is skipped.
 SKIPPED_TERMS = frozenset({"GO:0005515"})
+# Protein names with only this evidence are unvetted predictions (ARBA rules,
+# submitter text), so they are not used to decide whether an abstract names a gene.
+UNVETTED_NAME_EVIDENCE = ("ECO:0000256|ARBA", "ECO:0000313")
 
 
 @dataclass(frozen=True)
@@ -85,6 +90,7 @@ class CitingEntry:
     gene: str
     taxon: str
     panther_families: frozenset[str]
+    protein_names: frozenset[str] = frozenset()
 
 
 def parse_uniprot_flatfile(text: str) -> GeneRecord:
@@ -129,24 +135,60 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
 
 
 def parse_protein_names(text: str) -> frozenset[str]:
-    """Recommended, alternative and submitted protein names from ``DE`` lines.
+    """Curated recommended and alternative protein names from ``DE`` lines.
+
+    Submitted names (``SubName``) and names whose only evidence is an ARBA rule or
+    submitter text are unvetted, so they are left out.
 
     >>> sorted(parse_protein_names(
     ...     "DE   RecName: Full=Aurora kinase C;\\nDE            EC=2.7.11.1;\\n"
     ...     "DE   AltName: Full=Aurora 3 {ECO:0000303};\\nDE            Short=ARK-3;\\n"))
     ['ARK-3', 'Aurora 3', 'Aurora kinase C']
+    >>> sorted(parse_protein_names(
+    ...     "DE   RecName: Full=Glutamine synthetase {ECO:0000256|ARBA:ARBA00012937};\\n"
+    ...     "DE   SubName: Full=Heat shock protein 70 {ECO:0000313|EMBL:CAA1};\\n"))
+    []
     """
     names = set()
     for line in text.splitlines():
-        if line.startswith("DE   "):
-            for m in re.finditer(r"(?:Full|Short)=([^;{]+)", line):
+        if line.startswith("DE   ") and "SubName:" not in line:
+            for m in re.finditer(r"(?:Full|Short)=([^;{]+)(\{[^}]*\})?", line):
+                evidence = [
+                    e.strip() for e in (m.group(2) or "").strip("{}").split(",")
+                ]
+                if m.group(2) and all(
+                    e.startswith(UNVETTED_NAME_EVIDENCE) for e in evidence
+                ):
+                    continue
                 names.add(m.group(1).strip())
     return frozenset(n for n in names if n and "uncharacterized" not in n.lower())
+
+
+def parse_protein_names_field(field: str) -> frozenset[str]:
+    """Protein names from UniProt's TSV ``Protein names`` column.
+
+    >>> sorted(parse_protein_names_field("Tubulin alpha chain (EC 3.6.5.-) (Alpha-tubulin 2)"))
+    ['Alpha-tubulin 2', 'EC 3.6.5.-', 'Tubulin alpha chain']
+    """
+    head = field.split(" (", 1)[0].strip()
+    return frozenset(n for n in [head, *re.findall(r"\(([^()]+)\)", field)] if n)
 
 
 def _norm(token: str) -> str:
     """Upper-case and strip non-alphanumerics, so ``GDI/D4`` matches ``GDID4``."""
     return re.sub(r"[^A-Z0-9]", "", token.upper())
+
+
+def same_gene_symbol(symbol: str, names: Iterable[str]) -> bool:
+    """Whether a gene symbol is one of ``names``, ignoring case and punctuation.
+
+    UniProt writes mouse and rat symbols in title case (``Arhgdib``) and human
+    symbols in upper case (``ARHGDIB``).
+
+    >>> same_gene_symbol("Arhgdib", {"ARHGDIB", "GDIR2"}), same_gene_symbol("Arhgdia", {"ARHGDIB"})
+    (True, False)
+    """
+    return _norm(symbol) in {_norm(n) for n in names}
 
 
 def _phrase(text: str) -> str:
@@ -181,6 +223,25 @@ def _names_protein(text: str, name: str) -> bool:
     return False
 
 
+def abstract_text(path: Path) -> str:
+    """The front matter, title and abstract of a cached publication.
+
+    The text is cut at the first section heading after ``## Abstract``, or, if the
+    file has no abstract heading, at its first section heading.
+
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     p = Path(tmp) / "PMID_1.md"
+    ...     _ = p.write_text("title: T\\n## Abstract\\nA\\n## Methods\\nM\\n## Full Text\\nF")
+    ...     abstract_text(p)
+    'title: T\\n## Abstract\\nA'
+    """
+    text = path.read_text(errors="replace")
+    start = text.find("\n## Abstract")
+    end = text.find("\n## ", start + 1 if start >= 0 else 0)
+    return text if end < 0 else text[:end]
+
+
 def named_in_abstract(
     pmid: str,
     names: Iterable[str],
@@ -194,17 +255,19 @@ def named_in_abstract(
     ignored); protein names are matched as phrases.
 
     >>> import tempfile
-    >>> d = Path(tempfile.mkdtemp())
+    >>> tmp = tempfile.TemporaryDirectory()
+    >>> d = Path(tmp.name)
     >>> _ = (d / "PMID_1.md").write_text("title: X\\n## Abstract\\nGFP-tagged GDI/D4 was diffuse; aurora kinases A, B, and C.\\n## Full Text\\nCSGALNACT1")
     >>> named_in_abstract("1", ["GDID4"], d), named_in_abstract("1", ["CSGALNACT1"], d), named_in_abstract("2", ["X"], d)
     (True, False, None)
     >>> named_in_abstract("1", ["AURKC"], d, ["Aurora kinase C"])
     True
+    >>> tmp.cleanup()
     """
     path = publications_dir / f"PMID_{pmid}.md"
     if not path.exists():
         return None
-    text = path.read_text(errors="replace").split("\n## Full Text", 1)[0]
+    text = abstract_text(path)
     tokens = {_norm(tok) for tok in text.split()}
     wanted = {_norm(n) for n in names}
     if {w for w in wanted if len(w) >= 3} & tokens:
@@ -213,8 +276,36 @@ def named_in_abstract(
     return any(_names_protein(phrased, n) for n in protein_names)
 
 
+def gene_specific_names(own: GeneRecord, citing: Iterable[CitingEntry]) -> set[str]:
+    """The annotated protein's names that no citing entry for another gene shares.
+
+    Family-level names are often shared verbatim by paralogs ("Tubulin alpha
+    chain"). An abstract using such a name does not say which paralog it studied,
+    so it must not cancel the paralog signal. An ortholog with the same gene
+    symbol sharing the name is the expected case, so it does not count.
+
+    >>> own = GeneRecord("P1", "1", frozenset(), frozenset(), frozenset(),
+    ...                  frozenset({"Tubulin alpha chain", "Alpha-tubulin 1"}))
+    >>> other = CitingEntry("P2", "TUA2", "1", frozenset(), frozenset({"Tubulin alpha chain"}))
+    >>> sorted(gene_specific_names(own, [other]))
+    ['Alpha-tubulin 1']
+    >>> mouse = CitingEntry("P3", "Tua1", "2", frozenset(), frozenset({"Tubulin alpha chain"}))
+    >>> own = GeneRecord("P1", "1", frozenset(), frozenset({"TUA1"}), frozenset(),
+    ...                  frozenset({"Tubulin alpha chain"}))
+    >>> sorted(gene_specific_names(own, [mouse]))
+    ['Tubulin alpha chain']
+    """
+    shared = {
+        _phrase(n)
+        for c in citing
+        if not same_gene_symbol(c.gene, own.gene_names)
+        for n in c.protein_names
+    }
+    return {n for n in own.protein_names if _phrase(n) not in shared}
+
+
 def score_lead(
-    own: GeneRecord, citing: list[CitingEntry], named_in_abstract: bool | None
+    own: GeneRecord, citing: list[CitingEntry], abstract_names_gene: bool | None
 ) -> tuple[int, str]:
     """Score how likely the cited paper is about one of the citing entries instead.
 
@@ -231,16 +322,19 @@ def score_lead(
     elif same_taxon:
         score += 2
         reasons.append("same_taxon_other_gene")
-    if any(c.taxon != own.taxon and c.gene in own.gene_names for c in citing):
+    if any(
+        c.taxon != own.taxon and same_gene_symbol(c.gene, own.gene_names)
+        for c in citing
+    ):
         score += 2
         reasons.append("same_gene_other_species")
     if len(citing) <= 3:
         score += 1
         reasons.append("few_citing_entries")
-    if named_in_abstract is False:
+    if abstract_names_gene is False:
         score += 2
         reasons.append("gene_not_named_in_abstract")
-    elif named_in_abstract:
+    elif abstract_names_gene:
         score -= 3
         reasons.append("gene_named_in_abstract")
     return score, ";".join(reasons)
@@ -271,18 +365,24 @@ def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | 
 def parse_citing_tsv(text: str, pmids: Iterable[str]) -> dict[str, list[CitingEntry]]:
     """Map each queried PMID to the entries in a UniProt TSV result that cite it.
 
-    >>> tsv = ("Entry\\tGene Names (primary)\\tOrganism (ID)\\tPubMed ID\\tPANTHER\\n"
-    ...        "Q86X52\\tCHSY1\\t9606\\t11514575; 10231032\\tPTHR12369:SF42;PTHR12369;\\n")
+    >>> tsv = ("Entry\\tProtein names\\tGene Names (primary)\\tOrganism (ID)\\tPubMed ID\\tPANTHER\\n"
+    ...        "Q86X52\\tChondroitin sulfate synthase 1 (EC 2.4.1.175)\\tCHSY1\\t9606\\t11514575; 10231032\\tPTHR12369:SF42;PTHR12369;\\n")
     >>> out = parse_citing_tsv(tsv, ["11514575", "9113980"])
     >>> [c.accession for c in out["11514575"]], out["9113980"]
     (['Q86X52'], [])
+    >>> sorted(out["11514575"][0].protein_names)
+    ['Chondroitin sulfate synthase 1', 'EC 2.4.1.175']
     """
     wanted = set(pmids)
     out: dict[str, list[CitingEntry]] = {p: [] for p in wanted}
     for row in csv.DictReader(text.splitlines(), delimiter="\t"):
         families = frozenset(f.split(":")[0] for f in row["PANTHER"].split(";") if f)
         entry = CitingEntry(
-            row["Entry"], row["Gene Names (primary)"], row["Organism (ID)"], families
+            row["Entry"],
+            row["Gene Names (primary)"],
+            row["Organism (ID)"],
+            families,
+            parse_protein_names_field(row["Protein names"]),
         )
         for pmid in {p.strip() for p in row["PubMed ID"].split(";")} & wanted:
             out[pmid].append(entry)
@@ -292,13 +392,22 @@ def parse_citing_tsv(text: str, pmids: Iterable[str]) -> dict[str, list[CitingEn
 def fetch_citing_entries(
     pmids: Iterable[str], cache_dir: Path = CACHE_DIR
 ) -> dict[str, list[CitingEntry]]:
-    """Reviewed UniProt entries citing each PMID, fetched in batches and cached."""
-    cache = cache_dir / "citing-entries.json"
+    """Reviewed UniProt entries citing each requested PMID, fetched in batches and cached.
+
+    UniProt's ``lit_pubmed:`` search matches an entry's own references (its
+    ``RX   PubMed=`` lines), not the computationally mapped bibliography, so the
+    result is comparable with the flat file's citations.
+    """
+    wanted = set(pmids)
+    # v2 adds protein names; the version keeps an older cache from being misread.
+    cache = cache_dir / "citing-entries-v2.json"
     stored: dict[str, list[dict[str, Any]]] = (
         json.loads(cache.read_text()) if cache.exists() else {}
     )
-    need = sorted(set(pmids) - set(stored))
-    fields = "accession,gene_primary,organism_id,lit_pubmed_id,xref_panther"
+    need = sorted(wanted - set(stored))
+    fields = (
+        "accession,protein_name,gene_primary,organism_id,lit_pubmed_id,xref_panther"
+    )
     for i in range(0, len(need), BATCH_SIZE):
         batch = need[i : i + BATCH_SIZE]
         query = (
@@ -316,22 +425,41 @@ def fetch_citing_entries(
                     "gene": e.gene,
                     "taxon": e.taxon,
                     "panther": sorted(e.panther_families),
+                    "protein_names": sorted(e.protein_names),
                 }
                 for e in entries
             ]
+        # Write a sibling file and rename it, so an interrupted run never leaves
+        # an unreadable cache behind.
         cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_text(json.dumps(stored))
+        partial = cache.with_suffix(f".{os.getpid()}.tmp")
+        partial.write_text(json.dumps(stored))
+        partial.replace(cache)
     return {
         p: [
-            CitingEntry(e["accession"], e["gene"], e["taxon"], frozenset(e["panther"]))
+            CitingEntry(
+                e["accession"],
+                e["gene"],
+                e["taxon"],
+                frozenset(e["panther"]),
+                frozenset(e["protein_names"]),
+            )
             for e in v
         ]
         for p, v in stored.items()
+        if p in wanted
     }
 
 
-def _review_index(gene_dir: Path) -> dict[tuple[str, str, str], tuple[str, bool]]:
-    """Map (term, evidence, reference) to (review action, has WRONG_GENE_PRODUCT defect)."""
+ReviewKey = tuple[str, str, str, str]
+
+
+def _review_index(gene_dir: Path) -> dict[ReviewKey, tuple[str, bool]]:
+    """Map (term, evidence, reference, isoform) to (action, has WRONG_GENE_PRODUCT).
+
+    NOT rows are left out, because they are never candidate rows; the isoform
+    keeps isoform-specific rows that share a term and reference apart.
+    """
     paths = list(gene_dir.glob("*-ai-review.yaml"))
     if not paths:
         return {}
@@ -343,11 +471,14 @@ def _review_index(gene_dir: Path) -> dict[tuple[str, str, str], tuple[str, bool]
     )
     index = {}
     for a in review.get("existing_annotations") or []:
+        if a.get("negated"):
+            continue
         r = a.get("review") or {}
         key = (
             str((a.get("term") or {}).get("id")),
             str(a.get("evidence_type")),
             str(a.get("original_reference_id")),
+            str(a.get("isoform") or ""),
         )
         wrong_gene = any(
             d.get("defect_type") == "WRONG_GENE_PRODUCT"
@@ -377,7 +508,7 @@ def find_leads(
         )
     leads: list[dict[str, Any]] = []
     for gene_dir, (own, rows) in candidates:
-        index: dict[tuple[str, str, str], tuple[str, bool]] | None = None
+        index: dict[ReviewKey, tuple[str, bool]] | None = None
         for row in rows:
             # Drop the gene itself: the same accession, or the same-named gene in
             # the same species (a secondary entry for one gene is not a wrong gene).
@@ -385,14 +516,19 @@ def find_leads(
                 c
                 for c in citing.get(row["REFERENCE"][5:], [])
                 if c.accession != own.accession
-                and not (c.taxon == own.taxon and c.gene in own.gene_names)
+                and not (
+                    c.taxon == own.taxon and same_gene_symbol(c.gene, own.gene_names)
+                )
             ]
             if not others or len(others) > MAX_CITING_ENTRIES:
                 continue
             if index is None:
                 index = _review_index(gene_dir)
+            product = row["GENE PRODUCT ID"]
+            isoform = product if "-" in product else ""
             action, wrong_gene = index.get(
-                (row["GO TERM"], row["GO EVIDENCE CODE"], row["REFERENCE"]), ("", False)
+                (row["GO TERM"], row["GO EVIDENCE CODE"], row["REFERENCE"], isoform),
+                ("", False),
             )
             score, reasons = score_lead(
                 own,
@@ -401,7 +537,7 @@ def find_leads(
                     row["REFERENCE"][5:],
                     own.gene_names,
                     publications_dir,
-                    own.protein_names,
+                    gene_specific_names(own, others),
                 ),
             )
             leads.append(

@@ -2,8 +2,8 @@
 title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
-species: [human, ECOLI]
-genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1]
+species: [human, ECOLI, ARATH, DICDI]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA]
 ---
 
 # Wrong-Gene Leads
@@ -43,9 +43,16 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    TAS or NAS that cite a PMID the gene's own `*-uniprot.txt` does not cite. NOT rows
    and bare protein binding (`GO:0005515`) are skipped, as are high-throughput codes.
 2. Ask UniProt which reviewed entries cite each such PMID, in batches, cached under
-   `.cache/wrong-gene-leads/`. Papers cited by more than 20 reviewed entries are
-   treated as large-scale and skipped.
-3. Drop citing entries that are the same gene in the same species. An unreviewed or
+   `.cache/wrong-gene-leads/`. UniProt's `lit_pubmed:` search matches only an
+   entry's own references (its `RX   PubMed=` lines), not the computationally
+   mapped bibliography (GeneRIF, PRO, Reactome, GAD), so both sides of the
+   comparison are the same kind of list. Checked 2026-11-06: for CSGALNACT1,
+   ARHGDIB and SOCS3, `lit_pubmed_id` equals the flat file's RX set, and none of
+   CSGALNACT1's eight mapped papers is matched by a `lit_pubmed:` search.
+3. Drop citing entries that are the same gene in the same species (symbols are
+   compared ignoring case, since UniProt writes rodent symbols in title case). Papers
+   still cited by more than 20 other reviewed entries are treated as large-scale and
+   skipped. An unreviewed or
    secondary entry annotated while the reviewed entry for the same gene cites the
    paper is not a wrong gene; before this filter, such cases dominated the top
    scores (for example Drosophila `loqs`, X2J5X6 against Q9VJY9).
@@ -63,6 +70,12 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    The name check matters because papers often study several members of a family; a
    paper whose abstract names the annotated gene probably did study it. ARHGDIB's
    paper mentions "GDI/D4", one of its synonyms, so that lead is kept but ranks low.
+   Gene names come from the whole `GN` block, and curated protein names (`DE`
+   `Full=`/`Short=`) are matched as phrases. Protein names whose only evidence is an
+   ARBA rule or submitter text are not used, and neither is a name shared by a citing
+   entry: a family name such as "Tubulin alpha chain" does not say which paralog a
+   paper studied. The check reads the cached title and abstract only, up to the next
+   section heading.
 
 The report is written to `reports/wrong-gene-leads/leads.tsv`. It is generated and
 git-ignored, never committed, because it aggregates every review. It joins each lead
@@ -109,7 +122,7 @@ foregrounded.
 
 ## First lead review (2026-11-01)
 
-The five top-tier leads that looked most plausible from paper titles were checked
+The six top-tier leads that looked most plausible from paper titles were checked
 against the cached abstracts. Full text could not be retrieved for any of them
 (Europe PMC has none, and the JBC pages returned 403), so CLAUDE.md's rule applies:
 an experimental row is not called wrong-gene unless the abstract itself says so.
@@ -123,8 +136,8 @@ an experimental row is not called wrong-gene unless the abstract itself says so.
 | NLRP3 | NF-kappaB regulation (IPI) | PMID:15817483, PYPAF3 | **False positive.** The abstract discusses PYPAF1, an NLRP3 synonym. A parser bug missed synonyms that wrap onto a later `GN` line; it is fixed and tested. |
 | AURKC | seven rows (TAS) | PMID:19774610, review on Aurora A | **False positive.** The review covers "aurora kinases A, B, and C"; the name check does not match "Aurora C" against AURKC. |
 
-So one of five leads was confirmed, three need the full text, and the remaining
-flags were detector false positives. The two false-positive patterns, wrapped synonyms
+So one of six leads was confirmed, three need the full text, and two were detector
+false positives. The two false-positive patterns, wrapped synonyms
 and protein names written in words, are both name-matching gaps; the first is fixed.
 
 ## Protein-name matching and second lead review (2026-11-01)
@@ -149,21 +162,44 @@ where available:
 | rat/Dusp21, ARATH/ERS1, ARATH/FRK1, ARATH/ARR5, DANRE/tbx5a | various | **False positives.** The papers study DSP21 directly, all five ethylene receptor isoforms, the FRK1 marker gene, the ARR5 cytokinin marker, and Tbx5 DNA binding by gel-shift assay (in the full text). |
 | human/ALDOA, ARATH/AGO1, ARATH/CCA1, ARATH/HSP17.7, ARATH/MLO2, ARATH/MYB34, ARATH/RGA | various | **No change.** An ortholog paper (rabbit aldolase), multi-gene papers whose abstracts do not settle it (AGO1, CCA1, a possible HSP17.6A/17.7 nomenclature mix-up), a family-wide statement (MLO), a gene discussed in the full text (MYB34), and a row the review already removes (RGA). |
 
-Across both batches (25 leads): 3 rows are confirmed or probable wrong-gene
+Across both batches (26 leads): 3 rows are confirmed or probable wrong-gene
 annotations (PAPSS1, tagC, AHK2), 1 is a wrong evidence code (POFUT1), 2 are wrong
 references for true claims (GLN2, SYP121), 6 are unresolved queries pending full
-text, and the rest are false positives or need no change. Remaining false positives
+text, 7 are false positives and 7 need no change. Remaining false positives
 come mostly from synonyms UniProt does not list (DSP21) and from papers that study a
 gene as an assay readout or as one of a named family ("five receptor isoforms").
+
+## Review fixes and re-sweep (2026-11-06)
+
+Three changes from PR review, re-run over the current corpus (10,169 leads in 2,684
+genes; the corpus grew since the first sweep, so the earlier tables are not directly
+comparable):
+
+- **Gene symbols are compared ignoring case.** UniProt writes mouse and rat symbols
+  in title case (`Socs3`), so before this fix the same-gene-other-species signal
+  could not fire for human against rodent entries. It now fires on 845 rows instead
+  of 128, and the top tier grows from 406 to 448 rows.
+- **Protein names shared with a citing entry for another gene are not used.** A
+  family name such as "Tubulin alpha chain" does not say which paralog a paper
+  studied. The guard changes the score of 13 rows and brings one back into the top
+  tier: PAPSS1's skeletal-development row, the confirmed wrong-gene case above,
+  which the protein-name penalty had buried. Names whose only evidence is an ARBA
+  rule or submitter text are also dropped.
+- **The abstract check stops at the next section heading** after `## Abstract`,
+  and the review join keys on isoform and skips NOT rows, so isoform-specific rows
+  no longer overwrite each other.
+
+The top tier (score 6 or more) is now 448 rows in 226 genes; 56 of them carry the
+same-gene-other-species signal.
 
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
   paper is irrelevant, and unreviewed entries (like pKM101 TraB) rarely cite papers at
   all, so cases like traB are invisible.
-- **The name check uses gene names only.** Abstracts that say "filamin C",
-  "Aurora C" or "calcineurin A beta" are not matched against FLNC, AURKC or PPP3CB,
-  which leaves some multi-gene papers ranked too high.
+- **The name check misses names UniProt does not list.** An abstract that uses an
+  unlisted synonym (DSP21 for rat Dusp21) is read as not naming the gene, which leaves
+  some multi-gene papers ranked too high.
 - **IPI rows are noisy.** An interaction paper is often cited by UniProt for only one
   partner.
 - **Uncached papers** get no name-check adjustment.
@@ -172,7 +208,6 @@ gene as an assay readout or as one of a named family ("five receptor isoforms").
 
 - Review the top tier, starting with the non-IPI human rows, and record confirmed
   cases as `WRONG_GENE_PRODUCT` source defects in the gene reviews.
-- Match UniProt protein names, not only gene names, in the abstract check.
 - Consider scoring IPI rows separately, or requiring that the abstract names a citing
   entry's gene.
 - Report the same-gene-other-species signal separately: a direct evidence code (IDA)

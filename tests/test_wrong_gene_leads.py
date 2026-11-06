@@ -12,6 +12,7 @@ import pytest
 from ai_gene_review.tools.wrong_gene_leads import (
     CitingEntry,
     GeneRecord,
+    MAX_CITING_ENTRIES,
     candidate_rows,
     fetch_citing_entries,
     find_leads,
@@ -66,6 +67,41 @@ def test_csgalnact1_outranks_arhgdib(leads):
     assert top["human/CSGALNACT1"] > top["human/ARHGDIB"]
 
 
+GOA_HEADER = "\t".join(
+    [
+        "GENE PRODUCT DB",
+        "GENE PRODUCT ID",
+        "SYMBOL",
+        "QUALIFIER",
+        "GO TERM",
+        "GO NAME",
+        "GO ASPECT",
+        "ECO ID",
+        "GO EVIDENCE CODE",
+        "REFERENCE",
+        "WITH/FROM",
+        "TAXON ID",
+        "TAXON NAME",
+        "ASSIGNED BY",
+        "GENE NAME",
+        "DATE",
+    ]
+)
+
+
+def _gene_folder(root, uniprot, acc="P00001", pmid="1", taxon="9606"):
+    """A minimal gene folder with one IDA row citing ``pmid``."""
+    gene = root / "human" / "ABC1"
+    gene.mkdir(parents=True)
+    (gene / "ABC1-uniprot.txt").write_text(uniprot)
+    row = "\t".join(
+        ["UniProtKB", acc, "ABC1", "enables", "GO:0003674", "x", "F", "ECO:0000314"]
+        + ["IDA", f"PMID:{pmid}", "", taxon, "x", "UniProt", "x", "20200101"]
+    )
+    (gene / "ABC1-goa.tsv").write_text(GOA_HEADER + "\n" + row + "\n")
+    return gene
+
+
 def test_same_gene_entry_is_not_a_lead(tmp_path):
     """A reviewed entry for the same gene in the same species is not a wrong gene."""
     gene = tmp_path / "DROME" / "loqs"
@@ -118,6 +154,80 @@ def test_same_gene_entry_is_not_a_lead(tmp_path):
     assert find_leads([gene], citing=citing, publications_dir=tmp_path) == []
 
 
+def test_same_gene_filter_ignores_symbol_case(tmp_path):
+    """A same-species entry whose symbol differs only in case is the same gene."""
+    gene = _gene_folder(
+        tmp_path, "AC   P00001;\nGN   Name=ABC1;\nOX   NCBI_TaxID=9606;\n"
+    )
+    citing = {"1": [CitingEntry("P00002", "Abc1", "9606", frozenset())]}
+    assert find_leads([gene], citing=citing, publications_dir=tmp_path) == []
+
+
+@pytest.mark.parametrize(
+    "n_citing,flagged", [(MAX_CITING_ENTRIES, True), (MAX_CITING_ENTRIES + 1, False)]
+)
+def test_large_scale_papers_are_skipped(tmp_path, n_citing, flagged):
+    """A paper cited by more than MAX_CITING_ENTRIES other entries is skipped."""
+    gene = _gene_folder(
+        tmp_path, "AC   P00001;\nGN   Name=ABC1;\nOX   NCBI_TaxID=9606;\n"
+    )
+    entries = [
+        CitingEntry(f"Q{i:05d}", f"X{i}", "10090", frozenset()) for i in range(n_citing)
+    ]
+    leads = find_leads([gene], citing={"1": entries}, publications_dir=tmp_path)
+    assert bool(leads) is flagged
+
+
+def test_shared_family_name_does_not_cancel_paralog_signal(tmp_path):
+    """A family name shared with the citing paralog is not evidence the gene was studied.
+
+    TUA1-like case: both paralogs are "Tubulin alpha chain", so an abstract using
+    that phrase does not name the annotated paralog.
+    """
+    gene = _gene_folder(
+        tmp_path,
+        "AC   P00001;\nDE   RecName: Full=Tubulin alpha chain;\nGN   Name=ABC1;\n"
+        "OX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR11588; X; 1.\n",
+    )
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_1.md").write_text(
+        "title: T\n## Abstract\nWe purified tubulin alpha chain from TUA2 cells.\n"
+    )
+    paralog = CitingEntry(
+        "P00002",
+        "TUA2",
+        "9606",
+        frozenset({"PTHR11588"}),
+        frozenset({"Tubulin alpha chain"}),
+    )
+    (lead,) = find_leads([gene], citing={"1": [paralog]}, publications_dir=pubs)
+    assert "same_taxon_paralog" in lead["reasons"]
+    assert "gene_not_named_in_abstract" in lead["reasons"]
+
+
+def test_cached_pmids_are_not_requeried(tmp_path):
+    """Cached PMIDs, including ones with no citing entries, are served from the cache.
+
+    Only the requested PMIDs are returned, not the whole cache.
+    """
+    import json
+
+    cache = tmp_path / "citing-entries-v2.json"
+    entry = {
+        "accession": "Q86X52",
+        "gene": "CHSY1",
+        "taxon": "9606",
+        "panther": ["PTHR12369"],
+        "protein_names": ["Chondroitin sulfate synthase 1"],
+    }
+    cache.write_text(json.dumps({"11514575": [entry], "1": [], "2": [entry]}))
+    out = fetch_citing_entries(["11514575", "1"], cache_dir=tmp_path)
+    assert set(out) == {"11514575", "1"}
+    assert out["1"] == []
+    assert out["11514575"][0].protein_names == {"Chondroitin sulfate synthase 1"}
+
+
 def test_leads_join_existing_review(leads):
     """The CSGALNACT1 rows already carry WRONG_GENE_PRODUCT defects from review."""
     rows = [r for r in leads if r["gene"] == "human/CSGALNACT1"]
@@ -161,6 +271,12 @@ def test_trab_is_a_known_miss(leads):
             [CitingEntry(f"P{i}", "X", "10090", frozenset()) for i in range(5)],
             None,
             (0, ""),
+        ),
+        # UniProt writes mouse symbols in title case.
+        (
+            [CitingEntry("P2", "Abc1", "10090", frozenset())],
+            None,
+            (3, "same_gene_other_species;few_citing_entries"),
         ),
     ],
 )
