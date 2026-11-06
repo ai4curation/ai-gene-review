@@ -40,3 +40,11 @@ Current GO was checked directly through QuickGO. GO0003896 is obsolete as equiva
 - [PMID:21630458] An expanded protein-protein interaction network in Bacillus subtilis reveals a group of hubs: Exploration by an integrative approach. Cached abstract was consulted; detailed assays not visible there are not used to contradict experimental annotations.
 - [PMID:25374563] Protein-tyrosine phosphorylation interaction network in Bacillus subtilis reveals new substrates, kinase activators and kinase cross-talk. Full cached text was consulted for the relevant target-specific claims.
 - [PMID:20122408] Reconstitution of the B. subtilis replisome with 13 proteins including two distinct replicases. Full author-hosted article and supplement inspected. Methods explicitly specify native B. subtilis 168 sequences without tags. The 13-protein reaction starts from a flapped minicircle and includes PriA; it does not reconstitute oriC recognition, primer removal or ligation. PolC supplies bulk synthesis and DnaE extends RNA primers.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Apply REMOVE consistently to bare GO:0005515 rows without denying interactions or claiming citation misattribution.
+- Refine remaining broad machine replication row consistently to the supported process, preserving original payload.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

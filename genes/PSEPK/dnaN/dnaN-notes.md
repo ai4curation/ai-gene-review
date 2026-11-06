@@ -23,3 +23,11 @@ Target P0A120 is the KT2440 record. Curated HAMAP/RuleBase and domain statements
 - GO:0030337 DNA polymerase processivity factor activity: NEW. Retain the inherited proposal and original payload. The target belongs to the beta-clamp family, and Pseudomonas reconstitution directly separates the beta processivity factor from polymerase and loader. The processivity activity adds a distinct regulator function, not polymerization or nuclease chemistry.
 
 Primary sources used: PMID:15611049. Independent frozen support: file:PSEPK/dnaN/dnaN-uniprot.txt.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Record INTERPRO WRONG_TERM for GO:0003887 (InterPro:IPR022634|InterPro:IPR022635|InterPro:IPR022637); original action remains REMOVE.
+- Record INTERPRO WRONG_TERM for GO:0008408 (InterPro:IPR022634|InterPro:IPR022635|InterPro:IPR022637); original action remains REMOVE.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

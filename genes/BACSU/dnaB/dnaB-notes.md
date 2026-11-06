@@ -35,3 +35,12 @@ PMID20071750 full Methods explicitly uses B. subtilis strain168 for growth-phase
 ## Ontology-gap placement follow-up
 
 Moved the ontology-only helicase-loading term question from knowledge_gaps to suggested_questions. The supported DnaI ATPase/loading and DnaD/DnaB DNA-binding contributions are unchanged. MCM2–7-specific loader terminology remains inappropriate. Biological mechanism uncertainties and existing evidence boundaries are preserved.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Refine remaining broad machine replication row consistently to the supported process, preserving original payload.
+- Retain inherited NEW GO:0003677; specify both ssDNA and dsDNA binding in core activities from direct domain/gel-shift evidence.
+- Replace generic location rationales with fractionation evidence distinguishing cytoplasmic and membrane-associated pools.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

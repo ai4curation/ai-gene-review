@@ -17,3 +17,11 @@ Target Q88LG7 is the KT2440 record. Curated HAMAP/RuleBase and domain statements
 - GO:0071897 DNA biosynthetic process: ACCEPT. HolB contributes the clamp-loading scaffold that enables processive DNA production. This supports biosynthetic machinery participation despite the erroneous accompanying polymerase MF; no claim of isolated HolB catalysis is made.
 
 Primary sources used: PMID:15611049. Independent frozen support: file:PSEPK/holB/holB-uniprot.txt.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Record UNIPROT WRONG_TERM for GO:0003887 (InterPro:IPR004622|InterPro:IPR015199|EC:2.7.7.7); original action remains REMOVE.
+- Record INTERPRO WRONG_TERM for GO:0008408 (InterPro:IPR004622); original action remains REMOVE.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

@@ -16,3 +16,11 @@ Target Q88P74 is the KT2440 record. Curated HAMAP/RuleBase and domain statements
 Primary sources used: PMID:21955458. Independent frozen support: file:PSEPK/holC/holC-uniprot.txt.
 
 The paper explicitly clones KT2440 chi–psi. Primer-to-locus/sequence mapping is being documented separately. Complex ssDNA binding must not be propagated to standalone chi. Current GO0030674 protein-macromolecule adaptor activity covers the non-receptor SSB–loader bridge; no new ontology term is required. GO0030159 is receptor-specific and is not used. The module may treat HolC as an accessory architecture, while the gene itself has a core accessory function.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Record UNIPROT WRONG_TERM for GO:0003887 (InterPro:IPR007459|EC:2.7.7.7); original action remains REMOVE.
+- Refine machine GO:0006260 to GO:0006261 and align the core process.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

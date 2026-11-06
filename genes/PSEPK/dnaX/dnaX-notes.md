@@ -22,3 +22,10 @@ Target Q88F30 is the KT2440 record. Curated HAMAP/RuleBase and domain statements
 - GO:0003689 DNA clamp loader activity: NEW. Retain the inherited proposal and its original payload. Pseudomonas reconstitution demonstrates the tau3-delta-delta-prime loader as a required unit for efficient elongation. DnaX contributes ATP-dependent conformational work, while the other loader subunits are also required; the inherited contributes_to qualifier is appropriate. No isolated-DnaX loading or universal gamma isoform is asserted.
 
 Primary sources used: PMID:15611049. Independent frozen support: file:PSEPK/dnaX/dnaX-uniprot.txt.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Record UNIPROT WRONG_TERM for GO:0003887 (InterPro:IPR012763|InterPro:IPR021029|InterPro:IPR022754|EC:2.7.7.7); original action remains REMOVE.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

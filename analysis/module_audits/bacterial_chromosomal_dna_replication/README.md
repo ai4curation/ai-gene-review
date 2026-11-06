@@ -12,3 +12,16 @@ Run `uv run python modules/bacterial_chromosomal_dna_replication-source-analysis
 All 97 production-compiler/oracle cases pass. They reject missing mandatory roles, incomplete complexes, cross-taxon mixtures, generic family/ATPase substitutions, split-polypeptide PHP/PolC activities, and unsupported native gap-filler inference. Stoichiometric capacity does not measure abundance, expression or replication sufficiency. False means unresolved panel coverage, not pathway absence.
 
 The immutable baseline preserves 1,067 historical rows (1,065 machine assertions and two inherited proposals) and 104 raw UniProt/GOA files. Fourteen new proposals give 1,081 current rows. Falcon attempts failed with HTTP403; manual evidence and construct/identity notes record the work actually done. Focused gene, family, module, history and source checks pass. Eight module advisories retain missing exact GO loader terms and unresolved broad family-scope adjudications. Full-corpus validation terminated with exit 1: 19 unrelated reference failures in 17 yeast reviews, with all 23 affected review/source/validation-input blobs unchanged from the pinned base. Schema and term checks passed; best-practices validation reported zero errors. Exact tuples, log SHA256 and input-blob proof are in `preexisting-reference-failures.yaml`. The module is COMPLETE and focused schema/semantic/render plus all 97 capacity cases pass. Module PR publication, external review/CI and actual merge remain pending.
+
+## PR #6117 review follow-up
+
+Eleven gene reviews now record the HolD start-site discrepancy and exact construct
+coordinates, source-specific polymerase-mapping defects, consistent removal of bare
+protein-binding terms, and specific replication/proofreading activities. Historical
+NEW proposals remain intact; their more precise core activities retain three
+explicit coverage advisories. The epsilon module annoton now uses DNA-specific
+3′–5′ exonuclease activity, matching the gene cores. All 97 pathway cases pass.
+
+The prior full-corpus result above is historical. Fresh full validation of these
+scientific corrections, renewed independent review/CI and actual merge remain
+pending. See round1-followup.yaml and round1-gene-review-proof.yaml.

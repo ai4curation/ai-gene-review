@@ -463,3 +463,13 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+## 2026-11-06: Replication PR #6117 review follow-up
+
+Eleven reviewed genes preserve 131 annotation payloads, nine inherited NEW actions,
+22 raw files and 49 referenced sources. HolD model/construct coordinates and
+source-specific mapping defects are structured; generic binding policy is applied
+consistently. Epsilon proofreading is refined to DNA-specific exonuclease activity
+in the genes and module. Focused checks and all 97 pathway cases pass. Fresh full
+validation, publication of the follow-up, independent review/CI and actual merge
+remain outstanding.

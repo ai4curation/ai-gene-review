@@ -27,3 +27,11 @@ Primary sources used: PMID:15611049. Independent frozen support: file:PSEPK/dnaQ
 ### Follow-up: DNA biosynthesis participation
 
 The initial over-annotation judgment on GO:0071897 was reconsidered after comparative primary evidence was checked. PMID:8702818 compares purified alpha with alpha-epsilon cores and reports faster DNA synthesis with epsilon; PMID:15611049 reconstructs the Pseudomonas alpha-epsilon replicase. This supports a conserved functional contribution to biosynthesis, beyond necessity alone. The existing BP is ACCEPT, while intrinsic polymerase MFs remain REMOVE. E. coli kinetic values are not transferred to KT2440.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Record UNIPROT WRONG_TERM for GO:0003887 (InterPro:IPR006054|InterPro:IPR006309|EC:2.7.7.7); original action remains REMOVE.
+- Refine machine exonuclease row and core to DNA-specific GO:0008296; retain the original term payload.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

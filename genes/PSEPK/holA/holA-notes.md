@@ -15,3 +15,10 @@ Target Q88DM9 is the KT2440 record. Curated HAMAP/RuleBase and domain statements
 - GO:0071897 DNA biosynthetic process: ACCEPT. The upstream inferred polymerase MF is wrong, but the BP claim is independently supported by direct clamp-loading assistance to processive DNA synthesis. A true process claim is not removed merely because its original inference route was defective.
 
 Primary sources used: PMID:15611049. Independent frozen support: file:PSEPK/holA/holA-uniprot.txt.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Record UNIPROT WRONG_TERM for GO:0003887 (InterPro:IPR010372|EC:2.7.7.7|UniRule:UR002057143); original action remains REMOVE.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.

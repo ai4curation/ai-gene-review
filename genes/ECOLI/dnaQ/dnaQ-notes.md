@@ -13,3 +13,11 @@ All seeded annotations were assessed, including repair, regulation, localization
 `just paint-losses ECOLI dnaQ` reported no applicable IRD or IKR. IBA judgments concern inherited functions and target biology, not donor counts. The default Falcon research command was attempted and failed with HTTP403 authentication/access failure. No provider report was authored or fabricated; these are manual notes.
 
 Original rows: 42; current rows: 42; inherited NEW: 0; added NEW: 0. Actions: {'MODIFY': 4, 'ACCEPT': 13, 'REMOVE': 25}.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Refine machine exonuclease row and core to DNA-specific GO:0008296; retain the original term payload.
+- Refine remaining broad machine replication row consistently to the supported process, preserving original payload.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.
