@@ -455,7 +455,8 @@ animal Rabin3/Rab8 GEFs while checking the fission-yeast duplication into
 vegetative `sec2` and sporulation-specific `spo13`.
 
 - [x] `yeast/SEC2` - *S. cerevisiae* Sec4 Rab GEF; drafted in this branch
-- [ ] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member
+- [x] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member;
+  drafted in this branch
 - [ ] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
 - [ ] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
 - [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
@@ -470,6 +471,11 @@ vegetative `sec2` and sporulation-specific `spo13`.
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
   PAINT node stays outside the fungal clade.
+- Added `SCHPO/sec2`: both PTHR14430 PAINT rows are sound for the long
+  fission-yeast Sec2 paralog. The CACAO meiotic-spindle-pole row cites an
+  unrelated human cerebral perfusion PMID, so the review keeps the plausible
+  localization by modifying it to PomBase's GO:0035974 row and records a CACAO
+  `WRONG_REFERENCE` source defect.
 
 ## 2026-11-01
 
