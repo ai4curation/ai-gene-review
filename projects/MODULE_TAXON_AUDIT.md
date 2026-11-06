@@ -563,3 +563,7 @@ Integrated published main `1970e159b9` with the validated PR #6129 head `aafe54e
 ## 2026-11-06 — PR #6129 tracker placement and tally
 
 Correct the shared project page after integration for PR #6129: place the bacterial_dsbab_oxidative_folding checkbox under Status and derive the displayed audit-state tally from all 777 inventory rows. This changes project prose and its rendering only; the inventory and all curated science/source files remain unchanged from 14cc2fc9ef7075abfa6bddce9556b222327bab42.
+
+## 2026-11-06 — PR #6129 round2 full validation completed
+
+The bacterial_dsbab_oxidative_folding PR #6129 round2 review follow-up completed a fresh full-corpus run on 5fc26f0eaccdc9050295cc6a0c111dbf198628f0. Schema, terms, best practices and all54 pathway checks passed. The only17 blocking errors are the known16 unrelated yeast citation reviews; their22 relevant inputs equal the pinned base, and all197 frozen publication files matched the tested head. Current main already fixes these citations in merged PR5975. Integrating that main, publishing the reviewed fixes, renewed review/CI and actual merge remain pending.
