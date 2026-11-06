@@ -40,3 +40,9 @@
   treated skeptically because fungal Eaf3 proteins act as H3K36me-linked
   Rpd3S/NuA4 subunits rather than as CONSTANS/FT-promoter regulators like the
   source MRG1/MRG2 proteins in Arabidopsis.
+- The `GO:1990841` row is therefore a plant-function overpropagation rather
+  than a loss of H3K36 methyl-lysine reading in fungal Eaf3 proteins. This
+  review modifies it to `GO:0140003 histone H3K36me3 reader activity` based on
+  S. pombe Clr6S / S. cerevisiae Rpd3S chromodomain and H3K36me3
+  peptide-binding evidence, not on the separate plant-seeded
+  `PTN008955946` PAINT node.
