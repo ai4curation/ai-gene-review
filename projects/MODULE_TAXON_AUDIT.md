@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flavonoid_degradation`: comparative follow-up in progress; fourteen existing reviews frozen, seven alphaproteobacterial comparison reviews seeded, literature and taxon scope under audit.
+- [ ] `bacterial_flavonoid_degradation`: comparative science integrated; 21 member reviews, nine curated references and Pseudomonadota scope. Focused/full validation, dedicated audit PR and merge pending.
 
 - [x] `osmoregulated_periplasmic_glucan_biosynthesis`: [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142) merged at `fb8e3ee95b`; 179 scoped files verified identical to the approved head.
 
@@ -581,3 +581,7 @@ PR #2142 review fixes passed a fresh full-corpus validation on frozen science he
 Start comparative flavonoid audit from merged PR5971. Freeze fourteen existing reviews,34annotation rows and34source files; inspect three review articles and the 2013/2016/2024 primary evidence. A live KEGG census places all50 complete seven-KO coassignments in Pseudomonadota without proving pathway activity. Correct the unsupported exclusion of UDP-glucose epimerase activity in Hsero_1012 to UNDECIDED and qualify the FdeD reaction position while preserving all inherited NEW rows. Record independent full-text access for four HERSS reviews. Seven newly seeded BRADU comparisons are being reviewed separately. OPG PR2142 actually merged and179scoped files match its approved head; mark that module COMPLETE. Flavonoid module science, validation, dedicated PR, review,CI and merge remain pending.
 
 [Verified OPG merge content](MODULE_TAXON_AUDIT/proofs/pr2142-merged-content.json) records all 179 compared files.
+
+## 2026-11-06 — flavonoid comparative science integration
+
+Integrate seven independently verified USDA110 comparisons with fourteen existing reviews, preserving all 45 pre-existing/seed annotation rows, inherited NEW actions and 48 raw/provider files. Curate three review articles and six primary studies, including independent ORS285 whole-locus evidence. Scope to Pseudomonadota with explicit sampling limits. Separate unresolved FdeD/FdeH context from the six chemical roles; preserve untested late assignments as hypotheses. Forty-four production-compiler coverage checks pass and four mutations are rejected. Dedicated PR, full-corpus validation and actual merge remain pending.
