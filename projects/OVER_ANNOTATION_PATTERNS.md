@@ -3,7 +3,7 @@ title: "Over-Annotation Patterns Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN, HORSE]
-genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII, AARS2, DARS2]
+genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII, AARS2, HORSE/DARS2]
 manifest:
   slides:
     - href: OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html
@@ -23,7 +23,8 @@ over-annotation that surfaced during gene review, nine categories in all, each t
 worked examples in real reviews. We did this so that curators and pipeline authors can
 recognise a pattern once rather than rediscovering it gene by gene; the catalogue was
 first presented at the GO Consortium meeting in October 2025. Eleven exemplar reviews are
-complete (human PHYKPL, UBA7 and AARS2, fission yeast Epe1, *Candida* LPL1, horse DARS2,
+complete (human PHYKPL, UBA7 and AARS2, fission yeast Epe1, *Candida* LPL1,
+horse <gene species="HORSE" symbol="DARS2">DARS2</gene>,
 and five biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
 recorded actions match the patterns: all ten generic `protein binding` IPI rows on
 PHYKPL and UBA7 are REMOVE, and Epe1's electronically inferred JmjC-domain
