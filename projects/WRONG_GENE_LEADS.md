@@ -189,9 +189,11 @@ comparable):
   section heading and drops the PubMed citation line, author list, affiliations and
   identifiers, which a symbol that is also a surname could otherwise match. 796
   abstract-only records keep their abstract under `## Content`, and those are read
-  too. For the 292 full-text `## Content` records, only the title is used, because
-  the abstract cannot be separated reliably. This changes the name-check result
-  for 19 rows.
+  too. Of the 299 full-text `## Content` records, 242 open with the same PubMed
+  block, and their abstract is read up to its `DOI:`/`PMID:` trailer. The other 57
+  do not mark where the abstract ends, so only their title is used. The window
+  change altered the name-check result for 19 rows, and the trailer rule for 5
+  more.
 - **The review join keys on isoform and skips NOT rows**, so isoform-specific rows
   no longer overwrite each other.
 

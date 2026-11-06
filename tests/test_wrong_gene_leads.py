@@ -326,6 +326,13 @@ def test_protein_name_in_abstract_penalises_aurkc_lead():
         ("9771708", ["ATPSK2", "brachymorphic"], ["Cohn DH", "Cedars-Sinai", "PMID:"]),
         # Abstract-only record whose abstract sits under "## Content".
         ("20237237", ["ENaC", "Nedd4-2"], ["McDonald FJ", "University of Otago"]),
+        # Full text under "## Content" that opens with the PubMed block: the
+        # abstract is read up to the block's DOI/PMID trailer, not the body.
+        (
+            "10339610",
+            ["CcmABCDEFGH", "heme chaperone"],
+            ["Schulz H", "Zürich", "PMCID"],
+        ),
     ],
 )
 def test_abstract_text_reads_abstract_without_bibliography(pmid, present, absent):
@@ -339,3 +346,17 @@ def test_abstract_text_reads_abstract_without_bibliography(pmid, present, absent
     text = abstract_text(PUBLICATIONS_DIR / f"PMID_{pmid}.md")
     assert all(p in text for p in present)
     assert not any(a in text for a in absent)
+
+
+def test_undelimited_full_text_contributes_title_only():
+    """Full text under "## Content" with no PubMed block gives the title only.
+
+    Nothing marks where the abstract ends, and reading the body would make the
+    check a full-text check.
+    """
+    from ai_gene_review.tools.wrong_gene_leads import PUBLICATIONS_DIR, abstract_text
+
+    assert (
+        abstract_text(PUBLICATIONS_DIR / "PMID_10357231.md")
+        == "Glutamate synthase: a complex iron-sulfur flavoprotein."
+    )

@@ -251,8 +251,28 @@ def _names_protein(text: str, name: str) -> bool:
 
 # A PubMed author list: comma-separated "Surname INITIALS" items, the first one
 # often carrying an affiliation marker, e.g. "Faiyaz ul Haque M(1), King LM, Cohn DH."
-_AUTHOR_ITEM = r"[^\W\d][\w'.\- ]* [A-Z]{1,4}(?:\(\d+(?:,\d+)*\))?"
-_AUTHOR_LIST = re.compile(rf"^{_AUTHOR_ITEM}(?:, {_AUTHOR_ITEM})*(?:,? et al)?\.?$")
+_AUTHOR = re.compile(r"[^\W\d][\w'.\- ]* [A-Z]{1,4}(?:\(\d+(?:,\d+)*\))*")
+
+
+def _is_author_list(paragraph: str) -> bool:
+    """Whether a paragraph is a PubMed author list.
+
+    Each comma-separated item is tested on its own, which keeps a long byline that
+    ends in a consortium name from backtracking through every split.
+
+    >>> _is_author_list("Faiyaz ul Haque M(1), King LM, Superti-Furga A, Cohn DH.")
+    True
+    >>> _is_author_list("Ke Y(1)(2), Butt AG, et al.")
+    True
+    >>> _is_author_list("ENaC is regulated by Nedd4-2, which binds PY motifs.")
+    False
+    """
+    items = paragraph.rstrip(".").split(", ")
+    if items[-1] in {"et al", "et al."}:
+        items = items[:-1]
+    return bool(items) and all(_AUTHOR.fullmatch(i) for i in items)
+
+
 # Paragraphs of a PubMed text record that are bibliographic, not the abstract.
 _RECORD_PARAGRAPH = re.compile(
     r"^(?:\d+\. \S|Author information:|DOI:|PMID:|PMCID:|Copyright|©|"
@@ -273,7 +293,7 @@ def strip_bibliographic(text: str) -> str:
     kept = []
     for para in re.split(r"\n\s*\n", text):
         flat = " ".join(para.split())
-        if flat and not _RECORD_PARAGRAPH.match(flat) and not _AUTHOR_LIST.match(flat):
+        if flat and not _RECORD_PARAGRAPH.match(flat) and not _is_author_list(flat):
             kept.append(para.strip())
     return "\n\n".join(kept)
 
@@ -281,10 +301,18 @@ def strip_bibliographic(text: str) -> str:
 def abstract_text(path: Path) -> str:
     """The title and abstract of a cached publication, without bibliographic text.
 
-    The title comes from the front matter. The abstract runs from ``## Abstract``
-    to the next section heading. Some abstract-only records put the abstract under
-    ``## Content`` instead (front matter ``content_type: abstract_only``); other
-    ``## Content`` sections can be full text, so for those only the title is used.
+    The title comes from the front matter (or the ``# `` heading). The abstract is
+    read from:
+
+    - ``## Abstract``, up to the next section heading;
+    - ``## Content`` in an abstract-only record (front matter
+      ``content_type: abstract_only``);
+    - ``## Content`` in a full-text record that opens with the PubMed text block,
+      up to the block's ``DOI:``/``PMCID:``/``PMID:`` trailer, after which the
+      article body starts.
+
+    Other full-text ``## Content`` records do not mark where their abstract ends,
+    so only the title is used for them.
 
     >>> import tempfile
     >>> with tempfile.TemporaryDirectory() as tmp:
@@ -294,8 +322,14 @@ def abstract_text(path: Path) -> str:
     ...     q = Path(tmp) / "PMID_2.md"
     ...     _ = q.write_text("---\\ntitle: T\\ncontent_type: abstract_only\\n---\\n"
     ...                      "## Content\\n\\nMak T(1).\\n\\nB")
-    ...     abstract_text(p), abstract_text(q)
-    ('T\\n\\nA', 'T\\n\\nB')
+    ...     r = Path(tmp) / "PMID_3.md"
+    ...     _ = r.write_text("---\\ncontent_type: full_text_xml\\n---\\n# T\\n## Content\\n\\n"
+    ...                      "1. J. 2000.\\n\\nC\\n\\nDOI: 10.1/x\\nPMID: 3\\n\\nBody")
+    ...     s = Path(tmp) / "PMID_4.md"
+    ...     _ = s.write_text("---\\ntitle: T\\ncontent_type: full_text_xml\\n---\\n"
+    ...                      "## Content\\n\\nAbstract and body")
+    ...     abstract_text(p), abstract_text(q), abstract_text(r), abstract_text(s)
+    ('T\\n\\nA', 'T\\n\\nB', 'T\\n\\nC', 'T')
     """
     text = path.read_text(errors="replace")
     meta: dict[str, Any] = {}
@@ -303,18 +337,23 @@ def abstract_text(path: Path) -> str:
         front, _, text = text[4:].partition("\n---\n")
         loaded = yaml.safe_load(front)
         meta = loaded if isinstance(loaded, dict) else {}
-    headings = ["## Abstract"]
-    if meta.get("content_type") == "abstract_only":
-        headings.append("## Content")
+    title = str(meta.get("title") or "")
+    if not title and (m := re.search(r"(?m)^# (.+)$", text)):
+        title = m.group(1).strip()
     body = ""
-    for heading in headings:
+    for heading in ("## Abstract", "## Content"):
         start = text.find(heading)
-        if start >= 0:
-            start += len(heading)
-            end = text.find("\n## ", start)
-            body = text[start : end if end >= 0 else None]
-            break
-    parts = [str(meta.get("title") or ""), strip_bibliographic(body)]
+        if start < 0:
+            continue
+        start += len(heading)
+        end = text.find("\n## ", start)
+        body = text[start : end if end >= 0 else None]
+        if heading == "## Content" and meta.get("content_type") != "abstract_only":
+            trailer = re.search(r"(?m)^(?:DOI|PMCID|PMID): ", body)
+            pubmed_block = re.match(r"\s*\d+\. \S", body)
+            body = body[: trailer.start()] if trailer and pubmed_block else ""
+        break
+    parts = [title, strip_bibliographic(body)]
     return "\n\n".join(p for p in parts if p)
 
 
