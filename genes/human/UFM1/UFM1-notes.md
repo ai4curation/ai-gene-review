@@ -35,3 +35,11 @@ The GOA `protein binding` IPI rows are mostly with UBA5 (Q9GZZ9; the E1 — the 
 - protein binding IPI rows: KEEP_AS_NON_CORE (UBA5) or MODIFY/MARK_AS_OVER_ANNOTATED for uninformative singletons.
 - Brain development, ER-phagy, ER stress, neg reg apoptosis, neg reg nuclear import, ER signaling: KEEP_AS_NON_CORE (downstream/substrate-specific) — keep ufmylation as the core.
 </content>
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse) and ISS (GO_REF:0000024, from mouse P61961), both located_in. Both were KEEP_AS_NON_CORE.
+- Source: mouse Ufm1 GO:0005783 IDA from PMID:21494687 (QuickGO, 2026-11-06). Full text read: endogenous UFM1 in MIN6 fractions with GDH, LAMP2, BiP and HSPA8 markers [PMID:21494687 "It is clear that UFBP1 was present in the same fraction as BiP, indicative for ER localization"; "UFM1 partially co-localized with UFBP1 in the ER, but a significant amount of UFM1 protein was detected in the cytosolic fraction"]. Mouse and human UniProt list only Nucleus and Cytoplasm.
+- Site of the principal function: [PMID:30626644 "UFMylated RPL26 is highly enriched on ER membrane-bound ribosomes and polysomes"] (abstract).
+- Topology: 85-residue soluble modifier, held at the ER cytosolic face through UFBP1/DDRGK1 and the ER-tethered ligase; stays at root, no membrane or lumen row.
+- Outcome: both rows KEEP_AS_NON_CORE -> ACCEPT, because the core activity (RPL26 UFMylation) is shown at the ER and core_functions already names the ER (this also clears two "location not reflected" validator warnings). Alternative: KEEP_AS_NON_CORE, since most free UFM1 is cytosolic/nuclear. Old reasons that cited a quote about the ligase complexes were replaced by quotes about UFM1 itself.

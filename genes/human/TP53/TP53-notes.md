@@ -89,3 +89,12 @@ QuickGO withFrom queries (2026-10-01; taxonUsage=descendants):
   extrapolations from animals (PMID:31861340 "The biological role of the remote homologs found in Holozoa is unclear.").
 - Changes to the human TP53 rows: none. These node placements do not contradict the
   human annotations, and GO:0042771 sits on a node that does not reach choanoflagellates by IBA.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000044, SL-0095), the only ER row. No sub-compartment or MAM rows.
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:17170702}" (curated). PMID:17170702 (Synoviolin; cached text lacks the results figures): [PMID:17170702 "Synoviolin sequestrated and metabolized p53 in the cytoplasm"].
+- Independent: PMID:25624484 (Giorgi et al. 2015 PNAS; fetched, abstract-only): [PMID:25624484 "Here we show that, in the cytoplasm, WT p53 localizes at the ER and at specialized contact domains between the ER and mitochondria (mitochondria-associated membranes)."] and [PMID:25624484 "WT p53 directly binds to the sarco/ER Ca(2+)-ATPase (SERCA) pump at the ER"].
+- The old ACCEPT cited PMID:14744935 ("Endoplasmic reticulum stress induces p53 cytoplasmic localization"), which is about cytoplasm, not ER; replaced.
+- Outcome: ACCEPT -> KEEP_AS_NON_CORE (recruited regulatory pool of a soluble nuclear TF). Root only; no NEW MAM (GO:0044233) row because it rests on one abstract-only study of a recruited pool. Mitochondrion rows untouched.

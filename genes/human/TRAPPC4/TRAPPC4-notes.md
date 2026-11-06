@@ -27,3 +27,10 @@ Annotation stance:
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the prior wording framed the TRAPP-component context as PN-specific and directly relevant because human patient fibroblasts and yeast Trs23 models show trafficking and autophagy defects.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044) and ISS (GO_REF:0000024, from mouse Q9ES56), both located_in, both ACCEPT.
+- Check: human UniProt line is "Endoplasmic reticulum {ECO:0000250|UniProtKB:Q9ES56}". In mouse Q9ES56 (checked via UniProt REST, 2026-11-06) the ER line is ECO:0000305 (curator inference), while the Golgi, vesicle and postsynaptic lines are ECO:0000269 from PMID:11018053. The synbindin immuno-EM paper reports Golgi and unidentified vesicles, not ER [PMID:11018053 "Dense labeling was observed on the Golgi apparatus (Fig. 10H and Fig. I) and unidentified vesicles in the dendritic shaft"]. So no assay places TRAPPC4 itself at the ER.
+- The ER claim holds by TRAPP core membership: the TRAPPC3 ortholog is on Sec31p-marked transitional ER [PMID:16880271 "Immuno-EM in NRK cells confirmed that mBet3p (5-nm gold particles) resides on the tER region labeled with Sec31p (10-nm gold particles)."].
+- Outcome: both rows kept ACCEPT (consistent with core_functions) with the check recorded; stays at root (one line only, soluble peripheral subunit). No source_defects: the ISS faithfully transfers the mouse entry, whose ER line is an inference rather than an error.
