@@ -475,3 +475,7 @@ outstanding. See [audit progress](../analysis/module_audits/bacterial_dnak_dnaj_
 ## 2026-11-06 — DnaK comparative mechanism integrated
 
 Fourteen complete reviews preserve 227 historical rows and 43 protected sources, with six supported molecular-function additions. Thirteen curated references, including three reviews, provide twenty findings. The module separates canonical J-protein activation from Thermus client handoff, assigns ATP hydrolysis only to DnaK and places DafA in optional inhibitory context. The production-topology and curated-compatibility checker passes 178 controls and 82 quotation checks. Final validation, dedicated PR review, CI and actual merge remain required. All unrelated inventory rows remain unchanged.
+
+## 2026-11-06 — DnaK full validation completed
+
+The DnaK/DnaJ/GrpE audit full run finished on 10,589 reviews, with zero best-practice errors and all54 referenced pathways passing. Its17 reference errors exactly match known failures in16 unrelated yeast reviews; all22 relevant inputs equal the pinned base. All245 scoped files matched validated science commit3b0ddf6124 before metadata closure. The panel retains14 complete reviews,227historical rows and43protected sources;178capacity controls and82quotations pass. Dedicated PR, independent review, CI and actual merge remain outstanding.
