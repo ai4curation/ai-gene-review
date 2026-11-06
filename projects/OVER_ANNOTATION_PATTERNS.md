@@ -168,12 +168,18 @@ because no MF term says where the reaction happens. A mitochondrial synthetase s
 still be refined from `GO:0006418` to `GO:0070127`. The test is whether the added content
 is already carried elsewhere, not how deep the term sits.
 
-**Examples**: the 15 *P. putida* aminoacyl-tRNA synthetase reviews and human AARS1 each
-marked `GO:0006418` over-annotated, or modified it to an amino-acid-specific child, on the
-reasoning that the child "already captures" the process — the exact judgement the
-obsoletion reversed. human/AARS2 and HORSE/DARS2 proposed an amino-acid-specific
-mitochondrial child (`GO:0070143`, `GO:0070146`) that is now obsolete; both now resolve to
-`GO:0070127`, with specificity on `GO:0004813` / `GO:0004815`.
+**Examples**: four reviews made the inverted judgement explicitly, and all four have
+since been migrated. `PSEPK/glnS` and `PSEPK/gltX` marked `GO:0006418` over-annotated
+because the amino-acid-specific child "already captures" the process; `PSEPK/serS`
+modified it to `GO:0006434`; `human/AARS1` modified it to `GO:0006419`. Each now accepts
+`GO:0006418`, with it in `core_functions`. This was a minority judgement rather than a
+house style — most synthetase reviews, `PSEPK/valS` among them, accepted `GO:0006418` all
+along — which is what makes the pattern worth naming: it is available to anyone applying
+"prefer the more specific term", not a habit of one curation batch.
+
+`human/AARS2` and `HORSE/DARS2` are the same pattern one level down: both proposed an
+amino-acid-specific *mitochondrial* child (`GO:0070143`, `GO:0070146`), now obsolete, and
+both resolve to `GO:0070127` with specificity on `GO:0004813` / `GO:0004815`.
 
 ## Genes Exemplifying Patterns
 
