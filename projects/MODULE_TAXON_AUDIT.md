@@ -543,3 +543,7 @@ Integrated published main `1970e159b9` with the validated PR #5970 head `b1ecf59
 ## 2026-11-06 — PR #5970 tracker placement and tally
 
 Correct the shared project page after integration for PR #5970: place the bacterial_ethanolamine_uptake_catabolism checkbox under Status and derive the displayed audit-state tally from all 777 inventory rows. This changes project prose and its rendering only; the inventory and all curated science/source files remain unchanged from ea09de467d34d109e14184f8ccd3d78f134dbd3f.
+
+## 2026-11-06 — PR #5970 round1 full validation completed
+
+The bacterial_ethanolamine_uptake_catabolism PR #5970 round1 review follow-up completed a fresh full-corpus run on ffafeb78851a39226167dce82b5c2cb59e40be74. Schema, terms, best practices and all54 pathway checks passed. The only17 blocking errors are the known16 unrelated yeast citation reviews; their22 relevant inputs equal the pinned base, and all452 frozen publication files matched the tested head. Current main already fixes these citations in merged PR5975. Integrating that main, publishing the reviewed fixes, renewed review/CI and actual merge remain pending.
