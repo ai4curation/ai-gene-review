@@ -519,7 +519,8 @@ evidence for the budding-yeast seed.
 - [ ] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows
 - [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member; rechecked
   against PTHR13027 after the yeast/MON1 refresh
-- [ ] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member
+- [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member; rechecked
+  against PTHR13027 with no IBA action changes
 - [ ] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member
 - [ ] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member
 
@@ -594,6 +595,11 @@ evidence for the budding-yeast seed.
   `PTN000315021`, and Opisthokonta `PTN000315023` placements; the only review
   edits cite the no-direct-Candida-literature search for CGD's accepted `ND`
   placeholders.
+- Rechecked `NEUCR/apg-13`, the *Neurospora crassa* `PTHR13027:SF7` Mon1
+  ortholog. The existing review already accepted the same fungal, eukaryotic,
+  and Opisthokonta IBA rows; the 2026 follow-up search did not find direct
+  Q870Q4 literature or a newer filamentous-fungal Mon1-Ccz1 paper that would
+  change those calls.
 
 ## 2026-11-01
 

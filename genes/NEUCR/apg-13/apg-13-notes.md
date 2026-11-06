@@ -39,6 +39,11 @@ find a direct N. crassa experimental paper. The main Neurospora autophagy hit,
 PMID:25333968, is about female development and lists `atg-13 | 04840`, which is
 not this Mon1-family gene.
 
+2026-11-06 searches for Q870Q4, NCU09220, N. crassa MON1/Mon1-Ccz1, and
+N. crassa apg-13/mon1 still found no direct Q870Q4 paper. The newer N. crassa
+autophagy and prevacuolar-compartment papers provide Rab7/vacuole pathway
+context but do not assay this Mon1-family gene or change the PAINT decisions.
+
 ## Annotation decisions
 
 - The PAINT fungal vacuole membrane and protein targeting to vacuole rows are
