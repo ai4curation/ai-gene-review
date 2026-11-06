@@ -521,7 +521,8 @@ evidence for the budding-yeast seed.
   against PTHR13027 after the yeast/MON1 refresh
 - [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member; rechecked
   against PTHR13027 with no IBA action changes
-- [ ] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member;
+  rechecked against PTHR13027 with no IBA action changes
 - [ ] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member
 
 ---
@@ -600,6 +601,10 @@ evidence for the budding-yeast seed.
   and Opisthokonta IBA rows; the 2026 follow-up search did not find direct
   Q870Q4 literature, and the newer N. crassa prevacuolar and autophagy
   morphology papers add Rab7/vacuole context without assaying Mon1.
+- Rechecked `ASPFU/mon1`, the *A. fumigatus* Af293 `PTHR13027:SF7` Mon1
+  member. The PAINT IBA decisions remain sound against the Aspergillus MonA and
+  Fusarium FgMon1 literature; the review only needed a `PMID:12364329` quote
+  normalized to the exact cached text.
 
 ## 2026-11-01
 
