@@ -25,3 +25,16 @@ GO:1903607: ACCEPT. Functional rescue by CcmB and its participation in the CcmAC
 ## 2026-11-06 source packaging
 
 Persistent marker CYTOCHROME-SHEON-ccmB-SOURCE-PACKAGING-20261106. Moved the full acquired primary PDF and extraction to the ignored audit acquired-sources cache, preserving byte hashes. The committed source analysis now contains only scoped strain/construct table excerpts and URL/hash provenance. Gene review assertions, quotes, machine payloads, UniProt/GOA files and normal publication caches were unchanged.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- GO:0015232 UNDECIDED: MR-1 efflux phenotypes do not resolve autonomous CcmB membrane-crossing activity.
+- GO:0015886 ACCEPT: CcmB participates in heme trafficking, without an asserted autonomous transmembrane conduit.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.
+
+
+## PR6121 reference-finding follow-up (2026-11-06)
+
+Narrowed the top-level finding statements for PMID:40026579, PMID:40167305 to the claims established by their existing quoted passages. Annotation actions, core functions, quotes and source records are unchanged. The original 52-file handoff remains preserved and verified separately; this edit has a supplemental history and manifest.

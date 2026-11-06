@@ -13,3 +13,12 @@ Falcon was genuinely attempted with the normal default provider and failed authe
 What chemistry breaks the Cys127-heme bond during productive transfer, and which native reductants participate?
 
 Additional evidence checks: exact primary-source excerpts, corrected detection limits, current GO parent relationships and same-role process comparators are preserved in the shared source analysis. CcmI has no direct binding MF assignment.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- GO:0005886 ACCEPT: Target membrane-anchor predictions support the plasma-membrane assignment.
+- GO:0016020 MODIFY: Target membrane-anchor predictions support the plasma-membrane assignment.
+- GO:0017003 ACCEPT: CcmE forms its own covalent Cys127-heme intermediate before downstream transfer.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.

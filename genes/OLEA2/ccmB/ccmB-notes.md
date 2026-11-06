@@ -13,3 +13,10 @@ Falcon was genuinely attempted with the normal default provider and failed authe
 Does G20 CcmB transmit ATP-driven conformational change to CcmC, and does it translocate any substrate?
 
 Additional evidence checks: exact primary-source excerpts, corrected detection limits, current GO parent relationships and same-role process comparators are preserved in the shared source analysis. CcmI has no direct binding MF assignment.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- GO:0015232 UNDECIDED: A transmembrane heme-transport activity is unresolved for G20 CcmB.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.

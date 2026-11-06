@@ -33,3 +33,17 @@ Read the full 2023 E. coli structures (PMID:37626034), 2025 CcmB efflux work (PM
 Specific reassessment: Binds heme transiently and covalently as a membrane-anchored periplasmic chaperone and delivers it to the heme-ligation machinery.
 
 Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- GO:0017003 ACCEPT retained; clarify current definition and distinct own-adduct versus downstream-delivery claims. Historical redundant NEW retained.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.
+
+The historical NEW GO:0018063 duplicates current MODIFY replacements. It is retained by explicit parent instruction to preserve the frozen assertion; archival withdrawal would require a separate exact-payload preservation change and aggregate-checker reconciliation. This is annotation redundancy, not a disputed molecular role.
+
+
+## PR6121 reference-finding follow-up (2026-11-06)
+
+Narrowed the top-level finding statements for PMID:40167305 to the claims established by their existing quoted passages. Annotation actions, core functions, quotes and source records are unchanged. The original 52-file handoff remains preserved and verified separately; this edit has a supplemental history and manifest.

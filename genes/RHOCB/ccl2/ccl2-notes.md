@@ -21,3 +21,13 @@ The core/row-coverage advisory for GO:0018063 is retained: direct chemical parti
 ## 2026-11-06 source packaging
 
 Persistent marker CYTOCHROME-RHOCB-ccl2-SOURCE-PACKAGING-20261106. Moved the full acquired primary PDF and extraction to the ignored audit acquired-sources cache, preserving byte hashes. The committed source analysis now contains only scoped strain/construct table excerpts and URL/hash provenance. Gene review assertions, quotes, machine payloads, UniProt/GOA files and normal publication caches were unchanged.
+
+
+## PR6121 round-1 specificity follow-up (2026-11-06)
+
+The historical NEW GO:0015036 payload and core are unchanged. Current QuickGO definitions of GO:0015035 and GO:0015036 both express a reversible sulfide/disulfide reaction; protein substrate scope, not an assumed net direction, distinguishes them. PMID28634234 measures protein-associated thiol-disulfide exchange using CcmH variants and TNB adducts, and discusses a slower alternative involving reduced CcmH. That evidence does not justify claiming CcmH lacks reducing chemistry. A separate specificity review should distinguish the protein intermediates from assay adducts before refining the core, while preserving the exact historical NEW assertion. Parent instruction defers that non-blocking refinement.
+
+
+## PR6121 reference-finding follow-up (2026-11-06)
+
+Narrowed the top-level finding statements for file:RHOCB/ccl2/ccl2-source-analysis/construct-scope.md to the claims established by their existing quoted passages. Annotation actions, core functions, quotes and source records are unchanged. The original 52-file handoff remains preserved and verified separately; this edit has a supplemental history and manifest.

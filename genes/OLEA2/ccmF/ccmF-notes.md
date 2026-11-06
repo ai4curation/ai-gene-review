@@ -13,3 +13,11 @@ Falcon was genuinely attempted with the normal default provider and failed authe
 Which electron donor and partner contacts support isolated System I* heme ligation without CcmH?
 
 Additional evidence checks: exact primary-source excerpts, corrected detection limits, current GO parent relationships and same-role process comparators are preserved in the shared source analysis. CcmI has no direct binding MF assignment.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- GO:0015886 ACCEPT: System I* CcmF participates in heme delivery at the terminal attachment machinery.
+- GO:0015232 MARK_AS_OVER_ANNOTATED: G20 CcmF heme handling does not establish a membrane-crossing transporter.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.

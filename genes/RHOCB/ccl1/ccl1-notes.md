@@ -23,3 +23,16 @@ GO:0017004: MODIFY. The assembly term can be refined to its cytochrome c-heme li
 GO:0020037: ACCEPT. The CcmF family contains a stable noncovalent heme cofactor and heme-handling architecture. Comparative CcmF biochemistry supports the target inference; no SB1003 binding constant or purified target assay is claimed. The frozen target is SB1003; the primary work uses tagged/truncated R. capsulatus proteins and MT1131-derived complementation backgrounds. This is a conserved-role inference, not a direct assay of an unmodified SB1003 protein; construct provenance is documented in the source analysis.
 
 GO:0004408: NEW. The CcmFH functional reconstruction establishes complex-level synthase activity. R. capsulatus CcmF physically associates with CcmH and CcmI in the functional membrane machinery. The contributes_to qualifier explicitly avoids assigning the entire reaction to isolated CcmF; the reconstructed reaction is comparative E. coli evidence. The frozen target is SB1003; the primary work uses tagged/truncated R. capsulatus proteins and MT1131-derived complementation backgrounds. This is a conserved-role inference, not a direct assay of an unmodified SB1003 protein; construct provenance is documented in the source analysis.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- GO:0015886 ACCEPT: CcmF participates in intracellular heme delivery to the ligation machinery.
+- Move repeated SB1003/MT1131 construct caveat to source reference assessment; preserve per-row biological rationale.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.
+
+
+## PR6121 reference-finding follow-up (2026-11-06)
+
+Narrowed the top-level finding statements for PMID:24397552, file:RHOCB/ccl2/ccl2-source-analysis/construct-scope.md to the claims established by their existing quoted passages. Annotation actions, core functions, quotes and source records are unchanged. The original 52-file handoff remains preserved and verified separately; this edit has a supplemental history and manifest.
