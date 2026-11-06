@@ -472,6 +472,5 @@ represent the native OAS-route panel. Family and PAINT scope are qualified where
 substrates diverge, and the Campylobacter placement has no invented PTN. The 59-case
 capacity/preservation check passes with 158 historical rows, 32 raw files and three
 provider artifacts preserved; one supported MF proposal brings the row total to 159.
-Targeted gene, module and family validation passes. Full validation, a dedicated PR,
-external review/CI and actual merge remain pending. See
+Targeted gene, module and family validation pass. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. A dedicated PR, external review/CI and actual merge remain pending. See
 [audit evidence](../analysis/module_audits/bacterial_cysteine_biosynthesis_via_o_acetylserine/README.md).

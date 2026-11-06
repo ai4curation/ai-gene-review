@@ -69,6 +69,4 @@ All 16 targeted gene reviews and their histories passed. Module schema, semantic
 validation, rendering, checker lint and three structure/sequence comparisons pass.
 The three module advisories transparently reflect unresolved broad PTHR10314
 function scope. Final family checks pass with zero conflicts and four unresolved cases, recorded
-separately following independent scientific review. Full-corpus validation, a dedicated PR, external review/CI and
-actual merge remain pending; module status COMPLETE describes the curated artifact,
-not completion of the project audit.
+separately following independent scientific review. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. A dedicated PR, external review/CI and actual merge remain pending. Module status COMPLETE describes the curated artifact, not completion of the project audit.
