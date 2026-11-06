@@ -7748,3 +7748,71 @@ The accepted closures cover **294 deduplicated paths**, including **229 deduplic
 This fixed window includes only GATA2, GATA1, GATA3 and GATA6. GATM, GBE1 and later acceptances are excluded. The prior 908,026-byte progress journal, 235 dated queue records and 162 earlier completion updates are preserved. Catalogue order changes only by checking these four genes and updating the count. Scientific source files remain unchanged. The native history links the four accepted gene PRs and separates symbols from accepted ordinals.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-04T210529Z-codex-1034b2.yaml).
+
+## Completion checkpoint 709 — 2026-11-05 03:58:46 UTC
+
+709 complete; 2,167 remaining out of 2,876 catalogue genes. This catch-up records six independently accepted reviews after checkpoint 703 and grants no additional completion credit.
+
+| Gene | Accepted ordinal | Actual merge | Executed integration | Original / stored contexts | Status |
+| --- | ---: | --- | --- | ---: | --- |
+| [GATAD2B](https://github.com/ai4curation/ai-gene-review/pull/5961) | 704 | [07b1560b](https://github.com/ai4curation/ai-gene-review/commit/07b1560b18b5c1dbec8ba14bc7c6866ff0343485) | [run 41910098291](https://github.com/ai4curation/ai-gene-review/actions/runs/41910098291) | 74 / 76 | COMPLETE |
+| [GATM](https://github.com/ai4curation/ai-gene-review/pull/5963) | 705 | [4b7ce2de](https://github.com/ai4curation/ai-gene-review/commit/4b7ce2de9b9a0c2d4442b453ad2e4c0fa628dcc3) | [run 41914007905](https://github.com/ai4curation/ai-gene-review/actions/runs/41914007905) | 37 / 37 | COMPLETE |
+| [GBE1](https://github.com/ai4curation/ai-gene-review/pull/5966) | 706 | [cea5eb4b](https://github.com/ai4curation/ai-gene-review/commit/cea5eb4b4fa6c38e0186d940931909cf3c3e36cc) | [run 41923730354](https://github.com/ai4curation/ai-gene-review/actions/runs/41923730354) | 27 / 28 | COMPLETE |
+| [GBA2](https://github.com/ai4curation/ai-gene-review/pull/5967) | 707 | [aa59c86d](https://github.com/ai4curation/ai-gene-review/commit/aa59c86d8572d94fe848002df4cffc7ff513efd0) | [run 41927365263](https://github.com/ai4curation/ai-gene-review/actions/runs/41927365263) | 53 / 53 | COMPLETE |
+| [GBA1](https://github.com/ai4curation/ai-gene-review/pull/5968) | 708 | [c94e28bd](https://github.com/ai4curation/ai-gene-review/commit/c94e28bd668b3f81d67edfdaa9fe3461fc293afd) | [run 41940610293](https://github.com/ai4curation/ai-gene-review/actions/runs/41940610293) | 96 / 96 | COMPLETE |
+| [GCDH](https://github.com/ai4curation/ai-gene-review/pull/5972) | 709 | [ac55b7d2](https://github.com/ai4curation/ai-gene-review/commit/ac55b7d2f604993bd93d091dba3375feff376a7c) | [run 41953219963](https://github.com/ai4curation/ai-gene-review/actions/runs/41953219963) | 25 / 25 | COMPLETE |
+
+The six reviews preserve 312 original contexts and contain 315 current rows, including three supported NEW molecular functions. GBA2 retains both pairs of source-ID/date assertions that its 51-row seed collapsed; they remain 53 original contexts. GATM used a force/no-seed refresh, so its 37 originals are not described as genuine seed rows.
+
+The committed reviews contain 225 reference assessments, six cores, 15 natural products and 46 current review quotation occurrences. Product counts include displayed natural sequences and exclude engineered constructs; they do not imply equal activity across products. Eight flat extension atoms, two NOT contexts and one contributes_to qualifier are retained. GBA1 separately preserves seven literal atom occurrences and two OR groups; its four flat atoms include a shared consequence of an OR expression.
+
+Accepted closures cover 398 deduplicated paths, including 306 scientific source paths. The cumulative published payloads cover 227 deduplicated paths, and actual parent deltas cover 226. Identical shared sources already present in the actual parent are explicitly retained: R-HSA-9976102 for GATAD2B and PMID33361282 for GBA1. These figures are unions rather than sums.
+
+All six actual merge-group suites and required integration checks executed successfully. Their accepted receipts retain skipped routes, warnings and unresolved corpus diagnostics. Historical evidence and earlier project records remain unchanged. This checkpoint is fixed to accepted ordinals 704–709; GCH1 and later acceptances are outside its scope.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-05T035846Z-codex-1465e0.yaml).
+
+## Completion checkpoint 715 — 2026-11-05 08:58:45 UTC
+
+715 complete; 2,161 remaining out of 2,876 catalogue genes. This catch-up records six independently accepted reviews after checkpoint 709 and grants no additional completion credit.
+
+| Gene | Accepted ordinal | Actual merge | Executed integration | Original / stored contexts | Status |
+| --- | ---: | --- | --- | ---: | --- |
+| [GCH1](https://github.com/ai4curation/ai-gene-review/pull/5976) | 710 | [bcead031](https://github.com/ai4curation/ai-gene-review/commit/bcead031369d8739c819091f3348deb68b24f321) | [run 41957380148](https://github.com/ai4curation/ai-gene-review/actions/runs/41957380148) | 71 / 71 | DRAFT |
+| [GCK](https://github.com/ai4curation/ai-gene-review/pull/5980) | 711 | [37e83e3c](https://github.com/ai4curation/ai-gene-review/commit/37e83e3c2378b980becbeee4187b990e0643158b) | [run 41969819517](https://github.com/ai4curation/ai-gene-review/actions/runs/41969819517) | 86 / 86 | COMPLETE |
+| [GCSH](https://github.com/ai4curation/ai-gene-review/pull/5986) | 712 | [34bc185a](https://github.com/ai4curation/ai-gene-review/commit/34bc185a94094f323d3cafc3bab373a75363d819) | [run 41974409149](https://github.com/ai4curation/ai-gene-review/actions/runs/41974409149) | 28 / 28 | COMPLETE |
+| [GDF2](https://github.com/ai4curation/ai-gene-review/pull/5996) | 713 | [2fb8b13e](https://github.com/ai4curation/ai-gene-review/commit/2fb8b13e0949a7e8f9c66a7f76f436c3a4d0c9f3) | [run 41988851330](https://github.com/ai4curation/ai-gene-review/actions/runs/41988851330) | 61 / 61 | COMPLETE |
+| [GDAP1](https://github.com/ai4curation/ai-gene-review/pull/5998) | 714 | [e8b41e0c](https://github.com/ai4curation/ai-gene-review/commit/e8b41e0ccf2b801da71b34272c3a5b740f93c9fa) | [run 41990175310](https://github.com/ai4curation/ai-gene-review/actions/runs/41990175310) | 61 / 61 | COMPLETE |
+| [GEMIN5](https://github.com/ai4curation/ai-gene-review/pull/6002) | 715 | [61459f7d](https://github.com/ai4curation/ai-gene-review/commit/61459f7ddc509fdd6e6fbaec853e01b493c0ebca) | [run 41992363005](https://github.com/ai4curation/ai-gene-review/actions/runs/41992363005) | 73 / 73 | DRAFT |
+
+The six reviews preserve all 380 original contexts in 380 current rows, with no NEW annotations. GCH1 retains both original contexts collapsed into one of its 70 native seed keys; GEMIN5 retains both pairs collapsed by its 71-key seed. These are 71 and 73 originals respectively, not added assertions.
+
+The committed reviews contain 355 reference assessments, nine cores and 70 current quotation occurrences. Twelve natural sequences or precursors are counted, including displayed products; engineered constructs are excluded. GDF2 additionally records one mature BMP9 cleavage product, separately from its single precursor. GCSH's processed chain is not another splice isoform. The product counts do not imply equal activity across products. All 23 flat extension atoms and GCH1's one NOT context are retained.
+
+Accepted closures cover 377 deduplicated paths, including 269 normal scientific source paths. Cumulative published payloads and actual parent deltas each cover 175 deduplicated paths; these figures are unions rather than sums. GCSH's 25 normal target sources remain distinct from its 53 dependency-reference paths: 52 immutable dependency references and the authored GCSH review. The full GCSH closure has 68 objects; the dependency paths are not 53 unchanged source caches. GEMIN5's 11 official UniProt JSON excerpt placements retain their source provenance separately from its 16 local source placements.
+
+All six actual merge-group suites and required integration checks executed successfully. GCH1 and GEMIN5 retain computed DRAFT status and their reviewed advisories; acceptance does not erase unresolved scientific questions, skipped routes or corpus warnings. Historical evidence and earlier project records remain unchanged. This checkpoint is fixed to accepted ordinals 710–715; GFER and later acceptances are outside its scope.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-05T085845Z-codex-37a18d.yaml).
+
+## Completion checkpoint 720 — 2026-11-05 14:33:42 UTC
+
+720 complete; 2,156 of 2,876 remain. This checkpoint records five independently accepted actual merges after checkpoint 715: GFER, GFI1B, GFAP, GFPT1 and GGCX. It publishes their existing credit and adds no new gene acceptance. GIGYF1 and later acceptances belong to a subsequent checkpoint.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Original / stored contexts | References / assessments | Core functions | Natural products | Current review quotes |
+| --- | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| GFER | 716 | [#6010](https://github.com/ai4curation/ai-gene-review/pull/6010) | [7de769bf](https://github.com/ai4curation/ai-gene-review/commit/7de769bfcba6a88f7aa9706a8295dd5f96e1525a) | [41999350735](https://github.com/ai4curation/ai-gene-review/actions/runs/41999350735) | 27 / 27 | 37 / 37 | 1 | 2 | 8 |
+| GFI1B | 717 | [#6011](https://github.com/ai4curation/ai-gene-review/pull/6011) | [2b437ead](https://github.com/ai4curation/ai-gene-review/commit/2b437ead1f91e24741dd7c01cf7bef67cde593e4) | [42003936094](https://github.com/ai4curation/ai-gene-review/actions/runs/42003936094) | 21 / 21 | 33 / 33 | 1 | 2 | 13 |
+| GFAP | 718 | [#6013](https://github.com/ai4curation/ai-gene-review/pull/6013) | [b1a4b490](https://github.com/ai4curation/ai-gene-review/commit/b1a4b490dc78bf7ebecfe6ae441e5b5759124254) | [42017473920](https://github.com/ai4curation/ai-gene-review/actions/runs/42017473920) | 279 / 279 | 74 / 74 | 1 | 3 | 5 |
+| GFPT1 | 719 | [#6014](https://github.com/ai4curation/ai-gene-review/pull/6014) | [684b4fd4](https://github.com/ai4curation/ai-gene-review/commit/684b4fd43ea51a689e0838eaefd1e9e861c7be97) | [42018676529](https://github.com/ai4curation/ai-gene-review/actions/runs/42018676529) | 30 / 30 | 40 / 40 | 1 | 2 | 4 |
+| GGCX | 720 | [#6015](https://github.com/ai4curation/ai-gene-review/pull/6015) | [3bec32ba](https://github.com/ai4curation/ai-gene-review/commit/3bec32baf2e9461b4920d0928be3769df65e30b2) | [42037746017](https://github.com/ai4curation/ai-gene-review/actions/runs/42037746017) | 39 / 39 | 42 / 42 | 1 | 2 | 5 |
+
+The five accepted reviews preserve 396 original contexts in 396 stored rows, with zero NEW annotations, 226 reference assessments, five cores, 11 natural products and 35 current structured review quote occurrences. Nine flat extension atoms remain: three in GFAP, one in GFPT1 and five in GGCX. No NOT or contributes_to contexts occur in this window. Natural-product counts exclude engineered assay constructs and do not assign identical functions to every splice product. Quote counts concern the current review YAML, including repeated placements; companion evidence and historical quotations remain separate.
+
+The accepted object closures contain 41/32/79/47/49 paths respectively, including 28/23/69/35/39 normal sources. Published and actual-parent payloads contain 19/25/55/16/36 paths. Their deduplicated unions are 232 closure paths, 181 normal-source paths and 151 published/actual-parent paths. These union counts are distinct from the per-gene sums; shared sources are counted once in a union. GGCX's final amendment child count does not replace its full 36-path actual merge scope.
+
+GFER, GFPT1 and GGCX retain computed DRAFT status and accepted uncertainty. GFER keeps its unresolved extracellular and liver-development contexts, official-term/cache-label discrepancy and inherited research-source advisory. GFPT1 retains 30 original contexts restored from 29 seed keys: its unqualified extracellular-exosome context is non-core, while the separate literal CL:0000639 pituitary-basophil context remains UNDECIDED with its documented source mismatch. GGCX retains 39 originals restored from 38 seed keys, its five extension atoms and its source-sensitive annotation advisory. GFI1B and GFAP are COMPLETE. Acceptance does not remove these distinctions.
+
+All five actual merge-group suites, required schema validation and aggregate gates executed successfully. Ordinary PR runs that skipped the suite were not used as integration evidence. Existing corpus warnings, declared test deselections/skips and source-access limitations remain recorded in the accepted receipts; this checkpoint does not re-adjudicate them. Earlier catalogue order, queue records, completion updates, journal bytes and scientific source objects remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-05T143342Z-codex-833bb6.yaml).
