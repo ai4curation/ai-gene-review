@@ -22,9 +22,9 @@ over-generalised family propagation. We catalogued the recurring shapes of this
 over-annotation that surfaced during gene review, nine categories in all, each tied to
 worked examples in real reviews. We did this so that curators and pipeline authors can
 recognise a pattern once rather than rediscovering it gene by gene; the catalogue was
-first presented at the GO Consortium meeting in October 2025. Nine exemplar reviews are
-complete (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
-biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
+first presented at the GO Consortium meeting in October 2025. Eleven exemplar reviews are
+complete (human PHYKPL, UBA7 and AARS2, fission yeast Epe1, *Candida* LPL1, horse DARS2,
+and five biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
 recorded actions match the patterns: all ten generic `protein binding` IPI rows on
 PHYKPL and UBA7 are REMOVE, and Epe1's electronically inferred JmjC-domain
 demethylase, oxidoreductase and dioxygenase rows are REMOVE, while its two
@@ -146,8 +146,10 @@ mitochondrial twins, and two compartment-qualified variants. Each paired 1:1 wit
 existing molecular function that already carries the amino acid, `GO:0004813`
 alanine-tRNA ligase activity and so on, and each obsoletion comment says so in those
 terms: the process "restates an existing molecular function ... and adds nothing beyond
-it". Annotation is directed to the MF plus the compartment-level process, and 40 of the 42
-carry a `replaced_by` naming it.
+it". Annotation is directed to the MF plus the compartment-level process, and every one of
+the 42 carries a `replaced_by`: 40 name that compartment-level process, and the two
+compartment-qualified cytosolic variants (`GO:0061475`, `GO:1990762`) name `GO:7770128`
+tRNA aminoacylation for cytosolic protein translation instead.
 
 A 43rd term went in the same batch for a different reason, and is not an instance of this
 pattern: `GO:0070681` glutaminyl-tRNAGln biosynthesis via transamidation was obsoleted as
