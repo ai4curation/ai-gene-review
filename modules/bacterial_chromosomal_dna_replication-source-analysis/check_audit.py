@@ -202,7 +202,8 @@ def capacity(doc, panel):
           [k for k in ecoli if k!='ECOLI/dnaE']+['PSEPK/dnaEA'], False)
     for node, genes in [('dnac_helicase_loading',['ECOLI/dnaC']),('dcia_helicase_loading',['VIBCH/dciA']),('bacillus_helicase_loading',['BACSU/dnaD','BACSU/dnaB','BACSU/dnaI'])]:
         check(node+' supported implementation',node,genes,True)
-        for g in genes:check(node+' missing '+g,node,[x for x in genes if x!=g],False)
+        for g in genes:
+            check(node+' missing '+g,node,[x for x in genes if x!=g],False)
     check('DnaC name does not equate Bacillus helicase and E. coli loader','dnac_helicase_loading',['BACSU/dnaC'],False)
     check('DnaB name does not equate accessory and helicase','fork_unwinding_protection',['BACSU/dnaB','BACSU/ssbA'],False)
     for node,gene in [('dnac_helicase_loading','ECOLI/dnaC'),('dcia_helicase_loading','VIBCH/dciA')]:
@@ -210,42 +211,51 @@ def capacity(doc, panel):
     for org in ['ECOLI','PSEPK','BACSU']:
         genes=[org+'/'+g for g in ['dnaX','holA','holB']]
         check(org+' assembled minimal clamp loader','clamp_loader_activity',genes,True)
-        for g in genes:check(org+' incomplete loader without '+g,'clamp_loader_activity',[x for x in genes if x!=g],False)
+        for g in genes:
+            check(org+' incomplete loader without '+g,'clamp_loader_activity',[x for x in genes if x!=g],False)
         check(org+' loader needs reviewed contributions','clamp_loader_activity',genes,False,masks=['GO:0003689'])
     check('Cross-species loader subunits do not assemble by assertion','clamp_loader_activity',['ECOLI/dnaX','PSEPK/holA','BACSU/holB'],False)
     check('DnaE1 plus epsilon','dnae_dnaq_synthesis',['ECOLI/dnaE','ECOLI/dnaQ'],True)
     check('Bacillus DnaE3 cannot substitute for DnaE1','dnae_dnaq_synthesis',['BACSU/dnaE','ECOLI/dnaQ'],False)
-    compatible_epsilon=deepcopy(panel['ECOLI/dnaQ']);compatible_epsilon['taxon']=panel['BACSU/dnaE']['taxon']
+    compatible_epsilon=deepcopy(panel['ECOLI/dnaQ'])
+    compatible_epsilon['taxon']=panel['BACSU/dnaE']['taxon']
     check('DnaE3 still fails DnaE1 role after removing taxon confound','dnae_dnaq_synthesis',['BACSU/dnaE'],False,synthetic=[compatible_epsilon])
     check('Active PHP DnaE1 supports fused implementation','dnae_php_synthesis',['MYCTU/dnaE1'],True)
     check('PHP polymerase needs measured proofreading','dnae_php_synthesis',['MYCTU/dnaE1'],False,masks=['GO:0008296'])
     check('PHP domain on E. coli alpha is not active PHP proofreader','dnae_php_synthesis',['ECOLI/dnaE'],False)
     check('Bacillus dual polymerase implementation','polc_dnae3_synthesis',['BACSU/polC','BACSU/dnaE'],True)
-    for g in ['BACSU/polC','BACSU/dnaE']:check('Dual polymerase missing '+g,'polc_dnae3_synthesis',[x for x in ['BACSU/polC','BACSU/dnaE'] if x!=g],False)
+    for g in ['BACSU/polC','BACSU/dnaE']:
+        check('Dual polymerase missing '+g,'polc_dnae3_synthesis',[x for x in ['BACSU/polC','BACSU/dnaE'] if x!=g],False)
     check('PolC proofreading is necessary','polc_dnae3_synthesis',['BACSU/polC','BACSU/dnaE'],False,masks=['GO:0008296'])
     for node,key in [('dnae_php_synthesis','MYCTU/dnaE1'),('polc_dnae3_synthesis','BACSU/polC')]:
-        p,q=deepcopy(panel[key]),deepcopy(panel[key]);p['enabled'].discard('GO:0008296');q['enabled'].discard('GO:0003887')
+        p,q=deepcopy(panel[key]),deepcopy(panel[key])
+        p['enabled'].discard('GO:0008296')
+        q['enabled'].discard('GO:0003887')
         check('Fused activities cannot be pooled across split proteins '+node,node,[] if key.startswith('MYCTU') else ['BACSU/dnaE'],False,synthetic=[p,q])
-    fake=deepcopy(panel['ECOLI/dnaE']);fake['accession']='synthetic_same_family_polymerase'
+    fake=deepcopy(panel['ECOLI/dnaE'])
+    fake['accession']='synthetic_same_family_polymerase'
     check('Family and chemistry alone do not establish replicative role','dnae_dnaq_synthesis',['ECOLI/dnaQ'],False,synthetic=[fake])
     check('E. coli PolA removal and replacement','rna_primer_removal',['ECOLI/polA'],True)
     check('E. coli gap filling','dna_gap_filling',['ECOLI/polA'],True)
     check('FenA can remove primer flaps','rna_primer_removal',['BACSU/fenA'],True)
     check('RNase HIII with PolA alternative','rna_primer_removal',['BACSU/rnhC','BACSU/polA'],True)
-    for g in ['BACSU/rnhC','BACSU/polA']:check('RNase HIII route missing '+g,'bacillus_rnhc_pola_removal',[x for x in ['BACSU/rnhC','BACSU/polA'] if x!=g],False)
+    for g in ['BACSU/rnhC','BACSU/polA']:
+        check('RNase HIII route missing '+g,'bacillus_rnhc_pola_removal',[x for x in ['BACSU/rnhC','BACSU/polA'] if x!=g],False)
     check('Bacillus native gap-filler assignment unresolved','dna_gap_filling',['BACSU/polA'],False)
     check('Bacillus measured in-vitro PolA capacity','dna_gap_filling',['BACSU/polA'],True,in_vitro=True)
     check('PolC gap filling is not established by polymerase activity','dna_gap_filling',['BACSU/polC'],False,in_vitro=True)
     for node,genes in [('torsional_stress_relief',['ECOLI/gyrA','ECOLI/gyrB']),('daughter_dna_unlinking',['ECOLI/parC','ECOLI/parE'])]:
         check(node+' assembled complex',node,genes,True)
-        for g in genes:check(node+' isolated '+g,node,[g],False)
+        for g in genes:
+            check(node+' isolated '+g,node,[g],False)
         check(node+' cannot use ATPase without strand-passage contribution',node,genes,False,masks=['GO:0003918'])
     check('Gyrase family alone does not establish E. coli decatenation role','daughter_dna_unlinking',['ECOLI/gyrA','ECOLI/gyrB'],False)
     check('TopoIV family alone does not establish gyrase torsional role','torsional_stress_relief',['ECOLI/parC','ECOLI/parE'],False)
     for node in ['torsional_stress_relief','daughter_dna_unlinking']:
         genes=['MYCTU/gyrA','MYCTU/gyrB']
         check('H37Rv gyrase experimentally supports '+node,node,genes,True)
-        for g in genes:check('H37Rv isolated subunit lacks '+node,node,[g],False)
+        for g in genes:
+            check('H37Rv isolated subunit lacks '+node,node,[g],False)
         check('H37Rv intrinsic ATPase cannot substitute for '+node,node,genes,False,masks=['GO:0003918'])
         check('Cross-species GyrA/B mixture cannot supply '+node,node,['ECOLI/gyrA','MYCTU/gyrB'],False)
     check('H37Rv gyrase not assigned by arbitrary family members','myctu_gyrase_decatenation',['ECOLI/gyrA','ECOLI/gyrB'],False)
@@ -270,7 +280,8 @@ def main():
     (AUDIT/'capacity-results.yaml').write_text(yaml.safe_dump({'status':'FAIL' if failures else 'PASS','cases':cases,'limitations':__doc__},sort_keys=False,width=100))
     print(json.dumps({k:v for k,v in integration.items() if k!='review_sha256'},indent=2))
     print(f'{len(cases)} capacity cases; {len(failures)} failures')
-    for case in failures:print(json.dumps(case))
+    for case in failures:
+        print(json.dumps(case))
     assert not failures
 
 if __name__=='__main__':
