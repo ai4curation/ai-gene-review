@@ -63,4 +63,4 @@ advisories. [PR #6100](https://github.com/ai4curation/ai-gene-review/pull/6100) 
 preservation and capacity reports for reproducible results.
 
 
-PR #6100 review follow-up addresses the fifteen findings in `review-followup-round1.yaml`. All 21 changed gene reviews and focused family/module checks pass; 65 capacity cases still pass with all original machine payloads and raw sources preserved. The full-corpus result above predates this follow-up; a fresh run is pending. Actual merge remains outstanding.
+PR #6100 review follow-up addresses the fifteen findings in `review-followup-round1.yaml`. All 21 changed gene reviews and focused family/module checks pass; 65 capacity cases still pass with all original machine payloads and raw sources preserved. The fresh full-corpus run on 2471af88ef is terminal: all 10,559 reviews were checked, with exactly the same 19 errors in 17 unrelated yeast reviews and 23 unchanged input blobs; schema, ontology, best-practices and 54 pathway checks pass. External review approved this commit. Actual merge remains outstanding.
