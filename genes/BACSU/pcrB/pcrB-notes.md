@@ -120,7 +120,18 @@ So the two precedents the notes leaned on are the two exceptions, and both
 differ from PcrB in the way CLAUDE.md's thyroglobulin/fibrin/C3 cases differ
 from angiotensinogen: Und-P and Dol-P-Man are themselves glycosylated
 intermediates that carry the growing product, whereas HepG only ferries an
-acetyl group it does not contribute. The term is dropped; the reasoning is
+acetyl group it does not contribute.
+
+**Correction (2026-11-06, from the PR #6063 review).** DPM1 does not belong in
+the table as a counterexample at all. It *charges* the carrier with the group it
+donates (GDP-Man to Dol-P-Man), which makes it the analogue of YvoF, not of
+PcrB. PcrB builds the carrier *backbone*, so its matched-role comparators are
+DHDDS/NUS1 (dolichol), HepS/HepT (the C35 donor PcrB itself consumes) and UppS.
+That leaves UppS as the single genuine counterexample, which strengthens the
+drop rather than weakening it. The repository already holds the matched-role
+precedent: `modules/bacterial_undecaprenyl_phosphate_carrier_supply.yaml` models
+UppS with `GO:0016094` polyprenol biosynthetic process alone and no downstream
+glycan process. The `suggested_questions` entry was rewritten accordingly. The term is dropped; the reasoning is
 recorded as a `suggested_questions` entry asking GO whether the
 carrier-synthase exclusion is deliberate practice. This also keeps the gene
 consistent with the merged module, which puts `GO:0042158` on the LhaT annoton.
