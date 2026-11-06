@@ -104,3 +104,15 @@ output was generated for this reassessment.
 
 The earlier listing of 6I34 as human is also superseded: it is a Neanderthal
 construct. Modern-human assembly comparisons here use 6I33 and 6I35.
+
+
+## Review follow-up — 2026-11-06
+
+Rechecked the official GO and InterPro records and read the cited family material.
+The lyase row now records over-annotation; the electron-transfer, homodimer and two
+stimulus-response rows retain explicit uncertainty. Added an InterPro scope query, a neutral UniProt provenance question and
+a biological assembly gap without changing machine evidence, core function or sources.
+The retained UniProt record already carries GO:0030170 and GO:0016594 (glycine binding)
+with GO_Central evidence. Neither observation adds a NEW row to the retained GOA set.
+Family research supplies context, not an independent human oligomer measurement.
+The existing JSON records preserve machine/context provenance; the curation remains YAML.

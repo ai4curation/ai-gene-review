@@ -13,11 +13,21 @@ monomer and no comparable stimulation by free lipoate in its preparation. Its me
 reverse-reaction experiment does not test inhibition. The normal cache contains only the
 abstract; the external reading did not cover a complete PDF or every supplement.
 
-[PMID:2268343](https://pubmed.ncbi.nlm.nih.gov/2268343/) remains abstract-only after publisher
-access attempts. GO:0009055 includes enzymatic redox activity. Lack of a carrier role or
-the abstract's genomic focus cannot establish a source error. GO:0016829 excludes oxidative
-cleavage, but the demonstrated partial decarboxylation prevents dismissal of the lyase
-assignment solely from EC classification. Both questions remain UNDECIDED.
+[PMID:2268343](https://pubmed.ncbi.nlm.nih.gov/2268343/) remains abstract-only. A suggested
+question asks UniProt for the TAS statement; a miscitation has not been demonstrated.
+
+The current [OLS definition](https://www.ebi.ac.uk/ols4/ontologies/go/classes?iri=http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FGO_0009055)
+and [QuickGO definition](https://www.ebi.ac.uk/QuickGO/term/GO:0009055), rechecked on
+2026-11-06, both include enzyme-associated redox transformations. Neither resource
+restricts this term to electron carriers. This defeats a carrier-only objection but does
+not positively establish the separate GLDC activity. The cited TAS remains unresolved.
+
+The current [IPR001597 entry](https://www.ebi.ac.uk/interpro/entry/InterPro/IPR001597/)
+is a domain entry with a direct GO:0016829 mapping and a description including P-proteins.
+The GO definition excludes oxidative cleavage. The physiological GLDC reaction and an
+artificial partial reaction should not be conflated: without H-protein, excess PLP is
+consumed as a cosubstrate. The lyase row is therefore MARK_AS_OVER_ANNOTATED; the
+domain-level applicability concern is PROBABLE and asks InterPro to CHECK its scope.
 
 ## Chicken donor and cofactor identity
 
@@ -72,3 +82,16 @@ is legitimate descendant grounding, and donor count is not treated as a weakness
 Source URLs, original-byte digests and target-specific checks are retained in
 [source evidence](GLDC-source-evidence.json). The three broad process terms are verified
 ancestors of GO:0019464; PLP and pyridoxal binding are distinct ligand terms.
+
+## Family material and review follow-up
+
+The existing [family review](../../../interpro/panther/PTHR11773/PTHR11773-review.md)
+and [generated family research](../../../interpro/panther/PTHR11773/PTHR11773-deep-research-falcon.md)
+were read as secondary leads. The former's native-dimer wording is not an additional
+human experiment. The latter discusses the split bacterial P-protein architecture;
+structural homology does not independently resolve human solution stoichiometry.
+The deposited human dimers and chicken experiments remain positive evidence, alongside
+the published recombinant monomer. The remaining biological question concerns matched
+native-human assembly and activity, rather than whether any dimer model exists.
+No additional research provider was invoked. The source digest record and historical
+context archive remain JSON operational records; they do not replace the curated YAML.
