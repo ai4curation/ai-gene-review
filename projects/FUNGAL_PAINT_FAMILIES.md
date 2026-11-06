@@ -457,7 +457,8 @@ vegetative `sec2` and sporulation-specific `spo13`.
 - [x] `yeast/SEC2` - *S. cerevisiae* Sec4 Rab GEF; drafted in this branch
 - [x] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member;
   drafted in this branch
-- [ ] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
+- [x] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member;
+  drafted in this branch
 - [ ] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
 - [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
 
@@ -476,6 +477,9 @@ vegetative `sec2` and sporulation-specific `spo13`.
   unrelated human cerebral perfusion PMID, so the review keeps the plausible
   localization by modifying it to PomBase's GO:0035974 row and records a CACAO
   `WRONG_REFERENCE` source defect.
+- Added `SCHPO/spo13`: the short meiotic Sec2-family Ypt2 GEF. No PTHR14430
+  PAINT IBA rows are propagated to this SF4 paralog; the fungal cell-tip PAINT
+  node remains confined to the long Sec2 branch.
 
 ## 2026-11-01
 
