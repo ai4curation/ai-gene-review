@@ -31,3 +31,19 @@
   that vesicle-associated PI4P steadily declines between the TGN and plasma
   membrane, but retained the Sec2-centered Ypt32/Sec4/Sec15 handoff near
   docking [PMID:37556206].
+
+## ai4c-reviewer follow-up, 2026-11-06
+
+- Revised the PAINT `GO:0051286` cell-tip IBA from `ACCEPT` to
+  `MARK_AS_OVER_ANNOTATED`: the fission-yeast and Candida source species are
+  true tip growers, while budding-yeast Sec2 is at the cellular bud tip and bud
+  neck during mitotic polarized growth. The supported cell-tip descendant in
+  budding yeast is the condition-specific `GO:0043332` mating projection tip.
+- Requoted the `GO:0043332` HDA row from the direct SEC2 sentence in
+  PMID:19053807 and removed a generic SWAT-methods quote from the bud-neck HDA
+  row.
+- Clarified that the non-core `GO:0005829` cytosol row corresponds to
+  unanchored/diffuse Sec2 rather than the functional vesicle-associated pool.
+- Changed the broad sporulation row to `TOO_GENERAL` because the specific
+  GO:0032120 prospore membrane formation row is already present from the same
+  Suda et al. paper.
