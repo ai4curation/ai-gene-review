@@ -473,3 +473,18 @@ were authored. All125capacity/chemistry/preservation cases pass. The historical 
 sarcosine dehydrogenase remains a visible gene/family identity gap, so the module stays
 DRAFT despite the completed reviews of all identified members. Full validation is terminal: 10,553 reviews; 17 reference errors in 16 unrelated yeast reviews; 22 relevant inputs identical to the pinned base; zero best-practice errors and 27,708 warnings. PR [#6122](https://github.com/ai4curation/ai-gene-review/pull/6122) is open; external review/CI and actual merge remain pending.
 See [audit evidence](../analysis/module_audits/bacterial_dimethylglycine_sarcosine_catabolism/README.md).
+
+## PR #6122 review follow-up
+
+The misplaced sarcosine-oxidase quote is removed from PuuB and retained on SoxB.
+SoxB cores identify beta-localized oxidation to the imine alongside complex
+contribution, without claiming isolated beta performs the full THF reaction.
+All twelve Sox records distinguish subunit-specific catalysis or supported
+cofactor roles from complex activity. DdhC FMN binding is removed on extracted-
+flavin evidence; correction queries preserve source qualifiers and payloads.
+
+Thirteen focused gene checks, two family follow-ups and 125 capacity cases pass.
+All 96 annotation rows, 44 raw files and six provider files remain intact. The
+prior full-corpus result is historical: fresh validation of these corrections,
+publication, renewed review/CI and actual merge remain pending. The historical
+C-83 identity gap remains explicit, and the module remains DRAFT.

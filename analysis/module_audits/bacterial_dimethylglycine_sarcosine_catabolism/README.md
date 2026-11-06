@@ -25,3 +25,18 @@ The production logic engine passes125 capacity, identity, taxon, core-function, 
 All22 focused gene validations and histories pass. Module schema and semantic validation pass; the two remaining semantic advisories concern the exact THF-coupled DMGO activity lacking a GO id. All59 module quotations and74 family quotations match their sources. Four-family schema/term checks pass, with146 grounding checks passing and no conflicts in the family/gene cross-check. Full-corpus validation of science commit `8bde501e2ff0646446a2e4deda82fad8b4b1192c` is terminal: 10,553 reviews, 17 reference errors in 16 unrelated yeast reviews, and all 22 relevant inputs identical to the pinned base. Schema, ontology and best practices have no blocking errors. The run reports 52 reference advisories, 115 ontology advisories and 27,708 best-practice warnings; all 54 PMID-bearing pathway files pass. Exact error tuples and source hashes are in `fullrun-terminal.json`. [PR #6122](https://github.com/ai4curation/ai-gene-review/pull/6122) is open; external review, CI and actual merge remain pending. The C-83 identity gap remains explicit beyond publication.
 
 The comparative-reference catalog was moved into this audit directory byte-for-byte after the full run. Recursive module schema validation is checked separately; the historical full-run manifest records its original path.
+
+## PR #6122 review follow-up
+
+The misplaced sarcosine-oxidase quote is removed from PuuB and retained on SoxB.
+SoxB cores identify beta-localized oxidation to the imine alongside complex
+contribution, without claiming isolated beta performs the full THF reaction.
+All twelve Sox records distinguish subunit-specific catalysis or supported
+cofactor roles from complex activity. DdhC FMN binding is removed on extracted-
+flavin evidence; correction queries preserve source qualifiers and payloads.
+
+Thirteen focused gene checks, two family follow-ups and 125 capacity cases pass.
+All 96 annotation rows, 44 raw files and six provider files remain intact. The
+prior full-corpus result is historical: fresh validation of these corrections,
+publication, renewed review/CI and actual merge remain pending. The historical
+C-83 identity gap remains explicit, and the module remains DRAFT.

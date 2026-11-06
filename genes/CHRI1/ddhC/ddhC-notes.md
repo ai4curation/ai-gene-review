@@ -48,3 +48,10 @@ Persistent marker DMG-CHRI1-ddhC-20261106. Reviewed every original row, inherite
 - Retained both inherited NEW rows and the conditional ferredoxin-specific term proposal; no new assertion added.
 
 Original machine payloads, inherited NEW rows and raw files are protected by original-members-baseline.json. PMID32631860 is now full text; its assay scope is documented in ../ddhC/ddhC-source-analysis/identity-and-assay-scope.md.
+
+
+## PR #6122 round-1 gene follow-up (2026-11-06)
+
+- Change the electronic FMN-binding claim from MARK_AS_OVER_ANNOTATED to REMOVE using target-specific HPLC/cofactor evidence; add a qualified INTERPRO scope correction query, preserving the inherited FAD-binding proposal.
+
+Schema compatibility does not establish an isolated-subunit reaction. The common convention preserves supported catalytic, structural, and cofactor distinctions and marks ortholog transfers explicitly. All historical non-review payloads, inherited NEW actions, and raw/provider bytes remain unchanged; no annotation rows were added or deleted and no publication cache was refreshed.

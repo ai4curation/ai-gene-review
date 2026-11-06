@@ -26,3 +26,11 @@ All six rows reviewed. FAD and FMN binding, cytoplasm, complex membership, folat
 Chemistry/assembly sources: [PMID:9185627] heterotetramer-specific folate coupling; [PMID:16934831] full-text flavin mechanism and folate-free imine hydrolysis; [PMID:15914915] publisher full PDF, p955, scoped excerpt in `genes/PSEPK/soxB/soxB-source-analysis/assembly-evidence.md`. [PMID:35266867] is KT2440 pathway background, not purification of KT2440 SoxABDG. The schema lacks a proposed-contribution slot; this is an ontology representation question, not an unresolved biological activity.
 
 All original annotation payloads and inherited NEW rows retained unchanged. No NEW rows added. Raw UniProt/GOA and existing provider artifacts preserved. Default Falcon research genuinely attempted; failed with HTTP 403 authentication/access error. Manual source assessment is recorded here; no provider report was fabricated.
+
+
+## PR #6122 round-1 gene follow-up (2026-11-06)
+
+- Replace the FAD-binding-only beta core (where present) with proposed sarcosine oxidase (imine-forming) activity, retaining complex contribution and all inherited cofactor NEW rows. This is beta-localized catalysis within the assembled enzyme, not autonomous full THF-coupled turnover.
+- Record provenance-specific WRONG_QUALIFIER correction queries (enables to contributes_to) on original sarcosine-oxidase rows; keep all original qualifiers and actions unchanged.
+
+Schema compatibility does not establish an isolated-subunit reaction. The common convention preserves supported catalytic, structural, and cofactor distinctions and marks ortholog transfers explicitly. All historical non-review payloads, inherited NEW actions, and raw/provider bytes remain unchanged; no annotation rows were added or deleted and no publication cache was refreshed.
