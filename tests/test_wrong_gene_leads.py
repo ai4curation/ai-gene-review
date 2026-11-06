@@ -335,6 +335,8 @@ def test_protein_name_in_abstract_penalises_aurkc_lead():
         ),
         # A byline with a generational suffix ("Wharton KA Jr") is still a byline.
         ("11274052", ["dishevelled"], ["Wharton", "Nusse R", "Cadigan KM"]),
+        # A group author after a semicolon ends a long consortium byline.
+        ("24190013", ["ovarian"], ["Brooks-Wilson", "Pharoah PD", "Ramus SJ"]),
     ],
 )
 def test_abstract_text_reads_abstract_without_bibliography(pmid, present, absent):

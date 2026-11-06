@@ -258,7 +258,8 @@ _AUTHOR = re.compile(
 # A group author in a byline ("ADHR Consortium", "GTEx Consortium").
 _GROUP_AUTHOR = re.compile(
     r"(?:The )?[\w'.\- ]*\b(?:Consortium|Group|Collaborators|Investigators|"
-    r"Network|Team)\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
+    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative|Committee)"
+    r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
 )
 
 
@@ -276,10 +277,14 @@ def _is_author_list(paragraph: str) -> bool:
     True
     >>> _is_author_list("Smith J, Lee K, ADHR Consortium.")
     True
+    >>> _is_author_list("Cook LS, Brooks-Wilson A; Ovarian Cancer Association Consortium.")
+    True
     >>> _is_author_list("ENaC is regulated by Nedd4-2, which binds PY motifs.")
     False
     """
-    items = paragraph.rstrip(".").split(", ")
+    # PubMed separates a trailing group author with a semicolon:
+    # "... Brooks-Wilson A; Ovarian Cancer Association Consortium."
+    items = re.split(r"[,;] ", paragraph.rstrip("."))
     if items[-1] in {"et al", "et al."}:
         items = items[:-1]
     people = [i for i in items if not _GROUP_AUTHOR.fullmatch(i)]
