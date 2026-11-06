@@ -39,4 +39,4 @@ HP_1507 now records a SUSPECTED start-site issue without claiming a corrected ge
 
 The three uncertain upstream candidates still assert no core functions. Cj0172c already has a machine-supplied catalytic row to adjudicate, and its qualified homology-based replacement does not imply a demonstrated native pathway. BT_4612 and HP_1507 have no seeded rows: conservatively declining NEW assertions is not a contradictory judgment about an existing annotation.
 
-All64 seeded payloads, five inherited NEW rows and36 raw sources remain unchanged. Nine new proposals remain after withdrawal of eight authored rows. The22 production compiler cases still pass. Fresh review and CI are required after publication of this follow-up; the earlier requested-changes verdict is not approval.
+All 64 seeded payloads, five inherited NEW rows and 36 raw sources remain unchanged. Nine new proposals remain after withdrawal of eight authored rows. The 22 production compiler cases still pass. Fresh review and CI are required after publication of this follow-up; the earlier requested-changes verdict is not approval.

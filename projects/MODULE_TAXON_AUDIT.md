@@ -656,7 +656,7 @@ Integration proof: [round1-main-integration.json](../analysis/module_audits/bact
 
 ## 2026-11-06 — carboxyspermidine PR6089 review follow-up
 
-The review requested substrate-scope, annotation-action, native-process evidence, source-defect and rationale corrections. Ten member reviews were updated and pass focused validation. Eight authored isomer-specific spermine/thermospermine BP rows were withdrawn while supported molecular activities and positive native context remain. All 64 original payloads and36 raw sources are preserved; nine authored proposals remain alongside five inherited NEW rows. The 22 compiler cases pass. The prior full validation has 19 independently proved pre-existing reference errors. This branch records the actual CHANGES_REQUESTED verdict on5324e9e7a9; the local follow-up needs fresh review and CI after publication.
+The review requested substrate-scope, annotation-action, native-process evidence, source-defect and rationale corrections. Ten member reviews were updated and pass focused validation. Eight authored isomer-specific spermine/thermospermine BP rows were withdrawn while supported molecular activities and positive native context remain. All 64 original payloads and 36 raw sources are preserved; nine authored proposals remain alongside five inherited NEW rows. The 22 compiler cases pass. The prior full validation has 19 independently proved pre-existing reference errors. This branch records the actual CHANGES_REQUESTED verdict on 5324e9e7a9; the local follow-up needs fresh review and CI after publication.
 
 ## 2026-11-06 — PR #6089 integration with published main
 
@@ -701,3 +701,7 @@ Integration proof: [validated-head-main5-integration.json](../analysis/module_au
 Integrated published main `577501df51` with the validated PR #6089 head `4ad3da3e70`. All 180 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row and four previously verified completion records retained verbatim from the approved head; both dated journals are preserved. Incoming main contains the merged OPG, DsbAB and beta-oxidation audits; validation implementation is unchanged. The four corresponding completion bullets are also preserved; incoming completion records and all dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
 
 Integration proof: [validated-head-main6-integration.json](../analysis/module_audits/bacterial_carboxyspermidine_biosynthesis/validated-head-main6-integration.json).
+
+## 2026-11-06 — carboxyspermidine prose and review-history clarification
+
+Correct three authored prose-spacing defects in module notes, the BT_0674 publisher-figure README and the earlier carboxyspermidine follow-up journal. Refresh the PR6089 review history from GitHub, recording API dismissal states as observations rather than inventing past decisions. Approval is tied to head 022ee1e2f24d8d556b95370797b41a9630932b0f; this follow-up requires renewed review and CI. No gene review, module YAML, family review, source cache, historical target or validation rule changes.
