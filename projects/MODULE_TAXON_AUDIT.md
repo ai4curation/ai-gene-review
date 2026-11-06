@@ -43,7 +43,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_fatty_acid_beta_oxidation`: [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136) merged as `20043f67a6ed802902f84a968aa57c88a8ca3a8f` on 2026-11-06T22:09:45Z. All 294 scoped files match the approved head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6136-merged-content.json).
 
-- [ ] `bacterial_fused_puta_proline_catabolism`: comparative literature and accession audit started; five existing reviews under consultation.
+- [ ] `bacterial_fused_puta_proline_catabolism`: eleven reviews complete; sixteen references and broad family/chemistry scope integrated; final validation and dedicated PR pending.
 
 - [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
 
@@ -635,3 +635,14 @@ Begin the comparative fused-PutA audit from published main 5f8f3b5c5e. Preserve 
 ## 2026-11-06 — beta-oxidation merge verified
 
 PR #6136 actually merged as 20043f67a6ed802902f84a968aa57c88a8ca3a8f at 2026-11-06T22:09:45Z. Independently compared Git object IDs for all 294 scoped scientific, source and audit files against approved head 8855038e451a9da8d72a499dc27db9e39598ea80; every blob is identical. Record the beta-oxidation audit as COMPLETE with a linked proof. The recorded full validation remains passing with its disclosed corpus advisories. Shared project metadata is excluded from the 294-file comparison and is updated here; unrelated inventory rows remain unchanged.
+
+
+## 2026-11-06 — fused PutA cross-lineage integration
+
+Completed eleven individual reviews while preserving 198 original/seed annotation payloads, order, the one historical NEW action, and 28 raw/provider files. Eight PutA exemplars now span the five characterized architecture/phylogeny classes and a Helicobacter comparison; three PutP exemplars include G27 as explicitly comparative inference. P12 transporter and J99 enzyme experiments are not G27 assays. Corynebacterium structural constructs do not establish native transport or membrane localization.
+
+Curated sixteen references with 31 mined findings, including both comparative reviews (PMID:28712849; PMID:28990412) and the newly fetched 2025 SmPutA primary study (PMID:40738191). Individual catalytic, transport, and intermediate-handoff steps carry source evidence. The 2025 study names F7X6I3 and distinguishes crystallographic intermediates from simulation-based channeling.
+
+Replace the narrow TIGR01238 GSALDH selector with full fused-PutA family IPR025703 plus the independently supported activity and same-polypeptide architecture. Current Geobacter, Corynebacterium and G27 records have IPR025703 but lack TIGR01238. Negative controls retain monofunctional RocA/PUT2 and non-proline PanF/ActP exclusions. Broaden quinone substrate identity from benzoquinones to CHEBI:36141; the reduced product remains a free-text descriptor rather than a guessed ontology identifier. Native quinone identity remains unresolved.
+
+Bacterial scope is retained because the characterized catalytic architecture spans Pseudomonadota, Thermodesulfobacteriota, Campylobacterota and Actinomycetota. This is not a claim of universal bacterial distribution or a complete transport pathway in every enzyme source organism. The production-circuit checker separately enforces reviewed activity, fusion, and matched-strain evidence: 44 checks and six deliberate mechanism mutations. These rules do not turn a compiler family hit into proof of native flux. Full validation, publication and actual merge remain pending.
