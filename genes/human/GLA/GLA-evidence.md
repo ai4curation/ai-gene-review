@@ -6,7 +6,7 @@ All 73 official publication identities were checked. The original 70-reference u
 
 ## PMID:39940
 
-Selected original human-liver Methods and Results were read, despite absent PubMed abstract. Separate soluble-oligosaccharide and glycolipid assays establish catalysis. Historical preparations do not define modern alternative products.
+Selected original human-liver Methods and Results establish soluble-oligosaccharide and glycolipid hydrolysis. The immutable cache contains only bibliographic text; no title quotation is presented as experimental evidence. Original locator: Methods, oligosaccharide assays; Results, Figures 8–9 and Table II. Historical preparations are not natural alternative products.
 
 ## PMID:8804427
 
@@ -42,7 +42,7 @@ Literal BioPlex 293T/HCT116 rows and directed releases identify GLA bait and ALG
 
 ## PMID:36115835
 
-Original terminal-ten-residue peptide/isolated-PDZ assays and target tables support positive pairs. Only two exact IntAct records have quantified parameters; below-quantification values are not nonbinding. TX1BP3 workbook shorthand remains a candidate name correspondence, not clone-sequence proof.
+Original terminal-ten-residue peptide/isolated-PDZ assays and target tables support positive pairs. Only two exact IntAct records have quantified parameters; below-quantification values are not nonbinding. TX1BP3 shorthand is not clone proof. GLA’s lumenal/secreted topology leaves physiological access to cytoplasmic PDZ domains unestablished; isolated peptides do not settle that question.
 
 ## PMID:36477203
 
@@ -58,7 +58,7 @@ The publisher correction replaces a duplicated fourth Methods loss-function equa
 
 ## PMID:15668341
 
-The actual mouse IMP donor source reports iNOS expression and nitration after Gla loss, including an aged comparison without atherosclerosis. These are contextual downstream readouts, not purified NOS inhibition or direct human experiments.
+The actual mouse IMP donor source reports iNOS expression and nitration after Gla loss, including an aged comparison without atherosclerosis. Expression/nitration do not measure NO flux or NOS catalytic regulation; regulation need not require direct binding.
 
 ## PMID:23533145
 
@@ -74,6 +74,6 @@ Independent primary enzymology and the shared core support the function underlyi
 
 ## Historical preservation
 
-The inherited review at commit f78a69fdd6fcbf269eacea1e34f173787d38c85c is preserved in Git and an immutable private snapshot: 43 annotations, 28 reference objects, 50 review quote associations, six gene files and four history records. The accompanying GLA-preserved-history.json pins every old object and quote association without reprinting historical quotations. The original notes prefix and authentic Falcon output remain unchanged. The present assessment supersedes judgments explicitly; it does not rewrite earlier history.
+The inherited review at commit f78a69fdd6fcbf269eacea1e34f173787d38c85c is preserved in Git and an immutable private snapshot: 43 annotations, 28 reference objects, 50 review quote associations, six gene files and four history records. The original notes prefix and authentic Falcon output remain unchanged. The present assessment supersedes judgments explicitly; it does not rewrite earlier history.
 
-The subsequent main-branch correction at commit 66c8c42c changed the historical experimental cytoplasm judgment to TOO_GENERAL, consistent with this assessment, and added a fifth prior history. Both the original snapshot and the intervening review object remain pinned in the preserved-history manifest.
+The subsequent main-branch correction at commit 66c8c42c changed the historical experimental cytoplasm judgment to TOO_GENERAL, consistent with this assessment, and added a fifth prior history. The original and intervening review objects remain recoverable from Git; private verification receipts are retained separately.

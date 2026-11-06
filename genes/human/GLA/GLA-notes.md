@@ -36,7 +36,14 @@ All 58 current annotations were individually reviewed with the literal machine c
 
 Correction: the earlier rejection of cytoplasm equated it with cytosol. GO:0005737 includes organelles; the two current cytoplasm assertions are compatible with the biology and are marked too general, while root lysosome annotations remain accepted. The catalytic core now also recognizes directly demonstrated oligosaccharide turnover. Dimerization is retained as observed, without a universal requirement across enzyme preparations.
 
-Generic-binding removals preserve positive associations and do not allege wrong genes or experimental failures. Cargo uptake is not receptor activity. The inherited provider report is unchanged; primary support and its limits are documented separately. The prior 43 review objects, 28 references and 50 quote associations remain recoverable using the preserved-history manifest and original Git blob. Four earlier curation histories remain intact.
+Generic-binding removals preserve positive associations and do not allege wrong genes or experimental failures. Cargo uptake is not receptor activity. The inherited provider report is unchanged; primary support and its limits are documented separately. The prior 43 review objects, 28 references and 50 quote associations remain recoverable from the original Git commit and blob. Four earlier curation histories remain intact.
 
 
 Native preparation also preserves the later main-branch cytoplasm correction from commit 66c8c42c and its 2026-11-03 curation history. Five prior GLA histories remain intact. The fresh native seed reproduces all 58 reviewed contexts and all 16 exported fields; the single 429-residue product is unchanged. Source acquisition added only missing records and preserved every existing cache.
+
+
+## 2026-11-06 — review follow-up
+
+The review feedback is addressed by narrower process specificity, primary quotation anchors where cached text exists, and clearer evidence boundaries. The public archive manifest is removed; its exact bytes and all historical records remain preserved. The original journal prefix is unchanged. Primary sources now support both electronic catalytic rows explicitly; the inherited provider output remains background only. Selected original reading remains essential where indexed cache text is incomplete.
+
+Native follow-up validation retains one advisory warning because the inherited provider report is not cited as annotation/core evidence. The computed status is therefore DRAFT; this does not signify an unreviewed annotation. All biological support remains grounded in primary sources.
