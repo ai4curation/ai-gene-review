@@ -11,8 +11,8 @@ Sources checked, 2026-11-04:
   the rest are abstract-only.
 - Web search "TRF2-S short isoform neurons axonal mRNA transport" for the ortholog-derived
   axon/axonal mRNP transport IEA rows; found and cached PMID:26586091 (rat TRF2-S).
-- Context: `modules/telomere_end_joining_pathway_choice.yaml` and
-  `gocams/65a1f4f800002884/65a1f4f800002884-review.yaml` (NBS1 phospho-switch, TRF2 TRFH docking).
+- Context: telomere end-joining pathway choice (NBS1 phospho-switch, TRF2 TRFH docking)
+  (module and GO-CAM review proposed in ai4curation/ai-gene-review#5904; not on this branch and not used as evidence). The cached source model `gocams/65a1f4f800002884/65a1f4f800002884-src.yaml` was read.
 
 ## Key findings
 
@@ -35,6 +35,7 @@ Sources checked, 2026-11-04:
 ## Curation decisions to remember
 
 - GO:0140463 chromatin-protein adaptor activity chosen as the docking-hub MF (TRF2 on telomeric
-  chromatin recruits Apollo, RAP1, SLX4, RTEL1); the GO-CAM review argues the adaptor role belongs
-  to TRF2 rather than NBN.
+  chromatin recruits Apollo, RAP1, SLX4, RTEL1). PMID:19287395 calls TRF2 a protein hub, and PMID:28216226
+  shows NBS1, Apollo and PNUTS competing for the same TRFH surface, so the adaptor role is placed on TRF2;
+  gomodel:65a1f4f800002884 instead draws NBN adaptor activity with has_input TERF2 (see suggested_questions).
 - Positive regulation of telomere maintenance and negative regulation via telomerase marked over-annotated.

@@ -9,7 +9,7 @@ Sources checked:
 - Local publication cache searched for titles mentioning EXO1 / exonuclease 1 / EXOI:
   found PMID:21325134 (human resection reconstitution) in addition to GOA papers;
   PMID:22002605 and PMID:34520455 are yeast and were not used.
-- Fetched PMID:28216226 (NBS1 phosphorylation and telomere repair choice; module context).
+- Fetched PMID:28216226 (NBS1 phosphorylation and telomere repair choice; context for the telomere end-joining pathway-choice module proposed in ai4curation/ai-gene-review#5904, not used as evidence).
 - Two speculative fetches (PMID:22325778, PMID:21496894) resolved to unrelated papers
   and were not used.
 

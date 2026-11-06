@@ -10,8 +10,9 @@ Sources checked:
   end-joining 2010" -> PMID:20192759. Fetched into `publications/`.
 - Reactome cached entries for the NHEJ ligation reactions and HIV 2-LTR circle formation.
 - UniProt P49917 record.
-- Context: modules/telomere_end_joining_pathway_choice.yaml (LIG4 as the ligase of the
-  classical-NHEJ route that fuses telomeres lacking TRF2).
+- Context: telomere end-joining pathway choice (module and GO-CAM review proposed in ai4curation/ai-gene-review#5904; not on this branch and not used as evidence): LIG4 as the ligase of the
+  classical-NHEJ route that fuses telomeres lacking TRF2 [PMID:28216226 "Classical-NHEJ-mediated repair of
+  telomeres lacking TRF2 requires phosphorylated NBS1S432 to activate ATM"].
 
 ## Key findings
 
@@ -49,3 +50,7 @@ Sources checked:
   neurogenesis/stem-cell/chromosome-organization rows marked over-annotated.
 - 25 bare protein-binding rows REMOVE; partner relationships are captured by the DNA ligase
   IV complex, DNA-PK-LIG4 complex and NHEJ complex CC terms.
+
+## PR #5944 review follow-up
+
+- Rule applied across the NBN and LIG4 reviews: a developmental or tissue-level process term whose only basis is the knockout phenotype of a housekeeping DNA repair factor (lethality, apoptosis, progenitor loss) records necessity, not participation, and is MARK_AS_OVER_ANNOTATED; it is kept as non-core only where the gene performs a step inside the process itself (as LIG4 does in V(D)J joining during lymphocyte differentiation). Applied to GO:0001701 and GO:0007417 (changed from KEEP_AS_NON_CORE); GO:0002328 pro-B cell differentiation, GO:0033077 T cell differentiation in thymus and GO:0045190 isotype switching stay non-core because LIG4 performs the joining step inside them.

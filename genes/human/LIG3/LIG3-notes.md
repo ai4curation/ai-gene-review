@@ -49,8 +49,10 @@ Sources checked:
   without nuclear Lig3 [PMID:21655080]; LIG1 can substitute for some A-EJ [PMID:26787905].
 - Not in V(D)J recombination: LIG3 cannot complement LIG4-null pre-B cells (PMID:9809069),
   supporting the NOT annotation.
-- Context module: modules/telomere_end_joining_pathway_choice.yaml places LIG3 (with PARP1)
-  in the alternative-NHEJ route at telomeres lacking POT1-TPP1.
+- Context: telomere end-joining pathway choice (module and GO-CAM review proposed in ai4curation/ai-gene-review#5904; not on this branch and not used as evidence). The placement of LIG3 (with PARP1)
+  in the alternative-NHEJ route at telomeres lacking POT1-TPP1 rests on PMID:28216226 ("interaction of
+  de-phosphorylated NBS1S432 with TRF2 promotes A-NHEJ mediated repair of telomeres lacking POT1-TPP1") and
+  the LIG3 alt-NHEJ literature above.
 
 ## Curation decisions of note
 - GO:0003909 rows MODIFY -> GO:0003910 DNA ligase (ATP) activity.
