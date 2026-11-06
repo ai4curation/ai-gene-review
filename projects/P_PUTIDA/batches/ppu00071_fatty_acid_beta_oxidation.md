@@ -24,10 +24,11 @@ The comparative module uses exact reviewed members from E. coli, Salmonella, Pse
 - [x] Complete the three KT2440 gene reviews and comparative literature assessment.
 - [x] Complete 19 exemplar reviews and eight family reviews.
 - [x] Preserve original annotation payloads and raw/provider sources.
-- [ ] Finish full validation, publish the module PR and shepherd it to actual merge.
+- [x] Pass focused checks and full-corpus validation.
+- [ ] Publish the module PR and shepherd it to actual merge.
 
 ## 2026-11-06 — comparative audit
 
-Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Final focused checks, full-corpus validation, a dedicated PR, independent review, CI and actual merge remain pending.
+Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. A dedicated PR, independent review, CI and actual merge remain pending.
 
 The broad [KEGG candidate inventory](ppu00071_fatty_acid_beta_oxidation.tsv) is retained. Candidate membership alone does not establish catalytic role or native flux. Provider source files remain unchanged; no old running-research status is treated as a live process.
