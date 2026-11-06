@@ -21,6 +21,10 @@
   by direct CGD and PomBase Sec2 rows; the A. fumigatus deletion phenotype at
   hyphal tips is consistent with that inherited localization even though Sec2
   itself has not yet been imaged in Aspergillus.
+- Liu et al. noted that `AnSEC2` deletion produces only a mild phenotype in
+  *Aspergillus niger*, so the stronger *A. fumigatus* deletion phenotypes should
+  stay as species-specific context and should not be propagated into downstream
+  autophagy, cell-wall-integrity, or virulence annotations without direct assays.
 - No autophagy, cell-wall-integrity, or virulence process annotation was added.
   The 2025 mutant phenotypes show that sec2 is required for those outputs, but
   they do not by themselves show that Sec2 performs the autophagy, signaling, or
