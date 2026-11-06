@@ -461,7 +461,8 @@ assertions inherited from non-fungal branches.
   catabolic-process node
 - [x] `CANGA/PPN1` - CGD *Candida glabrata* ortholog reviewed against the
   fungal polyphosphate catabolic-process node
-- [ ] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog
+- [x] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog with inferred fungal
+  vacuolar polyphosphatase activity
 - [ ] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
 
 ---
@@ -487,6 +488,12 @@ assertions inherited from non-fungal branches.
   nuclear location undecided; and removes the stale TreeGrafter
   `GO:0008081 phosphoric diester hydrolase activity` row because PAINT now has
   an agreeing 2026 IRD at the fungal Ppn1 node.
+- Added `SCHPO/ppn1`, accepting the four `PTN000818947` fungal Ppn1 PAINT
+  IBAs and using the completed S. cerevisiae/C. glabrata family reviews plus
+  the Q9C1W8 UniProt entry to refine generic vacuole, vacuolar membrane,
+  membrane, hydrolase, and energy-reserve rows to fungal vacuolar
+  polyphosphate catabolism. The S. pombe GOA set has no stale TreeGrafter
+  `GO:0008081` row, so no PTHR10340 IRD loss needed to be recorded.
 
 ## 2026-11-01
 
