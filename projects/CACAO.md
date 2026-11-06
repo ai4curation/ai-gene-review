@@ -659,7 +659,7 @@ found, and because two of the figures here were themselves corrections.
    HPA 2, PANTHER 1, GOC 1), and a further ~31 were **misfiled** onto `OTHER`
    when a value already existed (CACAO 18, CollecTF 5, EcoliWiki 3,
    PseudoCAP 3, RGD 2) — so part of the pile was never a schema gap at all.
-   Batch 3's own 7 are re-filed; the remaining ones that then had a home
+   Batch 3's own 7 are re-filed; the remaining ~130 that then had a home
    became the separate migration done in #6027 (batch 1) and its sequel. As
    batch 3 recorded it: 7 of its 29
    defects were filed as `OTHER` with the resource named in the explanation,
@@ -677,8 +677,11 @@ found, and because two of the figures here were themselves corrections.
    value existed `just export-source-defects` could not produce the report
    that mattered most. #5984 added the value and #6027 re-filed 83 defects
    onto it, so `reports/source-defects/INTERPRO.md` now exists and carries
-   90 — second only to UniProt. The ~130 figure above was the estimate made
-   before that migration ran; #6027 moved 85 defects in all and left 112
+   90. Corpus-wide that is sixth, behind `UNIPROT`, `GO_CENTRAL`, `RGD`,
+   `PSEUDOCAP` and the `OTHER` pile it is draining — the superlative above is
+   scoped to the defects *this project* found, and does not survive being
+   restated as a corpus-wide rank. The ~130 figure above was the estimate
+   made before that migration ran; #6027 moved 85 defects in all and left 112
    `resource: OTHER`, of which 45 name no resource at all and so cannot be
    triaged without reading each explanation.
 2. **`SourceDefectTypeEnum` could not express the same assertion entered
