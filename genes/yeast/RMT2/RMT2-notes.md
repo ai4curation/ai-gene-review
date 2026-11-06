@@ -21,9 +21,14 @@ broad eukaryotic root, carries `GO:0005634`, `GO:0005737`, and the generic
 `PTN001285367` branch carries guanidinoacetate methyltransferase activity and
 creatine biosynthesis. The fungal `PTN001285370` branch carries `GO:0019702`
 protein arginine N5-methyltransferase activity. RMT2 receives only the root
-localization rows and the fungal activity row, so the only bad catalytic GOA row
-is the InterPro2GO mapping from RMT2-family `IPR017408` to the now omega-branch
-`GO:0016274`.
+localization rows and the fungal activity row. The InterPro2GO row from
+RMT2-family `IPR017408` to parent `GO:0016274` is true but redundant because
+RMT2 already carries the precise fungal-node `GO:0019702` activity.
+
+For the biological process side of the same chemistry, GO has
+`GO:0035246 peptidyl-arginine N-methylation`, which covers Rmt2's modification
+of Rpl12 Arg67 without using the omega-N-specific process children. A missing
+child for peptidyl-arginine N5-methylation would mirror `GO:0019702`.
 
 The Rmt2 localization evidence is broader than the core activity. Genome-scale
 and stress-localization rows place Rmt2 in both nucleus and cytoplasm, and
@@ -39,6 +44,12 @@ part of the group required for accurate translation. I kept these annotations as
 non-core because the mechanistic paper does not show that Rmt2 itself performs a
 translation step; it methylates Rpl12, and failed methylation likely explains the
 later ribosome-biogenesis/translation phenotypes.
+
+Nomenclature note: the 2002 Rpl12-substrate abstract calls recombinant S.
+cerevisiae RMT2 a "Type III protein-arginine methyltransferase" under the
+terminology of the time. The later type IV label distinguishes Rmt2's
+delta/N5-monomethylarginine product from omega-N type I, II and III PRMT
+products.
 
 Manual web search on 2026-11-06 found one newer S. cerevisiae Rmt2 mention:
 Luciano et al. 2026, "A systematic interactome of Saccharomyces cerevisiae SET1C
