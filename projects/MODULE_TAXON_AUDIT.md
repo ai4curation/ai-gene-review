@@ -474,3 +474,8 @@ capacity/preservation check passes with 158 historical rows, 32 raw files and th
 provider artifacts preserved; one supported MF proposal brings the row total to 159.
 Targeted gene, module and family validation pass. Full-corpus validation is terminal: 10,544 reviews, 17 reference errors in 16 unrelated yeast reviews, and zero best-practice errors. All 22 affected inputs are byte-identical to the pinned base; the exact errors, input blobs and log hash are recorded in preexisting-reference-failures.yaml. PR #6120 is open. The five-gene and family review follow-up passes focused checks and all 59 capacity cases; fresh full validation, renewed external review, CI and actual merge remain pending. See
 [audit evidence](../analysis/module_audits/bacterial_cysteine_biosynthesis_via_o_acetylserine/README.md).
+
+
+## 2026-11-06 — cysteine follow-up full validation
+
+The PR #6120 scientific follow-up full run finished on 10,544 reviews, with zero best-practice errors and 54 referenced pathways passing. Its 17 reference errors match the previous run exactly and affect 16 unrelated yeast reviews; all 22 relevant inputs are identical to the pinned base. All 189 scoped publication files match the validated commit. Renewed review, CI and actual merge remain required.

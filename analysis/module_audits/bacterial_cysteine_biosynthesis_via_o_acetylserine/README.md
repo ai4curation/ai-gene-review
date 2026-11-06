@@ -91,3 +91,6 @@ UNRESOLVED; the explicit member comparisons preserve their distinct judgments.
 Five focused gene checks, family checks and all 59 capacity cases pass. The full
 corpus result above describes the prior revision; fresh validation of this
 scientific follow-up and renewed external review remain pending.
+
+
+The scientific follow-up full run finished on 10,544 reviews. All 189 publication-manifest files match validated commit `e90f3048306da3250ee664f74119fb5974a36ed7`. Schema/term checks and all 54 referenced pathways pass; best practices report zero errors and 27,995 warnings. Its 17 reference errors in 16 unrelated yeast reviews exactly match the prior run, with all 22 relevant inputs independently identical to pinned base. See `round1-fullrun-terminal.json`. Publication, renewed review, CI and actual merge remain required.
