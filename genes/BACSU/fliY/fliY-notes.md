@@ -18,3 +18,10 @@ The pristine review text, complete original non-review annotation payloads, inhe
 No NEW biological-process annotation was inferred from necessity alone. New proposals, if any, identify missing experimentally grounded molecular activities. PAINT loss checks were run for all genes carrying IBA and found no lineage loss; donor count and target self-inclusion were not used as weaknesses.
 
 Extension evidence [PMID:1447979 Identification and characterization of FliY, a novel component of the Bacillus subtilis flagellar switch complex.] supports a separate structural molecule activity proposal (GO:0005198), through physical switch-component identity and complementation as well as the null phenotype. This is an independent specific role, not reinstatement of the retired GO:0005515 proposal. The historical cheD complementation group in this paper refers to FliY, not modern CheD receptor deamidase.
+
+
+## 2026-11-06 PR6100 round1 scientific follow-up
+
+All pre-edit rows, original actions and source hashes are frozen in `.cache/module-audit-logs/chemotaxis-20261106/round1-bacillus-baseline.json`. No machine annotation payload or inherited authored proposal payload was changed. Every summary in this gene is now claim-specific.
+
+Removed CheC-specific phosphatase-stimulation quotes and copied CheC reasons from FliY. PMID12920116 directly reports FliY CheY-P hydrolysis; PMID14749334 distinguishes constitutive FliY turnover from CheC adaptation. PMID30455280 supplies physical switch-assembly evidence for the structural/location claims, with strain3610/PY79 versus reference168 scope explicit.

@@ -16,3 +16,10 @@ CheA is the central histidine kinase in Bacillus subtilis chemotaxis. Receptor c
 The pristine review text, complete original non-review annotation payloads, inherited proposals and raw SHA-256 hashes are recorded in `.cache/module-audit-logs/chemotaxis-20261106/bacillus-baseline.json`. Every machine annotation is preserved. No raw UniProt or GOA file was edited. The normal default Falcon attempt returned HTTP 403 authorization failure; manual notes are used and no provider report was fabricated.
 
 No NEW biological-process annotation was inferred from necessity alone. New proposals, if any, identify missing experimentally grounded molecular activities. PAINT loss checks were run for all genes carrying IBA and found no lineage loss; donor count and target self-inclusion were not used as weaknesses.
+
+
+## 2026-11-06 PR6100 round1 scientific follow-up
+
+All pre-edit rows, original actions and source hashes are frozen in `.cache/module-audit-logs/chemotaxis-20261106/round1-bacillus-baseline.json`. No machine annotation payload or inherited authored proposal payload was changed. Every summary in this gene is now claim-specific.
+
+Removed template residue suggesting CheA has CheV’s receiver-dependent adaptation role. CheA is the histidine-kinase phosphoryl donor. Current QuickGO responses `GO_0000155-round1.json` and `GO_0140299-round1.json` confirm molecular-sensor ancestry and binding/intracellular-level semantics, so the earlier direct-ligand-only rationale was incomplete. Both sensor-kinase rows now MODIFY to GO0004673; the existing histidine-kinase row is ACCEPT and broad transferase/core use the same term. Structured suspected term-scope queries are retained without a phylogenetic-placement or donor-count allegation.

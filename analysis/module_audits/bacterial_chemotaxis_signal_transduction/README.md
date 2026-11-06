@@ -5,7 +5,7 @@ flagellar chemotaxis mechanism. It does not imply that every bacterium has the
 mechanism, that every branch co-occurs, or that Wsp, Chp and other nonflagellar
 systems can substitute for the motor-output pathway.
 
-The 36 curated references include comparative treatments and primary experiments
+The 37 curated references include comparative treatments and primary experiments
 for the individual activities and causal edges. Forty-six completed reviews cover
 E. coli, P. putida, B. subtilis, H. pylori, S. meliloti, V. alginolyticus and
 V. vulnificus. The linked gene notes distinguish reference accessions from assayed
@@ -61,3 +61,6 @@ errors in 17 unchanged yeast reviews; `preexisting-reference-failures.yaml` reco
 the exact errors and 23 unchanged input blobs. There are 27,993 best-practice
 advisories. [PR #6100](https://github.com/ai4curation/ai-gene-review/pull/6100) is open; remote review/CI and actual merge remain outstanding. See `audit-progress.yaml` for the recorded stage and the separate
 preservation and capacity reports for reproducible results.
+
+
+PR #6100 review follow-up addresses the fifteen findings in `review-followup-round1.yaml`. All 21 changed gene reviews and focused family/module checks pass; 65 capacity cases still pass with all original machine payloads and raw sources preserved. The full-corpus result above predates this follow-up; a fresh run is pending. Actual merge remains outstanding.

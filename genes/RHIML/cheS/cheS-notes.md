@@ -19,3 +19,9 @@ Every authored chemotaxis proposal names the actual catalytic or functional-comp
 ## Research provider and verification
 
 The provider-free command failed because this checkout requires an explicit provider. A subsequent normal `just deep-research RHIML cheS --provider falcon` attempted Falcon and failed with HTTP 403 authentication. Logs are preserved at `.cache/module-audit-logs/chemotaxis-20261106/falcon-explicit-RHIML-cheS.log`. No provider report was fabricated; these are manual evidence notes.
+
+## PR 6100 round 1 follow-up — 2026-11-06
+
+Item 11: retain GO:0098772 molecular function regulator activity. Current QuickGO defines GO:0030234 as modulation of catalytic activity and GO:0019887 as modulation of protein kinase activity. The primary Results section, "Autophosphorylation of CheA is unaffected by CheS," reports in Fig. 8: "No differences were observed between the kinetics of autophosphorylation of CheA in the absence and presence of CheS" ([PMID:22194454 full text](https://pmc.ncbi.nlm.nih.gov/articles/PMC3294773/)). This passage was rechecked in the indexed primary full text; direct PMC browser access returned an anti-bot page and the Europe PMC XML request returned HTTP 500 during this follow-up.
+
+The positive results are complex formation, increased CheY1 affinity and faster CheY1-P loss. The data support regulation of the functional complex, but do not identify which catalytic rate is changed rather than altered recruitment/phosphate flow. GO:0030234 is therefore considered but not established; GO:0019887 is not supported by the autokinase assay. No direct CheS phosphatase chemistry or resolved CheS–CheY1 bridge is inferred.

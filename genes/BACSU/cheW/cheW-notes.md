@@ -18,3 +18,10 @@ The pristine review text, complete original non-review annotation payloads, inhe
 No NEW biological-process annotation was inferred from necessity alone. New proposals, if any, identify missing experimentally grounded molecular activities. PAINT loss checks were run for all genes carrying IBA and found no lineage loss; donor count and target self-inclusion were not used as weaknesses.
 
 Integration refinement: the newly authored adaptor MF is GO:0030159 signaling receptor complex adaptor activity. PMID8169224 and PMID11553614 explicitly place CheW/CheV coupling between chemoreceptors and CheA, meeting the physical-support definition for a receptor signaling complex. This refines the earlier authored GO:0035591 proposal; there was no machine-seeded adaptor MF to modify. CheV receiver adaptation remains a distinct function.
+
+
+## 2026-11-06 PR6100 round1 scientific follow-up
+
+All pre-edit rows, original actions and source hashes are frozen in `.cache/module-audit-logs/chemotaxis-20261106/round1-bacillus-baseline.json`. No machine annotation payload or inherited authored proposal payload was changed. Every summary in this gene is now claim-specific.
+
+Removed CheV phosphorylation as support for every CheW row/core. The retained IC adaptor proposal integrates genetic redundancy/complementation (PMID8169224), the explicit receptor–CheA coupling statement (PMID11553614) and the experimentally linked frozen UniProt function. The1994 abstract itself labels its detailed coupling model speculative; it is not presented as direct physical-complex purification. UniProt’s target-specific disruption account identifies aspartate and2-deoxyglucose, improving the substrate-taxis evidence.

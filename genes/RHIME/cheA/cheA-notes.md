@@ -19,3 +19,12 @@ Every authored chemotaxis proposal names the actual catalytic or functional-comp
 ## Research provider and verification
 
 The provider-free command failed because this checkout requires an explicit provider. A subsequent normal `just deep-research RHIME cheA --provider falcon` attempted Falcon and failed with HTTP 403 authentication. Logs are preserved at `.cache/module-audit-logs/chemotaxis-20261106/falcon-explicit-RHIME-cheA.log`. No provider report was fabricated; these are manual evidence notes.
+
+
+## 2026-11-06 — PR #6100 review follow-up
+
+QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor activity, as well as GO:0004673. The sensor parent describes ligand binding with an activity change in response to intracellular ligand level. Receptor-controlled histidine phosphorylation is established, but the experiments do not establish that sensor activity on CheA itself: chemoreceptors detect the stimulus and control CheA through the coupling complex. The child definition alone had obscured this inherited requirement. Retain the demonstrated kinase chemistry as GO:0004673 and the receptor-controlled phosphorelay in the process/core description; ask GO to resolve the term-scope mismatch rather than asserting an experimentally disproven kinase or a wrong PAINT node.
+
+PMID:9485379 establishes the kinase and forward/reverse phosphotransfer in the RU lineage. The current 1021 record differs at five positions from deposited RU11/001 CheA; the qualitative role is inferred from the ortholog and conserved architecture, without transferring quantitative RU measurements.
+
+This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in modules/bacterial_chemotaxis_signal_transduction-source-analysis/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.

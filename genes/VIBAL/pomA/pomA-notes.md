@@ -20,3 +20,8 @@ All original machine fields and raw files are preserved. Normal fetch-gene prece
 Ontology scope: GO:0140605 requires a proton gradient, whereas GO:0170085 excludes ion transport. Neither is assigned to sodium-driven PomAB. Sodium channel activity describes the experimentally demonstrated downhill ion-conduction component, with contributes_to for each subunit. GO:0120101 identifies the correct stator complex but its A4B2/nonrotating wording is outdated; this review uses the observed A5B2 architecture. PomB OmpA-like or generic MotB family membership is not evidence of sodium specificity. No unsupported peptidoglycan-binding MF is added from a domain name alone.
 
 Primary strain-table check: PMID22343296 Table 1 on the publisher/PMC article explicitly lists VIO5 as VIK4 laf, Pof+ Laf−, and NMB191 as its ΔpomAB Laf− derivative. This verifies the lateral-flagellum limitation independently of the assay word “swarm.” Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC3318489/ (Table 1).
+
+
+## 2026-11-06 — PR #6100 review follow-up
+
+Moved the ontology-only knowledge gap to suggested_questions. The GO stator-complex definition retains A4B2/nonrotating wording despite A5B2 structures and models with rotation of the A-subunit ring around the anchored B-subunit dimer. The sodium-driven PomAB stator identity and ion-conducting role are established; this is an ontology-description mismatch rather than uncertainty about the target being a stator. Update the definition of GO:0120101 using modern stator structures while retaining the concept that includes both proton- and sodium-driven stators. Evidence remains in the reference findings: PMID:37500658 (5:2 structure) and PMID:39793043 (sodium pathway). No biological uncertainty about the stator role is implied.

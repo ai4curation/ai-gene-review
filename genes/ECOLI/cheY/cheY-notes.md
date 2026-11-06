@@ -46,3 +46,9 @@ PMID20398208 full text was read at https://onlinelibrary.wiley.com/doi/full/10.1
 ### Reassessment of the PAINT histidine-phosphatase claim
 
 GO:0101006 is now UNDECIDED, superseding the earlier REMOVE. Receiving phosphate on Asp57 does not exclude net hydrolysis of a donor phosphohistidine after intrinsic CheY dephosphorylation. PMID2832069 describes CheA dephosphorylation by CheY; PMID7623663 (normally fetched, abstract-only) directly reports intrinsic CheY autohydrolysis. No target-specific loss or PAINT IRD/IKR was found. Removed the categorical plant-only source defect and marked the propagation interpretation unresolved. The family TOO_DEEP judgement has been reported to the module owner for reassessment; family files are outside this agent scope. The response-regulator core remains unchanged.
+
+## PR 6100 round 1 follow-up — 2026-11-06
+
+Items 8 and 15: the three acetylation rows now apply MARK_AS_OVER_ANNOTATED to reported in-vitro self-acetylation of unknown native relevance. The 2006 abstract establishes a reported self-reaction; missing full text limits reassessment of catalytic controls, not acknowledgment of that observation. The 2010 paper chemically modifies CheY as substrate and does not independently show participation. Gene-level actions remain consistent across the two same-term process rows without conflating their experiments. No native acetylation flux or resolved catalytic mechanism is claimed.
+
+The GO:0101006 IBA remains UNDECIDED and the family node UNRESOLVED. E. coli CheY is a motor-directed signal carrier whose Asp-phosphate is hydrolyzed; Sinorhizobium CheY1 is a dedicated phosphate sink. PMID:22194454 states that CheY1 "serves as a sink for surplus phosphoryl groups from CheA-P." That biological asymmetry strengthens the net-reaction framing for CheY1 without establishing a target-specific loss in E. coli. Source-label-only summaries were replaced with biological conclusions.

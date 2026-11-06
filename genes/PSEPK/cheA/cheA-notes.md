@@ -39,3 +39,12 @@ The official supplement explicitly maps the cheA deletion to PP_4338 and lists c
 Source anchor: [file:PSEPK/cheA/cheA-source-analysis/PMID40197389-supp1.txt "Unmarked cheA (PP_4338) deletion mutant"]
 
 All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
+
+
+## 2026-11-06 — PR #6100 review follow-up
+
+QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor activity, as well as GO:0004673. The sensor parent describes ligand binding with an activity change in response to intracellular ligand level. Receptor-controlled histidine phosphorylation is established, but the experiments do not establish that sensor activity on CheA itself: chemoreceptors detect the stimulus and control CheA through the coupling complex. The child definition alone had obscured this inherited requirement. Retain the demonstrated kinase chemistry as GO:0004673 and the receptor-controlled phosphorelay in the process/core description; ask GO to resolve the term-scope mismatch rather than asserting an experimentally disproven kinase or a wrong PAINT node.
+
+PMID:40197389 demonstrates CheA autophosphorylation and CheY phosphotransfer; its supplement identifies PP_4338. PMID:30761113 places this paralog in KT2440 flagellar chemotaxis.
+
+This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in modules/bacterial_chemotaxis_signal_transduction-source-analysis/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.

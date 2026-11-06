@@ -15,3 +15,7 @@ PMID:27002127 remains abstract-only after a normal forced fetch. Its abstract ex
 The full-text review PMID:38048436 reports the absence of the canonical CheR/CheB methylation adaptation pair in H. pylori. A methyl-accepting signal-domain label does not prove TlpD methylation. No specific direct metal-binding NEW was added merely to reproduce a domain label; the CZB chemistry is documented in the receptor mechanism. No target entry was found in gocams/index.tsv.
 
 Normal Falcon attempt (`just deep-research HELPY tlpD --provider falcon`) failed HTTP403 authentication/access. No provider report was fabricated. Log: `.cache/module-audit-logs/chemotaxis-20261106/HELPY-tlpD-falcon.log`. All three original row payloads and two raw files remain intact; no inherited NEW rows existed. Status COMPLETE records completed decisions, with limits to exact strain and construct evidence explicit. Validation and preservation results are logged with the module audit.
+
+## PR 6100 round 1 follow-up — 2026-11-06
+
+Item 13: PMID:41648481 relevance is now MEDIUM because the J99 preprint provides comparative structural context, not decisive 26695 functional evidence. VERIFIED describes the checked source correspondence; preprint status does not by itself establish LOW_QUALITY. No annotation or core activity was added from this source.

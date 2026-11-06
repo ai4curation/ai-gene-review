@@ -15,3 +15,10 @@ CheC is a Bacillus subtilis chemotaxis adaptation protein with CheY-P phosphatas
 The pristine review text, complete original non-review annotation payloads, inherited proposals and raw SHA-256 hashes are recorded in `.cache/module-audit-logs/chemotaxis-20261106/bacillus-baseline.json`. Every machine annotation is preserved. No raw UniProt or GOA file was edited. The normal default Falcon attempt returned HTTP 403 authorization failure; manual notes are used and no provider report was fabricated.
 
 No NEW biological-process annotation was inferred from necessity alone. New proposals, if any, identify missing experimentally grounded molecular activities. PAINT loss checks were run for all genes carrying IBA and found no lineage loss; donor count and target self-inclusion were not used as weaknesses.
+
+
+## 2026-11-06 PR6100 round1 scientific follow-up
+
+All pre-edit rows, original actions and source hashes are frozen in `.cache/module-audit-logs/chemotaxis-20261106/round1-bacillus-baseline.json`. No machine annotation payload or inherited authored proposal payload was changed. Every summary in this gene is now claim-specific.
+
+GO0050918 remains ACCEPT on direct behavioral support: PMID23226535 Fig5B measures proline capillary taxis in OI1085, cheC-null and complemented strains. Its full text also distinguishes CheD-binding effects from phosphatase turnover. Original14749334 identifier is preserved; biochemical activity alone was not sufficient support for directed taxis. Original14749334 JBC fulltext remains inaccessible via the Crossref-resolved publisher URL; no cached publication was fabricated.
