@@ -184,9 +184,15 @@ Two modules have been built for this project:
 ## Plan
 
 1. **Scoping (this page).** Done.
-2. **Fetch and review Part A.** Fetched; egsA and pcrB reviews are deferred to
-   a later pass, with the evidence and planned actions recorded in their notes
-   files.
+2. **Part A: done.** egsA and pcrB are reviewed and complete. Two reviewer
+   critiques of the earlier draft plans were settled rather than carried over:
+   egsA's `MODIFY` of `GO:0006650` is now grounded on the enzyme's ~170-fold
+   kinetic bias toward DHAP reduction and on the GO convention shown by *E.
+   coli* GpsA, not on the undemonstrated claim that EgsA supplies PcrB; and the
+   planned `GO:0042158` row on pcrB was dropped, because PcrB contributes no
+   atom to the modified lipoprotein and a comparator sweep over donor-making
+   enzymes (FDPS, GGPS1, MAT2A, ACLY, bioB) shows none carries the term for the
+   modification that consumes its product.
 3. **Part B acyltransferases: done.** plsY and plsC are reviewed and complete.
    G1P use was recorded as a proposed term plus knowledge gaps, not as a
    function: the near-equal in vitro result is from detergent, PlsY prefers G3P
@@ -194,9 +200,14 @@ Two modules have been built for this project:
 4. **Check the A5FJK8 `GO:0000107` row** against the PANTHER node and the
    protein's own sequence. If it is wrong, record it as an error pattern,
    in the same form as [ARCHAEA annotation-patterns](ARCHAEA/annotation-patterns.md).
-5. **Ontology questions** for GO: process terms for archaeal-type
-   (isoprenoid ether, G1P) membrane lipid biosynthesis and for
-   membrane-spanning lipid (GDGT, brGDGT, iso-diabolic acid) biosynthesis.
+5. **Ontology questions** for GO, now four: an `sn`-glycerol 1-phosphate
+   biosynthetic process term (GO has `GO:0046167` for the G3P enantiomer only);
+   process terms for archaeal-type (isoprenoid ether, G1P) and for
+   membrane-spanning (GDGT, brGDGT, iso-diabolic acid) lipid biosynthesis;
+   whether `GO:0008611`'s C-1 wording should be clarified, since pcrB's row is
+   its first prokaryotic use; and whether excluding carrier- and
+   donor-synthesising enzymes from the process terms they feed is deliberate
+   practice, given that UppS and human/DPM1 are annotated the other way.
 6. **Modules: two built** (above). A G1P/G3P backbone-choice module could
    still link the bacterial and archaeal halves once both sides are reviewed.
 7. **Follow-ups from the modules:** review YvoF (O34993) and LhaT/YpjA
@@ -204,6 +215,14 @@ Two modules have been built for this project:
    (PA to CDP-DAG) is modelled in no bacterial module.
 
 ## Open questions
+
+- **Settled by the pcrB review:** `GO:0008611`'s definition centres the ether
+  linkage on C-1, while HepGP's is on C-3 of G1P. The objection dissolves: C-3
+  is the carbon distal to the phosphate, the same physical position as C-1 in
+  the mirror-image G3P numbering used for plasmalogens, and the number differs
+  only because `sn` numbering is fixed by backbone stereochemistry. The
+  definition's two "normally" hedges cover it, so no new term is needed for
+  ether-bond formation as such.
 
 - Is G1P acylation by PlsY/PlsC a physiological activity in *B. subtilis*,
   where G1P lipids occur, or only in vitro promiscuity?
