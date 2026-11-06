@@ -143,7 +143,7 @@ indirect biological-process rows. These are recorded here so the comparison is n
 lost; this review keeps its own calls, which rest on its source guide's rule of
 retaining positive effects while separating endpoints from the executed chemistry.
 
-Rows the retired GBA review marked MARK_AS_OVER_ANNOTATED that this review keeps
+Terms the retired GBA review marked MARK_AS_OVER_ANNOTATED that this review keeps
 (KEEP_AS_NON_CORE unless noted): GO:0016241 regulation of macroautophagy,
 GO:0006914 autophagy, GO:0007040 lysosome organization, GO:0009267 cellular
 response to starvation, GO:0009268 response to pH, GO:0032006 regulation of TOR
