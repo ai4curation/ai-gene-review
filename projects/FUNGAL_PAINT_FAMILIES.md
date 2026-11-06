@@ -463,7 +463,7 @@ assertions inherited from non-fungal branches.
   fungal polyphosphate catabolic-process node
 - [x] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog with inferred fungal
   vacuolar polyphosphatase activity
-- [ ] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
+- [x] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
 
 ---
 
@@ -494,6 +494,11 @@ assertions inherited from non-fungal branches.
   membrane, hydrolase, and energy-reserve rows to fungal vacuolar
   polyphosphate catabolism. The S. pombe GOA set has no stale TreeGrafter
   `GO:0008081` row, so no PTHR10340 IRD loss needed to be recorded.
+- Added `NEUCR/epp-1`, accepting the four `PTN000818947` fungal Ppn1 PAINT
+  IBAs and the exact UniProt endopolyphosphatase inferences, refining generic
+  vacuole and membrane rows to fungal-type vacuole or fungal-type vacuole
+  membrane, and recording that literature searches found no direct N. crassa
+  EPP-1 deletion, localization, or purified-enzyme paper.
 
 ## 2026-11-01
 
