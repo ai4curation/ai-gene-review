@@ -204,8 +204,10 @@ plastids come later.
      KDEL-type motif or shown by protease protection, supports `GO:0005788`.
      The ER exit site (`GO:0070971`) needs a marker of transitional ER.
    - **Recruited cytosolic pools stay at the root**, core only when the
-     function is shown at the ER. Membership of an ER-acting complex does not
-     by itself localise a subunit.
+     function is shown at the ER. Membership of an ER-acting complex supports
+     the organelle root for an obligate subunit but never localises it to a
+     sub-compartment, and it is not core when the subunit's own data place it
+     elsewhere (TRAPPC4).
    - **A new sub-compartment row refines generic rows**: the gene's
      `GO:0016020` membrane rows become `MODIFY` to it, all rows on the term
      alike.
@@ -314,7 +316,7 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 The last 19 human genes on the root-only ER list (SMPD2 to ZDHHC23); with GBA
 left to the duplicate-folder cleanup, this finishes the human ER list. Two gained
 a sub-compartment term (SMPD2 ER membrane, TRAPPC3 ER exit site) and three
-changed action (STAU2, TP53, UFM1). The same PR carries the optional SCP2 and
+changed action (STAU2, TP53, TRAPPC4, UFM1). The same PR carries the optional SCP2 and
 PGRMC2 wording fixes from the ER batch 3 review and corrects NRXN1's mouse donor
 claim on three non-ER rows.
 
@@ -331,7 +333,7 @@ claim on three non-ER rows.
 | TP53 | root; IEA ACCEPT to KEEP_AS_NON_CORE | Synoviolin sequesters p53 at the ER (PMID:17170702); wild-type p53 at ER and MAM binding SERCA (PMID:25624484); recruited pool of a nuclear factor |
 | TRAPPC1 | root; row stays ACCEPT | TRAPP acts at ER exit sites or ERGIC (PMID:21525244); support is at complex level |
 | TRAPPC3 | root; NEW GO:0070971 ER exit site (IC) | endogenous mammalian Bet3 on Sec31-marked transitional ER, 7.6-22-fold enriched there by immuno-EM (PMID:16880271); binds SEC23 |
-| TRAPPC4 | root | mouse ER line is a curator inference; synbindin immuno-EM shows Golgi and vesicles (PMID:11018053); holds through TRAPP membership |
+| TRAPPC4 | root; IEA and ISS ACCEPT to KEEP_AS_NON_CORE | mouse ER line is a curator inference; its own synbindin immuno-EM shows Golgi and vesicles, not ER (PMID:11018053); the ER is plausible only through TRAPP membership |
 | TRAPPC5 | root | by similarity with no named source; holds through TRAPP membership (PMID:16880271) |
 | UFM1 | root; IEA and ISS KEEP_AS_NON_CORE to ACCEPT | endogenous UFM1 partly in the BiP-marked ER fraction with UFBP1 (PMID:21494687); UFMylated RPL26 on ER-bound ribosomes (PMID:30626644) |
 | UFSP2 | root | ER localization depends on the TM protein ODR4, and ODR4 loss phenocopies UFSP2 loss for RPL26 deUFMylation (PMID:35926457) |
