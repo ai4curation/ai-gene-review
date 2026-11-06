@@ -36,5 +36,6 @@
 - For fungal Eaf3/MRG proteins, the accepted PAINT complex calls should be the
   NuA4 row from `PTN000093963` and the Rpd3S row from `PTN000853816`. The
   plant-seeded `GO:1990841 promoter-specific chromatin binding` IBA should be
-  treated skeptically because its donor set is Arabidopsis-only even though the
-  IBD sits at the eukaryotic root.
+  treated skeptically because fungal Eaf3 proteins act as H3K36me-linked
+  Rpd3S/NuA4 subunits rather than as CONSTANS/FT-promoter regulators like the
+  source MRG1/MRG2 proteins in Arabidopsis.
