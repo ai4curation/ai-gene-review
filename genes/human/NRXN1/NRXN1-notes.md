@@ -47,3 +47,7 @@
 - Donor paper (fetched, abstract only): [PMID:19036990 "We also observed that exit of neurexins from the ER/Golgi and correct targeting require their PDZ-binding motif at the C terminus, whereas two presumptive ER retention signals are inactive."] Epitope-tagged neurexins in cultured neurons: biosynthetic transit, ER accumulation of PDZ-motif mutants. ATP1A1/ATP1A2 transit precedent -> MARK_AS_OVER_ANNOTATED; KEEP_AS_NON_CORE would need wild-type endogenous neurexin shown in an ER pool.
 - No GO:0005789 (type I protein in transit).
 - Not edited (outside brief scope, flag): the same incorrect "current mouse GOA carries no experimental annotation" sentence is on the ISS rows for GO:0031965 nuclear membrane, GO:0031982 vesicle and GO:0043025 neuronal cell body; whether mouse has IDA rows for those terms from PMID:19036990 too should be checked in a follow-up.
+
+## 2026-11-06 Follow-up: mouse donor annotations
+
+The ISS rows for GO:0031965 nuclear membrane, GO:0031982 vesicle and GO:0043025 neuronal cell body said mouse Nrxn1 had no experimental annotation to these terms. QuickGO (2026-11-06) shows each has an IDA from BHF-UCL on PMID:19036990, the same tagged-neurexin transit paper behind the ER row. The reasons are corrected; the MARK_AS_OVER_ANNOTATED calls stand because that paper shows transit, not residence.

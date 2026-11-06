@@ -43,6 +43,8 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR_OPEN. PR #6125 validated follow-up; review, CI and actual merge pending.
 
+- [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
+
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
 - [x] `bacterial_assimilatory_nitrate_reduction`: [PR #5740](https://github.com/ai4curation/ai-gene-review/pull/5740) merged as `62f214ee641ee2c662c58c8e40a6eeba6a39c7f0` at 2026-10-30T06:46:53Z. All 209 scoped source/curation/history blobs match the approved head; 21 member reviews are COMPLETE with no PENDING annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5740-merged-content.json). PR #5928 is a separate family-review follow-up.
@@ -82,7 +84,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 2 PR_OPEN, 2 IN_PROGRESS and 740 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 4 PR_OPEN, 2 IN_PROGRESS and 738 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -527,6 +529,35 @@ The divisome review follow-up completed full validation on 10,555 reviews. The 1
 
 Integrated published main `fd782f231a` with the validated PR #6123 head `4b65e56304`. All 158 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
 
+## 2026-11-06: Replication PR #6117 review follow-up
+
+Eleven reviewed genes preserve 131 annotation payloads, nine inherited NEW actions,
+22 raw files and 49 referenced sources. HolD model/construct coordinates and
+source-specific mapping defects are structured; generic binding policy is applied
+consistently. Epsilon proofreading is refined to DNA-specific exonuclease activity
+in the genes and module. Focused checks and all 97 pathway cases pass. Fresh full
+validation, publication of the follow-up, independent review/CI and actual merge
+remain outstanding.
+
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `c27aa23b93` with the validated PR #6117 head `05b701415a`. All 575 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+
+## 2026-11-06 — replication proposal refinements
+
+PR #6117 round 2 refines two proposals authored within this PR, with both prior versions archived and independently verified against git and the pristine seed: HolD now uses DNA-templated DNA replication, while Bacillus DnaB has separate single- and double-stranded DNA-binding activities. Three DnaQ exonuclease rows refine directly to DNA-specific proofreading activity. DnaB membrane evidence explicitly distinguishes wild-type enrichment from mutant DnaD recruitment. Four focused review validations, renders and histories pass without curation warnings. All 1,067 original seed rows, including two inherited NEW rows, and 104 raw sources remain preserved across 52 COMPLETE reviews; the final count is 1,082 rows. The module remains unchanged. The capacity checker recognizes only the two independently verified DNA-binding descendant relationships and passes 100 cases, including removal and one-way entailment controls. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
+
+
+## 2026-11-06 — Replication round2 validated
+
+Replication round2 completed full validation on 10,653 reviews. The17 reference errors are the exact known errors in16 unrelated yeast reviews; all22 relevant inputs equal the pinned base. Schema and terms pass; best practices report zero errors, and all54 PMID-bearing pathways pass. All588 scoped files match validated science commit 2ea0e902c55f0b3ddd219f8bb03511fca3b4b130. The 52 completed reviews preserve 1,067 pristine annotation rows (1,065 machine rows and two inherited proposals) and104 raw files;15 added rows yield1,082 current rows. Two proposals authored by this PR were revised with exact archives, distinguished from original seeds. The100 capacity cases pass, including one-way GO DNA-binding descendant entailment. Renewed independent review, CI and actual merge remain pending for PR#6117.
+
+## 2026-11-06 — PR #6117 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6117 head `8df6fabd8d`. All 588 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
 ## 2026-11-06: DnaK/DnaJ/GrpE comparative audit started
 
 Six original reviews (159 historical rows and 27 protected files) are being
@@ -535,32 +566,25 @@ Exact protein identities and assay-host provenance are checked before extrapolat
 Module/family integration, validation, a dedicated PR and actual merge remain
 outstanding. See [audit progress](https://github.com/ai4curation/ai-gene-review/blob/c99f6fcf564af250fb346babab970651d86dd295/analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/audit-progress.yaml).
 
-
-
 ## 2026-11-06 — DnaK comparative mechanism integrated
 
 Fourteen complete reviews preserve 227 historical rows and 43 protected sources, with six supported molecular-function additions. Thirteen curated references, including three reviews, provide twenty findings. The module separates canonical J-protein activation from Thermus client handoff, assigns ATP hydrolysis only to DnaK and places DafA in optional inhibitory context. The production-topology and curated-compatibility checker passes 178 controls and 82 quotation checks. Final validation, dedicated PR review, CI and actual merge remain required. All unrelated inventory rows remain unchanged.
-
 
 ## 2026-11-06 — DnaK full validation completed
 
 The DnaK/DnaJ/GrpE audit full run finished on 10,589 reviews, with zero best-practice errors and all 54 referenced pathways passing. Its 17 reference errors exactly match known failures in 16 unrelated yeast reviews; all 22 relevant inputs equal the pinned base. All245 scoped files matched validated science commit 3b0ddf6124 before metadata closure. The panel retains 14 complete reviews,227historical rows and 43 protected sources; 178 capacity controls and 82 quotations pass. Dedicated PR, independent review, CI and actual merge remain outstanding.
 
-
 ## 2026-11-06 — DnaK prepublication integration with published main
 
 Integrated published main `db69104296` with the validated DnaK closure head `2e594d73ea`. All 242 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
-
 
 ## 2026-11-06 — DnaK PR #6125 published
 
 Published the comparative DnaK/DnaJ/GrpE audit as PR #6125. Fourteen complete gene reviews preserve 227 historical rows and 43 protected sources; six supported molecular-function additions yield 233 current rows. Full validation is terminal with 17 proven pre-existing citation errors outside the scoped audit, zero best-practice errors and 54 referenced pathways passing. Independent review, CI and actual merge remain pending.
 
-
 ## 2026-11-06 — DnaK review follow-up
 
 PR #6125 review follow-up refines DnaJ replication actions, claim-specific localization evidence, DnaK holdase coverage and GrpE dimerization judgments across twelve gene reviews. E. coli DnaJ cytosol is explicitly UNDECIDED; reported RNase inhibition and physical complex membership retain evidence-specific explanations. The original 227 seed rows, three inherited NEW rows and all 43 raw/provider/prediction files are preserved; six PR-authored proposals bring the total to 233 rows. DafA alone changes an authored evidence code from IC to IPI, with the exact old row archived. Root independently verifies all 51 handoff files, 232 unchanged current payloads, the single documented revision, 74 unchanged publication sources and append-only notes. All 178 capacity/evidence controls pass. Module locations use the supported comparative cytoplasm granularity, and three molecular-activity index concepts are restored without changing roles, chemistry or compatibility. Focused checks pass with four documented module advisories. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
-
 
 ## 2026-11-06 — DnaK review follow-up validated
 
@@ -569,3 +593,7 @@ DnaK review follow-up completed full validation on 10,618 reviews. The17 referen
 ## 2026-11-06 — PR #6125 integration with published main
 
 Integrated published main `1970e159b9` with the validated PR #6125 head `69d14486d0`. All 266 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6125 integration with published main
+
+Integrated published main `488d370561` with the validated PR #6125 head `7fba6b8079`. All 268 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All fourteen scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
