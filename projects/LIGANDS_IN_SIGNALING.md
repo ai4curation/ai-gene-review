@@ -492,9 +492,10 @@ validators.
 
 1. **More modules**, pan-species, ligand step first, using the decisions in section 2. The queue
    from the gap check is done (collagen-DDR and fly Toll-6/7 neurotrophin were the last two).
-   Gene reviews are still missing for most of their members (NT1, spz5, Toll-6, kek6, DDR1 and
-   fly Ddr; DDR2 and Toll-7 have reviews), and the collagen reviews have no ligand-activity core
-   function.
+   All receptor and ligand members of both modules now have gene reviews (DDR1, fly Ddr, NT1,
+   spz5, Toll-6 and kek6 were added after the modules). The NT1 and spz5 reviews move the ligands
+   onto neurotrophin signaling pathway, and the Toll-6 review removes the Roundabout-binding IBA
+   from the Slit PAINT node. The collagen reviews still have no ligand-activity core function.
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an
