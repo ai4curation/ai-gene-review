@@ -9,7 +9,7 @@
 
 ## 2026-11 newer-literature scan
 
-- Search hit PMID:37792890, a 2023 fission-yeast MIPC/cell-wall study. It reports that imt2 deletion is temperature-sensitive, unlike imt1 or imt3 deletion, and that imt2 cells accumulate cell-wall material at the septum in a phenotype suppressed by imt3 deletion. This suggests Imt paralog differences in IPC-subspecies usage, but not a distinct GO-process annotation for SPCC4F11.04c.
+- Search hit PMID:37792890, a 2023 fission-yeast MIPC/cell-wall study. It reports that imt3 deletion, but not imt1 or imt2 deletion, suppresses css1-3; imt2 deletion is temperature-sensitive, and imt2 cells accumulate cell-wall material at the septum in a phenotype suppressed by imt3 deletion. This suggests Imt paralog differences in IPC-subspecies usage, but not a distinct GO-process annotation for SPCC4F11.04c.
 - Search hit the 2026 inositol-starvation paper by Sanchez et al. as broader fission-yeast inositol-metabolism context. It does not appear to revise Imt2's direct IPC mannosyltransferase role.
 
 ## Decisions

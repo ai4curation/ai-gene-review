@@ -485,7 +485,7 @@ activity` term when enough evidence is present.
 - [x] `SCHPO/imt1` - fission-yeast IPC mannosyltransferase in the Imt1
   subfamily; drafted in this branch
 - [x] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog;
-  drafted in this branch
+  re-reviewed in PR #6112
 - [ ] `SCHPO/SPAC17G8.11c` - fission-yeast imt3, an SF20 imt paralog
 - [ ] `CGD:CAL0000176496` - CGD-seeded *Candida albicans* IPC mannosyltransferase
 - [ ] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
