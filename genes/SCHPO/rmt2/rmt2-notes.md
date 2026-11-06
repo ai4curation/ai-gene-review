@@ -12,9 +12,11 @@ name is GUANIDINOACETATE N-METHYLTRANSFERASE, but the PAINT table splits the
 family into a fungal Rmt2 branch and a vertebrate GAMT branch. The fungal
 `PANTHER:PTN001285370` node carries `GO:0019702` protein arginine
 N5-methyltransferase activity from the experimentally characterized
-S. cerevisiae seed. The vertebrate `PANTHER:PTN001285367` node carries
-guanidinoacetate N-methyltransferase activity and creatine biosynthesis; those
-terms should not propagate to fungal rmt2.
+S. cerevisiae seed. Chern et al. 2002 directly purified budding-yeast Rmt2,
+used SAM to methylate ribosomal protein L12, and mapped the methyl-acceptor site
+to Arg67, grounding that seed. The vertebrate `PANTHER:PTN001285367` node
+carries guanidinoacetate N-methyltransferase activity and creatine
+biosynthesis; those terms should not propagate to fungal rmt2.
 
 PomBase and UniProt give rmt2 nuclear/cytoplasmic localization from the 2006
 fission-yeast ORFeome YFP localization screen, and the 2026-05-29 PAINT
