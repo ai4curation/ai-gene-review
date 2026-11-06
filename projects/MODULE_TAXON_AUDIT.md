@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -25,6 +25,16 @@ judgments. Recheck upstream for new, renamed and removed modules before declarin
 this project finished. Open PR overlaps are leads to inspect, not proof that the
 work has been done; broad PR #5076 alone overlaps many modules.
 
+
+
+The current catalog covers **779 valid ModuleReview documents** at pinned main
+`f0306d4de38a86ed077b066841167cc071bd56fe`: 777 top-level modules and two experimental
+GapMind modules (`MODULE:gapmind_his_biosynthesis` and `MODULE:gapmind_ile_biosynthesis`).
+This 2026-11-06 refresh adds 64 previously unlisted paths, all NOT_STARTED. Experimental
+imports remain explicitly unaudited; their presence in the catalog is coverage of the
+all-module goal, not scientific approval. Earlier universe counts above are historical.
+[Universe refresh proof](MODULE_TAXON_AUDIT/proofs/universe-refresh-20261106.json).
+
 For each module, record evidence that all of the following are satisfied:
 
 1. Review literature was searched; relevant references have manual assessments and
@@ -40,6 +50,8 @@ For each module, record evidence that all of the following are satisfied:
    merged. Record its number and merge commit before marking the audit complete.
 
 ## Status
+
+- [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: IN_PROGRESS. Nine member reviews cover 160 original annotation rows; eight curated references include three reviews. Module participant integration and validation remain pending. Existing structural inventory fields still describe the original participants; no completion, publication or merge is claimed.
 
 - [x] `bacterial_aspartate_to_threonine_biosynthesis`: [PR #5858](https://github.com/ai4curation/ai-gene-review/pull/5858) merged as `225589950bb458a00b76f46024480ac6f68b76a6` at 2026-11-01T23:27:51Z after approval of `f074ad3642687ea4d2bb6eeb02757e2028e8b37e` and passing required/queue checks. All 152 scoped blobs match the approved head; 20 reviews, 192 machine rows and 40 raw sources are preserved. Final 193 rows include one restored inherited authored proposal; two others remain retired.
 - [x] `bacterial_beta_aryl_ether_dimer_cleavage`: [PR #5930](https://github.com/ai4curation/ai-gene-review/pull/5930) merged as `22ee0c020b11a0455c6e75da1a36fb59af729954` at 2026-11-03T05:26:24Z after approval of `f54046b04cea6bb86bc49c9d38e5f06776aabaef` and passing head/queue checks. All 153 scoped blobs match the approved head; 16 COMPLETE reviews, nine original annotation rows and 32 raw sources are preserved, with no NEW annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5930-merged-content.json).
@@ -76,7 +88,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [ ] `bacterial_alkyl_hydroperoxide_reductase`: Fifteen member reviews preserve 258 original annotation rows and 30 raw sources; recorded full validation passed with 9,242 reviews, zero errors and 54 pathway checks. Pinned GitHub snapshot 2026-10-27T16:06:35.159856+00:00: PR #5595 is OPEN at 41e8b30b69f09d0bafcd50178b019e32b394b13e with reviewDecision REVIEW_REQUIRED. Its latest submitted review 5670221625, submitted at 2026-10-27T15:57:16Z on older head d911d7aa8b66c0c22d5ccbcaadbaa285e1ac84d6, is now DISMISSED. The earlier approval is historical and does not apply to the new head. Review and CI for the published prose follow-up remain pending; CI below is pinned to 41e8b30b69f09d0bafcd50178b019e32b394b13e.
 - [ ] `bacterial_aminoacyl_trna_charging`: Audit 29 has 42 completed member drafts spanning eight bacterial taxon codes, 386 active rows after four redundant authored proposals were retired, and 84 preserved raw sources. The revised module has 20 required output roles, 40 activities and five continuity edges; 44 assembly/context cases pass. Final independent scientific QA and source attachment are in progress; full validation and publication remain pending.
-- [ ] Remaining 685 modules are NOT_STARTED. 25 of 715 audits are complete; 5 remain active (3 open PRs and 2 audits in progress).
+- [ ] Remaining 745 modules are NOT_STARTED. The current 779-entry ledger records 27 COMPLETE and 7 active audits (4 PR_OPEN and 3 IN_PROGRESS). Other rows retain their existing dated status evidence; this is not a fresh global PR-status survey.
 
 ## Notes
 
@@ -462,3 +474,12 @@ PR #5997 publishes 17 complete reviews, preserving 89 original rows and 34 raw s
 ## 2026-11-04 — c-di-AMP review findings addressed
 
 PR #5997 review follow-up preserves all 89 original annotation payloads and 34 raw files, adds nine evidence-backed recommendations (seven binding activities, DarB enzyme activation and inferred DacA membrane location), and corrects three cyclase BP mappings to the supported cyclic di-AMP biosynthetic-process proposal. KtrA channel regulation is retained with target-species primary evidence; CabP and KhtT remain broader based on their different evidence. Two CpaA process claims remain UNDECIDED. Seventeen focused validations, module/source checks and 37 capacity cases pass. Fresh independent review and CI remain pending.
+
+
+## 2026-11-06 — module universe refresh and divisome audit tracking
+
+Expanded the catalog from 715 to 779 verified module documents at pinned main `f0306d4de38a86ed077b066841167cc071bd56fe`. The 64 additions comprise 62 top-level modules and the two experimental GapMind histidine/isoleucine ModuleReviews; all enter NOT_STARTED. Preserved every unrelated prior inventory row, all prior inventory notes and the dated project journal. Only the divisome row moves to IN_PROGRESS, recording nine members, 160 original rows, eight curated references and three review articles while module participant integration remains pending. Derived ledger totals are 27 COMPLETE, four PR_OPEN, three IN_PROGRESS and 745 NOT_STARTED. This extends coverage of upstream additions without promoting unreviewed modules or refreshing unrelated stale lifecycle claims.
+
+### Divisome integration — 2026-11-06
+
+The [divisome audit](../analysis/module_audits/bacterial_divisome_peptidoglycan_transpeptidation/README.md) integrates nine completed member reviews, four bacterial realizations and the conditional Bacillus PBP3 catalytic substitute. Fourteen curated references include three reviews and ten findings. The scoped checker passes 56 capacity cases plus a primary heterologous compatibility check, preserving all 160 original rows and 19 raw/provider files. Full-corpus validation and publication remain pending; no merged completion is claimed.
