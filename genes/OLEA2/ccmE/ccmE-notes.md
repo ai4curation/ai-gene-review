@@ -22,3 +22,10 @@ Additional evidence checks: exact primary-source excerpts, corrected detection l
 - GO:0017003 ACCEPT: CcmE forms its own covalent Cys127-heme intermediate before downstream transfer.
 
 Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.
+
+
+## PR6121 provenance and redundancy follow-up (2026-11-06)
+
+The prior membrane-anchor-only wording was too strong about orientation. The G20 target has a Phobius anchor, while PMID:16364305 describes E. coli CcmE topology. The review now explicitly labels the periplasm-facing orientation as comparative inference and cites the cached abstract; it does not present the E. coli domain-swap experiment as a native G20 assay. Protein-heme linkage remains ACCEPT for the target's Cys127 adduct. The core process list retains GO:0018063 and omits its GO:0017003 ancestor; the distinct own-adduct and downstream-transfer chemistry remains in the description and individual rows.
+
+Standard record-section backfill derives the UniProt quote provenance; these metadata additions do not change the quoted source text or underlying functional assertions.

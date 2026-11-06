@@ -97,6 +97,13 @@ def source_exists(reference):
 
 def load_panel():
     baseline = read(AUDIT / 'seed-baseline.yaml')
+    retirement = read(AUDIT / 'retired-ccme-proposal.yaml')
+    assert retirement['review_path'] == 'genes/ECOLI/ccmE/ccmE-ai-review.yaml'
+    assert retirement['original_payload'] == {
+        'term': {'id': 'GO:0018063', 'label': 'cytochrome c-heme linkage'},
+        'evidence_type': 'IMP', 'original_reference_id': 'PMID:9712585',
+        'qualifier': 'involved_in'}
+    assert retirement['lifecycle_delta'] == {'retired': True}
     totals, actions, panel, hashes = Counter(), Counter(), {}, {}
     for member in baseline['members']:
         path = ROOT / member['review_path']
@@ -105,8 +112,15 @@ def load_panel():
         assert doc['id'] == member['accession'] and doc['taxon'] == member['taxon'], path
         rows, seeds = doc.get('existing_annotations', []), member['annotations']
         assert len(rows) >= len(seeds), path
-        for seed, row in zip(seeds, rows):
-            assert {k: v for k, v in row.items() if k != 'review'} == seed['payload'], path
+        for index, (seed, row) in enumerate(zip(seeds, rows)):
+            payload = {k: v for k, v in row.items() if k != 'review'}
+            if (member['review_path'] == retirement['review_path']
+                    and index == retirement['row_index']):
+                assert seed['payload'] == retirement['original_payload'], path
+                assert payload.pop('retired', None) is True, path
+                assert seed['prior_action'] == row['review']['action'] == 'NEW', path
+                totals['retired_inherited_NEW'] += 1
+            assert payload == seed['payload'], path
             if seed['prior_action'] == 'NEW':
                 assert row['review']['action'] == 'NEW', path
                 totals['inherited_NEW'] += 1
@@ -118,6 +132,8 @@ def load_panel():
         for row in rows:
             assert row['review']['action'] != 'PENDING', path
             actions[row['review']['action']] += 1
+            if row['review']['action'] == 'NEW' and not row.get('retired', False):
+                totals['active_NEW'] += 1
         for name, digest in member['raw_sha256'].items():
             assert sha(ROOT / name) == digest, name
             totals['raw_sources_preserved'] += 1
@@ -146,6 +162,7 @@ def load_panel():
         totals['provider_artifacts_preserved'] += 1
     assert totals['complete_reviews'] == 29 and totals['historical_rows'] == 227
     assert totals['historical_machine_rows'] == 224 and totals['inherited_NEW'] == 3
+    assert totals['retired_inherited_NEW'] == 1 and totals['active_NEW'] == 8
     assert totals['raw_sources_preserved'] == 58 and totals['provider_artifacts_preserved'] == 6
     assert set(panel) == {x for group in IDENTITIES.values() for x in group}
     return panel, totals, actions, hashes
@@ -392,7 +409,7 @@ def run_cases(doc, panel, totals, actions, hashes):
         module_sha256=sha(ROOT / 'modules' / (SLUG + '.yaml')),
         seed_baseline_sha256=sha(AUDIT / 'seed-baseline.yaml'),
         checker_sha256=sha(Path(__file__)),
-        scope='29 frozen curated exemplars; preserved historical payloads/raw/provider bytes. New rows are separately counted. No native-genome absence inference.'), sort_keys=False))
+        scope='29 frozen curated exemplars; preserved original payloads/raw/provider bytes. One exact historical NEW has only the documented retired:true lifecycle delta; historical and active proposals are counted separately. No native-genome absence inference.'), sort_keys=False))
     (AUDIT / 'capacity-results.yaml').write_text(yaml.safe_dump(dict(
         status='PASS', case_count=len(cases),
         semantics='Production compile_node/is_satisfied with independent accession-role, matched-strain, branch chemistry, family and reviewed-core oracle. Capacity is bounded curated-panel coverage; heterologous and inferred roles do not become native flux or genome completeness. False means unsupported panel coverage, not biological absence.',

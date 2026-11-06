@@ -47,3 +47,10 @@ The historical NEW GO:0018063 duplicates current MODIFY replacements. It is reta
 ## PR6121 reference-finding follow-up (2026-11-06)
 
 Narrowed the top-level finding statements for PMID:40167305 to the claims established by their existing quoted passages. Annotation actions, core functions, quotes and source records are unchanged. The original 52-file handoff remains preserved and verified separately; this edit has a supplemental history and manifest.
+
+
+## PR6121 provenance and redundancy follow-up (2026-11-06)
+
+The redundant historical GO:0018063 NEW proposal is now retired in place using the schema's retired flag. Its row order, source payload, supporting quotations and historical action remain, with the exact prior row additionally recorded in analysis/module_audits/bacterial_cytochrome_c_maturation_system_i/retired-ccme-proposal.yaml. The true process remains asserted by the two GO:0017004 MODIFY replacements and by the core function; no REMOVE action is used for duplication. The core list omits the redundant GO:0017003 ancestor while retaining its distinct His130-adduct chemistry in prose and the accepted original annotation. GO:1903607 is retained: it is not in the current is_a/part_of ancestor closure of GO:0018063, so no unsupported hierarchy equivalence is asserted.
+
+Standard record-section backfill derives the UniProt quote provenance; these metadata additions do not change the quoted source text or underlying functional assertions.
