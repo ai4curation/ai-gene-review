@@ -333,6 +333,8 @@ def test_protein_name_in_abstract_penalises_aurkc_lead():
             ["CcmABCDEFGH", "heme chaperone"],
             ["Schulz H", "Zürich", "PMCID"],
         ),
+        # A byline with a generational suffix ("Wharton KA Jr") is still a byline.
+        ("11274052", ["dishevelled"], ["Wharton", "Nusse R", "Cadigan KM"]),
     ],
 )
 def test_abstract_text_reads_abstract_without_bibliography(pmid, present, absent):

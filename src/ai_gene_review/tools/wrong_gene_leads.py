@@ -251,7 +251,15 @@ def _names_protein(text: str, name: str) -> bool:
 
 # A PubMed author list: comma-separated "Surname INITIALS" items, the first one
 # often carrying an affiliation marker, e.g. "Faiyaz ul Haque M(1), King LM, Cohn DH."
-_AUTHOR = re.compile(r"[^\W\d][\w'.\- ]* [A-Z]{1,4}(?:\(\d+(?:,\d+)*\))*")
+_AUTHOR = re.compile(
+    r"[^\W\d][\w'.\- ]* [A-Z]{1,4}(?: (?:Jr|Sr|2nd|3rd|4th|II|III|IV))?"
+    r"(?:\(\d+(?:,\d+)*\))*"
+)
+# A group author in a byline ("ADHR Consortium", "GTEx Consortium").
+_GROUP_AUTHOR = re.compile(
+    r"(?:The )?[\w'.\- ]*\b(?:Consortium|Group|Collaborators|Investigators|"
+    r"Network|Team)\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
+)
 
 
 def _is_author_list(paragraph: str) -> bool:
@@ -264,13 +272,20 @@ def _is_author_list(paragraph: str) -> bool:
     True
     >>> _is_author_list("Ke Y(1)(2), Butt AG, et al.")
     True
+    >>> _is_author_list("Rousset R(1), Mack JA, Wharton KA Jr, Scott MP.")
+    True
+    >>> _is_author_list("Smith J, Lee K, ADHR Consortium.")
+    True
     >>> _is_author_list("ENaC is regulated by Nedd4-2, which binds PY motifs.")
     False
     """
     items = paragraph.rstrip(".").split(", ")
     if items[-1] in {"et al", "et al."}:
         items = items[:-1]
-    return bool(items) and all(_AUTHOR.fullmatch(i) for i in items)
+    people = [i for i in items if not _GROUP_AUTHOR.fullmatch(i)]
+    # A byline names at least one person; a lone group name is not enough to
+    # tell it from a sentence.
+    return bool(people) and all(_AUTHOR.fullmatch(i) for i in people)
 
 
 # Paragraphs of a PubMed text record that are bibliographic, not the abstract.
@@ -350,7 +365,10 @@ def abstract_text(path: Path) -> str:
         body = text[start : end if end >= 0 else None]
         if heading == "## Content" and meta.get("content_type") != "abstract_only":
             trailer = re.search(r"(?m)^(?:DOI|PMCID|PMID): ", body)
-            pubmed_block = re.match(r"\s*\d+\. \S", body)
+            # The PubMed text block opens with a numbered citation line carrying
+            # the year ("1. Proc Natl Acad Sci U S A. 1999 May 25;..."). Without
+            # it the trailer search could run into a full text's references.
+            pubmed_block = re.match(r"\s*\d+\. \S[^\n]*\b(?:19|20)\d\d\b", body)
             body = body[: trailer.start()] if trailer and pubmed_block else ""
         break
     parts = [title, strip_bibliographic(body)]
