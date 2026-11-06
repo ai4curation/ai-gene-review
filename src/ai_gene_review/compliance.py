@@ -84,6 +84,7 @@ class AnnotationSupportPlugin:
     ) -> list[PathCompliance]:
         """Score one opportunity per applicable annotation, not per quotation."""
         scores = []
+        gene_dir = review_gene_dir(source_path)
         for i, annotation in enumerate(data.get("existing_annotations") or []):
             review = annotation.get("review") or {}
             support = review.get("supported_by") or []
@@ -107,7 +108,7 @@ class AnnotationSupportPlugin:
                     # The same test as the nd_policy warning: a publication, or
                     # the deep-research or notes file recording the search.
                     passed = has_text(review.get("reason")) and cites_search(
-                        review, data, review_gene_dir(source_path))
+                        review, data, gene_dir)
                 else:
                     sources = (review.get("propagation_review") or {}).get(
                         "source_entities"

@@ -96,14 +96,14 @@ def _ref_dir(reference_id: str) -> Optional[str]:
 def _own_folders(data: Dict[str, Any]) -> Set[str]:
     """Folder names taken to be the review's own when its path is unknown.
 
-    The gene symbol, the accession, ``SYMBOL__ACCESSION`` (an alternative-ORF
-    peptide that shares its host's symbol), and the folder of the review's own
-    UniProt or GOA file, which also covers some folders named after a synonym.
-    The validator passes the review's real folder instead, which is exact.
+    Only for callers with no review file, such as data built in memory: the
+    validator and the compliance analyzer pass the review's real folder, which
+    is exact. The gene symbol, the accession, and ``SYMBOL__ACCESSION`` (an
+    alternative-ORF peptide that shares its host's symbol). References are not
+    scanned, since a review may cite an ortholog's files.
 
-    >>> sorted(_own_folders({"gene_symbol": "rad51", "id": "P36601", "references": [
-    ...     {"id": "file:genes/SCHPO/rhp51/rhp51-uniprot.txt"}]}))
-    ['P36601', 'rad51', 'rad51__P36601', 'rhp51']
+    >>> sorted(_own_folders({"gene_symbol": "rad51", "id": "P36601"}))
+    ['P36601', 'rad51', 'rad51__P36601']
     >>> sorted(_own_folders({"id": "P1"}))
     ['P1']
     """
@@ -111,12 +111,6 @@ def _own_folders(data: Dict[str, Any]) -> Set[str]:
     folders = {f for f in (symbol, accession) if f}
     if symbol and accession:
         folders.add(f"{symbol}__{accession}")
-    for ref in data.get("references") or []:
-        ref_id = ref.get("id") if isinstance(ref, dict) else None
-        if isinstance(ref_id, str) and ref_id.endswith(("-uniprot.txt", "-goa.tsv")):
-            ref_dir = _ref_dir(ref_id)
-            if ref_dir:
-                folders.add(ref_dir.split("/")[1])
     return folders
 
 
@@ -127,7 +121,8 @@ def cites_search(
 
     A publication (PMID, DOI, PMC) counts wherever it is cited. A file recording
     the search (deep research or notes) counts only when it is the gene's own and
-    is quoted in ``supported_by``, so the verbatim check confirms what it says;
+    is quoted in ``supporting_text``, the field the verbatim local-quote check
+    reads (``supporting_text_fulltext`` is never checked, so it does not count);
     a nonblank quote need not be about the search, so this narrows the loophole
     rather than closing it. ``gene_dir`` (``ORG/FOLDER``, from the review's path)
     makes the own-folder test exact; without it, ``_own_folders`` is used.
@@ -170,7 +165,7 @@ def cites_search(
         isinstance(s.get("reference_id"), str)
         and any(m in s["reference_id"] for m in SEARCH_RECORD_MARKERS)
         and own(s["reference_id"])
-        and (has_text(s.get("supporting_text")) or has_text(s.get("supporting_text_fulltext")))
+        and has_text(s.get("supporting_text"))
         for s in support
     )
 

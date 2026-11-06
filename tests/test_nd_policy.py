@@ -170,6 +170,38 @@ def test_review_path_gives_the_exact_folder(gene_dir, passes):
     assert cites_search(review, doc, gene_dir) is passes
 
 
-def test_fulltext_quote_counts_like_supporting_text():
+def test_fulltext_quote_does_not_count_for_a_search_file():
+    """supporting_text_fulltext is never checked against the file, so it cannot show a search."""
     review = {"supported_by": [{"reference_id": "file:CANAL/X/X-notes.md", "supporting_text_fulltext": "0 records"}]}
-    assert cites_search(review, GENE)
+    assert not cites_search(review, GENE)
+
+
+def test_fallback_does_not_borrow_an_orthologs_folder():
+    """With no path, a cited ortholog UniProt file does not make its folder the gene's own."""
+    doc = {"gene_symbol": "Map2k4", "id": "Q6AXP2",
+           "references": [{"id": "file:human/MAP2K4/MAP2K4-uniprot.txt"}]}
+    review = {"supported_by": [{"reference_id": "file:human/MAP2K4/MAP2K4-notes.md", "supporting_text": "x"}]}
+    assert not cites_search(review, doc)
+
+
+def test_validator_uses_the_review_path_without_goa(tmp_path, monkeypatch):
+    """check_goa=False must not drop the review path: the own-folder test stays exact."""
+    import yaml
+    from ai_gene_review.validation import validate_gene_review
+
+    gene_dir = tmp_path / "genes" / "SCHPO" / "rhp51"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "rhp51-notes.md").write_text("No study of rhp51 was found.\n")
+    review = gene_dir / "rhp51-ai-review.yaml"
+    row = {"term": {"id": "GO:0003674", "label": "molecular_function"}, "evidence_type": "ND",
+           "original_reference_id": "GO_REF:0000015",
+           "review": {"action": "ACCEPT", "reason": "x", "supported_by": [
+               {"reference_id": "file:SCHPO/rhp51/rhp51-notes.md",
+                "supporting_text": "No study of rhp51 was found."}]}}
+    review.write_text(yaml.safe_dump({"id": "P36601", "gene_symbol": "rad51",
+                                      "taxon": {"id": "NCBITaxon:4896", "label": "S. pombe"},
+                                      "existing_annotations": [row]}))
+    monkeypatch.setattr("ai_gene_review.validation.local_source_text.PROJECT_ROOT", tmp_path)
+    report = validate_gene_review(review, check_goa=False, check_supporting_text=False)
+    assert not [i for i in report.issues if i.check_type == "nd_policy"
+                and "literature was searched" in i.message]
