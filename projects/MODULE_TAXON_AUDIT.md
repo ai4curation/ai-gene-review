@@ -90,7 +90,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 4 PR_OPEN, 4 IN_PROGRESS and 735 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after universe refresh: 784 modules; 34 COMPLETE, 4 PR_OPEN, 4 IN_PROGRESS and 742 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -679,3 +679,11 @@ PutA full validation passed on 5d01f7ba96fea3f93ec5a0fd61cfdcf212ef2a9b across 1
 Integrated published main `d2e41f09fb` with the validated PutA audit head `5f9ddc95a4`. All 196 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's validated row and the independently verified beta-oxidation completion row. All dated journals are preserved. Validation implementation is unchanged. The full run covered 10701 reviews and all 195 frozen inputs were verified unchanged before closeout; full-validation.json records its complete outcome and advisories. A dedicated PR, independent review and fresh CI still gate actual merge.
 
 Integration proof: [validated-head-integration.json](../analysis/module_audits/bacterial_fused_puta_proline_catabolism/validated-head-integration.json).
+
+## 2026-11-06 — module universe refresh to 784
+
+The module universe was checked against published main d2e41f09fbe335e611d3bfe0b5d0dff01d5a8ea4 and the integrated checkout. Seven previously untracked modules bring inventory coverage from 777 to 784. Every existing row is preserved. All seven additions are NOT_STARTED: structural triage, source citations and declared status do not establish completed literature, taxon, exemplar, member-review or merged-PR audits. Their PR overlaps remain unchecked.
+
+`bacterial_iad_auxin_catabolism`, `bombesin_receptor_signaling`, `endoplasmic_reticulum_lifecycle`, `er_cotranslational_translocation`, `er_oxidative_protein_folding`, `tsh_signaling`, `variovorax_metallophore_metal_homeostasis`.
+
+Universe proof: [module-universe-20261106-d2e41f09.json](MODULE_TAXON_AUDIT/proofs/module-universe-20261106-d2e41f09.json).
