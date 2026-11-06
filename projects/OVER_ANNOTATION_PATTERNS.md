@@ -2,8 +2,8 @@
 title: "Over-Annotation Patterns Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
-species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN]
-genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII]
+species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN, HORSE]
+genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII, AARS2, DARS2]
 manifest:
   slides:
     - href: OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html
@@ -19,7 +19,7 @@ manifest:
 nothing, or assert an activity the protein does not have, because they come from
 high-throughput interactome screens, domain signatures, broad keyword mappings or
 over-generalised family propagation. We catalogued the recurring shapes of this
-over-annotation that surfaced during gene review, eight categories in all, each tied to
+over-annotation that surfaced during gene review, nine categories in all, each tied to
 worked examples in real reviews. We did this so that curators and pipeline authors can
 recognise a pattern once rather than rediscovering it gene by gene; the catalogue was
 first presented at the GO Consortium meeting in October 2025. Nine exemplar reviews are
@@ -132,6 +132,49 @@ belongs on the catalytic member (`enables`); the partner takes `contributes_to` 
 (no active site), **eryCII** (heme-less P450 activator). See `PSEUDOENZYMES.md` and
 `PROTEIN_COMPLEX_FUNCTIONS.md`.
 
+### 9. Specificity That Restates Another Aspect (cross-aspect redundancy)
+
+**The Problem**: a term is more specific than its parent, but the only thing its
+specificity adds is a fact already asserted in a *different* GO aspect. "Prefer the more
+specific term" then pushes a curator or reviewer toward a term that carries no extra
+information, and in the worst case toward marking the correct parent as an
+over-annotation.
+
+The worked case is tRNA charging. GO had 42 biological-process terms naming the amino
+acid being charged: `GO:0006419` alanyl-tRNA aminoacylation and its 19 siblings, their 20
+mitochondrial twins, and two compartment-qualified variants. Each paired 1:1 with an
+existing molecular function that already carries the amino acid, `GO:0004813`
+alanine-tRNA ligase activity and so on, and each obsoletion comment says so in those
+terms: the process "restates an existing molecular function ... and adds nothing beyond
+it". Annotation is directed to the MF plus the compartment-level process, and 40 of the 42
+carry a `replaced_by` naming it.
+
+A 43rd term went in the same batch for a different reason, and is not an instance of this
+pattern: `GO:0070681` glutaminyl-tRNAGln biosynthesis via transamidation was obsoleted as
+"a specific pathway variant, which is out of scope for GO", its MF counterpart is
+`GO:0050567` rather than a Gln-tRNA ligase, and its comment gives `consider` targets
+instead of a `replaced_by` because "no single term is a safe automatic substitution". See
+`AMINO_ACID_ACTIVATION_OBSOLETION.md`.
+
+**The diagnostic**: ask what the specific term asserts that its parent plus the gene's
+other annotations do not. If the answer is "the amino acid", "the substrate" or "the
+product", and an MF row already names it, the specificity is redundant and the parent is
+the right term.
+
+**What this is not**: an argument against specificity in general. Compartment
+specificity survived the same obsoletion untouched — `GO:0070127` tRNA aminoacylation for
+mitochondrial protein translation is still live and still an `is_a` child of `GO:0006418`,
+because no MF term says where the reaction happens. A mitochondrial synthetase should
+still be refined from `GO:0006418` to `GO:0070127`. The test is whether the added content
+is already carried elsewhere, not how deep the term sits.
+
+**Examples**: the 15 *P. putida* aminoacyl-tRNA synthetase reviews and human AARS1 each
+marked `GO:0006418` over-annotated, or modified it to an amino-acid-specific child, on the
+reasoning that the child "already captures" the process — the exact judgement the
+obsoletion reversed. human/AARS2 and HORSE/DARS2 proposed an amino-acid-specific
+mitochondrial child (`GO:0070143`, `GO:0070146`) that is now obsolete; both now resolve to
+`GO:0070127`, with specificity on `GO:0004813` / `GO:0004815`.
+
 ## Genes Exemplifying Patterns
 
 | Gene | Species | Over-Annotation Pattern | Status |
@@ -145,10 +188,13 @@ belongs on the catalytic member (`enables`); the partner takes `contributes_to` 
 | pqsB | PSEAE | Catalytic acyltransferase MF on the non-catalytic subunit | COMPLETE |
 | actI-ORF2 | STRCO | Catalytic acyltransferase MF on the chain-length factor (no active site) | COMPLETE |
 | eryCII | SACEN | Full P450 MF/cofactor set on a heme-less pseudoenzyme | COMPLETE |
+| AARS2 | human | Amino-acid-specific BP restating the paired MF (obsoleted upstream) | COMPLETE |
+| HORSE/DARS2 | HORSE | Amino-acid-specific BP restating the paired MF (obsoleted upstream) | COMPLETE |
 
 ## Recommended Curation Principles
 
-1. **Specificity over breadth**: Always prefer the most specific accurate term
+1. **Specificity over breadth, with one exception**: prefer the most specific accurate
+   term, unless its only added content is already asserted in another aspect (pattern 9)
 2. **Remove uninformative annotations**: Generic protein binding from HTP screens
 3. **Validate domain predictions**: Especially for enzymatic activity
 4. **Distinguish direct vs. indirect**: Annotate to proximal function
