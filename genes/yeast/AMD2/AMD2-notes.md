@@ -118,3 +118,12 @@ purpose: the same report says AMD2 localizes to the cytoplasm in the Huh et al. 
 study. If that study reports YDR242W, the CC ND is stale (literature on this gene in this species
 identifies a location) and should become REMOVE with `nd_case: STALE` plus an IDA cytoplasm row, not
 an accepted ND with a citation. The paper is not in the cache, so this needs checking first.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[2]` GO:0005575 cellular_component (ND) left uncited again and flagged as
+  possibly stale. `AMD2-deep-research-falcon.md` states that AMD2 "is annotated as localizing to
+  the **cytoplasm** based on the global GFP localization study" of Huh et al. 2003 (Nature
+  425:686-691). A genome-wide GFP screen that localizes YDR242W is literature on this gene in
+  this species, so the CC ND would be stale; the Huh et al. data for YDR242W still need checking
+  before the row is re-actioned.
