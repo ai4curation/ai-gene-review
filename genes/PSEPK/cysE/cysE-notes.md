@@ -53,3 +53,12 @@ some records have atypical architecture or conflicting process annotations.
   node PTN000602332 carries cytosol (IBD), withdrawn only for plant organellar
   SATs (IRD at PTN000602385), and Q88PL0 has no membrane or signal features. The
   record's own SUBCELLULAR LOCATION line is ARBA-derived and no longer cited.
+
+
+## Comparative cysteine-route audit (2026-11-06)
+
+All four existing decisions retained. Q88PL0 matches the specific serine O-acetyltransferase models; native KT2440 enzymology is not supplied by S-313 cell extracts (PMID10482527) or recombinant PAO1 CysE (PMID42278617). The cytosol refinement remains a phylogenetic/architecture inference, not native fractionation. PAO1 lack of canonical CSC regulation cannot establish absence of interaction in KT2440. No complex membership, virulence process, or activity for the other KT2440 CysE-family paralogs is inferred.
+
+Default Falcon research was attempted normally with --provider falcon and failed with HTTP403. No provider report was fabricated; this section records manual review.
+
+Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.
