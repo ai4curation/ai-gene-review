@@ -471,3 +471,7 @@ The next module audit begins from pinned main `ee3ce5f10c138b64413d054c3755e2fce
 ## 2026-11-06 — DsbAB member and comparative evidence checkpoint
 
 The DsbAB audit has13complete gene reviews across E. coli, KT2440, PA14, Bacillus168 and exact-sequence Campylobacter proteins;78original payloads and26raw files are preserved, with9supported additions. Four family reviews assess six actual PAINT assertions and pass49grounding/25quotation checks, retaining unresolved broad-family scope. Thirteen curated references include four reviews and23source-checked findings. Exact81116DsbB remains an explicit archived-accession gap. Module integration, full validation, publication and actual merge are still outstanding.
+
+## 2026-11-06 — comparative DsbAB mechanism integrated
+
+Integrated DsbB-dependent oxidative folding across three bacterial phyla with two required roles, explicit alternative relays, and optional PA14 DsbA2 biochemical context. Fourteen completed gene reviews preserve 78 original rows and 28 raw sources; fourteen supported additions yield 92 current rows. Official archived 81116 DsbB identity is bridged without fabricated raw data or family IDs. Fourteen references, including four reviews, provide 24 findings. Eight curated compatible pairs and 75 scoped controls retain assay, compartment and family-scope limits. Full validation, dedicated PR, independent review, CI and actual merge remain required.
