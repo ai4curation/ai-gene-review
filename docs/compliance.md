@@ -22,7 +22,7 @@ two contextual metrics. Each applicable annotation contributes one opportunity:
 | --- | --- | --- |
 | `literature_support` | Conclusive experimental/TAS decisions, including MODIFY, REMOVE and non-core decisions | At least one PMID/DOI support item with nonblank `supporting_text` or `supporting_text_fulltext` |
 | `inference_support` | Corrective or NEW inferred annotations, including IEA/IBA | Nonblank `review.reason` plus a support reference, an `additional_reference_ids` entry, or a propagation source with `source_id` |
-| `nd_search_support` | ACCEPTed ND rows | A nonblank `review.reason` plus a citation of the literature search, as the `nd_policy` warning requires: a PMID/DOI/PMC id in `supported_by` or `additional_reference_ids`, or a `supported_by` quote from the gene's own deep-research or notes file. A bare or unquoted file, another gene's file, and the UniProt record do not count |
+| `nd_search_support` | ACCEPTed ND rows | A nonblank `review.reason` plus a citation of the literature search, as the `nd_policy` warning requires: a PMID/DOI/PMC id in `supported_by` or `additional_reference_ids`, or a `supported_by` quote (in `supporting_text`) from the gene's own deep-research or notes file. A bare or unquoted file, another gene's file, a MOD gene description, and the UniProt record do not count |
 | `nd_stale_support` | ND rows marked REMOVE or MODIFY | As `literature_support`: a PMID/DOI quote from the literature on this gene that makes the ND stale |
 
 The two ND rules reward adherence to the evidence-code guideline (see
