@@ -92,3 +92,20 @@
 - Comparator check for GO:0032933 SREBP signaling pathway: carried in human/mouse/rat by SCAP,
   INSIG1/2, SREBF1/2, ERLIN1/2 but by no S1P/S2P protease (QuickGO query 2026-10-18); not proposed
   as NEW, raised as a suggested question instead.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IDA (PMID:35362222) and IEA (GO_REF:0000044, SL-0173), both located_in, both KEEP_AS_NON_CORE
+already. No sub-compartment rows.
+
+Checks (full text of PMID:35362222 cached):
+- Fractionation separated mitochondria from ER and Golgi [PMID:35362222 "Biochemical fractionation of the
+  whole‐cell lysate (WCL), cytosol (Cyto, tubulin), mitochondria (Mito, COX IV), lysosomes (Lyso, LAMP1), Golgi
+  apparatus (Golgi, GM130), endoplasmic reticulum (ER, ERp72)"], so not the crude-pellet/MAM case.
+- Protease protection [PMID:35362222 "S1P could still be detected after elimination of the mitochondrial outer
+  membrane, which indicated that S1P resides in the mitochondrial matrix space"]; partners ETFA/ETFB are matrix.
+- UniProt Mitochondrion is curated from PMID:35362222 (ECO:0000269); the IEA mapping is sound.
+
+Outcome: both rows stay KEEP_AS_NON_CORE, reasons record the check. No GO:0005759 row: the matrix reading
+(one protease-protection assay, one study) conflicts with the curated ER/Golgi single-pass type I topology
+and lumenal protease domain, and protection past the OMM does not separate inner membrane from matrix.

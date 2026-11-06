@@ -161,3 +161,11 @@ show aggregation and surface/membrane damage, not transmembrane pore formation.
 - MARK_AS_OVER_ANNOTATED ×3: GO:0001649, GO:0033687, GO:0048630.
 - REMOVE ×1: GO:0005515 protein binding.
 - NEW ×3: GO:0061844, GO:0050829, GO:0050830.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IDA (PMID:29983246, located_in) and IEA (GO_REF:0000044, SL-0173, located_in). Both ACCEPT -> KEEP_AS_NON_CORE.
+- Evidence is organelle-level imaging of the endogenous peptide: [PMID:29983246 "endogenous MOTS-c exhibited a predominantly extra-nuclear localization pattern with a certain degree of mitochondrial association"]; [PMID:25738459 "HeLa and HEK293 cells showed a certain degree of mitochondrial co-localization"].
+- IEA: SL-0173 rests on the curated UniProt location [file:human/MT-RNR1__A0A0C5B5G6/MT-RNR1__A0A0C5B5G6-uniprot.txt "Mitochondrion {ECO:0000269|PubMed:29983246}"]; mapping sound.
+- No transit peptide or TM in the record; no sub-mitochondrial assay. Stays at the root.
+- Why non-core: core_functions place the activities in nucleus and extracellular region; nothing shows a MOTS-c activity inside mitochondria. Evidence is about the peptide (antibody/imaging, rho-zero loss), not the host 12S rRNA.

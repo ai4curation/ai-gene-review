@@ -24,6 +24,12 @@ genes:
   - GRP
   - NMB
   - COL1A1
+  - DDR1
+  - Ddr
+  - NT1
+  - spz5
+  - Toll-6
+  - kek6
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ
@@ -49,7 +55,7 @@ Knowing that *some* ligand is missing needs only GOA. Knowing *which* ligand is 
 curated knowledge, and the curated module is the place to keep it with its evidence. We
 therefore started curating pan-species signaling modules whose first step is the ligand, so
 that generic pathway hole-filling can report the gaps. Three new two-step modules are done
-(netrin, Slit-Robo, and MIF-CD74) and two existing modules with open ligand gaps were upgraded
+(netrin, Slit-Robo, and MIF-CD74/CD44) and two existing modules with open ligand gaps were upgraded
 to family-level ligand steps (Kit signaling and Ephrin-Eph signaling).
 
 ## 1. Are ligands part of the pathway in GO?
@@ -202,7 +208,7 @@ place genes in pathways.
 
 ## 4. Curated modules
 
-All fourteen modules have family-grounded pan-species ligand steps and pass the schema and module
+All fifteen modules have family-grounded pan-species ligand steps and pass the schema and module
 validators.
 
 - **[Netrin signaling](../modules/netrin_signaling.yaml)** (*netrin-activated signaling
@@ -215,64 +221,77 @@ validators.
   are only on axon guidance terms and have no MF.
 - **[Slit-Robo signaling](../modules/slit_robo_signaling.yaml)** (*Roundabout signaling
   pathway*). Ligand: Slit subfamilies of PTHR45836, *chemorepellent activity*, with PAINT node
-  PTN002911633 kept. The validator warns that the node's own term is *Roundabout binding*; that
-  warning is intentional and documented. Receptor: Robo receptors (no PANTHER id; they span three
+  PTN002911633 kept. The module validator warns that this node's IBD rows are *heparin binding*
+  and *Roundabout binding* (`GO:0048495`) only, so the node cannot be the evidence for the step's
+  *chemorepellent activity*, location or process terms; the mismatch is intentional (Decision 2)
+  and documented in the PTHR45836 family review. Receptor: Robo receptors (no PANTHER id; they span three
   families). GOA gaps in the notes: human SLIT1 and ROBO2, fly robo2 and robo3 are not on the
   pathway.
 - **[Kit signaling](../modules/kit_signaling.yaml)** (*Kit signaling pathway*, `GO:0038109`).
-  Upgraded the ligand step (`kitlg_scf_ligand`) from a single-gene `ENTITY` to `FAMILY`
+  Upgraded the ligand step (`kitlg_scf_ligand`) from a single-gene `GENE_PRODUCT` selector to `FAMILY`
   (`PANTHER:PTHR11574` `KIT LIGAND`, PAINT node `PTN002611905`, *cytokine activity*
   `GO:0005125`) with representative members in human (`KITLG`) and zebrafish (`kitlga`; the
   `PTHR11574` family review also covers mouse `Kitlg` and zebrafish `kitlgb`). GOA gaps resolved
   in gene reviews: human `KITLG` and zebrafish `kitlga` lacked `GO:0038109` *Kit signaling
   pathway* (added as `NEW` in both reviews).
 - **[Ephrin-Eph signaling](../modules/ephrin_receptor_signaling.yaml)** (*ephrin receptor
-  signaling pathway*, `GO:0048013`). Upgraded the ligand step (`efnb2_efnb2_ligand`) from a
-  single-gene `ENTITY` using *ephrin receptor binding* (`GO:0046875`) to `FAMILY`
+  signaling pathway*, `GO:0048013`). Upgraded the ligand step (now `ephrin_ligand_family`, formerly
+  the EFNB2-specific `efnb2_efnb2_ligand`) from a single-gene `GENE_PRODUCT` selector using *ephrin
+  receptor binding* (`GO:0046875`) to `FAMILY`
   (`PANTHER:PTHR11304` `EPHRIN`, PAINT node `PTN000885159`, *receptor ligand activity*
   `GO:0048018`) with representative members on the module step for human (`EFNB2`, `EFNB1`) and
   zebrafish (`efnb2a`), while the `PTHR11304` family review spans GPI-anchored ephrin-A
   (`EFNA1`–`EFNA5`), transmembrane ephrin-B (`EFNB1`–`EFNB3`), *C. elegans* (`efn-4`), and
-  *Drosophila* (`Ephrin`). The validator's `PAINT_TERM_NOT_ASSERTED` warning on `PTN000885159`
-  (`GO:0048018` vs PAINT's `GO:0046875`) is intentional per Decision 2 and documented in
-  `interpro/panther/PTHR11304/PTHR11304-review.yaml`.
-- **[MIF-CD74 signaling](../modules/mif_signaling.yaml)** (*macrophage migration inhibitory
-  factor signaling pathway*, `GO:0035691`). Two-step pan-species module. Ligand: MIF /
-  D-dopachrome tautomerase family (`PANTHER:PTHR11954`, PAINT nodes `PTN000237513` and
-  `PTN000237510`), *cytokine activity* (`GO:0005125`, a child of *receptor ligand activity*
-  `GO:0048018`). Receptor: CD74 subfamily (`PANTHER:PTHR14093:SF17`, PAINT node `PTN002679661`),
-  *cytokine receptor activity* (`GO:0004896`). GOA gap resolved in the new human `MIF` gene
+  *Drosophila* (`Ephrin`). `PTN000885159` is kept on the ligand step although its IBD MF is
+  `GO:0046875` rather than `GO:0048018` (Decision 2); the mismatch is documented in
+  `interpro/panther/PTHR11304/PTHR11304-review.yaml`. The module validator does not flag it. Ephrin
+  reverse signaling (into the ephrin-expressing cell) is outside the module boundary.
+- **[MIF-CD74/CD44 signaling](../modules/mif_signaling.yaml)** (*macrophage migration inhibitory
+  factor signaling pathway*, `GO:0035691`). Two-step module scoped to Euteleostomi, the clade where
+  both receptor subunits exist (the CD74 and CD44 PAINT nodes `PTN002679661` and `PTN002566805` are
+  both placed there); the MIF ligand family is older (Bilateria node `PTN000237513`, Eukaryota root
+  `PTN000237510`). Ligand: MIF / D-dopachrome tautomerase family (`PANTHER:PTHR11954`), *cytokine
+  activity* (`GO:0005125`, a child of *receptor ligand activity* `GO:0048018`). Receptor: the
+  *macrophage migration inhibitory factor receptor complex* (`GO:0035692`), *cytokine receptor
+  activity* (`GO:0004896`), with CD74 (`PANTHER:PTHR14093:SF17`) as the MIF-binding unit
+  (*macrophage migration inhibitory factor binding*, `GO:0035718`) and CD44
+  (`PANTHER:PTHR10225:SF6`) as the signaling unit; CD74 alone binds MIF but cannot signal. GOA gap resolved in the new human `MIF` gene
   review: in GOA only the receptor `CD74` carried `GO:0035691`, while human `MIF` carried
   `GO:0005125` *cytokine activity* and the parent term `GO:0007166` *cell surface receptor
   signaling pathway* (`IDA`, `PMID:12782713`), which is refined via `MODIFY` to `GO:0035691`
   *macrophage migration inhibitory factor signaling pathway*.
 - **[IL-34-CSF1R signaling](../modules/il34_signaling.yaml)** (*interleukin-34-mediated signaling
-  pathway*, `GO:0061514`, and sibling *macrophage colony-stimulating factor signaling pathway*,
-  `GO:0038145`). Three-step pan-species module. Ligand: IL-34 family (`PANTHER:PTHR28606`, PAINT
+  pathway*, `GO:0061514`). Two-step pan-species module (IL-34 ligand step, CSF1R receptor step).
+  *Macrophage colony-stimulating factor signaling pathway* (`GO:0038145`) is not a module concept,
+  because it is defined by CSF1 binding; downstream CSF1R effectors (GRB2, PI3K, PLCG2, MAPK,
+  STAT3) are left for a future CSF1R module. Ligand: IL-34 family (`PANTHER:PTHR28606`, PAINT
   node `PTN002823014`), *cytokine activity* (`GO:0005125`). Receptor: CSF1R subfamily
   (`PANTHER:PTHR24416:SF47`, PAINT nodes `PTN001230349` and `PTN002814394`), *macrophage
   colony-stimulating factor receptor activity* (`GO:0005011`). GOA Category C gap resolved in the
-  new human `IL34` gene review: in GOA `IL34` was annotated to `GO:0038145` (`IBA`, modified to
+  new human `IL34` gene review: in GOA `IL34` was annotated to `GO:0038145` (`NAS`, modified to
   `GO:0061514`) and `GO:0061514` (`IDA`), while its only MF terms were `GO:0005157` (*macrophage
-  colony-stimulating factor receptor binding*, `IBA`/`IDA`/`IMP`) and `GO:0005515` (*protein
+  colony-stimulating factor receptor binding*, `IBA`/`IDA`/`IEA`) and `GO:0005515` (*protein
   binding*, `IPI`); `GO:0005157` is modified to `GO:0005125` (*cytokine activity*) per Decision 2.
 - **[IL-21 signaling](../modules/il21_signaling.yaml)** (*interleukin-21-mediated signaling
   pathway*, `GO:0038114`). Three-step pan-species module. Ligand: IL-21 subfamily
   (`PANTHER:PTHR14356:SF2`, within `PANTHER:PTHR14356` `INTERLEUKIN-15-RELATED`, PAINT nodes
-  `PTN002682898` and `PTN007637558`), *cytokine activity* (`GO:0005125`). Receptor: IL21R
-  subfamily (`PANTHER:PTHR23037:SF7`, PAINT node `PTN000547990`) paired with the common gamma
-  chain (`IL2RG`, `PANTHER:PTHR23037:SF47`, PAINT nodes `PTN002745476` and `PTN008588077`),
+  `PTN002682898` and `PTN007637558`, which attest only biological-process terms, so they do not
+  ground the step's MF or location; `PTN002682898` has no taxon in `PTHR14356-paint.tsv`),
+  *cytokine activity* (`GO:0005125`). Receptor: IL21R subfamily (`PANTHER:PTHR23037:SF7`, PAINT
+  node `PTN000547990`), *interleukin-21 receptor activity* (`GO:0001532`), paired with the common
+  gamma chain (`IL2RG`, `PANTHER:PTHR23037:SF47`, PAINT nodes `PTN002745476` and `PTN008588077`),
   *cytokine receptor activity* (`GO:0004896`). GOA Category A gap resolved in the human `IL21`
   gene review: `IL21` lacked `GO:0038114` and carried `GO:0007165` (*signal transduction*, `NAS`,
   refined via `MODIFY` to `GO:0038114`) alongside `GO:0007259` (*cell surface receptor signaling
   pathway via JAK-STAT*, `NAS`, `ACCEPT`), and its receptor-binding annotations (`GO:0005126`,
   `GO:0005134`) are modified to `GO:0005125` (*cytokine activity*).
 - **[IL-22 signaling](../modules/il22_signaling.yaml)** (*interleukin-22-mediated signaling
-  pathway*, `GO:0140865`). Three-step pan-species module. Ligand: IL-22 family (`PANTHER:PTHR48488`,
+  pathway*, `GO:0140865`). Pan-species module. Ligand: IL-22 family (`PANTHER:PTHR48488`,
   PAINT node `PTN009232695`), *cytokine activity* (`GO:0005125`). Receptor: IL22RA1 subfamily
-  (`PANTHER:PTHR20859:SF53`, PAINT node `PTN000466212`) paired with the shared `IL10RB` beta
-  chain (`PANTHER:PTHR20859:SF50`), *cytokine receptor activity* (`GO:0004896`), alongside
-  extracellular decoy antagonism by soluble `IL22RA2` (`PANTHER:PTHR20859:SF51`). GOA Category A
+  (`PANTHER:PTHR20859:SF53`, PAINT node `PTN000466212`), *interleukin-22 receptor activity*
+  (`GO:0042018`), paired with the shared `IL10RB` beta chain (`PANTHER:PTHR20859:SF50`), *cytokine
+  receptor activity* (`GO:0004896`). The soluble decoy receptor `IL22RA2` (`PANTHER:PTHR20859:SF51`)
+  is outside the module boundary and recorded in a boundary note, not as a part. GOA Category A
   gap resolved in the human `IL22` gene review: `IL22` lacked `GO:0140865` and carried only
   `GO:0007165` (*signal transduction*, `IEA`), refined via `MODIFY` to `GO:0140865` (with `NEW`
   `GO:0007259` *cell surface receptor signaling pathway via JAK-STAT* retained alongside it), and
@@ -280,8 +299,8 @@ validators.
   activity*).
 - **[Death receptor / Fas signaling](../modules/death_receptor_apoptotic_signaling.yaml)** (*Fas
   signaling pathway*, `GO:0036337`, and *extrinsic apoptotic signaling pathway via death domain
-  receptors*, `GO:0008625`). Upgraded all steps from single-gene `ENTITY` selectors to `FAMILY`
-  selectors. Ligand: Fas ligand subfamily (`PANTHER:PTHR11471:SF33`, within `PANTHER:PTHR11471`
+  receptors*, `GO:0008625`). Converted the three remaining single-gene `GENE_PRODUCT` selectors to
+  `FAMILY`, so every step is family-grounded. Ligand: Fas ligand subfamily (`PANTHER:PTHR11471:SF33`, within `PANTHER:PTHR11471`
   `TUMOR NECROSIS FACTOR FAMILY MEMBER`, PAINT node `PTN000895255`), *cytokine activity*
   (`GO:0005125`). Receptor: FAS (`PANTHER:PTHR46874:SF1`); DISC adaptor: FADD
   (`PANTHER:PTHR15077:SF10`); initiator protease: CASP8 (`PANTHER:PTHR10454`, PAINT node
@@ -291,8 +310,8 @@ validators.
   activity*) but lacked `GO:0036337` (*Fas signaling pathway*), added as `NEW` (`PMID:7826947`).
 - **[Chemokine / Interleukin-8 signaling](../modules/chemokine_signaling.yaml)**
   (*chemokine-mediated signaling pathway*, `GO:0070098`, and *interleukin-8-mediated signaling
-  pathway*, `GO:0038112`). Upgraded all steps from single-gene `ENTITY` selectors to `FAMILY`
-  selectors. Ligand: Interleukin-8 subfamily (`PANTHER:PTHR12015:SF200`, within `PANTHER:PTHR12015`
+  pathway*, `GO:0038112`). Converted the four remaining single-gene `GENE_PRODUCT` selectors to
+  `FAMILY`, so every step is family-grounded. Ligand: Interleukin-8 subfamily (`PANTHER:PTHR12015:SF200`, within `PANTHER:PTHR12015`
   `SMALL INDUCIBLE CYTOKINE A`, PAINT node `PTN002564680`), *chemokine activity* (`GO:0008009`).
   Receptor: CXCR2 (`PANTHER:PTHR10489:SF689`, PAINT nodes `PTN001628461` and `PTN002573743`) and
   CCR5 (`PANTHER:PTHR10489:SF686`, PAINT node `PTN001628461`). In the new human `CXCL8` gene
@@ -333,19 +352,41 @@ validators.
   (`PANTHER:PTHR45695:SF6`), *bombesin receptor activity* (`GO:0004946`). GOA Category A gap
   resolved in the new human `GRP` and `NMB` gene reviews (`NEW` `GO:0031989` on both genes,
   retaining complementary `GO:0007218` *neuropeptide signaling pathway* as `ACCEPT`, plus `MODIFY` on
-  `GO:0007165` → `GO:0031989` on both genes, `MODIFY` on `GO:1900738` → `GO:0007200` on `GRP`, and
-  `MODIFY` on `GO:0005179` → `GO:0005184` on `NMB`).
-- **[Collagen-DDR receptor tyrosine kinase signaling](../modules/collagen_ddr_signaling.yaml)**
-  (*collagen-activated tyrosine kinase receptor signaling pathway*, `GO:0038063`). Two-step
-  pan-species module. Ligands: fibrillar and basement-membrane collagen triple-helical chains
-  including COL1A1 (`PANTHER:PTHR24023:SF1082`), COL1A2 (`PANTHER:PTHR24023:SF568`), COL2A1
-  (`PANTHER:PTHR24023:SF58`), COL3A1 (`PANTHER:PTHR24023:SF604`), and COL4A1
-  (`PANTHER:PTHR24023:SF854`, within `PANTHER:PTHR24023` `COLLAGEN ALPHA`), *receptor ligand
-  activity* (`GO:0048018`). Receptors: DDR1 (`PANTHER:PTHR24416:SF333`) and DDR2
-  (`PANTHER:PTHR24416:SF295`), *protein tyrosine kinase collagen receptor activity* (`GO:0038062`)
-  and *collagen binding* (`GO:0005518`). GOA Category C gap resolved in the updated human `COL1A1`
-  gene review (`NEW` `IC` annotations for `GO:0048018` and `GO:0038063` backed by
-  `Reactome:R-HSA-2327738` and `Reactome:R-HSA-2465890`).
+  `GO:0007165` → `GO:0031989` and `GO:0007218` on both genes, `MODIFY` on `GO:1900738` → `GO:0007200`
+  on `GRP`, and `MODIFY` on `GO:0005179` → `GO:0005184` on `NMB`).
+- **[Collagen-DDR signaling](../modules/collagen_ddr_signaling.yaml)** (*collagen-activated
+  tyrosine kinase receptor signaling pathway*, `GO:0038063`). Scoped to Eumetazoa, the taxon of
+  the receptor PAINT node. Ligand: a variant set by collagen class, each with *receptor ligand
+  activity* (`GO:0048018`), since no child term fits a structural collagen acting as a ligand:
+  fibrillar collagens I-III for both receptors and collagen IV for DDR1 (both in
+  `PANTHER:PTHR24023` `COLLAGEN ALPHA`, restricted to these chains), collagen X for DDR2
+  (`PANTHER:PTHR15427:SF48`). Drosophila Multiplexin, known only from a genetic interaction, is in
+  the notes and the knowledge gap, not a ligand variant (the same bar that keeps Toll-2 out of
+  the neurotrophin module). Receptor: DDR1 and DDR2
+  (DDR subfamilies of `PANTHER:PTHR24416`, PAINT node `PTN002400507`), *protein tyrosine
+  kinase collagen receptor activity* (`GO:0038062`). Fly Ddr is not a representative: its gene
+  review finds dipteran Ddr is a predicted pseudokinase (lost catalytic lysine, catalytic-loop
+  asparagine and DFG aspartate) with an unconserved collagen pocket, while Tribolium DDR and
+  *C. elegans* ddr-2 keep all three kinase residues (the honeybee model keeps two; *C. elegans* ddr-1 one). Downstream effectors and the other collagen
+  receptors (integrins, GP6, LAIR1, which belong to *collagen-activated signaling pathway*) are
+  boundary notes. GOA gaps recorded in the notes: in human only COL4A2 and COL4A6 are on the
+  pathway (IBA) and no collagen has a ligand-activity MF in GOA (resolved for human `COL1A1` in its
+  updated gene review via `NEW` `IC` annotations and a second core function for `GO:0048018` and
+  `GO:0038063` backed by `Reactome:R-HSA-2327738` and `Reactome:R-HSA-2465890`, alongside
+  `interpro/panther/PTHR24023/PTHR24023-review.yaml`); in fly no collagen is on the pathway.
+  No paper shows that fly collagen IV activates Ddr, which is recorded as a biology knowledge gap.
+- **[Neurotrophin signaling through Toll-family receptors](../modules/neurotrophin_toll_signaling.yaml)**
+  (*neurotrophin signaling pathway*, `GO:0038179`). Scoped to Drosophila melanogaster, because no
+  cached paper tests the ligand-receptor pairing in other insects. Ligand: the neurotrophins DNT1
+  (NT1) and DNT2 (spz5) (`PANTHER:PTHR23199` `NEUROTROPHIN 1-RELATED`, PAINT node `PTN002354018`),
+  *growth factor activity* (`GO:0008083`, a child of receptor ligand activity). Receptor: Toll-6 and
+  Toll-7, *neurotrophin receptor activity* (`GO:0005030`); no PANTHER id, as they sit in different
+  families. Optional co-receptor: Kek-6 (`PANTHER:PTHR24366:SF87`, PAINT node `PTN008615184`).
+  Adaptors (MyD88, Wek, Sarm) and JNK/NF-kB outputs are a boundary note, as is the immune
+  Spaetzle-Toll-1 pathway (`dmel_toll_signaling`). GOA gap recorded in the notes: NT1 and spz5 are
+  annotated only to *Toll signaling pathway*, not to the neurotrophin pathway. The notes also flag
+  that Toll-6 inherits Roundabout binding and axon-guidance IBAs from the Slit PAINT nodes, the
+  over-propagation the PTHR45836 family review already records for its Toll-6 subfamily.
 
 ## 5. Other curator work in this branch
 
@@ -357,8 +398,12 @@ validators.
   prune would also remove 233 now-passing entries for other genes; that was left out to keep this
   change focused.
 - **KITLG, kitlga, EFNB1, and MIF gene reviews:** added `NEW` `GO:0038109` (*Kit signaling
-  pathway*) to human `KITLG` and zebrafish `kitlga`; updated `GO:0046875` (*ephrin receptor
-  binding*) to `MODIFY` → `GO:0048018` (*receptor ligand activity*) on human `EFNB1`; and
+  pathway*) to human `KITLG` and zebrafish `kitlga` (in `kitlga`, *cytokine activity* is carried
+  by the `MODIFY` of `GO:0005173` *stem cell factor receptor binding*, not by a separate `NEW` row);
+  updated `GO:0046875` (*ephrin receptor binding*) to `MODIFY` → `GO:0048018` (*receptor ligand
+  activity*) on human `EFNB1`, with the five *protein binding* rows recording EFNB1–Eph receptor
+  pairs also `MODIFY` → `GO:0048018`, the ERBB2 rows → `GO:0005102` (not a ligand interaction),
+  the PICK1 row → `GO:0030165` *PDZ domain binding*, and the ANKRD46 two-hybrid row `REMOVE`; and
   created the full human `MIF` review (`genes/human/MIF/MIF-ai-review.yaml`) with `MODIFY` on
   `GO:0007166` (*cell surface receptor signaling pathway*) → `GO:0035691` (*macrophage migration
   inhibitory factor signaling pathway*) and `MODIFY` on `GO:0005126` (*cytokine receptor
@@ -412,10 +457,10 @@ validators.
     its IBD should use the ligand-activity term; a new `SUBFAMILY_ONLY` assessment of
     *chemorepellent activity* covers the four Slit subfamilies.
   - `interpro/panther/PTHR11574/PTHR11574-review.yaml`: `SOUND` node assessments for
-    `PTN002611905` (`GO:0005125` *cytokine activity*, `GO:0005576` *extracellular region*,
-    `GO:0005886` *plasma membrane*, `GO:0008284` *positive regulation of cell population
-    proliferation*) and `FAMILY_WIDE` term assessments including `GO:0005125` (*cytokine
-    activity*) and `GO:0038109` (*Kit signaling pathway*).
+    `PTN002611905` on its two IBD terms (`GO:0005886` *plasma membrane*, `GO:0008284` *positive
+    regulation of cell population proliferation*) and `FAMILY_WIDE` term assessments for
+    `GO:0005125` (*cytokine activity*), `GO:0038109` (*Kit signaling pathway*), `GO:0005173`,
+    `GO:0005886` and `GO:0008284`; PAINT does not place `GO:0005125` or `GO:0038109` at the node.
   - `interpro/panther/PTHR11304/PTHR11304-review.yaml`: `SOUND` node assessments on
     `PTN000885159` (`GO:0046875` *ephrin receptor binding*, `GO:0048013` *ephrin receptor
     signaling pathway*, `GO:0005886` *plasma membrane*, `GO:0007411` *axon guidance*), noting
@@ -437,8 +482,9 @@ validators.
     (*interleukin-34-mediated signaling pathway*) that PAINT should also place `GO:0005125` and
     `GO:0061514` at `PTN002823014`.
   - `interpro/panther/PTHR14356/PTHR14356-review.yaml`: `SOUND` node assessments on
-    `PTN002682898` (`GO:0001819` *positive regulation of cytokine production*, `GO:0050778`
-    *positive regulation of immune response*) and `PTN007637558` (`GO:0045954` *positive
+    `PTN002682898`, the node whose seeds span both subfamilies (`GO:0001819` *positive regulation of cytokine production*, `GO:0050778`
+    *positive regulation of immune response*), `PTN002682897` (including `GO:0005125` *cytokine
+    activity* and `GO:0005576` *extracellular region*) and `PTN007637558` (`GO:0045954` *positive
     regulation of natural killer cell mediated cytotoxicity*), `FAMILY_WIDE` term assessment for
     `GO:0005125` (*cytokine activity*) across IL-21 (`PTHR14356:SF2`) and IL-15 (`PTHR14356:SF3`)
     subfamilies, and `SUBFAMILY_ONLY` term assessments for `GO:0038114` (*interleukin-21-mediated
@@ -446,18 +492,18 @@ validators.
     signaling pathway* on `PANTHER:PTHR14356:SF3`).
   - `interpro/panther/PTHR48488/PTHR48488-review.yaml`: `SOUND` node assessments on
     `PTN009232695` (`GO:0005125` *cytokine activity*, `GO:0005576` *extracellular region*) and
-    `SCOPE_MISMATCH` on `GO:0050728` (*negative regulation of inflammatory response*), plus a
+    `UNRESOLVED` on `GO:0050728` (*negative regulation of inflammatory response*), plus a
     `FAMILY_WIDE` term assessment recommending `GO:0140865` (*interleukin-22-mediated signaling
     pathway*) at `PTN009232695`.
   - `interpro/panther/PTHR11471/PTHR11471-review.yaml`: `SOUND` node assessments on
-    `PTN000895255` (`GO:0005125` *cytokine activity*, `GO:0005615` *extracellular space*,
-    `GO:0005886` *plasma membrane*, `GO:0043123` *positive regulation of canonical NF-kappaB
-    signal transduction*), `SCOPE_MISMATCH` on `PTN000895255` `GO:2001238` (*positive regulation
-    of extrinsic apoptotic signaling pathway*) and `PTN007549844` `GO:0010811` (*positive
-    regulation of cell-substrate adhesion*), and `SUBFAMILY_ONLY` term assessments for
-    `GO:0036337` (*Fas signaling pathway* on `PANTHER:PTHR11471:SF33`) and `GO:0008625`
-    (*extrinsic apoptotic signaling pathway via death domain receptors* on `SF33`, `SF35`,
-    `SF36`, `SF41`).
+    `PTN000895255` (`GO:0005125` *cytokine activity*, `GO:0005576` *extracellular region*,
+    `GO:0007166` *cell surface receptor signaling pathway*, `GO:0043123` *positive regulation of
+    canonical NF-kappaB signal transduction*) and on `PTN001352146`, `PTN002607429`,
+    `PTN002607446` and `PTN008518640`, `TOO_DEEP` on `PTN000895255` `GO:2001238` (*positive
+    regulation of extrinsic apoptotic signaling pathway*), and `SUBFAMILY_ONLY` term assessments
+    for `GO:0036337` (*Fas signaling pathway* on `PANTHER:PTHR11471:SF33`) and `GO:0008625`
+    (*extrinsic apoptotic signaling pathway via death domain receptors* on `SF33`, `SF27`,
+    `SF23`).
   - `interpro/panther/PTHR12015/PTHR12015-review.yaml`: `SOUND` node assessments on
     `PTN002564680` (ELR+ CXC chemokines including CXCL8), `PTN000245709` (CC/XC chemokines),
     `PTN000428508` (CXCL12), and `PTN008302571` (CXCL9/10/11), `NEEDS_PRUNING` on `PTN008532501`
@@ -486,7 +532,7 @@ validators.
     (`PTHR16866:SF2`) and `NMB` (`PTHR16866:SF3`).
   - `interpro/panther/PTHR24023/PTHR24023-review.yaml`: `SOUND` node assessments on `PTN001166351`
     (`GO:0030020`), `PTN008390299` (`GO:0031012`), `PTN009074843` (`GO:0030199` on the major
-    fibrillar collagen clade), `PTN000615596` (`COL4A3`), and `PTN000615545` (`COL4A6`), plus
+    fibrillar collagen clade), `PTN000615596` (`COL4A2`), and `PTN000615545` (`COL4A6`), plus
     `SUBFAMILY_ONLY` term assessments for `GO:0048018` (*receptor ligand activity*) and
     `GO:0038063` (*collagen-activated tyrosine kinase receptor signaling pathway*) across `COL1A1`
     (`SF1082`), `COL1A2` (`SF568`), `COL2A1` (`SF58`), and `COL3A1` (`SF604`).
@@ -506,9 +552,9 @@ validators.
   `ephrin_receptor_signaling` (upgraded), `mif_signaling`, `il34_signaling`, `il21_signaling`,
   `il22_signaling`, `death_receptor_apoptotic_signaling` (upgraded), `chemokine_signaling`
   (upgraded), `c5a_signaling`, `tsh_signaling`, `bombesin_receptor_signaling`,
-  `collagen_ddr_signaling`.
+  `collagen_ddr_signaling`, `neurotrophin_toll_signaling`.
 - Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22, FASLG, CXCL8, C5, C3,
-  TSHB, CGA, GRP, NMB, COL1A1.
+  TSHB, CGA, GRP, NMB, COL1A1, DDR1, Ddr, NT1, spz5, Toll-6, kek6.
 - Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
   PTHR11471, PTHR12015, PTHR11412, PTHR11515, PTHR11509, PTHR16866, PTHR24023.
 - Report page: [report/ligand-gap-report.html](LIGANDS_IN_SIGNALING/report/ligand-gap-report.html)
@@ -517,10 +563,17 @@ validators.
 
 ### Next steps
 
-1. **More modules**, pan-species, ligand step first, using the decisions in section 2. Queue from
-   the gap check: fly Toll-6/7 neurotrophin (spz5, NT1), opioid receptor signaling (PENK, PDYN,
-   POMC), endothelin receptor signaling (EDN1, EDN2, EDN3), galanin signaling (GAL, GALP),
-   angiotensin signaling (AGT), CCL19 signaling, APOA1 signaling.
+1. **More modules**, pan-species, ligand step first, using the decisions in section 2. All receptor
+   and ligand members of the collagen-DDR and fly Toll-6/7 neurotrophin modules now have gene
+   reviews (DDR1, fly Ddr, NT1, spz5, Toll-6 and kek6 were added after the modules). The NT1 and
+   spz5 reviews move the ligands onto neurotrophin signaling pathway, and the Toll-6 review removes
+   the Roundabout-binding IBA from the Slit PAINT node. The fly Ddr review predicts a pseudokinase
+   and gives Ddr's core role as wrapping-glia axon ensheathment, so fly Ddr was dropped as a module
+   representative; human COL1A1 now carries a receptor-ligand-activity core function for DDR
+   signaling, while the other collagen reviews (COL1A2, COL2A1, COL3A1, COL4A1, COL10A1) do not yet.
+   Remaining GPCR/hormone queue: opioid receptor signaling (PENK, PDYN, POMC), endothelin receptor
+   signaling (EDN1, EDN2, EDN3), galanin signaling (GAL, GALP), angiotensin signaling (AGT), CCL19
+   signaling, APOA1 signaling.
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an
@@ -557,9 +610,22 @@ uv run python projects/LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey
 
 ### Known issues
 
-- Module validator warnings: PANTHER family-membership checks pass against `.cache/panther/panther-members-19.0.tsv`;
-  the remaining advisory warnings are `PTN008501429` MOD-ID seed comparison (no UniProtKB accessions in `PTHR10574-paint.tsv`)
-  and the intentional `PAINT_TERM_NOT_ASSERTED` / `SUBFAMILY_ONLY` warnings on `slit_robo_signaling.yaml` (`GO:0045499` vs PAINT's `GO:0048495`)
-  and `ephrin_receptor_signaling.yaml` (`GO:0048018` vs PAINT's `GO:0046875`).
+- Module validator: no errors in the eleven modules, but PANTHER family membership is **not**
+  checked. The validator reports every representative member as "not in the PANTHER member index
+  ... so family membership was not checked". Checked instead against each member's UniProt
+  `DR PANTHER` lines: the families agree for the netrin, Slit-Robo, Kit, MIF, chemokine and C5a
+  modules. The exceptions are pre-existing steps outside the ligand work. In
+  `ephrin_receptor_signaling.yaml`, EPHA2 and EPHB4 sit under `PTHR24416`, but UniProt places them
+  in `PTHR46877`. In `death_receptor_apoptotic_signaling.yaml`, CASP8 sits under `PTHR10454`, but
+  UniProt places it in `PTHR48169`. Some STAT3, STAT1 and GRB2 subfamily ids in the IL modules
+  have no matching subfamily in UniProt, which lists only the family. These are flagged here and
+  not changed.
+- Other advisory warnings: `PTN008501429` (netrin) seed overlap not checked, because its IBD seeds
+  carry no UniProtKB accession. `slit_robo_signaling.yaml`: `PTN002911633` attests only
+  `GO:0008201` and `GO:0048495`, not the step's terms (intentional, Decision 2), and a
+  `FAMILY_SCOPE_RESTRICTED` warning says `GO:0045499` is `SUBFAMILY_ONLY`. The ephrin
+  `PTN000885159` term mismatch is not flagged by the validator. The remaining warnings are
+  PTN-aspect and family-review-conformance warnings in `kit_signaling`, `il21_signaling`,
+  `il34_signaling`, `death_receptor_apoptotic_signaling`, `chemokine_signaling` and `c5a_signaling`.
 - `tests/test_bioreason_benchmark_policy.py::test_argo95_exact_goa_reads_the_declared_baseline_commit`
   fails on main as well; unrelated to this work.

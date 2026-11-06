@@ -21,3 +21,12 @@
   system`, and `chemotaxis`; demote or remove broader parent terms like
   `phosphorelay sensor kinase activity`, `transferase activity, transferring
   phosphorus-containing groups`, and `signal transduction`.
+
+## 2026-11-03 re-review
+- Deep research: `just deep-research PSEPK cheA --provider perplexity` failed (provider 'perplexity' not available); `just mod-description-deep-research` skipped (no MOD provider configured for PSEPK). Existing falcon report used; every falcon quote was checked as a verbatim substring.
+- UniProt quotes now cite the local flat file (file:PSEPK/cheA/cheA-uniprot.txt). ARBA-only, imported (ECO:0000313), DE-name and DR GO lines are not used as support.
+- Literature added: PMID:30761113 (Lopez-Farfan 2019, full text; was cited by DOI only) [PMID:30761113 "mutation of cheA2 abolished chemotaxis, which is consistent with the notion the CheA2 forms part of the che chemotaxis pathway"]; PMID:40197389 (He 2025, full text) [PMID:40197389 "The results showed that CheA exhibited a strong autophosphorylation signal after incubation with [32P]ATP[γP] for 45 min"] [PMID:40197389 "The addition of CheY to phosphorylated CheA led to a labeling of CheY and a reduction in the phospholabeling of CheA"]. PMIDs found via Europe PMC search (DOI and title queries). The He 2025 text does not give the CheA locus tag; its chemotaxis-null cheA deletion matches PP_4338.
+- The UniProt CC FUNCTION/CATALYTIC ACTIVITY lines are ARBA-only; replaced as support by the papers above and by PROSITE FT DOMAIN / MOD_RES lines.
+- GO:0000155 phosphorelay sensor kinase activity is an is_a CHILD of GO:0004673 (earlier note had this backwards). Its definition puts signal detection on the kinase; CheA is receptor-controlled [PMID:40197389 "methylated MCPs and the coupling protein CheW activate CheA autophosphorylation"]. MODIFY -> GO:0004673 (same as E. coli CheA).
+- GO:0016772 MODIFY -> GO:0004673; GO:0007165 TOO_GENERAL (ancestor of accepted GO:0000160); GO:0005737 ACCEPT (no KT2440 localization data for a more specific term).
+- Removed six non-verbatim falcon quotes (baseline-listed) and the DE-name quote. Status COMPLETE.

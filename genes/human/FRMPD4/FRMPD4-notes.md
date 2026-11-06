@@ -1,0 +1,23 @@
+# FRMPD4 research notes
+
+Human FRMPD4 is a multidomain scaffold whose terminal PDZ-binding motif and PIP2-binding FERM region connect protein and membrane interactions to dendritic-spine targeting. Human construct overexpression, rodent knockdown and human rescue support spine-density regulation in rat neurons; they do not establish every endogenous human physiological context (PMID:19118189). Rat Preso1 and mouse genetic experiments independently support Homer–metabotropic glutamate receptor anchoring and regulation of receptor phosphorylation, with the kinase activity belonging to recruited enzymes (PMID:22561452).
+
+The 2011 LGN paper contains a real FRMPD4 fragment interaction even though its title and crystal focus on Inscuteable. The later human FRMPD4–LGN structure clarifies the fragment identity and interface (PMID:22074847; PMID:25664792). Human intellectual-disability and tagged-construct studies support loss of scaffold functions, while truncated-protein overexpression is separated from actual patient transcript/protein stability (PMID:25644381; PMID:29267967).
+
+The high-throughput interaction sources require assay-specific interpretation. Human terminal-peptide selection verifies the DLG1 pair in original Table S1 (PMID:24550280), and Table EV3 plus independently viewed Fig. 5A support the six annotated PDZ partners in PMID:30126976. The phosphomimetic library does not establish endogenous phosphorylation. The MERS E binding result is real despite the SARS-CoV-2-focused title, but it is an in-vitro peptide–PDZ assay, not infection participation (PMID:33864728).
+
+The original quantitative supplement to PMID:36115835 materially changes confidence in 22 specific curated interactions: below-threshold signals and unresolved imported affinity fields cannot be counted as measured binding. Thirty-one contexts have positive original support; among these, 27 have the precise orientation required for PDZ domain binding. All 76 original GOA contexts remain preserved, including exact partners and provenance. There are no new annotations or quotations.
+
+The human FRMPD4–GPSM2 fragment interaction is specifically TPR domain binding, supported by the selected 2011 assays and the later human complex structure, ITC and interface substitutions (PMID:22074847; PMID:25664792). It does not by itself establish spindle-orientation physiology. FRMPD4's own PDZ module has a separate βPix-associated scaffold role: the R102A perturbation and neuronal domain experiments support the module's contribution without turning every isolated domain contact into an endogenous core complex (PMID:19118189).
+
+The selected original WW experiment reports negative purified-protein F-actin sedimentation alongside positive cellular colocalization. These results support indirect actin association; the abstract's broader association language does not establish direct actin binding (PMID:19118189, Methods and Results/Figure 3I).
+
+## Evidence and provenance
+
+The [source guide](FRMPD4-source-guide.md) distinguishes selected accessible originals from abstract-only cached sources. The [quantitative audit](FRMPD4-bioinformatics/RESULTS.md) reproduces the original measurements and their assay thresholds; the [evidence archive](FRMPD4-source-evidence.yaml) preserves all 76 original contexts and exact source joins. No new annotations or quotations are proposed.
+
+On 2026-11-01, native repository acquisition produced the 76-row seed and 17 normal sources (11 reused unchanged and six newly acquired). The native PAINT slice has 191 nodes and 11 rows; both target assertions agree with the separately inspected dated 188-node tree. Initial validation passed with eight generic-binding advisories and DRAFT status; the [original CREATE history](../../../history/genes/human/FRMPD4/2026-11-01T015415Z-claude-code-9e055a.yaml) preserves those outcomes. The prior notes remain in that published revision. This follow-up retains the provider credential hold and manual original-source research, with revised-content checks recorded in a new history only after execution.
+
+## Follow-up validation on 2026-11-01
+
+Default schema, ontology, reference and best-practice validation and strict GOA reconciliation passed for all 76 original contexts. Seven retained generic-binding advisories remain; the native status audit confirms DRAFT. The GPSM2 refinement accounts for the reduction from eight advisories. All 22 unresolved quantitative contexts and all 17 normal source files remain unchanged. The portable audit outputs match the independently replayed original workbook. The new EDIT history, rendered preview and source/preservation checks passed. No new annotations, quotations or provider calls were introduced.

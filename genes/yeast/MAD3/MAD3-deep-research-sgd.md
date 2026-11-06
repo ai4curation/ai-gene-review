@@ -1,0 +1,24 @@
+---
+provider: sgd
+authorship: SGD curators (hand-written gene description)
+source_url: https://www.alliancegenome.org/api/gene/SGD:S000003550
+source_field: relatedNotes[noteType=MOD_provided_gene_description]
+mod_gene_id: SGD:S000003550
+mod_gene_page: https://www.yeastgenome.org/locus/MAD3
+uniprot_accession: P47074
+fetch_date: '2026-11-01'
+citations_provided: false
+authoring_date_provided: false
+note: >-
+  Verbatim machine-fetched SGD curated gene description, as served by
+  the Alliance of Genome Resources, reproduced as-is as an external
+  deep-research source. It is written by database curators, not generated
+  for this review; the source supplies no citations and no authoring date.
+  Curatorial assessment of this text (relevance, correctness, staleness,
+  which claims were traced to publications) is the reviewer's and belongs in
+  the gene review's references[].reference_review, not in this file.
+---
+
+# SGD gene description for MAD3 (yeast)
+
+Subunit of the spindle-assembly checkpoint complex; involved in delaying anaphase onset in cells with defects in mitotic spindle assembly; pseudosubstrate inhibitor of APC(Cdc20), the anaphase promoting complex involved in Pds1p (securin) turnover; MAD3 has a highly diverged paralog, BUB1, that arose from the whole genome duplication; N-terminal TPR domain-containing region is homologous with the N-terminal region of Bub1p

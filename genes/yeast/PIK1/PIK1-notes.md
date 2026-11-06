@@ -19,3 +19,8 @@ Evidence journal (YeastPathways phosphoinositide_biosynthesis batch, 2026-10-06)
 ## Curation decisions
 - RCA cytosol -> MODIFY to TGN; generic kinase IEA -> MODIFY to GO:0004430; protein binding (Frq1, Gga2) REMOVE as uninformative; ARBA 'cellular response to stress' over-annotated.
 - PMID:10587649 not available (no abstract in cache); its IDA/IMP rows accepted because consistent with other evidence.
+
+## Description follow-up (UniProt/SGD text)
+- Pheromone response: the only evidence is an overexpression phenotype [PMID:8248783 "Expression of PIK1 from a multicopy plasmid elevated PtdIns 4-kinase activity and enhanced the response to mating pheromone."]. Checked and peripheral; not annotated.
+- Cytokinesis: conditional mutants arrest with large buds and divided nuclei, and the actin link was a suggestion [PMID:8194527 "Conditional mutants have a cytokinesis defect as indicated by a uniform terminal phenotype of cells with large buds and fully divided nuclei."]. Given the later Golgi secretion defect [PMID:10930462 "pik1(ts) cells exhibit a rapid defect in secretion of Golgi-modified secretory pathway cargos, Hsp150p and invertase"], the cytokinesis arrest may be secondary to loss of Golgi PtdIns4P. Not annotated.
+- Neither UniProt nor SGD mentions the Golgi PtdIns4P requirement for secretory cargo exit or the Frq1 subunit; recorded as MISSING_STATEMENT on both cited source texts.

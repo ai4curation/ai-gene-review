@@ -36,6 +36,9 @@ from ai_gene_review.validation.module_validator import validate_executable_model
 ROOT = Path(__file__).resolve().parents[1]
 ENDOSOMAL = ROOT / "modules/endosomal_trafficking_routing.yaml"
 LDLR = ROOT / "modules/ldl_receptor_mediated_endocytosis.yaml"
+ASGR = ROOT / "modules/asgr_galnac_hepatocyte_delivery.yaml"
+FCRN = ROOT / "modules/fcrn_igg_albumin_salvage_transcytosis.yaml"
+RETROMER = ROOT / "modules/retromer_endosome_to_tgn_retrieval.yaml"
 
 
 def _toy_trafficking_doc() -> dict[str, Any]:
@@ -154,7 +157,11 @@ def test_run_abm_scenario_rejects_unknown_stage_in_settings() -> None:
     assert any("settings name elements that are not model stages" in f for f in res.failures)
 
 
-@pytest.mark.parametrize("path", [ENDOSOMAL, LDLR], ids=lambda p: p.stem)
+@pytest.mark.parametrize(
+    "path",
+    [ENDOSOMAL, LDLR, ASGR, FCRN, RETROMER],
+    ids=lambda p: p.stem,
+)
 def test_curated_abm_modules_pass_all_scenarios(path: Path) -> None:
     doc = yaml.safe_load(path.read_text())
     assert unchecked_scenario_models(doc) == []
@@ -164,6 +171,44 @@ def test_curated_abm_modules_pass_all_scenarios(path: Path) -> None:
     all_results = run_declared_scenarios(doc)
     assert [(r.scenario_id, r.failures) for r in all_results if not r.passed] == []
     assert validate_executable_models(doc, ROOT) == ([], [])
+
+
+def test_asgr_galnac_fcrn_and_retromer_abm_branching_phenotypes() -> None:
+    # 1. ASGR1/ASGR2 hepatocyte GalNAc uptake: Rab7 loss increases cytosolic escape
+    asgr_model = module_to_abm(ASGR)
+    asgr_wt = simulate_abm(asgr_model)
+    asgr_rab7_ko = simulate_abm(
+        asgr_model, settings={"escrt_rab7_late_endosome": False}
+    )
+    assert asgr_wt.final_counts["cytosolic_galnac_escape"] == 10
+    assert asgr_rab7_ko.final_counts["ctsd_lysosomal_degradation"] == 0
+    assert (
+        asgr_rab7_ko.final_counts["cytosolic_galnac_escape"]
+        >= asgr_wt.final_counts["cytosolic_galnac_escape"] * 4
+    )
+
+    # 2. FcRn (FCGRT/B2M) salvage: WT salvage dominance vs FcRn blockade hypercatabolism
+    fcrn_model = module_to_abm(FCRN)
+    fcrn_wt = simulate_abm(fcrn_model)
+    fcrn_ko = simulate_abm(fcrn_model, settings={"fcrn_ph_dependent_salvage": False})
+    assert fcrn_wt.final_counts["ehd1_snap23_salvage_exocytosis"] == 80
+    assert fcrn_wt.final_counts["ctsd_lysosomal_catabolism"] == 20
+    assert fcrn_ko.final_counts["ehd1_snap23_salvage_exocytosis"] == 0
+    assert fcrn_ko.final_counts["ctsd_lysosomal_catabolism"] == DEFAULT_N_AGENTS
+
+    # 3. Retromer (VPS35/VPS26A/VPS29) & SORL1 retrograde sorting: WT TGN retrieval vs VPS35 loss
+    ret_model = module_to_abm(RETROMER)
+    ret_wt = simulate_abm(ret_model)
+    ret_ko = simulate_abm(ret_model, settings={"retromer_csc_cargo_selection": False})
+    ret_rab7_ko = simulate_abm(
+        ret_model, settings={"escrt_rab7_degradative_routing": False}
+    )
+    assert ret_wt.final_counts["rab9a_ap1_tgn_delivery"] == 80
+    assert ret_wt.final_counts["ctsd_lysosomal_proteolysis"] == 20
+    assert ret_ko.final_counts["rab9a_ap1_tgn_delivery"] == 0
+    assert ret_ko.final_counts["ctsd_lysosomal_proteolysis"] == DEFAULT_N_AGENTS
+    assert ret_rab7_ko.final_counts["ctsd_lysosomal_proteolysis"] == 0
+    assert ret_rab7_ko.final_counts["rab9a_ap1_tgn_delivery"] == DEFAULT_N_AGENTS
 
 
 def test_endosomal_trafficking_rab7_loss_boosts_cytosolic_escape() -> None:

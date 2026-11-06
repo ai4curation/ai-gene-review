@@ -33,6 +33,8 @@ from ai_gene_review.validation.action_consistency import (
     check_action_consistency,
     go_ancestors,
 )
+from ai_gene_review.validation.nd_policy import check_nd_policy
+from ai_gene_review.validation.paint_loss_check import check_paint_losses, has_paint_losses
 from ai_gene_review.validation.decomposition import (
     check_decomposition,
     go_is_a_ancestors,
@@ -55,6 +57,8 @@ from ai_gene_review.validation.uniprot_quote_source import (
     validate_uniprot_quote_sources,
 )
 from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.source_statement_defects import validate_statement_defects
+from ai_gene_review.mod_providers import is_mod_description_file
 from ai_gene_review.taxon import is_ncbitaxon_curie
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
@@ -407,6 +411,7 @@ def validate_gene_review(
         validate_uniprot_quote_sources(data, report)
         validate_record_sections(data, report)
         validate_goa_support(data, report, yaml_file_path)
+        validate_statement_defects(data, report)
 
     return report
 
@@ -495,6 +500,7 @@ def check_best_practices_rules(
     validate_alternative_records(data, report)
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
+    check_nd_policy(data, report)
     check_decomposition(
         data,
         report,
@@ -505,6 +511,12 @@ def check_best_practices_rules(
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )
+    if has_paint_losses(data):
+        from ai_gene_review.validation.module_validator import load_paint_index
+
+        check_paint_losses(
+            data, report, load_paint_index(get_project_root() / "interpro" / "panther")
+        )
     if yaml_file is not None:
         # Source-level check: a folded scalar turns a newline into a space, so a
         # hyphenated compound split across lines renders as two words. Invisible to
@@ -866,7 +878,12 @@ def check_best_practices_rules(
 
         if not has_research_support:
             if yaml_file is not None:
-                research_files = list(yaml_file.parent.glob("*research*.md"))
+                # MOD gene descriptions are curator-written source text, not AI deep
+                # research, so leaving one uncited is not what this check is about.
+                research_files = [
+                    f for f in yaml_file.parent.glob("*research*.md")
+                    if not is_mod_description_file(f.name)
+                ]
                 if research_files:
                     research_file_names = [
                         f.name for f in research_files[:3]
@@ -1006,12 +1023,32 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
+                    # A BIOLOGY gap on the MF aspect may mark a contested activity deliberately
+                    # left out of the NEW rows. Read the core function's own gaps, and the
+                    # top-level gaps only when this is the review's only core function. The
+                    # gap need not be about this term, so keep the issue but lower it to
+                    # INFO and drop the NEW advice.
+                    candidate_gaps = list(core_func.get("knowledge_gaps") or [])
+                    if len(data["core_functions"]) == 1:
+                        candidate_gaps += data.get("knowledge_gaps") or []
+                    has_mf_gap = any(
+                        isinstance(gap, dict)
+                        and isinstance(gap.get("gap_kind"), list)
+                        and "BIOLOGY" in gap["gap_kind"]
+                        and gap.get("dark_aspect") == "MF_DARK"
+                        for gap in candidate_gaps
+                    )
                     if not is_from_annotations and has_support:
                         report.add_issue(
-                            ValidationSeverity.WARNING,
+                            ValidationSeverity.INFO if has_mf_gap else ValidationSeverity.WARNING,
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
                             path=f"core_functions[{i}].molecular_function",
-                            suggestion="Consider adding this term to existing_annotations with action: NEW if it's a novel annotation",
+                            suggestion=(
+                                "The review has an MF_DARK knowledge gap; if that gap is about this "
+                                "activity, leaving it out of NEW rows is intended"
+                                if has_mf_gap
+                                else "Consider adding this term to existing_annotations with action: NEW if it's a novel annotation"
+                            ),
                             validation_category="BestPractices",
                             check_type="core_function_molecular_function_not_in_annotations",
                         )

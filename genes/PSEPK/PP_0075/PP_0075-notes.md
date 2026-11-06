@@ -31,3 +31,11 @@ The report correctly retrieves the SulP/SLC26-STAS architecture and the absence
 of a direct transport assay. Its proposed sulfate cargo remains speculative.
 Its assignment of intact choline-O-sulfate uptake to an unspecified ABC route
 is also not established by the target or cached KT2440 evidence.
+
+## 2026-11-02 completion (choline-O-sulfate module curation)
+
+- GO:0016020 membrane changed from KEEP_AS_NON_CORE to MODIFY -> GO:0005886 plasma
+  membrane: correct but general; nine Phobius helices plus SLC26A/SulP domain in a
+  Gram-negative bacterium place the protein in the cytoplasmic (inner) membrane.
+- Removed reliance on the ARBA-only SUBCELLULAR LOCATION line as support.
+- Status set to COMPLETE.

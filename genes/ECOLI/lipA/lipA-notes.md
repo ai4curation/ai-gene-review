@@ -47,10 +47,22 @@ abstract-only), the UniProt record and PubMed searches.
 
 ## Quaternary structure
 
-- Purified as a monomer/dimer mixture (PMID:11106496); molecular-sieve chromatography shows
-  LipA alone runs near monomer mass (44 kDa vs 38 kDa theoretical) and forms a 1:1 complex
-  with NfuA (PMID:29051382). Both sulfurs come from one polypeptide (PMID:15740115). A
-  functional homodimer is therefore not established; GO:0042803 is treated as over-annotation.
+- Unresolved, and the literature has changed its mind. The early reports read a homodimer
+  [PMID:10747808 "Biotin synthase and lipoate synthase are homodimers"], and the AdoMet and
+  sulfur stoichiometries were taken the same way [PMID:15157071 "consistent with a model in
+  which two LipA proteins are required to synthesize one lipoyl group"].
+- Both sulfurs of one lipoyl group come from one polypeptide (PMID:15740115). This retires the
+  inter-subunit sulfur-sharing rationale that made the 1:2 LipA:product stoichiometry look like
+  evidence for an obligate dimer. It does *not* by itself exclude a homodimer whose subunits
+  each run a complete reaction -- an inference these notes previously drew, wrongly.
+- What is actually on the record: purification gives a monomer/dimer mixture (PMID:11106496);
+  molecular-sieve chromatography puts LipA alone near its monomer mass [PMID:29051382 "LipA
+  alone (dotted trace) elutes at 59.6 mL by MSC, exhibiting an experimentally calculated mass
+  of 44.1 kDa (theoretical mass, 38.2 kDa)"] and resolves a 1:1 LipA-NfuA heterodimer; and
+  UniProt declines to choose ("Monomer or homodimer."). So no *defined* homodimer is
+  established, the earlier reports are superseded on this point, and GO:0042803 is treated as
+  over-annotation on that basis. The oligomeric state under turnover is an open knowledge gap
+  in the review, not a settled call.
 
 ## Interactions and localization
 
@@ -74,3 +86,27 @@ abstract-only), the UniProt record and PubMed searches.
 - NEW GO:1904047 (IC, from PMID:15157071 SAM stoichiometry and the HAMAP/Booker cluster
   description of SAM as an exchangeable ligand).
 - Protein binding (AceF/SucB, NfuA) REMOVE.
+
+## Review written (2026-10-31)
+
+`lipA-ai-review.yaml` is complete: 19 rows (8 ACCEPT, 7 MODIFY, 2 REMOVE,
+1 MARK_AS_OVER_ANNOTATED, 1 NEW), 3 core functions, `status: COMPLETE`. The
+decisions are the ones sketched under "GO decisions" above, with two points
+settled while writing:
+
+- **GO:0042803 protein homodimerization** is `MARK_AS_OVER_ANNOTATED`, not
+  REMOVE. The IDA observation is real — LipA purified "as a mixture of monomeric
+  and dimeric species" (PMID:11106496) — so the term is not false; what
+  overreaches is reading a functional homodimer into it, against UniProt's own
+  "Monomer or homodimer", the single-polypeptide sulfur donation
+  (PMID:15740115) and the 1:1 NfuA complex (PMID:29051382).
+- **The cytoplasm rows MODIFY to cytosol.** GO:0005737 is not one of the five
+  root organelle terms that `projects/ORGANELLES.md` exempts from refinement, so
+  the ordinary "correct but general is MODIFY" rule applies, and GO:0005829 is
+  carried by IDA.
+
+Quoting note for whoever edits this file next: the `supporting_text` checker
+strips square brackets as editorial, so
+`"... 1 equiv of [lipoyl]H-protein"` fails even though it is verbatim in
+PMID:15157071. `[4Fe-4S]` is exempt as scientific notation; `[lipoyl]` is not.
+The quote is written in the sanctioned `...` form instead.

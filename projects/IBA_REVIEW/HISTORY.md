@@ -135,6 +135,78 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-10-28 — Quantitative phylogenetic distance analysis for single-organism IBAs
+
+Built [`single_organism_distance.py`](single_organism_distance.py) and
+[`single-organism-distance.md`](single-organism-distance.md) to quantify how far up and
+down the tree single-organism IBAs travel across all 25,298 positive GOA `IBA` rows
+(6,382 GOA genes, 6,379 reviewed; 3,517 non-self single-organism IBAs across 2,165 genes;
+3,433 rated: 3,426 with resolved donor lineage and 7 in `Tier 0`). Defined four
+complementary metrics and separated **Propagation Failure (`Fail` = `REMOVE` +
+`MARK_AS_OVER_ANNOTATED`)** from **Term Granularity Refinement (`Refn` = `MODIFY` +
+`TOO_GENERAL`)**:
+
+1. **Taxonomic LCA Clade Depth ($d_{\text{LCA}}$) & Branch Steps ($s_{\text{up}} + s_{\text{down}}$):**
+   Propagation failure (`% Fail`) rates climb from **8.0%** (`REMOVE` **2.6%**, 14.0% total
+   downgraded, $n = 1{,}346$) in close clades (Tier 1) and **12.2%–13.6%** (`REMOVE`
+   **4.6%–5.9%**) in phylum/Bilateria splits (Tiers 3–4; small-$n$ Tier 2 has $n = 73$ with
+   1.4% Fail, 0.0% `REMOVE`, and 16.4% `MODIFY`/`TOO_GENERAL` refinement) to **13.7%**
+   (`REMOVE` **5.4%**, $n = 735$) across Opisthokonta/Amorphea (Tier 5), **19.3%**
+   (`REMOVE` **10.8%**, $n = 83$) at Eukaryota root (Tier 6), and **22.6%** (`REMOVE`
+   **15.0%**, 31.6% total downgraded, $n = 133$) at `LUCA` (Tier 7).
+2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):**
+   Calibrated on close donor–target pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}538$ total: 785 in
+   cached PAINT families with an explicit node taxid, 226 in cached families with an unrecorded
+   blank `taxon:` in `*-paint.tsv`, and 527 uncached), single-organism IBAs whose `IBD` was placed at
+   `LUCA`/`Eukaryota`/`Opisthokonta` ($d_{\text{PTN}} \le 1$, $n = 121$) or intermediate
+   pre-vertebrate clades ($2 \le d_{\text{PTN}} \le 5$, $n = 252$) have a **7- to 8-fold
+   higher `REMOVE` rate** (**4.1%** and **3.6%**, with **8.3%** and **7.1%** Fail, **14.9%** and
+   **13.9%** downgraded) than those scoped within the clade/Vertebrata ($d_{\text{PTN}} \ge 6$,
+   $n = 412$: **0.5%** `REMOVE`, **6.6%** Fail, **13.6%** downgraded). Rows with an unrecorded blank
+   `taxon:` string ($n = 226$) show **8.4%** Fail and **4.9%** `REMOVE` (**12.4%** downgraded).
+3. **PANTHER Subfamily Dilution (`CROSS_SF` vs `SAME_SF`):** Crossing a PANTHER subfamily
+   boundary increases the propagation failure rate and nearly doubles the `REMOVE` rate
+   (7.4% $\to$ 10.6% Fail, 2.3% $\to$ 4.2% `REMOVE` in close/moderate taxa, $n = 430$ vs
+   $n = 189$; 12.3% $\to$ 19.1% Fail, 5.8% $\to$ 8.7% `REMOVE` in distant taxa, $n = 260$
+   vs $n = 277$).
+4. **Exact TreeGrafter Tree Steps & Duplications (`steps_from_ibd`, `duplication_on_path`):**
+   Across all 383 rated single-taxon `IBD` paths in `projects/TREEGRAFTER/graft_paths_all.tsv`
+   (which audits reviewed TreeGrafter `IEA` graft paths on non-PANTHER species, with $n = 2$
+   direct row overlap with GOA `IBA` annotations), crossing a duplication node on `< 10` step
+   paths raises the failure rate from **12.9%** (`REMOVE` **4.8%**, $n = 209$) to **17.3%**
+   (`REMOVE` **8.0%**, $n = 162$), and to **20.0%** (`REMOVE` **10.0%**, $n = 10$) on paths of
+   $\ge 10$ tree steps with duplication.
+
+*Note on circularity*: Because existing review actions were generated under `IBA_REVIEW.md`
+guidelines that already instruct reviewers to scrutinize cross-kingdom and deep-node
+propagations, these rates partly reflect reviewer policy rather than an independent ground
+truth. However, auditing the retained rows with `--candidates` (which flags Tier 4–7
+`ACCEPT`/`KEEP_AS_NON_CORE` rows whose existing `reason` text matches 13 skeptical keywords,
+supplemented by PANTHER family/ortholog consistency sweeps) reveals inconsistencies where
+earlier reviews left high-distance over-propagations at `ACCEPT` or `KEEP_AS_NON_CORE`.
+
+Used `--candidates` together with PANTHER family/ortholog consistency sweeps to **identify 15
+candidate genes for re-review** (submitted in partitioned follow-up PRs
+[#5703](https://github.com/ai4curation/ai-gene-review/pull/5703) and
+[#5704](https://github.com/ai4curation/ai-gene-review/pull/5704)) where high-distance
+single-organism IBAs had been left at `ACCEPT` or `KEEP_AS_NON_CORE` despite biological or
+ortholog-review evidence of over-propagation:
+- **Tier 7 / Tier 6 batch (8 genes, [PR #5703](https://github.com/ai4curation/ai-gene-review/pull/5703)):**
+  `human/MDH1` (`GO:0006099` TCA cycle from *M. tuberculosis* `mdh` via `PTN000600336`),
+  `BACSU/sigF` (`GO:0000976` transcription cis-regulatory region binding from an *Arabidopsis* plastid sigma factor `TAIR:locus:2084420` via `PTN000779307`),
+  `human/IDI1` & `human/IDI2` (`GO:0009240` IPP biosynthesis from *Arabidopsis* `IPP1` `AT5G16440` via `PTN000853999`),
+  `SCHPO/SPAC11D3.09` & `SCHPO/SPAPB24D3.03` (`GO:0009446` putrescine biosynthesis from *Arabidopsis* agmatinases via `PTN000144486`),
+  and `SCHPO/SPAC17G8.02` & `SCHPO/SPBC1683.06c` (`GO:0006152` purine nucleoside catabolic process, single-organism *Arabidopsis* `NRH1`/`NRH2` IBA via `PTN000266727`, plus multi-organism `GO:0008477` purine nucleosidase activity on the same node).
+- **Tier 5 / Tier 4 batch (7 genes, [PR #5704](https://github.com/ai4curation/ai-gene-review/pull/5704)):**
+  `human/ATG4D`, `human/ATG2B`, & `DICDI/atg1` (`GO:0034727`
+  piecemeal microautophagy of the nucleus from *S. cerevisiae* `ATG4`/`ATG2`/`ATG1` via `PTN002503342`/`PTN000324023`/`PTN000681273`),
+  `SCHPO/cit1` (`GO:0005975` carbohydrate metabolic process from human `CS` via `PTN000201223`),
+  `SCHPO/lsb6` (`GO:0005802`, `GO:0007030`, `GO:0007032` from *Drosophila* `Pi4KIIalpha` via `PTN000305230`),
+  `SCHPO/oar2` (`GO:0048038` quinone binding from human `CBR4` via `PTN002449501`), and
+  `human/HSPB2` (`GO:0042026` protein refolding from *Drosophila* sHSPs via `PTN000897708`).
+
+---
+
 ## 2026-08-26 — Systematic MSA pass over the pseudo-enzyme backlog
 
 The (e) pass built the first MSAs but only for Argonautes and CRMP; every other
