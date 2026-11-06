@@ -2,7 +2,7 @@
 
 ## Human channel experiments
 
-[PMID:17344063](https://pmc.ncbi.nlm.nih.gov/articles/PMC1937038/) reports human Cx47 dye transfer and paired-cell currents. [AY285161.1](https://www.ncbi.nlm.nih.gov/nuccore/AY285161.1) encodes current residues 4–439; its excluded upstream AUG does not establish endogenous initiation. Selected original Methods/Results/captions were read. Tissue evidence is rhesus; mutant ER retention is separate.
+[PMID:17344063](https://pmc.ncbi.nlm.nih.gov/articles/PMC1937038/) reports human Cx47 dye transfer and paired-cell currents. Selected original sections were read. Tissue evidence is rhesus; mutant ER retention is separate.
 
 [PMID:19056803](https://doi.org/10.1093/brain/awn328) separates surface plaques from channel function: I33M has defective homotypic coupling and altered heterotypic gating. The published Methods cite AF014643, whose sequence differs from AY285161 at historical residues 80 and 249; the actual plasmid sequence is unavailable. Historical I33 maps to current I36. Figure 7 includes a reused WT curve; contemporary WT controls are also reported. Opposing-cell pairing is not heteromeric coassembly. Selected original text and Figure 7 were inspected.
 
@@ -31,3 +31,7 @@ GO:0007267 and GO:0010644 are direct is_a children of GO:0007154. The broad exis
 ## Product boundary
 
 The current canonical record is Q5T442, 439 residues. Historical constructs and uncertain initiation do not establish a second natural isoform. The sequence and its hash are retained in the source archive; a canonical-only product slot is not added to the review.
+
+## Reproducible deposited-sequence comparisons
+
+The [local comparison](GJC2-bioinformatics/README.md) parses the two original GenBank CDS translations and the cached UniProt sequence. It reproduces the human accession comparisons and residue-number mapping above. The mouse 437-residue construct remains a reported experimental length, with equivalence unresolved; no mouse sequence reconstruction is claimed.

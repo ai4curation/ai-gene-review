@@ -17,3 +17,9 @@ Default validation and strict original-context matching passed. Two advisories r
 ## 2026-11-05 — direct manual support and final local status
 
 An exact four-word manual-page anchor was added to the existing core support. The first attempt used an unsupported database-section field on a manual source; that diagnostic was preserved and the field omitted. Default validation now passes with only the PANTHER reference resolver limitation. The actual helper computes COMPLETE, and that scalar was applied and confirmed. Strict original matching remains unchanged; final history validation and private rendering passed. The initial DRAFT reports above remain historical diagnostics. No external source, action, core term or product changed. Publication remains pending.
+
+## 2026-11-06 — localization and channel interpretation
+
+Human Cx47 supports channel coupling; the tissue-localization experiment used rhesus oligodendrocytes [PMID:17344063](https://pmc.ncbi.nlm.nih.gov/articles/PMC1937038/). Mouse myelin staining supports the transferred annotation, while human sheath localization remains unresolved [PMID:20578039](https://doi.org/10.1002/glia.21032). The core now records plasma membrane and gap junction.
+
+The [deposited-sequence comparison](GJC2-bioinformatics/README.md) separates accession sequences from unsequenced experimental plasmids. Opposing-cell connexin pairing is distinct from subunit mixing within a connexon.
