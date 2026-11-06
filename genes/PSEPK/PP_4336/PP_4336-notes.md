@@ -23,3 +23,7 @@ The existing COMPLETE review and its three authored NEW proposals were frozen be
 Default Falcon was attempted once and returned HTTP403 authentication failure; the genuine command log is retained in the ignored comparative-panel audit directory. No provider report was fabricated.
 
 All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Strengthened the chemotaxis inference with direct KT2440 gradient context (PMID32766440) and source-qualified stator phenotypes (PMID36409076). Mechanical execution is distinct from sensing or prior assembly. The MotCD clustering result is retained explicitly; agar spreading is not treated as a gradient-response assay.

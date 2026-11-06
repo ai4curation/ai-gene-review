@@ -72,3 +72,10 @@ All 15 inherited rows, including NEW GO0008564 and GO0120102, and the genuine Fa
 Existing genuine Falcon report retained without refresh.
 
 All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+
+## 2026-11-06 PR6138 round-1 clarification
+
+Accepted the independently supported ATP-hydrolysis and type III secretion-complex rows alongside the export activity and flagellar location. Current GO lacks the formerly implied hierarchy links; absence of an edge does not mean the export reaction lacks ATP hydrolysis. PMID8943245 directly measures Salmonella ATPase activity, and PMID29946050 reconstitutes ATP-dependent export. No original annotation payload or inherited NEW action changed.
+
+Ontology definitions and ancestor URLs, primary-source scope and reviewer disagreements are recorded in `analysis/module_audits/bacterial_flagellar_assembly_export/round1-consultation.md`.

@@ -595,3 +595,7 @@ Full validation of frozen science 401af31cd2 completed successfully: 10,691 gene
 ## 2026-11-06 — flagellar PR #6138 published
 
 Published the independently validated flagellar audit as PR #6138. The 38-member scientific panel remains unchanged from full-validation science 401af31cd2. This checkpoint only records the live PR identity and updates the project ledger; independent review, CI and actual merge remain pending.
+
+## 2026-11-06 — flagellar review evidence adjudicated
+
+PR6138 follow-up corrects the Salmonella FliI hierarchy inconsistency, strengthens self-association synthesis and direct motor-switch evidence, distinguishes stator execution of chemotaxis from upstream export/assembly, and adds source-qualified gradient context. Current GO supports the motor and FlgE ancestry; the obsolete contrary framing was not reinstated. Seventeen member reviews pass focused checks, all254 row payloads and prior NEW actions remain unchanged, and all131 raw/provider sources are preserved. The renewed full run, external review, CI and merge remain pending.

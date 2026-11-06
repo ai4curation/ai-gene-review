@@ -15,3 +15,7 @@ NEW0030254: the protein performs carrier/docking/activation work, rather than se
 Research provenance: the bare deep-research recipe requires an explicit provider. The subsequent real `--provider falcon` request failed with authentication HTTP403; no provider report was created or synthesized. This manual review uses the cited primary caches and target classification.
 
 Adjudication check: existing GO0071973 motility claims are retained as non-core broad functional participation because same-role FliH/FliJ comparators consistently carry them. Lack of torque production alone is not a sufficient negative argument. Chemotaxis GO0006935 remains UNDECIDED: its definition includes directed locomotion, not only signal transduction, and the available sources do not settle the intended breadth for export factors.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Reassessed chemotaxis as over-annotation: export/assembly evidence identifies FliJ molecular work but does not establish guided-movement participation. This differs from the ongoing torque supplied by stators during the response.

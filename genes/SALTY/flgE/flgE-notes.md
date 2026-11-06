@@ -8,3 +8,7 @@ P0A1J1/STM1177 has 403 residues. RCSB 6K3I entity1 exactly matches UniProt resid
 Default Falcon was attempted once and returned HTTP403 authentication failure; the genuine command log is retained in the ignored comparative-panel audit directory. No provider report was fabricated.
 
 All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Corrected spacing in reviewer-authored prose; source quotations and scientific claims are unchanged.

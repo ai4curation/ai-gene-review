@@ -77,3 +77,15 @@ The original detailed PAINT node analysis is retained; `just paint-losses ECOLI 
 Existing provider research was read as context and preserved byte-for-byte. Independent publication/UniProt support replaces reliance on provider assertions wherever the record lacked primary grounding.
 
 Adjudication check: existing GO0071973 motility claims are retained as non-core broad functional participation because same-role FliH/FliJ comparators consistently carry them. Lack of torque production alone is not a sufficient negative argument. Chemotaxis GO0006935 remains UNDECIDED: its definition includes directed locomotion, not only signal transduction, and the available sources do not settle the intended breadth for export factors.
+
+
+## 2026-11-06 PR6138 round-1 clarification
+
+Retained all three specific self-association ACCEPT decisions and made functional homohexamer formation explicit in the existing catalytic core synthesis. PMID12787361 measures oligomerization and cooperative ATPase activity in Salmonella, not canonical E. coli. The PMID8604139 interaction table remains unverified from its cached abstract; the reference assessment now distinguishes that source limit from independent support for the conserved self-association claim. The entire chemotaxis annotation row is unchanged.
+
+Ontology definitions and ancestor URLs, primary-source scope and reviewer disagreements are recorded in `analysis/module_audits/bacterial_flagellar_assembly_export/round1-consultation.md`.
+
+
+### Subsequent round-1 chemotaxis adjudication
+
+Following the integration reviewer's evidence-based adjudication, the original GO0006935 NAS row is MARK_AS_OVER_ANNOTATED. PMID31337100 supports export-gate activation and construction but does not establish FliI participation in ongoing propulsion, steering or gradient-dependent motor regulation. Apparatus construction alone is insufficient for this guided-movement claim. This is an evidence-scope judgment, not a demonstration that all possible secondary roles are absent or a restriction of UNDECIDED to inaccessible papers. The exact export quote and complete original payload are preserved; the reference assessment is aligned. This supersedes the preceding note that the chemotaxis row was unchanged during the initial narrower consultation.

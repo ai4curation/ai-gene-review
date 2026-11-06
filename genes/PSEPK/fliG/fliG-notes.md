@@ -13,3 +13,7 @@
 Reviewed every existing annotation and the biological summary/core functions. Original annotation payloads, including historical NEW proposals, are preserved. Family/domain evidence supports conserved structural assignments; comparative Salmonella or other bacterial assays are not presented as KT2440 experiments. Exact subunit counts and interaction geometries are not transferred as target measurements.
 
 GO:0003774 explicitly includes electrochemical-gradient-driven flagellar rotation. Rotor/switch structural roles are distinguished from autonomous torque generation. The C-ring/MS-ring CC terms were verified against ontology ancestry and remain valid substructure locations.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Restored explicit CheY-P-to-FliG switching and rotor–stator interface evidence from PMID31452860. Comparative residue labels remain attributed to that source. Current GO0140605 descends from GO0003774; the older wrong-kind-of-motor wording would be incorrect. Removed unused PMID39766194 reference.

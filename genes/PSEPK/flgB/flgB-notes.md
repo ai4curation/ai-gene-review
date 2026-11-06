@@ -12,3 +12,7 @@ PMID:33931760 resolves the Salmonella basal-body rod; the target-specific NCBIfa
 General flagellar motility does not by itself establish swarming. The electronically transferred swarming term is qualified against the KT2440 physiological context in PMID:36409076, not rejected because an experimental source is unavailable.
 
 PMID:33931760 purified basal bodies from engineered Salmonella Typhimurium TH25631 (including a hook deletion, elevated FlhDC and a FliG ΔPAA variant). This supports the resolved rod architecture, not an unmodified KT2440 native basal-body measurement.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Made the description a standalone biological summary. The evidence and cross-species inference limits remain in annotation reasons and reference assessments.

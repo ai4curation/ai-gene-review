@@ -10,3 +10,7 @@ The normal Falcon research attempt failed (HTTP 403; provider output was not fab
 PMID:34785766 combines a Salmonella FlgD pentamer structure with deletion/complementation and secretion experiments. The target has NCBIfam NF005176 and FlgD-specific domains. Structural scaffold participation supports both the MF and assembly BP; no catalytic activity is proposed. Comparator evidence is saved in the audit cache.
 
 PMID:34785766 cloned full-length flgD from Salmonella Typhimurium SJW1103 and expressed untagged protein in E. coli BL21(DE3)pLysS; complementation used Salmonella SJW156. Six reviewed FlgD comparators yielded only two current manual binding/location rows and no assembly annotation. This absence was explicitly considered: the proposed structural assembly role follows independent scaffold evidence rather than an assumption that curators overlooked a pathway gap.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Moved evidential qualifications out of the biological description; the homolog-based scope remains in review reasons. Removed the unused axial-structure finding from PMID39766194 that does not identify FlgD.

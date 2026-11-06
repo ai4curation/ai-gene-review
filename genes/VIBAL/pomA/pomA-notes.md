@@ -8,3 +8,7 @@ Current UniProt O06873 is a species-level V.alginolyticus record. Its complete s
 Default Falcon was attempted once and returned HTTP403 authentication failure; the genuine command log is retained in the ignored comparative-panel audit directory. No provider report was fabricated.
 
 All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Added motor-level gradient and CheY-control context (PMID27439872; PMID17376072), with the YM4 microfluidic assay distinguished from the selected reference/structural protein. The mechanical-effector inference does not assert a PomA-specific gradient assay.
