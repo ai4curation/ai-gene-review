@@ -121,4 +121,17 @@ This bounded follow-up reused the prior genuine research-provider attempts and c
 
 ## 2026-11-05 — completion metadata follow-up
 
-The systematic review and organelle-policy follow-up merged in PR #5558, but the top-level status remained DRAFT. Verified that the current review is byte-identical to that merged assessment: all 83 annotations have decisions and reasons, no PENDING or UNDECIDED rows remain, and the core function and source/isoform qualifications are present. Set status to COMPLETE. All other review fields, supporting evidence, raw UniProt/GOA sources and earlier notes are preserved. This closes a metadata omission; it introduces no new biological assertion.
+The systematic review and organelle-policy follow-up merged in PR #5558, but the top-level status remained DRAFT. Verified that the reviewed biological content matched that merged assessment; the resulting file was identical apart from the status change: all 83 annotations have decisions and reasons, no PENDING or UNDECIDED rows remain, and the core function and source/isoform qualifications are present. Set status to COMPLETE. All other review fields, supporting evidence, raw UniProt/GOA sources and earlier notes are preserved. This closes a metadata omission; it introduces no new biological assertion.
+
+
+## 2026-11-06 — PR #6124 review follow-up
+
+The requested `uv run ai-gene-review validate --strict --terms genes/human/DIABLO/DIABLO-ai-review.yaml` passed before the prose corrections with exit 0 and zero validation warnings. COMPLETE therefore remains supported. The Python dependency deprecation notice is a runtime warning, not a gene-review validation warning. The same strict command is rerun after these edits.
+
+Corrected the UTP11/CGI-94 (PMID:12559088) and SLC66A2 (PMID:32296183) summaries/reasons to agree with REMOVE of uninformative GO:0005515. Their positive reported interactions remain documented; removal is not a claim that binding is false. No annotation action, replacement, payload, source quote, core function or isoform/construct judgment changes.
+
+The frozen GOA TSV contains 84 data rows and the review contains 83 annotations. Two GO:0005515 / IPI / PMID:19153467 / UniProtKB:Q13490 rows represent the same biological assertion: IntAct dated 20260725 and UniProt dated 20100504. They differ in ASSIGNED BY and DATE, and are otherwise field-identical. One review entry covers this repeated assertion. Neither raw row was edited or dropped.
+
+The prior 2026-11-05 heading records Pacific local time: the corresponding 2026-11-06T04:44:33Z session was 2026-11-05 20:44:33 PST. Its historical heading is retained. The statement about byte identity is clarified to account for the status change at that session; this follow-up additionally corrects review prose.
+
+Reviewed the nonblocking HuRI question without changing the eight existing refinements. Their stated basis is a measured binary-assay interaction with an experimentally characterized enzyme or transporter partner. That identifies a binding-partner class under assay conditions, not a native physiological encounter, regulation of the partner, or a new catalytic/transport role for DIABLO. Compartment and construct limitations already remain explicit in the reasons. Those claims are not promoted into the DIABLO core, and native validation would still be needed before a pathway or cellular mechanism is inferred.
