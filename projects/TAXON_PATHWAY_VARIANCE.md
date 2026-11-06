@@ -1,7 +1,7 @@
 ---
 title: "Taxon Pathway Variance"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-10
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
 species: [worm, DROME, human, DICDI]
@@ -149,16 +149,32 @@ REJECTED), and where in this repo the case was found.
 
 ### Current proposals
 
-| ID | Term | Constraint | Taxon | Blocks | Caveat |
+| ID | Term | Constraint | Taxon | Blocks | Status |
 |---|---|---|---|---|---|
-| TPV-001 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | worm STAT IBAs from PTN000927860 | direct evidence is for *C. elegans* |
-| TPV-002 | GO:0046425 regulation of receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | gei-17 and nematode PIAS/PTPN2 IBAs, ~100 IEAs | stated separately in case constraints do not propagate over regulates |
-| TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa (fallback: never in Dictyostelia) | Dictyostelium STAT IBAs; non-animal IEAs | ontology prerequisite (see YAML) |
+| TPV-001 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda | worm STAT IBAs from PTN000927860 | ACCEPTED, [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) |
+| TPV-002 | GO:0046425 regulation of cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda | gei-17 and nematode PIAS/PTPN2 IBAs, ~100 IEAs | ACCEPTED, [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) |
+| TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa | Dictyostelium STAT IBAs; non-animal IEAs | ACCEPTED, [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) via [PR #32861](https://github.com/geneontology/go-ontology/pull/32861) |
 
-GO has no taxon constraint on any of these terms today (checked in QuickGO and OLS).
+### Outcome
 
-TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
-`prerequisites` entry in the YAML; not yet requested.
+All three were requested in
+[go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689)
+(2026-10-05), with the briefing as the supporting analysis. GO added them on
+2026-11-03: `neverin:6231` on GO:0007259 and GO:0046425 in commit
+[98389d1](https://github.com/geneontology/go-ontology/commit/98389d1bd9ea9c7e60b5a4420b7cf61c9ce5b0be),
+and `onlyin:33208` on GO:0007259 in commit
+[fed722d](https://github.com/geneontology/go-ontology/commit/fed722deb9e08f121365216c338db4cc08fac3e0)
+(PR #32861) after a reviewer noticed it had been missed. The Nematoda constraints were
+taken at phylum level, not the *Caenorhabditis* fallback. The same commit renamed the
+regulation terms to "regulation of cell surface receptor signaling pathway via JAK-STAT"
+(go-ontology#14167). Each proposal's `submission` block in the YAML records the issue,
+the commits and the dates.
+
+One loose end: GO applied the Metazoa constraint without the TPV-003 prerequisite
+(re-parenting GO:0007260), so GO:0007260 now inherits it by part_of. GO:0007260 is
+already listed for obsoletion in
+[go-ontology#27064](https://github.com/geneontology/go-ontology/issues/27064), which
+would remove the conflict. If it stays, request the re-parenting there.
 
 ## To do
 
