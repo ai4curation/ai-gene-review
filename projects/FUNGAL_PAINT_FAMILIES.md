@@ -45,7 +45,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
-| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
+| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`ASPFU/rmt2`/`EMENI/rmt2` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 | `PTHR32385` MANNOSYL PHOSPHORYLINOSITOL CERAMIDE SYNTHASE | fungal IPC mannosyltransferase node | `SUR1`/`CSH1`/`imt1`/`imt2`/`imt3`/`MIT1`/`Q4WDG6` |
 
@@ -94,7 +94,8 @@ paralog-aware activity and complex checks.
 
 ## Later Candidates
 
-- [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
+- [x] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways; covered
+  by Family 4
 - [x] `PTHR19370` fungal NADH-cytochrome b5 reductases
 
 ## Family 3: Chitin Synthase Export Chaperones
@@ -439,12 +440,15 @@ node for protein arginine N5-methyltransferase activity. The official PANTHER
 family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
 to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 
-- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
-  drafted in this branch
-- [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
-- [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
-- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
-- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
+- [x] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  merged in PR #6035
+- [x] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog; merged in PR #6037
+- [x] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member; merged in PR
+  #6038
+- [x] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; reviewed in
+  PR #6039
+- [x] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; reviewed in PR
+  #6040
 
 ## Family 20: Sec2 Rab GEFs
 
