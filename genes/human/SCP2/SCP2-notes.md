@@ -162,3 +162,7 @@ mouse, not rat). Isoform restriction recorded as a source defect (Gene_Product_F
 P22307-2) on the ISS row. Stays at the root. Added PMID:11003606 to references.
 core_functions[1] still lists GO:0005783 for the lipid-transfer function; left as is (the
 microsomal transfer data are the functional link), but worth a second look.
+- Correction (2026-11-06): settled in review of PR #6028. GO:0005783 was removed from the
+  lipid-transfer core function's locations (cytosol only), and its description now names
+  donor and acceptor membranes rather than an ER location, since no assay places the transfer
+  activity at the ER.
