@@ -8,7 +8,8 @@ No deep-research provider was available. Sources checked:
 - All GOA-cited publications cached via `just fetch-gene-pmids human IL1RAP`
   (20 PMIDs; full text for 22426547, 23847621, 28534174, 31736959, 32822567,
   35922511; abstract only for the rest).
-- Context: `modules/il1_signaling.yaml`, GO-CAM review `gocams/59cc772c00000000/`.
+- Context only, not evidence: GO-CAM gomodel:59cc772c00000000. (IL-1 signalling module/GO-CAM review
+  proposed in ai4curation/ai-gene-review#5904.)
 
 Queries (grep over cached text): "IL-1RAcP", "IL1RAP", "accessory protein",
 "AcPb", "soluble IL-1RAcP", "microglia", "IL-36", "IL-33".
@@ -35,3 +36,26 @@ Queries (grep over cached text): "IL-1RAcP", "IL1RAP", "accessory protein",
 - NAD+ nucleosidase (EC 3.2.2.6) is a PROSITE TIR-rule inference only; no IL-1 receptor family TIR
   domain has been shown to hydrolyse NAD+.
 - No OLS hit for an IL-36-specific GO receptor/pathway term (searched "interleukin-36", "IL-36 signaling").
+
+## PR #5941 review follow-up (2026-11-06)
+
+Comparator check for the `enables` qualifier on receptor-activity rows (QuickGO MF annotations,
+fetched 2026-11-06; raw table kept outside the repo):
+
+- IL18RAP (O95256, IL-1 family accessory chain): `enables` GO:0042008 interleukin-18 receptor activity,
+  IBA and IDA (PMID:25500532), plus `enables` GO:0015026 coreceptor activity.
+- IL1RL1 (Q01638) and IL1RL2 (Q9HB29), ligand-binding chains: `enables` GO:0002114 / GO:0004908.
+- IL2RG (P31785): `contributes_to` IL-2, IL-4, IL-7 receptor activity (TAS); `enables` IL-15 receptor
+  activity (IDA) and coreceptor activity.
+- CSF2RB (P32927): `contributes_to` IL-3 and IL-5 receptor activity; `enables` coreceptor activity.
+- IL6ST (P40189): `contributes_to` IL-6, IL-11, LIF, oncostatin-M receptor activity; `enables`
+  oncostatin-M (two IDA), CNTF and IL-27 receptor activity, and coreceptor activity.
+
+Conclusion: practice is mixed, but the IL-1 family convention (IL18RAP, and the PAINT IBA for IL1RAP)
+is `enables`. IL1RAP also contacts IL-1beta in the ternary complex (PMID:22426547). The `enables` rows
+are accepted, the convention is recorded in their `reason`, and the question of `contributes_to` for
+accessory chains is raised in `suggested_questions`.
+
+ComplexPortal decoy-complex propagations are now recorded as `source_defects` (resource OTHER,
+ComplexPortal named in the explanation). The soluble isoform (Q9NPH3-2) is recorded in
+`functional_isoforms`.

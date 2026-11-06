@@ -7,8 +7,11 @@ Sources checked (2026-11-04):
   DISEASE (CRMO3) and the PROSITE-ProRule-derived TIR NADase catalytic activity.
 - All GOA-cited publications cached via `just fetch-gene-pmids human IL1R1` (abstracts for most;
   full text for PMID:33391283, PMID:23847621, PMID:33961781).
-- Context: `modules/il1_signaling.yaml` (IL1R1 receptor annoton, GO:0004908) and GO-CAM
-  59cc772c00000000 (IL1R1 activity typed GO:0004908, part_of GO:0070498, plasma membrane; verdict OK).
+- Context only, not evidence: GO-CAM gomodel:59cc772c00000000 types the IL1R1 activity as GO:0004908,
+  part_of GO:0070498, at the plasma membrane. (IL-1 signalling module/GO-CAM review proposed in
+  ai4curation/ai-gene-review#5904.) After PR review this review refines IL1R1's MF to the child term
+  GO:0004909 interleukin-1, type I, activating receptor activity, which separates the signalling type I
+  receptor from the IL1R2 decoy.
 
 ## Key findings
 

@@ -8,8 +8,8 @@ Sources checked (2026-11-04):
   full text for PMID:26439902 and PMID:23847621).
 - Added PMID:33391283 (Chan & Schroder-style review of alternative IL-1 activation, full text
   cached) for cell-surface IL-1alpha.
-- Context: `modules/il1_signaling.yaml` (IL1A as one of two IL1R1 agonists, cytokine activity,
-  extracellular region) and GO-CAM 59cc772c00000000 (IL1B-centred; IL1A not modelled).
+- Context only, not evidence: GO-CAM gomodel:59cc772c00000000 (IL1B-centred; IL1A not modelled). (IL-1
+  signalling module/GO-CAM review proposed in ai4curation/ai-gene-review#5904.)
 
 ## Key findings
 

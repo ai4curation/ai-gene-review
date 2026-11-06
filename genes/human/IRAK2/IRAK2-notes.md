@@ -8,8 +8,9 @@ No deep-research provider was available. Sources checked:
 - All GOA-cited publications cached via `just fetch-gene-pmids human IRAK2` (14 PMIDs; full text for
   18636090, 20485341, 21903422, 21988832, 28514442, 33961781, 36865541, 38605168, 38961291; abstract
   only for 10383454, 11544529, 17878161, 30256449, 9374458).
-- Reactome cached entries for the TAS rows; context in `modules/il1_signaling.yaml` and
-  `gocams/59cc772c00000000/59cc772c00000000-review.yaml`; sibling reviews IRAK1, IRAK4, MYD88.
+- Reactome cached entries for the TAS rows; sibling reviews IRAK1, IRAK4, MYD88. Context only, not
+  evidence: GO-CAM gomodel:59cc772c00000000 (IL-1 signalling module/GO-CAM review proposed in
+  ai4curation/ai-gene-review#5904).
 
 Queries (grep over cached text): "IRAK2", "IRAK-2", "kinase activity", "autophosphorylat",
 "NLRP3", "inflammasome", "caspase-1", "nucle", "mitochond".
