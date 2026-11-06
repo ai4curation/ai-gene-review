@@ -18,8 +18,9 @@ that seeds the fungal PAINT node.
 2026-11-06 web searches for direct `Candida albicans` MON1/Ypt7/Ccz1 literature
 again found only orthology-derived MON1 entries and product pages, not new
 Candida-specific Mon1-Ccz1 functional studies. The 2026 S. cerevisiae VINE/Ypt10
-and Pdr16 lipid-droplet papers broaden the budding-yeast Mon1-Ccz1 regulatory
-contexts but do not change the Candida inference.
+paper PMID:42715149 and Pdr16 lipid-droplet paper PMID:42593964 broaden the
+budding-yeast Mon1-Ccz1 regulatory contexts but do not change the Candida
+inference.
 
 Wang et al. established the direct yeast source evidence for the fungal PAINT
 vacuolar-delivery rows: "Both Mon1 and Ccz1 are required for protein delivery
