@@ -23,6 +23,7 @@ BREAKDOWN = {
     "also IPR050726": "xref:interpro-IPR002956 AND xref:interpro-IPR050726",
     "also IPR050726, vertebrates": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:7742",
     "also IPR050726, arthropods": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:6656",
+    "also IPR050726, not arthropods": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 NOT taxonomy_id:6656",
     "also IPR050726, insects": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:50557",
     "also IPR050726, bacteria": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:2",
     "also IPR050726 and IPR051753": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND xref:interpro-IPR051753",
@@ -72,7 +73,9 @@ def main():
         m = r["metadata"]
         print(f"- {m['accession']} {m['name']} ({m['source_organism']['scientificName']}, length {m['length']})")
     allp = get(f"{API}/protein/uniprot/entry/interpro/IPR002956/?page_size=1")
-    print(f"\nAll UniProtKB proteins matching IPR002956: {allp.get('count')}\n")
+    print(f"\nAll UniProtKB proteins matching IPR002956: {allp.get('count')}"
+          " (InterPro API protein/uniprot endpoint; the UniProtKB search counts below"
+          " come from a different index and can differ)\n")
 
     print("## PRINTS PR01223 (BRIDEOF7LESS) match segments on Q8K3J9\n")
     pr = get(f"{API}/entry/prints/PR01223/protein/uniprot/{TARGET.lower()}")
@@ -110,6 +113,19 @@ def main():
         except Exception as e:  # report, never invent
             n = f"query failed ({e})"
         print(f"| {label} | `{query}` | {n} |")
+
+    print("\n## IPR002956 AND IPR050726 matches outside Arthropoda\n")
+    try:
+        url = UNIPROT + "?" + urllib.parse.urlencode({
+            "query": "(xref:interpro-IPR002956 AND xref:interpro-IPR050726 NOT taxonomy_id:6656)",
+            "fields": "accession,organism_name", "format": "tsv", "size": 50})
+        with urllib.request.urlopen(url, timeout=60) as r:
+            rows = r.read().decode().strip().splitlines()[1:]
+        for row in rows:
+            acc, org = row.split("\t", 1)
+            print(f"- {acc} ({org})")
+    except Exception as e:  # report, never invent
+        print(f"- query failed ({e})")
 
 
 if __name__ == "__main__":
