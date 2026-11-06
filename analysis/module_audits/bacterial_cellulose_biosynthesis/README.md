@@ -16,7 +16,7 @@ The generic BcsB/BcsC branch now carries positive sampled-lineage contexts. Two 
 
 Round15 follow-up adds two explicit frozen-GOA controls: RKN E5RST0 and TK24 A0ABM5R5V5 are admitted by reviewed biochemical refinements, while unchanged GOA alone remains insufficient. The 27 cases make this dependency visible. Catalytic BcsA UDP-glucose metabolism is retained consistently, and AcsD has an explicit noncatalytic core summary. All original payloads and sources remain unchanged.
 
-Round16 follow-up checks all five catalytic BcsA donor-metabolism claims across the panel. Each retains GO:0006011 and includes it in the catalytic core. PSEPK and CERS4 also retain product-pathway coverage through separately supported NEW cellulose-process rows; the E. coli specific process row and existing AGRFC/KOMXY rows remain. All 88 original payloads are preserved, yielding 101 current rows. Fresh full-corpus validation is pending after these focused checks.
+Round16 follow-up checks all five catalytic BcsA donor-metabolism claims across the panel. Each retains GO:0006011 and includes it in the catalytic core. PSEPK and CERS4 also retain product-pathway coverage through separately supported NEW cellulose-process rows; the E. coli specific process row and existing AGRFC/KOMXY rows remain. All 88 original payloads are preserved, yielding 101 current rows. The subsequently completed full runs are recorded below.
 
 ## Round17 specificity and provenance
 
@@ -26,4 +26,10 @@ The immutable historical ledger contains 87 machine payloads and one historical 
 
 Thirteen gene validations, 14 new history validations, module/schema checks, 27 capacity cases, five catalytic donor/product checks, six checker controls, rendering and diff checks pass. The five catalytic checks require GO:0090540 in both reviewed functions and their cores. Detailed results and hashes are in `round17-followup.yaml`.
 
-The pre-round17 full run terminated with exit 1 at science commit 04a28f01332c3ffc6900650249d5fe7c6bf2db8c, reproducing the same 19 reference errors in 17 unrelated unchanged yeast reviews. All 23 source/validation-input blobs in the preexisting proof were rechecked. This run does not validate the subsequent round17 edits; a fresh full run is pending and owned by the parent agent. See `round16-fullrun-terminal.json`.
+The pre-round17 full run terminated with exit 1 at science commit 04a28f01332c3ffc6900650249d5fe7c6bf2db8c, reproducing the same 19 reference errors in 17 unrelated unchanged yeast reviews. All 23 source/validation-input blobs in the preexisting proof were rechecked. That earlier run did not validate the subsequent round17 edits; it remains historical evidence in `round16-fullrun-terminal.json`. The round17 run is recorded below.
+
+## Round17 full validation closure
+
+The fresh full run on approved science commit `3cdca2d091dd8f770d8dad14367bbbae8443220f` is terminal with exit 1. It checked 10,553 reviews and reproduced exactly the same 19 reference-error tuples in 17 unrelated yeast reviews. All 23 recorded review/source/configuration blobs are unchanged. Schema and ontology have no blocking errors; ontology has 115 advisories in 109 files. References have 52 advisories in addition to the documented errors. Best practices have zero errors and 27,997 advisories. All 54 PMID-bearing pathway files among 81 markdown files pass.
+
+`round17-fullrun-terminal.yaml` pins the log hash, exact phase counts, 21 gene-review hashes, module/checker hashes and source-preservation check to that science commit. This closure changes metadata only. The earlier round17 project publication history is now explicitly validated and included in the history accounting, alongside the original 14 gene/module records. Two separate closure histories record this final ledger update. The archived PP_2634 YAML preserves its historical payload together with the pre-refinement round16 review prose; no archive bytes are changed. Publication of the closure, current-head review/CI and actual merge remain pending.
