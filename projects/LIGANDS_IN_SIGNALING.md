@@ -321,6 +321,33 @@ validators.
   mis-curated `PINC` `TAS` `GO:0008009` (*chemokine activity*, `PMID:10820279`) and InterPro2GO
   `IEA` `GO:0004866` (*endopeptidase inhibitor activity*, also over-propagated at PAINT node
   `PTN000892454`) are removed (`REMOVE`, with `source_defects` on `GO:0008009`).
+- **[Collagen-DDR signaling](../modules/collagen_ddr_signaling.yaml)** (*collagen-activated
+  tyrosine kinase receptor signaling pathway*, `GO:0038063`). Scoped to Eumetazoa, the taxon of
+  the receptor PAINT node. Ligand: a variant set by collagen class, each with *receptor ligand
+  activity* (`GO:0048018`), since no child term fits a structural collagen acting as a ligand:
+  fibrillar collagens I-III for both receptors and collagen IV for DDR1 (both in
+  `PANTHER:PTHR24023` `COLLAGEN ALPHA`, restricted to these chains), collagen X for DDR2
+  (`PANTHER:PTHR15427:SF48`). Drosophila Multiplexin, known only from a genetic interaction, is in
+  the notes and the knowledge gap, not a ligand variant (the same bar that keeps Toll-2 out of
+  the neurotrophin module). Receptor: DDR1, DDR2
+  and fly Ddr (DDR subfamilies of `PANTHER:PTHR24416`, PAINT node `PTN002400507`), *protein tyrosine
+  kinase collagen receptor activity* (`GO:0038062`). Downstream effectors and the other collagen
+  receptors (integrins, GP6, LAIR1, which belong to *collagen-activated signaling pathway*) are
+  boundary notes. GOA gaps recorded in the notes: in human only COL4A2 and COL4A6 are on the
+  pathway (IBA) and no collagen has a ligand-activity MF; in fly no collagen is on the pathway.
+  No paper shows that fly collagen IV activates Ddr, which is recorded as a biology knowledge gap.
+- **[Neurotrophin signaling through Toll-family receptors](../modules/neurotrophin_toll_signaling.yaml)**
+  (*neurotrophin signaling pathway*, `GO:0038179`). Scoped to Drosophila melanogaster, because no
+  cached paper tests the ligand-receptor pairing in other insects. Ligand: the neurotrophins DNT1
+  (NT1) and DNT2 (spz5) (`PANTHER:PTHR23199` `NEUROTROPHIN 1-RELATED`, PAINT node `PTN002354018`),
+  *growth factor activity* (`GO:0008083`, a child of receptor ligand activity). Receptor: Toll-6 and
+  Toll-7, *neurotrophin receptor activity* (`GO:0005030`); no PANTHER id, as they sit in different
+  families. Optional co-receptor: Kek-6 (`PANTHER:PTHR24366:SF87`, PAINT node `PTN008615184`).
+  Adaptors (MyD88, Wek, Sarm) and JNK/NF-kB outputs are a boundary note, as is the immune
+  Spaetzle-Toll-1 pathway (`dmel_toll_signaling`). GOA gap recorded in the notes: NT1 and spz5 are
+  annotated only to *Toll signaling pathway*, not to the neurotrophin pathway. The notes also flag
+  that Toll-6 inherits Roundabout binding and axon-guidance IBAs from the Slit PAINT nodes, the
+  over-propagation the PTHR45836 family review already records for its Toll-6 subfamily.
 
 ## 5. Other curator work in this branch
 
@@ -453,7 +480,7 @@ validators.
 - Modules: `netrin_signaling`, `slit_robo_signaling`, `kit_signaling` (upgraded),
   `ephrin_receptor_signaling` (upgraded), `mif_signaling`, `il34_signaling`, `il21_signaling`,
   `il22_signaling`, `death_receptor_apoptotic_signaling` (upgraded), `chemokine_signaling`
-  (upgraded), `c5a_signaling`.
+  (upgraded), `c5a_signaling`, `collagen_ddr_signaling`, `neurotrophin_toll_signaling`.
 - Gene reviews: NTN1, NTN3, KITLG, kitlga, EFNB1, MIF, IL34, IL21, IL22, FASLG, CXCL8, C5.
 - Family reviews: PTHR45836, PTHR11574, PTHR11304, PTHR11954, PTHR28606, PTHR14356, PTHR48488,
   PTHR11471, PTHR12015, PTHR11412.
@@ -463,8 +490,11 @@ validators.
 
 ### Next steps
 
-1. **More modules**, pan-species, ligand step first, using the decisions in section 2. Queue from
-   the gap check: collagen-DDR, fly Toll-6/7 neurotrophin (spz5, NT1).
+1. **More modules**, pan-species, ligand step first, using the decisions in section 2. The queue
+   from the gap check is done (collagen-DDR and fly Toll-6/7 neurotrophin were the last two).
+   Gene reviews are still missing for most of their members (NT1, spz5, Toll-6, kek6, DDR1 and
+   fly Ddr; DDR2 and Toll-7 have reviews), and the collagen reviews have no ligand-activity core
+   function.
    Several human gaps (VEGFR-1/3, FGFR, Fas, CXCL8) already have modules with the
    ligand; they need the hole-filling run, not new modules.
 2. **Module-driven hole filling.** Replace `curated/expected_ligands.yaml` with the modules: an
