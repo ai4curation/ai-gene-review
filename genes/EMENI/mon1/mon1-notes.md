@@ -1,5 +1,22 @@
 # EMENI mon1 notes
 
+## 2026-11-06
+
+- Re-reviewed Q5BBI7 against `interpro/panther/PTHR13027/PTHR13027-paint.tsv`
+  and confirmed that the four existing PAINT rows map to the broad eukaryotic
+  `PTN000315021` Rab7/Ypt7 GEF node, the Opisthokonta `PTN000315023`
+  Mon1-Ccz1 complex node, and the fungal `PTN000989606` vacuole membrane and
+  vacuolar protein-targeting node.
+- PubMed/web searches for `Q5BBI7`, `AN2093`, `"Aspergillus nidulans" MonA`,
+  `"Aspergillus nidulans" mon1`, `Aspergillus MonA Ccz1`, and `Aspergillus
+  Mon1 Ccz1 Rab7` did not find a direct A. nidulans MonA paper newer than
+  PMID:32010467 or an Aspergillus Ccz1/Rab7 assay.
+- No action changes were needed. The review already accepts the IBA rows,
+  narrows the broad IEA vacuolar membrane and vesicle-mediated transport
+  terms, keeps MVB membrane as non-core, proposes macroautophagy by ISS from
+  yeast and Fusarium Mon1 evidence, and leaves direct A. nidulans
+  MonA-Ccz1/Rab7 validation as an open experiment.
+
 ## 2026-10-24
 
 - Seeded Q5BBI7 with `just fetch-gene EMENI mon1`; GOA contains four PAINT
