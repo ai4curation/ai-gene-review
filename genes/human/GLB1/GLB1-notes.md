@@ -91,3 +91,7 @@ The long GLB1 product supplies lysosomal beta-galactosidase activity. The shorte
 The review now separates recombinant self-association, cellular staining, granule cargo and urinary-vesicle detection from the principal catalytic function. The 647-residue alternative product remains represented without assigning its localization or activity from sequence length alone. The primary-evidence details and remaining access limits are in [the manual synthesis](GLB1-deep-research-manual.md).
 
 All 62 incoming annotation contexts are retained, including the two source-distinct cDNA rows and four AND extension groups. One isoform-specific matrix-binding MF is proposed; no new biological process is inferred from necessity or cargo membership. The prior notes above, historical sessions and quote associations remain preserved.
+
+## 2026-11-06: review follow-up
+
+The follow-up harmonizes the two repeated-term decisions while preserving all incoming contexts. Direct publication support replaces the duplicated guide quotations. Cache availability remains distinct from separately read original material. The earlier notes and initial validation/status record above remain preserved; current status is recorded in the review and source guide.
