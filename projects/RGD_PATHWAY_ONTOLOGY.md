@@ -106,10 +106,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 107 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 118 |
 | `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 23 |
-| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 7 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 14 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 5 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -234,12 +234,13 @@ overlap only (4 of its 7 genes are in the pathway); IL-10 itself still has no mo
 Re-running the triage after merging `main` on 2026-10-18 moved six former candidates. Five now
 match only by GO term to Drosophila or plant modules: RNA polymerase I, II and III
 transcription, mitochondrial protein import, and the microRNA pathway. The sixth, insulin
-secretion, now has a mammalian module. These five are still worth modelling for mammals.
+secretion, now has a mammalian module. The microRNA pathway was modelled in the fifth set;
+the RNA polymerase pathways are still worth modelling for mammals.
 
-Several `related_module_only` seeds are mammalian pathways whose only module
-match is a bacterial one: nucleotide excision repair, mismatch repair,
-homologous recombination and non-homologous end joining. They are also
-candidates for new eukaryotic modules.
+Several `related_module_only` seeds were mammalian pathways whose only module
+match was a bacterial one: nucleotide excision repair, mismatch repair,
+homologous recombination and non-homologous end joining. All four now have
+human modules (fifth set).
 
 Two caveats apply to the `has_module` tier. A gene-overlap match needs only
 half of a module's genes in the pathway, so a broad pathway such as extrinsic
@@ -664,7 +665,7 @@ them as evidence.
 Two triage observations came out of this set. PW:0000492 renin-angiotensin
 cascade is now `has_module` only because all 21 angiotensin II module genes are
 in its gene list, although the module leaves its proteases out. This is the
-loose gene-overlap case described above, and the cascade is still unmodelled.
+loose gene-overlap case described above. The cascade was modelled in the fifth set.
 The `best_gocam` leads for PW:0000639 (`63d320cd00001536`, RAC1 degradation in
 migration) and PW:0000244 (`67f85f2b00004426`, a C5a receptor model) are
 gene-overlap ties with no relation to the pathway.
@@ -714,6 +715,124 @@ Possible upstream errors found in this set:
   sensors, the AT1 JAK/STAT arm, the AT2 branch or GLUT4 translocation. Most
   members of these modules have no gene review; the modules' notes list them.
 
+### Fifth set: repair, RNA, p53, retinoids, the RAS cascade, Fe-S and PCP
+
+The fifth set modelled 11 mammalian pathways whose only match was a GO term
+on a bacterial, Drosophila or plant module, plus the renin-angiotensin cascade.
+That cascade had counted as covered only by gene overlap. Each module cites one
+PW id as evidence; mRNA nuclear export also cites its NXF1-NXT1 child,
+PW:0001625. The triage re-run moves all 11 to `has_module`. PW:0002635,
+mitochondrial iron-sulfur cluster biogenesis, moved there too, through
+`mitochondrial_iron_sulfur_cluster_assembly`, which merged on `main`
+meanwhile.
+
+- **DNA repair.**
+  - [`modules/nucleotide_excision_repair.yaml`](../modules/nucleotide_excision_repair.yaml)
+    ([PW:0000130](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000130.yaml)) has two
+    recognition routes as a variant set. Global-genome repair goes through
+    UV-DDB and XPC-RAD23B-CETN2. Transcription-coupled repair goes through
+    stalled RNA polymerase II, CSB, CRL4-CSA, UVSSA and ELOF1. The next steps
+    are TFIIH opening, XPA/RPA verification, dual incision by XPF-ERCC1 and
+    XPG, and repair synthesis and ligation. It models 36 of 39 RGD genes and
+    adds 9 that the steps need. The CDK-activating kinase is left out, because
+    it leaves TFIIH during repair.
+  - [`modules/eukaryotic_mismatch_repair.yaml`](../modules/eukaryotic_mismatch_repair.yaml)
+    ([PW:0000662](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000662.yaml)) follows the
+    reaction reconstituted from purified human proteins. MutSalpha or MutSbeta
+    recognises the mismatch, RFC loads PCNA, MutLalpha nicks, EXO1 excises,
+    RPA protects the gap, and Pol delta and LIG1 fill and seal it. MutLbeta and
+    MutLgamma are context.
+  - [`modules/homologous_recombination_dsb_repair.yaml`](../modules/homologous_recombination_dsb_repair.yaml)
+    ([PW:0000202](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000202.yaml)) refers to
+    `atm_dsb_signaling` for the BRCA1-A arm. It then runs from short- and
+    long-range resection through RPA coating, BRCA1-PALB2-BRCA2 RAD51 loading
+    and strand invasion to junction dissolution or resolution, the last as
+    variant sets.
+  - [`modules/nonhomologous_end_joining.yaml`](../modules/nonhomologous_end_joining.yaml)
+    ([PW:0000203](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000203.yaml)) is classical
+    NHEJ: Ku, DNA-PKcs, optional end processing and gap filling, and
+    XRCC4-LIG4 with XLF and PAXX. It takes 53BP1-RIF1 from the ATM module.
+    Alternative end joining has its own GO term and is context. CtIP, which RGD
+    curates here, belongs to the resection step of the HR module.
+- **Signalling.**
+  - [`modules/p53_signaling.yaml`](../modules/p53_signaling.yaml)
+    ([PW:0000718](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000718.yaml)) is the p53
+    regulatory circuit: stress-kinase phosphorylation, MDM2/MDM4 feedback, ARF
+    inhibition of MDM2, acetylation and SIRT1 deacetylation, and transactivation.
+    The p53 target genes are outputs under the substrate-vs-participant rule;
+    MDM2 is the exception, because it does work in the loop. Nine of the 40 RGD
+    genes are participants. The apoptosis and G1-arrest outputs are references
+    to existing modules.
+  - [`modules/wnt_planar_cell_polarity.yaml`](../modules/wnt_planar_cell_polarity.yaml)
+    ([PW:0000200](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000200.yaml)) takes ligand
+    secretion and Frizzled reception from `wnt_signaling`. It then models the
+    ROR2/PTK7 co-receptors, the core PCP proteins, and the DAAM1-RHOA-ROCK and
+    RAC1-JNK arms. It avoids the Wnt/PCP terms GO plans to obsolete
+    (ai4curation/ai-gene-review#5781).
+  - [`modules/renin_angiotensin_cascade.yaml`](../modules/renin_angiotensin_cascade.yaml)
+    ([PW:0000492](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000492.yaml)) is the
+    proteolytic cascade: renin with ATP6AP2, ACE or chymase or cathepsin G, the
+    ACE2/neprilysin/PRCP arm to angiotensin-(1-7) on MAS1, and ENPEP and ANPEP.
+    The receptor step is a reference to `angiotensin_ii_receptor_signaling`.
+    Angiotensinogen is the proteases' substrate and the hormone source, and it
+    carries no `GO:0002003`, following the AGT worked example in `CLAUDE.md`.
+- **RNA and metabolism.**
+  - [`modules/mirna_biogenesis_and_silencing.yaml`](../modules/mirna_biogenesis_and_silencing.yaml)
+    ([PW:0000808](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000808.yaml)) runs from the
+    Microprocessor, XPO5 export and DICER1 with TARBP2/PRKRA to Argonaute
+    loading, TNRC6, CCR4-NOT and PAN2-PAN3 deadenylation, decapping and XRN1.
+    The miRNA editing and uridylation enzymes are context.
+  - [`modules/mrna_nuclear_export.yaml`](../modules/mrna_nuclear_export.yaml)
+    ([PW:0001587](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001587.yaml)) has TREX
+    loading, NXF1-NXT1, optional TREX-2, the pore, DDX19-GLE1 release and an
+    optional CRM1 route. It models the pore inline, because no human pore
+    module exists.
+  - [`modules/retinoic_acid_metabolism.yaml`](../modules/retinoic_acid_metabolism.yaml)
+    ([PW:0001004](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001004.yaml)) runs from
+    RBP4-STRA6 delivery through the RDH10-DHRS3 pair and ALDH1A1-3 to CRABP
+    binding and CYP26 catabolism. Ester storage is optional and refers to
+    `retinoid_visual_cycle`. It does not cite PW:0000141 retinol metabolism:
+    that pathway is intestinal absorption and shares only 2 of its 11 genes
+    with this module.
+  - [`modules/cytosolic_iron_sulfur_assembly.yaml`](../modules/cytosolic_iron_sulfur_assembly.yaml)
+    ([PW:0002636](RGD_PATHWAY_ONTOLOGY/pathways/PW_0002636.yaml)) covers all
+    nine RGD genes. The NDOR1-CIAPIN1 electrons feed the NUBP1-NUBP2 scaffold
+    and the CIAO1-CIAO2B-MMS19 targeting complex, with the mitochondrial module
+    upstream. GO has no process term for the cytosolic machinery, so the
+    module uses `GO:0044572` [4Fe-4S] cluster assembly.
+
+The NER and mismatch repair modules both model PCNA, RFC, Pol delta and LIG1,
+because no human replication module exists to refer to. A shared human
+gap-filling module could replace both copies.
+
+Possible upstream errors found in this set:
+
+- **GOA.**
+  - PMS1 has a contributes_to DNA endonuclease IDA row whose paper assays human
+    MLH1-PMS2 and names PMS1 only as the yeast subunit.
+  - PCNA has a purine mismatch glycosylase IDA row whose abstract reports only
+    binding to MutS complexes.
+  - TNRC6A's only adaptor-activity row is HDA from an RNA-interactome screen.
+  - RDH10's NAD+-dependent activity cites a paper reporting a preference for
+    NADP.
+  - MAS1 has an angiotensin II receptor TAS row from 1988, before
+    angiotensin-(1-7) was known as its ligand.
+  - ACE2 has a peptidyl-dipeptidase IDA row whose paper says it acts only as a
+    carboxypeptidase on the angiotensins.
+  - NUP214 and NUP42 carry a karyopherin term, nuclear export signal receptor
+    activity.
+- **GO-CAM.**
+  - The TC-NER model `6796b94c00002938` types CSB and UVSSA with activities
+    other than their reviewed and experimental ones.
+  - The resection models `65a1f4f800000855` and `65a1f4f800001380` use
+    replication-fork resection (`GO:0110025`) where DSB processing
+    (`GO:0000729`) looks intended.
+  - `613aae0000001005` places RAD51 single-stranded DNA binding in the
+    presynaptic intermediate filament cytoskeleton.
+  - p53 is typed with four different transcription factor terms across models.
+- **Coverage.** No human GO-CAM models canonical miRNA biogenesis, mismatch
+  repair, NHEJ, CIA, PCP or retinoic acid synthesis.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -725,8 +844,6 @@ Possible upstream errors found in this set:
   Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
-- Model the renin-angiotensin cascade (PW:0000492), which is `has_module` only
-  by gene overlap with the angiotensin II module.
 - Reconcile `gpcr_camp_pka_signaling` with the fuller
   `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
   compact module's cyclase and PKA steps.
@@ -736,9 +853,18 @@ Possible upstream errors found in this set:
 - Review the blood-set member genes, starting with the proteases and cofactors
   that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
 - Model IL-10 signaling, which has only an IL-22 gene-overlap match, and the
-  mammalian pathways whose only match is a Drosophila, plant or bacterial module
-  (RNA polymerase I-III transcription, mitochondrial protein import, the microRNA
-  pathway, and the DNA repair pathways listed under Module seeds).
+  remaining `related_module_only` mammalian pathways that are not broad: RNA
+  polymerase I and III transcription, chromatin remodeling, calcium transport,
+  mTOR signaling (beside `pi3k_akt_mtor`), leptin, cardiolipin metabolism, and
+  intestinal retinol absorption (PW:0000141). The six broad ones (RNA polymerase
+  transcription, RNA polymerase II, translation, ribosome biogenesis,
+  calcium-mediated signaling and the spliceosome) need splitting first.
+- Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
+  NER and mismatch repair modules, and point
+  `retinoic_acid_receptor_signaling`'s production step at
+  `retinoic_acid_metabolism`.
+- Fix the triage's prose scraping of GO and UniProt ids
+  (ai4curation/ai-gene-review#6006).
 - Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
   receptors in the adult synapse, and a human PAR/Crumbs/Scribble polarity module
   (the PKC module mentions the PAR complex only through the atypical PKCs), and a
@@ -761,6 +887,7 @@ Possible upstream errors found in this set:
 - [x] Gene reviews for SREBP pathway members
 - [x] Model the `candidate` seeds (9 of the 10 from the 2026-10-20 triage, in the second and third sets; IL-10 left the queue by gene overlap)
 - [x] Model the 14 candidates from the curated mappings (13 modules, fourth set)
+- [x] Model the mammalian pathways whose only match was another taxon's module, and the RAS cascade (11 modules, fifth set)
 
 ## Notes
 
@@ -792,3 +919,11 @@ other-taxon or GO-term modules, and 9 have only a broad GO term or none
 Fourth set of 13 modules for the 14 curated-mapping candidates. The re-run
 leaves no candidates: 107 `has_module`, 23 `related_module_only` and 7
 `no_specific_go_term`.
+
+### 2026-11-05
+
+Fifth set of 11 modules: nucleotide excision repair, mismatch repair,
+homologous recombination, NHEJ, p53 signaling, microRNA biogenesis, mRNA
+nuclear export, retinoic acid metabolism, the renin-angiotensin cascade,
+cytosolic Fe-S assembly and Wnt/PCP. The re-run gives 118 `has_module`, 14
+`related_module_only` and 5 `no_specific_go_term`.
