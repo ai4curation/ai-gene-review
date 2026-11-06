@@ -102,3 +102,30 @@ machine annotation payloads and raw sources. Only then finalize the module,
 run scoped and full validation, publish its own PR, and shepherd it to merge.
 The missing GO term belongs in notes/proposed terms, not a biology knowledge
 gap: a wet-lab experiment would not create an ontology class.
+
+## 2026-11-06 — Deinococcus sequence bridge from primary supplements
+
+The PMC supplement archive for PMID:38962131 was obtained from Europe PMC after
+the PMC download endpoint returned a browser challenge. Supplementary Tables
+S2/S3/S4 identify KDR_B0073 (FruA), KDR_B0074 (FruK candidate), and restored
+KDR_B0075 (FruB) on CP150842.1. Translation of the published reverse-strand
+coordinates, using bacterial code 11 with CDS validation, gives 598, 315 and
+826 residues, respectively. The complete FruA and FruK translations are exactly
+identical to current UniProt Q9RZP7 and Q9RZP6. The ENA record has only a source
+feature; coordinates come from the supplement, not an unrecorded gene prediction.
+
+S3/S4 link the 826-residue FruB counterparts in ATCC13939E/O (and R1-2016 in
+S4) to WP_027480352.1. Targeted current UniProt searches did not establish an
+accession for this restored protein. Keep the locus/RefSeq evidence explicit;
+do not assign the old pseudogene or a guessed UniProt identifier to this node.
+The RefSeq sequence itself still requires independent comparison.
+
+S2 labels KDR_B0074 tagatose-6-phosphate kinase whereas S3 labels its same-length
+counterparts 1-phosphofructokinase. This annotation discrepancy needs functional
+review, not a label-based choice. The sequence bridge supports adding the two
+component reviews, with clear strain/assay boundaries; it does not establish that
+ATCC13939K performs PEP-dependent fructose uptake. Preserve PMID:21822900's
+ATP-dependent tested system separately.
+
+Machine-readable coordinates, extracted supplement rows, source URLs and checksums:
+[deinococcus-sequence-bridge.json](../analysis/module_audits/bacterial_fructose_pts_catabolism/deinococcus-sequence-bridge.json).
