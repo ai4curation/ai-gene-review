@@ -718,7 +718,7 @@ involved_in GO:0044010 single-species biofilm formation (IMP) on PA5208 rests on
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA5208/PA5208-ai-review.yaml`
 
-involved_in GO:0071978 (IMP) on PA5208 rests on a single mini-Tn5 insertion mutant from a swarming screen (Overhage et al. 2007) that also has a growth defect. PA5208 is a PhoU-like UPF0111 protein with no flagellar function; the row records an indirect mutant phenotype and is the sole seed of the PTN002194937 swarming IBD (5 leaf IBAs, including non-flagellated Haemophilus and Coxiella).
+involved_in GO:0071978 (IMP) on PA5208 rests on a single mini-Tn5 insertion mutant from a swarming screen (Overhage et al. 2007) that also has a growth defect. PA5208 is a PhoU-like UPF0111 protein with no flagellar or motor domain and whose own function is predicted rather than known; the row records an indirect mutant phenotype and is the sole seed of the PTN002194937 swarming IBD (5 leaf IBAs, two of them in Haemophilus influenzae and Coxiella burnetii, which encode no core flagellar genes).
 
 > and a PA5208 mutant that had a slight growth defect
 > — PMID:17158671
