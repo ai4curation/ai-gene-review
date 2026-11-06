@@ -189,8 +189,8 @@ IBA is low quality.
 - [x] Chicken `cerebral cortex development`: reviewed in BTBD3.
 - [x] Write the upstream requests in the repo's structured formats (2026-11-05):
   - Taxon constraints TPV-004 to TPV-007 in [proposed_taxon_constraints.yaml](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.yaml): MBF and SBF complexes only in Fungi, S100 protein binding only in Chordata, cerebral cortex development never in Aves. The IRD on PTN000917496 is recorded with TPV-004.
-  - InterPro2GO verdicts in [interpro2go.sssom.yaml](INTERPRO/interpro2go.sssom.yaml): narrow IPR037893 → S100 protein binding by taxon, and narrow IPR002956 → sevenless binding and visual perception to the BOSS family.
-  - Curated replacement rules: CR-0005 (IPR037893 AND Chordata → S100 protein binding) and CR-0006 (IPR002956 AND IPR050726 → sevenless binding, visual perception), in `rules/curated/`.
+  - InterPro2GO verdicts in [interpro2go.sssom.yaml](INTERPRO/interpro2go.sssom.yaml): narrow IPR037893 → S100 protein binding by taxon, narrow IPR002956 → sevenless binding to the BOSS family, and remove IPR002956 → visual perception (BOSS induces R7 fate but does not perceive light).
+  - Curated replacement rules: CR-0005 (IPR037893 AND Chordata → S100 protein binding) and CR-0006 (IPR002956 AND IPR050726 → sevenless binding, sevenless signaling pathway), in `rules/curated/`.
   - The COPII coat structural-constituent term is a `proposed_new_terms` entry in the npp-20 review.
   - The LPXD1 UniProt disruption-phenotype error is a `source_defects` entry in the LPXD1 review.
 - [ ] Submit these to GO, InterPro and UniProt (status is PROPOSED in each file).

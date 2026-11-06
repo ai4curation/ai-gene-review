@@ -4,9 +4,29 @@ Queries the public InterPro REST API (no key needed) and prints a Markdown repor
 Usage: python3 ipr002956_check.py > RESULTS.md
 """
 import json
+import urllib.parse
 import urllib.request
 
 API = "https://www.ebi.ac.uk/interpro/api"
+UNIPROT = "https://rest.uniprot.org/uniprotkb/search"
+# Related InterPro entries whose names are cited alongside IPR002956
+NAMED_ENTRIES = ["IPR050726", "IPR051753", "IPR037893"]
+# UniProtKB breakdowns of the IPR002956 membership
+BREAKDOWN = {
+    "all IPR002956": "xref:interpro-IPR002956",
+    "vertebrates (taxon 7742)": "xref:interpro-IPR002956 AND taxonomy_id:7742",
+    "arthropods (taxon 6656)": "xref:interpro-IPR002956 AND taxonomy_id:6656",
+    "insects (taxon 50557)": "xref:interpro-IPR002956 AND taxonomy_id:50557",
+    "bacteria (taxon 2)": "xref:interpro-IPR002956 AND taxonomy_id:2",
+    "also IPR051753 (GPRC5 family)": "xref:interpro-IPR002956 AND xref:interpro-IPR051753",
+    "also IPR051753, vertebrates": "xref:interpro-IPR002956 AND xref:interpro-IPR051753 AND taxonomy_id:7742",
+    "also IPR050726": "xref:interpro-IPR002956 AND xref:interpro-IPR050726",
+    "also IPR050726, vertebrates": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:7742",
+    "also IPR050726, arthropods": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:6656",
+    "also IPR050726, insects": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:50557",
+    "also IPR050726, bacteria": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND taxonomy_id:2",
+    "also IPR050726 and IPR051753": "xref:interpro-IPR002956 AND xref:interpro-IPR050726 AND xref:interpro-IPR051753",
+}
 TARGET = "Q8K3J9"  # mouse Gprc5c
 # GPRC5 family members and Drosophila BOSS for comparison
 COMPARE = {
@@ -26,6 +46,13 @@ def get(url):
     with urllib.request.urlopen(req, timeout=60) as r:
         body = r.read()
     return json.loads(body) if body else {}
+
+
+def uniprot_count(query):
+    url = UNIPROT + "?" + urllib.parse.urlencode({"query": f"({query})", "size": 1})
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return r.headers.get("x-total-results")
 
 
 def main():
@@ -65,6 +92,24 @@ def main():
             print(f"- {acc} {label}: IPR002956 match = {has}; entries = {', '.join(ids)}")
         except Exception as e:  # report, never invent
             print(f"- {acc} {label}: query failed ({e})")
+
+    print("\n## Related InterPro entry names\n")
+    for acc in NAMED_ENTRIES:
+        try:
+            m = get(f"{API}/entry/interpro/{acc}")["metadata"]
+            print(f"- {acc}: {m['name']['name']} (type: {m['type']})")
+        except Exception as e:  # report, never invent
+            print(f"- {acc}: query failed ({e})")
+
+    print("\n## UniProtKB breakdown of IPR002956 matches\n")
+    print("| Subset | UniProtKB query | Count |")
+    print("|---|---|---|")
+    for label, query in BREAKDOWN.items():
+        try:
+            n = uniprot_count(query)
+        except Exception as e:  # report, never invent
+            n = f"query failed ({e})"
+        print(f"| {label} | `{query}` | {n} |")
 
 
 if __name__ == "__main__":
