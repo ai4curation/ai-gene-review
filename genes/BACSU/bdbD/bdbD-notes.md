@@ -21,3 +21,7 @@ All original annotation payloads are preserved. Three justified additions: prote
 ## PR6129 evidence follow-up (2026-11-06)
 
 Retained the membrane-raft rows as UNDECIDED because the exact compartment mapping and target-specific location remain unresolved, not because full main text was inaccessible. This is not a conclusion that the proteins cannot associate with bacterial microdomains. The reviewer's claimed precedent is not identical: SecA refers to PMID27362352 partial flotillin colocalization, and SecY currently ACCEPTs PMID23651456 DRM/FloT evidence. No gene-action changes. Corrected the protein-folding comparator rationale: ECOLI DsbA IDA1429594 and PSEPK DsbA are authored NEW proposals, not upstream GOA rows. Current three-accession QuickGO query returns zero protein-folding rows. BdbD's NEW IC is retained on direct chemistry plus PhoA maturation; systematic absence is a convention question, not evidence of curator oversight.
+
+## 2026-11-06: protein-folding proposal evidence threshold
+
+Clarified the common decision rule: direct oxidation plus productive functional-substrate evidence in the target organism supports the BdbD proposal; in vitro archived-record transfer or PAO1-to-PA14 extrapolation remains a reason to defer a new BP. The upstream convention gap is shared uncertainty, not the discriminator. All annotation payloads, actions, quotations and core functions are unchanged.

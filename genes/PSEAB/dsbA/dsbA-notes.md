@@ -15,3 +15,7 @@ Text S2 was recovered from the genuine EuropePMC supplementary archive. All four
 ## PR6129 evidence follow-up (2026-11-06)
 
 Removed the unanchored core GO0006457 process assertion, while retaining direct protein-substrate disulfide chemistry and native PA14 scope. No NEW BP was manufactured for validator coverage. The same-role upstream search returned zero rows; repository Ecoli/Pputida DsbA and BdbD entries are authored proposals, not positive GOA convention. This does not deny that DsbA1 performs oxidative-folding chemistry. Also corrected core wording to regeneration of the oxidized active site.
+
+## 2026-11-06: protein-folding proposal evidence threshold
+
+Clarified the common decision rule: direct oxidation plus productive functional-substrate evidence in the target organism supports the BdbD proposal; in vitro archived-record transfer or PAO1-to-PA14 extrapolation remains a reason to defer a new BP. The upstream convention gap is shared uncertainty, not the discriminator. All annotation payloads, actions, quotations and core functions are unchanged.
