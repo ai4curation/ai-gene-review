@@ -42,3 +42,58 @@ term is proposed.
 - No gene-level deep-research file exists for this gene; none was generated in
   this session (provider not run). The module and P. putida project
   OpenScientist reports were used for retrieval.
+
+
+## 2026-11-05 complete gene-level comparative audit
+
+Re-read every existing annotation, core function, raw UniProt record, relevant
+provider report and primary literature. Original annotation payloads and raw
+UniProt/GOA snapshots were preserved; no new annotation rows were added. Five
+authored NEW rows across the four-gene baseline remain inherited proposals, not
+new proposals from this audit. Default Falcon research was attempted with
+`just deep-research ORGANISM GENE --provider falcon`; it failed with HTTP 403
+authentication. No provider report was fabricated or overwritten. Manual findings
+are recorded here; the command logs are in the ignored module-audit cache.
+
+QuickGO on 2026-11-05 confirmed active GO:0102143 includes both carboxynorspermidine
+and carboxyspermidine dehydrogenase reactions, and GO:0102144 is obsolete as the
+same activity. Searches for carboxyspermidine/carboxynorspermidine decarboxylase
+and carboxypolyamine returned no specific decarboxylase term. The existing NTR
+name was retained; no GO or PTN identifier was invented. PANTHER official names
+were checked in panther.obo, and exact protein/subfamily assignments against the
+unchanged UniProt records (PTHR43796:SF2 for the dehydrogenases; PTHR43727:SF1 for
+the decarboxylases).
+
+The comparative literature requires a substrate-specific reading. The B. fragilis
+and C. leptum enzymes have measured putrescine/DAP kinetics, but these are not
+measurements of this target [PMID:37437886, "These data suggest that both enzymes
+can use putrescine or DAP and thus produce carboxyspermidine or
+carboxynorspermidine."]. Agmatine was not tested in those comparisons. The 2025
+reconstruction shows that related pairs can make tetramines or use agmatine;
+those functions are not transferred here [PMID:40074085, "The ASA-dependent
+pathway consisting of CASDH/CASDC homologs has diversified during evolution
+to produce norspermidine (29), N1-aminopropylagmatine (37), and as we have shown
+here, spermidine and Spm/Tspm."]. Physiological product identity, reconstructed
+pathway activity and isolated-enzyme turnover are distinct evidence.
+
+Refined GO:0003824 and all GO:0016831 rows to MODIFY with the already-supported
+NTR carboxyspermidine/carboxynorspermidine decarboxylase activity; the core uses
+proposed_molecular_function with the matching proposal. This changes specificity,
+not the claimed chemistry. Existing lysine/diaminopimelate removals remain
+consistent with the family review.
+
+GO:0045312 changed from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED: family/rule
+assignment predicts substrate capability but does not establish endogenous
+carboxynorspermidine supply or norspermidine biosynthesis in KT2440. The earlier
+notes' claim that this was a real peripheral process exceeded the evidence.
+The inherited spermidine NEW row remains a comparative inference, not an assay.
+The TreeGrafter source PTN001691018 remains distinct from Vibrio's IBA node.
+
+Targeted searches for PP_2928/carboxyspermidine and nspC/KT2440 did not recover
+a direct target assay. The paired pathway remains a comparative proposal.
+Family identity and adjacency are supportive but insufficient to establish
+native diamine preference, particularly after CAPA-pathway diversification
+[PMID:37878710]. The H. pylori putrescine assay cited previously cannot establish
+physiological substrate preference: that homolog was also characterized as CAPADH.
+No new PLP-binding or homodimerization row was added solely from family architecture;
+the specific catalytic proposal already captures the core activity.
