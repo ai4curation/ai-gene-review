@@ -10,10 +10,11 @@
   `"Candida glabrata" EAF3`, `"CAGL0K02321g"`, `"Q6FN68" EAF3`, and
   `"Nakaseomyces glabratus" EAF3 Rpd3S NuA4`. No newer paper describing a
   C. glabrata or N. glabratus EAF3-specific experiment was found.
-- C. glabrata Q6FN68 is in the same PANTHER `PTHR10880:SF15` branch as
-  budding-yeast EAF3, fission-yeast alp13, and C. albicans EAF3, so the
-  EnsemblFungi transfers from SGD EAF3 and the NuA4/Rpd3S combined IEAs are
-  biologically plausible.
+- C. glabrata Q6FN68 is an MRG-family Eaf3 homolog in the broad pan-eukaryotic
+  PANTHER `PTHR10880:SF15` branch. This subfamily membership is useful for
+  family-level architecture but does not itself carry the fungal Rpd3S, NuA4, or
+  TINTIN inferences; those should be anchored to the S. cerevisiae EAF3
+  orthology transfers and the fungal PAINT nodes.
 - The current PAINT cache has a clean fungal `PTN000853816` IBD for
   `GO:0032221 Rpd3S complex`, seeded by PomBase alp13 and SGD EAF3. This is
   appropriate for C. glabrata EAF3; the short donor list is not weak evidence.
