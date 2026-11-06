@@ -83,3 +83,11 @@ Two disease-relevant catabolic roles:
 - The SA-beta-gal paper (PMID:11927518) beta-galactosidase activity IDA is now ACCEPT for consistency with every other row on that term (SA-beta-gal is lysosomal beta-galactosidase activity); carbohydrate metabolic process IDA is KEEP_AS_NON_CORE, matching the IEA row.
 - Core function 1 (GO:0004565 beta-galactosidase activity, directly involved in GO:0006689 ganglioside catabolic process, lysosomal lumen) matches the dismech GM1_Gangliosidosis_Type_1 and _Type_3 molecular nodes, which mark the same MF and BP DECREASED.
 - GLB1 added as the GM1/lactosylceramide entry step of modules/glycosphingolipid_lysosomal_degradation.yaml (Reactome R-HSA-1605624, R-HSA-1606312).
+
+## 2026-11-06: product-specific functional review
+
+The long GLB1 product supplies lysosomal beta-galactosidase activity. The shorter S-Gal product has a distinct matrix-binding role; the same historical elastin-binding abbreviation also occurs in literature about the unrelated sterol-isomerase locus, so construct identity matters. [PMID:2511208](https://pubmed.ncbi.nlm.nih.gov/2511208/), [PMID:8383699](https://pubmed.ncbi.nlm.nih.gov/8383699/).
+
+The review now separates recombinant self-association, cellular staining, granule cargo and urinary-vesicle detection from the principal catalytic function. The 647-residue alternative product remains represented without assigning its localization or activity from sequence length alone. The primary-evidence details and remaining access limits are in [the manual synthesis](GLB1-deep-research-manual.md).
+
+All 62 incoming annotation contexts are retained, including the two source-distinct cDNA rows and four AND extension groups. One isoform-specific matrix-binding MF is proposed; no new biological process is inferred from necessity or cargo membership. The prior notes above, historical sessions and quote associations remain preserved.
