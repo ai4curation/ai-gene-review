@@ -333,8 +333,8 @@ validators.
   (DDR subfamilies of `PANTHER:PTHR24416`, PAINT node `PTN002400507`), *protein tyrosine
   kinase collagen receptor activity* (`GO:0038062`). Fly Ddr is not a representative: its gene
   review finds dipteran Ddr is a predicted pseudokinase (lost catalytic lysine, catalytic-loop
-  asparagine and DFG aspartate) with an unconserved collagen pocket, while beetle, honeybee and
-  nematode DDRs keep the kinase residues. Downstream effectors and the other collagen
+  asparagine and DFG aspartate) with an unconserved collagen pocket, while Tribolium DDR and
+  *C. elegans* ddr-2 keep all three kinase residues (the honeybee model keeps two; *C. elegans* ddr-1 none). Downstream effectors and the other collagen
   receptors (integrins, GP6, LAIR1, which belong to *collagen-activated signaling pathway*) are
   boundary notes. GOA gaps recorded in the notes: in human only COL4A2 and COL4A6 are on the
   pathway (IBA) and no collagen has a ligand-activity MF; in fly no collagen is on the pathway.
