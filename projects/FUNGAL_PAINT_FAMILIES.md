@@ -459,7 +459,8 @@ assertions inherited from non-fungal branches.
   this branch
 - [ ] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
   catabolic-process node
-- [ ] `CANGA/PPN1` - CGD *Candida glabrata* Ppn1-family member
+- [x] `CANGA/PPN1` - CGD *Candida glabrata* ortholog reviewed against the
+  fungal polyphosphate catabolic-process node
 - [ ] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog
 - [ ] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
 
@@ -479,6 +480,13 @@ assertions inherited from non-fungal branches.
   `CGD:CAL*` *Candida albicans* seed rather than the CANGA member; and records
   the newer 2025 polyphosphate-engineering and FRET-assay papers without
   changing the core GO conclusions.
+- Drafted `CANGA/PPN1`; it accepts the conserved fungal Ppn1
+  endopolyphosphatase, exopolyphosphatase, fungal-type vacuole, and
+  polyphosphate-catabolism transfers from `PTN000818947`; keeps vacuole
+  membrane and cytosol as non-core inherited locations; leaves the inferred
+  nuclear location undecided; and removes the stale TreeGrafter
+  `GO:0008081 phosphoric diester hydrolase activity` row because PAINT now has
+  an agreeing 2026 IRD at the fungal Ppn1 node.
 
 ## 2026-11-01
 
