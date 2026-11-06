@@ -185,12 +185,20 @@ comparable):
   tier: PAPSS1's skeletal-development row, the confirmed wrong-gene case above,
   which the protein-name penalty had buried. Names whose only evidence is an ARBA
   rule or submitter text are also dropped.
-- **The abstract check stops at the next section heading** after `## Abstract`,
-  and the review join keys on isoform and skips NOT rows, so isoform-specific rows
+- **The name check reads only the title and abstract.** It stops at the next
+  section heading and drops the PubMed citation line, author list, affiliations and
+  identifiers, which a symbol that is also a surname could otherwise match. 796
+  abstract-only records keep their abstract under `## Content`, and those are read
+  too. For the 292 full-text `## Content` records, only the title is used, because
+  the abstract cannot be separated reliably. This changes the name-check result
+  for 19 rows.
+- **The review join keys on isoform and skips NOT rows**, so isoform-specific rows
   no longer overwrite each other.
 
-The top tier (score 6 or more) is now 448 rows in 226 genes; 56 of them carry the
-same-gene-other-species signal.
+The top tier (score 6 or more) is now 444 rows in 225 genes; 52 of them carry the
+same-gene-other-species signal. The 406, 448 and 444 here count score 6 or more on
+the 2026-11-06 corpus. They are not comparable with the 466 (score 6 only) and 390
+from the 2026-11-01 corpus above.
 
 ## Limitations
 

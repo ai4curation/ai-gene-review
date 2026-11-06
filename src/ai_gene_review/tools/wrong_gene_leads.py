@@ -167,11 +167,37 @@ def parse_protein_names(text: str) -> frozenset[str]:
 def parse_protein_names_field(field: str) -> frozenset[str]:
     """Protein names from UniProt's TSV ``Protein names`` column.
 
+    The recommended name comes first and each alternative name follows in
+    parentheses; names may themselves contain parentheses.
+
     >>> sorted(parse_protein_names_field("Tubulin alpha chain (EC 3.6.5.-) (Alpha-tubulin 2)"))
     ['Alpha-tubulin 2', 'EC 3.6.5.-', 'Tubulin alpha chain']
+    >>> sorted(parse_protein_names_field(
+    ...     "Guanine nucleotide-binding protein G(i) subunit alpha-1 (Adenylate cyclase-inhibiting G alpha protein (Gi)) (Gi1)"))
+    ['Adenylate cyclase-inhibiting G alpha protein (Gi)', 'Gi1', 'Guanine nucleotide-binding protein G(i) subunit alpha-1']
     """
-    head = field.split(" (", 1)[0].strip()
-    return frozenset(n for n in [head, *re.findall(r"\(([^()]+)\)", field)] if n)
+    names: list[str] = []
+    depth = 0
+    current = ""
+    for ch in field:
+        # A top-level " (" opens an alternative name; other parentheses belong
+        # to the name being read.
+        if ch == "(" and depth == 0 and current.endswith(" "):
+            names.append(current)
+            current = ""
+            depth = 1
+            continue
+        if ch == "(" and depth:
+            depth += 1
+        elif ch == ")" and depth:
+            depth -= 1
+            if depth == 0:
+                names.append(current)
+                current = ""
+                continue
+        current += ch
+    names.append(current)
+    return frozenset(n.strip() for n in names if n.strip())
 
 
 def _norm(token: str) -> str:
@@ -223,23 +249,73 @@ def _names_protein(text: str, name: str) -> bool:
     return False
 
 
-def abstract_text(path: Path) -> str:
-    """The front matter, title and abstract of a cached publication.
+# A PubMed author list: comma-separated "Surname INITIALS" items, the first one
+# often carrying an affiliation marker, e.g. "Faiyaz ul Haque M(1), King LM, Cohn DH."
+_AUTHOR_ITEM = r"[^\W\d][\w'.\- ]* [A-Z]{1,4}(?:\(\d+(?:,\d+)*\))?"
+_AUTHOR_LIST = re.compile(rf"^{_AUTHOR_ITEM}(?:, {_AUTHOR_ITEM})*(?:,? et al)?\.?$")
+# Paragraphs of a PubMed text record that are bibliographic, not the abstract.
+_RECORD_PARAGRAPH = re.compile(
+    r"^(?:\d+\. \S|Author information:|DOI:|PMID:|PMCID:|Copyright|©|"
+    r"Comment in|Comment on|Erratum in|Update of|Conflict of interest)"
+)
 
-    The text is cut at the first section heading after ``## Abstract``, or, if the
-    file has no abstract heading, at its first section heading.
+
+def strip_bibliographic(text: str) -> str:
+    """Drop citation, author, affiliation and identifier paragraphs.
+
+    These repeat surnames and institutions, so a gene symbol that is also a
+    surname ("Mak") would otherwise read as the gene being named.
+
+    >>> strip_bibliographic("1. Nat Genet. 1998.\\n\\nTitle.\\n\\nMak T(1), Lee AB.\\n\\n"
+    ...                     "Author information:\\n(1)Mak Lab.\\n\\nBody text.\\n\\nPMID: 1")
+    'Title.\\n\\nBody text.'
+    """
+    kept = []
+    for para in re.split(r"\n\s*\n", text):
+        flat = " ".join(para.split())
+        if flat and not _RECORD_PARAGRAPH.match(flat) and not _AUTHOR_LIST.match(flat):
+            kept.append(para.strip())
+    return "\n\n".join(kept)
+
+
+def abstract_text(path: Path) -> str:
+    """The title and abstract of a cached publication, without bibliographic text.
+
+    The title comes from the front matter. The abstract runs from ``## Abstract``
+    to the next section heading. Some abstract-only records put the abstract under
+    ``## Content`` instead (front matter ``content_type: abstract_only``); other
+    ``## Content`` sections can be full text, so for those only the title is used.
 
     >>> import tempfile
     >>> with tempfile.TemporaryDirectory() as tmp:
     ...     p = Path(tmp) / "PMID_1.md"
-    ...     _ = p.write_text("title: T\\n## Abstract\\nA\\n## Methods\\nM\\n## Full Text\\nF")
-    ...     abstract_text(p)
-    'title: T\\n## Abstract\\nA'
+    ...     _ = p.write_text("---\\ntitle: T\\nauthors:\\n- Mak T\\n---\\n\\n# T\\n"
+    ...                      "**Authors:** Mak T\\n\\n## Abstract\\n\\nA\\n\\n## Methods\\nM")
+    ...     q = Path(tmp) / "PMID_2.md"
+    ...     _ = q.write_text("---\\ntitle: T\\ncontent_type: abstract_only\\n---\\n"
+    ...                      "## Content\\n\\nMak T(1).\\n\\nB")
+    ...     abstract_text(p), abstract_text(q)
+    ('T\\n\\nA', 'T\\n\\nB')
     """
     text = path.read_text(errors="replace")
-    start = text.find("\n## Abstract")
-    end = text.find("\n## ", start + 1 if start >= 0 else 0)
-    return text if end < 0 else text[:end]
+    meta: dict[str, Any] = {}
+    if text.startswith("---\n"):
+        front, _, text = text[4:].partition("\n---\n")
+        loaded = yaml.safe_load(front)
+        meta = loaded if isinstance(loaded, dict) else {}
+    headings = ["## Abstract"]
+    if meta.get("content_type") == "abstract_only":
+        headings.append("## Content")
+    body = ""
+    for heading in headings:
+        start = text.find(heading)
+        if start >= 0:
+            start += len(heading)
+            end = text.find("\n## ", start)
+            body = text[start : end if end >= 0 else None]
+            break
+    parts = [str(meta.get("title") or ""), strip_bibliographic(body)]
+    return "\n\n".join(p for p in parts if p)
 
 
 def named_in_abstract(

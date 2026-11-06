@@ -317,3 +317,25 @@ def test_protein_name_in_abstract_penalises_aurkc_lead():
     hits = [r for r in rows if r["reference"] == "PMID:19774610"]
     assert hits
     assert all("gene_named_in_abstract" in r["reasons"] for r in hits)
+
+
+@pytest.mark.parametrize(
+    "pmid,present,absent",
+    [
+        # Abstract under "## Abstract": authors and affiliations are dropped.
+        ("9771708", ["ATPSK2", "brachymorphic"], ["Cohn DH", "Cedars-Sinai", "PMID:"]),
+        # Abstract-only record whose abstract sits under "## Content".
+        ("20237237", ["ENaC", "Nedd4-2"], ["McDonald FJ", "University of Otago"]),
+    ],
+)
+def test_abstract_text_reads_abstract_without_bibliography(pmid, present, absent):
+    """The name check sees the title and abstract, not author lists or affiliations.
+
+    A symbol that is also a surname or an institution word would otherwise read as
+    the gene being named.
+    """
+    from ai_gene_review.tools.wrong_gene_leads import PUBLICATIONS_DIR, abstract_text
+
+    text = abstract_text(PUBLICATIONS_DIR / f"PMID_{pmid}.md")
+    assert all(p in text for p in present)
+    assert not any(a in text for a in absent)
