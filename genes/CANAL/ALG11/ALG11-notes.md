@@ -12,8 +12,9 @@ Newer-literature search:
   `ALG11-deep-research-falcon.md` was created.
 - PubMed searches on 2026-11-06 did not find newer papers directly assaying
   the ALG11 reaction in Candida albicans.
-- The targeted Candida albicans ALG11 query found PMID:42181501 and its
-  preprint PMID:41646340. The 2026 paper tests an alg11 deletion and
-  complementation strain for colony biofilm rheology and cell-wall-related
-  phenotypes, but it is not direct evidence for an additional core GO process
-  beyond ALG11's conserved LLO-assembly role.
+- The targeted Candida albicans ALG11 query found a same-species deletion and
+  complementation paper, PMID:42181501, reporting colony biofilm rheology and
+  cell-wall-related phenotypes; these perturbation phenotypes are downstream of
+  conserved LLO assembly and do not support an additional direct GO process. Its
+  preprint PMID:41646340 was cached for provenance but is superseded by the 2026
+  journal article.
