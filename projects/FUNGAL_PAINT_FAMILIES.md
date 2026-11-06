@@ -598,8 +598,8 @@ evidence for the budding-yeast seed.
 - Rechecked `NEUCR/apg-13`, the *Neurospora crassa* `PTHR13027:SF7` Mon1
   ortholog. The existing review already accepted the same fungal, eukaryotic,
   and Opisthokonta IBA rows; the 2026 follow-up search did not find direct
-  Q870Q4 literature or a newer filamentous-fungal Mon1-Ccz1 paper that would
-  change those calls.
+  Q870Q4 literature, and the newer N. crassa prevacuolar and autophagy
+  morphology papers add Rab7/vacuole context without assaying Mon1.
 
 ## 2026-11-01
 
