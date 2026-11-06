@@ -11,3 +11,10 @@ The historical intrinsic hydrolase proposal is retained as a specific homology-b
 Current QuickGO confirms the GO0033913 hydrolysis definition, polysaccharide-binding child relation, and OPG-biosynthesis descendants of the broad carbohydrate/glucan process terms. GO1900727 is not a descendant of GO0051274 in the retrieved closure; that refinement explicitly describes a pathway-specific lateral interpretation. All location statements are curated homology/prediction rather than a KT2440 assay. PMID17906125 is PA14 (not KT2440) and abstract-only; PMID15313617 is abstract-only structural/branching hypothesis, not proven catalysis.
 
 Genuine OpenScientist research and its PDF/HTML artifacts were available and preserved byte-for-byte. No provider rerun was needed. Its asserted native hydrolytic processing is qualified against the primary evidence; no fake provider output was created. No source publication was refreshed or hand-edited. Scoped computational analysis is reproducible with `uv run python genes/PSEPK/opgG/opgG-source-analysis/map_opgg.py`.
+
+
+## 2026-11-06 PR2142 follow-up
+
+Retained GO:0051274 as ACCEPT. The OPG-specific process is already represented but does not currently entail beta-glucan biosynthesis; the independently supported beta-glucan claim must not be replaced away. The ontology relationship is now a suggested question. Original row identifiers, evidence and source metadata are unchanged.
+
+Applied projects/ENZYME_SPECIFICITY.md to the inherited GO:0033913 proposal. The roughly 127-fold E. coli activity difference, dedicated OpgD comparator and absence of a hydrolysis-specific native phenotype warrant residual-activity caution; they do not alone establish promiscuous noise given substrate selectivity, retained catalytic residues and the ligand-bound pocket in PMID:37735577. The proposal is retained with evolved physiological function unresolved and outside the core. No cofactor-dependent enhancement is treated as observed. For KT2440, ISS transfers predicted capability only, not the donor rate or physiological role. All inherited NEW payloads and actions remain unchanged.

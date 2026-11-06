@@ -13,3 +13,8 @@ QuickGO searches for glucohexadecaose, glucan cyclase, beta-glucan cyclotransfer
 Existing broad biosynthetic rows refine to OPG biosynthesis because this protein itself catalyzes product formation. The beta-glucan IBA from PTN001253664 does not assert hydrolase chemistry; the cyclized product remains predominantly beta-linked. Its OPG-process refinement is lateral in the current ontology closure. The periplasmic IBA is a considered node judgment from P40120; conserved Tat-type export supports it and the normal PAINT-loss command found no IRD/IKR. This is inferred location, not direct native assay. Carbohydrate binding refines to polysaccharide binding as ancillary substrate recognition.
 
 Default Falcon was genuinely attempted via `just deep-research XANCP opgD --provider falcon` and failed403 authentication. No provider file was fabricated; research was performed manually using the primary paper, authoritative supplement, frozen UniProt, RCSB identity and current ontology. COMPLETE reflects completed evidence-based decisions with those native-context limits explicit.
+
+
+## 2026-11-06 PR2142 follow-up
+
+Retained GO:0051274 as ACCEPT. The OPG-specific process is already represented but does not currently entail beta-glucan biosynthesis; the independently supported beta-glucan claim must not be replaced away. The ontology relationship is now a suggested question. Original row identifiers, evidence and source metadata are unchanged.
