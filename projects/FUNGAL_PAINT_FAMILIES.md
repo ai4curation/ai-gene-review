@@ -516,7 +516,8 @@ evidence for the budding-yeast seed.
 
 - [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1/Ypt7 GEF subunit; rechecked in
   PTHR13027 after 2026 VINE/Ypt10 and lipid-droplet papers
-- [ ] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows
+- [x] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows;
+  rechecked against PTHR13027 and its Schizosaccharomyces Mon1-Ccz1 IRD
 - [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member; rechecked
   against PTHR13027 after the yeast/MON1 refresh
 - [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member; rechecked
@@ -614,6 +615,11 @@ evidence for the budding-yeast seed.
   Mon1-Ccz1-complex IBA over-annotated for `EMENI/mon1`, while the GEF,
   vacuolar-membrane, vacuolar-protein-targeting and ISS autophagy decisions
   still stand.
+- Rechecked `SCHPO/mon1`, the fission-yeast `PTHR13027:SF7` Mon1 ortholog. The
+  fungal vacuole-membrane/protein-targeting and eukaryotic GEF IBAs still align
+  with PAINT; the Mon1-Ccz1 complex row is PomBase ISO-only because the
+  2025-09-03 `PTN008545077` IRD blocks the broad Opisthokonta complex IBA on the
+  Schizosaccharomyces branch.
 
 ## 2026-11-01
 
