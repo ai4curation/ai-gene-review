@@ -45,6 +45,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
+| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
 
 ---
 
@@ -425,6 +426,23 @@ refining the root oxidoreductase transfer.
   merged in PR #5415
 - [ ] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
   the (+)-asperlin cluster; drafted in PR #5873
+
+## Family 19: Rmt2/GAMT Methyltransferases
+
+`PTHR32379` contains a broad eukaryotic root with cytoplasmic/nuclear
+localization and generic SAM-dependent methyltransferase placements, a vertebrate
+`PANTHER:PTN001285367` GAMT node for guanidinoacetate N-methyltransferase
+activity and creatine biosynthesis, and a fungal `PANTHER:PTN001285370` Rmt2
+node for protein arginine N5-methyltransferase activity. The official PANTHER
+family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
+to keep the GAMT branch separate from Rpl12/RMT2 methylation.
+
+- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  drafted in this branch
+- [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
+- [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
+- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
+- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
 
 ---
 
