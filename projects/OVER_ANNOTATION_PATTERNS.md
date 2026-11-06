@@ -156,8 +156,14 @@ A 43rd term went in the same batch for a different reason, and is not an instanc
 pattern: `GO:0070681` glutaminyl-tRNAGln biosynthesis via transamidation was obsoleted as
 "a specific pathway variant, which is out of scope for GO", its MF counterpart is
 `GO:0050567` rather than a Gln-tRNA ligase, and its comment gives `consider` targets
-instead of a `replaced_by` because "no single term is a safe automatic substitution". See
-`AMINO_ACID_ACTIVATION_OBSOLETION.md`.
+instead of a `replaced_by` because "no single term is a safe automatic substitution". Its
+comment names an earlier structural twin, `GO:0070680` asparaginyl-tRNAAsn biosynthesis
+via transamidation, obsoleted on its own ticket (go-ontology#31932, against #15375 for the
+Gln term) and replaced by `GO:0070981` L-asparagine biosynthetic process — a different
+destination again, and not a tRNA term at all. So a reader opening the pinned snapshot in
+`modules/bacterial_aminoacyl_trna_charging-analysis/go-obsolescence.obo` finds 22 stanzas:
+the 20 cytosolic terms plus both transamidation terms, only one of which belongs to the 43.
+See `AMINO_ACID_ACTIVATION_OBSOLETION.md`.
 
 **The diagnostic**: ask what the specific term asserts that its parent plus the gene's
 other annotations do not. If the answer is "the amino acid", "the substrate" or "the
