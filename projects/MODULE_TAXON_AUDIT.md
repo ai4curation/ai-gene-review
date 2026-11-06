@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_fatty_acid_beta_oxidation`: Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Final focused checks, full-corpus validation, a dedicated PR, independent review, CI and actual merge remain pending.
+
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
 - [x] `bacterial_assimilatory_nitrate_reduction`: [PR #5740](https://github.com/ai4curation/ai-gene-review/pull/5740) merged as `62f214ee641ee2c662c58c8e40a6eeba6a39c7f0` at 2026-10-30T06:46:53Z. All 209 scoped source/curation/history blobs match the approved head; 21 member reviews are COMPLETE with no PENDING annotations. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5740-merged-content.json). PR #5928 is a separate family-review follow-up.
@@ -80,7 +82,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 2 PR_OPEN, 2 IN_PROGRESS and 740 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot: 777 modules; 33 COMPLETE, 3 IN_PROGRESS, 739 NOT_STARTED, 2 PR_OPEN. Dated inventory states are not a fresh global PR survey.
 
 ## Notes
 
@@ -524,3 +526,7 @@ The divisome review follow-up completed full validation on 10,555 reviews. The 1
 ## 2026-11-06 — PR #6123 integration with published main
 
 Integrated published main `fd782f231a` with the validated PR #6123 head `4b65e56304`. All 158 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — comparative beta-oxidation audit
+
+Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Final focused checks, full-corpus validation, a dedicated PR, independent review, CI and actual merge remain pending.

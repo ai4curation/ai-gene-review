@@ -9,58 +9,25 @@ autolink_gene_symbols: false
 
 # PSEPK ppu00071: bacterial fatty acid beta-oxidation
 
-- Module: `bacterial_fatty_acid_beta_oxidation`
-- Pathway context: KEGG `ppu00071` (fatty acid degradation)
-- Focused genes: 3
-- Broad membership-table candidates: 22
+The four-reaction core starts with an already activated fatty acyl-CoA. FadE-mediated dehydrogenation, hydration, NAD-dependent hydroxyacyl-CoA oxidation and thiolysis release acetyl-CoA and a shortened chain only when the selected proteins accept that substrate. Transport, activation, cofactor recycling, unsaturated-substrate auxiliary reactions and odd-chain product disposal are external requirements.
 
-## Boundary
+| Member | Supported role | Evidence boundary |
+|---|---|---|
+| PP1893 / Q88LN6 (fadE) | Acyl-CoA dehydrogenation, acceptor unspecified | Inferred role; PMID32826213 identifies PP0368/PP0370 as stronger native dehydrogenase candidates. No demonstrated ETF coupling or isolated kinetics. |
+| PP2136 / Q88L02 (fadB) | Hydration and NAD-dependent oxidation | Curated multidomain chemistry and native fitness support; chain range and purified complex kinetics unresolved. |
+| PP2137 / Q88L01 (fadA) | CoA-dependent thiolysis with the compatible alpha partner | Native pairing inference is distinct from isolated kinetics. Phenylacetate annotation remains UNDECIDED; a canonical beta-oxidation role does not exclude a secondary role. |
 
-This batch covers the four-reaction saturated fatty acid beta-oxidation spiral:
-
-1. `fadE` (PP_1893/Q88LN6): ETF-dependent acyl-CoA dehydrogenation
-2. `fadB` (PP_2136/Q88L02): trans-2-enoyl-CoA hydration
-3. `fadB` (PP_2136/Q88L02): NAD-dependent 3-hydroxyacyl-CoA oxidation
-4. `fadA` (PP_2137/Q88L01): thiolytic cleavage and two-carbon shortening
-
-Fatty-acid activation by FadD is upstream of the repeating spiral. Auxiliary
-reactions for unsaturated substrates and pathway-specific acyl-CoA enzyme
-paralogs are outside this module. The broad KEGG list is retained in the TSV;
-membership alone is not evidence that a paralog performs the core spiral in
-KT2440.
+The comparative module uses exact reviewed members from E. coli, Salmonella, Pseudomonas putida, P. fragi, P. aeruginosa, M. tuberculosis and B. subtilis. Its four reaction classes have distinct family implementations and matched-partner/substrate conditions. P. fragi and H37Rv structural pairs establish partial TFE chemistry without assigning a native first-step dehydrogenase. The PAO1 dehydrogenase constructs are distinguished from PA14 mutant growth and clinical-isolate proteomics.
 
 ## Status
 
-- [x] Fetch the focused genes from UniProt and GOA.
-- [x] Consult the annotation-reviewer workflow on the PSEPK realization.
-- [x] Complete module + `ppu00071` + PSEPK OpenScientist research.
-- [x] Curate the three focused gene reviews.
-- [x] Create a reusable four-reaction bacterial module with exact PSEPK exemplars.
-- [ ] Complete OpenScientist gene-level research for FadE and FadA (FadE complete; FadA running).
-- [x] Validate the module and focused gene reviews.
-- [x] Render the gene reviews and batch page.
-- [ ] Open one PR for this module and shepherd review and CI.
+- [x] Complete the three KT2440 gene reviews and comparative literature assessment.
+- [x] Complete 19 exemplar reviews and eight family reviews.
+- [x] Preserve original annotation payloads and raw/provider sources.
+- [ ] Finish full validation, publish the module PR and shepherd it to actual merge.
 
-## Focused Genes
+## 2026-11-06 — comparative audit
 
-| Gene | Locus | UniProt | Module role | First-pass result |
-|---|---|---|---|---|
-| `fadE` | PP_1893 | Q88LN6 | medium/long-chain acyl-CoA dehydrogenase | Retain the two specific activities and beta-oxidation process; localization remains uncertain |
-| `fadB` | PP_2136 | Q88L02 | enoyl-CoA hydratase and hydroxyacyl-CoA dehydrogenase | Existing review already supports both core reactions and FadBA complex membership |
-| `fadA` | PP_2137 | Q88L01 | 3-ketoacyl-CoA thiolase | Retain thiolase and beta-oxidation; add FadBA complex; remove electronic phenylacetate propagation |
+Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Final focused checks, full-corpus validation, a dedicated PR, independent review, CI and actual merge remain pending.
 
-## Evidence Notes
-
-The exact UniProt records define the four reaction leaves and identify Q88L02
-and Q88L01 as the alpha and beta subunits of the FadBA complex. The
-species-aware OpenScientist report independently recovered FadE, FadB, and
-FadA as the primary four-step realization, but also proposed several plausible
-paralogs using homology and KEGG membership. Those paralogs are left as a
-curation gap because their chain-length or pathway specificity has not been
-established for KT2440.
-
-The module uses Rhea reactions for direction-aware chemistry, exact UniProt
-exemplars, and FadE/FadB/FadA family selectors. It has no module-level molecular
-function or generic cytoplasm/cytosol assertion. The broad candidate inventory
-is retained in
-[`ppu00071_fatty_acid_beta_oxidation.tsv`](ppu00071_fatty_acid_beta_oxidation.tsv).
+The broad [KEGG candidate inventory](ppu00071_fatty_acid_beta_oxidation.tsv) is retained. Candidate membership alone does not establish catalytic role or native flux. Provider source files remain unchanged; no old running-research status is treated as a live process.
