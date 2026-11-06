@@ -18,7 +18,7 @@ The BACSU review now quotes the palmitate-utilization result and accurately dist
 
 The module explains the hydratase convention: BACSU FadB's supported 2-enoyl reaction uses GO0018812, while ECOLI FadB also has curated (3E)-enoyl hydration (RHEA20724), requiring GO0004300 to cover its repertoire. SALTY FadA/FadB and PSEPK FadE descriptions now summarize biology; their earlier evidence-assessment prose is retained in notes.
 
-The annotation-reviewer consultation independently supported the chain-preserving correction, the cofactor/acceptor distinction, and the Bacillus-specific inference. Original annotation payloads and source files are checked separately from these scientific judgments. Full validation of the revised science remains required before publication.
+The annotation-reviewer consultation independently supported the chain-preserving correction, the cofactor/acceptor distinction, and the Bacillus-specific inference. Original annotation payloads and source files are checked separately from these scientific judgments. Full validation of the revised science passed on 2026-11-06 at frozen science commit `f063b332b1c5aa1ff7b1ac043f43586bd51819a4`; see `round1-full-validation.json`. Renewed external review, CI and actual merge remain pending.
 
 ## Validation provenance
 

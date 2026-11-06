@@ -571,3 +571,7 @@ Integrated current main 488d370561caf677da6e0c8ef94d5b0c7f4cb374 before beta-oxi
 PR6136 review corrections preserve chain-length specificity independently of acceptor identity, accept target-specific inferred Bacillus ETF coupling, distinguish bound FAD from a net flavin acceptor, fix direct palmitate/C4 support, clarify hydratase conventions and remove description-level curation framing. All 217 current row payloads, prior NEW actions and 40 raw/provider files remain unchanged. Eleven revised gene reviews, one family review and the module require renewed focused/full validation, review, CI and merge.
 
 [Source adjudication](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-source-adjudication.md) records the decisions and remaining assay limits.
+
+## 2026-11-06 — beta-oxidation revised science validated
+
+The round1 full-corpus run passed on `f063b332b1c5aa1ff7b1ac043f43586bd51819a4`: 10,688 reviews, zero blocking errors and all 54 PMID-bearing pathways. All 290 frozen files were unchanged after the run. The 52 reference advisories in 31 files are outside this nineteen-member panel; the audit does not claim to repair them. Eleven revised reviews and the preserved 217 annotation payloads are covered by the new run. PR #6136 is ready for renewed external review and CI; actual merge remains pending.
