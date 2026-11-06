@@ -16,3 +16,8 @@ The normal Falcon research provider was attempted once and failed with HTTP 403 
 Action counts: {"ACCEPT": 9, "KEEP_AS_NON_CORE": 7, "MODIFY": 2, "UNDECIDED": 9}.
 
 Accessible full PMC19470749 supports the existing NOT adhesion row, not a new positive adhesin claim. Fibronectin/activation distinctions in PMID17849409 remain UNDECIDED where full assay access was unavailable. Broad proteomics/expression claims are not removed for lack of target detail.
+
+
+## 2026-11-06 — PR6125 evidence/action follow-up
+
+3: distinguish cytoplasmic localization from purified-protein functional assays. Original machine rows and source bytes were frozen before edits. Published PMID and raw-source evidence remain separate from native target-specific experiments. Core location changes, where made, retain cytoplasm when finer cytosol resolution was not independently supported. Physiological uncertainty is not treated as automatic disproof of a directly measured molecular activity.

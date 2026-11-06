@@ -16,3 +16,8 @@ The normal Falcon research provider was attempted once and failed with HTTP 403 
 Action counts: {"ACCEPT": 2, "MODIFY": 1, "NEW": 1}.
 
 ATP binding is not inferred from activation of the DnaK ATPase. The Mtb electronic ATP-binding claim is marked over-annotated without asserting absolute absence of affinity. Thermus direct client handling is distinguished from unresolved unconditional ATPase stimulation.
+
+
+## 2026-11-06 — PR6125 evidence/action follow-up
+
+3: distinguish cytoplasmic localization from purified-protein functional assays; 8: biological description retains client-handoff and autoinhibition mechanisms. Original machine rows and source bytes were frozen before edits. Published PMID and raw-source evidence remain separate from native target-specific experiments. Core location changes, where made, retain cytoplasm when finer cytosol resolution was not independently supported. Physiological uncertainty is not treated as automatic disproof of a directly measured molecular activity.

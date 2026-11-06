@@ -15,3 +15,8 @@ The normal Falcon research provider was attempted once and failed with HTTP 403 
 
 Action counts: {"ACCEPT": 6, "MODIFY": 1, "UNDECIDED": 1}.
 
+
+
+## 2026-11-06 — PR6125 evidence/action follow-up
+
+7: align GrpE homodimerization with its core functional architecture; 3: support cytosol refinement through bacterial GrpE phylogeny, not a cytoplasm label or exchange assay. Original machine rows and source bytes were frozen before edits. Published PMID and raw-source evidence remain separate from native target-specific experiments. Core location changes, where made, retain cytoplasm when finer cytosol resolution was not independently supported. Physiological uncertainty is not treated as automatic disproof of a directly measured molecular activity.

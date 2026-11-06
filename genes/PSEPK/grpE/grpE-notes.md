@@ -11,3 +11,8 @@ Primary scope: [PMID:1826368] separates DnaJ stimulation of DnaK-bound ATP hydro
 Comparative boundary: [PMID:11162122, abstract] states "Here, DnaJ does not stimulate the DnaK-mediated ATP hydrolysis" for Thermus thermophilus. This is not negative evidence for the E. coli or KT2440 proteins, but rules out treating J-domain identity alone as a universal kinetic guarantee. Official QuickGO definitions were retrieved on 2026-11-06; GO:0051082 and GO:0003767 are obsolete, while GO:0044183 describes folding assistance and GO:0051087 binding to a chaperone protein. Client binding is not chaperone-partner binding.
 
 The pre-existing genuine Falcon report was read as background and preserved unchanged; primary and curated evidence control the review.
+
+
+## 2026-11-06 — PR6125 evidence/action follow-up
+
+7: align GrpE homodimerization with its core functional architecture; 3: support cytosol refinement through bacterial GrpE phylogeny, not a cytoplasm label or exchange assay; 8: remove provenance from biological description. Original machine rows and source bytes were frozen before edits. Published PMID and raw-source evidence remain separate from native target-specific experiments. Core location changes, where made, retain cytoplasm when finer cytosol resolution was not independently supported. Physiological uncertainty is not treated as automatic disproof of a directly measured molecular activity.

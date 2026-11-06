@@ -488,7 +488,7 @@ Fourteen complete reviews preserve 227 historical rows and 43 protected sources,
 
 ## 2026-11-06 — DnaK full validation completed
 
-The DnaK/DnaJ/GrpE audit full run finished on 10,589 reviews, with zero best-practice errors and all54 referenced pathways passing. Its17 reference errors exactly match known failures in16 unrelated yeast reviews; all22 relevant inputs equal the pinned base. All245 scoped files matched validated science commit3b0ddf6124 before metadata closure. The panel retains14 complete reviews,227historical rows and43protected sources;178capacity controls and82quotations pass. Dedicated PR, independent review, CI and actual merge remain outstanding.
+The DnaK/DnaJ/GrpE audit full run finished on 10,589 reviews, with zero best-practice errors and all 54 referenced pathways passing. Its 17 reference errors exactly match known failures in 16 unrelated yeast reviews; all 22 relevant inputs equal the pinned base. All245 scoped files matched validated science commit 3b0ddf6124 before metadata closure. The panel retains 14 complete reviews,227historical rows and 43 protected sources; 178 capacity controls and 82 quotations pass. Dedicated PR, independent review, CI and actual merge remain outstanding.
 
 ## 2026-11-06 — DnaK prepublication integration with published main
 
@@ -497,3 +497,7 @@ Integrated published main `db69104296` with the validated DnaK closure head `2e5
 ## 2026-11-06 — DnaK PR #6125 published
 
 Published the comparative DnaK/DnaJ/GrpE audit as PR #6125. Fourteen complete gene reviews preserve 227 historical rows and 43 protected sources; six supported molecular-function additions yield 233 current rows. Full validation is terminal with 17 proven pre-existing citation errors outside the scoped audit, zero best-practice errors and 54 referenced pathways passing. Independent review, CI and actual merge remain pending.
+
+## 2026-11-06 — DnaK review follow-up
+
+PR #6125 review follow-up refines DnaJ replication actions, claim-specific localization evidence, DnaK holdase coverage and GrpE dimerization judgments across twelve gene reviews. E. coli DnaJ cytosol is explicitly UNDECIDED; reported RNase inhibition and physical complex membership retain evidence-specific explanations. The original 227 seed rows, three inherited NEW rows and all 43 raw/provider/prediction files are preserved; six PR-authored proposals bring the total to 233 rows. DafA alone changes an authored evidence code from IC to IPI, with the exact old row archived. Root independently verifies all 51 handoff files, 232 unchanged current payloads, the single documented revision, 74 unchanged publication sources and append-only notes. All 178 capacity/evidence controls pass. Module locations use the supported comparative cytoplasm granularity, and three molecular-activity index concepts are restored without changing roles, chemistry or compatibility. Focused checks pass with four documented module advisories. Fresh full validation, publication, renewed review/CI and actual merge remain pending.
