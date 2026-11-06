@@ -29,3 +29,14 @@ This section supersedes the earlier shape and flippase verdicts above. All 44 or
 QuickGO definitions and ancestor snapshots, provider failure log, PAINT output, baseline and exact preservation report are retained under the ignored audit cache. Unresolved native transport contribution would need discriminating experiments; ontology or literature-access tasks are not framed as biological knowledge gaps.
 
 Identity limit: the 2011/2014 transport experiments identify E. coli His-FtsW plasmid pDML2400 and the C43(DE3) expression host; this audit did not align the original plasmid sequence against the frozen P0ABG4 sequence. The 2021 in-vivo study identifies BW25113-derived strains and explicit FtsW substitutions. These construct and strain contexts are preserved rather than presenting every experiment as an assay of purified, unmodified K-12 reference protein.
+
+
+## PR6123 round-1 follow-up (2026-11-06)
+
+- three flippase claims marked over-annotated with assay retained.
+
+Historical annotation payloads, inherited NEW rows and raw/provider bytes were preserved against the published head 1678b44ceb3b7781cc4abcafbe54090c89f742bc. Claim-specific membrane support uses the frozen transmembrane prediction with its actual evidence code; a computational topology feature is not called an experimental localization. Full construct/strain mappings remain in the earlier notes and source analysis instead of being repeated on unrelated rows.
+
+The direct enzyme-activator evidence in PMID:30692671 applies to the assayed StPBP2x and SaPBP1 constructs, including catalytic-serine mutants. GO:0008047 is current and requires direct interaction without covalent modification. No corresponding role is inferred for Bacillus PBP3 from catalytic compensation, and an essential physical PBP2B requirement alone does not identify direct activation chemistry. A divisome complex annotation describes septal pair membership, not a purified complete native assembly; PBP3 conditional backup is left outside that assertion.
+
+All five D,D proposals now share one reaction definition and the QuickGO-verified GO:0016755 parent. The definition retains organism-dependent acceptors and does not turn an inferred PBP3 linkage into a product-resolved assay. QuickGO searches and responses are preserved in the ignored round-1 audit cache.

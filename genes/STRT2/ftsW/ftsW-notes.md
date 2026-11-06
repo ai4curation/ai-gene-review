@@ -15,3 +15,15 @@ The normal Falcon attempt failed with HTTP403 (authentication/access); no provid
 The flippase claims remain unresolved and are excluded from the core polymerase function.
 
 The process proposal was checked against same-role FtsW comparators P0ABG4 and O07639 using QuickGO (2026-11-06): both carry GO:0009252. This is a convention check, not evidence for the target. The term parents describe chemical biosynthesis and are not redundant with target cell-shape/division terms. No target entry was found in gocams/index.tsv.
+
+
+## PR6123 round-1 follow-up (2026-11-06)
+
+- claim-specific membrane topology evidence.
+- explicit divisome complex membership with target/ortholog scope.
+
+Historical annotation payloads, inherited NEW rows and raw/provider bytes were preserved against the published head 1678b44ceb3b7781cc4abcafbe54090c89f742bc. Claim-specific membrane support uses the frozen transmembrane prediction with its actual evidence code; a computational topology feature is not called an experimental localization. Full construct/strain mappings remain in the earlier notes and source analysis instead of being repeated on unrelated rows.
+
+The direct enzyme-activator evidence in PMID:30692671 applies to the assayed StPBP2x and SaPBP1 constructs, including catalytic-serine mutants. GO:0008047 is current and requires direct interaction without covalent modification. No corresponding role is inferred for Bacillus PBP3 from catalytic compensation, and an essential physical PBP2B requirement alone does not identify direct activation chemistry. A divisome complex annotation describes septal pair membership, not a purified complete native assembly; PBP3 conditional backup is left outside that assertion.
+
+All five D,D proposals now share one reaction definition and the QuickGO-verified GO:0016755 parent. The definition retains organism-dependent acceptors and does not turn an inferred PBP3 linkage into a product-resolved assay. QuickGO searches and responses are preserved in the ignored round-1 audit cache.

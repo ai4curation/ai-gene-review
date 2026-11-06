@@ -25,3 +25,17 @@ Full PMID:18978050 directly identifies an FtsI segment in the FtsL two-hybrid sc
 Generic cell division is refined to the already-present FtsZ-dependent cytokinesis descendant. Cell wall organization is retained; the current ancestry snapshot does not make peptidoglycan biosynthesis its descendant, so no lateral refinement is disguised as specificity. The single physiological core couples the proposed precise transpeptidase activity to septal wall synthesis and division-site localization with actual quotes, replacing the earlier hydrolytic proxy and unsupported placeholder text.
 
 Identity limit: PMID:6450748 explicitly assays E. coli BUG6 and JE10730 thermosensitive division mutants, the latter with thermolabile PBP3. PMID:9324244 assays the named soluble E. coli construct rather than a sequence-verified, full-length P0AD68 preparation. PMID:3049550 studies the pbpBr1 substitution phenotype. These gene-specific studies support K-12 FtsI biology, but their construct/strain-specific numerical outcomes are not silently assigned to an unmodified reference strain.
+
+
+## PR6123 round-1 follow-up (2026-11-06)
+
+- activation boundary documented without unsupported MF.
+- remove title-only evidence from generic-binding policy row.
+- specific IPR037532 wrong-term source defect.
+- standardized DD proposal definition and verified parent.
+
+Historical annotation payloads, inherited NEW rows and raw/provider bytes were preserved against the published head 1678b44ceb3b7781cc4abcafbe54090c89f742bc. Claim-specific membrane support uses the frozen transmembrane prediction with its actual evidence code; a computational topology feature is not called an experimental localization. Full construct/strain mappings remain in the earlier notes and source analysis instead of being repeated on unrelated rows.
+
+The direct enzyme-activator evidence in PMID:30692671 applies to the assayed StPBP2x and SaPBP1 constructs, including catalytic-serine mutants. GO:0008047 is current and requires direct interaction without covalent modification. No corresponding role is inferred for Bacillus PBP3 from catalytic compensation, and an essential physical PBP2B requirement alone does not identify direct activation chemistry. A divisome complex annotation describes septal pair membership, not a purified complete native assembly; PBP3 conditional backup is left outside that assertion.
+
+All five D,D proposals now share one reaction definition and the QuickGO-verified GO:0016755 parent. The definition retains organism-dependent acceptors and does not turn an inferred PBP3 linkage into a product-resolved assay. QuickGO searches and responses are preserved in the ignored round-1 audit cache.

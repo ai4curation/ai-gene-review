@@ -563,7 +563,24 @@ def preservation(panel: dict, baseline: dict) -> dict:
             "status": "NOT_RUN",
             "reason": "Original operational capture unavailable; source hashes and row counts checked.",
         }
-    assert counts["current_rows"] == 162 and counts["NEW_rows"] == 2
+    # Two original PG-process proposals plus two directly assayed activation roles.
+    # Keep activation distinct from TP catalysis and from Bacillus backup phenotypes.
+    activators = set()
+    for protein in panel.values():
+        for row in protein.review["existing_annotations"]:
+            if row["review"]["action"] == "NEW" and row["term"]["id"] == "GO:0008047":
+                activators.add(protein.accession)
+                assert any(
+                    evidence["reference_id"] == "PMID:30692671"
+                    for evidence in row["review"].get("supported_by", [])
+                )
+                assert any(
+                    core.get("molecular_function", {}).get("id") == "GO:0008047"
+                    for core in protein.review["core_functions"]
+                )
+    assert activators == {"Q2FZ94", "Q5M2U8"}
+    counts["direct_activator_exemplars"] = sorted(activators)
+    assert counts["current_rows"] == 164 and counts["NEW_rows"] == 4
     return counts
 
 

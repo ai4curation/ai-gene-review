@@ -482,7 +482,7 @@ Expanded the catalog from 715 to 779 verified module documents at pinned main `f
 
 ### Divisome integration — 2026-11-06
 
-The [divisome audit](../analysis/module_audits/bacterial_divisome_peptidoglycan_transpeptidation/README.md) integrates nine completed member reviews, four bacterial realizations and the conditional Bacillus PBP3 catalytic substitute. Fourteen curated references include three reviews and ten findings. The scoped checker passes 56 capacity cases plus a primary heterologous compatibility check, preserving all 160 original rows and 19 raw/provider files. Full-corpus validation and publication remain pending; no merged completion is claimed.
+The [divisome audit and supporting evidence](https://github.com/ai4curation/ai-gene-review/pull/6123) integrates nine completed member reviews, four bacterial realizations and the conditional Bacillus PBP3 catalytic substitute. Fourteen curated references include three reviews and ten findings. The scoped checker passes 56 capacity cases plus a primary heterologous compatibility check, preserving all 160 original rows and 19 raw/provider files. Full-corpus validation and publication remain pending; no merged completion is claimed.
 
 
 ## 2026-11-06 — divisome full validation attribution
@@ -491,3 +491,7 @@ The divisome full run finished on 10,555 reviews. Schema and term checks pass; b
 
 
 The divisome audit is published as [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123). Auto-merge is enabled through the normal review, CI and merge queue gates. Publication does not count as completed module-audit work; actual merge remains required.
+
+## 2026-11-06 — divisome review follow-up
+
+PR6123 review follow-up preserves all160 original machine rows, two inherited NEW rows and19raw/provider files; adds two experimentally supported enzyme-activator rows. Nine focused validations, renders and histories pass, as do57capacity/evidence controls. Target-specific support, wall-organization actions, FtsW flippase scope, official locus symbols and one InterPro defect are corrected. The rendered project evidence link now points to the live PR. Fresh full validation and renewed review/CI remain required.
