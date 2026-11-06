@@ -2,7 +2,7 @@
 
 ## Literature search (no deep-research provider available)
 
-Sources checked: the UniProt record P62136 (CC FUNCTION, SUBUNIT, SUBCELLULAR LOCATION), and every publication behind the GOA rows, cached by `just fetch-gene-pmids human PPP1CA` (82 papers). Full text was available for the SHOC2-MRAS-PP1C structure papers, the PNUTS pause-release (mouse) and termination papers, the NBS1 telomere paper, the MYC/PNUTS paper, the iron-PP1 paper, RIG-I/MDA5, Nox4/GADD34, E-cadherin BioID, Sds22/Repo-Man and the circadian paper. Several others were abstract-only (noted in each row's summary). Context: modules/integrated_stress_response.yaml and modules/telomere_end_joining_pathway_choice.yaml.
+Sources checked: the UniProt record P62136 (CC FUNCTION, SUBUNIT, SUBCELLULAR LOCATION), and every publication behind the GOA rows, cached by `just fetch-gene-pmids human PPP1CA` (82 papers). Full text was available for the SHOC2-MRAS-PP1C structure papers, the PNUTS pause-release (mouse) and termination papers, the NBS1 telomere paper, the MYC/PNUTS paper, the iron-PP1 paper, RIG-I/MDA5, Nox4/GADD34, E-cadherin BioID, Sds22/Repo-Man and the circadian paper. Several others were abstract-only (noted in each row's summary). Context only: the integrated stress response and telomere end-joining pathway-choice modules (proposed in ai4curation/ai-gene-review#5904).
 
 ## Key findings
 
@@ -20,7 +20,7 @@ Sources checked: the UniProt record P62136 (CC FUNCTION, SUBUNIT, SUBCELLULAR LO
 
 - All 225 bare GO:0005515 rows: REMOVE, per the protein-binding policy. The interactions are mostly with regulatory subunits; their content is captured by the PP1 complex and PTW/PP1 complex CC rows.
 - phosphatase activity / phosphoprotein phosphatase activity: MODIFY to GO:0004722.
-- regulation of translational initiation in response to stress: MODIFY to GO:0036496 (eIF2alpha dephosphorylation), matching the ISR module.
+- regulation of translational initiation in response to stress: MODIFY to GO:0036496 (eIF2alpha dephosphorylation), the term that names the PP1-catalysed step.
 - Glycogen, synaptic and circadian rows (mostly rodent transfers): KEEP_AS_NON_CORE as holoenzyme- or tissue-specific roles.
 - Photoperiod entrainment, response to lead, exosome, cadherin binding/cell-cell adhesion, PP1 binding, RNP/complex binding: MARK_AS_OVER_ANNOTATED.
 - Cited TAS PMID:10640627 is about PP2A/PP2B rather than PP1. The activity row is accepted on other evidence.

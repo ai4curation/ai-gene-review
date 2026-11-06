@@ -2,8 +2,8 @@
 
 ## Literature search (no deep-research provider available)
 Sources checked: UniProt O75807 (curated FUNCTION, SUBUNIT, SUBCELLULAR LOCATION, INTRAMEM/REGION features);
-all 16 GOA-cited PMIDs cached via `just fetch-gene-pmids`. Context: modules/integrated_stress_response.yaml
-(gadd34_pp1_regulator annoton: GO:0019888, GO:0036496, cytosol).
+all 16 GOA-cited PMIDs cached via `just fetch-gene-pmids`. Context only: integrated stress response module
+(gadd34_pp1_regulator annoton: GO:0019888, GO:0036496, cytosol) (module proposed in ai4curation/ai-gene-review#5904).
 
 ## Key findings
 - Holophosphatase: [PMID:11381086 "GADD34 formed a complex with the catalytic subunit of protein phosphatase 1 (PP1c) that specifically promoted the dephosphorylation of eIF2alpha in vitro."]

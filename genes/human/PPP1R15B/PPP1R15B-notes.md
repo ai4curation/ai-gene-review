@@ -3,7 +3,7 @@
 ## Literature search (no deep-research provider available)
 Sources checked: UniProt Q5SWA1 (curated FUNCTION, SUBUNIT, DISEASE); all 11 GOA-cited PMIDs cached via
 `just fetch-gene-pmids`; PMID:14638860 (Jousse et al. 2003, CReP discovery; already cached for the ISR module).
-Context: modules/integrated_stress_response.yaml (crep_pp1_regulator annoton).
+Context only: integrated stress response module, crep_pp1_regulator annoton (module proposed in ai4curation/ai-gene-review#5904).
 
 ## Key findings
 - Constitutive eIF2alpha phosphatase subunit: [PMID:14638860 "Here, we report on identification of a regulatory subunit of a constitutive eIF2α phosphatase complex that regulates basal levels of eIF2α phosphorylation."] (work largely in rodent cells)

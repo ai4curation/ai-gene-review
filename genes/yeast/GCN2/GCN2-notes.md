@@ -9,7 +9,7 @@ No deep-research provider was available. Sources checked:
 - All 22 GOA-cited publications cached by `just fetch-gene-pmids yeast GCN2` (all abstract-only in the cache).
 - Attempted full text of PMID:21849502 (PMC3196070) via Europe PMC and the BioC OA service: not retrievable (HTTP 500 / not in OA subset).
 - Reactome R-SCE-9633467, R-SCE-9633480, R-SCE-9633750.
-- Context: `modules/integrated_stress_response.yaml` (gcn2_variant annoton).
+- Context only: integrated stress response module, gcn2_variant annoton (module proposed in ai4curation/ai-gene-review#5904).
 
 ## Findings
 

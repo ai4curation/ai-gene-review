@@ -3,8 +3,9 @@
 ## Literature search (no deep-research provider available)
 Sources checked: UniProt P05198 (curated FUNCTION, ACTIVITY REGULATION, SUBUNIT, PTM,
 SUBCELLULAR LOCATION); all 32 GOA-cited PMIDs cached via `just fetch-gene-pmids`; additionally
-fetched PMID:10613902 (Kedersha 1999, stress granules). Context: modules/integrated_stress_response.yaml
-and gocams/66b5638000001589/66b5638000001589-review.yaml.
+fetched PMID:10613902 (Kedersha 1999, stress granules). Context only: the integrated stress response module and GO-CAM review proposed in
+ai4curation/ai-gene-review#5904. The EIF2S1 GO-CAM mistyping is cited directly from
+gocams/66b5638000001589/66b5638000001589-src.yaml and gocams/66b5638000000624/66b5638000000624-src.yaml.
 
 ## Key findings
 - eIF2 is a general initiation factor: [PMID:16289705 "eIF2 (eukaryotic translation initiation factor 2) and eIF2B augmented translation of capped, uncapped and encephalomyocarditis virus-internal ribosome entry site-promoted mRNAs."] whereas [PMID:16289705 "eIF4E specifically stimulated capped mRNA translation"].

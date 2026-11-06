@@ -5,9 +5,8 @@
 Sources checked: the UniProt entry P19525 (curated FUNCTION, SUBUNIT, SUBCELLULAR LOCATION
 and ACTIVITY REGULATION text); every GOA-cited publication cached by
 `just fetch-gene-pmids human EIF2AK2` (49 papers; most are abstract-only); and the cached
-Reactome reactions for the PKR pathway (R-HSA-98336xx/9835xxx/9839xxx). Context came from
-`modules/integrated_stress_response.yaml`, which models PKR as one realizer of the eIF2alpha
-kinase step, and from GO-CAM 66b5638000001589, which is about PERK and contains no PKR activity.
+Reactome reactions for the PKR pathway (R-HSA-98336xx/9835xxx/9839xxx). Context only: the integrated stress response module (module proposed in ai4curation/ai-gene-review#5904),
+which models PKR as one realizer of the eIF2alpha kinase step, and GO-CAM 66b5638000001589, which is about PERK and contains no PKR activity.
 
 ## Key findings
 

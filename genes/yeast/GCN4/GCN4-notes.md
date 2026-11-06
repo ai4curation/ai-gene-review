@@ -8,7 +8,7 @@ No deep-research provider was available. Sources checked:
 - UniProt P03069 curated FUNCTION, SUBUNIT, SUBCELLULAR LOCATION, INDUCTION, DOMAIN, PTM text.
 - All 37 GOA-cited publications cached by `just fetch-gene-pmids yeast GCN4` (full text in cache for PMID:12455686, 16402857, 16472744, 22195967, 29628310, 31211995; others abstract-only).
 - SGD ids in WITH/FROM resolved through UniProt REST (S000005411 GAL11/MED15; S000005160 RAP1; S000002552 TAF12; S000005786 GCD1; S000003315 GCD2; S000000189 ROX3/MED19; S000000285 SPT7; S000005508 SPT20; S000006175 HFI1/ADA1; S000005335 POP2).
-- Context: `modules/integrated_stress_response.yaml` (gcn4 effector realizer).
+- Context only: integrated stress response module, gcn4 effector realizer (module proposed in ai4curation/ai-gene-review#5904).
 
 ## Findings
 

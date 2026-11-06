@@ -8,7 +8,7 @@ No deep-research provider was available. Sources checked:
 - UniProt P32501 FUNCTION, SUBUNIT, SUBCELLULAR LOCATION (by similarity to P56287).
 - All 12 GOA-cited publications cached by `just fetch-gene-pmids yeast GCD6` (full text cached for PMID:22842922, 24852487, 26928762, 27023709, 37968396; others abstract-only).
 - SGD ids resolved via UniProt REST: S000001734 GCN3 (eIF2B alpha), S000003315 GCD2 (eIF2B delta), S000005786 GCD1 (eIF2B gamma), S000002619 GCD6 itself.
-- Context: `modules/integrated_stress_response.yaml` (eif2b_gef annoton, PTHR45887).
+- Context only: integrated stress response module, eif2b_gef annoton, PTHR45887 (module proposed in ai4curation/ai-gene-review#5904).
 
 ## Findings
 
