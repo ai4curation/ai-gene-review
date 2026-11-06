@@ -17,13 +17,14 @@ manifest:
 **Bottom line:** in the integrated stress response, four kinases (HRI, PKR,
 PERK and GCN2) each sense a different stress and phosphorylate eIF2α, which
 blocks the eIF2B exchange factor, dampens global translation and lets ATF4 be
-translated. Scoped, not yet started as a project: this page lists about 18
-candidate human genes, including the DELE1-OMA1 route from mitochondrial stress
-to HRI, but no project-specific review work has been done. Five candidates
-already have reviews from other work: EIF2AK3 (PERK), ATF4, ATF3 and EIF2B4 are
-COMPLETE and OMA1 is IN_PROGRESS, 489 annotations between them. Thirteen have
-no gene folder, including the hub EIF2S1 (eIF2α), three of the four kinases,
-DELE1 and four of the five eIF2B subunits. There is no ISR module yet.
+translated. This page lists about 18 candidate human genes, including the
+DELE1-OMA1 route from mitochondrial stress to HRI. As of 2026-11-02, 15 of them
+have reviews: three of the four kinases (EIF2AK1/HRI, EIF2AK3/PERK,
+EIF2AK4/GCN2), the DELE1-OMA1 branch, all five eIF2B subunits, the
+transcriptional arm (ATF4, ATF3, ASNS) and now the hub itself, **EIF2S1**
+(eIF2α, 102 annotation rows). Four candidates still have no gene folder:
+EIF2AK2 (PKR) and the three remaining feedback/output genes DDIT3 (CHOP),
+PPP1R15A (GADD34) and PPP1R15B (CReP). There is no ISR module yet.
 
 We scoped this because the ISR is a drug target (ISRIB), eIF2B mutations cause
 vanishing white matter disease, and the DELE1-HRI branch was only described in
@@ -97,7 +98,31 @@ Four kinases sense different stresses:
 
 ## Project Status
 
-- [ ] Stub - needs gene folder setup
+- [x] Gene folders set up for 15 of the ~18 candidates
+- [ ] Remaining gene reviews: EIF2AK2 (PKR), DDIT3 (CHOP), PPP1R15A (GADD34),
+      PPP1R15B (CReP)
+- [ ] ISR module, including the OMA1-DELE1 mitochondrial branch
+- EIF2S1 (eIF2α): reviewed 2026-11-02 (DRAFT, 102 rows). Notes on the curation
+  decisions are in
+  [EIF2S1-notes.md](../genes/human/EIF2S1/EIF2S1-notes.md). Three points that
+  affect the rest of the project:
+  - The branch-signalling terms are annotated across the whole transduction
+    chain, not just the kinase: GO:0140468 *HRI-mediated signaling* carries
+    OMA1, DELE1, EIF2AK1, EIF2S1, ATF4 and DDIT3. EIF2S1 likewise carries
+    GO:0036499 *PERK-mediated unfolded protein response*. The GCN2 sibling
+    GO:0140469 *GCN2-mediated signaling* is annotated to EIF2AK4, GCN1, IMPACT
+    and MAP3K20 but **not** to EIF2S1; that asymmetry looks like a gap, but the
+    human evidence for the GCN2→eIF2α step is `By similarity` in UniProt and
+    ISS/IEA in GOA, so it was raised as a question rather than proposed as a
+    `NEW` row.
+  - eIF2α's mitochondrial location is kept at the root organelle term.
+    PMID:38340717 gives two direct lines plus an ER-marker control, but the
+    protein has no TM segment or presequence and the association is
+    stress-dependent peripheral recruitment to the cytosolic face, so
+    GO:0005741 was not added.
+  - Reactome already models three of the four phosphorylation events
+    (R-HSA-381111 PERK, R-HSA-9835885 PKR, R-HSA-9840415 DELE1-HRI), which is a
+    useful starting skeleton for the module.
 - EIF2AK3 (PERK): the review does not add GO:0140467 *integrated stress
   response signaling*. [PR #3219](https://github.com/ai4curation/ai-gene-review/pull/3219)
   removed that proposed `NEW` row: GO:0140467 is an ancestor of the
