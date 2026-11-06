@@ -85,3 +85,125 @@
 - No GO term exists for lipoprotein N-acetylation specifically; GO:0006474
   N-terminal protein amino acid acetylation was considered but LhaT, not
   PcrB, performs the transfer.
+
+## Review session 2026-11-06: resolution of the two reviewer critiques
+
+Both open questions from the merged PR review of the plan above were re-tested
+before the review was written. Both changed the plan.
+
+### 1. The planned `NEW GO:0042158 lipoprotein biosynthetic process` row: DROPPED
+
+Asked explicitly which entity performs the step. LhaT transfers the acetyl
+group to the lipoprotein; the acetyl group itself comes from acetyl-CoA via
+YvoF; the HepG carrier is released and reloaded, so PcrB's product contributes
+no atom to Ac-LP. PcrB is three steps upstream and supplies a regenerated
+cofactor. The Δ*pcrB* result is necessity evidence, which is what being
+required for a process looks like whether or not the gene participates in it.
+
+The earlier comparator check was the wrong comparison. Lgt and Lnt modify the
+lipoprotein themselves, so they do the work. Re-run against gene products in
+the *same role* - enzymes that make a donor or carrier consumed by a
+protein-modification process (QuickGO annotation API, biological_process,
+2026-11-06):
+
+| Donor/carrier synthase | Consumer modification | Carries the consumer's process term? |
+|---|---|---|
+| FDPS P14324 (makes FPP) | protein farnesylation | No; isoprenoid/cholesterol biosynthesis only |
+| GGPS1 O95749 (makes GGPP) | protein geranylgeranylation | No |
+| MAT2A P31153, metK P0A817 (make SAM) | protein/DNA methylation | No; `GO:0006556` only |
+| ACLY P53396, ACSS2 Q9NR19 (make acetyl-CoA) | protein acetylation | No |
+| bioB P12998, bioF P12999 (make biotin) | protein biotinylation | No; `GO:0009102` only |
+| UppS P60472 (makes Und-P) | peptidoglycan biosynthesis | Yes, `GO:0009252` IMP |
+| DPM1 O60762 (makes Dol-P-Man) | GPI/O-mannosylation | Yes, `GO:0006506` IDA, `GO:0035269` IDA |
+
+So the two precedents the notes leaned on are the two exceptions, and both
+differ from PcrB in the way CLAUDE.md's thyroglobulin/fibrin/C3 cases differ
+from angiotensinogen: Und-P and Dol-P-Man are themselves glycosylated
+intermediates that carry the growing product, whereas HepG only ferries an
+acetyl group it does not contribute. The term is dropped; the reasoning is
+recorded as a `suggested_questions` entry asking GO whether the
+carrier-synthase exclusion is deliberate practice. This also keeps the gene
+consistent with the merged module, which puts `GO:0042158` on the LhaT annoton.
+
+**Correction (2026-11-06, from the PR #6063 review).** DPM1 does not belong in
+the table as a counterexample at all. It *charges* the carrier with the group it
+donates (GDP-Man to Dol-P-Man), which makes it the analogue of YvoF, not of
+PcrB. PcrB builds the carrier *backbone*, so its matched-role comparators are
+DHDDS/NUS1 (dolichol), HepS/HepT (the C35 donor PcrB itself consumes) and UppS.
+That leaves UppS as the single genuine counterexample, which strengthens the
+drop rather than weakening it. The repository already holds the matched-role
+precedent: `modules/bacterial_undecaprenyl_phosphate_carrier_supply.yaml` models
+UppS with `GO:0016094` polyprenol biosynthetic process alone and no downstream
+glycan process. The `suggested_questions` entry was rewritten accordingly.
+
+### 2. `GO:0008611 ether lipid biosynthetic process`: USED, but as an added row, not a replacement
+
+Definition (OLS, 2026-11-06): "lipids that contain (normally) one lipid alcohol
+in ether linkage to one of the carbon atoms (normally C-1) of glycerol."
+
+The C-3 objection dissolves on inspection. In HepGP the ether is on the
+glycerol carbon *distal to the phosphate*. That is the same physical position
+as C-1 in the mirror-image sn-glycerol-3-phosphate numbering used for
+plasmanyl/plasmenyl lipids; the number differs only because sn numbering is
+fixed by backbone stereochemistry. The two hedged "normally" clauses cover
+exactly this. UniProt independently calls the reaction an ether-bond-formation
+step, and the family survey states the family forms "an ether bond between
+glycerol-1-phosphate and polyprenyl diphosphates" [PMID:24684232]. No new term
+is needed for ether-bond formation as such.
+
+But the planned MODIFY was wrong on a different ground, which the plan had not
+checked: `GO:0008611` is **not** a descendant of `GO:0046474`. Its parents are
+`GO:0008610` lipid biosynthetic process, `GO:0046485` ether lipid metabolic
+process and `GO:0046504` glycerol ether biosynthetic process (OLS). Replacing
+`GO:0046474` with it would therefore *discard* a true claim (HepGP is a
+glycerophospholipid; UniProt's PATHWAY line says so) rather than refine it.
+
+Comparator check on the process term (QuickGO + UniProt REST, 2026-11-06):
+
+- `GO:0008611` has ~5192 annotations; a `taxonId` query returns **0** in
+  Archaea (NCBITaxon:2157) and **0** in Bacillota (NCBITaxon:1239). Every one
+  sampled is a eukaryotic plasmalogen enzyme (GNPAT, AGPS and orthologues).
+- Every reviewed archaeal GGGPS (P0C882, O26652, O29844, Q9HSF8, A2BIS8,
+  A3CTK2, A3DN81, A5UJF1, A8A9K6, Q2FQM4, A1RRN9, A2SSK1 and others) carries
+  `GO:0046474` and none carries `GO:0008611` - these are the enzymes that form
+  the identical ether bond on the identical acceptor.
+- That absence is *explained*, not conventional: those rows all come from the
+  single HAMAP rule MF_00112 (the same rule that annotates PcrB), whose GO
+  mapping offers no ether term, and no curator has yet reviewed a prokaryotic
+  ether-lipid enzyme. It is not a twenty-year curatorial decision about what
+  the term means.
+
+Resolution adopted: `GO:0046474` rows (IBA, IDA, IEA) are **ACCEPT**ed as core,
+since no descendant of that term names heptaprenylglyceryl phosphate or any
+archaeal-type ether lipid, so the general term is already as precise as the
+evidence allows. `GO:0006650` is **MODIFY**ed to `GO:0046474` (parent to the
+specific child the gene already carries). `GO:0008611` is added as a **NEW**
+row (IDA, PMID:21761520) because it states the one thing the glycerophospholipid
+terms do not - that PcrB forms the ether linkage - and PcrB performs that step
+itself. This would be the term's first prokaryotic use, which is noted in the
+row. The ontology question (clarify the definition; add a child for isoprenoid
+or archaeal-type ether lipid biosynthesis) is recorded in
+`suggested_questions`, not as `proposed_new_terms`, since the existing term is
+usable as written. The module's `GO:0008611` assertion on the PcrB step is
+therefore upheld.
+
+### Other decisions
+
+- `GO:0004659` (IBA, IEA) and `GO:0016765` (IEA) MODIFY to `GO:0120536`, as
+  planned; all three are ancestors of a term the gene already carries by IDA and
+  EXP. The IBA rows carry `propagation_review` blocks; no PAINT slice for
+  PTN002219408 is cached locally, so the node was assessed from the donor set
+  (all Bacillales group I HepGP synthases: O34790, Q53726 PCRB_STAA8, Q8Y6C8
+  PCRB_LISMO, verified against UniProt REST) and the family literature.
+- `GO:0120536` (EXP, IDA, IEA) ACCEPT as the core molecular function.
+- `GO:0000287` KEEP_AS_NON_CORE, as planned; the Mg2+ requirement is
+  experimental [PMID:23322418] but is a catalytic accessory, not the selected
+  function.
+- Added `NEW GO:0005737 cytoplasm` (IC). The gene had no cellular-component row
+  at all; the enzyme is soluble with no TM or signal peptide, both substrates
+  are cytoplasmic, PMID:40626731 places the carrier-synthesizing half of the
+  pathway in the cytosol, and every reviewed GGGPS family member carries this
+  term.
+- The in vitro C10/C20 donor range is left unannotated, as planned: the C35
+  donor is what the dimer is built for and the C35 product is what accumulates
+  in vivo.
