@@ -67,6 +67,7 @@ you hit that case. They map directly onto the schema enums (`GoCamClaimVerdictEn
 ## Workflow
 
 ```bash
+just gocam-lint <model_id>             # structural anomalies to check first
 just seed-gocam-review <model_id>      # one PENDING entry per cached annoton
 # ... assess each activity using this skill ...
 just validate-gocam-review gocams/<model_id>/<model_id>-review.yaml

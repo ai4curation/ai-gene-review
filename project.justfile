@@ -304,6 +304,12 @@ export-source-defects *args="":
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
+# Report structural anomalies in cached GO-CAM models (see docs/gocam_lint.md)
+# Example: just gocam-lint 59cc772c00000000
+# Example: just gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+gocam-lint *args="":
+    uv run ai-gene-review gocam-lint {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
