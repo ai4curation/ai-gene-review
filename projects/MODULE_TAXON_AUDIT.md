@@ -43,7 +43,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_fatty_acid_beta_oxidation`: [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136) merged as `20043f67a6ed802902f84a968aa57c88a8ca3a8f` on 2026-11-06T22:09:45Z. All 294 scoped files match the approved head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6136-merged-content.json).
 
-- [ ] `bacterial_fused_puta_proline_catabolism`: eleven reviews complete; sixteen references and broad family/chemistry scope integrated; final validation and dedicated PR pending.
+- [ ] `bacterial_fused_puta_proline_catabolism`: eleven member reviews, sixteen references and broad family/chemistry scope pass focused and full validation; dedicated PR and actual merge pending.
 
 - [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
 
@@ -646,3 +646,7 @@ Curated sixteen references with 31 mined findings, including both comparative re
 Replace the narrow TIGR01238 GSALDH selector with full fused-PutA family IPR025703 plus the independently supported activity and same-polypeptide architecture. Current Geobacter, Corynebacterium and G27 records have IPR025703 but lack TIGR01238. Negative controls retain monofunctional RocA/PUT2 and non-proline PanF/ActP exclusions. Broaden quinone substrate identity from benzoquinones to CHEBI:36141; the reduced product remains a free-text descriptor rather than a guessed ontology identifier. Native quinone identity remains unresolved.
 
 Bacterial scope is retained because the characterized catalytic architecture spans Pseudomonadota, Thermodesulfobacteriota, Campylobacterota and Actinomycetota. This is not a claim of universal bacterial distribution or a complete transport pathway in every enzyme source organism. The production-circuit checker separately enforces reviewed activity, fusion, and matched-strain evidence: 44 checks and six deliberate mechanism mutations. These rules do not turn a compiler family hit into proof of native flux. Full validation, publication and actual merge remain pending.
+
+## 2026-11-06 — PutA full validation complete
+
+PutA full validation passed on 5d01f7ba96fea3f93ec5a0fd61cfdcf212ef2a9b across 10701 reviews, with all 195 frozen inputs unchanged. Schema, term, reference and best-practice stages have no blocking errors; all 54 pathway-reference checks pass. There are 120 term-label advisories, 53 reference advisories and 27771 best-practice warnings. The eight panel term-label advisories match the current QuickGO GO:0003842 label; the validator cache has the earlier label. The eleven-member panel preserves 198 original/seed annotation payloads, its one historical NEW row and 28 raw/provider files. Sixteen curated references, including two comparative reviews, support the three steps. All 44 capacity checks and six mechanism mutations pass; module semantic validation has zero warnings. These checks do not establish native matched-system flux for component-only or inferred exemplars. Main integration, a dedicated PR, independent review, CI and actual merge remain required.
