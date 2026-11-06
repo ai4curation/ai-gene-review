@@ -13,3 +13,7 @@ Ten positive HuRI interactions remain recorded despite generic-binding removal f
 Six unresolved annotations preserve the distinction between evidence that is incomplete and a function that is disproven. Cytoskeletal binding specificity, actin-filament residence, sinoatrial development and hearing require source-specific adjudication. The contextual astroglial barrier annotation remains non-core. No source defect or NEW annotation is asserted.
 
 Clouston syndrome and the historical recessive-hearing disease-validity question are separate. Genetic association, expression and a large genomic deletion do not on their own identify which normal protein activity performs a particular physiological step. The clinical bibliography retains this boundary without converting a negative historical variant screen into a negative biological function.
+
+## 2026-11-06: review follow-up
+
+Reassessed all three substantive requests on [PR #6024](https://github.com/ai4curation/ai-gene-review/pull/6024#issuecomment-6670201750). The review now weighs the broader hearing evidence, retains two supported cytoskeletal interactions as non-core, and adds tissue and channel-partnership context. Four uncertain rows remain. The source guide records access boundaries and the archive retains the preceding review state. No NEW annotation or natural product was added.
