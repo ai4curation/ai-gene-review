@@ -500,7 +500,7 @@ def check_best_practices_rules(
     validate_alternative_records(data, report)
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
-    check_nd_policy(data, report)
+    check_nd_policy(data, report, yaml_file)
     check_decomposition(
         data,
         report,

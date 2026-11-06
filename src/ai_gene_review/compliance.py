@@ -7,12 +7,13 @@ This measures evidence presence, not its biological correctness or verbatimness.
 """
 
 from collections import defaultdict
+import inspect
 from pathlib import Path
 import re
 from typing import Any, Literal, Protocol
 
 import yaml
-from ai_gene_review.validation.nd_policy import cites_search
+from ai_gene_review.validation.nd_policy import cites_search, review_gene_dir
 from pydantic import BaseModel, ConfigDict, Field
 from linkml_runtime.utils.schemaview import SchemaView
 from linkml_data_qc.config import QCConfig
@@ -69,7 +70,7 @@ class QCMetricPlugin(Protocol):
     """Extension seam for computed checks, without changing the analyzer."""
 
     def evaluate(
-        self, data: dict[str, Any], config: GeneQCConfig
+        self, data: dict[str, Any], config: GeneQCConfig, source_path: Path | None = None
     ) -> list[PathCompliance]:
         """Return per-instance applicable checks; omit inapplicable checks."""
         ...
@@ -79,7 +80,7 @@ class AnnotationSupportPlugin:
     """Reward quotes or sourced rationale using configured evidence/actions."""
 
     def evaluate(
-        self, data: dict[str, Any], config: GeneQCConfig
+        self, data: dict[str, Any], config: GeneQCConfig, source_path: Path | None = None
     ) -> list[PathCompliance]:
         """Score one opportunity per applicable annotation, not per quotation."""
         scores = []
@@ -105,7 +106,8 @@ class AnnotationSupportPlugin:
                 elif rule.support == "literature_search":
                     # The same test as the nd_policy warning: a publication, or
                     # the deep-research or notes file recording the search.
-                    passed = has_text(review.get("reason")) and cites_search(review, data)
+                    passed = has_text(review.get("reason")) and cites_search(
+                        review, data, review_gene_dir(source_path))
                 else:
                     sources = (review.get("propagation_review") or {}).get(
                         "source_entities"
@@ -315,7 +317,11 @@ class GeneComplianceAnalyzer:
                 score.slot_scores = kept
                 paths.append(score)
         for plugin in self.plugins:
-            paths.extend(plugin.evaluate(data, self.config))
+            # Plugins written before source_path existed keep their two-argument form.
+            if "source_path" in inspect.signature(plugin.evaluate).parameters:
+                paths.extend(plugin.evaluate(data, self.config, source_path=Path(path)))
+            else:
+                paths.extend(plugin.evaluate(data, self.config))
         # Merge plugin and schema checks at the same object path for dashboards.
         merged: dict[tuple[str, str], PathCompliance] = {}
         for score in paths:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from ai_gene_review.validation.nd_policy import iter_nd_policy_violations
+from ai_gene_review.validation.nd_policy import cites_search, iter_nd_policy_violations
 
 
 SEARCH = "file:human/X/X-deep-research-falcon.md"
@@ -138,3 +138,38 @@ def test_search_rule_applies_only_to_accept():
 
 def test_search_rule_ignores_non_nd_rows():
     assert fields(nd("ACCEPT", term="GO:0016787", evidence="IBA", searched=False)) == []
+
+
+@pytest.mark.parametrize("reference_id,passes", [
+    ("file:CANAL/X/X-notes.md", True),
+    ("file:genes/CANAL/X/X-notes.md", True),
+    ("file:CANAL/Y/Y-notes.md", False),
+    ("file:genes/CANAL/Y/Y-notes.md", False),
+])
+def test_both_file_path_forms(reference_id, passes):
+    """file:ORG/GENE/... and file:genes/ORG/GENE/... name the same file."""
+    row = nd("ACCEPT", searched=False)
+    row["review"]["supported_by"] = [{"reference_id": reference_id, "supporting_text": "0 records"}]
+    assert (fields(row) == []) is passes
+
+
+def test_organism_code_does_not_widen_the_own_folders():
+    """A self UniProt reference in the genes/ form names the gene's folder, not the organism."""
+    doc = {"gene_symbol": "ALG14", "id": "Q1", "references": [{"id": "file:genes/CANAL/ALG14/ALG14-uniprot.txt"}]}
+    other = {"supported_by": [{"reference_id": "file:genes/CANAL/ERG9/ERG9-notes.md", "supporting_text": "x"}]}
+    own = {"supported_by": [{"reference_id": "file:genes/CANAL/ALG14/ALG14-notes.md", "supporting_text": "x"}]}
+    assert not cites_search(other, doc)
+    assert cites_search(own, doc)
+
+
+@pytest.mark.parametrize("gene_dir,passes", [("SCHPO/rhp51", True), ("SCHPO/rad3", False)])
+def test_review_path_gives_the_exact_folder(gene_dir, passes):
+    """With the review's folder known, a synonym-named folder is recognised exactly."""
+    doc = {"gene_symbol": "rad51", "id": "P36601"}
+    review = {"supported_by": [{"reference_id": "file:SCHPO/rhp51/rhp51-notes.md", "supporting_text": "x"}]}
+    assert cites_search(review, doc, gene_dir) is passes
+
+
+def test_fulltext_quote_counts_like_supporting_text():
+    review = {"supported_by": [{"reference_id": "file:CANAL/X/X-notes.md", "supporting_text_fulltext": "0 records"}]}
+    assert cites_search(review, GENE)
