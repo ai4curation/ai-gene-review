@@ -21,3 +21,8 @@ Three source rows retain every original non-review field. Plasma membrane is acc
 ## Research and validation provenance
 
 Normal fetch completed for the active record before review. The pristine document, all three annotation payloads and raw hashes were saved in `.cache/module-audit-logs/cellulose-20261105/streptomyces-baseline.json`. Raw UniProt and GOA files were not edited. Default Falcon research failedHTTP403; the log is preserved and no provider report was fabricated. These are manual research notes. The primary2024 paper is normally cached in full. Exact sources and hashes are recorded in the adjacent provenance files. Reproduce the identity report with `uv run python genes/STRLI/cslA/cslA-source-analysis/verify_identity.py`.
+
+
+## 2026-11-06 — PR2143 round15 follow-up
+
+Clarified spaces in source-strain and sequence-length prose. The module now labels A0ABM5R5V5 with its exact submitted name, Glycosyl transferase, and explicitly states that admission through GO:0016760 uses this evidence-backed review proposal rather than frozen GOA alone.

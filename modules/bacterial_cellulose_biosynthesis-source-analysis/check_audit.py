@@ -83,7 +83,10 @@ def main():
             for slot in ["molecular_function", "contributes_to_molecular_function"]:
                 if core.get(slot):
                     functions.add(core[slot]["id"])
+        raw_functions = {a["payload"]["term"]["id"] for a in member["annotations"]
+                         if a["prior_action"] != "NEW"}
         records[member["accession"]] = {"families": families, "functions": functions,
+                                         "frozen_goa_functions": raw_functions,
                                          "genus": review["taxon"]["label"].split()[0]}
         if not review.get("core_functions"):
             no_core.append(member["review_path"])
@@ -105,7 +108,7 @@ def main():
 
     def check(
         name, present, expected, node=None, interpretation="panel machinery coverage",
-        family_scan=False, enforce_context=True
+        family_scan=False, enforce_context=True, function_source="reviewed"
     ):
         def holds(atom):
             if atom.node_id in unknown:
@@ -120,7 +123,8 @@ def main():
                     continue
                 if not set(atom.domain_ids) <= record["families"]:
                     continue
-                if not set(atom.function_ids) <= record["functions"]:
+                functions = record["functions"] if function_source == "reviewed" else record["frozen_goa_functions"]
+                if not set(atom.function_ids) <= functions:
                     continue
                 return True
             return False
@@ -136,6 +140,7 @@ def main():
                 "expected": expected,
                 "observed": result,
                 "interpretation": interpretation,
+                "function_source": function_source,
             }
         )
 
@@ -146,6 +151,10 @@ def main():
           False, "bcsB_bcsC_envelope_route", family_scan=True,
           interpretation="Context-oracle contract, not a claim that the compiler enforces taxa")
     polymerase = "bcsA_cellulose_polymerization_step"
+    for accession in ["E5RST0", "A0ABM5R5V5"]:
+        check("Frozen GOA alone leaves " + accession + " cellulose activity unresolved",
+              {accession}, False, polymerase, function_source="frozen_goa",
+              interpretation="The positive reviewed-function case depends on the evidence-backed MODIFY proposal; raw GOA does not yet carry GO:0016760.")
     check("KT2440 reviewed ABC architecture", {"Q88JL4", "Q88JL3", "Q88JL1"}, True)
     check(
         "KT2440 polymerase alone does not establish envelope machinery",

@@ -29,3 +29,8 @@ Normal fetching seeded the zero-row review and frozen raw files before edits; th
 The2024 and2016 papers are normally cached in full. The2015/2017 normal caches are abstract-only, but official accepted manuscripts were retrieved from the University of Essex repository and retained with hashes. PDF font encodings corrupt ordinary pdftotext output, which was rejected; the source PDFs remain unmodified. Selected source pages were separately rendered and OCRed with clearly named derived files. The source2015 structural page8 and assay page10 were visually inspected, as were the2024 supplementary construct figure and a2017 structural page. OCR is an aid and is not used for verbatim supporting quotations. Exact quotes in the review come from normally cached publications or curated UniProt experimental statements.
 
 The primary2024 Sarcina study [PMID:38750617](https://pubmed.ncbi.nlm.nih.gov/38750617/) demonstrates mixed-linkage glucan synthases and is a specificity counterexample, not a cellulose exemplar. The clostridial study [PMID:33264329](https://pmc.ncbi.nlm.nih.gov/articles/PMC7710045/) directly characterizes CcsZ hydrolase but predicts CcsA synthase activity; it does not establish another directly assayed cellulose polymerase.
+
+
+## 2026-11-06 — PR2143 round15 follow-up
+
+Clarified source-strain prose. Considered GO:0016899: its definition additionally requires a CH-OH donor. Hydrogen peroxide production establishes an oxygen-linked redox reaction but not which functional group of the bifunctional glycolaldehyde substrate is oxidized, or the unknown physiological donor. Retain the broad core oxidoreductase claim until the donor/product chemistry justifies that refinement; the module now uses the exact name Radical copper oxidase GlxA.
