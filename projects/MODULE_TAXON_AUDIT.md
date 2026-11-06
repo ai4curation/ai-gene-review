@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flagellar_assembly_export`: 38 complete reviews, 31 roles and 17 curated references; full-corpus validation passed with zero blocking errors. Main integration preserves the scientific content; dedicated PR and actual merge pending.
+- [ ] `bacterial_flagellar_assembly_export`: [PR #6138](https://github.com/ai4curation/ai-gene-review/pull/6138) open; 38 complete reviews, 31 roles and 17 references. Full local validation passed; review, CI and actual merge pending.
 
 - [ ] `osmoregulated_periplasmic_glucan_biosynthesis`: Comparative OPG science and focused validation are complete: 11 COMPLETE gene reviews, 91 original annotation payloads preserved, 96 current rows, 28 unchanged raw/provider sources, 13 literature references including two reviews, 18 findings, seven parts and eight annotons, two family reviews, 24 endpoint cases and ten mutation cases. The full-corpus run completed on science commit 074427cc8340be71f9fbdeea8440f551bdbea6b0 with schema, term, best-practice and pathway checks passing. Its 17 blocking reference errors in 16 unrelated yeast reviews exactly match the known baseline; all 22 relevant inputs are identical to the pinned base. These are addressed separately in PR #6134. Publication of this comparative revision to adopted PR #2142, renewed review, CI and actual merge remain pending. [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142).
 
@@ -86,7 +86,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 2 PR_OPEN, 4 IN_PROGRESS and 737 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 3 PR_OPEN, 3 IN_PROGRESS and 737 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -591,3 +591,7 @@ Comparative flagellar curation now covers 31 roles and 38 COMPLETE gene reviews 
 Full validation of frozen science 401af31cd2 completed successfully: 10,691 gene reviews, zero blocking errors, 27,769 best-practice advisories and 54 pathway-reference checks passed. All 52 reference advisories in 31 files lie outside the 38-member panel. Integrate published main fb8e3ee95b, retaining OPG completion and the independently verified replication completion row and prose. No validation implementation or flagellar scientific/source file changed. Dedicated PR, independent review, CI and actual merge remain pending.
 
 [Full validation](../analysis/module_audits/bacterial_flagellar_assembly_export/full-validation.json) and [preserved content](../analysis/module_audits/bacterial_flagellar_assembly_export/prepublication-main-integration.json) record the verified scope.
+
+## 2026-11-06 — flagellar PR #6138 published
+
+Published the independently validated flagellar audit as PR #6138. The 38-member scientific panel remains unchanged from full-validation science 401af31cd2. This checkpoint only records the live PR identity and updates the project ledger; independent review, CI and actual merge remain pending.
