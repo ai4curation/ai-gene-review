@@ -117,8 +117,10 @@ The organelle-by-stage matrix lives in
 - [ ] Lysosome/endosome: add ESCRT-I (TSG101, VPS28, VPS37 reviews exist) and ESCRT-II; model endosome maturation (Rab7, Mon1-Ccz1, HOPS) eukaryote-wide; Vps10/VSR hydrolase sorting; lysophagy
 - [x] ER: `endoplasmic_reticulum_lifecycle` umbrella with two eukaryote-wide rule modules, `er_cotranslational_translocation` (SRP, SRP receptor, Sec61) and `er_oxidative_protein_folding` (BiP, PDI; Ero1 and the calnexin cycle optional); both `RULE_CANDIDATE`
 - [ ] ER: ground ERAD (Hrd1/Hrd3, Derlin, Cdc48-Ufd1-Npl4) once Hrd1's family table and per-lineage Cdc48/Hrd3 subfamilies are in place; add ER shaping, COPII export and a eukaryote-wide (IRE1) UPR; resolve SRbeta's PANTHER placement; add plant SRalpha and SRP68/72 selectors
+- [x] Golgi: `golgi_apparatus_lifecycle` umbrella with one eukaryote-wide rule module, `golgi_copi_vesicle_coat` (GBF1/Gea, Arf1, coatomer); `RULE_CANDIDATE`; COPII referenced as the optional Drosophila module
+- [ ] Golgi: ground a eukaryote-wide COPII module once Sec24, Sec31 and Sec12 have local PANTHER entries; add ArfGAPs, Golgi tethers and SNAREs, and TGN exit
 - [x] Nucleus: `nucleus_lifecycle` umbrella with one partial eukaryote-wide rule module, `nuclear_pore_transport_core` (four nucleoporins, Ran, NTF2, Crm1, Cse1); `RULE_CANDIDATE`
 - [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
-- [ ] Golgi, lipid droplet, autophagosome
+- [ ] Lipid droplet, autophagosome
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
