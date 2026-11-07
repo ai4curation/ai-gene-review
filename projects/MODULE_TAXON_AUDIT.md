@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_gallate_catabolism`: Comparative audit passes full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+
 - [ ] `bacterial_fatty_acid_beta_oxidation`: Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
 
 - [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
@@ -649,3 +651,7 @@ The round1 full-corpus run passed on `f063b332b1c5aa1ff7b1ac043f43586bd51819a4`:
 Integrated published main `8daf92bfc8` with the validated PR #6136 head `b6811b89d6`. All 294 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
 
 Integration proof: [round1-main-integration.json](../analysis/module_audits/bacterial_fatty_acid_beta_oxidation/round1-main-integration.json).
+
+## 2026-11-07 — gallate comparative audit full validation passes
+
+Comparative audit passes full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_gallate_catabolism/full-validation.json).
