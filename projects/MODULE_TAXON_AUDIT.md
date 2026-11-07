@@ -908,3 +908,7 @@ PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288
 ## 2026-11-07 — bacterial lol lipoprotein trafficking full validation passes
 
 Comparative audit passes full validation on 25063f5cf5: 10,789 reviews, zero blocking errors and 315 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_lol_lipoprotein_trafficking/full-validation.json).
+
+## 2026-11-07 — bacterial_lol_lipoprotein_trafficking main integration
+
+Integrated main ce5593571d1ebddcebe1727de8d12159cb5f135f after the passing full run on 25063f5cf5bb505222b9a1295a8a1a222b7ce347. All 311 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
