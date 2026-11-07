@@ -14,3 +14,7 @@ Actual Falcon request via `just deep-research ECTOL phaZ --provider falcon` fail
 The specific intracellular mcl-PHA depolymerization core now uses the existing proposed activity, without asserting an exact oligomer distribution. GO0016020 remains UNDECIDED: membrane includes peripheral bilayer attachment, so absence of TM alone is not exclusion; a PHA monolayer is not proof of bilayer localization.
 
 Exact evidence, before/after payload audit and source hashes: analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/implementation/.
+
+## 2026-11-07 — PR6194 second review follow-up
+
+Laterally refine the propagated acylglycerol process row to GO0042620, supported by native GPo1 polyester turnover. Preserve source payload/order, membrane UNDECIDED and the secondary-MAG uncertainty. Normalize the existing proposed activity definition without asserting a purified GPo1 oligomer distribution.

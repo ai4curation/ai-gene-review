@@ -33,3 +33,7 @@ Full17170116 distinguishes KT2442 recombinant/native-granule assays from KT2440.
 GO0004806 changed to MARK_AS_OVER_ANNOTATED under the measured-activity/relevance-unknown enzyme-specificity tier. Positive overnight KT2442 tributyrin chemistry is retained. Full PMID17170116 Fig6 directly resolves HO monomer/dimer products from HO-rich copolymer, now stated with strain and copolymer limitations in core evidence. The proposed broader depolymerase has GO0016788 as immediate genus. Historical NEW granule row remains unchanged and retired.
 
 Exact evidence, before/after payload audit and source hashes: analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/implementation/.
+
+## 2026-11-07 — PR6194 second review follow-up
+
+Clarify that the supported C8-specific GO0050527 inference and broader mcl-PHA proposal can coexist: broader substrate acceptance does not falsify the narrower reaction. Product-resolved LC-MS is attributed to PMID17170116 through its documented external full-text reading, not to PMID41055782. Exact strain/construct and pure-polymer limitations remain.

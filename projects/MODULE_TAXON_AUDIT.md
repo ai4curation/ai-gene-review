@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194: full validation passed on science head bb0c422df1 (10,795 reviews, zero blocking errors; 546 frozen inputs verified). Independent review, current-main integration/CI and actual merge remain pending.
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194 round-two follow-up passed six focused gene validations, module and family checks, seven renders, and 32 capacity cases. Nine member reviews retain their original rows and proposal lifecycles. An invalid PhaA Falcon quotation was removed while retaining target-specific primary evidence. Shared PAINT scope remains unresolved where tree evidence is insufficient; the AcoC enforcement limitation is explicit. Current-main integration, fresh full validation, publication, review and actual merge remain pending.
 
 - [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
 
@@ -946,3 +946,7 @@ Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full 
 ## 2026-11-07 — bacterial mcl pha synthesis and mobilization full validation passes
 
 PR #6194 follow-up passes full validation on bb0c422df1: 10,795 reviews, zero blocking errors and 546 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/full-validation-20261107-1238.json).
+
+## 2026-11-07 — MCL-PHA round-two follow-up
+
+PR #6194 round-two follow-up passed six focused gene validations, module and family checks, seven renders, and 32 capacity cases. Nine member reviews retain their original rows and proposal lifecycles. An invalid PhaA Falcon quotation was removed while retaining target-specific primary evidence. Shared PAINT scope remains unresolved where tree evidence is insufficient; the AcoC enforcement limitation is explicit. Current-main integration, fresh full validation, publication, review and actual merge remain pending.

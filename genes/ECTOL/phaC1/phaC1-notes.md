@@ -7,3 +7,7 @@ All seeded annotation payloads and order are preserved. No NEW row is added. The
 Actual Falcon request via `just deep-research ECTOL phaC1 --provider falcon` failed with HTTP403 authentication. The failure log is in `.cache/module-audit-logs/mcl-pha-20261107/gpo1-consultation/falcon-phaC1.log`; no provider report was fabricated. Manual primary/curated-source review supplies the evidence.
 
 `just paint-losses ECTOL phaC1` found the target absent from the cached reference tree; lineage losses cannot be assessed. The generic no-loss footer is not evidence of a resolved negative. Source membership is verified independently from UniProt/archive records; no PTN placement or loss is invented.
+
+## 2026-11-07 — PR6194 second review follow-up
+
+Add CC:FUNCTION metadata to the existing curated UniProt quotation; no function, action, source text or ordered annotation payload changes.

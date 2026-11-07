@@ -14,3 +14,7 @@ The sole new assertion is inferred non-amino-acyl transfer, a molecular role not
 New normally fetched PMID36689471 directly establishes dedicated native PAO1 BioH/PA0502 and biotin rescue/complementation. GO0009102 is now MAOA because the ancestral pathway assignment exceeds PhaG evidence; GO0090499 remains UNDECIDED, as endogenous failure to compensate is not a purified PhaG-negative assay. Original authored NEW IC payload is unchanged. Frozen UniProt EC2.4.1.- versus hydroxyacyl-transfer chemistry is recorded as a source defect without rewriting the raw record.
 
 Exact evidence, before/after payload audit and source hashes: analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/implementation/.
+
+## 2026-11-07 — PR6194 second review follow-up
+
+The untagged UniProt FUNCTION statement is not independent PAO1 purified-activity evidence. The catalytic inference rests on PAO1 genetics/identity plus the explicit P. putida reverse-transfer assay; historical NEW IC payload remains untouched, with code adjudication separately unresolved.
