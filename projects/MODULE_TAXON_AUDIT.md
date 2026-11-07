@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR #6125: main d7638df804395ce8c81baeea891fd75b60d58d39 integrated with 300 frozen nonshared files preserved. Historical full validation remains on f707927be90bc5c3a6863122496821838802f5b8; fresh review, CI and merge are pending.
+- [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR #6125 approved at 54804480a3; current main d7638df804 integrated at 388c3a376b. All 300 frozen nonshared files remain unchanged, including 298 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to f707927be90bc5c3a6863122496821838802f5b8. Fresh current-head review, CI and actual merge remain pending.
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
 
@@ -1080,3 +1080,9 @@ Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full 
 ## 2026-11-07 — bacterial_dnak_dnaj_refolding_cycle main integration
 
 Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full run on f707927be90bc5c3a6863122496821838802f5b8. All 300 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — DnaK current integration ready
+
+PR #6125 approved at 54804480a3; current main d7638df804 integrated at 388c3a376b. All 300 frozen nonshared files remain unchanged, including 298 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to f707927be90bc5c3a6863122496821838802f5b8. Fresh current-head review, CI and actual merge remain pending.
+
+[Publication closeout](../analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/approved-main-20261107-1427-closeout.json).
