@@ -45,6 +45,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Set
 
@@ -70,8 +71,8 @@ BASELINE_PATH = PROJECT_ROOT / "conf" / "quote_check_baseline.yaml"
 #: carries quotes and is not a gene review. Prediction reviews are covered by
 #: ``prediction_evidence`` and are listed so the census is complete.
 DEFAULT_GLOBS = (
-    "modules/*.yaml",
-    "interpro/panther/*/PTHR*-review.yaml",
+    "modules/**/*.yaml",
+    "interpro/*/*/*-review.yaml",
     "gocams/*/*-review.yaml",
     "rules/**/*.yaml",
     "models/**/*.yaml",
@@ -160,7 +161,6 @@ def iter_quotes(data: Any) -> Iterator[Quote]:
                     text,
                 )
             for key, value in node.items():
-                child_inherited = inherited
                 if key == "references" and isinstance(value, list):
                     for i, ref in enumerate(value):
                         rid = ref.get("id") if isinstance(ref, dict) else None
@@ -170,7 +170,7 @@ def iter_quotes(data: Any) -> Iterator[Quote]:
                             rid if isinstance(rid, str) else None,
                         )
                     continue
-                yield from walk(value, f"{path}.{key}" if path else str(key), child_inherited)
+                yield from walk(value, f"{path}.{key}" if path else str(key), inherited)
         elif isinstance(node, list):
             for i, value in enumerate(node):
                 yield from walk(value, f"{path}[{i}]", inherited)
@@ -228,12 +228,38 @@ def check_quote(
     )
 
 
-def load_baseline(path: Path = BASELINE_PATH) -> Dict[str, Set[str]]:
-    """Read the baseline as ``{repo-relative file: {quote digest, ...}}``."""
+#: A baseline: ``{repo-relative file: {outcome: {quote digest, ...}}}``. Entries are
+#: split by outcome so a quote that misquotes a readable source (``not_found``,
+#: fixable now) stays distinguishable from one whose source is absent
+#: (``unresolved``), and a quote cannot move from one class to the other unseen.
+Baseline = Dict[str, Dict[str, Set[str]]]
+
+#: The outcome keys a baseline may use.
+BASELINE_OUTCOMES = (Outcome.NOT_FOUND.value, Outcome.UNRESOLVED.value)
+
+
+def load_baseline(path: Path = BASELINE_PATH) -> Baseline:
+    """Read the baseline file (a fresh copy, safe to mutate).
+
+    >>> load_baseline(Path("/nonexistent.yaml"))
+    {}
+    """
     if not path.exists():
         return {}
+    return {k: {o: set(d) for o, d in v.items()} for k, v in _load_baseline(path).items()}
+
+
+@lru_cache(maxsize=4)
+def _load_baseline(path: Path) -> Baseline:
+    """Parse the baseline once per process (module validation checks one file at a time)."""
     loaded = yaml.safe_load(path.read_text()) or {}
-    return {str(k): set(v or []) for k, v in (loaded.get("entries") or {}).items()}
+    baseline: Baseline = {}
+    for key, by_outcome in (loaded.get("entries") or {}).items():
+        unknown = set(by_outcome or {}) - set(BASELINE_OUTCOMES)
+        if unknown:
+            raise ValueError(f"{path}: {key}: unknown baseline outcome(s) {sorted(unknown)}")
+        baseline[str(key)] = {o: set(d or []) for o, d in (by_outcome or {}).items()}
+    return baseline
 
 
 def check_document(
@@ -241,18 +267,22 @@ def check_document(
     yaml_file: Optional[Path] = None,
     project_root: Path = PROJECT_ROOT,
     validator: Any = None,
-    baseline: Optional[Dict[str, Set[str]]] = None,
+    baseline: Optional[Baseline] = None,
 ) -> List[QuoteResult]:
-    """Check every quote in *data*; mark failures listed in the baseline."""
+    """Check every quote in *data*; mark failures listed in the baseline.
+
+    A failure is baselined only under its own outcome: a quote listed as
+    ``unresolved`` whose source now exists but does not contain it blocks.
+    """
     if baseline is None:
-        baseline = load_baseline()
+        baseline = _load_baseline(BASELINE_PATH) if BASELINE_PATH.exists() else {}
     key = baseline_key(yaml_file, project_root) if yaml_file is not None else None
-    known = baseline.get(key, set()) if key else set()
+    known = baseline.get(key, {}) if key else {}
     results = []
     for quote in iter_quotes(data):
         result = check_quote(quote, project_root, validator)
         if result.outcome in FAILURES and quote.reference_id:
-            if quote_digest(quote.reference_id, quote.text) in known:
+            if quote_digest(quote.reference_id, quote.text) in known.get(result.outcome.value, set()):
                 result = QuoteResult(quote, result.outcome, result.detail, baselined=True)
         results.append(result)
     return results
@@ -281,24 +311,41 @@ def default_files(project_root: Path = PROJECT_ROOT) -> List[Path]:
     return sorted(files)
 
 
-def write_baseline(entries: Dict[str, Set[str]], path: Path = BASELINE_PATH) -> None:
+def write_baseline(entries: Baseline, path: Path = BASELINE_PATH) -> None:
     """Write *entries* to the baseline file with its explanatory header."""
     header = (
         "# Known failing supporting_text quotes outside gene reviews.\n"
         "#\n"
         "# Generated by ai_gene_review.validation.quote_check; do not add entries by hand.\n"
         "# Each entry is quote_digest(reference_id, supporting_text) for a quote that\n"
-        "# failed when its document kind was brought under the check (issue #6021).\n"
+        "# failed when its document kind was brought under the check (issue #6021),\n"
+        "# listed under its outcome: not_found (the source exists but does not contain\n"
+        "# the quote; fixable now) or unresolved (the source is missing).\n"
         "# Listed quotes are reported as WARNINGs; any other failure is an ERROR.\n"
         "# Fix a quote, then shrink this file with:\n"
         "#   just validate-quotes --prune-baseline\n"
     )
     body = yaml.safe_dump(
-        {"entries": {k: sorted(entries[k]) for k in sorted(entries) if entries[k]}},
+        {
+            "entries": {
+                k: {o: sorted(entries[k][o]) for o in BASELINE_OUTCOMES if entries[k].get(o)}
+                for k in sorted(entries)
+                if any(entries[k].values())
+            }
+        },
         sort_keys=False,
         width=100,
     )
     path.write_text(header + body)
+
+
+def count_entries(baseline: Baseline) -> int:
+    """Number of digests in *baseline*.
+
+    >>> count_entries({"a.yaml": {"not_found": {"x", "y"}, "unresolved": {"z"}}})
+    3
+    """
+    return sum(len(d) for v in baseline.values() for d in v.values())
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -319,23 +366,37 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     mode.add_argument(
         "--init-baseline",
         action="store_true",
-        help="Rebuild the baseline from every current failure; only when adding a "
-        "new document kind, never to make a new failure pass",
+        help="Create the baseline from every current failure, over the full default "
+        "scope. Refuses when the baseline already exists: once created it only shrinks",
     )
     args = parser.parse_args(argv)
+    if args.init_baseline and args.files:
+        parser.error("--init-baseline needs the full default scope; pass no files")
+    if args.init_baseline and BASELINE_PATH.exists():
+        parser.error(
+            f"{BASELINE_PATH} already exists and only shrinks; fix failures instead, "
+            "or delete the file deliberately in a reviewed change"
+        )
+    if args.prune_baseline and args.files:
+        parser.error("--prune-baseline needs the full default scope; pass no files")
     files = args.files or default_files()
 
     baseline = load_baseline()
-    current: Dict[str, Set[str]] = {}
+    current: Baseline = {}
     totals: Counter = Counter()
     blocking = 0
     for path in files:
-        data = yaml.safe_load(path.read_text())
+        try:
+            data = yaml.safe_load(path.read_text())
+        except yaml.YAMLError as exc:  # report the file, then keep checking the rest
+            print(f"❌ ERROR {path}: not valid YAML, so its quotes cannot be checked: {exc}")
+            blocking += 1
+            continue
         key = baseline_key(path)
         for result in check_document(data, path, baseline=baseline):
             totals[result.outcome.value] += 1
             if result.outcome in FAILURES and key and result.quote.reference_id:
-                current.setdefault(key, set()).add(
+                current.setdefault(key, {}).setdefault(result.outcome.value, set()).add(
                     quote_digest(result.quote.reference_id, result.quote.text)
                 )
             if result.outcome is Outcome.VERIFIED:
@@ -345,23 +406,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             if result.outcome is Outcome.UNCHECKED and not args.show_unchecked:
                 continue
             print(format_result(Path(key) if key else path, result))
-    failed = totals["not_found"] + totals["unresolved"]
     print(
-        f"Quotes: {totals['verified']} verified, {failed} failed "
-        f"({blocking} blocking, {failed - blocking} baselined), "
-        f"{totals['unchecked']} unchecked (no readable source) in {len(files)} files"
+        f"Quotes: {totals['verified']} verified; "
+        f"{totals['not_found']} not found in their source and "
+        f"{totals['unresolved']} with a missing source "
+        f"({blocking} blocking, {totals['not_found'] + totals['unresolved'] - blocking} baselined); "
+        f"{totals['unchecked']} unchecked (no readable source); {len(files)} files"
     )
     if args.init_baseline:
         write_baseline(current)
-        print(f"Wrote {sum(map(len, current.values()))} entries to {BASELINE_PATH}")
+        print(f"Wrote {count_entries(current)} entries to {BASELINE_PATH}")
         return 0
     if args.prune_baseline:
-        if args.files:
-            parser.error("--prune-baseline needs the full default scope; pass no files")
-        pruned = {k: v & current.get(k, set()) for k, v in baseline.items()}
+        pruned = {
+            k: {o: d & current.get(k, {}).get(o, set()) for o, d in v.items()}
+            for k, v in baseline.items()
+        }
         write_baseline(pruned)
-        dropped = sum(map(len, baseline.values())) - sum(map(len, pruned.values()))
-        print(f"Dropped {dropped} baseline entries that now pass")
+        print(f"Dropped {count_entries(baseline) - count_entries(pruned)} baseline entries that now pass")
     return 1 if blocking else 0
 
 

@@ -17,6 +17,7 @@ from ai_gene_review.validation.quote_check import (
     check_quote,
     default_files,
     iter_quotes,
+    load_baseline,
     main,
 )
 
@@ -79,9 +80,43 @@ def test_baselined_failure_warns_instead_of_blocking(tmp_path):
     yaml_file = PROJECT_ROOT / "modules" / "x.yaml"  # key only; not read
     key = "modules/x.yaml"
     unlisted = check_document(doc, yaml_file, baseline={})
-    listed = check_document(doc, yaml_file, baseline={key: {quote_digest(TP53, bad)}})
+    listed = check_document(
+        doc, yaml_file, baseline={key: {"not_found": {quote_digest(TP53, bad)}}}
+    )
     assert [r.blocking for r in unlisted] == [True]
     assert [(r.blocking, r.baselined) for r in listed] == [(False, True)]
+
+
+def test_baseline_entry_only_covers_its_own_outcome():
+    """A quote baselined as unresolved blocks once its source exists but lacks it."""
+    bad = "a sentence that is in no UniProt record"
+    doc = {"evidence": [{"source_id": TP53, "supporting_text": bad}]}
+    yaml_file = PROJECT_ROOT / "modules" / "x.yaml"
+    results = check_document(
+        doc, yaml_file, baseline={"modules/x.yaml": {"unresolved": {quote_digest(TP53, bad)}}}
+    )
+    assert [(r.outcome, r.blocking) for r in results] == [(Outcome.NOT_FOUND, True)]
+
+
+def test_init_baseline_refuses_partial_scope_and_existing_file(tmp_path, monkeypatch):
+    """--init-baseline cannot shrink the scope or overwrite a baseline (it only shrinks)."""
+    good = tmp_path / "good.yaml"
+    good.write_text(yaml.safe_dump({"evidence": [{"source_id": TP53, "supporting_text": GOOD_TP53}]}))
+    with pytest.raises(SystemExit):
+        main(["--init-baseline", str(good)])
+    existing = tmp_path / "baseline.yaml"
+    existing.write_text("entries: {}\n")
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", existing)
+    with pytest.raises(SystemExit):
+        main(["--init-baseline"])
+    assert existing.read_text() == "entries: {}\n"
+
+
+def test_committed_baseline_uses_known_outcomes():
+    """Every committed entry is filed under not_found or unresolved."""
+    baseline = load_baseline()
+    assert baseline, "conf/quote_check_baseline.yaml should exist"
+    assert all(set(v) <= {"not_found", "unresolved"} for v in baseline.values())
 
 
 def test_main_exit_code(tmp_path: Path):
@@ -96,7 +131,14 @@ def test_main_exit_code(tmp_path: Path):
 def test_default_scope_covers_every_non_gene_review_kind():
     """The gate reaches modules, families, GO-CAM reviews, rules and projects."""
     rel = {p.relative_to(PROJECT_ROOT).as_posix() for p in default_files()}
-    for prefix in ("modules/", "interpro/panther/", "gocams/", "rules/", "projects/"):
+    for prefix in ("modules/", "interpro/panther/", "interpro/pfam/", "gocams/", "rules/", "projects/"):
         assert any(r.startswith(prefix) for r in rel), prefix
     assert not any(r.endswith("-ai-review.yaml") and r.startswith("genes/") for r in rel)
     assert not any("recapitulation-experiment" in r for r in rel)
+
+
+def test_main_reports_unparseable_yaml_and_fails(tmp_path: Path, capsys):
+    bad = tmp_path / "broken.yaml"
+    bad.write_text("key: [unclosed\n")
+    assert main([str(bad)]) == 1
+    assert "broken.yaml: not valid YAML" in capsys.readouterr().out
