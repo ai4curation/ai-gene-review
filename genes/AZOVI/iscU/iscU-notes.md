@@ -23,3 +23,10 @@ Research provenance: configured Falcon was genuinely attempted and failed HTTP40
 Core synthesis: Scaffolds nascent Fe-S clusters and delivers them to recipient proteins.
 
 No NEW annotations or retirements were introduced. Ordered source payloads were frozen before review and checked independently after editing. Unresolved rows reflect evidence limits, not unfinished row review.
+
+
+## 2026-11-07 PR6175 round1 evidence review
+
+Corrected the GO:0051536 refinement to supported GO:0051537 and GO:0051539 binding descendants. GO:0140132 remains a separate carrier core, not a binding descendant. Mined publication-linked UniProt scaffold, occupancy and delivery statements.
+
+Full adjudication and fresh ontology provenance: `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/round1/azovi-consultation/scientific-findings.md`. All ordered annotation payloads and existing row presence are preserved. No NEW, deleted or retired rows are introduced; source/provider files remain immutable. Existing Falcon attempt/failure provenance is reused.

@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: [PR #6175](https://github.com/ai4curation/ai-gene-review/pull/6175) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific follow-up ready for full validation: correct cluster-binding refinement, source-specific support, organism-specific folding judgments and restored family provenance. Eleven changed reviews pass focused checks; 208 ordered rows and all historical proposal lifecycles remain unchanged. Capacity passes 49 scenarios, six sensitivities and two mutations. New full-corpus validation, publication, fresh review/CI and merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 

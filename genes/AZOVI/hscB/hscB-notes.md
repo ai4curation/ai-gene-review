@@ -24,3 +24,10 @@ Research provenance: configured Falcon was genuinely attempted and failed HTTP40
 Core synthesis: Activates HscA ATP hydrolysis to promote transfer of IscU-bound clusters to recipient proteins.
 
 No NEW annotations or retirements were introduced. Ordered source payloads were frozen before review and checked independently after editing. Unresolved rows reflect evidence limits, not unfinished row review.
+
+
+## 2026-11-07 PR6175 round1 evidence review
+
+Replaced recycled evidence with target-system interaction and ATPase stimulation. Folding remains UNDECIDED, while chaperone binding is compatible with the current GO definition including transport. Oligomerization remains mapping-specific overannotation, not a measured negative.
+
+Full adjudication and fresh ontology provenance: `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/round1/azovi-consultation/scientific-findings.md`. All ordered annotation payloads and existing row presence are preserved. No NEW, deleted or retired rows are introduced; source/provider files remain immutable. Existing Falcon attempt/failure provenance is reused.
