@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_lps_transport`: Comparative LPS audit ready for full validation: 19 COMPLETE gene reviews, 214 ordered rows and six historical NEW preserved with no additions/retirements; three review articles and six comparative primaries supply 23 scoped findings. Canonical and meningococcal terminal roles plus optional M/Y support pass 56 capacity cases, 14 mutations and seven gate sensitivities. Six family reviews retain 27 PAINT assertions with explicit substrate-scope uncertainty. Focused checks pass; full validation, dedicated PR, independent review and actual merge remain pending.
+- [ ] `bacterial_lps_transport`: Comparative audit passes full validation on 4dbf88cb98: 10,787 reviews, zero blocking errors and 476 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
@@ -904,3 +904,7 @@ Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full 
 ## 2026-11-07 — cellulose approved-head integration of 7eee074bca
 
 PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Per-path preservation and validation scope](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json). The incoming OPG completion and flavonoid row are retained exactly. All 33 previously complete rows remain unchanged; no completion is inferred from an open-row status or from this local integration. Both parents’ dated journal entries and the pins autolink exclusion are preserved. The historical round-17 module pin describes its recorded revision; round27-full-run.json supersedes its validation status, without retrospectively changing that earlier receipt.
+
+## 2026-11-07 — bacterial lps transport full validation passes
+
+Comparative audit passes full validation on 4dbf88cb98: 10,787 reviews, zero blocking errors and 476 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_lps_transport/full-validation-proof.json).
