@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_lps_transport`: [PR #6190](https://github.com/ai4curation/ai-gene-review/pull/6190) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_lps_transport`: [PR #6190](https://github.com/ai4curation/ai-gene-review/pull/6190) review follow-up passes focused checks; fresh full validation, publication, renewed review/CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -938,3 +938,7 @@ Comparative audit passes full validation on 4dbf88cb98: 10,787 reviews, zero blo
 ## 2026-11-07 — bacterial_lps_transport main integration
 
 Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on 4dbf88cb9832e29c7d82b073279a997e1faf68eb. All 472 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — LPS review follow-up prepared locally
+
+Corrected evidence attachment and biological summaries, retained evidence-based family scope uncertainty, clarified terminal-profile coverage, and replaced nine cache dependencies with durable data or explicitly bounded excerpts. All 214 source rows and six historical NEW rows remain intact; 56 capacity cases, 14 mutations and seven sensitivities pass. Earlier full-validation PASS is historical; a fresh guarded run will start on the frozen follow-up commit before publication. [Frozen integration receipt](../analysis/module_audits/bacterial_lps_transport/review-followup/module-integration/handoff.json).

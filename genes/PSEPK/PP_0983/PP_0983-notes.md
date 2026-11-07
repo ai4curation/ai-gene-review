@@ -32,7 +32,7 @@ No provider deep research was run for this gene.
 
 ## 2026-11-07 independent LPS module consultation
 
-All 5 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `.cache/module-audit-logs/lps-20261107/psepk-consultation/falcon-PP_0983.log`; no provider report was fabricated.
+All 5 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `analysis/module_audits/bacterial_lps_transport/psepk-consultation/provider-attempts/falcon-PP_0983.log`; no provider report was fabricated.
 
 PAINT-loss traversal could not be resolved because the exact KT2440 accession is absent from the cached family tree. The tool footer is not evidence of an independently established absence of loss. These original rows are IEA (and retained historical ISO proposals for LptD/E), not IBA.
 
@@ -49,3 +49,8 @@ Relevant source findings:
 - [PMID:19500581] The E. coli biochemical study reports LptF/LptG association with LptB and inclusion of LptC. Complex association supports subunit assignments but is not itself a complete transport-flux assay. Verbatim: "We report here that both LptF and LptG formed a complex with LptB."
 - [PMID:30894744] E. coli K-12 lpt genes expressed in BL21(DE3) support nanodisc structural and ATPase analyses of LptB2FG(C); the structures resolve an LPS-binding cavity and coupling. These are homolog experiments for KT2440. Verbatim: "Six lipid acyl chains of LPS tightly fit into a cone-shaped hydrophobic pocket formed by TMs 1, 2, and 5 of LptF and LptG"
 - [PMID:41407669] P. aeruginosa PAO1-LAC genes expressed in E. coli support structural/biochemical characterization of LptB2FG(C); tagged LptB variants partly complement a P. aeruginosa conditional mutant. The reported Pa-LptC/Ec-LptC incompatibility cites earlier work and concerns assembly compatibility, not loss of the native LptC role. No KT2440 assay is presented. Verbatim: "each gene (lptB, lptC, lptF and lptG) had been amplified from P. aeruginosa PAO1-LAC genomic DNA (47085D-5 ATCC) using PCR"
+
+
+## PR6190 evidence/prose follow-up
+
+Corrected the historical Falcon failure pointer to the already committed durable provider-attempt log. The failed attempt and all annotation decisions remain unchanged.

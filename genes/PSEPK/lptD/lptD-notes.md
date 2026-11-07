@@ -35,7 +35,7 @@ No provider deep research was run for this gene.
 
 ## 2026-11-07 independent LPS module consultation
 
-All 7 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `.cache/module-audit-logs/lps-20261107/psepk-consultation/falcon-lptD.log`; no provider report was fabricated.
+All 7 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `analysis/module_audits/bacterial_lps_transport/psepk-consultation/provider-attempts/falcon-lptD.log`; no provider report was fabricated.
 
 PAINT-loss traversal could not be resolved because the exact KT2440 accession is absent from the cached family tree. The tool footer is not evidence of an independently established absence of loss. These original rows are IEA (and retained historical ISO proposals for LptD/E), not IBA.
 
@@ -51,3 +51,8 @@ Relevant source findings:
 - [PMID:26370939] This REVIEW synthesizes periplasmic LPS transport and outer-membrane insertion. It is secondary mechanistic context, not an independent primary experiment on a KT2440 protein. Verbatim: "Following extraction, it traverses a bridge formed by LptA and finally is selectively inserted into the outer leaflet of the OM by the LptDE OM translocon."
 - [PMID:29449493] Purified E. coli Lpt components reconstitute ATP-dependent membrane-to-membrane LPS movement. Necessity/sufficiency refers to the tested assembled seven-protein system, not autonomous transport by every component. Verbatim: "Thus, all seven Lpt proteins and ATP are necessary and sufficient for membrane-to-membrane transport to occur."
 - [PMID:24990744] The linked PDB4N4R structure is Salmonella Typhimurium LT2 LptD/LptE expressed in E. coli, verified from official entity records. The abstract supports the barrel/plug and lateral-insertion model; it is not an E. coli-native or KT2440 structural assay. Verbatim: "LptE adopts a roll-like structure located inside the barrel of LptD to form an unprecedented two-protein 'barrel and plug' architecture."
+
+
+## PR6190 evidence/prose follow-up
+
+Corrected the historical Falcon failure pointer to the already committed durable provider-attempt log. The failed attempt and all annotation decisions remain unchanged.

@@ -9,3 +9,8 @@ Mediate LPS insertion across the outer membrane as the LptD transport element; H
 PMID15192148 assays H44/76 directly. UniProt wording “Essential for envelope biogenesis” must not be read as H44/76 viability essentiality: an imp deletion survives, while surface-delivery assays show the mechanistic defect. PAINT target leaf was unavailable; no loss-free lineage conclusion is claimed.
 
 Evidence, preserved source hashes, ontology snapshots and validation are in analysis/module_audits/bacterial_lps_transport/neisseria-consultation/.
+
+
+## PR6190 evidence/prose follow-up
+
+The outer-membrane ACCEPT now quotes PMID15192148’s explicit observation of Imp in purified Neisserial outer membranes, rather than its transport conclusion. Its membrane-separation difficulties concern tracking LPS through fractions; the authors still explicitly report Imp in purified OMs. No action changed.

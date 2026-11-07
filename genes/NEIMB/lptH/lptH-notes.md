@@ -9,3 +9,8 @@ Transfer LPS through the periplasm as the LptA-family bridge carrier. This molec
 LptH is the literature carrier name; UniProt calls NMB0355 lptA. It is not the unrelated lipid A phosphoethanolamine transferase. PAINT PTN002194456 supports the LptA lineage; normal loss check found no applicable IRD/IKR. Carrier MF remains an explicit mechanistic inference, not purified target kinetics.
 
 Evidence, preserved source hashes, ontology snapshots and validation are in analysis/module_audits/bacterial_lps_transport/neisseria-consultation/.
+
+
+## PR6190 evidence/prose follow-up
+
+Replaced methodological identity boilerplate with the reproducible exact-and-unique CDS-match finding. This supports the strain bridge, not an independent MC58 experiment; the native H44/76 evidence and assay limitations remain unchanged.

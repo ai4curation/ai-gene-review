@@ -36,7 +36,7 @@ No provider deep research was run for this gene.
 
 ## 2026-11-07 independent LPS module consultation
 
-All 8 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `.cache/module-audit-logs/lps-20261107/psepk-consultation/falcon-lptA.log`; no provider report was fabricated.
+All 8 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `analysis/module_audits/bacterial_lps_transport/psepk-consultation/provider-attempts/falcon-lptA.log`; no provider report was fabricated.
 
 PAINT-loss traversal could not be resolved because the exact KT2440 accession is absent from the cached family tree. The tool footer is not evidence of an independently established absence of loss. These original rows are IEA (and retained historical ISO proposals for LptD/E), not IBA.
 
@@ -51,3 +51,8 @@ Relevant source findings:
 - [PMID:20720015] E. coli LptC binds LPS and transfers it directionally to LptA; cysteine-accessibility experiments orient its soluble domain toward the periplasm. Verbatim: "In vitro, LptA can displace lipopolysaccharide from LptC (but not vice versa), consistent with their locations and their proposed placement in a unidirectional export pathway."
 - [PMID:22668317] E. coli assembly experiments support domain-to-domain connection of the periplasmic bridge; membrane cofractionation does not make LptA an integral membrane protein. Verbatim: "This protein has been proposed to physically link the IM and the OM because it is the only periplasmic Lpt component without a membrane tether and because it fractionates with both membranes."
 - [PMID:29449493] Purified E. coli Lpt components reconstitute ATP-dependent membrane-to-membrane LPS movement. Necessity/sufficiency refers to the tested assembled seven-protein system, not autonomous transport by every component. Verbatim: "Thus, all seven Lpt proteins and ATP are necessary and sufficient for membrane-to-membrane transport to occur."
+
+
+## PR6190 evidence/prose follow-up
+
+Corrected the historical Falcon failure pointer to the already committed durable provider-attempt log. The failed attempt and all annotation decisions remain unchanged.

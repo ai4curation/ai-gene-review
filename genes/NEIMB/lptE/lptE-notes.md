@@ -9,3 +9,8 @@ Support LptD biogenesis or stability through physical association at the outer m
 Normal PAINT-loss check found no IRD/IKR on the target lineage. This is not an independent proof of every propagated function. LptE association is demonstrated with His-tag and untagged/BamA controls; gross electrophoretic folding differences do not establish an autonomous generic refolding activity.
 
 Evidence, preserved source hashes, ontology snapshots and validation are in analysis/module_audits/bacterial_lps_transport/neisseria-consultation/.
+
+
+## PR6190 evidence/prose follow-up
+
+Replaced methodological identity boilerplate with the reproducible exact-and-unique CDS-match finding. The 159-residue LptE/role-specific identity bridge transfers protein identity, not the native strain of the experiment. H44/76 assays remain distinct from MC58 inference. The LptE summary now states positive biology; accessory/non-obligatory scope remains in the review reasons.

@@ -36,7 +36,7 @@ No provider deep research was run for this gene.
 
 ## 2026-11-07 independent LPS module consultation
 
-All 7 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `.cache/module-audit-logs/lps-20261107/psepk-consultation/falcon-lptE.log`; no provider report was fabricated.
+All 7 original ordered annotation rows were reviewed. Their machine payloads, actions and historical NEW lifecycle are retained; no new annotation was added. The prior note about no provider attempt is historical: an actual Falcon run now failed HTTP 403, archived under `analysis/module_audits/bacterial_lps_transport/psepk-consultation/provider-attempts/falcon-lptE.log`; no provider report was fabricated.
 
 PAINT-loss traversal could not be resolved because the exact KT2440 accession is absent from the cached family tree. The tool footer is not evidence of an independently established absence of loss. These original rows are IEA (and retained historical ISO proposals for LptD/E), not IBA.
 
@@ -50,3 +50,8 @@ Relevant source findings:
 - [PMID:21257909] The E. coli lptE6 mutant and specific lptD/bamA suppressors support an LptE role during LptD assembly. This does not imply generic folding-chaperone activity. Verbatim: "We show that lptE6 and both suppressor mutations affect the assembly of the LptD/E complex"
 - [PMID:24938785] Purified E. coli LptE binds LPS and alters its aggregation state; matched in-vivo mutant phenotypes link this substrate interaction to the assembly function. Verbatim: "Our results establish that LptE binds LPS specifically and that this is crucial to LptE’s function in vivo."
 - [PMID:29449493] Purified E. coli Lpt components reconstitute ATP-dependent membrane-to-membrane LPS movement. Necessity/sufficiency refers to the tested assembled seven-protein system, not autonomous transport by every component. Verbatim: "Thus, all seven Lpt proteins and ATP are necessary and sufficient for membrane-to-membrane transport to occur."
+
+
+## PR6190 evidence/prose follow-up
+
+Corrected the historical Falcon failure pointer to the already committed durable provider-attempt log. The failed attempt and all annotation decisions remain unchanged.

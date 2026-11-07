@@ -9,3 +9,8 @@ Stabilize the periplasmic LptD beta-taco domain and its connection with the Lpt 
 The official yedD symbol/path is retained while LptY is explained as the new name. The old plasma-membrane IEA is corrected to the mature outer-membrane location using full primary evidence. Source defect is recorded without editing the immutable UniProt record.
 
 Source and construct scope, independent PDB sequence comparisons, phenotype limits and validation/protection receipts are in analysis/module_audits/bacterial_lps_transport/accessory-consultation/.
+
+
+## PR6190 evidence/prose follow-up
+
+Recast the description as positive mechanistic biology. The review reasons retain the bounds on autonomous activity and lineage-wide essentiality; no catalytic activity, universal requirement or annotation action was added.
