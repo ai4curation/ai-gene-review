@@ -52,3 +52,7 @@ Research: the normal default Falcon attempt failed with HTTP403 authentication; 
 Retired only the redundant top-level CHA aldolase proposal because current GO0047443 already includes that exact reaction. Its exact prior structured content is archived under ligK-source-analysis/retired-cha-term-proposal.yaml. All original rows and historical NEW actions remain intact.
 
 No annotation payload, row order, inherited NEW action, raw/provider artifact or existing publication cache was altered. No additional NEW rows were added. Focused validation, render and helper-history results are recorded in the round1-gene-review handoff.
+
+## 2026-11-07 — PR6158 boundary and provenance follow-up
+
+Replace the obsolete GO0047443 split-term question with a synonym/label clarification: the official definition already includes CHA cleavage, and the redundant proposal remains retired. All original annotations and NEW lifecycle remain unchanged.

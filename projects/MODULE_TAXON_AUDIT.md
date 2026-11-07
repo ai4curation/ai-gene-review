@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_gallate_catabolism`: PR #6158: main d7638df804 integrated at c5cac55cfe, preserving all 197 frozen nonshared inputs. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_gallate_catabolism`: PR #6158 follow-up places GalP uptake in adjacent context and retains the six-step intracellular catalytic mechanism. C7570 secondary-metabolism evidence remains UNDECIDED; no unsupported lateral replacement is asserted. Publisher evidence documents the KTGAL bridge and whole-cell uptake limits. Seven focused gene validations, module/history checks, eight renders and38 coverage controls pass. All60 ordered payloads and nine historical NEW rows are preserved. Fresh source freeze, full validation, publication, review and actual merge remain pending.
 
 - [x] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
 
@@ -1058,3 +1058,7 @@ Integration proof: [record](../analysis/module_audits/bacterial_gallate_cataboli
 PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
 
 PR #6158: main d7638df804 integrated at c5cac55cfe, preserving all 197 frozen nonshared inputs. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_gallate_catabolism/post-hepg-main-integration-20261107.json).
+
+## 2026-11-07 — Gallate review follow-up
+
+PR #6158 follow-up places GalP uptake in adjacent context and retains the six-step intracellular catalytic mechanism. C7570 secondary-metabolism evidence remains UNDECIDED; no unsupported lateral replacement is asserted. Publisher evidence documents the KTGAL bridge and whole-cell uptake limits. Seven focused gene validations, module/history checks, eight renders and38 coverage controls pass. All60 ordered payloads and nine historical NEW rows are preserved. Fresh source freeze, full validation, publication, review and actual merge remain pending.

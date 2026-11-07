@@ -22,3 +22,7 @@ All original annotation rows, order, source terms, evidence codes, references, q
 Removed whole-strain growth quotes from molecular-function refinements while retaining domain/signature and comparator mechanistic evidence. Scoped growth remains physiological context for the inferred pathway role, not a direct enzyme or specificity assay. New publisher-excerpt provenance is shared under C7570 source analysis.
 
 No annotation payload, row order, inherited NEW action, raw/provider artifact or existing publication cache was altered. No additional NEW rows were added. Focused validation, render and helper-history results are recorded in the round1-gene-review handoff.
+
+## 2026-11-07 — PR6158 boundary and provenance follow-up
+
+Family/domain and cluster evidence plus whole-strain growth support a qualified gallate-process core, not a target-specific pathway assay or exact intermediate assignment. An inferred core does not mandate a manufactured NEW annotation merely to remove a coverage warning. All three BURL3 candidates use this policy. C7570's original secondary-metabolism classification is now UNDECIDED because the GO definition permits unusual nutrients but target evidence does not resolve that classification; its prior lateral replacement was withdrawn. No new rows or loss claims were added.

@@ -27,3 +27,7 @@ Transport interpretation distinguishes the adapted KTGAL strain from parental KT
 ## Verification in progress
 
 The nine existing reviews preserve 50 annotation payloads, including nine inherited NEW rows. No annotation was added or retired in that panel. The new BURL3 panel has ten seeded rows. Exact source and provider preservation, focused validations and generated histories are recorded in the consultation manifests. The rebuilt family index confirms the declared representatives. All 24 production coverage and boundary cases pass; the chemical oracle and its limits are explicit. Three module conformance advisories concern specific proposed core terms, not missing chemistry. Whole-repository validation and a dedicated PR remain pending.
+
+## 2026-11-07 — PR6158 boundary and provenance follow-up
+
+This follow-up supersedes the earlier optional-entry boundary: GalP and GalT are both adjacent transport context. The removed optional GalP part and input edge are archived exactly in review-20261107/science-consultation/galp-model-archive.json. All intracellular parts and chemical connections are unchanged. The KA1/SYK-6 panel is explicitly synthetic, not proof of one native route. The production compiler still does not enforce reaction identity; the historical coverage checker and receipts are preserved and require an additive update for the six catalytic atoms. Publisher transport/strain evidence is now reproducible in review-20261107/publisher-evidence.md with separate hashed provenance.
