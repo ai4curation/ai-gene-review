@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_choline_to_glycine_betaine_biosynthesis`: Thirteen completed reviews, 18 curated references and 43 capacity cases. PR #6108 round2 adds explicit OpuBC/BD choline-transport proposals and cleans repeated GbsB evidence: 107 rows, all 105 prior payloads and 26 raw files preserved. Focused checks pass. Round2 full validation on 96797150bae is terminal exit 1 with 19 proven unrelated reference errors in 17 yeast reviews, 23 base-identical inputs and 27,994 best-practice advisories; no scoped blocker. Publication, renewed review/CI and actual merge remain pending. [PR #6108](https://github.com/ai4curation/ai-gene-review/pull/6108).
+- [ ] `bacterial_choline_to_glycine_betaine_biosynthesis`: PR #6108: integrated main 5b68ef3aac into approved head 8a3e90bcc6, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
