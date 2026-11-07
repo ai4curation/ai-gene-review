@@ -15,33 +15,33 @@ so far, not whole proteomes.
 | METS5 | 19 | 84 | 90% | 0% | 0% | 10% | 0% |
 | ACIAM | 1 | 2 | 100% | 0% | 0% | 0% | 0% |
 | SACS2 | 1 | 4 | 75% | 25% | 0% | 0% | 0% |
-| METTH | 5 | 27 | 89% | 0% | 4% | 7% | 0% |
+| METTH | 16 | 71 | 94% | 0% | 1% | 4% | 0% |
 | HALSA | 1 | 8 | 62% | 0% | 0% | 38% | 0% |
 | HALVD | 1 | 14 | 57% | 0% | 0% | 43% | 0% |
-| **All** | 46 | 223 | 83% | 4% | 2% | 11% | 0% |
+| **All** | 57 | 267 | 85% | 3% | 2% | 10% | 0% |
 
 ## Electronic rows by pipeline (all species)
 
 | Pipeline | Rows |
 |---|---|
-| InterPro2GO | 75 |
-| Combined multiple IEA methods | 54 |
-| TreeGrafter | 16 |
-| UniRule (shared sequence features) | 11 |
+| InterPro2GO | 87 |
+| Combined multiple IEA methods | 74 |
+| TreeGrafter | 19 |
+| UniRule (shared sequence features) | 15 |
+| ARBA | 8 |
 | UniProtKB subcellular location mapping | 7 |
-| ARBA | 6 |
 | EC mapping | 6 |
 | UniPathway mapping | 4 |
+| GO logical inference | 4 |
 | UniProtKB keyword mapping | 3 |
-| GO logical inference | 2 |
 | Rhea mapping | 1 |
 
 ## Rows by evidence code (all species)
 
 | Code | Rows |
 |---|---|
-| IEA | 185 |
+| IEA | 228 |
 | IDA | 20 |
 | IBA | 8 |
-| EXP | 5 |
+| EXP | 6 |
 | ISS | 5 |

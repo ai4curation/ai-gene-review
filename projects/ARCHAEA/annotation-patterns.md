@@ -239,6 +239,12 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   named after plant 7-hydroxymethyl chlorophyll a reductase, a
   ferredoxin-dependent enzyme; Frh oxidises H2 and reduces F420. The review
   removes the row and flags the node for PANTHER.
+- **Example (round 7):** METTH/MTH_1559 (FwdB, O27601), the tungsten-pterin
+  subunit of formylmethanofuran dehydrogenase. One TreeGrafter node,
+  PTN002875529 (PTHR43105, respiratory nitrate reductase), gives it NADH
+  dehydrogenase activity, membrane and respiratory electron transport chain.
+  Fwd is a soluble cytoplasmic enzyme that uses ferredoxin, not NAD(H); the
+  review removes all three rows.
 
 ## 15. An experimental row with the wrong cofactor variant of the activity
 
@@ -271,6 +277,12 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   flavin-bifurcating subunit of HdrABC, carries CoB--CoM heterodisulfide
   reductase activity, but the disulfide is cleaved at HdrB (PMID:28818947). All
   three reviews record the activity as `contributes_to` in core functions.
+- **Downstream effect (round 7):** METTH/mtrH (O27224), a soluble subunit with
+  no membrane anchor, carries sodium ion transmembrane transport from GO's
+  logical inference (GO_REF:0000108), only because the whole-complex
+  methyltransferase activity was first put on it. FwdB (MTH_1559) carries the
+  whole formylmethanofuran dehydrogenase activity with `enables`, though it
+  catalyses only the CO2-to-formate half (PMID:27846502).
 
 ## 17. A cofactor's metal annotated as free metal-ion binding
 
@@ -325,6 +337,12 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   H2-using enzyme for the same step, Hmd, is a different protein with no
   sequence similarity (PMID:7852356). The review removes the row; the
   mapping is wrong for every member.
+- **A half-true case (round 7):** METTH/mvhA (Q50783) gets the same term from
+  IPR018194. Ferredoxin is one of the two end acceptors of Mvh electrons, but
+  it is reduced only by bifurcation coupled to heterodisulfide reduction
+  (PMID:21262829), not by the uncoupled H2:ferredoxin reaction the term
+  describes. The review modifies the row to the proposed bifurcating
+  reaction.
 
 ## 20. A term defined for one lineage's enzyme variant used across the family
 
@@ -337,6 +355,12 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   review proposes one.
 - **Scale:** the review counted 952 GO:0051912 annotations in QuickGO, nearly
   all IEA, including bacterial HdrB/C-like proteins.
+- **Also through InterPro2GO (round 7):** METTH/hdrB (O27907), the catalytic
+  subunit that cleaves the disulfide, gets GO:0051912 from IPR017678
+  (heterodisulfide reductase subunit B). The mapping is right in spirit and
+  wrong as the term is defined, so the fix belongs in GO, not in InterPro2GO.
+  The HdrB entry also has no cluster-binding row, although its CCG domains bind
+  the two noncubane [4Fe-4S] clusters (PMID:28818947).
 - **Fix:** generalise GO:0051912 to the heterodisulfide reduction itself and
   add one child per electron donor. Compare pattern 11, where a pathway term
   defined for *Chloroflexus* is used for the archaeal cycle.
@@ -369,6 +393,48 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   QuickGO (2026-11-07), cofC is the only one with a positive row for the same
   term, so this is a single error, not a recurring archaeal pattern. A
   GOA-wide scan would show whether it recurs elsewhere.
+
+## 22. An oxygen-using activity on the F420-dependent members of a shared fold
+
+- **Example:** METTH/mer (O27784), F420-dependent methylene-H4MPT reductase.
+  InterPro2GO maps the luciferase-like domain (IPR011251) and superfamily
+  (IPR036661) to GO:0016705 oxidoreductase activity acting on paired donors
+  with incorporation or reduction of molecular oxygen. That is right for the
+  flavin monooxygenases of the fold (bacterial luciferase, alkanesulfonate
+  monooxygenase), but Mer binds no flavin, uses no O2 and transfers a hydride
+  from reduced F420 (PMID:2298726). The review removes the row.
+- **Scale:** 18 InterPro families of F420-dependent luciferase-like enzymes
+  hold 51,170 UniProtKB entries, 51,118 of which carry the term (1,491
+  archaeal); the other 96,336 luciferase-like proteins are not in an F420
+  family (UniProt, 2026-11-07).
+- **Fix:** curated rule [CR-0007](../../rules/curated/CR-0007.yaml) keeps the
+  term for the fold except members of the F420 families. Related to patterns 1
+  and 14 (an activity named after the family's best-known member).
+
+## 23. A UniProt keyword for a residue the sequence lacks
+
+- **Example:** METTH/MTH_1559 (FwdB, O27601). PIRNR rule PIRNR005646 adds the
+  keyword Selenocysteine. The sequence has no selenocysteine: the tungsten
+  ligand is a cysteine (Cys123, aligned to the cysteine ligand in the
+  *Methanothermobacter wolfeii* Fwd structure). Some formate dehydrogenase
+  family members use selenocysteine there, so the rule's keyword holds for
+  only part of its family. Recorded as a UniProt source defect in the review.
+
+## Leads from round 7, not yet reviewed
+
+- **mtrA2 (O27134, MTH_1062)** is a soluble MtrA paralog outside the mtr
+  operon, with no membrane anchor; HAMAP rule MF_01093 nevertheless gives it a
+  transmembrane segment inside the soluble domain, EC 7.2.1.4 and Mtr complex
+  membership (mtrA1 review, suggested question).
+- **Hmd in PTHR11645:** 43 of the 50 [Fe]-hydrogenase entries sit in the
+  pyrroline-5-carboxylate reductase subfamily PTHR11645:SF0, and
+  *M. jannaschii* Hmd (Q58194) receives P5C reductase and proline biosynthesis
+  IBA rows from node PTN000182176, which the existing PTHR11645 family review
+  already marks for pruning (pattern 1). The *M. thermautotrophicus* Hmd has
+  neither row.
+- **GO:0018537** is named coenzyme F420-dependent N5,N10-*methenyl*tetrahydromethanopterin
+  reductase activity, but its definition is the *methylene*-to-methyl reaction
+  of Mer; the mer review proposes a rename.
 
 ## Related findings from round 2
 
@@ -405,6 +471,7 @@ send to the resource that owns them:
 | 17 (cofactor metal as free metal-ion binding) | same file, IPR005778 to GO:0050897 | REMOVE, replace with GO:0031419 | not needed |
 | 18 (copied cofactor set) | same file, IPR017682 to GO:0050660 and GO:0051536, IPR017679 to GO:0016151, IPR017681 to GO:0016151 and GO:0050660 | REMOVE | not needed |
 | 19 (acceptor-specific or wrong-enzyme hydrogenase term) | same file, IPR018194, IPR002844 and IPR036080 to GO:0008901 | REMOVE (the Mtd entries replace with GO:0030268) | not needed |
+| 22 (oxygen-using activity on F420-dependent fold members) | same file, IPR011251 and IPR036661 to GO:0016705 | broadMatch | CR-0007 (excludes 18 F420-dependent families) |
 | 21 (paired positive and NOT rows) | `genes/METJA/cofC/cofC-ai-review.yaml` `source_defects` | WRONG_QUALIFIER, for UniProt | not applicable |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).

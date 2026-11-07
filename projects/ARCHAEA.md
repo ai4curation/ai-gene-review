@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC, frhB, frhG, mtd]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC, frhB, frhG, mtd, MTH_1557, MTH_1559, ftr, mch, hmd, mer, mtrA1, mtrH, hdrB, mvhA]
 ---
 
 # Archaea
@@ -22,13 +22,13 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, thirty-three new archaeal reviews are complete (a five-gene pilot, a
+So far, forty-four new archaeal reviews are complete (a five-gene pilot, a
 second round of four, two rounds on the *M. sedula* CO2-fixation cycle and
-two rounds on hydrogenotrophic methanogenesis), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
+three rounds on hydrogenotrophic methanogenesis), the two pathways are built as modules, METAC mcrA has been revised, and the duplicate amoA
 reviews have been merged. Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
-thin, old experimental coverage. Twenty-one recurring error patterns are
+thin, old experimental coverage. Twenty-three recurring error patterns are
 collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
 largest affect hundreds of archaeal proteins each: InterPro2GO mappings
 that put catalytic activity on non-catalytic proteasome alpha subunits
@@ -249,6 +249,28 @@ checks done directly.
 Five more interpro2go rows were added to the SSSOM set (IPR017679, IPR017681
 twice, IPR002844, IPR036080).
 
+## Round 7 results: the methanogenesis pathway completed (November 2026)
+
+Eleven more *M. thermautotrophicus* proteins reviewed, so every step of CO2
+reduction to methane has a reviewed protein, and the pathway is built as the
+second archaeal module, `modules/hydrogenotrophic_methanogenesis.yaml` (DRAFT):
+seven C1 steps, the Mtd/Hmd alternative for step 4, the bifurcating
+MvhADG-HdrABC complex and the F420-reducing hydrogenase. QC: 14 function checks
+match reviewed core functions, 0 conflicts; the two Fwd half-reactions have no
+GO term.
+
+| Gene(s) | Finding |
+|---|---|
+| MTH_1559, MTH_1557 (FwdB, FwdA) | Each subunit does half of the formylmethanofuran dehydrogenase reaction (CO2 to formate; formate onto methanofuran), and GO has a term for neither half; two terms proposed. FwdB carries three respiratory terms from a nitrate reductase TreeGrafter node (pattern 14) and a Selenocysteine keyword for a residue it lacks (pattern 23) |
+| ftr, mch | All electronic rows correct; only a generic transferase row refined |
+| hmd | The [Fe]-hydrogenase; GO has no term for binding its iron-guanylylpyridinol cofactor (proposed). Its family sits in the P5C reductase PANTHER subfamily (lead) |
+| mer | A monooxygenase term from the luciferase-like fold, wrong for the whole F420-dependent clade (pattern 22; curated rule CR-0007) |
+| mtrA1, mtrH | Consistent with METJA mtrA; MtrH's own half-reaction fits GO:0042086. MtrH, a soluble subunit, carries sodium transmembrane transport only by inference from the whole-complex activity (pattern 16) |
+| hdrA, hdrB, mvhA | Same proposed bifurcation term as METJA hdrA. HdrB gets the methanophenazine-defined GO:0051912 from InterPro2GO (pattern 20); MvhA's ferredoxin hydrogenase row is half true (pattern 19) |
+
+Two interpro2go rows (IPR011251 and IPR036661, broadMatch) point to the new
+curated rule CR-0007.
+
 ## Anchor organisms
 
 Chosen on 2026-10-14 for relevance to DOE missions (bioenergy, critical
@@ -407,8 +429,9 @@ split.
 5. **Breadth and modules:** review the rest of Part A theme by theme, then
    Part B. The 3HP/4HB CO2-fixation cycle module is built (DRAFT); remaining
    candidates are hydrogenotrophic methanogenesis and archaeal ether-lipid
-   biosynthesis. Round 5 reviewed five methanogenesis proteins as a start on
-   the first of these.
+   biosynthesis. Hydrogenotrophic methanogenesis is now built
+   (`modules/hydrogenotrophic_methanogenesis.yaml`, DRAFT, rounds 5-7);
+   ether-lipid biosynthesis remains.
 6. **Coverage measure: done.** `ARCHAEA/coverage/goa_evidence_coverage.py`
    counts GOA rows by evidence code for each project species; re-run it after
    each round ([RESULTS](ARCHAEA/coverage/RESULTS.md)).
