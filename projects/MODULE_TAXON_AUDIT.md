@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flavonoid_degradation`: PR #6140 round-2 follow-up: nine retired proposals use explicit withdrawal actions; three FdeB orthologs retain supported broad hydrolase core inference while substrate and catalytic geometry remain unresolved. Two speculative reaction terms moved to questions. Ten focused gene checks, 44 coverage cases and four mutations pass; fresh full validation and publication pending.
+- [ ] `bacterial_flavonoid_degradation`: PR #6140 follow-up passes full validation on 58063482b8: 10,722 reviews, zero blocking errors and 345 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_fatty_acid_beta_oxidation`: Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
 
@@ -693,3 +693,7 @@ PR #6140 revised science passes full validation on 9e1e860ce0: 10,717 reviews, z
 ## 2026-11-07 — flavonoid round-2 evidence and withdrawal follow-up
 
 PR #6140 round-2 follow-up: nine retired proposals use explicit withdrawal actions; three FdeB orthologs retain supported broad hydrolase core inference while substrate and catalytic geometry remain unresolved. Two speculative reaction terms moved to questions. Ten focused gene checks, 44 coverage cases and four mutations pass; fresh full validation and publication pending. All 46 original annotation payloads/order and 91 existing source files are preserved. Characterized-family site mapping corrects a provider residue number and avoids an unsupported activity-loss claim from an alternative histidine candidate. Earlier full runs remain historical.
+
+## 2026-11-07 — bacterial flavonoid degradation full validation passes
+
+PR #6140 follow-up passes full validation on 58063482b8: 10,722 reviews, zero blocking errors and 345 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_flavonoid_degradation/round2-full-validation.json).
