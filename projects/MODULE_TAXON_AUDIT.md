@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_kdp_potassium_homeostasis`: [PR #6179](https://github.com/ai4curation/ai-gene-review/pull/6179) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_kdp_potassium_homeostasis`: PR #6179 review follow-up preserves 20 gene reviews, 274 ordered source rows and eight historical NEW proposals. Nine KdpC/F activity relations receive probable source-correction requests while contribution cores remain; Dgeo localization is unresolved, KdpE activator outputs are aligned, and regulatory profiles are nonexclusive. Focused validation and capacity controls pass with disclosed family-scope advisories; full validation, publication, fresh review and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 

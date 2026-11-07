@@ -47,3 +47,8 @@ GO0008556 and0071805 are ACCEPT for the peptide's structural contribution to its
 Every original annotation row and its source payload/order was reviewed and preserved. No additional annotation rows were proposed. Full provenance and assay boundaries: `analysis/module_audits/bacterial_kdp_potassium_homeostasis/psepk-consultation/primary-scope.md`; sequence checks are adjacent. No IBA rows occur in these six reviews, so no IBA loss judgment is being made. Family membership and original historical ISO donors are retained independently of donor counts.
 
 A genuine `just deep-research PSEPK kdpF --provider falcon` request failed HTTP403 authentication. Logs remain in `.cache/module-audit-logs/kdp-20261107/psepk-consultation/`; no provider report was manufactured.
+
+
+## 2026-11-07 PR6179 round-one adjudication
+
+Reviewed the source relation, core role and source-specific limits relevant to this gene. See `analysis/module_audits/bacterial_kdp_potassium_homeostasis/round1/evidence.md` for the full evidence and disagreement record. Original ordered annotation payloads, qualifiers and historical NEW/retired flags are preserved. GO0008556 now has a relation-specific overannotation judgment and probable source correction from enables to contributes_to; structural contribution remains core. KdpF requirement is conditional on the tested detergent-solubilized preparation, not universal native essentiality. [PMID:10608856; PMID:34272288].

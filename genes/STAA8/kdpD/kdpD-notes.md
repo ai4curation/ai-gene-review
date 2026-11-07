@@ -26,3 +26,8 @@ Sequence-transfer audit (retrieved 2026-11-04): donor [A0A0H2XIE2](https://rest.
 All ten historical rows and the inherited ISS NEW action are preserved. The USA300 A0A0H2XIE2 donor and Q2FWH7 are 885/885 identical; LAC* expression phenotypes and MRSA252 KdpD2 remain distinguished. PMID33989637 provides isolated-domain structural corroboration, not an NCTC 8325 physiological assay.
 
 Default Falcon research was attempted and failed with HTTP 403; no provider output was fabricated. Manual full-primary reading supports this review. PAINT-loss checks completed; STAA8 target has no IRD/IKR, while Q1J2K3 is absent from the cached tree and no target loss is inferred. Baseline, source hashes, ontology snapshots and reproducible sequence comparison are retained under analysis/module_audits/bacterial_kdp_potassium_homeostasis/regulatory-comparators/.
+
+
+## 2026-11-07 PR6179 round-one adjudication
+
+Reviewed the source relation, core role and source-specific limits relevant to this gene. See `analysis/module_audits/bacterial_kdp_potassium_homeostasis/round1/evidence.md` for the full evidence and disagreement record. Original ordered annotation payloads, qualifiers and historical NEW/retired flags are preserved. Removed a duplicated sentence only; the LAC* experimental versus NCTC8325 target distinction is retained.
