@@ -1,0 +1,24 @@
+# Independent capacity audit
+
+Run from the repository root:
+
+```sh
+uv run python analysis/module_audits/bacterial_l_carnitine_catabolism/capacity/audit_capacity.py
+uv run ruff check analysis/module_audits/bacterial_l_carnitine_catabolism/capacity
+```
+
+The normal run verifies `input-hashes.yaml` before computing results. `--capture-inputs` deliberately changes the reviewed input snapshot and must be used only after reviewing source changes. `make_fixture.py` deterministically regenerates the manually authored source ledger; it does not discover experimental evidence or read module topology. Do not regenerate an already released historical manifest in place.
+
+`audit_capacity.py` uses production `compile_module`, `is_satisfied` and `enumerate_routes`. It obtains Boolean requirements, optional parts and realizer alternatives from the actual module. Its independent source fixture supplies the required chemistry and finite positive member evidence. Original module descriptors supply family/ortholog selectors, substrates/products and import active units. The production Atom does not itself contain all complex subunit or ortholog information, so the oracle explicitly reads those original descriptors. The production Boolean compiler does not validate chemical connections; a separate source-grounded contract checks oxidation→cleavage→hydrolysis and optional uptake→oxidation.
+
+The audit has 49 cases, 14 deliberate module mutations and five gate-sensitivity checks. It verifies removal of each required role, alternative hydrolase architecture, optional import, recognition/core/assembly completeness, wrong-family and wrong-substrate descriptors, exact-member evidence, taxon coherence, fusion reuse and alternative pathway boundaries. It corrupts mandatory-part presence/optionality, family selection, chemistry, alternative wiring, fused ortholog, importer structure and reaction connections. Every corruption must either violate the independent chemical contract or change a fixture outcome. Separate gate ablations show that family, taxon, exact chemistry and evidence-tier checks actually affect outcomes; blocked cognate import preserves enzyme chemistry but defeats the uptake-plus-catabolism profile.
+
+The qualified profile supports PAO1, KT2440 and sequence-matched RHIME enzyme panels. It supports uptake in the two Pseudomonas panels at their stated inference tiers. The strict direct-or-sequence-identical profile supports RHIME chemistry only and no full uptake panel. A false strict result means insufficient evidence at that threshold, not an inactive protein. The six historical PSEPK proposed annotations are preserved as provenance, not used as assay evidence. Neither ACCEPT actions nor broad GO membership creates a reaction claim. Review core MFs are checked for consistency only after independent source qualification.
+
+The same-strain gate defines a coherent selected panel; it does not deny cross-species reconstitution, which the transport source itself demonstrates. The synthetic family/GO controls and alternative-route descriptors do not invent accessions or native experimental negatives. The audit is not a genome-wide classifier, does not estimate flux or growth, and does not independently remeasure the literature. Source scope is summarized in `modules/bacterial_l_carnitine_catabolism-source-analysis/README.md`.
+
+`input-hashes.yaml` closes over consumed module, source fixture, checker code, production compiler/helper files, exact member reviews/raw records, family reviews, linked local/publication references, original spreadsheets, the RHIME sequence bridge and released gene receipts. It follows structured `file:` and PMID references of consumed YAML; it is not a crawler of arbitrary prose hyperlinks. External full-text availability/provenance is documented in the frozen source consultations, and the CntAB abstract was read on PubMed without replacing any cached publication. The source hash certifies bytes, not the validity of an interpretation.
+
+The gene-release chain is verified explicitly: original PSEPK and PAO1 manifests remain unchanged, 78 originally released files retain their hashes, and exactly six CdhB review/notes/render files have authorized before/after hashes in the additive receipt. All its 13 current/new artifacts are verified. No other source or gene change is silently accepted. Final family release identity is recorded in the final handoff, while consumed family YAMLs and their referenced sources remain in the reproducible input closure.
+
+`verification.json` records the focused commands and confirms byte-identical fixture regeneration and results after a default frozen-input rerun. `handoff.yaml` is the immutable release inventory; it excludes itself from its own hash map and is identified by its separately reported SHA256.

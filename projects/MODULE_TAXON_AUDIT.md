@@ -41,6 +41,10 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [x] `bacterial_flavonoid_degradation`: PR #6140 actually merged as 4b8aabfd9dc31ade6356ae1791bd2037904d119f; 270 changed nonshared files are byte-identical to the reviewed head and 16 changed reviews remain COMPLETE with no PENDING rows.
+
+- [ ] `bacterial_l_carnitine_catabolism`: Comparative audit ready for full validation: 11 manually assessed references including five reviews; 14 COMPLETE gene reviews, five family reviews and 49 capacity cases with 14 module mutations and five sensitivity checks. All ordered source rows preserved; three inherited proposals explicitly retired. Dedicated PR and actual merge pending.
+
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
@@ -94,7 +98,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 7 PR_OPEN, 4 IN_PROGRESS, 733 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 7 PR_OPEN, 5 IN_PROGRESS, 731 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -761,3 +765,7 @@ Merged published main e9d31cced895d2d74c464d57cbd40381e15520ab into approved cho
 ## 2026-11-07 — bacterial_choline_o_sulfate_uptake_and_desulfation main integration
 
 Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head 41649e7eaeec646b59abcbe875530454cbcf0105. All 124 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Flavonoid audit merge verified
+
+PR #6140 actually merged as 4b8aabfd9dc31ade6356ae1791bd2037904d119f; 270 changed nonshared files are byte-identical to the reviewed head and 16 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6140-merged-content.json).
