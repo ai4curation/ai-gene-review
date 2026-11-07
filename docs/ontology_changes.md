@@ -254,10 +254,14 @@ staying in the TSV as a record.
   justification must name the terms that should replace it;
 - a `request_status` saying the request was filed with no tracker issue linked;
 - a `change_dsl` that does not parse, disagrees with the slots, or parses as the
-  wrong KGCL class; and one on a change type KGCL cannot express at all
+  wrong KGCL class; and one on a change type KGCL's *grammar* has no statement for
   (`NODE_DIRECT_MERGE`, `REMOVE_MAPPING`, `MAPPING_PREDICATE_CHANGE`,
-  `COMPLEX_CHANGE`, `OTHER`), where a string that parses cannot be the right kind
-  by construction;
+  `COMPLEX_CHANGE`, `OTHER`), where a string that parses must be some other kind.
+  Note the distinction: KGCL has classes for four of those five — the enum binds
+  them as `kgcl:NodeDirectMerge`, `kgcl:RemoveMapping`,
+  `kgcl:MappingPredicateChange` and `kgcl:ComplexChange` — but `kgcl.lark` gives
+  no controlled-English form for any of them, which is why `kgcl_dsl()` renders
+  nothing rather than a string that looks like KGCL and does not parse;
 - a reparenting change (`NODE_MOVE`, `NODE_DEEPENING`, `NODE_SHALLOWING`), or a
   `REMOVE_MAPPING`, whose `old_value` is missing or is not an identifier. That one
   slot carries three different things — the current parent's CURIE for the

@@ -239,6 +239,29 @@ def test_a_mapping_removal_does_not_render_an_arrow_to_nothing():
     assert "→" not in md
 
 
+def test_a_predicate_change_names_the_mapping_predicate_not_a_value():
+    """`MAPPING_PREDICATE_CHANGE`'s old/new_value are the mapping's predicates, so
+    rendering them as "Value" would read as a definition or label change."""
+    base = {c: "" for c in COLUMNS}
+    rows = [
+        {
+            **base,
+            "ontology": "GO",
+            "about_node": "GO:1",
+            "change_type": "MAPPING_PREDICATE_CHANGE",
+            "old_value": "skos:exactMatch",
+            "new_value": "skos:broadMatch",
+            "origin": "SELF_PROPOSED",
+            "request_status": "NOT_FILED",
+            "justification": "The mapping is broader than an exact match.",
+            "supported_by": "[]",
+        }
+    ]
+    md = render_request_report("GO", rows)
+    assert "**Mapping predicate:** `skos:exactMatch` → `skos:broadMatch`" in md
+    assert "**Value:**" not in md
+
+
 def test_a_value_change_still_renders_the_arrow():
     base = {c: "" for c in COLUMNS}
     rows = [
