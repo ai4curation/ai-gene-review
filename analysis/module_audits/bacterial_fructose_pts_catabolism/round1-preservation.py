@@ -35,11 +35,14 @@ def representatives(value):
 def main():
     prior = json.loads((AUDIT / 'final-panel-preservation.json').read_text())
     protected = set(prior['protected_files'])
-    rows = {}; names = {}; refs = set()
+    rows = {}
+    names = {}
+    refs = set()
     tracked = set(subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', HEAD],
                                         cwd=ROOT, text=True).splitlines())
     for path in prior['reviews']:
-        old = yaml.safe_load(git_bytes(path)); new = yaml.safe_load((ROOT / path).read_text())
+        old = yaml.safe_load(git_bytes(path))
+        new = yaml.safe_load((ROOT / path).read_text())
         assert payloads(old) == payloads(new), path
         assert [a['review']['action'] for a in old['existing_annotations']] == [a['review']['action'] for a in new['existing_annotations']], path
         assert [(r['id'], r['title']) for r in old['references']] == [(r['id'], r['title']) for r in new['references']], path
@@ -52,7 +55,8 @@ def main():
         up = Path(path).with_name(Path(path).name.replace('-ai-review.yaml', '-uniprot.txt'))
         names[old['id']] = re.search(r'^DE   (?:RecName|SubName): Full=(.*?)(?: \{|;)',
                                     (ROOT / up).read_text(), re.M).group(1)
-    old = yaml.safe_load(git_bytes(MODULE)); new = yaml.safe_load((ROOT / MODULE).read_text())
+    old = yaml.safe_load(git_bytes(MODULE))
+    new = yaml.safe_load((ROOT / MODULE).read_text())
     refs.update(r['id'] for r in old['references'] if r['id'].startswith('PMID:'))
     for ref in refs:
         p = 'publications/' + ref.replace(':', '_') + '.md'
@@ -61,9 +65,11 @@ def main():
     protected.update(p for p in tracked if p.startswith('modules/bacterial_fructose_pts_catabolism-deep-research'))
     source_hashes = {}
     for p in sorted(protected):
-        data = (ROOT / p).read_bytes(); assert data == git_bytes(p), p
+        data = (ROOT / p).read_bytes()
+        assert data == git_bytes(p), p
         source_hashes[p] = hashlib.sha256(data).hexdigest()
-    old_reps = list(representatives(old)); new_reps = list(representatives(new))
+    old_reps = list(representatives(old))
+    new_reps = list(representatives(new))
     assert len(old_reps) == len(new_reps)
     changed_labels = 0
     for a, b in zip(old_reps, new_reps):
