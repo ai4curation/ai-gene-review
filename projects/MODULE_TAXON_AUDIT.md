@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 follow-up passes full validation on dea61b9999: 10,740 reviews, zero blocking errors and 162 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 scientific review follow-up passes full validation on dea61b9999; main 5b68ef3aac is integrated with 158 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
