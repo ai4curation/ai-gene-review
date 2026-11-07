@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_fructose_pts_catabolism`: [PR #6144](https://github.com/ai4curation/ai-gene-review/pull/6144) label/evidence follow-up passes focused checks and 49 capacity cases; renewed review, CI and actual merge pending.
+- [ ] `bacterial_fructose_pts_catabolism`: PR #6144: integrated main 2f72fda87e into approved head 9cf7682c23, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
