@@ -1,6 +1,6 @@
 ---
 title: "Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [human, PSEPK, POPTR, DANRE, METTP, DROME]
 manifest:

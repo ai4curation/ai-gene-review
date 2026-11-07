@@ -156,8 +156,9 @@ membrane tethering activity* in its place; the recommended pattern is
 that MF with a `part_of` link to the transport process it serves. We
 recorded the upstream plan, the flagged InterPro and UniRule mappings,
 and the reviews in this repo that touch the terms. The
-obsoletion has landed: the 2026-09-26 audit found GO:0099022 and
-GO:0099041 obsolete and GO:7770062 live. Eight human TRAPP subunit reviews
+obsoletion has landed: a QuickGO recheck on 2026-10-31 found all five BP
+terms obsolete and GO:7770062 live, so the ontology side of this project is
+complete. Eight human TRAPP subunit reviews
 (TRAPPC1, 3, 4, 5, 8, 11, 12, 13) already MODIFY their NAS row on the
 obsolete GO:0099022 to GO:0006888 *ER to Golgi vesicle-mediated
 transport*. TMF1 is fixed in PR #3237 (merged): its NEW MF row and core
