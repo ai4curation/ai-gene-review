@@ -3,6 +3,8 @@ title: "Molecular Adaptor Activity Annotation Review"
 maturity: SCOPING
 tags: [PIPELINE, BIOLOGY_DOMAIN]
 species: [human]
+sidecars:
+  genes: MOLECULAR_ADAPTOR_ACTIVITY/genes.yaml
 ---
 
 # Molecular Adaptor Activity Annotation Review
@@ -17,8 +19,9 @@ consistently: which child term to pick, how to record the two partners being
 bridged, how to tell an adaptor from a scaffold / sequestering / carrier
 protein, and how much weight to give the large body of phylogenetically
 propagated adaptor annotations already in GOA. Nothing has been audited yet —
-this page is a stub capturing the term landscape, the GO guidelines, and the
-propagation picture so the audit can be scoped.
+this page captures the term landscape, the GO guidelines, the propagation
+picture, and a seeded phase-1 anchor gene set; no annotations have been
+adjudicated yet.
 
 ## Scope
 
@@ -128,6 +131,36 @@ Consequences for review (per the IBA guidance in CLAUDE.md and
   necessarily an adaptor; distinguish adaptor vs scaffold vs sequestering vs
   carrier.
 
+## Phase 1 anchor set
+
+Seeded from QuickGO (2026-11-07): every **human** gene product carrying at least
+one **experimental** annotation (evidence under `ECO:0000269` — IDA, IPI, IMP,
+IGI, IEP, EXP) to `GO:0060090` or a descendant. 1,289 annotation rows resolve to
+**666 distinct gene products**. This is a worklist, not a set of curation
+decisions — the full table, grouped by branch and with per-term evidence and
+references, is in [genes.yaml](MOLECULAR_ADAPTOR_ACTIVITY/genes.yaml).
+
+Genes are tagged with one or more *branches* so the sub-domains can be scoped
+and worked separately (a gene may be in more than one, so the counts sum above
+666):
+
+| Branch | Genes | What it covers |
+|---|---:|---|
+| `core_adaptor` | 512 | protein-macromolecule / signaling / cargo / enzyme-substrate / ubiquitin-like ligase-substrate adaptors — the primary `protein binding` → adaptor target |
+| `reader` | 114 | histone, RNA and ubiquitin/UFM1 modification "reader" activities (epigenetic/RNA readers; a distinct curation domain) |
+| `scaffold` | 51 | `GO:0140693` molecular condensate scaffold, `GO:0005078` MAP kinase scaffold |
+| `tether_anchor` | 17 | organelle membrane tether / anchor / docking and chromatin-loop anchoring activities |
+
+176 of the 666 already have a `genes/human/<symbol>/` folder in the repo
+(flagged `existing_folder: true` in the sidecar) — these are the natural
+starting points, though a folder does not mean the adaptor row was reviewed.
+
+**Proposed phase-1 cut:** the `core_adaptor` branch (512 genes). The `reader`
+branch is large and mechanistically distinct (recognising a modified residue to
+recruit downstream machinery) and overlaps the chromatin/epigenetics work, so it
+is a candidate for its own phase; `scaffold` must stay distinct from adaptor per
+the scope boundary above.
+
 ## Decision rules (draft)
 
 1. Bare `protein binding` → replace with an adaptor term **only when the
@@ -144,9 +177,14 @@ Consequences for review (per the IBA guidance in CLAUDE.md and
 
 ## Plan / open items
 
-- [ ] Assemble the phase-1 gene set: human proteins whose GOA carries a bare
-  `protein binding` row plus literature evidence of a bridging role, and
-  human experimental annotations already under `GO:0060090` / `GO:0030674`.
+- [x] Seed the phase-1 anchor set from QuickGO: 666 human gene products with an
+  experimental annotation under the `GO:0060090` subtree, grouped by branch
+  ([genes.yaml](MOLECULAR_ADAPTOR_ACTIVITY/genes.yaml)).
+- [ ] Add the complementary set: human genes whose GOA carries a bare
+  `protein binding` row plus literature evidence of a bridging role (needs
+  manual literature triage; not deterministically queryable).
+- [ ] Confirm the phase-1 cut (core_adaptor 512 vs. splitting the reader
+  branch) and prioritise the 176 genes that already have a review folder.
 - [ ] Draft worked examples for the common children (signaling, cargo,
   cytoskeletal, enzyme-substrate) tying each to a reviewed gene.
 - [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
