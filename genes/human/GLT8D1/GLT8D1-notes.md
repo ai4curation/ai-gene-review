@@ -13,3 +13,7 @@ No generated provider report was made. [Primary-source guide](GLT8D1-source-guid
 ## Review follow-up, 2026-11-07
 
 The current actions supersede the earlier tally: four ACCEPT, one MODIFY and one TOO_GENERAL; zero NEW. The membrane claim is resolved by accepted Golgi-membrane placement; the original HDA target table remains unverified. GO:0035250 now names the experimentally resolved UDP donor without choosing a linkage. Source-cache availability flags have been checked against the fetched files; separate original-paper access remains documented in the source guide. The sequence notation above means replacement at 216–259 and deletion of 260–371.
+
+## Second review follow-up, 2026-11-07
+
+The current actions supersede the preceding tallies: three ACCEPT, one KEEP_AS_NON_CORE, one MODIFY and one TOO_GENERAL; zero NEW. GO:0046527 is retained as non-core. Its reason now records the requested assay limitation explicitly. The other five decisions and the core section are unchanged.
