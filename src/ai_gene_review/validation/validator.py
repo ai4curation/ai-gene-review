@@ -398,11 +398,12 @@ def validate_gene_review(
         check_best_practices_rules(
             data,
             report,
-            yaml_file_path if check_goa else None,
+            yaml_file_path,
             check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
             publications_dir=publications_dir,
             check_ontology=check_ontology,
+            check_goa=check_goa,
         )
         # Local sources need no network, so this runs even when reference
         # validation is off (validate-all's best-practices pass): the external
@@ -472,6 +473,7 @@ def check_best_practices_rules(
     progress_callback: Optional[Callable] = None,
     publications_dir: Optional[Path] = None,
     check_ontology: bool = False,
+    check_goa: bool = True,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -500,7 +502,7 @@ def check_best_practices_rules(
     validate_alternative_records(data, report)
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
-    check_nd_policy(data, report)
+    check_nd_policy(data, report, yaml_file)
     check_decomposition(
         data,
         report,
@@ -1231,7 +1233,7 @@ def check_best_practices_rules(
         )
 
     # Validate against GOA file if enabled
-    if yaml_file is not None and "existing_annotations" in data:
+    if check_goa and yaml_file is not None and "existing_annotations" in data:
         if progress_callback:
             progress_callback("Validating against GOA")
         goa_validator = GOAValidator()
