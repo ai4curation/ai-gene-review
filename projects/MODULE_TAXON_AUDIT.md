@@ -43,7 +43,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: [PR #6167](https://github.com/ai4curation/ai-gene-review/pull/6167) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
 
-- [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [x] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 changed nonshared files are byte-identical to the reviewed head and 10 changed reviews remain COMPLETE with no PENDING rows.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -779,3 +779,7 @@ Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full 
 ## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
 
 Integrated main f583a9215b0f6a33399d56716a5279bc6828461f after the passing full run on 5ca4d26e74a5455b6122ecb0c700a920c635ca4e. All 101 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Choline sulfate audit merge verified
+
+PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 changed nonshared files are byte-identical to the reviewed head and 10 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6105-merged-content.json).
