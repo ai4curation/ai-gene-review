@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_lipoprotein_maturation`: [PR #6184](https://github.com/ai4curation/ai-gene-review/pull/6184) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_lipoprotein_maturation`: PR #6184 review follow-up preserves 14 gene reviews, 88 ordered annotations and 16 active historical NEW proposals; no rows are added or retired. The sole authored-payload correction changes Lit location evidence IDA to IC with an explicit receipt. Lgt localization remains unresolved, LspA processing and Lnb localization are refined, specific proposed activities are documented, Lnt family reasoning is corrected, and LhaT selects exact P54392. Focused validation, 39 capacity cases and 11 mutation controls pass. Full validation, publication, fresh review and actual merge remain pending.
 
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 

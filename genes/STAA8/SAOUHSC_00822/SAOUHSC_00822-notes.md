@@ -11,3 +11,8 @@ Cross-species compatibility is directional: SaA+SeB works, SeA+SaB fails despite
 For NEW BP, each protein performs catalytic or obligatory complex work; neither is the modified lipoprotein substrate. Existing same-role Lnt comparators carry GO0042158 (exact queries archived in the neighboring frozen Lnb consultation). Current term scope and ancestry were checked; no redundant BP, TLR2 response, cytokine production or virulence assertion is added. GO-CAM target/comparator checks and exact query receipts accompany the audit.
 
 A real Falcon attempt failed HTTP403; see the consultation research receipt and log. No provider report was invented. PAINT losses cannot be checked without a PANTHER assignment; absence of a cross-reference is not evidence of no evolutionary losses.
+
+
+## PR 6184 source adjudication, 2026-11-07
+
+A machine-readable phospholipid-dependent apolipoprotein N-acyltransferase proposal captures the specific reaction established by recombinant reconstitution (PMID:42580408), alongside the retained valid GO genus. LnsA catalysis and LnsB contribution remain distinct, and compatible pairing remains required. The proposal does not infer protease function from LnsB ancestry, universal cross-species interchangeability, or autonomous activity. No NEW annotation rows were added.

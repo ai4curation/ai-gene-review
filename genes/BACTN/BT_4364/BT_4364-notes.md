@@ -13,3 +13,8 @@ Only BT_4364 was mutated: "Only Lnb(C198S) could restore N-acylation activity to
 The zero-row seed is preserved. Two additions cover the demonstrated acyltransferase genus and direct participation in lipoprotein biosynthesis. Exact-role QuickGO comparators P23930 and Q88DN4 carry GO:0042158. MF and BP are distinct aspects and no duplicate parent/child process is added. GO:0016410 is obsolete; GO:0140186 has an inappropriate lysine-N6/acyl-CoA reaction. Downstream growth, morphology, client sorting, polysaccharide use and OMV changes do not justify additional direct process claims.
 
 A genuine Falcon request was made and failed with HTTP403 authentication/access rejection; the log is archived and no provider report was fabricated. The publication and normal-fetch raw source files remain unchanged. All quotations above are from the full cached primary, not generated provider prose.
+
+
+## PR 6184 source adjudication, 2026-11-07
+
+Core localization is refined from membrane to plasma membrane as an inference from five predicted alpha-helical transmembrane segments and the extracytoplasmic DUF4105 domain (PMID:39495918), together with the mature lipoprotein reaction. This is not a native fractionation measurement. The paper's uncertainty about inner-versus-outer localization of lipoprotein clients does not describe Lnb itself. Existing BT_4364 construct-length/identity limits remain in the prior notes. A donor-agnostic specific N-acyltransferase proposal is added alongside the valid GO genus, without a NEW annotation, imported Lnt donor chemistry, or claim of purified Lnb activity.
