@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flavonoid_degradation`: PR #6140 revised science passes full validation on 58063482b8: 10,722 reviews, zero blocking errors and all 345 frozen inputs verified. Main 2f72fda87e integration preserves the scientific inputs and the reverified OPG completion. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_flavonoid_degradation`: PR #6140 follow-up passes full validation on ee4222b667: 10,754 reviews, zero blocking errors and 367 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -777,3 +777,7 @@ PR #6140 follow-up passes full validation on 58063482b8: 10,722 reviews, zero bl
 ## 2026-11-07 — bacterial_flavonoid_degradation main integration
 
 Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f after the passing full run on 58063482b8ade016b8e30aed621b4e0457c02daa. All 341 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial flavonoid degradation full validation passes
+
+PR #6140 follow-up passes full validation on ee4222b667: 10,754 reviews, zero blocking errors and 367 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_flavonoid_degradation/round3-full-run.json).
