@@ -795,3 +795,7 @@ PR #6167 evidence follow-up repairs duplicated/off-target FLAJ1 quotes and resto
 ## 2026-11-07 — bacterial heptaprenylglyceryl ether lipid full validation passes
 
 PR #6167 follow-up passes full validation on e4a4bb1dfe: 10,760 reviews, zero blocking errors and 138 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_heptaprenylglyceryl_ether_lipid/round1-full-validation.json).
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e after the passing full run on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f. All 134 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
