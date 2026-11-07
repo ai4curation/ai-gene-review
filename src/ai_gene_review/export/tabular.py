@@ -208,9 +208,9 @@ class TabularExporter:
         Derive the method field from evidence type and reference.
         
         Rules:
-        - Experimental evidence codes (IDA, IPI, IMP, IGI, IEP, HTP, HDA, HMP, HGI, HEP) → "Experimental"
+        - Experimental evidence codes (IDA, IPI, IMP, IGI, IEP, HTP, HDA, HMP, HGI, HEP, ECO:0007744) → "Experimental"
         - IEA → derive from reference (e.g., GO_REF:0000107 → "ARBA", GO_REF:0000002 → "InterPro2GO", etc.)
-        - All other codes (IBA, ISS, IC, ISO, ISA, ISM, IGC, RCA, TAS, NAS, ND) → use code as-is
+        - All other codes (including EXP, IBA, ISS, IC, ISO, ISA, ISM, IGC, RCA, TAS, NAS, ND) → use code as-is
         
         Args:
             evidence_type: The evidence type code
@@ -222,8 +222,9 @@ class TabularExporter:
         if not evidence_type:
             return "Unknown"
             
-        # Define experimental evidence codes
-        experimental_codes = EXPERIMENTAL_EVIDENCE_CODES
+        # Preserve the established EXP method label while classifying ECO-only
+        # evidence. EXP remains experimental for coverage and support policy.
+        experimental_codes = EXPERIMENTAL_EVIDENCE_CODES - {"EXP"}
         
         if evidence_type in experimental_codes:
             return "Experimental"

@@ -15,13 +15,13 @@ Method labels follow the GO_REF definitions in geneontology/go-site
 
 from __future__ import annotations
 
-from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES, source_evidence_code
-
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
 import re
 from typing import Iterator, Optional
+
+from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES, source_evidence_code
 
 #: Evidence codes that transfer a function from a named donor gene product.
 DONOR_EVIDENCE = {"ISO", "ISS", "ISA"}
@@ -71,7 +71,6 @@ PREFIX_SPECIES = {
     "Xenbase": "Xenopus",
     "HGNC": "Homo sapiens",
 }
-
 
 
 EXPERIMENTAL = EXPERIMENTAL_EVIDENCE_CODES

@@ -34,8 +34,6 @@ large-scale and skipped, as are bare protein-binding rows.
 
 from __future__ import annotations
 
-from ai_gene_review.evidence import LITERATURE_EVIDENCE_CODES as LITERATURE_CODES, source_evidence_code
-
 import argparse
 import csv
 import json
@@ -48,6 +46,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import yaml
+
+from ai_gene_review.evidence import LITERATURE_EVIDENCE_CODES as LITERATURE_CODES, source_evidence_code
 
 from ai_gene_review.tools.function_requirements import REPO_ROOT, _get, _write_tsv
 

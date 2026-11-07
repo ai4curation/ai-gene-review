@@ -32,6 +32,9 @@ counts and tabular method classification therefore retain it. A broad EXP
 compliance rule also applies to this experimental component; this is a coarse
 policy category, not an ECO-to-GAF equivalence or an inference of IDA/IMP.
 Exports still retain the literal evidence identifier alongside the method group.
+The tabular export retains its established `EXP` method label for explicit EXP
+rows. Other existing method labels are unchanged; ECO:0007744 receives the
+`Experimental` method group without changing its evidence identifier.
 
 Sources checked on 2026-11-07:
 

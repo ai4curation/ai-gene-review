@@ -8,8 +8,6 @@ not reviewer proposals. This audit does not establish loss of biological genes.
 
 from __future__ import annotations
 
-from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES as EXPERIMENTAL, source_evidence_code
-
 import argparse
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -28,6 +26,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import yaml
+
+from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES as EXPERIMENTAL, source_evidence_code
 
 
 API = "https://rest.uniprot.org"

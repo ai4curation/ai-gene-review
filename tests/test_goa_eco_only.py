@@ -126,6 +126,15 @@ def test_eco_only_is_experimental_in_literature_and_tabular_export():
     assert parsed.evidence_code == "ECO:0007744"
 
 
+def test_exp_keeps_legacy_export_method_and_experimental_coverage():
+    from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES, evidence_matches
+    from ai_gene_review.export.tabular import TabularExporter
+
+    assert TabularExporter()._derive_method("EXP", "PMID:40050408") == "EXP"
+    assert "EXP" in EXPERIMENTAL_EVIDENCE_CODES
+    assert evidence_matches("EXP", {"EXP"})
+
+
 def test_raw_eco_only_counts_and_target_coverage(tmp_path):
     from ai_gene_review.analysis.orphan_curated import goa_counts
     from ai_gene_review.export.propagation_rows import EXPERIMENTAL, iter_target_evidence
