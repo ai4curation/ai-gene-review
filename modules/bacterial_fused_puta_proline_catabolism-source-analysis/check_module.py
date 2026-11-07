@@ -1,8 +1,9 @@
 """Check curated component coverage, not automatic proteome or native-flux prediction.
 
-The production circuit exposes family and function identifiers. An explicit
-evidence oracle supplies same-protein fusion and same-strain pairing; free-text
-architecture is not automatically enforced by the compiler.
+The production circuit exposes family and function identifiers. Curated retained
+claims supply activities, and explicit rules supply same-protein fusion and
+same-strain pairing. This is a consistency check, not independent verification
+of experiments; free-text architecture is not enforced by the compiler.
 """
 from copy import deepcopy
 from pathlib import Path
@@ -24,6 +25,57 @@ FUNCTION = {TRANSPORT: "GO:0005298", PRODH: "GO:0004657", GSALDH: "GO:0003842"}
 SPECIES = ["PSEPK", "ECOLI", "SALTY", "BRADU", "SINMM", "GEOSL", "9CORY", "HELPG"]
 
 
+def curated_functions(review):
+    """Expose retained claims without using core status as a truth/evidence score.
+
+    The returned provenance records curation decisions, not independently checked
+    assays. Historical/proposed NEW rows are not treated as retained GOA claims.
+    """
+    origins = {}
+    for index, row in enumerate(review.get("existing_annotations", [])):
+        if row.get("retired") or row.get("negated"):
+            continue
+        decision = row["review"]
+        action = decision["action"]
+        terms = ([row["term"]] if action in {"ACCEPT", "KEEP_AS_NON_CORE"} else
+                 decision.get("proposed_replacement_terms", []) if action == "MODIFY" else [])
+        for term in terms:
+            if term["id"].startswith("GO:"):
+                origins.setdefault(term["id"], []).append(dict(
+                    kind="reviewed_annotation", row_index=index, action=action,
+                    evidence_type=row["evidence_type"],
+                    original_reference_id=row.get("original_reference_id")))
+    for index, core in enumerate(review.get("core_functions", [])):
+        term = core.get("molecular_function")
+        if term:
+            origins.setdefault(term["id"], []).append(dict(kind="core_synthesis", core_index=index))
+    return origins
+
+
+def check_claim_extraction():
+    """Counterfactual curation fixtures; none is a new biological assertion."""
+    term = dict(id="GO:0004657", label="proline dehydrogenase activity")
+    row = dict(term=term, evidence_type="IEA", review=dict(action="ACCEPT"))
+    checks = 0
+    for action in ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY"]:
+        fixture = deepcopy(row)
+        fixture["review"] = dict(action=action, proposed_replacement_terms=[term])
+        assert term["id"] in curated_functions(dict(existing_annotations=[fixture]))
+        checks += 1
+    for flag in ["retired", "negated"]:
+        fixture = deepcopy(row)
+        fixture[flag] = True
+        assert not curated_functions(dict(existing_annotations=[fixture]))
+        checks += 1
+    for action in ["REMOVE", "UNDECIDED", "MARK_AS_OVER_ANNOTATED", "NEW"]:
+        fixture = deepcopy(row)
+        fixture["review"]["action"] = action
+        assert not curated_functions(dict(existing_annotations=[fixture]))
+        checks += 1
+    assert term["id"] in curated_functions(dict(core_functions=[dict(molecular_function=term)]))
+    return checks + 1
+
+
 def load_evidence():
     proteins = {}
     sources = {}
@@ -38,8 +90,8 @@ def load_evidence():
             families = []
             for namespace, identifier in re.findall(r"^DR   (InterPro|PANTHER); ([^;]+);", text, re.M):
                 families.append(namespace + ":" + identifier)
-            functions = {r["term"]["id"] for r in review["existing_annotations"]
-                         if r["review"]["action"] == "ACCEPT"}
+            origins = curated_functions(review)
+            functions = set(origins)
             # These eight individually reviewed PutAs have both active sites.
             # This assertion is checked against the reviewed claims, not inferred
             # from the PANTHER label or a generic aldehyde-dehydrogenase hit.
@@ -47,7 +99,8 @@ def load_evidence():
             if fused:
                 assert {"GO:0004657", "GO:0003842"} <= functions, rp
             proteins[review["id"]] = dict(system=species, families=families,
-                                          functions=sorted(functions), fused=fused)
+                                          functions=sorted(functions), fused=fused,
+                                          claim_origins=origins)
             for p in [rp, up]:
                 sources[str(p.relative_to(ROOT))] = hashlib.sha256(p.read_bytes()).hexdigest()
     for acc, function in [("P39634", "GO:0003842"), ("P07275", "GO:0003842"),
@@ -150,15 +203,22 @@ def main():
             mutations.append("optional_step_" + str(index))
         else:
             raise AssertionError("Optional step mutation not detected")
-    result = dict(status="PASS", cases=cases, case_count=len(cases), mutations_rejected=mutations,
+    result = dict(status="PASS", check_kind="curation_coverage_consistency",
+                  claim_extraction_checks=check_claim_extraction(),
+                  required_activity_claim_origins={acc: {term: origins for term, origins in
+                      p.get("claim_origins", {}).items() if term in FUNCTION.values()}
+                      for acc, p in proteins.items() if p.get("claim_origins")},
+                  cases=cases, case_count=len(cases), mutations_rejected=mutations,
                   source_sha256=sources, module_sha256=hashlib.sha256(MODULE.read_bytes()).hexdigest(),
                   native_flux_asserted=False,
-                  limits=["HELPG coverage is comparative inference, not a G27 assay.",
+                  limits=["Activities are reviewed claims (ACCEPT, KEEP_AS_NON_CORE, MODIFY replacements, or core synthesis), not independently verified assays. NEW proposals, retired and negated rows are excluded.",
+                          "Evidence strength differs by target and source; matching coverage does not imply matching experimental support. See round1-review-response.md and the member reviews.",
+                          "HELPG coverage is comparative inference, not a G27 assay.",
                           "Component-only panels lack a reviewed matched transporter, not necessarily a transporter in nature.",
                           "Same-protein and strain constraints are explicit evidence-oracle rules, not automatic free-text interpretation.",
                           "Synthetic fixtures are counterfactuals, not accession-level claims."])
     (AUDIT / "capacity-results.json").write_text(json.dumps(result, indent=2) + "\n")
-    print(f"PASS: {len(cases)} evidence-coverage checks; {len(mutations)} mechanism mutations rejected")
+    print(f"PASS: {len(cases)} curation-coverage checks; {len(mutations)} mechanism mutations rejected; {result['claim_extraction_checks']} claim-extraction checks")
 
 
 if __name__ == "__main__":

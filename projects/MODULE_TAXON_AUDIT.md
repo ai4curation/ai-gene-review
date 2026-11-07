@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_fused_puta_proline_catabolism`: [PR #6150](https://github.com/ai4curation/ai-gene-review/pull/6150) contains eleven reviews, sixteen references, 44 capacity checks and six mutation controls; focused and full validation pass. Review, CI and actual merge pending.
+- [ ] `bacterial_fused_puta_proline_catabolism`: [PR #6150](https://github.com/ai4curation/ai-gene-review/pull/6150) has eleven member reviews plus a yeast comparator. Biological follow-up passes focused checks; renewed full validation, review, CI and actual merge remain pending.
 
 - [x] `bacterial_fatty_acid_beta_oxidation`: [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136) merged as `20043f67a6ed802902f84a968aa57c88a8ca3a8f` on 2026-11-06T22:09:45Z. All 294 scoped files match the approved head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6136-merged-content.json).
 
@@ -691,3 +691,7 @@ Universe proof: [module-universe-20261106-d2e41f09.json](MODULE_TAXON_AUDIT/proo
 ## 2026-11-06 — PutA PR #6150 published
 
 Opened PR #6150 after PutA full validation passed on 5d01f7ba96fea3f93ec5a0fd61cfdcf212ef2a9b across 10701 reviews with zero blocking errors. Published main d2e41f09fb was integrated with all 196 scoped files outside the shared tracker preserved, and the module universe was refreshed to 784 entries with seven unaudited additions. All eleven member reviews, 198 source annotation payloads, one historical NEW row and 28 raw/provider files remain preserved. The beta-oxidation actual-merge proof and completion row are retained. Independent review, fresh CI and actual merge remain pending.
+
+## 2026-11-07 — PutA biological review follow-up
+
+Addressed the changes-requested review on b4a3149: harmonized non-RHH transcription mapping rejection, left unsupported PSEPK membrane-face localization UNDECIDED, clarified inferred sodium binding, and aligned the existing yeast PUT2 glutamate-formation decision. The audit now includes eleven module-member reviews and one yeast comparator. All 221 original annotation payloads retain their order, with no added or retired rows. The explicit ledger documents sixteen earlier action reversals. The checker records retained, replacement and core claims with row provenance; its 44 cases, six mechanism mutations and ten extraction controls measure curation consistency, not independent assay confirmation. Six gene validations, renders and histories pass; family attribution retains claude-code and codex. The prior full pass remains historical evidence for its recorded head. Renewed full validation, publication, review, CI and actual merge are pending.
