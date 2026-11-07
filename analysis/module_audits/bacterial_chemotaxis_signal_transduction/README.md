@@ -55,12 +55,17 @@ one unconfigured Pfam label namespace, and three family-function scope warnings.
 The latter are retained because the existing family scope vocabulary cannot express
 the CheA eukaryotic IRD exclusion or the mixed FliN/FliY catalytic architecture.
 Those warnings do not negate the experimentally supported exemplar functions.
-Full-corpus validation finished across 10,559 reviews. Schema, ontology, best-practices
-and 54 pathway-reference checks pass. Its exit status is 1 because of 19 reference
-errors in 17 unchanged yeast reviews; `preexisting-reference-failures.yaml` records
-the exact errors and 23 unchanged input blobs. There are 27,993 best-practice
-advisories. [PR #6100](https://github.com/ai4curation/ai-gene-review/pull/6100) is open; remote review/CI and actual merge remain outstanding. See `audit-progress.yaml` for the recorded stage and the separate
-preservation and capacity reports for reproducible results.
+Historical full-corpus validation on 2471af88ef ended with 19 unrelated reference errors. The subsequent historical 17-review reconciliation passed 729 snippets and 291 titles at 46b0453941 against 488d370561. Seven reviews and the schema differ at the latest integration; these historical results are not claimed for current HEAD. Scientific scope and focused results above remain unchanged.
 
+Current integration and input accounting are linked below. Actual merge remains pending.
 
-PR #6100 review follow-up addresses the fifteen findings in `review-followup-round1.yaml`. All 21 changed gene reviews and focused family/module checks pass; 65 capacity cases still pass with all original machine payloads and raw sources preserved. The fresh full-corpus run on 2471af88ef is terminal: all 10,559 reviews were checked, with exactly the same 19 errors in 17 unrelated yeast reviews and 23 unchanged input blobs; schema, ontology, best-practices and 54 pathway checks pass. External review approved this commit. Actual merge remains outstanding.
+- [approved-head-integration.json](approved-head-integration.json)
+- [approved-main7-integration.json](approved-main7-integration.json)
+- [approved-main8-integration.json](approved-main8-integration.json)
+- [main9-integration.json](main9-integration.json)
+- [validated-head-integration.json](validated-head-integration.json)
+- [validated-head-main3-integration.json](validated-head-main3-integration.json)
+- [validated-head-main4-integration.json](validated-head-main4-integration.json)
+- [validated-head-main5-integration.json](validated-head-main5-integration.json)
+- [validated-head-main6-integration.json](validated-head-main6-integration.json)
+- [Current provenance scope](main9-provenance-scope.json)
