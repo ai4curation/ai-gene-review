@@ -9,13 +9,15 @@ import yaml
 AUDIT = Path(__file__).resolve().parent
 ROOT = AUDIT.parents[3]
 BASE = json.loads((AUDIT / 'baseline.json').read_text())
-sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+def sha(p):
+    return hashlib.sha256(p.read_bytes()).hexdigest()
 checks = {}
 for name, before in BASE['reviews'].items():
     current = yaml.safe_load((ROOT / name).read_text())
     original_rows = before['existing_annotations']
     rows = current['existing_annotations']
-    payload = lambda rs: [{k: v for k, v in r.items() if k != 'review'} for r in rs]
+    def payload(rs):
+        return [{k: v for k, v in r.items() if k != 'review'} for r in rs]
     assert payload(rows) == payload(original_rows), name
     expected = deepcopy(before)
     if '/PSEPK/' in name:
