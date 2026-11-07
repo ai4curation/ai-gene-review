@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_groel_groes_chaperonin_folding`: PR #6164 scientific review follow-up passes full validation on 42d0858a7b; main 5f65fb600c is integrated with 241 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_groel_groes_chaperonin_folding`: PR #6164 approved at e5a0ea03c2; main 7eee074bca integrated at d5eb59e90e with 257 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
