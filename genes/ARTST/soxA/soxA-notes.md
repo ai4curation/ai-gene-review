@@ -22,3 +22,13 @@
   process is suggested only by the gene cluster [PMID:9563845], with no physiological data, so left as a
   suggested question.
 - P40873 is the reference protein for PANTHER PTHR10961 (subfamily SF7 per UniProt DR line).
+
+
+## 2026-11-06 comparative module audit
+
+Persistent marker DMG-ARTST-soxA-20261106. Reviewed every original row, inherited proposal, core and cited source. Default Falcon was attempted normally because no provider artifact existed; HTTP403 authentication/access failure is logged. These are manual notes, not a fabricated provider report.
+
+- Retained all five annotation decisions and the direct monomeric sarcosine oxidase core.
+- Clarified enzymatic folate coupling versus possible nonenzymatic formaldehyde trapping; family-level comparative evidence is not relabeled as an exact TE1826 assay.
+
+Original machine payloads, inherited NEW rows and raw files are protected by original-members-baseline.json. Source limitations are explicit: many original primary citations remain abstract-only, with curated UniProt evidence and direct deposited structure mappings used for corroboration. No inaccessible experimental annotation was rejected merely for missing full text.
