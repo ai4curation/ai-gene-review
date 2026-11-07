@@ -12,6 +12,9 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/16YgnHyBS1PjY9QWUZgZwZ
       title: Project brief
+    - href: https://claude.ai/artifact/GHRaq9M5SJkRknTDVgUFt6
+      title: Cutoff check
+      description: AI generated
 ---
 
 # Enzyme Specificity Project
