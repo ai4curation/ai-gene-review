@@ -116,3 +116,57 @@ process consequence. The NEW ER membrane annotation is supported by focused
 biochemical evidence. The nine physical GOA rows have four ACCEPT decisions,
 three MARK_AS_OVER_ANNOTATED decisions, one KEEP_AS_NON_CORE decision, and one
 UNDECIDED decision; the review also contains one NEW annotation.
+
+### 2026-10-01 live-GOA refresh
+
+Refreshing current GOA changed the PAINT surface substantially. The older
+GO_REF:0000033 transfers for `GO:0051082 unfolded protein binding` and
+`GO:1990871 Vma12-Vma22 assembly complex` are no longer live, so those exact
+source rows were retained as `retired: true` provenance rows. Current GOA now
+has three `PANTHER:PTN001592797` IBA rows: `GO:0005783 endoplasmic reticulum`,
+`GO:0007035 vacuolar acidification`, and `GO:0016471 vacuolar
+proton-transporting V-type ATPase complex`. The first is consistent with
+focused ER-association evidence, and the second is a real downstream phenotype
+of failed V-ATPase assembly. The mature V-ATPase complex `part_of` row is a
+role-confounded transfer because Vma22 is a transient ER Vma12-Vma22 assembly
+factor rather than a subunit of the final proton pump.
+
+The current local `PTHR31996` cache contains family metadata and entries for
+yeast Vma22 and human CCDC115/VMA22, but no `PTHR31996-paint.tsv`, so the exact
+current IBD placement could not be inspected locally. The GOA `WITH/FROM`
+strings identify `PANTHER:PTN001592797` as the PTN source for all three live
+IBA rows; the extant `UniProtKB:Q96NT0` and `SGD:S000001102` entries in
+`WITH/FROM` are descendant evidence, not the curated source entity.
+
+Current SGD also carries a `GO:0005515 protein binding` row from the 1995
+Vma22-Vma12 evidence. The interaction is real, but the generic molecular
+function should be removed because the precise physical biology is already
+captured by the `GO:1990871 Vma12-Vma22 assembly complex` IPI row.
+
+No newer primary yeast VMA22 paper was found that changes the core
+assembly-factor interpretation. Chen et al. 2025 reported that `vma22`
+deletion nearly depletes inorganic polyphosphate in a 55-strain screen
+[PMID:40291979, "deletions of vtc1, kcs1, vma22, vma5, pho85, vtc4, vma2,
+vma3, ecm14, and vph2 resulted in near-complete polyP depletion"], but Vma22's
+effect on polyP is an indirect consequence of impaired vacuolar V-ATPase
+assembly rather than evidence that Vma22 performs VTC-mediated polyphosphate
+synthesis.
+
+## 2026-10-05 PR 3717 follow-up
+
+- Corrected the current `GO:0007035 vacuolar acidification` IBA summary:
+  `SGD:S000001102` is VMA22 itself, not Vph1. The target in its own
+  `WITH/FROM` is expected for a self-seeded IBA and marks direct experimental
+  grounding on VMA22.
+- Strengthened the proposed V-ATPase V0 sector assembly-factor MF by comparing
+  it explicitly with `GO:0030674 protein-macromolecule adaptor activity`.
+  Vma22's Vma12/subunit-d bridging is adaptor-like, but the resolved steric
+  checkpoint that occupies the V0 subunit-d surface and prevents premature V1
+  attachment is not captured by the existing adaptor term.
+- Added the cached 2025 polyphosphate screen to `references` with LOW relevance
+  to make the rejected downstream polyP phenotype visible in the review.
+
+The refreshed review now has 14 total rows: nine current GOA rows, four
+retired rows, and the existing proposed ER membrane annotation. The final action
+counts are five ACCEPT, two KEEP_AS_NON_CORE, three MARK_AS_OVER_ANNOTATED, two
+REMOVE, one UNDECIDED, and one NEW.
