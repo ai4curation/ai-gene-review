@@ -934,3 +934,7 @@ PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 change
 ## 2026-11-07 — bacterial methionine cycle full validation passes
 
 Comparative audit passes full validation on 125cfcb38c: 10,801 reviews, zero blocking errors and 727 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_methionine_cycle/full-validation.json).
+
+## 2026-11-07 — bacterial_methionine_cycle main integration
+
+Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on 125cfcb38cfa1ef3a0733a85281e10e37cb4cef5. All 723 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
