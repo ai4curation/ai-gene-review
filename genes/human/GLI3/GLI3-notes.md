@@ -232,3 +232,23 @@ Earlier blanket wording about both GLI3 products following the same trafficking 
 The context archive preserves the original 124-row review and all 190 quote associations. Thirty associations are historical-only where the old excerpt does not establish the precise current assertion; 160 remain active. The source guide records actual reading limits, and the evidence sidecar preserves the full current raw contexts and source ownership scope.
 
 The unresolved judgments concern the specific transcriptional assay, one digit-development source, two negative thymocyte-differentiation transfers, the nuclear-speck identity and the exact part_of-axoneme relation. They do not imply an unknown core molecular function.
+
+## Review follow-up, 2026-11-07
+
+Three annotation decisions were revised; their exact replacements and evidence limits are recorded in their reasons. Their original term, evidence, reference and product fields remain intact. Biological-process repression rows retain their process descendants; no process term is replaced by a molecular-function term, and no NEW annotation is added. No assay construct is automatically assigned a physiological product identifier.
+
+The structured product model adds GLI3R using the current schema; the earlier review had product identifiers in prose but no functional_isoforms entry. All incoming annotation products remain unchanged. Exact product identities and limits are recorded in that model and the core descriptions.
+
+The earlier notes' conclusion that no row should remain UNDECIDED is retained as historical judgment and superseded here. It is not a repository rule. The enum permits unresolved assertions and requires UNDECIDED when relevant evidence is inaccessible. Prior COMPLETE status does not resolve an evidence gap. Current uncertainty is source-specific:
+
+| Raw context | Remaining limit |
+|---|---|
+| 37 | The inspected structural paper demonstrates human GLI3 peptide binding; its functional reporter uses GLI1. |
+| 49 | The original letter's contents remain unavailable. |
+| 65–66 | The mouse donor abstract supports negative selection; the differentiation-inhibition assay remains uninspected. |
+| 105 | Observed SPOP-associated nuclear foci do not resolve splicing-speck identity. |
+| 122 | Positive tip localization does not resolve the exact part_of-axoneme assertion. |
+
+GO:0046638 concerns increasing differentiation; GO:0046639 concerns reducing it. Positive transfers have inspected fetal differentiation experiments; negative transfers have a separate, less accessible source. Opposite term labels do not make their evidence interchangeable. Neither the unresolved compartment nor relation is treated as experimental disproof.
+
+Six title-only evidence excerpts were removed from active support while retaining their citations and all 190 historical quotation objects. The source guide records the external original behind the phenotype statement; the publication cache is unchanged. The computed status remains DRAFT while unresolved judgments remain.

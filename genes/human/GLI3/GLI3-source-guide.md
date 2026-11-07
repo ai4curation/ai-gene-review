@@ -1,10 +1,10 @@
 # GLI3 source guide
 
-The current review assesses 125 original annotation contexts. A native seed collapses two contexts; both are restored, including the two nuclear extension atoms. The source-evidence record retains curator, date, qualifier and grouped partner provenance.
+The current review assesses 125 original annotation contexts. The download helper combines two source contexts; both are restored. Nuclear-location extensions are retained for the two contexts that carry them. The source-evidence record retains curator, date, qualifier and grouped partner provenance.
 
-The context archive preserves the exact earlier review and all 190 quotation associations. Of these, 160 remain active and 30 are explicitly superseded as active support. No new quotation was authored. Source-only pointers distinguish literature support from a verbatim excerpt.
+The context archive preserves the exact earlier review and all 190 quotation associations. Of these, 154 remain active and 36 are explicitly superseded as active support. Six superseded excerpts are publication titles. One new four-word excerpt appears below and is cited once in the review. Source-only pointers distinguish literature support from a verbatim excerpt.
 
-Current UniProt describes a 1580-residue protein and proteolytic activator/repressor products. The repressor endpoint is unspecified. Historical construct numbering is not silently projected onto the current sequence.
+UniProt identifies intact 1580-residue GLI3 and a processed repressor with an unspecified endpoint. Historical construct numbering is not silently projected onto the current sequence.
 
 Actual PAINT tree, alignment and ancestral mappings were inspected: GLI3 is AN159/PTN002500386; four assertions are at Bilateria AN0/PTN000456649 and the pathway assertion at Deuterostomia AN105/PTN001836086. The extra incoming mouse donor is retained despite the cached IBD difference.
 
@@ -12,7 +12,7 @@ Reactome locations were checked against actual P10071 participants. Processed re
 
 ## Literature access
 
-These scopes describe the material actually inspected by the collaborating reviewers. They do not claim that an abstract-only normal cache contains the separately accessed full text. Native source acquisition also retains background UniProt references outside this manually adjudicated list.
+These scopes describe the material actually inspected by the collaborating reviewers. They do not claim that an abstract-only normal cache contains the separately accessed full text. Downloaded records also include background UniProt references outside this manually assessed list.
 
 | Reference | Inspected material |
 |---|---|
@@ -53,3 +53,7 @@ These scopes describe the material actually inspected by the collaborating revie
 | [PMID:31279575](https://pubmed.ncbi.nlm.nih.gov/31279575/) | Selected GLI3 results and methods |
 | [PMID:35140242](https://pubmed.ncbi.nlm.nih.gov/35140242/) | Methods and original supplementary workbook |
 | [PMID:9354785](https://pubmed.ncbi.nlm.nih.gov/9354785/) | Metadata only; letter contents unavailable |
+
+## External full-text excerpt
+
+[PMID:11001584, PMC1288546](https://pmc.ncbi.nlm.nih.gov/articles/PMC1288546/), GLI3 section, Pallister-Hall syndrome paragraph, includes “imperforate anus, anteverted nares”. This is an external full-text excerpt; the unchanged local publication cache contains only metadata. It supports phenotype context, not a direct developmental mechanism.
