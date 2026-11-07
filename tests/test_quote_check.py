@@ -102,8 +102,11 @@ def test_init_baseline_refuses_partial_scope_and_existing_file(tmp_path, monkeyp
     """--init-baseline cannot shrink the scope or overwrite a baseline (it only shrinks)."""
     good = tmp_path / "good.yaml"
     good.write_text(yaml.safe_dump({"evidence": [{"source_id": TP53, "supporting_text": GOOD_TP53}]}))
+    missing = tmp_path / "no-baseline-yet.yaml"
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", missing)
     with pytest.raises(SystemExit):
         main(["--init-baseline", str(good)])
+    assert not missing.exists()
     existing = tmp_path / "baseline.yaml"
     existing.write_text("entries: {}\n")
     monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", existing)
@@ -168,13 +171,14 @@ def test_prune_writes_to_the_redirected_baseline(tmp_path, monkeypatch):
     baseline = tmp_path / "baseline.yaml"
     key = "tmp/doc.yaml"
     baseline.write_text(yaml.safe_dump({"entries": {key: {"not_found": ["stale0000"]}}}))
-    real = load_baseline()
+    from ai_gene_review.validation.quote_check import BASELINE_PATH as committed
+    committed_text = committed.read_text()
     monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", baseline)
     monkeypatch.setattr("ai_gene_review.validation.quote_check.default_files", lambda: [doc_file])
     main(["--prune-baseline"])
     assert "stale0000" not in baseline.read_text()  # the redirected file was rewritten
     monkeypatch.undo()
-    assert load_baseline() == real  # the committed baseline was not touched
+    assert committed.read_text() == committed_text  # the committed baseline was not touched
 
 
 def test_init_refuses_when_a_file_is_unparseable(tmp_path, monkeypatch, capsys):

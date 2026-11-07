@@ -342,6 +342,7 @@ def write_baseline(entries: Baseline, path: Optional[Path] = None) -> None:
         width=100,
     )
     path.write_text(header + body)
+    _load_baseline.cache_clear()  # a later read in this process must see the new file
 
 
 def count_entries(baseline: Baseline) -> int:
