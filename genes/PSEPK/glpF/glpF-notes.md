@@ -50,3 +50,10 @@ The paper explicitly places PP_1076/GlpF in the `glpF-glpK-glpR-glpD` locus and 
 ## 2026-11-04 (PR #5936 review follow-up)
 
 - PMID:25827416 full text is now cached; quotes previously attributed to this notes file now cite the PMID directly.
+
+
+## 2026-11-07 comparative glycerol audit
+
+Rechecked all six rows. Retained the glycerol-channel assignment and plasma-membrane refinement, grounded in GlpF-specific biological context and membrane architecture. PMID25827416 supplies native KT2440 glp-locus physiology and glpFK co-overexpression, not isolated Q88NX7 permeability measurements. Neither all MIP-family substrate activities nor E. coli water/metalloid transport is automatically transferred.
+
+Default Falcon attempted via normal workflow and failed HTTP403 authentication; no provider output was fabricated. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.
