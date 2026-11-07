@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_kdp_potassium_homeostasis`: PR #6179: main d7638df804395ce8c81baeea891fd75b60d58d39 integrated with 487 frozen nonshared files preserved. Historical full validation remains on bd3853cd6583c81053ae8910be3d109055fabd09; fresh review, CI and merge are pending.
+- [ ] `bacterial_kdp_potassium_homeostasis`: PR #6179 approved at e2685bf8d8; current main d7638df804 integrated at 4b9ce3060e. All 487 frozen nonshared files remain unchanged, all checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to bd3853cd6583c81053ae8910be3d109055fabd09. Fresh current-head review, CI and actual merge remain pending.
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
 
@@ -1026,3 +1026,9 @@ Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b after the passing full 
 ## 2026-11-07 — bacterial_kdp_potassium_homeostasis main integration
 
 Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full run on bd3853cd6583c81053ae8910be3d109055fabd09. All 487 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Kdp current integration ready
+
+PR #6179 approved at e2685bf8d8; current main d7638df804 integrated at 4b9ce3060e. All 487 frozen nonshared files remain unchanged, all checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to bd3853cd6583c81053ae8910be3d109055fabd09. Fresh current-head review, CI and actual merge remain pending.
+
+[Publication closeout](../analysis/module_audits/bacterial_kdp_potassium_homeostasis/approved-main-20261107-1442-closeout.json).
