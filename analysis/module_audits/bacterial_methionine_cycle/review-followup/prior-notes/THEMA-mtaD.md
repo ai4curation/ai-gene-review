@@ -1,0 +1,5 @@
+# mtaD review notes
+
+2026-11-07: Reviewed all 8 seeded annotations, preserving their payloads/order and adding no rows. Read full17603473 and the source-scoped literature consultation. Full23968233 was recovered from the author archive while its protected normal abstract cache was preserved. Its target Table1 includes 5′-deoxyadenosine as well as SAH, MTA and adenosine; all four specific activities are retained by refinement of existing broad rows. The core synthesis emphasizes SAH/MTA, while the physiological importance of the weaker adenosine/5′-deoxyadenosine capacities remains unresolved. No invented native salvage process was added. The official2PLM/Q9X034 identity is exact406aa.
+
+Actual configured Falcon research attempt failed with HTTP403 authentication failure; no provider report was fabricated. Manual primary-source review supplied the evidence. PAINT-loss command completed and found no applicable loss; source-node reasoning uses phylogeny, not donor counts. Fresh QuickGO definitions/queries and exact logs are archived under the thema consultation. Raw UniProt, GOA, publication caches and seed receipts remain immutable.

@@ -22,3 +22,10 @@ Automated deep-research providers were unavailable for this host, so this is a c
 ## 2026-11-07 independent methionine-cycle audit
 
 All original ordered payloads, qualifiers and historical proposal lifecycle are unchanged; no new rows. Genuine Falcon attempt failed authentication403, without a fabricated provider report. Source scopes and ontology snapshots: `analysis/module_audits/bacterial_methionine_cycle/ecoli-existing-consultation/`. Historical cycle NEW retained after full publisher Methods verified MG1655 GST constructs and purified pathway-step assays. This does not claim native whole-cycle flux. W3110 conditioned-medium evidence supports bounded producer-side quorum participation, not universal signaling from metabolic phenotypes.
+
+## PR6196 evidence follow-up, 2026-11-07
+
+- Classify inferred catalytic iron binding as core, with explicit organism/access limits for the newly read primary comparator.
+- Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
+
+Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.

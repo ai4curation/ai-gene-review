@@ -25,3 +25,9 @@ Automated deep-research providers were unavailable for this host, so this is a c
 ## 2026-11-07 independent methionine-cycle audit
 
 All original ordered payloads, qualifiers and historical proposal lifecycle are unchanged; no new rows. Genuine Falcon attempt failed authentication403, without a fabricated provider report. Source scopes and ontology snapshots: `analysis/module_audits/bacterial_methionine_cycle/ecoli-existing-consultation/`. The older notes marking true nucleoside catabolism as overannotation are superseded: refine to purine nucleoside catabolism. The 5-prime versus 2-prime deoxynucleoside mapping remains explicitly unresolved. Direct toxic-byproduct clearance and homodimer evidence remain supported.
+
+## PR6196 evidence follow-up, 2026-11-07
+
+- Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
+
+Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.

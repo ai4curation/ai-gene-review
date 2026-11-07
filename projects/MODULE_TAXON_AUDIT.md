@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_methionine_cycle`: [PR #6196](https://github.com/ai4curation/ai-gene-review/pull/6196) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_methionine_cycle`: PR #6196 review follow-up ready for fresh full validation: 13 member reviews corrected, 192 ordered published rows and all core functions preserved. Nineteen integral binding decisions now ACCEPT; MetK/MetH evidence anchors corrected, MtaD replacements limited to supported SAH/MTA roles with weak activities documented. Capacity remains 47 cases, nine mutations and ten gate sensitivities. Fresh full validation, review, CI and actual merge pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 

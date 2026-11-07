@@ -9,3 +9,9 @@ Inferred MesD-like sulfur methyl transfer to L-homocysteine, associated with Mes
 ## 2026-11-07 additive catalytic-zinc correction
 
 The existing zinc-binding row is ACCEPT rather than KEEP_AS_NON_CORE. Its unchanged reason and support identify zinc coordination as a conserved catalytic feature of the MesD-like protein; uncertainty about directly measured native metal occupancy does not make that feature peripheral. This is an inference from the exact MesD relationship, catalytic architecture and PMID:33534785, not a new native occupancy assay. Only the review action changes. All source payloads, evidence, order and proposal lifecycle remain unchanged. The original consultation handoff is retained; the separate psepk-zinc-followup receipt supersedes only the changed review, notes and render hashes.
+
+## PR6196 evidence follow-up, 2026-11-07
+
+- Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
+
+Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.

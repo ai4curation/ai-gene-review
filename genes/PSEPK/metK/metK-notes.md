@@ -5,3 +5,9 @@
 All original annotation payloads, order and historical NEW lifecycle are preserved. Review decisions distinguish curated conserved-role inference from target assays. See `analysis/module_audits/bacterial_methionine_cycle/psepk-consultation/evidence.md` and official GO/identity snapshots for source-specific reasoning. No new annotation row was authored. PAINT target leaf was unavailable, so lineage losses were not adjudicated. A genuine default Falcon attempt failed (see audit logs); no provider report was invented.
 
 Conserved methionine adenosyltransferase catalyzing SAM formation from L-methionine and ATP; target assignment is supported by curated family chemistry rather than measured KT2440 flux.
+
+## PR6196 evidence follow-up, 2026-11-07
+
+- Classify HAMAP-supported catalytic ATP/magnesium binding as core.
+
+Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.

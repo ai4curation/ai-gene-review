@@ -10,3 +10,11 @@ Both SMM and SAM donor reactions are retained; the broad methyltransferase row r
 The general SMM metabolic process is as precise as warranted. The complete SMM-cycle IBA remains UNDECIDED because the native complementary SMM-forming context is not established. No donor-count or invented loss inference is used. The loss command reports no IRD/IKR but local family PAINT data are absent, so this is not a complete verified loss-free-tree assertion. DNA-damage IEP likewise remains unresolved rather than denying real expression responsiveness or inventing a damage-response mechanism. See mmum-consultation/evidence.md for exact context and source-access boundaries.
 
 Follow-up official PAINT topology lookup recovered the release19 tree without editing family caches: Q47690 leaf PTN001078917 is below rootPTN001843930 viaPTN000472791/PTN000473134. See paint-trace.json and the raw official API snapshot. This resolves placement, but not the physiological SMM-cycle context; the earlier local-cache absence is not used as a biological argument.
+
+## PR6196 evidence follow-up, 2026-11-07
+
+- Classify the target-identical active-site zinc-binding structure as core.
+- Clarify that unadjudicated native cycle/IBD scope, not a demonstrated missing reaction, motivates UNDECIDED.
+- Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
+
+Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.
