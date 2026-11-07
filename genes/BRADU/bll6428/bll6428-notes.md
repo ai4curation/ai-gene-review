@@ -19,3 +19,10 @@ PAINT: normal lineage-loss query found no IRD/IKR. Cached IBD and actual seed we
 ## 2026-11-06 — comparative review follow-up
 
 Reassessed the PR #6140 review requests against the original row payloads and independent sources. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md` for the mapping, family and participation decisions. All original rows remain in their original order; inherited proposals that lack positive participation evidence are withdrawn by review action rather than deleted. No raw UniProt, GOA or provider artifact was edited.
+
+
+## 2026-11-07 PR #6140 round-2 review follow-up
+
+Broad GO:0016787 hydrolase activity is retained in the core synthesis as a family/fold/conserved-candidate inference, without selecting ester versus C-C chemistry, substrate, or native process participation. The independent sequence check corrects the provider report's Asp358 to actual Asp359 in PP_3195. Its H405 candidate corresponds to bll6428 Q374, while alignment of characterized Q93NG6 S217/D300/H329 maps to PP_3195 S268/D359/H394, Hsero_1004 S233/D324/H359 and bll6428 S237/D328/H363. Candidate correspondence is not proof of target geometry or catalytic loss. See PP_3195-bioinformatics/fdeb-round2/RESULTS.md and the reproducible round2 maps. The C-C family comparator is now cited directly to the primary PMID:16321959 (hydrolytic cleavage) and official reviewed Q93NG6 record; PMID:17275835 supports the comparator structure/mutagenesis context. Both fetched papers are abstract-only; no target experiment is attributed to them.
+
+See `analysis/module_audits/bacterial_flavonoid_degradation/round2-review-response.md` for source provenance, limits and disposition of all seven review points. Earlier journal entries record superseded judgments and remain unchanged.
