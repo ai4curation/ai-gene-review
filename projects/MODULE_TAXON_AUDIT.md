@@ -3,6 +3,7 @@ title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
 last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
+autolink_exclude: [cheW]
 ---
 
 # Module literature, taxonomy and member review audit
@@ -41,7 +42,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: integrated main 5b68ef3aac into approved head 9797c5d2f3, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: 46 gene reviews, 37 module references and 65 capacity cases. Main 5b68ef3aac integrated at 59a7652ff with 366 scientific inputs preserved. The 729-snippet/291-title reference reconciliation is historical at 46b0453941 against main 488d370561; seven review inputs changed subsequently. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -776,14 +777,20 @@ Integrated published main `577501df51` with the validated PR #6100 head `4c70f9b
 
 Integration proof: [validated-head-main6-integration.json](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main6-integration.json).
 
-## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration main7 (4fa058f671)
 
 Integrated main 4fa058f671604c3aa4c142ac13bd07e54ef27baa into approved head 94e3587d6da3715827be26c5ec2f73ede38d7ea7. 346 frozen files remain byte-identical outside shared metadata and 5 qualified reviews/renders. The only parsed review changes are 37 source qualifiers copied from main; all affected reviews, renders and histories pass focused validation. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
 
 ## 2026-11-07 — bacterial_chemotaxis_signal_transduction integrated ledger counts
 
-Derive the current snapshot from the integrated ledger without changing any inventory row: {'COMPLETE': 34, 'NOT_STARTED': 734, 'IN_PROGRESS': 4, 'PR_OPEN': 5}. Retain dated journals and verified completion bullets.
+Historical snapshot after main7, superseded by the current Status ledger: 34 COMPLETE, 5 PR_OPEN, 4 IN_PROGRESS and 734 NOT_STARTED. Retain dated journals and verified completion bullets.
 
-## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration main8 (5b68ef3aac)
 
 Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 into approved head 9797c5d2f381212eb10f6487190ea8ec050577fe. All 366 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — chemotaxis provenance scope, review round 14
+
+PR #6100: 46 gene reviews, 37 module references and 65 capacity cases. Main 5b68ef3aac integrated at 59a7652ff with 366 scientific inputs preserved. The 729-snippet/291-title reference reconciliation is historical at 46b0453941 against main 488d370561; seven review inputs changed subsequently. Fresh review, CI and actual merge remain pending.
+
+The new append-only history records the previously unrecorded status-text edit in `2a3426000` and this scope correction. Historical validation results are retained with explicit anchors. [Current input comparison](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/round14-provenance-scope.json) records the seven later review-blob changes without presenting the old run as current. [Main7 integration](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/approved-main7-integration.json) and [main8 integration](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/approved-main8-integration.json) retain their distinct proofs.
