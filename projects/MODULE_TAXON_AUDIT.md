@@ -43,7 +43,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_flavonoid_degradation`: PR #6140 actually merged as 4b8aabfd9dc31ade6356ae1791bd2037904d119f; 270 changed nonshared files are byte-identical to the reviewed head and 16 changed reviews remain COMPLETE with no PENDING rows.
 
-- [ ] `bacterial_l_carnitine_catabolism`: Comparative audit ready for full validation: 11 manually assessed references including five reviews; 14 COMPLETE gene reviews, five family reviews and 49 capacity cases with 14 module mutations and five sensitivity checks. All ordered source rows preserved; three inherited proposals explicitly retired. Dedicated PR and actual merge pending.
+- [ ] `bacterial_l_carnitine_catabolism`: Comparative audit passes full validation on 0176e3dd0a: 10,759 reviews, zero blocking errors and 255 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
@@ -769,3 +769,7 @@ Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head 4164
 ## 2026-11-07 — Flavonoid audit merge verified
 
 PR #6140 actually merged as 4b8aabfd9dc31ade6356ae1791bd2037904d119f; 270 changed nonshared files are byte-identical to the reviewed head and 16 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6140-merged-content.json).
+
+## 2026-11-07 — bacterial l carnitine catabolism full validation passes
+
+Comparative audit passes full validation on 0176e3dd0a: 10,759 reviews, zero blocking errors and 255 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_l_carnitine_catabolism/full-validation.json).
