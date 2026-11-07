@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 approved at bfe001265b; main bb89a37783 integrated at 221290a965 with 173 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 provenance corrected: the 09:50 integration manifest contains 158 files, not the previously reported 173. The additive correction verifies 176 unchanged files, including all 170 from the preceding manifest and the 12 omitted provenance entries. Curated science is unchanged; full validation remains scoped to dea61b9999. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
