@@ -46,7 +46,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
 
-- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: Comparative MCL PHA audit ready for full validation: nine COMPLETE reviews, 23 preserved seeded rows and one justified IC addition; three full reviews plus primary evidence, four family reviews with 95 grounding checks, 32 capacity cases, seven mutations and seven gate sensitivities. Qualified substrate and intracellular-access gates retain class I copolymer evidence without asserting a complete native turnover panel. Four family-scope advisories remain explicit. Full validation, dedicated PR and actual merge remain pending.
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: Comparative audit passes full validation on dcaaf85b18: 10,788 reviews, zero blocking errors and 436 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
@@ -910,3 +910,7 @@ PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288
 ## 2026-11-07 — Isc audit merge verified
 
 PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6175-merged-content.json).
+
+## 2026-11-07 — bacterial mcl pha synthesis and mobilization full validation passes
+
+Comparative audit passes full validation on dcaaf85b18: 10,788 reviews, zero blocking errors and 436 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/full-validation-proof.json).
