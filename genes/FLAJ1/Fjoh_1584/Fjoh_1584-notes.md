@@ -11,3 +11,12 @@ A5FJK8 is the UW101 group II C20 GGGPS represented in4JEJ, not the archaeal4MM1 
 ### Primary-access follow-up
 
 PMID24684232 publisher full text was subsequently obtained and independently read at https://onlinelibrary.wiley.com/doi/full/10.1111/mmi.12596 . Its Figure2 uses a Bacillus delta-pcrB assay host. Figure5 distinguishes fjGGGPS I90A from wild type; groupII magnesium is modeled, not observed density. The local abstract cache remains unchanged. The separate full-text-scope note records these boundaries.
+
+
+## PR6167 round1 evidence correction — 2026-11-07
+
+Twenty-four copies of the I90A sentence were an authoring artifact, not independent evidence. Remove triplication and keep one copy only in each of the two specific-MF rows and the core where mutant-versus-wild-type specificity is discussed. The HisF REMOVE and source defect instead use the established GGGPS reaction plus the independently checked structural-relative distinction in the publisher scope note. The chemical BP and broad-MF refinements use the cached primary abstract's ether-formation statement, not an off-target mutation. All eight original row payloads and actions remain unchanged.
+
+The full publisher text was read again at https://onlinelibrary.wiley.com/doi/full/10.1111/mmi.12596 on 2026-11-07. Results compare HisF by DALI structural similarity, not catalytic equivalence. The GGGPS reaction itself is independently recorded in the target's curated experimental FUNCTION statement. Native feeding experiments were unsuccessful and the paper leaves the physiological role unresolved. Figure 2 tests long donors in a Bacillus deletion host; Figure 5 tests an engineered fjGGGPS mutant. These do not establish native downstream processing. Row-specific reasons now state only relevant evidence; the knowledge gap concerns native C20 product fate, without unrelated sugar-loading or carrier-bypass wording.
+
+Cytoplasm remains UNDECIDED because native location is unresolved, not because full text is unavailable. Soluble recombinant purification or lack of transmembrane segments is insufficient. The official HAMAP MF_00112 rule places cytoplasm only in its archaeal branch, not the Bacteroidota branch. Bacillus PcrB has additional explicit cytosolic-pathway context in PMID:40626731, so its different decision need not be imposed on this target.

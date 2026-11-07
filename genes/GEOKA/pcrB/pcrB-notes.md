@@ -11,3 +11,10 @@ Q5L3C1 is GK0274 from HTA426. Official mappings identify it in4NAE/4NAF;4MM1 is 
 ### Primary-access follow-up
 
 PMID24684232 publisher full text was subsequently obtained and independently read at https://onlinelibrary.wiley.com/doi/full/10.1111/mmi.12596 . Its Figure2 uses a Bacillus delta-pcrB assay host. Figure5 distinguishes fjGGGPS I90A from wild type; groupII magnesium is modeled, not observed density. The local abstract cache remains unchanged. The separate full-text-scope note records these boundaries.
+
+
+## 2026-11-07 PR review follow-up
+
+The target-specific curated experimental FUNCTION/CATALYTIC ACTIVITY statements cite PMID:21761520 and PMID:24684232; official PDB mappings identify Q5L3C1 in 4NAE/4NAF. The 2014 publisher full text was independently read although both frozen publication caches are abstract-only. Its donor comparison expresses the enzymes in a B.subtilis delta-pcrB host; target-native downstream lipid processing is not established. The 2011 cache remains abstract-only.
+
+The common provenance is recorded here once; annotation reasons retain the claim-specific chemistry and evidence limits. Native downstream lipid processing remains unresolved. Sugar loading and an undecaprenyl-carrier bypass are not claimed by this audit.

@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 scientific review follow-up passes full validation on 5ca4d26e74; main f583a9215b is integrated with 101 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 evidence follow-up repairs duplicated/off-target FLAJ1 quotes and restores the scoped PcrB comparator rationale, including a verified bacterial ether-lipid annotation that refutes a universal prokaryotic-absence claim. All 45 ordered annotation payloads and actions are unchanged. Five changed reviews pass focused gene/history/render checks; full validation of the follow-up remains pending before publication.
 
 - [x] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 changed nonshared files are byte-identical to the reviewed head and 10 changed reviews remain COMPLETE with no PENDING rows.
 
@@ -787,3 +787,7 @@ PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 change
 ## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
 
 Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full run on 5ca4d26e74a5455b6122ecb0c700a920c635ca4e. All 101 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Ac-HepG evidence follow-up
+
+PR #6167 evidence follow-up repairs duplicated/off-target FLAJ1 quotes and restores the scoped PcrB comparator rationale, including a verified bacterial ether-lipid annotation that refutes a universal prokaryotic-absence claim. All 45 ordered annotation payloads and actions are unchanged. Five changed reviews pass focused gene/history/render checks; full validation of the follow-up remains pending before publication.
