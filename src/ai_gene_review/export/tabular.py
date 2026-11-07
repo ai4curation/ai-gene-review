@@ -7,6 +7,7 @@ import pandas as pd
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
 from ai_gene_review.export.annotation_export import _dict_to_obj
+from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES
 
 
 class TabularExporter:
@@ -222,7 +223,7 @@ class TabularExporter:
             return "Unknown"
             
         # Define experimental evidence codes
-        experimental_codes = {"IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+        experimental_codes = EXPERIMENTAL_EVIDENCE_CODES
         
         if evidence_type in experimental_codes:
             return "Experimental"
