@@ -25,3 +25,9 @@ The inherited GO:0046275 proposal is explicitly `retired: true` because this rev
 The inherited GO:0046275 proposal now uses REMOVE with its existing retired:true flag. This explicitly withdraws a curator-authored proposal, following the documented cysI precedent, rather than making a biological absence claim or reporting disappearance from upstream GOA. Original payload, position and evidence remain present.
 
 See `analysis/module_audits/bacterial_flavonoid_degradation/round2-review-response.md` for source provenance, limits and disposition of all seven review points. Earlier journal entries record superseded judgments and remain unchanged.
+
+## PR #6140 round-3 consultation — 2026-11-07
+
+Corrected the retired GO:0046275 reason from the superseded over-annotation wording to withdrawal of the earlier curator-authored proposal. REMOVE and retired:true are unchanged; this is not a claim of biological incapacity or disappearance from GOA.
+
+All ordered annotation payloads and actions are preserved, including the nine prior retirements across the panel. No source record, provider report or publication cache was edited. The shared FdeB analysis retains its stable PP_3195 host path with an explicit cross-species README and separate round-3 module-audit outputs; historical round-2 results are unchanged.
