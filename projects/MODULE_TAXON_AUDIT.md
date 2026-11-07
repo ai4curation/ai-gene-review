@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162 scientific review follow-up passes full validation on 4ddda49a73; main 5b68ef3aac is integrated with 175 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162 approved at 734f33b243; main 0a807fc555 integrated at 8b3da87c66 with 184 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
