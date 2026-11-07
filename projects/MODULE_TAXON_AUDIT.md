@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_choline_to_glycine_betaine_biosynthesis`: PR #6108: integrated main 5b68ef3aac into approved head 8a3e90bcc6, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [ ] `bacterial_choline_to_glycine_betaine_biosynthesis`: PR #6108 approved at 7e3ce12429; main 7eee074bca integrated at f0b3a7cae9 with 165 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
