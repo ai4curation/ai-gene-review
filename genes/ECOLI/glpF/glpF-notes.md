@@ -64,3 +64,10 @@ that GlpF performs an E. coli cellular mercury-response process.
 Rechecked all 21 rows, including both negated water claims. Later purified reconstitution contradicts absence of water permeation, even though glycerol transport is the physiological core. Retained the supported glycerol/channel/topology refinements. The mercury-response IDA is now UNDECIDED: the accessible PMID8584435 abstract does not expose the target mercury experiment, and reagent sensitivity alone does not settle functional participation in a cellular response. Removed reasoning based on inert source qualifiers. No positive water or metalloid assertion was manufactured.
 
 Default Falcon attempted via normal workflow and failed HTTP403 authentication; no provider output was fabricated. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.
+
+
+## PR6162 review follow-up (2026-11-07 UTC)
+
+Reassessed mercury response against the current GO definition and publisher abstract. Channel inhibition alone does not prove a cellular-response role; the specific full experiment remains inaccessible, so UNDECIDED is retained without a categorical source-defect claim.
+
+Original ordered annotation payloads, raw/provider/publication bytes and historical NEW assertions are preserved. No new GO row was added.

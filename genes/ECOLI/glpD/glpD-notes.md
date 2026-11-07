@@ -61,3 +61,10 @@ was reviewed together with `genes/PSEPK/glpD`.
 Rechecked all 19 rows. Current GO0009055 includes enzymatic electron-transfer reactions, so GlpD electron transfer is accepted rather than restricted to autonomous shuttle proteins. Retained the genuine soluble pool as non-core cytoplasm and the active membrane-associated pool as core. Direct respiratory electron entry and functional homodimerization are core-associated. The aerobic enzyme designation does not exclude nitrate-respiratory growth (PMID4945192); quinone analog structures do not constitute a native ubiquinone-bound structure. Physiological terminal electron acceptors are downstream of GlpD, not direct GlpD substrates.
 
 Default Falcon attempted via normal workflow and failed HTTP403 authentication; no provider output was fabricated. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.
+
+
+## PR6162 review follow-up (2026-11-07 UTC)
+
+Current official GO0009055 includes enzymatic metabolic electron transfer and is not an ancestor of GO0004368. Retained this directly supported core claim and made electron transfer, functional homodimerization and aerobic respiratory participation explicit in core functions, without excluding nitrate respiration.
+
+Original ordered annotation payloads, raw/provider/publication bytes and historical NEW assertions are preserved. No new GO row was added.

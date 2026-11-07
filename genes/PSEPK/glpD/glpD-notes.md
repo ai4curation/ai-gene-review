@@ -91,3 +91,10 @@ actions:
 Rechecked all five rows, preserving the historical plasma-membrane NEW payload and action. Quinone-dependent oxidation remains supported by curated RuleBase specificity and native pathway context; exact native quinone identity, membrane face and homodimeric assembly are qualified ortholog inferences. PMID25827416 measures growth/reporters and GlpK, not purified GlpD quinone specificity. The pre-existing OpenScientist report is genuine; its contradictory six-TM statement is not accepted. A lack of TM helices is not affirmative membrane-localization evidence.
 
 Existing genuine provider research was inspected and preserved byte-for-byte; conclusions were checked against primary sources. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.
+
+
+## PR6162 review follow-up (2026-11-07 UTC)
+
+Retained the exact historical NEW membrane payload/action and strengthened its positive ISS rationale with a reproducible frozen-sequence bridge:286/500 aligned residues identical (57.2%), or286/515 total columns(55.53%). Verified family/reaction compatibility and native pathway description accompany direct Ecoli donor topology. Target membrane-face orientation and oligomerization remain inferred.
+
+Original ordered annotation payloads, raw/provider/publication bytes and historical NEW assertions are preserved. No new GO row was added.

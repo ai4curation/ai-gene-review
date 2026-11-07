@@ -5,3 +5,10 @@ PMID4368746 was read in full at the publisher; the cache remains abstract-only. 
 The source annotation payloads and order were preserved against `analysis/module_audits/bacterial_glycerol_uptake_catabolism/bacillus-seed-baseline.yaml`. No NEW annotations were added. All original evidence codes remain source evidence codes, even when the review supplies independent support.
 
 A real Falcon request (`just deep-research BACSU glpD --provider falcon`) failed with HTTP 403 authentication failure. The failure is logged under `.cache/module-audit-logs/glycerol-20261107/bacillus-review/falcon-glpD.log`; no provider-labelled research file was fabricated. Manual review used the cited primary sources and curated UniProt statements. PAINT lineage loss inspection found no IRD/IKR loss; this is a loss check, not a new reconstruction of the ancestral node.
+
+
+## PR6162 review follow-up (2026-11-07 UTC)
+
+Added the existing full-primary reading provenance to rows invoking W168/BR95 genetic/extract assays. Restored abstract-only-cache metadata for4368746; separately accessed full text remains explicitly documented, and quinone specificity/topology are not promoted to direct native assay claims.
+
+Original ordered annotation payloads, raw/provider/publication bytes and historical NEW assertions are preserved. No new GO row was added.

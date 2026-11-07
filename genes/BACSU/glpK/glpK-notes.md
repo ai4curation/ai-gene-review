@@ -5,3 +5,10 @@ PMID2127799 and PMID7773413 are abstract-only in the cache. Their native genetic
 The source annotation payloads and order were preserved against `analysis/module_audits/bacterial_glycerol_uptake_catabolism/bacillus-seed-baseline.yaml`. No NEW annotations were added. All original evidence codes remain source evidence codes, even when the review supplies independent support.
 
 A real Falcon request (`just deep-research BACSU glpK --provider falcon`) failed with HTTP 403 authentication failure. The failure is logged under `.cache/module-audit-logs/glycerol-20261107/bacillus-review/falcon-glpK.log`; no provider-labelled research file was fabricated. Manual review used the cited primary sources and curated UniProt statements. PAINT lineage loss inspection found no IRD/IKR loss; this is a loss check, not a new reconstruction of the ancestral node.
+
+
+## PR6162 review follow-up (2026-11-07 UTC)
+
+Refined the true general glycerol-3-phosphate metabolic process to glycerol-3-phosphate biosynthesis, because GlpK forms that product. This is consistent with the supported Ecoli/Pseudomonas refinement and does not assert G3P catabolism or lipid-directed physiological flux.
+
+Original ordered annotation payloads, raw/provider/publication bytes and historical NEW assertions are preserved. No new GO row was added.
