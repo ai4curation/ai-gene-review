@@ -23,3 +23,10 @@
 Completed all existing annotations for phaG; preserved ordered source payloads and provider artifacts. Genuine existing provider reports were read as leads, with primary evidence and exact strain boundaries prioritized. Evidence, ontology snapshots, PAINT limits and supplementary provenance are under analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/psepk-consultation/. No new GO row added. PAINT target-leaf unavailable is not evidence of absence of evolutionary loss.
 
 PMID35338129 supports forward transacylation through heterologous product-sink/FadD controls, while the original purified assay measures reverse CoA-to-ACP transfer. Native quantitative forward flux remains unmeasured. Both historical NEW rows retain original evidence/action.
+
+
+## PR6194 follow-up — 2026-11-07
+
+Removed the absence-of-forward-in-vitro-data quotation from positive core support; retained the limitation explicitly and kept positive reverse-transfer/product-sink findings. No annotation actions, source payloads or historical proposals changed.
+
+Exact evidence, before/after payload audit and source hashes: analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/implementation/.

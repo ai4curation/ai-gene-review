@@ -26,3 +26,10 @@
 Completed all existing annotations for phaZ; preserved ordered source payloads and provider artifacts. Genuine existing provider reports were read as leads, with primary evidence and exact strain boundaries prioritized. Evidence, ontology snapshots, PAINT limits and supplementary provenance are under analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/psepk-consultation/. No new GO row added. PAINT target-leaf unavailable is not evidence of absence of evolutionary loss.
 
 Full17170116 distinguishes KT2442 recombinant/native-granule assays from KT2440. Weak overnight tributyrin hydrolysis is retained as peripheral MF; native glycerolipid-catabolic flux is not inferred. The historical granule NEW/IDA proposal is retired in place with root authorization for unsupported target-direct provenance, not rejection of localization. Original row archived in retired-phaZ-proposal.yaml. Core location remains qualified, corroborated by native fraction detection without selective-enrichment claim. Native31468725 found no titre/yield improvement after phaZ deletion under its tested accumulation conditions, superseding unconditional older notes.
+
+
+## PR6194 follow-up — 2026-11-07
+
+GO0004806 changed to MARK_AS_OVER_ANNOTATED under the measured-activity/relevance-unknown enzyme-specificity tier. Positive overnight KT2442 tributyrin chemistry is retained. Full PMID17170116 Fig6 directly resolves HO monomer/dimer products from HO-rich copolymer, now stated with strain and copolymer limitations in core evidence. The proposed broader depolymerase has GO0016788 as immediate genus. Historical NEW granule row remains unchanged and retired.
+
+Exact evidence, before/after payload audit and source hashes: analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/implementation/.

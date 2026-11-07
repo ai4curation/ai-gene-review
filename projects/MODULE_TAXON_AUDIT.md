@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: [PR #6194](https://github.com/ai4curation/ai-gene-review/pull/6194) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194 scientific follow-up ready for fresh full validation: corrected PhaZ activity/evidence and PhaG biotin participation, positive supported PhaC SF5 scope, and qualified family judgments. Original module and all annotation payloads/lifecycles retained. Additive capacity passes 32 cases, seven mutations, seven sensitivities and four proposed-function bridge controls; 15 explicit source supersessions preserve all old closure inputs. Fresh full validation, review, CI and merge pending.
 
 - [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
 

@@ -7,3 +7,10 @@ All seeded annotation payloads and order are preserved. No NEW row is added. The
 Actual Falcon request via `just deep-research ECTOL phaZ --provider falcon` failed with HTTP403 authentication. The failure log is in `.cache/module-audit-logs/mcl-pha-20261107/gpo1-consultation/falcon-phaZ.log`; no provider report was fabricated. Manual primary/curated-source review supplies the evidence.
 
 `just paint-losses ECTOL phaZ` found the target absent from the cached reference tree; lineage losses cannot be assessed. The generic no-loss footer is not evidence of a resolved negative. Source membership is verified independently from UniProt/archive records; no PTN placement or loss is invented.
+
+
+## PR6194 follow-up — 2026-11-07
+
+The specific intracellular mcl-PHA depolymerization core now uses the existing proposed activity, without asserting an exact oligomer distribution. GO0016020 remains UNDECIDED: membrane includes peripheral bilayer attachment, so absence of TM alone is not exclusion; a PHA monolayer is not proof of bilayer localization.
+
+Exact evidence, before/after payload audit and source hashes: analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/implementation/.
