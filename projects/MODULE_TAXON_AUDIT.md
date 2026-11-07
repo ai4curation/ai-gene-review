@@ -815,7 +815,7 @@ Integrated published main `577501df51` with the validated PR #6100 head `4c70f9b
 
 Integration proof: [validated-head-main6-integration.json](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main6-integration.json).
 
-## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration f5b02387a8 main7 (4fa058f671)
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main7 integration 4fa058f671
 
 Integrated main 4fa058f671604c3aa4c142ac13bd07e54ef27baa into approved head 94e3587d6da3715827be26c5ec2f73ede38d7ea7. 346 frozen files remain byte-identical outside shared metadata and 5 qualified reviews/renders. The only parsed review changes are 37 source qualifiers copied from main; all affected reviews, renders and histories pass focused validation. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
 
@@ -823,7 +823,7 @@ Integrated main 4fa058f671604c3aa4c142ac13bd07e54ef27baa into approved head 94e3
 
 Historical snapshot after main7, superseded by the current Status ledger: 34 COMPLETE, 5 PR_OPEN, 4 IN_PROGRESS and 734 NOT_STARTED. Retain dated journals and verified completion bullets.
 
-## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration f5b02387a8 main8 (5b68ef3aac)
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main8 integration 5b68ef3aac
 
 Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 into approved head 9797c5d2f381212eb10f6487190ea8ec050577fe. All 366 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
 
