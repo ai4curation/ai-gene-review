@@ -41,11 +41,13 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_groel_groes_chaperonin_folding`: PR #6164 approved at e5a0ea03c2; main 7eee074bca integrated at d5eb59e90e with 257 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
+
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
-- [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
+- [x] `bacterial_cytochrome_c_maturation_system_i`: [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121) merged as `a76d110ace9de65316f4dfbe999c1a66ab38602a` at 2026-11-07T01:49:33Z. All 370 scoped files match final published head `d114fb850d7bdfe8ac83c12c174aeb71e690eaea`; 29 member reviews are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6121-merged-content.json).
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -96,7 +98,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 8 PR_OPEN, 3 IN_PROGRESS, 732 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 8 PR_OPEN, 3 IN_PROGRESS, 731 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -825,3 +827,39 @@ Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full 
 ## 2026-11-07 — bacterial_flavonoid_degradation main integration
 
 Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full run on ee4222b667d93d9587aa0502d028d3b1b78dabf7. 361 frozen files remain byte-identical outside shared metadata and 2 preservation checkers with previously verified formatting equivalence. The checker hashes still match the recorded equivalent versions. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — GroEL/GroES comparative audit started
+
+Comparative GroEL/GroES audit started: eight assessed references, twelve findings, twelve member reviews under consultation across three bacterial phyla. Family selectors and separately scoped E. coli/Caulobacter CnoX mechanisms are drafted. 201 ordered seed payloads frozen. Full validation, dedicated PR and merge remain pending.
+
+## 2026-11-07 — GroEL/GroES comparative curation integrated
+
+GroEL/GroES comparative curation: 12 complete member reviews, 201 preserved original rows and no added rows; 12 assessed references with 16 findings. Five bacterial species, verified cage families and separately scoped CnoX mechanisms. Full validation, dedicated PR and actual merge remain pending. The frozen baselines establish 64 new Bacillus/Mycobacterium rows plus 16 Caulobacter rows, correcting the initial 81-new/202-total arithmetic to 80-new/201-total. Earlier history records remain append-only.
+
+## 2026-11-07 — cytochrome c maturation merge verified
+
+PR #6121 merged; 370 scoped files match the final published head and all 29 member reviews are COMPLETE. Shared project metadata/indexes are excluded from blob equality. This completion is based on the actual merge, not an approval or queue entry.
+
+## 2026-11-07 — bacterial groel groes chaperonin folding full validation passes
+
+Comparative audit passes full validation on 6332a1d51e: 10,742 reviews, zero blocking errors and 220 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_groel_groes_chaperonin_folding/full-run-proof.json).
+
+## 2026-11-07 — bacterial_groel_groes_chaperonin_folding main integration
+
+Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full run on 6332a1d51e0e1488c73d594a62e1cfb2aeb9f458. All 216 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — GroEL/GroES review corrections
+
+PR #6164 review follow-up: restored citation corrections, refined self-binding and metal-binding judgments, and corrected holdase ontology placement. Focused validation passes; fresh full validation, independent review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial groel groes chaperonin folding full validation passes
+
+PR #6164 follow-up passes full validation on 42d0858a7b: 10,754 reviews, zero blocking errors and 245 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_groel_groes_chaperonin_folding/round1-full-run.json).
+
+## 2026-11-07 — bacterial_groel_groes_chaperonin_folding main integration
+
+Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full run on 42d0858a7ba3af9240eaf0ee58f3dfd41f464db2. All 241 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_groel_groes_chaperonin_folding main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head e5a0ea03c28b59f8bba89636a08d5309f2771a8a. All 257 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
