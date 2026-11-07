@@ -207,3 +207,10 @@ therefore upheld.
 - The in vitro C10/C20 donor range is left unannotated, as planned: the C35
   donor is what the dimer is built for and the C35 product is what accumulates
   in vivo.
+
+
+## 2026-11-07 module audit: source scope and complete annotation review
+
+Rechecked all existing annotation rows, references and core functions against the frozen sources. No machine payload, row order or historical NEW assertion was changed; no new annotation was added. The default Falcon attempt failed with HTTP403 and produced no provider report; manual review is documented here instead. Normal PAINT-loss checks returned no IRD/IKR.
+
+Magnesium binding is accepted as a central catalytic cofactor requirement. Historical ether-lipid and cytoplasm NEW payloads/actions remain intact, with bounded reasons and substantive source quotations. PcrB directly forms the phosphorylated ether lipid; carrier use in Bacillus is distinguished from bulk membrane synthesis, family-wide function and unresolved membrane translocation. Generic IBA refinement uses target assays, without reconstructing a clade from the donor list. The author-thesis precursor-feeding evidence does not prove EgsA supplies the native pool.

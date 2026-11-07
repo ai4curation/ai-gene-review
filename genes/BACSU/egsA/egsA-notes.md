@@ -138,3 +138,10 @@ the authors' reading of Caforio et al. 2018, not new data here
 known"]. Guldan 2008, Sa-Nogueira 1997, Mota 1999, Guldan 2011, Linde 2016,
 Palyzova 2022 and the lipid-divide review remain abstract-only in the cache, so
 the araM knockout result is still unverified.
+
+
+## 2026-11-07 module audit: source scope and complete annotation review
+
+Rechecked all existing annotation rows, references and core functions against the frozen sources. No machine payload, row order or historical NEW assertion was changed; no new annotation was added. The default Falcon attempt failed with HTTP403 and produced no provider report; manual review is documented here instead. Normal PAINT-loss checks returned no IRD/IKR.
+
+The lipid-process claim is now UNDECIDED: kinetic asymmetry does not establish native direction or lipid flux. Broad NAD(P) activity is refined to both existing cofactor-specific children; preferred NAD activity remains core and measured lower-efficiency NADP activity remains non-core. The official author thesis was read separately from the still abstract-only 2008 article; scoped source analysis documents Table10 and the exogenous-G1P bypass in the ΔaraM experiment. The 2026 alternative-G1P statement cites prior engineered E. coli work, not a new B. subtilis pathway.
