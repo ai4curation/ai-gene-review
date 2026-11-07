@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mnma_trna_thiolation`: Comparative MnmA audit ready for full validation: 19 COMPLETE reviews, 166 preserved ordered rows including four active historical proposals, eight reviewed families and three full comparative reviews. Three architectures yield four formal routes. Source-qualified capacity passes 59 cases, nine mutations, eight gate sensitivities and three family controls. Five family advisories remain; dedicated PR and merge pending.
+- [ ] `bacterial_mnma_trna_thiolation`: Comparative audit passes full validation on b4f4966674: 10,801 reviews, zero blocking errors and 550 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -930,3 +930,7 @@ Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b after the passing full 
 ## 2026-11-07 — Cellulose audit merge verified
 
 PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 changed nonshared files are byte-identical to the reviewed head and 21 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr2143-merged-content.json).
+
+## 2026-11-07 — bacterial mnma trna thiolation full validation passes
+
+Comparative audit passes full validation on b4f4966674: 10,801 reviews, zero blocking errors and 550 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mnma_trna_thiolation/full-validation-20261107-1238.json).
