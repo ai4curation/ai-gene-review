@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_flagellar_assembly_export`: PR #6138 approved at 721ef757d8; main 7eee074bca integrated at 030fcbb5fd with 447 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
+
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
@@ -55,7 +57,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `osmoregulated_periplasmic_glucan_biosynthesis`: [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142) merged at `fb8e3ee95b`; 179 scoped files verified identical to the approved head.
 
-- [ ] `bacterial_chromosomal_dna_replication`: COMPLETE module; 52 completed gene reviews, 37 references and 97 passing capacity cases cover twelve required duplication roles. All 1,067 historical rows and 104 raw files are preserved. Full validation is terminal with 19 proven pre-existing reference errors in 17 unrelated yeast reviews (23 unchanged input blobs); no scoped blockers. PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) includes the validated review corrections; fresh external review/CI and actual merge remain pending.
+- [x] `bacterial_chromosomal_dna_replication`: PR [#6117](https://github.com/ai4curation/ai-gene-review/pull/6117) merged at 2026-11-06T17:59:52Z (`a4c122693a2144f1ca5a90efb520e78760e0f1dd`). All 569 scoped files match the reviewed head and current main; all 52 member reviews are COMPLETE with 1,082 rows and no PENDING. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6117-merged-content.json); [current-main panel](MODULE_TAXON_AUDIT/proofs/pr6117-current-main-panel.json).
 
 - [ ] `bacterial_divisome_peptidoglycan_transpeptidation`: PR_OPEN. [PR #6123](https://github.com/ai4curation/ai-gene-review/pull/6123) includes nine completed member reviews, fourteen curated references and 57 capacity/evidence checks. Full validation found only verified pre-existing reference errors; renewed review, CI and actual merge remain pending.
 
@@ -96,7 +98,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 8 PR_OPEN, 3 IN_PROGRESS, 732 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 8 PR_OPEN, 3 IN_PROGRESS, 731 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -825,3 +827,63 @@ Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full 
 ## 2026-11-07 — bacterial_flavonoid_degradation main integration
 
 Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full run on ee4222b667d93d9587aa0502d028d3b1b78dabf7. 361 frozen files remain byte-identical outside shared metadata and 2 preservation checkers with previously verified formatting equivalence. The checker hashes still match the recorded equivalent versions. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-06 — flagellar audit started; replication merge verified
+
+Started the flagellar assembly/export comparative audit from published main. The initial member baseline preserves 129 annotation rows and 57 raw/provider files. The gene reviewers own disjoint export and structural panels, while the module synthesis checks ion coupling, stator alternatives and regulation against direct species evidence. Separately verified PR #6117 at merge a4c122693a2144f1ca5a90efb520e78760e0f1dd and current main 488d370561caf677da6e0c8ef94d5b0c7f4cb374: all 569 scoped files are identical and all 52 reviews are COMPLETE with 1,082 rows and no pending actions. The linked proofs support the replication completion record; flagellar work remains in progress.
+
+## 2026-11-06 — comparative flagellar mechanisms and member reviews
+
+Comparative flagellar curation now covers 31 roles and 38 COMPLETE gene reviews across Pseudomonas, Escherichia, Salmonella and Vibrio. All 240 original annotation payloads, 29 inherited NEW rows and 131 raw/provider files are preserved; 14 supported additions yield 254 current rows. Seventeen curated references, including three reviews, supply 26 findings and evidence on every role. Gammaproteobacterial scope, verified families, exact construct identities, matched MotAB/MotCD/PomAB pairs and distinct assembly/export versus motor endpoints are explicit. The production-compiler checks pass 107 source-scoped cases and detect four incorrect mechanism mutations. Focused validation passed, including zero module semantic warnings. Full-corpus validation, a dedicated PR, independent review, CI and actual merge remain completion gates.
+
+[Mechanism and endpoint boundaries](../analysis/module_audits/bacterial_flagellar_assembly_export/endpoint-contract.yaml) distinguish native configurations, bypass backgrounds, reconstructed export and condition-specific motility. [Panel preservation](../analysis/module_audits/bacterial_flagellar_assembly_export/panel-preservation.json) and [construct identities](../analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/identity-and-assay-scope.md) record the evidence boundaries. Missing FliE, envelope-ring assembly and other background prerequisites are not treated as dispensable or as supplied by a family hit.
+
+## 2026-11-06 — flagellar full-validation closeout and OPG integration
+
+Full validation of frozen science 401af31cd2 completed successfully: 10,691 gene reviews, zero blocking errors, 27,769 best-practice advisories and 54 pathway-reference checks passed. All 52 reference advisories in 31 files lie outside the 38-member panel. Integrate published main fb8e3ee95b, retaining OPG completion and the independently verified replication completion row and prose. No validation implementation or flagellar scientific/source file changed. Dedicated PR, independent review, CI and actual merge remain pending.
+
+[Full validation](../analysis/module_audits/bacterial_flagellar_assembly_export/full-validation.json) and [preserved content](../analysis/module_audits/bacterial_flagellar_assembly_export/prepublication-main-integration.json) record the verified scope.
+
+## 2026-11-06 — flagellar PR #6138 published
+
+Published the independently validated flagellar audit as PR #6138. The 38-member scientific panel remains unchanged from full-validation science 401af31cd2. This checkpoint only records the live PR identity and updates the project ledger; independent review, CI and actual merge remain pending.
+
+## 2026-11-06 — flagellar review evidence adjudicated
+
+PR6138 follow-up corrects the Salmonella FliI hierarchy inconsistency, strengthens self-association synthesis and direct motor-switch evidence, distinguishes stator execution of chemotaxis from upstream export/assembly, and adds source-qualified gradient context. Current GO supports the motor and FlgE ancestry; the obsolete contrary framing was not reinstated. Seventeen member reviews pass focused checks, all254 row payloads and prior NEW actions remain unchanged, and all131 raw/provider sources are preserved. The renewed full run, external review, CI and merge remain pending.
+
+## 2026-11-06 — PR #6138 integration with DsbAB merge 8daf92bfc8
+
+Integrated published main `8daf92bfc8` with the validated PR #6138 head `24e3974192`. All 422 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged focused-validated row and the previously verified replication completion row; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The revised science has passed focused checks. A new full-corpus run is required after this integration; the historical full run covers the earlier revision only.
+
+Integration proof: [round1-main-integration.json](../analysis/module_audits/bacterial_flagellar_assembly_export/round1-main-integration.json).
+
+## 2026-11-06 — flagellar round1 full validation passed
+
+The flagellar round1 scientific corrections passed full validation at 813f6cdfc9b04fef9fae921ad2644e21c63600f9 on 2026-11-06T22:11:15.929973+00:00. All 428 frozen files remain unchanged. The 10709-review corpus reports zero blocking errors, 115 term advisories and 52 reference advisories; all 31 reference-advisory files are outside the 38-member panel. Best-practices validation has zero errors and 27769 warnings, and all 54 pathway-reference checks pass. The corrections distinguish ongoing motor execution from export-mediated assembly in chemotaxis, retain ontology-supported ancestor refinements, and separate FliJ export-gate activation from ATPase activation. PR #6138 still requires publication of these corrections, renewed review and CI, and actual merge.
+
+## 2026-11-06 — PR #6138 integration with published main 577501df51
+
+Integrated published main `577501df51` with the approved PR #6138 head `2a886b9f64`. All 428 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged reviewed row and the previously verified chromosomal-replication completion row; both dated journals are preserved. Validation implementation is unchanged. The renewed round1 full run passed on 10709 reviews with all 428 frozen files unchanged, 115 term advisories and 52 reference advisories outside the 38-member panel. Renewed CI and review gate this integration commit.
+
+Integration proof: [round1-main2-integration.json](../analysis/module_audits/bacterial_flagellar_assembly_export/round1-main2-integration.json).
+
+## 2026-11-07 — bacterial_flagellar_assembly_export main integration
+
+Integrated main e9d31cced895d2d74c464d57cbd40381e15520ab into approved head ce4d07a0ee97edb304f27abb5d8b9e211ac384e4. 422 frozen files remain byte-identical outside shared metadata and 6 qualified reviews/renders. The only parsed review changes are 29 source qualifiers copied from main; all affected reviews, renders and histories pass focused validation. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_flagellar_assembly_export integrated ledger counts
+
+Derive the current snapshot from the integrated ledger without changing any inventory row: {'COMPLETE': 34, 'NOT_STARTED': 734, 'IN_PROGRESS': 4, 'PR_OPEN': 5}. Retain dated journals and verified completion bullets.
+
+## 2026-11-07 — bacterial_flagellar_assembly_export main integration
+
+Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head f6bc2a981ed49a6e108d5b8f8a8066426dce5770. All 443 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_flagellar_assembly_export main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e into approved head b452df06df3e1bbe8d5cf2f11608483ac14a19e7. All 445 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_flagellar_assembly_export main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head 721ef757d8900726cdd0af3f55d444cd42d1896f. All 447 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
