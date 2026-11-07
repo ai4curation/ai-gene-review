@@ -7858,3 +7858,45 @@ Each linked merge-group run executed its integration suite and required checks s
 Only GJB2, GK, GJB6, GLDC and GLB1 are checked in this fixed window, accepted ordinals 726–730. All other pending genes remain unchecked. The ClinGen seed, catalogue identities and order, earlier progress journal, 235 dated queue records, 167 previous completion updates, scientific sources and prior histories are preserved.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-07T010428Z-codex-59a1f9.yaml).
+
+## Completion checkpoint 735 — 2026-11-07 04:49:34 UTC
+
+735 complete; 2,141 of 2,876 remain. This checkpoint publishes five independently accepted actual merges after checkpoint 730. It records existing acceptance credit and grants no additional gene acceptance.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Original / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | ---: | --- |
+| GLDN | 731 | [#6145](https://github.com/ai4curation/ai-gene-review/pull/6145) | [4fa058f6](https://github.com/ai4curation/ai-gene-review/commit/4fa058f671604c3aa4c142ac13bd07e54ef27baa) | [42320833455](https://github.com/ai4curation/ai-gene-review/actions/runs/42320833455) | 13 / 14 | COMPLETE |
+| GLI3 | 732 | [#6151](https://github.com/ai4curation/ai-gene-review/pull/6151) | [fdb02a90](https://github.com/ai4curation/ai-gene-review/commit/fdb02a90aa4d873bd6d57fb220be986e183c4a26) | [42324294450](https://github.com/ai4curation/ai-gene-review/actions/runs/42324294450) | 125 / 125 | DRAFT |
+| GLA | 733 | [#6139](https://github.com/ai4curation/ai-gene-review/pull/6139) | [2f72fda8](https://github.com/ai4curation/ai-gene-review/commit/2f72fda87ec460ef99562726f68795f2a2d9552f) | [42324380133](https://github.com/ai4curation/ai-gene-review/actions/runs/42324380133) | 58 / 58 | DRAFT |
+| GLT8D1 | 734 | [#6156](https://github.com/ai4curation/ai-gene-review/pull/6156) | [b9e302be](https://github.com/ai4curation/ai-gene-review/commit/b9e302be34e9e4a4a1beb68a47e51b444ebcd657) | [42336216455](https://github.com/ai4curation/ai-gene-review/actions/runs/42336216455) | 6 / 6 | COMPLETE |
+| GLIS2 | 735 | [#6154](https://github.com/ai4curation/ai-gene-review/pull/6154) | [5f65fb60](https://github.com/ai4curation/ai-gene-review/commit/5f65fb600c4150f550f37e334c15eaf8dad4032a) | [42336825343](https://github.com/ai4curation/ai-gene-review/actions/runs/42336825343) | 71 / 71 | COMPLETE |
+
+All five full merge commits are ancestors of the checked main revision, and the committed reviews match their accepted merge versions byte-for-byte. GLDN retains 13 original GOA contexts and one separate NEW annotation; the other four add no NEW annotations. GLI3 retains six UNDECIDED judgments. GLI3 and GLA retain their actual computed DRAFT status; the other three are COMPLETE. Campaign acceptance records completed review and verified merge, without rewriting those statuses or resolving scientific uncertainties.
+
+Each linked merge-group run executed its integration suite and required checks successfully. Ordinary PR runs that skipped the suite are not credited as integration. Existing test skips, deselections, warnings and broader unresolved corpus diagnostics remain in the accepted evidence; this tracker update does not re-adjudicate them.
+
+Only GLDN, GLI3, GLA, GLT8D1 and GLIS2 are checked in this fixed window, accepted ordinals 731–735. GNB4, GNB2 and all other pending genes remain unchecked. The ClinGen seed, catalogue identities and order, earlier progress journal, 235 dated queue records, 168 previous completion updates, scientific sources and prior histories are preserved.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-07T044934Z-codex-518e68.yaml).
+
+## Completion checkpoint 740 — 2026-11-07 09:35:37 UTC
+
+740 complete; 2,136 of 2,876 remain. This checkpoint publishes five independently accepted actual merges after checkpoint 735. It records existing acceptance credit and grants no additional gene acceptance.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Literal raw / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | ---: | --- |
+| GNB4 | 736 | [#6165](https://github.com/ai4curation/ai-gene-review/pull/6165) | [e9d50a8a](https://github.com/ai4curation/ai-gene-review/commit/e9d50a8a42ab5e6b5560d09ff8c44e64f4c77360) | [42338059015](https://github.com/ai4curation/ai-gene-review/actions/runs/42338059015) | 22 / 22 | COMPLETE |
+| GNB2 | 737 | [#6163](https://github.com/ai4curation/ai-gene-review/pull/6163) | [f5b02387](https://github.com/ai4curation/ai-gene-review/commit/f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e) | [42340221509](https://github.com/ai4curation/ai-gene-review/actions/runs/42340221509) | 72 / 72 | DRAFT |
+| GPKOW | 738 | [#6166](https://github.com/ai4curation/ai-gene-review/pull/6166) | [d022781f](https://github.com/ai4curation/ai-gene-review/commit/d022781f67b7b2445ad4c3831b847e7efee7dd9c) | [42342368043](https://github.com/ai4curation/ai-gene-review/actions/runs/42342368043) | 87 / 87 | COMPLETE |
+| GMNN | 739 | [#6161](https://github.com/ai4curation/ai-gene-review/pull/6161) | [ce559357](https://github.com/ai4curation/ai-gene-review/commit/ce5593571d1ebddcebe1727de8d12159cb5f135f) | [42352318406](https://github.com/ai4curation/ai-gene-review/actions/runs/42352318406) | 74 / 73 | DRAFT |
+| GRIA1 | 740 | [#6177](https://github.com/ai4curation/ai-gene-review/pull/6177) | [bb89a377](https://github.com/ai4curation/ai-gene-review/commit/bb89a377830600d2850d64215e0da94a47a06c6a) | [42357033229](https://github.com/ai4curation/ai-gene-review/actions/runs/42357033229) | 198 / 192 | DRAFT |
+
+All five actual merges are ancestors of the checked main revision, and each committed review matches its accepted merge and approved source version byte-for-byte. GNB4 and GPKOW are COMPLETE; GNB2, GMNN and GRIA1 retain their actual DRAFT status. GNB2 retains one UNDECIDED judgment and GRIA1 retains fourteen. None of these five adds a NEW annotation. Campaign acceptance records completed review and verified merge, without rewriting review status or resolving scientific uncertainties.
+
+GNB2 preserves 72 literal incoming records and 72 reviewed contexts; its downloaded GOA TSV contains 71 rows, with the distinct extension context restored in the review and public provenance. GMNN preserves 74 literal records in 73 schema contexts, and GRIA1 preserves 198 literal records in 192 schema contexts. Their public evidence retains the individual original records and explicit projection mappings.
+
+Each linked merge-group run executed its integration suite and required checks successfully. Ordinary PR runs that skipped the suite are not credited as integration. Test skips, deselections, warnings and broader unresolved corpus diagnostics remain in the accepted evidence; this tracker update does not re-adjudicate them.
+
+Only GNB4, GNB2, GPKOW, GMNN and GRIA1 are checked in this fixed window, accepted ordinals 736–740. All other genes remain unchanged. The ClinGen seed, catalogue identities and order, earlier progress journal, 235 dated queue records, 169 previous completion updates, scientific sources and prior histories are preserved.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-07T093537Z-codex-01121a.yaml).
