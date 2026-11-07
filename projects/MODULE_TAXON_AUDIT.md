@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: [PR #6167](https://github.com/ai4curation/ai-gene-review/pull/6167) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 scientific review follow-up passes full validation on 5ca4d26e74; main f583a9215b is integrated with 101 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [x] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 changed nonshared files are byte-identical to the reviewed head and 10 changed reviews remain COMPLETE with no PENDING rows.
 
