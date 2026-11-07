@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mla_intermembrane_phospholipid_transport`: [PR #6198](https://github.com/ai4curation/ai-gene-review/pull/6198) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_mla_intermembrane_phospholipid_transport`: PR #6198 review follow-up corrects MlaA source quotations and adds three directly supported binding/location proposals. All 115 original annotation payloads, including 16 historical NEW rows, are preserved; 118 current rows include 19 active NEW and none retired. Six focused gene validations, histories and renders pass. Inventory now counts four annotons, six families and eighteen representatives, retaining open PR #5076. Source closure verifies 713 inputs and resolves every curated citation; provider bibliographies remain explicitly bounded. The additive capacity audit recognizes the supported PE-binding descendant while preserving transport, partner and strain limits. Eleven gene coverage warnings remain documented. Fresh full validation, PR update, review and actual merge remain pending.
 
 - [ ] `bacterial_lipoprotein_maturation`: PR #6184 scientific review follow-up passes full validation on 1702541121; main bb89a37783 is integrated with 414 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -960,3 +960,11 @@ Comparative audit passes full validation on b005dd670c: 10,796 reviews, zero blo
 ## 2026-11-07 — bacterial_mla_intermembrane_phospholipid_transport main integration
 
 Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full run on b005dd670c0511266464cfe0540b5fcbf72cb1df. All 569 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Mla inventory metrics follow-up
+
+Regenerate Mla inventory from all four annotons and nested active-unit families: six families and eighteen representatives; all four steps have evidence. Direct annoton/function evidence remains zero under its existing definition and is distinguished from enclosing-step coverage. Preserve still-open PR5076 alongside6198. Biological module and genes unchanged by this metadata update. [Metric derivation](../analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/review-followup/inventory-metrics.json).
+
+## 2026-11-07 — Mla review evidence and capacity follow-up
+
+PR #6198 review follow-up corrects MlaA source quotations and adds three directly supported binding/location proposals. All 115 original annotation payloads, including 16 historical NEW rows, are preserved; 118 current rows include 19 active NEW and none retired. Six focused gene validations, histories and renders pass. Inventory now counts four annotons, six families and eighteen representatives, retaining open PR #5076. Source closure verifies 713 inputs and resolves every curated citation; provider bibliographies remain explicitly bounded. The additive capacity audit recognizes the supported PE-binding descendant while preserving transport, partner and strain limits. Eleven gene coverage warnings remain documented. Fresh full validation, PR update, review and actual merge remain pending.

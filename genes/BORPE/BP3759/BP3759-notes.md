@@ -17,3 +17,8 @@ A genuine `just deep-research BORPE BP3759 --provider falcon` attempt failed wit
 PAINT-losses was run. Bordetella targets are absent from the cached reference trees, so the report cannot establish absence of ancestral loss; no imaginary target placement or loss node is asserted. PAO1 Ttg2D reports no applicable loss. Two first attempts raced the shared IBD download and were rerun sequentially after completion, with both attempts retained. TreeGrafter row nodes identify source ancestry, not donor-count or self-citation defects.
 
 No universal essentiality, exact native stoichiometry, antibiotic transport or assay-derived native directional flux is inferred from growth/permeability phenotypes. See core descriptions for measured binding versus inferred transfer.
+
+
+## PR6198 evidence follow-up (2026-11-07)
+
+Replaced generic summaries and downgraded method-only GO_REF relevance; added exact target feature/signature quotations without changing source rows, actions or evidence tiers. The earlier no-NEW tally is historical, not a policy barring evidence-supported additions. Prior receipts and provider attempts remain unchanged; the additive consultation records the new decisions.
