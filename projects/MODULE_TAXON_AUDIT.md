@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_l_carnitine_catabolism`: [PR #6182](https://github.com/ai4curation/ai-gene-review/pull/6182) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_l_carnitine_catabolism`: PR #6182 review follow-up preserves 14 COMPLETE reviews and all 146 ordered source rows. Two redundant historical proposals are retired in place, leaving 11 historical NEW, six active and five retired. PP_0303 uses its exact proposed core activity while its KAH row remains UNDECIDED; PAO1 CbcV/W evidence is specific to each substrate, assay and construct. Complete review quotations, focused checks and capacity controls pass. Full validation, publication, fresh review and actual merge remain pending.
 
 - [x] `bacterial_flavonoid_degradation`: PR #6140 actually merged as 4b8aabfd9dc31ade6356ae1791bd2037904d119f; 270 changed nonshared files are byte-identical to the reviewed head and 16 changed reviews remain COMPLETE with no PENDING rows.
 

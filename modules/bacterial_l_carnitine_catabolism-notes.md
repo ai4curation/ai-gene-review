@@ -25,3 +25,8 @@ PMID17910757 adds a fifth review, with full text available. Its comparative path
 Comparative audit ready for full validation: 11 manually assessed references including five reviews; 14 COMPLETE gene reviews, five family reviews and 49 capacity cases with 14 module mutations and five sensitivity checks. All ordered source rows preserved; three inherited proposals explicitly retired. Dedicated PR and actual merge pending.
 
 The added 2007 review is available in full text. Its manually recorded review classification differs from the fetched machine classification; the immutable cache remains unchanged. Final consultations and capacity evidence are linked in the audit README.
+
+
+## 2026-11-07 — PR #6182 evidence clarification
+
+Expanded three truncated review quotations to complete source clauses, checked against the unchanged cached publications (PMIDs 9037756, 25787873, 23354714). The module retains its reaction boundary and family/activity/interface gates. Round-one gene follow-up retires two redundant historical proposals without deleting them and represents PP_0303 chemistry by its exact proposed activity; source-specific transport evidence is reviewed separately.

@@ -30,3 +30,9 @@ BcoEF hydrolyzes carnitinyl-CoA as well as betainyl-CoA and oxidizes carnitine. 
 Default Falcon attempts for both genes failed403; no provider file was fabricated. PAINT-loss commands completed, but neither exact accession is present in the cached tree, so losses are unassessed rather than absent. All payloads and protected source bytes are preserved. See rhime-consultation proof and gene source-analysis for details.
 
 The existing carnitine-metabolic parent is refined to both biosynthesis and catabolism: the same enzyme releases carnitine from carnitinyl-CoA and performs downstream degradative reactions. The added replacement term is not a new row; direct chemistry establishes participation. The module may keep the upstream reaction outside its boundary.
+
+## 2026-11-07 PR6182 round1 follow-up
+
+The redundant historical GO:0042413 NEW proposal is retired in place, preserving source payload/action/order and the supported metabolic-process refinement. GO:0070403 changes from KEEP_AS_NON_CORE to ACCEPT because NAD+ binding is integral to measured NAD-dependent carnitine oxidation. Full PMID30670548 Results/Table1 and the existing exact sequence bridge were rechecked. The carnitine-biosynthesis refinement refers to carnitinyl-CoA hydrolysis producing a transient intermediate of GBB utilization, not mammalian BBOX chemistry.
+
+See the round1/core-consultation audit for immutable payload/source preservation and validation. Previously generated research and primary-source records were reused without modification.
