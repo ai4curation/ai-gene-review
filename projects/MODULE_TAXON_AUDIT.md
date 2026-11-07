@@ -46,7 +46,9 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_mannose_pts`: Comparative audit passes full validation on b2db42291b: 10,788 reviews, zero blocking errors and 375 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
-- [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
+- [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+
+- [x] `bacterial_cellulose_biosynthesis`: PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 changed nonshared files are byte-identical to the reviewed head and 21 changed reviews remain COMPLETE with no PENDING rows.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -103,7 +105,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 9 PR_OPEN, 4 IN_PROGRESS, 730 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 9 PR_OPEN, 4 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -905,6 +907,34 @@ Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full 
 
 PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Per-path preservation and validation scope](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json). The incoming OPG completion and flavonoid row are retained exactly. All 33 previously complete rows remain unchanged; no completion is inferred from an open-row status or from this local integration. Both parents’ dated journal entries and the pins autolink exclusion are preserved. The historical round-17 module pin describes its recorded revision; round27-full-run.json supersedes its validation status, without retrospectively changing that earlier receipt.
 
+## 2026-11-07 — Comparative Isc assembly and transfer
+
+Comparative Isc curation integrates 18 COMPLETE gene reviews, 208 preserved original rows with one explicit historical-NEW retirement, 20 assessed references including five reviews, two family reconciliations and 17 function-qualified representatives. Canonical Fdx-supported/HscBA-assisted capacity is distinguished from anaerobic and suppressor bypasses. The capacity audit passes 38 scenarios, six evidence-gate sensitivity checks and two structural mutations. Full validation remains pending before a dedicated PR.
+
+## 2026-11-07 — bacterial isc iron sulfur cluster assembly full validation passes
+
+Comparative audit passes full validation on daf2de4dc7: 10,753 reviews, zero blocking errors and 268 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/full-validation.json).
+
+## 2026-11-07 — bacterial_isc_iron_sulfur_cluster_assembly main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e after the passing full run on daf2de4dc7d5d5c1cf790f159425007757be841a. All 264 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial isc iron sulfur cluster assembly full validation passes
+
+PR #6175 follow-up passes full validation on 31d0901593: 10,763 reviews, zero blocking errors and 324 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/round1-full-validation.json).
+
+## 2026-11-07 — bacterial_isc_iron_sulfur_cluster_assembly main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b after the passing full run on 31d09015932f61ba17a3fbb537901cf4949621a4. All 320 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Cellulose audit merge verified
+
+PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 changed nonshared files are byte-identical to the reviewed head and 21 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr2143-merged-content.json).
+
 ## 2026-11-07 — bacterial mannose pts full validation passes
 
 Comparative audit passes full validation on b2db42291b: 10,788 reviews, zero blocking errors and 375 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mannose_pts/full-validation-proof.json).
+
+## 2026-11-07 — bacterial_mannose_pts main integration
+
+Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on b2db42291b8339b2813a6955a05aa555c9d0d31e. All 371 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
