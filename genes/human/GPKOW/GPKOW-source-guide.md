@@ -32,7 +32,7 @@ Fig. 7 tests binding competition, not helicase catalysis.
 
 [Original source](https://europepmc.org/article/MED/25296192). Original XML selected Methods and Results inspected.
 
-Human-cell fractionation and tagged-protein imaging support this localization.
+DHX16 binding did not prove obligatory recruitment.
 
 ## PMID:25416956
 
@@ -64,6 +64,8 @@ HuRI records preserve human participants, yeast hosts, fusion tags and tested fr
 
 [Original source](https://pubmed.ncbi.nlm.nih.gov/33509932/). Author original PDF and PDB 7DVQ inspected.
 
+Original Bact preparation precedes branching; GO:0071017 specifies catalytically active B*. Stage nomenclature needs curator clarification.
+
 ## PMID:33961781
 
 HEK293T and HCT116 records retain their actual experimental contexts.
@@ -91,3 +93,11 @@ Patient fibroblasts retain variant RNA but show reduced protein. Fly knockout re
 Nucleus decisions use the same located_in context as accepted nucleoplasm localization. The broader term is entailed through part_of; this does not deny the underlying imaging or fractionation results. The two source nuclear extension atoms remain attached to their interaction contexts.
 
 The portable evidence records source identifiers, original line numbers, literal record fields and hashes. Private working paths are omitted. Original paper excerpts are not reproduced in these data joins.
+
+## Exact independent evidence locators
+
+The IBA supports cite the original PAINT record, not `raw_to_current`: JSON pointers `/paint_ancestry/assertions/0/literal_ibd` (raw 74, stored 0; global GAF line 9013) and `/paint_ancestry/assertions/1/literal_ibd` (raw 84, stored 84; global GAF line 8560). Both literal assertions are on AN0 / PTN000405990; target AN18 / PTN002496600 and original source hashes are in `paint_ancestry`.
+
+The minor-complex source defect is independently located at `/minor_spliceosome/source_and_term_crossrefs`, with the source URL/hash at `/minor_spliceosome/source`; atomic coverage is at `/minor_spliceosome/atomic_coordinates`. The added record excerpts come from the retained UniProt `CC:SUBUNIT` block.
+
+Removing bare GO_REF/sidecar supports from nucleus granularity judgments does not discard their original references. The nucleus criterion compares compatible locations. Distinct major/minor assemblies do not entail identical complex membership.
