@@ -15,3 +15,7 @@ Official UniProt declares one 340-residue product and a processed chain spanning
 Methods, Results and Figure 4 identify human clone AF300648.1 in COS7 cells. Wild type enhances IP3 signaling, but not maximal calcium response comparably. Separate HEK293T stability assays do not support mutant degradation. [PMID:23434117]
 
 Human beta4/gamma2/alphaoA expression in rat neurons “resulted in heterotrimer formation.” [PMID:11842130]
+
+## Review follow-up
+
+The reviewed revision supersedes the initial action allocation: 5 ACCEPT, 12 KEEP_AS_NON_CORE, 4 REMOVE and 1 TOO_GENERAL across the same 22 incoming contexts; zero NEW. Direct cached snippets and linked original-source locators now accompany the decisions. The prior notes remain intact.
