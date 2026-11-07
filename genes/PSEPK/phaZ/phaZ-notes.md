@@ -19,3 +19,10 @@
 
 - GO:0004806 triacylglycerol lipase activity is a substrate-misassigned automated annotation and should be replaced by GO:0050527. [file:PSEPK/phaZ/phaZ-uniprot.txt, "SubName: Full=Poly(3-hydroxyalkanoate) depolymerase"; AmiGO GO:0050527, "poly(3-hydroxyoctanoate) depolymerase activity"; https://amigo.geneontology.org/amigo/term/GO%3A0050527]
 - GO:0046503 glycerolipid catabolic process is misleading because intracellular PHA mobilization is not glycerolipid catabolism; GO:0042620 poly(3-hydroxyalkanoate) metabolic process is closer, but GO currently lacks a direct poly(3-hydroxyalkanoate) catabolic process term for intracellular PHA mobilization. [AmiGO term graph, "GO:0042620 poly(3-hydroxyalkanoate) metabolic process"; JBC 2007 PDF; https://amigo.geneontology.org/amigo/term/GO%3A0008152; https://pdfs.semanticscholar.org/ae3e/1d24baa56e7222a02f12b2b3b75ee84cee02.pdf]
+
+
+## 2026-11-07 comparative source audit
+
+Completed all existing annotations for phaZ; preserved ordered source payloads and provider artifacts. Genuine existing provider reports were read as leads, with primary evidence and exact strain boundaries prioritized. Evidence, ontology snapshots, PAINT limits and supplementary provenance are under analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/psepk-consultation/. No new GO row added. PAINT target-leaf unavailable is not evidence of absence of evolutionary loss.
+
+Full17170116 distinguishes KT2442 recombinant/native-granule assays from KT2440. Weak overnight tributyrin hydrolysis is retained as peripheral MF; native glycerolipid-catabolic flux is not inferred. The historical granule NEW/IDA proposal is retired in place with root authorization for unsupported target-direct provenance, not rejection of localization. Original row archived in retired-phaZ-proposal.yaml. Core location remains qualified, corroborated by native fraction detection without selective-enrichment claim. Native31468725 found no titre/yield improvement after phaZ deletion under its tested accumulation conditions, superseding unconditional older notes.
