@@ -21,3 +21,10 @@
 ## Evidence Limits
 
 - I did not find a local KT2440 paper that purified PP_5005/PhaC-II alone and measured its substrate panel directly. The review should therefore stay conservative: the polymerase function is well supported by pathway context, orthology/domain architecture, and KT2440 expression/engineering studies, but the precise standalone biochemical preference of KT2440 PhaC-II remains an evidence gap [file:PSEPK/phaC/phaC-deep-research-openai.md, "Available KT2440 literature supports a role in medium-chain-length poly(3-hydroxyalkanoate) biosynthesis and transcriptional induction under PHA-producing conditions"].
+
+
+## 2026-11-07 comparative source audit
+
+Completed all existing annotations for phaC; preserved ordered source payloads and provider artifacts. Genuine existing provider reports were read as leads, with primary evidence and exact strain boundaries prioritized. Evidence, ontology snapshots, PAINT limits and supplementary provenance are under analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/psepk-consultation/. No new GO row added. PAINT target-leaf unavailable is not evidence of absence of evolutionary loss.
+
+Non-amino-acyl transfer and PHA biosynthesis remain supported. PHB-specific assignment is generalized without claiming absolute inability to accept C4 substrates. Granule location remains qualified; KCTC1639/KT2442/P. putida U findings are not native KT2440 isozyme-specific assays.

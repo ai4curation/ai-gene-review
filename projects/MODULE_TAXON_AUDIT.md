@@ -44,6 +44,10 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
+
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: Comparative MCL PHA audit ready for full validation: nine COMPLETE reviews, 23 preserved seeded rows and one justified IC addition; three full reviews plus primary evidence, four family reviews with 95 grounding checks, 32 capacity cases, seven mutations and seven gate sensitivities. Qualified substrate and intracellular-access gates retain class I copolymer evidence without asserting a complete native turnover panel. Four family-scope advisories remain explicit. Full validation, dedicated PR and actual merge remain pending.
+
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
@@ -101,7 +105,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 9 PR_OPEN, 3 IN_PROGRESS, 731 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 9 PR_OPEN, 4 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -902,3 +906,7 @@ Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full 
 ## 2026-11-07 — cellulose approved-head integration of 7eee074bca
 
 PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Per-path preservation and validation scope](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json). The incoming OPG completion and flavonoid row are retained exactly. All 33 previously complete rows remain unchanged; no completion is inferred from an open-row status or from this local integration. Both parents’ dated journal entries and the pins autolink exclusion are preserved. The historical round-17 module pin describes its recorded revision; round27-full-run.json supersedes its validation status, without retrospectively changing that earlier receipt.
+
+## 2026-11-07 — Isc audit merge verified
+
+PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6175-merged-content.json).
