@@ -77,6 +77,12 @@ REPARENTING_CHANGES = frozenset({"NODE_MOVE", "NODE_DEEPENING", "NODE_SHALLOWING
 #: claim the term exists, which would need an ontology lookup.
 _CURIE_SHAPE = re.compile(r"^[A-Za-z][A-Za-z0-9_.]*:[A-Za-z0-9_][A-Za-z0-9_.\-]*$")
 
+#: A mapping removal's `old_value` identifies the mapping being withdrawn, by the
+#: `PREFIX:ID` of the source that carries it. It is the only field that says which
+#: mapping, and the exporter renders it as the request's "Mapping to remove", so a
+#: record without it exports an upstream request naming no target.
+MAPPING_SOURCE_CHANGES = frozenset({"REMOVE_MAPPING"})
+
 #: Change types with no KGCL semantics to lean on, so the prose must carry the case.
 PROSE_ONLY = frozenset({"COMPLEX_CHANGE", "OTHER"})
 
@@ -452,8 +458,10 @@ def iter_ontology_change_violations(
                     "old_value",
                     "missing_old_value",
                     f"{kind} does not record the value being changed",
-                    "Copy the current definition, label, synonym or mapping predicate "
-                    "from the ontology into old_value, verbatim",
+                    "Copy the current definition, label or synonym from the ontology "
+                    "into old_value, verbatim. For MAPPING_PREDICATE_CHANGE the pair is "
+                    "the mapping's current and proposed predicate, read from the mapping "
+                    "file rather than from the ontology",
                 )
             if not new:
                 yield (
@@ -490,6 +498,30 @@ def iter_ontology_change_violations(
                     "Set predicate to the relation as a CURIE (rdfs:subClassOf, "
                     "BFO:0000050 part_of, RO:0002211 regulates); reparenting and adding "
                     "a part_of link are different changes",
+                )
+
+        if kind in MAPPING_SOURCE_CHANGES:
+            source = change.get("old_value")
+            if not source:
+                yield (
+                    index,
+                    "old_value",
+                    "missing_mapping_source",
+                    f"{kind} does not say which mapping to remove",
+                    "Set old_value to the PREFIX:ID of the mapping's source "
+                    "(InterPro:IPR007225, UniRule:UR000459766). It is the only field "
+                    "naming the target, and the exported request renders it as "
+                    "\"Mapping to remove\"",
+                )
+            elif not _CURIE_SHAPE.match(str(source).strip()):
+                yield (
+                    index,
+                    "old_value",
+                    "mapping_source_not_a_curie",
+                    f"old_value is {source!r}, which is not a PREFIX:ID",
+                    "A mapping removal names its source as an identifier "
+                    "(InterPro:IPR007225), not as prose; the slot is shared with the "
+                    "value changes, which hold text, so its range cannot tell them apart",
                 )
 
         if kind in REPARENTING_CHANGES:

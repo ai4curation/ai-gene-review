@@ -850,3 +850,54 @@ def test_reparenting_rejects_prose_in_old_value():
 
 def test_a_well_formed_reparenting_passes():
     assert _codes({"proposed_ontology_changes": [_reparent()]}) == []
+
+
+# --- the mapping half of old_value (PR #5846 review, round 4)
+
+
+def _remove_mapping(**kw):
+    """A mapping removal: old_value names the mapping's source, not a term value."""
+    base = _change(
+        change_type="REMOVE_MAPPING",
+        has_direct_replacement=None,
+        old_value="InterPro:IPR007225",
+        justification="The mapping sends every orthologue to a term GO has obsoleted.",
+    )
+    base.pop("has_direct_replacement")
+    base.update(kw)
+    return base
+
+
+def test_a_mapping_removal_must_say_which_mapping():
+    """`REMOVE_MAPPING` is in neither VALUE_CHANGES nor REPARENTING_CHANGES, so
+    nothing required `old_value` even though it is the only field naming the
+    target and the exporter renders it as "Mapping to remove". A record without it
+    exported an upstream request to InterPro2GO saying nothing about what to
+    remove."""
+    data = {"proposed_ontology_changes": [_remove_mapping(old_value=None)]}
+    assert "missing_mapping_source" in _codes(data)
+
+
+def test_a_mapping_removal_names_its_source_as_an_identifier():
+    data = {
+        "proposed_ontology_changes": [
+            _remove_mapping(old_value="the Sec15 exocyst mapping")
+        ]
+    }
+    assert "mapping_source_not_a_curie" in _codes(data)
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["InterPro:IPR007225", "InterPro:IPR039682", "UniRule:UR000459766"],
+)
+def test_the_committed_mapping_source_spellings_pass(source):
+    assert _codes({"proposed_ontology_changes": [_remove_mapping(old_value=source)]}) == []
+
+
+def test_a_mapping_removal_is_not_asked_for_a_new_value():
+    """A removal withdraws a mapping rather than replacing it, so the value-change
+    checks must not apply to it."""
+    codes = _codes({"proposed_ontology_changes": [_remove_mapping()]})
+    assert "missing_new_value" not in codes
+    assert "missing_old_value" not in codes

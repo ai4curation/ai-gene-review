@@ -291,6 +291,13 @@ def _entry_lines(r: dict[str, str]) -> list[str]:
     if r["change_type"] == "REMOVE_MAPPING":
         if r["old_value"]:
             lines.append(f"- **Mapping to remove:** `{r['old_value']}`")
+    elif r["change_type"] == "MAPPING_PREDICATE_CHANGE":
+        # old_value/new_value are the mapping's predicates here, not a value of the
+        # term, so naming them "Value" would read as a definition or label change.
+        if r["old_value"] or r["new_value"]:
+            lines.append(
+                f"- **Mapping predicate:** `{r['old_value']}` → `{r['new_value']}`"
+            )
     elif r["old_value"] or r["new_value"]:
         lines.append(f"- **Value:** `{r['old_value']}` → `{r['new_value']}`")
     if r["subject"]:

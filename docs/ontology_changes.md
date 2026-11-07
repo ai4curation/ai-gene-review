@@ -258,10 +258,13 @@ staying in the TSV as a record.
   (`NODE_DIRECT_MERGE`, `REMOVE_MAPPING`, `MAPPING_PREDICATE_CHANGE`,
   `COMPLEX_CHANGE`, `OTHER`), where a string that parses cannot be the right kind
   by construction;
-- a reparenting change (`NODE_MOVE`, `NODE_DEEPENING`, `NODE_SHALLOWING`) whose
-  `old_value` is missing or is not a CURIE. That slot holds the current parent for
-  these three, because KGCL's `from` clause takes it, and holds definition or label
-  text for the value changes — so its string range cannot tell the two apart;
+- a reparenting change (`NODE_MOVE`, `NODE_DEEPENING`, `NODE_SHALLOWING`), or a
+  `REMOVE_MAPPING`, whose `old_value` is missing or is not an identifier. That one
+  slot carries three different things — the current parent's CURIE for the
+  reparenting changes, the withdrawn mapping's source for `REMOVE_MAPPING`, and
+  definition, label, synonym or predicate text for the value changes — so its
+  string range cannot tell them apart. A mapping removal without it exports an
+  upstream request naming no target;
 - an `adoption_status: NOT_APPLICABLE` that nonetheless lists
   `affected_annotations`: the value means the change touches no content here, so a
   file list contradicts it;
