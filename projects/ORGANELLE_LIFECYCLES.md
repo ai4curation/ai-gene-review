@@ -119,6 +119,8 @@ The organelle-by-stage matrix lives in
 - [ ] ER: ground ERAD (Hrd1/Hrd3, Derlin, Cdc48-Ufd1-Npl4) once Hrd1's family table and per-lineage Cdc48/Hrd3 subfamilies are in place; add ER shaping, COPII export and a eukaryote-wide (IRE1) UPR; resolve SRbeta's PANTHER placement; add plant SRalpha and SRP68/72 selectors
 - [x] Golgi: `golgi_apparatus_lifecycle` umbrella with one eukaryote-wide rule module, `golgi_copi_vesicle_coat` (GBF1/Gea, Arf1, coatomer); `RULE_CANDIDATE`; COPII referenced as the optional Drosophila module
 - [ ] Golgi: ground a eukaryote-wide COPII module once Sec24, Sec31 and Sec12 have local PANTHER entries; add ArfGAPs, Golgi tethers and SNAREs, and TGN exit
-- [ ] Nucleus, lipid droplet, autophagosome
+- [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
+- [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
+- [ ] Nucleus, autophagosome
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
