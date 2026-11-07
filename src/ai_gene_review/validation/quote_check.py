@@ -417,10 +417,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"{totals['not_found']} not found in their source and "
         f"{totals['unresolved']} with a missing source "
         f"({blocking} blocking, {totals['not_found'] + totals['unresolved'] - blocking} baselined); "
-        f"{len(unparseable)} unparseable files; "
+        f"{len(unparseable)} unparseable file{'' if len(unparseable) == 1 else 's'}; "
         f"{totals['unchecked']} unchecked (no readable source); {len(files)} files"
     )
     if args.init_baseline:
+        if unparseable:
+            # An unreadable file contributes no failures, so the baseline would be incomplete.
+            print("Not writing a baseline: fix the unparseable files first")
+            return 1
         write_baseline(current)
         print(f"Wrote {count_entries(current)} entries to {BASELINE_PATH}")
         return 0

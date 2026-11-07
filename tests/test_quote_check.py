@@ -143,7 +143,7 @@ def test_main_reports_unparseable_yaml_and_fails(tmp_path: Path, capsys):
     assert main([str(bad)]) == 1
     out = capsys.readouterr().out
     assert "broken.yaml: not valid YAML" in out
-    assert "(0 blocking, 0 baselined); 1 unparseable files" in out
+    assert "(0 blocking, 0 baselined); 1 unparseable file;" in out
 
 
 def test_prune_refuses_when_a_file_is_unparseable(tmp_path, monkeypatch, capsys):
@@ -175,3 +175,15 @@ def test_prune_writes_to_the_redirected_baseline(tmp_path, monkeypatch):
     assert "stale0000" not in baseline.read_text()  # the redirected file was rewritten
     monkeypatch.undo()
     assert load_baseline() == real  # the committed baseline was not touched
+
+
+def test_init_refuses_when_a_file_is_unparseable(tmp_path, monkeypatch, capsys):
+    """A first --init-baseline over a scope with unreadable YAML writes nothing and fails."""
+    bad = tmp_path / "broken.yaml"
+    bad.write_text("key: [unclosed\n")
+    baseline = tmp_path / "baseline.yaml"  # does not exist yet
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", baseline)
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.default_files", lambda: [bad])
+    assert main(["--init-baseline"]) == 1
+    assert not baseline.exists()
+    assert "Not writing a baseline" in capsys.readouterr().out
