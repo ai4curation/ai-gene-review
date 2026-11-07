@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-11-06
+last_reviewed: 2026-11-07
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -40,6 +40,10 @@ For each module, record evidence that all of the following are satisfied:
    merged. Record its number and merge commit before marking the audit complete.
 
 ## Status
+
+- [x] `bacterial_cytochrome_c_maturation_system_i`: [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121) merged as `a76d110ace9de65316f4dfbe999c1a66ab38602a` at 2026-11-07T01:49:33Z. All 370 scoped files match final published head `d114fb850d7bdfe8ac83c12c174aeb71e690eaea`; 29 member reviews are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6121-merged-content.json).
+
+- [ ] `bacterial_groel_groes_chaperonin_folding`: GroEL/GroES comparative curation: 12 complete member reviews, 201 preserved original rows and no added rows; 12 assessed references with 16 findings. Five bacterial species, verified cage families and separately scoped CnoX mechanisms. Full validation, dedicated PR and actual merge remain pending.
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -90,7 +94,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 5 PR_OPEN, 4 IN_PROGRESS and 735 NOT_STARTED. Counts retain each row's dated evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 5 PR_OPEN, 5 IN_PROGRESS, 733 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -681,3 +685,15 @@ Integrated published main `488d370561` with the validated PR #5970 head `46d8264
 Integrated published main `577501df51` with the validated PR #5970 head `754e29a9a9`. All 459 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row (no earlier completion rows regressed); both dated journals are preserved. Incoming main contains the merged beta-oxidation audit; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
 
 Integration proof: [validated-head-main4-integration.json](../analysis/module_audits/bacterial_ethanolamine_uptake_catabolism/validated-head-main4-integration.json).
+
+## 2026-11-07 — GroEL/GroES comparative audit started
+
+Comparative GroEL/GroES audit started: eight assessed references, twelve findings, twelve member reviews under consultation across three bacterial phyla. Family selectors and separately scoped E. coli/Caulobacter CnoX mechanisms are drafted. 201 ordered seed payloads frozen. Full validation, dedicated PR and merge remain pending.
+
+## 2026-11-07 — GroEL/GroES comparative curation integrated
+
+GroEL/GroES comparative curation: 12 complete member reviews, 201 preserved original rows and no added rows; 12 assessed references with 16 findings. Five bacterial species, verified cage families and separately scoped CnoX mechanisms. Full validation, dedicated PR and actual merge remain pending. The frozen baselines establish 64 new Bacillus/Mycobacterium rows plus 16 Caulobacter rows, correcting the initial 81-new/202-total arithmetic to 80-new/201-total. Earlier history records remain append-only.
+
+## 2026-11-07 — cytochrome c maturation merge verified
+
+PR #6121 merged; 370 scoped files match the final published head and all 29 member reviews are COMPLETE. Shared project metadata/indexes are excluded from blob equality. This completion is based on the actual merge, not an approval or queue entry.
