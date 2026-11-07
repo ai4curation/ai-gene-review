@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: Comparative audit passes full validation on dcaaf85b18: 10,788 reviews, zero blocking errors and 436 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: [PR #6194](https://github.com/ai4curation/ai-gene-review/pull/6194) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
 
 - [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
 
@@ -105,7 +105,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 36 COMPLETE, 8 PR_OPEN, 4 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 36 COMPLETE, 9 PR_OPEN, 3 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
