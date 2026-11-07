@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162 follow-up passes full validation on 4ddda49a73: 10,750 reviews, zero blocking errors and 180 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162 scientific review follow-up passes full validation on 4ddda49a73; main 5b68ef3aac is integrated with 175 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
