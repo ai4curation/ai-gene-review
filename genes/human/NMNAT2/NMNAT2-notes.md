@@ -127,3 +127,85 @@ Over-annotated / too-general: GO:0003824 catalytic activity (IEA, root-level MF)
 - GO:2000766 negative regulation of cytoplasmic translation — current.
 - GO:0140768 protein ADP-ribosyltransferase-substrate adaptor activity — current.
 - GO:0005794 Golgi apparatus / GO:0000139 Golgi membrane — current.
+
+## 2026-10-09 — weekly compliance pass
+
+Evidence-aware compliance (`just compliance-all`) had NMNAT2 at 46.10 weighted,
+the largest file in this batch (28 annotations, 13 references). **No annotation
+action was changed** — the prior review's calls hold. The pass added
+justification, provenance and the missing suggestion blocks.
+
+- **`review.reason` added to all 28 annotations.** Several deserve recording:
+
+  - **The two IBA nodes differ, and the split is the interesting finding.** The
+    two catalytic activities and the salvage process come from the *deep* node
+    **PANTHER:PTN000247701**, whose descendants span plant (AT5G55810), yeast
+    (S000003242, S000004320), fly (FBgn0039254), mouse, *bacterial NadD*
+    (P0A752) and the human paralogs NMNAT1 (Q9HAN9) and NMNAT3 (Q96T66). Golgi
+    localization comes from a *much shallower* node, **PANTHER:PTN002635346**,
+    seeded only by mouse Nmnat2 and human NMNAT2. That is correct, not sloppy:
+    the activity is ancestral and shared with both paralogs, whereas Golgi
+    anchoring is the isoform-specific trait and depends on palmitoylation of
+    Cys-164/165 rather than on the catalytic fold. A short donor list is not weak
+    support when the transferred trait is itself lineage-restricted.
+  - **Q9BZQ4 appears in its own `WITH/FROM`** on two IBA rows. Per
+    `projects/IBA_REVIEW.md` this is expected and correct — NMNAT2's own
+    experimental annotations are among the descendant evidences the PAINT curator
+    used to place the IBD — and is explicitly *not* marked circular.
+  - **Signature specificity determines term specificity.** `GO:0003824` (root)
+    fires on **IPR004821**, the broad cytidylyltransferase-like fold; the specific
+    activity rows fire on **IPR045094**, family-specific for eukaryotic NMN
+    adenylyltransferases. Same pipeline family, opposite outcome — recorded in the
+    reasons so the differing actions are legible.
+  - **`GO:0005737` cytoplasm is ACCEPT, not MODIFY → cytosol.** NMNAT2 genuinely
+    occupies several cytoplasmic compartments (soluble pool, cytoplasmic face of
+    the Golgi membrane, Golgi-derived axonal vesicles). Collapsing onto cytosol
+    would *lose* the membrane-anchored pools, not sharpen the claim.
+  - **`GO:0061564` axon development stays non-core, and the reason says why the
+    strong evidence does not promote it.** Null mice die at birth with severe axon
+    defects; compound heterozygotes already have fewer myelinated sensory axons at
+    1.5 months [PMID:30304512]. That is powerful *necessity* evidence. But what
+    NMNAT2 contributes is NAD+ — it does not itself extend or guide an axon; it
+    sustains a metabolite pool whose depletion activates SARM1. Real, indirect,
+    mediated by the catalytic function already annotated.
+
+- **Term-fit concern flagged for a curator, action deliberately unchanged:
+  `GO:0140768`.** The term is defined as "An enzyme-substrate adaptor that bings
+  together a protein ADP-ribosyl transferase and its substrate" (OLS), which
+  implies bridging *separable from catalysis*. But UniProt's mutagenesis data from
+  the same paper show H24D and W92G abolish **both** adenylyltransferase activity
+  **and** the ability to promote ribosome mono-ADP-ribosylation
+  (ECO:0000269|PubMed:34314702). Catalysis-dependence points to local NAD+ supply,
+  not adaptor bridging. The curator read the full text, so this is recorded as a
+  `suggested_question` plus a mechanism-separating experiment rather than acted on
+  unilaterally.
+
+- **`findings` added to all 13 references** — 3 on PMID:16118205, 3 on
+  PMID:17402747, 2 on PMID:30304512, 4 on PMID:34314702, 1 each on the two
+  Reactome entries, plus the 7 GO_REFs. Note the useful *negative* results now
+  captured from Sorci et al.: TrMP is a substrate only for NMNAT1 and NMNAT3, and
+  NMNH conversion by NMNAT2 is much slower — the exclusions that justify
+  annotating exactly these two activity terms.
+
+- **TAS rows now quote the primary source they trace to.** A TAS is only as good
+  as the statement behind it, so both Reactome Golgi-membrane rows now carry the
+  Berger et al. quote alongside Reactome's own. The cytosol (HPA) and cytoplasm
+  (EXP) rows gained Challa et al.'s "NMNAT-2, a cytosolic NAD+ synthase" as
+  independent corroboration — labelled as corroboration, since neither row cites
+  that paper.
+
+- **`alternative_products` descriptions.** Isoform 2 (VSP_015571) replaces the
+  first 28 residues, removing NAD-binding residues 16/17 **and the critical
+  ATP-binding His-24**. Since H24A alone reduces activity by 95%, it would be
+  expected catalytically dead — stated as an expectation, since it is untested.
+
+- **6 `suggested_questions` (was 3) and 3 `suggested_experiments` (was 2, both
+  lacking `hypothesis`).** New ones cover the GO:0140768 term fit, regulation of
+  Cys-164/165 palmitoylation given MYCBP2/FBXO45-driven turnover, and isoform 2.
+
+Result: 46.10 → **96.62** weighted, `just validate` clean — including the four
+pre-existing folded-scalar warnings (`cytidylyltransferase- like`,
+`palmitoylation- dependent`, `ADP- ribosyltransferase-substrate`, `activity-
+independent`), all rewrapped. The only remaining gaps are the seven GO_REF
+`findings[].supporting_text` slots; those documents are not cached, so any quote
+would be unverifiable.
