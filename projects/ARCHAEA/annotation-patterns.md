@@ -1,6 +1,6 @@
 ---
 title: "Archaeal GO annotation error patterns"
-species: [METTH, METS5, SACS2, ACIAM, SULAC]
+species: [METTH, METJA, METS5, SACS2, ACIAM, SULAC]
 ---
 
 # Archaeal GO annotation error patterns
@@ -254,6 +254,90 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   protein matching it binds the cofactor but does not catalyse alone (active
   enzyme needs both subunits, PMID:22752162).
 
+- **Examples from round 5 (methanogenesis):** METTH/frhA, the [NiFe] large
+  subunit of F420-reducing hydrogenase FrhABG, carries coenzyme F420
+  hydrogenase activity with `enables` (GO_REF:0000120); FrhA splits H2 but F420
+  is reduced at FrhB. METJA/mtrA, the cobamide-carrying subunit of the
+  eight-subunit Na+-pumping methyltransferase MtrA-H, carries the complex's
+  tetrahydromethanopterin S-methyltransferase activity (InterPro2GO IPR005778);
+  MtrH demethylates methyl-H4MPT (PMID:10338124). METJA/hdrA, the
+  flavin-bifurcating subunit of HdrABC, carries CoB--CoM heterodisulfide
+  reductase activity, but the disulfide is cleaved at HdrB (PMID:28818947). All
+  three reviews record the activity as `contributes_to` in core functions.
+
+## 17. A cofactor's metal annotated as free metal-ion binding
+
+- **Example:** METJA/mtrA (Q58261). InterPro2GO maps IPR005778 (MtrA) to
+  GO:0050897 cobalt ion binding. The cobalt is held in the corrin ring of a
+  cobamide prosthetic group, coordinated by a conserved histidine
+  (PMID:27324530); there is no free cobalt site. The review moves the row to
+  GO:0031419 cobalamin binding.
+- **Same error with nickel:** the F430 nickel of methyl-coenzyme M reductase
+  reaches McrA as metal ion binding (UniProt keyword mapping); METAC/mcrA
+  moves it to GO:0046906 tetrapyrrole binding and proposes a coenzyme F430
+  binding term.
+- **Fix:** map cofactor-binding families to the cofactor (cobalamin,
+  tetrapyrrole, heme) rather than to its metal. GO:0031419 is defined for
+  cobalamin, so a cobamide or corrinoid binding term would fit methanogen
+  cofactors better (a suggested question in the mtrA review).
+
+## 18. A complex's cofactor set copied onto every subunit's family entry
+
+- **Example:** METTH/frhA (P19496). InterPro2GO gives IPR017682 (FrhA only)
+  GO:0050660 FAD binding and GO:0051536 iron-sulfur cluster binding. FrhA
+  holds only the [NiFe] centre; the FAD and the F420 site are on FrhB and the
+  four [4Fe-4S] clusters are on FrhG and FrhB (cryo-EM of the
+  *M. marburgensis* complex, PMID:23483797, PMID:24569482). The review removes
+  both rows.
+- **Scope:** the three Frh subunit entries (IPR017682, IPR017679, IPR017681)
+  each carry the same four terms, so nickel binding on FrhB and FrhG and FAD
+  binding on FrhG are probably the same error. Those subunits are not yet
+  reviewed.
+- Related to pattern 16, but for cofactor binding rather than activity.
+
+## 19. An acceptor-specific activity from an acceptor-neutral motif
+
+- **Example:** METTH/frhA. InterPro2GO maps IPR018194, the Ni-binding motif
+  of every [NiFe]-hydrogenase large subunit, to GO:0008901 ferredoxin
+  hydrogenase activity. The motif says nothing about the electron acceptor,
+  and Frh reduces F420, not ferredoxin. The review removes the row.
+- **Lead:** IPR002844 and IPR036080 (Mtd, F420-dependent
+  methylenetetrahydromethanopterin dehydrogenase, which is not a hydrogenase)
+  also map to GO:0008901. Not yet reviewed.
+
+## 20. A term defined for one lineage's enzyme variant used across the family
+
+- **Example:** METJA/hdrA (P60200). GO:0051912 CoB--CoM heterodisulfide
+  reductase activity is defined with methanophenazine as the electron acceptor,
+  the membrane HdrDE enzyme of Methanosarcinales (EC 1.8.98.1). Hydrogenotrophs
+  such as *M. jannaschii* have no methanophenazine; their cytoplasmic HdrABC
+  couples heterodisulfide and ferredoxin reduction to H2 oxidation by flavin
+  electron bifurcation (EC 1.8.98.5, PMID:21262829), which has no GO term. The
+  review proposes one.
+- **Scale:** the review counted 952 GO:0051912 annotations in QuickGO, nearly
+  all IEA, including bacterial HdrB/C-like proteins.
+- **Fix:** generalise GO:0051912 to the heterodisulfide reduction itself and
+  add one child per electron donor. Compare pattern 11, where a pathway term
+  defined for *Chloroflexus* is used for the archaeal cycle.
+- **Related lead:** the only IDA row for this term on P60200 cites a
+  selenoprotein-labelling paper (PMID:9102456) whose abstract reports no enzyme
+  assay, and P60200 is the only donor of PAINT node PTN000078336, which
+  propagates the term to two *Korarchaeum cryptofilum* proteins. Recorded as a
+  suspected wrong reference in the review; full text not seen.
+
+## 21. A positive and a NOT row for the same term from the same paper
+
+- **Example:** METJA/cofC (Q58297). UniProt made both `enables` and
+  `NOT|enables` GO:0043814 phospholactate guanylyltransferase activity rows,
+  IDA, from PMID:18260642, on the same date (2010-09-29), with no annotation
+  extension. The paper's abstract reports that activity with kinetic
+  constants. Later work that seemed to argue against it (PMID:30952857) used a
+  non-cognate partner enzyme, and PMID:35038903 explains the result as an
+  artefact of that choice. The review removes the NOT row and records a
+  suspected wrong qualifier for UniProt.
+- **Fix:** a GOA-wide scan for (gene, term, reference) triples that carry
+  both qualifiers would find any others.
+
 ## Related findings from round 2
 
 - **Under-annotation reaches the best-studied archaeal proteins too.**
@@ -286,6 +370,10 @@ send to the resource that owns them:
 | 8 (catalytic activity on proteasome alpha) | same file, IPR019982 to GO:0004298 | REMOVE | not needed |
 | 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (module context, evaluated per proteome) |
 | 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE | not needed |
+| 17 (cofactor metal as free metal-ion binding) | same file, IPR005778 to GO:0050897 | REMOVE, replace with GO:0031419 | not needed |
+| 18 (copied cofactor set) | same file, IPR017682 to GO:0050660 and GO:0051536 | REMOVE | not needed |
+| 19 (acceptor-specific term from a neutral motif) | same file, IPR018194 to GO:0008901 | REMOVE | not needed |
+| 21 (paired positive and NOT rows) | `genes/METJA/cofC/cofC-ai-review.yaml` `source_defects` | WRONG_QUALIFIER, for UniProt | not applicable |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).
 A taxon or module condition is used only where the lineage or the missing

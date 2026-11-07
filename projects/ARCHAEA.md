@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC]
 ---
 
 # Archaea
@@ -22,13 +22,13 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, twenty-five new archaeal reviews are complete (a five-gene pilot, a
-second round of four, and two rounds on the *M. sedula* CO2-fixation
-cycle), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
+So far, thirty new archaeal reviews are complete (a five-gene pilot, a
+second round of four, two rounds on the *M. sedula* CO2-fixation cycle and
+a round on hydrogenotrophic methanogenesis), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
 reviews have been merged. Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
-thin, old experimental coverage. Sixteen recurring error patterns are
+thin, old experimental coverage. Twenty-one recurring error patterns are
 collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
 largest affect hundreds of archaeal proteins each: InterPro2GO mappings
 that put catalytic activity on non-catalytic proteasome alpha subunits
@@ -205,6 +205,34 @@ metabolism term is marked over-annotated. Msed_2055's isomerase row was a
 whole-complex activity on a cofactor subunit (pattern 16). What remains open
 for the module is biological: no step has genetic (knockout) evidence.
 
+## Round 5 results: hydrogenotrophic methanogenesis (November 2026)
+
+Five A4 targets reviewed: METTH frhA, and METJA mcrA, mtrA, hdrA and cofC.
+Of their 26 GOA rows, 18 are IEA, one IBA and two ISS; the five IDA rows sit
+on cofC (four, one of them a NOT) and hdrA (one, from a paper with no enzyme
+assay). *M. jannaschii* itself has almost no enzymology: three of the four
+METJA reviews rest on orthologs from *Methanothermobacter*,
+*Methanothermococcus* and *Methanococcus*.
+
+| Gene | Finding |
+|---|---|
+| frhA | The [NiFe] large subunit of F420-reducing hydrogenase. FAD and iron-sulfur rows removed (those cofactors are on FrhB and FrhG; pattern 18); ferredoxin hydrogenase removed (Frh reduces F420; pattern 19); F420 hydrogenase activity is the complex's (pattern 16) |
+| mcrA (METJA) | Consistent with the METTH and METAC reviews. UniProt's "MCR I" name comes by similarity to *M. marburgensis*, though Methanococcales MCR is its own type; the thioglycine shown on the *M. jannaschii* protein (PMID:31139720) is missing from UniProt |
+| mtrA | The cobamide-carrying subunit of the Na+-pumping methyltransferase. Cobalt ion binding moved to cobalamin binding (pattern 17); the methyltransferase activity is the complex's (pattern 16) |
+| hdrA | The flavin-bifurcating subunit of HdrABC. GO:0051912 is defined for the methanophenazine-dependent enzyme of Methanosarcinales, which hydrogenotrophs lack (pattern 20); a term for the bifurcating reaction (EC 1.8.98.5) is proposed. Its one IDA cites a selenoprotein-labelling paper |
+| cofC | 2-phospho-L-lactate guanylyltransferase of F420 biosynthesis. A NOT row contradicts a positive row from the same paper, curator and day (pattern 21); the 2019 challenge to the substrate was resolved in its favour (PMID:35038903). Terms for the PEP and 3-phospho-D-glycerate variants are proposed |
+
+Four interpro2go rows were added to the SSSOM set (IPR017682 twice,
+IPR018194, IPR005778). Two tooling issues turned up:
+
+- The action-consistency check groups a NOT row with positive rows on the
+  same term, so cofC warns about inconsistent actions on opposite claims.
+- The quote validator strips `[NiFe]` as if it were an editorial bracket,
+  although it keeps `[4Fe-4S]`. The frhA quotes work around it with `...`.
+
+The [coverage report](ARCHAEA/coverage/RESULTS.md) counts GOA rows by evidence
+code over all reviewed archaeal genes.
+
 ## Anchor organisms
 
 Chosen on 2026-10-14 for relevance to DOE missions (bioenergy, critical
@@ -363,10 +391,11 @@ split.
 5. **Breadth and modules:** review the rest of Part A theme by theme, then
    Part B. The 3HP/4HB CO2-fixation cycle module is built (DRAFT); remaining
    candidates are hydrogenotrophic methanogenesis and archaeal ether-lipid
-   biosynthesis.
-6. **Coverage measure:** add a script under `ARCHAEA/` that counts GOA rows
-   by evidence code for each target species. It will show how far archaeal
-   GO coverage depends on IEA, and can be re-run as the project progresses.
+   biosynthesis. Round 5 reviewed five methanogenesis proteins as a start on
+   the first of these.
+6. **Coverage measure: done.** `ARCHAEA/coverage/goa_evidence_coverage.py`
+   counts GOA rows by evidence code for each project species; re-run it after
+   each round ([RESULTS](ARCHAEA/coverage/RESULTS.md)).
 
 ## Open questions
 
