@@ -262,6 +262,7 @@ def validate_gene_residue_claims(
     doc = yaml.load(path.read_text(), Loader=_Loader)
     gene = (doc or {}).get("gene_symbol") or path.stem
     accession = (doc or {}).get("id", "")
+    cache.add_review_records(path)
     results: list[ClaimCheck] = []
     for ann in (doc or {}).get("existing_annotations") or []:
         pr = (ann.get("review") or {}).get("propagation_review") or {}
@@ -305,6 +306,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"residue-claim validation over {genes_with_claims} gene review(s) with claims: "
         f"{counts['PASS']} pass, {counts['FAIL']} fail, {counts['UNRESOLVED']} unresolved"
+        f"{cache.fallback_note()}"
     )
     return 1 if counts["FAIL"] else 0
 
