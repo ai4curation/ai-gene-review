@@ -193,6 +193,8 @@ IBA is low quality.
   - Curated replacement rules: CR-0005 (IPR037893 AND Chordata → S100 protein binding) and CR-0006 (IPR002956 AND IPR050726 AND Arthropoda → sevenless binding, sevenless signaling pathway), in `rules/curated/`.
   - The COPII coat structural-constituent term is a `proposed_new_terms` entry in the npp-20 review.
   - The LPXD1 UniProt disruption-phenotype error is a `source_defects` entry in the LPXD1 review.
+- [x] Taxon constraint TPV-008 (2026-11-07): sevenless binding only in Metazoa, which blocks the 13 bacterial, fungal and plant IPR002956 rows. Arthropoda is recorded as the narrower alternative; it was not chosen because vertebrate ROS1 is the Sevenless ortholog.
+- [x] The other two IPR037893 mappings (2026-11-07): ubiquitin protein ligase binding is accepted (Skp1 binds the CS domain itself, PMID:15996101). Tubulin binding is removed: it rests on one mouse cell-line study that did not map the binding site (PMID:17916393), which is better curated directly to Cacybp.
 - [ ] Submit these to GO, InterPro and UniProt (status is PROPOSED in each file).
 - [ ] Gene review: Drosophila boss, the positive control for curated rule CR-0006.
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
