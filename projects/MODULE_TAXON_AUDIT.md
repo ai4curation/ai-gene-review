@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 scientific review follow-up passes full validation on dea61b9999; main 5b68ef3aac is integrated with 158 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 approved at f8fa5df6e6; main 7eee074bca integrated at 0175b8a4dc with 165 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
