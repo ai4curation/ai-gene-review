@@ -635,11 +635,15 @@ def main() -> None:
     }
 
     # Module candidates: group rows by the differentia filler (the "Y" context),
-    # and record which modules already mention Y's GO id.
+    # and record which modules already mention Y's GO id. Label-only rows are
+    # skipped: their filler is the regulated process, not a context to model.
     by_ctx: dict[str, set[str]] = defaultdict(set)
     ctx_label: dict[str, str] = {}
     for r in ann_rows:
-        for d in (r.get("decomposition") or {}).get("differentia", []):
+        dec = r.get("decomposition") or {}
+        if dec.get("label_only"):
+            continue
+        for d in dec.get("differentia", []):
             by_ctx[d["id"]].add(r["gene"])
             ctx_label[d["id"]] = d["label"]
     candidates = [
