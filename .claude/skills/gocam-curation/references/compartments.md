@@ -47,7 +47,7 @@ nuclear lumen (the envelope is between them).
 |---|---|
 | `SAME` / `ADJACENT` | physically possible as drawn |
 | `BRIDGED` | two membranes bordering the same space (ER membrane → Golgi membrane, outer → inner mitochondrial membrane); possible at a contact site or on vesicle docking, so lower priority |
-| `EXPLAINED` | the edge skips compartments, but a module pinned to both activities spells out the steps through a transport step; the report gives the module path. Not a lead |
+| `EXPLAINED` | the edge skips compartments, but a module pinned to both activities has a path through a transport step whose declared locations touch both ends; the report gives the path and the compartments spanned. Not a lead, though it rests on the module being right. An explanation with `spans_edge: false` was offered but refused: the edge stays `NONADJACENT` |
 | `RELOCATING` | a direct regulation edge that skips compartments, where the downstream protein is known to sit next to the regulator (it is acted on there, then moves). Not a lead, but no module says how it moves yet |
 | `NONADJACENT` | the edge skips one or more compartments and nothing explains it (`distance` = steps in the adjacency graph) |
 | `INDETERMINATE` | an end is `UNRESOLVED` or `MISSING` |

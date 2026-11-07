@@ -130,3 +130,110 @@ def test_stat3_known_locations_include_cytosol():
     locations = ProteinLocationIndex(ROOT / "genes", cm, anc)
     assert "CYTOSOL" in locations("UniProtKB:P40763")
     assert locations("UniProtKB:NOT_A_PROTEIN") == frozenset()
+
+
+def _located_module(bridge_location: str) -> dict:
+    """a (pinned) -> bridge (TRANSPORT_STEP at bridge_location) -> z (pinned)."""
+    return {
+        "module": {
+            "id": "m",
+            "label": "m",
+            "parts": [
+                {
+                    "order": 1,
+                    "node": {
+                        "id": "a",
+                        "label": "a",
+                        "gocam_associations": [
+                            {"model": "gomodel:M", "activity": "gomodel:M/up"}
+                        ],
+                    },
+                },
+                {
+                    "order": 2,
+                    "node": {
+                        "id": "bridge",
+                        "label": "bridge",
+                        "module_type": "TRANSPORT_STEP",
+                        "context": {
+                            "cellular_components": [
+                                {"preferred_term": "x", "term": {"id": bridge_location}}
+                            ]
+                        },
+                    },
+                },
+                {
+                    "order": 3,
+                    "node": {
+                        "id": "z",
+                        "label": "z",
+                        "gocam_associations": [
+                            {"model": "gomodel:M", "activity": "gomodel:M/down"}
+                        ],
+                    },
+                },
+            ],
+            "connections": [
+                {"source": "a", "target": "bridge", "connection_type": "PRECEDES"},
+                {"source": "bridge", "target": "z", "connection_type": "PRECEDES"},
+            ],
+        }
+    }
+
+
+_MODEL = {
+    "id": "gomodel:M",
+    "activities": [
+        {
+            "id": "gomodel:M/up",
+            "enabled_by": {"term": "P1"},
+            "occurs_in": {"term": "GO:0005829"},
+            "causal_associations": [
+                {"predicate": "RO:0002629", "downstream_activity": "gomodel:M/down"}
+            ],
+        },
+        {
+            "id": "gomodel:M/down",
+            "enabled_by": {"term": "P2"},
+            "occurs_in": {"term": "GO:0005576"},
+        },
+    ],
+}
+
+
+@pytest.mark.parametrize(
+    "bridge_location,status",
+    [
+        # plasma membrane touches both cytosol and the extracellular region
+        ("GO:0005886", EdgeStatus.EXPLAINED),
+        # a mitochondrial step does not span cytosol -> extracellular
+        ("GO:0005759", EdgeStatus.NONADJACENT),
+    ],
+)
+def test_transport_step_must_span_the_edge(bridge_location, status):
+    cm = CompartmentModel.load()
+    index = ModuleBridgeIndex(
+        [ModuleGraph.from_dict("m", _located_module(bridge_location))]
+    )
+    r = check_model(_MODEL, cm, lambda t: {t}, explainer=index.explain)
+    (edge,) = r.edges
+    assert edge.status == status
+    assert edge.explanation is not None
+    assert edge.explanation["spans_edge"] is (status == EdgeStatus.EXPLAINED)
+
+
+def test_referenced_module_locations_count_for_the_bridge(index):
+    e = index.explain(
+        "gomodel:5f46c3b700002685/5f46c3b700002801",
+        "gomodel:5f46c3b700002685/5f46c3b700002806",
+    )
+    assert e is not None
+    # karyopherin_nuclear_protein_import declares nuclear envelope and nucleoplasm
+    assert {"GO:0005635", "GO:0005654"} <= set(e.bridge_locations)
+
+
+def test_isoform_accession_finds_the_gene_folder():
+    cm = CompartmentModel.load()
+    anc = oak_ancestor_fn(f"simpleobo:{MINI_GO}")
+    locations = ProteinLocationIndex(ROOT / "genes", cm, anc)
+    assert locations("UniProtKB:P40763-1") == locations("UniProtKB:P40763")
