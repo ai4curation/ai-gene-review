@@ -931,4 +931,8 @@ PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 change
 
 ## 2026-11-07 — Comparative Mla architecture audit
 
-- [ ] `bacterial_mla_intermembrane_phospholipid_transport`: Comparative Mla audit ready for full validation: eighteen COMPLETE reviews, 115 preserved ordered rows, sixteen active historical proposals and no added or retired rows. Three full reviews, six family audits and source-qualified cross-species assemblies; independent audit passes 60 cases, 14 mutations, 12 sensitivities and eight family/domain controls. Three family-scope advisories remain. Full validation, dedicated PR and actual merge pending.
+- [ ] `bacterial_mla_intermembrane_phospholipid_transport`: Comparative audit passes full validation on b005dd670c: 10,796 reviews, zero blocking errors and 571 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial mla intermembrane phospholipid transport full validation passes
+
+Comparative audit passes full validation on b005dd670c: 10,796 reviews, zero blocking errors and 571 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/full-validation.json).
