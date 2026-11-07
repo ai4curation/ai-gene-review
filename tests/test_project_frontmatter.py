@@ -203,9 +203,7 @@ def test_project_manual_reviews_are_well_formed(md_path: Path) -> None:
     assert isinstance(reviews, list), f"{rel} 'manual_reviews' must be a list."
 
     for i, review in enumerate(reviews):
-        assert isinstance(review, dict), (
-            f"{rel} manual_reviews[{i}] must be a mapping."
-        )
+        assert isinstance(review, dict), f"{rel} manual_reviews[{i}] must be a mapping."
 
         unknown = sorted(set(review) - REVIEW_KEYS)
         assert not unknown, (
@@ -328,10 +326,21 @@ def deck_projects(tmp_path: Path) -> Path:
     [
         {},
         {"slides": [{"href": "FOO/slides/FOO-slides.html"}]},
-        {"slides": [{"href": "FOO/slides/FOO-slides.html", "title": "Deck",
-                     "description": "Overview deck"}]},
+        {
+            "slides": [
+                {
+                    "href": "FOO/slides/FOO-slides.html",
+                    "title": "Deck",
+                    "description": "Overview deck",
+                }
+            ]
+        },
         {"slides": [{"href": "https://example.org/deck.html"}]},
-        {"artifacts": [{"href": "https://claude.ai/artifact/abc", "title": "Project brief"}]},
+        {
+            "artifacts": [
+                {"href": "https://claude.ai/artifact/abc", "title": "Project brief"}
+            ]
+        },
         {"slides": [], "artifacts": []},
     ],
 )
@@ -344,19 +353,120 @@ def test_manifest_good(deck_projects: Path, manifest: dict) -> None:
     [
         ([], "must be a mapping"),
         ({"decks": []}, "unknown key(s) ['decks']"),
-        ({"slides": {"href": "FOO/slides/FOO-slides.html"}}, "manifest.slides must be a list"),
+        (
+            {"slides": {"href": "FOO/slides/FOO-slides.html"}},
+            "manifest.slides must be a list",
+        ),
         ({"slides": ["FOO/slides/FOO-slides.html"]}, "slides[0] must be a mapping"),
         ({"slides": [{"title": "Deck"}]}, "needs a non-empty string 'href'"),
-        ({"slides": [{"href": "FOO/slides/FOO-slides.html", "url": "x"}]}, "unknown key(s) ['url']"),
-        ({"slides": [{"href": "FOO/slides/FOO-slides.html", "title": 3}]}, "'title' must be a string"),
-        ({"slides": [{"href": "FOO/slides/missing.html"}]}, "does not exist under projects/"),
-        ({"slides": [{"href": "FOO/slides/orphan.html"}]}, "no sibling orphan.md source"),
+        (
+            {"slides": [{"href": "FOO/slides/FOO-slides.html", "url": "x"}]},
+            "unknown key(s) ['url']",
+        ),
+        (
+            {"slides": [{"href": "FOO/slides/FOO-slides.html", "title": 3}]},
+            "'title' must be a string",
+        ),
+        (
+            {"slides": [{"href": "FOO/slides/missing.html"}]},
+            "does not exist under projects/",
+        ),
+        (
+            {"slides": [{"href": "FOO/slides/orphan.html"}]},
+            "no sibling orphan.md source",
+        ),
         ({"slides": [{"href": "../outside.html"}]}, "path under projects/"),
-        ({"slides": [{"href": "http://example.org/deck.html"}]}, "path under projects/"),
-        ({"artifacts": [{"href": "FOO/slides/FOO-slides.html"}]}, "must be an https URL"),
-        ({"artifacts": [{"href": "http://claude.ai/artifact/abc"}]}, "must be an https URL"),
+        (
+            {"slides": [{"href": "http://example.org/deck.html"}]},
+            "path under projects/",
+        ),
+        (
+            {"artifacts": [{"href": "FOO/slides/FOO-slides.html"}]},
+            "must be an https URL",
+        ),
+        (
+            {"artifacts": [{"href": "http://claude.ai/artifact/abc"}]},
+            "must be an https URL",
+        ),
     ],
 )
 def test_manifest_bad(deck_projects: Path, manifest, expected: str) -> None:
     errors = manifest_errors(manifest, deck_projects)
+    assert any(expected in e for e in errors), errors
+
+
+@pytest.mark.parametrize(
+    "md_path",
+    _project_markdown_files(),
+    ids=lambda p: str(p.relative_to(PROJECTS_DIR)),
+)
+def test_project_proposed_ontology_changes_are_well_formed(md_path: Path) -> None:
+    """A project page's ``proposed_ontology_changes`` must be structurally valid.
+
+    LinkML validates this block on gene and module reviews, but a project page
+    is markdown, so nothing else checks it. Structural problems (a missing
+    required field, an unknown field, a ``change_type`` outside the enum) make
+    the entry unusable and are asserted here; policy violations are advisory and
+    surface as page warnings at render time instead.
+    """
+    from ai_gene_review.validation.ontology_change_policy import validate_change_entries
+
+    fm = _parse_frontmatter(md_path.read_text())
+    if "proposed_ontology_changes" not in fm:
+        return
+
+    rel = md_path.relative_to(PROJECTS_DIR)
+    _valid, errors = validate_change_entries(fm["proposed_ontology_changes"])
+    assert not errors, f"{rel} has invalid proposed_ontology_changes: {errors}"
+
+
+@pytest.mark.parametrize(
+    "changes,expected",
+    [
+        ("not a list", "must be a list"),
+        ([["nested"]], "must be a mapping"),
+        ([{"change_type": "NODE_RENAME"}], "missing required field(s)"),
+        (
+            [
+                {
+                    "change_type": "NOT_A_TYPE",
+                    "ontology": "GO",
+                    "about_node": {"id": "GO:1", "label": "x"},
+                    "justification": "j",
+                    "confidence": "PROBABLE",
+                }
+            ],
+            "not an OntologyChangeTypeEnum value",
+        ),
+        (
+            [
+                {
+                    "change_type": "NODE_RENAME",
+                    "ontology": "GO",
+                    "about_node": {"label": "no id"},
+                    "justification": "j",
+                    "confidence": "PROBABLE",
+                }
+            ],
+            "about_node needs a mapping with a non-empty 'id'",
+        ),
+        (
+            [
+                {
+                    "change_type": "NODE_RENAME",
+                    "ontology": "GO",
+                    "about_node": {"id": "GO:1", "label": "x"},
+                    "justification": "j",
+                    "confidence": "PROBABLE",
+                    "replaced_by": "GO:2",
+                }
+            ],
+            "unknown field(s) ['replaced_by']",
+        ),
+    ],
+)
+def test_proposed_ontology_changes_bad(changes, expected: str) -> None:
+    from ai_gene_review.validation.ontology_change_policy import validate_change_entries
+
+    _valid, errors = validate_change_entries(changes)
     assert any(expected in e for e in errors), errors
