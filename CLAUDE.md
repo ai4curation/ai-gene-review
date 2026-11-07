@@ -540,6 +540,18 @@ If `just fetch-gene` or a re-run deep-research file changes a source so that a q
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
 
+The same checks apply to every other YAML kind that carries quotes: modules,
+family reviews, GO-CAM reviews, rules and projects. `just validate-quotes`
+(`src/ai_gene_review/validation/quote_check.py`) finds every `supporting_text`,
+whether its source is named by `source_id`, `reference_id`, `reference` or the
+enclosing `references[].id`. It runs on every PR, not only when the quoting file
+changes, because a quote breaks when its *source* changes: editing a gene review
+can break a family review or module that quotes it, so re-run it after rewriting
+any file that others cite. A quote whose source has no readable text (`url`, `GO:`,
+`PMCID:`, no reference id) is reported as unchecked, never as verified. Failures
+that predate the check are in `conf/quote_check_baseline.yaml`, which only shrinks
+(`just validate-quotes --prune-baseline`).
+
 **Never cite a GOA file as support.** `GENE-goa.tsv` lists the annotations
 under review: it says what is annotated, never why it is true, so a
 `supported_by` entry pointing at it cites an annotation as evidence for itself.
