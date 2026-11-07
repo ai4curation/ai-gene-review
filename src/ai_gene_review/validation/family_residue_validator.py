@@ -90,6 +90,41 @@ class ResidueCheck:
         )
 
 
+class InactiveEntryError(LookupError):
+    """Raised when UniProtKB returns an inactive (deleted/merged/demerged) entry.
+
+    Such a record carries no sequence. This is a property of the cited accession, not a
+    retrieval failure, so callers report it as a FAIL on the claim that cites it rather
+    than letting one stale accession stop validation of every other family.
+    """
+
+    def __init__(self, accession: str, data: dict) -> None:
+        self.accession = accession
+        reason = data.get("inactiveReason") or {}
+        self.reason_type = reason.get("inactiveReasonType") or data.get("entryType") or "INACTIVE"
+        self.detail = reason.get("deletedReason") or ""
+        self.merged_into = list(reason.get("mergeDemergeTo") or [])
+        super().__init__(self.describe())
+
+    def describe(self) -> str:
+        """Human-readable explanation, for use in a check message.
+
+        >>> InactiveEntryError("C0H4F3", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "DELETED",
+        ...     "deletedReason": "Deleted from sequence source (ENSEMBL)"}}).describe()
+        'accession C0H4F3 is inactive in UniProtKB (DELETED: Deleted from sequence source (ENSEMBL))'
+        >>> InactiveEntryError("P1", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "MERGED", "mergeDemergeTo": ["P2"]}}).describe()
+        'accession P1 is inactive in UniProtKB (MERGED; now P2)'
+        """
+        msg = f"accession {self.accession} is inactive in UniProtKB ({self.reason_type}"
+        if self.detail:
+            msg += f": {self.detail}"
+        if self.merged_into:
+            msg += f"; now {', '.join(self.merged_into)}"
+        return msg + ")"
+
+
 @dataclass
 class SequenceCache:
     """Fetches and caches UniProt sequences.
@@ -106,6 +141,7 @@ class SequenceCache:
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
     _versions: dict[str, int] = field(default_factory=dict)
+    _inactive: dict[str, InactiveEntryError] = field(default_factory=dict)
 
     def _fetch_json(self, acc: str) -> dict:
         req = urllib.request.Request(
@@ -129,12 +165,20 @@ class SequenceCache:
         acc = accession.split(":")[-1]
         if acc in self._mem:
             return self._mem[acc]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         seq_path = self.cache_dir / f"{acc}.seq"
         if seq_path.exists():
             seq = seq_path.read_text().strip()
         else:
             data = self._fetch_json(acc)
+            if "sequence" not in data:
+                # Not cached on disk: an inactive entry can be restored, and a stale
+                # marker would then hide the live sequence.
+                err = InactiveEntryError(acc, data)
+                self._inactive[acc] = err
+                raise err
             seq = data["sequence"]["value"]
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
@@ -199,7 +243,17 @@ def check_anchor_residues(
             )
             continue
 
-        seq = cache.get(anchor)
+        try:
+            seq = cache.get(anchor)
+        except InactiveEntryError as exc:
+            results.append(
+                ResidueCheck(
+                    family, site_id, anchor, 0, [], None, Outcome.FAIL,
+                    f"{exc.describe()}; choose a live anchor protein",
+                    kind="ANCHOR_RESIDUE",
+                )
+            )
+            continue
         pinned = site.get("anchor_sequence_version")
         drift = ""
         if pinned is not None:
@@ -811,7 +865,15 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
             f"{kind} control declares no position/residue, so its assertion is unchecked",
             kind="CONTROL_RESIDUE",
         )
-    observed = _residue_at(cache.get(acc), pos)
+    try:
+        seq = cache.get(acc)
+    except InactiveEntryError as exc:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
+            f"{kind} control {exc.describe()}; replace or drop this control",
+            kind="CONTROL_RESIDUE",
+        )
+    observed = _residue_at(seq, pos)
     if observed is None:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
