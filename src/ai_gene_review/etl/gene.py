@@ -1309,7 +1309,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("date", ""),  # DATE
         ]
 
-        tsv_row = "\t".join(row)
+        # QuickGO can supply an ECO term without a legacy GO evidence code
+        # (for example CACAO's ECO:0007744). Keep that column empty, rather
+        # than inventing a GO code or failing on the JSON null. Other optional
+        # display fields can also be null.
+        tsv_row = "\t".join("" if value is None else str(value) for value in row)
         if tsv_row in seen_tsv_rows:
             continue
         seen_tsv_rows.add(tsv_row)
