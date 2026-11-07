@@ -28,3 +28,8 @@ The exonuclease row is now UNDECIDED. The 2010 primary's PHP-residue discussion 
 Native NA1000 (CB15-derived) disruption, epistasis and rpoB spectra support mutagenic damage tolerance. The dnaE2 disruption is an insertion/truncation allele; it is not a purified-enzyme assay. Family/HAMAP classification and mycobacterial catalytic mutants support DNA polymerase activity, while insertion versus extension, lesion repertoire and fidelity remain target-specific gaps. The broad polymerase row now quotes the actual catalytic reaction instead of a bare Rhea identifier. Every original source payload and the historical NEW row are preserved.
 
 A genuine Falcon request failed with HTTP403 authentication; no report was fabricated. Official GO definitions/ancestry, source-protection receipts and the complete action ledger are in the consultation audit directory. No family review or selector was changed. The newer 2026 polymerase survey (DOI:10.1093/nar/gkag133) was flagged to the module owner for family-boundary review, without using it to assert a target residue state here.
+
+
+## 2026-11-07 PR6169 proofreading follow-up
+
+Reassessed GO:0008408 as MARK_AS_OVER_ANNOTATED for the traced broad InterPro mapping, while explicitly retaining uncertainty about target nuclease activity. PMID:20615954 supplies a counterexample to uniform nuclease inference, not a target-specific residue-loss result. Specific DnaE2 evidence supports polymerase synthesis independently. The review does not equate error-prone behavior with absence of proofreading. See `analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round1-gene-consultation/RESULTS.md` and its captured InterPro/GO provenance. Original annotation payload and order remain unchanged; no new row is added.

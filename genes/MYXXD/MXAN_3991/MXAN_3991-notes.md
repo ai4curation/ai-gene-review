@@ -30,3 +30,8 @@ failure. The manual literature review is recorded here, not in a fabricated
 provider file. PAINT could not assess lineage losses because Q1D5A2 is absent
 as a leaf from the cached PTHR45900 tree. Source access attempts, input hashes,
 seed preservation and validation receipts are retained in the consultation folder.
+
+
+## 2026-11-07 PR6169 core-function follow-up
+
+PMID:34190612 directly supports RecA1 interaction and inhibition of DNA-binding/strand-exchange activity. Added an enzyme-inhibitor core (current GO:0004857), retaining the lesion-bypass process association on this regulatory role. Removed that association from the ATPase core because a gene-level process role does not establish which measured catalytic activity drives it. ATPase and ssDNA-binding cores remain; no annotation row was added or removed. Figure 4 distinguishes inhibition of new complexes from failure to clearly dismantle preformed RecA-coated DNA. PMID:38591662 construct attribution is strengthened by reproducible 290-aa/30,274-Da, R71/T72 and terminal 223–290 interval checks, without claiming a complete construct sequence match. See `analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round1-gene-consultation/RESULTS.md`.

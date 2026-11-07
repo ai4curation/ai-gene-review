@@ -23,3 +23,8 @@
 MMS-induced mutagenesis in PaW85 and stationary-phase antimutator effects are separate contexts. Replaced blanket nonmutagenic/nonreplicative claims with conditional physiology; current GO places TLS under DNA replication and DNA biosynthesis. Broad true claims refine to supported chemistry/processes. PHP exonuclease is UNDECIDED because the cited loss-of-residues comparison is mycobacterial, not a Q88I82 assay or target alignment. Historical TLS NEW is unchanged.
 
 The genuine existing provider research was read and preserved unchanged; primary sources control conclusions where reports are stale. PAINT-loss checking completed sequentially, but the target is not a leaf in the available cached family tree: loss status is unavailable, not demonstrated absent. Original ordered annotation payloads and historical NEW actions are preserved; no new row is added. Existing notes above are historical and superseded only where this dated audit explains a correction. All original raw, provider and publication bytes remain unchanged.
+
+
+## 2026-11-07 PR6169 proofreading follow-up
+
+Reassessed GO:0008408 as MARK_AS_OVER_ANNOTATED for the traced broad InterPro mapping, while explicitly retaining uncertainty about target nuclease activity. PMID:20615954 supplies a counterexample to uniform nuclease inference, not a target-specific residue-loss result. Specific DnaE2 evidence supports polymerase synthesis independently. The review does not equate error-prone behavior with absence of proofreading. See `analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round1-gene-consultation/RESULTS.md` and its captured InterPro/GO provenance. Original annotation payload and order remain unchanged; no new row is added.
