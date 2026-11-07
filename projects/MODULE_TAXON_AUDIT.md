@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 approved at fd6b4d1095; current main d7638df804 integrated at 7927373332. All 180 frozen nonshared files remain unchanged, including178 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to dea61b999950240d98a37193e419ef8b9c25299f. Fresh current-head review, CI and actual merge remain pending.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 follow-up refines Bacillus subtilis ProA from cytoplasm to inferred cytosol using target HAMAP/soluble reductase architecture and native-locus E. coli ProA imaging. Cytosol includes protein complexes; transient associations are not a reason to exclude it. This is comparative inference, not a Bacillus localization assay. All seven original ProA annotation payloads are preserved, with no NEW rows. Focused validation, history and rendering pass; 177 prior nonshared files are unchanged and three gene files have explicit successors. The current evidence closure verifies 225 inputs and 189 citation edges. Fresh full validation, publication and review remain pending; auto-merge is held.
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
 
@@ -1056,3 +1056,7 @@ Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full 
 PR #6160 approved at fd6b4d1095; current main d7638df804 integrated at 7927373332. All 180 frozen nonshared files remain unchanged, including178 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to dea61b999950240d98a37193e419ef8b9c25299f. Fresh current-head review, CI and actual merge remain pending.
 
 [Publication closeout](../analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/approved-main-20261107-1356-closeout.json).
+
+## 2026-11-07 — P5C ProA localization refinement
+
+PR #6160 follow-up refines Bacillus subtilis ProA from cytoplasm to inferred cytosol using target HAMAP/soluble reductase architecture and native-locus E. coli ProA imaging. Cytosol includes protein complexes; transient associations are not a reason to exclude it. This is comparative inference, not a Bacillus localization assay. All seven original ProA annotation payloads are preserved, with no NEW rows. Focused validation, history and rendering pass; 177 prior nonshared files are unchanged and three gene files have explicit successors. The current evidence closure verifies 225 inputs and 189 citation edges. Fresh full validation, publication and review remain pending; auto-merge is held.

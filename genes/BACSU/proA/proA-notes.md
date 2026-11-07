@@ -30,3 +30,11 @@ PAINT check: `just paint-losses BACSU proA` reported no IRD or IKR loss on this 
 ## PR6160 evidence follow-up (2026-11-07 UTC)
 
 Tightened row-specific rationale. For ProB/ProJ, cytosol remains a comparative inference from HAMAP, soluble architecture and E. coli native-locus monomeric-GFP localization, not from GOA. For ProA, the review retains the explicitly curated cytoplasm granularity without treating absence of a finer row as evidence. No actions or original payloads changed.
+
+## 2026-11-07: comparative cytosol refinement after PR6160 review
+
+The earlier cytoplasm-only decision is superseded by a narrow MODIFY to GO:0005829 cytosol, with the core location aligned. No annotation row is added. The cached full text of PMID:39514317 explicitly images ProA as well as ProB using native-locus monomeric superfolder GFP in the E. coli BW25113 background (M9/glucose growth). Both proteins disperse through the cytoplasm; the earlier polar GFP pattern was an overexpression/tag artifact. This is comparative evidence for Bacillus ProA, not a target localization experiment.
+
+Target P39821 has a HAMAP MF_00412 cytoplasm assignment and conserved gamma-glutamyl phosphate reductase architecture, without annotated export or membrane-spanning features. Together with the ProA-specific comparative microscopy, these support inferred cytosol at the same evidence threshold used for the kinase homologs. The previous appeal to transient intracellular associations was misplaced: the existing QuickGO response for GO:0005829 explicitly includes protein complexes in cytosol. Presence or absence of another annotation row does not determine the localization judgment.
+
+Original row order, all machine fields including qualifiers, and raw records remain unchanged. The existing seven rows contain no historical NEW proposals. The prior dated notes and preservation receipts remain intact; this follow-up records their explicit supersession only for the changed review, notes and derived HTML. Focused validation, rendering and exact preservation results are recorded in analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/proa-localization-followup-20261107/.
