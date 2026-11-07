@@ -1,0 +1,14 @@
+# PR6158 gene follow-up
+
+1. GalD now recommends GO:0016862 in both the MODIFY replacement and existing source-defect report. This corrects the EC-aligned chemical branch immediately; its substrate-specific child request remains separate. The core's primary quote now describes the tautomerization, not merely membership of a new subfamily.
+2. GalD, KA1 LigU and SYK-6 LigJ retain fitting grounded MF genera (GO:0016862, GO:0016863 and GO:0016836). Substrate-specific chemistry remains in descriptions, references and separate proposed child terms. No historical annotation or NEW action was changed.
+3. LigK's redundant CHA proposal is retired with the exact old structured entry archived. GO:0047443 explicitly includes CHA cleavage; a misleading short HMG label does not make a second request necessary. The GalC and LigK treatment now agrees.
+4. All three GalC ancestry claims were independently verified in the current QuickGO is_a/part_of closure, including GO:0072329. Thus the reviewer raised a useful provenance gap, not an actual wrong relationship. Saved official definitions, separate ancestor snapshots, URL/time/hash provenance and individual row explanations close that gap.
+
+Additional bounded corrections:
+- Removed curation commentary from LigU's description while retaining the KA1-versus-SYK-6 evidence distinction in its reference review and notes.
+- Independently read the publisher PMID21219457 text. Its short growth and LigJ-like replacement excerpts are preserved with the exact indexed retrieval hash. Full acquired text remains ignored, and the original publication cache remains unchanged. A provenanced file excerpt is valid evidence checked against its local source; it is not presented as an expanded publication cache. Unrelated whole-strain growth quotes were removed from BURL3 MF and CC rows. Growth remains only pathway context. The new comparative LigJ primary citation on C7570 is explicitly not a target assay.
+- Retained C7570 carboxy-lyase/hydrolase MARK_AS_OVER_ANNOTATED. Family/neighborhood support for a hydratase hypothesis does not by itself experimentally exclude other reactions in this unassayed protein. This differs in evidence strength from characterized SYK-6 LigJ; no forced cross-gene action symmetry is justified.
+- Did not adopt the reviewer's phrase 'gallate-specific IMP evidence' for PMID11092855. Its direct mutant-growth substrates were vanillate and syringate. LigJ gallate participation explicitly combines shared catalytic chemistry, DesB gallate entry (PMID16030198) and lower-pathway genetics. The original NEW/IMP payload is unchanged.
+
+No new annotation rows, new publication caches, module/family/project edits, full-corpus run, commits or publication actions were performed. The only remaining focused advisories concern uncited provider reports (GalC and GalD) and BURL3 C7569/C7572 process cores without additional NEW rows. These do not justify manufacturing source support or new annotations.

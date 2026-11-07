@@ -695,3 +695,7 @@ Integrated main e9d31cced895d2d74c464d57cbd40381e15520ab after the passing full 
 ## 2026-11-07 — gallate audit PR published
 
 PR #6158 published after full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Twelve member reviews and 24 source-based coverage cases pass. Fresh review, CI and actual merge remain pending. [PR #6158](https://github.com/ai4curation/ai-gene-review/pull/6158).
+
+## 2026-11-07 — gallate review follow-up
+
+PR #6158 review follow-up restores three grounded core genera, reconciles GalD branch correction, retires redundant LigK proposal and documents verified GalC ancestry. All 60 ordered payloads/actions preserved; eight focused gene checks and module/coverage checks pass. New full validation, fresh review and actual merge remain pending.

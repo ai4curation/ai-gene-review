@@ -15,3 +15,10 @@ Evidence quotations and provenance:
 Search and retrieval: exact locus/accession searches on 2026-11-06 returned no indexed results establishing a target-specific biochemical assay. A genuine `just deep-research BURL3 Bcep18194_C7569 --provider falcon` attempt failed with HTTP 403 authentication failure; no provider report was produced or fabricated. The command and error are retained under `.cache/module-audit-logs/gallate-20261106/BURL3-C7569-falcon.log`. Manual review used the frozen UniProt classification, publisher PMID:21219457 and the cited comparative papers.
 
 All original annotation rows, order, source terms, evidence codes, references, qualifiers and supporting entities are preserved. No NEW annotation rows were manufactured. Ontology definitions were checked against the official QuickGO response in `analysis/module_audits/bacterial_gallate_catabolism/burkholderia-consultation.ontology.json`.
+
+
+## 2026-11-07 PR6158 follow-up
+
+Removed whole-strain growth text from the molecular-function row; retained family-signature evidence for inferred CHA chemistry and scoped native growth as pathway context in the core. Independently verified publisher excerpts and capture provenance are shared under C7570 source analysis. No target assay or new GO assertion is manufactured.
+
+No annotation payload, row order, inherited NEW action, raw/provider artifact or existing publication cache was altered. No additional NEW rows were added. Focused validation, render and helper-history results are recorded in the round1-gene-review handoff.

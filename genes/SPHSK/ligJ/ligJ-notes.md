@@ -52,3 +52,12 @@ cached publications and the UniProt record. No `-deep-research-*.md` file exists
 KCH hydration, zinc coordination and Glu284 mechanism are supported by PMID:30207699; the protected cache is abstract-only but explicitly describes the structural/kinetic results. PDB6DWV entity1 maps G2IQQ5 and exactly matches all341 residues, preserved in structure-identity.json. The existing KCH-specific NTR is now the core activity rather than broad hydro-lyase. All four inherited NEW rows/actions are intact. Zinc binding is mechanistically central. The historical native genetics in PMID:11092855 and soluble pathway enzymology are distinguished from direct subcellular localization; cytoplasm remains a non-core inferred assignment. The enzyme acts on soluble ring-cleavage intermediates, and no direct lignin-polymer degradation is asserted.
 
 Research: the normal default Falcon attempt failed with HTTP403 authentication; manual evidence assessment is recorded here, without a fabricated provider report. All original non-review annotation payloads, order and inherited NEW actions are retained; no new annotation row was added. Sources were not refreshed. Current ontology responses and pre-edit proofs are in the ignored gallate-20261106/gene-review audit cache.
+
+
+## 2026-11-07 PR6158 follow-up
+
+Restored GO0016836 hydro-lyase as the grounded core MF with KCH-specific chemistry retained in description and a separate child-term request. No original or historical NEW annotation changed.
+
+No annotation payload, row order, inherited NEW action, raw/provider artifact or existing publication cache was altered. No additional NEW rows were added. Focused validation, render and helper-history results are recorded in the round1-gene-review handoff.
+
+Source-scope clarification: PMID11092855 directly tests growth on vanillate and syringate, not free gallate. The historical gallate NEW/IMP payload is preserved; its reason and core evidence now explicitly combine the shared LigJ reaction, DesB gallate entry from PMID16030198, and syringate-pathway genetics. The reviewer’s phrase “gallate-specific IMP evidence” is not adopted.
