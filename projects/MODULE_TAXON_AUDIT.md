@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_imuabc_damage_induced_mutagenesis`: PR #6169 scientific review follow-up passes full validation on 357df862a5; main 7eee074bca is integrated with 234 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_imuabc_damage_induced_mutagenesis`: PR #6169 second review follow-up corrects one contradictory PTHR33516 note: narrow-regulon LexA2 is not a negative SOS-response example. Structured family assessments, the module, all 12 gene reviews and 84 ordered rows including 10 historical NEW proposals remain unchanged. Focused checks pass; full validation, publication, fresh review and actual merge remain pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
