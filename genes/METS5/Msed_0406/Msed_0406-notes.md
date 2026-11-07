@@ -128,3 +128,7 @@ Calls where the parallel review differed, left as they are here:
   secondary activity" and "in vitro activity of unknown relevance".
 - GO:0006637 acyl-CoA metabolic process: the parallel review used ACCEPT
   rather than KEEP_AS_NON_CORE.
+
+Decision (2026-11-07, reviewer): keep GO:0003987 and GO:0050218 as
+KEEP_AS_NON_CORE, treating them as genuine secondary activities. The
+MARK_AS_OVER_ANNOTATED alternative above is not adopted.
