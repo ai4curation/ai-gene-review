@@ -23,3 +23,11 @@
   (IDA, PMID:28388411). GO:0120014 is not an is_a descendant of GO:0005543, so both are informative.
 - Core functions: (1) GO:0120014 (primary; definition matches the MlaC carrier exactly);
   (2) GO:0005543 binding state, retained so the module's MlaC annoton (GO:0005543) has gene-level grounding.
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Separate 2017 binding/model evidence from later measured transfer; qualify PE/PG selectivity using 2025 primary experiments.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Genuine default Falcon attempt failed with HTTP403 authentication; no provider report was generated. Manual consultation used cached primary papers and current ontology snapshots.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.

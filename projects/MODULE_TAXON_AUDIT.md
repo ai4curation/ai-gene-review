@@ -44,6 +44,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_mla_intermembrane_phospholipid_transport`: [PR #6198](https://github.com/ai4curation/ai-gene-review/pull/6198) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+
 - [ ] `bacterial_lipoprotein_maturation`: PR #6184 scientific review follow-up passes full validation on 1702541121; main bb89a37783 is integrated with 414 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
@@ -105,7 +107,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 11 PR_OPEN, 3 IN_PROGRESS, 728 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -946,3 +948,15 @@ PR #6184 follow-up passes full validation on 1702541121: 10,788 reviews, zero bl
 ## 2026-11-07 — bacterial_lipoprotein_maturation main integration
 
 Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on 1702541121f4bcf1b66b5eb52fd9a9cbf57fa4e5. All 414 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Comparative Mla architecture audit
+
+At this checkpoint: Comparative audit passes full validation on b005dd670c: 10,796 reviews, zero blocking errors and 571 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial mla intermembrane phospholipid transport full validation passes
+
+Comparative audit passes full validation on b005dd670c: 10,796 reviews, zero blocking errors and 571 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/full-validation.json).
+
+## 2026-11-07 — bacterial_mla_intermembrane_phospholipid_transport main integration
+
+Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full run on b005dd670c0511266464cfe0540b5fcbf72cb1df. All 569 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
