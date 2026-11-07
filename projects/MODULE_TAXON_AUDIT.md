@@ -1,7 +1,7 @@
 ---
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
-last_reviewed: 2026-11-07
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 ---
 
@@ -41,9 +41,9 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [x] `bacterial_cytochrome_c_maturation_system_i`: [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121) merged as `a76d110ace9de65316f4dfbe999c1a66ab38602a` at 2026-11-07T01:49:33Z. All 370 scoped files match final published head `d114fb850d7bdfe8ac83c12c174aeb71e690eaea`; 29 member reviews are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6121-merged-content.json).
-
 - [ ] `bacterial_groel_groes_chaperonin_folding`: Comparative audit passes full validation on 6332a1d51e: 10,742 reviews, zero blocking errors and 220 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+
+- [x] `bacterial_cytochrome_c_maturation_system_i`: [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121) merged as `a76d110ace9de65316f4dfbe999c1a66ab38602a` at 2026-11-07T01:49:33Z. All 370 scoped files match final published head `d114fb850d7bdfe8ac83c12c174aeb71e690eaea`; 29 member reviews are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6121-merged-content.json).
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -686,6 +686,48 @@ Integrated published main `577501df51` with the validated PR #5970 head `754e29a
 
 Integration proof: [validated-head-main4-integration.json](../analysis/module_audits/bacterial_ethanolamine_uptake_catabolism/validated-head-main4-integration.json).
 
+## 2026-11-06 — cytochrome c maturation comparative audit
+
+The bacterial System I module now distinguishes canonical CcmG-supported/CcmFH maturation from the experimentally reconstructed G20 cysteine-CcmE System I* cassette. 24 curated references and 55 findings support all 16 annotons; 29 individual reviews cover three complete curated panels plus selected Rhodobacter/Shewanella roles. All 227 historical rows, 58 raw files and six provider artifacts remain intact; six new proposals bring the total to 233 rows. Seven family reviews qualify chemistry, partner and mixed-subfamily claims without changing original PAINT verdicts. The 151 capacity controls pass. Scoped checks pass. Full validation on 4c2bbabe931 is terminal exit 1: 10,548 reviews, 17 proven unrelated reference errors in 16 yeast reviews, 22 base-identical inputs and 28,001 best-practice warnings. No scoped blocker was found. PR #6121 is open; external review/CI and actual merge remain pending; prior module PR #5362 is already merged. Other inventory rows retain their dated evidence.
+
+## 2026-11-06 — cytochrome review corrections
+
+PR #6121 follow-up reconciles heme handoff versus transmembrane transport across the audited taxa, supports membrane locations with topology, and retains the distinct CcmE covalent intermediates. Thirteen focused gene validations and five supplemental reference-finding checks pass; all 151 capacity cases still pass. All original annotation payloads and raw/provider sources are preserved. Fresh full-corpus validation, current-head external review and CI remain pending; no merge is claimed.
+
+## 2026-11-06 — cytochrome follow-up full validation
+
+The PR #6121 scientific follow-up full run finished on 10,548 reviews, with zero best-practice errors and 54 referenced pathways passing. Its 17 reference errors match the previous run exactly and affect 16 unrelated yeast reviews; all 22 relevant inputs are identical to the pinned base. All 307 scoped publication files match the validated commit. Renewed review, CI and actual merge remain required.
+
+## 2026-11-06 — cytochrome maturation location follow-up validated
+
+Round 2 full validation completed on 10,548 reviews: 17 exact known reference errors in 16 unrelated yeast reviews, all 22 inputs identical to the pinned base, zero best-practice errors and all 54 PMID-bearing pathways passing. All 342 scoped files matched science commit 7641af14dc before metadata closure. Seventeen gene reviews now use claim-specific topology/location evidence, including two core-only location repairs; 233 annotation rows, 58 raw files and six provider files remain unchanged. Publication, renewed independent review/CI and actual merge remain pending.
+
+## 2026-11-06 — PR #6121 integration with published main
+
+Integrated published main `c27aa23b93` with the validated PR #6121 head `542a9102ed`. All 339 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6121 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6121 head `6e98ed1c86`. All 341 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6121 integration with published main
+
+Integrated published main `488d370561` with the validated PR #6121 head `5316e29917`. All 342 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6121 integration with published main 577501df51
+
+Integrated published main `577501df51` with the validated PR #6121 head `6b379f89d2`. All 344 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row (no earlier completion rows regressed); both dated journals are preserved. Incoming main contains the merged beta-oxidation audit; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [validated-head-main4-integration.json](../analysis/module_audits/bacterial_cytochrome_c_maturation_system_i/validated-head-main4-integration.json).
+
+## 2026-11-07 — cytochrome-c provenance follow-up validates
+
+PR6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. Record-section metadata was added to 23 reviews; OLEA2 CcmE orientation is explicitly a comparative inference. One inherited ECOLI ccmE process proposal is retired in place, preserving its original action and payload. Redundant broad core processes are removed while specific linkage processes remain. All 233 original annotation payloads/order, 68 protected gene/source files and 40 publication caches are preserved. Twenty-three focused gene checks, 24 histories, 22 renders, 151 coverage cases and five retirement controls pass. [Full-run proof](../analysis/module_audits/bacterial_cytochrome_c_maturation_system_i/round3-full-validation.json).
+
+## 2026-11-07 — cytochrome-c main integration
+
+Integrated published main e9d31cced895d2d74c464d57cbd40381e15520ab after the passing full run on 072461b9b2. All 369 frozen files outside shared project metadata/index remain byte-identical. Every incoming inventory row is preserved except the current cytochrome audit row; no completion rows regress. This is an integration with preserved science, not an additional full-corpus pass. Fresh review, CI and actual merge remain pending.
+
 ## 2026-11-07 — GroEL/GroES comparative audit started
 
 Comparative GroEL/GroES audit started: eight assessed references, twelve findings, twelve member reviews under consultation across three bacterial phyla. Family selectors and separately scoped E. coli/Caulobacter CnoX mechanisms are drafted. 201 ordered seed payloads frozen. Full validation, dedicated PR and merge remain pending.
@@ -701,3 +743,7 @@ PR #6121 merged; 370 scoped files match the final published head and all 29 memb
 ## 2026-11-07 — bacterial groel groes chaperonin folding full validation passes
 
 Comparative audit passes full validation on 6332a1d51e: 10,742 reviews, zero blocking errors and 220 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_groel_groes_chaperonin_folding/full-run-proof.json).
+
+## 2026-11-07 — bacterial_groel_groes_chaperonin_folding main integration
+
+Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full run on 6332a1d51e0e1488c73d594a62e1cfb2aeb9f458. All 216 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
