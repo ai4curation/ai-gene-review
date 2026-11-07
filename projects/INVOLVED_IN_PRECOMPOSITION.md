@@ -536,7 +536,8 @@ context here.
 | Gene | Rows | Outcome |
 |---|---|---|
 | CDH2, CDH3, CDH11 (IBA) | 3 | The rows were already on the genus, and an earlier pass had MODIFYed them to GO:0098641; they are reversed to ACCEPT. Their `propagation_review` changes from TERM_SCOPING_PROBLEM/GRANULARITY_MISMATCH to NO_FAILURE_CORE, and the earlier reasoning is labelled superseded. |
-| CDH1 (IDA, from GO:0098631), DSG2 ×3 and DSC2 ×2 (IPI, from protein binding) | 6 | MODIFY replacements now target the genus; the row-specific summaries are kept. |
+| DSG2 ×3 and DSC2 ×2 (IPI, from protein binding) | 5 | MODIFY replacements now target the genus; the row-specific summaries are kept. |
+| CDH1 (IDA, on GO:0098631 *cell adhesion mediator activity*) | 1 | GO:0045296 is not under GO:0098631, so moving there would drop the claim that the binding mediates adhesion. The row is refined within its own branch, to GO:0098632 *cell-cell adhesion mediator activity*; CDH1's cadherin binding is already carried by its GO:0045296 rows (IBA, HDA). GO:0098632 is precomposed by definition (lesson 1 below), but as a refinement of the annotated term it is the right target. |
 | FAT4 (IDA, FAT4–DCHS1) | 1 | The reviewer-proposed NEW row is now on the genus. |
 | core functions (7 genes) | 7 | MF GO:0098641 → GO:0045296; each `directly_involved_in` already carries the adhesion process. |
 | GOA rows judged over-annotated, non-core or undecided (ANXA1, PPP1CA, BAIAP2, BAIAP2L1, EPCAM) | 5 | Unchanged. These aren't MODIFYs, so nothing is promoted. Four come from one E-cadherin interactome study (PMID:25468996); EPCAM's is an IBA. |
