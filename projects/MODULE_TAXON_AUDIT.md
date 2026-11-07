@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_kdp_potassium_homeostasis`: Comparative audit: 20 complete gene reviews, 274 ordered annotation rows (8 inherited NEW retained; no new assertions), 5 family reviews and 14 manually assessed references including 4 narrative reviews. Capacity checks pass 32 scenarios plus 3 module mutations and 4 optional-activity profiles. Focused final membership/module checks and full corpus validation precede a separate PR; actual merge remains pending.
+- [ ] `bacterial_kdp_potassium_homeostasis`: Comparative audit passes full validation on cc2868a722: 10,762 reviews, zero blocking errors and 285 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
@@ -767,3 +767,7 @@ Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head 4164
 ## 2026-11-07 — Kdp comparative audit
 
 Comparative audit: 20 complete gene reviews, 274 ordered annotation rows (8 inherited NEW retained; no new assertions), 5 family reviews and 14 manually assessed references including 4 narrative reviews. Capacity checks pass 32 scenarios plus 3 module mutations and 4 optional-activity profiles. Focused final membership/module checks and full corpus validation precede a separate PR; actual merge remains pending.
+
+## 2026-11-07 — bacterial kdp potassium homeostasis full validation passes
+
+Comparative audit passes full validation on cc2868a722: 10,762 reviews, zero blocking errors and 285 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_kdp_potassium_homeostasis/full-validation.json).
