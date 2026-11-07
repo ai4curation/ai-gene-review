@@ -25,3 +25,8 @@ Selected evidence anchors:
 No NEW rows, subtype-specific physiological annotations, target RNA activity, stable ProA-ProB complex or demonstrated substrate channeling were added. The five original Falcon attempts failed and remain documented in the original logs.
 
 PAINT check: `just paint-losses BACSU proA` reported no IRD or IKR loss on this target lineage. The retained IBA therefore does not contradict a cached PAINT loss.
+
+
+## PR6160 evidence follow-up (2026-11-07 UTC)
+
+Tightened row-specific rationale. For ProB/ProJ, cytosol remains a comparative inference from HAMAP, soluble architecture and E. coli native-locus monomeric-GFP localization, not from GOA. For ProA, the review retains the explicitly curated cytoplasm granularity without treating absence of a finer row as evidence. No actions or original payloads changed.

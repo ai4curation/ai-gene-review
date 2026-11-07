@@ -56,3 +56,8 @@ PMID:39514317 (full text) challenges required ProA–ProB channeling: heterologo
 PMID:37511294 (full text) overturns the previous claim that no ProB binds RNA. K-12 ASKA-derived proB was recloned into pET21a with C-terminal His tag, expressed in BL21-Gold(DE3), and tested by SELEX/competition EMSA. Estimated KD >>10 micromolar, no mapped binding site, no established native target or RNA-regulatory function. The KT2440 RNA-binding row is UNDECIDED; E. coli binding neither proves nor excludes this target transfer.
 
 Existing abstract-only primary caches were not refreshed. Curated experimental annotations remain supported where independent evidence agrees; no target-table detail was invented. Complete validation, ontology snapshots and preservation proof are in the member-review audit and ignored existing-review logs.
+
+
+## PR6160 evidence follow-up (2026-11-07 UTC)
+
+Re-read full PMID:37511294 and the InterPro provenance. Retained RNA-binding UNDECIDED: direct E. coli SELEX/competition EMSA is positive but weak, the PUA binding site was not mapped, and this target was not assayed. Accessibility of that paper does not resolve cross-species conservation; no physiological role is required merely to establish binding. This is an InterPro IEA, not a PAINT RNA assertion.

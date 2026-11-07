@@ -27,3 +27,10 @@ Selected evidence anchors:
 No NEW rows, subtype-specific physiological annotations, target RNA activity, stable ProA-ProB complex or demonstrated substrate channeling were added. The five original Falcon attempts failed and remain documented in the original logs.
 
 PAINT check: `just paint-losses BACSU proB` reported no IRD or IKR loss on this target lineage. The retained IBA therefore does not contradict a cached PAINT loss.
+
+
+## PR6160 evidence follow-up (2026-11-07 UTC)
+
+Re-read full PMID:37511294 and the InterPro provenance. Retained RNA-binding UNDECIDED: direct E. coli SELEX/competition EMSA is positive but weak, the PUA binding site was not mapped, and this target was not assayed. Accessibility of that paper does not resolve cross-species conservation; no physiological role is required merely to establish binding. This is an InterPro IEA, not a PAINT RNA assertion.
+
+Tightened row-specific rationale. For ProB/ProJ, cytosol remains a comparative inference from HAMAP, soluble architecture and E. coli native-locus monomeric-GFP localization, not from GOA. For ProA, the review retains the explicitly curated cytoplasm granularity without treating absence of a finer row as evidence. No actions or original payloads changed.

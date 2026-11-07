@@ -21,3 +21,10 @@ Selected evidence anchors:
 - [PMID:8755867] In C. glutamicum ATCC 17965, residual growth of proA-null mutants and complementation by asd support a bypass of the canonical reductive step; this is not an ATCC 13032 assay. Source: "Null proA alleles still grow slowly under proline starvation, which suggests that a proA-independent bypass of this metabolic step exists in C. glutamicum."
 
 No NEW rows, subtype-specific physiological annotations, target RNA activity, stable ProA-ProB complex or demonstrated substrate channeling were added. The five original Falcon attempts failed and remain documented in the original logs.
+
+
+## PR6160 evidence follow-up (2026-11-07 UTC)
+
+Replaced the three truncated proA-null bypass quotations used as affirmative support with the canonical-pathway sentence. Independent target HAMAP reaction support remains; the complete bypass finding stays explicitly separate. ATCC 17965 genetics is not an ATCC 13032 purified-enzyme assay.
+
+Tightened row-specific rationale. For ProB/ProJ, cytosol remains a comparative inference from HAMAP, soluble architecture and E. coli native-locus monomeric-GFP localization, not from GOA. For ProA, the review retains the explicitly curated cytoplasm granularity without treating absence of a finer row as evidence. No actions or original payloads changed.
