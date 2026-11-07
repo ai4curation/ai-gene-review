@@ -644,6 +644,30 @@ def classify_donor_regime(
     return "R4_BRACKETED_MULTI_SPECIES"
 
 
+def wilson_ci(k: int, n: int, z: float = 1.959963984540054) -> Tuple[float, float]:
+    """Return 95% Wilson score confidence interval (in percentage points, 0..100) for k/n.
+
+    >>> tuple(round(x, 1) for x in wilson_ci(50, 261))
+    (14.8, 24.4)
+    >>> tuple(round(x, 1) for x in wilson_ci(124, 938))
+    (11.2, 15.5)
+    >>> tuple(round(x, 1) for x in wilson_ci(12, 25))
+    (30.0, 66.5)
+    >>> tuple(round(x, 1) for x in wilson_ci(7, 34))
+    (10.3, 36.8)
+    >>> tuple(round(x, 1) for x in wilson_ci(17, 218))
+    (4.9, 12.1)
+    """
+    if n <= 0:
+        return (0.0, 0.0)
+    p = k / n
+    z2 = z * z
+    denom = 1.0 + z2 / n
+    center = (p + z2 / (2.0 * n)) / denom
+    half = (z * ((p * (1.0 - p) / n + z2 / (4.0 * n * n)) ** 0.5)) / denom
+    return (100.0 * max(0.0, center - half), 100.0 * min(1.0, center + half))
+
+
 REGIME_LABELS: Dict[str, str] = {
     "R1_SINGLE_GENE": "R1: Single donor gene (1 taxon, 1 distinct seed)",
     "R2_MULTI_PARALOG_SINGLE_TAXON": "R2: Multi-paralog single taxon (1 taxon, >=2 distinct seeds)",
@@ -1245,8 +1269,9 @@ def print_donor_regimes(
                     if not sub_rows:
                         continue
                     _k, fl, rf, rm, pf, pr, pd, prm = _format_rate_cols(sub_rows)
+                    ci_lo, ci_hi = wilson_ci(fl, len(sub_rows))
                     print(
-                        f"      {sub_lbl:<64} | n={len(sub_rows):>4} | Fail: {fl:>3} ({pf:>5.1f}%) | "
+                        f"      {sub_lbl:<64} | n={len(sub_rows):>4} | Fail: {fl:>3} ({pf:>5.1f}%, 95% CI {ci_lo:.1f}-{ci_hi:.1f}%) | "
                         f"Refn: {rf:>3} ({pr:>5.1f}%) | Down: {pd:>5.1f}% | REM: {rm:>3} ({prm:>4.1f}%)"
                     )
 
