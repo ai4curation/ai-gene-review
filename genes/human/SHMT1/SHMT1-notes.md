@@ -157,3 +157,26 @@ Secondary (non-core but real): nuclear de novo thymidylate synthesis / scaffold
 (dTMP biosynthetic process GO:0006231, lamin binding), riboregulation / mRNA
 5'-UTR binding, and HTMLA/threonine-aldolase promiscuous activities (carnitine
 biosynthesis backup).
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Row: GO:0005739 IBA (GO_REF:0000033, is_active_in), MARK_AS_OVER_ANNOTATED. No
+sub-compartment rows.
+
+Checks:
+- PAINT: `interpro/panther/PTHR11680/PTHR11680-paint.tsv` puts GO:0005739 at PTN000188068
+  (taxon:2759), seeds AT4G37930 (SHM1, Q9SZJ5), MGI:1277989 (Shmt2, Q9CZN7), RGD:1308582
+  (Shmt2), SGD:S000000467 (SHM1, P37292), UniProtKB:P34897 (SHMT2), ZFIN:ZDB-GENE-071213-1
+  (shmt2); identities checked via UniProt REST. All mitochondrial SHMT2-type enzymes. A NOT
+  (IRD) sits only at PTN008523729 (taxon:4895, fission yeast). The bilaterian node
+  PTN000188070 (nucleus) is seeded by SHMT1 P34896, mouse Shmt1 (MGI:98299), FB:FBgn0029823 and ZDB-GENE-040426-1558.
+- UniProt P34896: [file:human/SHMT1/SHMT1-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:17446168}. Nucleus"];
+  no transit peptide.
+- MitoCarta3.0: SHMT1 not listed (was in MitoCarta2.0 on Rickettsial homolog, domain,
+  induction and coexpression scores, no MS/MS); HPA "Cytosol;Nucleoplasm (Supported)".
+- QuickGO: mouse Shmt1 P50431 has MGI HDA mitochondrion rows from PMID:14651853 and
+  PMID:18614015 (2003/2008 mouse proteomes), which MitoCarta3.0 supersedes.
+
+Outcome: MARK_AS_OVER_ANNOTATED kept. Added propagation_review source_entities and a
+source defect (MISSING_NEGATION, GO_CENTRAL): a NOT at the vertebrate SHMT1 node would block
+the propagation. `is_active_in`: not shown. Stay at the root.

@@ -25,3 +25,7 @@ Validation outcome: `just validate PSEAE algX` passed with no curation warnings,
 ## Independent final QA, 2026-10-25
 
 Corrected the PMID:37797696 construct attribution: the negative surrogate acetylesterase assay and binary ITC use P. putida proteins, whereas the isolated AlgF oligosaccharide-binding assay uses P. aeruginosa AlgF. The Results explicitly state “AlgFPa did not display any affinity for the oligomers tested.” This supersedes any earlier grouping of both negative assays as Pp. Native Pa co-IP and the Pa NMR structure remain target-specific.
+
+## Deep research availability, 2026-11-02
+
+No provider deep-research report exists for this gene. No provider run was attempted for this gene, either in the original review (which, as recorded above, did not retry the outage beyond algI) or during the 2026-11-02 module audit, whose only retry was `just deep-research-falcon PSEAE algI` (403 authentication failure). For the corresponding KT2440 provider failures see genes/PSEPK/algI/algI-notes.md. No deep-research file was written by hand; the review rests on cached primary publications, the UniProt record and the existing annotation reviews.

@@ -11,10 +11,10 @@ from ai_gene_review.compliance import GeneComplianceAnalyzer, GeneQCConfig
 SCHEMA = Path("src/ai_gene_review/schema/gene_review.yaml")
 
 
-def analyze(tmp_path, annotations, config=None):
+def analyze(tmp_path, annotations, config=None, **doc):
     """Analyze a minimal real YAML review through the schema and policy."""
     path = tmp_path / "review.yaml"
-    path.write_text(yaml.safe_dump({"existing_annotations": annotations}))
+    path.write_text(yaml.safe_dump({**doc, "existing_annotations": annotations}))
     return GeneComplianceAnalyzer(SCHEMA, config).analyze_file(path)
 
 
@@ -359,18 +359,26 @@ def test_comparison_policy_holds_action_changes_in_denominator(tmp_path):
         assert metric(before, name).total == metric(after, name).total == 1
 
 
-def test_accepted_nd_rewards_recorded_search(tmp_path):
-    """A guideline-conformant ND earns credit for citing the literature search."""
-    searched = {"reference_id": "file:yeast/X/X-deep-research-falcon.md"}
+@pytest.mark.parametrize("supported_by,credited", [
+    ([], False),
+    ([{"reference_id": "file:yeast/X/X-deep-research-falcon.md",
+       "supporting_text": "no study of X was found"}], True),
+    ([{"reference_id": "file:yeast/X/X-notes.md", "supporting_text": "0 records"}], True),
+    ([{"reference_id": "PMID:2"}], True),
+    # the UniProt record is not a search, matching the nd_policy warning
+    ([{"reference_id": "file:yeast/X/X-uniprot.txt", "supporting_text": "PE   1"}], False),
+    # an unquoted search file, or another gene's, earns nothing
+    ([{"reference_id": "file:yeast/X/X-notes.md"}], False),
+    ([{"reference_id": "file:yeast/Y/Y-notes.md", "supporting_text": "0 records"}], False),
+])
+def test_accepted_nd_rewards_recorded_search(tmp_path, supported_by, credited):
+    """A guideline-conformant ND earns credit only for citing the literature search."""
     report = analyze(
-        tmp_path,
-        [
-            annotation("ND", "ACCEPT"),
-            annotation("ND", "ACCEPT", supported_by=[searched]),
-        ],
+        tmp_path, [annotation("ND", "ACCEPT", supported_by=supported_by)],
+        gene_symbol="X", id="P12345",
     )
     score = metric(report, "nd_search_support")
-    assert (score.populated, score.total) == (1, 2)
+    assert (score.populated, score.total) == (int(credited), 1)
 
 
 @pytest.mark.parametrize("action", ["REMOVE", "MODIFY"])

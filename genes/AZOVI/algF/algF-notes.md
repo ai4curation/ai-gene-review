@@ -33,3 +33,7 @@ Removed contributes_to acetyltransferase activity from the core. Native algF gen
 ## PR 5546 follow-up, 2026-10-25
 
 Clarified the lateral GO:0042121 to GO:0051979 decision against the Pseudomonas comparator. PMID:31900562 explicitly reports a PDO300 algF production defect and effects on polymerization/secretion-complex stability; native ATCC 9046 AJ34 instead directly establishes production of unacetylated alginate (PMID:10352233). Those additional PDO300 phenotypes are not transferred as an established native Azotobacter biosynthetic role. No action changed. The 31900562 cache contains abstract/repository metadata despite full_text_html labeling, so the new assessment explicitly limits source access to the abstract.
+
+## Deep research availability, 2026-11-02
+
+No provider deep-research report exists for this gene. The only provider attempt for this gene is the original review's Falcon run with Perplexity-lite fallback, which failed as recorded above. It was not retried during the 2026-11-02 module audit, whose only retry was `just deep-research-falcon PSEAE algI` (403 authentication failure); for the KT2440 provider failures see genes/PSEPK/algI/algI-notes.md. No deep-research file was written by hand; the review rests on cached primary publications, the UniProt record and the existing annotation reviews.

@@ -34,6 +34,8 @@ and carries the stated label is the term validator's job, not this module's.
 
 from __future__ import annotations
 
+import re
+
 from functools import lru_cache
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
@@ -64,6 +66,16 @@ EDGE_CHANGES = frozenset(
         "NODE_SHALLOWING",
     }
 )
+
+#: Reparenting changes put the CURRENT parent's CURIE in `old_value`, because that
+#: is what KGCL's `from` clause takes. The slot is a plain string shared with the
+#: value changes, so it gets no `Term` range and is shape-checked here instead.
+REPARENTING_CHANGES = frozenset({"NODE_MOVE", "NODE_DEEPENING", "NODE_SHALLOWING"})
+
+#: A CURIE is a prefix and a local id separated by a single colon. Deliberately
+#: loose: this says `old_value` holds an identifier rather than prose, and does not
+#: claim the term exists, which would need an ontology lookup.
+_CURIE_SHAPE = re.compile(r"^[A-Za-z][A-Za-z0-9_.]*:[A-Za-z0-9_][A-Za-z0-9_.\-]*$")
 
 #: Change types with no KGCL semantics to lean on, so the prose must carry the case.
 PROSE_ONLY = frozenset({"COMPLEX_CHANGE", "OTHER"})
@@ -156,8 +168,14 @@ _DSL_BUILDERS: Dict[str, Any] = {
         if f["subject"] and f["old"]
         else None
     ),
+    # KGCL's grammar is `move <subject> <predicate> <object> from <old> to <new>`,
+    # where the triple identifies the edge that ALREADY EXISTS and from/to give that
+    # edge's old and new object. So the object position is the current parent
+    # (`old_value`), not the one being moved to; naming `subject` there described an
+    # edge that does not exist yet. Both spellings parse, which is why this needs a
+    # verbatim test rather than a round-trip one.
     "NODE_MOVE": lambda f: (
-        f"move {f['about']} {f['predicate']} {f['subject']} from {f['old']} to {f['subject']}"
+        f"move {f['about']} {f['predicate']} {f['old']} from {f['old']} to {f['subject']}"
         if f["subject"] and f["predicate"] and f["old"]
         else None
     ),
@@ -474,6 +492,29 @@ def iter_ontology_change_violations(
                     "a part_of link are different changes",
                 )
 
+        if kind in REPARENTING_CHANGES:
+            old = change.get("old_value")
+            if not old:
+                yield (
+                    index,
+                    "old_value",
+                    "missing_current_parent",
+                    f"{kind} does not name the current parent",
+                    "Set old_value to the CURIE of the parent the term sits under "
+                    "now; KGCL's `from` clause takes it, and subject holds the new "
+                    "parent",
+                )
+            elif not _CURIE_SHAPE.match(str(old).strip()):
+                yield (
+                    index,
+                    "old_value",
+                    "current_parent_not_a_curie",
+                    f"old_value is {old!r}, which is not a CURIE",
+                    "For a reparenting change old_value holds the current parent's "
+                    "CURIE, not prose; the shared slot carries definition text for "
+                    "the value changes, which is why this is not caught by its range",
+                )
+
         if about and (about == direct or about in nondirect):
             yield (
                 index,
@@ -598,6 +639,19 @@ def iter_ontology_change_violations(
                 "need it set adoption_status to NOT_APPLICABLE. A landed obsoletion with "
                 "unmigrated content means this repository cites an obsolete term",
             )
+        if adoption_status == "NOT_APPLICABLE" and change.get("affected_annotations"):
+            count = len(change["affected_annotations"])
+            yield (
+                index,
+                "adoption_status",
+                "not_applicable_with_affected",
+                f"adoption_status is NOT_APPLICABLE but {count} affected "
+                f"record(s) are listed",
+                "NOT_APPLICABLE means the change touches no content here, so there is "
+                "nothing to migrate. Either drop affected_annotations, or, if those "
+                "records really do cite the term, set a status that says what is "
+                "outstanding",
+            )
         if adoption_status and not landed:
             yield (
                 index,
@@ -660,9 +714,23 @@ def iter_ontology_change_violations(
                         f"has_direct_replacement is {direct}",
                         "Correct whichever of the two is wrong",
                     )
-                if type(parsed).__name__ != _KGCL_CLASS.get(
-                    str(kind), type(parsed).__name__
-                ):
+                expected = _KGCL_CLASS.get(str(kind))
+                if expected is None:
+                    # KGCL has no form for this change type, so a change_dsl that
+                    # parses cannot be the right kind by construction. Defaulting the
+                    # expected class to the parsed one made this comparison x == x,
+                    # so the check never fired for the merge, mapping and catch-all
+                    # change types.
+                    yield (
+                        index,
+                        "change_dsl",
+                        "dsl_unsupported_kind",
+                        f"change_dsl parses as KGCL {type(parsed).__name__} but KGCL "
+                        f"has no form for change_type {kind}",
+                        "Omit change_dsl for this change type; the prose in "
+                        "justification has to carry the case instead.",
+                    )
+                elif type(parsed).__name__ != expected:
                     yield (
                         index,
                         "change_dsl",

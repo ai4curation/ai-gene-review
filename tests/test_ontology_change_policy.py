@@ -736,3 +736,117 @@ def test_committed_changes_use_string_dates():
     assert not offenders, (
         "ontology_state_verified must be a quoted string: " + "; ".join(offenders)
     )
+
+
+# --- regressions from the PR #5846 review (findings 5, 6, 7 and the
+# NOT_APPLICABLE/affected_annotations combination)
+
+
+def _reparent(change_type="NODE_MOVE", **kw):
+    """A reparenting change: old_value is the CURRENT parent, subject the new one."""
+    base = _change(
+        change_type=change_type,
+        has_direct_replacement=None,
+        subject={"id": "GO:0043039", "label": "tRNA charging"},
+        predicate="rdfs:subClassOf",
+        old_value="GO:0006418",
+    )
+    base.pop("has_direct_replacement")
+    base.update(kw)
+    return base
+
+
+def test_node_move_dsl_names_the_edge_that_exists():
+    """KGCL's `move s p o from old to new` identifies the edge BEFORE the move.
+
+    The object position is the current parent, so it equals the `from` term; naming
+    the new parent there described an edge that does not exist yet. Both spellings
+    parse as NodeMove, so this has to assert the string verbatim.
+    """
+    dsl = kgcl_dsl(_reparent())
+    assert dsl == (
+        "move GO:0099022 rdfs:subClassOf GO:0006418 from GO:0006418 to GO:0043039"
+    )
+    assert type(parse_kgcl(dsl)).__name__ == "NodeMove"
+
+
+def test_node_deepening_and_shallowing_dsl_are_asserted_verbatim():
+    assert kgcl_dsl(_reparent("NODE_DEEPENING")) == (
+        "deepen GO:0099022 from GO:0006418 to GO:0043039"
+    )
+    assert kgcl_dsl(_reparent("NODE_SHALLOWING")) == (
+        "shallow GO:0099022 from GO:0006418 to GO:0043039"
+    )
+
+
+@pytest.mark.parametrize(
+    "change_type",
+    [
+        "NODE_DIRECT_MERGE",
+        "REMOVE_MAPPING",
+        "MAPPING_PREDICATE_CHANGE",
+        "COMPLEX_CHANGE",
+        "OTHER",
+    ],
+)
+def test_a_dsl_on_a_change_type_kgcl_cannot_express_is_flagged(change_type):
+    """These five have no KGCL class, so the old `.get(kind, parsed)` default made
+    the kind comparison `x == x` and the check could never fire for them."""
+    data = {
+        "proposed_ontology_changes": [
+            _change(
+                change_type=change_type,
+                change_dsl="obsolete GO:0099022 with replacement GO:7770062",
+            )
+        ]
+    }
+    assert "dsl_unsupported_kind" in _codes(data)
+
+
+def test_not_applicable_adoption_with_affected_records_is_flagged():
+    data = {
+        "proposed_ontology_changes": [
+            _change(
+                origin="UPSTREAM_COMPLETED",
+                stance="AGREE",
+                ontology_state_verified="2026-11-01",
+                adoption_status="NOT_APPLICABLE",
+                affected_annotations=["modules/dmel_exocyst.yaml"],
+            )
+        ]
+    }
+    assert "not_applicable_with_affected" in _codes(data)
+
+
+def test_not_applicable_adoption_with_no_affected_records_passes():
+    data = {
+        "proposed_ontology_changes": [
+            _change(
+                origin="UPSTREAM_COMPLETED",
+                stance="AGREE",
+                ontology_state_verified="2026-11-01",
+                adoption_status="NOT_APPLICABLE",
+            )
+        ]
+    }
+    assert "not_applicable_with_affected" not in _codes(data)
+
+
+def test_reparenting_needs_the_current_parent():
+    data = {"proposed_ontology_changes": [_reparent(old_value=None)]}
+    assert "missing_current_parent" in _codes(data)
+
+
+def test_reparenting_rejects_prose_in_old_value():
+    """`old_value` is shared with the value changes, which hold definition text, so
+    its string range cannot catch a non-CURIE here."""
+    data = {
+        "proposed_ontology_changes": [
+            _reparent(old_value="the tRNA aminoacylation branch")
+        ]
+    }
+    assert "current_parent_not_a_curie" in _codes(data)
+
+
+def test_a_well_formed_reparenting_passes():
+    assert _codes({"proposed_ontology_changes": [_reparent()]}) == []

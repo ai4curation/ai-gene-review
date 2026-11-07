@@ -228,3 +228,13 @@ Refreshed the UniProt/QuickGO seed from the 2026-10-01 current GOA:
 - PMID:41686312, found in the 2026 search, was added to the review as a LOW-relevance
   quantitative peroxisomal-proteome reference. It contextualizes Fsh3 abundance in
   oleate/glucose conditions but does not identify a substrate or justify a BP/MF change.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[5]` GO:0008150 biological_process (ND) not cited, flagged as possibly
+  stale. These notes cite S. cerevisiae data that tie FSH3 to specific processes: the
+  double-deletion beta-oxidation assay [PMID:36164978 "A β‐oxidation activity assay of Δlpx1,
+  Δfsh3, and Δlpx1Δfsh3 strains"] (reduced fatty-acid beta-oxidation, overlapping with Lpx1) and
+  the H2O2/apoptosis study [PMID:30776074 "Our results suggest that FSH3 induced apoptosis of
+  yeast in a NUC1 dependent manner."]. The BP ND may be stale (a GO:0006635 fatty acid
+  beta-oxidation IGI is a candidate); a curator should judge whether these meet the bar.

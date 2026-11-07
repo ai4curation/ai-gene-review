@@ -33,12 +33,13 @@ proposed_ontology_changes:
   origin: UPSTREAM_COMPLETED
   stance: AGREE
   ontology_state_verified: '2026-11-01'
-  adoption_status: NOT_STARTED
+  adoption_status: COMPLETE
   affected_annotations:
   - genes/POPTR/ALARS/ALARS-ai-review.yaml
   - genes/PSEPK/alaS/alaS-ai-review.yaml
   - genes/human/AARS1/AARS1-ai-review.yaml
   - genes/human/AARS2/AARS2-ai-review.yaml
+  - genes/human/AARSD1/AARSD1-ai-review.yaml
   upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
   see_also:
   - https://github.com/geneontology/go-annotation/issues/6525
@@ -64,7 +65,7 @@ proposed_ontology_changes:
   origin: UPSTREAM_COMPLETED
   stance: AGREE
   ontology_state_verified: '2026-11-01'
-  adoption_status: NOT_STARTED
+  adoption_status: COMPLETE
   affected_annotations:
   - genes/PSEPK/argS/argS-ai-review.yaml
   - genes/PSEPK/glyS/glyS-ai-review.yaml
@@ -93,7 +94,7 @@ proposed_ontology_changes:
   origin: UPSTREAM_COMPLETED
   stance: AGREE
   ontology_state_verified: '2026-11-01'
-  adoption_status: NOT_STARTED
+  adoption_status: IN_PROGRESS
   affected_annotations:
   - genes/DANRE/gtpbp3/gtpbp3-ai-review.yaml
   - genes/human/AARS2/AARS2-ai-review.yaml

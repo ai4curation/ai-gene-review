@@ -74,3 +74,16 @@ Existing GOA annotations (10):
 - A-band CPA is a **D-rhamnan homopolymer** ("common polysaccharide antigen"); B-band = serotype-
   specific O antigen exported by the Wzx/Wzy pathway (not Wzm/Wzt).
 - No RB-TnSeq/FEBA fitness dataset fetch command available in this repo for PSEAE; step skipped.
+
+## PseudoCAP IBA-seed assessment
+
+Audit added 2026-10-28 (PseudoCAP IBA-seed project, worklist rank 48). The
+review itself was not rewritten.
+
+| PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
+|---|---|---|---|---|---|---|
+| PTN002019107 (PTHR30413) | GO:0015920 lipopolysaccharide transport | 1 (sole seed) | 24 (20 taxa) | GO:0015920, IMP, PMID:9244257 (PseudoCAP) | SOUND (seed); node term too specific for the clade | Chromosomal wzm mutants make A-band polysaccharide but cannot export it, and it accumulates in the cytoplasm [PMID:9244257 "The inability of the polymer to cross the inner membrane resulted in the accumulation of cytoplasmic A-band polysaccharide."]. This is direct transport evidence for the permease subunit, not a downstream phenotype. Strictly, the exported substrate is Und-PP-linked O-polysaccharide, not finished LPS, but GO:0015920 is the conventional term for O-antigen exporters. The node, however, covers the wider ABC-2 permease clade. Its PAINT leaves include B. subtilis TagG (teichoic acid), S. aureus, Listeria and Streptomyces permeases, the capsule exporters CtrC and KpsM, and the archaeal MA_1176 and SSO1143. None of the Gram-positive or archaeal organisms makes LPS. I recorded a GO_CENTRAL `WRONG_TERM`/CHECK defect proposing GO:0015774 polysaccharide transport at this node. |
+
+Row consistency: both GO:0015920 rows (IBA, IMP) stay `ACCEPT` because the
+claim is true for Wzm. I corrected the IBA row's `reason`, which had called the
+family-wide propagation appropriate. The PseudoCAP row needs no defect.

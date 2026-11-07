@@ -115,12 +115,16 @@ slots carry the KGCL class's own fields, so a proposal can be emitted as KGCL an
 applied with `oaklib apply`. `kgcl_schema` is already an indirect dependency via
 `oaklib`, so this costs nothing extra.
 
-What KGCL does *not* model is the argument for a change. `justification`,
-`supported_by`, `confidence` and `report_status` are this repository's additions,
-following the pattern `SourceDefect` already uses, and they are the reason to
-record a proposal here rather than only in a tracker. `confidence` and
-`report_status` reuse the source-defect enums deliberately: the values mean the
-same thing, and a parallel enum would drift.
+What KGCL does *not* model is the argument for a change, or which direction the
+change is travelling in. `justification`, `supported_by`, `confidence`, `origin`,
+`stance`, `request_status` and `adoption_status` are this repository's additions, and
+they are the reason to record a proposal here rather than only in a tracker.
+`confidence` does reuse `SourceDefectConfidenceEnum`, because grading our own case
+means the same thing in both places. The lifecycle does **not** reuse the
+source-defect enum: `request_status` and `adoption_status` are separate enums,
+because a request made of an ontology and the migration it creates for us are two
+different pieces of state that move independently, and the single `report_status`
+this started with could not say which one it meant.
 
 ### The DSL is checked by KGCL's own parser
 
@@ -182,10 +186,20 @@ proposed_ontology_changes:
     Tethering is a binding activity, not a process … recorded as a non-direct
     replacement because a biological process cannot be replaced outright by a
     molecular function.
-  confidence: CONFIRMED
-  report_status: FIXED
-  term_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-10-31'
+  adoption_status: NOT_APPLICABLE
+  upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 ```
+
+Read the `origin`/`stance`/`adoption_status` trio together: GO has already made this
+change, we agree with it, and nothing in this repository cites the obsolete term, so
+there is no migration to do. An outbound request looks different — `origin:
+SELF_PROPOSED` with a `request_status` and no `adoption_status`, because there is
+nothing to adopt until the ontology acts. `confidence` belongs on an outbound request,
+where it grades our own case; a landed upstream change needs
+`ontology_state_verified` instead, which is a date we checked rather than a judgement.
 
 ## Reporting
 
@@ -229,7 +243,7 @@ staying in the TSV as a record.
   no KGCL semantics, so the prose is the whole request. KGCL has
   `NodeDirectMerge` but no split, so a class split is a `COMPLEX_CHANGE` whose
   justification must name the terms that should replace it;
-- a `report_status` saying the request was filed with no tracker issue linked;
+- a `request_status` saying the request was filed with no tracker issue linked;
 - a `change_dsl` that does not parse, disagrees with the slots, or parses as the
   wrong KGCL class;
 - a term proposed for obsoletion that the same review `ACCEPT`s on an annotation
@@ -287,7 +301,9 @@ mapping removal to the body that maintains the mapping.
 recorded two of five terms obsolete as of 2026-09-26; all five are. Amino acid
 activation recorded all 43 live as of 2026-08-29; the four rechecked are
 obsolete. In both cases the ontology moved and the page did not. Nothing here
-detects that: `report_status` is a curator's assertion, and no check compares it
-against the live ontology. A periodic audit that re-queries each `about_node` and
-flags a `NOT_REPORTED` change whose term is already obsolete would close the
+detects that: `origin` and `request_status` are a curator's assertions, and no check
+compares either against the live ontology. `ontology_state_verified` only records
+the date someone looked, so it ages without ever contradicting itself. A periodic
+audit that re-queries each `about_node` and flags a change still recorded as
+`SELF_PROPOSED`, or as `NOT_FILED`, whose term is already obsolete would close the
 loop, and would have caught both.
