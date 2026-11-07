@@ -594,6 +594,12 @@ context here.
    - ~~GO:0061739 (ATG8 lipidation)~~: done in round 3.
    - ~~GO:0098641 (cadherin binding)~~: done in round 4. The lateral
      GO:0098632 turned out to be precomposed by definition.
+   - Parked: definitionally precomposed binding-plus-adhesion terms
+     (GO:0098631 *cell adhesion mediator activity*, GO:0098632 *cell-cell
+     adhesion mediator activity* and their children). The inventory's label
+     match cannot find them, so they need a pass driven by logical
+     definitions. CDH1's GO:0098631 IDA row is parked on GO:0098632 until
+     then.
    - Next: GO:0106074 *aminoacyl-tRNA metabolism involved in translational
      fidelity* (class D-iii, no logical definition; aminoacyl-tRNA editing,
      28 uses) and GO:0006271 *DNA strand elongation involved in DNA
