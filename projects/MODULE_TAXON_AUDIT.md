@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 approved at bcfeede8a6; main 0a807fc555 integrated at 57d168a364 with 157 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
+- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 approved at 0a03ae8e59; main bb89a37783 integrated at 1ea1c664b0 with 160 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
