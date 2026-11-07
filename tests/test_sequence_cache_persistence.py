@@ -1,5 +1,6 @@
 """Offline cache-progress and diagnostic regression tests; no upstream calls."""
 
+import http.client
 import importlib.util
 import io
 import json
@@ -29,6 +30,14 @@ validator = load_file(
 )
 
 
+@pytest.fixture(autouse=True)
+def no_backoff_sleep(monkeypatch):
+    monkeypatch.setattr(validator, "_sleep", lambda _seconds: None)
+
+
+ATTEMPTS = len(validator.FETCH_BACKOFF_SECONDS) + 1
+
+
 def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
     cache_dir = tmp_path / "cache"
     before = manifest_module.manifest(cache_dir)
@@ -49,7 +58,7 @@ def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="P54321.*https://rest.uniprot.org/uniprotkb/P54321.json") as caught:
         cache.get("P54321")
     assert isinstance(caught.value.__cause__, urllib.error.HTTPError)
-    assert len(calls) == 2  # one request per accession, no retry
+    assert len(calls) == 1 + ATTEMPTS  # the 503 is retried, then gives up
     assert not (cache_dir / "P54321.seq").exists()
     after = manifest_module.manifest(cache_dir)
     changed, digest = manifest_module.generation(before, after)
@@ -58,7 +67,7 @@ def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
     assert (cache_dir / "P12345.seq").read_bytes() == b"MACDEFGHIK"
     # Reusing the saved generation does not fetch or create another generation.
     assert validator.SequenceCache(cache_dir).get("P12345") == "MACDEFGHIK"
-    assert len(calls) == 2
+    assert len(calls) == 1 + ATTEMPTS
     assert manifest_module.generation(after, after)[0] is False
 
 
@@ -74,8 +83,164 @@ def test_failure_context_keeps_original_cause(tmp_path, monkeypatch, error):
     with pytest.raises(RuntimeError, match="Q12345.*https://") as caught:
         validator.SequenceCache(tmp_path).get("Q12345")
     assert caught.value.__cause__ is error
-    assert len(calls) == 1 and calls[0][1] == 60
+    assert len(calls) == ATTEMPTS and all(timeout == 60 for _, timeout in calls)
     assert not list(tmp_path.iterdir())
+
+
+def uniprot_record(sequence="MACDEFGHIKLM", *, declared=None, version_line=True):
+    """A minimal UniProt text record whose SQ line declares ``declared`` (default: the truth)."""
+    length, crc = (len(sequence), validator._crc64(sequence)) if declared is None else declared
+    dt = "DT   21-MAR-2012, sequence version 3.\n" if version_line else ""
+    return (
+        "ID   TEST_CAEEL              Unreviewed;        12 AA.\n"
+        "AC   Q12345; A0A000;\n"
+        "DT   21-MAR-2012, integrated into UniProtKB/TrEMBL.\n"
+        f"{dt}"
+        "DT   02-SEP-2026, entry version 88.\n"
+        f"SQ   SEQUENCE   {length} AA;  1300 MW;  {crc} CRC64;\n"
+        f"     {sequence[:10]} {sequence[10:]}\n"
+        "//\n"
+    )
+
+
+def unavailable(calls, error=None):
+    def fetch(req, timeout):
+        calls.append(req.full_url)
+        raise error or urllib.error.HTTPError(
+            req.full_url, 500, "Internal Server Error", {}, None
+        )
+    return fetch
+
+
+def committed(tmp_path, text=None):
+    record = tmp_path / "TEST-uniprot.txt"
+    record.write_text(text or uniprot_record())
+    return record
+
+
+@pytest.mark.parametrize("path,crc", [
+    ("genes/worm/pnk-1/pnk-1-uniprot.txt", "9BD2BF7375C370AB"),
+    ("genes/human/SEPHS1/SEPHS1-uniprot.txt", "E9636E38146D926D"),
+])
+def test_crc64_matches_the_value_uniprot_prints(path, crc):
+    record = validator.read_uniprot_flat_file(ROOT / path)
+    assert record.declared_crc64 == crc
+    assert validator._crc64(record.sequence) == crc and record.intact
+
+
+def test_flat_file_parses_accessions_sequence_and_version(tmp_path):
+    record = validator.read_uniprot_flat_file(committed(tmp_path))
+    assert record.accessions == ["Q12345", "A0A000"]
+    assert record.sequence == "MACDEFGHIKLM" and record.sequence_version == 3
+    assert record.declared_length == 12 and record.intact
+
+
+def test_transient_failure_recovers_on_retry(tmp_path, monkeypatch):
+    calls, waits = [], []
+    monkeypatch.setattr(validator, "_sleep", waits.append)
+
+    def flaky(req, timeout):
+        calls.append(req.full_url)
+        if len(calls) == 1:
+            raise urllib.error.HTTPError(req.full_url, 503, "unavailable", {}, None)
+        return io.BytesIO(json.dumps({"sequence": {"value": "MACD"}}).encode())
+
+    monkeypatch.setattr(validator.urllib.request, "urlopen", flaky)
+    assert validator.SequenceCache(tmp_path).get("Q12345") == "MACD"
+    assert len(calls) == 2 and waits == [validator.FETCH_BACKOFF_SECONDS[0]]
+    assert (tmp_path / "Q12345.seq").read_text() == "MACD"
+
+
+def test_not_found_is_not_retried_and_ignores_committed_record(tmp_path, monkeypatch):
+    calls = []
+
+    def missing(req, timeout):
+        calls.append(req.full_url)
+        raise urllib.error.HTTPError(req.full_url, 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(validator.urllib.request, "urlopen", missing)
+    cache = validator.SequenceCache(tmp_path / "cache")
+    cache.add_local_record(committed(tmp_path))
+    with pytest.raises(RuntimeError) as caught:
+        cache.get("Q12345")
+    assert not isinstance(caught.value, validator.UniProtUnavailable)
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("make_error", [
+    lambda: None,  # the default 500
+    lambda: http.client.IncompleteRead(b'{"sequence": {"val'),  # body cut off mid-transfer
+])
+def test_outage_falls_back_to_committed_record(tmp_path, monkeypatch, capsys, make_error):
+    calls = []
+    monkeypatch.setattr(validator.urllib.request, "urlopen", unavailable(calls, make_error()))
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    cache_dir = tmp_path / "cache"
+    cache = validator.SequenceCache(cache_dir)
+    assert cache.add_local_record(committed(tmp_path)) == "Q12345"
+    assert cache.get("UniProtKB:Q12345") == "MACDEFGHIKLM"
+    assert cache.sequence_version("Q12345") == 3
+    assert len(calls) == ATTEMPTS  # the version came from the same record
+    assert "::warning::UniProt unavailable for Q12345" in capsys.readouterr().out
+    assert cache.fallbacks == ["Q12345"] and "Q12345" in cache.fallback_note()
+    # A fallback is not persisted, so the next run fetches the live record.
+    assert not cache_dir.exists() or not list(cache_dir.iterdir())
+
+
+def test_record_without_version_does_not_refetch(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(validator.urllib.request, "urlopen", unavailable(calls))
+    cache = validator.SequenceCache(tmp_path / "cache")
+    cache.add_local_record(committed(tmp_path, uniprot_record(version_line=False)))
+    assert cache.get("Q12345") == "MACDEFGHIKLM"
+    assert cache.sequence_version("Q12345") is None
+    assert len(calls) == ATTEMPTS
+
+
+def test_secondary_accession_is_not_registered(tmp_path, monkeypatch):
+    monkeypatch.setattr(validator.urllib.request, "urlopen", unavailable([]))
+    cache = validator.SequenceCache(tmp_path / "cache")
+    cache.add_local_record(committed(tmp_path))
+    with pytest.raises(validator.UniProtUnavailable):
+        cache.get("A0A000")
+
+
+@pytest.mark.parametrize("declared", [
+    (20, "0000000000000000"),  # truncated: shorter than its SQ line says
+    (12, "0000000000000000"),  # edited: right length, wrong checksum
+])
+def test_record_failing_its_own_sq_line_is_not_used(tmp_path, monkeypatch, capsys, declared):
+    calls = []
+    monkeypatch.setattr(validator.urllib.request, "urlopen", unavailable(calls))
+    cache = validator.SequenceCache(tmp_path / "cache")
+    cache.add_local_record(committed(tmp_path, uniprot_record(declared=declared)))
+    with pytest.raises(validator.UniProtUnavailable):
+        cache.get("Q12345")
+    assert "does not match the length and CRC64" in capsys.readouterr().err
+    assert cache.fallbacks == []
+
+
+def test_fallback_can_be_switched_off(tmp_path, monkeypatch):
+    monkeypatch.setattr(validator.urllib.request, "urlopen", unavailable([]))
+    monkeypatch.setenv(validator.FALLBACK_ENV, "0")
+    cache = validator.SequenceCache(tmp_path / "cache")
+    cache.add_local_record(committed(tmp_path))
+    with pytest.raises(validator.UniProtUnavailable):
+        cache.get("Q12345")
+
+
+def test_outage_without_committed_record_still_fails(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(validator.urllib.request, "urlopen", unavailable(calls))
+    cache = validator.SequenceCache(tmp_path)
+    with pytest.raises(validator.UniProtUnavailable, match="P54321") as caught:
+        cache.get("P54321")
+    assert isinstance(caught.value.__cause__, urllib.error.HTTPError)
+    assert len(calls) == ATTEMPTS
+    # Within the run, the same accession does not pay for another round of retries.
+    with pytest.raises(validator.UniProtUnavailable):
+        cache.sequence_version("P54321")
+    assert len(calls) == ATTEMPTS
 
 
 def test_version_optional_or_independent_and_order_stable(tmp_path):

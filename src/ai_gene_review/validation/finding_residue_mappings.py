@@ -120,6 +120,7 @@ def validate_finding_residue_mappings(path: Path, cache: SequenceCache) -> list[
     doc = yaml.load(path.read_text(), Loader=_Loader) or {}
     gene = doc.get("gene_symbol") or path.stem
     accession = doc.get("id", "")
+    cache.add_review_records(path)
     results: list[ClaimCheck] = []
     for ref in doc.get("references") or []:
         for finding in ref.get("findings") or []:
@@ -155,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"finding residue-mapping validation over {reviews} gene review(s): "
         f"{counts['PASS']} pass, {counts['FAIL']} fail, {counts['UNRESOLVED']} unresolved"
+        f"{cache.fallback_note()}"
     )
     return 1 if counts["FAIL"] else 0
 

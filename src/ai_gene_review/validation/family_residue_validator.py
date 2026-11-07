@@ -38,7 +38,13 @@ tandem repeat needs alignment- or structure-level checking. See
 
 from __future__ import annotations
 
+import http.client
 import json
+import os
+import re
+import sys
+import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -53,6 +59,113 @@ if TYPE_CHECKING:  # annotation only; the runtime import lives in _panther_index
     from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
+
+# UniProt answers 5xx during partial outages, sometimes for hours, so a few retries cover
+# a blip but not an outage; that is what the committed-record fallback below is for. A
+# 4xx other than 429 says the accession itself is wrong and is never retried.
+FETCH_BACKOFF_SECONDS = (2, 8)
+_sleep = time.sleep  # module attribute so tests can skip the waits
+
+# Set to 0 to make an outage fail even where a committed record could stand in; the
+# scheduled full pass does, since that is the run meant to talk to UniProt itself.
+FALLBACK_ENV = "UNIPROT_FALLBACK"
+
+_FETCH_ERRORS = (OSError, json.JSONDecodeError, http.client.HTTPException)
+_SEQUENCE_VERSION = re.compile(r"sequence version (\d+)\.")
+_SQ_HEADER = re.compile(r"^SQ   SEQUENCE\s+(\d+) AA;.*?\b([0-9A-F]{16}) CRC64;")
+
+
+class UniProtUnavailable(RuntimeError):
+    """UniProt could not serve a record because of an upstream or network failure.
+
+    Distinct from a plain ``RuntimeError`` so callers can tell "UniProt is down" (which
+    a committed copy of the record can stand in for) from "UniProt says no" (which it
+    must not).
+    """
+
+
+def _is_transient(exc: BaseException) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code >= 500 or exc.code == 429
+    # URLError (DNS, refused, reset), timeouts, a body cut off mid-transfer
+    # (IncompleteRead) or mid-JSON
+    return isinstance(exc, _FETCH_ERRORS)
+
+
+def _crc64(sequence: str) -> str:
+    """The SWISS-PROT CRC64 that UniProt prints on every ``SQ`` line."""
+    crc = 0
+    for byte in sequence.encode("ascii"):
+        crc = (crc >> 8) ^ _CRC64_TABLE[(crc ^ byte) & 0xFF]
+    return f"{crc:016X}"
+
+
+def _crc64_table() -> list[int]:
+    table = []
+    for i in range(256):
+        part = i
+        for _ in range(8):
+            part = (part >> 1) ^ 0xD800000000000000 if part & 1 else part >> 1
+        table.append(part)
+    return table
+
+
+_CRC64_TABLE = _crc64_table()
+
+
+class UniProtRecord(NamedTuple):
+    """The parts of a committed UniProt text record the fallback needs."""
+
+    accessions: list[str]
+    sequence: str
+    sequence_version: int | None
+    declared_length: int | None
+    declared_crc64: str | None
+
+    @property
+    def intact(self) -> bool:
+        """True only if the sequence matches the length and CRC64 its ``SQ`` line declares.
+
+        A truncated or edited record would otherwise yield a short sequence and a
+        confident but wrong residue FAIL, which reads exactly like a curation error.
+        """
+        return (
+            bool(self.sequence)
+            and self.declared_length == len(self.sequence)
+            and self.declared_crc64 == _crc64(self.sequence)
+        )
+
+
+def read_uniprot_flat_file(path: Path) -> UniProtRecord:
+    """Parse a UniProt text record.
+
+    These are the ``<GENE>-uniprot.txt`` files that ``just fetch-gene`` commits beside
+    each gene review. Only the first entry is read.
+    """
+    accessions: list[str] = []
+    version: int | None = None
+    length: int | None = None
+    crc64: str | None = None
+    seq_lines: list[str] = []
+    in_sequence = False
+    for line in path.read_text().splitlines():
+        if line.startswith("//"):
+            break
+        if in_sequence:
+            seq_lines.append(line)
+        elif line.startswith("AC   "):
+            accessions.extend(a.strip() for a in line[5:].split(";") if a.strip())
+        elif line.startswith("DT   ") and version is None:
+            match = _SEQUENCE_VERSION.search(line)
+            if match:
+                version = int(match.group(1))
+        elif line.startswith("SQ   "):
+            in_sequence = True
+            header = _SQ_HEADER.match(line)
+            if header:
+                length, crc64 = int(header.group(1)), header.group(2)
+    sequence = "".join("".join(seq_lines).split())
+    return UniProtRecord(accessions, sequence, version, length, crc64)
 
 
 class Outcome(str, Enum):
@@ -101,23 +214,114 @@ class SequenceCache:
 
     Retrieval failures retain accession/URL context and propagate with their cause;
     they are never converted into UNRESOLVED curation results.
+
+    Transient failures are retried. If UniProt is still unavailable after that, a
+    record registered with ``add_local_record`` -- the UniProt file committed beside a
+    gene review -- stands in for that accession, with a warning on stderr. That covers
+    the case CI hits hardest: a new gene review's own protein is never in the restored
+    cache (merge-queue runs cannot read caches saved by PR runs), so an outage would
+    otherwise block every PR that adds residue claims. Fallback sequences are not
+    written to the disk cache, so a later run with UniProt back fetches the live record.
+
+    The fallback is used only when the record's sequence matches the length and CRC64
+    its own ``SQ`` line declares, is reported as a GitHub annotation and counted in
+    ``fallbacks``, and is switched off by ``UNIPROT_FALLBACK=0``. An accession that
+    has exhausted its retries is not retried again within the same run.
     """
 
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
-    _versions: dict[str, int] = field(default_factory=dict)
+    _versions: dict[str, int | None] = field(default_factory=dict)
+    _local_records: dict[str, Path] = field(default_factory=dict)
+    _unavailable: dict[str, UniProtUnavailable] = field(default_factory=dict)
+    fallbacks: list[str] = field(default_factory=list)
+
+    def add_local_record(self, path: Path) -> str | None:
+        """Register a committed UniProt text record as the fallback for its accession.
+
+        Only the primary accession is registered: a secondary one may come from a
+        demerged entry whose sequence differs from this record's.
+        """
+        accessions = read_uniprot_flat_file(path).accessions
+        if not accessions:
+            return None
+        self._local_records.setdefault(accessions[0], path)
+        return accessions[0]
+
+    def add_review_records(self, review_path: Path) -> None:
+        """Register the UniProt record(s) committed beside a gene review.
+
+        The review's own protein is the sequence least likely to be in the CI cache,
+        so this is the record most worth having when UniProt is down.
+        """
+        for record in sorted(review_path.parent.glob("*-uniprot.txt")):
+            self.add_local_record(record)
 
     def _fetch_json(self, acc: str) -> dict:
+        if acc in self._unavailable:
+            raise self._unavailable[acc]
         req = urllib.request.Request(
             UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
         )
-        try:
-            with urllib.request.urlopen(req, timeout=60) as fh:
-                return json.load(fh)
-        except (OSError, json.JSONDecodeError) as exc:
-            raise RuntimeError(
-                f"Could not retrieve UniProt record {acc} from {req.full_url}"
-            ) from exc
+        for attempt in range(len(FETCH_BACKOFF_SECONDS) + 1):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as fh:
+                    return json.load(fh)
+            except _FETCH_ERRORS as exc:
+                if isinstance(exc, urllib.error.HTTPError):
+                    exc.close()  # release the error response's socket
+                if not _is_transient(exc):
+                    raise RuntimeError(
+                        f"Could not retrieve UniProt record {acc} from {req.full_url}"
+                    ) from exc
+                if attempt < len(FETCH_BACKOFF_SECONDS):
+                    _sleep(FETCH_BACKOFF_SECONDS[attempt])
+                    continue
+                error = UniProtUnavailable(
+                    f"Could not retrieve UniProt record {acc} from {req.full_url} "
+                    f"after {attempt + 1} attempts"
+                )
+                error.__cause__ = exc
+                self._unavailable[acc] = error
+                raise error
+        raise AssertionError("unreachable")  # the loop always returns or raises
+
+    def _fallback(self, acc: str, error: UniProtUnavailable) -> tuple[str, int | None]:
+        """Use the committed record for ``acc``, or re-raise if none can be trusted."""
+        path = self._local_records.get(acc)
+        if path is None or os.environ.get(FALLBACK_ENV, "1") == "0":
+            raise error
+        record = read_uniprot_flat_file(path)
+        if not record.intact:
+            print(
+                f"warning: committed record {path} does not match the length and "
+                "CRC64 on its SQ line; not using it",
+                file=sys.stderr,
+            )
+            raise error
+        message = (
+            f"UniProt unavailable for {acc} ({error.__cause__}); "
+            f"validated against committed record {path}"
+        )
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print(f"::warning::{message}")  # workflow commands are read from stdout
+        else:
+            print(f"warning: {message}", file=sys.stderr)
+        self.fallbacks.append(acc)
+        self._mem[acc] = record.sequence
+        # Remember the version even when the record has none, so that a later
+        # sequence_version() call does not go back to an unavailable UniProt.
+        self._versions[acc] = record.sequence_version
+        return record.sequence, record.sequence_version
+
+    def fallback_note(self) -> str:
+        """Summary-line suffix naming accessions served from committed records."""
+        if not self.fallbacks:
+            return ""
+        return (
+            f"; {len(self.fallbacks)} sequence(s) from committed records while UniProt "
+            f"was unavailable ({', '.join(self.fallbacks)})"
+        )
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
@@ -134,7 +338,10 @@ class SequenceCache:
         if seq_path.exists():
             seq = seq_path.read_text().strip()
         else:
-            data = self._fetch_json(acc)
+            try:
+                data = self._fetch_json(acc)
+            except UniProtUnavailable as exc:
+                return self._fallback(acc, exc)[0]
             seq = data["sequence"]["value"]
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
@@ -158,7 +365,11 @@ class SequenceCache:
         if ver_path.exists():
             version = int(ver_path.read_text().strip())
         else:
-            version = self._fetch_json(acc).get("entryAudit", {}).get("sequenceVersion")
+            try:
+                data = self._fetch_json(acc)
+            except UniProtUnavailable as exc:
+                return self._fallback(acc, exc)[1]
+            version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is None:
                 return None
             ver_path.write_text(str(version))
@@ -240,8 +451,6 @@ def _check_motif(
     family: str, site_id: str, anchor: str, seq: str, motif: dict
 ) -> ResidueCheck:
     """Check that the anchor's declared block matches the curated pattern."""
-    import re
-
     start, end = motif["start"], motif["end"]
     pattern = motif["pattern_regex"]
     if not (1 <= start <= end <= len(seq)):
