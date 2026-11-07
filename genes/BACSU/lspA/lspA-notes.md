@@ -16,3 +16,10 @@ Added as the monoderm exemplar of the LspA step in `modules/bacterial_lipoprotei
   file exists for this gene.
 - An lspA-null strain is viable but impaired at temperature extremes and accumulates lipid-modified PrsA precursor
   [PMID:9880550 "Cells lacking SPase II accumulated lipid-modified precursor and mature-like forms of PrsA"].
+
+
+## 2026-11-07 source and ontology audit
+
+Reviewed all original rows, references and core activity. Original annotation payloads/order and historical NEW actions are preserved; no row was added or retired. See `analysis/module_audits/bacterial_lipoprotein_maturation/ecoli-bacsu-consultation/evidence.md` for the complete source/construct and ontology rationale. All genuine Falcon attempts returned authentication HTTP403; manual synthesis is recorded here without creating provider output. Final PAINT lineage inspection reported no IRD/IKR loss; initial cold-cache download races were retried sequentially and logged. Protected publication/provider/raw files remain unchanged.
+
+Current GO:0009003 signal peptidase activity is active and supplies the substrate-directed core genus; GO:0004190 remains a correct mechanistic assertion. Generic endopeptidase refines to both; proteolysis refines to protein processing. The specific proposal retains only lipidated-prolipoprotein/Cys context. Bacillus downstream LhaT acetylation prevents an inference that all products remain diacylated.

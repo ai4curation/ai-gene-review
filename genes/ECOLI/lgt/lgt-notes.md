@@ -27,3 +27,12 @@ Manual synthesis:
   cytosolic-side association [PMID:18602442], but later topology and structural
   work place Lgt as a seven-transmembrane inner-membrane enzyme with a
   membrane/periplasmic catalytic cavity [PMID:22287519; PMID:26729647].
+
+
+## 2026-11-07 source and ontology audit
+
+Reviewed all original rows, references and core activity. Original annotation payloads/order and historical NEW actions are preserved; no row was added or retired. See `analysis/module_audits/bacterial_lipoprotein_maturation/ecoli-bacsu-consultation/evidence.md` for the complete source/construct and ontology rationale. All genuine Falcon attempts returned authentication HTTP403; manual synthesis is recorded here without creating provider output. Final PAINT lineage inspection reported no IRD/IKR loss; initial cold-cache download races were retried sequentially and logged. Protected publication/provider/raw files remain unchanged.
+
+Retained the specific diacylglyceryl-transfer chemistry and process participation. Membrane claims use topology and enzyme evidence, not the claim that monoderm cells have only one possible membrane. E. coli sided-presence annotation is distinguished from the old peripheral/aquatic catalytic model.
+
+The new full primary PMID:42126242 compares E. coli Δlgt and ΔlgtΔlpp backgrounds and finds that Lpp load, donor homolog and detectable protein production affect complementation. It does not directly test B. subtilis Lgt as a donor; no native loss of chemistry or universal cross-species interchangeability is inferred.

@@ -41,6 +41,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_lipoprotein_maturation`: Curated comparative audit ready for full validation: 14 COMPLETE gene reviews, 88 rows (75 inherited rows including three historical NEW, plus 13 new assertions), 11 manually assessed references with 23 findings, four reviewed PANTHER families and verified alternative family descriptors. Shared Lgt/LspA core and five optional terminal product routes pass 35 evidence-qualified capacity cases and 10 mutation checks. Full-corpus validation, module-specific PR, review, CI and actual merge remain pending.
+
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
