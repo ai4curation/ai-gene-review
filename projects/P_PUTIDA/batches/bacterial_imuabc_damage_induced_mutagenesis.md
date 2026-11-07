@@ -50,3 +50,19 @@ Generated UTC: 2026-08-12
 show that ImuB and DnaE2 have context-dependent, sometimes antagonistic effects
 on mutation accumulation, while ImuC/DnaE2 participates in alkylation-damage
 tolerance. ImuB is modeled as an adaptor rather than a polymerase contributor.
+
+2026-11-04: Module generalized beyond PSEPK and promoted to COMPLETE. The
+cassette is characterized experimentally in three distant lineages, so the
+module is now species-neutral (scope ABSTRACT) with KT2440 as one exemplar of
+three, alongside Caulobacter crescentus (PMID:15886391) and Mycobacterium
+tuberculosis (PMID:20615954). Six new COMPLETE gene reviews were added for those
+exemplars (CAUVC imuA/imuB/dnaE2, MYCTU Rv3395c/Rv3394c/dnaE2) and the five
+KT2440 reviews listed above were promoted from DRAFT to COMPLETE. The accessory
+role became a REALIZER variant set, because actinobacteria have no ImuA homolog
+and use the non-orthologous ImuA' (Rv3395c) instead; the boundary rule above
+against assigning catalytic functions to ImuA or ImuB is kept, and no molecular
+function is asserted for either accessory protein. PANTHER family reviews were
+written for all four families the module touches (PTHR45900, PTHR33516,
+PTHR35369, PTHR32294); the PTHR35369 review records that the family's only PAINT
+node places DNA repair at the root and so reaches the SulA cell-division
+inhibitors.

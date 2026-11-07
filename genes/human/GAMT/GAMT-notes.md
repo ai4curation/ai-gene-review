@@ -102,3 +102,51 @@ None characterize a specific GAMT binding function.
   GATM/GAMT local creatine synthesis (ScienceDirect S0006899321004844).
 </content>
 </invoke>
+
+
+## 2026-11-02 — Reaction, phylogeny and source reassessment
+
+The preceding journal is retained verbatim as historical work. Its confident rejection of nuclear localization, muscle-contraction attribution and generic-binding removal policy is superseded by the source-specific assessment below. Earlier unsupported quantitative methyl-group statements are not carried into the current biological summary.
+
+### Human catalytic evidence and process scope
+
+The original scanned pages 915–917 of PMID:8651275 were visually read, including Methods, Table 1 and Results. Fractionated and dialysed human liver extracts transferred radiolabeled methyl groups from SAM to guanidinoacetate; chromatography identified creatine. Substrate-free blanks, reference enzymes, electrocautery effects and mixing controls were considered. This is direct reaction/product evidence, separate from clinical loss-of-function necessity. The normal cache remains abstract-only; the inspected original images are retained separately. The mislabeled PDF endpoint returned HTML and is not counted as an original PDF. [Original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC1914613/)
+
+The official human Reactome reaction and catalyst specify SAM plus guanidinoacetate conversion to SAH plus creatine and a proton, with Q14353 in cytosol. GAMT performs the creatine-biosynthesis step, rather than the later transport or creatine-kinase reactions. The inherited core-only SAM-catabolism facet is retained: exact-term comparators include rat/mouse Gamt and other methyltransferases, and the actual typed hierarchy does not make it redundant with creatine biosynthesis. No separate NEW or quantitative homeostasis claim is proposed. [Reaction](https://reactome.org/content/detail/R-HSA-71286); [human participant](https://reactome.org/content/detail/R-HSA-71276)
+
+### Phylogeny and products
+
+The exact displayed 236-residue human sequence matches the PTHR32379 alignment and target AN17/PTN002529431. All four IBA assertion nodes lie on its lineage, with unchanged literal/current/main donors. The nuclear and cytoplasmic assertions have genuine experimental fungal donor contexts. The accessible Rmt2 abstract describes both compartments; donor full-text images were not read. Chemical specialization alone is not evidence of localization loss, and the verified cytosolic reaction does not require an exclusive location. No human nuclear assay is invented.
+
+Both natural UniProt products are preserved: Q14353-1 is 236 residues and Q14353-2 is 269 residues, with the latter independently matching the VSP_042722 reconstruction and direct FASTA. The processed chain 2–236 is distinct. The inspected liver assay does not establish equivalent activity for the longer natural product, and disease transcripts are not normal splice products. [UniProt](https://www.uniprot.org/uniprotkb/Q14353/entry)
+
+### Interaction and unresolved contraction claims
+
+The original BioPlex tables support the Q14353–O95363 co-association. Exact HuRI rows support Q14353-1–Q969Q5 and Q14353-1–Q9HCM9-2 in human-ORF yeast two-hybrid assays. The partner suffix and clone scope remain explicit; the overlapping screen records are not treated as independent functional mechanisms. Four generic protein-binding annotations are removed as uninformative under the current policy, while their positive biological observations are preserved. No replacement activity is invented. [PMID:28514442](https://pubmed.ncbi.nlm.nih.gov/28514442/); [PMID:32296183](https://pubmed.ncbi.nlm.nih.gov/32296183/); [PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/)
+
+The muscle-contraction TAS is UNDECIDED. PMID:8547310's full experiments were not recovered; its cloning/clinical abstract cannot settle a direct role in the GO-defined contractile step. The rat probe does not make the cloned human record a wrong-organism citation. PMID:9325156's authentic abstract supports the established reaction and human gene mapping, while its negative jittery-mouse mutation finding does not negate human enzymatic activity. [PMID:8547310](https://pubmed.ncbi.nlm.nih.gov/8547310/); [PMID:9325156](https://pubmed.ncbi.nlm.nih.gov/9325156/)
+
+### Conservation and current stage
+
+The private proposal covers eighteen literal current contexts: nine ACCEPT, four MODIFY, four REMOVE and one UNDECIDED; no NEW is added. One core retains the specific catalytic activity, creatine biosynthesis, SAM catabolism and cytosol. Eleven inherited references receive manual assessments. All seventeen old rows and fourteen original quote associations remain available through immutable Git and private original files, with exact historical locators in the compact public evidence record. The old single HuRI row lacks partner identity and is not silently assigned to one current partner.
+
+Three short current anchors are exact cached substrings, with source hashes and byte offsets recorded separately. Both inherited reference finding statements are restored with explicit manual assessments. Their short exact anchors contain 13 words from PMID:8651275 and 4 words from UniProt, alongside the 6-word Reactome core anchor. Each appears once; twelve other inherited quotation associations remain historical-only. No excerpt is repeated here. Genuine native acquisition and private seed reconciliation now match all eighteen original rows and the actual 16-column export. Sixteen main sources are reused unchanged, thirteen missing sources are acquired without force, and all three exact snippets pass native-byte checks. Both product records and the two restored finding statements remain intact. Default validation passed with one advisory for the deliberately retained core-only SAM-catabolism facet; it does not require manufacturing a NEW annotation. Strict GOA matched all 18 rows, native history and DRAFT status checks passed, and private rendering/link and whitespace checks passed. The muscle-contraction judgment remains UNDECIDED. Source text and original annotation contexts were not manually edited.
+
+The broad cytoplasm IBA is refined to cytosol using the verified direct GO:0005829 part_of GO:0005737 relationship and the human Reactome catalyst. The PAINT node and donors remain valid; no ancestry defect or nuclear exclusion is inferred.
+
+
+## 2026-11-04 — Native source reconciliation
+
+The genuine no-seed refresh preserved the inherited review and journal before transfer. All 18 current contexts and their four IBA placements match the actual export; both natural-product records match the native UniProt record. All 29 source bytes and eleven reference titles were checked, with selected original reading kept distinct from normal-cache availability. The two inherited finding statements remain current at their stated scope. The exact native source snippets occur once each, with no added quotation in this journal. A native EDIT history records the completed transfer. Default validation passed with one advisory for the deliberately retained core-only SAM-catabolism facet; it does not require manufacturing a NEW annotation. Strict GOA matched all 18 rows, native history and DRAFT status checks passed, and private rendering/link and whitespace checks passed. The muscle-contraction judgment remains UNDECIDED.
+
+## 2026-11-04 — Functional variant evidence and compartment scope
+
+Human GAMT-deficient fibroblast assays provide additional functional evidence for the enzyme: selected missense alleles restore activity, whereas others do not. These experiments corroborate the reaction established by the original human-liver assay. Their clinical findings also explain why GAMT matters for neurological health, without identifying an additional developmental step performed by the protein ([PMID:24415674](https://pubmed.ncbi.nlm.nih.gov/24415674/), [PMID:26319512](https://pubmed.ncbi.nlm.nih.gov/26319512/)).
+
+The longer annotated product requires a distinction between sequence and demonstrated protein function. UniProt maps Q14353-2 to NM_138924.3/NP_620279.1. The [PMID:26003046](https://pubmed.ncbi.nlm.nih.gov/26003046/) abstract reports no measurable wild-type transcript-2 activity, while the official [NCBI Gene 2593](https://www.ncbi.nlm.nih.gov/gene/2593) description reports no detected GFP-fusion protein in that study. The result therefore does not establish intrinsic inactivity of purified 269-residue GAMT. Original Methods were not accessed. Both declared products remain recorded, and the proposed experiment first controls expression and stability.
+
+The verified nuclear PAINT placement remains positive phylogenetic support, now classified as non-core because a central human nuclear biochemical role is not established. This does not assert localization loss from fungal-to-metazoan substrate specialization or exclusivity of the cytosolic pool. The historical muscle-contraction TAS remains uncertain: its accessible cloning/clinical abstract does not resolve the exact support, and an article title cannot exclude unseen experiments.
+
+The core again records guanidinoacetate and SAM as structured substrates. SAM catabolism remains a supported facet of the same methyl-transfer reaction, with positive ortholog/comparator and human reaction evidence; no NEW annotation is manufactured to remove an advisory. The biological question separating guanidinoacetate toxicity from creatine depletion is restored. Earlier journal text remains historical. Current source assessments and exact excerpts are in the review, with public locators in the [source guide](GAMT-source-guide.md).
+
+Target validation passed with one advisory for the deliberately retained SAM-catabolism core facet; strict GOA matched all 18 originals. Native codex EDIT history, DRAFT status audit, private 18-row/one-core/14-reference rendering and whitespace checks passed. One source-specific UNDECIDED judgment remains; all 29 scientific sources are unchanged.

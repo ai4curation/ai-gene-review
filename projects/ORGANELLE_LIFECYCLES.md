@@ -113,6 +113,10 @@ The organelle-by-stage matrix lives in
 - [ ] Extract a shared receptor-to-Atg8 capture module from `mitophagy`
 - [x] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus `peroxisomal_protein_import` (eukaryote-wide, PAINT-grounded per subunit; `RULE_CANDIDATE`); metabolism referenced as optional modules
 - [ ] Peroxisome: ground the receptor E2 (Pex4/Pex22 and animal E2s) and the PEX1/PEX6 anchor (PEX26, Pex15, APEM9) per lineage; check the PEX3 step in kinetoplastid genomes and Pex16 and PTS2 losses against proteomes; add pexophagy
-- [ ] Lysosome/endosome, ER, Golgi, nucleus, lipid droplet, autophagosome
+- [x] Lysosome/endosome: `lysosome_lifecycle` umbrella with two eukaryote-wide rule modules, `vacuolar_atpase_acidification` (V-ATPase, one PANTHER family per subunit) and `escrt_iii_intralumenal_vesicle_formation` (ESCRT-III and Vps4 by subfamily); both `RULE_CANDIDATE`
+- [ ] Lysosome/endosome: add ESCRT-I (TSG101, VPS28, VPS37 reviews exist) and ESCRT-II; model endosome maturation (Rab7, Mon1-Ccz1, HOPS) eukaryote-wide; Vps10/VSR hydrolase sorting; lysophagy
+- [x] ER: `endoplasmic_reticulum_lifecycle` umbrella with two eukaryote-wide rule modules, `er_cotranslational_translocation` (SRP, SRP receptor, Sec61) and `er_oxidative_protein_folding` (BiP, PDI; Ero1 and the calnexin cycle optional); both `RULE_CANDIDATE`
+- [ ] ER: ground ERAD (Hrd1/Hrd3, Derlin, Cdc48-Ufd1-Npl4) once Hrd1's family table and per-lineage Cdc48/Hrd3 subfamilies are in place; add ER shaping, COPII export and a eukaryote-wide (IRE1) UPR; resolve SRbeta's PANTHER placement; add plant SRalpha and SRP68/72 selectors
+- [ ] Golgi, nucleus, lipid droplet, autophagosome
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)

@@ -48,3 +48,21 @@ PubMed/NCBI search notes:
 - Beware the old and new Neurospora names: recent papers' `erg4`/`Delta erg4`
   rows refer to the C-24(28) sterol reductase `NCU01333`, not to the old `erg-4`
   C-24 methyltransferase locus `NCU03006`.
+
+## 2026-11-06 PTHR44068 re-review
+
+- Refreshed the UniProt flat file from entry version 123 to 124. The only
+  functional-adjacent change was UniProt's `GO:0003838 sterol
+  24-C-methyltransferase activity` cross-reference changing from an EnsemblFungi
+  IEA to the current GO_Central IBA; the OMA xref also changed.
+- Re-checked the PTN002226525 sterol-SMT and PTN000802684 fungal Erg6 PAINT
+  nodes against the new `PTHR44068` family review. The Neurospora `erg-4`
+  IBAs for sterol 24-C-methyltransferase activity, ER location, and ergosterol
+  biosynthesis remain sound.
+- Web and PubMed searches found one newer full-text paper that used an
+  `N. crassa` `Delta erg6` strain as a sterol-pathway complementation host for
+  Asparagus C24SMT genes and observed impaired ergosterol production in the
+  knockout [PMID:41341311, "Disruption of erg5 and erg6 or both"]. This is useful corroboration
+  of the NCU03006 knockout phenotype but does not supersede the direct
+  Neurospora sterol genetics in PMID:154056 or UniProt's curated
+  lanosterol-to-eburicol reaction.

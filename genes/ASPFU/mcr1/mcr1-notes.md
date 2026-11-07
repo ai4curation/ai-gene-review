@@ -21,9 +21,10 @@
   captures the NADH-specific child `GO:0090524`.
 - `PTN000452208` carries `GO:0006696 ergosterol biosynthetic process` from an
   S. cerevisiae MCR1 source. PMID:10622712 reconstituted Candida CYP51 sterol
-  14alpha-demethylation with a yeast microsomal cytochrome b5/NADH-cytochrome
-  b5 reductase chain, which supports the CBR1 branch rather than directly
-  establishing an ER ergosterol role for mitochondrial MCR1.
+  14alpha-demethylation using yeast cytochrome b5 and NADH-cytochrome b5
+  reductase, but the abstract does not identify that yeast reductase as
+  mitochondrial Mcr1 or directly establish an A. fumigatus mcr1 ergosterol
+  role.
 - Manual searches for direct A. fumigatus mcr1 work by `AFUA_1G04540`,
   `Q4WJW8`, and A. fumigatus NADH-cytochrome-b5-reductase queries did not find
   primary evidence that changes the PAINT-backed MCR1-clade assessment; the

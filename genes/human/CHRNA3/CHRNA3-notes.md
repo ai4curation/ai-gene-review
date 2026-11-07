@@ -14,3 +14,12 @@ No native stoichiometry is inferred solely from a fixed recombinant concatamer. 
 ## PR #5582 follow-up, 2026-10-26
 
 Removed generic reference-review templates while preserving source-specific assessments and mined mechanistic findings from the cited receptor reconstitution/structural and native mouse studies. Human engineered receptor composition, reporter-mutation stoichiometry and mouse physiological effects are explicitly distinguished. Citation prose was normalized without altering original annotation payloads or existing supporting quotations.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and ISS (GO_REF:0000024, rat P04757), both `located_in`; no ER sub-compartment rows.
+
+- UniProt: "Endoplasmic reticulum {ECO:0000250|UniProtKB:P04757}" (file:human/CHRNA3/CHRNA3-uniprot.txt, CC SUBCELLULAR LOCATION), so the IEA keyword is itself by similarity to rat.
+- QuickGO: rat P04757 GO:0005783 rests on an EXP from PMID:19474315 (Rezvani et al. 2009, UBXD4; abstract only, no PMC full text through the PubMed tool). Abstract: [PMID:19474315 "Our data suggest that UBXD4 modulates the distribution of alpha3* nAChRs between specialized intracellular compartments and the plasma membrane."]
+- PMID:26265139 (full text): ERAD of alpha3 in differentiated PC12 cells, [PMID:26265139 "it is conceivable that CHIP/UBXN2A interactions occur while α3 is being extracted from the ER into the cytosol by p97"].
+- Outcome: both rows ACCEPT -> KEEP_AS_NON_CORE. A real biosynthetic/quality-control ER pool of the gene (ABCA4/BACE2 rule), but the channel acts at the plasma/synaptic membrane, so not core. MARK_AS_OVER_ANNOTATED was the close alternative (no alpha3-plus-ER-marker image quoted). No NEW ER membrane row: transit pool of a multi-pass subunit. PMID:19474315 added to references.
