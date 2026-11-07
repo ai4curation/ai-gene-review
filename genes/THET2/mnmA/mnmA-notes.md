@@ -21,3 +21,7 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 - GO:0016783 (IEA; GO_REF:0000002): MODIFY. The transferase/sulfurtransferase claim is correct but the characterized substrate and position support tRNA-uridine 2-sulfurtransferase activity, GO:0103016, already present in this review. Refine to this specific descendant without inventing a new annotation or assuming one cofactor mechanism for all MnmA homologs.
 
 - GO:0103016 (IEA; GO_REF:0000120): ACCEPT. The target-specific biochemical evidence establishes ATP-dependent sulfur incorporation at C2 of tRNA U34. Accept the precise catalytic function. The reaction identity does not settle every terminal sulfur-transfer intermediate or imply that the Thermus cluster requirement applies to E. coli or Bacillus MnmA.
+
+## 2026-11-07 — PR6199 source-specific follow-up
+
+PMID:31801798 methods identify HB27 Ttc1727, expressed recombinantly. The U34A substrate control, ATP omission and inactive apoenzyme support ATP-dependent wobble thiolation. Reconstituted iron content was 3.72 ± 0.03 mol per mol protein, with spectroscopic and Cys-mutant support. One authored IDA NEW proposes GO:0051539; it describes measured cluster binding, not native cellular occupancy or a universal D-type requirement. HAMAP MF_00144 supports cytoplasm, with cytosol inferred from the soluble reaction context.

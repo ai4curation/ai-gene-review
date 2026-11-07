@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mnma_trna_thiolation`: PR #6199: full validation passed on science head b4f4966674 (10,801 reviews, zero blocking errors; 550 frozen inputs verified). Independent review, current-main integration/CI and actual merge remain pending.
+- [ ] `bacterial_mnma_trna_thiolation`: PR #6199 scientific follow-up passed focused checks: twelve revised genes, module checks, four family schemas/quote checks, and 59 capacity cases. Original 162 machine rows and four historical NEW rows are preserved; one exact-target Fe-S binding NEW is added. Earlier full validation remains scoped to b4f4966674. Current-main integration, fresh full validation, publication, review/CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -933,4 +933,8 @@ PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 change
 
 ## 2026-11-07 — bacterial mnma trna thiolation full validation passes
 
-Comparative audit passes full validation on b4f4966674: 10,801 reviews, zero blocking errors and 550 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mnma_trna_thiolation/full-validation-20261107-1238.json).
+Comparative audit passes full validation on b4f4966674: 10,801 reviews, zero blocking errors and 550 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](MODULE_TAXON_AUDIT/proofs/pr6199-full-validation-20261107-1238.json).
+
+## 2026-11-07 — MnmA scientific review follow-up
+
+PR #6199 scientific follow-up passed focused checks: twelve revised genes, module checks, four family schemas/quote checks, and 59 capacity cases. Original 162 machine rows and four historical NEW rows are preserved; one exact-target Fe-S binding NEW is added. Earlier full validation remains scoped to b4f4966674. Current-main integration, fresh full validation, publication, review/CI and actual merge remain pending.

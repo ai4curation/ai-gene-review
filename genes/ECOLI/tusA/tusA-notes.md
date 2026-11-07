@@ -41,3 +41,7 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 - GO:0097163 (IEA; GO_REF:0000120): ACCEPT. TusA covalently accepts persulfide sulfur from IscS and supplies the downstream relay, directly matching the sulfur-carrier definition. Independent biochemistry supports the electronic mapping as well as the experimental row.
 
 - GO:1990329 (IPI; PMID:16387657): ACCEPT. TusA binds IscS in the sulfur-mobilizing complex and stimulates its catalytic activity; this is the mechanistically informative complex annotation corresponding to the nonspecific interaction rows. No generalized protein-binding function is needed to capture this role.
+
+## 2026-11-07 — PR6199 source-specific follow-up
+
+The E. coli relay supports a soluble cytosolic tRNA reaction. Cytosol refinements use the same functional/structural inference for MnmA and TusA/B/C/D/E; no new fractionation measurement is claimed. PMID:16387657 reconstitutes the pathway with recombinant components; PMID:16472754 resolves the TusBCD heterohexamer. Core reaction roles and original annotation payloads are preserved. The frozen seed has 17 rows whereas raw GOA has 18: two GO:0005515/IPI/PMID:16387657 records share the same represented claim and WITH/FROM but differ in assigned-by/date (IntAct versus EcoCyc). This pre-existing seed collapse is documented, not repaired by manufacturing an authored NEW or changing row order.

@@ -11,3 +11,7 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 - GO:0031071 (IEA; GO_REF:0000120): ACCEPT. The PS832/168-lineage YrvO protein is the seeded IscS1 homolog and has direct cysteine-desulfurase and sulfur-donation support in PMID:25825430. The YrvO–MnmA pair acts in U34 thiolation; this validates the shared catalytic claim independently of the electronic or ISS source and does not transfer every function of the SufS donor P0A6B9. The original assay-to-reference-strain bridge is explicit in the identity evidence.
 
 - GO:0031071 (ISS; GO_REF:0000024): ACCEPT. The PS832/168-lineage YrvO protein is the seeded IscS1 homolog and has direct cysteine-desulfurase and sulfur-donation support in PMID:25825430. The YrvO–MnmA pair acts in U34 thiolation; this validates the shared catalytic claim independently of the electronic or ISS source and does not transfer every function of the SufS donor P0A6B9. The original assay-to-reference-strain bridge is explicit in the identity evidence.
+
+## 2026-11-07 — PR6199 source-specific follow-up
+
+PMID:25825430 demonstrates the YrvO–MnmA partnership, contingent on ATP. The target raw record lacks an independently supported subcellular-location statement; the author core location has therefore been removed and archived, without changing desulfurase activity or the supported partnership. A dedicated MnmA-donor role is not evidence that Fe-S assembly activity is experimentally excluded.

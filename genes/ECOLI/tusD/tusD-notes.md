@@ -31,3 +31,7 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 - GO:1990228 (IDA; PMID:16472754): ACCEPT. The crystal structure and biochemical reconstitution establish membership of TusBCD, a heterohexamer with two copies of each subunit. GO:1990228 describes the sulfur-transfer complex; the direct structure supports the inherited node assertion without counting extant donors as phylogenetic evidence.
 
 - GO:1990228 (IPI; PMID:16387657): ACCEPT. The crystal structure and biochemical reconstitution establish membership of TusBCD, a heterohexamer with two copies of each subunit. GO:1990228 describes the sulfur-transfer complex; the direct structure supports the inherited node assertion without counting extant donors as phylogenetic evidence.
+
+## 2026-11-07 — PR6199 source-specific follow-up
+
+The E. coli relay supports a soluble cytosolic tRNA reaction. Cytosol refinements use the same functional/structural inference for MnmA and TusA/B/C/D/E; no new fractionation measurement is claimed. PMID:16387657 reconstitutes the pathway with recombinant components; PMID:16472754 resolves the TusBCD heterohexamer. Core reaction roles and original annotation payloads are preserved.

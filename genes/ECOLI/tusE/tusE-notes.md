@@ -23,3 +23,7 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 - GO:0097163 (IDA; PMID:16387657): ACCEPT. Retain the experimentally curated sulfur-carrier role of TusE and its conserved relay assignment, supported by the reconstituted pathway, TusBCD stimulation and MnmA–tRNA interaction. This does not turn the proposed direct TusE-persulfide-to-MnmA-cysteine handoff into an established molecular intermediate; the 2025 critical review explicitly leaves that step unresolved.
 
 - GO:1990228 (IPI; PMID:16387657): ACCEPT. The relay study supports association with the sulfur-transfer reaction assembly, including the MnmA–tRNA/TusE interaction. Retain the experimentally curated component claim without claiming that TusE or MnmA is a constitutive subunit of the structurally defined TusBCD heterohexamer, or that all proteins form one permanently stable complex.
+
+## 2026-11-07 — PR6199 source-specific follow-up
+
+The E. coli relay supports a soluble cytosolic tRNA reaction. Cytosol refinements use the same functional/structural inference for MnmA and TusA/B/C/D/E; no new fractionation measurement is claimed. PMID:16387657 reconstitutes the pathway with recombinant components; PMID:16472754 resolves the TusBCD heterohexamer. Core reaction roles and original annotation payloads are preserved.
