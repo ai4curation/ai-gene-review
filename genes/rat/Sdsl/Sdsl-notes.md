@@ -25,3 +25,7 @@
 **Open questions.** Rat SDSL is reported monomeric but human SDSL is a crystallographic dimer; is this a real species difference or an assay artefact? Human SDSL carries IBA L-serine catabolic process (GO:0006565) and rat does not. The rat paper shows L-serine/L-threonine decomposition in cells, so a process annotation could be considered by a curator; it was not added here.
 
 **Stale UniProt quotes (2026-10-10):** replaced 3 `UniProtKB:A0A6N3IN21` supporting_text quotes (the FUNCTION text now wraps at "alpha-/ketobutyrate", so the old quote no longer matched the flat file) with verbatim FUNCTION fragments and the L-serine CATALYTIC ACTIVITY reaction from the current `Sdsl-uniprot.txt`.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[10], GO:0008150 biological_process (ND, ACCEPT): may be stale. PMID:33079132 characterizes rat SDHL as a multifunctional enzyme (glutamate racemase plus L-serine/L-threonine dehydratase), and the 2026-10-04 re-review notes above record that "The rat paper shows L-serine/L-threonine decomposition in cells, so a process annotation could be considered by a curator". The Falcon report's statement that no rat enzymology was retrieved predates or missed this paper. A process term such as L-serine catabolic process may replace the ND. Action not changed here.

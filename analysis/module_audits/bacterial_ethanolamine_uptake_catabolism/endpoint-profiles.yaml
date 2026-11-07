@@ -1,0 +1,300 @@
+status: IMPLEMENTED_TARGETED_CHECKS_PASS
+module: bacterial_ethanolamine_uptake_catabolism
+root_scope:
+  required_root_nodes:
+  - eutbc_ethanolamine_deamination
+  - acetaldehyde_oxidation
+  conditional_access: Optional protein uptake with mandatory external access gate; no empty diffusion
+    reaction.
+  profiles_file: analysis/module_audits/bacterial_ethanolamine_uptake_catabolism/endpoint-profiles.yaml
+  rationale: Retain the original oxidative biochemical boundary without denying the less demanding nitrogen
+    endpoint demonstrated in native Acinetobacter and heterologous eut-deletion assays. Every report must
+    distinguish chemical routing, cofactor recycling, and sustained native growth.
+  implementation_status: Implemented in the scoped executable checker against production compiler output,
+    exact reviewed members, compatible active-unit pairs, actual chemistry and explicit physiological
+    gates. 79 capacity cases and 8 mutation checks pass; static gene content alone does not establish
+    native growth.
+profiles:
+- id: nitrogen_liberation
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  external_gates:
+  - actual substrate access
+  - compatible active adenosylated cobamide
+  - compatible expressed EutB/EutC pair
+  claim: Ammonia/ammonium release plus acetaldehyde production. Nitrogen assimilation and native growth
+    require host assimilation, expression, turnover and toxicity context.
+- id: oxidative_acetyl_coa
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - acetylating_eute_route
+  external_gates:
+  - access and active cofactor
+  - CoA and NAD+ availability
+  claim: Chemical carbon routing to acetyl-CoA; sustained flux and biomass assimilation are not proved
+    by a single-pass atom match.
+- id: oxidative_acetate
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - non_acylating_aldh_route
+  external_gates:
+  - access and active cofactor
+  - NAD+ availability
+  claim: Chemical carbon routing to acetate. Acetate activation/central assimilation and redox recycling
+    are downstream dependencies; do not silently grant biomass growth.
+- id: reductive_ethanol
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - acetaldehyde_reduction
+  external_gates:
+  - access and active cofactor
+  - NADH supply
+  claim: Acetaldehyde disposal as ethanol and NAD+ regeneration. Alone this is not net oxidative carbon
+    assimilation or ATP generation.
+- id: acetyl_phosphate_atp
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - acetylating_eute_route
+  - eutd_coa_recycling
+  - acetate_kinase_energy_conservation
+  external_gates:
+  - access and active cofactor
+  - NAD+ recycling for sustained flux
+  - CoA/phosphate and ADP availability
+  claim: Reaction sequence to acetate with substrate-level ATP production; not a universally required
+    EutD/EutQ gene pair.
+- id: sustained_carbon_utilization
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - acetaldehyde_oxidation
+  external_gates:
+  - experiment-specific access
+  - active compatible cofactor and demonstrated maintenance if needed
+  - expression adequate for carbon use
+  - redox and CoA recycling/availability for selected architecture
+  - acetaldehyde containment/removal compatible with flux
+  - downstream assimilation and energy conservation
+  - native-strain/context evidence or explicitly inferred status
+  claim: Requires independent physiological evidence or a complete modeled closure. Cannot be returned
+    true from static protein-presence Boolean alone.
+- id: private_cofactor_cycling
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - acetylating_eute_route
+  - acetaldehyde_reduction
+  - eutd_coa_recycling
+  - acetate_kinase_energy_conservation
+  external_gates:
+  - LT2 matched implementation
+  - Access and active cofactor
+  - Initial NAD+ and CoA pools; phosphate and ADP
+  claim: Defined 1:1 oxidative/reductive scheme cancels modeled NAD and CoA carriers and supports ATP
+    production; genetically supported compartment model, not a measurement of native flux. Listeria product
+    ratios require additional electron disposal.
+- id: reactivation_after_inactivation
+  required_nodes:
+  - eutbc_ethanolamine_deamination
+  - eutbc_reactivation
+  external_gates:
+  - Matched LT2 interaction witness with E. coli biochemical mechanism inferred
+  - Inactivated bound cofactor
+  - ATP,Mg2+ and available replacement adenosylcobalamin
+  claim: Maintenance after inactivation; not a universal prerequisite for ordinary EutBC turnover or all
+    nitrogen-growth conditions.
+compiler_limits:
+- ModuleContext.conditions, taxa, function substrates/products, locations and connections are not represented
+  in Atom. Persist them in the module and bind oracle conditions to actual annoton/node dictionaries,
+  with unknown evidence distinct from biological absence.
+- The PROTEIN_COMPLEX EutBC annoton becomes one GO0008851 atom; compile_node does not expand active_units.
+  The oracle must inspect the original complex and require both compatible EutB and EutC from the intended
+  strain/construct. One GO0008851-bearing EutB is insufficient.
+- optional:true and ZERO_OR_MORE produce an always-true empty skip. This is appropriate for optional functions,
+  never a proof of diffusion, nutrient availability, redox closure or shell-free growth.
+- ONE_OR_MORE has at-least-one Boolean semantics. enumerate_routes lists one branch at a time; do not
+  use that list to claim oxidative and reductive pathways are mutually exclusive or to establish a flux
+  balance.
+- Atom has no stoichiometry or cofactors; an EutG presence test cannot prove enough NAD+ regeneration,
+  and an EutQ ATP-generating atom cannot prove local ATP delivery to EutA/EutT.
+- No endpoint_profiles schema slot exists. Keep executable profiles in analysis/checker, tied to actual
+  module node IDs/function+substrate requirements; do not add unsupported schema keys.
+evidence_edges:
+- - EutBC
+  - EutE or nonacylating ALDH
+  - acetaldehyde input; specific catalytic chain, not family membership alone
+- - EutBC
+  - EutG
+  - parallel acetaldehyde fate; not a serial step after oxidation
+- - EutE
+  - EutG
+  - NADH can feed reductive recycling in the defined coupled implementation
+- - EutG
+  - EutE
+  - NAD+ regeneration can support oxidation; exact closure not universal
+- - EutE
+  - EutD
+  - acetyl-CoA supplies phosphotransacetylase
+- - EutD
+  - EutE
+  - CoA recycling in private-pool implementation
+- - EutD
+  - EutQ kinase or supported alternative
+  - acetyl phosphate supplies acetate kinase
+- - EutA
+  - EutBC
+  - reactivates after inactivation; not a normal irreversible event each turnover
+- - EutQ scaffold
+  - LT2 cargo/shell assembly
+  - physical scaffolding distinct from kinase chemistry; no universal Gram-positive transfer
+required_controls:
+- EutBC alone passes chemical deamination endpoint but fails original oxidative root.
+- No transport witness passes only a documented diffusion-permissive context; same proteins fail/are unresolved
+  under limiting access or unknown conditions.
+- No active compatible cobamide prevents supported deamination; cyanocobalamin without processing evidence
+  is not automatically active cofactor.
+- EutB alone, EutC alone, and an unverified cross-taxon pair fail complex witness; failure denotes unsupported
+  compatibility, not proof all cross-species pairs are impossible.
+- EutG plus EutBC passes reductive-fate capacity with NADH but fails oxidative endpoint; adding EutE permits
+  coexistence.
+- PduP in mixed EutE family without acetaldehyde-specific core does not grant EutE capacity; generic AldB
+  membership without correct substrate/cofactor likewise fails.
+- PP0544 remains inferred candidate access, separate from experimentally grounded native transport; PA4022
+  supplies direct oxidation and Q9ZAA1 cannot serve as a PAO1 native-strain witness.
+- Native ATCC17978 nitrogen growth and overexpression/evolved carbon growth have distinct results despite
+  related gene sets.
+- EutD/EutG deletions fail selected private-cofactor-pool closure, not every deamination endpoint; alternatives
+  require positive context evidence.
+- EutQ kinase activity alone cannot satisfy LT2 scaffold requirement; full LT2 protein can satisfy both
+  if each required activity is independently reviewed.
+- Gram-positive EutQ short architecture cannot automatically inherit LT2 scaffold; absence does not mean
+  a Bacillota BMC is impossible.
+- Missing EutA does not universally fail reduced-oxygen Salmonella or the demonstrated Acinetobacter nitrogen
+  context; damaged cofactor without a repair/supply path does not pass a sustained EutA-dependent profile.
+- No measured or modeled redox closure returns sustained-native-carbon status UNKNOWN, not a positive
+  Boolean shortcut.
+scoped_evidence:
+- source_id: PMID:35880884
+  source_path: publications/PMID_35880884.md
+  source_sha256: 920ac1549f9bfd1c8c07a8b1d21b978960f30754ecbcd3e780c5fe06346a74b9
+  supporting_text: Chromosomal levels of eutBC expression were sufficient to support growth with ethanolamine
+    as a nitrogen source
+  applies_to: nitrogen endpoint versus carbon-growth endpoint
+  assay_scope_and_limit: Native ATCC17978, Fig4. Host ammonia assimilation and other metabolic machinery
+    are present; EutBC is not an autonomous biomass pathway.
+- source_id: PMID:35880884
+  source_path: publications/PMID_35880884.md
+  source_sha256: 920ac1549f9bfd1c8c07a8b1d21b978960f30754ecbcd3e780c5fe06346a74b9
+  supporting_text: Strains were grown in nce minimal medium containing ethanolamine as the sole source
+    of nitrogen.
+  applies_to: reactivase and BMC nonuniversality
+  assay_scope_and_limit: Fig7 heterologous A. baumannii EutBC in Salmonella eut deletions. Do not call
+    this complete carbon assimilation by EutBC alone.
+- source_id: PMID:35880884
+  source_path: publications/PMID_35880884.md
+  source_sha256: 920ac1549f9bfd1c8c07a8b1d21b978960f30754ecbcd3e780c5fe06346a74b9
+  supporting_text: Chromosomal expression of eutBC allows A. baumannii to use ethanolamine as a sole nitrogen
+    source but not as a carbon and energy source.
+  applies_to: expression/context gate
+  assay_scope_and_limit: Native chromosomal expression differs from plasmid overexpression and ISAba1-evolved
+    expression. Enzyme capacity does not by itself establish native carbon growth.
+- source_id: PMID:35880884
+  source_path: publications/PMID_35880884.md
+  source_sha256: 920ac1549f9bfd1c8c07a8b1d21b978960f30754ecbcd3e780c5fe06346a74b9
+  supporting_text: AbEutBC can utilize various adenosylcobamides
+  applies_to: active cofactor prerequisite
+  assay_scope_and_limit: Compatible adenosylated cobamide is the broader prerequisite; adenosylcobalamin
+    is the established standard for the main panel. Free cyanocobalamin alone is not equivalent to active
+    bound cofactor without processing.
+- source_id: PMID:15466042
+  source_path: publications/PMID_15466042.md
+  source_sha256: 835ba033ef8d0f3f9d63817f97671e0579649bd51acf7ef0220c1835dd182958
+  supporting_text: When a lowered pH and/or ethanolamine concentration reduced the Eth0 concentration
+    below 25 microM, EutH was needed to facilitate diffusion.
+  applies_to: conditional substrate access
+  assay_scope_and_limit: LT2 conditions; threshold concerns free uncharged substrate and growth, not a
+    transporter Km or universal taxon threshold. Full-source provenance is in the delivered SALTY EutH
+    source analysis.
+- source_id: PMID:22267508
+  source_path: publications/PMID_22267508.md
+  source_sha256: 728f7d487a35f86ba2b47dc966f15af4cd83d1e684a4d6b5502fb02e72b89543
+  supporting_text: We found here that purified rHdhA and rExaC both oxidize acetaldehyde.
+  applies_to: non-acylating acetaldehyde oxidation
+  assay_scope_and_limit: PAO1 HdhA/PA4022 and PA1984 ExaC recombinant assays, NAD+ at pH9. The Q9ZAA1
+    reference is ATCC17933 and is not the directly assayed PA1984 protein.
+- source_id: PMID:23585538
+  source_path: publications/PMID_23585538.md
+  source_sha256: e7f6a18862ae1cd68832207a4acc4fb3f0d2ffa0bd2ede583b8438aeb4832a4a
+  supporting_text: 'These are EutD
+
+    (acetyl-CoA to acetyl phosphate) and EutG (acetaldehyde to ethanol).'
+  applies_to: private cofactor recycling implementation
+  assay_scope_and_limit: Abstract explicitly describes stringent genetic physiology. Its proposed outside-shell
+    EutBC position is not used;2025 primary imaging/assembly supersedes that spatial model.
+- source_id: PMID:26448059
+  source_path: publications/PMID_26448059.md
+  source_sha256: 8bb618cfa210a26afc1cca1d1424af46e3d16921464204407e0f4d72bfc67246
+  supporting_text: When EutQ, EutP or both were present in the reaction mixture, ATP was formed at the
+    expense of AcCoA
+  applies_to: EutD then acetate-kinase endpoint
+  assay_scope_and_limit: Direct coupled assays; EutD generates acetyl phosphate from acetyl-CoA and phosphate,
+    releasing CoA. This proves in-vitro ATP production, not selective ATP delivery to EutA inside a sealed
+    compartment.
+- source_id: PMID:26448059
+  source_path: publications/PMID_26448059.md
+  source_sha256: 8bb618cfa210a26afc1cca1d1424af46e3d16921464204407e0f4d72bfc67246
+  supporting_text: synthesis of AckA, PduW or TdcD restored anoxic growth of the eutQ strain on ethanolamine
+    and tetrathionate
+  applies_to: kinase-role alternatives
+  assay_scope_and_limit: Substrate-level phosphorylation is not uniquely EutQ. Expression-based rescue
+    is not proof every native kinase architecture is interchangeable. EutQ scaffold activity is a separate
+    requirement in selected native assemblies.
+- source_id: PMID:41032589
+  source_path: publications/PMID_41032589.md
+  source_sha256: 2026515806712a7512eaff1b049c75e6a8133cf0021252b32ce565f64e8564e8
+  supporting_text: the N-terminal domain of EutQ mediates the physical binding between the shell and cargos
+    to ensure encapsulation
+  applies_to: LT2 BMC scaffold
+  assay_scope_and_limit: Direct LT2 imaging, domain perturbation and interaction data; do not equate a
+    scaffold annoton alone with a complete shell.
+- source_id: PMID:41032589
+  source_path: publications/PMID_41032589.md
+  source_sha256: 2026515806712a7512eaff1b049c75e6a8133cf0021252b32ce565f64e8564e8
+  supporting_text: the EutQ proteins of Gram-positive species like Enterococcus faecalis and Listeria
+    monocytogenes lack the first three α helices
+  applies_to: taxon-dependent assembly
+  assay_scope_and_limit: Do not grant the LT2 N-terminal scaffold mechanism to all EutQ proteins or infer
+    no Gram-positive BMC assembly.
+- source_id: PMID:15466038
+  source_path: publications/PMID_15466038.md
+  source_sha256: 37d7ddde4f69d97963e4ea41463937c5d7cfeac772d67e3f44794dc46713bcba
+  supporting_text: 'reactivation and activation occur through
+
+    the exchange of modified coenzyme for free intact adenosylcobalamin.'
+  applies_to: EutA maintenance
+  assay_scope_and_limit: Primary E. coli biochemical mechanism; ATP and Mg2+ required in the tested reactivation
+    assay. Fresh cofactor exchange is not cofactor biosynthesis and is not a separate event after every
+    normal catalytic turnover.
+- source_id: PMID:16291677
+  source_path: publications/PMID_16291677.md
+  source_sha256: 22e72e7be527e119af55b6f7069625c56e14bf4dcbc75eaad57087191cb8750a
+  supporting_text: 'Neither GSH nor EutA was
+
+    needed during growth on ethanolamine under reduced-oxygen conditions.'
+  applies_to: conditional EutA/native growth
+  assay_scope_and_limit: Abstract-level Salmonella physiology. EutA is not universally required even for
+    all Salmonella growth conditions; toxin management/oxygen context matters.
+- source_id: PMID:33850044
+  source_path: publications/PMID_33850044.md
+  source_sha256: e554727585e8291da0e71f8715f6277bf1dab5358ec7e2a6194a13cbe6f15cb4
+  supporting_text: 15 mM EA was converted into about 6.6 mM acetate and 3.4 mM ethanol
+  applies_to: coexisting oxidative/reductive fates
+  assay_scope_and_limit: EGDe anaerobic defined-medium metabolite data.10403S was used for gene-disruption/EET
+    tests.2:1 product ratio is incompatible with assuming a universally closed1:1 EutE/EutG NAD cycle;
+    additional electron disposal is needed/inferred.
+- source_id: PMID:33850044
+  source_path: publications/PMID_33850044.md
+  source_sha256: e554727585e8291da0e71f8715f6277bf1dab5358ec7e2a6194a13cbe6f15cb4
+  supporting_text: Further studies are required to elucidate the role of this eut BMC shell protein as
+    a redox carrier.
+  applies_to: avoid invented EET conduit
+  assay_scope_and_limit: lmo1185 shell electron-transfer function is a hypothesis, although EutB/Ndh2
+    perturbation supports physiological EET coupling.
