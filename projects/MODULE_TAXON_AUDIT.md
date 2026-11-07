@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_methionine_cycle`: PR #6196 review follow-up ready for fresh full validation: 13 member reviews corrected, 192 ordered published rows and all core functions preserved. Nineteen integral binding decisions now ACCEPT; MetK/MetH evidence anchors corrected, MtaD replacements limited to supported SAH/MTA roles with weak activities documented. Capacity remains 47 cases, nine mutations and ten gate sensitivities. Fresh full validation, review, CI and actual merge pending.
+- [ ] `bacterial_methionine_cycle`: PR #6196 follow-up passes full validation on 057aabb030: 10,801 reviews, zero blocking errors and 854 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -938,3 +938,7 @@ Comparative audit passes full validation on 125cfcb38c: 10,801 reviews, zero blo
 ## 2026-11-07 — bacterial_methionine_cycle main integration
 
 Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on 125cfcb38cfa1ef3a0733a85281e10e37cb4cef5. All 723 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial methionine cycle full validation passes
+
+PR #6196 follow-up passes full validation on 057aabb030: 10,801 reviews, zero blocking errors and 854 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_methionine_cycle/review-followup/full-validation-20261107-1238.json).
