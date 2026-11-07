@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_dimethylglycine_sarcosine_catabolism`: PR #6122: integrated main 2f72fda87e into approved head 4c93918641, preserving curated decisions and adding 9 exact upstream source qualifiers; focused checks pass. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [ ] `bacterial_dimethylglycine_sarcosine_catabolism`: PR #6122 approved at 2aa897d294; main 7eee074bca integrated at 6cb7fceca5 with 256 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
