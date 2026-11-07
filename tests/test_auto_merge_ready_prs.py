@@ -663,6 +663,129 @@ def test_legacy_required_check_can_explicitly_succeed():
     ).eligible
 
 
+# Superseded rollup entries (duplicate runs and re-runs)
+
+BUILD = "Build and test"
+
+
+def _t(clock):
+    return f"2026-10-30T{clock}Z"
+
+
+def _run(name, conclusion, started, completed=None, wf=BUILD, status="COMPLETED"):
+    entry = {
+        "__typename": "CheckRun",
+        "name": name,
+        "status": status,
+        "conclusion": conclusion,
+        "startedAt": _t(started),
+        "workflowName": wf,
+    }
+    if completed is not None:
+        entry["completedAt"] = _t(completed)
+    return entry
+
+
+def test_cancelled_duplicate_run_does_not_block_a_later_success():
+    """The #5618 shape: two runs race on one push, the loser is cancelled.
+
+    Its gate job still runs under `if: always()`, so the commit carries a
+    `failure` and three `cancelled` entries beside four successes under the
+    same names. Branch protection reads the latest per name and calls this
+    mergeable; counting every entry blocked the PR on three successive heads.
+    """
+    review = "Review PR"
+    rollup = [
+        # The duplicate run, cancelled one second in.
+        _run("validation (3.12)", "CANCELLED", "17:37:58", "17:37:59"),
+        _run("suite (3.12)", "CANCELLED", "17:37:58", "17:37:59"),
+        _run("test (3.12)", "FAILURE", "17:38:01", "17:38:04"),
+        _run("claude-review", "CANCELLED", "17:37:59", "17:38:00", wf=review),
+        # The run that actually executed.
+        _run("validation (3.12)", "SUCCESS", "17:38:06", "17:52:17"),
+        _run("suite (3.12)", "SUCCESS", "17:38:06", "17:44:06"),
+        _run("test (3.12)", "SUCCESS", "17:52:19", "17:53:06"),
+        _run("claude-review", "SUCCESS", "17:38:03", "17:46:26", wf=review),
+    ]
+    pr = make_pr(statusCheckRollup=rollup)
+    decision = decide(pr, required_checks=[REQUIRED_CHECK])
+    assert decision.eligible, decision.reason
+
+
+def test_a_later_failure_still_blocks_an_earlier_success():
+    """Collapsing must not run the wrong way round: the newest entry wins."""
+    rollup = [
+        _run(REQUIRED_CHECK, "SUCCESS", "10:00:00", "10:05:00"),
+        _run(REQUIRED_CHECK, "FAILURE", "11:00:00", "11:05:00"),
+    ]
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "test (3.12)=failure" in decision.reason
+
+
+def test_a_started_rerun_keeps_the_pr_pending_rather_than_inheriting_success():
+    """A re-run with no completedAt is newer than the attempt it supersedes."""
+    rollup = [
+        _run(REQUIRED_CHECK, "SUCCESS", "10:00:00", "10:05:00"),
+        _run(REQUIRED_CHECK, None, "11:00:00", status="IN_PROGRESS"),
+    ]
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "checks still running" in decision.reason
+
+
+def test_duplicates_without_timestamps_are_not_collapsed():
+    """No proof of ordering means no collapse, so the failure still vetoes."""
+    rollup = [
+        {"name": REQUIRED_CHECK, "status": "COMPLETED", "conclusion": "SUCCESS"},
+        {"name": REQUIRED_CHECK, "status": "COMPLETED", "conclusion": "FAILURE"},
+    ]
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "test (3.12)=failure" in decision.reason
+
+
+def test_duplicates_with_tied_timestamps_are_not_collapsed():
+    rollup = [
+        _run(REQUIRED_CHECK, "SUCCESS", "10:00:00", "10:05:00"),
+        _run(REQUIRED_CHECK, "FAILURE", "10:00:00", "10:05:00"),
+    ]
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "test (3.12)=failure" in decision.reason
+
+
+def test_same_name_from_a_different_workflow_is_a_different_check():
+    """Two apps may post one name; neither supersedes the other."""
+    rollup = [
+        _run(REQUIRED_CHECK, "SUCCESS", "11:00:00", "11:05:00"),
+        _run(REQUIRED_CHECK, "FAILURE", "10:00:00", "10:05:00", wf="Security scan"),
+    ]
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "test (3.12)=failure" in decision.reason
+
+
+def _status(state, created):
+    return {
+        "__typename": "StatusContext",
+        "context": "legacy",
+        "state": state,
+        "createdAt": _t(created),
+    }
+
+
+def test_commit_statuses_collapse_by_context():
+    rollup = [_status("FAILURE", "10:00:00"), _status("SUCCESS", "11:00:00")]
+    pr = make_pr(statusCheckRollup=rollup)
+    assert decide(pr, required_checks=["legacy"]).eligible
+
+
+def test_collapsing_cannot_empty_a_populated_rollup():
+    rollup = [_run("only", "SUCCESS", "10:00:00", "10:05:00")]
+    assert auto_merge.latest_rollup_entries(rollup) == rollup
+
+
 # List stage deferral
 
 
