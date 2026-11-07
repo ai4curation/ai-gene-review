@@ -9,3 +9,10 @@
   ACCEPTed on recA and kept as non-core on imuA.
 - The serine-type endopeptidase activity (GO:0004252) rests on the curated HAMAP rule
   MF_00015 (the LexA autocleavage reaction, EC 3.4.21.88); no KT2440 cleavage assay exists.
+
+
+## 2026-11-07 — comparative ImuABC annotation audit
+
+Direct KT2440 promoter-binding and regulon experiments support repression by a narrow SOS branch; they do not justify excluding SOS merely because LexA1 controls more genes. SOS and functional operator-bound complex are core. Curated LexA-family autoproteolysis remains explicitly inferred; no purified target cleavage experiment was identified. The scoped primary-reading file records full-source access separately from unchanged abstract-only caches.
+
+The genuine existing provider research was read and preserved unchanged; primary sources control conclusions where reports are stale. PAINT-loss checking completed sequentially, but the target is not a leaf in the available cached family tree: loss status is unavailable, not demonstrated absent. Original ordered annotation payloads and historical NEW actions are preserved; no new row is added. Existing notes above are historical and superseded only where this dated audit explains a correction. All original raw, provider and publication bytes remain unchanged.

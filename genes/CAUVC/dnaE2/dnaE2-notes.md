@@ -18,3 +18,13 @@
   DnaE2 while DnaE1 retains them.
   [PMID:20615954, "The corresponding domain of Mtb DnaE1 retains all amino acids associated with exonuclease activity ( 34 – 36 ), whereas key residues are absent in DnaE2."]
   No DnaE2 exonuclease assay exists, so the row is marked over-annotated rather than removed.
+
+## 2026-11-07 comparative consultation
+
+The earlier replication rejection is corrected: official current QuickGO places GO:0042276 under GO:0006301 DNA damage tolerance, which is part_of GO:0006260 DNA replication. The path is not pure is_a. The source replication row is MODIFY to the already-proposed TLS term. DnaE2's distinction from essential chromosome-replicative DnaE does not make the ontology ancestor false. Likewise, the DNA-repair definition includes bypass; its TLS correction must not be justified by equating all repair with lesion excision.
+
+The exonuclease row is now UNDECIDED. The 2010 primary's PHP-residue discussion concerns mycobacterial DnaE2; no residue-by-residue target correspondence was established in this consultation. The earlier global/target loss assertion and the claim that an error-prone phenotype excludes proofreading are superseded. Target catalytic-site analysis and biochemical assays could resolve this; no residue identity or negative assay is invented. Cytoplasm is ACCEPT because it is the inferred location of the core DNA activity, not a peripheral role solely because evidence is indirect.
+
+Native NA1000 (CB15-derived) disruption, epistasis and rpoB spectra support mutagenic damage tolerance. The dnaE2 disruption is an insertion/truncation allele; it is not a purified-enzyme assay. Family/HAMAP classification and mycobacterial catalytic mutants support DNA polymerase activity, while insertion versus extension, lesion repertoire and fidelity remain target-specific gaps. The broad polymerase row now quotes the actual catalytic reaction instead of a bare Rhea identifier. Every original source payload and the historical NEW row are preserved.
+
+A genuine Falcon request failed with HTTP403 authentication; no report was fabricated. Official GO definitions/ancestry, source-protection receipts and the complete action ledger are in the consultation audit directory. No family review or selector was changed. The newer 2026 polymerase survey (DOI:10.1093/nar/gkag133) was flagged to the module owner for family-boundary review, without using it to assert a target residue state here.
