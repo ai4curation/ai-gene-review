@@ -2,7 +2,7 @@
 
 ## PMID:30622141
 
-The human reference protein carries E6S for myristoylation. Its cyclase target was human RetGC1; regulatory activity is distinct from catalysis.
+The experimental construct and feedback synthesis are now in the appended biological notes. Original Methods/Results and Figure4 locators remain in the independent evidence.
 
 ## PMID:30184081
 
@@ -14,7 +14,7 @@ The clinical variants are human, but the functional study used bovine GCAP1 cons
 
 ## PMID:9620085
 
-Human tissue was tested directly. The antibody antigen was bovine; GCAP2 staining of inner retinal neurons does not establish GUCA1A localization.
+The repository cache is abstract-only; the published original was independently read. Methods94–148 and human Results221–227 remain available through the original locators.
 
 ## PMID:32296183
 
@@ -47,3 +47,13 @@ The genuine P43080 fetch and qualified missing-source acquisition are complete. 
 ## Native checks — 2026-11-07T09:38:28.319228+00:00
 
 Validation, strict GOA matching, history validation and rendering passed. The computed status is COMPLETE with zero review warnings. Reference validation checked 31 titles and one YAML snippet with no issues; the notes quotation was separately matched to its cache. All seven inherited sources and the ontology cache remain unchanged. The earlier pending preparation entries above are superseded by this completion record.
+
+## Follow-up evidence boundaries
+
+The current definition separates surrounding outer-segment membrane from internal disc membrane; the queried ancestry has no path between them.
+
+Myristoylation alone does not resolve the active membrane compartment. The record assigns its lipid-anchor statement by similarity to bovine GCAP1.
+
+Exact human GCAP1–3 annotations retain regulator/activator terms; inhibitor annotations instead trace the NHERF4 family. The convention remains a curator question; absence of an annotation does not establish absent biological activity.
+
+The new independent records preserve the original Figure4 image, current definitions, exact comparator queries and a zero-hit target GO-CAM index check. No new annotation is proposed.

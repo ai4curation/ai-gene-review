@@ -11,3 +11,13 @@ The genuine P43080 fetch and qualified missing-source acquisition are complete. 
 ## Native checks — 2026-11-07T09:38:28.319228+00:00
 
 Validation, strict GOA matching, history validation and rendering passed. The computed status is COMPLETE with zero review warnings. Reference validation checked 31 titles and one YAML snippet with no issues; the notes quotation was separately matched to its cache. All seven inherited sources and the ontology cache remain unchanged. The earlier pending preparation entries above are superseded by this completion record.
+
+## Review follow-up — biological synthesis
+
+The human assay reference construct was E6S, myristoylated in E. coli expressing yeast N-myristoyltransferase. Its target was human RetGC1; regulation is distinct from catalysis. The calcium-dependent feedback “decelerates the cyclase in the dark” ([PMID:30622141](https://pubmed.ncbi.nlm.nih.gov/30622141/)).
+
+Human retinal sections show strong cone and slight rod outer-segment staining; bovine antibody antigen does not change the tissue species ([PMID:9620085](https://pubmed.ncbi.nlm.nih.gov/9620085/)).
+
+The curated function record states “GCAP1 inhibits RetGC activation” ([UniProt P43080, CC:FUNCTION](https://www.uniprot.org/uniprotkb/P43080/entry)). This calcium-dependent regulation supports the broader regulator core.
+
+The current proposal retains all incoming contexts and records the remaining compartment and inhibitor-term questions separately. Earlier preparation and completion entries remain historical records.
