@@ -185,3 +185,15 @@ S. cerevisiae target-specific experiments and a metazoan dense-core-vesicle spec
 not from target-specific loss of the broader PTN000491103 Golgi/membrane/cytosol
 ancestral assertions. No existing annotation action changed. The current GOA WITH/FROM
 supporting entities were backfilled for all IBA and UniProt SubCell rows.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[7]` GO:0003674 molecular_function (ND) cited to these notes (no
+  biochemical activity assigned; the Ubp15 complex is a binding partner only).
+- `existing_annotations[8]` GO:0008150 biological_process (ND) not cited, flagged as possibly
+  stale. These notes record that Costanzo et al. 2010 [PMID:20093466] "directly links deletion to
+  Gap1 sorting/transport defects" and that Benschop et al. 2010 [PMID:20620961] has a Results
+  section "The Ubp15-Ecm30 Ubiquitin Protease Complex Is Involved in Methionine Metabolism".
+  These are S. cerevisiae ECM30 mutant phenotypes tied to specific processes (amino acid permease
+  sorting; methionine metabolism), so the BP ND may be stale; a curator should judge whether
+  they meet the IMP bar.
