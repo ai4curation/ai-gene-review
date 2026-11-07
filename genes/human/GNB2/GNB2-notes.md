@@ -37,3 +37,7 @@ The first Gly77Arg case linked GNB2 to developmental delay [PMID:31698099 "a de 
 ## Native follow-up completed, 2026-11-07
 
 Target validation, strict GOA matching and the 951-family cross-check passed. The source-defect export includes the proposed upstream check, with reporting status NOT_REPORTED. The computed status remains DRAFT because the legacy validator reports two context-dependent action differences. Its exception mechanism does not cover these warnings; the attempted stale exception was removed without changing the scientific decisions.
+
+## Second review follow-up, 2026-11-07
+
+The second follow-up changes two review actions and the source-defect category, adds retained-record corroboration and a source locator, and preserves all 72 incoming contexts. Target validation, strict GOA matching, source-defect export and the 951-family cross-check passed. The exported extension request uses OTHER and remains NOT_REPORTED. Computed status remains DRAFT with one legacy exosome action-consistency advisory; the source uncertainty is preserved.
