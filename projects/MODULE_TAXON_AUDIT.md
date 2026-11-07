@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_gallate_catabolism`: PR #6158 published after full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Twelve member reviews and 24 source-based coverage cases pass. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_gallate_catabolism`: PR #6158 follow-up passes full validation on 40aa360422: 10,737 reviews, zero blocking errors and 177 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -699,3 +699,7 @@ PR #6158 published after full validation on 1186397389: 10,717 reviews, zero blo
 ## 2026-11-07 — gallate review follow-up
 
 PR #6158 review follow-up restores three grounded core genera, reconciles GalD branch correction, retires redundant LigK proposal and documents verified GalC ancestry. All 60 ordered payloads/actions preserved; eight focused gene checks and module/coverage checks pass. New full validation, fresh review and actual merge remain pending.
+
+## 2026-11-07 — bacterial gallate catabolism full validation passes
+
+PR #6158 follow-up passes full validation on 40aa360422: 10,737 reviews, zero blocking errors and 177 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_gallate_catabolism/round1-full-validation.json).
