@@ -241,3 +241,13 @@ taken from the review.
   citation and backfill the three TAS `literature_support` slots) agrees with the
   existing deliberate gap and is left for a follow-up PR; nothing here invents a
   PMID for it.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[13], GO:0003674 molecular_function (ND, GO_REF:0000015), currently ACCEPT: may be stale.
+  The "Secondary / moonlighting function" section above records PMID:39143229 (Ma et al. 2025), a study of
+  human AMDHD1 in cholangiocarcinoma reporting that it interacts with SMAD2, SMAD3 and SMAD4 and stabilizes
+  SMAD4 (UniProt FUNCTION and SUBUNIT). That is literature on the human gene product describing an
+  adaptor/stabilizer activity, so the ND may no longer hold. The paper is not cached and a curator should
+  check whether it supports an informative MF term. The enzyme activity itself is still unassayed in human.
+  The action was not changed.
