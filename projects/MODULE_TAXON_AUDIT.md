@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 scientific review follow-up passes full validation on e4a4bb1dfe; main f5b02387a8 is integrated with 134 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 approved at 9ef811b9d3; main 7eee074bca integrated at 78b2ae415a with 154 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
