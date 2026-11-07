@@ -23,7 +23,7 @@ pairing, nuclear import) are left out. **Modules now state those steps and are
 linked to the GO-CAM activities, so they explain the jump**: 62 of the 76 direct
 receptor → nucleus edges are explained by a module path through a nuclear
 import step ([Explaining edges with modules](#explaining-edges-with-modules)).
-What remains, 56 direct edges in 35 models, are review leads; most pass
+What remains, 54 direct edges in 33 models, are review leads; most pass
 material (a metabolite or protein) across a membrane with no transporter in the
 model. Two QC flags, `UNRESOLVED_COMPARTMENT` and `NONADJACENT_COMPARTMENTS`,
 record confirmed findings in GO-CAM reviews.
@@ -109,7 +109,7 @@ A causal edge is then classified by the distance between its two ends:
 | `SAME` | both activities in one compartment |
 | `ADJACENT` | they share a boundary |
 | `BRIDGED` | two membranes bordering the same space, e.g. ER membrane → Golgi membrane or outer → inner mitochondrial membrane; plausible at a membrane contact site or on vesicle docking, so reported at lower priority |
-| `EXPLAINED` | farther apart, but a module linked to both activities has a path between them through a transport step (see below) |
+| `EXPLAINED` | farther apart, but a module linked to both activities has a path between them through a transport step whose declared locations touch both ends (see below) |
 | `RELOCATING` | farther apart, but the edge is a direct regulation and the downstream protein is known (from its gene folder) to occupy a compartment the regulator touches: the regulator acts on the protein there, and the protein then does its job elsewhere |
 | `NONADJACENT` | anything else farther apart; a lead for the `NONADJACENT_COMPARTMENTS` flag |
 | `INDETERMINATE` | one end is unresolved or missing |
@@ -165,10 +165,19 @@ GO-CAM edge A → B when:
 2. the module's `connections` lead from A's element to B's element (lifting each
    to the nearest node that takes part in a connection; negative regulation
    does not carry the signal); and
-3. the path goes through a `TRANSPORT_STEP` node.
+3. the path goes through a `TRANSPORT_STEP` node; and
+4. that step spans the edge: the GO locations declared at or below the transport
+   node (its `context.cellular_components` and annoton `locations`), together
+   with those of any module it includes by `module_ref`, touch or share a
+   compartment at each end of the edge. A vesicle or mitochondrial transport
+   step therefore cannot explain a plasma membrane → nucleus edge. When this
+   condition fails, the edge stays `NONADJACENT` and the report keeps the
+   explanation with `spans_edge: false`, so a reviewer can see what was
+   offered and why it was refused.
 
-The checker reports the path and any module included under the transport step
-by `module_ref`. For the BMP4 model, for example:
+The checker reports the path, any module included under the transport step by
+`module_ref`, and the compartments the step was found to span. For the BMP4
+model, for example:
 
 ```yaml
 upstream_label: ACVR1 Hsap
@@ -181,7 +190,13 @@ explanation:
     bmp_transcriptional_output]
   bridges: [smad_complex_nuclear_import]
   via_modules: [karyopherin_nuclear_protein_import]
+  bridge_compartments: [CYTOSOL, NUCLEAR_ENVELOPE, NUCLEAR_LUMEN]
+  spans_edge: true
 ```
+
+`EXPLAINED` still rests on what the module declares: it shows that a curated
+module path passes through a transport step located between the two ends, not
+that the module's biology is right. That remains a module-review question.
 
 The pins are curated, not inferred: nothing matches genes to modules
 automatically, so an explanation is a curator's claim that this module is what
@@ -230,8 +245,8 @@ model:
 | adjacent | 1,207 |
 | bridged (membrane–space–membrane) | 63 |
 | explained by a module | 62 |
-| relocating | 21 |
-| non-adjacent | 181 (56 with a direct predicate: 33 material flow, 23 regulation) |
+| relocating | 23 |
+| non-adjacent | 179 (54 with a direct predicate: 33 material flow, 21 regulation) |
 | indeterminate | 2,956 |
 
 The largest groups of compartment jumps before modules and protein locations
@@ -265,7 +280,7 @@ evidence really cannot resolve) goes in `notes`, so the next reader knows it was
 checked.
 
 Explained and relocating edges are not leads: a module or the protein's own
-locations account for them. The leads are the 35 models with at least one
+locations account for them. The leads are the 33 models with at least one
 **direct** edge that is still non-adjacent (one already has a review). The
 models with the most such edges:
 
@@ -303,6 +318,11 @@ location (chromatin → `GO:0000228` nuclear chromosome).
   kinase acting on the cytosolic tail of a receptor is correctly adjacent, but a
   luminal enzyme annotated only to "ER membrane" looks adjacent to the cytosol
   too.
+- The `cell periphery` union includes the cytosol and the extracellular region,
+  so any cell-periphery term that GO does not place more precisely (cell cortex,
+  cell division site and their descendants) reads as possibly extracellular,
+  and a cortical → extracellular edge comes out adjacent. This is deliberately
+  permissive.
 - `BRIDGED` accepts two membranes that border a common space whether or not a
   contact site or docking event is part of the biology.
 - Topologically, the lumen of the secretory pathway is equivalent to the

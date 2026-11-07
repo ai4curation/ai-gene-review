@@ -74,6 +74,10 @@ CAUSAL_PREDICATES: dict[str, tuple[str, bool]] = {
     "RO:0002305": ("causally upstream of, negative effect", False),
     "RO:0002411": ("causally upstream of", False),
     "RO:0012009": ("constitutively upstream of", False),
+    "RO:0002578": ("directly regulates", True),
+    "RO:0002212": ("negatively regulates", False),
+    "RO:0002418": ("causally upstream of or within", False),
+    "RO:0004047": ("causally upstream of or within, positive effect", False),
 }
 
 #: Predicates that pass material (a product used by the next activity) rather
@@ -148,7 +152,8 @@ class EdgeStatus(str, Enum):
     """Two membranes bordering the same space (contact site, vesicle docking)."""
     NONADJACENT = "NONADJACENT"
     EXPLAINED = "EXPLAINED"
-    """Non-adjacent, but a module path through a transport step spells out the gap."""
+    """Non-adjacent, but a module path through a transport step spells out the gap,
+    and that step's declared locations touch the compartments at both ends."""
     RELOCATING = "RELOCATING"
     """Non-adjacent regulation of a protein known to occupy a compartment next to the regulator."""
     INDETERMINATE = "INDETERMINATE"
@@ -481,7 +486,10 @@ def check_model(
     A non-adjacent edge is then refined, in this order:
 
     1. ``EXPLAINED`` when ``explainer`` finds a module path through a transport
-       step between the two activities;
+       step between the two activities, and the step's declared locations
+       (with those of any module it includes) touch both ends of the edge
+       (:func:`bridge_span`). Otherwise the edge stays ``NONADJACENT`` and
+       the explanation is kept with ``spans_edge: false``;
     2. ``RELOCATING`` when the edge is a direct regulation (not material flow,
        and not an indirect edge such as transcriptional control, which reaches
        its target through gene expression) and ``protein_locations`` places the
@@ -554,8 +562,16 @@ def check_model(
             if status == EdgeStatus.NONADJACENT and explainer:
                 found = explainer(up, down)
                 if found is not None:
-                    status = EdgeStatus.EXPLAINED
-                    explanation = found.to_dict()
+                    span = bridge_span(
+                        cm,
+                        ancestors,
+                        getattr(found, "bridge_locations", ()),
+                        resolutions[up].compartments,
+                        resolutions[down].compartments,
+                    )
+                    explanation = {**found.to_dict(), **span}
+                    if span["spans_edge"]:
+                        status = EdgeStatus.EXPLAINED
             if (
                 status == EdgeStatus.NONADJACENT
                 and kind == EdgeKind.REGULATION
@@ -595,6 +611,50 @@ def check_model(
         locations=locations,
         edges=edges,
     )
+
+
+def bridge_span(
+    cm: CompartmentModel,
+    ancestors: AncestorFn,
+    bridge_locations: Iterable[str],
+    upstream: Iterable[str],
+    downstream: Iterable[str],
+) -> dict[str, Any]:
+    """Does a module's transport step reach the compartments at both ends of an edge?
+
+    The bridge's declared GO locations are placed in the compartment model
+    (single or coarse); the step spans the edge when they touch, or share, a
+    compartment of each end. A module path through a transport step that
+    happens elsewhere (say, a vesicle step offered for a plasma membrane to
+    nucleus edge) does not explain the edge.
+
+    >>> cm = CompartmentModel.load()
+    >>> anc = lambda t: {t}
+    >>> nuclear_import = ["GO:0005829", "GO:0005635", "GO:0005654"]
+    >>> bridge_span(cm, anc, nuclear_import, {"PLASMA_MEMBRANE"},
+    ...             {"NUCLEAR_ENVELOPE", "NUCLEAR_LUMEN"})["spans_edge"]
+    True
+    >>> golgi = ["GO:0000139"]
+    >>> r = bridge_span(cm, anc, golgi, {"PLASMA_MEMBRANE"}, {"NUCLEAR_LUMEN"})
+    >>> r["spans_edge"], r["bridge_compartments"]
+    (False, ['GOLGI_MEMBRANE'])
+    >>> bridge_span(cm, anc, [], {"CYTOSOL"}, {"EXTRACELLULAR"})["spans_edge"]
+    False
+    """
+    comps: set[str] = set()
+    for term in bridge_locations:
+        res = cm.resolve(term, ancestors)
+        if res.status in (
+            ResolutionStatus.RESOLVED,
+            ResolutionStatus.COARSE,
+            ResolutionStatus.AMBIGUOUS,
+        ):
+            comps |= res.compartments
+    up, down = set(upstream), set(downstream)
+    spans = bool(comps) and all(
+        _within_one(cm.distance(end, comps)) for end in (up, down) if end
+    )
+    return {"bridge_compartments": sorted(comps), "spans_edge": spans}
 
 
 def _within_one(distance: Optional[int]) -> bool:
@@ -699,7 +759,9 @@ class ProteinLocationIndex:
         acc = gene_product.split(":", 1)[-1]
         if acc in self._cache:
             return self._cache[acc]
-        path = self._goa_paths().get(acc)
+        paths = self._goa_paths()
+        # an isoform accession (P40763-1) shares its gene folder with the entry
+        path = paths.get(acc) or paths.get(acc.split("-", 1)[0])
         out: set[str] = set()
         if path is not None:
             rejected = self._rejected_terms(path)
