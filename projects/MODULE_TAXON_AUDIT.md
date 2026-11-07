@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_dimethylglycine_sarcosine_catabolism`: [PR #6122](https://github.com/ai4curation/ai-gene-review/pull/6122) access/prose follow-up passes 18 focused checks; renewed review, CI and actual merge pending. Historical C-83 identity remains unresolved.
+- [ ] `bacterial_dimethylglycine_sarcosine_catabolism`: PR #6122: integrated main 2f72fda87e into approved head 4c93918641, preserving curated decisions and adding 9 exact upstream source qualifiers; focused checks pass. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
