@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194 follow-up passes full validation on bb0c422df1: 10,795 reviews, zero blocking errors and 546 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194: full validation passed on science head bb0c422df1 (10,795 reviews, zero blocking errors; 546 frozen inputs verified). Independent review, current-main integration/CI and actual merge remain pending.
 
 - [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
 
