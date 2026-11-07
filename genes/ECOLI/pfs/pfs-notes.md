@@ -20,3 +20,8 @@ Automated deep-research providers were unavailable for this host, so this is a c
 - Modify `identical protein binding` to `protein homodimerization activity`, then keep homodimerization as non-core structural context.
 - Mark `purine deoxyribonucleoside catabolic process` as over-annotated: Pfs does hydrolyze the purine deoxyribonucleoside 5'-deoxyadenosine, but the E. coli role of that reaction is radical-SAM byproduct repair rather than general purine deoxyribonucleoside catabolism.
 - Do not add `L-methionine salvage from methylthioadenosine` or `quorum sensing` to the MTA arm of Pfs: the UniProt methionine-salvage pathway is HAMAP-derived and E. coli K-12 lacks an obvious downstream 5-methylthioribose kinase route, and the direct AI-2/quorum-sensing producer step is LuxS cleavage of S-ribosylhomocysteine to DPD.
+
+
+## 2026-11-07 independent methionine-cycle audit
+
+All original ordered payloads, qualifiers and historical proposal lifecycle are unchanged; no new rows. Genuine Falcon attempt failed authentication403, without a fabricated provider report. Source scopes and ontology snapshots: `analysis/module_audits/bacterial_methionine_cycle/ecoli-existing-consultation/`. The older notes marking true nucleoside catabolism as overannotation are superseded: refine to purine nucleoside catabolism. The 5-prime versus 2-prime deoxynucleoside mapping remains explicitly unresolved. Direct toxic-byproduct clearance and homodimer evidence remain supported.
