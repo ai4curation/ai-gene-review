@@ -15,3 +15,8 @@ Retained real GroES folding-cofactor activity under current GO0044183 (binding p
 All original ordered annotation payloads, historical NEW actions and protected source/provider bytes were retained. No NEW rows were added. Existing provider research was used as a lead, with primary/curated evidence checked independently. A genuine default Falcon attempt failed with403 authentication; no provider report was fabricated. PAINT-loss check completed: no IRD/IKR found on the mapped target lineage.
 
 Current actions: 16 ACCEPT, 2 KEEP_AS_NON_CORE, 17 MODIFY, 1 REMOVE. Status COMPLETE reflects completed adjudication, including explicit uncertainty, not proof of every tested proposition. Focused validation/render/history results and source preservation are recorded in the existing-member consultation proof.
+
+
+## PR6164 review follow-up, 2026-11-07
+
+Independently reconsidered review5809803940 using original PMID12198306, biochemical lower-oligomer evidence in PMID15327959, current GO definitions and full publisher PMID12837792 Methods/Table2. [Activity evidence](../../../analysis/module_audits/bacterial_groel_groes_chaperonin_folding/round1-activity-consultation/evidence.md) records the judgment. GroEL2 self-binding is refined to identical protein binding; its broad folding-chaperone row explicitly covers the non-ATP mode. E. coli GroES metal binding is marked over-annotated because DLS assembly effects and a proposed site do not establish direct target coordination, even with a valid ancestral source. This supersedes the earlier inference that the DLS response sufficiently justified KEEP_AS_NON_CORE. Neither high calcium alone nor short donor lists is used as a refutation. Original payloads and sources are preserved.

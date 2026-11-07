@@ -9,3 +9,7 @@ Twelve manually assessed module references contain sixteen findings. Family grou
 Module schema and custom validation pass. Seven conformance advisories reflect the holdase ontology gap and unresolved family-wide GroEL activity, not unreviewed member functions. The production compiler treats the folding cage as one atom; the source-based oracle explicitly checks its two active units, activity and compatible pairing. Its 24 cases include five cognate pairs, one experimentally supported heterologous pair, missing witnesses and arbitrary pairing controls. Passing this panel does not establish native flux, universal presence or kinetic order.
 
 Full-corpus validation passed on science commit 6332a1d51e0e1488c73d594a62e1cfb2aeb9f458: 10,742 gene reviews, zero blocking errors and 220 frozen inputs. See full-run-proof.json for advisory counts and the exact scope. main-integration-proof.json records preserved-science integration; prepublication-lint-proof.json records equivalent checker formatting. Independent review, CI and actual merge remain required. Module status COMPLETE records curation readiness; the audit tracker is not COMPLETE until merge.
+
+## PR review follow-up, 2026-11-07
+
+See round1-review-response.md and round1-root-receipt.json for the corrected citation provenance, two annotation-action changes, refined holdase parent and core-complex context. Focused checks pass. The original full-corpus result above remains historical; a fresh full run is required for these scientific changes.

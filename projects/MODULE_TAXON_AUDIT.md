@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_groel_groes_chaperonin_folding`: [PR #6164](https://github.com/ai4curation/ai-gene-review/pull/6164) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_groel_groes_chaperonin_folding`: PR #6164 review follow-up: restored citation corrections, refined self-binding and metal-binding judgments, and corrected holdase ontology placement. Focused validation passes; fresh full validation, independent review, CI and actual merge remain pending.
 
 - [x] `bacterial_cytochrome_c_maturation_system_i`: [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121) merged as `a76d110ace9de65316f4dfbe999c1a66ab38602a` at 2026-11-07T01:49:33Z. All 370 scoped files match final published head `d114fb850d7bdfe8ac83c12c174aeb71e690eaea`; 29 member reviews are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6121-merged-content.json).
 
@@ -747,3 +747,7 @@ Comparative audit passes full validation on 6332a1d51e: 10,742 reviews, zero blo
 ## 2026-11-07 — bacterial_groel_groes_chaperonin_folding main integration
 
 Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full run on 6332a1d51e0e1488c73d594a62e1cfb2aeb9f458. All 216 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — GroEL/GroES review corrections
+
+PR #6164 review follow-up: restored citation corrections, refined self-binding and metal-binding judgments, and corrected holdase ontology placement. Focused validation passes; fresh full validation, independent review, CI and actual merge remain pending.
