@@ -9,3 +9,12 @@ TrEMBL Q88EW7; MotD (MotB-like, PANTHER PTHR30329; MotB_plug + OmpA-like domains
 
 Decisions: plasma membrane ACCEPT; membrane MODIFY -> GO:0005886. NEW: GO:0071977 IMP, GO:0120101 IC, GO:0015078 contributes_to IC (module stator MF). Not added: GO:0042834 peptidoglycan binding (MotB family inference only; no cached direct evidence for MotD) - left as a suggested question/experiment.
 Note: PANTHER subfamily PTHR30329:SF20 is labelled "EXPORTED PROTEIN" and holds Q88EW7. Family-level PTHR30329 is HETEROGENEOUS (OmpA-like peptidoglycan-binding domain proteins: OmpA, Pal, OprF and others as well as MotB/PomB/LafU/MotD stator anchors), so it is not itself a stator family; the module grounds MotD at SF20.
+
+
+## Taxon/module audit, 2026-11-06
+
+PP_4335 is the MotD B-type stator subunit based on exact pair genetics and MotB_plug/OmpA architecture. PANTHER PTHR30329 is heterogeneous and is not itself a stator family; update review reasons accordingly. Proton specificity remains inferred, not measured for KT2440. The older 4:2 quotation above is historical and superseded by PMID:32929189; it is not an asserted native KT2440 stoichiometry. Retain all inherited NEW rows.
+
+Source anchor: [PMID:36409076 "P. putida has a large gene cluster for flagellar motility comprising the genes for the stator MotCD (PP4336 and PP4335)."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.

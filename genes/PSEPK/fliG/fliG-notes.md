@@ -6,3 +6,12 @@
 - Most rows lacked supported_by; added quotes from PMID:31452860 (full text) [PMID:31452860 "FliG is directly involved in torque generation [8]."] [PMID:31452860 "the FliM1/FliN3 complex binds to the FliG ring structure through a one-to-one interaction between FliG and FliM to form the continuous C ring wall"], the UniProt PIRNR-backed FUNCTION line, NCBIfam TIGR00207 and the falcon fliEFG operon statement.
 - Location rows: GO:0009425 basal body and GO:0009288 flagellum MODIFY -> GO:0009433 C ring (correct but general); GO:0005886 MODIFY -> GO:0009898 cytoplasmic side of plasma membrane (peripheral, PIRNR-backed location). GO:0003774 MODIFY -> GO:0140605 (contributes_to). Chemotaxis KEEP_AS_NON_CORE (FliG performs the switching step but its core role is rotation). GO:0071973 ACCEPT.
 - Added NEW GO:0005198 structural molecule activity (IC) as a second core function: the C-ring module asserts this complex-level activity and FliG forms the ring scaffold. Status remains COMPLETE.
+
+
+## Taxon/module audit, 2026-11-06
+
+Retain FliG torque transmission as a contribution to motor activity and its separate structural role. The new Salmonella structure is comparative support for C-ring rearrangement; it is not KT2440 structural evidence or proof of a target-specific CheY interface. Existing non-core chemotaxis judgment remains defensible for the broadly required rotor component.
+
+Source anchor: [PMID:39179739 "The CheY proteins are bound into an open groove between two adjacent protomers on the surface of the middle subring of the C ring and interact with the FliG and FliM subunits."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.

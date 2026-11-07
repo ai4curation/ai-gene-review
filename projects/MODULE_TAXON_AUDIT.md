@@ -2,7 +2,10 @@
 title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
 last_reviewed: 2026-11-06
-tags: [BIOLOGY_DOMAIN]
+tags:
+- BIOLOGY_DOMAIN
+autolink_exclude:
+- cheW
 ---
 
 # Module literature, taxonomy and member review audit
@@ -41,6 +44,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: 46 gene reviews, 37 module references and 65 capacity cases. Main 5b68ef3aac integrated at 59a7652ff with 366 scientific inputs preserved. The 729-snippet/291-title reference reconciliation is historical at 46b0453941 against main 488d370561; seven review inputs changed subsequently. Fresh review, CI and actual merge remain pending.
+
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
@@ -49,7 +54,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_fatty_acid_beta_oxidation`: Comparative beta-oxidation curation covers 19 COMPLETE gene reviews across seven species and three bacterial phyla, preserving all 211 original annotation payloads, both inherited NEW rows and 40 raw/provider files. Six supported additions yield 217 rows. Seventeen references, including four review articles, supply 21 mined findings. Four required reactions use ten alternatives and eight reviewed protein families. Unknown physiological electron acceptors, matched partner requirements, substrate limits and distinct native versus biochemical endpoints are explicit. The source-scoped checker uses the production module circuit with 54 cases and 12 mutation checks; passing cases do not replace the literature assessment. Focused checks and full-corpus validation passed on 2026-11-06 (10,688 reviews; zero blocking errors). Corpus advisory reference issues outside this panel remain recorded in the validation proof. Published as [PR #6136](https://github.com/ai4curation/ai-gene-review/pull/6136); independent review, CI and actual merge remain pending.
 
-- [ ] `bacterial_dsbab_oxidative_folding`: PR_OPEN. [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) contains fourteen completed gene reviews, fourteen curated references and 75 capacity cases. Full validation found only verified pre-existing reference errors; external review, CI and actual merge pending.
+- [x] `bacterial_dsbab_oxidative_folding`: [PR #6129](https://github.com/ai4curation/ai-gene-review/pull/6129) merged as `8daf92bfc82949aa53b6998152522545fe073b64` at 2026-11-06T21:10:09Z. All 201 scoped science, source and history files match approved head `5bb80f75d37eb5b9a08dcf9e54c31c70a49e3bba`. The audit covers fourteen member reviews and 75 capacity cases; the historical full-run scope and baseline reference limitations remain recorded. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6129-merged-content.json).
 
 - [ ] `osmoregulated_periplasmic_glucan_biosynthesis`: Comparative OPG science and focused validation are complete: 11 COMPLETE gene reviews, 91 original annotation payloads preserved, 96 current rows, 28 unchanged raw/provider sources, 13 literature references including two reviews, 18 findings, seven parts and eight annotons, two family reviews, 24 endpoint cases and ten mutation cases. The full-corpus run completed on science commit 074427cc8340be71f9fbdeea8440f551bdbea6b0 with schema, term, best-practice and pathway checks passing. Its 17 blocking reference errors in 16 unrelated yeast reviews exactly match the known baseline; all 22 relevant inputs are identical to the pinned base. These are addressed separately in PR #6134. Publication of this comparative revision to adopted PR #2142, renewed review, CI and actual merge remain pending. [PR #2142](https://github.com/ai4curation/ai-gene-review/pull/2142).
 
@@ -94,7 +99,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 33 COMPLETE, 7 PR_OPEN, 4 IN_PROGRESS, 733 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 7 PR_OPEN, 4 IN_PROGRESS, 732 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -761,3 +766,73 @@ Merged published main e9d31cced895d2d74c464d57cbd40381e15520ab into approved cho
 ## 2026-11-07 — bacterial_choline_o_sulfate_uptake_and_desulfation main integration
 
 Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head 41649e7eaeec646b59abcbe875530454cbcf0105. All 124 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-06 — chemotaxis comparative audit started
+
+The original E. coli/Pseudomonas panel has 22 completed reviews, with 318 historical rows (21 inherited authored proposals) and 44 raw sources recorded before editing. One inherited generic CheW adaptor proposal is archived and replaced by a specific receptor-complex adaptor proposal; all machine rows and raw sources are preserved. The module remains DRAFT while Bacillus, Helicobacter and Sinorhizobium alternatives are reviewed and integrated. The former plant-only PTHR43228 phosphatase verdict is now unresolved after reaction-level examination. This changes only the chemotaxis inventory row; every other row retains its dated evidence. Ledger counts at this checkpoint are 27 COMPLETE, 3 IN_PROGRESS, 681 NOT_STARTED, 4 PR_OPEN; these are not a fresh survey of GitHub PR states.
+
+## 2026-11-06 — PR #6100 integration with published main
+
+Integrated published main `db69104296` with the approved PR #6100 head `072c8d1884`. All 333 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged approved row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6100 integration with published main
+
+Integrated published main `1970e159b9` with the validated PR #6100 head `e5d1b1e49b`. All 335 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6100 integration with published main
+
+Integrated published main `488d370561` with the validated PR #6100 head `417e944ea2`. All 337 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — chemotaxis validation inputs reconciled after main integration
+
+Historical full validation on 2471af88ef ended with 19 unrelated reference errors. Incoming main 488d370561 changed all 17 affected yeast reviews, superseding that error expectation; six source/implementation inputs remained unchanged. A targeted rerun of those 17 reviews now passes 729 snippets and 291 titles with zero issues. Chemotaxis science remains unchanged; renewed CI/review and actual merge remain pending.
+
+The [input comparison and scoped reference rerun](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/main3-reference-input-reconciliation.json) preserves the historical proof unchanged. Integration records remain available for [the first approved-head integration](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/approved-head-integration.json), [the second integration](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-integration.json) and [main 488d370561](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main3-integration.json).
+
+## 2026-11-06 — PR #6100 integration with published main
+
+Integrated published main `fb8e3ee95b` with the validated PR #6100 head `ef8a865877`. All 341 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG audit; validation implementation is unchanged. The corrected reference-input provenance from the approved head is preserved. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+## 2026-11-06 — PR #6100 integration with DsbAB merge 8daf92bfc8
+
+Integrated published main `8daf92bfc8` with the validated PR #6100 head `df72b8e943`. All 343 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main contains the merged OPG and DsbAB audits; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [validated-head-main5-integration.json](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main5-integration.json).
+
+## 2026-11-06 — DsbAB merged content verified
+
+Verified actual merge of DsbAB PR6129 at 8daf92bfc82949aa53b6998152522545fe073b64 against approved head 5bb80f75d37eb5b9a08dcf9e54c31c70a49e3bba. All 201 scoped files are byte-identical, including curated science and sources. Marked only this module COMPLETE; no other audit status changed. Shared tracker files are excluded from the science equivalence proof.
+
+## 2026-11-06 — chemotaxis review U1 ledger reconciliation
+
+Correct the current ledger snapshot after recording the DsbAB merge: 777 modules comprise 34 COMPLETE, 4 PR_OPEN, 3 IN_PROGRESS and 736 NOT_STARTED. The prior line described the preceding integration commit and was stale after the completion update. Fix spacing in current DsbAB prose and inventory text, retain append-only historical records, and link the earlier main4 integration proof. No gene review, module, family, source evidence or scientific validation input changes.
+
+Earlier integration evidence: [main4 proof](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main4-integration.json).
+
+## 2026-11-06 — PR #6100 integration with published main 577501df51
+
+Integrated published main `577501df51` with the validated PR #6100 head `4c70f9b8e3`. All 349 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row and the independently verified DsbAB completion row; both dated journals are preserved. Incoming main contains the merged beta-oxidation audit; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
+
+Integration proof: [validated-head-main6-integration.json](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/validated-head-main6-integration.json).
+
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration main7 (4fa058f671)
+
+Integrated main 4fa058f671604c3aa4c142ac13bd07e54ef27baa into approved head 94e3587d6da3715827be26c5ec2f73ede38d7ea7. 346 frozen files remain byte-identical outside shared metadata and 5 qualified reviews/renders. The only parsed review changes are 37 source qualifiers copied from main; all affected reviews, renders and histories pass focused validation. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction integrated ledger counts
+
+Historical snapshot after main7, superseded by the current Status ledger: 34 COMPLETE, 5 PR_OPEN, 4 IN_PROGRESS and 734 NOT_STARTED. Retain dated journals and verified completion bullets.
+
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration main8 (5b68ef3aac)
+
+Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 into approved head 9797c5d2f381212eb10f6487190ea8ec050577fe. All 366 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — chemotaxis provenance scope, review round 14
+
+PR #6100: 46 gene reviews, 37 module references and 65 capacity cases. Main 5b68ef3aac integrated at 59a7652ff with 366 scientific inputs preserved. The 729-snippet/291-title reference reconciliation is historical at 46b0453941 against main 488d370561; seven review inputs changed subsequently. Fresh review, CI and actual merge remain pending.
+
+The new append-only history records the previously unrecorded status-text edit in `2a3426000` and this scope correction. Historical validation results are retained with explicit anchors. [Current input comparison](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/round14-provenance-scope.json) records the seven later review-blob changes without presenting the old run as current. [Main7 integration](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/approved-main7-integration.json) and [main8 integration](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/approved-main8-integration.json) retain their distinct proofs.
+
+## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e into approved head 3d8371006fda0a8566ad3a5e4f8bf64157f2458f. All 371 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.

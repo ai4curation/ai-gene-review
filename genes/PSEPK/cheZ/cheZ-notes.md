@@ -7,3 +7,12 @@
 - The earlier core-function quote attributed the UniProt FUNCTION text to PMID:12534463 (genome paper, abstract-only) and was not verbatim; replaced by the UniProt file quote.
 - GO:0003824 MODIFY -> GO:0004721 (module MF); GO:0005737 ACCEPT; GO:0050920 ACCEPT; GO:0009288 bacterial-type flagellum changed from MARK_AS_OVER_ANNOTATED to REMOVE with a source_defects entry (InterPro2GO IPR007439 -> GO:0009288 is wrong for the CheZ family; aligned with the E. coli CheZ review).
 - KT2440 support: CheZ co-purifies with CheA [PMID:40197389 "the response regulator CheY and the phosphatase CheZ (two proteins known to be associated with CheA) also showed high Log2(fold change) values"]. No KT2440 cheZ mutant or localization data (falcon report section 4-5). Status COMPLETE.
+
+
+## Taxon/module audit, 2026-11-06
+
+This primary E. coli structure/functional result anchors direct CheZ catalysis at CheY-P, not dephosphorylation of arbitrary response regulators. PP_4339 is the cheYZA-associated CheZ; KT2440 turnover specificity itself has not been purified and assayed in the consulted sources. Current QuickGO searches found no CheY/phosphoaspartate-specific activity, so retain GO:0004721 with explicit substrate and transfer limits. No invented NTR or bare binding row is needed.
+
+Source anchor: [PMID:12080332 "The side chain of Gln 147 of CheZ inserts into the CheY active site and is essential to the dephosphorylation activity of CheZ."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.

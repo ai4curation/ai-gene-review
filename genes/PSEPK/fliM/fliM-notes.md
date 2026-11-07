@@ -12,3 +12,12 @@ TrEMBL entry Q88EU5 (PP_4358), FliM family (PIRSF002888, TIGR01397). No KT2440 f
 
 Decisions: GO:0003774 cytoskeletal motor activity MODIFY -> GO:0005198 structural molecule activity (lateral: torque made by stator/FliG, FliM is structural/switch); plasma membrane KEEP_AS_NON_CORE (peripheral); flagellum and basal body MODIFY -> GO:0009433 C ring; positive chemotaxis MODIFY -> GO:0006935 (switch serves both directions); cell motility ACCEPT; swarming MARK_AS_OVER_ANNOTATED (consistent with PSEPK motA).
 Module: complex-level GO:0005198 for C ring; recorded GO:0005198 as FliM's own best-supported MF. Considered GO:0140031 phosphorylation-dependent protein binding for CheY-P docking but did not add (binding term, family-level only).
+
+
+## Taxon/module audit, 2026-11-06
+
+The primary Salmonella structure uses constitutively active CheY D13K/Y106W; it supports conserved FliM switching structure, not a direct KT2440 FliM experiment. Retain the structural molecule MF and C-ring location refinements. No uninformative bare protein binding term is proposed. Existing swarming caution is retained because semisolid swimming is not a swarming assay.
+
+Source anchor: [PMID:39179739 "The CheY proteins are bound into an open groove between two adjacent protomers on the surface of the middle subring of the C ring and interact with the FliG and FliM subunits."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
