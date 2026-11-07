@@ -46,7 +46,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
-- [ ] `bacterial_carboxyspermidine_biosynthesis`: PR #6089: main 7eee074bca integrated at d1ed61b062 into approved head f56114fec3; all 192 approved nonshared files remain byte-identical. Review 5810633494 on 80077c8704 confirms preserved science and requests tracker metadata repair. Historical full-corpus validation remains scoped to its recorded head; this follow-up requires renewed review and current-head CI after publication, followed by actual merge.
+- [ ] `bacterial_carboxyspermidine_biosynthesis`: PR #6089 approved at f99bd51e26; main 0a807fc555 integrated at 2d2a30bd8e with 197 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
