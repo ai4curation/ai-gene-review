@@ -7,3 +7,16 @@
   2026-09-01 and returned no report. No provider-named deep-research file was
   synthesized manually; the review remains grounded in the exact target
   UniProt record and the module-level primary/retrieval evidence.
+
+
+## 2026-11-07 independent Lol consultation
+
+Q88FS9 is assigned to LolA by curated HAMAP MF_00240 and NCBIfam TIGR00547; its cleavable signal peptide and curated periplasmic location support the compartment. Assignment to KT2440 is an ortholog inference; the cited E. coli experiments are not assays of this target.
+
+All original rows, source payloads and historical NEW rows remain in their original order. The current review supersedes older action prose above where different. No additional NEW annotation was introduced.
+
+The carrier role is supported by the curated HAMAP rule and the original E. coli soluble-complex experiment [PMID:7628437, "p20 formed a soluble complex only with outer membrane-directed lipoproteins such as Lpp"]. The historical carrier proposal is retained. The Asp+2 retention rule remains a target-specific experimental question; general rule text is not a KT2440 substrate-panel assay. A real Falcon attempt on 2026-11-07 exited 1 with HTTP 403 authentication failure (cache log lolA-falcon.log); no provider report was fabricated.
+
+GO ancestry was queried live from QuickGO (is_a and part_of, 2026-11-07). GO:0042953 and GO:0044874 are neither ancestors nor descendants of each other. Historical transport proposals remain active; no new proposal is needed to suppress coverage warnings. Query responses are preserved in the consultation artifacts.
+
+PAINT-loss inspection: the target accession is absent from the cached family tree, so lineage losses could not be checked; the tool's concluding no-loss line is not proof of absence. This panel contains electronic TreeGrafter/InterPro/curated-rule annotations rather than IBA rows; no unsupported PAINT-node judgment was added.
