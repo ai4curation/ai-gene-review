@@ -9,7 +9,7 @@ Selected primary Methods, Results and figure descriptions were inspected. Cached
 - **PMID:21543332**: Geminin-GFP localization depends on Idas coexpression; this does not determine constitutive endogenous distribution. Idas perturbations are not assigned wholesale to Geminin.
 - **PMID:22615398**: HOXC9 structural and DNA-competition experiments differ from full-length HOXD9 reporter assays.
 - **PMID:24217620**: FUCCI uses a Geminin fragment; the nuclear claim is corroborated independently.
-- **PMID:41365879**: Purified human assays support CDT1 sequestration; routine CDT1ΔN and separate full-length experiments differ. Steric interpretation is docking-informed.
+- **PMID:41365879**: Purified assays distinguish CDT1ΔN and full-length constructs; steric interpretation is docking-informed.
 - **PMID:25416956**: Human ORF interactions were screened in yeast and retested pairwise. The exact current partner records preserve fragment and isoform labels; study-wide orthogonal validation is not assigned individually to these pairs.
 - **PMID:31515488**: The variant study compares mutant and wild-type interactions in yeast. Its GMNN feature records remain separate from the unsuffixed GO annotation; no disease effect or assayed canonical-sequence equivalence is inferred.
 - **PMID:32296183**: Human ORFs were tested in yeast; the recorded fragments and isoform labels remain distinct.
