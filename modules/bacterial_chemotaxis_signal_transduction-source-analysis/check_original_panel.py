@@ -6,6 +6,8 @@ from pathlib import Path
 
 import yaml
 
+from upstream_qualifiers import original_payloads
+
 ROOT = Path(__file__).resolve().parents[2]
 AUDIT = ROOT / 'analysis/module_audits/bacterial_chemotaxis_signal_transduction'
 
@@ -29,7 +31,7 @@ def main():
         assert document['taxon'] == member['taxon'], member['review_path']
         assert document['status'] == 'COMPLETE', member['review_path']
         expected = Counter(signature(row['payload']) for row in member['annotations'])
-        actual = Counter(signature(payload(row)) for row in document['existing_annotations'])
+        actual = Counter(signature(row) for row in original_payloads(ROOT, AUDIT, member, document))
         if f"{member['organism']}/{member['gene']}" == replacement['gene']:
             assert replacement['original_row']['review']['action'] == 'NEW'
             old = signature(payload(replacement['original_row']))

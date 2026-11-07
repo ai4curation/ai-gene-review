@@ -17,6 +17,8 @@ from pathlib import Path
 
 import yaml
 
+from upstream_qualifiers import original_payloads
+
 from ai_gene_review.module_logic import (
     _atom_from_annoton, compile_node, is_satisfied,
 )
@@ -55,7 +57,8 @@ def preservation(baseline):
         assert doc['id'] == member['accession'], key
         assert doc['taxon'] == member['taxon'], key
         expected = Counter(signature(a['payload']) for a in member['annotations'])
-        actual = Counter(signature(payload(a)) for a in doc['existing_annotations'])
+        checked_payloads = original_payloads(ROOT, AUDIT, member, doc)
+        actual = Counter(signature(a) for a in checked_payloads)
         if key == refined['gene']:
             assert refined['original_row']['review']['action'] == 'NEW'
             expected.subtract({signature(payload(refined['original_row'])): 1})
@@ -67,10 +70,10 @@ def preservation(baseline):
         assert all(n >= 0 for n in expected.values()), key
         assert not (+expected - actual), key
         added = actual - (+expected)
-        for row in doc['existing_annotations']:
+        for row, checked_payload in zip(doc['existing_annotations'], checked_payloads):
             action = row['review']['action']
             assert action != 'PENDING', key
-            if added[signature(payload(row))]:
+            if added[signature(checked_payload)]:
                 assert action == 'NEW', key
             actions[action] += 1
         totals['genuinely_added_NEW'] += sum(added.values())
