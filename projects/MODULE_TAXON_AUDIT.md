@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_gallate_catabolism`: PR #6158 revised evidence passes full validation on 40aa360422: 10,737 reviews, zero blocking errors and all 177 frozen inputs verified. Main 2f72fda87e is integrated with the validated scientific inputs preserved. Fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_gallate_catabolism`: PR #6158 approved at 2e55002677; main 7eee074bca integrated at b5159f5752 with 186 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
