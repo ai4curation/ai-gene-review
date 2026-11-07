@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_gallate_catabolism`: Comparative audit passes full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_gallate_catabolism`: PR #6158 published after full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Twelve member reviews and 24 source-based coverage cases pass. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -691,3 +691,7 @@ Comparative audit passes full validation on 1186397389: 10,717 reviews, zero blo
 ## 2026-11-07 — bacterial_gallate_catabolism main integration
 
 Integrated main e9d31cced895d2d74c464d57cbd40381e15520ab after the passing full run on 1186397389272b306d479ad2d6d7742f5b74f986. All 138 frozen files outside shared project metadata remain byte-identical. Every incoming inventory row except this audit row is retained; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — gallate audit PR published
+
+PR #6158 published after full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Twelve member reviews and 24 source-based coverage cases pass. Fresh review, CI and actual merge remain pending. [PR #6158](https://github.com/ai4curation/ai-gene-review/pull/6158).
