@@ -53,3 +53,7 @@ The private review preserves all 49 incoming contexts, including the two records
 ## Native acquisition, 2026-11-07
 
 Genuine native helpers completed the 48 missing source records and preserved all five inherited source records byte-for-byte. The genuine 48-row seed and original machine records matched the frozen inputs; the separately preserved cone-cell context was restored, retaining all 49 incoming contexts and both extension atoms. Genuine product declarations were retained. Titles and cache availability flags now match the actual normal records; independent original-reading limits remain separately documented. History, validation and rendering results follow after execution.
+
+## Follow-up source access, 2026-11-07
+
+The publication-cache flags remain unchanged. The evidence sidecar separately records independently inspected original URLs, capture hashes and section locators. Notes quote two inspected originals; YAML quotations are checked against actual normal records or the cited local UniProt record. No missing full-paper access is inferred from a successful abstract fetch.
