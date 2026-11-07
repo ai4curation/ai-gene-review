@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 evidence follow-up: correct CORGL positive-support quotations and three localization rationales; retain six target RNA-binding uncertainties with source-specific justification. Eight focused gene checks pass with all 123 payloads/actions unchanged. Family layout and complete quotations are repaired, and Bacillus carrier labels expose regulatory context. Full validation and publication remain pending.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 follow-up passes full validation on dea61b9999: 10,740 reviews, zero blocking errors and 162 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -699,3 +699,7 @@ Integrated main 4fa058f671604c3aa4c142ac13bd07e54ef27baa after the passing full 
 ## 2026-11-07 — glutamate-to-P5C evidence review follow-up
 
 PR #6160 evidence follow-up: correct CORGL positive-support quotations and three localization rationales; retain six target RNA-binding uncertainties with source-specific justification. Eight focused gene checks pass with all 123 payloads/actions unchanged. Family layout and complete quotations are repaired, and Bacillus carrier labels expose regulatory context. Full validation and publication remain pending.
+
+## 2026-11-07 — bacterial glutamate to p5c biosynthesis full validation passes
+
+PR #6160 follow-up passes full validation on dea61b9999: 10,740 reviews, zero blocking errors and 162 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/round1-full-run.json).
