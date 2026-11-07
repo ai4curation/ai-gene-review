@@ -69,6 +69,8 @@ for act in ACTIONS:
     mac("pct" + act.title().replace("_", ""), 100 * (a.action == act).mean())
 b = a[~a.pb]
 mac("nAnnNoPB", len(b))
+for act in ACTIONS:
+    mac("pct" + act.title().replace("_", "") + "NoPB", 100 * (b.action == act).mean())
 mac("pctRejectedNoPB", 100 * b.rejected.mean()); mac("pctChangedNoPB", 100 * b.changed.mean())
 mac("pctRejectedAll", 100 * a.rejected.mean()); mac("pctChangedAll", 100 * a.changed.mean())
 
@@ -105,6 +107,13 @@ iea = b[b.evidence_type == "IEA"].copy()
 iea["pipeline"] = iea.reference.map(GOREF).fillna("other")
 write_tab(pct_table(iea, "pipeline", min_n=200), "tab_action_by_iea_pipeline.tex", "IEA pipeline")
 write_tab(pct_table(a[a.pb], "evidence_type", min_n=100), "tab_protein_binding.tex", "Code")
+write_tab(pct_table(b.dropna(subset=["assigned_by"]), "assigned_by", min_n=1500), "tab_action_by_assigned_by.tex", "Assigned by")
+for grp in ["ComplexPortal", "CACAO", "PseudoCAP", "SynGO", "SynGO-UCL"]:
+    sub = b[b.assigned_by == grp]
+    if len(sub):
+        k = "".join(ch for ch in grp if ch.isalpha())
+        mac("n" + k, len(sub)); mac("rej" + k, 100 * sub.rejected.mean())
+        mac("acc" + k, 100 * (sub.action == "ACCEPT").mean())
 orgs = b.organism.value_counts().head(12).index.tolist()
 write_tab(pct_table(b[b.organism.isin(orgs)], "organism"), "tab_action_by_organism.tex", "Organism")
 
