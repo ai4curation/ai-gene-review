@@ -1245,6 +1245,62 @@ UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88
         yaml_path.unlink()
 
 
+QUALIFIER_GOA = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	Q12345	TEST	is_active_in	GO:0005737	cytoplasm	C	ECO:0000318	IBA	GO_REF:0000033		NCBITaxon:9606	Homo sapiens	GO_Central	Test protein	20180515
+UniProtKB	Q12345	TEST	enables	GO:0001234	test function	F	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	located_in	GO:0005739	mitochondrion	C	ECO:0000314	IDA	PMID:1		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	colocalizes_with	GO:0005739	mitochondrion	C	ECO:0000314	IDA	PMID:1		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
+
+
+@pytest.mark.parametrize("indent", ["", "  "])
+def test_backfill_qualifiers_only_inserts_lines(tmp_path, indent):
+    """Backfilling leaves every existing line byte-identical, whatever the layout.
+
+    Folded scalars, comments and key order survive; each filled row gains one
+    ``qualifier:`` line after ``original_reference_id``; a row GOA gives two
+    qualifiers for, and a row that already has one, are left alone.
+    """
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(QUALIFIER_GOA)
+    rows = [
+        "- term:",
+        "    id: GO:0005737",
+        "    label: cytoplasm",
+        "  evidence_type: IBA",
+        "  original_reference_id: GO_REF:0000033",
+        "  review:",
+        "    summary: >-",
+        "      folded text that a re-dump",
+        "      would rewrap",
+        "    action: ACCEPT  # a comment",
+        "- term:",
+        "    id: GO:0001234",
+        "    label: test function",
+        "  qualifier: contributes_to",
+        "  evidence_type: IPI",
+        "  original_reference_id: PMID:12345",
+        "- term:",
+        "    id: GO:0005739",
+        "    label: mitochondrion",
+        "  evidence_type: IDA",
+        "  original_reference_id: PMID:1",
+    ]
+    text = "id: Q12345\nexisting_annotations:\n" + "".join(
+        f"{indent}{r}\n" for r in rows
+    ) + "core_functions: []\n"
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(text)
+
+    updated_count, _ = GOAValidator().backfill_qualifiers(yaml_path)
+
+    assert updated_count == 1
+    new_lines = yaml_path.read_text().split("\n")
+    old_lines = text.split("\n")
+    inserted = f"{indent}  qualifier: is_active_in"
+    at = old_lines.index(f"{indent}  original_reference_id: GO_REF:0000033") + 1
+    assert new_lines == old_lines[:at] + [inserted] + old_lines[at:]
+
+
 def test_new_action_validation():
     """Test validation of annotations with action=NEW."""
     validator = GOAValidator()
