@@ -20,3 +20,8 @@ The required default Falcon request genuinely failed with HTTP403 (authenticatio
 The two IPR025703 transcription mappings now use REMOVE, matching BjPutA/GsPutA/CfPutA on the same solved non-RHH architecture criterion. No direct negative DNA-binding assay is claimed. The proline-biosynthesis rejection now leads with the paper's actual separation of the pathways rather than the generic NADH assay methods. [PMID:27679491 "Furthermore, P5C/GSAL is also the intermediate of proline biosynthesis, so channeling provides a mechanism for segregating catabolism and biosynthesis ( 21 )."]
 
 The scoped action ledger and ontology checks are in `analysis/module_audits/bacterial_fused_puta_proline_catabolism/round1-action-reversal-ledger.yaml` and `round1-review-response.md`. Original annotation rows and source fields are retained in order.
+
+
+## 2026-11-07 PR #6150 round3 follow-up
+
+Removed only the second identical PMID:27679491 channeling quotation from the GO:0055129 review support list. The retained channeling passage and independent coupled NADH-production passage still support the same REMOVE decision on the biosynthetic-pathway mapping. The underlying primary describes segregation of catabolism and biosynthesis and directly assays the proline-consuming coupled reaction. All annotation payloads, actions, core functions, and other evidence are unchanged.
