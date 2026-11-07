@@ -127,3 +127,39 @@ Completes the cytoplasmic bacterial urease holoenzyme (`(UreABC)3`) and `UreD`-`
 - **Updated Modules:**
   - [`modules/bacterial_tonb_siderophore_import.yaml`](../../modules/bacterial_tonb_siderophore_import.html) (`MODULE:bacterial_tonb_siderophore_import` — expanded with `exbB4` and `exbD5` proton-channel motor step)
   - [`modules/variovorax_metallophore_metal_homeostasis.yaml`](../../modules/variovorax_metallophore_metal_homeostasis.html) (`MODULE:variovorax_metallophore_metal_homeostasis` — expanded with `ppx` polyP turnover and `czcB`, `czcC`, `czcD` heavy-metal efflux)
+
+---
+
+## 5. Tranche 4 Curation Batches (SsuABC-SsuE Alkanesulfonate Import & Reductase, TauABC Taurine Import, CzcI/CzcR/CusS/CadA2 Heavy-Metal Island Completion, and Fur1 Iron Regulation)
+
+### Batch 4A: Alkanesulfonate ABC Importer & FMN Reductase (`ssuA2`, `ssuB2`, `ssuC5`, `ssuE`) and Taurine ABC Importer (`tauA`, `tauB1`, `tauC`)
+
+Completes the organosulfonate and taurine assimilation pathways around `ssuD` (`C5CNW9`) and `tauD1` (`A0A0H2MHV8`):
+
+| Role in Complex / Pathway | Gene Symbol | UniProt / Locus (`VARPD`) | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Periplasmic sulfonate SBP | `ssuA2` | `A0A0H2M8H9` (`VPARA_29980`) | Aliphatic sulfonate-binding protein SsuA2 (330 aa, `TIGR01451`) | Sec signal peptide (1-28) + periplasmic NMT1/SsuA fold (`PF09084`) | `GO:0046306` (alkanesulfonate transport), `GO:0015419` (`contributes_to`), `GO:0030288`, `GO:0055052` |
+| Sulfonate import ATPase | `ssuB2` | `A0A0H2MAS0` (`VPARA_29960`) | Aliphatic sulfonates import ATP-binding protein SsuB2 (EC 7.6.2.14, 272 aa, `MF_01723`) | ABC ATPase (`PS50893`) with Walker A (`41-GPSGCGKT-48`) + Walker B (`153-LLLD-156`) | `GO:0015419`, `GO:0005524`, `GO:0016887`, `GO:0046306`, `GO:0005886`, `GO:0055052` |
+| Sulfonate permease | `ssuC5` | `A0A0H2MD44` (`VPARA_29970`) | Aliphatic sulfonates transport permease protein SsuC5 (298 aa, `PTHR30409:SF6`) | 6-TM MetI-like ABC transmembrane domain (`PS50928`, residues 112-286) | `GO:0046306`, `GO:0015419` (`contributes_to`), `GO:0005886`, `GO:0055052` |
+| NADPH-FMN reductase | `ssuE` | `A0A0H2MC24` (`VPARA_36280`) | FMN reductase (NADPH) SsuE (EC 1.5.1.38, 190 aa, `TIGR01727`) | Flavodoxin-like fold (`PF03358`) supplying $\text{FMNH}_2$ to SsuD | `GO:0052591` (FMN reductase (NADPH) activity), `GO:0010181`, `GO:0071284`, `GO:0005829` |
+| Periplasmic taurine SBP | `tauA` | `A0A0H2M727` (`VPARA_03650`) | Taurine-binding periplasmic protein TauA (318 aa, `MF_01666`) | Sec signal peptide (1-22) + periplasmic TauA fold (`PTHR30024:SF47`) | `GO:1902935` (taurine binding), `GO:0015734`, `GO:0030288`, `GO:0055052` |
+| Taurine import ATPase | `tauB1` | `A0A0H2MNF8` (`VPARA_03660`) | Taurine import ATP-binding protein TauB1 (EC 7.6.2.7, 255 aa, `MF_01667`) | ABC ATPase (`PS50893`) with Walker A (`37-GPSGCGKT-44`) + Walker B (`156-LLAD-159`) | `GO:0015411`, `GO:0005524`, `GO:0016887`, `GO:0015734`, `GO:0005886`, `GO:0055052` |
+| Taurine permease | `tauC` | `A0A0H2M7Y1` (`VPARA_03670`) | Taurine transport system permease protein TauC (294 aa, `MF_01668`) | 6-TM ABC transmembrane type-1 domain (`PS50928`, residues 100-280) | `GO:0015734`, `GO:0015411` (`contributes_to`), `GO:0005886`, `GO:0055052` |
+
+- **Linked Module:** [`modules/taurine_uptake_and_desulfonation.yaml`](../../modules/taurine_uptake_and_desulfonation.html) (`MODULE:taurine_uptake_and_desulfonation` — expanded with `tauA`, `tauB1`, and `tauC`)
+
+---
+
+### Batch 4B: Heavy-Metal Resistance Island Completion (`czcI`, `czcR`, `cusS`, `cadA2`) and Ferric Uptake Regulator (`fur1`)
+
+| Role | Gene Symbol | UniProt / Locus (`VARPD`) | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Periplasmic Czc modulator | `czcI` | `A0A0H2LVR9` (`VPARA_44920`) | Cobalt-zinc-cadmium resistance protein CzcI (123 aa, `NF045614`) | Histidine-rich cluster (`36-HWGHHEHE-43`) + `71-CAVCH-75` motif | `GO:0046872` (metal ion binding), `GO:0046686` (response to cadmium ion), `GO:0010043` (response to zinc ion) |
+| Heavy-metal response regulator | `czcR` | `A0A0H2LVW5` (`VPARA_44930`) | Transcriptional activator protein CzcR (225 aa, `TIGR01387`) | Receiver domain (`Asp51`) + OmpR/PhoB winged-helix DNA-binding domain (`PS51755`) | `GO:0000156`, `GO:0001216`, `GO:0000976`, `GO:0000160`, `GO:0045893`, `GO:0010043`, `GO:0005829` |
+| Heavy-metal sensor kinase | `cusS` | `A0A0H2MBG2` (`VPARA_44940`) | Sensor protein CusS/CzcS (EC 2.7.13.3, 443 aa, `TIGR01386`) | 2 TM helices + HAMP (`PS50885`) + HisKA/HATPase_c (`PS50109`, `His233`) | `GO:0000155` (phosphorelay sensor kinase activity), `GO:0005524`, `GO:0000160`, `GO:0046777`, `GO:0010043`, `GO:0005886` |
+| P1B-2-type heavy-metal ATPase | `cadA2` | `A0A0H2LVW9` (`VPARA_44980`) | P-type Zn(2+)/Cd(2+) transporter CadA2 (EC 7.2.2.12, 759 aa, `TIGR01512`) | N-terminal HMA domain (`IPR006121`) + intramembrane `410-CPC-412` + `Asp454` phosphorylation site | `GO:0016463` (P-type zinc transporter activity), `GO:0015086` (cadmium ion transmembrane transporter activity), `GO:0005524`, `GO:0046872`, `GO:0071577`, `GO:0070574`, `GO:0005886` |
+| Ferric uptake repressor | `fur1` | `A0A0H2M8T9` (`VPARA_18200`) | Ferric uptake regulation protein Fur1 (139 aa, `NF006999`) | Structural $\text{Zn}^{2+}$ site (`Cys92, Cys95, Cys132, Cys135`) + regulatory $\text{Fe}^{2+}$ site (`His86, Asp88, Glu107, His124`) | `GO:0001217` (DNA-binding transcription repressor activity), `GO:0000976`, `GO:0008198` (ferrous iron binding), `GO:0045892`, `GO:0006879`, `GO:0005829` |
+
+- **Updated Modules:**
+  - [`modules/variovorax_metallophore_metal_homeostasis.yaml`](../../modules/variovorax_metallophore_metal_homeostasis.html) (`MODULE:variovorax_metallophore_metal_homeostasis` — expanded with `fur1`, `cadA2`, `czcI`, `czcR`, and `cusS`)
+  - [`modules/bacterial_tonb_siderophore_import.yaml`](../../modules/bacterial_tonb_siderophore_import.html) (`MODULE:bacterial_tonb_siderophore_import` — evidence updated with `fur1`)
