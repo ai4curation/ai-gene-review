@@ -44,7 +44,9 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
+- [ ] `bacterial_gallate_catabolism`: PR #6158: main d7638df804 integrated at c5cac55cfe, preserving all 197 frozen nonshared inputs. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and actual merge remain pending.
+
+- [x] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
 
 - [x] `bacterial_lipoprotein_maturation`: PR #6184 merged as dc4512172353d85fed764fa9fcaf7daf16a78698; all 344 changed nonshared files are byte-identical to the approved head. All 14 module members have COMPLETE reviews without PENDING rows. Actual merged content verified.
 
@@ -107,7 +109,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 9 PR_OPEN, 3 IN_PROGRESS, 728 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 38 COMPLETE, 9 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -1000,3 +1002,59 @@ Integrated main bb89a377830600d2850d64215e0da94a47a06c6a into approved head 0a03
 ## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
 
 Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full run on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f. All 163 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — gallate comparative audit full validation passes
+
+Comparative audit passes full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_gallate_catabolism/full-validation.json).
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main e9d31cced895d2d74c464d57cbd40381e15520ab after the passing full run on 1186397389272b306d479ad2d6d7742f5b74f986. All 138 frozen files outside shared project metadata remain byte-identical. Every incoming inventory row except this audit row is retained; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — gallate audit PR published
+
+PR #6158 published after full validation on 1186397389: 10,717 reviews, zero blocking errors and 138 frozen inputs verified. Twelve member reviews and 24 source-based coverage cases pass. Fresh review, CI and actual merge remain pending. [PR #6158](https://github.com/ai4curation/ai-gene-review/pull/6158).
+
+## 2026-11-07 — gallate review follow-up
+
+PR #6158 review follow-up restores three grounded core genera, reconciles GalD branch correction, retires redundant LigK proposal and documents verified GalC ancestry. All 60 ordered payloads/actions preserved; eight focused gene checks and module/coverage checks pass. New full validation, fresh review and actual merge remain pending.
+
+## 2026-11-07 — bacterial gallate catabolism full validation passes
+
+PR #6158 follow-up passes full validation on 40aa360422: 10,737 reviews, zero blocking errors and 177 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_gallate_catabolism/round1-full-validation.json).
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f after the passing full run on 40aa36042295b4d714e07d9f115a23e2c1f6c134. All 173 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e into approved head decb94b75756c1fb435c54c2f231477e55d85cf1. All 184 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head 2e55002677c85c5557968aee8fefe63e84fcbd6b. All 186 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b into approved head e7fbc9c6d54c70678703b938a9f38b7b3d18a039. All 189 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main bb89a377830600d2850d64215e0da94a47a06c6a into approved head 05a2acb413d2f5fa26757909177c77266b83c0d3. All 192 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration
+
+Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full run on 40aa36042295b4d714e07d9f115a23e2c1f6c134. All 195 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_gallate_catabolism main integration d7638df804
+
+Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full run on 40aa36042295b4d714e07d9f115a23e2c1f6c134. All 197 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+Integration proof: [record](../analysis/module_audits/bacterial_gallate_catabolism/post-hepg-main-integration-20261107.json).
+
+## 2026-11-07 — verified HepG merge and gallate integration scope
+
+PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
+
+PR #6158: main d7638df804 integrated at c5cac55cfe, preserving all 197 frozen nonshared inputs. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_gallate_catabolism/post-hepg-main-integration-20261107.json).

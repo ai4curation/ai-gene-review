@@ -36,3 +36,10 @@ cached publications and the UniProt record. No `-deep-research-*.md` file exists
 - NEW GO:0036238 (IDA, PMID:16030198) and NEW GO:0019396 gallate catabolic process (IMP/IDA, PMID:16030198).
 - No GO term for syringate catabolism exists (GO:1901065 syringal lignin catabolic process is for the polymer);
   not proposed.
+
+
+## 2026-11-06 comparative source and annotation audit
+
+New normally fetched primary PMID:24657997 provides direct DesB iron-center structure and substrate-recognition evidence. PDB3WR9 entity1 maps Q5NTE5 and exactly matches all 418 residues of the frozen record; structure-identity.json preserves the bridge. Therefore FeII binding is ACCEPT as catalytic, replacing an outdated family-only caveat. The legacy species code/taxon payload remains untouched; the biological experimental strain is SYK-6. Both historical NEW annotations remain unchanged as assertions. The assay demonstrates chemistry and mutant-supported native aromatic utilization, not universal gallate growth for every family member.
+
+Research: the normal default Falcon attempt failed with HTTP403 authentication; manual evidence assessment is recorded here, without a fabricated provider report. All original non-review annotation payloads, order and inherited NEW actions are retained; no new annotation row was added. Sources were not refreshed. Current ontology responses and pre-edit proofs are in the ignored gallate-20261106/gene-review audit cache.
