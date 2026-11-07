@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_fused_puta_proline_catabolism`: PR #6150 follow-up passes full validation on 6cd2f11830: 10,720 reviews, zero blocking errors and 226 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_fused_puta_proline_catabolism`: PR #6150: integrated main 2f72fda87e into approved head bd62f935e0, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
