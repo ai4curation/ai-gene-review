@@ -44,6 +44,8 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
+- [ ] `bacterial_mannose_pts`: Comparative mannose PTS audit ready for full validation: nine COMPLETE reviews preserve 93 ordered rows and two historical NEW proposals; three full reviews and primary studies supply 14 mined findings. Four role/domain-qualified components model fused or split relays and compatible mannose uptake. Focused checks pass with zero module warnings, 46 family groundings, 60 capacity cases, 13 mutations and nine gate sensitivities. Full validation, dedicated PR and actual merge remain pending.
+
 - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
