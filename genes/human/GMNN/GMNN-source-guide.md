@@ -9,7 +9,7 @@ Selected primary Methods, Results and figure descriptions were inspected. Cached
 - **PMID:21543332**: Geminin-GFP localization depends on Idas coexpression; this does not determine constitutive endogenous distribution. Idas perturbations are not assigned wholesale to Geminin.
 - **PMID:22615398**: HOXC9 structural and DNA-competition experiments differ from full-length HOXD9 reporter assays.
 - **PMID:24217620**: FUCCI uses a Geminin fragment; the nuclear claim is corroborated independently.
-- **PMID:41365879**: CDT1ΔN/full-length assays differ; other CDT1 refinements share this evidence.
+- **PMID:41365879**: CDT1ΔN/full-length assays differ; steric inference is docking-informed. CDT1 refinements share this evidence.
 - **PMID:25416956**: Human ORF interactions were screened in yeast and retested pairwise. The exact current partner records preserve fragment and isoform labels; study-wide orthogonal validation is not assigned individually to these pairs.
 - **PMID:31515488**: The variant study compares mutant and wild-type interactions in yeast. Its GMNN feature records remain separate from the unsuffixed GO annotation; no disease effect or assayed canonical-sequence equivalence is inferred.
 - **PMID:32296183**: Human ORFs were tested in yeast; the recorded fragments and isoform labels remain distinct.
@@ -21,7 +21,7 @@ Current HPA XML reports supported main nucleoplasm localization and additional c
 
 GO:0140311 describes binding that prevents partner engagement and is the selected mechanistic refinement for CDT1. It descends from GO:0140313, not GO:0140678; no ontology ancestry between those two alternatives is asserted. CDT1 remains a licensing factor, not an enzyme. GO:0140416 describes prevention of transcription-regulator chromatin engagement; AP4-associated corepression remains distinct.
 
-Original-access locators: [11125146 author PDF, Figures 3–4 and Methods](https://walter.hms.harvard.edu/wp-content/uploads/2021/09/10.1126-science.290.5500.2309.pdf); [16924111 Methods/Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC1551900/); [19906994 Methods/Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC2775996/); [21543332 Results/Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC3123090/); [41365879 Results, Figures 6–7](https://pmc.ncbi.nlm.nih.gov/articles/PMC12695944/). These identify the independently inspected originals; they do not change normal-cache availability flags. Short cached excerpts are counted at every placement in the source ledger. Specificity-based TOO_GENERAL judgments preserve the positive experiments.
+Original-access locators: [11125146 author PDF, Figures 3–4 and Methods](https://walter.hms.harvard.edu/wp-content/uploads/2021/09/10.1126-science.290.5500.2309.pdf); [16924111 Methods/Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC1551900/); [19906994 Methods/Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC2775996/); [21543332 Results/Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC3123090/); [41365879 Results, Figures 2 and 6–7](https://pmc.ncbi.nlm.nih.gov/articles/PMC12695944/). These identify the independently inspected originals; they do not change normal-cache availability flags. Short cached excerpts are counted at every placement in the source ledger. Specificity-based TOO_GENERAL judgments preserve the positive experiments.
 
 - **PMID:24064211**: Human fragments, Xenopus extracts and U2OS assays were distinguished; the proposed oligomeric model is not a universal native stoichiometry.
 
