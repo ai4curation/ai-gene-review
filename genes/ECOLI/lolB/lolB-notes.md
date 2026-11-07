@@ -26,3 +26,8 @@ All existing annotations and core functions were reassessed against their cited 
 An actual configured Falcon attempt for this gene failed with HTTP 403 authentication; no provider report was fabricated. The log is retained under `.cache/module-audit-logs/lol-20261107/ecoli-consultation/falcon-lolB.log`. Manual primary-source review supplies the evidence.
 
 LolB is a lipid-anchored outer-membrane lipoprotein of Escherichia coli whose periplasm-facing domain accepts mature lipoproteins from LolA and promotes insertion of their lipid anchors into the outer membrane. It is the terminal acceptor and insertion component of the canonical Lol trafficking pathway. LolB is essential in ordinary E. coli backgrounds; this requirement can be bypassed under altered lipoprotein-toxicity and envelope-stress conditions. Its historical HemM name does not reflect its established lipoprotein-trafficking function.
+
+
+## PR6188 follow-up (2026-11-07)
+
+Unify insertion proposal definition and parent; distinguish membrane insertase client chemistry without imposing a separate donor on bifunctional carriers. Original annotation payloads, qualifiers and proposal lifecycle are unchanged. See analysis/module_audits/bacterial_lol_lipoprotein_trafficking/review-followup/decisions.md for source and ontology adjudication.

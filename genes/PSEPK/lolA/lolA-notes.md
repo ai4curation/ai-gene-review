@@ -20,3 +20,8 @@ The carrier role is supported by the curated HAMAP rule and the original E. coli
 GO ancestry was queried live from QuickGO (is_a and part_of, 2026-11-07). GO:0042953 and GO:0044874 are neither ancestors nor descendants of each other. Historical transport proposals remain active; no new proposal is needed to suppress coverage warnings. Query responses are preserved in the consultation artifacts.
 
 PAINT-loss inspection: the target accession is absent from the cached family tree, so lineage losses could not be checked; the tool's concluding no-loss line is not proof of absence. This panel contains electronic TreeGrafter/InterPro/curated-rule annotations rather than IBA rows; no unsupported PAINT-node judgment was added.
+
+
+## PR6188 follow-up (2026-11-07)
+
+Replace copied cross-gene and repeated generic caveats with annotation-specific reasoning; keep shared ortholog scope in notes and source assessments. Target KT2440 roles are conserved-function inferences from specific identity/architecture and ortholog experiments; no cited E. coli assay is represented as a measurement of this target. Original annotation payloads, qualifiers and proposal lifecycle are unchanged. See analysis/module_audits/bacterial_lol_lipoprotein_trafficking/review-followup/decisions.md for source and ontology adjudication.

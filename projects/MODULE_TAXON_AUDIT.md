@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_lol_lipoprotein_trafficking`: [PR #6188](https://github.com/ai4curation/ai-gene-review/pull/6188) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_lol_lipoprotein_trafficking`: [PR #6188](https://github.com/ai4curation/ai-gene-review/pull/6188) review follow-up ready locally: focused science, capacity and source checks pass. Dependency hold until ECO import [PR #6186](https://github.com/ai4curation/ai-gene-review/pull/6186) actually merges; final dependency integration, full validation, remote publication and fresh review/CI remain pending. Auto-merge remains off.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 

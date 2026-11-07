@@ -24,3 +24,8 @@ Protein transport is true and is now refined to lipoprotein transport, not marke
 GO ancestry was queried live from QuickGO (is_a and part_of, 2026-11-07). GO:0042953 and GO:0044874 are neither ancestors nor descendants of each other. Historical transport proposals remain active; no new proposal is needed to suppress coverage warnings. Query responses are preserved in the consultation artifacts.
 
 PAINT-loss inspection: no PANTHER family is present in the LolB source record, so lineage losses could not be checked. This panel contains electronic TreeGrafter/InterPro/curated-rule annotations rather than IBA rows; no unsupported PAINT-node judgment was added.
+
+
+## PR6188 follow-up (2026-11-07)
+
+Unify insertion proposal definition and parent; distinguish membrane insertase client chemistry without imposing a separate donor on bifunctional carriers. Refine outer-membrane annotation and core location to periplasmic side using target architecture and conserved cargo acceptance. Replace copied cross-gene and repeated generic caveats with annotation-specific reasoning; keep shared ortholog scope in notes and source assessments. Target KT2440 roles are conserved-function inferences from specific identity/architecture and ortholog experiments; no cited E. coli assay is represented as a measurement of this target. Original annotation payloads, qualifiers and proposal lifecycle are unchanged. See analysis/module_audits/bacterial_lol_lipoprotein_trafficking/review-followup/decisions.md for source and ontology adjudication.

@@ -15,3 +15,8 @@ Validation and rendering require the ECO-preserving code/schema until that depen
 The current PANTHER tree does not return A5FI22 as a leaf. The PAINT-loss helper therefore cannot assess losses for this target; its generic concluding line is not evidence that the lineage has been checked and found loss-free. Exact UniProt family/domain classification and native target evidence are independent of unavailable PTN placement.
 
 Final focused validation passes with three advisory warnings because the synthesized carrier MF, periplasm location and OM-localization context have no standalone annotation rows. No annotations were manufactured to silence these warnings. Term/reference checks, rendering and the helper history pass. The first fixed-project validation failure was an environmental local-source-root mismatch; the passing run uses 202 byte-identical source files from the fixed code in an ignored overlay linked to the Lol worktree. Both logs and exact commands are retained.
+
+
+## PR6188 follow-up (2026-11-07)
+
+Retain compatible broad source claim; explicitly distinguish inferred direct participation and supported core localization from annotation-row completeness, with a suspected source relation-precision CHECK. Original annotation payloads, qualifiers and proposal lifecycle are unchanged. See analysis/module_audits/bacterial_lol_lipoprotein_trafficking/review-followup/decisions.md for source and ontology adjudication.

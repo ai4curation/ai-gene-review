@@ -13,3 +13,8 @@ The primary's charge substitutions were made in BamE; their binding/extraction r
 A genuine Falcon research attempt on 2026-11-07 returned HTTP 403 authentication failure (exit 1). The exact log is preserved under the aciad-consultation audit directory; no provider-named report was fabricated. Existing raw sources and publication caches were not rewritten.
 
 PAINT loss inspection could not resolve the target lineage: no PANTHER family is recorded for LolB, while the other target accessions are absent from the available family trees. The tool's concluding no-loss sentence is not evidence of an absence. The seeded rows are IEA; no unsupported IBA-node judgment is made.
+
+
+## PR6188 follow-up (2026-11-07)
+
+Unify insertion proposal definition and parent; distinguish membrane insertase client chemistry without imposing a separate donor on bifunctional carriers. Refine outer-membrane annotation and core location to periplasmic side using target architecture and conserved cargo acceptance. Original annotation payloads, qualifiers and proposal lifecycle are unchanged. See analysis/module_audits/bacterial_lol_lipoprotein_trafficking/review-followup/decisions.md for source and ontology adjudication.
