@@ -133,3 +133,7 @@ localization, substrate, or pathway has been established.
 Searches for 2025-2026 UBP11 literature did not find a new paper that
 establishes an in-vivo substrate or non-redundant pathway for Ubp11. The review
 therefore keeps the existing conservative BP-dark model.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[8], GO:0005575 cellular_component (ND, GO_REF:0000015), ACCEPT: the ND may be stale. UBP11-deep-research-falcon.md reports that a systematic localization study of budding-yeast DUBs places Ubp11 in the cytoplasm (cited through the Suresh et al. 2020 review). If the underlying screen is confirmed, it identifies a location for this gene product in S. cerevisiae. The primary study is not cached, so a curator should check it before adding a CC annotation. The review action was left unchanged.

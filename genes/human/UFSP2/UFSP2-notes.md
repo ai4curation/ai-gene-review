@@ -9,3 +9,12 @@ UFSP2 (UFM1-specific protease 2) is the principal human UFM1-specific cysteine (
 
 ## Provenance
 Research and verbatim supporting quotes are recorded inline in `UFSP2-ai-review.yaml` (per-annotation `supported_by` and `references` findings). This notes file summarizes the completed review; see the YAML for evidence citations.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IBA (is_active_in), IEA (GO_REF:0000120, located_in), IDA PMID:35926457 (is_active_in). All ACCEPT, kept.
+- IBA: PAINT IBD on PTN008489070 (taxon 6072), seeds MGI:MGI:1913679, UniProtKB:Q9NUQ7 (self) and WB:WBGene00018160 (interpro/panther/PTHR48153/PTHR48153-paint.tsv).
+- IEA: UniProt "Endoplasmic reticulum {ECO:0000269|PubMed:35926457}" plus mouse Q99K23.
+- IDA: full text of PMID:35926457 [PMID:35926457 "we identify a role for localization of UFSP2 at the ER via its interaction with the ER resident protein ODR4 for its ability to remove UFM1 from RPL26"; "ODR4 is essential for stabilizing UFSP2 and anchoring it at the ER membrane in proximity to the ribosome."; "Moreover, UFSP2 and ODR4 knockout cell lines were an exact phenocopy in their role in restraining levels of RPL26 UFMylation"].
+- is_active_in: justified on both rows; the activity (RPL26 deUFMylation) depends on ODR4-mediated ER localization.
+- Topology: no TM or signal peptide; tethered to the cytosolic face by ODR4, so stays at root (no ER membrane row).
