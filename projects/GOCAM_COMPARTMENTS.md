@@ -315,15 +315,15 @@ well the check's leads hold up:
 | `59cc772c00000000` IL-1β | CASP1 (cytosol) → IL1B (extracellular) | **Confirmed**: the release step is missing; the cited paper says the secretion mechanism is unknown |
 | `600ced8500002343` BMP9 | SMAD1 in chromatin | **Confirmed** `UNRESOLVED_COMPARTMENT`; the cited paper shows nuclear accumulation (nuclear chromosome would state it) |
 | `66e382fb00001232` BMP4, `5f46c3b700002685` IL-6 | receptor/JAK → nuclear SMAD/STAT | Explained by the modules; not flagged |
-| `693b3c0900004859` ER-to-Golgi (*S. pombe*) | 16 edges | **1 confirmed** (luminal Ssp120 cannot touch cytosolic Sec24; the Emp43 hand-over is missing); 14 dismissed as coarse-location artefacts on the cytosolic face of the budding membranes; 1 legitimate |
+| `693b3c0900004859` ER-to-Golgi (*S. pombe*) | 16 edges | **1 confirmed finding** on 2 edges (luminal Ssp120 cannot touch cytosolic Sec24, an edge the model draws twice; the Emp43 hand-over is missing); 13 edges dismissed as coarse-location artefacts on the cytosolic face of the budding membranes; 1 legitimate (SNARE complex → Sec18) |
 | `69729a3800007453` mitochondrial import (*S. pombe*) | 3 TOM → Tim50 edges | **Wrong location, not a missing step**: Tim50 is placed in the matrix instead of the inner membrane |
 | `62d0afa500000298`, `61e0e55600001225` gluconeogenesis (mouse) | inner-membrane carrier → cytosolic enzyme | Dismissed as an acceptable simplification (the outer membrane is crossed passively through porins) |
 | `6796b94c00004996` SARS-CoV-2 entry | 3 edges into the endosomal S2 node | **2 confirmed** (the model merges the TMPRSS2 surface route and the endosomal cathepsin route; the "ACAT1" node is a symbol collision for SOAT1); ACE2 → S2 dismissed as relocation |
 | `65692e7e00001822` RNF115/TLR | GDI1 → RAB13, RAB13 → TLR4 | GDI1: **wrong location** (a cytosolic chaperone placed in the ER); RAB13 → TLR4: dismissed (TLR4 is the cargo) but flagged as wrongly direct |
 | `65bc474400000029` ZDHHC4/MAVS | ER ↔ mitochondrial outer membrane | Dismissed: contact-site chemistry, which the cited paper reports |
 
-So the leads were useful but not self-evidently right: roughly a third of the
-flagged edges pointed to a real problem, either a missing step or a wrong
+Counting distinct findings rather than edges (an edge the model draws twice counts once), the leads
+were useful but not self-evidently right: roughly a third of them pointed to a real problem, either a missing step or a wrong
 location in the source model. The rest were coarse locations, contact-site
 biology, or simplifications a curator could reasonably make. That is why a
 finding needs a reviewer. The reviews also found problems unrelated to
