@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_l_carnitine_catabolism`: PR #6182: main d7638df804395ce8c81baeea891fd75b60d58d39 integrated with 327 frozen nonshared files preserved. Historical full validation remains on ce303513876cd1cf236a0f2d9a637280025b008a; fresh review, CI and merge are pending.
+- [ ] `bacterial_l_carnitine_catabolism`: PR #6182 approved at 4c8e4e3a91; current main d7638df804 integrated at 633226beb1. All 327 frozen nonshared files remain unchanged, including325 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to ce303513876cd1cf236a0f2d9a637280025b008a. Fresh current-head review, CI and actual merge remain pending.
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
 
@@ -1034,3 +1034,9 @@ Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full 
 ## 2026-11-07 — bacterial_l_carnitine_catabolism main integration
 
 Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full run on ce303513876cd1cf236a0f2d9a637280025b008a. All 327 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Carnitine current integration ready
+
+PR #6182 approved at 4c8e4e3a91; current main d7638df804 integrated at 633226beb1. All 327 frozen nonshared files remain unchanged, including325 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to ce303513876cd1cf236a0f2d9a637280025b008a. Fresh current-head review, CI and actual merge remain pending.
+
+[Publication closeout](../analysis/module_audits/bacterial_l_carnitine_catabolism/approved-main-20261107-1349-closeout.json).
