@@ -127,12 +127,15 @@ class SequenceCache:
         )
         # Three total attempts, with only 2s and 4s waits. A successful record
         # still passes through the same validation and persistent cache paths.
-        for attempt in range(1, 4):
+        attempts = 3
+        for attempt in range(1, attempts + 1):
             try:
                 with urllib.request.urlopen(req, timeout=60) as fh:
                     return json.load(fh)
-            except (OSError, json.JSONDecodeError, http.client.IncompleteRead) as exc:
-                if attempt == 3 or not _retryable_uniprot_error(exc):
+            except (OSError, json.JSONDecodeError, http.client.HTTPException) as exc:
+                if attempt == attempts or not _retryable_uniprot_error(exc):
+                    # Keep the final HTTPError body available through __cause__;
+                    # only responses discarded before another attempt are closed.
                     raise RuntimeError(
                         f"Could not retrieve UniProt record {acc} from {req.full_url}"
                     ) from exc
@@ -140,6 +143,7 @@ class SequenceCache:
                     # urlopen raised before entering the response context manager.
                     exc.close()
                 time.sleep(2 ** attempt)
+        raise AssertionError("unreachable")
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
