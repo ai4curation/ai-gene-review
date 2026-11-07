@@ -1,7 +1,7 @@
 ---
 title: "Ribosome Quality Control (RQC) Project"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-05
+last_reviewed: 2026-10-30
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [ZNF598, EDF1, GIGYF2, PELO, HBS1L, ABCE1, NEMF, LTN1, TCF25, ANKZF1, ASCC3, ASCC2, VCP]
@@ -19,16 +19,18 @@ EDF1 sense collisions, PELO-HBS1L and ABCE1 split the ribosome, and the NEMF-LTN
 RQC complex ubiquitinates the chain left on the 60S subunit. All 13 candidate
 genes on this page now have complete gene reviews, made during the Proteostasis
 batches, whose co-translational QC selection covers RQC, rather than under this
-project; the stale "Stub" line has been cleared and the remaining module/GO-CAM
-follow-up is tracked in
-[#3952](https://github.com/ai4curation/ai-gene-review/issues/3952). Across the
+project; the stale "Stub" line has been cleared. Across the
 12 RQC genes (VCP excluded) the reviews assess 430 GOA rows: 276 ACCEPT, 95
 KEEP_AS_NON_CORE, 20 REMOVE, 18 MARK_AS_OVER_ANNOTATED, 17 MODIFY and 4 NEW.
 The 97 rows that use RQC-specific terms, such as `rescue of stalled cytosolic
 ribosome` (GO:0072344) and `RQC complex` (GO:1990112), were all accepted or
 added; the corrections fall on generic `protein binding` rows and on off-pathway
-terms such as DNA replication for ASCC2/ASCC3. No RQC module has been built yet,
-although six production GO-CAMs in `gocams/` already model parts of the pathway.
+terms such as DNA replication for ASCC2/ASCC3. The pathway is now modelled in
+[`modules/ribosome_quality_control.yaml`](../modules/ribosome_quality_control.yaml),
+a concrete human module in six ordered parts, and the six production GO-CAMs in
+`gocams/` that cover parts of the pathway have been cross-checked against the
+reviews — they agree on nine molecular functions and diverge on three, all
+recorded in the module notes.
 
 ## Overview
 
@@ -105,12 +107,35 @@ Targets problematic mRNAs:
 - NEMF mutations cause neurological disease
 - Proteostasis disorders
 
+## Module
+
+[`modules/ribosome_quality_control.yaml`](../modules/ribosome_quality_control.yaml)
+(`CONCRETE`, human) models the pathway in six ordered parts: ZNF598/EDF1
+collision sensing; the optional GIGYF2-4EHP shutdown of initiation on the
+defective message; subunit dissociation, as a `ONE_OR_MORE` variant set over the
+ubiquitin-dependent RQT/ASCC route and the A-site-vacancy PELO-HBS1L-ABCE1 route;
+NEMF-LTN1-TCF25 nascent-chain ubiquitination with NEMF CAT tailing; ANKZF1
+cleavage of the 60S-bound P-site tRNA; and VCP/p97 extraction of the chain. Every
+molecular function is the participant's own reviewed core function, so the module
+QC function-consistency check reports `CORE_SUPPORTED` throughout. EIF4E2, which
+is not one of the 13 candidates below, is included because the GIGYF2 arm is not
+a complete repression step without it; its review already exists. Curation
+decisions, the GO-CAM cross-check table and the open items are in
+[`modules/ribosome_quality_control-notes.md`](../modules/ribosome_quality_control-notes.md).
+
 ## Project Status
 
 - [x] Review all 13 candidate genes listed here
-- [ ] Build an RQC module spanning ZNF598/EDF1 collision sensing,
+- [x] Build an RQC module spanning ZNF598/EDF1 collision sensing,
   PELO-HBS1L-ABCE1 splitting and NEMF-LTN1 nascent-chain handling
   ([#3952](https://github.com/ai4curation/ai-gene-review/issues/3952))
-- [ ] Cross-check the six production GO-CAMs that already model parts of the
+- [x] Cross-check the six production GO-CAMs that already model parts of the
   pathway against the curated gene reviews
   ([#3952](https://github.com/ai4curation/ai-gene-review/issues/3952))
+- [ ] Generate a module-level deep research report
+  (`just module-deep-research-perplexity ribosome-quality-control`)
+- [ ] Review ASCC1 and TRIP4 so the RQT complex descriptor can carry all four
+  subunits as active units
+- [ ] Report the three GO-CAM divergences upstream (ABCE1 `GO:0017111` vs
+  `GO:0016887`; ANKZF1 `GO:0004521` vs `GO:0004549`; and the EDF1/TCF25/VCP
+  coverage gaps)
