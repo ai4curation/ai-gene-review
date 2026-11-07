@@ -21,3 +21,9 @@ The original reports "dendritic spines, where CNIH-2 co-localized with both TARP
 The original eighteen specificity comparisons remain historical provenance. This follow-up retains supported broad physiological compartments, distinguishes receptor readouts from demonstrated responses, and preserves the narrower unresolved source conjunction. All raw contexts, extension atoms, original ECO records and six alternative-product declarations remain unchanged. The functional-product model, source access, exact quote placements and independent phylogeny artifact are audited separately. Native acquisition and affected checks remain pending.
 
 Native completion: the genuine helper fetched PMID22720072, all 113 prior source caches remained exact, and affected validation, strict GOA matching, computed status, EDIT history and rendering passed. The review remains DRAFT with one justified context-sensitive advisory. Final publication is pending its separate peer.
+
+## Consistency declaration follow-up
+
+The existing context exception is now recorded in the schema-supported field, with its prior explanation relocated intact. One additional cached anchor is used once. All annotation actions, incoming contexts, products, source caches and previous evidence records remain unchanged. Affected native checks are pending.
+
+Native completion: affected gene and reference validation, strict GOA matching, computed status and genuine EDIT-history checks passed. Annotation decisions and cached sources remain unchanged; actual rendering and final conservation checks are recorded separately.
