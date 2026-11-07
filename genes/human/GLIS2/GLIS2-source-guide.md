@@ -30,7 +30,7 @@ The institutional original Figure 2, Results and Methods document axonemal immun
 
 ## Methyl-SELEX uncertainty
 
-The original methods cover recombinant transcription-factor preparations and methylated/unmethylated DNA selections. The exact GLIS2 entry in supplemental tables S1–S6 was not recovered. Construct length, expression host and methylation preference therefore remain unassigned for this row. UNDECIDED preserves the curator assertion while making the access boundary explicit. [PMID:28473536](https://pmc.ncbi.nlm.nih.gov/articles/PMC8009048/)
+The original methods cover recombinant transcription-factor preparations and methylated/unmethylated DNA selections. The exact GLIS2 entry in supplemental tables S1–S6 was not recovered. Construct length, expression host and methylation preference therefore remain unassigned for this row. The broad DNA-binding claim is retained at a more specific existing term; source-specific uncertainty remains. [PMID:28473536](https://pmc.ncbi.nlm.nih.gov/articles/PMC8009048/)
 
 ## HuRI physical evidence
 
@@ -51,3 +51,7 @@ The remaining references retain their individual access and relevance judgments 
 ## Native source reconciliation
 
 The native machine inputs and all 71 reviewed contexts now match. The normal caches for PMID:11741991 and PMID:17618285 contain abstracts; their independent original-text readings remain documented above. The five short excerpts in the review match the actual normal caches, with whitespace normalization only. The preceding private-preparation notes are retained as provenance.
+
+## Follow-up reconciliation
+
+The earlier native paragraph records the first publication. The follow-up preserves its source objects and original access boundaries; all nine current excerpt objects match their normal caches. Current status and revised decisions are recorded in the review and notes.
