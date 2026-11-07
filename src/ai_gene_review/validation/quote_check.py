@@ -238,12 +238,16 @@ Baseline = Dict[str, Dict[str, Set[str]]]
 BASELINE_OUTCOMES = (Outcome.NOT_FOUND.value, Outcome.UNRESOLVED.value)
 
 
-def load_baseline(path: Path = BASELINE_PATH) -> Baseline:
+def load_baseline(path: Optional[Path] = None) -> Baseline:
     """Read the baseline file (a fresh copy, safe to mutate).
+
+    *path* defaults to the module's ``BASELINE_PATH``, looked up at call time so
+    that redirecting it (as the tests do) also redirects reads.
 
     >>> load_baseline(Path("/nonexistent.yaml"))
     {}
     """
+    path = BASELINE_PATH if path is None else path
     if not path.exists():
         return {}
     return {k: {o: set(d) for o, d in v.items()} for k, v in _load_baseline(path).items()}
@@ -311,8 +315,9 @@ def default_files(project_root: Path = PROJECT_ROOT) -> List[Path]:
     return sorted(files)
 
 
-def write_baseline(entries: Baseline, path: Path = BASELINE_PATH) -> None:
-    """Write *entries* to the baseline file with its explanatory header."""
+def write_baseline(entries: Baseline, path: Optional[Path] = None) -> None:
+    """Write *entries* to the baseline file (default: ``BASELINE_PATH`` at call time)."""
+    path = BASELINE_PATH if path is None else path
     header = (
         "# Known failing supporting_text quotes outside gene reviews.\n"
         "#\n"

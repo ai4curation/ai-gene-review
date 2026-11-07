@@ -158,3 +158,20 @@ def test_prune_refuses_when_a_file_is_unparseable(tmp_path, monkeypatch, capsys)
     assert main(["--prune-baseline"]) == 1
     assert baseline.read_text() == before
     assert "Not pruning" in capsys.readouterr().out
+
+
+def test_prune_writes_to_the_redirected_baseline(tmp_path, monkeypatch):
+    """Redirecting BASELINE_PATH redirects the write, so guard tests cannot touch the real file."""
+    bad_quote = "a sentence that is in no UniProt record"
+    doc_file = tmp_path / "doc.yaml"
+    doc_file.write_text(yaml.safe_dump({"evidence": [{"source_id": TP53, "supporting_text": bad_quote}]}))
+    baseline = tmp_path / "baseline.yaml"
+    key = "tmp/doc.yaml"
+    baseline.write_text(yaml.safe_dump({"entries": {key: {"not_found": ["stale0000"]}}}))
+    real = load_baseline()
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", baseline)
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.default_files", lambda: [doc_file])
+    main(["--prune-baseline"])
+    assert "stale0000" not in baseline.read_text()  # the redirected file was rewritten
+    monkeypatch.undo()
+    assert load_baseline() == real  # the committed baseline was not touched
