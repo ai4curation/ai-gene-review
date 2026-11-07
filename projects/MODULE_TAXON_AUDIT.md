@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160: main d7638df804395ce8c81baeea891fd75b60d58d39 integrated with 180 frozen nonshared files preserved. Historical full validation remains on dea61b999950240d98a37193e419ef8b9c25299f; fresh review, CI and merge are pending.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160 approved at fd6b4d1095; current main d7638df804 integrated at 7927373332. All 180 frozen nonshared files remain unchanged, including178 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to dea61b999950240d98a37193e419ef8b9c25299f. Fresh current-head review, CI and actual merge remain pending.
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
 
@@ -1050,3 +1050,9 @@ Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full 
 ## 2026-11-07 — bacterial_glutamate_to_p5c_biosynthesis main integration
 
 Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full run on dea61b999950240d98a37193e419ef8b9c25299f. All 180 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — P5C current integration ready
+
+PR #6160 approved at fd6b4d1095; current main d7638df804 integrated at 7927373332. All 180 frozen nonshared files remain unchanged, including178 checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to dea61b999950240d98a37193e419ef8b9c25299f. Fresh current-head review, CI and actual merge remain pending.
+
+[Publication closeout](../analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/approved-main-20261107-1356-closeout.json).
