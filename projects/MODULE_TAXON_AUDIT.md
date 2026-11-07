@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mannose_pts`: [PR #6193](https://github.com/ai4curation/ai-gene-review/pull/6193) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_mannose_pts`: [PR #6193](https://github.com/ai4curation/ai-gene-review/pull/6193) review corrections and scoped checkout-ready source closure pass; fresh full validation, remote publication, CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
@@ -938,3 +938,8 @@ Comparative audit passes full validation on b2db42291b: 10,788 reviews, zero blo
 ## 2026-11-07 — bacterial_mannose_pts main integration
 
 Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on b2db42291b8339b2813a6955a05aa555c9d0d31e. All 371 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+
+## 2026-11-07 — bacterial_mannose_pts reviewed follow-up ready for full validation
+
+Corrected UA159 ManL membrane uncertainty and claim-specific assay/topology anchors across three genes while preserving all 93 ordered source rows and two active historical NEW proposals. Verified PTHR32502 role/domain constraints remain unchanged. The prior 60 cases, 13 mutations and nine sensitivities pass with identical expectations. A separate 409-input publication package passes with ignored-cache reads prohibited; it does not stage the unrelated global preservation pool. Earlier full validation remains a historical result; a fresh run for the forthcoming local commit is pending. [Scoped closure](../analysis/module_audits/bacterial_mannose_pts/review-followup/publication-package/handoff.json).

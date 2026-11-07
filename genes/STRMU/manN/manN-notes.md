@@ -17,3 +17,8 @@ All primary caches and machine-generated source files remain immutable. Supporti
 Focused validation passed. Coverage advisories (one for ManL; two each for ManM/ManN) concern the inferred core complex and mannose process not having separate seeded rows. No extra NEW rows were manufactured to silence them; specific reaction replacements already imply the transport context.
 
 Final refinement: whole-operon24928869 Fig2 directly supports the apparatus in GlcNAc uptake. Broad MF rows refine to all supported mannose/glucose/GlcNAc specific PTS activities, while the core emphasizes the shared mannose reaction. Stable full-operon complementation was not obtained; no complete rescue is claimed.
+
+
+## PR6193 source-specific follow-up (2026-11-07)
+
+Replaced recycled growth anchors with native UA159 PEP-dependent activity evidence, target domain/topology inference and the full-primary manLMN amino-sugar deletion result. No isolated-subunit flux or direct GlcNAc product assay is claimed. Membrane localization is supported by target-specific PROSITE-ProRule topology, not growth. Original ordered payloads and qualifiers are unchanged. Additive evidence and preservation proof: `analysis/module_audits/bacterial_mannose_pts/review-followup`; earlier releases remain historical and unchanged.

@@ -1,0 +1,7 @@
+# Bounded identity observations
+
+PMID12902269 Figure1 was visually re-inspected on 2026-11-07 from the originally acquired image. In the UA159 panel, the arrows labelled manL, manM, manN lie after SMU.1876 and before comA; the JAM1 panel shows the kan insertion in manL. This is a locus-layout observation, not an experimental construct sequence alignment. Figure source and original byte hash are retained in acquisition-mapping.json; the image itself is not redistributed here.
+
+The independent primary PMID17951382 explicitly identifies “manL (SMU.1877) and manM (SMU.1878)”. Together with the already committed official UA159 protein/genome records, the adjacent third CDS supports the manN/SMU_1879 bridge. All six official protein sequences, lengths, locus aliases and hashes remain in literature-consultation/identity-proof.json and its source JSON/EMBL records. The checkpoint does not convert this bridge into independently resequenced experimental constructs.
+
+The historical CECT catalogue observation lists CECT904 = ATCC25601 = DSM20019 = JCM1096. It documents strain aliases only; it does not establish a complete active four-protein panel. The exact deposited U28163 fragment, already committed, establishes the 87-aa partial IID limitation. Current WDN19 proteome data are a discovery comparator, not a replacement for the assayed CECT904 strain. The original catalogue capture is preserved locally with URL/hash provenance, not required for current sequence-capacity computation.
