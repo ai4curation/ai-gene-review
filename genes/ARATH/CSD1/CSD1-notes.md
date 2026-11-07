@@ -1,0 +1,20 @@
+# Curation Notes for *Arabidopsis thaliana* CSD1 (`P24704` / `AT1G08830`)
+
+## 1. Gene Identity & Biochemical Function
+- **UniProt ID:** `P24704` (`SODC1_ARATH`)
+- **AGI Locus:** `AT1G08830`
+- **Gene Symbol:** `CSD1`
+- **Protein Name:** Superoxide dismutase [Cu-Zn] 1 (152 AA, Reviewed Swiss-Prot)
+- **Catalytic Activity:** Catalyzes the disproportionation of superoxide radicals into molecular oxygen and hydrogen peroxide (`2 superoxide + 2 H+ = H2O2 + O2`, `EC:1.15.1.1`, `RHEA:20696`) [PMID:9765550, "Superoxide dismutase in Arabidopsis: an eclectic enzyme family with disparate regulation and protein localization."].
+- **Cofactors & Activation:** Binds one catalytic copper ion (`Cu+`/`Cu2+`, coordinated at His45, His47, His62, His119) and one structural zinc ion (`Zn2+`, coordinated at His62, His70, His79, Asp82) per subunit (`uniprot:P24704`). Copper-dependent activation of cytosolic CSD1 is promoted by direct physical interaction with the copper metallochaperone CCS (`AT1G12520`) and the stress-protective protein DJ-1a (`AT3G14990`, `Q9FPF0`) [PMID:20406884, "We further identify superoxide dismutase 1 (SOD1) and glutathione peroxidase 2 (GPX2) as interaction partners of both AtDJ-1a and human DJ-1, and show that this interaction results in AtDJ-1a- and DJ-1-mediated cytosolic SOD1 activation in a copper-dependent fashion."].
+- **Subcellular Localization:** Localized primarily in the cytosol (`GO:0005829`) and nucleus (`GO:0005634`) [PMID:20406884; PMID:15772282, "CSD1 encodes a Cu/ZnSOD active in the cytosol, and CSD2 encodes a Cu/ZnSOD active in the chloroplast stroma."].
+
+## 2. Post-Transcriptional Regulation by miR398 & The `GO:0035195` Substrate-vs-Actor Mis-Annotation
+- **miR398-Guided Cleavage of `CSD1` mRNA:**
+  - `CSD1` (`AT1G08830`) contains a conserved `miR398` complementary target site in its 5' UTR (`5'-AAGGGGUUUCCUGAGAUCACA-3'`), which is cleaved by `miR398a/b/c`-guided ARGONAUTE1 (AGO1) RISC (`Allen_Score = 0`, degradome `P = 0.00494` in `file:projects/THLAR_OILSEED/mirna_targets/tardb_ath_degradome.tsv`).
+  - Under oxidative stress (high light, heavy metals, methyl viologen) or sufficient copper supply, `MIR398` transcription is downregulated, relieving post-transcriptional slicing of `CSD1` and `CSD2` mRNAs and enabling rapid accumulation of `CSD1` and `CSD2` transcripts and active superoxide dismutase protein [PMID:16861386, "Posttranscriptional induction of two Cu/Zn superoxide dismutase genes in Arabidopsis is mediated by downregulation of miR398 and important for oxidative stress tolerance."].
+  - Conversely, under copper deficiency (`SPL7`-activated `MIR398` transcription) or high sucrose (`PMID:18392778`), `miR398` accumulates and directs cleavage of `CSD1` and `CSD2` mRNAs to spare copper for plastocyanin.
+- **Audit of `GO:0035195` (`miRNA-mediated post-transcriptional gene silencing`):**
+  - Both UniProt/QuickGO (`CSD1-goa.tsv`) and TAIR (`tair.gaf.gz`, recorded in `file:projects/THLAR_OILSEED/mirna_targets/goa_tair_mirna_annotations.tsv`) annotate `CSD1` (`P24704` / `AT1G08830`) as `involved_in` `GO:0035195` (`miRNA-mediated post-transcriptional gene silencing`) with evidence code `IEP` citing `PMID:16861386`.
+  - Per GO biological process curation principles, a gene product is `involved_in` a process only if it performs part of the work of that process (e.g., `DCL1`, `SE`, `HYL1`, `HEN1`, `AGO1`). Being the mRNA substrate cleaved by `miR398`-loaded RISC does not make the encoded Cu/Zn superoxide dismutase enzyme a participant in the miRNA silencing machinery.
+  - Comparator check: canonical plant miRNA target genes (`SPL2/3/4/5/9/10/11/13/15` targeted by `miR156`, `ARF10/16/17` targeted by `miR160`, `AP2`/`TOE1/2/3` targeted by `miR172`, `APS1`/`APS4`/`SULTR2;1` targeted by `miR395`, `LAC2/4/17` targeted by `miR397`) are not annotated to `GO:0035195`. Only three mRNA targets in all of *Arabidopsis* (`CSD1`, `CSD2`, `PXMT1`) carry `GO:0035195` (all via `IEP`), confirming that this is a classic substrate-vs-actor curation error that must be `REMOVE`d.
