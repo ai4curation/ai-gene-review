@@ -787,3 +787,7 @@ Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head bd62
 ## 2026-11-07 — bacterial fused puta proline catabolism full validation passes
 
 PR #6150 follow-up passes full validation on c7dd5c910d: 10,753 reviews, zero blocking errors and 252 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_fused_puta_proline_catabolism/round3-full-run.json).
+
+## 2026-11-07 — bacterial_fused_puta_proline_catabolism main integration
+
+Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full run on c7dd5c910df6a03cca652fedfd7b2a4c4d6a5fb2. All 248 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 7 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.

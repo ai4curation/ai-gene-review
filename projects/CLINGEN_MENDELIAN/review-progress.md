@@ -7838,3 +7838,23 @@ Each linked merge-group run executed its integration suite and required checks s
 Only GIGYF1, GIPC3, GJB1, GJB3 and GJC2 are checked in this fixed window, accepted ordinals 721–725. All other pending genes remain unchecked. The ClinGen seed, catalogue identities and order, earlier progress journal, 235 dated queue records, 166 previous completion updates, scientific sources and prior histories are preserved.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-06T215021Z-codex-e75b54.yaml).
+
+## Completion checkpoint 730 — 2026-11-07 01:04:28 UTC
+
+730 complete; 2,146 of 2,876 remain. This checkpoint publishes five independently accepted actual merges after checkpoint 725. It records existing acceptance credit and grants no additional gene acceptance.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Original / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | ---: | --- |
+| GJB2 | 726 | [#6022](https://github.com/ai4curation/ai-gene-review/pull/6022) | [ca13d601](https://github.com/ai4curation/ai-gene-review/commit/ca13d601fcdd56e59a216cde4082301f74846d7c) | [42298981344](https://github.com/ai4curation/ai-gene-review/actions/runs/42298981344) | 72 / 72 | COMPLETE |
+| GK | 727 | [#6026](https://github.com/ai4curation/ai-gene-review/pull/6026) | [577501df](https://github.com/ai4curation/ai-gene-review/commit/577501df51a3742542ac9522dbe663a60f55ba78) | [42298987018](https://github.com/ai4curation/ai-gene-review/actions/runs/42298987018) | 31 / 31 | COMPLETE |
+| GJB6 | 728 | [#6024](https://github.com/ai4curation/ai-gene-review/pull/6024) | [ee3a4835](https://github.com/ai4curation/ai-gene-review/commit/ee3a48357e1ef2f27fbc9fb69433f37336456e5f) | [42309180087](https://github.com/ai4curation/ai-gene-review/actions/runs/42309180087) | 35 / 35 | COMPLETE |
+| GLDC | 729 | [#6141](https://github.com/ai4curation/ai-gene-review/pull/6141) | [15905dca](https://github.com/ai4curation/ai-gene-review/commit/15905dcae75120d05ddf6a51150ddb8fbaa2472b) | [42311308840](https://github.com/ai4curation/ai-gene-review/actions/runs/42311308840) | 25 / 25 | COMPLETE |
+| GLB1 | 730 | [#6143](https://github.com/ai4curation/ai-gene-review/pull/6143) | [7c74c30d](https://github.com/ai4curation/ai-gene-review/commit/7c74c30d9bcbe57ee0170bf1963784b2352ccfa3) | [42313947766](https://github.com/ai4curation/ai-gene-review/actions/runs/42313947766) | 62 / 63 | COMPLETE |
+
+All five full merge commits are ancestors of the checked main revision, and the committed reviews match their accepted merge versions byte-for-byte. GLB1 retains 62 original GOA contexts and one separate NEW annotation; GJB2, GK, GJB6 and GLDC add no NEW annotations. The accepted reviews retain 1, 2, 4, 4 and 5 UNDECIDED judgments respectively. Their computed COMPLETE status does not resolve those scientific uncertainties.
+
+Each linked merge-group run executed its integration suite and required checks successfully. Ordinary PR runs that skipped the suite are not credited as integration. Existing test skips, deselections, warnings and broader unresolved corpus diagnostics remain in the accepted evidence; this tracker update does not re-adjudicate them.
+
+Only GJB2, GK, GJB6, GLDC and GLB1 are checked in this fixed window, accepted ordinals 726–730. All other pending genes remain unchecked. The ClinGen seed, catalogue identities and order, earlier progress journal, 235 dated queue records, 167 previous completion updates, scientific sources and prior histories are preserved.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-07T010428Z-codex-59a1f9.yaml).
