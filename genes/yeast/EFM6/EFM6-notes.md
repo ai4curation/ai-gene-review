@@ -180,3 +180,12 @@ methylation", DOI:10.1080/15476286.2018.1440875). Extra context NOT added to the
   review's choice not to manufacture a generic biological-process annotation.
 - Searched again for recent direct EFM6/YNL024C literature. No newer paper superseding the
   eEF1A-Lys390 assignment or establishing a downstream biological process was found.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[6]` GO:0008150 biological_process (ND) not cited, flagged as possibly
+  stale. The yeast paper PMID:26115316 identifies Efm6 as the methyltransferase responsible for
+  eEF1A Lys390 methylation in vivo (loss of the methylation in efm6 deletion), which is
+  literature on this gene in this species supporting a process term such as peptidyl-lysine
+  (mono)methylation / protein methylation. Only the downstream physiological role of the mark
+  is unknown, so the root BP ND may be stale.
