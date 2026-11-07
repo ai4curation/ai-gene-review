@@ -22,7 +22,7 @@ PXD000608 identifies the deposited experiment; no GRIA4-specific protein or pept
 
 ## PMID:12670305
 
-Complete original OCR was read; normal cache remains abstract-only.
+External OCR inspected; cache remains abstract-only.
 
 ## PMID:29220673
 
@@ -33,3 +33,7 @@ Family sequencing identifies de novo variants; structural models predict pore or
 The target descends from each asserted ancestral node; the raw22 donor snapshot differs without changing that descent.
 
 The evidence file retains the 55 original records, both precise-ECO reviews, the two date-only records, four restored extensions, product hashes, PAINT assertions, and explicit Reactome target chains. No new annotation is proposed.
+
+## Independent original access
+
+The `source_access` entries in [the evidence record](GRIA4-evidence.json) distinguish normal-cache content from external access for PMID:12670305, PMID:20032460 and PMID:23739980. Each contains the public original URL, inspected sections and retained-content hashes. The cache flags remain unchanged.

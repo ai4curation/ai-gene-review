@@ -33,3 +33,13 @@ The first-publication access limitations remain historical above; current assess
 ## Follow-up native preparation
 
 Gene, reference, status and genuine EDIT-history checks passed. The reference validator checked two snippets and eleven titles, with five snippets skipped; the independent repository-rendering replay verified all seven YAML excerpts, including UniProt continuation-line normalization. Computed status remains COMPLETE with zero validation warnings; publication and review gates remain separate. Four structured source-defect rows were exported privately. All source records, incoming contexts and declared products were preserved. The HTML was regenerated from the final review.
+
+## Cache and external-source provenance
+
+The availability flags describe the immutable normal caches. External original-reading records are separate and carry public URLs, inspected sections and content hashes in the evidence file. The historical journal entries above are retained.
+
+UniProt reports “M4 transmembrane segment mediates tetramerization” by similarity. This does not directly test P48058-2. [UniProt P48058, DOMAIN](https://www.uniprot.org/uniprotkb/P48058/entry).
+
+## Second follow-up native preparation
+
+Gene, reference, status and genuine EDIT-history checks passed. The repository section helper added two exact record sections and left two ambiguous matches unset. Reference validation checked three snippets and eleven titles, skipped five snippets and found no issues; the independent source-rendering peer verified all eight YAML excerpts. Computed status remains COMPLETE with zero validation warnings. Immutable sources and all incoming contexts, products and actions were preserved. The HTML was regenerated from the final review; publication and new-head gates remain separate.
