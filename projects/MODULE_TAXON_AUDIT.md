@@ -43,7 +43,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
-- [ ] `bacterial_carboxyspermidine_biosynthesis`: [PR #6089](https://github.com/ai4curation/ai-gene-review/pull/6089) has 18 COMPLETE reviews preserving 64 seeded rows and 36 raw sources. Its reviewed science at `20037c495a` was approved with successful CI. Integration with published main preserves the science; renewed review, CI and actual merge remain pending.
+- [ ] `bacterial_carboxyspermidine_biosynthesis`: PR #6089: integrated main 5b68ef3aac into approved head 263c1735e7, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
