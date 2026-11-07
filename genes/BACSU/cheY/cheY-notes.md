@@ -18,3 +18,10 @@ The pristine review text, complete original non-review annotation payloads, inhe
 No NEW biological-process annotation was inferred from necessity alone. New proposals, if any, identify missing experimentally grounded molecular activities. PAINT loss checks were run for all genes carrying IBA and found no lineage loss; donor count and target self-inclusion were not used as weaknesses.
 
 GO:0101006 remains UNDECIDED: PTHR43228 root PTN001981629 carries the assertion from ARR22; there is no lineage IRD/IKR. Receiver phosphotransfer plus hydrolysis may remove histidine phosphate indirectly, so the familiar receiver mechanism does not establish a loss. A catalytic-turnover assay and the intended GO convention are needed.
+
+
+## 2026-11-07 — PR #6100 review 5812414716, C2
+
+The question whether net phosphate drainage through the CheY receiver cycle warrants GO:0101006 is a curation/ontology convention question, not a wet-lab knowledge gap. It remains unresolved alongside the unchanged UNDECIDED row and PAINT assessment; no source defect or activity loss is asserted. The former CURATION/ONTOLOGY-only knowledge_gaps entry has therefore moved here. Its assay component is retained separately as a suggested experiment: quantify CheA-P transfer, CheY-P decay and phosphate release under multiple-turnover conditions. Such kinetics can establish reaction behavior but do not alone decide GO convention. The full old entry is archived in the additive follow-up before.json.
+
+Original convention question: Whether Bacillus CheY should carry protein histidine phosphatase activity for net phosphate drainage through its receiver cycle remains unresolved.

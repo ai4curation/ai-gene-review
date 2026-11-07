@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: 46 gene reviews, 37 module references and 65 capacity cases. Main f5b02387a8 integrated at ac8b6e2b6e, preserving 371 inputs at that integration. Historical reference reconciliation is scoped to 46b0453941 against 488d370561; seven review inputs and the schema changed subsequently. Tracker follow-up preserves scientific content; fresh review, CI and actual merge remain pending.
+- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100 review follow-up corrected four CheW replacement-term rationales and moved the CheY curation-convention gap to notes while retaining the proposed kinetics experiment. All 33 annotation rows, actions and replacements are unchanged. Two focused gene validations, module and history checks, and three renders pass. Historical 65-case capacity scope is explicit; no new capacity or full-corpus pass is claimed. Source-closure freeze, current-main integration, fresh full validation, publication, review and actual merge remain pending.
 
 - [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
@@ -836,3 +836,7 @@ The new append-only history records the previously unrecorded status-text edit i
 ## 2026-11-07 — bacterial_chemotaxis_signal_transduction main integration f5b02387a8
 
 Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e into approved head 3d8371006fda0a8566ad3a5e4f8bf64157f2458f. All 371 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Chemotaxis review follow-up
+
+PR #6100 review follow-up corrected four CheW replacement-term rationales and moved the CheY curation-convention gap to notes while retaining the proposed kinetics experiment. All 33 annotation rows, actions and replacements are unchanged. Two focused gene validations, module and history checks, and three renders pass. Historical 65-case capacity scope is explicit; no new capacity or full-corpus pass is claimed. Source-closure freeze, current-main integration, fresh full validation, publication, review and actual merge remain pending.

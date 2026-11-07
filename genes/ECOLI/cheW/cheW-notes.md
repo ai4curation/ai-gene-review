@@ -43,3 +43,8 @@ to match the module annoton.
 Refined all five existing adaptor replacements and core MF from molecular adaptor activity to GO:0030159 signaling receptor complex adaptor activity, verified against current QuickGO definition. Direct receptor/kinase bridging and assembly assays support this specificity. Qualified broad homologue-output wording.
 
 Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.
+
+
+## 2026-11-07 — PR #6100 review 5812414716, C1
+
+Four MODIFY rationales still named the generic molecular adaptor term although their unchanged replacement and core already specify GO:0030159 signaling receptor complex adaptor activity. The reasons now consistently describe CheW supporting the receptor-CheA signaling complex, using the existing interaction/assembly evidence. No annotation source field, replacement, action, evidence code, qualifier or proposal lifecycle changed.
