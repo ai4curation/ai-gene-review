@@ -380,11 +380,18 @@ no longer restore them.
   MYCTU/Rv0898c, human/P3R3URF), which need knowledge gaps written by
   reading before the row can go.
 
-**Not yet swept (as of `04e2ffa3e`).** Reviews merged from main after the last
-pass carry 42 ND rows that `nd_policy` flags: 37 `MODIFY` rows in 13 mouse
-keratin-associated protein reviews (Krtap3-2 to Krtap29-1), whose reasons rest
-on family-level literature; human/CDKAL1 BP; ARATH/PGR3; and rat Actl7a, Aph1a
-and Pik3c2a. They are waiting for a decision.
+**Mouse keratin-associated proteins (2026-11-06).** The 37 `MODIFY` ND rows in
+13 mouse Krtap reviews (Krtap3-2 to Krtap29-1) came from main after the pass. Each
+review's notes record the literature on the gene: sequencing, gene-cluster
+descriptions, RNA expression, misattributed GOA rows (Krtap21-1) or a binding
+study of unstated species (Krtap8-1). None identifies a function for the mouse
+gene, so all 37 became `ACCEPT`, each citing its notes file as the record of the
+search. The 33 replacement terms the reviews did not carry elsewhere became `ISS`
+`NEW` rows. Applied with `apply_acceptance_rule.py mouse/Krtap`.
+
+**Not yet swept.** Five `REMOVE` or `MODIFY` ND rows from reviews merged after
+the pass have no `nd_case`: human/CDKAL1 BP, ARATH/PGR3 CC, and rat Actl7a,
+Aph1a and Pik3c2a BP. They are waiting for a decision.
 
 ## Plan
 
@@ -392,7 +399,8 @@ and Pik3c2a. They are waiting for a decision.
 - [x] Agree on the action per case: guideline-conformant ND is `ACCEPT`
 - [x] Add `nd_case` to the schema, `nd_policy` warnings, ND compliance rules
 - [x] Re-action pass (above)
-- [ ] Decide the 42 unswept rows from main (above)
+- [x] Mouse Krtap rows from main (above)
+- [ ] Decide the 5 remaining unswept rows (above)
 - [ ] Classify the 217 `ACCEPT` rows with no `nd_case` by reading (counted in
       the inventory's `nd_case` table); gap-less `aspect_empty` rows are
       expected to be N4 and gain `BIOLOGY` gaps
