@@ -190,13 +190,13 @@ IBA is low quality.
 - [x] Write the upstream requests in the repo's structured formats (2026-11-05):
   - Taxon constraints TPV-004 to TPV-007 in [proposed_taxon_constraints.yaml](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.yaml): MBF and SBF complexes only in Fungi, S100 protein binding only in Chordata, cerebral cortex development never in Aves. The IRD on PTN000917496 is recorded with TPV-004.
   - InterPro2GO verdicts in [interpro2go.sssom.yaml](INTERPRO/interpro2go.sssom.yaml): narrow IPR037893 → S100 protein binding by taxon, narrow IPR002956 → sevenless binding to the BOSS family, and remove IPR002956 → visual perception (BOSS induces R7 fate but does not perceive light).
-  - Curated replacement rules: CR-0005 (IPR037893 AND Chordata → S100 protein binding) and CR-0006 (IPR002956 AND IPR050726 AND Arthropoda → sevenless binding, sevenless signaling pathway), in `rules/curated/`.
+  - Curated replacement rules: CR-0005 (IPR037893 AND Chordata → S100 protein binding) and CR-0006 (IPR002956 AND IPR050726 AND Diptera → sevenless binding, sevenless signaling pathway), in `rules/curated/`. CR-0006 first used Arthropoda; the boss review narrowed it to Diptera on 2026-11-07.
   - The COPII coat structural-constituent term is a `proposed_new_terms` entry in the npp-20 review.
   - The LPXD1 UniProt disruption-phenotype error is a `source_defects` entry in the LPXD1 review.
 - [x] Taxon constraint TPV-008 (2026-11-07): sevenless binding only in Metazoa, which blocks the 13 bacterial, fungal and plant IPR002956 rows. Arthropoda is recorded as the narrower alternative; it was not chosen because vertebrate ROS1 is the Sevenless ortholog.
 - [x] The other two IPR037893 mappings (2026-11-07): ubiquitin protein ligase binding is accepted (Skp1 binds the CS domain itself, PMID:15996101). Tubulin binding is removed: it rests on one mouse cell-line study that did not map the binding site (PMID:17916393), which is better curated directly to Cacybp.
 - [ ] Submit these to GO, InterPro and UniProt (status is PROPOSED in each file).
-- [ ] Gene review: Drosophila boss, the positive control for curated rule CR-0006.
+- [x] Gene review: Drosophila boss, the positive control for curated rule CR-0006 (2026-11-07). It accepts both rule consequents on experimental evidence. It also narrowed CR-0006 from Arthropoda to Diptera, since the Sevenless-binding ectodomain of BOSS is conserved only in Diptera (PMID:42043338); 135 of the 211 arthropod matches were non-dipteran.
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
 - [ ] Rerun RAR on current GOA for our reviewed species (script not yet written).
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
