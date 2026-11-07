@@ -15,3 +15,10 @@ Research: genuine `just deep-research RHOCA fruB --provider falcon` failed HTTP4
 - PMID:2193161: "MTP consists of three moieties: a fructose-specific enzyme III
 (IIIfru)-like N-terminal moiety (residues 1 to 143) followed by an FPr(HPr)-like
 moiety (residues 157 to 245) and an enzyme I-like moiety (residues 273 to 827)."
+
+
+## 2026-11-07 PR #6144 review follow-up
+
+Aligned the EIIA-to-EIIB proposal definition and ontology boundary with PSEPK and AZOBR. The sequence-matched locus architecture and curated domain statement remain the target-specific support; purified pairwise transfer kinetics or phosphosite assays are not asserted. [PMID:2193161, reported IIIfru/HPr/EI residue ranges; file:RHOCA/fruB/fruB-uniprot.txt, CC:DOMAIN.]
+
+Original GOA annotation payloads, actions and order are unchanged. See `analysis/module_audits/bacterial_fructose_pts_catabolism/round1-review-response.md` for the six-findings disposition, including the retained current GO:0006001 preferred label.

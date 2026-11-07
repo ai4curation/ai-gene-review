@@ -15,3 +15,10 @@ Research: genuine `just deep-research AZOBR fruB1 --provider falcon` failed HTTP
 - PMID:39817736: "Although the membrane-bound FruA consists of EIIB and EIIC domains, the cytosolic FruB is a larger polyprotein and consists of EIIA-HPr-EI domains (15)."
 - file:analysis/module_audits/bacterial_fructose_pts_catabolism/alpha-identity.yaml: "A0A0P0ES92"
 - file:AZOBR/fruB1/fruB1-uniprot.txt: "IPR006318; PTS_EI-like."
+
+
+## 2026-11-07 PR #6144 review follow-up
+
+The primary reference now records native PTS1 induction, promoter evidence and the architecture inference separately. It does not measure purified domain-to-domain kinetics or phosphosite chemistry. The EIIA-to-EIIB proposal uses the same definition as PSEPK and RHOCA, with the Sp7-specific evidence limits retained. [PMID:39817736 "Analysis of the proteome of A. brasilense Sp7 grown on fructose as sole carbon source showed upregulation of all the three components of a fructose PTS (designated as Fru-PTS1); FruA (AMK58_25875), FruK (AMK58_25880), and FruB (AMK58_25885)."]
+
+Original GOA annotation payloads, actions and order are unchanged. See `analysis/module_audits/bacterial_fructose_pts_catabolism/round1-review-response.md` for the six-findings disposition, including the retained current GO:0006001 preferred label.

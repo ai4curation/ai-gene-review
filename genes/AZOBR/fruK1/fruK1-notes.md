@@ -15,3 +15,10 @@ Research: genuine `just deep-research AZOBR fruK1 --provider falcon` failed HTTP
 - PMID:39817736: "Fructose-1-phosphate, the product of PTSFru reactions, enters the glycolytic pathway for further catabolism after its conversion to fructose-1,6-bisphosphate by 1-phosphofructokinase (1-PFK) (16, 17)."
 - file:analysis/module_audits/bacterial_fructose_pts_catabolism/alpha-identity.yaml: "A0A0P0F764"
 - file:AZOBR/fruK1/fruK1-uniprot.txt: "IPR022463; 1-PFruKinase."
+
+
+## 2026-11-07 PR #6144 review follow-up
+
+The primary reference now separates native PTS1 FruK induction from the introductory pathway chemistry and inferred target substrate specificity. No purified FruK1 kinetic measurement is attributed to this paper. [PMID:39817736 "Fructose-1-phosphate, the product of PTSFru reactions, enters the glycolytic pathway for further catabolism after its conversion to fructose-1,6-bisphosphate by 1-phosphofructokinase (1-PFK) (16, 17)."]
+
+Original GOA annotation payloads, actions and order are unchanged. See `analysis/module_audits/bacterial_fructose_pts_catabolism/round1-review-response.md` for the six-findings disposition, including the retained current GO:0006001 preferred label.

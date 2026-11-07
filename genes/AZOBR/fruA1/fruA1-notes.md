@@ -15,3 +15,10 @@ Research: genuine `just deep-research AZOBR fruA1 --provider falcon` failed HTTP
 - PMID:39817736: "Figure 1B and C shows that inactivation of the fruA1 led to a complete loss of the ability of the fruA1::km mutant to grow on fructose as sole carbon source suggesting its primary role in supporting growth on fructose."
 - file:analysis/module_audits/bacterial_fructose_pts_catabolism/alpha-identity.yaml: "A0A0P0F8C9"
 - file:AZOBR/fruA1/fruA1-uniprot.txt: "IPR006327; PTS_IIC_fruc."
+
+
+## 2026-11-07 PR #6144 review follow-up
+
+Architecture-dependent rows now cite the publication's membrane-bound EIIB/EIIC sentence, while transport/process phenotype rows retain the growth result. The phosphocysteine refinement additionally cites the target fructose-specific EIIB signature IPR003353, rather than only EIIC. These support a conserved-mechanism inference; no site-resolved phosphocysteine assay or direct localization experiment is claimed. The primary reference now distinguishes native locus induction and mutant physiology from those chemical inferences. [PMID:39817736 "Although the membrane-bound FruA consists of EIIB and EIIC domains, the cytosolic FruB is a larger polyprotein and consists of EIIA-HPr-EI domains (15)."]
+
+Original GOA annotation payloads, actions and order are unchanged. See `analysis/module_audits/bacterial_fructose_pts_catabolism/round1-review-response.md` for the six-findings disposition, including the retained current GO:0006001 preferred label.

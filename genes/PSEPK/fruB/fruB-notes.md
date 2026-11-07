@@ -38,3 +38,10 @@ Reviewed all original annotation rows and complete biological scope. Payloads, r
 A genuine default Falcon attempt failed with HTTP403; no provider report was fabricated. The review is based on cached primary literature, curated source statements and sequence/domain evidence.
 
 The target sequence order is EIIA (2–142), HPr (282–372), then the EI region; phosphate flows EI→HPr→EIIA. PTHR46244:SF6 membership alone cannot establish fusion architecture because the subfamily includes standalone EI proteins. Native phosphorylation states in PMID18296519 support conditional cross-talk with the nitrogen-related PTS; direct purified partner rates remain unresolved.
+
+
+## 2026-11-07 PR #6144 review follow-up
+
+Corrected the stale term-proposal statement: GO:0016772 is MODIFY to PEP-entry activity, not MARK_AS_OVER_ANNOTATED. The distinct downstream protein relay remains in the core via the NTR. The shared proposed definition is aligned with RHOCA/AZOBR without flattening the stronger native KT2440 evidence. [PMID:18296519 "PtsN cannot replace the EIIA Fru domain of FruB for phosphorylation of FruA"]
+
+Original GOA annotation payloads, actions and order are unchanged. See `analysis/module_audits/bacterial_fructose_pts_catabolism/round1-review-response.md` for the six-findings disposition, including the retained current GO:0006001 preferred label.
