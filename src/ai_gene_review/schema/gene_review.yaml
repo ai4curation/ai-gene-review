@@ -315,6 +315,16 @@ slots:
       Use only on very rare occasions: records why this annotation's action is
       deliberately allowed to contradict another row's action under the
       action-consistency rules. See docs/action_consistency.md.
+  curation_error:
+    range: CurationError
+    description: >-
+      Structured record of what went wrong when the existing annotation was made
+      from its cited reference: the kind of reading error, the text it appears to
+      rest on (with its manuscript section), the reference that actually holds the
+      evidence, and whether the error has been reported to the source database.
+      Judges this annotation's use of the paper, not the paper itself; a sound
+      paper misread by a curator keeps reference_review.correctness VERIFIED.
+      Usually accompanies action REMOVE or MODIFY. See docs/curation_errors.md.
   propagation_review:
     range: PropagationReview
     description: >-
@@ -1498,6 +1508,7 @@ classes:
       - supported_by
       - knowledge_gaps
       - propagation_review
+      - curation_error
       - consistency_exception
     rules:
       - preconditions:
@@ -1508,6 +1519,46 @@ classes:
           slot_conditions:
             proposed_replacement_terms:
               required: true
+
+  CurationError:
+    description: >-
+      What went wrong when an existing annotation was curated from its cited
+      reference. Complements review.action (what to do now) and review.reason
+      (prose): this object is the reusable, machine-readable part, so errors can be
+      counted by type and reported back to the database that made them.
+    attributes:
+      error_type:
+        range: CurationErrorTypeEnum
+        required: true
+        description: The kind of reading error. Record the most salient one.
+      responsible_source:
+        range: string
+        recommended: true
+        description: >-
+          The database that asserted the annotation (the GAF assigned_by value,
+          e.g. UniProt, MGI, ZFIN), i.e. where a correction should be sent.
+      misread_text:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          The text in the cited reference that the annotation appears to rest on,
+          quoted verbatim with its reference_section_type. For
+          BACKGROUND_CLAIM_CURATED this is the background sentence, wherever in the
+          paper it sits (it is often in the abstract).
+      evidence_reference_ids:
+        range: Reference
+        multivalued: true
+        inlined: false
+        description: >-
+          Reference(s) that actually contain the evidence the annotation claims,
+          when known, e.g. the earlier paper a background sentence cites.
+      report_status:
+        range: CurationErrorReportStatusEnum
+        description: Whether the error has been reported to responsible_source.
+      report_url:
+        range: uri
+        description: Link to the report (issue tracker, helpdesk ticket or email archive).
 
   ConsistencyException:
     description: >-
@@ -3672,6 +3723,51 @@ enums:
         description: Correctly cited, but the paper's central claim is contradicted or contested by other evidence
       LOW_QUALITY:
         description: Correctly cited, but methodologically weak or preliminary; treat its conclusions with caution
+
+  CurationErrorTypeEnum:
+    description: >-
+      Kinds of error made when an annotation was curated from a reference. These
+      describe the curator's reading of a paper, not the paper's quality
+      (ReferenceCorrectnessEnum) or a propagation step (PropagationRootCauseEnum).
+    permissible_values:
+      BACKGROUND_CLAIM_CURATED:
+        description: >-
+          The annotation rests on a statement the paper makes as background,
+          restating earlier work (typically in the introduction, abstract framing
+          or discussion), not on the paper's own experiments. The evidence, if any,
+          is in the earlier work; at most it supports a TAS citing that work.
+      NO_SUPPORTING_CONTENT:
+        description: >-
+          The paper contains no experiment or statement supporting the annotated
+          term for this gene product, not even as background.
+      WRONG_GENE_OR_HOMONYM:
+        description: >-
+          The paper's evidence concerns a different gene, paralog, homeolog,
+          splice product or a protein that shares the name.
+      EVIDENCE_CODE_MISMATCH:
+        description: >-
+          The paper supports the term, but not with the kind of experiment the
+          evidence code asserts (e.g. an expression pattern curated as IMP).
+      OVERINTERPRETED_RESULT:
+        description: >-
+          The paper's experiment is real but does not establish the term, e.g.
+          overexpression read as participation, a negative result under
+          redundancy read as absence of function (NOT), or a downstream phenotype
+          read as direct involvement.
+      OTHER:
+        description: Any other reading error; explain in review.reason.
+
+  CurationErrorReportStatusEnum:
+    description: Whether a curation error has been reported to the database that made it.
+    permissible_values:
+      NOT_REPORTED:
+        description: Recorded here only.
+      REPORTED:
+        description: Reported to the responsible source; awaiting action.
+      FIXED_UPSTREAM:
+        description: The responsible source corrected or withdrew the annotation.
+      DECLINED_UPSTREAM:
+        description: The responsible source reviewed the report and kept the annotation.
 
   FindingReviewStatusEnum:
     description: >-

@@ -9,6 +9,8 @@ import glob
 import pathlib
 import yaml
 
+from check_remap import quote_section
+
 BASE = pathlib.Path(__file__).resolve().parent
 ROOT = BASE.parents[1]
 EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"}
@@ -16,7 +18,7 @@ REVIEWED = {"pax3-a": "XENLA", "zic1": "XENLA", "hes4-a": "XENLA", "id3-a": "XEN
             "sox8": "XENLA", "sox9-a": "XENLA", "sox10": "XENLA"}
 COLS = ["group", "gene_product_id", "symbol", "taxon_id", "go_term", "evidence", "qualifier", "reference",
         "assigned_by", "proposed_action", "replacement_ids", "replacement_labels", "rationale",
-        "supporting_reference", "supporting_text", "source_checked"]
+        "supporting_reference", "supporting_text", "source_checked", "reference_section_type", "source_error"]
 
 
 def reviewed_rows():
@@ -44,7 +46,10 @@ def reviewed_rows():
         rv = match.get("review") or {}
         repl = rv.get("proposed_replacement_terms") or []
         action = {"MODIFY": "REPLACE", "UNDECIDED": "UNDECIDED", "REMOVE": "REMOVE", "MARK_AS_OVER_ANNOTATED": "OVER_ANNOTATED"}.get(rv.get("action"), "REPLACE")
-        quote = next((s for s in rv.get("supported_by") or [] if str(s.get("reference_id", "")).startswith("PMID:")), {})
+        ce = rv.get("curation_error") or {}
+        # a recorded curation error quotes the misread text; show that, as the batch rows do
+        quotes = (ce.get("misread_text") or []) + (rv.get("supported_by") or [])
+        quote = next((s for s in quotes if str(s.get("reference_id", "")).startswith("PMID:")), {})
         out.append({
             "group": "R_reviewed_in_repo", "gene_product_id": r["GENE PRODUCT ID"], "symbol": sym,
             "taxon_id": r["TAXON ID"], "go_term": r["GO TERM"], "evidence": r["GO EVIDENCE CODE"],
@@ -55,6 +60,9 @@ def reviewed_rows():
             "rationale": f"Decision taken in the full gene review genes/{REVIEWED[sym]}/{sym}/ ({rv.get('action')}).",
             "supporting_reference": quote.get("reference_id", ""), "supporting_text": quote.get("supporting_text", ""),
             "source_checked": "GENE_REVIEW",
+            "reference_section_type": quote.get("reference_section_type")
+            or quote_section(quote.get("reference_id", ""), quote.get("supporting_text", "")) or "",
+            "source_error": ce.get("error_type", ""),
         })
     return out
 

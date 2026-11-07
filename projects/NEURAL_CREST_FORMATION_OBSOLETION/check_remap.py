@@ -6,7 +6,12 @@ For each row of remap/*.tsv (excluding *.input.tsv):
   * every replacement id must be a live GO term whose label matches, or 'NTR'
     with one of the two proposed labels;
   * proposed_action must be one of REPLACE, REMOVE, UNDECIDED, OVER_ANNOTATED
-    (gain-of-function-only evidence: not carried forward to any replacement).
+    (gain-of-function-only evidence: not carried forward to any replacement);
+  * reference_section_type, if set, must be a ManuscriptSection value, and TITLE
+    or ABSTRACT must match where the quote actually sits in the cached record
+    (cached full texts carry no internal headings, so body quotes stay blank);
+  * source_error, if set, must be a CurationErrorTypeEnum value (see
+    docs/curation_errors.md).
 
 Usage: uv run python projects/NEURAL_CREST_FORMATION_OBSOLETION/check_remap.py [files...]
 """
@@ -18,14 +23,39 @@ import re
 import sys
 import urllib.request
 
+import yaml
+
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 NTR = {"neural plate border formation", "neural crest progenitor maintenance"}
 ACTIONS = {"REPLACE", "REMOVE", "UNDECIDED", "OVER_ANNOTATED"}
+_ENUMS = yaml.safe_load(open(ROOT / "src/ai_gene_review/schema/gene_review.yaml"))["enums"]
+SECTIONS = set(_ENUMS["ManuscriptSection"]["permissible_values"])
+ERROR_TYPES = set(_ENUMS["CurationErrorTypeEnum"]["permissible_values"])
 _cache = {}
 
 
 def norm(s):
     return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def quote_section(ref, quote):
+    """TITLE or ABSTRACT if the quote sits there in the cached record, else None.
+
+    Cached full texts have no internal section headings, so a quote from the body
+    cannot be placed and returns None.
+    """
+    m = re.match(r"PMID:(\d+)$", (ref or "").strip())
+    pub = ROOT / f"publications/PMID_{m.group(1)}.md" if m else None
+    if not quote or not pub or not pub.exists():
+        return None
+    text = pub.read_text()
+    title = re.search(r"^# (.+)$", text, re.M)
+    abstract = re.search(r"^## Abstract\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if title and norm(quote) in norm(title.group(1)):
+        return "TITLE"
+    if abstract and norm(quote) in norm(abstract.group(1)):
+        return "ABSTRACT"
+    return None
 
 
 def go_label(gid):
@@ -72,6 +102,13 @@ def check(path):
                 print(f"ERROR {where}: quote not found in {pub.name}"); errors += 1
         elif act != "UNDECIDED":
             print(f"ERROR {where}: no supporting_text for a {act} decision"); errors += 1
+        sec, err = r.get("reference_section_type") or "", r.get("source_error") or ""
+        if sec and sec not in SECTIONS:
+            print(f"ERROR {where}: reference_section_type {sec!r} not a ManuscriptSection"); errors += 1
+        elif sec in ("TITLE", "ABSTRACT") and quote and quote_section(ref, quote) != sec:
+            print(f"ERROR {where}: quote is not in the {sec} of the cached record"); errors += 1
+        if err and err not in ERROR_TYPES:
+            print(f"ERROR {where}: source_error {err!r} not a CurationErrorTypeEnum value"); errors += 1
     print(f"{path}: {len(rows)} rows, {errors} errors")
     return errors
 

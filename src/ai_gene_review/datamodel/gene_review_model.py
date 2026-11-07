@@ -1509,6 +1509,58 @@ class ReferenceCorrectnessEnum(str, Enum):
     """
 
 
+class CurationErrorTypeEnum(str, Enum):
+    """
+    Kinds of error made when an annotation was curated from a reference. These describe the curator's reading of a paper, not the paper's quality (ReferenceCorrectnessEnum) or a propagation step (PropagationRootCauseEnum).
+    """
+    BACKGROUND_CLAIM_CURATED = "BACKGROUND_CLAIM_CURATED"
+    """
+    The annotation rests on a statement the paper makes as background, restating earlier work (typically in the introduction, abstract framing or discussion), not on the paper's own experiments. The evidence, if any, is in the earlier work; at most it supports a TAS citing that work.
+    """
+    NO_SUPPORTING_CONTENT = "NO_SUPPORTING_CONTENT"
+    """
+    The paper contains no experiment or statement supporting the annotated term for this gene product, not even as background.
+    """
+    WRONG_GENE_OR_HOMONYM = "WRONG_GENE_OR_HOMONYM"
+    """
+    The paper's evidence concerns a different gene, paralog, homeolog, splice product or a protein that shares the name.
+    """
+    EVIDENCE_CODE_MISMATCH = "EVIDENCE_CODE_MISMATCH"
+    """
+    The paper supports the term, but not with the kind of experiment the evidence code asserts (e.g. an expression pattern curated as IMP).
+    """
+    OVERINTERPRETED_RESULT = "OVERINTERPRETED_RESULT"
+    """
+    The paper's experiment is real but does not establish the term, e.g. overexpression read as participation, a negative result under redundancy read as absence of function (NOT), or a downstream phenotype read as direct involvement.
+    """
+    OTHER = "OTHER"
+    """
+    Any other reading error; explain in review.reason.
+    """
+
+
+class CurationErrorReportStatusEnum(str, Enum):
+    """
+    Whether a curation error has been reported to the database that made it.
+    """
+    NOT_REPORTED = "NOT_REPORTED"
+    """
+    Recorded here only.
+    """
+    REPORTED = "REPORTED"
+    """
+    Reported to the responsible source; awaiting action.
+    """
+    FIXED_UPSTREAM = "FIXED_UPSTREAM"
+    """
+    The responsible source corrected or withdrew the annotation.
+    """
+    DECLINED_UPSTREAM = "DECLINED_UPSTREAM"
+    """
+    The responsible source reviewed the report and kept the annotation.
+    """
+
+
 class FindingReviewStatusEnum(str, Enum):
     """
     Reviewer's assessment of the empirical standing of a specific finding (a statement extracted from a reference) in light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a whole reference, this applies per finding: a paper may have some findings that stand and others that have been overturned. Use superseded_by to point to the reference(s) responsible.
@@ -4385,7 +4437,22 @@ class Review(ConfiguredBaseModel):
                        'Review',
                        'CoreFunction']} })
     propagation_review: Optional[PropagationReview] = Field(default=None, description="""Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
+    curation_error: Optional[CurationError] = Field(default=None, description="""Structured record of what went wrong when the existing annotation was made from its cited reference: the kind of reading error, the text it appears to rest on (with its manuscript section), the reference that actually holds the evidence, and whether the error has been reported to the source database. Judges this annotation's use of the paper, not the paper itself; a sound paper misread by a curator keeps reference_review.correctness VERIFIED. Usually accompanies action REMOVE or MODIFY. See docs/curation_errors.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     consistency_exception: Optional[ConsistencyException] = Field(default=None, description="""Use only on very rare occasions: records why this annotation's action is deliberately allowed to contradict another row's action under the action-consistency rules. See docs/action_consistency.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
+
+
+class CurationError(ConfiguredBaseModel):
+    """
+    What went wrong when an existing annotation was curated from its cited reference. Complements review.action (what to do now) and review.reason (prose): this object is the reusable, machine-readable part, so errors can be counted by type and reported back to the database that made them.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    error_type: CurationErrorTypeEnum = Field(default=..., description="""The kind of reading error. Record the most salient one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError', 'PredictionAssessment']} })
+    responsible_source: Optional[str] = Field(default=None, description="""The database that asserted the annotation (the GAF assigned_by value, e.g. UniProt, MGI, ZFIN), i.e. where a correction should be sent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError'], 'recommended': True} })
+    misread_text: Optional[list[SupportingTextInReference]] = Field(default=None, description="""The text in the cited reference that the annotation appears to rest on, quoted verbatim with its reference_section_type. For BACKGROUND_CLAIM_CURATED this is the background sentence, wherever in the paper it sits (it is often in the abstract).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError']} })
+    evidence_reference_ids: Optional[list[str]] = Field(default=None, description="""Reference(s) that actually contain the evidence the annotation claims, when known, e.g. the earlier paper a background sentence cites.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError']} })
+    report_status: Optional[CurationErrorReportStatusEnum] = Field(default=None, description="""Whether the error has been reported to responsible_source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError']} })
+    report_url: Optional[str] = Field(default=None, description="""Link to the report (issue tracker, helpdesk ticket or email archive).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError']} })
 
 
 class ConsistencyException(ConfiguredBaseModel):
@@ -5258,7 +5325,7 @@ class PredictionAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment',
                        'PredictionAssessment']} })
     confidence_score: int = Field(default=..., description="""Confidence score following de Crécy-Lagard et al. 2025: 2 = concordant with evidence, 1 = uncertain, 0 = discordant with evidence""", ge=0, le=2, json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionAssessment']} })
-    error_type: Optional[PredictionErrorTypeEnum] = Field(default=None, description="""Type of error that led to the incorrect prediction, following Table 1 of de Crécy-Lagard et al. 2025""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionAssessment']} })
+    error_type: Optional[PredictionErrorTypeEnum] = Field(default=None, description="""Type of error that led to the incorrect prediction, following Table 1 of de Crécy-Lagard et al. 2025""", json_schema_extra = { "linkml_meta": {'domain_of': ['CurationError', 'PredictionAssessment']} })
     summary: str = Field(default=..., description="""Summary of the assessment rationale""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamReview',
                        'Review',
                        'InterPro2GORedundancy',
@@ -5326,6 +5393,7 @@ ModuleContext.model_rebuild()
 ModuleConnection.model_rebuild()
 ExistingAnnotation.model_rebuild()
 Review.model_rebuild()
+CurationError.model_rebuild()
 ConsistencyException.model_rebuild()
 PropagationReview.model_rebuild()
 ResidueClaim.model_rebuild()

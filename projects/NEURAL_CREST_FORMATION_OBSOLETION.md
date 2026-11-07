@@ -170,7 +170,10 @@ the parent.)
 annotation: all 84 experimental GO:0014029 rows plus the 17 regulation-term
 rows (12 distinct). That is 94 rows and 62 distinct gene–paper decisions. Each
 row gives an action, replacement ids and labels, a rationale and a verbatim
-quote. Every quote and every replacement id passes `check_remap.py` (live GO
+quote, with the quote's manuscript section (`reference_section_type`; blank when
+the quote is in the body of a cached full text, which has no section headings)
+and, where the source annotation was misread, a `source_error` type
+([Curation Errors](../docs/curation_errors.md)). Every quote and every replacement id passes `check_remap.py` (live GO
 terms with matching labels, quotes found in the cached papers). The table is
 assembled by `merge_remap.py` from four review batches (`remap/*.tsv`, each with
 a `.notes.md`) and from the gene reviews already in this repo.
@@ -283,7 +286,7 @@ What the remapping shows:
 ---
 # STATUS
 
-Last updated: 2026-10-20
+Last updated: 2026-11-07
 
 - [x] Defect documented (text vs placement), checked in QuickGO and OLS
 - [x] Inventory of all annotations to the four terms (`inventory.py`, `annotations.tsv`, `summary.md`)
@@ -303,6 +306,23 @@ Last updated: 2026-10-20
 - [ ] Submit the GO request (needs sign-off)
 
 # NOTES
+
+## 2026-11-07 (curation errors made structured)
+
+The four rows whose papers contain no crest experiments (KLHL12, PEF1, PDCD6,
+Chrd) were plain REMOVEs. They are now marked `source_error:
+BACKGROUND_CLAIM_CURATED`. Their quote is the background sentence the
+annotation rests on, which sits in each abstract: "The ubiquitin ligase CUL3 is
+an essential regulator of neural crest specification" [PMID:27716508] and
+"Genetic inactivation of Chordin ... results in neural crest defects affecting
+heart and neck organs" [PMID:17685487]. The hes4-a NOT row carries
+`curation_error` (OVERINTERPRETED_RESULT) in its gene review, and
+`merge_remap.py` copies it into the table. The schema gained
+`review.curation_error`; see `docs/curation_errors.md`. These five are the
+first entries for a report to UniProt and MGI. The overexpression-only rows
+(zic2-a, zic4, TSPAN18) and the expression-only rows (grem1, Id2) are
+candidates for OVERINTERPRETED_RESULT / EVIDENCE_CODE_MISMATCH but are not
+marked yet.
 
 ## 2026-10-20 (UNDECIDED rows resolved from full texts)
 

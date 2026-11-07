@@ -459,6 +459,12 @@ apply to every UniProt quote, whatever it supports.
 Validation warns on both (`uniprot_quote_unvetted_prediction`,
 `uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
 
+When an annotation is wrong because its cited paper was **misread** (a background
+sentence curated as the paper's own result, a homeolog's phenotype, an overexpression
+read as participation), record that on the annotation as `review.curation_error`,
+not on the reference: the paper itself may be sound. See
+[Curation Errors](docs/curation_errors.md).
+
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.
