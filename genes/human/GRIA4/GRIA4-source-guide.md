@@ -10,7 +10,7 @@ The recombinant human GluA4 assay and rodent neuronal preparations are separate.
 
 ## UniProtKB:P48058
 
-Only P48058-1 and P48058-2 are declared; the legacy isoform-3 interaction sentence does not establish a third human product.
+See the structured source query and product discussion in the review notes.
 
 ## PMID:32151690
 
@@ -22,7 +22,7 @@ PXD000608 identifies the deposited experiment; no GRIA4-specific protein or pept
 
 ## PMID:12670305
 
-Accessible original fragments and the abstract concern recombinant HEK293 channel kinetics; absence of a verified presynaptic preparation remains an access and specificity limit.
+Complete original OCR was read; normal cache remains abstract-only.
 
 ## PMID:29220673
 
