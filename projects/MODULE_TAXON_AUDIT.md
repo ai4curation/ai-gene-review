@@ -43,7 +43,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_cytochrome_c_maturation_system_i`: [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121) merged as `a76d110ace9de65316f4dfbe999c1a66ab38602a` at 2026-11-07T01:49:33Z. All 370 scoped files match final published head `d114fb850d7bdfe8ac83c12c174aeb71e690eaea`; 29 member reviews are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6121-merged-content.json).
 
-- [ ] `bacterial_groel_groes_chaperonin_folding`: GroEL/GroES comparative curation: 12 complete member reviews, 201 preserved original rows and no added rows; 12 assessed references with 16 findings. Five bacterial species, verified cage families and separately scoped CnoX mechanisms. Full validation, dedicated PR and actual merge remain pending.
+- [ ] `bacterial_groel_groes_chaperonin_folding`: Comparative audit passes full validation on 6332a1d51e: 10,742 reviews, zero blocking errors and 220 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_ethanolamine_uptake_catabolism`: Comparative audit and full validation complete locally; adopted PR5970 update, renewed review, CI and actual merge pending [PR #5970](https://github.com/ai4curation/ai-gene-review/pull/5970).
 
@@ -697,3 +697,7 @@ GroEL/GroES comparative curation: 12 complete member reviews, 201 preserved orig
 ## 2026-11-07 — cytochrome c maturation merge verified
 
 PR #6121 merged; 370 scoped files match the final published head and all 29 member reviews are COMPLETE. Shared project metadata/indexes are excluded from blob equality. This completion is based on the actual merge, not an approval or queue entry.
+
+## 2026-11-07 — bacterial groel groes chaperonin folding full validation passes
+
+Comparative audit passes full validation on 6332a1d51e: 10,742 reviews, zero blocking errors and 220 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_groel_groes_chaperonin_folding/full-run-proof.json).
