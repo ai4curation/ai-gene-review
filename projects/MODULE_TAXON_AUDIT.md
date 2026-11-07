@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_cellulose_biosynthesis`: PR #2143 follow-up passes full validation on acee1d329a: 10,764 reviews, zero blocking errors and 282 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_cellulose_biosynthesis`: PR #2143 round 27 passes full validation on acee1d329a; GO:0090540 product scope is corrected. Main 5b68ef3aac is already integrated. Fresh review, CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
