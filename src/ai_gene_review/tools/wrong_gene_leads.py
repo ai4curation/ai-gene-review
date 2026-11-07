@@ -34,6 +34,8 @@ large-scale and skipped, as are bare protein-binding rows.
 
 from __future__ import annotations
 
+from ai_gene_review.evidence import LITERATURE_EVIDENCE_CODES as LITERATURE_CODES, source_evidence_code
+
 import argparse
 import csv
 import json
@@ -58,7 +60,6 @@ UNIPROT_STREAM = "https://rest.uniprot.org/uniprotkb/stream"
 # Low-throughput experimental codes, plus author statements (TAS, NAS) that cite a
 # paper: both are curated from a specific publication, so both can be attached to
 # the wrong gene. High-throughput papers are skipped.
-LITERATURE_CODES = frozenset({"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "TAS", "NAS"})
 # A paper cited by more reviewed entries than this, after entries for the annotated
 # gene itself are dropped, is treated as large-scale.
 MAX_CITING_ENTRIES = 20
@@ -490,7 +491,7 @@ def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | 
         for row in csv.DictReader(fh, delimiter="\t"):
             ref = row.get("REFERENCE") or ""
             if (
-                row.get("GO EVIDENCE CODE") in LITERATURE_CODES
+                source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID")) in LITERATURE_CODES
                 and ref.startswith("PMID:")
                 and ref[5:] not in own.cited_pmids
                 and row.get("GO TERM") not in SKIPPED_TERMS
