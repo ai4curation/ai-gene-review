@@ -13,3 +13,10 @@ Provider deep research could not run: `just deep-research-falcon` failed with Ed
 - GO:0051087 is changed to GO:0030544 Hsp70 protein binding. GO:0006457 is marked as over-annotated. GO:0051259 is removed (the HscB C-terminal "oligomerisation" domain is the IscU-binding module).
 - Protein-binding rows: one is changed to Hsp70 protein binding (the HscA partner); the others are removed per the protein-binding policy.
 - P15288 (PepD) comes from a high-throughput pull-down only.
+
+
+## 2026-11-07 ISC whole-gene re-review
+
+Specialization and monomeric structure do not disprove generic folding or heterooligomer assembly. PMID22782893 shows structured-IscU stabilization, but a folding/recovery endpoint is unresolved; GO0051259 includes heteromers, and complex membership does not by itself show assembly promotion. Both broad processes remain UNDECIDED. Direct HscA activation and targeting/cluster-transfer activity are retained. Current QuickGO confirms Hsp70 binding is a descendant of both chaperone binding and heat-shock-protein binding.
+
+All original ordered annotation payloads and historical NEW actions were preserved. Existing raw/provider/publication files were not refreshed. A genuine new default Falcon attempt returned HTTP 403; no provider report was fabricated. Manual source review is recorded here and in `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/ecoli-consultation/`. The normal PAINT lineage-loss check found no IRD or IKR; donor-list length and target self-inclusion were not used as evidence against the ancestral assertion. Focused validation, render, and append-only helper-history results are recorded in the final handoff.

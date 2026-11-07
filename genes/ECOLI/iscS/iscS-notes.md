@@ -47,3 +47,10 @@ PMID:22194618, PMID:24561554 and PMID:18304323.
 - Removed: detection of UV (NAS; s4U-tRNA, not IscS, is the near-UV chromophore);
   bare protein-binding rows from interactome screens. Sulfur compound transport
   marked over-annotated: persulfide relay between proteins is not transport.
+
+
+## 2026-11-07 ISC whole-gene re-review
+
+Retained the independent thiamine and tRNA sulfur-delivery branches as core work. Sulfur-compound transport includes intracellular directed transfer and is supported by persulfide handoff, not restricted to a pore. The electronic [2Fe-2S] binding claim is unresolved: the structural intermediate highlighted in PMID36605734 derives from Archaeoglobus IscS–IscU(D35A), while native E. coli ligand occupancy is not established. No claim that transient binding cannot be a molecular function.
+
+All original ordered annotation payloads and historical NEW actions were preserved. Existing raw/provider/publication files were not refreshed. A genuine new default Falcon attempt returned HTTP 403; no provider report was fabricated. Manual source review is recorded here and in `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/ecoli-consultation/`. Focused validation, render, and append-only helper-history results are recorded in the final handoff.
