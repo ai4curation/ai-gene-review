@@ -12,7 +12,7 @@ The abstract reports calcium-permeable GluR1/GluR3 channels but not GluR2-contai
 
 ### PMID:8824304
 
-Both flip/flop constructs were tested; receptor species is not explicit in Methods and cannot be inferred from the human host.
+Flip/flop experiments used HEK293 hosts; receptor species was unspecified. Historical S750 numbering is not projected onto current human residues.
 
 ### PMID:10731148
 
@@ -66,7 +66,7 @@ Abstract: rat treatment and cultured neuronal surface-expression assays; phospho
 
 ### PMID:15456832
 
-The abstract supports endosomal transport. Exact organelle assays remain uninspected; the positive curated locations are retained.
+Indexed original Figure 4a shows transfected COS1 GluR-A with calnexin. Independent endogenous human ER evidence is assessed separately; precise endosomal pools retain curated support.
 
 ### PMID:15548228
 
@@ -246,7 +246,7 @@ Full original: E18 rat cortex, endogenous GluR1 and short tail decoys; acute BDN
 
 ### PMID:23739980
 
-Original assembly and surface assays read; the postsynaptic IDA attribution needs clarification.
+The complete original tests rat flip receptors in HEK293 cells. It supports surface expression and assembly; the experiment supporting the postsynaptic IDA attribution remains unidentified.
 
 ### PMID:23844251
 
@@ -335,3 +335,13 @@ Original Methods specify rat expression constructs; human variant ascertainment 
 ## Reactome models
 
 Reactome’s human models identify P42261 in AMPA receptor complexes and in CNIH-associated transport cargo. Event compartments are checked against the GRIA1 leaf; larger assemblies may span membranes. These TAS models do not establish human experiments or splice-specific activity. Cargo localization does not assign the coat, GTPase, kinase, or fusion machinery’s activity to GRIA1.
+
+### PMID:22720072
+
+Human cortex ER fractions contained endogenous GluR1, with marker and microsome controls. JM4 normalization was unavailable for GluR1/2; these data establish a biosynthetic pool, not ER channel activity.
+
+## Follow-up evidence policy
+
+Normal-cache availability remains machine-derived. Independent original access is recorded in the evidence sidecar; an abstract-only cache does not mean the original was unread. The separate phylogeny artifact contains the actual tree/alignment/IBD replay. Incoming raw records preserve provenance and do not independently validate their own claims.
+
+Broader physiological membrane locations remain positive alongside specialized compartments. The synapse-assembly extension remains unresolved despite its explicit curator model. ER, ER-to-Golgi and endocytic pools are non-core; receptor cargo is not assigned vesicle-transport machinery activity.
