@@ -3,6 +3,7 @@ title: Module literature, taxonomy and member review audit
 maturity: IN_PROGRESS
 last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
+autolink_exclude: [pins]
 ---
 
 # Module literature, taxonomy and member review audit
@@ -41,7 +42,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_cellulose_biosynthesis`: [PR #2143](https://github.com/ai4curation/ai-gene-review/pull/2143) has 21 completed reviews and 27 passing capacity cases. Its historical full validation at `3cdca2d091` recorded 19 unrelated reference errors in 17 yeast reviews; upstream has since repaired that entire error set, and focused validation of all 17 now passes. The original full-run result remains historical evidence. Current-head review/CI and actual merge remain pending.
+- [ ] `bacterial_cellulose_biosynthesis`: PR #2143 tracker and provenance follow-up integrates main 2f72fda87e, derives counts from the current ledger, restores per-path preservation evidence, and records the complete GO:0090540 definition caveat. Historical validation retains its 19 pre-existing errors; a fresh full run is required before publication.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -779,3 +780,7 @@ Integrated main e9d31cced895d2d74c464d57cbd40381e15520ab into approved head 7186
 ## 2026-11-07 — bacterial_cellulose_biosynthesis main integration
 
 Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into reviewed head 43613a1fa0e5f53b2813a4f0fda305f71f08c92a. All 271 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — cellulose tracker and provenance review follow-up
+
+PR #2143 tracker and provenance follow-up integrates main 2f72fda87e, derives counts from the current ledger, restores per-path preservation evidence, and records the complete GO:0090540 definition caveat. Historical validation retains its 19 pre-existing errors; a fresh full run is required before publication. The earlier round26 discrepancy was 33/6/4/734 versus the displayed 33/5/4/735; current counts are derived after integration rather than copying either old snapshot.
