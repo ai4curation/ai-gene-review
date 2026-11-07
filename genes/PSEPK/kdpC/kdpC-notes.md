@@ -30,3 +30,12 @@ preferred complex-level relation.
 - GO:0008556 changed to MARK_AS_OVER_ANNOTATED (accessory subunit; contributes_to in
   core_functions); GO:0006813 and GO:0016020 changed to MODIFY (correct but general).
   Added NEW part_of GO:0031004 by orthology.
+
+
+## Scoped Kdp module consultation — 2026-11-07
+
+GO0008556 is ACCEPT for structural contribution to the pump; the core already uses contributes_to. The inert inherited relationship string is not a reason to reject genuine function. ATP binding is UNDECIDED: the full E. coli21711450 paper reports low-specificity photoaffinity observations, no isolated-KdpC ATP ITC signal up to2.8mM, and ATP-dependent isolated-domain interaction. The later periplasmic structure challenges physiological contact with the KdpB ATP pocket, not all possible nucleotide binding. Original positive data remain represented.
+
+Every original annotation row and its source payload/order was reviewed and preserved. No additional annotation rows were proposed. Full provenance and assay boundaries: `analysis/module_audits/bacterial_kdp_potassium_homeostasis/psepk-consultation/primary-scope.md`; sequence checks are adjacent. No IBA rows occur in these six reviews, so no IBA loss judgment is being made. Family membership and original historical ISO donors are retained independently of donor counts.
+
+A genuine `just deep-research PSEPK kdpC --provider falcon` request failed HTTP403 authentication. Logs remain in `.cache/module-audit-logs/kdp-20261107/psepk-consultation/`; no provider report was manufactured.

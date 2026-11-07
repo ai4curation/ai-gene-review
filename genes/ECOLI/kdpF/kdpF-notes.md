@@ -11,3 +11,12 @@
   integrity of a complex) but not proposed as NEW, since the stabilisation is only demonstrated
   for the detergent-solubilised complex and is replaceable by lipids.
 - GO:1903103 (antiporter complex, ComplexPortal IPI) MODIFY to GO:0031004 with a source defect.
+
+
+## 2026-11-07 E. coli Kdp module consultation
+
+Reviewed all existing annotation claims against the cached primary literature, UniProt record, and current GO definitions. Original ordered annotation payloads and source files were frozen before editing; no new annotation rows were added. The two inherited KdpD NEW proposals remain present. Detailed decisions and source scope are recorded in `analysis/module_audits/bacterial_kdp_potassium_homeostasis/ecoli-consultation/`.
+
+A genuine configured Falcon research request was attempted for this gene and failed with HTTP 403 authentication; no provider report was fabricated. The exact attempt log is `.cache/module-audit-logs/kdp-20261107/ecoli-consultation/falcon-kdpF.log`. PAINT-loss checking found no PANTHER family in the source record, so lineage losses could not be checked.
+
+PMID:10608856 directly distinguishes structural contribution from indispensability. The protected abstract explicitly reports nearly unchanged membrane ATPase activity and growth at 0.1 mM K+ without KdpF, but activity loss after detergent purification and restoration with purified KdpF or lipids. Together with intact-complex structures, these observations support a core contribution to GO:0008556 and transport participation, now ACCEPT. No autonomous ATPase, universal native requirement, or new annotation row is asserted. Publisher full-text retrieval was attempted by the collaborating reviewer and returned HTTP 403; the explicit abstract observations are sufficient for these bounded claims.
