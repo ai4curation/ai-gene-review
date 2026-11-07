@@ -19,3 +19,12 @@ No NEW annotations are proposed. The axon IEA decision is restricted to physiolo
 The earlier no-NEW statement records the initial review and is superseded by the single clustering proposal below. See [primary evidence and scope](GLDN-source-guide.md#original-source-evidence) for the cited assay and localization anchors. The original 13 annotation contexts remain unchanged; one proposed ISS annotation is separate.
 
 The broad signal-transduction IBA remains as non-core evidence, with its verified ancestral placement retained. The core now names channel clustering. Cell-line-specific HPA staining remains supported but non-core; the Matrisome assertion remains accepted while the core location uses extracellular region.
+
+## Follow-up on compartment scope
+
+The three plasma-membrane annotations are retained as non-core. This aligns the supported precursor locations with the extracellular/cell-surface core; it does not reject membrane localization. The axon source concern is a SUSPECTED UniProt CHECK, preserving the distinct rat and mouse citation chains in the evidence record. No corrected compartment or universal mapping error is asserted.
+
+[PMID:16039564, Figure 4D–H, "no gold particles were detected
+in the axon"]. Original-paper access and the abstract-only cache remain distinguished in the source guide.
+
+The previous validator warning was: `Inconsistent review actions for term GO:0005886 (plasma membrane): ACCEPT (IEA, ISS); KEEP_AS_NON_CORE (IDA)`. It came from `validation/validator.py` (`inconsistent_review_actions`), separately from the action-consistency rule table. Its original output and the prior DRAFT history are preserved; status must be recomputed after applying this follow-up.
