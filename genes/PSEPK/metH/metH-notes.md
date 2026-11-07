@@ -12,3 +12,10 @@ Conserved cobalamin-dependent remethylation of L-homocysteine to L-methionine wi
 - Classify specifically inferred catalytic MetH cofactor binding as core, retaining the native-assay limit.
 
 Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.
+
+
+## PR 6196 review 5812380406 follow-up (2026-11-07)
+
+Refined the two general folate-process rows and core to GO:0035999 using the saved ontology ancestry and actual folate-regenerating reaction. Replaced raw-line fragments with complete curated UniProt FUNCTION/reaction statements. The catalytic inference is not a native KT2440 flux assay.
+
+Original ordered annotation payloads, qualifiers, evidence codes and historical NEW lifecycle are preserved. No sources refreshed; only lightweight preservation/quotation checks were run under disk constraints. Root will coordinate focused schema/reference/history checks and rendering.

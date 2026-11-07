@@ -10,3 +10,10 @@ Actual configured Falcon research attempt failed with HTTP403 authentication fai
 - Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
 
 Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.
+
+
+## PR 6196 review 5812380406 follow-up (2026-11-07)
+
+Replaced both core evidence attachments with the primary measured MTA/SAH efficiencies, rather than attaching unrelated SAH-product/5-deoxyadenosine fragments to MTA activity. Side-activity tiers, all row decisions and native-flux limits remain unchanged.
+
+Original ordered annotation payloads, qualifiers, evidence codes and historical NEW lifecycle are preserved. No sources refreshed; only lightweight preservation/quotation checks were run under disk constraints. Root will coordinate focused schema/reference/history checks and rendering.

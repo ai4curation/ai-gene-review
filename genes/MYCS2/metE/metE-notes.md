@@ -11,3 +11,10 @@ Canonical771aa two-domain MetE is distinguished from compact MesD/MesB. Zinc bin
 - Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
 
 Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.
+
+
+## PR 6196 review 5812380406 follow-up (2026-11-07)
+
+Clarified that PMID33468593 names MSMEG_4185 as metH, while the named metE is bridged to MSMEG_6638 using the reference genome. Corrected the authorship-correction citation spelling; no catalytic judgment changed.
+
+Original ordered annotation payloads, qualifiers, evidence codes and historical NEW lifecycle are preserved. No sources refreshed; only lightweight preservation/quotation checks were run under disk constraints. Root will coordinate focused schema/reference/history checks and rendering.

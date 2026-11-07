@@ -11,3 +11,10 @@ GO0071267 salvage includes regeneration from derivatives, so inferred terminal r
 - Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
 
 Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.
+
+
+## PR 6196 review 5812380406 follow-up (2026-11-07)
+
+Refined general folate-process rows and core to GO:0035999; the current definition includes this folate demethylation/regeneration step. Clarified MSMEG_4185 as the paper-named metH locus, distinct from the reference-genome bridge for metE.
+
+Original ordered annotation payloads, qualifiers, evidence codes and historical NEW lifecycle are preserved. No sources refreshed; only lightweight preservation/quotation checks were run under disk constraints. Root will coordinate focused schema/reference/history checks and rendering.
