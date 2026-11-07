@@ -25,3 +25,17 @@ Genuine native helpers completed the 22 missing source records, preserving all 1
 ## Native validation and rendering
 
 Gene, reference, genuine CREATE-history and family checks passed. The reference validator checked one excerpt and 29 titles with no issues. The actual 951-family corpus at the native base had zero conflicts; unrelated unresolved entries remain reported. Computed review status stays DRAFT with six advisory warnings: three explicit consistency exceptions are marked stale by the table checker, while the legacy same-term checker reports the corresponding three mismatches. The source-specific and relation-specific distinctions remain intentional; no action was changed to obtain a status. The final HTML was regenerated, and source files and original contexts were preserved. Publication and later exact-head gates remain separate.
+
+## Review follow-up — 2026-11-07
+
+This entry supersedes the earlier action/status commentary; the earlier journal entries remain intact. Source access was investigated manually, using the original URLs and section locators in the source-evidence record. No provider report was generated.
+
+HEK293T mutant-versus-wild-type comparisons show JNK/ERK activation and partial rescue by SP600125. The signaling response belongs to this disease-construct experiment; the experiment does not establish a normal MAPK-regulator role. [PMID:26236191](https://pubmed.ncbi.nlm.nih.gov/26236191/).
+
+Mitochondrial targeting is supported by human CEM-C7 knockout experiments and isolated-organelle assays. The active fragment can therefore act at the mitochondrial outer membrane as well as the plasma membrane. [PMID:30976076](https://pubmed.ncbi.nlm.nih.gov/30976076/).
+
+Familial segregation and aberrant splicing establish pathogenic hearing loss. They do not by themselves identify GSDME as a physiological participant in sound perception. [PMID:9771715](https://pubmed.ncbi.nlm.nih.gov/9771715/).
+
+### Native completion — 2026-11-07
+
+The existing-lane follow-up passed gene validation, strict GOA matching, all 29 reference titles and five supporting snippets, history validation and the computed-status check. The stale consistency-exception metadata was removed without changing its annotation decision; the original diagnostics remain in the execution record. Status remains DRAFT with the legacy membrane-action comparison and the core-location coverage advisory. No NEW annotation was added. All 39 normal sources and the existing ontology cache remain byte-exact. Rendering and the final sorted-cache check complete this preparation.

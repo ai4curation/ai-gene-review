@@ -55,3 +55,12 @@ Eleven members and four candidates trace to O60443, including truncations 1–20
 ## Evidence access
 
 The separate source-evidence record contains original-source URLs, hashes and inspected section locators. It is independent of the raw GOA archive. The precursor, cleavage products, official splice products and pathogenic variants retain separate identities.
+
+## Follow-up source locators
+
+| Source | Original sections | Public record |
+|---|---|---|
+| PMID:26236191 | Methods; Results; Figures 3–4 | [PMC4504148](https://pmc.ncbi.nlm.nih.gov/articles/PMC4504148/) |
+| PMID:30976076 | Methods; Results; Figures 4–6 | [PMC6459836](https://pmc.ncbi.nlm.nih.gov/articles/PMC6459836/) |
+
+The source-evidence record gives exact captured-source hashes and selected BioC passage indices. Normal-cache availability flags remain unchanged.
