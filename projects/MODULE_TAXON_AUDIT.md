@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_chemotaxis_signal_transduction`: [PR #6100](https://github.com/ai4curation/ai-gene-review/pull/6100). 46 completed member reviews, 37 curated references and 65 passing capacity cases. Historical full validation on 2471af88ef ended with 19 unrelated reference errors. Incoming main 488d370561 changed all 17 affected yeast reviews, superseding that error expectation; six source/implementation inputs remained unchanged. A targeted rerun of those 17 reviews now passes 729 snippets and 291 titles with zero issues. Chemotaxis science remains unchanged; renewed CI/review and actual merge remain pending.
+- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: integrated main 5b68ef3aac into approved head 9797c5d2f3, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
