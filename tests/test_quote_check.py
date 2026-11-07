@@ -141,4 +141,20 @@ def test_main_reports_unparseable_yaml_and_fails(tmp_path: Path, capsys):
     bad = tmp_path / "broken.yaml"
     bad.write_text("key: [unclosed\n")
     assert main([str(bad)]) == 1
-    assert "broken.yaml: not valid YAML" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "broken.yaml: not valid YAML" in out
+    assert "(0 blocking, 0 baselined); 1 unparseable files" in out
+
+
+def test_prune_refuses_when_a_file_is_unparseable(tmp_path, monkeypatch, capsys):
+    """Pruning with an unreadable file would drop that file's entries, so it refuses."""
+    bad = tmp_path / "broken.yaml"
+    bad.write_text("key: [unclosed\n")
+    baseline = tmp_path / "baseline.yaml"
+    baseline.write_text("entries:\n  broken.yaml:\n    not_found:\n    - abc\n")
+    before = baseline.read_text()
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.BASELINE_PATH", baseline)
+    monkeypatch.setattr("ai_gene_review.validation.quote_check.default_files", lambda: [bad])
+    assert main(["--prune-baseline"]) == 1
+    assert baseline.read_text() == before
+    assert "Not pruning" in capsys.readouterr().out

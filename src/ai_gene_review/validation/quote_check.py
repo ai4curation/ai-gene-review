@@ -385,12 +385,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     current: Baseline = {}
     totals: Counter = Counter()
     blocking = 0
+    unparseable: List[Path] = []
     for path in files:
         try:
             data = yaml.safe_load(path.read_text())
         except yaml.YAMLError as exc:  # report the file, then keep checking the rest
             print(f"❌ ERROR {path}: not valid YAML, so its quotes cannot be checked: {exc}")
-            blocking += 1
+            unparseable.append(path)
             continue
         key = baseline_key(path)
         for result in check_document(data, path, baseline=baseline):
@@ -411,6 +412,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"{totals['not_found']} not found in their source and "
         f"{totals['unresolved']} with a missing source "
         f"({blocking} blocking, {totals['not_found'] + totals['unresolved'] - blocking} baselined); "
+        f"{len(unparseable)} unparseable files; "
         f"{totals['unchecked']} unchecked (no readable source); {len(files)} files"
     )
     if args.init_baseline:
@@ -418,13 +420,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"Wrote {count_entries(current)} entries to {BASELINE_PATH}")
         return 0
     if args.prune_baseline:
+        if unparseable:
+            # An unreadable file contributes no current failures, so pruning would
+            # silently drop its baseline entries. Fix the YAML first.
+            print("Not pruning: fix the unparseable files first, or their entries would be dropped")
+            return 1
         pruned = {
             k: {o: d & current.get(k, {}).get(o, set()) for o, d in v.items()}
             for k, v in baseline.items()
         }
         write_baseline(pruned)
         print(f"Dropped {count_entries(baseline) - count_entries(pruned)} baseline entries that now pass")
-    return 1 if blocking else 0
+    return 1 if blocking or unparseable else 0
 
 
 if __name__ == "__main__":
