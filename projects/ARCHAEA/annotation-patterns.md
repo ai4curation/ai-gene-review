@@ -233,6 +233,13 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   beta-oxidation from the ECHS1-named crotonase subfamily, and Msed_1456
   acetyl-CoA biosynthesis from the acetyl-CoA synthetase family (pattern 1).
 
+- **Example (round 6):** METTH/frhB (P19499). TreeGrafter node
+  PTN001263539 gives GO:0052592 oxidoreductase activity, acting on CH or CH2
+  groups, with an iron-sulfur protein as acceptor. The family PTHR31332 is
+  named after plant 7-hydroxymethyl chlorophyll a reductase, a
+  ferredoxin-dependent enzyme; Frh oxidises H2 and reduces F420. The review
+  removes the row and flags the node for PANTHER.
+
 ## 15. An experimental row with the wrong cofactor variant of the activity
 
 - **Example:** METS5/Msed_1426 (A4YGN2), acryloyl-CoA reductase. A UniProt IDA
@@ -289,10 +296,19 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   four [4Fe-4S] clusters are on FrhG and FrhB (cryo-EM of the
   *M. marburgensis* complex, PMID:23483797, PMID:24569482). The review removes
   both rows.
-- **Scope:** the three Frh subunit entries (IPR017682, IPR017679, IPR017681)
-  each carry the same four terms, so nickel binding on FrhB and FrhG and FAD
-  binding on FrhG are probably the same error. Those subunits are not yet
-  reviewed.
+- **Confirmed across the complex (round 6):** the three Frh subunit entries
+  (IPR017682, IPR017679, IPR017681) each carry the same four terms. Checked
+  against the structure in the METTH frhB and frhG reviews:
+
+  | Term copied onto every subunit | FrhA (IPR017682) | FrhB (IPR017679) | FrhG (IPR017681) |
+  |---|---|---|---|
+  | nickel cation binding | right | wrong | wrong |
+  | FAD binding | wrong | right | wrong |
+  | iron-sulfur cluster binding | wrong | right (one [4Fe-4S]) | right (three [4Fe-4S]) |
+  | coenzyme F420 hydrogenase activity | contributes_to | contributes_to | contributes_to |
+
+  Five of the twelve subunit mappings are wrong, and coenzyme F420 binding,
+  which only FrhB has, is mapped to none.
 - Related to pattern 16, but for cofactor binding rather than activity.
 
 ## 19. An acceptor-specific activity from an acceptor-neutral motif
@@ -301,9 +317,14 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   of every [NiFe]-hydrogenase large subunit, to GO:0008901 ferredoxin
   hydrogenase activity. The motif says nothing about the electron acceptor,
   and Frh reduces F420, not ferredoxin. The review removes the row.
-- **Lead:** IPR002844 and IPR036080 (Mtd, F420-dependent
-  methylenetetrahydromethanopterin dehydrogenase, which is not a hydrogenase)
-  also map to GO:0008901. Not yet reviewed.
+- **A worse case, same term (round 6):** METTH/mtd (Q50501). IPR002844 and
+  IPR036080, whose 169 members are all F420-dependent
+  methylenetetrahydromethanopterin dehydrogenases (Mtd), map to GO:0008901
+  ferredoxin hydrogenase activity. Mtd is not a hydrogenase: it strictly
+  requires F420 (PMID:1991149) and uses neither H2 nor ferredoxin. The
+  H2-using enzyme for the same step, Hmd, is a different protein with no
+  sequence similarity (PMID:7852356). The review removes the row; the
+  mapping is wrong for every member.
 
 ## 20. A term defined for one lineage's enzyme variant used across the family
 
@@ -324,6 +345,15 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   assay, and P60200 is the only donor of PAINT node PTN000078336, which
   propagates the term to two *Korarchaeum cryptofilum* proteins. Recorded as a
   suspected wrong reference in the review; full text not seen.
+- **Korarchaeum check (round 6):** *K. cryptofilum* encodes HdrABC and
+  Mvh/Frh-like hydrogenase subunits but no methyl-coenzyme M reductase and no
+  protein named for coenzyme M or coenzyme B synthesis (UniProt query of
+  taxon 374847, 2026-11-07). Its genome paper describes peptide fermentation
+  (PMID:18535141, abstract only; the full text could not be retrieved). A
+  CoB--CoM substrate is therefore unsupported for these two IBA targets,
+  though Hdr-like complexes in non-methanogens may reduce another disulfide.
+  Still a lead: it needs the genome paper's full text, or a PAINT review of
+  node PTN000078336.
 
 ## 21. A positive and a NOT row for the same term from the same paper
 
@@ -335,8 +365,10 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   non-cognate partner enzyme, and PMID:35038903 explains the result as an
   artefact of that choice. The review removes the NOT row and records a
   suspected wrong qualifier for UniProt.
-- **Fix:** a GOA-wide scan for (gene, term, reference) triples that carry
-  both qualifiers would find any others.
+- **Scan (round 6):** of the 21 NOT annotations on archaeal proteins in
+  QuickGO (2026-11-07), cofC is the only one with a positive row for the same
+  term, so this is a single error, not a recurring archaeal pattern. A
+  GOA-wide scan would show whether it recurs elsewhere.
 
 ## Related findings from round 2
 
@@ -371,8 +403,8 @@ send to the resource that owns them:
 | 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (module context, evaluated per proteome) |
 | 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE | not needed |
 | 17 (cofactor metal as free metal-ion binding) | same file, IPR005778 to GO:0050897 | REMOVE, replace with GO:0031419 | not needed |
-| 18 (copied cofactor set) | same file, IPR017682 to GO:0050660 and GO:0051536 | REMOVE | not needed |
-| 19 (acceptor-specific term from a neutral motif) | same file, IPR018194 to GO:0008901 | REMOVE | not needed |
+| 18 (copied cofactor set) | same file, IPR017682 to GO:0050660 and GO:0051536, IPR017679 to GO:0016151, IPR017681 to GO:0016151 and GO:0050660 | REMOVE | not needed |
+| 19 (acceptor-specific or wrong-enzyme hydrogenase term) | same file, IPR018194, IPR002844 and IPR036080 to GO:0008901 | REMOVE (the Mtd entries replace with GO:0030268) | not needed |
 | 21 (paired positive and NOT rows) | `genes/METJA/cofC/cofC-ai-review.yaml` `source_defects` | WRONG_QUALIFIER, for UniProt | not applicable |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).

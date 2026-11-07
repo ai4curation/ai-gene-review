@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC, frhB, frhG, mtd]
 ---
 
 # Archaea
@@ -22,9 +22,9 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, thirty new archaeal reviews are complete (a five-gene pilot, a
+So far, thirty-three new archaeal reviews are complete (a five-gene pilot, a
 second round of four, two rounds on the *M. sedula* CO2-fixation cycle and
-a round on hydrogenotrophic methanogenesis), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
+two rounds on hydrogenotrophic methanogenesis), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
 reviews have been merged. Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
@@ -232,6 +232,22 @@ IPR018194, IPR005778). Two tooling issues turned up:
 
 The [coverage report](ARCHAEA/coverage/RESULTS.md) counts GOA rows by evidence
 code over all reviewed archaeal genes.
+
+## Round 6 results: following the round 5 leads (November 2026)
+
+Three more *Methanothermobacter* proteins, chosen to test round 5 leads, and two
+checks done directly.
+
+| Lead | Result |
+|---|---|
+| Frh cofactor set copied onto every subunit (pattern 18) | Confirmed. The frhB and frhG reviews find nickel binding wrong on both, FAD binding wrong on FrhG, and iron-sulfur binding right on both (refined to 4Fe-4S). FrhB gains coenzyme F420 binding, which no mapping gives it. Five of the twelve subunit mappings are wrong |
+| Mtd mapped to ferredoxin hydrogenase (pattern 19) | Confirmed. All 169 members of IPR002844/IPR036080 are F420-dependent Mtd enzymes, which use neither H2 nor ferredoxin; the mtd review removes the row and keeps GO:0030268 as the core activity |
+| FrhB TreeGrafter term | A new pattern 14 case: the node gives a ferredoxin-acceptor oxidoreductase term named after a plant chlorophyll reductase |
+| Paired positive and NOT rows (pattern 21) | cofC is the only case among the 21 NOT annotations on archaeal proteins in QuickGO |
+| HdrA PAINT node reaching *Korarchaeum* | *K. cryptofilum* has HdrABC but no methyl-coenzyme M reductase, so a CoB--CoM substrate is unsupported; still a lead (see pattern 20) |
+
+Five more interpro2go rows were added to the SSSOM set (IPR017679, IPR017681
+twice, IPR002844, IPR036080).
 
 ## Anchor organisms
 
