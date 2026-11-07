@@ -186,7 +186,7 @@ the GAF.
 ### Recurring Y contexts
 
 [`data/module_candidates.yaml`](INVOLVED_IN_PRECOMPOSITION/data/module_candidates.yaml)
-groups rows by Y. There are 197 contexts; 95 have three or more genes, and
+groups rows by Y. There are 197 contexts; 94 have three or more genes, and
 70 of those are named by no module (crude test: the GO id does not appear in
 any module YAML). They are **not** a module to-do list. Read them through the
 module policy below: some Y's are really mechanisms (module material), most
@@ -251,7 +251,7 @@ saying where Y went:
 | **A. MF `part_of` BP** | 77 | MODIFY to the MF. Y goes to the mechanism module or GO-CAM, or to a `core_function` (MF + `directly_involved_in: [Y]`) if core. |
 | **B. BP `part_of` BP** | 586 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
 | **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
-| **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition. |
+| **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition, unless the term turns out to be the right grain (GO:0106074, round 5: see *Kept terms*). |
 | **Kept terms** (any class) | 41 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
 | **E. label-only** | 11 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
 
@@ -575,16 +575,22 @@ editing, and its RELATED synonyms say so ("aminoacyl-tRNA proofreading",
   domains, AARSD1/AlaX, DTD1, ANKRD16 and others) pairs it with GO:0002161 or
   one of its children (Ser-tRNA(Ala), Gly-tRNA(Ala), Ala-tRNA(Pro),
   D-aminoacyl-tRNA deacylase, L-seryl-tRNA(Thr) hydrolase activity). The
-  exception is ANKRD16, which has no MF in that core function: it binds
-  AlaRS and captures serine that AlaRS has misactivated, on its own lysine
-  side chains, before the serine can reach tRNA(Ala).
+  exception is ANKRD16, whose activity has no GO term yet: it binds AlaRS
+  and captures serine that AlaRS has misactivated, on its own lysine side
+  chains, before the serine can reach tRNA(Ala). Its review records that as
+  `proposed_molecular_function: misactivated amino acid acceptor activity`.
 
-The 14 GOA rows are all electronic (UniProt keyword and rule mappings),
-plus one reviewer-proposed ISS row (*P. putida* *thrS*). Their reviews judged
-each on its merits: 13 are ACCEPT or NEW, and one is MARK_AS_OVER_ANNOTATED
-(the truncated human DTD1 product A0A2R8YCT7, which lacks the editing
-site; the term stays on the canonical Q8TEA8). None is a MODIFY away from
-the term.
+Of the 14 rows on the term, 13 are electronic and one is a reviewer-proposed
+NEW row (ISS, *P. putida* *thrS*). The electronic rows come from GO_REF:0000108
+(logical inference from inter-ontology links, 8 rows) and GO_REF:0000120
+(combined IEA, 5 rows). Both infer the process from the deacylase activity
+through the same `part_of GO:0106074` link the keep decision rests on: the
+human DTD1 row lists GO:0002161, GO:0051499 and GO:0106026 as its
+`supporting_entities`. Their reviews judged each row on its merits: 12 are
+ACCEPT, one is the NEW row, and one is MARK_AS_OVER_ANNOTATED (the truncated
+human DTD1 product A0A2R8YCT7, which lacks the editing site and so has none of
+those activities; the term stays on the canonical Q8TEA8). None is a MODIFY
+away from the term.
 
 ### GO:0006271 *DNA strand elongation involved in DNA replication* — kept
 
@@ -602,7 +608,8 @@ decomposed mechanically. It should not be:
   the parent would leave them under the bare genus, which is wrong for both.
 - **The genus is broader in a way that matters.** GO:0022616 also covers
   strand extension outside replication. The genes that carry GO:0006271 are
-  polymerase delta (POLD2, phage polymerase), the sliding clamp (ECOLI/dnaN, BACSU/dnaN, PSEPK/dnaN), the
+  replicative polymerases (POLD2 of polymerase delta, and the B-family
+  polymerase of phage BPPH2), the sliding clamp (ECOLI/dnaN, BACSU/dnaN, PSEPK/dnaN), the
   clamp loader (RFC subunits, CG8142) and the MCM helicase (MCM4, *mcm-4*).
   For them, "which strand-extension process" is the information.
 
@@ -615,6 +622,13 @@ ECOLI/dnaC to GO:0031297 *replication fork processing*. Those
 reviews correct over-annotations; they are not decompositions and are left
 as they are.
 
+Keeping the class does not settle each row's granularity. DROME/RfC3,
+DROME/RfC38, DROME/RfC4, yeast/RFC3 and human/POLD2 also carry GO:0006272
+*leading strand elongation* or GO:0006273 *lagging strand elongation*
+beside their accepted GO:0006271 rows. Whether a given row should be refined
+to one of those children is an ordinary review question, separate from
+whether GO:0006271 should exist.
+
 ### Lessons from round 5
 
 1. **"Involved in" in a label is not a reason to decompose.** Some terms name
@@ -625,8 +639,8 @@ as they are.
    serves, keep the term and record why.
 2. **There is no mechanical test for this.** An EXACT synonym without
    "involved in", or `is_a` children, looked like a usable signal. Across the
-   inventory it flags 147 terms, but many of those EXACT synonyms just reword
-   the X-in-Y pair ("coronary angiogenesis" for *angiogenesis involved in
+   inventory it flags more than a hundred terms, and many of those EXACT
+   synonyms just reword the X-in-Y pair ("coronary angiogenesis" for *angiogenesis involved in
    coronary vascular morphogenesis*), and grouping classes have children too.
    Keep decisions are made term by term and listed in
    `keep_precomposed.yaml`.

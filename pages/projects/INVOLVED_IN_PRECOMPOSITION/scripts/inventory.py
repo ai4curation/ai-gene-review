@@ -248,7 +248,7 @@ def load_keep(path: Path) -> dict[str, str]:
     """Term id -> reason for the curated KEEP_PRECOMPOSED terms.
 
     >>> import tempfile
-    >>> p = Path(tempfile.mkstemp(suffix=".yaml")[1])
+    >>> p = Path(tempfile.mkdtemp()) / "keep.yaml"
     >>> _ = p.write_text("- id: GO:1\\n  label: a involved in b\\n  reason: stage term\\n")
     >>> load_keep(p)
     {'GO:1': 'stage term'}
@@ -500,6 +500,11 @@ def main() -> None:
     )
     labels = by_label(terms)
     inv = {tid: t for tid, t in terms.items() if INVOLVED_IN in t.name}
+    unknown = sorted(set(keep) - set(inv))
+    if unknown:
+        raise SystemExit(
+            f"{args.keep}: not 'involved in' terms in {args.go}: {unknown}"
+        )
 
     go_rows = []
     for tid, t in sorted(inv.items()):
