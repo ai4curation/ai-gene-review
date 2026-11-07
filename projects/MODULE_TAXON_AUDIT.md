@@ -44,9 +44,9 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_gallate_catabolism`: PR #6158: main b4f249a30490049f1009fea5871a037219596e0f integrated with 195 frozen nonshared files preserved. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and merge are pending.
+- [ ] `bacterial_gallate_catabolism`: PR #6158: main d7638df804 integrated at c5cac55cfe, preserving all 197 frozen nonshared inputs. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and actual merge remain pending.
 
-- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
+- [x] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
 
 - [x] `bacterial_lipoprotein_maturation`: PR #6184 merged as dc4512172353d85fed764fa9fcaf7daf16a78698; all 344 changed nonshared files are byte-identical to the approved head. All 14 module members have COMPLETE reviews without PENDING rows. Actual merged content verified.
 
@@ -109,7 +109,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 38 COMPLETE, 9 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -1052,3 +1052,9 @@ Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full 
 Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full run on 40aa36042295b4d714e07d9f115a23e2c1f6c134. All 197 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
 
 Integration proof: [record](../analysis/module_audits/bacterial_gallate_catabolism/post-hepg-main-integration-20261107.json).
+
+## 2026-11-07 — verified HepG merge and gallate integration scope
+
+PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
+
+PR #6158: main d7638df804 integrated at c5cac55cfe, preserving all 197 frozen nonshared inputs. Historical full validation remains on 40aa36042295b4d714e07d9f115a23e2c1f6c134; fresh review, CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_gallate_catabolism/post-hepg-main-integration-20261107.json).
