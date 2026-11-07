@@ -1058,13 +1058,22 @@ def scan_corpus() -> Tuple[
             mr["root_cause"] = rev_info.get("root_cause", "")
             multi_donor_records.append(mr)
 
-    n_reclassified_r2_to_r1 = sum(
+    n_reclassified_r2_to_r1_all = sum(
         1 for r in records if r["n_seed_tokens"] > 1 and r["n_distinct_donors"] == 1
+    )
+    n_reclassified_r2_to_r1_rated_resolved = sum(
+        1
+        for r in records
+        if r["n_seed_tokens"] > 1
+        and r["n_distinct_donors"] == 1
+        and r["action"] in (DOWNGRADE_ACTIONS | RETAIN_ACTIONS)
+        and r["regime"] != "R0_UNKNOWN_LINEAGE"
     )
     diagnostics = {
         "excluded_unresolved_1_seed": n_excluded_unresolved_1_seed,
         "excluded_unresolved_multi_seed": n_excluded_unresolved_multi_seed,
-        "reclassified_r2_to_r1_by_dedup": n_reclassified_r2_to_r1,
+        "reclassified_r2_to_r1_by_dedup_all": n_reclassified_r2_to_r1_all,
+        "reclassified_r2_to_r1_by_dedup_rated_resolved": n_reclassified_r2_to_r1_rated_resolved,
     }
     return (
         n_iba_rows,
@@ -1244,7 +1253,8 @@ def print_donor_regimes(
     diag = diagnostics or {}
     excl_1 = diag.get("excluded_unresolved_1_seed", 0)
     excl_m = diag.get("excluded_unresolved_multi_seed", 0)
-    reclass_dedup = diag.get("reclassified_r2_to_r1_by_dedup", 0)
+    reclass_all = diag.get("reclassified_r2_to_r1_by_dedup_all", 0)
+    reclass_rated = diag.get("reclassified_r2_to_r1_by_dedup_rated_resolved", 0)
     print("\n5E. INCLUSION & ACTION-MATCHING DIAGNOSTICS")
     print("-" * 116)
     print(
@@ -1252,8 +1262,8 @@ def print_donor_regimes(
         f"1-distinct-seed={excl_1:,}, >=2-distinct-seeds={excl_m:,} (total={excl_1 + excl_m:,})"
     )
     print(
-        f"  Single-taxon resolved rows reclassified R2 -> R1 by canonical_seed_gene deduplication: "
-        f"{reclass_dedup:,}"
+        f"  Single-taxon rows reclassified R2 -> R1 by canonical_seed_gene deduplication: "
+        f"all_non_self={reclass_all:,}, rated_resolved_lineage={reclass_rated:,}"
     )
     for reg_key in (
         "R1_SINGLE_GENE",
