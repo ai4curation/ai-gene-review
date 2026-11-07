@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_methionine_cycle`: PR #6196 follow-up passes full validation on 057aabb030: 10,801 reviews, zero blocking errors and 854 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
+- [ ] `bacterial_methionine_cycle`: PR #6196: full validation passed on science head 057aabb030 (10,801 reviews, zero blocking errors; 854 frozen inputs verified). Independent review, current-main integration/CI and actual merge remain pending.
 
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
