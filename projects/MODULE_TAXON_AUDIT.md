@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_flagellar_assembly_export`: PR #6138: integrated main 2f72fda87e into approved head f6bc2a981e, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [ ] `bacterial_flagellar_assembly_export`: PR #6138 approved at 721ef757d8; main 7eee074bca integrated at 030fcbb5fd with 447 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
