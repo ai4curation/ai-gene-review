@@ -101,10 +101,19 @@ status is not evidence of anything.
 `unmigrated_landed_change` fires when a change has landed and its
 `affected_annotations` are still `NOT_STARTED` or `IN_PROGRESS`. That is the
 failure that actually happens: the ontology moves, and the repository keeps
-citing the retired term. It fires three times on
-`AMINO_ACID_ACTIVATION_OBSOLETION` today, naming nine files across four species
-that still annotate to terms GO obsoleted — found by adding the field, not by
-anyone noticing.
+citing the retired term. It fires **once** on `AMINO_ACID_ACTIVATION_OBSOLETION`
+today, on the `GO:0070143` record, naming three paths: `genes/DANRE/gtpbp3`,
+`genes/human/AARS2` and
+`modules/mitochondrial_trna_charging_and_initiator_formylation.yaml`. Of those,
+the module is what is genuinely outstanding — it still binds the obsolete term in
+a `processes:` slot, and its evidence statement now contradicts AARS2's own
+review.
+
+It fired three times, over nine files, when the field was first added. Two of
+those firings were wrong in the other direction: the affected reviews had already
+been migrated and the record still said `NOT_STARTED`. So the check found real
+unmigrated content *and* stale bookkeeping, and the count only became honest once
+the statuses were audited against the files. Read a falling count as either.
 
 ## It is KGCL, wrapped
 
@@ -245,7 +254,17 @@ staying in the TSV as a record.
   justification must name the terms that should replace it;
 - a `request_status` saying the request was filed with no tracker issue linked;
 - a `change_dsl` that does not parse, disagrees with the slots, or parses as the
-  wrong KGCL class;
+  wrong KGCL class; and one on a change type KGCL cannot express at all
+  (`NODE_DIRECT_MERGE`, `REMOVE_MAPPING`, `MAPPING_PREDICATE_CHANGE`,
+  `COMPLEX_CHANGE`, `OTHER`), where a string that parses cannot be the right kind
+  by construction;
+- a reparenting change (`NODE_MOVE`, `NODE_DEEPENING`, `NODE_SHALLOWING`) whose
+  `old_value` is missing or is not a CURIE. That slot holds the current parent for
+  these three, because KGCL's `from` clause takes it, and holds definition or label
+  text for the value changes — so its string range cannot tell the two apart;
+- an `adoption_status: NOT_APPLICABLE` that nonetheless lists
+  `affected_annotations`: the value means the change touches no content here, so a
+  file list contradicts it;
 - a term proposed for obsoletion that the same review `ACCEPT`s on an annotation
   row — `ACCEPT` means the term is a core function of the gene, which contradicts
   asking for its obsoletion. `MODIFY` with the replacement is the consistent pair.

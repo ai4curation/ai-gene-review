@@ -30,6 +30,15 @@ proposed_ontology_changes:
   stance: AGREE
   ontology_state_verified: '2026-10-31'
   adoption_status: COMPLETE
+  affected_annotations:
+  - genes/human/TRAPPC1/TRAPPC1-ai-review.yaml
+  - genes/human/TRAPPC3/TRAPPC3-ai-review.yaml
+  - genes/human/TRAPPC4/TRAPPC4-ai-review.yaml
+  - genes/human/TRAPPC5/TRAPPC5-ai-review.yaml
+  - genes/human/TRAPPC8/TRAPPC8-ai-review.yaml
+  - genes/human/TRAPPC11/TRAPPC11-ai-review.yaml
+  - genes/human/TRAPPC12/TRAPPC12-ai-review.yaml
+  - genes/human/TRAPPC13/TRAPPC13-ai-review.yaml
   upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
@@ -50,7 +59,7 @@ proposed_ontology_changes:
   origin: UPSTREAM_COMPLETED
   stance: AGREE
   ontology_state_verified: '2026-10-31'
-  adoption_status: COMPLETE
+  adoption_status: NOT_APPLICABLE
   upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
@@ -71,7 +80,7 @@ proposed_ontology_changes:
   origin: UPSTREAM_COMPLETED
   stance: AGREE
   ontology_state_verified: '2026-10-31'
-  adoption_status: COMPLETE
+  adoption_status: NOT_APPLICABLE
   upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
@@ -92,7 +101,7 @@ proposed_ontology_changes:
   origin: UPSTREAM_COMPLETED
   stance: AGREE
   ontology_state_verified: '2026-10-31'
-  adoption_status: COMPLETE
+  adoption_status: NOT_APPLICABLE
   upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO
@@ -114,6 +123,8 @@ proposed_ontology_changes:
   stance: AGREE
   ontology_state_verified: '2026-10-31'
   adoption_status: COMPLETE
+  affected_annotations:
+  - genes/human/TMF1/TMF1-ai-review.yaml
   upstream_tracker_issue: https://github.com/geneontology/go-annotation/issues/6375
 - change_type: REMOVE_MAPPING
   ontology: GO
