@@ -97,3 +97,10 @@ native diamine preference, particularly after CAPA-pathway diversification
 physiological substrate preference: that homolog was also characterized as CAPADH.
 No new PLP-binding or homodimerization row was added solely from family architecture;
 the specific catalytic proposal already captures the core activity.
+
+
+## PR 6089 review 5812319279 follow-up (2026-11-07)
+
+Added the previously prose-cited PMID37878710 to references with a bounded CAPA-diversification finding. No annotation action, payload, lifecycle or core changed.
+
+Read-only source caches were used; no downloads or source refreshes. Original annotation payloads/order and every historical NEW lifecycle are preserved. Heavy validation and rendering are deferred because disk space is critically low.

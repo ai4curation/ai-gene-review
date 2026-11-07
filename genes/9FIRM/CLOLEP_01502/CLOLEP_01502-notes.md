@@ -44,3 +44,10 @@ capacity in findings and this notebook. It is not assigned as a separate
 native biological function without evidence that it serves one. The CAPADH
 NTR excludes PUT/DAP chemistry and its support comes from the exact-pair
 reconstruction, not family membership alone.
+
+
+## PR 6089 review 5812319279 follow-up (2026-11-07)
+
+Clarified the threshold for not adding a PUT/DAP MF proposal solely for coverage. Purified EDO61991.1 activities remain positively recorded; their evolved secondary role is unresolved against the agmatine-route reconstruction. Comparable BfCASDH rates alone do not decide this distinction. No activity is denied and no numerical cutoff is imposed.
+
+Read-only source caches were used; no downloads or source refreshes. Original annotation payloads/order and every historical NEW lifecycle are preserved. Heavy validation and rendering are deferred because disk space is critically low.

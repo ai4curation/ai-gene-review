@@ -4,6 +4,7 @@ Coverage means the reviewed role panel, not demonstrated native flux or exhausti
 capacity of a genome. Run from the repository root with uv run python this_file.
 """
 
+import argparse
 from collections import Counter
 import hashlib
 import json
@@ -33,6 +34,13 @@ def walk(value):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, default=AUDIT / "substrate-followup-20261107")
+    args = parser.parse_args()
+    output = args.output_dir.resolve()
+    # Historical receipts remain immutable when current scientific conclusions change.
+    assert output != AUDIT.resolve(), "Use an additive result directory, not historical audit outputs"
+    output.mkdir(parents=True, exist_ok=True)
     baseline = read(AUDIT / "seed-baseline.yaml")
     panel = read(AUDIT / "member-panel.yaml")
     module = read(MODULE)
@@ -204,6 +212,19 @@ def main():
     )
     casdc = "nspc_spermidine_formation"
     check(
+        "Unresolved HP_0020 cannot supply the putrescine-specific decarboxylase step",
+        reviews["O24865"]["taxon"]["id"],
+        {"O24865"},
+        False,
+        node=casdc,
+    )
+    check(
+        "Helicobacter candidates do not establish the complete putrescine route",
+        reviews["O24865"]["taxon"]["id"],
+        {"O24865", next(a for a, d in reviews.items() if d["gene_symbol"] == "HP_1507")},
+        False,
+    )
+    check(
         "Canonical K184 is not the assayed active construct",
         reviews["A8FNH9"]["taxon"]["id"],
         {"A8FNH9"},
@@ -258,9 +279,12 @@ def main():
         ("source-closure.yaml", sources),
         ("new-annotations.yaml", added),
     ]:
-        (AUDIT / name).write_text(
+        destination = output / name
+        temporary = destination.with_suffix(destination.suffix + ".tmp")
+        temporary.write_text(
             yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=100)
         )
+        temporary.replace(destination)
     print(
         json.dumps(
             {k: v for k, v in result.items() if k != "reaction_conformance_checks"},

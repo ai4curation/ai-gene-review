@@ -21,3 +21,10 @@ The Cj0172c activity remains a candidate inferred from PTHR43796:SF2 and compara
 ## 2026-11-05 core-function consistency re-review
 
 The provisional MF refinement was previously promoted into a predicted core. This core has been withdrawn: family membership and a counterintuitive phenotype in another strain do not resolve the physiological substrate or exact reaction in Q0PBW7. Like BT_4612, this is a substrate-uncertain candidate with no asserted core. The original seeded row retains its non-review payload and its explicitly provisional MODIFY recommendation; a knowledge gap records what would confirm or change it.
+
+
+## PR 6089 review 5812319279 follow-up (2026-11-07)
+
+Changed the imported saccharopine row to UNDECIDED and withdrew the provisional GO:0102143 replacement. SF2 membership and the 81116 deletion phenotype do not resolve the exact Q0PBW7 substrate. The H. pylori CAPADH comparator is positive evidence for substrate diversity, not direct evidence that Cj0172c must use agmatine.
+
+Read-only source caches were used; no downloads or source refreshes. Original annotation payloads/order and every historical NEW lifecycle are preserved. Heavy validation and rendering are deferred because disk space is critically low.

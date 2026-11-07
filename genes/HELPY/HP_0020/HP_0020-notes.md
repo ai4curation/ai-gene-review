@@ -17,3 +17,10 @@ RCSB 8H52 maps to O26037 by SIFTS, but its primary source is NCTC11637_00022, st
 Neither CASDH is adjacent to the NspC gene in these reference genomes; no adjacency or operon inference is made. PMID28648602 on inactive H. pylori SpeE is not used to establish the alternative route. Family membership, in-vitro substrate acceptance, native metabolite output and genetic necessity are kept separate. PMID37878710 demonstrates CAPA diversification, preventing blanket putrescine specificity transfer. No biofilm/growth-process or generic binding annotation is proposed.
 
 `just paint-losses HELPY HP_0020` returned no IRD or IKR. PTHR43727-review.yaml already scopes LysA MF/BP to SF2 and recommends pruning PTN000159906 before SF1. Removal of these rows agrees with that family judgement.
+
+
+## PR 6089 review 5812319279 follow-up (2026-11-07)
+
+Withdrawn the specific carboxyspermidine NTR/core inference; retained the supported carboxy-lyase genus and separately qualified spermidine-process inference. PMID37878710 assays synthesized H. pylori CAPADH WP_000557673 with a C-terminal His6 tag, expressed in E. coli BL21(DE3), not O24865. Its positive CAPA result does not justify flipping HP_0020 to asserted CAPADC. The former top-level proposal/core are archived in the additive follow-up directory; no annotation row was removed or retired.
+
+Read-only source caches were used; no downloads or source refreshes. Original annotation payloads/order and every historical NEW lifecycle are preserved. Heavy validation and rendering are deferred because disk space is critically low.
