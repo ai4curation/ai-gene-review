@@ -7,13 +7,15 @@ condition. Q88KS6 (Pseudomonas putida PP_2213) fails the first and matches the
 second.
 """
 
+import json
+
 import pytest
 from typer.testing import CliRunner
 
 from ai_gene_review.cli import app
+from ai_gene_review.curated_rules import ProteinFeatures
 from ai_gene_review.etl.arba import ARBARule
 from ai_gene_review.etl.arba_match import (
-    ProteinFeatures,
     UniProtFeatureClient,
     arba_goa_rows,
     check_goa_rows,
@@ -70,13 +72,14 @@ RULE_2026_04 = _rule(
 
 @pytest.fixture
 def q88ks6():
+    lineage = ["131567", "2", "3379134", "1224", "1236", "72274", "135621", "286", "136845", "303", "160488"]
     return ProteinFeatures(
-        accession="Q88KS6",
-        taxon_id="160488",
-        lineage={"131567", "2", "3379134", "1224", "1236", "72274", "135621", "286", "136845", "303", "160488"},
-        interpro={"IPR045851", "IPR025110", "IPR020845", "IPR000873", "IPR042099", "IPR051087"},
-        panther={"PTHR43605", "PTHR43605:SF10"},
-        funfam={"3.30.300.30:FF:000005"},
+        signatures={
+            "INTERPRO": {"IPR045851", "IPR025110", "IPR020845", "IPR000873", "IPR042099", "IPR051087"},
+            "PANTHER": {"PTHR43605", "PTHR43605:SF10"},
+            "FUNFAM": {"3.30.300.30:FF:000005"},
+        },
+        taxon_ids={f"NCBITaxon:{t}" for t in lineage},
     )
 
 
@@ -97,27 +100,43 @@ def test_new_rule_version_matches_via_taxon_free_set(q88ks6):
 @pytest.mark.parametrize(
     "funfam,lineage,expected",
     [
-        ({"3.30.300.30:FF:000008"}, {"2"}, "TAXON_ONLY"),
-        ({"3.30.300.30:FF:000008"}, {"91835"}, None),
-        (set(), {"91835"}, "NO_SIGNATURE"),
+        ({"3.30.300.30:FF:000008"}, {"NCBITaxon:2"}, "TAXON_ONLY"),
+        ({"3.30.300.30:FF:000008"}, {"NCBITaxon:91835"}, None),
+        (set(), {"NCBITaxon:91835"}, "NO_SIGNATURE"),
     ],
 )
 def test_closest_failure_kinds(funfam, lineage, expected):
     rule = _rule("ARBA1", [[_cond("FunFam id", "3.30.300.30:FF:000008"), _cond("taxon", "fabids", "91835")]], "2025-01-01")
-    features = ProteinFeatures("P1", "1", lineage=lineage, funfam=funfam)
+    features = ProteinFeatures({"FUNFAM": funfam}, lineage)
     assert evaluate_rule(rule, features).closest_failure == expected
 
 
 def test_partial_signature():
     rule = _rule("ARBA1", [[_cond("InterPro id", "IPR1"), _cond("InterPro id", "IPR2")]], "2025-01-01")
-    features = ProteinFeatures("P1", "1", lineage={"1"}, interpro={"IPR1"})
+    features = ProteinFeatures({"INTERPRO": {"IPR1"}}, {"NCBITaxon:1"})
     assert evaluate_rule(rule, features).closest_failure == "PARTIAL_SIGNATURE"
+
+
+def test_multi_value_condition_needs_any_value():
+    rule = ARBARule.from_json(
+        {
+            "uniRuleId": "ARBA1",
+            "mainRule": {
+                "conditionSets": [
+                    {"conditions": [{"type": "InterPro id", "conditionValues": [{"value": "IPR1"}, {"value": "IPR2"}]}]}
+                ],
+                "annotations": [],
+            },
+            "modifiedDate": "2025-01-01",
+        }
+    )
+    assert evaluate_rule(rule, ProteinFeatures({"INTERPRO": {"IPR2"}}, set())).matched
 
 
 def test_negated_condition_blocks_match():
     rule = _rule("ARBA1", [[_cond("InterPro id", "IPR1"), _cond("PANTHER id", "PTHR9", negative=True)]], "2025-01-01")
-    with_family = ProteinFeatures("P1", "1", lineage={"1"}, interpro={"IPR1"}, panther={"PTHR9", "PTHR9:SF1"})
-    without = ProteinFeatures("P2", "1", lineage={"1"}, interpro={"IPR1"}, panther={"PTHR8"})
+    with_family = ProteinFeatures({"INTERPRO": {"IPR1"}, "PANTHER": {"PTHR9", "PTHR9:SF1"}}, {"NCBITaxon:1"})
+    without = ProteinFeatures({"INTERPRO": {"IPR1"}, "PANTHER": {"PTHR8"}}, {"NCBITaxon:1"})
     assert not evaluate_rule(rule, with_family).matched
     assert evaluate_rule(rule, without).matched
 
@@ -185,26 +204,41 @@ def test_check_goa_rows_old_rule_is_a_mismatch(goa_file, q88ks6):
 
 @pytest.mark.integration
 def test_uniprot_features_q88ks6():
-    features = UniProtFeatureClient().features(["Q88KS6"])["Q88KS6"]
-    assert features.taxon_id == "160488"
-    assert "2" in features.lineage  # Bacteria
-    assert "IPR051087" in features.interpro
-    assert "PTHR43605" in features.panther
+    protein = UniProtFeatureClient().proteins(["Q88KS6"])["Q88KS6"]
+    assert protein.taxon_id == "160488"
+    assert "NCBITaxon:2" in protein.features.taxon_ids  # Bacteria
+    assert "IPR051087" in protein.features.signatures["INTERPRO"]
+    assert "PTHR43605" in protein.features.signatures["PANTHER"]
+
+
+def _write_stale_cache(cache_dir):
+    """Cache the 2026_03 version of ARBA00086692, which Q88KS6 cannot satisfy."""
+    rule_dir = cache_dir / "ARBA00086692"
+    rule_dir.mkdir(parents=True)
+    (rule_dir / "ARBA00086692.json").write_text(json.dumps(RULE_2026_03.to_json()))
 
 
 @pytest.mark.integration
 def test_cli_arba_check(tmp_path):
+    _write_stale_cache(tmp_path)
     result = CliRunner().invoke(
         app, ["arba-check", "Q88KS6", "ARBA00086692", "--cache-dir", str(tmp_path)]
     )
     assert result.exit_code == 0, result.output
     assert "Q88KS6 (taxon 160488" in result.output
-    assert "ARBA00086692 (modified " in result.output
+    # The stale cached copy is ignored: the current rule matches via its taxon-free set.
+    assert "ARBA00086692 (modified 2026-07-18): matches via set 0" in result.output
 
 
 @pytest.mark.integration
 def test_cli_arba_check_goa(goa_file, tmp_path):
+    _write_stale_cache(tmp_path)
     result = CliRunner().invoke(app, ["arba-check-goa", str(goa_file), "--cache-dir", str(tmp_path)])
     assert result.exit_code == 0, result.output
-    assert "PROTEIN_NOT_FOUND  Q00000" in result.output
-    assert "RULE_NOT_FOUND  Q88KS6  GO:0016405" in result.output
+    statuses = {
+        tuple(line.split()[:3]) for line in result.output.splitlines() if line and not line.startswith(" ")
+    }
+    # The stale cached copy is ignored, so the July row matches the current rule.
+    assert ("MATCH", "Q88KS6", "GO:0031956") in statuses
+    assert ("RULE_NOT_FOUND", "Q88KS6", "GO:0016405") in statuses
+    assert ("PROTEIN_NOT_FOUND", "Q00000", "GO:0005737") in statuses

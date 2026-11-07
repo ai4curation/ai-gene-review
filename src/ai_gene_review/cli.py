@@ -2744,18 +2744,18 @@ def arba_check(
     from ai_gene_review.etl.arba import ARBAClient
     from ai_gene_review.etl.arba_match import UniProtFeatureClient, evaluate_rule
 
-    features = UniProtFeatureClient().features([accession]).get(accession)
-    if features is None:
+    protein = UniProtFeatureClient().proteins([accession]).get(accession)
+    if protein is None:
         typer.echo(f"{accession} not found in UniProtKB", err=True)
         raise typer.Exit(code=1)
-    typer.echo(f"{accession} (taxon {features.taxon_id}, UniProt {features.uniprot_release})")
+    typer.echo(f"{accession} (taxon {protein.taxon_id}, UniProt {protein.uniprot_release})")
     client = ARBAClient(cache_dir=cache_dir)
     for rule_id in rule_ids:
         rule = client.fetch_rule(rule_id, use_cache=False)
         if rule is None:
             typer.echo(f"  {rule_id}: not found in ARBA")
             continue
-        _echo_rule_match(evaluate_rule(rule, features))
+        _echo_rule_match(evaluate_rule(rule, protein.features))
 
 
 @app.command()
