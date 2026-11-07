@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_fused_puta_proline_catabolism`: PR #6150: integrated main 2f72fda87e into approved head bd62f935e0, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [ ] `bacterial_fused_puta_proline_catabolism`: PR #6150 follow-up passes full validation on c7dd5c910d: 10,753 reviews, zero blocking errors and 252 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -783,3 +783,7 @@ Integrated main e9d31cced895d2d74c464d57cbd40381e15520ab after the passing full 
 ## 2026-11-07 — bacterial_fused_puta_proline_catabolism main integration
 
 Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head bd62f935e042cd9c68b9ba8c62eecba06037a6b7. All 237 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 7 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial fused puta proline catabolism full validation passes
+
+PR #6150 follow-up passes full validation on c7dd5c910d: 10,753 reviews, zero blocking errors and 252 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_fused_puta_proline_catabolism/round3-full-run.json).
