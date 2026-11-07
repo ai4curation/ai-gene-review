@@ -37,3 +37,11 @@
 - GO:1990531 (P-type flippase complex): MODIFY -> GO:0043190.
 - GO:0120014 enables (IBA, IDA): MARK_AS_OVER_ANNOTATED (revised in PR review); the activity belongs to the assembled MlaFEDB complex with MlaC, so core records contributes_to; MlaD-intrinsic lipid contact is GO:0005543 phospholipid binding. Same reading applied to MlaB, MlaE and MlaF.
   (plus MlaC).
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Narrow full-carrier activity overannotation rationale to the exact GO definition; retain collective contribution and positive subunit function without universal alone-inactivity logic.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Genuine default Falcon attempt failed with HTTP403 authentication; no provider report was generated. Manual consultation used cached primary papers and current ontology snapshots.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.
