@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194 scientific follow-up ready for fresh full validation: corrected PhaZ activity/evidence and PhaG biotin participation, positive supported PhaC SF5 scope, and qualified family judgments. Original module and all annotation payloads/lifecycles retained. Additive capacity passes 32 cases, seven mutations, seven sensitivities and four proposed-function bridge controls; 15 explicit source supersessions preserve all old closure inputs. Fresh full validation, review, CI and merge pending.
+- [ ] `bacterial_mcl_pha_synthesis_and_mobilization`: PR #6194 follow-up passes full validation on bb0c422df1: 10,795 reviews, zero blocking errors and 546 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [x] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 actually merged as 4fc849e496a34fa6d5d478239a68c913724e11ca; 244 changed nonshared files are byte-identical to the reviewed head and 18 changed reviews remain COMPLETE with no PENDING rows.
 
@@ -942,3 +942,7 @@ Comparative audit passes full validation on dcaaf85b18: 10,788 reviews, zero blo
 ## 2026-11-07 — bacterial_mcl_pha_synthesis_and_mobilization main integration
 
 Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on dcaaf85b18a4bd93be434352a3dc8e73f6042020. All 432 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial mcl pha synthesis and mobilization full validation passes
+
+PR #6194 follow-up passes full validation on bb0c422df1: 10,795 reviews, zero blocking errors and 546 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review-followup/full-validation-20261107-1238.json).
