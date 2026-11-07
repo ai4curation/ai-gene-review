@@ -633,7 +633,7 @@ Correct the shared project page after integration for PR #6129: place the bacter
 
 ## 2026-11-06 — PR #6129 round2 full validation completed
 
-The bacterial_dsbab_oxidative_folding PR #6129 round2 review follow-up completed a fresh full-corpus run on 5fc26f0eaccdc9050295cc6a0c111dbf198628f0. Schema, terms, best practices and all54 pathway checks passed. The only17 blocking errors are the known16 unrelated yeast citation reviews; their22 relevant inputs equal the pinned base, and all197 frozen publication files matched the tested head. Current main already fixes these citations in merged PR5975. Integrating that main, publishing the reviewed fixes, renewed review/CI and actual merge remain pending.
+The bacterial_dsbab_oxidative_folding PR #6129 round2 review follow-up completed a fresh full-corpus run on 5fc26f0eaccdc9050295cc6a0c111dbf198628f0. Schema, terms, best practices and all54 pathway checks passed. The only17 blocking errors are the known16 unrelated yeast citation reviews; their22 relevant inputs equal the pinned base, and all 197 frozen publication files matched the tested head. Current main already fixes these citations in merged PR5975. Integrating that main, publishing the reviewed fixes, renewed review/CI and actual merge remain pending.
 
 ## 2026-11-06 — PR #6129 integration with published main
 
@@ -669,7 +669,7 @@ Integration proof: [round1-main-integration.json](../analysis/module_audits/bact
 
 ## 2026-11-06 — adopted ethanolamine comparative audit integrated
 
-The comparative ethanolamine audit now contains22 completed reviews (20 positive members and2 negative comparators),224 original rows and226 current rows, with47 raw/provider files preserved. One existing-PR-authored PA4022 evidence revision is archived and two new molecular-function rows are supported. Five exact EutB/EutC pairs span Pseudomonadota and Bacillota. Twenty literature references, including three reviews, plus two scoped primary-source records supply58 findings. The eight-part module preserves required deamination plus an oxidative fate; uptake, parallel reduction, cofactor recycling, reactivation and LT2 cargo scaffolding have explicit scope.79 capacity cases,8 mutations and153 module/profile quotations pass. PSEPK/pta is a related family-crosscheck correction that remains DRAFT, not an additional completed member. Full validation and publication to adopted PR5970, renewed review/CI and actual merge remain required.
+The comparative ethanolamine audit now contains22 completed reviews (20 positive members and2 negative comparators),224 original rows and 226 current rows, with47 raw/provider files preserved. One existing-PR-authored PA4022 evidence revision is archived and two new molecular-function rows are supported. Five exact EutB/EutC pairs span Pseudomonadota and Bacillota. Twenty literature references, including three reviews, plus two scoped primary-source records supply58 findings. The eight-part module preserves required deamination plus an oxidative fate; uptake, parallel reduction, cofactor recycling, reactivation and LT2 cargo scaffolding have explicit scope.79 capacity cases,8 mutations and153 module/profile quotations pass. PSEPK/pta is a related family-crosscheck correction that remains DRAFT, not an additional completed member. Full validation and publication to adopted PR5970, renewed review/CI and actual merge remain required.
 
 ## 2026-11-06 — ethanolamine comparative audit validated
 
@@ -907,7 +907,7 @@ Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full 
 
 PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Per-path preservation and validation scope](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json). The incoming OPG completion and flavonoid row are retained exactly. All 33 previously complete rows remain unchanged; no completion is inferred from an open-row status or from this local integration. Both parents’ dated journal entries and the pins autolink exclusion are preserved. The historical round-17 module pin describes its recorded revision; round27-full-run.json supersedes its validation status, without retrospectively changing that earlier receipt.
 
-## 2026-11-06 — carboxyspermidine PR6089 review follow-up
+## 2026-11-06 — carboxyspermidine PR #6089 review follow-up
 
 The review requested substrate-scope, annotation-action, native-process evidence, source-defect and rationale corrections. Ten member reviews were updated and pass focused validation. Eight authored isomer-specific spermine/thermospermine BP rows were withdrawn while supported molecular activities and positive native context remain. All 64 original payloads and 36 raw sources are preserved; nine authored proposals remain alongside five inherited NEW rows. The 22 compiler cases pass. The prior full validation has 19 independently proved pre-existing reference errors. This branch records the actual CHANGES_REQUESTED verdict on 5324e9e7a9; the local follow-up needs fresh review and CI after publication.
 
@@ -957,7 +957,7 @@ Integration proof: [validated-head-main6-integration.json](../analysis/module_au
 
 ## 2026-11-06 — carboxyspermidine prose and review-history clarification
 
-Correct three authored prose-spacing defects in module notes, the BT_0674 publisher-figure README and the earlier carboxyspermidine follow-up journal. Refresh the PR6089 review history from GitHub, recording API dismissal states as observations rather than inventing past decisions. Approval is tied to head 022ee1e2f24d8d556b95370797b41a9630932b0f; this follow-up requires renewed review and CI. No gene review, module YAML, family review, source cache, historical target or validation rule changes.
+Correct three authored prose-spacing defects in module notes, the BT_0674 publisher-figure README and the earlier carboxyspermidine follow-up journal. Refresh the PR #6089 review history from GitHub, recording API dismissal states as observations rather than inventing past decisions. Approval is tied to head 022ee1e2f24d8d556b95370797b41a9630932b0f; this follow-up requires renewed review and CI. No gene review, module YAML, family review, source cache, historical target or validation rule changes.
 
 ## 2026-11-07 — bacterial_carboxyspermidine_biosynthesis main integration
 
@@ -982,3 +982,7 @@ Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head f561
 ## 2026-11-07 — bacterial_carboxyspermidine_biosynthesis main integration
 
 Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b into approved head f99bd51e261ca33835a26db1c8e5e673afd71fb0. All 197 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 4 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Carboxyspermidine review provenance snapshot
+
+Refresh the timestamped PR #6089 review snapshot, including the previously omitted approval 5810786577 and all 12 original approval states from dismissal events. Latest observed review 5812173985 requests metadata repair; no approval of this later edit is claimed. All 197 previously preserved nonshared files and all other inventory rows remain unchanged. [Snapshot proof](../analysis/module_audits/bacterial_carboxyspermidine_biosynthesis/review-snapshot-20261107-1230.json).
