@@ -13,6 +13,15 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/WCjRqayPU7HqmNMi6YwR78
       title: Project brief
+manual_reviews:
+  - reviewed_by: cmungall
+    date: 2026-11-07
+    status: READY
+    notes: >-
+      Signed off on the plasma-membrane-subdomain convention (ACCEPT-at-own-resolution
+      for multi-source cellular-component rows, with the two guardrails) and its
+      application to GUCY2C, MUC16 and CA9. Scope is this policy decision; the broader
+      project remains IN_PROGRESS.
 ---
 
 # Accessible Surfaceome (SurfaceBench) Comparison
@@ -274,12 +283,12 @@ resolution** to it:
   where the **quoted** evidence on each generic row stops at the generic term —
   e.g. CA9's `GO:0005886` rows quote only *"Human carbonic anhydrase IX (CA IX) is
   an integral membrane protein"*, which does not fix inner vs outer leaflet — while
-  a `NEW GO:0009897` external-side row carries its own topology evidence. (CA9 is
-  not a fully clean exemplar: its generic rows are a mix of IBA/IDA/IEA/TAS, and
-  their shared *reason* argues the ectoenzyme topology directly, so it carries the
-  same `ACCEPT`-while-arguing-the-subdomain tension as GUCY2C and MUC16 below — see
-  the settled convention below. The distinction the page intends lives in what each
-  row's **quoted** evidence resolves, not in its reason prose.)
+  a `NEW GO:0009897` external-side row carries its own topology evidence. (CA9's
+  generic rows are a mix of IBA/IDA/IEA/TAS; their shared *reason* has been reworded
+  to stop arguing the ectoenzyme topology, leaving the external-side claim on the
+  `NEW GO:0009897` row per the settled convention below. The distinction the page
+  intends lives in what each row's **quoted** evidence resolves, not in its reason
+  prose.)
 
 The sharp discriminator is **what each row's own evidence resolves**, applied
 per row: if the evidence supporting a generic row already fixes the subdomain
@@ -307,12 +316,16 @@ than a licence to leave generic rows vague:
    cited on the `NEW GO:0016324` row; the generic rows keep only the evidence that
    stops at plasma membrane (surface localization, membrane integrality).
 
-Applied to **GUCY2C** (five `GO:0005886` rows `ACCEPT` at source resolution, their
-shared anchor now carries only the surface-localization quote PMID:23269669; the
-apical quote PMID:11950846 sits on the `NEW GO:0016324` row) and **MUC16** (generic
-PM rows `ACCEPT`, apical surface as the `NEW GO:0016324` row). **CA9** already fits:
-its generic rows `ACCEPT` on membrane-integrality evidence, and the `NEW
-GO:0009897` external-side row carries its own topology evidence.
+Applied to all three ectoenzyme/mucin cases in this PR:
+- **GUCY2C** — five `GO:0005886` rows `ACCEPT` at source resolution; their shared
+  anchor now carries only the surface-localization quote PMID:23269669, and the
+  apical quote PMID:11950846 sits on the `NEW GO:0016324` row.
+- **MUC16** — generic PM rows `ACCEPT` with the reason no longer arguing apical;
+  the apical microplicae quote (PMID:17898272) moved off the generic row onto the
+  `NEW GO:0016324` row.
+- **CA9** — generic PM rows `ACCEPT` on membrane-integrality evidence, reason
+  reworded to drop the external-side (ectoenzyme) argument; the external-side
+  topology sits on the `NEW GO:0009897` row.
 
 This exception is scoped to **multi-source CC rows**. A single row whose *own*
 evidence fixes the subdomain (a lipid anchor, a TM topology, a contact-site
