@@ -41,7 +41,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glycerol_uptake_catabolism`: [PR #6162](https://github.com/ai4curation/ai-gene-review/pull/6162) opened after passing full validation and verified main integration. Independent review, CI and actual merge remain pending.
+- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162 follow-up passes full validation on 4ddda49a73: 10,750 reviews, zero blocking errors and 180 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -747,3 +747,7 @@ Comparative audit passes full validation on 744ba398e0: 10,718 reviews, zero blo
 ## 2026-11-07 — bacterial_glycerol_uptake_catabolism main integration
 
 Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f after the passing full run on 744ba398e08d8e9a417335dcfa9c07b395934d70. All 151 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial glycerol uptake catabolism full validation passes
+
+PR #6162 follow-up passes full validation on 4ddda49a73: 10,750 reviews, zero blocking errors and 180 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_glycerol_uptake_catabolism/round1-full-run.json).
