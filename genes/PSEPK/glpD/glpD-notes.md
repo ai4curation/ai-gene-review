@@ -84,3 +84,10 @@ actions:
 ## 2026-11-04 (PR #5936 review follow-up)
 
 - PMID:25827416 full text is now cached; quotes previously attributed to this notes file now cite the PMID directly. Added a suggested question recording that in_complex GO:0009331 is homology-based (about 57% identity to E. coli GlpD), with no KT2440 oligomerization assay.
+
+
+## 2026-11-07 comparative glycerol audit
+
+Rechecked all five rows, preserving the historical plasma-membrane NEW payload and action. Quinone-dependent oxidation remains supported by curated RuleBase specificity and native pathway context; exact native quinone identity, membrane face and homodimeric assembly are qualified ortholog inferences. PMID25827416 measures growth/reporters and GlpK, not purified GlpD quinone specificity. The pre-existing OpenScientist report is genuine; its contradictory six-TM statement is not accepted. A lack of TM helices is not affirmative membrane-localization evidence.
+
+Existing genuine provider research was inspected and preserved byte-for-byte; conclusions were checked against primary sources. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.

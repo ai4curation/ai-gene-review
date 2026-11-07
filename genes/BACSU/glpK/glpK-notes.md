@@ -1,0 +1,7 @@
+# BACSU glpK annotation review — 2026-11-07
+
+PMID2127799 and PMID7773413 are abstract-only in the cache. Their native genetics complements the target HAMAP kinase inference. PMID4368746 full text shows glycerol kinase activity in W168/BR95 extracts and selective loss in GlpK mutants; these are not resolved cytosol assays. Cytosol is retained as inherited intracellular-kinase placement, not relabeled IDA. Existing ATP binding is supported by the ATP substrate requirement. G3P metabolism remains valid because GlpK produces G3P; G3P catabolism would be chemically wrong. Broad kinase and glycerol/carbohydrate metabolism rows are refined to existing precise terms.
+
+The source annotation payloads and order were preserved against `analysis/module_audits/bacterial_glycerol_uptake_catabolism/bacillus-seed-baseline.yaml`. No NEW annotations were added. All original evidence codes remain source evidence codes, even when the review supplies independent support.
+
+A real Falcon request (`just deep-research BACSU glpK --provider falcon`) failed with HTTP 403 authentication failure. The failure is logged under `.cache/module-audit-logs/glycerol-20261107/bacillus-review/falcon-glpK.log`; no provider-labelled research file was fabricated. Manual review used the cited primary sources and curated UniProt statements. PAINT lineage loss inspection found no IRD/IKR loss; this is a loss check, not a new reconstruction of the ancestral node.

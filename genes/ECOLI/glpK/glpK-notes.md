@@ -77,3 +77,10 @@
 ## 2026-11-04 (PR #5936 second review round)
 
 - GO:0006072 -> GO:0046167 reason now cites the PAINT GO:0046167 IBD on the eukaryotic glycerol kinase node PTN000023394 as corroboration (not propagated to this bacterial protein).
+
+
+## 2026-11-07 comparative glycerol audit
+
+Rechecked all 27 rows. The Zn ligand is a real GlpK contribution to the EIIA-Glc regulatory interface (PMIDs8170944 and9538005), not disproven by absence from isolated structures: retain zinc binding as non-core. Refined broad metal binding to supported Mg/Mn catalytic and Zn regulatory claims. Phosphorylation and functionally relevant self-association remain core-associated claims. Indexed full PMID5335908 identifies K10 strain7 and distinguishes D-glyceraldehyde-stimulated ATP cleavage from stable phosphorylation; corrected description and recorded a bounded UniProt query. Wiley full PMID11967071 Table1 explicitly lists glpK induction by MMC, so the expression result is retained while functional DNA-response participation is UNDECIDED. See primary-scope.md/provenance.json; existing publication caches remain unchanged.
+
+Default Falcon attempted via normal workflow and failed HTTP403 authentication; no provider output was fabricated. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.
