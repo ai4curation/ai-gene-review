@@ -663,6 +663,7 @@ def scan_corpus() -> Tuple[
     List[Dict[str, Any]],
     List[Dict[str, Any]],
     List[Dict[str, Any]],
+    Dict[str, int],
 ]:
     acc_info, taxon_names = load_panther_entries()
     tax_lineage = build_taxon_lineages()
@@ -778,7 +779,7 @@ def scan_corpus() -> Tuple[
                     not r[0] or r[0].startswith(("UNRESOLVED", "OTHER")) for r in resolved
                 )
                 if has_unresolved and target_taxid not in donor_taxa:
-                    if len(seed_toks) <= 1:
+                    if n_distinct_donors <= 1:
                         n_excluded_unresolved_1_seed += 1
                     else:
                         n_excluded_unresolved_multi_seed += 1
@@ -1056,10 +1057,15 @@ def scan_corpus() -> Tuple[
             mr["reason"] = rev_info.get("reason", "")
             mr["root_cause"] = rev_info.get("root_cause", "")
             multi_donor_records.append(mr)
-            if mr is multi_donor_records[0]:
-                mr["excluded_unresolved_1_seed"] = n_excluded_unresolved_1_seed
-                mr["excluded_unresolved_multi_seed"] = n_excluded_unresolved_multi_seed
 
+    n_reclassified_r2_to_r1 = sum(
+        1 for r in records if r["n_seed_tokens"] > 1 and r["n_distinct_donors"] == 1
+    )
+    diagnostics = {
+        "excluded_unresolved_1_seed": n_excluded_unresolved_1_seed,
+        "excluded_unresolved_multi_seed": n_excluded_unresolved_multi_seed,
+        "reclassified_r2_to_r1_by_dedup": n_reclassified_r2_to_r1,
+    }
     return (
         n_iba_rows,
         len(iba_genes),
@@ -1070,6 +1076,7 @@ def scan_corpus() -> Tuple[
         records,
         graft_single_org_rows,
         multi_donor_records,
+        diagnostics,
     )
 
 
@@ -1106,7 +1113,9 @@ def _format_rate_cols(sub: List[Dict[str, Any]]) -> RateStats:
 
 
 def print_donor_regimes(
-    records: List[Dict[str, Any]], multi_donor_records: List[Dict[str, Any]]
+    records: List[Dict[str, Any]],
+    multi_donor_records: List[Dict[str, Any]],
+    diagnostics: Dict[str, int] | None = None,
 ) -> None:
     all_non_self = records + multi_donor_records
     rated_all = [r for r in all_non_self if r["action"] in (DOWNGRADE_ACTIONS | RETAIN_ACTIONS)]
@@ -1197,28 +1206,54 @@ def print_donor_regimes(
         "R3_SINGLE_CLADE_JUMP",
         "R4_BRACKETED_MULTI_SPECIES",
     ):
-        for sf in ("SAME_SF", "CROSS_SF"):
-            sub = [
-                r
-                for r in rated_all
-                if r["regime"] == reg_key and r.get("sf_status") == sf
-            ]
+        reg_rows = [r for r in rated_all if r["regime"] == reg_key]
+        res_sf_rows = [r for r in reg_rows if r.get("sf_status") in ("SAME_SF", "CROSS_SF")]
+        cov_pct = 100.0 * len(res_sf_rows) / max(1, len(reg_rows))
+        print(
+            f"  [{REGIME_LABELS[reg_key]} — resolved SF coverage: {len(res_sf_rows)}/{len(reg_rows)} ({cov_pct:.1f}%)]"
+        )
+        for sf in ("SAME_SF", "CROSS_SF", "UNKNOWN_SF"):
+            sub = [r for r in reg_rows if r.get("sf_status") == sf]
             if not sub:
                 continue
             _keep, fail, ref, rem, p_fail, p_ref, p_down, p_rem = _format_rate_cols(sub)
             label = f"{REGIME_LABELS[reg_key]} + {sf}"
             print(
-                f"  {label:<68} | n={len(sub):>4} | Fail: {fail:>3} ({p_fail:>5.1f}%) | "
+                f"    {label:<66} | n={len(sub):>4} | Fail: {fail:>3} ({p_fail:>5.1f}%) | "
                 f"Refn: {ref:>3} ({p_ref:>5.1f}%) | Down: {p_down:>5.1f}% | REM: {rem:>3} ({p_rem:>4.1f}%)"
             )
+            if sf == "SAME_SF" and reg_key != "R1_SINGLE_GENE":
+                same_all = [
+                    r for r in sub if len([s for s in r.get("donor_sfs", "").split("|") if s]) == 1
+                ]
+                mixed_sf = [
+                    r for r in sub if len([s for s in r.get("donor_sfs", "").split("|") if s]) > 1
+                ]
+                for sub_lbl, sub_rows in (
+                    ("-> all resolved donors in target SF", same_all),
+                    ("-> mixed donor SFs (>=1 in target SF)", mixed_sf),
+                ):
+                    if not sub_rows:
+                        continue
+                    _k, fl, rf, rm, pf, pr, pd, prm = _format_rate_cols(sub_rows)
+                    print(
+                        f"      {sub_lbl:<64} | n={len(sub_rows):>4} | Fail: {fl:>3} ({pf:>5.1f}%) | "
+                        f"Refn: {rf:>3} ({pr:>5.1f}%) | Down: {pd:>5.1f}% | REM: {rm:>3} ({prm:>4.1f}%)"
+                    )
 
-    excl_1 = multi_donor_records[0].get("excluded_unresolved_1_seed", 0) if multi_donor_records else 0
-    excl_m = multi_donor_records[0].get("excluded_unresolved_multi_seed", 0) if multi_donor_records else 0
+    diag = diagnostics or {}
+    excl_1 = diag.get("excluded_unresolved_1_seed", 0)
+    excl_m = diag.get("excluded_unresolved_multi_seed", 0)
+    reclass_dedup = diag.get("reclassified_r2_to_r1_by_dedup", 0)
     print("\n5E. INCLUSION & ACTION-MATCHING DIAGNOSTICS")
     print("-" * 116)
     print(
         f"  Non-self GOA IBA rows excluded due to >=1 unresolved WITH/FROM seed: "
-        f"1-seed={excl_1:,}, >=2-seeds={excl_m:,} (total={excl_1 + excl_m:,})"
+        f"1-distinct-seed={excl_1:,}, >=2-distinct-seeds={excl_m:,} (total={excl_1 + excl_m:,})"
+    )
+    print(
+        f"  Single-taxon resolved rows reclassified R2 -> R1 by canonical_seed_gene deduplication: "
+        f"{reclass_dedup:,}"
     )
     for reg_key in (
         "R1_SINGLE_GENE",
@@ -1246,6 +1281,7 @@ def print_summary(
     records: List[Dict[str, Any]],
     graft_single_org_rows: List[Dict[str, Any]],
     multi_donor_records: List[Dict[str, Any]] | None = None,
+    diagnostics: Dict[str, int] | None = None,
 ) -> None:
     rated = [r for r in records if r["action"] in (DOWNGRADE_ACTIONS | RETAIN_ACTIONS)]
     unique_genes = len({(r["org_dir"], r["gene"]) for r in records})
@@ -1456,7 +1492,7 @@ def print_summary(
         )
 
     if multi_donor_records is not None:
-        print_donor_regimes(records, multi_donor_records)
+        print_donor_regimes(records, multi_donor_records, diagnostics)
 
 
 def print_tier_rows(records: List[Dict[str, Any]], tier: int) -> None:
@@ -1465,14 +1501,15 @@ def print_tier_rows(records: List[Dict[str, Any]], tier: int) -> None:
     for r in sub:
         ptn_tax = f" ({r['paint_taxon_name']})" if r.get("paint_taxon_name") else ""
         rc = f" | root_cause={r['root_cause']}" if r.get("root_cause") else ""
+        reg = f" | regime={r['regime']}" if r.get("regime") else ""
         print(
-            f"  {r['org_dir']}/{r['gene']} | {r['go_id']} ({r['go_name']}) | "
+            f"  {r['org_dir']}/{r['gene']} | {r['go_id']} ({r['go_name']}){reg} | "
             f"donor={r['donor_org']} | PTN={r['ptn_id']}{ptn_tax} | "
             f"sf={r['sf_status']} | action={r['action']}{rc}"
         )
 
 
-def print_candidates(records: List[Dict[str, Any]]) -> None:
+def print_candidates(records: List[Dict[str, Any]], all_regimes: bool = False) -> None:
     keywords = (
         "do not",
         "does not",
@@ -1488,15 +1525,17 @@ def print_candidates(records: List[Dict[str, Any]]) -> None:
         "not directly",
         "unlike",
     )
-    print("HIGH-DISTANCE (Tier 4-7) RETAINED SINGLE-ORGANISM IBAs WITH SKEPTICAL REVIEW REASONS:")
+    scope_label = "NON-SELF IBAs (ALL REGIMES R1-R4)" if all_regimes else "SINGLE-ORGANISM IBAs"
+    print(f"HIGH-DISTANCE (Tier 4-7) RETAINED {scope_label} WITH SKEPTICAL REVIEW REASONS:")
     print("-" * 116)
     for r in records:
         if r["tier"] >= 4 and r["action"] in RETAIN_ACTIONS:
             reason_lower = r["reason"].lower()
             if any(k in reason_lower for k in keywords):
                 ptn_tax = f" ({r['paint_taxon_name']})" if r.get("paint_taxon_name") else ""
+                reg = f" | {r['regime']}" if r.get("regime") else ""
                 print(
-                    f"[Tier {r['tier']}] {r['org_dir']}/{r['gene']} | {r['go_id']} ({r['go_name']}) | "
+                    f"[Tier {r['tier']}{reg}] {r['org_dir']}/{r['gene']} | {r['go_id']} ({r['go_name']}) | "
                     f"donor={r['donor_org']} ({r['seed_toks']}) | PTN={r['ptn_id']}{ptn_tax} | "
                     f"action={r['action']}"
                 )
@@ -1544,6 +1583,7 @@ def main() -> None:
         records,
         graft_single_org_rows,
         multi_donor_records,
+        diagnostics,
     ) = scan_corpus()
 
     if args.summary or not (
@@ -1559,27 +1599,21 @@ def main() -> None:
             records,
             graft_single_org_rows,
             multi_donor_records,
+            diagnostics,
         )
     elif args.regimes:
-        print_donor_regimes(records, multi_donor_records)
+        print_donor_regimes(records, multi_donor_records, diagnostics)
     active_records = (records + multi_donor_records) if args.all_regimes else records
     if args.tier is not None:
         print_tier_rows(active_records, args.tier)
     if args.candidates:
-        print_candidates(active_records)
+        print_candidates(active_records, all_regimes=args.all_regimes)
     if args.tsv or args.json:
-        export_records = [
-            {
-                k: v
-                for k, v in r.items()
-                if k not in ("excluded_unresolved_1_seed", "excluded_unresolved_multi_seed")
-            }
-            for r in active_records
-        ]
+        export_records = list(active_records)
         if args.tsv:
             os.makedirs(os.path.dirname(os.path.abspath(args.tsv)), exist_ok=True)
             if export_records:
-                fieldnames = list(export_records[0].keys())
+                fieldnames = list(dict.fromkeys(k for r in export_records for k in r.keys()))
                 with open(args.tsv, "w", encoding="utf-8", newline="") as f:
                     writer = csv.DictWriter(
                         f, fieldnames=fieldnames, delimiter="\t", extrasaction="ignore"
