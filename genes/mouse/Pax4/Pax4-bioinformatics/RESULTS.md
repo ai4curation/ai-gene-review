@@ -53,6 +53,11 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | Pax6 | pancreas | 1-week-old stage (mouse) | 26.5 | 63.2 | Affymetrix |
 | Pax6 | islet of Langerhans | 5-week-old stage (mouse) | 54.5 | 89.9 | Affymetrix |
 
+Stage-merged calls (present and absent) in pancreas and its parts:
+
+- **Pax4**: islet of Langerhans absent (gold, 44); dorsal pancreas present (gold, 74); pancreas present (silver, 52)
+- **Pax6**: islet of Langerhans present (gold, 96); pancreas present (gold, 83); dorsal pancreas present (gold, 73)
+
 ### UBERON:0000970 eye and its parts
 
 | gene | entity | stage | start (dpc) | score | data types |
@@ -173,6 +178,11 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | Pax6 | eyeball of camera-type eye | 8-week-old stage (mouse) | 75.5 | 98.8 | Affymetrix |
 | Pax6 | retina | 3-month-old stage (mouse) | 103.5 | 75.8 | Affymetrix |
 
+Stage-merged calls (present and absent) in eye and its parts:
+
+- **Pax4**: extra-ocular muscle absent (gold, 61); substantia propria of cornea absent (gold, 60); epithelium of lens absent (gold, 58); retina absent (gold, 53); cornea absent (gold, 53); lacrimal gland absent (gold, 52); conjunctival fornix absent (gold, 52); ciliary body absent (gold, 50); pigmented layer of retina absent (gold, 50); iris absent (gold, 43); retinal neural layer absent (gold, 17); lens of camera-type eye present (gold, 57); eyeball of camera-type eye present (gold, 54); camera-type eye present (gold, 54)
+- **Pax6**: hyaloid cavity absent (gold, 50); retinal neural layer present (gold, 99); substantia propria of cornea present (gold, 99); lens of camera-type eye present (gold, 98); corneal epithelium present (gold, 98); iris present (gold, 97); epithelium of lens present (gold, 97); cornea present (gold, 97); eyeball of camera-type eye present (gold, 97); ciliary body present (gold, 96); conjunctiva present (gold, 96); conjunctival fornix present (gold, 96); retina present (gold, 96); lens anterior epithelium present (gold, 94); lens pit present (gold, 94); layer of retina present (gold, 94); lacrimal gland present (gold, 94); camera-type eye present (gold, 93); inner nuclear layer of retina present (gold, 83); pigmented layer of retina present (gold, 76); outer nuclear layer of retina present (gold, 70); ganglionic layer of retina present (gold, 68); lens fiber present (gold, 59); extra-ocular muscle present (silver, 58)
+
 ### UBERON:0001905 pineal body and its parts
 
 | gene | entity | stage | start (dpc) | score | data types |
@@ -181,6 +191,11 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | Pax6 | pineal body | Theiler stage 25 (mouse) | 17.0 | 75.0 | in situ hybridization |
 | Pax6 | pineal body | Theiler stage 26 (mouse) | 18.0 | 50.0 | in situ hybridization |
 | Pax6 | pineal body | neonate stage | 19.5 | 88.2 | Affymetrix |
+
+Stage-merged calls (present and absent) in pineal body and its parts:
+
+- **Pax4**: pineal body absent (gold, 53)
+- **Pax6**: pineal body present (gold, 82)
 
 ### UBERON:0001890 forebrain and its parts
 
@@ -351,6 +366,11 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | Pax6 | cerebral cortex | 5-month-old stage (mouse) | 166.5 | 46.9 | Affymetrix |
 | Pax6 | neocortex | 5-month-old stage (mouse) | 166.5 | 45.9 | Affymetrix |
 
+Stage-merged calls (present and absent) in forebrain and its parts:
+
+- **Pax4**: rostral migratory stream absent (gold, 68); cingulate cortex absent (gold, 65); optic fissure absent (gold, 57); ventromedial nucleus of hypothalamus absent (gold, 56); caudate-putamen absent (gold, 56); lateral hypothalamic area absent (gold, 56); nucleus accumbens absent (gold, 56); retrosplenial region absent (gold, 56); dorsal striatum absent (gold, 56); medial dorsal nucleus of thalamus absent (gold, 56); lateral geniculate body absent (gold, 56); anterior amygdaloid area absent (gold, 56); lateral septal nucleus absent (gold, 56); globus pallidus absent (gold, 55); dorsomedial nucleus of hypothalamus absent (gold, 55); medial geniculate body absent (gold, 55); mammillary body absent (gold, 55); olfactory tubercle absent (gold, 55); habenula absent (gold, 55); subiculum absent (gold, 55); paraventricular nucleus of hypothalamus absent (gold, 55); subparaventricular zone absent (gold, 55); medial preoptic region absent (gold, 55); arcuate nucleus of hypothalamus absent (gold, 55); prefrontal cortex absent (gold, 54); median eminence of neurohypophysis absent (gold, 54); pineal body absent (gold, 53); suprachiasmatic nucleus absent (gold, 48); supraoptic nucleus absent (gold, 44); olfactory bulb absent (gold, 43); barrel cortex absent (gold, 42); visual cortex absent (gold, 38); dentate gyrus of hippocampal formation granule cell absent (gold, 34); cortical plate absent (gold, 33); primary visual cortex absent (gold, 28); superior frontal gyrus absent (gold, 20); entorhinal cortex present (silver, 79); CA3 field of hippocampus present (silver, 77); perirhinal cortex present (silver, 75); hippocampal field present (silver, 59); dorsal plus ventral thalamus present (gold, 54); dentate gyrus of hippocampal formation present (silver, 53); striatum present (silver, 51); hypothalamus present (silver, 51); forebrain present (silver, 50); olfactory lobe present (gold, 46)
+- **Pax6**: optic recess of third ventricle absent (gold, 62); optic chiasma absent (gold, 61); future neurohypophysis absent (gold, 56); neural lobe of neurohypophysis absent (gold, 50); pituitary stalk absent (gold, 50); paraventricular nucleus of hypothalamus absent (gold, 49); medial geniculate body absent (gold, 48); barrel cortex absent (gold, 42); dorsal striatum absent (gold, 42); lateral hypothalamic area absent (gold, 40); anterior amygdaloid area absent (gold, 40); dorsomedial nucleus of hypothalamus absent (gold, 40); lateral geniculate body absent (gold, 40); medial dorsal nucleus of thalamus absent (gold, 40); mammillary body absent (gold, 40); ventromedial nucleus of hypothalamus absent (gold, 40); caudate-putamen absent (gold, 40); retrosplenial region absent (gold, 39); subiculum absent (gold, 39); habenula absent (gold, 39); olfactory tubercle absent (gold, 39); globus pallidus absent (gold, 39); medial preoptic region absent (gold, 39); subparaventricular zone absent (gold, 39); arcuate nucleus of hypothalamus absent (gold, 39); median eminence of neurohypophysis absent (gold, 39); optic fissure present (gold, 98); telencephalon lateral wall present (gold, 94); remnant of Rathke's pouch present (gold, 91); olfactory bulb present (gold, 88); CA3 field of hippocampus present (gold, 85); cerebral cortex subventricular zone present (gold, 84); roof plate of telencephalon present (gold, 83); pineal body present (gold, 82); olfactory lobe present (gold, 81); pars intermedia of adenohypophysis present (gold, 81); cerebral cortex ventricular layer present (gold, 80); rostral migratory stream present (silver, 78); perirhinal cortex present (gold, 76); ventral thalamus present (gold, 75); entorhinal cortex present (silver, 75); cortical plate present (gold, 72); zona incerta present (gold, 72); dentate gyrus of hippocampal formation granule cell present (gold, 72); pars distalis of adenohypophysis present (gold, 71); superior frontal gyrus present (gold, 71); roof plate of diencephalon present (gold, 71); diencephalon lateral wall present (gold, 70); primary visual cortex present (gold, 70); epithalamus present (gold, 70); dentate gyrus of hippocampal formation present (gold, 69); visual cortex present (gold, 69); CA1 field of hippocampus present (silver, 66); hippocampal field present (silver, 66); bed nucleus of stria terminalis present (silver, 64); optic stalk present (gold, 64); Ammon's horn present (gold, 63); septum of telencephalon present (gold, 63); amygdala present (gold, 61); pituitary gland present (gold, 61); temporal lobe present (gold, 61); supraoptic nucleus present (gold, 60); forebrain present (gold, 60); cerebral hemisphere present (gold, 60); telencephalon present (gold, 60); cerebral cortex present (gold, 59); dorsal plus ventral thalamus present (gold, 57); piriform cortex present (gold, 57); cingulate cortex present (silver, 56); basal forebrain present (gold, 56); neocortex present (gold, 55); striatum present (gold, 55); frontal cortex present (gold, 54); diencephalon present (gold, 54); primary motor cortex present (silver, 51); olfactory cortex present (gold, 51); hypothalamus present (gold, 50); lateral septal nucleus present (silver, 48); suprachiasmatic nucleus present (silver, 47)
+
 ### UBERON:0000160 intestine and its parts
 
 | gene | entity | stage | start (dpc) | score | data types |
@@ -363,4 +383,9 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | Pax6 | intestine | Theiler stage 20 (mouse) | 12.0 | 57.1 | RNA-Seq |
 | Pax6 | intestine | Theiler stage 23 (mouse) | 15.0 | 63.3 | RNA-Seq |
 | Pax6 | intestine | Theiler stage 24 (mouse) | 16.0 | 60.8 | RNA-Seq |
+
+Stage-merged calls (present and absent) in intestine and its parts:
+
+- **Pax4**: ileal epithelium absent (silver, 79); epithelium of small intestine absent (gold, 72); intestinal villus absent (gold, 61); intestinal epithelium absent (gold, 59); left colon absent (gold, 56); ileum absent (gold, 55); paneth cell absent (gold, 54); jejunum absent (gold, 51); small intestine Peyer's patch absent (silver, 51); crypt of Lieberkuhn of small intestine absent (gold, 40); right colon present (silver, 57); duodenum present (gold, 55); intestine present (gold, 53)
+- **Pax6**: paneth cell absent (gold, 59); small intestine Peyer's patch absent (silver, 51); left colon absent (gold, 48); right colon absent (gold, 45); crypt of Lieberkuhn of small intestine absent (gold, 40); ileal epithelium present (silver, 60); jejunum present (silver, 52); duodenum present (gold, 48); intestine present (gold, 47); colon present (silver, 47); large intestine present (silver, 46)
 

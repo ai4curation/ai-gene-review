@@ -51,6 +51,12 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | G6pc3 | islet of Langerhans | neonate stage | 19.5 | 77.8 | Affymetrix |
 | G6pc3 | islet of Langerhans | 5-week-old stage (mouse) | 54.5 | 80.2 | Affymetrix |
 
+Stage-merged calls (present and absent) in islet of Langerhans and its parts:
+
+- **G6pc2**: islet of Langerhans present (gold, 100)
+- **G6pc1**: islet of Langerhans present (gold, 43)
+- **G6pc3**: islet of Langerhans present (gold, 84)
+
 ### UBERON:0001264 pancreas and its parts
 
 | gene | entity | stage | start (dpc) | score | data types |
@@ -74,6 +80,12 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | G6pc3 | pancreas | 1-week-old stage (mouse) | 26.5 | 76.4 | Affymetrix |
 | G6pc3 | islet of Langerhans | 5-week-old stage (mouse) | 54.5 | 80.2 | Affymetrix |
 | G6pc3 | pancreas | 2-month-old stage (mouse) | 75.5 | 81.8 | Affymetrix |
+
+Stage-merged calls (present and absent) in pancreas and its parts:
+
+- **G6pc2**: islet of Langerhans present (gold, 100); pancreas present (gold, 90)
+- **G6pc1**: dorsal pancreas absent (gold, 48); pancreas present (gold, 44); islet of Langerhans present (gold, 43)
+- **G6pc3**: dorsal pancreas present (gold, 88); islet of Langerhans present (gold, 84); pancreas present (gold, 81)
 
 ### UBERON:0002107 liver and its parts
 
@@ -115,6 +127,12 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | G6pc3 | liver | 11-week-old stage (mouse) | 96.5 | 71.5 | Affymetrix|RNA-Seq |
 | G6pc3 | liver | 3-month-old stage (mouse) | 103.5 | 69.9 | Affymetrix|RNA-Seq |
 | G6pc3 | liver | 5-month-old stage (mouse) | 166.5 | 74.1 | Affymetrix|RNA-Seq |
+
+Stage-merged calls (present and absent) in liver and its parts:
+
+- **G6pc2**: fetal liver hematopoietic progenitor cell absent (gold, 43); left lobe of liver absent (gold, 36); liver present (gold, 42)
+- **G6pc1**: fetal liver hematopoietic progenitor cell absent (gold, 43); left lobe of liver present (gold, 98); liver present (gold, 92)
+- **G6pc3**: fetal liver hematopoietic progenitor cell present (silver, 75); liver present (gold, 68); left lobe of liver present (gold, 68)
 
 ### UBERON:0002113 kidney and its parts
 
@@ -170,4 +188,10 @@ Present calls only (the API reports no absent calls); a missing stage means no c
 | G6pc3 | right kidney | 2-month-old stage (mouse) | 75.5 | 92.5 | RNA-Seq |
 | G6pc3 | adult mammalian kidney | 3-month-old stage (mouse) | 103.5 | 80.4 | Affymetrix |
 | G6pc3 | adult mammalian kidney | 5-month-old stage (mouse) | 166.5 | 93.1 | Affymetrix |
+
+Stage-merged calls (present and absent) in kidney and its parts:
+
+- **G6pc2**: metanephric collecting duct absent (gold, 41); metanephric ureteric bud absent (gold, 39); renal medulla collecting duct absent (gold, 38); ureteric bud tip absent (gold, 38); metanephric cortical collecting duct absent (gold, 38); right kidney absent (silver, 36); renal corpuscle present (silver, 55); renal medulla interstitium present (gold, 55); metanephric loop of Henle present (silver, 54); metanephric S-shaped body present (silver, 52); metanephros present (silver, 49); metanephric proximal tubule present (silver, 47); metanephric renal vesicle present (silver, 44); kidney present (gold, 42); adult mammalian kidney present (gold, 41); proximal tubule present (silver, 31)
+- **G6pc1**: metanephric collecting duct absent (gold, 41); metanephric S-shaped body absent (gold, 41); metanephric renal vesicle absent (gold, 41); metanephric ureteric bud absent (gold, 39); renal medulla collecting duct absent (gold, 38); ureteric bud tip absent (gold, 38); renal medulla interstitium absent (gold, 38); renal corpuscle absent (gold, 38); metanephric cortical collecting duct absent (gold, 38); metanephric loop of Henle absent (gold, 37); right kidney present (gold, 98); adult mammalian kidney present (gold, 98); proximal tubule present (gold, 90); cortex of kidney present (gold, 86); kidney present (gold, 85); metanephros present (gold, 58); metanephric proximal tubule present (silver, 50)
+- **G6pc3**: renal medulla interstitium absent (silver, 63); metanephric cortical collecting duct absent (gold, 58); metanephric loop of Henle absent (gold, 58); metanephric collecting duct absent (gold, 54); right kidney present (gold, 92); proximal tubule present (gold, 87); cortex of kidney present (gold, 84); adult mammalian kidney present (gold, 84); kidney present (gold, 79); metanephric ureteric bud present (gold, 69); renal corpuscle present (silver, 68); metanephros present (gold, 68); renal medulla collecting duct present (silver, 66); ureteric bud tip present (silver, 64); metanephric proximal tubule present (silver, 64); metanephric renal vesicle present (silver, 63); metanephric S-shaped body present (silver, 60)
 

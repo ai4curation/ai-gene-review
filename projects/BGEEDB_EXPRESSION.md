@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, mouse]
 autolink_exclude: [old, Dark, RPE]
-genes: [PAX6, PAX4, ATOH1, OLIG2, MITF, GCG, G6PC1, G6PC2, G6PC3, ACTL8, AGFG1, AGFG2, GBX2, FGF8, PTF1A, RORA, RELN, SHH, SMO, FBXO41, DNER, PTPN11, EN1, EN2]
+genes: [PAX6, PAX4, G6pc2, Pax4, ATOH1, OLIG2, MITF, GCG, G6PC1, G6PC2, G6PC3, ACTL8, AGFG1, AGFG2, GBX2, FGF8, PTF1A, RORA, RELN, SHH, SMO, FBXO41, DNER, PTPN11, EN1, EN2]
 ---
 
 # Bgee expression as evidence
@@ -39,7 +39,12 @@ gluconeogenesis can run. AGFG2 and ACTL8 are absent from the anatomy of an
 inherited IBA term in which their sister paralog is detected. And the
 cerebellum-development module switches on in a staggered wave that broadly
 follows module order. The wave also exposes two module-modelling issues and two
-gaps in the Cell Ontology.
+gaps in the Cell Ontology. Full reviews of mouse G6pc2 and Pax4, the two
+strongest paralog leads, removed the inherited gluconeogenesis, brain and
+forebrain terms and marked the retina terms as over-annotations. In both,
+expression was one supporting line among phylogeny, phenotype and literature,
+never the deciding one. The Pax4 review also traced an expression-only (IEP)
+rat annotation into both an orthology projection and a PAINT seed.
 
 ## Contents
 
@@ -297,6 +302,74 @@ What the wave says about the module:
   calls at P0–P7 and 2 at P7–P21, so step 4's patchy postnatal row is
   a coverage gap, not biology.
 
+### 5. Follow-up reviews: mouse G6pc2 and Pax4
+
+The two strongest paralog leads were reviewed in full, in mouse, which has the
+richest Bgee data for both genes. G6pc2 has 95 anatomical entities and 35
+stages across in situ, Affymetrix, RNA-seq and single-cell data. Pax4 has 47
+entities and 22 stages, including 34 in situ calls. Each review cites a
+per-gene expression report (`scripts/gene_report.py`) that scores every
+anatomy-bearing GO term for the gene and its sister paralogs:
+
+- G6pc2: `genes/mouse/G6pc2/G6pc2-bioinformatics/RESULTS.md`
+- Pax4: `genes/mouse/Pax4/Pax4-bioinformatics/RESULTS.md`
+
+**mouse/G6pc2** (17 rows: 12 ACCEPT,
+3 MODIFY, 2 REMOVE).
+
+- **Core function.** Glucose-6-phosphatase activity in the β-cell ER is core.
+  It opposes glucokinase, shifts the glucose dose-response of insulin
+  secretion, and sets fasting blood glucose. *Regulation of insulin
+  secretion* is refined to the negative, glucose-stimulated child.
+- **Gluconeogenesis.** The IBA and the UniPathway IEA are removed as
+  over-propagation from PTN000971890, whose seeds include no G6PC2.
+  Deleting G6pc2 in β-cells alone accounts for the phenotype, and islets do
+  not supply blood glucose.
+- **How expression was used.** The paralog-controlled context check is
+  quoted in the reason as supporting evidence only. In liver, kidney and
+  intestine G6pc2 has 10 absent calls and only low present calls, while
+  G6pc1 is present at scores near 98. The review notes that G6pc2's trace
+  liver calls mean expression alone could not have carried the decision.
+
+**mouse/Pax4** (50 rows: 21 ACCEPT,
+18 MODIFY, 6 MARK_AS_OVER_ANNOTATED, 5 REMOVE). The core functions are
+transcriptional repression, β-cell fate allocation by cross-repression with
+Arx, and enteroendocrine fate in the gut.
+
+- **The IBA eye and brain rows.**
+  - *Brain development* and *forebrain development* are removed.
+  - *Retina development* and *sensory organ development* are marked as
+    over-annotated. A late role in photoreceptor maturation has never been
+    tested, because null mice die early.
+  - The evidence: no Pax4 ortholog has an eye or brain phenotype, and Pax4
+    and Pax6 cannot substitute for each other. Synteny places Pax4 among
+    the vertebrate Pax4/6/10 genes, which "are not implicated in the
+    development of eyes" (PMID:24951566).
+- **Expression did not decide those rows.** Mouse Pax4 is
+  ENRICHED-tier for brain terms, from adult Affymetrix samples and one E13
+  in situ timepoint, yet the review removed them. That is rules 1 and 2
+  below: presence is not participation.
+- **The IEP chain.** The rat retina paper (PMID:19012751) found Pax4 in
+  photoreceptors, peaking in the adult, and says this "argues against a role
+  in development". The same paper's expression-pattern (IEP) annotations
+  still reach mouse Pax4 by two routes.
+  - **Ensembl orthology projection.** *Retina development* and *circadian
+    rhythm* come from PMID:19012751, and *response to cAMP* and *response to
+    xenobiotic stimulus* from the pineal paper PMID:18818287.
+  - **PAINT.** Rat Pax4 (RGD:620433) is one of the seeds of the retina IBD
+    at PTN002900580.
+
+  The circadian, cAMP and xenobiotic rows are removed: a transcript that
+  oscillates or responds to a signal is an output of the pathway, not a
+  participant in it. Here mouse Bgee supplies a controlled absence for a
+  non-developmental term. Pax4 is absent from the pineal body (gold) where
+  Pax6 is present.
+
+Both reviews record source defects for the upstream resources and pose the
+PAINT node questions as suggested questions. The human genes are still
+unreviewed. Their IBAs come from the same nodes, so the same arguments should
+transfer, but they need their own reviews.
+
 ## Rules of use: when expression can count
 
 These rules come from the calibration and are offered as working guidance for
@@ -329,12 +402,14 @@ reviewers. They are not repository policy.
 |---|---|---|---|
 | IBA | ACTL8 `axon` (GO:0030424) | ACTB detected in neurons; ACTL8 germline-only and absent | reconsider the UNDECIDED row; candidate MARK_AS_OVER_ANNOTATED |
 | IBA | AGFG2 `acrosome assembly` (GO:0001675) | AGFG1 at 98–100 in sperm and male germ cells; AGFG2 absent | re-check the ACCEPT against AGFG2-specific literature |
-| IBA | G6PC2 `gluconeogenesis` (GO:0006094) | islet-dominant; 2/10 top tissues in the gluconeogenic context | review G6PC2 (no review yet) |
-| IBA / PAINT | PAX4 retina and forebrain terms from PTN002900580 | PAX6 enriched; PAX4 absent (human) or marginal (mouse) | review PAX4; raise node placement with PAINT |
+| IBA | G6PC2 `gluconeogenesis` (GO:0006094) | islet-dominant; 2/10 top tissues in the gluconeogenic context | **done (mouse G6pc2):** IBA and IEA REMOVEd; IRD suggested at the G6PC2 clade; human G6PC2 still unreviewed |
+| IBA / PAINT | PAX4 retina and forebrain terms from PTN002900580 | PAX6 enriched; PAX4 absent (human) or marginal (mouse) | **done (mouse Pax4):** brain and forebrain REMOVEd, retina and sensory organ MARK_AS_OVER_ANNOTATED; IRDs suggested on PTN000676639 and PTN009180007; human PAX4 still unreviewed |
 | review gap | MITF RPE, heart, skeletal muscle | top tissues unexplained by any retained anatomy term | check whether the review is missing functions |
 | module | cerebellum step 1 context | GBX2/FGF8 expressed at the midbrain-hindbrain boundary and rhombomere 1, not in the declared `cerebellum` | change the step context |
 | module | EN1/EN2 placement | expressed from E8, with the isthmic genes | suggested question for module curators |
 | ontology (CL) | CL:0002362, CL:0001031 | GCP lacks an external-granule-layer location; granule cell has none | request axioms from CL |
+| source (MGI) | mouse G6pc2 ER IDA citing PMID:10787428 | not expression: the cited paper is about NPC1 | recorded as a suspected wrong reference for MGI to check |
+| source (RGD, Ensembl) | rat Pax4 IEP rows (PMID:19012751, PMID:18818287) | rhythmic or regulated transcript levels, not function | recorded as source defects; four rows reach mouse Pax4 by orthology, and one seeds the PAINT retina IBD |
 
 The full machine-generated lists are
 [corpus_leads.tsv](BGEEDB_EXPRESSION/results/corpus_leads.tsv) and

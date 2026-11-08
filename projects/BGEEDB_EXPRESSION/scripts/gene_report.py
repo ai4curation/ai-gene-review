@@ -188,6 +188,16 @@ def main() -> None:
                 lines.append(f"| {r['gene']} | {r['entity_name']} | {r['stage_name']} | {r['stage_start_dpc']} | "
                              f"{float(r['score']):.1f} | {r['data_types']} |")
             lines.append("")
+            # The stage-resolved API reports present calls only; the stage-merged
+            # simple file also carries absent calls, which matter for a paralog
+            # comparison (e.g. Pax4 absent where Pax6 is present).
+            lines += [f"Stage-merged calls (present and absent) in {anat.name(f)} and its parts:", ""]
+            for s in symbols:
+                merged = sorted((c for c in calls[by_sym[s]] if c.quality in ("gold", "silver")
+                                 and anat.within(c.entity, f)), key=lambda c: (c.state, -c.score))
+                desc = "; ".join(f"{c.name} {c.state} ({c.quality}, {c.score:.0f})" for c in merged) or "no calls"
+                lines.append(f"- **{s}**: {desc}")
+            lines.append("")
 
     (out_dir / "RESULTS.md").write_text("\n".join(lines) + "\n")
     print(f"wrote {out_dir / 'RESULTS.md'}")

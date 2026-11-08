@@ -118,6 +118,12 @@ because Bgee has the richest data for this gene in mouse.
   - Forebrain presence is one Theiler stage 21 in situ timepoint plus adult
     Affymetrix hippocampus and cortex. Embryonic brain is absent (gold, 13.1)
     in bgee_calls.tsv.
+  - Pineal body: RESULTS.md section 4 lists no stage-resolved Pax4 present
+    call. The stage-merged bgee_calls.tsv has Pax4 absent from pineal body
+    (gold, 52.83), where Pax6 is present (gold, 81.75). So the rat pineal
+    pattern behind the IEP rows is not even confirmed in mouse. These are not
+    developmental terms, so this is the one controlled absence that counts
+    here, though it is still a minor point beside the IEP argument.
   - As the project concluded, presence cannot establish function and absence
     here is stage-merged. Expression is consistent with the decision, not its
     basis.
@@ -150,9 +156,12 @@ because Bgee has the richest data for this gene in mouse.
   MODIFYs to GO:0000978 are refinements.
 - GO:0003309 is_a GO:0035883 (enteroendocrine cell differentiation).
 - GO:2000227 negative regulation of pancreatic A cell differentiation is_a
-  GO:7770019 (already carried), so per CLAUDE.md I did not add it as NEW. It
-  is named in core_functions instead. Comparator: Hes1 carries GO:2000227 by
-  IMP, and Arx carries GO:0003310 by IMP (PMID:14561778).
+  GO:7770019 (already carried), so per CLAUDE.md I did not add it as NEW.
+  core_functions uses the carried parent GO:7770019 instead, because
+  validation warns on a core-function process absent from the annotations.
+  It is a candidate for a future curator-made annotation (comparators: Hes1
+  carries GO:2000227 by IMP, and Arx carries GO:0003310 by IMP,
+  PMID:14561778).
 
 ## Open questions
 
