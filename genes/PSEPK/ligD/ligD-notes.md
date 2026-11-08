@@ -132,3 +132,8 @@ Fresh validation, history and rendering results are recorded separately under
 ## 2026-11-08 — recovery PR review follow-up
 
 Replace functional methods-only quotes with result statements; retain construct provenance in reference findings and notes. Original annotation payloads and raw-source files remain unchanged.
+
+
+## 2026-11-08 — source-specific evidence follow-up
+
+Strengthen ATP, duplex/end-binding and multistep rNMP-extension support where applicable; remove duplicate evidence entries. Explicit NEW MF proposals record measured AP/5′-dRP chemistry without assigning a general native BER process. Abstract-only PMID:17293412 is scoped to the quoted mutant-spore phenotype, with no unverified strain details. Original source annotation payloads are unchanged. See the evidence-followup-20261108 receipt for the exact file scope.
