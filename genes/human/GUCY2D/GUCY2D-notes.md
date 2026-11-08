@@ -39,3 +39,21 @@ Original-access URLs and precise sections are recorded in the source evidence. C
 The genuine record-section helper added three unambiguous sections. Gene, reference, strict GOA and genuine EDIT-history checks passed. The reference validator checked seven excerpts and 48 titles with no issues; three local-record excerpts were skipped by that validator and were independently checked in the frozen peer. Existing status was reconciled to the repository-computed COMPLETE with no validation warnings; source-specific uncertainties remain in their reviewed decisions. All 49 incoming contexts, both extension atoms, product declarations and 53 normal sources remain preserved. HTML was regenerated. Exact-head review and CI remain separate publication gates.
 
 Validation added the previously absent GO:0042622 term-cache row. Its exact genuine content was independently checked and retained; no normal publication, pathway or family source was changed.
+
+### Further review follow-up — 2026-11-07
+
+The electronic nuclear-envelope assignment is removed as an unsupported compartment prediction; the rule’s training provenance remains unknown [ARBA:ARBA00086599].
+
+## Second review follow-up native completion, 2026-11-07
+
+The four reviewed files were applied after a separately completed existing-branch transition. Gene, strict GOA, reference and genuine EDIT-history checks passed. The reference check verified seven excerpts and 48 titles with no issues; three local-record excerpts retain their independent verification. Computed status remains COMPLETE with no validation warnings. HTML was regenerated and the final sorted-cache check passed. All 53 normal sources and the existing ontology cache remain byte-exact. Publication, current-head review and CI remain separate gates.
+
+## Binding-policy correction, 2026-11-08
+
+Human GC1 and human RD3 specifically coprecipitated in transfected cells [PMID:21078983, Methods and Figure 2C].
+
+Human GC1 coprecipitated with mouse Ankmy2, with ABCA4 as a negative control [PMID:21124868, Methods and Figure 6].
+
+The original full-text Methods and Results were rechecked in the unchanged publication caches and their [PMC3000275](https://pmc.ncbi.nlm.nih.gov/articles/PMC3000275/) and [PMC2991253](https://pmc.ncbi.nlm.nih.gov/articles/PMC2991253/) originals. Stored rows 14 and 15 now retain these interactions as `KEEP_AS_NON_CORE`, following the standing ClinGen project instruction. Their previous removal was solely informational. No evidence-backed specific replacement has been established. The prepared compartment correction and the five unresolved decisions remain unchanged.
+
+Direct validation with the retained runtime passed schema, ontology terms, reference excerpts and titles, strict GOA matching, and history checks. The reference validator checked nine excerpts and 48 titles with no issues; three local-record excerpts remain independently verified. The only two best-practice warnings are the generic-binding advisories superseded by the project instruction. The computed status is therefore recorded as DRAFT; all five UNDECIDED reviews remain explicit. HTML was regenerated.
