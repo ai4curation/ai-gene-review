@@ -1,6 +1,6 @@
 # Source-record defects for OTHER
 
-11 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+10 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
@@ -15,17 +15,7 @@ The InterPro2GO mapping IPR004136 (NMO) -> GO:0018580 nitronate monooxygenase ac
 > which define a new class of NADH:quinone reductases and are present in more than 490 hypothetical proteins in the GenBank
 > — PMID:27502282
 
-## 2. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTH6 enables GO:0015226 carnitine transmembrane transporter activity (IDA, PMID:19919675)
-- **Field:** Qualifier
-- **Change:** enables → contributes_to
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/Q9HTH6/Q9HTH6-ai-review.yaml`
-
-CaiX is the periplasmic substrate-binding protein of an ABC importer and cannot translocate carnitine without the CbcW permease and CbcV ATPase; contributes_to is the GO relation for a subunit carrying part of a complex activity.
-
-## 3. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 2. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTH6 involved_in GO:0015871 choline transport (IEA, GO_REF:0000002)
 - **Field:** GO ID
@@ -35,7 +25,7 @@ CaiX is the periplasmic substrate-binding protein of an ABC importer and cannot 
 
 InterPro2GO maps IPR017783 (ABC_choline_sub-bd, NCBIfam TIGR03414) to choline transport. The signature also matches the carnitine-specific CaiX proteins, so the InterPro mapping over-applies the choline substrate.
 
-## 4. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 3. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTH6 enables GO:0033265 choline binding (IEA, GO_REF:0000002)
 - **Field:** GO ID
@@ -45,7 +35,7 @@ InterPro2GO maps IPR017783 (ABC_choline_sub-bd, NCBIfam TIGR03414) to choline tr
 
 InterPro2GO maps IPR017783 (ABC_choline_sub-bd) to choline binding. The signature also matches carnitine-specific CaiX, which does not bind choline.
 
-## 5. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 4. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HY69 enables GO:0004467 long-chain fatty acid-CoA ligase activity (IDA, PMID:16797016)
 - **Field:** GO_ID
@@ -60,7 +50,7 @@ The PseudoCAP IDA annotation assigns long-chain fatty acid-CoA ligase activity t
 > These studies suggest that Alg44 may act as a co-polymerase in concert with Alg8, the major GT
 > — PMID:18524915
 
-## 6. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 5. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q06749 enables GO:0004794 threonine deaminase activity (IDA, PMID:8370530)
 - **Field:** GO_ID
@@ -73,7 +63,7 @@ The PseudoCAP IDA row for AlgL (Q06749) from PMID:8370530 uses GO:0004794 threon
 > The purified protein was shown to have alginate lyase activity.
 > — PMID:8370530
 
-## 7. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 6. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTH8 involved_in GO:0006631 fatty acid metabolic process (IEA, GO_REF:0000002)
 - **Field:** GO ID
@@ -83,7 +73,7 @@ The PseudoCAP IDA row for AlgL (Q06749) from PMID:8370530 uses GO:0004794 threon
 
 InterPro2GO maps IPR006108/IPR006176/IPR022694 (3-hydroxyacyl-CoA dehydrogenase domains) to fatty acid metabolic process. The L-carnitine dehydrogenase subfamily (IPR026578, HAMAP MF_02129) shares these domains but does not act on fatty acids; the InterPro mapping should exclude it.
 
-## 8. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 7. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTH7 enables GO:0043720 3-keto-5-aminohexanoate cleavage activity (IEA, GO_REF:0000002)
 - **Field:** GO ID
@@ -93,7 +83,7 @@ InterPro2GO maps IPR006108/IPR006176/IPR022694 (3-hydroxyacyl-CoA dehydrogenase 
 
 InterPro2GO maps IPR008567 (BKACE) to the substrate-specific 3-keto-5-aminohexanoate cleavage activity, but the family is substrate-diverse; members such as CdhC act on 3-dehydrocarnitine. The InterPro mapping should use a substrate-neutral parent.
 
-## 9. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 8. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** InterPro:IPR000667
 - **Subject:** UniProtKB:Q9HZG1
@@ -103,7 +93,7 @@ InterPro2GO maps IPR008567 (BKACE) to the substrate-specific 3-keto-5-aminohexan
 
 Resource is InterPro (InterPro2GO; assigned_by InterPro in GOA). The InterPro2GO mapping of IPR000667 (Peptidase S13) to GO:0006508 proteolysis is applied to this low-molecular-mass penicillin-binding protein, whose substrate is peptidoglycan (stem peptides and crosslinks), not protein. The signature records the serine D,D-peptidase fold; the mapping should be reviewed for the PBP members of the entry.
 
-## 10. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 9. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** InterPro:IPR003481
 - **Subject:** UniProtKB:Q9K3C5
@@ -116,7 +106,7 @@ InterPro2GO (resource: InterPro; GO_REF:0000002) maps IPR003481 (FliD_N, the N-t
 > A FliD (also called HAP2) oligomer forms the cap protein complex that is located at the tip of the flagellar filament (Yonekura et al.
 > — PMID:27664419
 
-## 11. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 10. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q03456 involved_in GO:0019290 siderophore biosynthetic process (IMP, PMID:8478325)
 - **Change:** GO:0019290 → GO:1900705 (negative regulation of siderophore biosynthetic process)

@@ -15,3 +15,8 @@ Reviewed every annotation evidence mapping. Choline and glycine-betaine claims n
 ## 2026-11-08 — consolidate PA5377 into cbcW
 
 PA5377 and cbcW are the same PAO1 protein, Q9HTI7, and carried the same 25 ordered GOA payloads. This canonical review now retains the PA5377 source-defect records and resolves the carnitine MF rows to the shared QAC ABC activity contributed by the permease. The binding protein provides cargo specificity. The canonical lateral catabolism-to-transport refinements, the substrate-binding-subunit-containing complex, and explicit transport descendants are retained; these describe the direct work more precisely than the alias’s older general or over-annotation dispositions. No source annotation is deleted or rewritten. The old review and action comparison are preserved in the consolidation receipt; its raw sources and historical notes remain in the PA5377 folder.
+
+
+## 2026-11-08 — assembled carnitine importer activity
+
+CaiX, CbcW and CbcV participate in the same measured carnitine-import activity. Partner dependence is intrinsic to this ABC importer, not a reason to deny its cargo-specific activity to a participating subunit. The core synthesis now records both the carnitine-specific cargo axis and the ATP-coupled QAC mechanism as contributed complex activities. CbcW IBA and IDA have the same ACCEPT action on the target claim; the separate PAINT CHECK asks about broader node scope without asserting a false target annotation or inferring evolutionary loss from alternative cargo. All machine-sourced annotation payloads are unchanged. Restored the COS flux experiment from the superseded alias review.

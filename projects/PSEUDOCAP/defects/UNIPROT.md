@@ -1,6 +1,6 @@
 # Source-record defects for UNIPROT
 
-5 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+9 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
@@ -37,7 +37,59 @@ enables GO:0043858 (EXP) on P18275 ArcD cites Luthi et al. 1990, whose abstract 
 
 The IMP lipid biosynthetic process row on EstA (O33407) from PMID:17631636 is based on reduced rhamnolipid in an estA deletion mutant. The UniProt entry itself says the role of EstA is unclear, and EstA is a surface-exposed outer-membrane esterase, not a rhamnolipid synthase. Unless the full text shows EstA acting on a biosynthetic intermediate, please consider removing the row. It is the sole seed of the PAINT IBD at PTN005219546 (960 leaf IBAs).
 
-## 4. OTHER (CONFIRMED, NOT_REPORTED)
+## 4. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX03
+- **Subject:** UniProtKB:Q9HX03
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031469 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutB/eutB-ai-review.yaml`
+
+Review organism-specific scope of MF_00861 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 5. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX03
+- **Subject:** UniProtKB:Q9HX03
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031471 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutB/eutB-ai-review.yaml`
+
+Review organism-specific scope of MF_00861 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 6. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX02
+- **Subject:** UniProtKB:Q9HX02
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031469 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutC/eutC-ai-review.yaml`
+
+Review organism-specific scope of MF_00601 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 7. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX02
+- **Subject:** UniProtKB:Q9HX02
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031471 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutC/eutC-ai-review.yaml`
+
+Review organism-specific scope of MF_00601 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 8. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9K3C5 located_in GO:0009421 bacterial-type flagellum filament cap (IDA, PMID:9488388)
 - **Field:** SUBUNIT
@@ -50,7 +102,7 @@ The UniProt entry Q9K3C5 records "SUBUNIT: Homopentamer {ECO:0000250}", an infer
 > Thus, we confirmed that the hexameric assembly of FliD78–405 occurs not only in the crystalline environment but also in solution using negative stain EM class averaging (Tang et al.
 > — PMID:27664419
 
-## 5. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+## 9. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT73
 - **Subject:** UniProtKB:Q9HT73

@@ -258,39 +258,6 @@ PTN002217427 is the root of PTHR39335 (7 reference leaves in 5 organisms) and ca
 
 ## 19. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
-- **Record:** PANTHER:PTN000766131
-- **Subject:** UniProtKB:Q9HTI7
-- **Field:** GO_ID
-- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-The IBD for GO:0005275 amine transmembrane transporter activity at PTN000766131 (PTHR47737, ProW/ChoW-type permeases, about 13 leaf IBAs) is seeded by P. aeruginosa PA5377/CbcW (Q9HTI7, PseudoCAP IDA, PMID:19919675) and E. coli ProW (P14176). Both transport quaternary ammonium compounds (choline, glycine betaine, carnitine, proline betaine), which GO classifies under GO:0015651 and GO:0015418, not under amine transmembrane transporter activity. Please repoint the IBD to GO:0015418 (or GO:0015651). Because the node members are permease subunits, consider contributes_to.
-
-## 20. OTHER (PROBABLE, NOT_REPORTED)
-
-- **Record:** PANTHER:PTN000766131
-- **Subject:** UniProtKB:Q9HTI7
-- **Field:** GO_ID
-- **Change:** check GO:0015226 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-The IBD for GO:0015226 carnitine transmembrane transporter activity at PTN000766131 (PTHR47737, about 13 leaf IBAs) rests only on P. aeruginosa PA5377/CbcW (Q9HTI7). In PMID:19919675, carnitine transport by CbcWV requires the separately encoded SBP CaiX (PA5388). The 98-100% identical P. syringae DC3000 Cbc core does not transport carnitine because DC3000 lacks caiX, and E. coli ProW, a co-seed of other IBDs at this node, is not a carnitine transporter. Substrate specificity is therefore not a property of the permease clade. Please remove this IBD, or replace it with GO:0015418 ABC-type quaternary ammonium compound transporting activity (contributes_to).
-
-## 21. OTHER (PROBABLE, NOT_REPORTED)
-
-- **Record:** PANTHER:PTN000766131
-- **Subject:** UniProtKB:Q9HTI7
-- **Field:** GO_ID
-- **Change:** check GO:1902603 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-The IBD for GO:1902603 carnitine transmembrane transport at PTN000766131 (PTHR47737, about 13 leaf IBAs) rests only on P. aeruginosa PA5377/CbcW (Q9HTI7, PseudoCAP IDA, PMID:21478341). Carnitine uptake by Cbc requires the separately encoded SBP CaiX (PMID:19919675). The 98-100% identical P. syringae DC3000 Cbc core does not transport carnitine, and E. coli ProW, in the same node, is a glycine betaine/proline betaine permease. Carnitine transport is therefore not a clade-wide property of these permeases. Please consider removing the IBD (keeping GO:0031460 and GO:0015871 if desired).
-
-## 22. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
 - **Record:** PANTHER:PTN000546715
 - **Subject:** UniProtKB:Q9HTB2
 - **Field:** GO_ID
@@ -306,7 +273,7 @@ The PAINT IBD of GO:0000271 polysaccharide biosynthetic process at PTN000546715 
 > Mutation of the putative acetyltransferase-encoding gene pa5458 did not abrogate polysaccharide production
 > — PMID:23341552
 
-## 23. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 20. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000546841
 - **Subject:** UniProtKB:Q9HTB2
@@ -323,7 +290,7 @@ The PAINT IBD of GO:0009103 lipopolysaccharide biosynthetic process at PTN000546
 > the muramic acid of the oatA mutant lacked this modification
 > — PMID:15661003
 
-## 24. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 21. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002019107
 - **Subject:** UniProtKB:Q9HTB8
@@ -333,7 +300,7 @@ The PAINT IBD of GO:0009103 lipopolysaccharide biosynthetic process at PTN000546
 
 The IBD of GO:0015920 lipopolysaccharide transport at PTN002019107 (PTHR30413, inner membrane transport permease) rests on one seed, P. aeruginosa Wzm (Q9HTB8). Its PseudoCAP IMP (PMID:9244257) is sound: wzm mutants accumulate A-band polysaccharide in the cytoplasm. But the node's 24 leaves include Bacillus subtilis TagG (P42953, a wall teichoic acid exporter), Staphylococcus aureus SAOUHSC_00642, Listeria lmo1074, two Streptomyces permeases, the capsule exporters CtrC (P32015) and Synechocystis KpsM (P73974), and the archaeal permeases MA_1176 (Methanosarcina) and SSO1143 (Sulfolobus). Gram-positive bacteria and archaea make no lipopolysaccharide. The substrate-neutral parent GO:0015774 polysaccharide transport fits the clade. Otherwise, GO:0015920 should be restricted to a node confined to Gram-negative O-antigen Wzm permeases.
 
-## 25. OTHER (SUSPECTED, NOT_REPORTED)
+## 22. OTHER (SUSPECTED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN005338738
 - **Subject:** UniProtKB:P13981
@@ -345,7 +312,7 @@ The GO:0016990 arginine deiminase activity IBD at PTN005338738 (23 leaf IBAs, so
 > The structure exhibits similarity to other arginine-modifying or substituted arginine-modifying enzymes such as dimethylarginine dimethylaminohydrolase (DDAH)
 > — PMID:14701825
 
-## 26. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
+## 23. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000208945
 - **Subject:** UniProtKB:P18275
@@ -357,7 +324,7 @@ The GO:0043858 arginine:ornithine antiporter activity IBD at PTN000208945 (sole 
 > The chlamydial AaxC transporter was resistant to cadaverine, L-lysine and L-ornithine, which inhibit the E. coli AdiC antiporter.
 > — PMID:18790867
 
-## 27. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
+## 24. MISSING_NEGATION (SUSPECTED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000241318
 - **Subject:** UniProtKB:O30508
@@ -368,6 +335,39 @@ PTN000241318 (PTHR11986, ArgD/AstC clade) carries an IBD of GO:0006526 L-arginin
 
 > this explains the enzyme's dual role in arginine biosynthesis and catabolism
 > — PMID:16593724
+
+## 25. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** PANTHER:PTN000766131
+- **Subject:** UniProtKB:Q9HTI7
+- **Field:** GO_ID
+- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+The IBD for GO:0005275 amine transmembrane transporter activity at PTN000766131 (PTHR47737, ProW/ChoW-type permeases, about 13 leaf IBAs) is seeded by P. aeruginosa PA5377/CbcW (Q9HTI7, PseudoCAP IDA, PMID:19919675) and E. coli ProW (P14176). Both transport quaternary ammonium compounds (choline, glycine betaine, carnitine, proline betaine), which GO classifies under GO:0015651 and GO:0015418, not under amine transmembrane transporter activity. Please repoint the IBD to GO:0015418 (or GO:0015651). Because the node members are permease subunits, consider contributes_to.
+
+## 26. OTHER (PROBABLE, NOT_REPORTED)
+
+- **Record:** PANTHER:PTN000766131
+- **Subject:** UniProtKB:Q9HTI7
+- **Field:** GO_ID
+- **Change:** check GO:0015226 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+Please check the cargo-specific scope of the GO:0015226 IBD at PTN000766131 against descendant permease and binding-protein evidence. The PAO1 CbcW seed Q9HTI7 has direct CaiX-dependent carnitine-uptake evidence and its target claim is accepted. The paper contrasts closely related Cbc cores with different binding-protein complements, so cargo specificity cannot be established from the core sequence alone. Alternative native cargo or absence of a known partner does not by itself demonstrate evolutionary loss or justify pruning a leaf. The family review therefore keeps exact node placement UNRESOLVED; this CHECK does not request removal of the experimentally supported PAO1 annotation or use seed count as evidence against inheritance.
+
+## 27. OTHER (PROBABLE, NOT_REPORTED)
+
+- **Record:** PANTHER:PTN000766131
+- **Subject:** UniProtKB:Q9HTI7
+- **Field:** GO_ID
+- **Change:** check GO:1902603 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+The IBD for GO:1902603 carnitine transmembrane transport at PTN000766131 (PTHR47737, about 13 leaf IBAs) rests only on P. aeruginosa PA5377/CbcW (Q9HTI7, PseudoCAP IDA, PMID:21478341). Carnitine uptake by Cbc requires the separately encoded SBP CaiX (PMID:19919675). The 98-100% identical P. syringae DC3000 Cbc core does not transport carnitine, and E. coli ProW, in the same node, is a glycine betaine/proline betaine permease. Carnitine transport is therefore not a clade-wide property of these permeases. Please consider removing the IBD (keeping GO:0031460 and GO:0015871 if desired).
 
 ## 28. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
@@ -381,15 +381,15 @@ The IBD of GO:0004096 catalase activity at PTN001247822 (CcmC/heme exporter prot
 > The ccmC mutant was also found to accumulate porphyrins, and catalase production was undetectable, consistent with the increased sensitivity to hydrogen peroxide.
 > — PMID:18174132
 
-## 29. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 29. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTH9 enables GO:0047617 fatty acyl-CoA hydrolase activity (IBA, GO_REF:0000033)
 - **Field:** GO ID
-- **Change:** GO:0047617 → GO:0016289
+- **Change:** check GO:0047617 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/cdhB/cdhB-ai-review.yaml`
 
-PAINT places fatty acyl-CoA hydrolase activity at PTN001273712, a node that includes the betainyl-CoA thioesterase subfamily SF2; the fatty-acyl substrate should be restricted to the FadM branch, or the node term generalized to acyl-CoA hydrolase activity.
+Investigate the substrate scope of the ancestral fatty-acyl assertion using target substrate-range data. The supported CdhB-type reaction is acyl-CoA hydrolysis, but an alternate physiological substrate alone does not justify deleting the secondary fatty-acyl possibility or restricting the node to FadM. No categorical propagation correction is requested.
 
 ## 30. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 

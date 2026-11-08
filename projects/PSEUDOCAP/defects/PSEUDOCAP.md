@@ -411,50 +411,7 @@ PseudoCAP annotates PA5359 (UniProtKB:Q9HTJ9) with GO:0043448 alkane catabolic p
 > Heterologous expression showed that the two alkane hydroxylase homologs of P. aeruginosa PAO1 (AlkB1 and AlkB2) oxidize C(12)-C(16)n-alkanes, while two rubredoxin (RubA1 and RubA2) and a rubredoxin reductase (RubB) homologs can replace their P. putida GPo1 counterparts in n-octane oxidation.
 > — PMID:14574114
 
-## 33. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTI7 enables GO:0005275 amine transmembrane transporter activity (IDA, PMID:19919675)
-- **Field:** GO_ID
-- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-PA5377 (CbcW permease, Q9HTI7) is annotated GO:0005275 amine transmembrane transporter activity, IDA, PMID:19919675. The substrates shown in that paper (choline, glycine betaine, L-carnitine) are quaternary ammonium compounds, which GO does not class as amines. GO:0015418 ABC-type quaternary ammonium compound transporting activity (with contributes_to for a permease subunit) is the accurate term. This row co-seeds the PAINT IBD at PTN000766131.
-
-## 34. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTI7 involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675)
-- **Field:** GO_ID
-- **Change:** check GO:0031457 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-PA5377 (CbcW, ABC permease) is annotated involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675). The evidence is that cbc transposon mutants cannot grow on betaine as sole carbon source, which reflects loss of uptake. The permease does not catalyse any catabolic step. Consider removing the row, or keeping only GO:0031460 glycine betaine transport.
-
-## 35. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTI7 involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675)
-- **Field:** GO_ID
-- **Change:** check GO:0042426 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-PA5377 (CbcW, ABC permease) is annotated involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675 and PMID:21478341). Both papers show that Cbc is needed for growth on choline as a carbon source, which reflects choline uptake. The permease does not perform any catabolic step. GO:0015871 choline transport already captures its role. Consider removing these rows.
-
-## 36. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTI7 involved_in GO:1902603 carnitine transmembrane transport (IDA, PMID:21478341)
-- **Field:** DB:Reference
-- **Change:** check PMID:21478341 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5377/PA5377-ai-review.yaml`
-
-GO:1902603 carnitine transmembrane transport for PA5377 (Q9HTI7) cites PMID:21478341 (Malek et al. 2011), whose abstract deals only with choline uptake by CbcXWV, BetT1 and BetT3. The carnitine evidence for CbcWV is in PMID:19919675 (PA14 cbc mutants fail to grow on carnitine, and PAO1 CbcWV restores CaiX-dependent carnitine uptake) and PMID:29517479. If PMID:21478341 has no carnitine data, please re-key the row. It is the sole seed of the PAINT IBD at PTN000766131.
-
-> These transposon mutants also failed to grow on L-carnitine (Fig. S2), suggesting that carnitine is an additional substrate for this transporter.
-> — PMID:19919675
-
-## 37. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 33. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB2 involved_in GO:0009243 O antigen biosynthetic process (IDA, PMID:23341552)
 - **Field:** Evidence_Code
@@ -467,7 +424,7 @@ The PseudoCAP GO:0009243 row for PA5458 (PMID:23341552, Hao et al. 2013) uses ID
 > Mutation of the putative acetyltransferase-encoding gene pa5458 did not abrogate polysaccharide production
 > — PMID:23341552
 
-## 38. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 34. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB8 involved_in GO:0015920 lipopolysaccharide transport (IMP, PMID:9244257)
 - **Field:** GO_ID
@@ -480,7 +437,7 @@ involved_in GO:0015920 lipopolysaccharide transport (IMP, PMID:9244257) on Wzm (
 > The inability of the polymer to cross the inner membrane resulted in the accumulation of cytoplasmic A-band polysaccharide.
 > — PMID:9244257
 
-## 39. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 35. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P18275 enables GO:0043858 arginine:ornithine antiporter activity (IMP, PMID:1311296)
 - **Field:** Evidence_Code
@@ -491,6 +448,49 @@ enables GO:0043858 (IMP) on PA5170 arcD cites Verhoogt et al. 1992, which measur
 
 > The ArcD protein was reconstituted in proteoliposomes after detergent solubilization of membrane vesicles.
 > — PMID:1311296
+
+## 36. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI7 enables GO:0005275 amine transmembrane transporter activity (IDA, PMID:19919675)
+- **Field:** GO_ID
+- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+PA5377 (CbcW permease, Q9HTI7) is annotated GO:0005275 amine transmembrane transporter activity, IDA, PMID:19919675. The substrates shown in that paper (choline, glycine betaine, L-carnitine) are quaternary ammonium compounds, which GO does not class as amines. GO:0015418 ABC-type quaternary ammonium compound transporting activity (with contributes_to for a permease subunit) is the accurate term. This row co-seeds the PAINT IBD at PTN000766131.
+
+## 37. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI7 involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675)
+- **Field:** GO_ID
+- **Change:** check GO:0031457 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+PA5377 (CbcW, ABC permease) is annotated involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675). The evidence is that cbc transposon mutants cannot grow on betaine as sole carbon source, which reflects loss of uptake. The permease does not catalyse any catabolic step. Consider removing the row, or keeping only GO:0031460 glycine betaine transport.
+
+## 38. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI7 involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675)
+- **Field:** GO_ID
+- **Change:** check GO:0042426 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+PA5377 (CbcW, ABC permease) is annotated involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675 and PMID:21478341). Both papers show that Cbc is needed for growth on choline as a carbon source, which reflects choline uptake. The permease does not perform any catabolic step. GO:0015871 choline transport already captures its role. Consider removing these rows.
+
+## 39. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI7 involved_in GO:1902603 carnitine transmembrane transport (IDA, PMID:21478341)
+- **Field:** DB:Reference
+- **Change:** check PMID:21478341 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
+
+GO:1902603 carnitine transmembrane transport for PA5377 (Q9HTI7) cites PMID:21478341 (Malek et al. 2011), whose abstract deals only with choline uptake by CbcXWV, BetT1 and BetT3. The carnitine evidence for CbcWV is in PMID:19919675 (PA14 cbc mutants fail to grow on carnitine, and PAO1 CbcWV restores CaiX-dependent carnitine uptake) and PMID:29517479. If PMID:21478341 has no carnitine data, please re-key the row. It is the sole seed of the PAINT IBD at PTN000766131.
+
+> These transposon mutants also failed to grow on L-carnitine (Fig. S2), suggesting that carnitine is an additional substrate for this transporter.
+> — PMID:19919675
 
 ## 40. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
 

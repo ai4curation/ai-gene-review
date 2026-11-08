@@ -35,3 +35,8 @@ Expanded three truncated review quotations to complete source clauses, checked a
 ## 2026-11-08 — canonical CbcW review
 
 The duplicate Q9HTI7/PA5377 review is consolidated into genes/PSEAE/cbcW/cbcW-ai-review.yaml, which is authoritative for the module. All 25 source rows and the GO_CENTRAL/PSEUDOCAP defect records are retained. CbcW contributes the membrane component of the shared QAC ABC importer; CaiX provides carnitine specificity. The older raw records and history remain traceable through the canonical folder and the consolidation receipt.
+
+
+## 2026-11-08 — consistent complex-level activity
+
+The CaiX-CbcWV annoton names the assembled carnitine transport activity. All three PAO1 subunits accept that function and use contributes_to in core synthesis; CbcV/CbcW additionally name the ATP-coupled quaternary-ammonium mechanism. These are complementary cargo and energy-coupling axes, not a claim that an isolated SBP, ATPase or permease transports carnitine. The module reaction lists ATP/water consumption because it is the assembled ABC importer. Existing source qualifiers are preserved. CbcW IBA and IDA agree on the experimentally supported target function; its separate GO_CENTRAL CHECK and the UNRESOLVED family node assessment concern broader partner-dependent cargo scope. Generated PseudoCAP project reports are refreshed to resolve the canonical cbcW paths.
