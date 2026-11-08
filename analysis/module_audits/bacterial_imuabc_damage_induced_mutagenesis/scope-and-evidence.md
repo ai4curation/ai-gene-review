@@ -1,0 +1,15 @@
+# ImuABC cross-species audit
+
+The existing panel comprises 11 reviewed genes with 80 ordered original annotation rows and 26 protected machine/provider files. PSEPK, CAUVC and MYCTU consultations are complete. The added MYXXD/MXAN_3991 review preserves its three seeded rows and adds one experimentally supported ATP hydrolysis annotation: 12 reviewed exemplars in total. The original annotation payloads and order remain intact.
+
+Two narrative reviews were read: PMID21475246 (publisher PDF explicitly headed review, obtained from the author institutional site) and PMID36288458 (the abstract identifies a review). Their cached PRIMARY_RESEARCH metadata is preserved; reference-audit.json records the manual classification. Fifteen references were assessed, including comparative computational surveys distinguished from experimental capacity evidence.
+
+Myxococcus 2024 supplies positive DNA-binding and ATPase evidence for ImuA; the 2021 assay did not detect DNA binding. Primary promoter-sequence mapping identifies the 2021 DK1622 protein as MXAN_3991/Q1D5A2, independently of its automated RecA name. Its connection to the 2024 synthetic construct is inferred from the named protein, length and residue positions; a complete construct sequence is unavailable. The ImuB biochemical construct is truncated, ATP-dependent assembly remains a model, and the partial imuA mutant phenotype does not establish absolute necessity for every bypass event.
+
+The separately qualified Myxococcus accessory realizer carries measured ATPase activity without transferring it to other ImuA or ImuA′ proteins. Its broad PANTHER RecA assignment does not establish canonical RecA sensing or recombinase activity. The family review consequently leaves these universal claims unresolved while retaining canonical RecA evidence and all five PAINT node verdicts. No unsupported precise family identifier, ancestral node or loss is asserted.
+
+Mycobacterial evidence is distinguished by protein origin, assay host and functional organism. Pseudomonas stationary-phase antimutator effects and induced mutagenesis are condition-dependent observations. GO DNA replication includes TLS through ontology ancestry; that does not assign bulk chromosome replication to DnaE2. A family-wide PHP exonuclease loss is not inferred from target-specific uncertainty.
+
+The production-compiler consultation checks 63 cases against three matched cassette panels and one isolated Myxococcus accessory context. Same-panel compatibility and reviewed roles are supplied by an evidence oracle: compiler Boolean satisfaction alone does not demonstrate physiological assembly, native flux or heterologous compatibility. The compiler treats alternative realizers as an inclusive OR despite EXACTLY_ONE presentation. Failure of the ATPase-qualified branch is not proof that ATPase-deficient ImuA cannot support TLS.
+
+Falcon was attempted and returned HTTP403 authentication failure. No provider report was invented. Focused checks, full-corpus validation, publication and actual merge are reported separately.
