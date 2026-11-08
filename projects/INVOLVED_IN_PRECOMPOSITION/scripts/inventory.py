@@ -40,6 +40,7 @@ import yaml
 REPO = Path(__file__).resolve().parents[3]
 INVOLVED_IN = " involved in "
 BIOLOGICAL_REGULATION = "GO:0065007"
+KEEP_LIST = Path(__file__).resolve().parent.parent / "keep_precomposed.yaml"
 
 # UniProt species code / repo folder -> suffix used in gocams/index.tsv gene_label
 INDEX_SPECIES = {
@@ -241,6 +242,22 @@ def label_only(terms: dict[str, GoTerm], t: GoTerm, dec: dict) -> bool:
         y in {label(terms, a) for a in ancestors(terms, d["id"])}
         for d in dec["differentia"]
     )
+
+
+def load_keep(path: Path) -> dict[str, str]:
+    """Term id -> reason for the curated KEEP_PRECOMPOSED terms.
+
+    >>> import tempfile
+    >>> p = Path(tempfile.mkdtemp()) / "keep.yaml"
+    >>> _ = p.write_text("- id: GO:1\\n  label: a involved in b\\n  reason: stage term\\n")
+    >>> load_keep(p)
+    {'GO:1': 'stage term'}
+    >>> load_keep(p.with_suffix(".missing"))
+    {}
+    """
+    if not path.exists():
+        return {}
+    return {e["id"]: e["reason"] for e in yaml.safe_load(path.read_text()) or []}
 
 
 def pattern_of(
@@ -465,10 +482,14 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--go", type=Path, required=True, help="GO go.obo (full)")
     ap.add_argument("--out", type=Path, required=True, help="output directory")
+    ap.add_argument(
+        "--keep", type=Path, default=KEEP_LIST, help="curated KEEP_PRECOMPOSED terms"
+    )
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
     terms = parse_obo(args.go)
+    keep = load_keep(args.keep)
     data_version = next(
         (
             line.split(": ", 1)[1].strip()
@@ -479,6 +500,11 @@ def main() -> None:
     )
     labels = by_label(terms)
     inv = {tid: t for tid, t in terms.items() if INVOLVED_IN in t.name}
+    unknown = sorted(set(keep) - set(inv))
+    if unknown:
+        raise SystemExit(
+            f"{args.keep}: not 'involved in' terms in {args.go}: {unknown}"
+        )
 
     go_rows = []
     for tid, t in sorted(inv.items()):
@@ -562,6 +588,8 @@ def main() -> None:
             }
             if dec:
                 row["decomposition"] = dec
+            if tid in keep:
+                row["kept"] = True
             row["gocam_same_gene"] = {
                 "activities": len(same_hits),
                 "covers_genus": sum(h.get("covers_genus", False) for h in same_hits),
@@ -637,11 +665,12 @@ def main() -> None:
     # Module candidates: group rows by the differentia filler (the "Y" context),
     # and record which modules already mention Y's GO id. Label-only rows are
     # skipped: their filler is the regulated process, not a context to model.
+    # Kept rows are skipped too: their term is not being decomposed.
     by_ctx: dict[str, set[str]] = defaultdict(set)
     ctx_label: dict[str, str] = {}
     for r in ann_rows:
         dec = r.get("decomposition") or {}
-        if dec.get("label_only"):
+        if dec.get("label_only") or r.get("kept"):
             continue
         for d in dec.get("differentia", []):
             by_ctx[d["id"]].add(r["gene"])
@@ -670,14 +699,22 @@ def main() -> None:
         i for i, t in inv.items() if (decomposition(terms, t) or {}).get("label_only")
     }
     for a in authored:
-        if a["term"].split()[0] in label_only_ids:
+        tid = a["term"].split()[0]
+        if tid in label_only_ids:
             a["label_only"] = True
+        if tid in keep:
+            a["kept"] = True
     summary["review_annotations"]["rows_label_only"] = sum(
         r["term"]["id"] in label_only_ids for r in ann_rows
+    )
+    summary["review_annotations"]["rows_kept"] = sum(
+        bool(r.get("kept")) for r in ann_rows
     )
     summary["authored_precomposed"] = {
         "uses": len(authored),
         "uses_label_only": sum(bool(a.get("label_only")) for a in authored),
+        "uses_kept": sum(bool(a.get("kept")) for a in authored),
+        "terms_kept": sorted(keep),
         "genes": len({a["gene"] for a in authored if "gene" in a}),
         "modules": len({a["module"] for a in authored if "module" in a}),
         "by_slot": dict(Counter(a["slot"] for a in authored).most_common()),
