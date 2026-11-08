@@ -16,11 +16,11 @@ The clinical variants are human, but the functional study used bovine GCAP1 cons
 
 Normal cache: abstract only. Original Methods94–148 and human Results221–227 were independently read. The antigen was bovine GCAP1; inner-retinal GCAP2 staining is distinct.
 
-[Original article, Methods and human Results](https://www.researchgate.net/profile/Nicolas-Cuenca/publication/13664583_The_localization_of_guanylyl_cylase-activating_proteins_in_the_mammalian_retina/links/0046351a383fa5cd3b000000/The-localization-of-guanylyl-cylase-activating-proteins-in-the-mammalian-retina.pdf).
+[PubMed record](https://pubmed.ncbi.nlm.nih.gov/9620085/) · [Original article, Methods and human Results](https://www.researchgate.net/profile/Nicolas-Cuenca/publication/13664583_The_localization_of_guanylyl_cylase-activating_proteins_in_the_mammalian_retina/links/0046351a383fa5cd3b000000/The-localization-of-guanylyl-cylase-activating-proteins-in-the-mammalian-retina.pdf).
 
 ## PMID:32296183
 
-HuRI tested human ORF constructs as Gal4 fusions in yeast. Current IntAct and historical PSI records support all seven pairs; retained assay configurations do not establish physiological partner roles or independently verified clone equivalence.
+Each pair has three curated Y2H-method records from one HuRI study. These support assay association, not three independent studies or verified endogenous complexes. Uncertain native encounter does not negate the supported physical-association claim. Partner UniProt records are secondary summaries; their cited papers were not newly read. No more-specific GCAP1 molecular function follows from these associations.
 
 ## PMID:26703466
 
@@ -40,15 +40,7 @@ The target lineage and literal IBD records remain separate from current donor sn
 
 ## Evidence access
 
-The independent evidence file records original source URLs, hashes, target paths and read locators. Cache availability describes the repository copy; it does not replace the recorded original-access scope. Native acquisition and validation are pending.
-
-## Native acquisition — 2026-11-07T09:35:15.831712+00:00
-
-The genuine P43080 fetch and qualified missing-source acquisition are complete. Both excerpts match the actual caches. Reference metadata was reconciled from those records; independent original-reading limits remain as recorded above. Validation results will be appended after the checks finish.
-
-## Native checks — 2026-11-07T09:38:28.319228+00:00
-
-Validation, strict GOA matching, history validation and rendering passed. The computed status is COMPLETE with zero review warnings. Reference validation checked 31 titles and one YAML snippet with no issues; the notes quotation was separately matched to its cache. All seven inherited sources and the ontology cache remain unchanged. The earlier pending preparation entries above are superseded by this completion record.
+The independent evidence file records original source URLs, hashes, target paths and read locators. Cache availability describes the repository copy; it does not replace the recorded original-access scope. Acquisition, validation and subsequent workflow updates are recorded in the [curation history](https://github.com/ai4curation/ai-gene-review/tree/main/history/genes/human/GUCA1A).
 
 ## Follow-up evidence boundaries
 
@@ -59,11 +51,3 @@ UniProt assigns the location experimentally to PMID:9620085; its lipid-anchor st
 Exact human GCAP1–3 annotations retain regulator/activator terms; inhibitor annotations instead trace the NHERF4 family. The convention remains a curator question; absence of an annotation does not establish absent biological activity.
 
 The new independent records preserve the original Figure4 image, current definitions, exact comparator queries and a zero-hit target GO-CAM index check. No new annotation is proposed.
-
-## Second follow-up status
-
-Earlier pending entries describe historical preparation and are superseded by the dated completion records above. This private follow-up awaits its own native validation and publication.
-
-## Resumed checks — 2026-11-08
-
-Scoped validation, strict GOA matching, reference validation, history validation and rendering passed. The computed status is DRAFT with seven generic-binding advisories, retained under the project's standing instruction. Reference validation checked 31 titles and one snippet, skipped one local-record snippet, and reported no issues. Cache lint passed. The failed package-module invocation for history validation was corrected to the installed entry point; the successful check supersedes that invocation error. These results supersede earlier status summaries for the current candidate.
