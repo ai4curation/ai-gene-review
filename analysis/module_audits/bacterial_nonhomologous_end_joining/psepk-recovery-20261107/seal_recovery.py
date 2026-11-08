@@ -36,10 +36,11 @@ for gene in ["ku", "ligD"]:
     path = Path(f"genes/PSEPK/{gene}/{gene}-ai-review.yaml")
     d = yaml.safe_load(path.read_text())
     old = before["reviews"][gene]
-    payload = lambda data: [
-        {k: v for k, v in row.items() if k != "review"}
-        for row in data["existing_annotations"]
-    ]
+    def payload(data):
+        return [
+            {k: v for k, v in row.items() if k != "review"}
+            for row in data["existing_annotations"]
+        ]
     assert payload(d) == payload(old), gene
     assert d == old, "Recovery verification changed reviewed science unexpectedly"
     counts[gene] = {

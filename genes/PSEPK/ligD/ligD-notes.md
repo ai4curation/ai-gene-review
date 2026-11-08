@@ -127,3 +127,8 @@ abstract; no PaW85-to-KT2440 bridge is restored. All fourteen ordered row payloa
 and both historical retirement flags are preserved, with no new annotation rows.
 Fresh validation, history and rendering results are recorded separately under
 `psepk-recovery-20261107`; they do not imply that lost historical receipts survived.
+
+
+## 2026-11-08 — recovery PR review follow-up
+
+Replace functional methods-only quotes with result statements; retain construct provenance in reference findings and notes. Original annotation payloads and raw-source files remain unchanged.
