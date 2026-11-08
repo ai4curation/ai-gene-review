@@ -18,3 +18,8 @@ Exact evidence, before/after payload audit and source hashes: analysis/module_au
 ## 2026-11-07 — PR6194 second review follow-up
 
 The untagged UniProt FUNCTION statement is not independent PAO1 purified-activity evidence. The catalytic inference rests on PAO1 genetics/identity plus the explicit P. putida reverse-transfer assay; historical NEW IC payload remains untouched, with code adjudication separately unresolved.
+
+
+## 2026-11-08 — PR #6194 evidence and scope follow-up
+
+Correct the authored proposal evidence to IMP from target mutant/complementation experiments; homologous purified chemistry is corroboration. See review-followup-20261108 for the prior review and change receipt. Original source annotation payloads are unchanged; authored proposal code changes and new rows are explicit.

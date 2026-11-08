@@ -18,3 +18,8 @@ Exact evidence, before/after payload audit and source hashes: analysis/module_au
 ## 2026-11-07 — PR6194 second review follow-up
 
 Laterally refine the propagated acylglycerol process row to GO0042620, supported by native GPo1 polyester turnover. Preserve source payload/order, membrane UNDECIDED and the secondary-MAG uncertainty. Normalize the existing proposed activity definition without asserting a purified GPo1 oligomer distribution.
+
+
+## 2026-11-08 — PR #6194 evidence and scope follow-up
+
+Judge propagated bilayer specificity as over-annotation, retaining uncertainty about secondary interactions rather than an unsupported absolute negative. See review-followup-20261108 for the prior review and change receipt. Original source annotation payloads are unchanged; authored proposal code changes and new rows are explicit.

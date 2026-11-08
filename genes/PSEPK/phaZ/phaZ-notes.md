@@ -37,3 +37,8 @@ Exact evidence, before/after payload audit and source hashes: analysis/module_au
 ## 2026-11-07 — PR6194 second review follow-up
 
 Clarify that the supported C8-specific GO0050527 inference and broader mcl-PHA proposal can coexist: broader substrate acceptance does not falsify the narrower reaction. Product-resolved LC-MS is attributed to PMID17170116 through its documented external full-text reading, not to PMID41055782. Exact strain/construct and pure-polymer limitations remain.
+
+
+## 2026-11-08 — PR #6194 evidence and scope follow-up
+
+Add an explicitly inferred depolymerase MF proposal with KT2442 biochemical and target-context limits. See review-followup-20261108 for the prior review and change receipt. Original source annotation payloads are unchanged; authored proposal code changes and new rows are explicit.
