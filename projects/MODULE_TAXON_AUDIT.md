@@ -46,6 +46,8 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_kdp_potassium_homeostasis`: PR #6179 approved at e2685bf8d8; current main d7638df804 integrated at 4b9ce3060e. All 487 frozen nonshared files remain unchanged, all checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to bd3853cd6583c81053ae8910be3d109055fabd09. Fresh current-head review, CI and actual merge remain pending.
 
+- [ ] `bacterial_imuabc_damage_induced_mutagenesis`: PR #6169: main 597e48b1634d7b6b85739e8cd037571b949f372f integrated with 258 frozen nonshared files preserved. Historical full validation remains on 90ccb6b4b319515f57990aed214e082c7aae7b71; fresh review, CI and merge are pending.
+
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
 
 - [x] `bacterial_lipoprotein_maturation`: PR #6184 merged as dc4512172353d85fed764fa9fcaf7daf16a78698; all 344 changed nonshared files are byte-identical to the approved head. All 14 module members have COMPLETE reviews without PENDING rows. Actual merged content verified.
@@ -1032,3 +1034,39 @@ Integrated main d7638df804395ce8c81baeea891fd75b60d58d39 after the passing full 
 PR #6179 approved at e2685bf8d8; current main d7638df804 integrated at 4b9ce3060e. All 487 frozen nonshared files remain unchanged, all checked against the approved revision. Module integration checks pass. The historical full-corpus PASS remains scoped to bd3853cd6583c81053ae8910be3d109055fabd09. Fresh current-head review, CI and actual merge remain pending.
 
 [Publication closeout](../analysis/module_audits/bacterial_kdp_potassium_homeostasis/approved-main-20261107-1442-closeout.json).
+
+## 2026-11-07 — ImuABC cross-species audit
+
+Comparative ImuABC audit: two narrative reviews and 15 assessed references, 12 reviewed exemplars, three matched cassette panels and a separately characterized Myxococcus ImuA ATPase. Original 80 rows plus three new-gene seed rows are preserved; one new ATPase annotation. 63 capacity/compiler cases pass. Final focused validation and full corpus run precede publication; fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial imuabc damage induced mutagenesis full validation passes
+
+Comparative audit passes full validation on 9d7cbd20fe: 10,748 reviews, zero blocking errors and 212 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/full-validation.json).
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main e9d50a8a42ab5e6b5560d09ff8c44e64f4c77360 after the passing full run on 9d7cbd20fe52fa4c3be3a3d1563baff493539a67. All 208 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial imuabc damage induced mutagenesis full validation passes
+
+PR #6169 follow-up passes full validation on 357df862a5: 10,757 reviews, zero blocking errors and 238 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round1-full-validation.json).
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece after the passing full run on 357df862a5b54dfad3483658a831b357c88c85f3. All 234 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial imuabc damage induced mutagenesis full validation passes
+
+PR #6169 follow-up passes full validation on 90ccb6b4b3: 10,766 reviews, zero blocking errors and 247 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round2-full-validation.json).
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b after the passing full run on 90ccb6b4b319515f57990aed214e082c7aae7b71. All 243 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main 597e48b1634d7b6b85739e8cd037571b949f372f after the passing full run on 90ccb6b4b319515f57990aed214e082c7aae7b71. All 258 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-08 — resume PR #6179 after disk cleanup
+
+Integrate main a344758bae648a999bbe316e9b1e2289a958d1bc into paused PR #6179 at 5efe2396934b24043d84f0af7a904fd1865ec05f. All 250 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
