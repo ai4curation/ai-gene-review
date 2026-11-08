@@ -321,6 +321,13 @@ wrong-gene-leads *args="":
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
+# Check GO-CAM activity locations against the disjoint compartment model
+# (unresolved occurs_in terms; causal edges between non-adjacent compartments)
+# Example: just gocam-compartments 59cc772c00000000
+# Example: just gocam-compartments -o reports/gocam-compartments.yaml
+gocam-compartments *args="":
+    uv run ai-gene-review gocam-compartments {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
