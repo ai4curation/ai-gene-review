@@ -44,3 +44,8 @@ Existing abstract-only primary caches were not refreshed. Curated experimental a
 ## 2026-11-08 — consistent inferred cytosolic ProA location
 
 Refine cytoplasm to cytosol using the same evidential standard as BACSU: curated HAMAP MF_00412 compartment/family support, soluble reductase architecture without annotated signal peptide or transmembrane segment, and comparative native-locus monomeric-GFP imaging of E. coli ProA (PMID:39514317). This is an inference for Pseudomonas putida KT2440, not a direct localization experiment. Protein association does not exclude cytosol. Original annotation payloads and raw records are unchanged.
+
+
+## 2026-11-08 — reference target wording
+
+Corrected the copied organism name in the PMID:39514317 findings and reference-review note to Pseudomonas putida. The experiment remains E. coli microscopy used comparatively; no target-strain assay or new biological claim is asserted.
