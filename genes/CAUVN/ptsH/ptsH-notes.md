@@ -10,3 +10,10 @@ Current GO definitions distinguish sugar-coupled transport from regulatory phosp
 No independent gene provider report is fabricated. Root's shared module Falcon attempt failed with HTTP403 authentication (sanitized receipt in acquisition-20261107/module-falcon-attempt.json); these are manual notes. Available official tree receipts do not locate the exact NA1000 accessions, so no CB15 replacement, target loss, or loss-free lineage is asserted. PtsN kinase activation remains genuinely unresolved beyond the measured SpoT output.
 
 No process proposal was added merely to populate the module. Gene core activities summarize independently supported chemistry/regulation even when no suitable existing annotation carries it; intentional coverage warnings should not trigger invented NEW rows.
+
+
+## 2026-11-08 — consistent Ntr/sugar scope and evidence limits
+
+The action discriminator is target evidence, not species labels or donor count: P. putida has a native sugar-independent route and a documented failure of PtsN to replace fructose EIIA; Caulobacter separates its Ntr effectors from sugar permeases and its mannose assignments originate in an incorrect transporter EC mapping. E. coli has measured cross-system phosphate exchange in vitro but lacks demonstrated native sugar-uptake participation for the Ntr branch, so physiological process assignment is over-annotation rather than an absolute negative. Bona fide E. coli/Bacillus HPr controls retain the sugar process because they feed sugar-specific EIIA proteins in the native carbohydrate route; common ancestry at PTN002135312 does not erase this functional divergence.
+
+Where the only localization assertion is ARBA-derived, compartment adjudication remains UNDECIDED and the core location is omitted. PtsN–KdpD target interaction plus regulatory output supports direction-neutral regulator inference without claiming an isolated kinase assay. Source annotation payloads are unchanged.
