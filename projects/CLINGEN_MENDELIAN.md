@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**740 of 2,876 genes are complete; 2,136 remain.**
-This checkpoint adds GNB4, GNB2, GPKOW, GMNN and GRIA1 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-740-2026-11-07-093537-utc) records the evidence and retained uncertainties.
+**743 of 2,876 genes are complete; 2,133 remain.**
+This checkpoint records the previously accepted GRXCR2, GRIA4 and GSX2 actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-743-2026-11-08-144516-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -5332,10 +5332,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **GPHN** — HGNC:15465; [sulfite oxidase deficiency due to molybdenum cofactor deficiency type C](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29f6ebf3-c4c5-4770-b7d1-50816b9f9d74-2023-05-12T180000.000Z) (MONDO:0014212; AR; Moderate).
 - [x] **GPKOW** — HGNC:30677; [holoprosencephaly-hypokinesia-congenital contractures syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4dd1c919-897b-4aea-af1b-ad55a4080468-2025-12-03T170000.000Z) (MONDO:0010610; XL; Moderate).
 - [x] **GRIA1** — HGNC:4571; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03597202-ca6c-4eb6-8531-59803753c382-2024-02-08T070000.000Z) (MONDO:0100038; AD; Moderate); [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84aaf490-76e2-4d87-a1bd-53ab6611236c-2024-02-08T070000.000Z) (MONDO:0100038; AR; Limited).
-- [ ] **GRIA4** — HGNC:4574; [neurodevelopmental disorder with or without seizures and gait abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2c6e2c49-e537-4eec-8b85-aef0c6651d55-2024-07-07T100000.000Z) (MONDO:0060641; AD; Moderate).
-- [ ] **GRXCR2** — HGNC:33862; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_207f12b7-3148-4a8f-88f8-f78ac5bb294c-2021-03-26T155748.643Z) (MONDO:0019497; AR; Moderate).
+- [x] **GRIA4** — HGNC:4574; [neurodevelopmental disorder with or without seizures and gait abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2c6e2c49-e537-4eec-8b85-aef0c6651d55-2024-07-07T100000.000Z) (MONDO:0060641; AD; Moderate).
+- [x] **GRXCR2** — HGNC:33862; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_207f12b7-3148-4a8f-88f8-f78ac5bb294c-2021-03-26T155748.643Z) (MONDO:0019497; AR; Moderate).
 - [ ] **GSTZ1** — HGNC:4643; [maleylacetoacetate isomerase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8c287e0b-88be-4fbb-82a6-a8c70d430506-2024-12-13T170000.000Z) (MONDO:0060527; AR; Moderate).
-- [ ] **GSX2** — HGNC:24959; [diencephalic-mesencephalic junction dysplasia syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2d6f7f67-63e7-4587-9216-6909f5883de9-2026-05-18T160000.000Z) (MONDO:0020762; AR; Moderate).
+- [x] **GSX2** — HGNC:24959; [diencephalic-mesencephalic junction dysplasia syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2d6f7f67-63e7-4587-9216-6909f5883de9-2026-05-18T160000.000Z) (MONDO:0020762; AR; Moderate).
 - [ ] **HAND1** — HGNC:4807; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a70bdb1-a3fc-45c5-aabb-4d2829fa6f29-2023-04-04T040000.000Z) (MONDO:0005453; AD; Moderate).
 - [ ] **HAND2** — HGNC:4808; [HAND2 related congenital heart defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29254c37-49c2-4d29-918f-c106989eadba-2026-04-13T040000.000Z) (MONDO:0800476; AD; Moderate).
 - [ ] **HAVCR2** — HGNC:18437; [HAVCR2-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1ea863f9-c3e9-4b1a-95c4-ef2eb2444bbd-2025-06-10T160000.000Z) (MONDO:1060169; AR; Moderate).

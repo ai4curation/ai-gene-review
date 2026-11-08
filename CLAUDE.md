@@ -6,6 +6,48 @@ This project is for managing AI reviews of gene annotations. The overall goal is
 review existing GO annotations using strict defined criteria, and to summarize the resulting
 high quality annotations.
 
+## Local parallel work and storage
+
+- Keep at most six unfinished workstreams, including the coordinator. An idle
+  agent or an open PR still occupies a slot until its work is delivered and its
+  workspace is retired. At the limit, finish existing PRs before starting genes.
+- Keep campaign working storage around 30 GB total, including the coordinator,
+  child checkouts, temporary files, environments, and caches. Count shared stores
+  once. Use fewer or sparse checkouts if six do not fit. When over budget, stop
+  intake and reduce storage before resuming research.
+- Use Orca-managed worktrees when running in Orca; otherwise use standard
+  registered Git worktrees or isolation explicitly provided by the environment.
+  Verify the checkout's top level and Git directory before writing. Never copy a
+  repository into `tmp/` to simulate isolation: Git discovery there may resolve
+  to the parent checkout and share its index.
+  Resolve metadata access through the environment's supported worktree interface;
+  do not work around a Git permission error by making a nested repository copy.
+- Assign one writer, branch, and PR to each checkout. Read-only helpers may
+  share it; concurrent writers must have distinct registered worktrees. Share
+  existing runtimes and immutable source caches rather than copying them per task.
+  Identify retained cache versions by source revision or content hash; never
+  overwrite a keeper that an earlier cleanup receipt or active review depends on.
+  Workers must use project code from their own registered checkout and must not
+  reinstall or mutate a shared environment concurrently. Check editable installs
+  and shared cache references before retiring the checkout they point into.
+  Calling the shared Python interpreter does not constrain nested `uv run`
+  subprocesses. Prefer direct validation helpers; set `UV_PROJECT_ENVIRONMENT`
+  to the retained runtime and set `UV_NO_SYNC=1`, `UV_FROZEN=1`, `UV_OFFLINE=1`,
+  and `PYTHONDONTWRITEBYTECODE=1` before validation. Verify that neither a local
+  `.venv` nor `uv.lock` changed unexpectedly after running a wrapper.
+- At delivery, verify that the PR and retained Git history contain the intended
+  work, preserve unpublished changes and unique evidence, then retire completed
+  worktrees through their owning tool. Remove redundant temporary copies against
+  explicit retained copies or recoverable Git objects, with a compact receipt.
+  Treat evidence archives, keeper catalogs, retention registries, and recovery
+  refs as retained data even when they live under `tmp/`. Verify and record any
+  replacement before removing them; a missing original path is not proof of loss
+  or permission to discard its recovery archive.
+  Do not retain full source snapshots, API payloads, or environments per review.
+- Report measured campaign storage and unfinished workstreams before starting a
+  new batch. File allocation and APFS physical free-space changes are different
+  measurements; do not claim one proves the other.
+
 ## Repository layout
 
 src/
@@ -662,6 +704,11 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
+
+Project-specific user instructions take precedence; see the
+[ClinGen curation instructions](projects/CLINGEN_MENDELIAN.md#curation-instructions)
+for that project's supported protein-binding policy. This cross-reference does
+not change validation or computed review statuses.
 
 ### A curation gap is not a knowledge gap
 
