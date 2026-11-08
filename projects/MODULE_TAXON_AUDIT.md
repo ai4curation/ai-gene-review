@@ -46,7 +46,7 @@ For each module, record evidence that all of the following are satisfied:
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
-- [ ] `bacterial_carboxyspermidine_biosynthesis`: PR #6089 revised substrate assignments passed five focused gene validations, module/family schema checks and 23 capacity cases. Current main d7638df804 is integrated at fa2d63c0a8 with 226 frozen nonshared files preserved. Fresh full-corpus validation, publication, review/CI and actual merge remain pending.
+- [ ] `bacterial_carboxyspermidine_biosynthesis`: PR #6089: main a344758bae integrated at e1c28c30d6; 237 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
 - [x] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167 merged at 2026-11-07T12:50:49Z as d7638df804395ce8c81baeea891fd75b60d58d39; 163 frozen nonshared blobs verified byte-identical. Six module representatives and the Fjoh_1584 comparator have COMPLETE reviews without PENDING rows. Actual merged content verified. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6167-merged-content.json).
 
@@ -114,9 +114,8 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkanesulfonate_uptake_desulfonation`: Merged PR #5593 at 384ea94e250c3aab07442ae0a08185c66ebffefe after approval of 00a883c844 and passing required checks. Verified 120 scoped paths against the approved head; 15 member reviews, 104 original annotation rows and 30 raw sources are preserved.
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
-- [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 7 PR_OPEN, 1 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
-- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 8 PR_OPEN, 1 IN_PROGRESS, 726 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -1145,3 +1144,13 @@ The following historical pending lines were superseded by verified merged-comple
 ## 2026-11-08 — resume PR #6089 after disk cleanup
 
 Integrate main a344758bae648a999bbe316e9b1e2289a958d1bc into paused PR #6089 at 32d4d5beb128f31638f798a80c7491c58718e8f4. All 237 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-08 — reconcile resumed PR #6089 tracker
+
+PR #6089: main a344758bae integrated at e1c28c30d6; 237 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_carboxyspermidine_biosynthesis/resume-20261108/integration-proof.json](../analysis/module_audits/bacterial_carboxyspermidine_biosynthesis/resume-20261108/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+
+Superseded parent snapshot lines retained for provenance:
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 7 PR_OPEN, 1 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
