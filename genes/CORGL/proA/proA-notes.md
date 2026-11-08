@@ -28,3 +28,8 @@ No NEW rows, subtype-specific physiological annotations, target RNA activity, st
 Replaced the three truncated proA-null bypass quotations used as affirmative support with the canonical-pathway sentence. Independent target HAMAP reaction support remains; the complete bypass finding stays explicitly separate. ATCC 17965 genetics is not an ATCC 13032 purified-enzyme assay.
 
 Tightened row-specific rationale. For ProB/ProJ, cytosol remains a comparative inference from HAMAP, soluble architecture and E. coli native-locus monomeric-GFP localization, not from GOA. For ProA, the review retains the explicitly curated cytoplasm granularity without treating absence of a finer row as evidence. No actions or original payloads changed.
+
+
+## 2026-11-08 — consistent inferred cytosolic ProA location
+
+Refine cytoplasm to cytosol using the same evidential standard as BACSU: curated HAMAP MF_00412 compartment/family support, soluble reductase architecture without annotated signal peptide or transmembrane segment, and comparative native-locus monomeric-GFP imaging of E. coli ProA (PMID:39514317). This is an inference for Corynebacterium glutamicum, not a direct localization experiment. Protein association does not exclude cytosol. Original annotation payloads and raw records are unchanged.
