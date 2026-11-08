@@ -20,5 +20,5 @@
 ## 4. Proposed New Annotations
 - **`GO:0010043` (`response to zinc ion`, `involved_in`, ISS from `PMID:10198000`)** -> **`NEW`**:
    - Co-transcribed and syntenically conserved in the `czcA3-czcB-czcC-czcI-czcR-cusS` (`VPARA_44890-VPARA_44940`) Zn2+/Cd2+/Co2+ resistance island (PMID:10198000).
-- **`GO:0030288` (`outer membrane-bounded periplasmic space`, `located_in`, IC from `file:VARPD/czcI/czcI-uniprot.txt` and `PMID:10198000`)** -> **`NEW`**:
-   - Mature CzcI (`VPARA_44920`, `NCBIfam:NF045614`, `InterPro:IPR055013`) is a soluble periplasmic heavy-metal resistance modulator lacking transmembrane helices in this diderm Gram-negative betaproteobacterium.
+- **`GO:0030288` (`outer membrane-bounded periplasmic space`, `located_in`, IC from `file:VARPD/czcI/czcI-uniprot.txt`)** -> **`NEW`**:
+   - Precursor CzcI (`VPARA_44920`) carries an N-terminal Sec signal peptide (`FT SIGNAL 1..20`, `SAM:SignalP`) cleaved to release the mature 103-aa soluble chain (`FT CHAIN 21..123`, `NCBIfam:NF045614`, `InterPro:IPR055013`) with zero predicted transmembrane helices into the outer membrane-bounded periplasmic space of this diderm Gram-negative betaproteobacterium.
