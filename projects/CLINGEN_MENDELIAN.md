@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**743 of 2,876 genes are complete; 2,133 remain.**
-This checkpoint records the previously accepted GRXCR2, GRIA4 and GSX2 actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-743-2026-11-08-144516-utc) records the evidence and retained uncertainties.
+**747 of 2,876 genes are complete; 2,129 remain.**
+This checkpoint records the previously accepted H1-4, GSDME, GUCY2D and GUCA1A actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-747-2026-11-08-160616-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3908,17 +3908,17 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **GRM6** — HGNC:4598; [GRM6-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1d65aebc-d4af-49ca-9682-9fde5f56bbef-2022-09-01T160000.000Z) (MONDO:0800397; AR; Definitive).
 - [ ] **GRN** — HGNC:4601; [frontotemporal dementia and/or amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e76545e6-2411-44c5-a458-99f02aa7ff44-2023-05-25T160000.000Z) (MONDO:0030923; AD; Definitive); [neuronal ceroid lipofuscinosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_49eb0915-acff-423d-a70f-d00d4319d404-2023-01-03T170000.000Z) (MONDO:0016295; AR; Definitive).
 - [ ] **GRXCR1** — HGNC:31673; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4becaf23-4b72-4dd1-a5aa-4deccbb394ea-2018-04-24T040000.000Z) (MONDO:0019497; AR; Definitive).
-- [ ] **GSDME** — HGNC:2810; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b0a844b-f968-48e0-8940-35584eb3454b-2017-11-21T170000.000Z) (MONDO:0019497; AD; Definitive).
+- [x] **GSDME** — HGNC:2810; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b0a844b-f968-48e0-8940-35584eb3454b-2017-11-21T170000.000Z) (MONDO:0019497; AD; Definitive).
 - [ ] **GSS** — HGNC:4624; [inherited glutathione synthetase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_69a8e645-0e10-4ea9-8545-212ce9b0dcbf-2019-04-26T160000.000Z) (MONDO:0017909; AR; Definitive).
 - [ ] **GTPBP2** — HGNC:4670; [Jaberi-Elahi syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c8e1f8d9-d8e8-428c-9860-f84bb96ff9ea-2024-08-16T160000.000Z) (MONDO:0060711; AR; Definitive).
 - [ ] **GTPBP3** — HGNC:14880; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0d1b0a47-e62d-48dd-8e0d-f2b1aff014a7-2020-02-12T203256.857Z) (MONDO:0009723; AR; Moderate); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_393ee652-756b-4b54-9e0a-916bbae9d9eb-2024-05-23T040000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **GUCA1A** — HGNC:4678; [cone dystrophy 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e610e6de-7901-4fad-8db5-f71db38fbdff-2025-05-15T160000.000Z) (MONDO:0011193; AD; Definitive).
-- [ ] **GUCY2D** — HGNC:4689; [GUCY2D-related dominant retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8816f73d-0432-4d50-bbb6-74a8f1da96ae-2022-05-28T195616.735Z) (MONDO:0100441; AD; Definitive); [GUCY2D-related recessive retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dcb8350d-c57f-43e3-9e9f-d059ebbf61c9-2022-03-27T232210.761Z) (MONDO:0100453; AR; Definitive).
+- [x] **GUCA1A** — HGNC:4678; [cone dystrophy 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e610e6de-7901-4fad-8db5-f71db38fbdff-2025-05-15T160000.000Z) (MONDO:0011193; AD; Definitive).
+- [x] **GUCY2D** — HGNC:4689; [GUCY2D-related dominant retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8816f73d-0432-4d50-bbb6-74a8f1da96ae-2022-05-28T195616.735Z) (MONDO:0100441; AD; Definitive); [GUCY2D-related recessive retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_dcb8350d-c57f-43e3-9e9f-d059ebbf61c9-2022-03-27T232210.761Z) (MONDO:0100453; AR; Definitive).
 - [ ] **GUSB** — HGNC:4696; [mucopolysaccharidosis type 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aae0c8bd-5ff2-48a1-90e9-9038dcb44bc3-2022-07-05T160000.000Z) (MONDO:0009662; AR; Definitive).
 - [ ] **GYG1** — HGNC:4699; [polyglucosan body myopathy type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c5a4546e-f7a6-4d4a-bd0d-763e2b7dca74-2023-03-24T160000.000Z) (MONDO:0014526; AR; Definitive).
 - [ ] **GYS1** — HGNC:4706; [glycogen storage disease due to muscle and heart glycogen synthase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b85c829-f66a-4c23-8a59-58f17bdaefb0-2024-02-12T190000.000Z) (MONDO:0012693; AR; Definitive).
 - [ ] **GYS2** — HGNC:4707; [glycogen storage disorder due to hepatic glycogen synthase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fd645894-0fa6-4d63-8b8d-16731978ca6b-2024-03-22T160000.000Z) (MONDO:0009414; AR; Definitive).
-- [ ] **H1-4** — HGNC:4718; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd0a9f58-4fb1-4904-9c38-c3e4b70c536e-2023-05-03T060000.000Z) (MONDO:0000508; AD; Definitive).
+- [x] **H1-4** — HGNC:4718; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd0a9f58-4fb1-4904-9c38-c3e4b70c536e-2023-05-03T060000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **H3-3A** — HGNC:4764; [Bryant-Li-Bhoj neurodevelopmental syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92b54362-8c84-407b-bf92-5f67bee55ed3-2024-03-19T160000.000Z) (MONDO:0030606; AD; Definitive).
 - [ ] **HAAO** — HGNC:4796; [vertebral, cardiac, renal, and limb defects syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89484d6b-0af1-4b77-9dcb-95c18331e3b7-2022-06-24T160000.000Z) (MONDO:0060554; AR; Definitive).
 - [ ] **HACD1** — HGNC:9639; [congenital myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_10c52aaf-cd58-4448-bac7-12b653bfa962-2021-06-28T160000.000Z) (MONDO:0019952; AR; Definitive).
