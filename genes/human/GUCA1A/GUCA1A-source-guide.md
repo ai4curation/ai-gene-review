@@ -14,7 +14,9 @@ The clinical variants are human, but the functional study used bovine GCAP1 cons
 
 ## PMID:9620085
 
-The repository cache is abstract-only; the published original was independently read. Methods94–148 and human Results221–227 remain available through the original locators.
+Normal cache: abstract only. Original Methods94–148 and human Results221–227 were independently read. The antigen was bovine GCAP1; inner-retinal GCAP2 staining is distinct.
+
+[Original article, Methods and human Results](https://www.researchgate.net/profile/Nicolas-Cuenca/publication/13664583_The_localization_of_guanylyl_cylase-activating_proteins_in_the_mammalian_retina/links/0046351a383fa5cd3b000000/The-localization-of-guanylyl-cylase-activating-proteins-in-the-mammalian-retina.pdf).
 
 ## PMID:32296183
 
@@ -52,8 +54,16 @@ Validation, strict GOA matching, history validation and rendering passed. The co
 
 The current definition separates surrounding outer-segment membrane from internal disc membrane; the queried ancestry has no path between them.
 
-Myristoylation alone does not resolve the active membrane compartment. The record assigns its lipid-anchor statement by similarity to bovine GCAP1.
+UniProt assigns the location experimentally to PMID:9620085; its lipid-anchor statement is by similarity to bovine GCAP1. Myristoylation does not resolve surrounding versus disc membrane.
 
 Exact human GCAP1–3 annotations retain regulator/activator terms; inhibitor annotations instead trace the NHERF4 family. The convention remains a curator question; absence of an annotation does not establish absent biological activity.
 
 The new independent records preserve the original Figure4 image, current definitions, exact comparator queries and a zero-hit target GO-CAM index check. No new annotation is proposed.
+
+## Second follow-up status
+
+Earlier pending entries describe historical preparation and are superseded by the dated completion records above. This private follow-up awaits its own native validation and publication.
+
+## Resumed checks — 2026-11-08
+
+Scoped validation, strict GOA matching, reference validation, history validation and rendering passed. The computed status is DRAFT with seven generic-binding advisories, retained under the project's standing instruction. Reference validation checked 31 titles and one snippet, skipped one local-record snippet, and reported no issues. Cache lint passed. The failed package-module invocation for history validation was corrected to the installed entry point; the successful check supersedes that invocation error. These results supersede earlier status summaries for the current candidate.

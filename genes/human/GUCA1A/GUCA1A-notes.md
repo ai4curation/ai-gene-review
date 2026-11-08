@@ -21,3 +21,15 @@ Human retinal sections show strong cone and slight rod outer-segment staining; b
 The curated function record states “GCAP1 inhibits RetGC activation” ([UniProt P43080, CC:FUNCTION](https://www.uniprot.org/uniprotkb/P43080/entry)). This calcium-dependent regulation supports the broader regulator core.
 
 The current proposal retains all incoming contexts and records the remaining compartment and inhibitor-term questions separately. Earlier preparation and completion entries remain historical records.
+
+## Second review follow-up — 2026-11-07
+
+One localization action is refined and its declared local-record reference normalized. The optional reference flag is omitted; explicit access provenance remains in the reference assessment and source guide. All earlier journal entries remain historical provenance.
+
+## Curation resumed — 2026-11-08
+
+The seven supported generic binding rows are retained as non-core under the ClinGen project's standing instruction. The reviewed localization and access-provenance corrections are applied; incoming contexts and prior journal entries are preserved.
+
+## Resumed checks — 2026-11-08
+
+Scoped validation, strict GOA matching, reference validation, history validation and rendering passed. The computed status is DRAFT with seven generic-binding advisories, retained under the project's standing instruction. Reference validation checked 31 titles and one snippet, skipped one local-record snippet, and reported no issues. Cache lint passed. The failed package-module invocation for history validation was corrected to the installed entry point; the successful check supersedes that invocation error. These results supersede earlier status summaries for the current candidate.
