@@ -30,3 +30,8 @@ The added 2007 review is available in full text. Its manually recorded review cl
 ## 2026-11-07 — PR #6182 evidence clarification
 
 Expanded three truncated review quotations to complete source clauses, checked against the unchanged cached publications (PMIDs 9037756, 25787873, 23354714). The module retains its reaction boundary and family/activity/interface gates. Round-one gene follow-up retires two redundant historical proposals without deleting them and represents PP_0303 chemistry by its exact proposed activity; source-specific transport evidence is reviewed separately.
+
+
+## 2026-11-08 — canonical CbcW review
+
+The duplicate Q9HTI7/PA5377 review is consolidated into genes/PSEAE/cbcW/cbcW-ai-review.yaml, which is authoritative for the module. All 25 source rows and the GO_CENTRAL/PSEUDOCAP defect records are retained. CbcW contributes the membrane component of the shared QAC ABC importer; CaiX provides carnitine specificity. The older raw records and history remain traceable through the canonical folder and the consolidation receipt.

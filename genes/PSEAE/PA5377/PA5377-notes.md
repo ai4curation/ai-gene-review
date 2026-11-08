@@ -126,3 +126,8 @@ question about the sulfur compound and construct is answered; the remaining
 experiment concerns direct flux and native partner availability. All original
 row payloads/order/qualifiers and NEW lifecycle, other annotation judgments and
 core functions are preserved.
+
+
+## 2026-11-08 — canonical review moved to cbcW
+
+The active review for Q9HTI7 is now [cbcW](../cbcW/cbcW-ai-review.yaml). The prior review is retained under analysis/module_audits/bacterial_l_carnitine_catabolism/cbcw-consolidation-20261108/PA5377-before.yaml.txt. Raw PA5377 source records and earlier notes remain unchanged. Source-defect judgments have been incorporated into the canonical review.
