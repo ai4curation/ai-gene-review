@@ -135,6 +135,34 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-11-06 — Donor-support topology regimes ($d_{\text{MRCA}}$ vs $d_{\text{LCA}}$) and single-clade jump audit
+
+Extended [`single_organism_distance.py`](single_organism_distance.py) (`--regimes`, `--all-regimes`) and
+[`single-organism-distance.md`](single-organism-distance.md) across all 28,945 positive GOA
+`IBA` rows (7,337 GOA genes; 3,988 non-self single-organism IBAs, 3,890 rated; 5,422 non-self
+multi-organism resolved IBAs, 5,356 rated) to compare the **donor-set MRCA clade depth
+($d_{\text{MRCA}}$)** against the **closest donor–target LCA depth ($d_{\text{LCA}}$)** across
+all 9,090 rated non-self resolved IBA rows with known donor lineages (9,246 incl. 156 in Tier 0),
+deduplicating dual-namespace seed tokens (`canonical_seed_gene`) and cross-tabulating with
+PANTHER subfamily status (`SAME_SF` vs `CROSS_SF`):
+
+1. **R1 — Single donor gene (`1 taxon, 1 distinct seed`, $n = 3{,}139$)**: **12.7% Fail**, **4.7% `REMOVE`** (7.6% Refine).
+2. **R2 — Multi-paralog single taxon (`1 taxon, >= 2 distinct seeds`, $n = 744$)**: **12.5% Fail**, **4.7% `REMOVE`** (7.0% Refine) — confirming that multiple co-annotated paralogs in a single donor organism do not reduce over-propagation risk overall, and reverse above `R1` in Tiers 3–4 (**19.2% Fail, 6.9% `REMOVE`**, $n = 261$, vs **13.2% Fail** in `R1`) and small-$n$ Tier 6 plant-to-fungi/animal jumps (**48.0% Fail, 24.0% `REMOVE`**, $n = 25$).
+3. **R3 — Multi-species single-clade jump (`>= 2 taxa`, $d_{\text{MRCA}} > d_{\text{LCA}}$, $n = 1{,}262$)**: **11.2% Fail**, **4.0% `REMOVE`** (7.0% Refine) — demonstrating that multi-species IBAs whose donors all coalesce inside a single donor clade before jumping to the target (e.g., `mouse` + `rat` $\to$ `worm`/`yeast`, `worm` + `fly` $\to$ `human`, or two bacteria $\to$ `human`) fail at nearly twice the rate of phylogenetically bracketed transfers (**12.0% vs 5.4% Fail** in Tiers 3–4; **15.2% vs 7.9% Fail** in Tiers 5–7).
+4. **R4 — Phylogenetically bracketed multi-species (`>= 2 taxa`, $d_{\text{MRCA}} \le d_{\text{LCA}}$, $n = 3{,}945$)**: **5.8% Fail**, **2.1% `REMOVE`** (7.6% Refine) overall, splitting into **3.0% Fail (`1.4% REMOVE`, $n = 1{,}353$; strict all-donor match: 3.1% Fail, `1.4% REMOVE`, $n = 795$)** for `R4 + SAME_SF` vs **9.9% Fail (`3.7% REMOVE`, $n = 1{,}182$)** for `R4 + CROSS_SF` when the target and resolved donors sit in different PANTHER subfamilies.
+
+Following the merge of the single-organism sibling harmonization and high-distance re-review
+batches ([PR #5857](https://github.com/ai4curation/ai-gene-review/pull/5857) and
+[PR #5861](https://github.com/ai4curation/ai-gene-review/pull/5861)), audited retained high-distance
+Regime 2, Regime 3, and `R4 + CROSS_SF` rows and identified **5 additional candidate genes** for curation re-review ([PR #6157](https://github.com/ai4curation/ai-gene-review/pull/6157)):
+- `ANOGA/DNAAF1` (`GO:0007368 determination of left/right symmetry`, Regime 3 Tier 4 jump from `Euteleostomi` donors `Danio rerio|Homo sapiens` via `PTN002915666`; `KEEP_AS_NON_CORE` $\to$ `REMOVE`).
+- `human/ASAH2` (`GO:0042759 long-chain fatty acid biosynthetic process`, Regime 3 Tier 7 jump from `Bacteria` donors `M. tuberculosis|P. aeruginosa` via `PTN004377481`; `ACCEPT` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `DANRE/asah2`).
+- `human/PARD3B` (`GO:0007155 cell adhesion`, a Regime 3 Tier 4 jump from `Ecdysozoa` donors `C. elegans par-3|D. melanogaster baz`, and `GO:0000226 microtubule cytoskeleton organization`, a Regime 4 Tier 1 `CROSS_SF` transfer from `FB:FBgn0000163|MGI:MGI:2135608|WB:WBGene00003918` across the vertebrate `Pard3` `SF10` vs `Pard3b` `SF4` duplication via `PTN001046835`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `HORSE/PARD3B`).
+- `worm/pdr-1` (`GO:0005783 endoplasmic reticulum` and `GO:0005794 Golgi apparatus`, Regime 3 Tier 4 jump from `Euarchontoglires` donors `Homo sapiens|Rattus norvegicus` via `PTN000188399`; `UNDECIDED` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `DROME/park`).
+- `human/ABHD2` (`PTHR10794:SF45`; `GO:0051792 medium-chain fatty acid biosynthetic process` from 3 *S. cerevisiae* fermentation esterase paralogs `EHT1|EEB1|YMR210W` `SGD:S000000381|SGD:S000004823|SGD:S000006016` and `GO:0051793 medium-chain fatty acid catabolic process` from `SGD:S000000381|SGD:S000006016` via `PTN000082647`, Regime 2 Tier 5; `KEEP_AS_NON_CORE` $\to$ `REMOVE` on `GO:0051792` and `MARK_AS_OVER_ANNOTATED` on `GO:0051793`).
+
+---
+
 ## 2026-10-28 — Quantitative phylogenetic distance analysis for single-organism IBAs
 
 Built [`single_organism_distance.py`](single_organism_distance.py) and
