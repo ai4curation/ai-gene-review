@@ -163,3 +163,36 @@ Completes the organosulfonate and taurine assimilation pathways around `ssuD` (`
 - **Updated Modules:**
   - [`modules/variovorax_metallophore_metal_homeostasis.yaml`](../../modules/variovorax_metallophore_metal_homeostasis.html) (`MODULE:variovorax_metallophore_metal_homeostasis` — expanded with `fur1`, `cadA2`, `czcI`, `czcR`, and `cusS`)
   - [`modules/bacterial_tonb_siderophore_import.yaml`](../../modules/bacterial_tonb_siderophore_import.html) (`MODULE:bacterial_tonb_siderophore_import` — evidence updated with `fur1`)
+
+---
+
+## 6. Tranche 5 Curation Batches (TDP/3MP Organosulfur Catabolism, High-Affinity PstSCAB-PhoU-PhoBR Phosphate Acquisition & Regulon, and CopA2/Zur Copper & Zinc Homeostasis)
+
+### Batch 5A: 3,3'-Thiodipropionic Acid & 3-Mercaptopropionate Catabolism (`fox`, `mdo`, `act`) and High-Affinity PstSCAB-PhoU-PhoBR Phosphate System (`pstS`, `pstC`, `pstA`, `pstB`, `phoU`, `phoB1`, `phoR1`)
+
+Completes the *Variovorax paradoxus* TBEA6 (`VARPD`) 3,3'-thiodipropionic acid (TDP) catabolic pathway around `acd` (`B9U6P5`, `VPARA_05440`) on contig `JZWI01000003` and the high-affinity phosphate transport/signaling cluster (`VPARA_10420-VPARA_10480`) immediately adjacent to `ppx` (`VPARA_10490`) on contig `JZWI01000005`:
+
+| Role in Pathway / Complex | Gene Symbol | UniProt / Locus (`VARPD`) | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| TDP cluster flavoprotein | `fox` | `A0A0H2M811` (`VPARA_05580`) | FAD-dependent oxidoreductase Fox (EC 1.-.-.-, 474 aa, `PS51387`, `PF01565`/`PF02913`) | N-terminal PCMH-type FAD-binding domain (residues 36-217) | `GO:0016491` (oxidoreductase activity), `GO:0071949` (FAD binding), `GO:0044273`, `GO:0005829` |
+| 3MP dioxygenase | `mdo` | `B9U5L8` (`VPARA_05600`) | 3-Mercaptopropionate dioxygenase Mdo (EC 1.13.11.66, 195 aa, `cd10548`, `IPR010300`) | Cupin 3-His mononuclear $\text{Fe}^{2+}$ triad (`His90, His92, His143`); oxygenates 3MP to 3SP | `GO:0016702`, `GO:0008198` (ferrous iron binding), `GO:0044273`, `GO:0005829` |
+| 3SP CoA-transferase | `act` | `B9U6P4` (`VPARA_05450`) | Family III acyl-CoA-transferase Act (398 aa, `PF02515`, `IPR003673`, `MONOMER-18547`) | Transfers CoA to 3-sulfinopropionate to form 3-sulfinopropionyl-CoA for Acd | `GO:0008410` (CoA-transferase activity), `GO:0044273`, `GO:0005829` |
+| Periplasmic Pi SBP | `pstS` | `A0A0H2M7F6` (`VPARA_10480`) | Periplasmic phosphate-binding protein PstS (345 aa, `TIGR00975`, `PTHR30502:SF2`) | Sec signal peptide (1-23) + periplasmic PBP domain (`PF12849`) | `GO:0042301` (phosphate ion binding), `GO:0015415` (`contributes_to`), `GO:0035435`, `GO:0030288`, `GO:0055052` |
+| Pi transmembrane permease | `pstC` | `A0A0H2MMT5` (`VPARA_10470`) | Phosphate transport system permease protein PstC (359 aa, `TIGR00974`, `PTHR30519:SF1`) | 6-TM ABC permease (`PS50928`, residues 119-352) forming heterodimeric pore with PstA | `GO:0005315`, `GO:0015415` (`contributes_to`), `GO:0035435`, `GO:0005886`, `GO:0055052` |
+| Pi transmembrane permease | `pstA` | `A0A0H2M6I3` (`VPARA_10460`) | Phosphate transport system permease protein PstA (294 aa, `MF_01696`, `TIGR00973`) | 6-TM ABC permease (`PS50928`, residues 77-285) forming heterodimeric pore with PstC | `GO:0005315`, `GO:0015415` (`contributes_to`), `GO:0035435`, `GO:0005886`, `GO:0055052` |
+| Pi import ABC ATPase | `pstB` | `A0A0D0L7E0` (`VPARA_10450`) | Phosphate import ATP-binding protein PstB (259 aa, `TIGR00972`, `PTHR43423:SF3`) | ABC ATPase (`PS50893`, Walker A `45-GPSGCGKS-52`, Walker B `Glu172`) | `GO:0016887`, `GO:0015415` (`contributes_to`), `GO:0005524`, `GO:0035435`, `GO:0005886`, `GO:0055052` |
+| Pi signaling adaptor | `phoU` | `A0A0H2MBK2` (`VPARA_10440`) | Phosphate transport system regulatory protein PhoU (233 aa, `TIGR02135`, `PTHR30227:SF1`) | Tandem PhoU 3-helix bundles (`PF01895`) bridging PstB and PhoR1 PAS domain | `GO:0009968` (negative regulation of signal transduction), `GO:0016036`, `GO:0005829`, `GO:0005886` |
+| Pho regulon activator | `phoB1` | `A0A0H2M7F4` (`VPARA_10430`) | Phosphate regulon response regulator PhoB1 (230 aa, `TIGR02154`, `PTHR48111:SF40`) | Receiver domain (`PS50110`, `Asp54`) + OmpR/PhoB winged-helix (`PS51755`) | `GO:0000156`, `GO:0001216`, `GO:0000976`, `GO:0000160`, `GO:0016036`, `GO:0045893`, `GO:0005829` |
+| Pho regulon sensor kinase | `phoR1` | `A0A0H2MMT2` (`VPARA_10420`) | Phosphate regulon sensor histidine kinase PhoR1 (EC 2.7.13.3, 464 aa, `TIGR02966`) | N-terminal TM (`PF11808`, 29-45) + PAS (`PF00989`) + HisKA/HATPase_c (`PS50109`, `His219`) | `GO:0000155`, `GO:0004721` (phosphoprotein phosphatase activity), `GO:0000160`, `GO:0016036`, `GO:0005886` |
+
+---
+
+### Batch 5B: Copper Efflux P1B-1 ATPase (`copA2`) and Zinc Uptake Repressor (`zur`)
+
+| Role | Gene Symbol | UniProt / Locus (`VARPD`) | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| P1B-1 Cu(+) efflux ATPase | `copA2` | `A0A0H2M2H3` (`VPARA_21930`) | P-type Cu(+) transporter CopA2 (EC 7.2.2.8, 747 aa, `TIGR01511`, `PTHR43520:SF8`) | N-terminal HMA (`PS50846`, `24-MTCASCV-30`) + TM6 `379-CPC-381` + `Asp423` phosphorylation site | `GO:0140581` (P-type monovalent copper transporter activity), `GO:0005507`, `GO:0005524`, `GO:0060003`, `GO:0055070`, `GO:0005886` |
+| Zinc uptake repressor | `zur` | `A0A0H2LYR2` (`VPARA_33720`) | Fur-family zinc uptake transcriptional repressor Zur (149 aa, `PTHR33202`, `PF01475`) | Structural 4-Cys $\text{Zn}^{2+}$ site (`Cys96, Cys99, Cys133, Cys136`) + regulatory `His90/His125` site | `GO:0001217` (DNA-binding transcription repressor activity), `GO:0000976`, `GO:0008270`, `GO:0045892`, `GO:0006882`, `GO:0005829` |
+
+- **Updated Module:**
+  - [`modules/variovorax_metallophore_metal_homeostasis.yaml`](../../modules/variovorax_metallophore_metal_homeostasis.html) (`MODULE:variovorax_metallophore_metal_homeostasis` — expanded with `copA2` and `zur`)

@@ -1,0 +1,22 @@
+# Curatorial Notes for `phoU` (`A0A0H2MBK2`, `VPARA_10440`) in *Variovorax paradoxus* TBEA6
+
+## 1. Gene & Protein Identity
+- **UniProt Accession:** `A0A0H2MBK2` (`A0A0H2MBK2_VARPD`)
+- **Gene Symbol:** `phoU`
+- **Locus Tag / EMBL CDS:** `VPARA_10440` / `KLN58032.1` on contig `JZWI01000005` (`RefSeq:WP_047783561.1`)
+- **Protein Length:** 233 aa (25,818 Da); cytoplasmic homodimer (`PIRNR:PIRNR003107`) containing two tandem symmetric three-alpha-helix bundle PhoU domains (`Pfam:PF01895` at residues 22–108 and 129–210; `InterPro:IPR028366`, `NCBIfam:TIGR02135` `phoU_full`, `PANTHER:PTHR42930:SF3`).
+- **Conserved Metal-Binding & Signaling Motifs:**
+  - Conserves the charged metal-coordinating residues in both three-helix bundles (`Glu54`, `Asp64`, `Glu94`, `Arg95` in bundle 1 and `Asp157`, `Asp158`, `Asp159`, `Glu195`, `Arg196` in bundle 2, corresponding to the *E. coli* PhoU `D58/N62/E100/R101/D104` and `D161/D165/E200/R201/D204` $\text{Mn}^{2+}/\text{Mg}^{2+}$-binding sites characterized in `PMID:24563032`).
+
+## 2. Operon Context on Contig `JZWI01000005`
+- Encoded immediately between `phoB1` (`VPARA_10430`, `KLN58031.1`) and `pstB` (`VPARA_10450`, `KLN58033.1`) within the `phoR1-phoB1-phoU-pstB-pstA-pstC-pstS-ppx` (`VPARA_10420`–`VPARA_10490`) phosphate regulon gene cluster.
+
+## 3. Literature & Comparative Evidence
+- **[PMID:24563032]** (Gardner et al. 2014 *J Bacteriol*): Demonstrates by bacterial two-hybrid, affinity co-elution, gel filtration, ICP-MS, tryptophan fluorescence, and chromosomal integration of `phoUQuad` mutants that PhoU is a homodimer that binds $\text{Mn}^{2+}$ and $\text{Mg}^{2+}$ to localize to the cytoplasmic face of the inner membrane and physically bridges the PstB ATPase subunit of PstSCAB to the PAS domain of the PhoR sensor kinase, negatively regulating the Pho regulon and modulating PstSCAB phosphate transport under phosphate-replete conditions.
+- **[PMID:3881386]** (Surin et al. 1985 *J Bacteriol*): Nucleotide sequence and organization of `phoU` at the 3' end of the `phoS-pstC-pstA-pstB-phoU` operon.
+
+## 4. Annotation Review Decisions
+- `GO:0005737` (`cytoplasm`, IEA `GO_REF:0000044`): **ACCEPT** — core location of soluble PhoU homodimers that peripherally associate with the inner membrane via PstB and PhoR1 (`PMID:24563032`).
+- `GO:0030643` (`intracellular phosphate ion homeostasis`, IEA `GO_REF:0000002`): **ACCEPT** — PhoU couples PstSCAB transport activity to PhoR1-PhoB1 signaling and prevents toxic hyperaccumulation of inorganic phosphate and polyphosphate (`PMID:24563032`).
+- `GO:0045936` (`negative regulation of phosphate metabolic process`, IEA `GO_REF:0000002`): **ACCEPT** — PhoU is the essential negative regulator of the PhoR1-PhoB1 phosphate starvation regulon under phosphate-replete conditions (`PMID:24563032`).
+- `GO:0046872` (`metal ion binding`, IC from `file:VARPD/phoU/phoU-uniprot.txt`): **NEW** — PhoU coordinates divalent metal cations ($\text{Mn}^{2+}/\text{Mg}^{2+}$) via conserved carboxylate/arginine clusters in each of its two `Pfam:PF01895` three-helix bundles (`22..108` and `129..210`), which is required for membrane association and phosphate-sufficiency signaling (`PMID:24563032`).
