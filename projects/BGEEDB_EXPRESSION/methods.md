@@ -75,6 +75,12 @@ flowchart LR
   stage-specific predicate, in three variants: declared_strict, declared and
   territory.
 - `scripts/figures.py` draws the two SVGs from the result YAMLs.
+- `scripts/gene_report.py` writes a per-gene report into a review's
+  `genes/<org>/<GENE>/<GENE>-bioinformatics/` folder. It covers top tissues and
+  breadth, every anatomy-bearing GO term in the gene's GOA file scored for the
+  gene and its paralogs, optional context checks, and stage-resolved calls in
+  named anatomies. Reviews cite it as
+  `file:<org>/<GENE>/<GENE>-bioinformatics/RESULTS.md`.
 
 ## Matching rules
 
@@ -143,6 +149,12 @@ uv run python projects/BGEEDB_EXPRESSION/scripts/paralogs.py
 uv run python projects/BGEEDB_EXPRESSION/scripts/cerebellum_timing.py
 # 5. figures
 uv run python projects/BGEEDB_EXPRESSION/scripts/figures.py
+# 6. per-gene reports used by the G6pc2 and Pax4 reviews
+uv run python projects/BGEEDB_EXPRESSION/scripts/gene_report.py mouse G6pc2 --paralog G6pc1 --paralog G6pc3 \
+  --context "gluconeogenesis:UBERON:0002107,UBERON:0001225,UBERON:0002108" \
+  --focus UBERON:0000006 --focus UBERON:0001264 --focus UBERON:0002107 --focus UBERON:0002113
+uv run python projects/BGEEDB_EXPRESSION/scripts/gene_report.py mouse Pax4 --paralog Pax6 \
+  --focus UBERON:0001264 --focus UBERON:0000970 --focus UBERON:0001905 --focus UBERON:0001890 --focus UBERON:0000160
 # doctests
 uv run python -m doctest projects/BGEEDB_EXPRESSION/scripts/bgee_common.py projects/BGEEDB_EXPRESSION/scripts/calibrate.py
 ```
