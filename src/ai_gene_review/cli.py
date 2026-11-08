@@ -4191,6 +4191,119 @@ def gocam_index(
 
 
 @app.command()
+def gocam_compartments(
+    model_ids: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="GO-CAM model ids (default: every cached model)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    ontology: Annotated[
+        str,
+        typer.Option("--ontology", help="oaklib handle for GO (e.g. sqlite:obo:go, simpleobo:go-basic.obo)"),
+    ] = "sqlite:obo:go",
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write the YAML report here instead of stdout"),
+    ] = None,
+    all_rows: Annotated[
+        bool,
+        typer.Option("--all-rows", help="Report every location and edge, not only problems"),
+    ] = False,
+    modules_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--modules-dir",
+            help="Modules whose gocam_associations pins can explain non-adjacent edges ('' to skip)",
+        ),
+    ] = Path("modules"),
+    genes_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--genes-dir",
+            help="Gene folders giving known protein locations for regulation edges ('' to skip)",
+        ),
+    ] = Path("genes"),
+):
+    """Check GO-CAM activity locations against a disjoint compartment model.
+
+    Flags `occurs_in` terms that no is_a/part_of path places in a distinct
+    compartment (e.g. chromatin), and causal edges between activities in
+    compartments that share no boundary (e.g. cytosol -> extracellular region).
+    A non-adjacent edge is EXPLAINED when a module pinned to both activities has
+    a path through a transport step, and RELOCATING when it regulates a protein
+    known (from its gene folder) to sit next to the regulator.
+    The compartment set and adjacency live in
+    src/ai_gene_review/data/gocam_compartments.yaml; see
+    projects/GOCAM_COMPARTMENTS.md.
+
+    Examples:
+        ai-gene-review gocam-compartments 59cc772c00000000 600ced8500002343
+        ai-gene-review gocam-compartments -o reports/gocam-compartments.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.etl.gocam import normalize_gocam_id
+    from ai_gene_review.gocam_compartments import (
+        CompartmentModel,
+        ProteinLocationIndex,
+        check_cached_models,
+        iter_cached_models,
+        oak_ancestor_fn,
+        summarize,
+    )
+    from ai_gene_review.gocam_module_bridges import ModuleBridgeIndex
+
+    if model_ids:
+        paths = []
+        for mid in model_ids:
+            bare = normalize_gocam_id(mid)
+            p = cache_dir / bare / f"{bare}-src.yaml"
+            if not p.exists():
+                raise typer.BadParameter(f"model not cached: {p} (run fetch-gocam first)")
+            paths.append(p)
+    else:
+        paths = list(iter_cached_models(cache_dir))
+    ancestors = oak_ancestor_fn(ontology)
+    cm = CompartmentModel.load()
+    explainer = (
+        ModuleBridgeIndex.from_dir(modules_dir).explain
+        if modules_dir and str(modules_dir) not in ("", ".")
+        else None
+    )
+    protein_locations = (
+        ProteinLocationIndex(genes_dir, cm, ancestors)
+        if genes_dir and str(genes_dir) not in ("", ".")
+        else None
+    )
+    reports = check_cached_models(paths, ancestors, cm, explainer, protein_locations)
+    doc = {
+        "summary": summarize(reports),
+        "models": [
+            r.to_dict(all_rows=all_rows)
+            for r in reports
+            if all_rows or r.unresolved or r.nonadjacent or r.relocating or r.explained
+        ],
+    }
+    text = _yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=120)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text)
+        s = doc["summary"]
+        typer.echo(
+            f"✓ Wrote {output}: {s['n_models']} models, "
+            f"{s['n_models_with_unresolved']} with unresolved locations, "
+            f"{s['n_models_with_nonadjacent']} with unexplained non-adjacent causal edges, "
+            f"{s['n_models_with_relocating']} with relocating, "
+            f"{s['n_models_with_explained']} with module-explained"
+        )
+    else:
+        typer.echo(text)
+
+
+@app.command()
 def subtraction_report(
     paths: Annotated[
         Optional[List[Path]],

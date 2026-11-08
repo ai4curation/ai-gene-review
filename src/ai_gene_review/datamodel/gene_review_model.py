@@ -2425,6 +2425,14 @@ class GoCamQcFlagEnum(str, Enum):
     """
     Complex represented with a complex term where a specific active subunit is known (or vice versa).
     """
+    UNRESOLVED_COMPARTMENT = "UNRESOLVED_COMPARTMENT"
+    """
+    The activity's 'occurs in' term cannot be traced through is_a/part_of to any distinct spatial compartment (organelle lumen or membrane, cytosol, plasma membrane, extracellular region). The location may be obvious from context, e.g. chromatin (GO places chromosome outside the nucleus), but the model does not state it. See projects/GOCAM_COMPARTMENTS.md.
+    """
+    NONADJACENT_COMPARTMENTS = "NONADJACENT_COMPARTMENTS"
+    """
+    A causal edge from or to this activity connects compartments that do not share a boundary (e.g. cytosol directly to extracellular region, plasma membrane directly to nuclear lumen), implying a missing transport, secretion or translocation step or a wrong 'occurs in'. See projects/GOCAM_COMPARTMENTS.md.
+    """
 
 
 
