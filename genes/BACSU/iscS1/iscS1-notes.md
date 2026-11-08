@@ -15,3 +15,8 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 ## 2026-11-07 — PR6199 source-specific follow-up
 
 PMID:25825430 demonstrates the YrvO–MnmA partnership, contingent on ATP. The target raw record lacks an independently supported subcellular-location statement; the author core location has therefore been removed and archived, without changing desulfurase activity or the supported partnership. A dedicated MnmA-donor role is not evidence that Fe-S assembly activity is experimentally excluded.
+
+
+## 2026-11-08 — PR #6199 review follow-up
+
+Add an evidence-backed IDA process proposal for direct YrvO sulfur transfer to MnmA; comparator, term-parent and GO-CAM checks recorded in the receipt. Original source annotation payloads remain unchanged; the new IscS1 process proposal, where applicable, is explicitly authored.

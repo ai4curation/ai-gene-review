@@ -29,3 +29,8 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 ## 2026-11-07 — PR6199 source-specific follow-up
 
 PMID:25825430 supports the cognate YrvO–MnmA ATP-dependent thiolation partnership; that quotation does not measure localization. The target HAMAP MF_00144 cytoplasm statement is now the independent location anchor, with cytosol explicitly inferred from the soluble tRNA reaction.
+
+
+## 2026-11-08 — PR #6199 review follow-up
+
+Repair the truncated sulfurtransferase-complex summary. Original source annotation payloads remain unchanged; the new IscS1 process proposal, where applicable, is explicitly authored.

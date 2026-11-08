@@ -20,7 +20,7 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 
 - GO:0005737 (IEA; GO_REF:0000120): MODIFY. Cytoplasmic localization is correct; the soluble cytosolic sulfur relay and tRNA substrate context support the more specific cytosol term already carried by this gene. This refinement does not assert a newly measured fractionation experiment: the original localization evidence, characterized soluble protein and intracellular tRNA reaction are considered together.
 
-- GO:0005829 (IDA; PMID:18304323): ACCEPT. Retain the curated cytosolic assignment, consistent with the soluble protein and its tRNA sulfur-transfer reaction. For the proteomic/localization sources this preserves the original curator's target assignment rather than claiming a target peptide was independently reidentified; for the inherited TusD row it is a conserved compartment inference, not a donor-count argument.
+- GO:0005829 (IDA; PMID:18304323): ACCEPT. Retain the existing cytosol assignment, consistent with the soluble protein and intracellular tRNA reaction. PMID:18304323 is cytosolic proteomics in MC4100; the original curator's MnmA assignment is retained without claiming an independent target-peptide reidentification.
 
 - GO:0006400 (IEA; GO_REF:0000104): MODIFY. The general tRNA modification/processing claim is correct, but the supported step is specifically C2 thiolation of wobble uridine, GO:0002143, already present in this review. Refine to that supported descendant. The protein performs catalytic sulfur transfer or supplies the characterized relay structure, rather than merely being a substrate or producing an indirect phenotype.
 
@@ -45,3 +45,8 @@ The shared evidence and access limits are documented in analysis/module_audits/b
 ## 2026-11-07 — PR6199 source-specific follow-up
 
 The E. coli relay supports a soluble cytosolic tRNA reaction. Cytosol refinements use the same functional/structural inference for MnmA and TusA/B/C/D/E; no new fractionation measurement is claimed. PMID:16387657 reconstitutes the pathway with recombinant components; PMID:16472754 resolves the TusBCD heterohexamer. Core reaction roles and original annotation payloads are preserved. PMID:38466471 explicitly names trmU (mnmA) among boric-acid-sensitive central-dogma mutants; retain that secondary phenotype without inventing an acid-detoxification activity. The gene-specific text replaces the generic screen quotation.
+
+
+## 2026-11-08 — PR #6199 review follow-up
+
+Replace stale undated per-row note text with the current source-specific adjudication; preserve original notes in the receipt and leave dated journal entries intact. Original source annotation payloads remain unchanged; the new IscS1 process proposal, where applicable, is explicitly authored.
