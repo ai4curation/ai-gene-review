@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**735 of 2,876 genes are complete; 2,141 remain.**
-This checkpoint adds GLDN, GLI3, GLA, GLT8D1 and GLIS2 after verification of their actual merges and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-735-2026-11-07-044934-utc) records the evidence and retained uncertainties.
+**740 of 2,876 genes are complete; 2,136 remain.**
+This checkpoint adds GNB4, GNB2, GPKOW, GMNN and GRIA1 after verification of their actual merges and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-740-2026-11-07-093537-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -5324,14 +5324,14 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **GLIS2** — HGNC:29450; [nephronophthisis 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c51be76f-59d3-4884-9df3-4416686848ab-2024-06-27T160000.000Z) (MONDO:0012680; AR; Moderate).
 - [ ] **GLUL** — HGNC:4341; [congenital brain dysgenesis due to glutamine synthetase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d71d7866-437d-48bd-8a98-21e67abdd917-2024-12-13T170000.000Z) (MONDO:0012393; AR; Moderate); [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fd1658f4-ac4f-47e2-91a1-a127550a5ee9-2025-01-07T180000.000Z) (MONDO:0100062; AD; Moderate).
 - [ ] **GLYCTK** — HGNC:24247; [D-glyceric aciduria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_438a1c87-2526-494b-a5b8-2fe6a2ac184b-2025-12-22T180000.000Z) (MONDO:0009070; AR; Moderate).
-- [ ] **GMNN** — HGNC:17493; [Meier-Gorlin syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d7274f8-8ae0-4260-bea2-c2c590967785-2024-12-04T170000.000Z) (MONDO:0014794; AD; Moderate).
+- [x] **GMNN** — HGNC:17493; [Meier-Gorlin syndrome 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9d7274f8-8ae0-4260-bea2-c2c590967785-2024-12-04T170000.000Z) (MONDO:0014794; AD; Moderate).
 - [ ] **GNAI3** — HGNC:4387; [auriculocondylar syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_236c74d0-b11b-4374-a3e1-4fa222eb3653-2026-05-21T040000.000Z) (MONDO:0000107; AD; Moderate).
-- [ ] **GNB2** — HGNC:4398; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0c04cdd2-5961-460d-9535-409a0f732900-2026-03-26T110000.000Z) (MONDO:0100038; AD; Moderate).
-- [ ] **GNB4** — HGNC:20731; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a8cecdd7-06d8-4697-8cd9-32900c366371-2026-07-29T160000.000Z) (MONDO:0015626; AD; Moderate).
+- [x] **GNB2** — HGNC:4398; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0c04cdd2-5961-460d-9535-409a0f732900-2026-03-26T110000.000Z) (MONDO:0100038; AD; Moderate).
+- [x] **GNB4** — HGNC:20731; [Charcot-Marie-Tooth disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a8cecdd7-06d8-4697-8cd9-32900c366371-2026-07-29T160000.000Z) (MONDO:0015626; AD; Moderate).
 - [ ] **GOT2** — HGNC:4433; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f94e1fde-baef-4529-a67d-842f21ea2c53-2025-10-27T040000.000Z) (MONDO:0044970; AR; Moderate).
 - [ ] **GPHN** — HGNC:15465; [sulfite oxidase deficiency due to molybdenum cofactor deficiency type C](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29f6ebf3-c4c5-4770-b7d1-50816b9f9d74-2023-05-12T180000.000Z) (MONDO:0014212; AR; Moderate).
-- [ ] **GPKOW** — HGNC:30677; [holoprosencephaly-hypokinesia-congenital contractures syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4dd1c919-897b-4aea-af1b-ad55a4080468-2025-12-03T170000.000Z) (MONDO:0010610; XL; Moderate).
-- [ ] **GRIA1** — HGNC:4571; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03597202-ca6c-4eb6-8531-59803753c382-2024-02-08T070000.000Z) (MONDO:0100038; AD; Moderate); [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84aaf490-76e2-4d87-a1bd-53ab6611236c-2024-02-08T070000.000Z) (MONDO:0100038; AR; Limited).
+- [x] **GPKOW** — HGNC:30677; [holoprosencephaly-hypokinesia-congenital contractures syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4dd1c919-897b-4aea-af1b-ad55a4080468-2025-12-03T170000.000Z) (MONDO:0010610; XL; Moderate).
+- [x] **GRIA1** — HGNC:4571; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_03597202-ca6c-4eb6-8531-59803753c382-2024-02-08T070000.000Z) (MONDO:0100038; AD; Moderate); [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_84aaf490-76e2-4d87-a1bd-53ab6611236c-2024-02-08T070000.000Z) (MONDO:0100038; AR; Limited).
 - [ ] **GRIA4** — HGNC:4574; [neurodevelopmental disorder with or without seizures and gait abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2c6e2c49-e537-4eec-8b85-aef0c6651d55-2024-07-07T100000.000Z) (MONDO:0060641; AD; Moderate).
 - [ ] **GRXCR2** — HGNC:33862; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_207f12b7-3148-4a8f-88f8-f78ac5bb294c-2021-03-26T155748.643Z) (MONDO:0019497; AR; Moderate).
 - [ ] **GSTZ1** — HGNC:4643; [maleylacetoacetate isomerase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8c287e0b-88be-4fbb-82a6-a8c70d430506-2024-12-13T170000.000Z) (MONDO:0060527; AR; Moderate).

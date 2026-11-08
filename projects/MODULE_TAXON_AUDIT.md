@@ -46,13 +46,19 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_lps_transport`: [PR #6190](https://github.com/ai4curation/ai-gene-review/pull/6190) review follow-up passes focused checks; fresh full validation, publication, renewed review/CI and actual merge remain pending.
 
+- [ ] `bacterial_imuabc_damage_induced_mutagenesis`: PR #6169: main 597e48b1634d7b6b85739e8cd037571b949f372f integrated with 258 frozen nonshared files preserved. Historical full validation remains on 90ccb6b4b319515f57990aed214e082c7aae7b71; fresh review, CI and merge are pending.
+
+- [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
+
+- [x] `bacterial_lipoprotein_maturation`: PR #6184 merged as dc4512172353d85fed764fa9fcaf7daf16a78698; all 344 changed nonshared files are byte-identical to the approved head. All 14 module members have COMPLETE reviews without PENDING rows. Actual merged content verified.
+
 - [ ] `bacterial_isc_iron_sulfur_cluster_assembly`: PR #6175 scientific review follow-up passes full validation on 31d0901593; main 0a807fc555 is integrated with 320 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
 - [x] `bacterial_cellulose_biosynthesis`: PR #2143 actually merged as 0a807fc55576d0371b2dfacb482f8d695992535b; 291 changed nonshared files are byte-identical to the reviewed head and 21 changed reviews remain COMPLETE with no PENDING rows.
 
 - [ ] `bacterial_flavonoid_degradation`: PR #6140 scientific review follow-up passes full validation on ee4222b667; main 5b68ef3aac is integrated with 361 frozen nonshared inputs preserved. Fresh review, CI and actual merge remain pending.
 
-- [ ] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105: integrated main 2f72fda87e into approved head 41649e7eae, preserving all frozen scientific inputs. Fresh review and CI on the integration head, followed by actual merge, remain pending. Historical full validation is scoped to its recorded science head.
+- [x] `bacterial_choline_o_sulfate_uptake_and_desulfation`: PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 changed nonshared files are byte-identical to the reviewed head and 10 changed reviews remain COMPLETE with no PENDING rows.
 
 - [ ] `bacterial_cytochrome_c_maturation_system_i`: PR #6121 provenance/CcmE follow-up passes full validation on 072461b9b2: 10,722 reviews, zero blocking errors and 374 frozen inputs verified. Fresh review, CI and actual merge pending. [PR #6121](https://github.com/ai4curation/ai-gene-review/pull/6121).
 
@@ -106,6 +112,8 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
 - [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -942,3 +950,107 @@ Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full 
 ## 2026-11-07 — LPS review follow-up prepared locally
 
 Corrected evidence attachment and biological summaries, retained evidence-based family scope uncertainty, clarified terminal-profile coverage, and replaced nine cache dependencies with durable data or explicitly bounded excerpts. All 214 source rows and six historical NEW rows remain intact; 56 capacity cases, 14 mutations and seven sensitivities pass. Earlier full-validation PASS is historical; a fresh guarded run will start on the frozen follow-up commit before publication. [Frozen integration receipt](../analysis/module_audits/bacterial_lps_transport/review-followup/module-integration/handoff.json).
+
+## 2026-11-07 — bacterial lipoprotein maturation full validation passes
+
+Comparative audit passes full validation on 06a98cd053: 10,771 reviews, zero blocking errors and 341 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_lipoprotein_maturation/full-validation-proof.json).
+
+## 2026-11-07 — bacterial_lipoprotein_maturation main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b after the passing full run on 06a98cd0530c1b0e462a053f68dd5cabec2bf306. All 337 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial lipoprotein maturation full validation passes
+
+PR #6184 follow-up passes full validation on 1702541121: 10,788 reviews, zero blocking errors and 418 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_lipoprotein_maturation/full-validation-round1-proof.json).
+
+## 2026-11-07 — bacterial_lipoprotein_maturation main integration
+
+Integrated main bb89a377830600d2850d64215e0da94a47a06c6a after the passing full run on 1702541121f4bcf1b66b5eb52fd9a9cbf57fa4e5. All 414 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — heptaprenylglyceryl comparative curation
+
+Comparative curation: seven completed gene reviews across four genera, 13 assessed references including three reviews, and six verified family-member assignments. The C20 GGGPS comparator is excluded from the C35 module. Native G1P supply, phosphatase identity and carrier membrane crossing remain biological gaps. Focused validation passes; full validation, PR publication, review and actual merge remain pending. [Scope and evidence](../analysis/module_audits/bacterial_heptaprenylglyceryl_ether_lipid/scope-and-evidence.md).
+
+## 2026-11-07 — bacterial heptaprenylglyceryl ether lipid full validation passes
+
+Comparative audit passes full validation on 5ca4d26e74: 10,752 reviews, zero blocking errors and 105 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_heptaprenylglyceryl_ether_lipid/full-run.json).
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 after the passing full run on 5ca4d26e74a5455b6122ecb0c700a920c635ca4e. All 101 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main f583a9215b0f6a33399d56716a5279bc6828461f after the passing full run on 5ca4d26e74a5455b6122ecb0c700a920c635ca4e. All 101 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Choline sulfate audit merge verified
+
+PR #6105 actually merged as f583a9215b0f6a33399d56716a5279bc6828461f; 126 changed nonshared files are byte-identical to the reviewed head and 10 changed reviews remain COMPLETE with no PENDING rows. [Merge proof](MODULE_TAXON_AUDIT/proofs/pr6105-merged-content.json).
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full run on 5ca4d26e74a5455b6122ecb0c700a920c635ca4e. All 101 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — Ac-HepG evidence follow-up
+
+PR #6167 evidence follow-up repairs duplicated/off-target FLAJ1 quotes and restores the scoped PcrB comparator rationale, including a verified bacterial ether-lipid annotation that refutes a universal prokaryotic-absence claim. All 45 ordered annotation payloads and actions are unchanged. Five changed reviews pass focused gene/history/render checks; full validation of the follow-up remains pending before publication.
+
+## 2026-11-07 — bacterial heptaprenylglyceryl ether lipid full validation passes
+
+PR #6167 follow-up passes full validation on e4a4bb1dfe: 10,760 reviews, zero blocking errors and 138 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_heptaprenylglyceryl_ether_lipid/round1-full-validation.json).
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e after the passing full run on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f. All 134 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head 9ef811b9d326703bc325a6e08cd13c39a3e87f0e. All 154 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b into approved head bcfeede8a640e614c3bb569994192ea415aa4252. All 157 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main bb89a377830600d2850d64215e0da94a47a06c6a into approved head 0a03ae8e591c7187b21c657e37e6729d9b5a8c74. All 160 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_heptaprenylglyceryl_ether_lipid main integration
+
+Integrated main b4f249a30490049f1009fea5871a037219596e0f after the passing full run on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f. All 163 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 1 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — ImuABC cross-species audit
+
+Comparative ImuABC audit: two narrative reviews and 15 assessed references, 12 reviewed exemplars, three matched cassette panels and a separately characterized Myxococcus ImuA ATPase. Original 80 rows plus three new-gene seed rows are preserved; one new ATPase annotation. 63 capacity/compiler cases pass. Final focused validation and full corpus run precede publication; fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial imuabc damage induced mutagenesis full validation passes
+
+Comparative audit passes full validation on 9d7cbd20fe: 10,748 reviews, zero blocking errors and 212 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/full-validation.json).
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main e9d50a8a42ab5e6b5560d09ff8c44e64f4c77360 after the passing full run on 9d7cbd20fe52fa4c3be3a3d1563baff493539a67. All 208 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial imuabc damage induced mutagenesis full validation passes
+
+PR #6169 follow-up passes full validation on 357df862a5: 10,757 reviews, zero blocking errors and 238 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round1-full-validation.json).
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece after the passing full run on 357df862a5b54dfad3483658a831b357c88c85f3. All 234 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial imuabc damage induced mutagenesis full validation passes
+
+PR #6169 follow-up passes full validation on 90ccb6b4b3: 10,766 reviews, zero blocking errors and 247 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/round2-full-validation.json).
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b after the passing full run on 90ccb6b4b319515f57990aed214e082c7aae7b71. All 243 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_imuabc_damage_induced_mutagenesis main integration
+
+Integrated main 597e48b1634d7b6b85739e8cd037571b949f372f after the passing full run on 90ccb6b4b319515f57990aed214e082c7aae7b71. All 258 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. This is preserved-science integration, not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-08 — resume PR #6190 after disk cleanup
+
+Integrate main a344758bae648a999bbe316e9b1e2289a958d1bc into paused PR #6190 at 6c2d6723fdfb5d626bbba4d431f247c02b2dd251. All 469 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
