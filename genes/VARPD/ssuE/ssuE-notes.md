@@ -15,15 +15,15 @@
 - **[PMID:26634408](https://pubmed.ncbi.nlm.nih.gov/26634408/) (Dayal,ernen & Ellis 2015, *Biochemistry* 54:7531-7538):** Demonstrated that optimal reduced-flavin transfer from SsuE to SsuD involves defined protein-protein interactions, while diffusional transfer can also occur under specified conditions.
 
 ## 3. Review of Existing GOA Annotations (4 IEA rows)
-1. **`GO:0005737` (`cytoplasm`, `located_in`, IEA `GO_REF:0000118` from `PANTHER:PTN002621350`)** -> **`MODIFY` to `GO:0005829` (`cytosol`)**:
-   - SsuE is a soluble 194-aa cytoplasmic enzyme lacking signal peptides or transmembrane helices that supplies reduced FMN to the cytosolic monooxygenase SsuD (`VPARA_09250`); refined to the more specific cellular component `GO:0005829` (`cytosol`) to match `ssuD` (`A0A0H2MCI3`).
-2. **`GO:0010181` (`FMN binding`, `enables`, IEA `GO_REF:0000118` from `PANTHER:PTN002621350`)** -> **`KEEP_AS_NON_CORE`**:
-   - Unlike flavoproteins carrying a permanently bound FMN prosthetic group, SsuE binds oxidized FMN as a catalytic substrate (`RHEA:17709`) and releases reduced $\text{FMNH}_2$ for transfer to SsuD (PMID:10480865, PMID:26634408). Following the `PSEPK/ssuE` comparator convention, `GO:0010181` is retained as `KEEP_AS_NON_CORE` because FMN interaction is already entailed by the catalytic reductase activity (`GO:0052873`).
-3. **`GO:0016491` (`oxidoreductase activity`, `enables`, IEA `GO_REF:0000002` from `InterPro:IPR005025`)** -> **`TOO_GENERAL`**:
-   - True but uninformative parent molecular function already entailed by the accepted specific child term `GO:0052873` (`FMN reductase (NADPH) activity`).
-4. **`GO:0052873` (`FMN reductase (NADPH) activity`, `enables`, IEA `GO_REF:0000120` from `InterPro:IPR019913`, `PANTHER:PTN002621350`, `RHEA:17709`, `EC:1.5.1.38`)** -> **`ACCEPT`**:
-   - Core catalytic activity of SsuE (`NCBIfam:TIGR03567`, `InterPro:IPR019913`, `PANTHER:PTHR43408:SF1`). Note that while *P. putida* S-313 SsuE was specific for NADPH in extract assays (PMID:10781557), *E. coli* SsuE turns over both NADH and NADPH at comparable rates; nicotinamide donor preference in *V. paradoxus* TBEA6 SsuE remains to be biochemically measured.
+1. **`GO:0008752` (`FMN reductase [NAD(P)H] activity`, `enables`, IEA `GO_REF:0000002` from `InterPro:IPR020048`)** -> **`ACCEPT`**:
+   - Core catalytic activity of SsuE (`NCBIfam:TIGR03567`, `InterPro:IPR020048`, `PANTHER:PTHR43408:SF1`). Because *P. putida* S-313 SsuE uses NADPH specifically in extract assays (PMID:10781557) whereas *E. coli* SsuE turns over both NADH and NADPH (PMID:10480865), and nicotinamide donor preference in *V. paradoxus* TBEA6 SsuE (`VPARA_09290`) has not been biochemically assayed, `GO:0008752` (`FMN reductase [NAD(P)H] activity`) is accepted at the warranted level of specificity.
+2. **`GO:0016491` (`oxidoreductase activity`, `enables`, IEA `GO_REF:0000002` from `InterPro:IPR005025`)** -> **`TOO_GENERAL`**:
+   - True but uninformative parent molecular function already entailed by the accepted child term `GO:0008752` (`FMN reductase [NAD(P)H] activity`).
+3. **`GO:0046306` (`alkanesulfonate catabolic process`, `involved_in`, IEA `GO_REF:0000002` from `InterPro:IPR020048`)** -> **`ACCEPT`**:
+   - Core pathway process in which SsuE (`VPARA_09290`, `KLN57918.1`) is co-encoded in the `ssuB2-ssuC5-ssuD-...-ssuA2-...-ssuE` cluster on contig `JZWI01000005` alongside `ssuB2` (`VPARA_09230`, `UniProtKB:A0A0H2MBB8`), `ssuC5` (`VPARA_09240`, `UniProtKB:A0A0H2M6G6`), `ssuD` (`VPARA_09250`, `UniProtKB:A0A0H2MCI3`), and `ssuA2` (`VPARA_09270`, `UniProtKB:A0A0H2M784`) and provides reduced $\text{FMNH}_2$ to SsuD (`VPARA_09250`).
+4. **`GO:0052873` (`FMN reductase (NADPH) activity`, `enables`, IEA `GO_REF:0000003` from `EC:1.5.1.38`)** -> **`MARK_AS_OVER_ANNOTATED`**:
+   - Over-specific nicotinamide cofactor assignment from `EC:1.5.1.38` mapping; NADPH vs NADH preference has not been experimentally assayed in *V. paradoxus* TBEA6 SsuE, and `GO:0008752` (`FMN reductase [NAD(P)H] activity`) is accepted as the core molecular function instead.
 
 ## 4. Proposed New Annotations
-- **`GO:0046306` (`alkanesulfonate catabolic process`, `involved_in`, IC from `file:VARPD/ssuE/ssuE-uniprot.txt` and `PMID:10480865`)** -> **`NEW`**:
-   - SsuE (`VPARA_09290`, `KLN57918.1`) is co-encoded in the `ssuB2-ssuC5-ssuD-...-ssuA2-...-ssuE` cluster on contig `JZWI01000005` and provides the reduced $\text{FMNH}_2$ cosubstrate required by the partner alkanesulfonate monooxygenase SsuD (`VPARA_09250`) to cleave aliphatic sulfonates into sulfite and the corresponding aldehyde.
+- **`GO:0005829` (`cytosol`, `located_in`, IC from `file:VARPD/ssuE/ssuE-uniprot.txt` and `PMID:10480865`)** -> **`NEW`**:
+   - SsuE (`VPARA_09290`) is a 194-residue soluble cytoplasmic flavin reductase (`Pfam:PF03358`, residues `1..142`) lacking signal peptides or transmembrane helices that transfers reduced FMN to the cytosolic monooxygenase SsuD (`VPARA_09250`, `UniProtKB:A0A0H2MCI3`) in the cytosol (`GO:0005829`).

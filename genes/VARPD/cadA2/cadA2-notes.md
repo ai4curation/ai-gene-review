@@ -39,8 +39,8 @@
     - True but uninformative parent molecular function already entailed by `GO:0016463` and `GO:0015086`.
 11. **`GO:0030001` (`metal ion transport`, `involved_in`, IEA `GO_REF:0000120` from `ARBA:ARBA00028072`, `PANTHER:PTN002458237`)** -> **`TOO_GENERAL`**:
     - True but uninformative parent process already entailed by `GO:0071577` (`zinc ion transmembrane transport`) and `GO:0070574` (`cadmium ion transmembrane transport`).
-12. **`GO:0046872` (`metal ion binding`, `enables`, IEA `GO_REF:0000002` from `InterPro:IPR006121`, `InterPro:IPR036163`)** -> **`ACCEPT`**:
-    - Supported by the N-terminal heavy-metal-associated (HMA) regulatory domain (`CDD:cd00371`, `InterPro:IPR006121`, `SUPFAM:SSF55008`, containing `26-CCGSTAC-32`) and the intramembrane `410-CPC-412` metal-coordination site.
+12. **`GO:0046872` (`metal ion binding`, `enables`, IEA `GO_REF:0000002` from `InterPro:IPR006121`, `InterPro:IPR036163`)** -> **`MODIFY` to `GO:0008270` (`zinc ion binding`) and `GO:0046870` (`cadmium ion binding`)**:
+    - Supported by the N-terminal heavy-metal-associated (HMA) regulatory domain (`CDD:cd00371`, `InterPro:IPR006121`, `SUPFAM:SSF55008`, containing `26-CCGSTAC-32`) and the intramembrane `410-CPC-412` metal-coordination site of this $\text{P}_{1\text{B}-2}$-subfamily $\text{Zn}^{2+}$/$\text{Cd}^{2+}$ ATPase (`NCBIfam:TIGR01512`, `PANTHER:PTHR48085:SF5`; PMID:9405611, PMID:12867443); refined to the specific descendants `GO:0008270` (`zinc ion binding`) and `GO:0046870` (`cadmium ion binding`).
 13. **`GO:0055085` (`transmembrane transport`, `involved_in`, IEA `GO_REF:0000118` from `PANTHER:PTN002458237`)** -> **`TOO_GENERAL`**:
     - True but uninformative parent process already entailed by `GO:0071577` and `GO:0070574`.
 14. **`GO:0070574` (`cadmium ion transmembrane transport`, `involved_in`, IEA `GO_REF:0000108` from `GO:0015086`)** -> **`ACCEPT`**:

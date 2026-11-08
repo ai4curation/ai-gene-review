@@ -14,25 +14,29 @@
 - **[PMID:10198000](https://pubmed.ncbi.nlm.nih.gov/10198000/) (Grosse et al. 1999, *J Bacteriol* 181:2385-2393):** Constructed $\Delta czcS$ and $\Delta czcR$ deletion mutants in *Alcaligenes eutrophus* (*Cupriavidus metallidurans* CH34) and demonstrated by growth in $5\text{ mM }\text{Zn}^{2+}$, reporter induction by $\text{Zn}^{2+}$/$300\ \mu\text{M}$, $\text{Co}^{2+}$, and $\text{Cd}^{2+}$, and `czcCBA` mRNA analysis that the CzcRS two-component system senses heavy-metal cations and activates `czc` transcription.
 
 ## 3. Review of Existing GOA Annotations (9 IEA rows)
-1. **`GO:0000155` (`phosphorelay sensor kinase activity`, `enables`, IEA `GO_REF:0000120` from `PROSITE-ProRule:PRU00107`, `InterPro:IPR003661`, `PANTHER:PTN001614306`, `RHEA:16537`, `EC:2.7.13.3`)** -> **`ACCEPT`**:
+1. **`GO:0000155` (`phosphorelay sensor kinase activity`, `enables`, IEA `GO_REF:0000120` from `ARBA:ARBA00029195`, `InterPro:IPR003661`, `InterPro:IPR036097`)** -> **`ACCEPT`**:
    - Core catalytic and sensory molecular function of CusS/CzcS (`EC 2.7.13.3`, `PROSITE:PS50109`, phospho-acceptor `His233`).
-2. **`GO:0000160` (`phosphorelay signal transduction system`, `involved_in`, IEA `GO_REF:0000120` from `PROSITE-ProRule:PRU00107`, `PROSITE-ProRule:PRU00102`, `InterPro:IPR003660`, `PANTHER:PTN001614306`)** -> **`ACCEPT`**:
+2. **`GO:0000160` (`phosphorelay signal transduction system`, `involved_in`, IEA `GO_REF:0000120` from `InterPro:IPR006290`, `InterPro:IPR050428`, `PANTHER:PTN002895899`)** -> **`ACCEPT`**:
    - Core biological process mediated by the CzcS/CusS sensor kinase paired with its cognate response regulator CzcR (`VPARA_44930`).
-3. **`GO:0005524` (`ATP binding`, `enables`, IEA `GO_REF:0000120` from `PROSITE-ProRule:PRU00107`, `InterPro:IPR003594`)** -> **`ACCEPT`**:
-   - Core nucleotide-binding activity of the C-terminal HATPase_c catalytic domain (`Pfam:PF02518`, `InterPro:IPR003594`, `PROSITE:PS50109`).
-4. **`GO:0005886` (`plasma membrane`, `located_in`, IEA `GO_REF:0000120` from `UniProtKB-SubCell:SL-0037`, `PANTHER:PTN001614306`)** -> **`ACCEPT`**:
+3. **`GO:0004673` (`protein histidine kinase activity`, `enables`, IEA `GO_REF:0000120` from `InterPro:IPR006290`, `EC:2.7.13.3`)** -> **`TOO_GENERAL`**:
+   - Direct parent term of `GO:0000155` (`phosphorelay sensor kinase activity`), which is already accepted on this gene.
+4. **`GO:0005886` (`plasma membrane`, `located_in`, IEA `GO_REF:0000120` from `UniProtKB-SubCell:SL-0037`, `PANTHER:PTN002895899`)** -> **`ACCEPT`**:
    - Core subcellular localization of the two-TM integral inner-membrane sensor kinase (`FT TRANSMEM 21..41` and `145..168`).
-5. **`GO:0016020` (`membrane`, `located_in`, IEA `GO_REF:0000120` from `InterPro:IPR006290`, `UniProtKB-SubCell:SL-0162`, `PANTHER:PTN001614306`)** -> **`TOO_GENERAL`**:
+5. **`GO:0007165` (`signal transduction`, `involved_in`, IEA `GO_REF:0000002` from `InterPro:IPR003660`, `InterPro:IPR003661`, `InterPro:IPR036097`)** -> **`TOO_GENERAL`**:
+   - Ancestor term of `GO:0000160` (`phosphorelay signal transduction system`), which is already accepted on this gene.
+6. **`GO:0016020` (`membrane`, `located_in`, IEA `GO_REF:0000002` from `InterPro:IPR003660`, `InterPro:IPR006290`)** -> **`TOO_GENERAL`**:
    - True but uninformative parent cellular component already entailed by the accepted specific term `GO:0005886` (`plasma membrane`).
-6. **`GO:0016310` (`phosphorylation`, `involved_in`, IEA `GO_REF:0000108` from `GO:0016772`)** -> **`TOO_GENERAL`**:
-   - True but uninformative parent biological process already entailed by `GO:0000160` (`phosphorelay signal transduction system`) and `GO:0046777` (`protein autophosphorylation`).
-7. **`GO:0016772` (`transferase activity, transferring phosphorus-containing groups`, `enables`, IEA `GO_REF:0000043` from `UniProtKB-KW:KW-0418`)** -> **`TOO_GENERAL`**:
+7. **`GO:0016301` (`kinase activity`, `enables`, IEA `GO_REF:0000104` from `UniRule:UR000416677`)** -> **`TOO_GENERAL`**:
+   - Ancestor term of `GO:0000155` (`phosphorelay sensor kinase activity`), which is already accepted on this gene.
+8. **`GO:0016740` (`transferase activity`, `enables`, IEA `GO_REF:0000104` from `UniRule:UR000416677`)** -> **`TOO_GENERAL`**:
+   - Broad enzyme class parent of `GO:0000155` (`phosphorelay sensor kinase activity`), which is already accepted on this gene.
+9. **`GO:0016772` (`transferase activity, transferring phosphorus-containing groups`, `enables`, IEA `GO_REF:0000002` from `InterPro:IPR004358`)** -> **`TOO_GENERAL`**:
    - True but uninformative parent molecular function already entailed by the accepted specific child term `GO:0000155` (`phosphorelay sensor kinase activity`).
-8. **`GO:0046686` (`response to cadmium ion`, `involved_in`, IEA `GO_REF:0000002` from `InterPro:IPR006290`)** -> **`ACCEPT`**:
-   - Supported by `InterPro:IPR006290` (`CzcS`, `NCBIfam:TIGR01386`), `PANTHER:PTHR45436:SF9` (`SENSOR PROTEIN CZCS`), and experimental characterization of CzcRS sensing of $\text{Zn}^{2+}$, $\text{Co}^{2+}$, and $\text{Cd}^{2+}$ (PMID:10198000).
-9. **`GO:0046777` (`protein autophosphorylation`, `involved_in`, IEA `GO_REF:0000118` from `PANTHER:PTN001614306`)** -> **`ACCEPT`**:
-   - Core biochemical step in which CusS/CzcS autophosphorylates at the conserved histidine residue `His233` (`FT MOD_RES 233 /note="Pros-phosphohistidine"`, `RHEA:16537`) upon periplasmic metal sensing.
 
 ## 4. Proposed New Annotations
+- **`GO:0005524` (`ATP binding`, `enables`, IC from `file:VARPD/cusS/cusS-uniprot.txt`)** -> **`NEW`**:
+   - Core nucleotide-binding activity of the C-terminal HATPase_c catalytic domain (`Pfam:PF02518`, `InterPro:IPR003594`, `PROSITE:PS50109`).
+- **`GO:0046777` (`protein autophosphorylation`, `involved_in`, IC from `file:VARPD/cusS/cusS-uniprot.txt`)** -> **`NEW`**:
+   - Core biochemical step in which CusS/CzcS autophosphorylates at the conserved histidine residue `His233` (`FT MOD_RES 233 /note="Phosphohistidine; by autocatalysis" /evidence="ECO:0000256|PROSITE-ProRule:PRU00107"`).
 - **`GO:0010043` (`response to zinc ion`, `involved_in`, ISS from `PMID:10198000` and `file:VARPD/cusS/cusS-uniprot.txt`)** -> **`NEW`**:
    - Zinc ($\text{Zn}^{2+}$) is the primary physiological inducer sensed by the CzcS (`TIGR01386`, `PTHR45436:SF9`) sensor kinase in the `czc` heavy-metal resistance system (PMID:10198000).

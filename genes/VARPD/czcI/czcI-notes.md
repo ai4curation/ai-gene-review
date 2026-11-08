@@ -15,8 +15,10 @@
 
 ## 3. Review of Existing GOA Annotations (1 IEA row)
 1. **`GO:0046686` (`response to cadmium ion`, `involved_in`, IEA `GO_REF:0000002` from `InterPro:IPR055013`)** -> **`ACCEPT`**:
-   - `InterPro:IPR055013` (`CzcI`, integrating `Pfam:PF11162` and `NCBIfam:NF045614` `efflu_CzcI_Cupr`) maps to `GO:0046686` (`response to cadmium ion`). In *V. paradoxus* TBEA6, `czcI` (`VPARA_44920`, `KLN54348.1`) is encoded directly between `czcC-czcB-czcA2` (`VPARA_44890-VPARA_44910`, `KLN54345.1-KLN54347.1`) and `czcR-cusS` (`VPARA_44930-VPARA_44940`, `KLN54349.1-KLN54350.1`), which is a cobalt-zinc-cadmium ($\text{Co}^{2+}$/$\text{Zn}^{2+}$/$\text{Cd}^{2+}$) resistance cluster (PMID:10198000).
+   - `InterPro:IPR055013` (`CzcI`, integrating `Pfam:PF11162` and `NCBIfam:NF045614` `efflu_CzcI_Cupr`) maps to `GO:0046686` (`response to cadmium ion`). In *V. paradoxus* TBEA6, `czcI` (`VPARA_44920`, `KLN54348.1`) is encoded directly between `czcA3-czcB-czcC` (`VPARA_44890-VPARA_44910`, `KLN54345.1-KLN54347.1`, `UniProtKB:A0A0H2MBF7`, `UniProtKB:A0A0H2LX82`, `UniProtKB:A0A0H2M0U4`) and `czcR-cusS` (`VPARA_44930-VPARA_44940`, `KLN54349.1-KLN54350.1`, `UniProtKB:A0A0H2LVW5`, `UniProtKB:A0A0H2MBG2`), which is a cobalt-zinc-cadmium ($\text{Co}^{2+}$/$\text{Zn}^{2+}$/$\text{Cd}^{2+}$) resistance cluster (PMID:10198000).
 
 ## 4. Proposed New Annotations
 - **`GO:0010043` (`response to zinc ion`, `involved_in`, ISS from `PMID:10198000`)** -> **`NEW`**:
-   - Co-transcribed and syntenically conserved in the `czcNICBARS` Zn2+/Cd2+/Co2+ resistance island. (Note: `GO:0030288` periplasmic localization is not added as a `NEW` IC row because the UniProt `FT SIGNAL 1..20` feature carries only `SAM:SignalP` evidence.)
+   - Co-transcribed and syntenically conserved in the `czcA3-czcB-czcC-czcI-czcR-cusS` (`VPARA_44890-VPARA_44940`) Zn2+/Cd2+/Co2+ resistance island (PMID:10198000).
+- **`GO:0030288` (`outer membrane-bounded periplasmic space`, `located_in`, IC from `file:VARPD/czcI/czcI-uniprot.txt` and `PMID:10198000`)** -> **`NEW`**:
+   - Mature CzcI (`VPARA_44920`, `NCBIfam:NF045614`, `InterPro:IPR055013`) is a soluble periplasmic heavy-metal resistance modulator lacking transmembrane helices in this diderm Gram-negative betaproteobacterium.

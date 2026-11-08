@@ -14,23 +14,23 @@
 - **[PMID:10198000](https://pubmed.ncbi.nlm.nih.gov/10198000/) (Grosse et al. 1999, *J Bacteriol* 181:2385-2393):** Purified the *Alcaligenes eutrophus* (*Cupriavidus metallidurans* CH34) CzcR response regulator, demonstrated specific DNA binding in the 5' regulatory region of the `czc` determinant (`"The CzcR putative response regulator was purified and shown to bind in the 5' region of czcN."`), and showed using $\Delta czcR$ and $\Delta czcS$ deletion mutants, `lacZ` reporter fusions, and cDNA analysis that the CzcRS two-component regulatory system activates `czc` transcription in response to $\text{Zn}^{2+}$, $\text{Co}^{2+}$, and $\text{Cd}^{2+}$ (`"cDNA analysis of czcCBA mRNA synthesis under inducing and noninducing conditions showed that the CzcRS two-component regulatory system is involved in Czc regulation."`).
 
 ## 3. Review of Existing GOA Annotations (7 IEA rows)
-1. **`GO:0000156` (`phosphorelay response regulator activity`, `enables`, IEA `GO_REF:0000120` from `PROSITE-ProRule:PRU00169`, `InterPro:IPR001789`, `PANTHER:PTN002695297`, `UniRule:UR000078911`)** -> **`ACCEPT`**:
+1. **`GO:0000156` (`phosphorelay response regulator activity`, `enables`, IEA `GO_REF:0000118` from `PANTHER:PTN008296494`)** -> **`ACCEPT`**:
    - Core molecular function of the N-terminal receiver domain (`PROSITE:PS50110`, residues `2..115`, phospho-acceptor `Asp51`), which accepts a phosphoryl group from its cognate sensor histidine kinase CusS/CzcS (`VPARA_44940`).
-2. **`GO:0000160` (`phosphorelay signal transduction system`, `involved_in`, IEA `GO_REF:0000120` from `PROSITE-ProRule:PRU00169`, `InterPro:IPR001789`, `UniRule:UR000078911`)** -> **`ACCEPT`**:
+2. **`GO:0000160` (`phosphorelay signal transduction system`, `involved_in`, IEA `GO_REF:0000002` from `InterPro:IPR001789`, `InterPro:IPR001867`)** -> **`ACCEPT`**:
    - Core biological process representing two-component histidine-aspartate phosphorelay signaling with the adjacent sensor kinase CusS/CzcS (`VPARA_44940`).
-3. **`GO:0003677` (`DNA binding`, `enables`, IEA `GO_REF:0000120` from `InterPro:IPR001867`, `PANTHER:PTN000673080`, `UniRule:UR000078911`)** -> **`ACCEPT`**:
-   - Core molecular function of the C-terminal OmpR/PhoB-type winged-helix domain (`Pfam:PF00486`, `InterPro:IPR001867`, residues `123..221`), experimentally supported for CzcR binding to the 5' regulatory region of the `czc` locus (PMID:10198000).
-4. **`GO:0005737` (`cytoplasm`, `located_in`, IEA `GO_REF:0000118` from `PANTHER:PTN000673080`)** -> **`MODIFY` to `GO:0005829` (`cytosol`)**:
-   - CzcR is a soluble 225-aa intracellular DNA-binding response regulator lacking signal peptides or transmembrane helices; refined to the more specific cellular component `GO:0005829` (`cytosol`).
-5. **`GO:0006355` (`regulation of DNA-templated transcription`, `involved_in`, IEA `GO_REF:0000120` from `InterPro:IPR001867`, `UniRule:UR000078911`)** -> **`MODIFY` to `GO:0045893` (`positive regulation of DNA-templated transcription`)**:
-   - `GO:0006355` is true but unsigned; upon phosphorylation by CzcS/CusS in the presence of inducing divalent cations ($\text{Zn}^{2+}$, $\text{Co}^{2+}$, $\text{Cd}^{2+}$), CzcR acts as a transcriptional activator (`PANTHER:PTHR48111:SF76`, `TRANSCRIPTIONAL ACTIVATOR PROTEIN CZCR`; PMID:10198000) that activates expression of the `czc` efflux genes, supporting refinement to `GO:0045893` (`positive regulation of DNA-templated transcription`).
-6. **`GO:0046686` (`response to cadmium ion`, `involved_in`, IEA `GO_REF:0000002` from `InterPro:IPR006291`)** -> **`ACCEPT`**:
-   - Supported by `InterPro:IPR006291` (`CzcR`, `NCBIfam:TIGR01387`) and experimental demonstration that the CzcRS two-component system mediates transcriptional induction in response to cadmium, cobalt, and zinc ions (PMID:10198000).
-7. **`GO:0046688` (`response to copper ion`, `involved_in`, IEA `GO_REF:0000118` from `PANTHER:PTN002695297`)** -> **`MARK_AS_OVER_ANNOTATED`**:
-   - Propagated by TreeGrafter from the broader CopR/CusR/CzcR PANTHER clade (`PTN002695297`). In *V. paradoxus* TBEA6, `czcR` (`VPARA_44930`, `NCBIfam:TIGR01387`, `PANTHER:PTHR48111:SF76`) is co-localized in the `czcA3-czcB-czcC-czcI-czcR-cusS` cobalt-zinc-cadmium resistance cluster; without evidence of copper-specific induction for `VPARA_44930`, `GO:0046688` is marked as `MARK_AS_OVER_ANNOTATED`.
+3. **`GO:0000976` (`transcription cis-regulatory region binding`, `enables`, IEA `GO_REF:0000120` from `InterPro:IPR039420`, `PANTHER:PTN008296494`)** -> **`ACCEPT`**:
+   - Core molecular function of the C-terminal OmpR/PhoB-type winged-helix domain (`PROSITE:PS51755`, `InterPro:IPR001867`, `InterPro:IPR039420`, residues `123..221`), experimentally supported for CzcR binding to the 5' regulatory region of the `czc` locus (PMID:10198000).
+4. **`GO:0003677` (`DNA binding`, `enables`, IEA `GO_REF:0000120` from `InterPro:IPR001867`, `InterPro:IPR006291`, `UniRule:UR000414392`)** -> **`TOO_GENERAL`**:
+   - True but uninformative parent molecular function already entailed by the accepted specific child term `GO:0000976` (`transcription cis-regulatory region binding`).
+5. **`GO:0005829` (`cytosol`, `located_in`, IEA `GO_REF:0000118` from `PANTHER:PTN008296494`)** -> **`ACCEPT`**:
+   - CzcR is a soluble 225-aa intracellular DNA-binding response regulator lacking signal peptides or transmembrane helices.
+6. **`GO:0006355` (`regulation of DNA-templated transcription`, `involved_in`, IEA `GO_REF:0000120` from `InterPro:IPR001867`, `InterPro:IPR006291`, `InterPro:IPR039420`, `PANTHER:PTN008296494`)** -> **`ACCEPT`**:
+   - Supported by the OmpR/PhoB-type winged-helix DNA-binding domain (`PROSITE:PS51755`, `NCBIfam:TIGR01387`) and experimental demonstration that the CzcRS two-component system regulates `czcCBA` mRNA synthesis in response to $\text{Zn}^{2+}$, $\text{Co}^{2+}$, and $\text{Cd}^{2+}$ (PMID:10198000).
+7. **`GO:0032993` (`protein-DNA complex`, `part_of`, IEA `GO_REF:0000118` from `PANTHER:PTN008296494`)** -> **`KEEP_AS_NON_CORE`**:
+   - Transient association with target operator DNA as a protein-DNA complex is true of OmpR/PhoB-family response regulators, while the primary cellular localization of CzcR is the cytosol (`GO:0005829`).
 
 ## 4. Proposed New Annotations
-- **`GO:0001216` (`DNA-binding transcription activator activity`, `enables`, ISS from `PMID:10198000` and `file:VARPD/czcR/czcR-uniprot.txt`)** -> **`NEW`**:
-   - Captures CzcR's specific effector function as a DNA-binding transcriptional activator (`PANTHER:PTHR48111:SF76`) of the `czc` heavy-metal resistance operon upon phosphorylation by CzcS/CusS (PMID:10198000).
+- **`GO:0003700` (`DNA-binding transcription factor activity`, `enables`, ISS from `PMID:10198000` and `file:VARPD/czcR/czcR-uniprot.txt`)** -> **`NEW`**:
+   - Captures CzcR's effector function as a DNA-binding transcription factor (`NCBIfam:TIGR01387`, `PROSITE:PS51755`) that binds the 5' regulatory region of the `czc` operon and regulates `czcCBA` mRNA synthesis upon phosphorylation by CzcS/CusS (PMID:10198000).
 - **`GO:0010043` (`response to zinc ion`, `involved_in`, ISS from `PMID:10198000` and `file:VARPD/czcR/czcR-uniprot.txt`)** -> **`NEW`**:
    - Zinc ($\text{Zn}^{2+}$) is the strongest physiological inducer of CzcRS-regulated transcription in the `czc` system (`"transcription was induced best by 300 microM zinc, less by 300 microM cobalt, and only slightly by 300 microM cadmium"`, PMID:10198000).
