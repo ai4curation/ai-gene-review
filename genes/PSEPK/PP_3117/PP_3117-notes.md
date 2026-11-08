@@ -21,3 +21,10 @@
   The Caulobacter and M. tuberculosis reviews use GO:0042276, where induced mutagenesis is
   demonstrated for the whole cassette.
 - No provider deep research exists for this gene (no -deep-research-*.md file).
+
+
+## 2026-11-07 — comparative ImuABC annotation audit
+
+Corrected the earlier missing-target-mutant premise: PMID28118378 individually deletes PP3117 in PaW85, stated isogenic to KT2440, and finds an AlkA-background alkylation-damage phenotype. The historical ISS TLS proposal is preserved, now strengthened with matched genetics. Precise target molecular activity remains unresolved. PMID38591662 measures DNA-enhanced ATPase in Myxococcus ImuA, not Q88I84. Legacy canonical SulA division-inhibitor mapping remains rejected on specific identity/architecture grounds, without universal claims about all ImuA proteins.
+
+A real default Falcon attempt (just deep-research PSEPK PP_3117 --provider falcon) failed HTTP403. No provider report was invented; these notes record manual review. PAINT-loss checking completed sequentially, but the target is not a leaf in the available cached family tree: loss status is unavailable, not demonstrated absent. Original ordered annotation payloads and historical NEW actions are preserved; no new row is added. Existing notes above are historical and superseded only where this dated audit explains a correction. All original raw, provider and publication bytes remain unchanged.
