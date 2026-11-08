@@ -705,10 +705,13 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
 
-Project-specific user instructions take precedence; see the
-[ClinGen curation instructions](projects/CLINGEN_MENDELIAN.md#curation-instructions)
-for that project's supported protein-binding policy. This cross-reference does
-not change validation or computed review statuses.
+For the ClinGen Mendelian project, follow its standing
+[curation instructions](projects/CLINGEN_MENDELIAN.md#curation-instructions):
+supported generic binding may remain `KEEP_AS_NON_CORE` when no evidence-backed
+specific function is available. Inaccessible or unadjudicated evidence remains
+`UNDECIDED`. The generic validator still emits `protein_binding_policy` warnings
+for these non-core binding rows; retain and report the resulting computed status.
+This project-specific instruction does not change validation.
 
 ### A curation gap is not a knowledge gap
 
