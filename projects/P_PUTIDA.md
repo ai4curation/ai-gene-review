@@ -55,6 +55,35 @@ Systematic AI-assisted review of GO annotations for *Pseudomonas putida*, focusi
 
 ## Genome-wide expansion
 
+### Transcription factors and regulatory evidence
+
+KT2440 is the pilot for the TF project's
+[bacterial regulon evidence workstream](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md).
+It will reconcile a whole-proteome TF candidate inventory with existing PSEPK
+reviews, then curate by regulatory system and protein family. TF identity,
+regulatory relationships, and iModulon membership remain separately sourced
+claims. The workstream links RegPrecise, CollecTF, PRODORIC, iModulonDB, genome
+annotations, and TF/effector resources without treating database agreement as
+independent evidence.
+
+- [x] Establish scope, source register, evidence boundaries, and pilot milestones.
+- [x] Audit the existing iModulon prototype and document prerequisites for reuse.
+- [x] Build the provisional TF census and [coverage report](P_PUTIDA/tf_census/data/coverage.md), retaining unresolved identities and role classifications.
+- [x] Select [20 calibration cases](P_PUTIDA/tf_census/data/calibration.tsv) and document [reproducible builds](P_PUTIDA/tf_census/README.md).
+- [x] Repair and validate all 84 PRECISE321 module imports; complete [20 scoped calibration assessments](P_PUTIDA/tf_census/calibration-review.md) and [importer checks](P_PUTIDA/tf_census/imodulon/calibration-results.md).
+- [x] Complete [carbon-utilization batch 1](P_PUTIDA/batches/tf_carbon_utilization_01.md): BenR, HexR, PtxS and CbrB, with structured target evidence and pathway-regulatory context.
+- [ ] Complete full GO reviews for the remaining 16 calibration cases.
+- [ ] Complete regulatory-system batches, followed by remaining family-based batches.
+
+The initial candidate union contains 647 proteins: 422 provisional main-TF
+candidates, 59 related regulators, 141 unresolved roles and 25 boundary cases
+excluded from the main queue by triage. Only 59 candidates have existing review
+files; file presence is not evidence of a current or validated review. The census
+joins RegPrecise and published PRECISE321 regulator identities by accession/locus,
+with source provenance and explicit alias conflicts.
+
+### Pathway coverage
+
 The next phase expands the project from selected genes to a pathway-by-pathway
 review of the KT2440 reference proteome. The working pattern is manual pathway
 hole filling: start with a curated module, ask which steps are satisfiable in

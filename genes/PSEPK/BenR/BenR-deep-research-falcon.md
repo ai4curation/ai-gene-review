@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-06-01T06:26:55.739182'
-end_time: '2026-06-01T06:41:09.624276'
-duration_seconds: 853.89
+cached: true
+start_time: '2026-11-08T17:26:01.311947'
+end_time: '2026-11-08T17:26:01.314267'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: PSEPK
@@ -25,7 +25,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 23
+citation_count: 27
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -42,9 +42,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000017 The induction of the $P_{ben}$ promoter
-    by benzoate (Bz) in wild-type *Pseudomonas putida* mt-2 (which contains the BenR
-    regulator)'
+  description: '## Context ID: pqac-00000014 The following figures and maps provide
+    information on benzoate-inducible promoter activity ($P_{ben}$), $\beta$-galactosidase
+    induc'
 ---
 
 ## Question
@@ -155,180 +155,224 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research Report: Functional Annotation of **BenR (benR; PP_3159; UniProt Q88I42)** in *Pseudomonas putida* KT2440
+## Research report: **BenR (benR; PP_3159; UniProt Q88I42)** in *Pseudomonas putida* KT2440
 
-## 0. Target verification (critical identity check)
-The UniProt accession **Q88I42** corresponds to **BenR**, annotated as the *“BenABC operon transcriptional activator”* from *Pseudomonas putida* strain KT2440, with ordered locus name **PP_3159**. A 2023 experimental/synthetic-biology study explicitly identifies *P. putida* **benR as PP_3159** and characterizes benzoate-responsive promoters in this genomic region, confirming that the literature summarized here matches the intended target (Pearson et al., 2023-12, https://doi.org/10.1021/acssynbio.3c00441). (pearson2023characterizationanddiversification pages 5-8)
+### Executive summary (verified target identity)
+BenR (UniProt **Q88I42**, gene **benR**, locus **PP_3159**) is a **chromosomally encoded AraC/XylS-family transcriptional activator** in *Pseudomonas putida* KT2440 that senses **benzoate** and activates transcription of the **benzoate oxidation (ben) operon** (classically *benA/benB/benC* ± *benD* and associated transport genes), thereby enabling conversion of benzoate to catechol and entry into downstream aromatic ring-cleavage metabolism. This BenR also exhibits **regulatory cross-talk** with the TOL plasmid **Pm** promoter (meta-cleavage pathway) and enforces **substrate prioritization** by repressing *pcaK* (4-hydroxybenzoate transporter) when benzoate is present. The BenR/BenR-responsive promoter module is also actively used as a **benzoate-inducible genetic sensor** in modern synthetic biology, with quantitative dynamic ranges reported in 2023 work. (cowles2000benraxyls pages 1-2, cowles2000benraxyls pages 3-4, cowles2000benraxyls pages 7-8, pearson2023characterizationanddiversification pages 5-8)
 
-## 1. Key concepts and current understanding
+**Key primary sources used here (with URLs/publication dates):**
+- Cowles et al., *Journal of Bacteriology* (Nov 2000): https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 3-4)
+- Pearson et al., *ACS Synthetic Biology* (Dec 2023): https://doi.org/10.1021/acssynbio.3c00441 (pearson2023characterizationanddiversification pages 5-8)
 
-### 1.1 What BenR is
-BenR is a **DNA-binding transcriptional regulator** in the **AraC/XylS family**, closely related to the aromatic-response regulator XylS. In *P. putida*, BenR is described as a **XylS homologue** (AraC-family) with typical architecture for this family (N-terminal effector/activation region; C-terminal helix-turn-helix DNA-binding domain), and Cowles et al. report BenR as a ~**318 aa** (~**36.4 kDa**) regulator. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 6-7)
+---
 
-**Functional definition:** BenR is best understood as a **benzoate-responsive transcriptional activator** that turns on expression of genes needed to initiate benzoate catabolism, chiefly the **benABC** benzoate dioxygenase gene cluster. (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 3-4)
+### 1) Key concepts & definitions (current understanding)
 
-### 1.2 Biological pathway context (benzoate → catechol entry step)
-The benzoate (ben) catabolic region contains structural genes encoding the initial oxidation of benzoate (benzoate dioxygenase components **BenA/BenB/BenC**, with downstream steps including **BenD** discussed), and nearby genes associated with uptake (e.g., **benK** transporter; **benF** porin), consistent with the idea that BenR couples **substrate sensing** (benzoate presence) to **catabolic gene expression**. (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 5-6)
+#### 1.1 What BenR is
+**BenR is a transcriptional activator** that belongs to the **AraC/XylS family**, i.e., a class of bacterial regulators that typically have a **C-terminal DNA-binding region with helix–turn–helix (HTH) motifs** and an **N-terminal effector/ligand-responsive region**. Cowles et al. describe BenR as a **XylS homologue** and explicitly place it in the **AraC family**, noting the presence of the **AraC/XylS family C-terminal consensus** that includes **two HTH motifs**. (cowles2000benraxyls pages 7-8)
 
-### 1.3 Cellular localization/site of action
-BenR functions as an **intracellular (cytosolic) DNA-binding transcription factor**, acting at chromosomal promoters (e.g., the benA/Pben promoter region) and capable of acting at related promoters in heterologous hosts when expressed there. This is supported by (i) its AraC/XylS-family identity, and (ii) extensive promoter-reporter and cross-promoter activation assays performed in *Pseudomonas* and *E. coli*. (cowles2000benraxyls pages 3-4, cowles2000benraxyls pages 7-8)
+#### 1.2 What the ben operon does (metabolic function it controls)
+The **ben genes encode the “entry” reactions** for benzoate catabolism: *benA/benB/benC* are assigned to a **benzoate 1,2-dioxygenase multicomponent system**, and *benD* is assigned to a **2-hydro-1,2-dihydroxybenzoate dehydrogenase (cis-diol dehydrogenase)**—together converting **benzoate → dihydrodiol intermediate → catechol**. (cowles2000benraxyls pages 5-6, cowles2000benraxyls pages 1-2)
 
-## 2. Experimental evidence for primary function
+#### 1.3 How AraC/XylS-family activation is conceptualized
+In the AraC/XylS paradigm (best characterized for XylS), regulators activate transcription through binding to **direct-repeat DNA motifs** upstream of the regulated promoter; the recognition sequence is described as **TGCAN6GGNTA** (present as repeats), with activation occurring when regulator binding promotes productive RNA polymerase engagement. Cowles et al. state that the *benA* promoter contains a **direct repeat sequence** matching the previously defined XylS binding site and that BenR likely uses a similar mode of promoter recognition. (cowles2000benraxyls pages 1-2, cowles2000benraxyls pages 7-8)
 
-### 2.1 Primary regulated target: **benABC** (benzoate dioxygenase genes)
-**Key experimental evidence (genetics + reporter assays):**
-* Cowles et al. constructed a **benA promoter–lacZ** transcriptional fusion and found that adding **benzoate** increased reporter activity by about **~15-fold** in wild-type *P. putida*, while **catechol did not induce** the fusion. A **benR mutant** failed to induce the benA reporter in response to benzoate, demonstrating BenR is **required** for benzoate-dependent activation of benA/benABC. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 3-4)
-* RT-PCR evidence indicates **benA, benB, benC** are cotranscribed in benzoate-grown cells, consistent with BenR controlling an operon-level response. (cowles2000benraxyls pages 4-5)
+---
 
-**Interpretation:** These experiments establish BenR as the **primary on-switch** for the benzoate entry pathway in *P. putida*, rather than a downstream metabolite (catechol) sensor. (cowles2000benraxyls pages 3-4)
+### 2) Functional annotation of BenR in KT2440 (mechanism, targets, ligands)
 
-### 2.2 Evidence for direct activation at the benA promoter
-Cowles et al. provide evidence consistent with **direct transcriptional activation**: when BenR was **overexpressed in *E. coli*** carrying a benA-lacZ reporter, reporter expression rose by **~25-fold** compared with no benR. In this high-expression context, adding benzoate did not further increase expression, implying that BenR can become effectively constitutively activating when abundant (a behavior commonly observed for AraC-family activators in heterologous or overexpression contexts). (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 3-4)
+#### 2.1 Primary function: benzoate-dependent activation of the ben promoter
+**Genetic necessity:** A transposon insertion disrupting *benR* abolished growth on benzoate, consistent with BenR being required for induction of benzoate catabolic genes. (cowles2000benraxyls pages 3-4)
 
-### 2.3 Promoter/operator features and transcription start mapping
-Cowles et al. mapped the **benA transcription start site** by primer extension, placing the 5′ end **~30 bp upstream** of the predicted start, and note **direct-repeat elements** in the ben promoter region consistent with operator architectures described for XylS-family regulators. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 7-8)
+**Direct transcriptional activation evidence:** Using a **benA-lacZ** transcriptional fusion, Cowles et al. showed that **benzoate induces benA expression ~15-fold** in wild-type cells, whereas **benR mutants fail to induce**. (cowles2000benraxyls pages 3-4)
 
-Pérez-Pantoja et al. additionally provide a promoter map depiction of conserved **distal/proximal operator-like boxes** and core promoter elements for Pben in *P. putida* mt-2, which is useful for engineering and for conceptualizing BenR binding/activation logic at Pben. (Pérez-Pantoja et al., 2015-04, https://doi.org/10.1111/1462-2920.12443). (perez‐pantoja2015thedifferentialresponse pages 23-26)
+**Effector specificity at the entry step:** Cowles et al. report **catechol does not induce** the benA fusion, indicating BenR responds to the upstream substrate signal (benzoate), not the downstream intermediate catechol. (cowles2000benraxyls pages 3-4)
 
-## 3. Physiological role and pathway coordination
+**Heterologous activation supports near-direct action:** Overexpression of BenR in *E. coli* increased benA-lacZ output by **~25-fold**, supporting BenR as a bona fide transcriptional activator of that promoter module. (cowles2000benraxyls pages 3-4)
 
-### 3.1 BenR is required for efficient growth on benzoate
-A **benR null mutant** is defective for growth on benzoate, and plasmid-borne benR complements this phenotype. Cowles et al. report that the complemented strain grows on benzoate with a generation time of **~2.4 h** vs **~1.8 h** for wild type, supporting BenR as a key determinant of efficient benzoate utilization. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 4-5)
+#### 2.2 Ligand/effector spectrum
+**Native/primary effector:** BenR is activated by **benzoate** (benzoic acid/benzoate). (cowles2000benraxyls pages 1-2, cowles2000benraxyls pages 7-8)
 
-### 3.2 BenR links benzoate availability to repression of competing aromatic uptake/catabolism
-Cowles et al. show BenR is involved in **benzoate-mediated repression** of **pcaK**, a 4-hydroxybenzoate (4-HBA) uptake system. In wild-type cells, growth on benzoate + 4-HBA reduces pcaK promoter reporter activity **~5-fold** relative to 4-HBA alone. Physiologically, 4-HBA uptake was **~10-fold lower** when wild type was grown on benzoate + 4-HBA versus 4-HBA alone, while a benR mutant retained high uptake (~**25 nmol·min⁻¹·mg⁻¹**). (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 6-7, cowles2000benraxyls pages 5-6)
+**Substituted aromatics:** In engineered reporter contexts, BenR also responds to **3-methylbenzoate** and **salicylate**, with sensor behavior depending on promoter architecture and BenR expression tuning. (pearson2023characterizationanddiversification pages 8-12)
 
-**Interpretation:** Beyond activating benzoate catabolism, BenR participates in **prioritization/coordination** among aromatic carbon sources, plausibly reducing metabolic conflict by down-modulating 4-HBA uptake when benzoate is present. (cowles2000benraxyls pages 6-7)
+**Pathway cross-regulation with substituted benzoates in vivo:** In KT2440, Cuevas (2007) reports strong **PbenA induction by 3-methylbenzoate** and highlights cross-talk with plasmid XylS that can further boost PbenA activity. (cuevas2007interaccionesmolecularesdel pages 144-144)
 
-## 4. Regulatory cross-talk and insulation (BenR vs XylS)
+#### 2.3 Promoter/operator architecture and binding-site evidence
+Cowles et al. report that the *benA* promoter contains a **direct repeat that matches the XylS binding site**, supporting a shared AraC/XylS-type cis-regulatory logic. (cowles2000benraxyls pages 1-2)
 
-### 4.1 BenR can activate TOL plasmid promoter Pm
-Cowles et al. show that BenR can activate the TOL plasmid **Pm** promoter in *E. coli*, reaching **~13,000 Miller units** (with a modest increase to ~**17,000** with benzoate in one setup), indicating potential cross-regulation among XylS/BenR-family promoters. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 4-5)
+They further describe **putative BenR/XylS-type binding sites** in the promoter region that “match the experimentally determined XylS binding site almost exactly,” and note at least one site **overlaps the RNA polymerase binding site**, implying possible competition/occlusion effects in certain states. (cowles2000benraxyls pages 6-7)
 
-### 4.2 In vivo insulation: physiological XylS does not strongly activate Pben
-Pérez-Pantoja et al. (2015) systematically tested Pben regulation in *P. putida* using chromosomally integrated **lux** reporters. They conclude that **BenR is necessary for strong induction of Pben by benzoate** and that physiological levels of the alternative regulator **XylS** do not significantly activate Pben. Only artificially high XylS overexpression yields measurable Pben activity, and even then Pben responses are **~10–15-fold weaker** than XylS activation of Pm. (Pérez-Pantoja et al., 2015-04, https://doi.org/10.1111/1462-2920.12443). (perez‐pantoja2015thedifferentialresponse pages 7-9)
+#### 2.4 Cross-regulation with TOL plasmid meta-cleavage promoter Pm
+BenR can activate the TOL plasmid **Pm** promoter (meta-cleavage pathway) even when the plasmid-encoded activator XylS is absent, providing an explanation for XylS-independent Pm activation by benzoate under some conditions. (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 6-7)
 
-**Image-supported evidence:** The figures retrieved from Pérez-Pantoja et al. show strong Pben induction by benzoate in benR+ backgrounds and near-silence of Pben in benR mutants unless XylS is overproduced. (perez‐pantoja2015thedifferentialresponse media 32f9b80f, perez‐pantoja2015thedifferentialresponse media 92d90004)
+Quantitatively, Cowles et al. report that in a **Pm-lacZ** reporter system BenR produced **~13,000 Miller units**, increasing to **~17,000 Miller units** with added benzoate. (cowles2000benraxyls pages 4-5)
 
-## 5. Recent developments (prioritizing 2023–2024)
+#### 2.5 Substrate prioritization (“hierarchy”) via repression of 4-HBA uptake
+BenR is required for **benzoate-mediated repression** of *pcaK*, a **4-hydroxybenzoate (4-HBA) transporter**. In Cowles et al., *pcaK-lacZ* expression in cells grown on **benzoate + 4-HBA** was about **fivefold lower** than in 4-HBA alone, and this repression was lost in a **benR mutant**. (cowles2000benraxyls pages 5-6)
 
-### 5.1 2023: Quantitative promoter part characterization linked to BenR/PP_3159
-Pearson et al. (2023-12, ACS Synthetic Biology; https://doi.org/10.1021/acssynbio.3c00441) evaluated promoter fragments near **PP_3159 (benR)** in *P. putida* and found a strong benzoate-inducible promoter upstream of **PP_3161** with **38 ± 5.2-fold induction at 10 mM benzoate**, while a promoter upstream of **PP_3160** showed only **1.7 ± 0.20-fold induction**. They also note that benzoate induction was hampered at **20 mM** due to toxicity. (pearson2023characterizationanddiversification pages 5-8)
+A consistent physiological readout is reduced substrate uptake: uptake of 4-HBA was ~**25 nmol·min⁻¹·mg⁻¹ protein** when cells were grown on 4-HBA alone, but wild-type cells grown on a mixture accumulated 4-HBA at about a **10-fold lower rate**, whereas the benR mutant maintained higher uptake. (cowles2000benraxyls pages 6-7)
 
-**Expert analysis:** This type of measured fold-induction under defined inducer concentrations provides “parts-grade” quantitative data supporting BenR/Pben as a robust inducible module and clarifies that promoter choice within the ben locus (PP_3161 vs PP_3160 upstream regions) strongly affects dynamic range. (pearson2023characterizationanddiversification pages 5-8)
+Cowles et al. caution this regulation is likely **indirect**, because they did not find a recognizable BenR/XylS site in the *pcaK* promoter and could not reproduce repression in *E. coli*. (cowles2000benraxyls pages 7-8)
 
-### 5.2 2023: Bioinformatic/mining perspective—BenR as a canonical benzoate sensor but missed by heuristic tools
-Hanko et al. (2023-04, ACS Synthetic Biology; https://doi.org/10.1021/acssynbio.2c00679) use BenR as an explicit example of a known benzoate-responsive transcription factor **adjacent to** the benzoate catabolic operon in *P. putida*, and report that their TFBMiner pipeline did not recover *P. putida* BenR because **benR is encoded on the same strand as the catabolic operon** (a limitation of their gene-organization heuristic), even though the enzymatic chain was predicted. (hanko2023tfbminerauserfriendly pages 6-7)
+---
 
-**Expert analysis:** This highlights a practical annotation pitfall: **operon orientation and database constraints** can cause automated pipelines to miss biologically correct regulators, so BenR is a useful “ground truth” control for functional annotation workflows. (hanko2023tfbminerauserfriendly pages 6-7)
+### 3) Cellular localization and where BenR acts
+BenR functions as a **DNA-binding transcription factor** acting at **chromosomal promoter regions** (*PbenA* and related ben promoters). Its AraC/XylS-family architecture (C-terminal HTH motifs) supports a **cytosolic** regulatory protein that binds DNA in the nucleoid region; however, in the retrieved primary sources there is **no direct experimental subcellular localization measurement** (e.g., fractionation or microscopy), so localization remains **inferred** from function and domain architecture. (cowles2000benraxyls pages 7-8)
 
-### 5.3 2024: Cell-free systems engineering reviews cite BenR/Pben as a regulatory component
-A 2024 ACS Synthetic Biology review on regulatory components for bacterial cell-free systems lists BenR/Pben as an example in which **benzoic acid activates BenR**, which then activates **Pben**, illustrating how native bacterial regulators are repurposed for cell-free circuit design. (Lee & Maerkl, 2024-11, https://doi.org/10.1021/acssynbio.4c00574). (perez‐pantoja2015thedifferentialresponse pages 23-26)
+---
 
-*Note:* The retrieved excerpt provides contextual mention rather than detailed performance metrics. (perez‐pantoja2015thedifferentialresponse pages 23-26)
+### 4) Recent developments (prioritizing 2023–2024) and latest research
 
-## 6. Current applications and real-world implementations
+#### 4.1 2023 quantitative characterization of BenR as an inducible sensor module (KT2440 + heterologous hosts)
+Pearson et al. (Dec 2023) systematically characterized AraC/XylS-family regulators in *P. putida* KT2440 and built **promoter–reporter constructs** for BenR-associated promoter regions. In *P. putida*, a BenR-linked promoter (PPP_3161) showed **38 ± 5.2-fold induction** with **10 mM benzoate** (toxicity observed at 20 mM). (pearson2023characterizationanddiversification pages 5-8)
 
-### 6.1 Whole-cell biosensors and synthetic reporter strains
-BenR/Pben has been engineered into **chromosomal lux reporters** in *Pseudomonas* to provide stable, low-copy, quantitative readouts of benzoate-responsive transcription—useful in pathway debugging, environmental sensing, and managing regulatory cross-talk in aromatic-degradation chassis. (Pérez-Pantoja et al., 2015-04, https://doi.org/10.1111/1462-2920.12443). (perez‐pantoja2015thedifferentialresponse pages 7-9, perez‐pantoja2015thedifferentialresponse media 32f9b80f)
+In engineered *E. coli*, BenR-based sensor plasmids showed fold-inductions tunable by expression architecture: **38 ± 3.9-fold**, **33 ± 6.2-fold**, or **8.7 ± 0.98-fold** depending on the constitutive promoter strength used to drive BenR (higher sensitivity often traded off with higher background). (pearson2023characterizationanddiversification pages 8-12)
 
-### 6.2 Modular cell-free biosensing (evidence summarized in later literature)
-A later review summarizes work (attributed there to Voyvodic et al.) in which BenR/Pben was used in a **modular cell-free biosensor** design; the review reports benzoate detection in commercial beverages with signal fold-changes up to **~180-fold**, and extension to detect other analytes (e.g., **hippuric acid** and **cocaine-related targets**) via upstream enzymatic conversion modules. (Dou et al., 2025-12, https://doi.org/10.1186/s44314-025-00032-7). (dou2025detectionofenvironmental pages 7-10)
+This work represents a modern, high-throughput-guided approach to functional annotation/utility of AraC/XylS regulators in KT2440, including BenR. (pearson2023characterizationanddiversification pages 5-8)
 
-*Interpretation:* While this is a secondary-source summary (not a 2023–2024 primary paper), it indicates a plausible pathway from BenR’s native function to **deployable sensing** in complex matrices (beverages; urine). (dou2025detectionofenvironmental pages 7-10)
+#### 4.2 2024–2025 context: genetic sensors and AraC/XylS regulators in biosensing
+A 2024 review on accelerating genetic sensor development emphasizes increasing capability to engineer and deploy biosensors, including deployment in non-model organisms such as *Pseudomonas* for environmental monitoring and bioproduction contexts. (dou2025detectionofenvironmental pages 7-10)
 
-## 7. Relevant statistics and quantitative data (consolidated)
-Key quantitative findings available from primary sources include:
-* **~15-fold** benA promoter induction by benzoate in wild-type *P. putida*; no induction by catechol. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 3-4)
-* **~25-fold** benA promoter activation when BenR is overexpressed in *E. coli* with benA-lacZ reporter. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 3-4)
-* BenR activation of **Pm** to ~**13,000** Miller units (to ~**17,000** with benzoate in one setup). (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 4-5)
-* Benzoate-mediated repression effects linked to BenR: **~5-fold** lower pcaK reporter activity; **~10-fold** reduced 4-HBA uptake in wild type on benzoate+4-HBA; benR mutant retains ~**25 nmol·min⁻¹·mg⁻¹** uptake. (Cowles et al., 2000-11, https://doi.org/10.1128/jb.182.22.6339-6346.2000). (cowles2000benraxyls pages 6-7, cowles2000benraxyls pages 5-6)
-* 2023 “parts-grade” promoter performance near benR: **38 ± 5.2-fold** induction for P_PP_3161 at **10 mM benzoate**, vs **1.7 ± 0.20** for P_PP_3160; benzoate toxicity noted at **20 mM**. (Pearson et al., 2023-12, https://doi.org/10.1021/acssynbio.3c00441). (pearson2023characterizationanddiversification pages 5-8)
+A 2025 review of transcription factor-based biosensors describes **BenR from *P. putida*** as a benzoate-responsive AraC/XylS-family TF that activates a PBen promoter, and summarizes a **cell-free** BenR biosensing workflow detecting benzoate with reported **fold-changes up to ~180** (and downstream detection of other analytes using added metabolic modules). While outside the user’s 2023–2024 priority window, it provides an authoritative overview of real-world biosensing usage. (dou2025detectionofenvironmental pages 7-10)
 
-## 8. Summary model for functional annotation
-BenR (PP_3159; UniProt Q88I42) is best annotated as a **benzoate-responsive AraC/XylS-family transcriptional activator** that operates in the **cytoplasm** by binding and activating the **benA/Pben promoter** and turning on the **benABC** operon required for initiating benzoate catabolism (benzoate → catechol entry). Genetic loss-of-function, promoter-reporter assays, and complementation show BenR is required for benzoate induction and for efficient growth on benzoate. BenR additionally contributes to **aromatic substrate prioritization**, participating in benzoate-mediated repression of the **pcaK** 4-HBA uptake system, and exhibits limited cross-talk potential with the XylS-controlled TOL system, though Pben is largely insulated from XylS under physiological conditions. (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 3-4, cowles2000benraxyls pages 6-7, perez‐pantoja2015thedifferentialresponse pages 7-9)
+---
 
-## Evidence summary table
-| Functional aspect | Key findings | Experimental approach/model system | Main citation |
-|---|---|---|---|
-| Target identity / gene mapping | BenR is the benzoate-responsive AraC/XylS-family transcriptional activator encoded by **PP_3159**, matching UniProt **Q88I42**; located adjacent to the benzoate catabolic operon in *Pseudomonas putida*. | Genomic context analysis, promoter-reporter characterization, comparative annotation in *P. putida*. | Pearson et al. 2023, ACS Synth Biol, DOI: 10.1021/acssynbio.3c00441, https://doi.org/10.1021/acssynbio.3c00441; Hanko et al. 2023, ACS Synth Biol, DOI: 10.1021/acssynbio.2c00679, https://doi.org/10.1021/acssynbio.2c00679 (pearson2023characterizationanddiversification pages 5-8, hanko2023tfbminerauserfriendly pages 6-7) |
-| Regulator family / domains | BenR is a **XylS homolog** in the **AraC/XylS family**; sequence analyses place it among regulators with conserved C-terminal HTH DNA-binding motifs, consistent with UniProt domain calls (AraC-bd_2 / HTH_AraC-type architecture). Cowles et al. describe a **318 aa (~36.4 kDa)** regulator with strong similarity to XylS. | Sequence comparison, operon cloning, mutational analysis. | Cowles et al. 2000, J Bacteriol, DOI: 10.1128/JB.182.22.6339-6346.2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 6-7) |
-| Primary regulated genes / operons | BenR activates the **benABC** operon (and benzoate locus including **benD**, with nearby transport-related genes **benK/benF/benE** discussed in the locus). **benA, benB, benC** are cotranscribed in benzoate-grown cells. | benA-lacZ reporter assays, RT-PCR, complementation of benR mutant, growth phenotyping on benzoate. | Cowles et al. 2000, J Bacteriol, DOI: 10.1128/JB.182.22.6339-6346.2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 4-5) |
-| Inducer / effector specificity | Native BenR responds primarily to **benzoate**; **catechol does not induce** benA-lacZ in the native system. In engineered/synthetic contexts, broader responsiveness to **3-methylbenzoate** and **salicylate** was observed for one BenR-derived construct, likely due to altered promoter architecture and/or increased BenR levels. | Native benA-lacZ assays in *P. putida*; engineered single-plasmid reporter systems in *E. coli* / *P. putida*. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000; Pearson et al. 2023, https://doi.org/10.1021/acssynbio.3c00441 (cowles2000benraxyls pages 3-4, pearson2023characterizationanddiversification pages 20-23) |
-| Native induction strength | In wild-type *P. putida*, benzoate increased **benA-lacZ ~15-fold** versus succinate alone; benR mutants lost this benzoate inducibility. | benA promoter-lacZ reporter in wild type vs benR mutant. | Cowles et al. 2000, J Bacteriol, DOI: 10.1128/JB.182.22.6339-6346.2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 3-4) |
-| Direct activation evidence | Overexpression of BenR in *E. coli* increased **benA-lacZ ~25-fold**, supporting direct activation of the benA promoter; in that overexpression context, added benzoate did not further increase signal, implying constitutive activation when BenR is highly abundant. | Heterologous T7-driven BenR overexpression in *E. coli* BL21(DE3) carrying benA-lacZ. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 3-4) |
-| Promoter/operator features | Primer extension mapped the **benA transcription start ~30 bp upstream** of the predicted start codon. The ben promoter region contains **direct-repeat elements** resembling XylS/BenR-family binding arrangements; one study also notes promoter/operator organization with conserved distal/proximal boxes useful for engineering. | Primer extension, reporter mapping, comparative promoter analysis, engineered lux reporters. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000; Pérez-Pantoja et al. 2015, DOI: 10.1111/1462-2920.12443, https://doi.org/10.1111/1462-2920.12443 (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 7-8, perez‐pantoja2015thedifferentialresponse pages 23-26) |
-| Physiological role in benzoate catabolism | benR null mutants are **defective for growth on benzoate**; complementation with plasmid-borne benR restores growth, with reported generation time **~2.4 h** for complemented strain versus **~1.8 h** for wild type. BenR therefore functions as the key transcriptional activator enabling benzoate utilization. | benR mutant construction, plasmid complementation, growth assays on benzoate. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 4-5) |
-| Additional regulon effects / pathway coordination | BenR also participates in benzoate-mediated repression of the **pcaK** 4-hydroxybenzoate uptake system, linking benzoate sensing to coordination of aromatic acid catabolism. Growth on benzoate + 4-HBA reduced pcaK-driven reporter activity **~5-fold**, and wild-type cells showed **~10-fold lower** 4-HBA uptake versus 4-HBA alone; benR mutants retained high uptake (**~25 nmol·min⁻¹·mg⁻¹**). | pcaK-lacZ reporter assays, uptake assays, benR mutant comparison, heterologous tests for direct regulation. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 6-7, cowles2000benraxyls pages 5-6) |
-| Cross-talk with XylS | BenR can activate the TOL plasmid **Pm** promoter; heterologous assays reported **13,000 Miller units** from Pm with BenR, increasing to **17,000 Miller units** with benzoate in one setup. Conversely, XylS can only partially substitute for BenR at Pben under some conditions. | Pm-lacZ assays in *E. coli*; TOL plasmid introduction into benR mutant. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 7-8, cowles2000benraxyls pages 3-4) |
-| Functional insulation of Pben vs XylS | In *P. putida* mt-2, physiological XylS levels do **not** significantly activate **Pben**; only artificial XylS overexpression gives measurable Pben induction, and even then responses are **10–15-fold weaker** than XylS activation of **Pm**. A benR mutant fails to grow on **5 mM benzoate** unless XylS is overexpressed from medium/high-copy plasmids. | Chromosomal **Pben::luxCDABE** and **Pm::luxCDABE** reporters, regulator dosage series, benR mutant growth tests. | Pérez-Pantoja et al. 2015, Environ Microbiol, DOI: 10.1111/1462-2920.12443, https://doi.org/10.1111/1462-2920.12443 (perez‐pantoja2015thedifferentialresponse pages 7-9) |
-| Quantitative promoter characterization in recent work | In 2023 characterization of PP_3159-associated promoters, **P_PP_3161** showed **38 ± 5.2-fold induction at 10 mM benzoate**, while **P_PP_3160** showed only **1.7 ± 0.20-fold**. Induction was hampered at **20 mM benzoate** because of toxicity. | 200 bp upstream promoter fragments fused to RFP in *P. putida*; benzoate dose testing. | Pearson et al. 2023, https://doi.org/10.1021/acssynbio.3c00441 (pearson2023characterizationanddiversification pages 5-8) |
-| Biosensor / synthetic biology use | BenR–Pben has been used as a **specific benzoate-responsive biosensor module** and as a reporter/control pair in synthetic biology. TFBMiner cites BenR as a canonical benzoate-responsive TF adjacent to the benzoate catabolic operon. Reviews and later reports highlight BenR/PBen in modular biosensing, including cell-free benzoate detection workflows. | Biosensor mining pipeline example; reporter engineering; synthetic biology reviews. | Hanko et al. 2023, https://doi.org/10.1021/acssynbio.2c00679; Lee & Maerkl 2024, DOI: 10.1021/acssynbio.4c00574, https://doi.org/10.1021/acssynbio.4c00574 (hanko2023tfbminerauserfriendly pages 6-7) |
-| Real-world implementation example | A later review summarizes a **cell-free BenR/PBen** platform detecting benzoate in beverages with signal changes up to **~180-fold**, and modular extensions for detecting metabolites such as **hippuric acid** and **cocaine-derived products** via upstream conversion modules. | Cell-free transcription-factor biosensor workflow summarized in review literature. | Dou et al. 2025, https://doi.org/10.1186/s44314-025-00032-7 (reviewed application) (dou2025detectionofenvironmental pages 7-10) |
-| Cellular localization / site of action | BenR is a **soluble intracellular DNA-binding transcription factor** expected to act in the **cytoplasm at chromosomal/plasmid promoters** rather than as a membrane or secreted protein; this inference is supported by its AraC/XylS-family regulator architecture and promoter-centric experimental evidence. | Domain/family inference plus transcriptional reporter and promoter-binding functional data. | Cowles et al. 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000; Pearson et al. 2023, https://doi.org/10.1021/acssynbio.3c00441 (cowles2000benraxyls pages 7-8, pearson2023characterizationanddiversification pages 5-8) |
+### 5) Current applications and real-world implementations
+
+#### 5.1 Inducible gene expression in industrially relevant pseudomonads
+BenR/Pben-like systems have been used as tightly controlled, inexpensive-inducer expression systems in pseudomonads (demonstrated in *Pseudomonas fluorescens* using its BenR homolog), including **shake-flask and 20 L fermentation** scales, supporting real-world bioprocess implementation of benzoate-inducible promoters. (retallack2006identificationofanthranilate pages 5-6)
+
+#### 5.2 Environmental and analytical biosensing
+Modern engineering repurposes BenR-promoter modules to build benzoate sensors with large dynamic ranges in living cells and in cell-free formats (e.g., benzoate detection in beverages). (pearson2023characterizationanddiversification pages 5-8, dou2025detectionofenvironmental pages 7-10)
+
+---
+
+### 6) Quantitative statistics and data (selected)
+- **benA promoter induction by benzoate (native P. putida):** ~15-fold (benA-lacZ). (cowles2000benraxyls pages 3-4)
+- **BenR heterologous activation (E. coli):** ~25-fold increase in benA-lacZ upon BenR overexpression. (cowles2000benraxyls pages 3-4)
+- **Pm promoter activation (cross-talk):** ~13,000 Miller units without added benzoate; ~17,000 Miller units with benzoate (Pm-lacZ). (cowles2000benraxyls pages 4-5)
+- **pcaK repression in benzoate+4-HBA vs 4-HBA alone:** ~5-fold lower; effect abolished in benR mutant. (cowles2000benraxyls pages 5-6)
+- **4-HBA uptake rate:** ~25 nmol·min⁻¹·mg⁻¹ protein on 4-HBA alone; ~10-fold lower on benzoate+4-HBA in wild type. (cowles2000benraxyls pages 6-7)
+- **2023 BenR-linked promoter induction in P. putida:** 38 ± 5.2-fold at 10 mM benzoate (PPP_3161). (pearson2023characterizationanddiversification pages 5-8)
+- **2023 engineered E. coli BenR sensor induction:** 38 ± 3.9-fold; 33 ± 6.2-fold; or 8.7 ± 0.98-fold depending on design. (pearson2023characterizationanddiversification pages 8-12)
+
+---
+
+### 7) Expert interpretation and evidence limitations
+
+1. **Primary functional role is regulatory (not enzymatic):** BenR does not catalyze a chemical reaction; it **controls expression** of the enzymatic benzoate oxidation pathway. (cowles2000benraxyls pages 3-4, cowles2000benraxyls pages 5-6)
+2. **Localization is inferred:** The literature retrieved provides strong genetic and transcriptional evidence for function but lacks direct localization assays; “cytosolic/nucleoid-associated TF” is inferred from AraC/XylS architecture and mechanism. (cowles2000benraxyls pages 7-8)
+3. **Binding-site mechanistic detail is partly inferential:** Direct repeats and XylS-like binding logic are well supported, but **BenR-specific biochemical binding constants (Kd) or DNase I footprints** were not captured in the retrieved excerpts; promoter-site mapping is largely via sequence similarity and genetic reporter behavior. (cowles2000benraxyls pages 6-7, cowles2000benraxyls pages 7-8)
+4. **Do not conflate homologs:** Some visual/promoter mapping evidence comes from a **BenR homolog in P. fluorescens** used as comparative support; key KT2440 conclusions are anchored in Cowles et al. and Pearson et al. (retallack2006identificationofanthranilate pages 5-6, cowles2000benraxyls pages 3-4, pearson2023characterizationanddiversification pages 5-8)
+
+---
+
+### Evidence summary table
+| Claim/Function | Evidence type (genetics, reporter assay, sequence analysis, review) | Key quantitative result | System/strain | Primary citation (authors, year, DOI/URL) | Notes/limitations |
+|---|---|---|---|---|---|
+| BenR is the chromosomal activator required for benzoate utilization and benA promoter induction | Genetics; reporter assay | benA-lacZ induced ~15-fold by benzoate in wild type; induction lost in benR mutant | *Pseudomonas putida* KT2440 / derivatives | Cowles, Nichols & Harwood, 2000, J. Bacteriol., https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 3-4) | Strong functional evidence; measures promoter output rather than direct DNA binding |
+| BenR directly or near-directly activates the ben promoter in a heterologous system | Reporter assay; heterologous expression | BenR overexpression in *E. coli* increased benA-lacZ expression ~25-fold | *E. coli* BL21(DE3) carrying BenR and benA-lacZ constructs | Cowles, Nichols & Harwood, 2000, J. Bacteriol., https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 3-4) | Supports direct activation, but heterologous context may not fully reproduce native regulation |
+| BenR belongs to the AraC/XylS family and is homologous to XylS | Sequence analysis; review | BenR shares ~62% identity to XylS; N-terminal region ~65% identity in reported comparisons | *P. putida* KT2440 and comparative analyses | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000; Ramos et al., 1990, https://doi.org/10.1093/nar/18.8.2149 (cowles2000benraxyls pages 1-2, cowles2000benraxyls pages 6-7, ramos1990afamilyof pages 1-2, ramos1990afamilyof pages 2-3) | Family assignment is robust, but no BenR structure is reported here |
+| BenR controls the benABC/benABCD benzoate oxidation entry pathway | Genetics; sequence analysis | benA-benC are cotranscribed in benzoate-grown cells; benA/B/C assigned to benzoate 1,2-dioxygenase system and benD to cis-diol dehydrogenase | *P. putida* KT2440 | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 4-5, cowles2000benraxyls pages 5-6) | Functional assignments are based on homology plus transcription data; enzyme assays for each subunit were not detailed in retrieved excerpts |
+| Effector specificity is centered on benzoate; catechol is not the inducer | Reporter assay | Benzoate induces benA; catechol does not induce benA | *P. putida* KT2440 | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 3-4) | Distinguishes substrate/product signaling at operon entry, but full ligand spectrum was not fully mapped in this paper |
+| BenR cross-activates the TOL plasmid meta-cleavage promoter Pm | Reporter assay; genetics | In *E. coli*, BenR expression yielded Pm::lacZ activity up to ~17,000 Miller units with benzoate; in *P. putida*, TOL-encoded XylS partially complemented benR defects (~5-fold increase in benA-lacZ with benzoate) | *E. coli* CC118 and *P. putida* strains with/without pWW0 | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 4-5) | Demonstrates regulatory overlap with XylS/Pm; overexpression may exaggerate physiological cross-talk |
+| BenR contributes to pathway hierarchy by repressing 4-HBA uptake/transport gene expression in the presence of benzoate | Reporter assay; genetics | pcaK-driven expression in benzoate + 4-HBA was ~5-fold lower than in 4-HBA alone; repression abolished in benR mutant | *P. putida* KT2440 and benR mutant | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000 (cowles2000benraxyls pages 5-6, cowles2000benraxyls pages 6-7) | Likely indirect regulation; authors did not find a clear BenR/XylS site in the pcaK promoter |
+| BenA promoter architecture is consistent with XylS-like binding by BenR | Sequence analysis; review | benA promoter contains direct repeats matching/closely matching the XylS binding site; XylS consensus described as repeat of TGCAN6GGNTA | *P. putida* promoter sequence comparisons | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000; Gerischer, 2002 (review) (cowles2000benraxyls pages 6-7, cowles2000benraxyls pages 7-8, cowles2000benraxyls pages 1-2, gerischer2002specificandglobal pages 3-5) | Strong cis-regulatory inference, but no BenR-specific DNase I footprinting or affinity constants were retrieved |
+| BenR is a cytosolic DNA-binding transcription factor acting at chromosomal promoters | Sequence/domain inference; review | No signal peptide or membrane localization evidence reported; AraC/XylS family proteins carry C-terminal HTH DNA-binding motifs | Inference from family/domain architecture and regulatory role | Cowles, Nichols & Harwood, 2000, https://doi.org/10.1128/jb.182.22.6339-6346.2000; UniProt-aligned family context via reviews (cowles2000benraxyls pages 7-8, gerischer2002specificandglobal pages 3-5) | Subcellular localization is inferred rather than directly measured in the retrieved literature |
+| Recent engineering work confirms PP_3159/BenR is a useful benzoate-responsive sensor module | Reporter assay; synthetic biology | In *P. putida*, promoter PPP_3161 showed 38 ± 5.2-fold induction at 10 mM benzoate; in *E. coli* single-plasmid variants, BenR systems showed 38 ± 3.9-fold, 33 ± 6.2-fold, or 8.7 ± 0.98-fold induction depending on expression tuning | *P. putida* KT2440 and engineered *E. coli* | Pearson et al., 2023, ACS Synth. Biol., https://doi.org/10.1021/acssynbio.3c00441 (pearson2023characterizationanddiversification pages 5-8, pearson2023characterizationanddiversification pages 8-12) | Valuable modern validation for biosensor use; promoter naming/length differs from older benA nomenclature and focuses on engineering performance rather than native physiology |
+| BenR sensor specificity extends beyond benzoate to related aromatics in engineered assays | Reporter assay; synthetic biology | BenR responded to benzoate, 3-methylbenzoate, and salicylate; one report notes strong induction by 3-methylbenzoate/salicylate in certain constructs | Engineered *E. coli* single-plasmid/two-plasmid sensor systems | Pearson et al., 2023, ACS Synth. Biol., https://doi.org/10.1021/acssynbio.3c00441 (pearson2023characterizationanddiversification pages 8-12, pearson2023characterizationanddiversification pages 20-23) | Specificity depends on promoter architecture and regulator expression level; these results may not equal native KT2440 physiological specificity |
+| Visual promoter-mapping and reporter data from a homologous pseudomonad support conserved BenR/Pben organization | Reporter assay; promoter mapping; comparative evidence | Homologous *Pseudomonas fluorescens* Pben system showed ~13-fold induction by 5 mM m-toluate and benR dependence of promoter activity | *P. fluorescens* benR/benABCD system | Retallack et al., 2006, Microb. Cell Fact., https://doi.org/10.1186/1475-2859-5-1 (retallack2006identificationofanthranilate pages 3-5, retallack2006identificationofanthranilate pages 2-3, retallack2006identificationofanthranilate pages 5-6, retallack2006identificationofanthranilate media 801e9bb0) | Useful comparative support only; not the target KT2440 protein and should not replace KT2440-specific evidence |
 
 
-*Table: This table summarizes experimentally supported functional annotation for BenR (PP_3159; UniProt Q88I42) in Pseudomonas putida, including regulation, inducer specificity, promoter behavior, physiology, and synthetic biology use. It highlights quantitative metrics and the main papers supporting each annotation point.*
+*Table: This table summarizes the main experimental and comparative evidence supporting functional annotation of BenR (Q88I42/PP_3159) in *Pseudomonas putida* KT2440. It highlights native regulatory function, pathway context, promoter architecture, cross-regulation, and recent engineering data while noting where conclusions are inferential or comparative.*
 
-## Limitations of this synthesis
-* No BenR-focused 2024 primary mechanistic study (e.g., structure/ligand binding constants, ChIP-seq-defined regulon) was retrieved in this run; the most detailed mechanistic/physiological primary evidence remains Cowles et al. (2000) and Pérez-Pantoja et al. (2015), with modern quantitative “parts characterization” from Pearson et al. (2023). (cowles2000benraxyls pages 3-4, perez‐pantoja2015thedifferentialresponse pages 7-9, pearson2023characterizationanddiversification pages 5-8)
-* Some applied biosensor performance metrics (e.g., ~180-fold signal change in beverages) were available only through a 2025 review summary rather than the original 2023–2024 primary report. (dou2025detectionofenvironmental pages 7-10)
+### Visual evidence (figures/tables)
+Promoter/operon organization and induction curves for a homologous BenR/Pben system (useful as a mechanistic visual analogue) were retrieved from Retallack et al. 2006. (retallack2006identificationofanthranilate media 801e9bb0, retallack2006identificationofanthranilate media 02c7240e, retallack2006identificationofanthranilate media 4c23c1c3, retallack2006identificationofanthranilate media 3df97ea0, retallack2006identificationofanthranilate media 71701dfd, retallack2006identificationofanthranilate media 91ada4ae, retallack2006identificationofanthranilate media fec0aca9, retallack2006identificationofanthranilate media f82164eb)
+
 
 References
 
-1. (pearson2023characterizationanddiversification pages 5-8): Allison N. Pearson, Matthew R. Incha, Cindy N. Ho, Matthias Schmidt, Jacob B. Roberts, Alberto A. Nava, and Jay D. Keasling. Characterization and diversification of arac/xyls family regulators guided by transposon sequencing. ACS Synthetic Biology, 13:206-219, Dec 2023. URL: https://doi.org/10.1021/acssynbio.3c00441, doi:10.1021/acssynbio.3c00441. This article has 5 citations and is from a domain leading peer-reviewed journal.
+1. (cowles2000benraxyls pages 1-2): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
 
-2. (cowles2000benraxyls pages 4-5): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
+2. (cowles2000benraxyls pages 3-4): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
 
-3. (cowles2000benraxyls pages 6-7): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
+3. (cowles2000benraxyls pages 7-8): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
 
-4. (cowles2000benraxyls pages 3-4): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
+4. (pearson2023characterizationanddiversification pages 5-8): Allison N. Pearson, Matthew R. Incha, Cindy N. Ho, Matthias Schmidt, Jacob B. Roberts, Alberto A. Nava, and Jay D. Keasling. Characterization and diversification of arac/xyls family regulators guided by transposon sequencing. ACS Synthetic Biology, 13:206-219, Dec 2023. URL: https://doi.org/10.1021/acssynbio.3c00441, doi:10.1021/acssynbio.3c00441. This article has 5 citations and is from a domain leading peer-reviewed journal.
 
 5. (cowles2000benraxyls pages 5-6): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
 
-6. (cowles2000benraxyls pages 7-8): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
+6. (pearson2023characterizationanddiversification pages 8-12): Allison N. Pearson, Matthew R. Incha, Cindy N. Ho, Matthias Schmidt, Jacob B. Roberts, Alberto A. Nava, and Jay D. Keasling. Characterization and diversification of arac/xyls family regulators guided by transposon sequencing. ACS Synthetic Biology, 13:206-219, Dec 2023. URL: https://doi.org/10.1021/acssynbio.3c00441, doi:10.1021/acssynbio.3c00441. This article has 5 citations and is from a domain leading peer-reviewed journal.
 
-7. (perez‐pantoja2015thedifferentialresponse pages 23-26): Danilo Pérez‐Pantoja, Juhyun Kim, Rafael Silva‐Rocha, and Víctor de Lorenzo. The differential response of the pben promoter of pseudomonas putida mt-2 to benr and xyls prevents metabolic conflicts in m-xylene biodegradation. Environmental microbiology, 17 1:64-75, Apr 2015. URL: https://doi.org/10.1111/1462-2920.12443, doi:10.1111/1462-2920.12443. This article has 31 citations and is from a domain leading peer-reviewed journal.
+7. (cuevas2007interaccionesmolecularesdel pages 144-144): P Domínguez Cuevas. Interacciones moleculares del regulador xyls y la arn polimerasa con el promotor pm del plásmido tol pww0 de pseudomonas putida. Unknown journal, 2007.
 
-8. (perez‐pantoja2015thedifferentialresponse pages 7-9): Danilo Pérez‐Pantoja, Juhyun Kim, Rafael Silva‐Rocha, and Víctor de Lorenzo. The differential response of the pben promoter of pseudomonas putida mt-2 to benr and xyls prevents metabolic conflicts in m-xylene biodegradation. Environmental microbiology, 17 1:64-75, Apr 2015. URL: https://doi.org/10.1111/1462-2920.12443, doi:10.1111/1462-2920.12443. This article has 31 citations and is from a domain leading peer-reviewed journal.
+8. (cowles2000benraxyls pages 6-7): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
 
-9. (perez‐pantoja2015thedifferentialresponse media 32f9b80f): Danilo Pérez‐Pantoja, Juhyun Kim, Rafael Silva‐Rocha, and Víctor de Lorenzo. The differential response of the pben promoter of pseudomonas putida mt-2 to benr and xyls prevents metabolic conflicts in m-xylene biodegradation. Environmental microbiology, 17 1:64-75, Apr 2015. URL: https://doi.org/10.1111/1462-2920.12443, doi:10.1111/1462-2920.12443. This article has 31 citations and is from a domain leading peer-reviewed journal.
+9. (cowles2000benraxyls pages 4-5): Charles E. Cowles, Nancy N. Nichols, and Caroline S. Harwood. Benr, a xyls homologue, regulates three different pathways of aromatic acid degradation in pseudomonas putida. Journal of Bacteriology, 182:6339-6346, Nov 2000. URL: https://doi.org/10.1128/jb.182.22.6339-6346.2000, doi:10.1128/jb.182.22.6339-6346.2000. This article has 193 citations and is from a peer-reviewed journal.
 
-10. (perez‐pantoja2015thedifferentialresponse media 92d90004): Danilo Pérez‐Pantoja, Juhyun Kim, Rafael Silva‐Rocha, and Víctor de Lorenzo. The differential response of the pben promoter of pseudomonas putida mt-2 to benr and xyls prevents metabolic conflicts in m-xylene biodegradation. Environmental microbiology, 17 1:64-75, Apr 2015. URL: https://doi.org/10.1111/1462-2920.12443, doi:10.1111/1462-2920.12443. This article has 31 citations and is from a domain leading peer-reviewed journal.
+10. (dou2025detectionofenvironmental pages 7-10): Yuan Dou, Jianli Zhang, Xinyu Gong, Qi Gan, Shuo Yu, and Yajun Yan. Detection of environmental pollutants using transcription factor-based whole-cell biosensors. Biotechnology for the Environment, Dec 2025. URL: https://doi.org/10.1186/s44314-025-00032-7, doi:10.1186/s44314-025-00032-7. This article has 1 citations.
 
-11. (hanko2023tfbminerauserfriendly pages 6-7): Erik K. R. Hanko, Tariq A. Joosab Noor Mahomed, Ruth A. Stoney, and Rainer Breitling. Tfbminer: a user-friendly command line tool for the rapid mining of transcription factor-based biosensors. ACS Synthetic Biology, 12:1497-1507, Apr 2023. URL: https://doi.org/10.1021/acssynbio.2c00679, doi:10.1021/acssynbio.2c00679. This article has 20 citations and is from a domain leading peer-reviewed journal.
+11. (retallack2006identificationofanthranilate pages 5-6): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
 
-12. (dou2025detectionofenvironmental pages 7-10): Yuan Dou, Jianli Zhang, Xinyu Gong, Qi Gan, Shuo Yu, and Yajun Yan. Detection of environmental pollutants using transcription factor-based whole-cell biosensors. Biotechnology for the Environment, Dec 2025. URL: https://doi.org/10.1186/s44314-025-00032-7, doi:10.1186/s44314-025-00032-7. This article has 1 citations.
+12. (ramos1990afamilyof pages 1-2): Juan L. Ramos, Fernando Rojo, Luming Zhou, and K. Timmis. A family of positive regulators related to the pseudomonas putida tol plasmid xyls and the escherichia coli arac activators. Nucleic acids research, 18 8:2149-52, Apr 1990. URL: https://doi.org/10.1093/nar/18.8.2149, doi:10.1093/nar/18.8.2149. This article has 109 citations and is from a highest quality peer-reviewed journal.
 
-13. (pearson2023characterizationanddiversification pages 20-23): Allison N. Pearson, Matthew R. Incha, Cindy N. Ho, Matthias Schmidt, Jacob B. Roberts, Alberto A. Nava, and Jay D. Keasling. Characterization and diversification of arac/xyls family regulators guided by transposon sequencing. ACS Synthetic Biology, 13:206-219, Dec 2023. URL: https://doi.org/10.1021/acssynbio.3c00441, doi:10.1021/acssynbio.3c00441. This article has 5 citations and is from a domain leading peer-reviewed journal.
+13. (ramos1990afamilyof pages 2-3): Juan L. Ramos, Fernando Rojo, Luming Zhou, and K. Timmis. A family of positive regulators related to the pseudomonas putida tol plasmid xyls and the escherichia coli arac activators. Nucleic acids research, 18 8:2149-52, Apr 1990. URL: https://doi.org/10.1093/nar/18.8.2149, doi:10.1093/nar/18.8.2149. This article has 109 citations and is from a highest quality peer-reviewed journal.
+
+14. (gerischer2002specificandglobal pages 3-5): U Gerischer. Specific and global regulation of genes associated with the degradation of aromatic compounds in bacteria. Unknown journal, 2002.
+
+15. (pearson2023characterizationanddiversification pages 20-23): Allison N. Pearson, Matthew R. Incha, Cindy N. Ho, Matthias Schmidt, Jacob B. Roberts, Alberto A. Nava, and Jay D. Keasling. Characterization and diversification of arac/xyls family regulators guided by transposon sequencing. ACS Synthetic Biology, 13:206-219, Dec 2023. URL: https://doi.org/10.1021/acssynbio.3c00441, doi:10.1021/acssynbio.3c00441. This article has 5 citations and is from a domain leading peer-reviewed journal.
+
+16. (retallack2006identificationofanthranilate pages 3-5): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+17. (retallack2006identificationofanthranilate pages 2-3): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+18. (retallack2006identificationofanthranilate media 801e9bb0): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+19. (retallack2006identificationofanthranilate media 02c7240e): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+20. (retallack2006identificationofanthranilate media 4c23c1c3): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+21. (retallack2006identificationofanthranilate media 3df97ea0): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+22. (retallack2006identificationofanthranilate media 71701dfd): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+23. (retallack2006identificationofanthranilate media 91ada4ae): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+24. (retallack2006identificationofanthranilate media fec0aca9): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
+
+25. (retallack2006identificationofanthranilate media f82164eb): Diane M Retallack, Tracey C Thomas, Ying Shao, Keith L Haney, Sol M Resnick, Vincent D Lee, and Charles H Squires. Identification of anthranilate and benzoate metabolic operons of pseudomonas fluorescens and functional characterization of their promoter regions. Microbial Cell Factories, 5:1-1, Jan 2006. URL: https://doi.org/10.1186/1475-2859-5-1, doi:10.1186/1475-2859-5-1. This article has 45 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](BenR-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000017 The induction of the $P_{ben}$ promoter by benzoate (Bz) in wild-type *Pseudomonas putida* mt-2 (which contains the BenR regulator)](BenR-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000014 The following figures and maps provide information on benzoate-inducible promoter activity ($P_{ben}$), $\beta$-galactosidase induc](BenR-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. pearson2023characterizationanddiversification pages 5-8
-2. cowles2000benraxyls pages 3-4
-3. cowles2000benraxyls pages 4-5
-4. cowles2000benraxyls pages 6-7
-5. hanko2023tfbminerauserfriendly pages 6-7
-6. dou2025detectionofenvironmental pages 7-10
-7. cowles2000benraxyls pages 5-6
-8. cowles2000benraxyls pages 7-8
-9. pearson2023characterizationanddiversification pages 20-23
-10. https://doi.org/10.1021/acssynbio.3c00441
-11. https://doi.org/10.1128/jb.182.22.6339-6346.2000
-12. https://doi.org/10.1111/1462-2920.12443
-13. https://doi.org/10.1021/acssynbio.2c00679
-14. https://doi.org/10.1021/acssynbio.4c00574
-15. https://doi.org/10.1186/s44314-025-00032-7
-16. https://doi.org/10.1021/acssynbio.3c00441;
-17. https://doi.org/10.1128/jb.182.22.6339-6346.2000;
-18. https://doi.org/10.1021/acssynbio.2c00679;
-19. https://doi.org/10.1021/acssynbio.3c00441,
-20. https://doi.org/10.1128/jb.182.22.6339-6346.2000,
-21. https://doi.org/10.1111/1462-2920.12443,
-22. https://doi.org/10.1021/acssynbio.2c00679,
-23. https://doi.org/10.1186/s44314-025-00032-7,
+1. cowles2000benraxyls pages 3-4
+2. pearson2023characterizationanddiversification pages 5-8
+3. cowles2000benraxyls pages 7-8
+4. pearson2023characterizationanddiversification pages 8-12
+5. cuevas2007interaccionesmolecularesdel pages 144-144
+6. cowles2000benraxyls pages 1-2
+7. cowles2000benraxyls pages 6-7
+8. cowles2000benraxyls pages 4-5
+9. cowles2000benraxyls pages 5-6
+10. dou2025detectionofenvironmental pages 7-10
+11. retallack2006identificationofanthranilate pages 5-6
+12. ramos1990afamilyof pages 1-2
+13. ramos1990afamilyof pages 2-3
+14. gerischer2002specificandglobal pages 3-5
+15. pearson2023characterizationanddiversification pages 20-23
+16. retallack2006identificationofanthranilate pages 3-5
+17. retallack2006identificationofanthranilate pages 2-3
+18. https://doi.org/10.1128/jb.182.22.6339-6346.2000
+19. https://doi.org/10.1021/acssynbio.3c00441
+20. https://doi.org/10.1128/jb.182.22.6339-6346.2000;
+21. https://doi.org/10.1093/nar/18.8.2149
+22. https://doi.org/10.1186/1475-2859-5-1
+23. https://doi.org/10.1128/jb.182.22.6339-6346.2000,
+24. https://doi.org/10.1021/acssynbio.3c00441,
+25. https://doi.org/10.1186/s44314-025-00032-7,
+26. https://doi.org/10.1186/1475-2859-5-1,
+27. https://doi.org/10.1093/nar/18.8.2149,

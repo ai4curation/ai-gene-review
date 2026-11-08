@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-06-01T07:31:45.666042'
-end_time: '2026-06-01T07:39:43.535478'
-duration_seconds: 477.87
+cached: true
+start_time: '2026-11-08T17:25:53.182769'
+end_time: '2026-11-08T17:25:53.186353'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: PSEPK

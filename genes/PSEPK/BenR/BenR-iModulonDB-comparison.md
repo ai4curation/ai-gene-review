@@ -1,5 +1,12 @@
 # BenR Gene Review vs iModulonDB Comparison
 
+> Historical report, superseded for membership on 2026-11-05 by the
+> [source-checked BenR summary](../../../projects/P_PUTIDA/tf_census/imodulon/reports/Q88I42.md).
+> The published module has 10 members; this report's 13-gene list used an arbitrary
+> 0.05 cutoff. PP_3765, PP_3168 and PP_3792 are not published BenR members.
+> Its mechanistic interpretations are not established by module membership; see the
+> [calibration evidence assessment](../../../projects/P_PUTIDA/tf_census/calibration-review.md).
+
 ## iModulonDB Dataset Information
 
 **Dataset**: P. putida putidaPRECISE321 (Lim et al., 2022, Metabolic Engineering 72:297-310)

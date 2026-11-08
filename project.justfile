@@ -2357,10 +2357,10 @@ family-msa family_id:
 
 # ============== iModulonDB Integration ==============
 
-# Compare gene review with iModulonDB data (for bacterial transcription factors)
+# Summarize published iModulon evidence with matched gene-review context
 # Examples:
 #   just compare-imodulondb PSEPK BenR
-#   just compare-imodulondb ecoli FliA
+#   just compare-imodulondb p_putida PP_3159
 compare-imodulondb organism gene *args="":
     @echo "Comparing {{organism}}/{{gene}} with iModulonDB..."
     uv run python scripts/compare_with_imodulondb_v2.py {{organism}} {{gene}} {{args}}

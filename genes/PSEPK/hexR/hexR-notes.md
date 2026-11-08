@@ -49,3 +49,44 @@
 - GO:0097367 carbohydrate derivative binding — captures the SIS-domain effector (KDPG) binding; broad but supported by the effector-sensing mechanism. KEEP_AS_NON_CORE.
 - GO:1901135 carbohydrate derivative metabolic process — HexR regulates metabolism but is not itself a metabolic enzyme; this BP is an InterPro over-call. MARK_AS_OVER_ANNOTATED.
 - GO:0032993 protein-DNA complex — supported (binds DNA as dimer at operators). ACCEPT/KEEP_AS_NON_CORE.
+
+## 2026-11-08 — first TF batch re-review
+
+This entry supersedes the earlier annotation-assessment summary and the unqualified
+SIS-pocket assignment above. The full manual search/access record is in
+`hexR-deep-research-manual.md`; three promoter-level direct relationships are in
+`hexR-regulatory-evidence.yaml`.
+
+All nine original rows were reassessed. Correct broad DNA binding, TF activity and
+transcription-regulation rows are now MODIFY to already-present specific terms.
+The operator-bound complex and integral KDPG-sensing activity are core. The SIS
+metabolic-process IEA was removed as a regulator-to-metabolic-participant transfer;
+GO:0010906 regulation of glucose metabolic process was proposed from the KT2440
+regulatory experiments. The core synthesis now describes one integrated activity.
+
+PMID:18245293 and PMID:19506074 support direct repression at Pedd/PP_1010,
+Pzwf/PP_1022 and Pgap-1/PP_1009. Indexed primary full-text assay sections were
+inspected despite direct PMC browser challenges; local caches remain abstract-only.
+The KDPG/SIS pocket and RNA-polymerase blockage models remain qualified.
+
+Newly found PMID:41260329 (2026 volume; online 2025) expands HexR regulation beyond
+these glucose-linked repressive edges, including positive acetate-associated
+programs. Its abstract is cached, but full text/supplementary target evidence was
+not accessible. Do not call the whole protein exclusively repressive in all
+conditions or derive new activating target edges from its aggregate abstract.
+
+Falcon/fallback research failed authentication/quota; a manual research record was
+written under the correct manual filename. MOD unsupported for PSEPK, FEBA
+unreachable. PAINT lineage check could not place Q88P32 in the available tree; no
+IBA row is present. These are source-access limits, not negative evidence.
+
+### 2026-11-08 — cross-batch DNA-binding specificity check
+
+The mapped HexR footprints and shared pseudopalindromic operator sequence in
+PMID:19506074 support GO:0000987 cis-regulatory region sequence-specific DNA
+binding. Both seeded DNA-binding rows (GO:0003677 and GO:0000976) are therefore
+MODIFY to GO:0000987, preserving their source term IDs. This supersedes the
+preceding acceptance of GO:0000976 and brings the specificity judgment into line
+with the comparable BenR/PtxS cases. There are now four MODIFY decisions among
+the nine original rows. The integrated repressor core function and three target
+relationships are unchanged.
