@@ -39,3 +39,11 @@ Familial segregation and aberrant splicing establish pathogenic hearing loss. Th
 ### Native completion — 2026-11-07
 
 The existing-lane follow-up passed gene validation, strict GOA matching, all 29 reference titles and five supporting snippets, history validation and the computed-status check. The stale consistency-exception metadata was removed without changing its annotation decision; the original diagnostics remain in the execution record. Status remains DRAFT with the legacy membrane-action comparison and the core-location coverage advisory. No NEW annotation was added. All 39 normal sources and the existing ontology cache remain byte-exact. Rendering and the final sorted-cache check complete this preparation.
+
+## Binding-policy correction — 2026-11-08
+
+Three retained HuRI records support human GSDME–TIFA association in yeast two-hybrid assays; its physiological role remains unresolved [PMID:32296183; GSDME-source-evidence.json, HuRI.current_rows].
+
+Following the standing ClinGen project instruction, the supported generic-binding row is retained as KEEP_AS_NON_CORE. No evidence-backed specific replacement has been established.
+
+Direct schema, ontology-term, reference, strict GOA and history checks passed. Five excerpts and 29 titles passed reference validation. Status remains DRAFT with three advisories: the binding-policy exception and the two pre-existing membrane/location advisories. HTML was regenerated.
