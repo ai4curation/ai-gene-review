@@ -6,6 +6,12 @@ This project is for managing AI reviews of gene annotations. The overall goal is
 review existing GO annotations using strict defined criteria, and to summarize the resulting
 high quality annotations.
 
+## Schema authoring
+
+Always author schemas in LinkML, including project-local pilot and sidecar formats.
+Do not author JSON Schema schemas. Define reusable classes so both complete records
+and individual snippets can be validated with LinkML tooling.
+
 ## Repository layout
 
 src/

@@ -8,16 +8,29 @@ import argparse
 import csv
 from pathlib import Path
 
-import jsonschema
 import yaml
+from linkml.validator import Validator
+from linkml.validator.plugins import JsonschemaValidationPlugin
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / 'projects/P_PUTIDA/tf_census/regulatory-evidence.schema.yaml'
 METADATA = ROOT / 'projects/P_PUTIDA/data/psepk_uniprot_metadata.tsv'
 
 
-def check_record(data, review, metadata, schema):
-    jsonschema.Draft202012Validator(schema).validate(data)
+def make_validator():
+    """Use LinkML's standard backend, generated solely from the LinkML schema."""
+    return Validator(SCHEMA, validation_plugins=[JsonschemaValidationPlugin(closed=True)])
+
+
+def check_structure(data, validator, target_class='RegulatoryEvidence'):
+    """Validate a complete record or a snippet against its LinkML class."""
+    report = validator.validate(data, target_class)
+    if report.results:
+        raise ValueError('\n'.join(result.message for result in report.results))
+
+
+def check_record(data, review, metadata, validator):
+    check_structure(data, validator)
     regulator = data['regulator']
     accession = regulator['accession']
     if accession != review['id'].removeprefix('UniProtKB:') or regulator['taxon'] != review['taxon']['id']:
@@ -45,8 +58,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('files', type=Path, nargs='+')
     args = parser.parse_args()
-    schema = yaml.safe_load(SCHEMA.read_text())
-    jsonschema.Draft202012Validator.check_schema(schema)
+    validator = make_validator()
     with METADATA.open() as handle:
         metadata = {r['Entry']: r for r in csv.DictReader(handle, delimiter='\t')}
     seen = set()
@@ -54,7 +66,7 @@ def main():
         data = yaml.safe_load(path.read_text())
         review_path = path.with_name(path.name.replace('-regulatory-evidence.yaml', '-ai-review.yaml'))
         review = yaml.safe_load(review_path.read_text())
-        ids = check_record(data, review, metadata, schema)
+        ids = check_record(data, review, metadata, validator)
         if ids & seen:
             raise ValueError(f'Duplicate IDs across files: {sorted(ids & seen)}')
         seen.update(ids)
