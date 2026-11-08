@@ -121,6 +121,8 @@ The organelle-by-stage matrix lives in
 - [ ] Golgi: ground a eukaryote-wide COPII module once Sec24, Sec31 and Sec12 have local PANTHER entries; add ArfGAPs, Golgi tethers and SNAREs, and TGN exit
 - [x] Autophagosome: `autophagosome_lifecycle` umbrella with one eukaryote-wide rule module, `autophagosome_core_biogenesis` (Atg1 kinase, PI3-kinase complex I, Atg9/Atg2/Atg18, Atg12 and Atg8 conjugation); `RULE_CANDIDATE`; the metazoan and yeast assembly modules referenced as optional
 - [ ] Autophagosome: add fungal Atg16 and plant Atg14 selectors, FIP200/Atg17 and ATG101, Atg10; model closure and fusion with the lysosome or vacuole
-- [ ] Nucleus, lipid droplet
+- [x] Nucleus: `nucleus_lifecycle` umbrella with one partial eukaryote-wide rule module, `nuclear_pore_transport_core` (four nucleoporins, Ran, NTF2, Crm1, Cse1); `RULE_CANDIDATE`
+- [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
+- [ ] Lipid droplet
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
