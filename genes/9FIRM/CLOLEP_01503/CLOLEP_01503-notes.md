@@ -46,3 +46,8 @@ catalytic mechanism without requiring another core function.
 ## 2026-11-06 — structured assessment of the CASDC/CAPADC naming discrepancy
 
 PMID39887002 Methods identifies EDO61992.1 as its crystallized CASDC; PMID40074085 Table S1 calls the same EDO61992 protein CAPADC. The reference_review records now expose that discrepancy. Structural evidence remains reliable for the PLP-dependent fold and Lys43 cofactor site, while reconstructed agmatine-route activity supports the functional assignment. No substrate-specific kinetics or native flux is inferred from the structural paper title. Annotation payloads, actions and core functions are unchanged.
+
+
+## 2026-11-08 — PR #6089 review follow-up
+
+Add explicit enables/involved_in relations to authored NEW proposals where absent. Machine-sourced annotation payloads remain unchanged. Cj0172c explicitly distinguishes its unassayed legacy EC mapping from the accession-matched negative assay for CLOLEP_01502; HP_0020 wording identifies its accepted carboxy-lyase genus and the lateral product-specific process correction. See the review-followup-20261108 receipt for this file’s exact scope.

@@ -28,3 +28,8 @@ The provisional MF refinement was previously promoted into a predicted core. Thi
 Changed the imported saccharopine row to UNDECIDED and withdrew the provisional GO:0102143 replacement. SF2 membership and the 81116 deletion phenotype do not resolve the exact Q0PBW7 substrate. The H. pylori CAPADH comparator is positive evidence for substrate diversity, not direct evidence that Cj0172c must use agmatine.
 
 Read-only source caches were used; no downloads or source refreshes. Original annotation payloads/order and every historical NEW lifecycle are preserved. Heavy validation and rendering are deferred because disk space is critically low.
+
+
+## 2026-11-08 — PR #6089 review follow-up
+
+Add explicit enables/involved_in relations to authored NEW proposals where absent. Machine-sourced annotation payloads remain unchanged. Cj0172c explicitly distinguishes its unassayed legacy EC mapping from the accession-matched negative assay for CLOLEP_01502; HP_0020 wording identifies its accepted carboxy-lyase genus and the lateral product-specific process correction. See the review-followup-20261108 receipt for this file’s exact scope.

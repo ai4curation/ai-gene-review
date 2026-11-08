@@ -42,3 +42,8 @@ Decision: NEW IDA GO:0102143 for the exact assayed protein; retain this measured
 activity in the core, with no native substrate preference over agmatine and
 no inferred target-strain process annotation. This is the first authored row
 for the zero-row seed, not an inherited NEW assertion.
+
+
+## 2026-11-08 — PR #6089 review follow-up
+
+Add explicit enables/involved_in relations to authored NEW proposals where absent. Machine-sourced annotation payloads remain unchanged. Cj0172c explicitly distinguishes its unassayed legacy EC mapping from the accession-matched negative assay for CLOLEP_01502; HP_0020 wording identifies its accepted carboxy-lyase genus and the lateral product-specific process correction. See the review-followup-20261108 receipt for this file’s exact scope.

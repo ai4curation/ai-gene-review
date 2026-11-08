@@ -57,3 +57,8 @@ The prior comparator/parent checks remain documented above; human SMS and yeast 
 Clarified why the conditional norspermidine IC proposal is retained: C58 ΔODC plus 100 µM DAP yields a measured cellular product in PMID26682642, unlike an isolated-enzyme alternate reaction or simple growth rescue. The individual Atu4170 step remains inferred; ordinary wild-type norspermidine flux is not claimed. No proposal payload or lifecycle changed.
 
 Read-only source caches were used; no downloads or source refreshes. Original annotation payloads/order and every historical NEW lifecycle are preserved. Heavy validation and rendering are deferred because disk space is critically low.
+
+
+## 2026-11-08 — PR #6089 review follow-up
+
+Add explicit enables/involved_in relations to authored NEW proposals where absent. Machine-sourced annotation payloads remain unchanged. Cj0172c explicitly distinguishes its unassayed legacy EC mapping from the accession-matched negative assay for CLOLEP_01502; HP_0020 wording identifies its accepted carboxy-lyase genus and the lateral product-specific process correction. See the review-followup-20261108 receipt for this file’s exact scope.
