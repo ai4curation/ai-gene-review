@@ -17,6 +17,7 @@ from ai_gene_review.curated_rules import ProteinFeatures
 from ai_gene_review.etl.arba import ARBARule
 from ai_gene_review.etl.arba_match import (
     UniProtFeatureClient,
+    UnsupportedConditionError,
     arba_goa_rows,
     check_goa_rows,
     evaluate_rule,
@@ -95,6 +96,15 @@ def test_new_rule_version_matches_via_taxon_free_set(q88ks6):
     match = evaluate_rule(RULE_2026_04, q88ks6)
     assert match.matched
     assert match.matching_sets == [0]
+    assert match.closest_failure is None
+    assert match.closest_sets == []
+
+
+@pytest.mark.parametrize("ctype", ["Pfam id", ""])
+def test_unsupported_condition_type_names_the_rule(q88ks6, ctype):
+    rule = _rule("ARBA00000042", [[_cond("InterPro id", "IPR000873"), _cond(ctype, "PF00501")]], "2025-01-01")
+    with pytest.raises(UnsupportedConditionError, match="ARBA00000042 uses unsupported condition type"):
+        evaluate_rule(rule, q88ks6)
 
 
 @pytest.mark.parametrize(
@@ -147,6 +157,8 @@ def test_negated_condition_blocks_match():
         (RULE_2026_04, "20260727", "MATCH"),
         (RULE_2026_03, "20260727", "MISMATCH"),
         (RULE_2026_03, "20250101", "RULE_EDITED_SINCE_LOAD"),
+        (RULE_2026_03, "20250321", "RULE_EDITED_SINCE_LOAD"),
+        (RULE_2026_03, "", "DATE_UNKNOWN"),
     ],
 )
 def test_load_status(q88ks6, rule, load_date, expected):
@@ -174,6 +186,7 @@ def goa_file(tmp_path):
         _goa_row("Q88KS6", "GO:0016405", "GO_REF:0000117", "ARBA:ARBA00099999", "20260616"),
         _goa_row("Q88KS6", "GO:0004321", "GO_REF:0000118", "PANTHER:PTN000644270", "20260727"),
         _goa_row("Q00000", "GO:0005737", "GO_REF:0000117", "ARBA:ARBA00086692", "20260727"),
+        _goa_row("Q88KS6", "GO:0005524", "GO_REF:0000117", "UniProtKB-UniRule:RU368065", "20260727"),
     ]
     path = tmp_path / "PP_2213-goa.tsv"
     path.write_text("\n".join("\t".join(r) for r in [GOA_HEADER, *rows]) + "\n")
@@ -182,13 +195,14 @@ def goa_file(tmp_path):
 
 def test_check_goa_rows(goa_file, q88ks6):
     rows = arba_goa_rows(goa_file)
-    assert len(rows) == 3  # the GO_REF:0000118 TreeGrafter row is skipped
+    assert len(rows) == 4  # the GO_REF:0000118 TreeGrafter row is skipped
     rules = {"ARBA00086692": RULE_2026_04, "ARBA00099999": None}
     checks = check_goa_rows(rows, rules, {"Q88KS6": q88ks6})
     assert [(c.go_id, c.status) for c in checks] == [
         ("GO:0031956", "MATCH"),
         ("GO:0016405", "RULE_NOT_FOUND"),
         ("GO:0005737", "PROTEIN_NOT_FOUND"),
+        ("GO:0005524", "NO_ARBA_RULE_CITED"),
     ]
 
 
@@ -242,3 +256,4 @@ def test_cli_arba_check_goa(goa_file, tmp_path):
     assert ("MATCH", "Q88KS6", "GO:0031956") in statuses
     assert ("RULE_NOT_FOUND", "Q88KS6", "GO:0016405") in statuses
     assert ("PROTEIN_NOT_FOUND", "Q00000", "GO:0005737") in statuses
+    assert ("NO_ARBA_RULE_CITED", "Q88KS6", "GO:0005524") in statuses

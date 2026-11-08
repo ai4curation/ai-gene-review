@@ -7,10 +7,13 @@ import subprocess
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import typer
 from typing_extensions import Annotated
+
+if TYPE_CHECKING:
+    from ai_gene_review.etl.arba_match import RuleMatch
 
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
@@ -2703,7 +2706,7 @@ def arba_lookup(
                 typer.echo(f"  {ann.comment_type}: {ann.text}")
 
 
-def _echo_rule_match(match) -> None:
+def _echo_rule_match(match: "RuleMatch") -> None:
     """Print one rule's verdict and, when it fails, its closest condition sets."""
     if match.matched:
         sets = ", ".join(str(i) for i in match.matching_sets)

@@ -1,8 +1,9 @@
 """Evaluate ARBA rule conditions against a protein.
 
 An ARBA rule fires on a protein when every condition of at least one of its
-condition sets holds. ARBA uses four condition types: InterPro, PANTHER,
-FunFam and taxon. This module answers "does rule X fire on protein Y, and if
+condition sets holds. The ARBA rules cited in this repository's GOA files use
+four condition types (InterPro, PANTHER, FunFam and taxon); any other type
+raises :class:`UnsupportedConditionError` naming the rule. This module answers "does rule X fire on protein Y, and if
 not, which conditions fail?", and checks the ARBA rows (``GO_REF:0000117``)
 of a cached GOA file against the rules they cite. Conditions are tested with
 the same :func:`ai_gene_review.curated_rules.condition_holds` used for this
@@ -58,10 +59,37 @@ UNIPROT_SIGNATURE_DBS = {"InterPro": "INTERPRO", "PANTHER": "PANTHER", "FunFam":
 FAILURE_KINDS = ("TAXON_ONLY", "PARTIAL_SIGNATURE", "NO_SIGNATURE")
 
 
+class UnsupportedConditionError(ValueError):
+    """An ARBA condition type this module cannot evaluate."""
+
+
+def check_condition_types(rule: ARBARule) -> None:
+    """Raise if ``rule`` uses a condition type outside :data:`ARBA_CONDITION_TYPES`.
+
+    >>> from ai_gene_review.etl.arba import ConditionValue, Statistics
+    >>> rule = ARBARule("ARBA1", "0", [ConditionSet([Condition("Pfam id", [ConditionValue("PF1")])])],
+    ...                 [], Statistics(), "", "")
+    >>> check_condition_types(rule)
+    Traceback (most recent call last):
+    ...
+    ai_gene_review.etl.arba_match.UnsupportedConditionError: ARBA1 uses unsupported condition type(s): 'Pfam id'
+    """
+    unknown = {c.condition_type for cs in rule.condition_sets for c in cs.conditions} - set(ARBA_CONDITION_TYPES)
+    if unknown:
+        listed = ", ".join(repr(t) for t in sorted(unknown))
+        raise UnsupportedConditionError(f"{rule.uni_rule_id} uses unsupported condition type(s): {listed}")
+
+
+def is_taxon_condition(condition: Condition) -> bool:
+    return ARBA_CONDITION_TYPES[condition.condition_type] == "TAXON"
+
+
 def arba_condition_holds(condition: Condition, features: ProteinFeatures) -> bool:
     """Test one ARBA condition: any of its values present, inverted if negative.
 
-    Taxon conditions match on the NCBI id (``cvId``).
+    Taxon conditions match on the NCBI id (``cvId``). The condition type must
+    be one of :data:`ARBA_CONDITION_TYPES`; :func:`evaluate_rule` checks this
+    first so that an unknown type is reported with its rule.
 
     >>> from ai_gene_review.etl.arba import ConditionValue
     >>> f = ProteinFeatures({"PANTHER": {"PTHR1", "PTHR1:SF2"}}, {"NCBITaxon:9606", "NCBITaxon:2759"})
@@ -71,7 +99,7 @@ def arba_condition_holds(condition: Condition, features: ProteinFeatures) -> boo
     False
     """
     ctype = ARBA_CONDITION_TYPES[condition.condition_type]
-    values = [f"NCBITaxon:{cv.cv_id}" if ctype == "TAXON" else cv.value for cv in condition.values]
+    values = [f"NCBITaxon:{cv.cv_id}" if is_taxon_condition(condition) else cv.value for cv in condition.values]
     present = any(condition_holds({"condition_type": ctype, "value": v}, features) for v in values)
     return present != condition.is_negative
 
@@ -105,7 +133,7 @@ class ConditionSetResult:
         """
         if self.matched:
             return None
-        signatures = [c.holds for c in self.conditions if c.condition.condition_type != "taxon"]
+        signatures = [c.holds for c in self.conditions if not is_taxon_condition(c.condition)]
         if all(signatures):
             return "TAXON_ONLY"
         if any(signatures):
@@ -136,7 +164,9 @@ class RuleMatch:
 
     @property
     def closest_sets(self) -> list[ConditionSetResult]:
-        """The failing sets of the closest failure kind, for reporting."""
+        """The failing sets of the closest failure kind, for reporting; empty if matched."""
+        if self.matched:
+            return []
         kind = self.closest_failure
         return [s for s in self.sets if s.failure_kind == kind]
 
@@ -149,7 +179,12 @@ def evaluate_condition_set(index: int, condition_set: ConditionSet, features: Pr
 
 
 def evaluate_rule(rule: ARBARule, features: ProteinFeatures) -> RuleMatch:
-    """Evaluate every condition set of ``rule`` against ``features``."""
+    """Evaluate every condition set of ``rule`` against ``features``.
+
+    Raises :class:`UnsupportedConditionError` if the rule uses a condition
+    type this module cannot evaluate.
+    """
+    check_condition_types(rule)
     return RuleMatch(
         rule_id=rule.uni_rule_id,
         rule_modified=rule.modified_date,
@@ -161,17 +196,21 @@ def load_status(match: RuleMatch, load_date: str) -> str:
     """Judge a GOA row against the current rule, allowing for rule edits.
 
     ``load_date`` is the GOA DATE column (``YYYYMMDD``); ``rule_modified`` is
-    ARBA's ``modifiedDate`` (``YYYY-MM-DD``).
+    ARBA's ``modifiedDate`` (``YYYY-MM-DD``). A rule edited on the load day may
+    have been edited after the load, so it counts as edited since. Without
+    either date the timing cannot be judged.
 
     >>> m = RuleMatch("ARBA1", "2026-07-18", [])
-    >>> load_status(m, "20260601")
-    'RULE_EDITED_SINCE_LOAD'
-    >>> load_status(m, "20260727")
-    'MISMATCH'
+    >>> load_status(m, "20260601"), load_status(m, "20260718"), load_status(m, "20260727")
+    ('RULE_EDITED_SINCE_LOAD', 'RULE_EDITED_SINCE_LOAD', 'MISMATCH')
+    >>> load_status(RuleMatch("ARBA1", "", []), "20260727")
+    'DATE_UNKNOWN'
     """
     if match.matched:
         return "MATCH"
-    if match.rule_modified.replace("-", "") > load_date:
+    if not match.rule_modified or not load_date:
+        return "DATE_UNKNOWN"
+    if match.rule_modified.replace("-", "") >= load_date:
         return "RULE_EDITED_SINCE_LOAD"
     return "MISMATCH"
 
@@ -232,7 +271,13 @@ class UniProtFeatureClient:
         return self._lineages[taxon_id]
 
     def proteins(self, accessions: list[str]) -> dict[str, UniProtProtein]:
-        """Fetch up to 100 accessions; accessions absent from UniProtKB are omitted."""
+        """Fetch accessions, keyed by primary accession; those absent from UniProtKB are omitted."""
+        out: dict[str, UniProtProtein] = {}
+        for i in range(0, len(accessions), 100):
+            out.update(self._proteins_batch(accessions[i : i + 100]))
+        return out
+
+    def _proteins_batch(self, accessions: list[str]) -> dict[str, UniProtProtein]:
         params: dict[str, str | int] = {
             "accessions": ",".join(accessions),
             "fields": "accession,organism_id,xref_interpro,xref_panther,xref_funfam",
@@ -286,19 +331,23 @@ def check_goa_rows(
     ARBA no longer serves it; ``features`` maps accessions to their features
     and omits accessions absent from UniProtKB.
 
-    A row is ``MATCH`` when any cited rule fires; ``RULE_EDITED_SINCE_LOAD``
-    and ``MISMATCH`` are decided by :func:`load_status` on the latest-modified
-    cited rule. Rules ARBA no longer serves give ``RULE_NOT_FOUND``, and
-    accessions absent from UniProtKB give ``PROTEIN_NOT_FOUND``.
+    A row is ``MATCH`` when any cited rule fires; ``RULE_EDITED_SINCE_LOAD``,
+    ``MISMATCH`` and ``DATE_UNKNOWN`` are decided by :func:`load_status` on the
+    latest-modified cited rule. A row whose WITH/FROM cites no ARBA rule (for
+    example a UniRule filed under the ARBA GO_REF) gives ``NO_ARBA_RULE_CITED``;
+    rules ARBA no longer serves give ``RULE_NOT_FOUND``, and accessions absent
+    from UniProtKB give ``PROTEIN_NOT_FOUND``.
     """
     checks = []
     for row in rows:
         accession = row["GENE PRODUCT ID"]
-        load_date = row.get("DATE", "")
-        cited = [rules[r] for r in arba_rule_ids(row.get("WITH/FROM", ""))]
-        found = [r for r in cited if r is not None]
+        load_date = row["DATE"]
+        rule_ids = arba_rule_ids(row["WITH/FROM"])
+        found = [r for r in (rules[rid] for rid in rule_ids) if r is not None]
         matches: list[RuleMatch] = []
-        if accession not in features:
+        if not rule_ids:
+            status = "NO_ARBA_RULE_CITED"
+        elif accession not in features:
             status = "PROTEIN_NOT_FOUND"
         elif not found:
             status = "RULE_NOT_FOUND"
@@ -311,7 +360,7 @@ def check_goa_rows(
             GoaArbaCheck(
                 accession=accession,
                 go_id=row["GO TERM"],
-                go_name=row.get("GO NAME", ""),
+                go_name=row["GO NAME"],
                 load_date=load_date,
                 status=status,
                 matches=matches,
@@ -331,10 +380,7 @@ def check_goa_file(
     """
     rows = arba_goa_rows(goa_file)
     accessions = sorted({r["GENE PRODUCT ID"] for r in rows})
-    features: dict[str, ProteinFeatures] = {}
-    for i in range(0, len(accessions), 100):
-        fetched = feature_client.proteins(accessions[i : i + 100])
-        features.update({acc: p.features for acc, p in fetched.items()})
-    rule_ids = sorted({rid for r in rows for rid in arba_rule_ids(r.get("WITH/FROM", ""))})
+    features = {acc: p.features for acc, p in feature_client.proteins(accessions).items()}
+    rule_ids = sorted({rid for r in rows for rid in arba_rule_ids(r["WITH/FROM"])})
     rules = {rid: rule_client.fetch_rule(rid, use_cache=False) for rid in rule_ids}
     return check_goa_rows(rows, rules, features)
