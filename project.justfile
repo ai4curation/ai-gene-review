@@ -321,6 +321,13 @@ wrong-gene-leads *args="":
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
+# Check GO-CAM activity locations against the disjoint compartment model
+# (unresolved occurs_in terms; causal edges between non-adjacent compartments)
+# Example: just gocam-compartments 59cc772c00000000
+# Example: just gocam-compartments -o reports/gocam-compartments.yaml
+gocam-compartments *args="":
+    uv run ai-gene-review gocam-compartments {{args}}
+
 # Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
 # Example: just seed-gocam-review 568b0f9600000284
 seed-gocam-review model_id *args="":
@@ -330,6 +337,7 @@ seed-gocam-review model_id *args="":
 # Example: just validate-gocam-review gocams/568b0f9600000284/568b0f9600000284-review.yaml
 validate-gocam-review file:
     uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview {{file}}
+    uv run python -m ai_gene_review.validation.quote_check {{file}}
 
 # Report review status of gene description files
 # Example: just descriptions-status yeast
@@ -1138,13 +1146,14 @@ validate-modules: ensure-panther-members
     echo "Schema-validating ${#files[@]} modules (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "${files[@]}" || rc=1
     echo "Validating module term labels, reference titles, and supporting_text..."
-    # module_validator also verifies every literature reference (PMID/DOI):
-    #  - each title (references list or EvidenceItem) must match the cited
-    #    publication title (catches wrong PMIDs and stale/abbreviated titles);
-    #  - each supporting_text quote must be a verbatim (normalized) substring of
-    #    the cached publications/PMID_*.md.
-    # Both use linkml-reference-validator's own matcher. Mismatches are errors;
-    # unfetchable/uncached references are advisory warnings.
+    # module_validator also verifies references and quotes:
+    #  - each literature title (references list or EvidenceItem) must match the
+    #    cited publication title (catches wrong PMIDs and stale/abbreviated titles);
+    #  - each supporting_text quote, in any slot (source_id, reference_id,
+    #    findings), must be a verbatim (normalized) substring of its source:
+    #    publications/ for PMID/DOI, the file on disk for file:/Reactome: (#6021).
+    # Quote failures are errors unless listed in conf/quote_check_baseline.yaml;
+    # quotes citing a source with no readable text are summarised as a warning.
     uv run python -m ai_gene_review.validation.module_validator "${files[@]}" || rc=1
     exit "$rc"
 
@@ -1307,6 +1316,17 @@ validate-changed *files:
 
 # conf/local_quote_baseline.yaml lists known non-verbatim file:/Reactome: quotes
 # (reported as warnings; any other failing quote is an error).
+# Check every supporting_text quote outside gene reviews against its source
+# (modules, family reviews, GO-CAM reviews, rules, projects; see
+# ai_gene_review.validation.quote_check). Failures block unless listed in
+# conf/quote_check_baseline.yaml, which only shrinks. Pass files to narrow it.
+# Example: just validate-quotes
+#          just validate-quotes modules/notch_signaling.yaml --show-unchecked
+#          just validate-quotes --prune-baseline
+[group('QC')]
+validate-quotes *args:
+    uv run python -m ai_gene_review.validation.quote_check {{args}}
+
 # Example: just local-quote-baseline --prune
 #          just local-quote-baseline --report reports/local-quote-failures.yaml
 # Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
@@ -2861,6 +2881,10 @@ validate-families: ensure-panther-members
     scripts/run_reference_validator.sh validate data "${files[@]}" \
         --schema src/ai_gene_review/schema/family_review.yaml \
         --target-class FamilyReview --config conf/reference_validator_config.yaml || rc=1
+    echo "Validating file:/Reactome: supporting_text quotes against their local sources..."
+    # The reference validator above skips file: and Reactome: (skip_prefixes), so
+    # without this step the families' ~6,000 file: quotes were never read (#6021).
+    uv run python -m ai_gene_review.validation.quote_check "${files[@]}" || rc=1
     echo "Validating curated residue sites against UniProt sequences..."
     uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
     echo "Cross-checking family reviews against the gene corpus..."
