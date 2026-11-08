@@ -46,6 +46,9 @@ For each module, record evidence that all of the following are satisfied:
 
 - [ ] `bacterial_nonhomologous_end_joining`: PR #6205: main a344758bae integrated at ebeab8b501; 310 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
+- [ ] `bacterial_fructose_pts_catabolism`: PR #6144 approved at c0fcd8377d; main 0a807fc555 integrated at 55d1cd6d66 with 224 approved nonshared files preserved. Focused integration checks pass. Historical full-corpus validation remains scoped to its recorded head; fresh review, CI and actual merge are pending.
+
+
 - [ ] `bacterial_imuabc_damage_induced_mutagenesis`: PR #6169: main 597e48b1634d7b6b85739e8cd037571b949f372f integrated with 258 frozen nonshared files preserved. Historical full validation remains on 90ccb6b4b319515f57990aed214e082c7aae7b71; fresh review, CI and merge are pending.
 
 - [ ] `bacterial_heptaprenylglyceryl_ether_lipid`: PR #6167: main b4f249a30490049f1009fea5871a037219596e0f integrated with 163 frozen nonshared files preserved. Historical full validation remains on e4a4bb1dfe01d58dc15e307974569ada61e2fd0f; fresh review, CI and merge are pending.
@@ -113,6 +116,10 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
 
 - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 11 PR_OPEN, 3 IN_PROGRESS, 726 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+- [ ] Ledger snapshot after this integration: 777 modules; 34 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 730 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -914,6 +921,44 @@ Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full 
 
 PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Per-path preservation and validation scope](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json). The incoming OPG completion and flavonoid row are retained exactly. All 33 previously complete rows remain unchanged; no completion is inferred from an open-row status or from this local integration. Both parents’ dated journal entries and the pins autolink exclusion are preserved. The historical round-17 module pin describes its recorded revision; round27-full-run.json supersedes its validation status, without retrospectively changing that earlier receipt.
 
+## 2026-11-06 — comparative fructose science completed
+
+Complete the comparative fructose science: 16 gene reviews with all 148 original/seed annotation payloads and 34 raw/provider files preserved, no NEW rows; 11 references including two review articles; three scoped family reviews; and 49 production-circuit evidence-coverage checks with seven mutations rejected. Retain the bacterial mechanism envelope with explicit alpha/gamma and Deinococcus strain limits. Require supported same-protein architecture and substrate specificity without inferring these from PANTHER names. Do not impose an unverified second EIIB domain on Azospirillum. Native flux, strict intramolecular relay and unresolved full-family phylogenetic partitions are not claimed. Final validation, dedicated PR and actual merge remain pending.
+
+## 2026-11-06 — fructose validation completed after ontology-service retry
+
+The fructose audit completed validation across 10695 reviews on science 51a5b37ad627fbc1930be9c45eb84e8db754e9ef. The original just validate-all command exited 1 because OLS timed out resolving NCBITaxon:12022; schema, reference, best-practice and pathway checks completed without blocking findings. A complete 10695-file term-stage retry subsequently passed on the same inputs. All 196 frozen files remain unchanged. There are 116 term advisories and 52 reference advisories, with reference-advisory files outside the 16-member panel; best-practices reports 27758 warnings and zero errors, and all 54 pathway-reference checks pass. The audit retains 148 annotation payloads and 34 raw/provider files, with eleven curated references, three family reviews and 49 production-circuit evidence checks. Main integration, a dedicated PR, independent review, CI and actual merge remain required.
+
+## 2026-11-06 — fructose audit integration with published main 577501df51
+
+Integrated published main `577501df51` with the validated fructose audit head `c5063e9747`. All 196 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. The original full run stopped its term stage on an OLS read timeout. All other stages completed without blocking findings, and a complete 10695-file term retry processed every file with 116 advisory GO label warnings and no blocking errors. All 196 frozen inputs were verified unchanged before closeout; the two logs and raw exit codes are retained in full-validation.json. A dedicated PR, independent review and CI must still gate actual merge.
+
+Integration proof: [validated-head-integration.json](../analysis/module_audits/bacterial_fructose_pts_catabolism/validated-head-integration.json).
+
+## 2026-11-06 — fructose PR #6144 published
+
+Published the validated comparative fructose audit as PR #6144. The current inventory now reflects all sixteen completed reviews and the module representative panel, rather than the initial five-review snapshot. The full-validation proof preserves both the ontology-service timeout and the complete retry with advisory labels; the integration proof preserves 196 scoped files against main 577501df51. Existing historical-outcome regression passes. Gene, module and family science is unchanged; independent review, CI and actual merge remain required.
+
+## 2026-11-07 — fructose PTS review follow-up
+
+Corrected representative protein names against frozen UniProt records, relocated the ontology-only knowledge gap to notes, improved AZOBR quote specificity and reference assessments, and aligned FruB proposed-term definitions while preserving target-specific evidence limits. Current QuickGO confirms D-fructose catabolic process for GO:0006001, so the requested older synonym was declined with the official response recorded. All 148 annotation payloads/order/actions, 65 sources, and module mechanism remain unchanged. Five changed genes and the unchanged DEIRA label check pass; module schema/semantic/reference checks, renders, six histories, 49 coverage cases and seven mutations pass. Only five reviewed-file hash pins changed in fixtures; no test logic or biological inputs were weakened. The earlier combined-stage full-validation result remains historical; no new full-corpus pass is claimed. Independent review, CI and actual merge remain required.
+
+## 2026-11-07 — bacterial_fructose_pts_catabolism main integration
+
+Integrated main 2f72fda87ec460ef99562726f68795f2a2d9552f into approved head 9cf7682c239085e1f97e47818d78ecab91505d65. All 214 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_fructose_pts_catabolism main integration
+
+Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e into approved head dae846efce2af1c5990eb85c3272716c9cd546ae. All 217 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_fructose_pts_catabolism main integration
+
+Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head 4a621a3c467fdd75a5ef3d5239522c181f9162c3. All 219 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
+## 2026-11-07 — bacterial_fructose_pts_catabolism main integration
+
+Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b into approved head c0fcd8377daf34e7cf0f75440a1dd770ca7fa532. All 224 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
+
 ## 2026-11-07 — Comparative Isc assembly and transfer
 
 Comparative Isc curation integrates 18 COMPLETE gene reviews, 208 preserved original rows with one explicit historical-NEW retirement, 20 assessed references including five reviews, two family reconciliations and 17 function-qualified representatives. Canonical Fdx-supported/HscBA-assisted capacity is distinguished from anaerobic and suppressor bypasses. The capacity audit passes 38 scenarios, six evidence-gate sensitivity checks and two structural mutations. Full validation remains pending before a dedicated PR.
@@ -1059,3 +1104,17 @@ Superseded parent snapshot lines retained for provenance:
 > - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts reflect this branch’s inventory.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+## 2026-11-08 — superseded status snapshots retained during resume
+
+The following historical pending lines were superseded by verified merged-completion entries in the status list.
+
+> - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
+
+## 2026-11-08 — resume PR #6144 after disk cleanup
+
+Integrate main a344758bae648a999bbe316e9b1e2289a958d1bc into paused PR #6144 at 5a2e681898c894c4cff64e810825f3b7b4383389. All 201 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-08 — resume PR #6205 after disk cleanup
+
+Integrate main ec787ac8700cacbf94a72abbbbe9dee9b622592b into paused PR #6205 at 6d644bdbad32a1956b86854813f584d1f5bfe1cd. All 344 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
