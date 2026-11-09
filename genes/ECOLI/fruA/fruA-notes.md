@@ -42,3 +42,18 @@
   plasma membrane. The broad GO:1902495 transmembrane transporter complex row
   is compatible with FruA oligomerization, but no fructose-Enzyme-II-specific
   GO complex term exists in the seeded annotations.
+
+## 2026-11-05 completion pass (Claude (AI-assisted))
+
+- GO:0016020 membrane changed from KEEP_AS_NON_CORE to MODIFY -> GO:0005886
+  plasma membrane: the term is correct but general, and the gene already
+  carries the specific term (IDA PMID:15919996, PMID:17309111). Added the
+  curated UniProt inner-membrane statement (ECO:0000269 PubMed:15919996).
+- Core MF: GO:0022877 is kept as the primary core activity, matching the
+  UniProt catalytic activity RHEA:49252 (EC 2.7.1.202) curated with
+  ECO:0000269 from PMID:8626640. GO:0090582 (IMP, C112S) is kept as the second
+  core activity for the EIIB phosphocysteine-to-fructose half-reaction; the two
+  terms are not is_a related, so neither row is a MODIFY of the other.
+- Deep research: the perplexity provider is not available in this environment
+  (the same command failed for PSEPK fruA); no provider file was created.
+- No PENDING/UNDECIDED rows remain; status set to COMPLETE.
