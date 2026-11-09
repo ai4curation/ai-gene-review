@@ -17,3 +17,14 @@ These family and domain data make Q88CA5 a credible PSEPK ClsC candidate, but
 they do not establish the PE+PG reaction in KT2440. Broad
 phosphatidyltransferase activity can be retained; exact ClsC activity and the
 cardiolipin process require biochemical or genetic confirmation.
+
+## 2026-11 update
+
+The HKD motif scan (`PP_5276-bioinformatics/RESULTS.md`) shows that both PLD catalytic
+motifs are intact (H170 and H414), at the same spacing as E. coli ClsC. Together with the
+PTHR21248-wide cardiolipin biosynthesis node (PTN000478698, which includes E. coli ClsC
+among its seeds), this is enough to accept the GO:0032049 process row, which was
+previously UNDECIDED. The exact reaction stays at GO:0030572 phosphatidyltransferase
+activity, because the phosphatidyl donor is untested. Q88CA5 is therefore not used as a
+representative of the module's PE-plus-PG ClsC (GO:0090483) annoton; it is listed in the
+module knowledge gaps instead.
