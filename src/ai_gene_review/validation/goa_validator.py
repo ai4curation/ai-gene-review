@@ -13,11 +13,11 @@ import yaml
 
 from ai_gene_review.tools.backfill_record_sections import load_marked
 
-# GO experimental evidence codes: the curator inspected direct experimental
-# results (and therefore read the cited paper, often its full text).
-EXPERIMENTAL_EVIDENCE_CODES: frozenset = frozenset(
-    {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+from ai_gene_review.evidence import (
+    EXPERIMENTAL_EVIDENCE_CODES as EXPERIMENTAL_EVIDENCE_CODES,
+    source_evidence_code,
 )
+
 # Author/curator-statement codes: still backed by a specific publication.
 AUTHOR_STATEMENT_CODES: frozenset = frozenset({"TAS", "NAS"})
 
@@ -147,7 +147,12 @@ class GOAAnnotation:
             go_id=row[4] if len(row) > 4 else "",
             go_term=row[5] if len(row) > 5 else "",
             go_aspect=row[6] if len(row) > 6 else "",
-            evidence_code=row[8] if len(row) > 8 else "",  # GO EVIDENCE CODE at index 8
+            # Prefer the source's GO shorthand; if none is supplied, preserve
+            # its actual ECO identifier for seeding and strict tuple matching.
+            # The downloaded TSV still has distinct ECO and GO-code columns.
+            evidence_code=source_evidence_code(
+                row[8] if len(row) > 8 else "", row[7] if len(row) > 7 else ""
+            ),
             evidence_type=row[7] if len(row) > 7 else "",  # ECO ID at index 7
             reference=row[9] if len(row) > 9 else "",
             with_from=row[10] if len(row) > 10 else "",

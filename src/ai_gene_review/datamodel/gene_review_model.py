@@ -717,7 +717,9 @@ class ModuleConnectionTypeEnum(str, Enum):
 
 class EvidenceType(str, Enum):
     """
-    Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
+    Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms,
+plus explicitly supported ECO identifiers when a source row omits its GO shorthand. Literal ECO
+identifiers preserve the source evidence; they are not inferred GO code mappings.
     """
     EXP = "EXP"
     """
@@ -822,6 +824,10 @@ class EvidenceType(str, Enum):
     IEA = "IEA"
     """
     Inferred from Electronic Annotation
+    """
+    ECOCOLON0007744 = "ECO:0007744"
+    """
+    combinatorial computational and experimental evidence used in manual assertion
     """
 
 
@@ -2418,6 +2424,14 @@ class GoCamQcFlagEnum(str, Enum):
     COMPLEX_SUBUNIT_REPRESENTATION = "COMPLEX_SUBUNIT_REPRESENTATION"
     """
     Complex represented with a complex term where a specific active subunit is known (or vice versa).
+    """
+    UNRESOLVED_COMPARTMENT = "UNRESOLVED_COMPARTMENT"
+    """
+    The activity's 'occurs in' term cannot be traced through is_a/part_of to any distinct spatial compartment (organelle lumen or membrane, cytosol, plasma membrane, extracellular region). The location may be obvious from context, e.g. chromatin (GO places chromosome outside the nucleus), but the model does not state it. See projects/GOCAM_COMPARTMENTS.md.
+    """
+    NONADJACENT_COMPARTMENTS = "NONADJACENT_COMPARTMENTS"
+    """
+    A causal edge from or to this activity connects compartments that do not share a boundary (e.g. cytosol directly to extracellular region, plasma membrane directly to nuclear lumen), implying a missing transport, secretion or translocation step or a wrong 'occurs in'. See projects/GOCAM_COMPARTMENTS.md.
     """
 
 
@@ -5985,7 +5999,7 @@ class ExistingAnnotation(ConfiguredBaseModel):
     qualifier: Optional[AnnotationQualifierEnum] = Field(default=None, description="""The GO annotation qualifier specifying the relationship between the gene product and the term. For MF annotations, distinguishes 'enables' (gene product has the activity independently) from 'contributes_to' (gene product contributes to a complex's activity but does not have the activity alone). For BP, distinguishes 'involved_in', 'acts_upstream_of', etc. For CC, distinguishes 'located_in', 'part_of', 'is_active_in', 'colocalizes_with'.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     extensions: Optional[list[AnnotationExtension]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     negated: Optional[bool] = Field(default=None, description="""Whether the term is negated""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation', 'RuleCondition', 'CuratedRuleCondition']} })
-    evidence_type: EvidenceType = Field(default=..., description="""Evidence code (e.g., IDA, IBA, ISS, TAS)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
+    evidence_type: EvidenceType = Field(default=..., description="""Source GO evidence code (e.g., IDA, IBA, ISS, TAS), or an explicitly supported ECO identifier when the source supplies no GO shorthand.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     original_reference_id: Optional[str] = Field(default=None, description="""ID of the original source reference, preserved as supplied by GOA/UniProt. Curate identifier replacements in references.reference_review.replacement and cite the actual evidence source in review.supported_by; do not rewrite this provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     retired: Optional[bool] = Field(default=None, description="""Whether the annotation is retired or replaced""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     isoform: Optional[str] = Field(default=None, description="""UniProt isoform identifier (e.g., \"P19544-1\" for WT1 isoform 1). Only populated when the annotation is specific to a particular isoform rather than the canonical protein sequence. Note that just because an experiment used a particular isoform doesn't mean the annotation is isoform-specific - it may apply to all isoforms. Use this field only when there is clear evidence the annotation is isoform-specific.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
