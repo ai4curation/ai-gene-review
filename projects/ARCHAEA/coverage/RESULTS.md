@@ -6,7 +6,7 @@ so far, not whole proteomes.
 
 | Species | Genes | Rows | IEA | IBA/phylogenetic | Similarity (ISS etc.) | Experimental | Curator/author |
 |---|---|---|---|---|---|---|---|
-| METJA | 10 | 52 | 71% | 13% | 4% | 12% | 0% |
+| METJA | 11 | 57 | 70% | 16% | 4% | 11% | 0% |
 | SULAC | 3 | 1 | 100% | 0% | 0% | 0% | 0% |
 | METAC | 1 | 5 | 60% | 0% | 40% | 0% | 0% |
 | METTP | 1 | 8 | 100% | 0% | 0% | 0% | 0% |
@@ -15,24 +15,25 @@ so far, not whole proteomes.
 | METS5 | 19 | 84 | 90% | 0% | 0% | 10% | 0% |
 | ACIAM | 1 | 2 | 100% | 0% | 0% | 0% | 0% |
 | SACS2 | 1 | 4 | 75% | 25% | 0% | 0% | 0% |
-| METTH | 16 | 71 | 94% | 0% | 1% | 4% | 0% |
+| METTH | 17 | 78 | 95% | 0% | 1% | 4% | 0% |
 | HALSA | 1 | 8 | 62% | 0% | 0% | 38% | 0% |
 | HALVD | 1 | 14 | 57% | 0% | 0% | 43% | 0% |
-| **All** | 57 | 267 | 85% | 3% | 2% | 10% | 0% |
+| KORCO | 1 | 3 | 67% | 33% | 0% | 0% | 0% |
+| **All** | 60 | 282 | 85% | 4% | 2% | 9% | 0% |
 
 ## Electronic rows by pipeline (all species)
 
 | Pipeline | Rows |
 |---|---|
-| InterPro2GO | 87 |
-| Combined multiple IEA methods | 74 |
+| InterPro2GO | 89 |
+| Combined multiple IEA methods | 79 |
 | TreeGrafter | 19 |
-| UniRule (shared sequence features) | 15 |
+| UniRule (shared sequence features) | 18 |
 | ARBA | 8 |
-| UniProtKB subcellular location mapping | 7 |
+| UniProtKB subcellular location mapping | 8 |
 | EC mapping | 6 |
+| GO logical inference | 5 |
 | UniPathway mapping | 4 |
-| GO logical inference | 4 |
 | UniProtKB keyword mapping | 3 |
 | Rhea mapping | 1 |
 
@@ -40,8 +41,8 @@ so far, not whole proteomes.
 
 | Code | Rows |
 |---|---|
-| IEA | 228 |
+| IEA | 240 |
 | IDA | 20 |
-| IBA | 8 |
+| IBA | 11 |
 | EXP | 6 |
 | ISS | 5 |

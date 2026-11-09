@@ -1,6 +1,6 @@
 ---
 title: "Archaeal GO annotation error patterns"
-species: [METTH, METJA, METS5, SACS2, ACIAM, SULAC]
+species: [METTH, METJA, METS5, SACS2, ACIAM, SULAC, KORCO]
 ---
 
 # Archaeal GO annotation error patterns
@@ -53,6 +53,16 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   into GO through Rhea-to-GO mapping, so the rules should be fixed first.
 - **Where else to look:** other enzymes of the 3HP/4HB cycle and other
   archaeal pathways that recruited enzymes from amino acid metabolism.
+
+- **Example (leads round):** METJA/hmd (Q58194), the [Fe]-hydrogenase. 43 of
+  the 50 Hmd entries sit in the pyrroline-5-carboxylate reductase subfamily
+  PTHR11645:SF0, and Q58194 inherits P5C reductase activity and proline
+  biosynthesis by IBA from node PTN000182176, whose seeds are all genuine P5C
+  reductases. Hmd reduces methenyl-H4MPT with H2 at its iron-guanylylpyridinol
+  cofactor and uses no NAD(P)H; its pairwise similarity to P5C reductases is at
+  background level (genes/METJA/hmd/hmd-bioinformatics/RESULTS.md). The review
+  removes both rows; the PTHR11645 family review already lists Q58194 as an
+  exception.
 
 ## 2. A plant-seeded PAINT node is propagated to an archaeal enzyme
 
@@ -369,15 +379,19 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   assay, and P60200 is the only donor of PAINT node PTN000078336, which
   propagates the term to two *Korarchaeum cryptofilum* proteins. Recorded as a
   suspected wrong reference in the review; full text not seen.
-- **Korarchaeum check (round 6):** *K. cryptofilum* encodes HdrABC and
-  Mvh/Frh-like hydrogenase subunits but no methyl-coenzyme M reductase and no
-  protein named for coenzyme M or coenzyme B synthesis (UniProt query of
-  taxon 374847, 2026-11-07). Its genome paper describes peptide fermentation
-  (PMID:18535141, abstract only; the full text could not be retrieved). A
-  CoB--CoM substrate is therefore unsupported for these two IBA targets,
-  though Hdr-like complexes in non-methanogens may reduce another disulfide.
-  Still a lead: it needs the genome paper's full text, or a PAINT review of
-  node PTN000078336.
+- **Korarchaeum, resolved (leads round):** KORCO/Kcr_0764 (B1L4Y3). The
+  *K. cryptofilum* genome has no methyl-coenzyme M reductase and no coenzyme M
+  synthesis genes (UniProt and InterPro survey of taxon 374847,
+  genes/KORCO/Kcr_0764/Kcr_0764-bioinformatics/RESULTS.md), and its genome
+  paper describes a peptide fermenter that never mentions coenzyme M or B
+  (PMID:18535141, now cached in full). The Hdr-like genes sit beside a carbon
+  monoxide dehydrogenase rather than in a methanogen Hdr arrangement. The IBA
+  from PTN000078336 therefore puts a substrate-specific activity on an
+  organism without the substrate; the review removes it and keeps the
+  protein's FAD and iron-sulfur electron-transfer role, with an unknown
+  partner. The second Korarchaeum target, Kcr_1115 (B1L5Y2), gets the same row
+  from the same node. The MCR-bearing korarchaeote is a different organism
+  (PMID:30833730).
 
 ## 21. A positive and a NOT row for the same term from the same paper
 
@@ -420,18 +434,25 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   family members use selenocysteine there, so the rule's keyword holds for
   only part of its family. Recorded as a UniProt source defect in the review.
 
-## Leads from round 7, not yet reviewed
+## 24. A UniProt rule applied in full to a paralog that lacks what the rule assumes
 
-- **mtrA2 (O27134, MTH_1062)** is a soluble MtrA paralog outside the mtr
-  operon, with no membrane anchor; HAMAP rule MF_01093 nevertheless gives it a
-  transmembrane segment inside the soluble domain, EC 7.2.1.4 and Mtr complex
-  membership (mtrA1 review, suggested question).
-- **Hmd in PTHR11645:** 43 of the 50 [Fe]-hydrogenase entries sit in the
-  pyrroline-5-carboxylate reductase subfamily PTHR11645:SF0, and
-  *M. jannaschii* Hmd (Q58194) receives P5C reductase and proline biosynthesis
-  IBA rows from node PTN000182176, which the existing PTHR11645 family review
-  already marks for pruning (pattern 1). The *M. thermautotrophicus* Hmd has
-  neither row.
+- **Example (leads round):** METTH/mtrA2 (O27134), a 183-residue soluble
+  paralog of the Mtr subunit MtrA, outside the mtr operon. HAMAP rule
+  MF_01093, written for the membrane-anchored operon subunit, is applied to it
+  in full: cell membrane, a single-pass transmembrane segment (residues
+  102-118, inside the soluble cobamide domain), EC 7.2.1.4, the Na+-coupled
+  reaction and Mtr complex membership. The rule's size range (183-262) and its
+  duplicate clause take in the paralogs on purpose, and its transmembrane
+  prediction runs on every sequence. mtrA2 aligns only to the first 180
+  residues of mtrA1 and has nothing matching its C-terminal anchor
+  (genes/METTH/mtrA2/mtrA2-bioinformatics/RESULTS.md). The review removes the
+  membrane, sodium transport and methyltransferase rows and keeps cobamide
+  binding; the rule's over-reach is recorded for UniProt.
+- **Fix:** a rule case that requires the C-terminal anchor for the membrane and
+  complex statements.
+
+## Leads still open
+
 - **GO:0018537** is named coenzyme F420-dependent N5,N10-*methenyl*tetrahydromethanopterin
   reductase activity, but its definition is the *methylene*-to-methyl reaction
   of Mer; the mer review proposes a rename.

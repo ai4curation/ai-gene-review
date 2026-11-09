@@ -2,9 +2,9 @@
 title: "Archaea"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
+species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD, KORCO]
 autolink_exclude: [ftsZ]
-genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC, frhB, frhG, mtd, MTH_1557, MTH_1559, ftr, mch, hmd, mer, mtrA1, mtrH, hdrB, mvhA]
+genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055, frhA, mtrA, hdrA, cofC, frhB, frhG, mtd, MTH_1557, MTH_1559, ftr, mch, hmd, mer, mtrA1, mtrH, hdrB, mvhA, mtrA2, Kcr_0764]
 ---
 
 # Archaea
@@ -22,13 +22,13 @@ fixation, bioleaching and thermostable enzymes), with **methanogens**
 (biomethane and power-to-gas) as a second DOE-facing theme and the
 haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 
-So far, forty-four new archaeal reviews are complete (a five-gene pilot, a
+So far, forty-seven new archaeal reviews are complete (a five-gene pilot, a
 second round of four, two rounds on the *M. sedula* CO2-fixation cycle and
 three rounds on hydrogenotrophic methanogenesis), the two pathways are built as modules, METAC mcrA has been revised, and the duplicate amoA
 reviews have been merged. Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
-thin, old experimental coverage. Twenty-three recurring error patterns are
+thin, old experimental coverage. Twenty-four recurring error patterns are
 collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
 largest affect hundreds of archaeal proteins each: InterPro2GO mappings
 that put catalytic activity on non-catalytic proteasome alpha subunits
@@ -270,6 +270,16 @@ GO term.
 
 Two interpro2go rows (IPR011251 and IPR036661, broadMatch) point to the new
 curated rule CR-0007.
+
+## Leads round (November 2026)
+
+Three reviews to test leads from earlier rounds.
+
+| Gene | Lead | Result |
+|---|---|---|
+| METTH mtrA2 | HAMAP MtrA rule on a soluble paralog | Held. The rule gives it a membrane location, a transmembrane segment inside its soluble domain and the Mtr complex reaction; it has no anchor. New pattern 24 |
+| METJA hmd | P5C reductase IBA on [Fe]-hydrogenase | Held. Both IBA rows removed as over-propagation to a divergent member (pattern 1); the activity rests on six crystal structures of this protein |
+| KORCO Kcr_0764 | Heterodisulfide reductase IBA in *Korarchaeum* | Held. No MCR and no coenzyme M synthesis in the genome, so the substrate-specific term does not fit; the protein keeps an electron-transfer role with an unknown partner (pattern 20) |
 
 ## Anchor organisms
 
