@@ -365,6 +365,28 @@ Arx, and enteroendocrine fate in the gut.
   non-developmental term. Pax4 is absent from the pineal body (gold) where
   Pax6 is present.
 
+**Double check on G6pc2.** Two further checks tested the gluconeogenesis
+removal.
+
+- **Targeted literature search.** The only direct measurement of glucose
+  production bearing on G6PC2 is a nominal human association: higher basal
+  hepatic glucose production in carriers of the fasting-glucose-raising
+  allele (p = 0.04, elderly twins; PMID:19669124). The review now weighs it.
+  No study measures glucose production in G6pc2-null mice, so that is a
+  suggested experiment.
+- **Blinded OpenScientist run.** It was given the neutral hypothesis but not
+  the review's decision, its reasoning or the Bgee report, and it reached
+  the same verdict from the literature alone. Its first proposed
+  confirmatory test was an expression-atlas cross-check of G6PC2 against its
+  paralogs, which is exactly what the held-out Bgee report contains. This is
+  the calibration result: expression corroborated a conclusion the
+  literature already supported, as rule 2 says it should.
+- **The PTN-level twist.** Chicken liver studies report a hepatic G6PC2
+  transcript. Bgee shows chicken G6PC1 is the liver and kidney paralog and
+  chicken G6PC2 is low everywhere, but chicken islets are not sampled. The
+  suggested PAINT loss was therefore narrowed from the whole G6PC2 clade to
+  the mammalian G6PC2 node (PTN000287500).
+
 Both reviews record source defects for the upstream resources and pose the
 PAINT node questions as suggested questions. The human genes are still
 unreviewed. Their IBAs come from the same nodes, so the same arguments should

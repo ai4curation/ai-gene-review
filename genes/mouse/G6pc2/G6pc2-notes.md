@@ -182,3 +182,23 @@ of hepatic or endogenous glucose production and for extra-islet expression.
   left as a question.
 
 Outcome: the REMOVE stands. The reason now weighs PMID:19669124 explicitly.
+
+## 2026-11-09: blinded OpenScientist check on gluconeogenesis
+
+Run: `just gene-hypothesis-research openscientist mouse G6pc2 --record-slug
+existing-go-0006094-remove --as-function-hypothesis` (3 iterations). The prompt held the neutral
+hypothesis "G6pc2 has gluconeogenesis (GO:0006094)", the term, the deep-research file and four
+PMIDs cited by this review (32213654, 23274894, 10078553, 25552595); it did not hold the REMOVE
+decision, its rationale, the Bgee report or the literature check above. Report:
+`G6pc2-hypotheses/function-hypothesis-go-0006094/openscientist.md`.
+
+- Verdict agrees: [file:mouse/G6pc2/G6pc2-hypotheses/function-hypothesis-go-0006094/openscientist.md
+  "The gluconeogenesis BP should be removed or flagged as a non-core, paralog-driven IBA
+  carry-over."] It keeps glucose-6-phosphatase activity and lists GO:0061179 among the process
+  terms that fit, as this review does.
+- It used no expression atlas. Its first proposed confirmatory test was an atlas cross-check of
+  G6PC2 against G6PC1/G6PC3 in gluconeogenic tissues, which the held-out Bgee report supplies, so
+  expression corroborated a conclusion the literature already supported.
+- Weaker than the review on two points: it calls G6pc2 absent from liver (trace expression is
+  reported), and it missed PMID:19669124 and the non-mammalian G6PC2 question.
+- Spot-checked quotations (PMID:32213654, PMID:23274894, PMID:10078553) are verbatim.
