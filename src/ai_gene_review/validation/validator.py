@@ -34,6 +34,9 @@ from ai_gene_review.validation.action_consistency import (
     go_ancestors,
 )
 from ai_gene_review.validation.nd_policy import check_nd_policy
+from ai_gene_review.validation.ontology_change_policy import (
+    check_ontology_change_policy,
+)
 from ai_gene_review.validation.paint_loss_check import check_paint_losses, has_paint_losses
 from ai_gene_review.validation.decomposition import (
     check_decomposition,
@@ -398,11 +401,12 @@ def validate_gene_review(
         check_best_practices_rules(
             data,
             report,
-            yaml_file_path if check_goa else None,
+            yaml_file_path,
             check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
             publications_dir=publications_dir,
             check_ontology=check_ontology,
+            check_goa=check_goa,
         )
         # Local sources need no network, so this runs even when reference
         # validation is off (validate-all's best-practices pass): the external
@@ -472,6 +476,7 @@ def check_best_practices_rules(
     progress_callback: Optional[Callable] = None,
     publications_dir: Optional[Path] = None,
     check_ontology: bool = False,
+    check_goa: bool = True,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -500,7 +505,8 @@ def check_best_practices_rules(
     validate_alternative_records(data, report)
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
-    check_nd_policy(data, report)
+    check_nd_policy(data, report, yaml_file)
+    check_ontology_change_policy(data, report)
     check_decomposition(
         data,
         report,
@@ -1023,14 +1029,20 @@ def check_best_practices_rules(
                             suggestion="Either use a term from ACCEPTED/NEW existing annotations/proposed replacements, or add supported_by references",
                         )
 
-                    # A core function with a BIOLOGY gap on the MF aspect may be a contested
-                    # activity deliberately left out of the NEW rows. The gap need not be about
-                    # this term, so keep the issue but lower it to INFO and drop the NEW advice.
+                    # A BIOLOGY gap on the MF aspect may mark a contested activity deliberately
+                    # left out of the NEW rows. Read the core function's own gaps, and the
+                    # top-level gaps only when this is the review's only core function. The
+                    # gap need not be about this term, so keep the issue but lower it to
+                    # INFO and drop the NEW advice.
+                    candidate_gaps = list(core_func.get("knowledge_gaps") or [])
+                    if len(data["core_functions"]) == 1:
+                        candidate_gaps += data.get("knowledge_gaps") or []
                     has_mf_gap = any(
                         isinstance(gap, dict)
-                        and "BIOLOGY" in (gap.get("gap_kind") or [])
+                        and isinstance(gap.get("gap_kind"), list)
+                        and "BIOLOGY" in gap["gap_kind"]
                         and gap.get("dark_aspect") == "MF_DARK"
-                        for gap in core_func.get("knowledge_gaps") or []
+                        for gap in candidate_gaps
                     )
                     if not is_from_annotations and has_support:
                         report.add_issue(
@@ -1038,7 +1050,7 @@ def check_best_practices_rules(
                             f"Core function term {term_id} ({term_label}) is not reflected in existing_annotations block",
                             path=f"core_functions[{i}].molecular_function",
                             suggestion=(
-                                "The core function has an MF_DARK knowledge gap; if that gap is about this "
+                                "The review has an MF_DARK knowledge gap; if that gap is about this "
                                 "activity, leaving it out of NEW rows is intended"
                                 if has_mf_gap
                                 else "Consider adding this term to existing_annotations with action: NEW if it's a novel annotation"
@@ -1225,7 +1237,7 @@ def check_best_practices_rules(
         )
 
     # Validate against GOA file if enabled
-    if yaml_file is not None and "existing_annotations" in data:
+    if check_goa and yaml_file is not None and "existing_annotations" in data:
         if progress_callback:
             progress_callback("Validating against GOA")
         goa_validator = GOAValidator()

@@ -26,3 +26,6 @@
 - A fresh search surfaced 2025 small-molecule and Num11 papers that mention CEK1
   pathway expression or phosphorylation; no newer primary CEK1 loss/add-back
   paper was found that should supersede the cached GOA evidence.
+- No direct C. albicans Cek1 localization paper was found, so the root cellular
+  component ND row remains compatible with the review's inferred PAINT
+  nucleo-cytoplasmic localization rows.

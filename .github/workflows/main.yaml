@@ -124,7 +124,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .cache/panther
-          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml', 'interpro/panther/panther-members-overrides.tsv') }}
           restore-keys: |
             panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
             panther-${{ runner.os }}-
@@ -193,6 +193,16 @@ jobs:
           steps.changes.outputs.infra == 'true' ||
           steps.changes.outputs.modules == 'true'
         run: just validate-modules
+
+      # Every supporting_text quote outside gene reviews (modules, family reviews,
+      # GO-CAM reviews, rules, projects) against its source: PMID/DOI against
+      # publications/, file:/Reactome: against the file on disk. Deliberately NOT
+      # path-scoped: a quote breaks when its *source* changes, and the source is
+      # usually a different file (a family review quoting a gene review, a module
+      # quoting a bioinformatics RESULTS.md). Path scoping is how the 20 stale
+      # family-review quotes in conf/quote_check_baseline.yaml went unnoticed (#6021).
+      - name: Validate supporting_text quotes (whole repo)
+        run: just validate-quotes
 
       # History records (append-only session provenance under history/, ported
       # from dismech) validate against src/ai_gene_review/schema/history.yaml.
@@ -419,10 +429,14 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: .cache/panther
-          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml', 'interpro/panther/panther-members-overrides.tsv') }}
           restore-keys: |
             panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
             panther-${{ runner.os }}-
+
+      - name: Settle PANTHER member index
+        if: steps.scope.outputs.run == 'true'
+        run: just ensure-panther-members
 
       - name: Test valid/invalid examples
         if: github.event_name == 'merge_group' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'

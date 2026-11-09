@@ -45,3 +45,7 @@ No new GO assertion was added.
 `just fetch-fitness PSEPK phnX` failed because neither a local FEBA database nor
 the remote source was reachable; no artifact was written. This is a data-access
 limitation, not a negative fitness result.
+
+## 2026-11-02
+
+Cytosol row changed from UNDECIDED to KEEP_AS_NON_CORE: phosphonates are imported before catabolism (PMID:37836707, "the import of phosphonates implies the involvement of transporters"), PhnX is a soluble signal-less HAD enzyme, and the PTHR43434 family review rates the cytosol IBD at PTN001291474 SOUND. No native-cell localization assay was found; the location stays non-core. Status promoted to COMPLETE; the openscientist deep-research file is now cited as a cross-checked source.

@@ -6,3 +6,7 @@ Pathway context: activates Lys2 (not a YeastCyc pathway gene); 4'-phosphopanteth
 - Genetics: [PMID:3921525 "lys2 and lys5 mutants contain blocks leading to the formation of this intermediate"].
 - NEW: GO:0018215 protein phosphopantetheinylation (IDA PMID:10320345). Comparator: QuickGO shows GO:0018215 on C. albicans LYS5 (Q59N08, CGD IDA/IGI) and Arabidopsis PPT (TAIR IDA). Lys5 itself performs the modification, so it passes the participation test.
 - All existing annotations accepted; Mg2+ binding non-core.
+
+## 2026-11-06 PTHR12215 audit
+
+Rechecked LYS5 against the local PTHR12215 PAINT slice. `PTN000259224` still supports cytosol, holo-[acyl-carrier-protein] synthase activity, and protein maturation, while the fungal `PTN000954835` node supports L-lysine biosynthesis. The legacy `GO:0005737 cytoplasm` TAS row should be narrowed to `GO:0005829 cytosol`; the SGD IMP row and fungal PAINT IBA justify listing L-lysine biosynthesis as a directly involved core process alongside protein phosphopantetheinylation.

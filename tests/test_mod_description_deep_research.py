@@ -99,3 +99,10 @@ def test_organism_folder_aliases(folder, mod):
 def test_looks_automated(curated, automated, expected):
     from ai_gene_review.etl.descriptions import looks_automated
     assert looks_automated(curated, automated) is expected
+
+
+def test_mgi_is_not_used(tmp_path: Path):
+    """MGI's note is a phenotype summary, so no mouse file is written (no network call)."""
+    status, path, message = emit_mod_deep_research("mouse", "Src", base_path=tmp_path, write=True)
+    assert (status, path) == ("skipped", None)
+    assert "phenotype" in message
