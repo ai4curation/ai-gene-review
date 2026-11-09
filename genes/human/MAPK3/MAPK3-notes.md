@@ -77,3 +77,22 @@ Replacement MF terms follow the MAPK1 review choices:
 - substrates/high-throughput partners without an informative MF (DHPS, TPR, RPS3, Eps8,
   Nsmf/Jacob, PKM, CDKN2AIP, PNKD, UNG, FAM135B, OTUD7B, MRFAP1L1, KLHL32, CD248, PADI3)
   -> REMOVE (removal does not mean the interaction is false).
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000117, ARBA:ARBA00026962) and TAS (PMID:19565474), both located_in, both
+MARK_AS_OVER_ANNOTATED before. No sub-compartment rows.
+
+Checks:
+- ARBA00026962 is a multi-family association rule without its own evidence; not used as support.
+- TAS review PMID:19565474 is abstract-only and does not mention mitochondria.
+- Direct human ERK1 evidence, PMID:19847302 (Galli 2009, HeLa, full text): [PMID:19847302 "we demonstrated the
+  presence of endogenous and recombinant hERK1 in purified non-contaminated mitochondria of HeLa cells"];
+  [PMID:19847302 "Approximately 15% of the hERK1-GFP molecules localized in mitochondria"]; ER contamination
+  checked [PMID:19847302 "5′ nucleotidase and glucose-6-phosphatase were determined in mitochondria from HeLa
+  cells"]. Serum stimulation moves ERK1 out towards the nucleus. Histone partners placed at the OMM by
+  proteinase K; the discussion speculates about matrix/TFAM.
+- Rodent ERK1/2 antibody data: PMID:18545666 (OMM and IMS subfractions), PMID:15030409 (OMM/IMS fraction).
+
+Outcome: both rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE. Stays at root (transient trafficking,
+disagreeing sub-mitochondrial lines). References added: PMID:18545666, PMID:15030409, PMID:19847302.

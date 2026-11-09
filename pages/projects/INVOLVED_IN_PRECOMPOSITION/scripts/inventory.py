@@ -39,6 +39,8 @@ import yaml
 
 REPO = Path(__file__).resolve().parents[3]
 INVOLVED_IN = " involved in "
+BIOLOGICAL_REGULATION = "GO:0065007"
+KEEP_LIST = Path(__file__).resolve().parent.parent / "keep_precomposed.yaml"
 
 # UniProt species code / repo folder -> suffix used in gocams/index.tsv gene_label
 INDEX_SPECIES = {
@@ -157,6 +159,41 @@ def decomposition(
     of live GO terms, returns that split, marked ``source: label_split`` (a
     heuristic: GO asserts no ``part_of`` here). A differentia filler that is
     itself an "involved in" term is flagged ``nested``.
+
+    A regulation term is flagged ``label_only`` when the "involved in Y" in its
+    label is entailed by its own definition: the genus is the bare
+    ``biological regulation``, there is no ``part_of`` differentia and no nested
+    filler, and Y (the label text after "involved in") is the label of an
+    is_a/part_of ancestor of the regulated process. Then there is no Y to
+    decompose away: GO:1901030 is ``positively_regulates`` GO:0097345 MOMP, and
+    GO:0097345 is itself ``part_of`` GO:0097190 apoptotic signaling pathway. A
+    grouping class with no differentia is not label-only (its Y is real but
+    missing from the axiom), and neither is a specific genus that ``regulates``
+    Y (GO:0071631 *mating pheromone secretion involved in positive regulation
+    of conjugation*).
+
+    >>> terms = {"GO:2": GoTerm(id="GO:2", name="momp", part_of=["GO:4"]),
+    ...          "GO:3": GoTerm(id="GO:3", name="x"), "GO:4": GoTerm(id="GO:4", name="y"),
+    ...          "GO:7": GoTerm(id="GO:7", name="z")}
+    >>> reg = GoTerm(id="GO:1", name="positive regulation of momp involved in y",
+    ...              intersection_of=[(None, "GO:0065007"), ("positively_regulates", "GO:2")])
+    >>> decomposition(terms, reg)["label_only"]
+    True
+    >>> unentailed = GoTerm(id="GO:8", name="positive regulation of z involved in y",
+    ...              intersection_of=[(None, "GO:0065007"), ("positively_regulates", "GO:7")])
+    >>> decomposition(terms, unentailed)["label_only"]
+    False
+    >>> grouping = GoTerm(id="GO:9", name="x involved in y", intersection_of=[(None, "GO:3")])
+    >>> decomposition(terms, grouping)["label_only"]
+    False
+    >>> xy = GoTerm(id="GO:5", name="x involved in y",
+    ...             intersection_of=[(None, "GO:3"), ("part_of", "GO:4")])
+    >>> decomposition(terms, xy)["label_only"]
+    False
+    >>> sec = GoTerm(id="GO:6", name="x involved in positive regulation of y",
+    ...              intersection_of=[(None, "GO:3"), ("positively_regulates", "GO:4")])
+    >>> decomposition(terms, sec)["label_only"]
+    False
     """
     if t.intersection_of:
         genus = [g for rel, g in t.intersection_of if rel is None]
@@ -182,7 +219,45 @@ def decomposition(
     else:
         return None
     out["nested"] = any(INVOLVED_IN in d["label"] for d in out["differentia"])
+    out["label_only"] = label_only(terms, t, out)
     return out
+
+
+def label_only(terms: dict[str, GoTerm], t: GoTerm, dec: dict) -> bool:
+    """Whether a decomposition's "involved in Y" is entailed by its regulated process.
+
+    See :func:`decomposition` for the rule and examples.
+    """
+    if (
+        dec["source"] != "logical_definition"
+        or dec["nested"]
+        or dec.get("genus", {}).get("id") != BIOLOGICAL_REGULATION
+        or not dec["differentia"]
+        or any(d["relation"] == "part_of" for d in dec["differentia"])
+        or INVOLVED_IN not in t.name
+    ):
+        return False
+    y = t.name.removeprefix("obsolete ").split(INVOLVED_IN, 1)[1]
+    return any(
+        y in {label(terms, a) for a in ancestors(terms, d["id"])}
+        for d in dec["differentia"]
+    )
+
+
+def load_keep(path: Path) -> dict[str, str]:
+    """Term id -> reason for the curated KEEP_PRECOMPOSED terms.
+
+    >>> import tempfile
+    >>> p = Path(tempfile.mkdtemp()) / "keep.yaml"
+    >>> _ = p.write_text("- id: GO:1\\n  label: a involved in b\\n  reason: stage term\\n")
+    >>> load_keep(p)
+    {'GO:1': 'stage term'}
+    >>> load_keep(p.with_suffix(".missing"))
+    {}
+    """
+    if not path.exists():
+        return {}
+    return {e["id"]: e["reason"] for e in yaml.safe_load(path.read_text()) or []}
 
 
 def pattern_of(
@@ -407,10 +482,14 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--go", type=Path, required=True, help="GO go.obo (full)")
     ap.add_argument("--out", type=Path, required=True, help="output directory")
+    ap.add_argument(
+        "--keep", type=Path, default=KEEP_LIST, help="curated KEEP_PRECOMPOSED terms"
+    )
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
     terms = parse_obo(args.go)
+    keep = load_keep(args.keep)
     data_version = next(
         (
             line.split(": ", 1)[1].strip()
@@ -421,6 +500,11 @@ def main() -> None:
     )
     labels = by_label(terms)
     inv = {tid: t for tid, t in terms.items() if INVOLVED_IN in t.name}
+    unknown = sorted(set(keep) - set(inv))
+    if unknown:
+        raise SystemExit(
+            f"{args.keep}: not 'involved in' terms in {args.go}: {unknown}"
+        )
 
     go_rows = []
     for tid, t in sorted(inv.items()):
@@ -504,6 +588,8 @@ def main() -> None:
             }
             if dec:
                 row["decomposition"] = dec
+            if tid in keep:
+                row["kept"] = True
             row["gocam_same_gene"] = {
                 "activities": len(same_hits),
                 "covers_genus": sum(h.get("covers_genus", False) for h in same_hits),
@@ -577,11 +663,16 @@ def main() -> None:
     }
 
     # Module candidates: group rows by the differentia filler (the "Y" context),
-    # and record which modules already mention Y's GO id.
+    # and record which modules already mention Y's GO id. Label-only rows are
+    # skipped: their filler is the regulated process, not a context to model.
+    # Kept rows are skipped too: their term is not being decomposed.
     by_ctx: dict[str, set[str]] = defaultdict(set)
     ctx_label: dict[str, str] = {}
     for r in ann_rows:
-        for d in (r.get("decomposition") or {}).get("differentia", []):
+        dec = r.get("decomposition") or {}
+        if dec.get("label_only") or r.get("kept"):
+            continue
+        for d in dec.get("differentia", []):
             by_ctx[d["id"]].add(r["gene"])
             ctx_label[d["id"]] = d["label"]
     candidates = [
@@ -604,8 +695,26 @@ def main() -> None:
         ),
     }
 
+    label_only_ids = {
+        i for i, t in inv.items() if (decomposition(terms, t) or {}).get("label_only")
+    }
+    for a in authored:
+        tid = a["term"].split()[0]
+        if tid in label_only_ids:
+            a["label_only"] = True
+        if tid in keep:
+            a["kept"] = True
+    summary["review_annotations"]["rows_label_only"] = sum(
+        r["term"]["id"] in label_only_ids for r in ann_rows
+    )
+    summary["review_annotations"]["rows_kept"] = sum(
+        bool(r.get("kept")) for r in ann_rows
+    )
     summary["authored_precomposed"] = {
         "uses": len(authored),
+        "uses_label_only": sum(bool(a.get("label_only")) for a in authored),
+        "uses_kept": sum(bool(a.get("kept")) for a in authored),
+        "terms_kept": sorted(keep),
         "genes": len({a["gene"] for a in authored if "gene" in a}),
         "modules": len({a["module"] for a in authored if "module" in a}),
         "by_slot": dict(Counter(a["slot"] for a in authored).most_common()),
