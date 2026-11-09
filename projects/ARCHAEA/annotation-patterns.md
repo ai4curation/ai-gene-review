@@ -403,10 +403,12 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   flavin monooxygenases of the fold (bacterial luciferase, alkanesulfonate
   monooxygenase), but Mer binds no flavin, uses no O2 and transfers a hydride
   from reduced F420 (PMID:2298726). The review removes the row.
-- **Scale:** 18 InterPro families of F420-dependent luciferase-like enzymes
-  hold 51,170 UniProtKB entries, 51,118 of which carry the term (1,491
-  archaeal); the other 96,336 luciferase-like proteins are not in an F420
-  family (UniProt, 2026-11-07).
+- **Scale:** within the luciferase-like domain entry IPR011251 (147,506
+  UniProtKB entries), the 18 InterPro families of F420-dependent enzymes hold
+  51,170, of which 51,118 carry the term (1,491 archaeal); the other 96,336
+  are not in an F420 family (UniProt, 2026-11-07). Counting the domain and the
+  superfamily entry IPR036661 together, as the CR-0007 validation run does,
+  the mappings cover 150,375 entries, the rule keeps 98,872 and drops 51,503.
 - **Fix:** curated rule [CR-0007](../../rules/curated/CR-0007.yaml) keeps the
   term for the fold except members of the F420 families. Related to patterns 1
   and 14 (an activity named after the family's best-known member).

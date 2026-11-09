@@ -227,8 +227,10 @@ IPR018194, IPR005778). Two tooling issues turned up:
 
 - The action-consistency check groups a NOT row with positive rows on the
   same term, so cofC warns about inconsistent actions on opposite claims.
-- The quote validator strips `[NiFe]` as if it were an editorial bracket,
-  although it keeps `[4Fe-4S]`. The frhA quotes work around it with `...`.
+- The quote validator stripped `[NiFe]` as if it were an editorial bracket,
+  although it kept `[4Fe-4S]`. Fixed by a literal-bracket pattern for
+  element-symbol formulae in `conf/reference_validator_config.yaml`; the Frh
+  quotes now give `[NiFe]` verbatim.
 
 The [coverage report](ARCHAEA/coverage/RESULTS.md) counts GOA rows by evidence
 code over all reviewed archaeal genes.
