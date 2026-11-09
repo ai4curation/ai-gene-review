@@ -150,6 +150,11 @@ This will create a file like `GENE-deep-research-perplexity.md`. You can also ma
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
 
+Preserve existing provider research and its artifacts verbatim. Do not manually edit
+them or rerun generation over them as part of routine curation. Generate missing
+research only; refresh existing output only when explicitly requested. Record
+corrections and disagreements in notes, `reference_review`, or `source_defects`.
+
 For non-human genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, ...). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
 
 A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same

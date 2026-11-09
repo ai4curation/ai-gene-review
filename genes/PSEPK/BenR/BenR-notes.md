@@ -206,3 +206,8 @@ The cached UniProt Q88I42 record maps to chromosomal benR/PP_3159 but its ARBA-d
 ### Structured targets and remaining gaps
 
 See BenR-regulatory-evidence.yaml for the supported promoter relationship, experimental host context, pathway-regulatory mechanism and directness limitation. Only one promoter relationship is captured here; this is not a complete regulon. The published ten-member BenR iModulon remains expression association and supplies no additional direct targets. A direct biochemical ligand assay, purified promoter-binding assay and native-context tests of substituted benzoates remain evidence needs.
+
+
+## 2026-11-10 — preserve the original provider research
+
+The 2026-11-08 Falcon command rewrote an existing provider report from cached output. Restored the report and its associated artifacts byte-for-byte from before this batch (parent of commit 8e42884c19). Provider output must not be manually corrected or incidentally replaced during curation. The primary-source assessments and curation decisions above remain in these notes and the review YAML.
