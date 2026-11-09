@@ -30,3 +30,12 @@ A second catalytic context records cleavage of nuclear chromatin in dying cells,
 The two newly fetched sources add direct biochemical support. [PMID:14646506](https://doi.org/10.1023/A:1009692807692) reports human Trx-DNase gamma chromatin cleavage with Ca/Mg or Mn dependence. [PMID:10807908](https://doi.org/10.1074/jbc.M001087200) reports recombinant human nuclease cleavage and in-vitro PARP modification with loss of activity; its transfected cellular experiments use mouse skin fibroblasts. Both normal caches are abstract-only, and bounded publisher attempts did not recover full Methods. No liposome assay is attributed to either abstract. Microparticle substrate evidence remains grounded in the independently read PMID:27293190 original.
 
 GO:0004530 describes DNA cleavage chemistry, not identity with the DNASE1 gene or susceptibility to G-actin. Its existing phylogenetic assertion and biochemical grounding are retained; UniProt's partial EC number does not negate the reaction class. The inspected studies do not establish every end-product distribution independently. The natural 275-residue product remains distinct from engineered terminal deletions and tagged constructs; historical assays are not automatically assigned to every splice product. Product descriptions now state biology, with these interpretation limits retained here. All 31 imported source dictionaries, both product identities and existing caches are unchanged.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IDA (PMID:23229555) and IEA (GO_REF:0000044, SL-0095), both `located_in`; no ER sub-compartment rows.
+
+- UniProt ER line is curated: "Endoplasmic reticulum {ECO:0000269|PubMed:23229555}" (file:human/DNASE1L3/DNASE1L3-uniprot.txt).
+- PMID:23229555 (Errami et al. 2013; abstract only in cache and through the PubMed tool): [PMID:23229555 "In HT-29 cells, endogenous DNAS1L3 localized to the endoplasmic reticulum (ER) and translocated to the nucleus upon apoptosis induction but prior to INDF manifestation"].
+- Sequence: SIGNAL 1..20, soluble chain 21..305, no KDEL-type C-terminus (ends ...KSKRS, the basic region 284-305 needed by similarity for activity on liposome-coated DNA; not a di-lysine signal, which needs a cytosolic tail). Also secreted (PMID:9714828 per UniProt).
+- Outcome: both rows KEEP_AS_NON_CORE held (endogenous protein in a native cell, ADIPOQ rule). No NEW lumen row: one line (signal peptide) against secretion and an ER-to-nucleus move; stays at the root.

@@ -202,3 +202,7 @@ the supporting claim is the SRP40-depletion phenotype - box H/ACA snoRNAs are
 destabilized after SRP40 loss - rather than a curated interaction with `SHM2` or
 `ADE3`, the row now uses `IMP`, matching the RRB1 `GO:0042254` comparator for a
 similar chaperone-depletion phenotype.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[3], GO:0003674 molecular_function (ND, GO_REF:0000015), ACCEPT: the ND may be stale. SRP40-deep-research-falcon.md cites yeast work (Verheggen et al. 2001, on box C/D snoRNA trafficking to the nucleolar body) reporting that snoRNAs interact with Srp40p in the nucleolar body, and a textbook source (Nierhaus 2004) for Srp40p associating with both snoRNP classes and with the largest subunit of RNA polymerase I. Those reports may identify a binding or snoRNP-chaperone molecular function for this gene product in S. cerevisiae. The primary papers are not cached, so a curator should check whether any of them supports an MF annotation. The review action was left unchanged.

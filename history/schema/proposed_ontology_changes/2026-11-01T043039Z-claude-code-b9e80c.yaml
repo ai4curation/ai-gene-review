@@ -1,0 +1,46 @@
+history_version: 1
+target:
+  kind: schema
+  slug: proposed_ontology_changes
+  path: src/ai_gene_review/schema/gene_review.yaml
+session:
+  id: 2026-11-01T043039Z-claude-code-b9e80c
+  timestamp: '2026-11-01T04:30:39Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    model: claude-opus-5
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - validation
+  - render
+  - tools
+  - projects
+  - docs
+  summary: Extend proposed_ontology_changes to project-page frontmatter; backfill
+    two obsoletion projects
+  details: |
+    Closes the gap the previous session recorded: a project-wide obsoletion had no home, because the slot existed only on gene and module reviews while the arguments live in roughly 30 projects/*_OBSOLETION.md pages.
+
+    A project page is markdown, so LinkML never validates its frontmatter. validate_change_entries supplies the structural gate instead, reading the required fields, the allowed fields and the permissible change_type values out of the schema file (raw YAML, cached; SchemaView takes 10.2s to build against 0.22s and is not needed for those three facts). tests/test_project_frontmatter.py applies it to every project page, render-projects reports rejects as page warnings, and the exporter now collects projects/**/*.md alongside the two review kinds. The project template gains a Proposed ontology changes table.
+
+    Design correction the backfill forced. The first version of the project gate excluded any entry with a policy violation, which dropped a structurally fine record because its report_status: FIXED carried no tracker link. That is inconsistent with gene and module reviews, where the same checks are WARNING severity and exclude nothing. Split into structural errors (missing or unknown field, change_type outside the enum, term field with no id) which exclude, and change_policy_warnings() which is advisory and excludes nothing. The renderer phrases the two differently.
+
+    Backfilled two projects, chosen because they are the two shapes of the direct/non-direct distinction:
+
+    VESICLE_TETHERING_OBSOLETION, six entries - five NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT plus the IPR028280 Njmu-R1 mapping removal, which is recorded here rather than on a module because no module curates Njmu-R1. GO records no replaced_by for any of the five: a BP cannot be replaced outright by an MF, so GO:7770062 is consider only.
+
+    AMINO_ACID_ACTIVATION_OBSOLETION, four representative entries (two cytosolic, two mitochondrial) of 43. These are the opposite shape: each carries a formal replaced_by to its block's generic process (GO:0006418 or GO:0070127), a BP replaced by a BP, which is legitimate, while GO's obsoletion comment separately names the 1:1 MF to annotate instead. So has_direct_replacement and has_nondirect_replacement on one entry. The rule that survives both cases: what can be repointed mechanically is direct, what needs a curator per annotation is not; same-aspect-ness is a consequence, not the test.
+
+    Only four of the 43 are recorded. The other 39 are mechanically derivable from the markdown tables already on that page, so transcribing them would duplicate those tables in a second format with no new information. A generator that reads a project's own tables is the right answer and is recorded in docs as still open.
+
+    Both project pages' audits were stale, in the same direction, and both are corrected. Vesicle tethering said two of five terms were obsolete as of 2026-09-26; a QuickGO recheck on 2026-11-01 found all five obsolete. Amino acid activation said all 43 were live as of 2026-08-29; the four rechecked are obsolete, which means its 15 affected reviews now cite obsolete terms while the page is still marked SCOPING. Nothing in this schema detects that: report_status is a curator's assertion and no check compares it against the live ontology. A periodic audit re-querying each about_node would have caught both, and is recorded as the follow-up.
+
+    Validation: 1737 tests and 30 doctests pass; ruff and mypy clean. The exporter now reports 15 changes across all three homes (4 on a module, 6 and 4 on the two project pages).

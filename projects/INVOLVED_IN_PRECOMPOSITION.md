@@ -10,9 +10,9 @@ species: [human, mouse, DROME, worm, DICDI, yeast]
 **Bottom line:** GO contains 784 live terms whose label reads "X involved in
 Y", and it has already obsoleted 1,265 more, 883 of them with a comment that
 the term "is pre-composed and should be captured as a GO-CAM model". Our gene
-reviews use 320 distinct such terms in 1,204 `existing_annotations` rows
-across 613 genes (28 species folders); 14 of those rows sit on
-obsolete terms. The schema could not say where the Y context goes when a
+reviews use 349 distinct such terms in 1,462 `existing_annotations` rows
+across 735 genes (39 species folders, `species_folders` in `data/summary.yaml`);
+8 of those rows sit on obsolete terms (14 when the project started). The schema could not say where the Y context goes when a
 term is replaced by its X. This project added `decomposed_into` to MODIFY
 (pointing at a module, a GO-CAM or the gene's core functions, or recording that
 Y is not carried), worked the 14 obsolete-term rows and a chaperone-mediated
@@ -114,28 +114,30 @@ here.
 |---|---|
 | live "involved in" terms in GO | 784 (BP 728, MF 53, CC 3) |
 | obsolete "involved in" terms | 1,265 (883 with a GO-CAM comment) |
-| review rows using one | 1,204 rows, 320 terms, 613 genes |
-| rows on already-obsolete terms | 14 |
-| rows on nested terms (Y is itself "… involved in …") | 254 |
-| rows whose existing review already records an extension | 1 |
-| rows where the gene is in any cached GO-CAM | 290 |
-| rows where a GO-CAM of the same gene realizes Y | 31 |
+| review rows using one | 1,462 rows, 349 terms, 735 genes |
+| rows on already-obsolete terms | 8 |
+| rows on nested terms (Y is itself "… involved in …") | 332 |
+| rows whose existing review already records an extension | 5 |
+| rows where the gene is in any cached GO-CAM | 355 |
+| rows where a GO-CAM of the same gene realizes Y | 35 |
 | rows where a same-symbol GO-CAM in another species realizes Y | 22 (lower bound: the script maps 12 species folders to GO-CAM index labels, and rows in the other folders get no same-symbol hit) |
-| rows whose gene is named in a module | 640 |
+| rows whose gene is named in a module | 735 |
+| rows on label-only terms (Y entailed by the regulated process; see round 3) | 11 |
+| rows on terms kept as the right grain (`keep_precomposed.yaml`; see round 5) | 41 |
 
-Figures refreshed 2026-10-27, after merging `main`; they are a snapshot, and
+Figures refreshed 2026-11-07, after merging `main`; they are a snapshot, and
 `data/summary.yaml` is authoritative. The first snapshot
 (2026-10-18) had 1,023 rows over 519 genes. Current review actions on these
-rows (after round 2): KEEP_AS_NON_CORE 582, ACCEPT 294, MODIFY 129,
-MARK_AS_OVER_ANNOTATED 94, UNDECIDED 63, REMOVE 23, NEW 18, TOO_GENERAL 1. Apart from the rows this
+rows (after round 5): KEEP_AS_NON_CORE 699, ACCEPT 358, MODIFY 160,
+MARK_AS_OVER_ANNOTATED 116, UNDECIDED 77, REMOVE 26, NEW 17, TOO_GENERAL 9. Apart from the rows this
 project decomposed, the existing MODIFYs do not decompose: in the first
 snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves to a different term (e.g.
 `DNA strand elongation involved in DNA replication` → `G1/S transition of
-mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 324,
-IEA 265, ISS 176, IDA 128, IBA 96, IGI 79, other 136.
+mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 368,
+IEA 310, ISS 193, IDA 160, IBA 112, ISO 110, IGI 83, other 115.
 
-By organism folder (`by_organism` in `data/summary.yaml`): human 662 rows,
-mouse 149, DROME 95, worm 87, DICDI 75, yeast 34, DANRE 19, other 83.
+By organism folder (`by_organism` in `data/summary.yaml`): human 737 rows,
+mouse 150, rat 140, DROME 120, worm 88, DICDI 75, yeast 35, other 106.
 
 ### Rows on already-obsolete terms (fix first)
 
@@ -184,8 +186,8 @@ the GAF.
 ### Recurring Y contexts
 
 [`data/module_candidates.yaml`](INVOLVED_IN_PRECOMPOSITION/data/module_candidates.yaml)
-groups rows by Y. There are 194 contexts; 76 have three or more genes, and
-57 of those are named by no module (crude test: the GO id does not appear in
+groups rows by Y. There are 197 contexts; 94 have three or more genes, and
+70 of those are named by no module (crude test: the GO id does not appear in
 any module YAML). They are **not** a module to-do list. Read them through the
 module policy below: some Y's are really mechanisms (module material), most
 are tissue or developmental contexts (not).
@@ -249,7 +251,9 @@ saying where Y went:
 | **A. MF `part_of` BP** | 77 | MODIFY to the MF. Y goes to the mechanism module or GO-CAM, or to a `core_function` (MF + `directly_involved_in: [Y]`) if core. |
 | **B. BP `part_of` BP** | 586 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
 | **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
-| **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition. |
+| **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition, unless the term turns out to be the right grain (GO:0106074, round 5: see *Kept terms*). |
+| **Kept terms** (any class) | 41 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
+| **E. label-only** | 11 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
 
 Outcomes:
 
@@ -328,8 +332,9 @@ The gene-review HTML template shows `decomposed_into` as badges.
 
 Each case is recorded in the gene review with `decomposed_into` and validates
 cleanly. After round 1, 15 rows carried a recorded decomposition (16 before
-human DNMT1 was retired upstream); round 2 brings `rows_decomposition_recorded`
-in `data/summary.yaml` to 34.
+human DNMT1 was retired upstream). After round 3, `rows_decomposition_recorded`
+in `data/summary.yaml` is 47; besides this project's rows, that includes
+decompositions recorded by other reviews merged to `main`.
 
 ### The obsolete-term rows
 
@@ -410,12 +415,246 @@ terms, core-function terms and isoform-specific terms that a review
 introduced, rather than GOA rows it reviewed, plus combined terms used
 anywhere in a module annoton (function, processes, targets). These are in
 [`data/authored_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/data/authored_precomposed.yaml).
-After this round there are 304 uses: 281 across 165 genes (152 in
-`directly_involved_in`, 116 as MODIFY replacements, 11 as core-function MFs
-and 2 as isoform-specific terms) and 23 in 12 modules (22 as annoton
-processes, led by GO:1901029/GO:1901030 in `bcl2_family_momp_control`, and 1
-as an annoton function, GO:0099626 in `synaptic_vesicle_exocytosis`). This is a second work stream:
+After round 4 there are 314 uses: 283 across 171 genes (164 in
+`directly_involved_in`, 111 as MODIFY replacements, 6 as core-function MFs
+and 2 as isoform-specific terms) and 31 in 12 modules (30 as annoton
+processes and 1 as an annoton function, GO:0099626 in
+`synaptic_vesicle_exocytosis`). 56 of them are on the label-only MOMP terms
+(round 3) and are flagged `label_only`; they need no decomposition. 49 more
+are on the two terms kept in round 5 and are flagged `kept`. That leaves 209
+to work through. Label-only and kept rows are also left out of
+`module_candidates.yaml`: a label-only filler is the regulated process, and a
+kept term is not being decomposed, so neither is a context to model. This is a second work stream:
 reviews have been actively moving annotations *toward* these terms.
+
+## Worked cases (round 3): label-only MOMP terms and ATG8 lipidation
+
+Round 3 started with the largest group of reviewer-authored combined terms
+and found it was not precomposed at all.
+
+### GO:1901030 / GO:1901029 *(positive / negative) regulation of MOMP involved in apoptotic signaling pathway* — no decomposition
+
+56 authored uses (BID, PMAIP1, BBC3, BCL2L11, MCL1, BCL2, and 10 annoton
+processes in `bcl2_family_momp_control` and `trail_apoptotic_signaling`) plus
+10 GOA rows (BAK1, GSK3B, LRRK2, rat Gsk3b, ACAA2, HSPA1A, SLC25A5). GO's
+logical definition of GO:1901030 is `biological regulation and
+positively_regulates GO:0097345` *mitochondrial outer membrane
+permeabilization*, with no `part_of` differentia. The "involved in apoptotic
+signaling pathway" is only in the label. It is entailed rather than added,
+because GO:0097345 is itself defined as MOMP "as part of the apoptotic
+signaling pathway" (`part_of` GO:0097190). Removing the context leaves the
+same term; there is no broader *regulation of MOMP* class to move to, and
+GO:1901028 lists "regulation of MOMP" as an EXACT synonym. **Outcome: keep
+every row; no decomposition.** The BH3-only, BCL-2 and BAK rows are judged
+on their own evidence as before.
+
+This is a new triage class, **E. label-only**: a regulation term whose
+"involved in Y" is entailed by its own definition. The rule tests that
+entailment directly: the genus is the bare *biological regulation*, there is no
+`part_of` differentia and no nested filler, and Y (the label text after
+"involved in") is an `is_a`/`part_of` ancestor of the regulated process. The
+inventory flags these terms, their rows (`rows_label_only`) and their authored
+uses (`label_only: true`, `uses_label_only`), so they no longer count as
+decomposition work. Four live GO terms qualify: the three MOMP regulation terms
+(GO:1901028/29/30) and GO:0061081 *positive regulation of myeloid leukocyte
+cytokine production involved in immune response*, whose regulated process
+GO:0061082 is_a GO:0002367 *cytokine production involved in immune response*.
+GO:0061081 is the weakest of the four: its entailment runs through GO:0002367,
+which is itself precomposed and in this project's queue. If GO retires
+GO:0002367 and re-parents GO:0061082, the "immune response" ancestor may go and
+the term will drop out of class E on the next inventory run. The MOMP terms
+have no such dependency: GO:0097345's `part_of GO:0097190` is a plain context
+axiom.
+
+Not class E:
+
+- **Grouping intersections.** GO:0003006 *developmental process involved in
+  reproduction* is defined as `GO:0022414 reproductive process and GO:0032502
+  developmental process`, and GO:0022412 likewise. Y is in the axiom as a
+  second genus, not as a `part_of`, so these stay class D-ii. The inventory
+  records only the first genus of such two-genus definitions.
+- **Regulation terms whose Y is not entailed.** GO:0051946/GO:0051951
+  *(positive) regulation of glutamate uptake involved in transmission of nerve
+  impulse* regulate GO:0051935 glutamate reuptake, which has no ancestor
+  labelled "transmission of nerve impulse".
+- **A specific genus that `regulates` Y.** GO:0071631 *mating pheromone
+  secretion involved in positive regulation of conjugation with cellular
+  fusion* has a real Y.
+
+GO's synonyms on GO:1901030 and GO:1901029 call the context-free phrase BROAD,
+which disagrees with the logical definition; that is upstream ticket 5.
+
+### GO:0061739 *protein lipidation involved in autophagosome assembly* → GO:0006501 *C-terminal protein lipidation*
+
+| Gene | Rows | Outcome |
+|---|---|---|
+| human ATG7 (IDA, PMID:37943659) | 1 | `DECOMPOSE_MODEL`: MODIFY to the genus with `decomposed_into` (`metazoan_autophagosome_biogenesis#atg7_e1`, `in_core_functions`). The ATG8 substrate stated in GO:0061739's definition is carried by the core MF, GO:0019779 *Atg8 activating enzyme activity*. |
+| yeast ATG7 (IDA/IMP) | 6 | The rows were already on the genus, and an earlier pass had MODIFYed them to GO:0061739; they are reversed to ACCEPT. That earlier reasoning itself noted that Atg8-PE conjugation also serves the Cvt pathway, so the autophagosome-only child was too narrow for yeast. |
+| human and HORSE ATG3 | 3 | MODIFYs from protein ubiquitination / protein targeting to membrane now target the genus. |
+| worm atg-3, atg-7 | 2 | Reviewer-proposed NEW rows now on the genus. |
+| core functions (ATG3 ×2, ATG7, atg-3, atg-7) | 5 | `directly_involved_in` GO:0061739 → GO:0006501; each already lists GO:0000045 *autophagosome assembly*. |
+| `metazoan_autophagosome_biogenesis` | 3 annotons | The E1, E2 and E3-like annotons' process is now the genus; the module is the context. The `atg8_conjugation` node keeps GO:0061739 as its concept, because a node concept maps the step to its exact GO class rather than annotating a gene. If GO obsoletes GO:0061739, the concept becomes GO:0006501, with the step's ATG8 substrate stated in the node description. |
+
+Why the decomposition is safe: every ATG3/ATG7 review already accepts
+GO:0000045 and lists it in its core functions, so the context is carried
+without the precomposed term, and the MFs name the Atg8-family substrate.
+Human ATG16L1 already accepts GO:0006501 (IDA), so the decomposed form was
+established in the corpus. Participation check: the E1 and E2 catalyse steps of
+the conjugation cascade, so a lipidation process term is theirs. They are not
+substrates. ATG8 lipidation also occurs outside autophagosome assembly (the
+yeast Cvt pathway; LC3-associated phagocytosis and conjugation to single
+membranes in animals), which is a second reason to prefer the genus.
+
+### Lessons from round 3
+
+1. **Read the logical definition before decomposing.** The label pattern
+   "X involved in Y" overcounts: when the definition has no `part_of`, the Y
+   is either entailed by X's own definition (MOMP) or absent (grouping
+   classes).
+2. **The genus can be the better term, not just the shorter one.** For
+   yeast ATG7, the precomposed child excluded a context in which the gene
+   acts (Cvt).
+3. **A node concept is not an annotation.** Module annotons take the genus;
+   the node that models the step may keep the exact precomposed class as its
+   concept.
+
+## Worked cases (round 4): cadherin binding
+
+GO:0098641 *cadherin binding involved in cell-cell adhesion* (class A, MF
+`part_of` BP) is defined as `GO:0045296 cadherin binding and part_of
+GO:0098609 cell-cell adhesion`. It is also `is_a` GO:0098632 *cell-cell
+adhesion mediator activity*. That looked like a possible lateral target, but
+GO:0098632 is itself defined as `GO:0005515 protein binding and part_of
+GO:0098609`. Its label doesn't say "involved in", but its definition is the same
+X-plus-context shape, so moving to it would not decompose anything. The
+decomposition is to the genus GO:0045296, with cell-cell adhesion carried by
+the core functions. Every cadherin review already lists a cell-cell adhesion
+process there: GO:0007156 *homophilic cell-cell adhesion* (CDH1), GO:0044331
+*cell-cell adhesion mediated by cadherin* (CDH2, CDH3, CDH11, FAT4), and
+GO:0098609 (DSG2, DSC2; DSG2 also GO:0002159 *desmosome assembly*). No module
+covers adherens junctions or desmosomes yet; under the module policy that
+would be a mechanism worth modelling, but it is not needed to place the
+context here.
+
+| Gene | Rows | Outcome |
+|---|---|---|
+| CDH2, CDH3, CDH11 (IBA) | 3 | The rows were already on the genus, and an earlier pass had MODIFYed them to GO:0098641; they are reversed to ACCEPT. Their `propagation_review` changes from TERM_SCOPING_PROBLEM/GRANULARITY_MISMATCH to NO_FAILURE_CORE, and the earlier reasoning is labelled superseded. |
+| DSG2 ×3 and DSC2 ×2 (IPI, from protein binding) | 5 | MODIFY replacements now target the genus; the row-specific summaries are kept. |
+| CDH1 (IDA, on GO:0098631 *cell adhesion mediator activity*) | 1 | GO:0045296 is not under GO:0098631, so moving there would drop the claim that the binding mediates adhesion. The row is refined within its own branch, to GO:0098632 *cell-cell adhesion mediator activity*; CDH1's cadherin binding is already carried by its GO:0045296 rows (IBA, HDA). GO:0098632 is precomposed by definition (lesson 1 below), but as a refinement of the annotated term it is the right target. |
+| FAT4 (IDA, FAT4–DCHS1) | 1 | The reviewer-proposed NEW row is now on the genus. |
+| core functions (7 genes) | 7 | MF GO:0098641 → GO:0045296; each `directly_involved_in` already carries the adhesion process. |
+| GOA rows judged over-annotated, non-core or undecided (ANXA1, PPP1CA, BAIAP2, BAIAP2L1, EPCAM) | 5 | Unchanged. These aren't MODIFYs, so nothing is promoted. Four come from one E-cadherin interactome study (PMID:25468996); EPCAM's is an IBA. |
+
+## Worked cases (round 5): two terms that stay
+
+The plan's next two authored terms turned out to be the right grain. Neither
+is decomposed, and no review changes. Both are now listed, with their
+reasons, in
+[`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml),
+which the inventory reads. Together they account for 49 authored uses and 41
+GOA rows.
+
+### GO:0106074 *aminoacyl-tRNA metabolism involved in translational fidelity* — kept
+
+The term has no logical definition (class D-iii). Its definition, "Any process
+which detects an amino-acid acetylated tRNA is charged with the correct amino
+acid, or removes incorrect amino acids from a charged tRNA", is aminoacyl-tRNA
+editing, and its RELATED synonyms say so ("aminoacyl-tRNA proofreading",
+"aminoacyl-tRNA correction"). GO has no other term for that process.
+
+- **The X half has no term of its own.** "Aminoacyl-tRNA metabolism" is not a
+  GO class. The nearest genus, GO:0006399 *tRNA metabolic process*, covers all
+  of tRNA metabolism (modification, processing, aminoacylation, degradation),
+  so decomposing to it would discard what the term says.
+- **The Y half is already carried.** The term is `is_a` GO:0006450
+  *regulation of translational fidelity*. A decomposition has nowhere better
+  to put "translational fidelity" than that second parent.
+- **GO anchors the editing activity here.** GO:0002161 *aminoacyl-tRNA
+  deacylase activity* is `part_of` GO:0106074. Every review that uses the term
+  in `core_functions` (15 genes: the class I and II synthetases' editing
+  domains, AARSD1/AlaX, DTD1, ANKRD16 and others) pairs it with GO:0002161 or
+  one of its children (Ser-tRNA(Ala), Gly-tRNA(Ala), Ala-tRNA(Pro),
+  D-aminoacyl-tRNA deacylase, L-seryl-tRNA(Thr) hydrolase activity). The
+  exception is ANKRD16, whose activity has no GO term yet: it binds AlaRS
+  and captures serine that AlaRS has misactivated, on its own lysine side
+  chains, before the serine can reach tRNA(Ala). Its review records that as
+  `proposed_molecular_function: misactivated amino acid acceptor activity`.
+
+Of the 14 rows on the term, 13 are electronic and one is a reviewer-proposed
+NEW row (ISS, *P. putida* *thrS*). The electronic rows come from GO_REF:0000108
+(logical inference from inter-ontology links, 8 rows) and GO_REF:0000120
+(combined IEA, 5 rows). Both infer the process from the deacylase activity
+through the same `part_of GO:0106074` link the keep decision rests on: the
+human DTD1 row lists GO:0002161, GO:0051499 and GO:0106026 as its
+`supporting_entities`. Their reviews judged each row on its merits: 12 are
+ACCEPT, one is the NEW row, and one is MARK_AS_OVER_ANNOTATED (the truncated
+human DTD1 product A0A2R8YCT7, which lacks the editing site and so has none of
+those activities; the term stays on the canonical Q8TEA8). None is a MODIFY
+away from the term.
+
+### GO:0006271 *DNA strand elongation involved in DNA replication* — kept
+
+The term is class B with a logical definition (`GO:0022616 DNA strand
+elongation and part_of GO:0006260 DNA replication`), so it could be
+decomposed mechanically. It should not be:
+
+- **It names a stage, not a mechanism used in a context.** Its EXACT synonym
+  is "DNA replication elongation", and Reactome has the same unit
+  (R-HSA-69190 "DNA strand elongation"). It stands to replication as
+  GO:0006414 *translational elongation* stands to translation, a term whose
+  label happens not to say "involved in".
+- **Its subclasses are stages too.** GO:0006272 *leading strand elongation*
+  and GO:0006273 *lagging strand elongation* are `is_a` GO:0006271. Retiring
+  the parent would leave them under the bare genus, which is wrong for both.
+- **The genus is broader in a way that matters.** GO:0022616 also covers
+  strand extension outside replication. The genes that carry GO:0006271 are
+  replicative polymerases (POLD2 of polymerase delta, and the B-family
+  polymerase of phage BPPH2), the sliding clamp (ECOLI/dnaN, BACSU/dnaN, PSEPK/dnaN), the
+  clamp loader (RFC subunits, CG8142) and the MCM helicase (MCM4, *mcm-4*).
+  For them, "which strand-extension process" is the information.
+
+Of the 27 GOA rows, 21 are ACCEPT on these core replication proteins. The
+others were already MODIFYed for reasons unrelated to the label: the four
+*Drosophila* Enok acetyltransferase complex members (Br140, Eaf6, Ing5,
+*enok*; IDA, PMID:27198229) move to GO:0000082 *G1/S transition of mitotic
+cell cycle*, *elg1* to GO:0006261 *DNA-templated DNA replication*, and
+ECOLI/dnaC to GO:0031297 *replication fork processing*. Those
+reviews correct over-annotations; they are not decompositions and are left
+as they are.
+
+Keeping the class does not settle each row's granularity. DROME/RfC3,
+DROME/RfC38, DROME/RfC4, yeast/RFC3 and human/POLD2 also carry GO:0006272
+*leading strand elongation* or GO:0006273 *lagging strand elongation*
+beside their accepted GO:0006271 rows. Whether a given row should be refined
+to one of those children is an ordinary review question, separate from
+whether GO:0006271 should exist.
+
+### Lessons from round 5
+
+1. **"Involved in" in a label is not a reason to decompose.** Some terms name
+   a process that GO has no other word for (GO:0106074), and some name a
+   stage of the Y process that has its own subclasses (GO:0006271). Ask
+   whether the X half, standing alone, would still say what the gene does.
+   If no X term exists, or the bare X would lose which process the gene
+   serves, keep the term and record why.
+2. **There is no mechanical test for this.** An EXACT synonym without
+   "involved in", or `is_a` children, looked like a usable signal. Across the
+   inventory it flags more than a hundred terms, and many of those EXACT
+   synonyms just reword the X-in-Y pair ("coronary angiogenesis" for *angiogenesis involved in
+   coronary vascular morphogenesis*), and grouping classes have children too.
+   Keep decisions are made term by term and listed in
+   `keep_precomposed.yaml`.
+3. **Upstream, these are renames, not obsoletions.** Renaming GO:0006271 to
+   its EXACT synonym, and GO:0106074 to the editing process it defines, would
+   take both out of the "involved in" set without moving an annotation
+   (ticket 6).
+
+### Lessons from round 4
+
+1. **A term without "involved in" in its label can still be precomposed in
+   its definition.** GO:0098632 is `protein binding and part_of cell-cell
+   adhesion`; the inventory finds only "involved in" labels, so such terms
+   are invisible to it. They are not worth chasing as lateral targets.
 
 ### Lessons from round 1
 
@@ -457,12 +696,24 @@ reviews have been actively moving annotations *toward* these terms.
      involved in sensory perception of sound`, 18 rows). A module for the MET
      complex (TMC1/2, LHFPL5, TMIE, PCDH15, CDH23), not for hearing.
 5. **Authored combined terms** — work through
-   `data/authored_precomposed.yaml`. Largest groups: GO:1901030 *positive
-   regulation of mitochondrial outer membrane permeabilization involved in
-   apoptotic signaling pathway* (30 replacement uses; the BCL-2 family, with
-   `bcl2_family_momp_control`), GO:0106074 *aminoacyl-tRNA metabolism involved
-   in translational fidelity* (aminoacyl-tRNA editing) and GO:0006271 *DNA
-   strand elongation involved in DNA replication*.
+   `data/authored_precomposed.yaml`, skipping `label_only` entries.
+   - ~~GO:1901030/GO:1901029 (MOMP)~~: label-only, no decomposition (round 3).
+   - ~~GO:0061739 (ATG8 lipidation)~~: done in round 3.
+   - ~~GO:0098641 (cadherin binding)~~: done in round 4. The lateral
+     GO:0098632 turned out to be precomposed by definition.
+   - Parked: definitionally precomposed binding-plus-adhesion terms
+     (GO:0098631 *cell adhesion mediator activity*, GO:0098632 *cell-cell
+     adhesion mediator activity* and their children). The inventory's label
+     match cannot find them, so they need a pass driven by logical
+     definitions. CDH1's GO:0098631 IDA row is parked on GO:0098632 until
+     then.
+   - ~~GO:0106074 (aminoacyl-tRNA editing) and GO:0006271 (replication
+     elongation)~~: kept as the right grain in round 5.
+   - Next: GO:0050910 *detection of mechanical stimulus involved in sensory
+     perception of sound* (12 uses, 6 genes; the hair-cell
+     mechanotransduction module in item 4) and GO:1904747 *positive
+     regulation of apoptotic process involved in development* (12 uses, 6
+     genes; class C, likely context to drop).
 6. **Full pass** — walk `data/annotations.yaml` gene by gene, from class A to
    B, C and D. Check `gocam_same_gene` and `gocam_same_symbol_other_species`
    first, and confirm orthology before citing the symbol-matched hits.
@@ -500,3 +751,7 @@ terms used in module annotons; small, so committed),
 regenerate them locally before a full pass. Decompositions marked `source:
 label_split` come from splitting the label into two exact GO labels when GO
 asserts no logical definition. They are a heuristic, not a GO assertion.
+The script also reads the curated
+[`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml)
+(`--keep`), which lists terms judged the right grain; their rows and uses
+are flagged `kept`.
