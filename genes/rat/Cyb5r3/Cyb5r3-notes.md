@@ -11,3 +11,7 @@
 - Retired by GOA: GO:0004128 IEA (GO_REF:0000117, ARBA). Review kept with a retirement note.
 - No existing actions changed. AMP/ADP binding (IDA, PMID:14609324) stay MARK_AS_OVER_ANNOTATED: the paper shows the FAD prosthetic group's own ADP moiety displaced into the NADH site in a mutant [PMID:14609324 "the adenosine diphosphate (ADP) moiety of the FAD prosthetic group is displaced into the corresponding ADP binding site of the physiological substrate, NADH"], not binding of free nucleotides.
 - Description rewritten as standalone biology (isoforms, ER/mitochondrial outer membrane anchoring, erythroid soluble form). UniProt quotes verified (0 stale).
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[32], GO:0008150 biological_process (ND, ACCEPT): may be stale. The gene's Falcon report (section "Rat-specific evidence") cites rat studies of the native enzyme: rat erythrocyte NADH-cytochrome b5 reductase function and rat brain synaptosome/plasma-membrane electron transport involving Cb5R (via the Gutierrez-Merino 2021 review). Its only absence statement is restricted to 2023-2024 genetic/physiology studies ("Direct **rat** genetic/physiology studies of Cyb5r3 in 2023–2024 were not present in the accessible corpus"), so it does not record that no rat study identifies a process. The classic rat liver microsome literature on cytochrome b5 reductase in fatty acid desaturation should also be checked before the ND is kept. Action not changed here.

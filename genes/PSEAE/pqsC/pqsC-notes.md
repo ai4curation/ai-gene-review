@@ -52,3 +52,18 @@ Moriwaki et al. (bioRxiv 2025.10.26.684697) predict the PqsB–PqsC heterodimer
 - PMID:24239007 — Dulcey et al. 2013, Chem Biol (pathway/mechanism). VERIFIED.
 - PMID:26811339 — Drees et al. 2016, JBC (PqsBC crystal structure, 5DWZ). VERIFIED.
 - PMID:12426334 — Gallagher et al. 2002, J Bacteriol (pqs genetics; IMP source). VERIFIED.
+
+## PseudoCAP IBA-seed assessment
+
+Audit added 2026-10-28 (PseudoCAP IBA-seed project, worklist rank 36). The
+review itself was not rewritten.
+
+| PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
+|---|---|---|---|---|---|---|
+| PTN002147059 (PTHR34069) | GO:0044550 secondary metabolite biosynthetic process | 1 (sole seed) | 30 (17 taxa) | GO:0044550, IMP, PMID:12426334 (PseudoCAP) | SOUND (seed); node placed too high | The seed is direct for PqsC: the screen's own pqsC (PA0998) transposon mutant lost PQS [PMID:12426334 "the largest class of pleiotropic mutations was found to cause dramatic reductions in the production of the quinolone signal (PQS). These genes included a cluster in the phnAB region (PA0998, PA0999, and PA1003)"], and later biochemistry shows that PqsBC makes HHQ (PMID:24239007, PMID:26811339). The PAINT leaf file, however, shows that the node sits above canonical FabH (KAS III) enzymes of primary fatty acid synthesis: H. influenzae FabH P43711, B. subtilis FabHB O07600, P. aeruginosa FabH Q9HYR2 and PA3286 Q9HYV7, Plasmodium FabH Q7KWI9, Chlamydia FabH O84242, Xanthomonas FabH Q8P810 and others. For those leaves the term is wrong. The PseudoCAP row needs no defect. I recorded a GO_CENTRAL `WRONG_TERM`/CHECK defect on the pqsC IBA row, asking for the IBD to move down to a PqsC-only node. |
+
+Row consistency: the IBA and IMP rows for GO:0044550 stay `ACCEPT` because the
+claim is true for PqsC. I added a direct quote from the Discussion of
+PMID:12426334 to both rows. The cached PTHR34069 family review calls this node
+SOUND only because PqsC is its one reviewed recipient. The leaf list above
+contradicts that, but the file is outside this audit's scope.

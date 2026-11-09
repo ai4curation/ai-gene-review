@@ -101,3 +101,9 @@ it is carried in `suggested_questions` rather than asserted.
 - The GO:0036125 NEW row is now ISS from the E. coli FadBA complex
   (PMID:368024) rather than IEA.
 - Broad parents changed from MARK_AS_OVER_ANNOTATED to TOO_GENERAL.
+
+## 2026-11-06 comparative primary-source re-review
+
+Native32826213 supports PP2137 fatty-acid-use fitness. FadBA assembly and thiolase chemistry remain inference from HAMAP/homologs, not purified target stoichiometry or complete acetyl-CoA yield. The historical complex NEW payload/action is preserved. Phenylacetate is UNDECIDED: a dedicated PaaJ does not prove exclusion of FadA, and the primary names PP3275 rather than the prior PP3280 premise. Removed categorical source-defect recommendation; no source record is renamed. Missing-provider Falcon attempt failed403, honestly recorded; no research output fabricated.
+
+All original annotation payloads, including historical proposals, and raw/provider/prediction artifacts are preserved. Source-scope details and exact quotes are in `../fadB/fadB-source-analysis/primary-scope.md` (for fadB, its local source-analysis directory). Shared publication caches were not refreshed. New normal publications36763117 and12115060 were fetched; acquired full articles remain ignored. PAINT-losses cannot assess these targets because they are not cached tree leaves. Focused validations, renders and new helper histories accompany the handoff.
