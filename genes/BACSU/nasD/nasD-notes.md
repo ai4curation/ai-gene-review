@@ -34,3 +34,8 @@ No isolated-subunit catalytic claim is inferred from the ordinary machine relati
 The earlier two-donor replacement rationale is superseded. PMID:9765565 reports: “Activity with NADPH was less than 10% of that with NADH.” This was a crude-extract signal, unlike a purified enzyme donor comparison. The assay does not separate direct NasDE NADPH turnover from possible transhydrogenase-mediated electron transfer or other extract activities; these are unresolved alternatives, not demonstrated mechanisms. Every affected MODIFY now proposes only GO:0106316, the established main NADH activity. The minor observation is preserved verbatim and raised as a question requiring purified-enzyme attribution. No primary quote, machine annotation field or raw record is changed.
 
 The previous NADP-binding ACCEPT rationale also relied on the minor signal. Its target ligand prediction remains suggestive, but the row is now UNDECIDED pending independent donor-specific binding or turnover evidence.
+
+
+## Module completion pass, 2026-11-03
+
+Resolved the remaining UNDECIDED row so the review can be COMPLETE for the bacterial assimilatory nitrate reduction module. GO:0050661 NADP binding (InterPro IEA): UNDECIDED -> MODIFY to GO:0051287 NAD binding. The native enzyme is NADH-dependent [PMID:9765565 "Activity with NADPH was less than 10% of that with NADH."]; the weak NADPH signal in extract is not independent evidence of NADP binding. Consistent with E. coli NirB and NasB.
