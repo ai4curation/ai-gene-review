@@ -153,3 +153,32 @@ deep-research file (treated as a lead list), and the generated Bgee report
   Reactome EXP is on human Q9NQR9); says the glucose homeostasis / insulin secretion rows
   are "IMP/ISO from the knockout work" (mouse rows are ISO/IEA from human, whose IMP source is
   the SNP study PMID:20668700). Neither affects the review's conclusions.
+
+## 2026-11-09: targeted check — does G6pc2 contribute to glucose production?
+
+Question: is there any direct measurement of glucose production or gluconeogenic flux in
+G6pc2-deficient animals or G6PC2 variant carriers that could overturn the gluconeogenesis REMOVE?
+PubMed searches combined G6pc2/IGRP/G6PC2 with clamp, tracer, isotope, glucose production,
+glucose turnover, pyruvate tolerance and gluconeogenesis, plus searches for human variant studies
+of hepatic or endogenous glucose production and for extra-islet expression.
+
+- The only direct measurement found is human and nominal: [PMID:19669124 "Among elderly twins, G
+  allele carriers had higher basal hepatic glucose production (p = 0.04)."] It is a subgroup of
+  159 twins at the G6PC2/ABCB11 locus, and the same allele raised early insulin responses, so it is
+  compatible with a higher defended glucose level and does not place G6PC2 in hepatic
+  gluconeogenesis. Pound et al. weighed exactly this alternative: [PMID:23274894 "The latter
+  explanation appears less likely since human G6PC2 (6,35) and mouse G6pc2 (9,36) are only
+  expressed in islets and not in liver."]
+- No mouse study found measures glucose production in G6pc2-null mice. Added as a suggested
+  experiment (tracer flux, pyruvate tolerance and clamp in global and beta-cell knockouts).
+- Extra-islet expression in mouse is trace: [PMID:16477532 "was detectable only in hypothalamus
+  tissue at increased template inputs"].
+- Birds: poultry liver studies measure a nutritionally regulated hepatic G6PC2 transcript
+  [PMID:31676410 "hepatic G6PC2 mRNA levels in males"]. Bgee shows chicken G6PC1 is the liver and
+  kidney paralog (scores 99) while chicken G6PC2 is low everywhere (liver 40), and no chicken
+  pancreas or islet sample exists (file:mouse/G6pc2/G6pc2-bioinformatics/chicken_paralogs.md).
+  So the evidence for a non-gluconeogenic, islet-restricted G6PC2 is mammalian; the suggested IRD
+  was scoped to the mammalian G6PC2 node PTN000287500, with the Euteleostomi node PTN002650241
+  left as a question.
+
+Outcome: the REMOVE stands. The reason now weighs PMID:19669124 explicitly.
