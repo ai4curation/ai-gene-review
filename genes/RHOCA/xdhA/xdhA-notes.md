@@ -13,3 +13,7 @@
 - Keep GO:0016491 oxidoreductase activity as non-core, add GO:0009055 electron transfer activity, and add `contributes_to` rows for GO:0070674 hypoxanthine dehydrogenase activity and GO:0004854 xanthine dehydrogenase activity.
 - Accept the specific FAD and [2Fe-2S] binding rows. Treat free iron, broad iron-sulfur cluster, metal, and broader FAD annotations as over-annotations because more precise cofactor terms are available.
 - Add direct hypoxanthine catabolism, xanthine catabolism, and urate biosynthesis process rows, all grounded in the same two-step XDH chemistry.
+
+## Completion pass
+
+- Completion pass (2026-11-09): restored GOA's `enables` qualifier on the GO:0004854 row (the review's MODIFY to `contributes_to` is now explicit, with a WRONG_QUALIFIER source defect); set the redundant FAD-binding and iron-sulfur-cluster parents to TOO_GENERAL (their accepted children GO:0071949 and GO:0051537 entail them); kept iron ion and metal ion binding as MARK_AS_OVER_ANNOTATED because cluster binding is not under metal ion binding in GO; added vetted supported_by to every row. Status set to COMPLETE.

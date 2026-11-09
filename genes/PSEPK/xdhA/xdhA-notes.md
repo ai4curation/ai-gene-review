@@ -15,3 +15,7 @@
 - Ground intrinsic electron-transfer activity in the measured, closely matched midpoint potentials of the molybdenum, FeSI, and FAD centers [PMID:11341925, "The midpoint potentials determined for the molybdenum, FeSI and FAD redox couples are close to each other"].
 - Add immediate hypoxanthine/xanthine catabolic processes and urate production, all explicitly inferred from the homologous bacterial complex.
 - Do not assert a KT2440 oligomer, localization, exact electron path, or XdhC requirement from homolog data alone.
+
+## Completion pass
+
+- Completion pass (2026-11-09): restored GOA's `enables` qualifier on the GO:0004854 row (the review's MODIFY to `contributes_to` is now explicit, with a WRONG_QUALIFIER source defect); set the redundant FAD-binding and iron-sulfur-cluster parents to TOO_GENERAL (their accepted children GO:0071949 and GO:0051537 entail them); kept iron ion and metal ion binding as MARK_AS_OVER_ANNOTATED because cluster binding is not under metal ion binding in GO; added vetted supported_by to every row. Status set to COMPLETE.
