@@ -17,3 +17,13 @@
 ## Deep research (falcon) additions
 - [file:DROME/Tcs6/Tcs6-deep-research-falcon.md "Expressing fly **Pcc1 together with fly Kae1** in *yeast kae1* mutants improved growth and recovery of t⁶A-modified tRNAs compared with fly Kae1 alone"]
 - Reports Tcs6 RNAi (Rojas-Benitez et al. 2017, Biomolecules) gives small, developmentally delayed larvae; not in GOA, not added (no fly t6A measurement for Tcs6). No change to decisions.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[2], GO:0003674 molecular_function (ND), currently ACCEPT: may be stale. The
+  falcon report records Lin et al. 2015 (RNA 21:2103-2118, doi:10.1261/rna.053934.115), in which fly
+  Pcc1/Tcs6 co-expressed with fly Kae1 improved growth and recovery of t6A-modified tRNAs in yeast kae1
+  mutants. That is a functional assay of this gene product (heterologous complementation) consistent
+  with a contributing role in KEOPS t6A synthesis, so the MF ND may no longer reflect the literature. A
+  curator should check the paper (not cached) before changing the row. Action not changed; no search
+  citation added.

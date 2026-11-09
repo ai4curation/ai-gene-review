@@ -32,3 +32,10 @@ PAINT source assertions were read in the committed PTHR11516 and PTHR22912 paint
 ## Acquisition and provenance
 
 All original non-review annotation fields and both raw files are preserved against the captured baseline. Normal Falcon plus perplexity-lite attempts failed authentication/quota; no generated provider report is invented. Normal gene-publication retrieval completed successfully. An actual FEBA attempt failed because no reachable mapped source was available; no fitness result is inferred. PMID10368162 is full text; 2061286, 8110297 and 1898934 remain abstract-only after normal force and provider-chain attempts. EuropePMC scanned-PDF access also returned 403. The initial candidate PMID2200674 proved to be an unrelated Bacillus stearothermophilus pyruvate E1 paper and is not cited as Pelobacter evidence.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- Deep research: no provider deep-research file exists for this gene, and none could be generated
+  in this session (no deep-research provider API keys were configured). No deep-research file was
+  written by hand. The review rests on the cached primary publications, the UniProt record and the
+  PANTHER/PAINT family files cited in the review.

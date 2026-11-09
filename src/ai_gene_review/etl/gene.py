@@ -1256,9 +1256,9 @@ def fetch_goa_data(uniprot_id: str) -> str:
         key=lambda x: (
             0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
             -(
-                int(x.get("date", "0")) if x.get("date", "").isdigit() else 0
+                int(x.get("date") or "0") if (x.get("date") or "").isdigit() else 0
             ),  # Negative for descending date
-            x.get("goId", ""),  # Then by GO ID
+            x.get("goId") or "",  # Then by GO ID
         ),
     )
 
@@ -1309,7 +1309,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("date", ""),  # DATE
         ]
 
-        tsv_row = "\t".join(row)
+        # QuickGO can supply an ECO term without a legacy GO evidence code
+        # (for example CACAO's ECO:0007744). Keep that column empty, rather
+        # than inventing a GO code or failing on the JSON null. Other optional
+        # display fields can also be null.
+        tsv_row = "\t".join("" if value is None else str(value) for value in row)
         if tsv_row in seen_tsv_rows:
             continue
         seen_tsv_rows.add(tsv_row)
