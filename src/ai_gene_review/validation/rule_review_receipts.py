@@ -221,8 +221,12 @@ def cited_set_numbers(text: str) -> Set[int]:
     [1, 7, 18, 37]
     >>> cited_set_numbers("12 of 343 sets were read")
     set()
+    >>> cited_set_numbers("matches across the screened sets 46,549")
+    set()
     """
     found: Set[int] = set()
+    # "46,549" is a count written with a thousands separator, not sets 46 and 549.
+    text = re.sub(r"\b\d{1,3}(?:,\d{3})+\b", "#", text)
     for match in _SET_REFERENCE.finditer(text):
         found.update(int(number) for number in re.findall(r"\d+", match.group(1)))
     return found
