@@ -26,6 +26,7 @@ import argparse
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -175,7 +176,7 @@ def labels_agree(stated: str, official: str) -> bool:
 
 
 _NOT_A_NAME = re.compile(
-    r"[=%|]|\b(?:jaccard|containment|overlap|subset|proteins?\b.*\d|quickgo|ipr2go|interpro2go)\b"
+    r"[=%|;]|\b(?:jaccard|containment|overlap|subset|proteins?\b.*\d|quickgo|ipr2go|interpro2go|uniprotkb|quer(?:y|ies))\b"
     r"|^(?:or|for|a|an|the|its|see|already|as|in|cs\d*|iea|ida|imp)\b",
     re.IGNORECASE,
 )
@@ -415,7 +416,9 @@ def check_review(
     if literature.get("assessment") in {"STRONG", "MODERATE", "CONTRADICTED"}:
         cited = [str(item.get("reference_id") or "") for item in literature.get("supported_by") or [] if isinstance(item, dict)]
         cited += [str(ref.get("id") or "") for ref in data.get("references") or [] if isinstance(ref, dict)]
-        if not any(ref.startswith(_LITERATURE_PREFIXES) for ref in cited):
+        # A publication or pathway named in the note is a checkable receipt too.
+        cited += re.findall(r"PMID:\d+|PubMed:\d+|PMC\d+|R-HSA-\d+|DOI:\S+", str(literature.get("notes") or ""))
+        if not any(ref.startswith(_LITERATURE_PREFIXES + ("PMC", "R-HSA-", "PubMed:")) for ref in cited):
             add(error, "literature_verdict_without_literature",
                 f"literature_support is {literature.get('assessment')} but the review cites no publication or "
                 "curated database record", "literature_support",
@@ -459,10 +462,18 @@ def check_review(
 # ---------------------------------------------------------------------------
 
 
-def _get_json(url: str, timeout: int = 30) -> Any:
+def _get_json(url: str, timeout: int = 30, attempts: int = 5) -> Any:
+    """GET a JSON document, waiting and retrying when the server asks us to slow down."""
     request = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed https hosts
-        return json.load(response)
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed https hosts
+                return json.load(response)
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (408, 429, 500, 502, 503, 504) or attempt == attempts - 1:
+                raise
+            time.sleep(2 ** (attempt + 1))
+    raise AssertionError("unreachable")
 
 
 def experimental_annotations(accession: str, go_id: str) -> List[str]:
@@ -527,6 +538,69 @@ def check_review_online(data: Dict[str, Any], report: ValidationReport) -> None:
                 + (f" (modified {live_modified})" if live_modified else ""), "rule.source_condition_set_count")
 
 
+def fetch_official_label(identifier: str) -> Optional[str]:
+    """Current official name of an InterPro entry or GO term (network).
+
+    Returns None when the source does not know the identifier.
+    """
+    try:
+        if identifier.startswith("IPR"):
+            data = _get_json(f"https://www.ebi.ac.uk/interpro/api/entry/interpro/{identifier}")
+            return data["metadata"]["name"]["name"]
+        data = _get_json(
+            "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/" + urllib.parse.quote(identifier)
+        )
+        results = data.get("results") or []
+        return results[0]["name"] if results else None
+    except urllib.error.HTTPError as exc:
+        if exc.code in (404, 410, 204):
+            return None
+        raise
+    except json.JSONDecodeError:
+        return None  # InterPro answers 204 with an empty body for a deleted entry
+
+
+def refresh_labels(files: Sequence[Path], labels_file: Optional[Path] = None) -> Dict[str, Tuple[Optional[str], str]]:
+    """Re-fetch cached labels that disagree with a review, or are missing.
+
+    The cache is the reference the label checks compare against, so it has to
+    follow InterPro and GO renames. Only identifiers whose recorded label
+    differs from the cache (or that the cache lacks) are fetched: either the
+    cache is stale, and is updated, or the review is wrong, and still fails.
+    Returns ``{id: (old label, new label)}`` for each entry that changed.
+    """
+    path = labels_file or PROJECT_ROOT / "rules" / "_labels.json"
+    cache = json.loads(path.read_text())
+    labels = load_labels(labels_file)
+    identifiers: Set[str] = set()
+    for review in files:
+        data = yaml.safe_load(Path(review).read_text()) or {}
+        rule = data.get("rule") or {}
+        stated = [
+            (str(condition.get("value", "")), condition.get("label"))
+            for condition_set in rule.get("condition_sets") or []
+            for condition in (condition_set or {}).get("conditions") or []
+        ]
+        stated += [(a.get("go_id", ""), a.get("go_label")) for a in rule.get("go_annotations") or []]
+        for identifier, label in stated:
+            if not _ID_RE.fullmatch(identifier):
+                continue
+            official = _official_label(identifier, labels)
+            if official is None or (label and _norm(label) != _norm(official)):
+                identifiers.add(identifier)
+    changed: Dict[str, Tuple[Optional[str], str]] = {}
+    for identifier in sorted(identifiers):
+        section = cache["interpro_labels"] if identifier.startswith("IPR") else cache["go_labels"]
+        label = fetch_official_label(identifier)
+        if label and section.get(identifier) != label:
+            changed[identifier] = (section.get(identifier), label)
+            section[identifier] = label
+    if changed:
+        path.write_text(json.dumps(cache, indent=2))
+        load_labels.cache_clear()
+    return changed
+
+
 # ---------------------------------------------------------------------------
 # Entry points
 # ---------------------------------------------------------------------------
@@ -553,10 +627,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--all", action="store_true", help="check every rules/**/*-review.yaml")
     parser.add_argument("--online", action="store_true", help="also check against UniProt and QuickGO")
     parser.add_argument("--summary", action="store_true", help="print counts per check instead of every issue")
+    parser.add_argument(
+        "--refresh-labels",
+        action="store_true",
+        help="first update rules/_labels.json from InterPro and QuickGO for the ids these reviews use",
+    )
     args = parser.parse_args(argv)
     files = sorted((PROJECT_ROOT / "rules").rglob("*-review.yaml")) if args.all else args.files
     if not files:
         parser.error("give review files or --all")
+    if args.refresh_labels:
+        for identifier, (before, after) in refresh_labels(files).items():
+            print(f"label updated: {identifier}: {before!r} -> {after!r}")
     counts: Dict[str, int] = {}
     failed = 0
     for path in files:

@@ -190,9 +190,12 @@ These are the errors an audit found in most earlier reviews. Check each one.
 7. **A taxon condition restricts.** A narrow taxon is usually what keeps a set
    precise. Do not call it arbitrary, and do not recommend widening it, without
    counting what the wider set would match.
-8. **Counts need a source.** `reviewed_protein_count` is 0 for every ARBA rule
-   because ARBA annotates only unreviewed entries; it does not mean the rule
-   matches nothing. A Swiss-Prot count is a sample, not the rule's coverage.
+8. **Counts need a source.** UniProt's rule statistics report
+   `reviewed_protein_count` 0 for every ARBA rule; it does not mean the rule
+   matches nothing. Count matches with a UniProtKB query and give the release.
+   A Swiss-Prot count is a sample, not the rule's coverage, and Swiss-Prot
+   entries that carry the term only as an ARBA IEA (GO_REF:0000117) are the
+   rule's own output, not support for it.
 9. **Biological process and molecular function are different questions.** A
    helicase or a ligase can take part in a catabolic process; do not replace a
    process term with function terms.
