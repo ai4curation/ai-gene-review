@@ -20,7 +20,8 @@
   (PMID:18832180, PMID:26193363, PMID:28045997); the G-protein mechanism is open
   [PMID:18832180 "Further studies, however, are required to elucidate the mechanism of BOSS-mediated signaling."].
 - Evolution: [PMID:42043338 "Thus, the Boss/Sev signaling module appears to be restricted to Dipterans."]
-  Outside Diptera the BOSS cognate is recognizable only by its transmembrane stack (PMID:18392882).
+  Outside Diptera the BOSS cognate is recognized by its transmembrane stack; its extracellular region is
+  not detectably conserved there, which the authors attribute to fast evolution (PMID:18392882).
 
 ## Consequence for CR-0006
 
