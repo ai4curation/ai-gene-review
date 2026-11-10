@@ -99,12 +99,16 @@ def _check_position(
     claimed = spec["residue"]
     try:
         seq = cache.get(acc)
+        drift = _version_note(cache, spec, acc)
     except InactiveEntryError as exc:
         return (
-            ClaimCheck(kind, gene, term, f"{label} {exc.describe()}", ClaimOutcome.FAIL),
+            ClaimCheck(
+                kind, gene, term,
+                f"{label} {acc}:{pos} cannot be validated: {exc.describe()}",
+                ClaimOutcome.FAIL,
+            ),
             None,
         )
-    drift = _version_note(cache, spec, acc)
     observed = _residue_at(seq, pos)
     if observed is None:
         return (
