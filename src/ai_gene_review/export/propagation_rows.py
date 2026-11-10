@@ -21,6 +21,8 @@ from pathlib import Path
 import re
 from typing import Iterator, Optional
 
+from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES, source_evidence_code
+
 #: Evidence codes that transfer a function from a named donor gene product.
 DONOR_EVIDENCE = {"ISO", "ISS", "ISA"}
 
@@ -70,8 +72,8 @@ PREFIX_SPECIES = {
     "HGNC": "Homo sapiens",
 }
 
-EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP",
-                "HTP", "HDA", "HMP", "HGI", "HEP"}
+
+EXPERIMENTAL = EXPERIMENTAL_EVIDENCE_CODES
 
 
 @dataclass
@@ -182,7 +184,7 @@ def iter_propagated_rows(genes_dir: Path) -> Iterator[PropagatedRow]:
     for path in iter_goa_files(genes_dir):
         species_dir, gene_dir = path.parent.parent.name, path.parent.name
         for row in read_goa_rows(path):
-            evidence = row.get("GO EVIDENCE CODE", "")
+            evidence = source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID"))
             reference = row.get("REFERENCE", "")
             with_from = row.get("WITH/FROM", "") or ""
             method = classify(evidence, reference, with_from)
@@ -224,4 +226,4 @@ def iter_target_evidence(genes_dir: Path) -> Iterator[tuple[str, str, str, str]]
         for row in read_goa_rows(path):
             if (row.get("QUALIFIER") or "").startswith("NOT"):
                 continue
-            yield species_dir, gene_dir, row.get("GO TERM", ""), row.get("GO EVIDENCE CODE", "")
+            yield species_dir, gene_dir, row.get("GO TERM", ""), source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID"))
