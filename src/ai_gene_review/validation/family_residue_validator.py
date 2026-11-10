@@ -141,12 +141,16 @@ class SequenceCache:
     sequence over the network.
 
     Retrieval failures retain accession/URL context and propagate with their cause;
-    they are never converted into UNRESOLVED curation results.
+    they are never converted into UNRESOLVED curation results. An inactive (deleted)
+    entry is different: UniProt answers it normally with no sequence, which is a state
+    of the data, so ``get`` raises InactiveEntry and the checks report UNRESOLVED.
+    Inactive accessions are remembered, so each is requested once per run.
     """
 
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
     _versions: dict[str, int] = field(default_factory=dict)
+    _inactive: dict[str, InactiveEntry] = field(default_factory=dict)
 
     def _fetch_json(self, acc: str) -> dict:
         req = urllib.request.Request(
@@ -182,13 +186,19 @@ class SequenceCache:
         acc = accession.split(":")[-1]
         if acc in self._mem:
             return self._mem[acc]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         seq_path = self.cache_dir / f"{acc}.seq"
         if seq_path.exists():
             seq = seq_path.read_text().strip()
         else:
             data = self._fetch_json(acc)
-            seq = sequence_from_entry(data, acc)
+            try:
+                seq = sequence_from_entry(data, acc)
+            except InactiveEntry as exc:
+                self._inactive[acc] = exc
+                raise
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is not None:
