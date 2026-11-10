@@ -202,3 +202,78 @@ decision, its rationale, the Bgee report or the literature check above. Report:
 - Weaker than the review on two points: it calls G6pc2 absent from liver (trace expression is
   reported), and it missed PMID:19669124 and the non-mammalian G6PC2 question.
 - Spot-checked quotations (PMID:32213654, PMID:23274894, PMID:10078553) are verbatim.
+
+## 2026-11-10: alpha-cell function added (Bahl 2025), during the human G6PC2 review
+
+While reviewing human G6PC2 (`genes/human/G6PC2/`) I read the full text of Bahl et al. 2025
+(PMID:39742505, Sci Transl Med), which was not in this review. It is the first functional
+study of G6PC2 in alpha cells and it uses a mouse conditional knockout, so it is mouse
+evidence and belongs here.
+
+### What the paper shows
+
+- New conditional allele (`G6pc2loxP/loxP`, exons 1-3 floxed) crossed to Gcg-CreERT2;
+  tamoxifen ablated G6pc2 in [PMID:39742505 "G6pc2 expression was ablated in 88% of α cells"].
+- No change in islet composition or turnover [PMID:39742505 "We observed no changes in
+  proliferation of α or β cells, nor in their relative proportions in islets of 12-week-old
+  α-G6PC2KO versus age-matched control mice"].
+- Direction and condition: glucagon was stimulated with a 4 mM amino acid mixture and then
+  suppressed by rising glucose. At zero glucose secretion was identical; [PMID:39742505 "when
+  incubated in the presence of 0.5mM, 1mM, 3mM, or 5mM glucose, α-G6PC2KO islets secreted
+  significantly (P < 0.0001) less glucagon relative to control islets, confirming a left shift
+  in the glucose response curve for glucagon release"]. So the affected process is **glucose
+  suppression of amino-acid-stimulated glucagon secretion**, and losing G6pc2 makes suppression
+  happen at lower glucose.
+- In vivo: [PMID:39742505 "revealed lower glucagon concentrations in both male and female
+  α-G6PC2KO mice relative to controls"] with insulin unchanged; slower recovery from
+  insulin-induced hypoglycaemia with hypoglucagonaemia at 30 min; and under 14 days of
+  phloridzin, lower glucagon with unchanged insulin, which excludes increased alpha-cell
+  insulin sensitivity as the cause. Males had significantly lower blood glucose after a 16 h
+  fast.
+- Mechanism: 2-NBDG efflux was retained in mutant islets, consistent with loss of futile
+  cycling in the mutant alpha cells; the authors' model is the same glucokinase-opposing cycle
+  as in beta cells [PMID:39742505 "The catalytic subunit of the islet-specific
+  glucose-6-phosphatase enzyme (G6PC2) opposes the action of glucokinase and creates a futile
+  substrate cycle"].
+- Human arm: G6PC2 protein is detectable in human alpha cells, 2-NBDG efflux from human alpha
+  cells falls on knockdown, and shRNA knockdown in sorted primary human alpha cells
+  (pseudo-islets) reproduces the leftward shift with unchanged glucagon content.
+
+### What changed in this review
+
+- **NEW row GO:0070094 positive regulation of glucagon secretion, IMP, PMID:39742505.**
+  Sign: deleting G6pc2 lowers glucagon at a given glucose, so G6pc2 is a positive regulator.
+  GO:0070094 checked in OLS (is_a GO:0070092 and GO:0090277; no children). There is no
+  glucagon analogue of GO:0061178/GO:0061179, so the set-point condition is stated in the
+  row summary; raised as a suggested question in the human review.
+  Participation test: the regulated step is alpha-cell glycolytic flux and G6pc2's own G6P
+  hydrolysis is what lowers it, so the gene product does the work. Comparator check (QuickGO,
+  exact term, human and mouse): Pask GO:0070092 IMP PMID:21181396, Kcnk16 GO:0070092 IMP
+  PMID:29402588, Syt7 GO:0070092 IMP PMID:19171650, Ffar4 GO:0070094 IMP PMID:24742677 - so
+  cell-intrinsic regulators of alpha-cell glucagon release do carry these terms. Gck carries
+  none, which is a curation lag on the recent alpha-cell GCK literature, not a convention.
+- **Description revised.** It said G6pc2 is "expressed almost exclusively in pancreatic islet
+  beta cells"; that overstated the restriction. It now says islet endocrine cells, about
+  twenty-fold more in beta than alpha cells, and describes both hormonal arms.
+- **core_functions** gained GO:0070094 under `directly_involved_in`, CL:0000171 pancreatic A
+  cell under `anatomical_locations`, a two-cell-type description, and the Bahl quote under
+  `supported_by`.
+- **PMID:39121091 reference_review revised.** It previously read "a possible alpha-cell role is
+  argued mainly for humans, so no glucagon-secretion term is proposed". That reasoning is
+  superseded: the paper's prediction was right and a mouse effect is demonstrable despite the
+  20-fold bias. Its inference from unchanged fasting glucagon in germline knockouts
+  [PMID:39121091 "These observations are consistent with the absence of a change in fasting
+  glucagon levels in G6pc2 KO mice"] did not hold for the conditional knockout. Relevance
+  raised LOW to MEDIUM and two findings added.
+- **Gluconeogenesis IBA reason extended.** The alpha-cell result does not weaken the REMOVE,
+  it strengthens it: both arms of the fasting-glucose phenotype are islet-hormonal (insulin
+  from beta cells, glucagon from alpha cells) and neither involves glucose output by the islet.
+- **suggested_questions**: the old question "Does G6pc2 influence glucagon secretion from mouse
+  alpha cells, or is that role confined to species with higher alpha-cell expression such as
+  human?" is answered for mouse, and was replaced by the open quantitative question - how much
+  of the global-knockout fasting-glucose phenotype comes from each arm, and whether the balance
+  differs in human.
+
+Validation: `env -u UV_NATIVE_TLS just validate mouse G6pc2` passes with no errors, after
+`just backfill-record-sections genes/mouse/G6pc2` (no changes needed; the new quotes are
+publication quotes, not UniProt).
