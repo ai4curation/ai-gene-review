@@ -15,3 +15,8 @@ Reviewed every annotation evidence mapping. Choline and glycine-betaine claims n
 ## 2026-11-08 — assembled carnitine importer activity
 
 CaiX, CbcW and CbcV participate in the same measured carnitine-import activity. Partner dependence is intrinsic to this ABC importer, not a reason to deny its cargo-specific activity to a participating subunit. The core synthesis now records both the carnitine-specific cargo axis and the ATP-coupled QAC mechanism as contributed complex activities. CbcW IBA and IDA have the same ACCEPT action on the target claim; the separate PAINT CHECK asks about broader node scope without asserting a false target annotation or inferring evolutionary loss from alternative cargo. All machine-sourced annotation payloads are unchanged. Restored the COS flux experiment from the superseded alias review.
+
+
+## 2026-11-10 — process propagation and importer control
+
+The target carnitine-transport process and activity both remain accepted. The PAINT node CHECK concerns unresolved scope across other permease/partner combinations, not an unsupported PAO1 target or an established evolutionary loss. The CbcV activity support again includes the MKH13 core-only negative control.

@@ -367,7 +367,7 @@ Please check the cargo-specific scope of the GO:0015226 IBD at PTN000766131 agai
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
 
-The IBD for GO:1902603 carnitine transmembrane transport at PTN000766131 (PTHR47737, about 13 leaf IBAs) rests only on P. aeruginosa PA5377/CbcW (Q9HTI7, PseudoCAP IDA, PMID:21478341). Carnitine uptake by Cbc requires the separately encoded SBP CaiX (PMID:19919675). The 98-100% identical P. syringae DC3000 Cbc core does not transport carnitine, and E. coli ProW, in the same node, is a glycine betaine/proline betaine permease. Carnitine transport is therefore not a clade-wide property of these permeases. Please consider removing the IBD (keeping GO:0031460 and GO:0015871 if desired).
+Please check the cargo-specific scope of the GO:1902603 IBD at PTN000766131 against descendant permease and binding-protein evidence. The experimentally supported PAO1 CbcW target transports carnitine in the assembled CaiX-CbcWV importer, and that target process remains accepted. Alternative native cargo or absence of a known binding-protein partner does not establish evolutionary loss or justify pruning a leaf. Exact node scope remains UNRESOLVED in the family review. This CHECK is consistent with the GO:0015226 cargo-activity CHECK and does not request removal of the supported PAO1 annotation.
 
 ## 28. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
