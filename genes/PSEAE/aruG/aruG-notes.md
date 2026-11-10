@@ -8,6 +8,7 @@
   most; full text for PMID:23484010).
 - PANTHER/PAINT context is taken from interpro/panther/*/ (PTHR30420, PTHR11986,
   PTHR11699, PTHR15162) and the corresponding family reviews.
+- The IBA GO:0009015 (N-succinylarginine dihydrolase) row is a PAINT
   over-propagation from PTN000764516, which spans both PTHR30420 subfamilies
   (SF1 transferases, SF2 dihydrolases); removed and recorded as a source defect.
 - UniProt's SIMILARITY comment ("succinylarginine dihydrolase family") conflicts
