@@ -1,0 +1,12 @@
+# Curation Notes: act (B9U6P4) in Variovorax paradoxus
+
+## Overview
+- **UniProt ID:** `B9U6P4` (`B9U6P4_VARPD`, 398 aa)
+- **Gene symbol / locus tag:** `act` (`VPARA_05450`, `Act(TBEA6)`, `KLN58430.1`)
+- **Organism:** *Variovorax paradoxus* strain TBEA6 (`NCBITaxon:34073`)
+- **Function:** Cytosolic homodimeric succinyl-CoA:3-sulfinopropionate CoA-transferase (`EC 2.8.3.-`, family III CoA-transferase `Pfam:PF02515` / `InterPro:IPR003673`).
+
+## Experimental Characterization in *Variovorax paradoxus* TBEA6
+- **Direct purification and steady-state kinetics (`PMID:23772073`):** Schürmann et al. 2013 ([PMID:23772073, "The act gene of Variovorax paradoxus TBEA6 encodes a succinyl-CoA:3-sulfinopropionate coenzyme A (CoA)-transferase, Act(TBEA6) (2.8.3.x), which catalyzes the activation of 3-sulfinopropionate (3SP), an intermediate during 3,3'-thiodipropionate (TDP) degradation."]) heterologously expressed and purified `Act(TBEA6)` (`B9U6P4`) as a 96 ± 3 kDa homodimer. It transfers CoA from succinyl-CoA ($V_{\max} = 44.6\ \mu\text{mol min}^{-1}\text{ mg}^{-1}$, $K_m = 0.08\ \text{mM}$, $k_{\text{cat}} = 36.0\ \text{s}^{-1}$), itaconyl-CoA, or glutaryl-CoA to 3-sulfinopropionate ($V_{\max} = 46.8\ \mu\text{mol min}^{-1}\text{ mg}^{-1}$, $K_m = 5.9\ \text{mM}$, $k_{\text{cat}} = 37.7\ \text{s}^{-1}$) to produce 3-sulfinopropanoyl-CoA (`3SP-CoA`).
+- **Operon context and polar effect on `acd` (`B9U6P5`):** Bruland et al. 2009 ([PMID:19001372, "Insertion of Tn5::mob in a gene putatively coding for a family III acyl-CoA-transferase resulted in the accumulation of 3-sulfinopropionate during cultivation on 3,3-thiodipropionic acid, indicating that this compound is further metabolized to 3-sulfinopropionyl-CoA and subsequently to propionyl-CoA."]) isolated a `Tn5::mob` mutant in `act` that accumulated 3SP and failed to grow on 3SP. Schürmann et al. 2013 ([PMID:23772073]) showed that an unmarked $\Delta act$ deletion mutant retained growth on TDP and 3SP (indicating an alternative 3SP-activating enzyme in strain TBEA6), whereas the `Tn5::mob` insertion exerted a polar effect on the downstream 3SP-CoA desulfinase gene `acd` (`B9U6P5`, [PMID:24317404]).
+- **Removal of spurious `GO:0033877` (`EC:2.8.3.15`):** `B9U6P4` was automatically annotated with `EC:2.8.3.15` (`succinyl-CoA:(R)-benzylsuccinate CoA-transferase activity`, `GO:0033877`) in the WGS submission `KLN58430.1`. `PMID:23772073` directly refutes this annotation and establishes `Act(TBEA6)` as a homodimeric succinyl-CoA:3-sulfinopropionate CoA-transferase (`GO:0008410`).
