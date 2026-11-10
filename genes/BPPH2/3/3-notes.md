@@ -169,3 +169,9 @@ sign inversion, no paper-not-about-the-gene. PMID:6402761 is a near miss for
 "paper is about another gene" — its title and principal claim concern gene 2 —
 but its abstract names p3 as a required component, so the row stands. The
 defective rows on this gene are UniProt's, not CACAO's.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0016787 / GO_REF:0000043: defect retyped (evidence depth: FULL_TEXT). The upstream fault is not a gene identifier but UniProt's FUNCTION sentence on P03681, which faithfully follows its cited paper (PMID:14763988 abstract attributes the activity to gp3) and has been superseded; Xiang 2008 full text (PMC2474476) cites that attribution and notes the gp3 structure does not support it, assigning the enzyme to gp13 (P15132 verified). Retyped to OUTDATED_STATEMENT (slot CC:FUNCTION, CHECK, verbatim asserted sentence) and moved to references[file:BPPH2/3/3-uniprot.txt].reference_review.source_defects as docs/source_defects.md prescribes; the annotation block no longer carries a defect. Moak & Molineux full text not read.

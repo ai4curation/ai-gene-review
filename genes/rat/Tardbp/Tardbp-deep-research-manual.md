@@ -64,3 +64,6 @@ from the cached publications in `publications/` (PMIDs below), with inline prove
 - Mitochondrial localisation in disease and with overexpression [PMID:27348499].
 - Nuclear retention of TDP-43 by CHCHD10 [PMID:28585542]: TDP-43 is the cargo in this study, not a
   regulator of nuclear import.
+  Correction on re-review: the same paper also reports the reverse direction, [PMID:28585542 "TDP-43
+  promoted the nuclear localization of CHCHD10 in a retrograde signalling manner"], which is what the
+  mouse protein-import annotation (has_input Chchd10) records.

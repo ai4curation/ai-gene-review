@@ -36,3 +36,9 @@
 - Bare protein binding (amelogenin, ABCB9) -> REMOVE per policy.
 - `phagocytic vesicle` IMP (PMID:22190682, AgBase): location established by imaging; IMP
   code describes Salmonella/Stx6 perturbations -> WRONG_EVIDENCE_CODE CHECK.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0007283 / PMID:18689890: defect withdrawn (evidence depth: FULL_TEXT). The PMC full text has Table 2 (absent from the cached copy) listing Lamp1 with "Release of spermatozoa from epithelium during spermatogenesis (Guttman et al. 2004)", so the TAS row records a real author statement and is correctly keyed. Defect deleted; action changed to MARK_AS_OVER_ANNOTATED (no functional test, Lamp1 knockout fertile).
