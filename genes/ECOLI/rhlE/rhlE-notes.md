@@ -18,6 +18,6 @@ membrane-bound RNase E scaffold.
 
 E. coli RhlE is primarily a ribosome-assembly factor [PMID:18083833]. Its
 degradosome role is shown only by reconstitution, where it replaces RhlB
-[PMID:15554979 "Thus, RhlE can replace\nthe function of RhlB in vitro."]; it is
+[PMID:15554979 "Thus, RhlE can replace the function of RhlB in vitro."]; it is
 used in the module as the characterised RhlE-subfamily exemplar, with that
 caveat stated in the module notes.

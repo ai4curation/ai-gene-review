@@ -34,3 +34,15 @@ The review retains direct KT2440 evidence for `pnp` physiology and homologous
 evidence for RhlB coupling without asserting a purified KT2440 complex.
 Same-genus PMID:40096066 directly maps PNPase binding to the P. aeruginosa
 RNase E scaffold and sharpens, but does not remove, that KT2440-specific hedge.
+
+## 2026-11-10 module-completion pass
+
+Harmonised with the new E. coli K-12 exemplar review (`genes/ECOLI/` same
+symbol) for the RNase E degradation module: every row now carries a vetted
+quote (HAMAP-derived UniProt text, or the E. coli experimental literature
+for homology support); broad parent terms entailed by an accepted specific term
+in this review are TOO_GENERAL rather than KEEP_AS_NON_CORE; ancillary binding
+and cofactor rows are KEEP_AS_NON_CORE. No new provider deep research was run
+(no API keys available in this session).
+The TreeGrafter GO:0000175 row is modified to GO:0004654 because GO:0000175 is a
+hydrolytic exonuclease term and PNPase is phosphorolytic (PROBABLE source defect).
