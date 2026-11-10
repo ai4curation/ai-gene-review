@@ -104,6 +104,33 @@ class ResidueCheck:
         )
 
 
+class InactiveEntry(LookupError):
+    """A UniProtKB accession whose entry is inactive (deleted or demerged).
+
+    UniProt answers such a request normally but returns no sequence. This is a state
+    of the data, not a retrieval failure: the claim that names the accession cannot be
+    checked until it is re-pointed, so callers report it as UNRESOLVED.
+    """
+
+    def __init__(self, accession: str, reason: str):
+        super().__init__(f"{accession} is inactive in UniProtKB: {reason}")
+        self.accession = accession
+        self.reason = reason
+
+
+def sequence_from_entry(data: dict, accession: str) -> str:
+    """Return the sequence of a UniProt JSON record, or raise InactiveEntry.
+
+    >>> sequence_from_entry({"sequence": {"value": "MAC"}}, "P00001")
+    'MAC'
+    """
+    if data.get("entryType") == "Inactive" or "sequence" not in data:
+        why = data.get("inactiveReason") or {}
+        reason = why.get("deletedReason") or why.get("inactiveReasonType") or "no sequence returned"
+        raise InactiveEntry(accession, reason)
+    return data["sequence"]["value"]
+
+
 @dataclass
 class SequenceCache:
     """Fetches and caches UniProt sequences.
@@ -161,7 +188,7 @@ class SequenceCache:
             seq = seq_path.read_text().strip()
         else:
             data = self._fetch_json(acc)
-            seq = data["sequence"]["value"]
+            seq = sequence_from_entry(data, acc)
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is not None:
@@ -225,7 +252,17 @@ def check_anchor_residues(
             )
             continue
 
-        seq = cache.get(anchor)
+        try:
+            seq = cache.get(anchor)
+        except InactiveEntry as exc:
+            results.append(
+                ResidueCheck(
+                    family, site_id, anchor, 0, [], None, Outcome.UNRESOLVED,
+                    f"anchor cannot be checked: {exc}; re-point the site to a current entry",
+                    kind="ANCHOR_INACTIVE",
+                )
+            )
+            continue
         pinned = site.get("anchor_sequence_version")
         drift = ""
         if pinned is not None:
@@ -837,7 +874,14 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
             f"{kind} control declares no position/residue, so its assertion is unchecked",
             kind="CONTROL_RESIDUE",
         )
-    observed = _residue_at(cache.get(acc), pos)
+    try:
+        observed = _residue_at(cache.get(acc), pos)
+    except InactiveEntry as exc:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), None, Outcome.UNRESOLVED,
+            f"{kind} control cannot be checked: {exc}; replace it with a current entry",
+            kind="CONTROL_RESIDUE",
+        )
     if observed is None:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,

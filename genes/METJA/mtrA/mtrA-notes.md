@@ -74,8 +74,10 @@ work on this protein is the in vitro reconstitution and crystal structure of its
 - GO:0019386 methanogenesis from CO2: M. jannaschii is a hydrogenotrophic CO2-reducing methanogen.
   ACCEPT.
 - GO:0006730 one-carbon metabolic process: not an ancestor of GO:0019386 in GO, so TOO_GENERAL
-  does not apply; the reaction is literally a C1 transfer between C1 carriers. ACCEPT (matches
-  MOOTH acsD, the analogous corrinoid methyl-carrier).
+  does not apply; the reaction is literally a C1 transfer between C1 carriers. First ACCEPT (as for
+  MOOTH acsD); revised to KEEP_AS_NON_CORE in the PR #6211 review, to match the other C1-carrier
+  enzymes of the pathway (Ftr, Mtd, Hmd, Mer, MtrH), since the term is broad and the core process is
+  GO:0019386.
 - GO:0005886 plasma membrane: single C-terminal TM anchor, stalk helix in cryo-EM. ACCEPT.
 - NEW: GO:0044677 methyl-tetrahydromethanopterin:coenzyme M methyltransferase complex (part_of),
   ISS from HAMAP subunit statement and the ortholog structure.
