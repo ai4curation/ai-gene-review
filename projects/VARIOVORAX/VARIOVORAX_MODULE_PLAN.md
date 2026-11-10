@@ -192,7 +192,7 @@ Completes the *Variovorax paradoxus* TBEA6 (`VARPD`) 3,3'-thiodipropionic acid (
 | Role | Gene Symbol | UniProt / Locus (`VARPD`) | Protein / Function | Key Cofactors / Chemistry | Target GO Terms |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | P1B-1 Cu(+) efflux ATPase | `copA2` | `A0A0H2M2H3` (`VPARA_21930`) | P-type Cu(+) transporter CopA2 (EC 7.2.2.8, 747 aa, `TIGR01511`, `PTHR43520:SF8`) | N-terminal HMA (`PS50846`, `22-MTCASCV-28`) + TM6 `390-CPC-392` + `Asp434` (`434-DKTGTLT-440`) phosphorylation site | `GO:0140581` (P-type monovalent copper transporter activity), `GO:0005507`, `GO:0005524`, `GO:0060003`, `GO:0055070`, `GO:0005886` |
-| Zinc uptake repressor | `zur` | `A0A0H2LYR2` (`VPARA_33720`) | Fur-family zinc uptake transcriptional repressor Zur (149 aa, `PTHR33202:SF14`, `PF01475`) | Structural 4-Cys $\text{Zn}^{2+}$ site (`Cys96, Cys99, Cys133, Cys136`) + regulatory `His90/His125` site | `GO:0001217` (DNA-binding transcription repressor activity), `GO:0000976`, `GO:0008270`, `GO:0045892`, `GO:0006882`, `GO:0005829` |
+| Zinc uptake repressor | `zur` | `A0A0H2LYR2` (`VPARA_33720`) | Fur-family zinc uptake transcriptional repressor Zur (149 aa, `PTHR33202`, `PF01475`) | Structural 4-Cys $\text{Zn}^{2+}$ site (`Cys96, Cys99, Cys133, Cys136`) + regulatory `His90/His125` site | `GO:0001217` (DNA-binding transcription repressor activity), `GO:0000976`, `GO:0008270`, `GO:0045892`, `GO:0006882`, `GO:0005829` |
 
 - **Updated Module:**
   - [`modules/variovorax_metallophore_metal_homeostasis.yaml`](../../modules/variovorax_metallophore_metal_homeostasis.html) (`MODULE:variovorax_metallophore_metal_homeostasis` — expanded with `copA2` and `zur`)

@@ -6,7 +6,7 @@
 - **Locus Tag / EMBL CDS:** `VPARA_10440` / `KLN58032.1` on contig `JZWI01000005` (`RefSeq:WP_047783561.1`)
 - **Protein Length:** 233 aa (25,818 Da); cytoplasmic homodimer (`PIRNR:PIRNR003107`) containing two tandem symmetric three-alpha-helix bundle PhoU domains (`Pfam:PF01895` at residues 22–108 and 129–210; `InterPro:IPR028366`, `NCBIfam:TIGR02135` `phoU_full`, `PANTHER:PTHR42930:SF3`).
 - **Conserved Metal-Binding & Signaling Motifs:**
-  - Conserves the charged metal-coordinating residues in both three-helix bundles (`Glu54`, `Asp64`, `Glu96`, `Arg97` in bundle 1 and `Asp157`, `Asp158`, `Asp159`, `Glu198`, `Arg199` in bundle 2, corresponding to the *E. coli* PhoU `D58/N62/E100/R101/D104` and `D161/D165/E200/R201/D204` $\text{Mn}^{2+}/\text{Mg}^{2+}$-binding sites characterized in `PMID:24563032`).
+  - Conserves the charged metal-coordinating residues in both three-helix bundles (`Glu54`, `Asp64`, `Glu96`, `Arg97` in bundle 1 and `Asp158`, `Asp159`, `Asp160`, `Glu198`, `Arg199` in bundle 2, corresponding to the *E. coli* PhoU `D58/N62/E100/R101/D104` and `D161/D165/E200/R201/D204` $\text{Mn}^{2+}/\text{Mg}^{2+}$-binding sites characterized in `PMID:24563032`).
 
 ## 2. Operon Context on Contig `JZWI01000005`
 - Encoded immediately between `phoB1` (`VPARA_10430`, `KLN58031.1`) and `pstB` (`VPARA_10450`, `KLN58033.1`) within the `phoR1-phoB1-phoU-pstB-pstA-pstC-pstS-ppx` (`VPARA_10420`–`VPARA_10490`) phosphate regulon gene cluster.
