@@ -2,8 +2,8 @@
 title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
-species: [human, ECOLI, ARATH, DICDI]
-genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA]
+species: [human, ECOLI, ARATH, DICDI, DROME, mouse]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4]
 ---
 
 # Wrong-Gene Leads
@@ -202,6 +202,39 @@ The top tier (score 6 or more) is now 444 rows in 225 genes; 52 of them carry th
 same-gene-other-species signal. The 406, 448 and 444 here count score 6 or more on
 the 2026-11-06 corpus. They are not comparable with the 466 (score 6 only) and 390
 from the 2026-11-01 corpus above.
+
+## Third lead review (2026-11-10)
+
+A fresh sweep after the byline fixes (bylines ending in NCBI's "New Collective
+Author" placeholder or a lowercase group name, and "Collaborators:" paragraphs, are
+now dropped) found 10,709 leads in 2,847 genes, with 460 rows in the top tier. The
+next 20 top-tier genes were checked the same way as before: one gene per lead, IPI
+rows skipped, genes already checked excluded, highest score first. All of a gene's
+flagged rows were read, so some outcomes below come from a row other than the
+highest-scoring one.
+
+| Gene | Row | Outcome |
+|---|---|---|
+| mouse/Rbpj | chromatin binding (IDA, MGI) | **Wrong gene, confirmed.** Every ChIP in PMID:23571214 (full text cached) pulls down BEND6. MGI already has the identical row on Bend6, with Rbpj as its `has_input`. `WRONG_GENE_PRODUCT` / `DELETE_ROW` / `CONFIRMED`. |
+| DROME/Septin1, Septin2, Septin4 | photoreceptor cell development (NAS, ComplexPortal) | **Probable wrong gene.** PMID:8181057 identifies peanut and its genetic interaction with seven in absentia; only pnut's entry cites it, and pnut carries the same row. `WRONG_GENE_PRODUCT` / `CHECK` / `PROBABLE` toward pnut (P40797) on each. |
+| human/PARD6B | four UniProt rows; tight junction (NAS, ComplexPortal) | **Wrong evidence code**, and **wrong reference.** The four UniProt rows rest on mouse Pard6b work in PMID:12545177 (`WRONG_EVIDENCE_CODE` / `PROBABLE`). The ComplexPortal row cites PMID:11257119, which cloned a 346-residue PAR-6: that is PARD6A, while PARD6B has 372 residues (`WRONG_REFERENCE` / `CONFIRMED`). |
+| human/DLG3 | kinase binding (IDA, MGI) | **Wrong evidence code, confirmed.** The PMC full text used rat PSD-93 and rodent brain. `WRONG_EVIDENCE_CODE` / `CHECK`. |
+| human/GNAQ | PLC-activating GPCR pathway (IDA, UniProt) | **Wrong evidence code**, probable. The paper is cited by mouse Gnaq for its structure and mutagenesis, not by human GNAQ. |
+| human/PPP3CA | two TAS rows (UniProt) | **Wrong reference.** PMID:2556704 cloned the two PPP3CB isoforms (its proline run and 18-residue insert are PPP3CB features). `WRONG_REFERENCE` / `PROBABLE`; quotes swapped to PPP3CA papers. The flagged CHP2 rows need no change. |
+| human/JAK1 | protein tyrosine kinase activity (EXP, Reactome) | **Wrong reference.** PMID:1386289 identifies TYK2 and never names JAK1. `WRONG_REFERENCE` / `PROBABLE`; quote swapped. Its seven flagged rows on PMID:8272873 are false positives: that abstract names "all known members of the Jak-Tyk family". |
+| human/AP2M1, DROME/EloC, DROME/Med | IDA rows | **Query.** The abstracts image other adaptins (AP2M1), name only Slim and mammalian KLHDC10 (EloC, filed as an evidence-code query), or concern Schnurri and Mad (Med, two rows). `SUSPECTED`; actions unchanged. |
+| human/AP3S2, human/JAK2, human/SRPRB, DROME/CycA, DROME/GstO1, DROME/GstO2, DROME/Prx4, DROME/RfC4 | various | **False positives or no change.** The cached full texts assay the gene itself (σ3B, cyclin A, the Omega GSTs, dPrx4), the abstract names the gene's family (JAK2), the evidence code already records mixed species (SRPRB), or the TAS rows rest on a statement about the whole complex (RfC4). |
+
+So of 20 leads: 4 are wrong-gene annotations (Rbpj, three Septins), 3 are wrong
+evidence codes (PARD6B, DLG3, GNAQ), 2 are wrong references for true claims (JAK1,
+PPP3CA, plus PARD6B's second row), 3 are queries, and 8 are false positives or need
+no change. A new pattern this round: a direct-evidence code on a human protein from a
+paper on the rodent ortholog. The same-gene-other-species signal, which the case fix
+turned on, now surfaces this pattern routinely.
+
+Across all three batches (46 leads): 7 wrong-gene annotations, 4 wrong evidence codes,
+4 wrong references, 9 queries pending full text, and 22 false positives or no change.
+No review action was changed on the strength of an abstract alone.
 
 ## Limitations
 
