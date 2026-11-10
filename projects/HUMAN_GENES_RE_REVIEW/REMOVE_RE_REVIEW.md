@@ -260,7 +260,9 @@ policy is the reason, and they were left as they are.
 - **Rows kept beside the ones changed.** The pass covered REMOVE rows only. A
   few inconsistencies among kept rows were seen and left: the TOMM40
   mitochondrion rows are `MARK_AS_OVER_ANNOTATED` against the organelle
-  policy, and the ZP3 immune-response transfers from an immunization study are
-  marked while the transcription transfers from the same study are removed.
+  policy; the electronic centriole row of HSPA1B is marked beside two accepted
+  direct-assay rows for the same term; and the ZP3 immune-response transfers
+  from an immunization study are marked while the transcription transfers from
+  the same study are removed.
 - **Other organisms.** The same patterns are likely in the mouse and model
   organism reviews, which were not touched.
