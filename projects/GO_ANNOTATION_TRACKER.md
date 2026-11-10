@@ -31,6 +31,7 @@ trackers to be shadowed later.
 | `<N>/thread.jsonl` | sync | append-only opening post, comments and events; an edit adds a new version |
 | `<N>/issue.yaml` | curated | `ShadowIssue`: study, triage, shadow work, upstream resolution, prior work |
 | `<N>/shadow.md` | curated | the worker's free-text log (optional) |
+| `<N>/self-rating.yaml` | curated | `SelfRating`: the worker's confidence, kept apart so the rater can read the record without it |
 | `<N>/rating.yaml` | curated | `ShadowRating` from an independent rater (optional) |
 
 The sync creates `issue.yaml` once, as a stub, and never rewrites curated files.
@@ -47,14 +48,20 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
 3. **Shadow work.** For each issue in `needs_shadow`, do the work here as
    for any other task: gene reviews, family reviews, curated rules, proposed
    terms. Record `shadow.diagnosis`, `proposed_actions` (subject, term,
-   replacement) and `work_products`, plus a self-rating. Read the thread with
+   replacement) and `work_products` in `issue.yaml`, and the worker's
+   confidence in `self-rating.yaml`. Read the thread with
    `just show-shadow-issue N --as-of <time>` (or `--opening-only` for BLIND)
-   and record that time as `thread_snapshot_at`.
+   and record that time as `thread_snapshot_at`. Before changing anything,
+   record any existing review of an affected gene, family, rule or term as
+   `prior_work` with `relation: COVERS_SUBJECT`.
 4. **Rating.** Once upstream closes the issue, a different agent or person
-   fills `resolution` and writes `rating.yaml`. The rater should not read the
-   worker's self-rating first. Many threads end in "fixed, thanks", so the
-   rater should check the released artifacts (GOA, interpro2go, ARBA and PAINT
-   releases, linked ontology PRs) rather than rely on the thread alone.
+   fills `resolution` and writes `rating.yaml`. The rater must not open
+   `self-rating.yaml` before scoring. Many threads end in "fixed, thanks", so
+   the rater should check the released artifacts (GOA, interpro2go, ARBA and
+   PAINT releases, linked ontology PRs) rather than rely on the thread alone,
+   and date each check (`checked_at`). If upstream has acted but the change is
+   not yet released, score `downstream: PENDING_RELEASE` and re-rate after the
+   next release.
 
 `just outstanding-shadow-issues` lists the three queues (`untriaged`,
 `needs_shadow`, `needs_rating`), prospective issues and newest issues first.
@@ -84,9 +91,16 @@ resolution.
 
 Retrospective issues are often only partly blind: the repo's GOA files and the
 ontology already reflect the fix, the model may have seen the thread in
-training, and 75 issues in the window already have earlier work in this repo.
-That earlier work is recorded as `prior_work` on each issue. These 75 are the
-natural first confirmation batch.
+training, and the repo may already hold work on the issue. `prior_work` records
+two kinds: `NAMES_ISSUE`, a commit message names the issue (75 issues in the
+backfill, found from git history; the natural first confirmation batch), and
+`COVERS_SUBJECT`, an existing review of an affected gene or family made for
+another reason. Only the first unblinds the thread, but both make the shadow
+work less independent, and the rater should say so.
+
+Agent worktrees can start from an older commit than the coordinator's branch.
+A worker whose checkout has no `issues/go-annotation/tracker.yaml` must stop
+rather than work without the mirror.
 
 ## No upstream notifications
 
@@ -129,6 +143,18 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   retrospective needs_shadow, then retrospective untriaged (25 per run, issues
   with `prior_work` and open issues first). It runs daily in the `medium` and
   `fast` cron profiles and weekly in `slow`.
+- 2026-11-10: first experiment, go-annotation 6596 (a PAINT IBA of GDP-forming
+  succinate-CoA ligase on yeast LSC1). A blind worker agreed with the curator
+  and traced the error to the term's placement at the root of the
+  alpha-subunit family PTHR11117, although the beta subunit sets nucleotide
+  specificity; it proposed a NOT at the Fungi node and found that the
+  issue's *S. pombe* precedent named the beta, not the alpha, subunit. An
+  independent rater scored it CONCORDANT (actions PARTIAL, downstream
+  PENDING_RELEASE, added value SOME, harm NONE). Confound: the LSC1 review
+  already removed the row (COVERS_SUBJECT prior work). The run led to five
+  protocol fixes: `self-rating.yaml` split out of `issue.yaml`,
+  `PENDING_RELEASE`, `checked_at`, `COVERS_SUBJECT` prior work, and the
+  worktree preflight.
 
 ## Next steps
 

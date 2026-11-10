@@ -144,7 +144,7 @@ def stats_cmd(
 def validate_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
 ) -> None:
-    """Validate every issue.yaml (ShadowIssue) and rating.yaml (ShadowRating) against the schema."""
+    """Validate issue.yaml (ShadowIssue), self-rating.yaml (SelfRating) and rating.yaml (ShadowRating)."""
     from linkml.validator import Validator
     from linkml.validator.plugins import JsonschemaValidationPlugin
 
@@ -156,6 +156,7 @@ def validate_cmd(
     for folder in folders:
         for filename, target in (
             ("issue.yaml", "ShadowIssue"),
+            ("self-rating.yaml", "SelfRating"),
             ("rating.yaml", "ShadowRating"),
         ):
             path = folder / filename

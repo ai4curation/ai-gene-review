@@ -323,6 +323,22 @@ def test_cli_validate_show_outstanding(config, tracker_dir):
     )
     assert result.exit_code == 0 and "## untriaged: 1" in result.output
 
+    self_rating = tracker_dir / "101" / "self-rating.yaml"
+    self_rating.write_text(
+        "tracker: example\nnumber: 101\nworker: w\nconfidence: VERY_HIGH\n"
+    )
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 1 and "VERY_HIGH" in result.output
+    self_rating.write_text(
+        "tracker: example\nnumber: 101\nworker: w\nconfidence: HIGH\n"
+    )
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 0, result.output
+
     issue_yaml = tracker_dir / "101" / "issue.yaml"
     issue_yaml.write_text(issue_yaml.read_text().replace("NOT_STARTED", "FINISHED"))
     result = runner.invoke(
