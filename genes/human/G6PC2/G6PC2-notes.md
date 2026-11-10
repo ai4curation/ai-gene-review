@@ -269,6 +269,10 @@ G6PC2 in alpha cells, and it has a human arm.
   parenthetical overstates the case: the activity is low but real, is required for the
   islet glucose cycle, and human PAP2-motif mutagenesis measures it directly
   (PMID:38095063). Module-level issue, not edited here (same note as in the mouse review).
+  Update (2026-11-10): the module note was corrected later in the same PR (commit
+  34c6884b69); it now describes a pancreatic-islet glucose-6-phosphatase of low turnover
+  that sets the insulin and glucagon glucose thresholds. The paralog-trap decision is
+  unchanged.
 - Human G6PC2 had no review until now; G6PC1 and G6PC3 reviews exist and were consulted
   for consistency.
 

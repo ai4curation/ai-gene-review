@@ -105,6 +105,9 @@ deep-research file (treated as a lead list), and the generated Bgee report
   decision, so I did not cite it as independent evidence. Note: that module's note calls
   G6PC2 "largely catalytically inactive autoantigen", which overstates the case (activity is
   low but real and abolished in KO islets). Module-level issue; not edited here.
+  Update (2026-11-10): the module note was corrected later in the same PR (commit
+  34c6884b69) to describe a pancreatic-islet glucose-6-phosphatase of low turnover; the
+  paralog-trap decision is unchanged.
 - Human G6PC3 review keeps its gluconeogenesis IBA as KEEP_AS_NON_CORE (G6pc3 has its own
   experimental glucose-production evidence). The G6PC2 decision is paralog-specific and does
   not conflict.
