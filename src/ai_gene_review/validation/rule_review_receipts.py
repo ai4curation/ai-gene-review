@@ -207,7 +207,7 @@ def looks_like_a_name(text: str) -> bool:
 
 
 _SET_REFERENCE = re.compile(
-    r"\b(?:condition\s+sets?|sets?|CS)\s*((?:\d+)(?:\s*(?:,|and|or|to|-)\s*\d+)*)(?!\s*(?:of|condition|sets?|entries|matches|proteins|%))",
+    r"\b(?:condition\s+sets?|sets?|CS)\s*((?:\d+(?!\d))(?:\s*(?:,|and|or|to|-)\s*\d+(?!\d))*)(?!\s*(?:of|condition|sets?|entries|matches|proteins|%))",
     re.IGNORECASE,
 )
 
@@ -222,6 +222,8 @@ def cited_set_numbers(text: str) -> Set[int]:
     >>> cited_set_numbers("12 of 343 sets were read")
     set()
     >>> cited_set_numbers("matches across the screened sets 46,549")
+    set()
+    >>> cited_set_numbers("set 900 matches 3 entries")
     set()
     """
     found: Set[int] = set()
