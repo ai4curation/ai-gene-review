@@ -47,7 +47,10 @@ from typing import Any, Iterable
 
 import yaml
 
-from ai_gene_review.evidence import LITERATURE_EVIDENCE_CODES as LITERATURE_CODES, source_evidence_code
+from ai_gene_review.evidence import (
+    LITERATURE_EVIDENCE_CODES as LITERATURE_CODES,
+    source_evidence_code,
+)
 
 from ai_gene_review.tools.function_requirements import REPO_ROOT, _get, _write_tsv
 
@@ -258,8 +261,11 @@ _AUTHOR = re.compile(
 )
 # A group author in a byline ("ADHR Consortium", "GTEx Consortium").
 _GROUP_AUTHOR = re.compile(
-    r"(?:The )?[\w'.\- ]*\b(?:Consortium|Group|Collaborators|Investigators|"
-    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative|Committee)"
+    # Keywords match in any case ("GERAD consortium"); "Collective Author" is
+    # NCBI's placeholder for an unnamed group ("New Collective Author").
+    r"(?:The )?[\w'.\- ]*\b(?i:Consortium|Group|Collaborators|Investigators|"
+    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative|Committee|"
+    r"Collective Author)"
     r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
 )
 
@@ -280,6 +286,10 @@ def _is_author_list(paragraph: str) -> bool:
     True
     >>> _is_author_list("Cook LS, Brooks-Wilson A; Ovarian Cancer Association Consortium.")
     True
+    >>> _is_author_list("Brandstatter I(1), Kieber JJ; New Collective Author.")
+    True
+    >>> _is_author_list("Harold D, Lambert JC; GERAD consortium.")
+    True
     >>> _is_author_list("ENaC is regulated by Nedd4-2, which binds PY motifs.")
     False
     """
@@ -296,7 +306,7 @@ def _is_author_list(paragraph: str) -> bool:
 
 # Paragraphs of a PubMed text record that are bibliographic, not the abstract.
 _RECORD_PARAGRAPH = re.compile(
-    r"^(?:\d+\. \S|Author information:|DOI:|PMID:|PMCID:|Copyright|©|"
+    r"^(?:\d+\. \S|Author information:|Collaborators:|DOI:|PMID:|PMCID:|Copyright|©|"
     r"Comment in|Comment on|Erratum in|Update of|Conflict of interest)"
 )
 
@@ -491,7 +501,8 @@ def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | 
         for row in csv.DictReader(fh, delimiter="\t"):
             ref = row.get("REFERENCE") or ""
             if (
-                source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID")) in LITERATURE_CODES
+                source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID"))
+                in LITERATURE_CODES
                 and ref.startswith("PMID:")
                 and ref[5:] not in own.cited_pmids
                 and row.get("GO TERM") not in SKIPPED_TERMS

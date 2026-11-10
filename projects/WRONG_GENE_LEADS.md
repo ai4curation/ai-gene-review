@@ -187,7 +187,8 @@ comparable):
   rule or submitter text are also dropped.
 - **The name check reads only the title and abstract.** It stops at the next
   section heading and drops the PubMed citation line, author list (including
-  bylines with "Jr" suffixes or group authors), affiliations and identifiers, which a symbol that is also a surname could otherwise match. 796
+  bylines with "Jr" suffixes or group authors), affiliations and identifiers,
+  which a symbol that is also a surname could otherwise match. 796
   abstract-only records keep their abstract under `## Content`, and those are read
   too. Of the 299 full-text `## Content` records, 242 open with the same PubMed
   block, and their abstract is read up to its `DOI:`/`PMID:` trailer. The other 57

@@ -335,6 +335,9 @@ def test_protein_name_in_abstract_penalises_aurkc_lead():
         ),
         # A byline with a generational suffix ("Wharton KA Jr") is still a byline.
         ("11274052", ["dishevelled"], ["Wharton", "Nusse R", "Cadigan KM"]),
+        # NCBI's "New Collective Author" placeholder ends the byline, and a
+        # "Collaborators:" paragraph follows it.
+        ("9634588", ["IBC6", "cytokinin"], ["Brandstatter", "Kieber JJ", "Evans ML"]),
         # A group author after a semicolon ends a long consortium byline.
         ("24190013", ["ovarian"], ["Brooks-Wilson", "Pharoah PD", "Ramus SJ"]),
     ],
