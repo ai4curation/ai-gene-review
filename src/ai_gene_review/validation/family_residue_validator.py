@@ -104,31 +104,39 @@ class ResidueCheck:
         )
 
 
-class InactiveEntry(LookupError):
-    """A UniProtKB accession whose entry is inactive (deleted or demerged).
+class InactiveEntryError(LookupError):
+    """Raised when UniProtKB returns an inactive (deleted/merged/demerged) entry.
 
-    UniProt answers such a request normally but returns no sequence. This is a state
-    of the data, not a retrieval failure: the claim that names the accession cannot be
-    checked until it is re-pointed, so callers report it as UNRESOLVED.
+    Such a record carries no sequence. This is a property of the cited accession, not a
+    retrieval failure, so callers report it as a FAIL on the claim that cites it rather
+    than letting one stale accession stop validation of every other family.
     """
 
-    def __init__(self, accession: str, reason: str):
-        super().__init__(f"{accession} is inactive in UniProtKB: {reason}")
+    def __init__(self, accession: str, data: dict) -> None:
         self.accession = accession
-        self.reason = reason
+        reason = data.get("inactiveReason") or {}
+        self.reason_type = reason.get("inactiveReasonType") or data.get("entryType") or "INACTIVE"
+        self.detail = reason.get("deletedReason") or ""
+        self.merged_into = list(reason.get("mergeDemergeTo") or [])
+        super().__init__(self.describe())
 
+    def describe(self) -> str:
+        """Human-readable explanation, for use in a check message.
 
-def sequence_from_entry(data: dict, accession: str) -> str:
-    """Return the sequence of a UniProt JSON record, or raise InactiveEntry.
-
-    >>> sequence_from_entry({"sequence": {"value": "MAC"}}, "P00001")
-    'MAC'
-    """
-    if data.get("entryType") == "Inactive" or "sequence" not in data:
-        why = data.get("inactiveReason") or {}
-        reason = why.get("deletedReason") or why.get("inactiveReasonType") or "no sequence returned"
-        raise InactiveEntry(accession, reason)
-    return data["sequence"]["value"]
+        >>> InactiveEntryError("C0H4F3", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "DELETED",
+        ...     "deletedReason": "Deleted from sequence source (ENSEMBL)"}}).describe()
+        'accession C0H4F3 is inactive in UniProtKB (DELETED: Deleted from sequence source (ENSEMBL))'
+        >>> InactiveEntryError("P1", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "MERGED", "mergeDemergeTo": ["P2"]}}).describe()
+        'accession P1 is inactive in UniProtKB (MERGED; now P2)'
+        """
+        msg = f"accession {self.accession} is inactive in UniProtKB ({self.reason_type}"
+        if self.detail:
+            msg += f": {self.detail}"
+        if self.merged_into:
+            msg += f"; now {', '.join(self.merged_into)}"
+        return msg + ")"
 
 
 @dataclass
@@ -141,16 +149,13 @@ class SequenceCache:
     sequence over the network.
 
     Retrieval failures retain accession/URL context and propagate with their cause;
-    they are never converted into UNRESOLVED curation results. An inactive (deleted)
-    entry is different: UniProt answers it normally with no sequence, which is a state
-    of the data, so ``get`` raises InactiveEntry and the checks report UNRESOLVED.
-    Inactive accessions are remembered, so each is requested once per run.
+    they are never converted into UNRESOLVED curation results.
     """
 
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
     _versions: dict[str, int] = field(default_factory=dict)
-    _inactive: dict[str, InactiveEntry] = field(default_factory=dict)
+    _inactive: dict[str, InactiveEntryError] = field(default_factory=dict)
 
     def _fetch_json(self, acc: str) -> dict:
         req = urllib.request.Request(
@@ -176,6 +181,39 @@ class SequenceCache:
                 time.sleep(2 ** attempt)
         raise AssertionError("unreachable")
 
+    def _record_sequence(self, acc: str, data: object) -> str:
+        """Validate a response before caching or classifying a cited accession.
+
+        Only explicit inactive metadata denotes an inactive accession. Other
+        sequence-less or malformed responses remain contextual hard errors.
+        """
+        entry_type = data.get("entryType") if isinstance(data, dict) else None
+        try:
+            if not isinstance(data, dict):
+                raise TypeError("expected a JSON object")
+            reason = data.get("inactiveReason")
+            if reason is not None and not isinstance(reason, dict):
+                raise TypeError("inactiveReason must be an object")
+            reason_type = (reason or {}).get("inactiveReasonType")
+            if entry_type == "Inactive" or (
+                isinstance(reason_type, str) and bool(reason_type.strip())
+            ):
+                # Memory only: a later run must be able to observe reactivation.
+                err = InactiveEntryError(acc, data)
+                self._inactive[acc] = err
+                raise err
+            seq = data["sequence"]["value"]
+            if not isinstance(seq, str) or not (
+                seq and seq.isascii() and seq.isalpha() and seq.isupper()
+            ):
+                raise ValueError("sequence.value must be nonempty uppercase letters")
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RuntimeError(
+                f"UniProt record {acc} from {UNIPROT_JSON.format(acc=acc)} "
+                f"has an invalid sequence payload (entryType={entry_type!r})"
+            ) from exc
+        return seq
+
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
 
@@ -184,21 +222,17 @@ class SequenceCache:
         of everything the first time versions were introduced.
         """
         acc = accession.split(":")[-1]
-        if acc in self._mem:
-            return self._mem[acc]
         if acc in self._inactive:
             raise self._inactive[acc]
+        if acc in self._mem:
+            return self._mem[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         seq_path = self.cache_dir / f"{acc}.seq"
         if seq_path.exists():
             seq = seq_path.read_text().strip()
         else:
             data = self._fetch_json(acc)
-            try:
-                seq = sequence_from_entry(data, acc)
-            except InactiveEntry as exc:
-                self._inactive[acc] = exc
-                raise
+            seq = self._record_sequence(acc, data)
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is not None:
@@ -214,6 +248,8 @@ class SequenceCache:
         an unversioned corpus costs no extra requests.
         """
         acc = accession.split(":")[-1]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         if acc in self._versions:
             return self._versions[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -221,7 +257,9 @@ class SequenceCache:
         if ver_path.exists():
             version = int(ver_path.read_text().strip())
         else:
-            version = self._fetch_json(acc).get("entryAudit", {}).get("sequenceVersion")
+            data = self._fetch_json(acc)
+            self._record_sequence(acc, data)
+            version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is None:
                 return None
             ver_path.write_text(str(version))
@@ -264,19 +302,19 @@ def check_anchor_residues(
 
         try:
             seq = cache.get(anchor)
-        except InactiveEntry as exc:
+            pinned = site.get("anchor_sequence_version")
+            current = cache.sequence_version(anchor) if pinned is not None else None
+        except InactiveEntryError as exc:
             results.append(
                 ResidueCheck(
-                    family, site_id, anchor, 0, [], None, Outcome.UNRESOLVED,
-                    f"anchor cannot be checked: {exc}; re-point the site to a current entry",
-                    kind="ANCHOR_INACTIVE",
+                    family, site_id, anchor, 0, [], None, Outcome.FAIL,
+                    f"{exc.describe()}; choose a live anchor protein",
+                    kind="ANCHOR_RESIDUE",
                 )
             )
             continue
-        pinned = site.get("anchor_sequence_version")
         drift = ""
         if pinned is not None:
-            current = cache.sequence_version(anchor)
             if current is not None and current != pinned:
                 drift = (
                     f" [anchor sequence version has moved {pinned} -> {current} "
@@ -885,13 +923,14 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
             kind="CONTROL_RESIDUE",
         )
     try:
-        observed = _residue_at(cache.get(acc), pos)
-    except InactiveEntry as exc:
+        seq = cache.get(acc)
+    except InactiveEntryError as exc:
         return ResidueCheck(
-            family, site_id, acc, pos, sorted(expected), None, Outcome.UNRESOLVED,
-            f"{kind} control cannot be checked: {exc}; replace it with a current entry",
+            family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
+            f"{kind} control {exc.describe()}; replace or drop this control",
             kind="CONTROL_RESIDUE",
         )
+    observed = _residue_at(seq, pos)
     if observed is None:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,

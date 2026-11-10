@@ -11,10 +11,9 @@ import pytest
 import yaml
 
 from ai_gene_review.validation.family_residue_validator import (
-    InactiveEntry,
+    InactiveEntryError,
     Outcome,
     SequenceCache,
-    sequence_from_entry,
     check_anchor_residues,
     check_controls,
     summarize,
@@ -29,10 +28,7 @@ class StubCache:
         self.seqs = seqs
 
     def get(self, accession: str) -> str:
-        seq = self.seqs[accession.split(":")[-1]]
-        if seq is None:  # stands for an entry UniProt has deleted
-            raise InactiveEntry(accession, "Deleted from sequence source (ENSEMBL)")
-        return seq
+        return self.seqs[accession.split(":")[-1]]
 
 
 # A 12-residue toy protein:  positions 1..12
@@ -255,6 +251,63 @@ def test_sequence_cache_writes_and_reads_disk(tmp_path):
     (tmp_path / "P12345.seq").write_text("MACDEF")
     assert cache.get("UniProtKB:P12345") == "MACDEF"
     assert cache.get("P12345") == "MACDEF"
+
+
+DELETED_RECORD = {
+    "entryType": "Inactive",
+    "primaryAccession": "C0H4F3",
+    "inactiveReason": {
+        "inactiveReasonType": "DELETED",
+        "deletedReason": "Deleted from sequence source (ENSEMBL)",
+    },
+    "extraAttributes": {"uniParcId": "UPI0001981FEE"},
+}
+
+
+def test_sequence_cache_raises_inactive_entry_error(tmp_path, monkeypatch):
+    """A deleted UniProt entry has no sequence; the cache says so instead of KeyError.
+
+    Regression for issue #6003 (C0H4F3 in PTHR21340). Nothing is written to disk, so the
+    accession is looked up again if UniProt restores it.
+    """
+    cache = SequenceCache(tmp_path)
+    monkeypatch.setattr(cache, "_fetch_json", lambda acc: DELETED_RECORD)
+    with pytest.raises(InactiveEntryError, match="DELETED"):
+        cache.get("UniProtKB:C0H4F3")
+    assert not (tmp_path / "C0H4F3.seq").exists()
+
+
+class _InactiveStub(StubCache):
+    def get(self, accession: str) -> str:
+        acc = accession.split(":")[-1]
+        if acc == "C0H4F3":
+            raise InactiveEntryError(acc, DELETED_RECORD)
+        return super().get(accession)
+
+
+def test_inactive_control_is_reported_as_a_failure_not_a_crash():
+    """One deleted control fails its own check; the other checks still run."""
+    review = _review(
+        [{"position": 3, "expected": ["C"]}],
+        pos_ctl=[
+            {"id": "UniProtKB:C0H4F3", "control_position": 3, "control_residue": "C"},
+            {"id": "UniProtKB:P00002", "control_position": 3, "control_residue": "C"},
+        ],
+    )
+    cache = _InactiveStub({"P00001": TOY, "P00002": TOY})
+    results = [r for r in check_controls(review, cache) if r.kind == "CONTROL_RESIDUE"]
+    by_acc = {r.accession: r for r in results}
+    assert by_acc["UniProtKB:C0H4F3"].outcome is Outcome.FAIL
+    assert "inactive" in by_acc["UniProtKB:C0H4F3"].message
+    assert by_acc["UniProtKB:P00002"].outcome is Outcome.PASS
+
+
+def test_inactive_anchor_is_reported_as_a_failure_not_a_crash():
+    review = _review([{"position": 3, "expected": ["C"]}])
+    review["residue_sites"][0]["anchor"] = {"id": "UniProtKB:C0H4F3"}
+    results = check_anchor_residues(review, _InactiveStub({}))
+    assert [r.outcome for r in results] == [Outcome.FAIL]
+    assert "inactive" in results[0].message
 
 
 @pytest.mark.integration
@@ -964,43 +1017,3 @@ def test_atom_provenance_is_optional_and_does_not_affect_checking():
     }])
     assert [r.outcome for r in check_anchor_residues(plain, CACHE)] == [Outcome.PASS]
     assert [r.outcome for r in check_anchor_residues(annotated, CACHE)] == [Outcome.PASS]
-
-
-def test_sequence_from_entry_reads_an_active_record():
-    """The sequence is read from an active UniProt JSON record."""
-    assert sequence_from_entry({"entryType": "UniProtKB reviewed (Swiss-Prot)",
-                                "sequence": {"value": "MAC"}}, "P00001") == "MAC"
-
-
-def test_sequence_from_entry_raises_for_a_deleted_record():
-    """An inactive record has no sequence; it raises InactiveEntry with UniProt's reason."""
-    record = {"entryType": "Inactive",
-              "inactiveReason": {"inactiveReasonType": "DELETED",
-                                 "deletedReason": "Deleted from sequence source (ENSEMBL)"}}
-    with pytest.raises(InactiveEntry, match="Deleted from sequence source"):
-        sequence_from_entry(record, "C0H4F3")
-
-
-def test_deleted_control_is_unresolved_not_a_crash():
-    """A control whose UniProt entry was deleted cannot be checked, so it is UNRESOLVED."""
-    cache = StubCache({"P00001": TOY, "P00002": None, "P00003": TOY})
-    review = _review([{"position": 3, "expected": ["C"]}],
-                     pos_ctl=[{"id": "UniProtKB:P00002", "control_position": 3, "control_residue": "C"}])
-    results = check_controls(review, cache)
-    deleted = [r for r in results if "P00002" in r.accession]
-    assert deleted and all(r.outcome is Outcome.UNRESOLVED for r in deleted)
-    assert "deleted" in deleted[0].message.lower()
-
-
-def test_deleted_anchor_is_unresolved_not_a_crash():
-    """A site whose anchor entry was deleted cannot be checked, so it is UNRESOLVED."""
-    cache = StubCache({"P00001": None})
-    results = check_anchor_residues(_review([{"position": 3, "expected": ["C"]}]), cache)
-    assert results and all(r.outcome is Outcome.UNRESOLVED for r in results)
-
-
-@pytest.mark.integration
-def test_real_deleted_entry_raises_inactive(tmp_path):
-    """C0H4F3 was deleted from UniProtKB in 2026; fetching it raises InactiveEntry."""
-    with pytest.raises(InactiveEntry):
-        SequenceCache(tmp_path).get("UniProtKB:C0H4F3")

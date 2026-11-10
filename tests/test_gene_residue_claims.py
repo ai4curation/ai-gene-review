@@ -326,27 +326,3 @@ def test_residue_and_motif_positions_are_unioned(tmp_path):
         ],
     }))
     assert load_family_sites(tmp_path)["PANTHER:PTHR00002#mixed"] == {5, 20, 21, 22}
-
-
-class DeletedEntryCache(StubCache):
-    """A stub where some accessions are deleted from UniProtKB (value None)."""
-
-    def get(self, accession: str) -> str:
-        from ai_gene_review.validation.family_residue_validator import InactiveEntry
-
-        seq = self.seqs[accession.split(":")[-1]]
-        if seq is None:
-            raise InactiveEntry(accession, "Deleted from sequence source (ENSEMBL)")
-        return seq
-
-    def sequence_version(self, accession: str) -> int | None:
-        return None
-
-
-def test_claim_on_a_deleted_entry_is_unresolved_not_a_crash():
-    """A claim naming an accession UniProt has deleted cannot be checked: UNRESOLVED."""
-    cache = DeletedEntryCache({"ANCHOR1": "MAHKCDEFGH", "TARGET1": None})
-    results = check_claim(_claim("LOST", 3, "H", 3, "A"), "UniProtKB:TARGET1", "G", "GO:1", cache)
-    target = [r for r in results if "TARGET1" in r.detail]
-    assert target and all(r.outcome is ClaimOutcome.UNRESOLVED for r in target)
-    assert "deleted" in target[0].detail.lower()

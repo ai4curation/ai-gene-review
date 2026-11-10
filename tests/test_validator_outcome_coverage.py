@@ -57,11 +57,6 @@ CANNOT_REJECT = {
         "a site with neither its own anchor nor a family reference_protein is "
         "incomplete, not contradicted, so this check reports UNRESOLVED by design"
     ),
-    "ANCHOR_INACTIVE": (
-        "a site whose anchor entry UniProt has deleted cannot be read, which leaves "
-        "the claim unchecked rather than contradicted, so this check reports "
-        "UNRESOLVED by design until the site is re-pointed to a current entry"
-    ),
 }
 
 #: The validator test modules whose execution defines coverage.
