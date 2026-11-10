@@ -27,3 +27,10 @@
 - Core functions: intronic pre-mRNA binding driving regulation of alternative splicing (incl.
   cryptic exon repression); 3'-UTR binding driving mRNA destabilisation (autoregulation);
   condensate scaffolding by the CTD.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0042307 / GO_REF:0000107: defect withdrawn (evidence depth: FULL_TEXT). The mouse source row (Q921F2 IDA, PMID:28585542) carries has_input Chchd10, and the cached full text states "TDP-43 promoted the nuclear localization of CHCHD10" (three-fold more nuclear CHCHD10 on TDP-43 overexpression). TDP-43 is the regulator and CHCHD10 the cargo, exactly as annotated; the claimed cargo/regulator conflation was wrong. Defect deleted, action/summary/reason rewritten, and the contradicting reference_review note, notes.md line and deep-research-manual line corrected.
+- GO:0042307 / GO_REF:0000121: defect withdrawn (evidence depth: FULL_TEXT). Same source row as the IEA entry; defect alias removed, action changed to KEEP_AS_NON_CORE and propagation_review changed from SOURCE_BAD/ROLE_CONFLATION to NO_FAILURE_NON_CORE/SUPPORTS_TRANSFER.

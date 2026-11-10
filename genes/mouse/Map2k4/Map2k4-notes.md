@@ -20,3 +20,10 @@
 ## 2026-10-28: positive regulation of JNK cascade rows (PR #5693 review)
 
 The two GO:0046330 ISO rows were first MARK_AS_OVER_ANNOTATED on the view that a cascade kinase should not carry the regulation term. That contradicted the rat Map2k7, Map3k5, Map2k3 and Map2k6 reviews, which keep such rows as true but non-core (curators give cascade kinases the term in some cases: rat Map2k7 by RGD IDA, human MAP3K5 by IMP). Both rows are now KEEP_AS_NON_CORE, with NO_FAILURE_NON_CORE propagation reviews; JNK cascade remains the core process.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0007528 / PMID:10521398: defect retyped (evidence depth: FULL_TEXT). Cached full text has no MKK4 data, but the row is not a gene mix-up. It is exported from MGI GO-CAM gomodel:64c3044100000125, where the Erbb2-allele IMP evidences the process edge ERBB signaling part_of NMJ development and is repeated on 8 genes; Erbb2 (MGI:95410, verified) already carries it, so REPOINT was wrong. Retyped to WRONG_REFERENCE / OVER_PROPAGATION / CHECK with the model activity as record; corrected_value removed.
+- GO:0038127 / PMID:8702681: defect retyped (evidence depth: ABSTRACT). Same GO-CAM export artefact; the IDA from PMID:8702681 evidences the MAPK cascade/ERBB nesting and Map2k1 already has its own row, so "intended for Map2k1" was wrong. The model's own Map2k4 evidence is PMID:10493750 (dominant-negative MKK4 blocks the neuregulin response; full text read on PMC), which supports the claim, hence KEEP_AS_NON_CORE. Retyped to WRONG_REFERENCE / OVER_PROPAGATION / CHECK. Full text of PMID:8702681 not obtainable.

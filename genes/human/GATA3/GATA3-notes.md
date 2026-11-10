@@ -25,3 +25,9 @@ The [developmental evidence](GATA3-external-evidence.md) resolves the three coch
 The earlier journal remains unchanged. Its access and validation entries describe the previous curation stage, not new biological evidence. Current source-specific uncertainty is retained unless an independently inspected experiment resolves the actual developmental claim.
 
 Native amendment checks: default validation, strict GOA matching, computed-status audit, EDIT history validation and private rendering pass. Status remains DRAFT. The single annotation advisory concerns preserved uncited historical deep-research files; no citation was fabricated. All 97 present source objects and the ontology cache remain unchanged.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0009615 / PMID:20583921: defect retyped (evidence depth: FULL_TEXT). The paper is the intended one and does measure GATA-3 expression, but in PBMCs exposed to Leishmania (a protozoan), with no viral stimulus (title, abstract, cached full text). Right paper, right gene, wrong term: retyped to WRONG_TERM (slot GO_ID, asserted GO:0009615, suggested GO:0001562 response to protozoan, CHECK). The identical row also sits on FOXP3 and TBX21 from the same paper, noted in the explanation.

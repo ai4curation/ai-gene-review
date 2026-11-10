@@ -33,3 +33,14 @@
 - Core MF: no GO term for the surfactant/steric-barrier role; proposed as a new term.
   `molecular condensate scaffold activity` kept for the RNA-dependent condensate
   formed at mitotic exit (by similarity to human).
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005634 / PMID:12368262: defect retyped (evidence depth: FULL_TEXT). The PMC full text does contain Ki-67 staining (Fig. 5C, E-G; clone TEC-3), missing from the cached copy, so the reference is right. The staining is on mouse embryo sections, yet MGI's source IDA is on rat Mki67 (D4A0Y6) with the mouse row derived by ISO. Retyped to WRONG_GENE_PRODUCT on the donor record (REPOINT D4A0Y6 to mouse E9PVX6).
+- GO:0008283 / PMID:12972605: defect retyped (evidence depth: FULL_TEXT). PMC full text mentions Ki-67 once, as anti-Ki67 labelling "data not shown" in Pura-null tissues. Ki-67 was the antibody target, so the row is on the intended gene and is not a gene mix-up; the defect is a marker read-out recorded as IDA process involvement. Retyped to OTHER, DELETE_ROW.
+- GO:0008283 / PMID:19303854: defect retyped (evidence depth: FULL_TEXT). Cached full text uses Ki67(+) cell counts as a read-out in Ezh2 conditional knockouts. Same marker-as-participant pattern on the intended gene, so retyped from WRONG_GENE_PRODUCT to OTHER; DELETE_ROW kept.
+- GO:0050673 / PMID:33129760: defect retyped (evidence depth: FULL_TEXT). PMC full text mentions Ki-67 once, as staining that "showed similar result (data not shown)" in Tmigd1-null intestine. Marker read-out on the intended gene; retyped to OTHER, DELETE_ROW.
+- GO:0072574 / PMID:25446530: defect retyped (evidence depth: ABSTRACT). Full text not obtainable; the abstract does not mention Ki-67. By analogy with the three verified rows this is probably a marker read-out, not a gene mix-up (Notch2 carries its own IMP row for the term). Retyped to OTHER, kept SUSPECTED / CHECK and the explanation states it is unverified.
+- GO:1990705 / PMID:25446530: defect retyped (evidence depth: ABSTRACT). As for GO:0072574 from the same paper; abstract only, retyped to OTHER, SUSPECTED / CHECK.

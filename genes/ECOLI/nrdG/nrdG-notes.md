@@ -79,3 +79,9 @@ biochemistry papers), the UniProt record, PubMed and QuickGO.
 - BP: NEW GO:0018201 and GO:0051604 (the activase catalyses the modification; matches PflA).
 - Downstream deoxyribonucleotide processes: upstream necessity, not participation;
   MARK_AS_OVER_ANNOTATED. Same pattern to apply to PflA (no fermentation terms) and paralogs.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0004748 / PMID:8954104: defect retyped (evidence depth: ABSTRACT). Not a wrong-gene error. The abstract reports an nrdG knockout and calls the anaerobic enzyme "nrdDG", and the identical row already exists on NrdD (P28903), so REPOINT to NrdD was meaningless. Retyped to WRONG_TERM (aerobic diphosphate reductase term used for the anaerobic triphosphate reductase system), CHECK, resource OTHER -> ECOLIWIKI, corrected_value dropped. REMOVE kept because the abstract itself separates the two enzymes; full text not obtainable.
