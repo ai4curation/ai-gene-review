@@ -15,3 +15,9 @@ parent terms entailed by an accepted, more specific term in the same review are
 TOO_GENERAL; generic `membrane` rows on degradosome partners are refined to
 cytoplasmic side of plasma membrane, reflecting recruitment to the
 membrane-bound RNase E scaffold.
+
+The two GO:0008312 (7S RNA binding) rows were checked in QuickGO: the DisProt
+IPI row's with/from is RNAcentral URS0000D56C4B_559292, a Saccharomyces
+cerevisiae 7S ribosomal RNA, whereas GO:0008312 denotes signal recognition
+particle 7S RNA. Both rows are modified to RNA binding and recorded as PROBABLE
+WRONG_TERM source defects (DisProt, CAFA).
