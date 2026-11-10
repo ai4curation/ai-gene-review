@@ -31,3 +31,8 @@ Replace functional methods-only quotes with result statements; retain construct 
 ## 2026-11-08 — source-specific evidence follow-up
 
 Strengthen ATP, duplex/end-binding and multistep rNMP-extension support where applicable; remove duplicate evidence entries. Explicit NEW MF proposals record measured AP/5′-dRP chemistry without assigning a general native BER process. Abstract-only PMID:17293412 is scoped to the quoted mutant-spore phenotype, with no unverified strain details. Original source annotation payloads are unchanged. See the evidence-followup-20261108 receipt for the exact file scope.
+
+
+## 2026-11-10 — terminal synthesis and phosphate removal
+
+Retain nucleotidyltransferase activity to cover both templated synthesis and non-templated ribonucleotide/deoxyribonucleotide addition. GO:0003912 names deoxynucleotide addition and cannot replace the preferred ribonucleotide terminal addition. Added the direct all-DNA 3-prime phosphatase annotation already supported in core synthesis. Original source rows remain unchanged.
