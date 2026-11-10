@@ -123,6 +123,7 @@ The organelle-by-stage matrix lives in
 - [ ] Autophagosome: add fungal Atg16 and plant Atg14 selectors, FIP200/Atg17 and ATG101, Atg10; model closure and fusion with the lysosome or vacuole
 - [x] Nucleus: `nucleus_lifecycle` umbrella with one partial eukaryote-wide rule module, `nuclear_pore_transport_core` (four nucleoporins, Ran, NTF2, Crm1, Cse1); `RULE_CANDIDATE`
 - [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
-- [ ] Lipid droplet
+- [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
+- [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
