@@ -106,10 +106,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 118 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 128 |
 | `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 14 |
-| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 5 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 6 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 3 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -229,7 +229,7 @@ gene-overlap match and still has no module:
 
 IL-10 signaling
 (PW:0000515) now matches `il22_signaling`, which merged on `main` meanwhile, by gene
-overlap only (4 of its 7 genes are in the pathway); IL-10 itself still has no module.
+overlap only (4 of its 7 genes are in the pathway). IL-10 got its own module in the sixth set.
 
 Re-running the triage after merging `main` on 2026-10-18 moved six former candidates. Five now
 match only by GO term to Drosophila or plant modules: RNA polymerase I, II and III
@@ -833,6 +833,91 @@ Possible upstream errors found in this set:
 - **Coverage.** No human GO-CAM models canonical miRNA biogenesis, mismatch
   repair, NHEJ, CIA, PCP or retinoic acid synthesis.
 
+### Sixth set: transcription, mTOR, cytokines, lipids and calcium
+
+The sixth set modelled the remaining mid-sized mammalian pathways and IL-10
+signaling in nine modules. Each cites one PW id as evidence. The re-run moves
+eight seeds to `has_module`; IL-10 was already there by IL-22 gene overlap and
+now has its own module. Two broad seeds also moved, but only by gene overlap:
+calcium-mediated signaling (PW:0001140) and eukaryotic RNA polymerase
+transcription (PW:0001275). Both remain unmodelled as a whole.
+
+- **Transcription.**
+  - [`modules/rna_polymerase_i_transcription.yaml`](../modules/rna_polymerase_i_transcription.yaml)
+    ([PW:0000126](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000126.yaml)) has UBF and SL1
+    promoter recognition, RRN3 recruitment, the Pol I enzyme as one complex with
+    13 units, and TTF1/CAVIN1 termination. It models 23 of RGD's 37 genes; the
+    general elongation factors and the signalling regulators are left out.
+  - [`modules/rna_polymerase_iii_transcription.yaml`](../modules/rna_polymerase_iii_transcription.yaml)
+    ([PW:0000128](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000128.yaml)) has the three
+    promoter types as a variant set, TFIIIB with BRF1 or BRF2, the Pol III enzyme
+    with POLR3G/POLR3GL as a paralog choice, and optional MAF1 repression. It
+    models 36 of 58 genes; tRNA processing (PW:0001573) is left out. The
+    subunits shared with Pol I are written identically in both modules.
+- **mTOR.** [`modules/mtor_complex_signaling.yaml`](../modules/mtor_complex_signaling.yaml)
+  ([PW:0000180](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000180.yaml)) models mTORC1 and
+  mTORC2 as complexes, RHEB, and amino-acid sensing through Ragulator, the Rag
+  GTPases, GATOR1/2, FLCN-FNIP and the sensors. The TSC complex, AKT and AMPK
+  inputs refer to `ampk_energy_sensing` and `pi3k_akt_mtor`. S6K, 4E-BP1, ULK1,
+  TFEB and the mTORC2 substrates are kinase targets, not participants.
+- **Cytokine receptors.**
+  - [`modules/leptin_receptor_signaling.yaml`](../modules/leptin_receptor_signaling.yaml)
+    ([PW:0000363](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000363.yaml)) is the LepRb
+    JAK2-STAT3 cascade with SH2B1, the SHP2-ERK and IRS-PI3K branches, and
+    SOCS3/PTP1B feedback. It fills in the receptor cascade that
+    `leptin_melanocortin_signaling` compresses, and takes the ligand step from it.
+  - [`modules/il10_signaling.yaml`](../modules/il10_signaling.yaml)
+    ([PW:0000515](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000515.yaml)) has IL10RA/IL10RB
+    assembly, JAK1 and TYK2, and STAT3 docking. SOCS3 is a transcriptional output,
+    because it blocks IL-6 rather than IL-10 signalling.
+  - Both take STAT dimerisation and transcription from `jak_stat_signaling`.
+- **Lipids.**
+  - [`modules/cardiolipin_metabolism.yaml`](../modules/cardiolipin_metabolism.yaml)
+    ([PW:0001344](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001344.yaml)) runs from
+    TAMM41, PGS1, PTPMT1 and CRLS1 to remodelling by a deacylase variant set,
+    tafazzin and HADHA. Its chemicals are grounded to ChEBI from the Rhea
+    reactions. LCLAT1 is left out: two studies of the human protein found no
+    lysocardiolipin activity. The seed's GO-CAM lead is this pathway's own human
+    model.
+  - [`modules/intestinal_retinoid_absorption.yaml`](../modules/intestinal_retinoid_absorption.yaml)
+    ([PW:0000141](RGD_PATHWAY_ONTOLOGY/pathways/PW_0000141.yaml)) covers dietary
+    vitamin A uptake, the part `retinoic_acid_metabolism` left out. Its steps are
+    retinyl ester hydrolysis, SCARB1/CD36 carotenoid uptake, BCO1 cleavage,
+    retinal reduction (the enzyme is unknown, so AKR1B10 and RDH11 are
+    candidates), CRBP2, LRAT and chylomicron packaging by reference, ISX feedback
+    and ABCA1 efflux.
+- **Calcium.** GO has no specific process term for either pathway.
+  - [`modules/camkii_signaling.yaml`](../modules/camkii_signaling.yaml)
+    ([PW:0001185](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001185.yaml)) has calmodulin
+    activation of the CaMKII holoenzyme, Thr286 autophosphorylation, GluN2B
+    docking, the CaMKIIN inhibitors and phosphatase termination. The substrates
+    are kinase targets. It does not use the obsolete `GO:0099004`.
+  - [`modules/calcium_sensing_receptor_signaling.yaml`](../modules/calcium_sensing_receptor_signaling.yaml)
+    ([PW:0001141](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001141.yaml)) has CASR with
+    Gq/11 and Gi/o routes, PLC and cAMP steps by reference, AP2S1-dependent
+    endocytosis and GRK/arrestin termination. GNA11 and AP2S1 are the familial
+    hypocalciuric hypercalcaemia genes.
+
+Possible upstream errors found in this set:
+
+- **GOA.**
+  - TAFAZZIN's `GO:0047184` IDA row uses an acyl-CoA-dependent term, but tafazzin
+    is CoA-independent.
+  - PPM1F has IDA `GO:0033192` calmodulin-dependent protein phosphatase activity,
+    a calcineurin-type term, for a PP2C phosphatase.
+  - SAMTOR is annotated to positive regulation of TORC1 signaling by a paper
+    showing it inhibits mTORC1.
+  - MAF1's promoter DNA-binding IDA rows look like ChIP occupancy read as a
+    molecular function.
+  - POLR3H and CRCP carry the whole Pol III complex's polymerase activity.
+- **GO-CAM.**
+  - The cardiolipin model `67b1629100002092` chains tafazzin and HADHA in
+    sequence, though they are alternative routes.
+  - The IL-10 model `626b20c100000681` has no TYK2-to-STAT3 edge and omits STAT1.
+  - Both CASR models use GNAQ rather than the genetically validated GNA11.
+- **RGD.** The PW:0001344 text gives phosphatidylglycerol as TAMM41's substrate;
+  it is phosphatidic acid, as RGD's own diagram shows.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -852,13 +937,16 @@ Possible upstream errors found in this set:
   them.
 - Review the blood-set member genes, starting with the proteases and cofactors
   that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
-- Model IL-10 signaling, which has only an IL-22 gene-overlap match, and the
-  remaining `related_module_only` mammalian pathways that are not broad: RNA
-  polymerase I and III transcription, chromatin remodeling, calcium transport,
-  mTOR signaling (beside `pi3k_akt_mtor`), leptin, cardiolipin metabolism, and
-  intestinal retinol absorption (PW:0000141). The six broad ones (RNA polymerase
-  transcription, RNA polymerase II, translation, ribosome biogenesis,
-  calcium-mediated signaling and the spliceosome) need splitting first.
+- Model the remaining pathways. Chromatin remodeling and calcium transport mix
+  unrelated complex or channel families and need splitting by family. The broad
+  ones (RNA polymerase II, translation, ribosome biogenesis, the spliceosome and
+  histone modification, plus RNA polymerase transcription and calcium-mediated
+  signaling, which match only by gene overlap) need splitting first. Kinin
+  signaling (PW:0001480) needs a decision on `kallikrein_kinin_cascade`'s
+  scope.
+- Make `pi3k_akt_mtor`'s mTORC1 step a reference to
+  `mtor_complex_signaling#mtorc1`, and move TBC1D7 into the TSC complex in
+  `ampk_energy_sensing`.
 - Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
   NER and mismatch repair modules, and point
   `retinoic_acid_receptor_signaling`'s production step at
@@ -888,6 +976,7 @@ Possible upstream errors found in this set:
 - [x] Model the `candidate` seeds (9 of the 10 from the 2026-10-20 triage, in the second and third sets; IL-10 left the queue by gene overlap)
 - [x] Model the 14 candidates from the curated mappings (13 modules, fourth set)
 - [x] Model the mammalian pathways whose only match was another taxon's module, and the RAS cascade (11 modules, fifth set)
+- [x] Model the remaining mid-sized mammalian pathways and IL-10 (9 modules, sixth set)
 
 ## Notes
 
@@ -927,3 +1016,11 @@ homologous recombination, NHEJ, p53 signaling, microRNA biogenesis, mRNA
 nuclear export, retinoic acid metabolism, the renin-angiotensin cascade,
 cytosolic Fe-S assembly and Wnt/PCP. The re-run gives 118 `has_module`, 14
 `related_module_only` and 5 `no_specific_go_term`.
+
+### 2026-11-10
+
+Sixth set of 9 modules: RNA polymerase I and III transcription, mTOR complex
+signaling, leptin receptor and IL-10 signaling, cardiolipin metabolism,
+intestinal retinoid absorption, CaMKII and calcium-sensing receptor signaling.
+The re-run gives 128 `has_module`, 6 `related_module_only` and 3
+`no_specific_go_term`.
