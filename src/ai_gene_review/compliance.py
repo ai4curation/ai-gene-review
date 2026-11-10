@@ -13,6 +13,7 @@ import re
 from typing import Any, Literal, Protocol
 
 import yaml
+from ai_gene_review.evidence import evidence_matches
 from ai_gene_review.validation.nd_policy import cites_search, review_gene_dir
 from pydantic import BaseModel, ConfigDict, Field
 from linkml_runtime.utils.schemaview import SchemaView
@@ -90,7 +91,7 @@ class AnnotationSupportPlugin:
             support = review.get("supported_by") or []
             for name, rule in config.annotation_rules.items():
                 if (
-                    annotation.get("evidence_type") not in rule.evidence_types
+                    not evidence_matches(annotation.get("evidence_type"), rule.evidence_types)
                     or review.get("action") not in rule.actions
                 ):
                     continue
