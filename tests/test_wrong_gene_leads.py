@@ -367,3 +367,21 @@ def test_undelimited_full_text_contributes_title_only():
         abstract_text(PUBLICATIONS_DIR / "PMID_10357231.md")
         == "Glutamate synthase: a complex iron-sulfur flavoprotein."
     )
+
+
+@pytest.mark.parametrize(
+    "paragraph,expected",
+    [
+        # Ordinary words are not group authors unless capitalised.
+        ("In the pilot study, cells were analyzed by FACS.", False),
+        ("The network model, inputs were scaled by CNTF.", False),
+        # Unambiguous group words match in any case.
+        ("Harold D, Lambert JC; GERAD consortium.", True),
+        ("Earp MA(1), Kelemen LE; Australian Cancer Study; Lu Y.", True),
+    ],
+)
+def test_group_author_matching_does_not_swallow_sentences(paragraph, expected):
+    """Only unambiguous group words are case-insensitive, so prose is not a byline."""
+    from ai_gene_review.tools.wrong_gene_leads import _is_author_list
+
+    assert _is_author_list(paragraph) is expected

@@ -261,11 +261,13 @@ _AUTHOR = re.compile(
 )
 # A group author in a byline ("ADHR Consortium", "GTEx Consortium").
 _GROUP_AUTHOR = re.compile(
-    # Keywords match in any case ("GERAD consortium"); "Collective Author" is
-    # NCBI's placeholder for an unnamed group ("New Collective Author").
-    r"(?:The )?[\w'.\- ]*\b(?i:Consortium|Group|Collaborators|Investigators|"
-    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative|Committee|"
-    r"Collective Author)"
+    # Words that are unambiguous as group authors match in any case ("GERAD
+    # consortium"); "Collective Author" is NCBI's placeholder for an unnamed
+    # group. Ordinary words (group, study, network, ...) must be capitalised, so
+    # a sentence such as "In the pilot study, ..." is not read as a byline.
+    r"(?:The )?[\w'.\- ]*\b(?:(?i:Consortium|Collaborators|Investigators|Committee|"
+    r"Collective Author)|Group|Network|Team|Study|Studies|Project|Program|"
+    r"Programme|Initiative)"
     r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
 )
 
@@ -291,6 +293,8 @@ def _is_author_list(paragraph: str) -> bool:
     >>> _is_author_list("Harold D, Lambert JC; GERAD consortium.")
     True
     >>> _is_author_list("ENaC is regulated by Nedd4-2, which binds PY motifs.")
+    False
+    >>> _is_author_list("In the pilot study, cells were analyzed by FACS.")
     False
     """
     # PubMed separates a trailing group author with a semicolon:
