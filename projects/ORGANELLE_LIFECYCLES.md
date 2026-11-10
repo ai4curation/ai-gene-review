@@ -129,6 +129,6 @@ The organelle-by-stage matrix lives in
 - [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
 - [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
-- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713, VSR sorting with retromer, AVP1, TIPs and NHX1; add fungal and animal Rab7, Vps39 and SNARE selectors so the fusion step can join `lysosome_lifecycle`
+- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713, VSR sorting with retromer, AVP1, TIPs and NHX1; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
 - [ ] Plastid, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
