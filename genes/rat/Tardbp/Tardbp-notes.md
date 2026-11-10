@@ -17,6 +17,10 @@
 - Mouse UniProt IDA (PMID:28585542) for positive regulation of protein import into nucleus: the
   paper shows CHCHD10 retains TDP-43 in the nucleus, so TDP-43 is the cargo. Rat ISO/IEA rows
   removed; defect recorded for UniProt.
+  - Correction on re-review: the mouse row has `has_input` Chchd10, and the same paper reports that
+    "TDP-43 promoted the nuclear localization of CHCHD10 in a retrograde signalling manner"
+    (three-fold more nuclear CHCHD10 on TDP-43 overexpression). TDP-43 is the regulator in that
+    experiment, so the source row is sound. Defect withdrawn; rat ISO/IEA rows now KEEP_AS_NON_CORE.
 - Mouse MGI IDA (PMID:18836447) for RNA pol II cis-regulatory sequence-specific DNA binding: the
   cached full text does not name TDP-43 (likely in a supplementary SBE2 pull-down list). Kept as
   non-core because human TDP-43 binding of promoter TAR DNA is independently documented.
