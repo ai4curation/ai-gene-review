@@ -15,7 +15,7 @@ match to the canonical Walker A consensus `[AG]-x(4)-G-K-[ST]` and to a relaxed
 controls. Command (run from the repository root):
 
 ```
-python3 -I genes/ECOLI/recC/recC-bioinformatics/walker_a_scan.py \
+python3 -I analysis/module_audits/bacterial_recbcd_end_resection/walker_a_scan.py \
   genes/ECOLI/recC/recC-uniprot.txt genes/PSEPK/recC/recC-uniprot.txt \
   genes/ECOLI/recB/recB-uniprot.txt genes/ECOLI/recD/recD-uniprot.txt \
   genes/PSEPK/recB/recB-uniprot.txt genes/PSEPK/recD/recD-uniprot.txt

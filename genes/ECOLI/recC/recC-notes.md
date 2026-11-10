@@ -5,7 +5,7 @@ Author: Claude (AI-assisted), 2026-11-09.
 Deep research was not run for this gene (no provider API keys were available in
 this session). The summary below is drawn from the cached publications under
 `publications/`, the UniProt record (`recC-uniprot.txt`) and a small sequence
-motif scan (`recC-bioinformatics/RESULTS.md`). Almost all cached papers are
+motif scan (`analysis/module_audits/bacterial_recbcd_end_resection/WALKER_A_RESULTS.md`). Almost all cached papers are
 abstract-only (`full_text_available: false`); only PMID:21219465 has full text.
 
 ## Identity and complex
@@ -42,7 +42,7 @@ abstract-only (`full_text_available: false`); only PMID:21219465 has full text.
   lines from PMID:22603794 and PMID:10884344, e.g. "Q->A: Acts at variant Chi
   sequences", "L->A: Does not act at Chi").
 - Sequence scan: RecC has no Walker A motif, whereas RecB and RecD do
-  (`recC-bioinformatics/RESULTS.md`). The helicase-like P-loop folds of RecC are
+  (`analysis/module_audits/bacterial_recbcd_end_resection/WALKER_A_RESULTS.md`). The helicase-like P-loop folds of RecC are
   therefore degenerate; there is no sequence basis for ATP binding by RecC.
 
 ## Biological processes
