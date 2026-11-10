@@ -42,11 +42,15 @@
 
 ### Decisions worth a second look
 
-1. **glutamate binding (GO:0016595, IDA, PMID:7685113): REMOVE.** The only cached text is the abstract,
-   which reports currents, not binding. PMID:12805203, the UniProt DOMAIN comment (evidence ECO:0000269) and the structural
-   literature place glutamate on GluN2 and glycine on GluN1. This is a removal of an experimental row on the
-   ground that the function is contradicted, not on the ground that the abstract is about another gene. If
-   the full text contains a binding assay on hNR1 alone, revisit.
+1. **glutamate binding (GO:0016595, IDA, PMID:7685113): REMOVE.** The full text was read on 2026-11-10 from
+   a PDF supplied by the user (the cache has the abstract only). All experiments are voltage-clamp recordings
+   from oocytes injected with hNR1 alone; no binding assay. The glutamate dose-response of current is fitted
+   to a binding isotherm (EC50 3.7 uM), currents are 4 to 60 nA, and the authors note that NR1 plus NR2 gives
+   about 100-fold larger currents. PMID:12805203, the UniProt DOMAIN comment (evidence ECO:0000269) and the
+   structural literature place glutamate on GluN2 and glycine on GluN1. So the row is removed because the
+   function is contradicted and the paper holds no direct binding evidence. The glycine binding row from the
+   same paper is also functional (glycine EC50 0.45 uM, block by 7-chlorokynurenate) but is kept, because
+   glycine binding by GluN1 is confirmed structurally.
 2. **propylene metabolic process (GO:0018964, ISS from mouse P35438): REMOVE, with a source defect** for
    ARUK-UCL/BHF-UCL. The mouse IDA cites PMID:21795692 (Shank3 and mGluR5); the full text does not contain
    the word propylene.
