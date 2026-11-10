@@ -125,5 +125,7 @@ The organelle-by-stage matrix lives in
 - [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
 - [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
-- [ ] Plastid, plant vacuole, specialized organelles
+- [x] Plastid: `plastid_lifecycle` umbrella (Viridiplantae) with two rule modules, `plastid_protein_import` (Toc34 and Toc159 receptors, Toc75, ClpC; Tic214 optional) and `plastid_division` (FtsZ1, FtsZ2, ARC5; MinD optional), Arabidopsis-grounded; both `RULE_CANDIDATE`; photosynthesis modules referenced as optional
+- [ ] Plastid: add Tic20, Tic110 and Tic40, ARC6 and PDV1/PDV2 once they have local PANTHER entries, and other green lineages' subfamilies; model plastid quality control and chlorophagy; decide how red-algal and secondary plastids are scoped
+- [ ] Plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
