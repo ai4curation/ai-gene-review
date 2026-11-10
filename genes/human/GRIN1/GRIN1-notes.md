@@ -70,9 +70,14 @@
    synapse, synaptic membrane to plasma/postsynaptic membrane; neuron projection to dendrite and dendritic
    spine; chemical synaptic transmission to excitatory chemical synaptic transmission; ion and cation
    transport to monoatomic cation transmembrane transport.
-8. **ER membrane (Reactome TAS x4): KEEP_AS_NON_CORE.** Kept because subunit assembly in the ER is a
-   required step and GluN2 cannot leave the ER without GluN1; not core because the channel does not act
-   there (projects/ORGANELLES.md rule 7).
+8. **ER membrane (Reactome TAS x4): MARK_AS_OVER_ANNOTATED** (changed from KEEP_AS_NON_CORE on 2026-11-10
+   after review by the user). GluN1 does not function in the ER; the rows describe assembly and transit.
+   No checked source shows endogenous GluN1 residing in neuronal ER, and unassembled GluN1 did not
+   accumulate there in GluN2-deficient cerebellum [PMID:15317856 "The loss was not accompanied by decreased
+   transcription and translation levels, increased extrasynaptic labeling, or ER accumulation"]. Not REMOVE,
+   because the location is true during biosynthesis and the Reactome statements are not wrong
+   (projects/ORGANELLES.md rule 7). A primary paper showing an endogenous ER pool would justify
+   KEEP_AS_NON_CORE.
 9. **synaptic vesicle (ISS from mouse): MARK_AS_OVER_ANNOTATED.** Donor PMID:10846156 describes KIF17
    transport vesicles in dendrites.
 10. **protein binding (4 IPI rows): REMOVE** under the protein-binding policy. Partners GRIN2B and GRIN3A
