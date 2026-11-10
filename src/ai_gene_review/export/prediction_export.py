@@ -30,6 +30,23 @@ ASSESSMENT_SCORES = {
     "NPI": 0,
     "REP": 0,
 }
+DATA_ERROR_TYPES = frozenset({"WRONG_INPUT_SEQUENCE"})
+"""Error types that record a pipeline mistake, not the model's: kept out of model scores."""
+
+
+def is_data_error(review: dict[str, Any] | None) -> bool:
+    """Whether a prediction review records a data-pipeline error rather than a model error.
+
+    >>> is_data_error({"assessment": "NPI", "error_type": "WRONG_INPUT_SEQUENCE"})
+    True
+    >>> is_data_error({"assessment": "NPI", "error_type": "PARALOG_OVERANNOTATION"})
+    False
+    >>> is_data_error(None)
+    False
+    """
+    return bool(review) and review.get("error_type") in DATA_ERROR_TYPES
+
+
 PREDICTION_FILENAME = re.compile(r"(?:^|-)predictions(?:-|\.)")
 PENDING_RATIONALE = re.compile(
     r"\b(?:requires?|awaiting|needs?|pending) (?:a )?(?:manual |expert )?(?:assessment|review)\b|\bnot yet (?:reviewed|assessed)\b",

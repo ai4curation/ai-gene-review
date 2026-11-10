@@ -30,3 +30,10 @@ All original non-review annotation fields and both raw files are preserved again
 ## Distinct AcoC architecture
 
 The current H16 record annotates a lipoyl domain (9–84) and an alpha/beta-hydrolase domain (137–360), unlike canonical SYNCB/BACSU E2 acetyltransferase folds. The 1991 abstract reports native FMP purification, N-terminal mapping and sequence similarity, not a standalone E2 transfer assay. Targeted literature searching did not identify a primary functional revision; current PROSITE PDOC00168 still calls FMP “most probably a dihydrolipamide acyltransferase.” Retain the curated E2 functional inference with that limit rather than claiming one conserved catalytic family or discarding it solely from a different fold. Original H16 AcoC sequence discrepancies at positions 95 and 121 are documented by UniProt against AAA21950; the current reference sequence is not presented as the exact purified 1991 sequence.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- Deep research: no provider deep-research file exists for this gene, and none could be generated
+  in this session (no deep-research provider API keys were configured). No deep-research file was
+  written by hand. The review rests on the cached primary publications, the UniProt record and the
+  PANTHER/PAINT family files cited in the review.

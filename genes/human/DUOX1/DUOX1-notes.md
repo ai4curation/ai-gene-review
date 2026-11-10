@@ -158,3 +158,10 @@ the true ortholog and the donor of the ISS (GO_REF:0000024) and Ensembl Compara
 phenotype was established [PMID:34168077 "Upon influenza airway challenge, Duox1-/- mice
 have enhanced mortality, morbidity, and impaired lung viral clearance."]. There is no
 `genes/mouse/Duox1/` folder, so it needs a review.
+
+## 2026-10-27 — Mouse ortholog (`genes/mouse/Duox1/`), `PTHR11972` family update, and mucosal DUOX1–LPO module
+
+- Completed the paired ortholog review in `genes/mouse/Duox1/Duox1-ai-review.yaml` (`UniProtKB:A2AQ92`, `MGI:2139422`), incorporating the 3.2–3.3 Å cryo-EM structures of the mouse DUOX1–DUOXA1 complex in 1:1 heterodimer and 2:2 dimer-of-heterodimer states (`PMID:32929281`), the in vivo airway influenza defense study (`PMID:34168077`), and the P19 neural stem cell Nip1/Duoxa1–Duox1 ROS differentiation study (Kennedy et al., 2010, `PMID:20233719`).
+- Confirmed consistent action decisions across the human (`DUOX1`) and mouse (`Duox1`) ortholog pair, including removal of the erroneous `GO:0042335` (`cuticle development`) and `GO:0004601` (`peroxidase activity`) / `GO:0006979` (`response to oxidative stress`) annotations that had propagated between human `DUOX1`, *C. elegans* `bli-3`, and mouse `Duox1`.
+- Created the reusable pathway module `modules/mucosal_duox1_lactoperoxidase_antimicrobial_system.yaml` capturing the apical epithelial DUOX1–DUOXA1 H2O2 generation and secreted lactoperoxidase (`LPO`) hypothiocyanite (`OSCN-`) antimicrobial/antiviral system, and updated `interpro/panther/PTHR11972/PTHR11972-review.yaml` with the PAINT node split (`PTN000944147` vs `PTN000239643`) and structural findings from `PMID:32929281` and `PMID:33420071`.
+

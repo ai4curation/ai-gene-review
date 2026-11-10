@@ -79,3 +79,15 @@ The gene has ~150 GO annotations, many of which are highly specific downstream e
 3. Multiple "protein binding" IPI annotations should be evaluated for more specific binding terms
 4. Several redundant location annotations from different evidence types
 5. Androgen receptor signaling annotations may be non-core for most biological contexts
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000120, from mouse Q99LX0) and GO:0005783 IDA (PMID:31536960). No ER sub-compartment rows.
+
+Checks:
+- Human UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:31536960}"; mouse Q99LX0 (fetched from UniProt REST 2026-11-05) carries the same line from the same paper, so both rows rest on PMID:31536960.
+- PMID:31536960 (full text cached): endogenous DJ-1 immunoprecipitated from ER, mitochondrial and MAM fractions of NTera2-derived cells and mouse brain, "mt, ER, and MAM markers (ii) used as internal control" [PMID:31536960 "PINK1 and DJ-1 immunoprecipitates in whole-cell extract (WCE) as well as in mt, ER, and MAM lysates from ECSCs, DNLCs, and mouse brain"]; "we found that NENF preferentially binds with DJ-1 in the mt, ER, and MAM fractions".
+- DJ-1 is soluble, no signal peptide or TM; UniProt "located predominantly in the cytoplasm". So an ER-associated (cytosolic-face) pool, not residence; core function not shown at the ER.
+- The old ACCEPT rationale (ER-stress protection, PMID:14652021) is a process claim, not location evidence.
+
+Outcome: both rows ACCEPT -> KEEP_AS_NON_CORE; stay at the root. No GO:0044233 MAM row: only one line (a MAM fraction) and a soluble protein.

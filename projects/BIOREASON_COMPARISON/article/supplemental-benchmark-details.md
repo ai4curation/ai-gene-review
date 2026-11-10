@@ -19,11 +19,11 @@ ARGO139 uses agent-adjudicated local AIGR references, not independently expert-s
 |---|---:|---:|---|
 | `argo139_rl_narrative` | 139 | - | Main RL narrative benchmark |
 | `argo95_sft_terms` | 95 | 955 | Main HF-catalogue SFT term benchmark |
-| `supplement_sft_terms_argo139_mixed_sources` | 139 | 10,697 | Mixed-source ARGO139 diagnostic; not a primary benchmark |
-| `supplement_sft_terms_web_export_44` | 44 | 9,742 | ARGO139 genes absent from HF; web source includes ancestor hierarchy |
+| `supplement_sft_terms_argo139_mixed_sources` | 139 | 10,667 | Mixed-source ARGO139 diagnostic; not a primary benchmark |
+| `supplement_sft_terms_web_export_44` | 44 | 9,712 | ARGO139 genes absent from HF; web source includes ancestor hierarchy |
 | `supplement_sft_narrative_hf` | 45 | - | SFT narrative cross-check |
 | `supplement_sft_terms_hf_catalogue_all` | 154 | 1,358 | Full HF catalogue view |
-| `supplement_sft_terms_union_all` | 198 | 11,100 | ARGO139 plus 59 HF-only genes |
+| `supplement_sft_terms_union_all` | 198 | 11,070 | ARGO139 plus 59 HF-only genes |
 | `supplement_gogpt_overlap_300` | 296 | 8,806 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
 
 The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue` SFT download contained 95/139 ARGO139 genes. The remaining 44 ARGO139 genes were not present in that download. We do **not** fill those 44 into the primary SFT analysis, because the BioReason-Pro SFT web exports expose a much larger ancestor-rich term panel and are not comparable to the HF catalogue source.
@@ -43,8 +43,10 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | HF catalogue / ARGO95 | 95 | 955 | 682 (71.4%) | 113 (11.8%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
-| Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 3,003 (28.1%) | 155 (1.4%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (65.8%) |
+| Web export | 44 | 9,712 | 2,321 (23.9%) | 12 (0.1%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.9%) |
+| Mixed-source ARGO139 total | 139 | 10,667 | 3,003 (28.2%) | 125 (1.2%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (66.0%) |
+
+The web-export and mixed-source rows exclude 30 csr-1 predictions recorded as `WRONG_INPUT_SEQUENCE`: the web export was run on the nhr-47 sequence, a pipeline error rather than a model error, as for the RL narrative's `performance_exclusions`. The union in Table S6 excludes them too; each summary reports the count as `excluded_data_errors`. Exclusion here is per row, unlike the RL narrative's per-gene exclusion: csr-1's other 7 terms (5 `LSP`, 1 `UNC` and 1 `COR`, on `GO:0005634` nucleus) stay scored, because they were assessed against the curated CSR-1 review; `benchmark-policy.yaml` records this. Table S6's 11,070 scored terms are the 11,100 rows in the sidecar files less these 30; file-level counts such as the project page's 8,783 of 11,100 templated rationales count all rows.
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
@@ -57,8 +59,8 @@ specificity, affinity, and binding site are unresolved.
 | Source | Mean terms/gene | Median terms/gene | Max terms/gene |
 |---|---:|---:|---:|
 | ARGO95 / HF catalogue | 10.1 | 7.0 | 38 |
-| Web export | 221.4 | 212.5 | 598 |
-| Mixed-source ARGO139 total | 77.0 | 12.0 | 598 |
+| Web export | 220.7 | 212.5 | 598 |
+| Mixed-source ARGO139 total | 76.7 | 11.0 | 598 |
 
 The all-HF view is still useful as the broadest single-source HF view, but it is not the main benchmark because 59 of those genes are outside ARGO139.
 
@@ -76,14 +78,14 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 
 The all-source union is the broadest source-availability view, but it combines ARGO139 with 59 HF-only genes and is therefore not a paired benchmark.
 
-**Table S6.** Supplemental all-source union: 11,100 terms across ARGO139 plus 59 HF-only genes.
+**Table S6.** Supplemental all-source union: 11,070 terms across ARGO139 plus 59 HF-only genes.
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,129 | 64.2 |
-| CNN | 3,242 | 29.2 |
+| UNC | 7,129 | 64.4 |
+| CNN | 3,242 | 29.3 |
 | LSP | 444 | 4.0 |
-| NPI | 209 | 1.9 |
+| NPI | 179 | 1.6 |
 | COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
