@@ -54,6 +54,8 @@ All 84 Reactome records were checked against their event summaries and explicit 
 
 ## Open evidence questions
 
-Seven contexts remain UNDECIDED: the target interaction from PMID:24981860; kinetochore location and assembly; the source-specific telomere-organization assertion; sperm proteomics; and both exosome contexts. They are recorded as unresolved evidence, not disproved functions. No NEW annotation is proposed.
+Six contexts remain UNDECIDED: kinetochore location and assembly; the source-specific telomere-organization assertion; sperm proteomics; and both exosome contexts. The original PMID:24981860 AP-MS assignment remains unverified, while its H3.3–DAXX claim is retained using independent evidence. They are recorded as unresolved evidence, not disproved functions. No NEW annotation is proposed.
 
 A supported generic physical association is retained as KEEP_AS_NON_CORE under the standing ClinGen project instruction. The single MARK_AS_OVER_ANNOTATED binding decision concerns a demonstrated mutant-specific gain in its cited experiment, without denying other evidence for that pair.
+
+Histone numbering omits initiator methionine. Deposition incorporates H3.3; its partners provide chaperone activity.
