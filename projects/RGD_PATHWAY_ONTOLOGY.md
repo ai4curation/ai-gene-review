@@ -947,6 +947,9 @@ Possible upstream errors found in this set:
 - Make `pi3k_akt_mtor`'s mTORC1 step a reference to
   `mtor_complex_signaling#mtorc1`, and move TBC1D7 into the TSC complex in
   `ampk_energy_sensing`.
+- Revisit IL10RB's function in `il22_signaling` (`GO:0004896`, PAINT-derived):
+  `il10_signaling` uses its experimental coreceptor activity `GO:0015026`, which
+  fits a subunit that cannot bind ligand alone.
 - Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
   NER and mismatch repair modules, and point
   `retinoic_acid_receptor_signaling`'s production step at
