@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR #6125: main ec787ac870 integrated at cb9ce7242d; 201 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
+- [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR #6125: main 65bf77f958 integrated at 7324c09b1c; 204 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
@@ -120,9 +120,7 @@ For each module, record evidence that all of the following are satisfied:
 - [x] `bacterial_alkyl_hydroperoxide_reductase`: [PR #5595](https://github.com/ai4curation/ai-gene-review/pull/5595) merged as `2d4b5ac0f19441c4b00fb7b3e5cfd43b2189f014` at 2026-10-29T02:25:50Z. All 196 scoped source/curation/history blobs match the approved head; 15 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5595-merged-content.json).
 - [x] `bacterial_aminoacyl_trna_charging`: [PR #5616](https://github.com/ai4curation/ai-gene-review/pull/5616) merged as `6f56c0addf030cb02af4c8ba7e8dfd470e8762ab` at 2026-10-30T03:27:06Z. All 314 scoped source/curation/history blobs match the approved head; 42 member reviews have no PENDING decisions. All member review statuses are COMPLETE. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr5616-merged-content.json).
 
-- [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 12 PR_OPEN, 3 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
-
-- [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+- [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 10 PR_OPEN, 1 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 ## Notes
 
@@ -1323,3 +1321,13 @@ Superseded parent snapshot lines retained for provenance:
 ## 2026-11-10 — resume PR #6125 after disk cleanup
 
 Integrate main 65bf77f9587b5f1614ed1a0434f015e9560b2516 into paused PR #6125 at ab5802900e01f07d64f18cf10d56f15d798cacfd. All 204 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-10 — reconcile resumed PR #6125 tracker
+
+PR #6125: main 65bf77f958 integrated at 7324c09b1c; 204 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/resume-round3-20261110/integration-proof.json](../analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/resume-round3-20261110/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+
+Superseded parent snapshot lines retained for provenance:
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 12 PR_OPEN, 3 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
