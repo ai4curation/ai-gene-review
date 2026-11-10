@@ -22,7 +22,10 @@ eukaryote-wide `MODULE:mitochondrial_protein_import` and
   as a membrane-bounded projection.
 - **All eukaryotes.** Each module's taxon context is Eukaryota. Lineage
   differences are modelled as `variant_sets` (different machinery for the same
-  stage) or as `optional` parts (a stage some lineages lack).
+  stage) or as `optional` parts (a stage some lineages lack). The exception is
+  an organelle confined to one lineage (the plastid and the plant vacuole):
+  its umbrella and rule modules take that clade as their context, and their
+  required parts assert "every member of the clade has this".
 - **Rules, not compendia.** A non-optional part asserts "every eukaryote with
   this organelle has this". That is a stronger claim than a descriptive pathway
   module makes, and it is what lets the satisfiability engine
