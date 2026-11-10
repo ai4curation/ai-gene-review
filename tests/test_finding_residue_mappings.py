@@ -172,3 +172,23 @@ def test_canonical_identity_failure_says_what_to_write():
     results = check_mapping(mapping, "P1", "G", "PMID:1", StubCache(seqs))
     detail = next(r.detail for r in results if r.kind == "CANONICAL_IDENTITY")
     assert "use UniProtKB:P1" in detail
+
+
+class DeletedEntryCache(StubCache):
+    """A stub where accessions mapped to None are deleted from UniProtKB."""
+
+    def get(self, accession: str) -> str:
+        from ai_gene_review.validation.family_residue_validator import InactiveEntry
+
+        seq = self.seqs[accession.split(":")[-1]]
+        if seq is None:
+            raise InactiveEntry(accession, "Deleted from sequence source (ENSEMBL)")
+        return seq
+
+
+def test_mapping_side_on_a_deleted_entry_is_unresolved_not_a_crash():
+    """A mapping naming a deleted UniProtKB accession is UNRESOLVED, not a traceback."""
+    cache = DeletedEntryCache({"P1": "MAKSDEFGH", "P1-2": None})
+    mapping = {"as_reported": _pos("P1-2", 7, "S"), "canonical": _pos("P1", 4, "S")}
+    results = check_mapping(mapping, "P1", "G", "PMID:1", cache)
+    assert _outcomes(results, "AS_REPORTED") == [ClaimOutcome.UNRESOLVED]

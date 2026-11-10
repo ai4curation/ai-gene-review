@@ -41,7 +41,7 @@ from pathlib import Path
 import yaml
 from yaml import CSafeLoader as _Loader
 
-from ai_gene_review.validation.family_residue_validator import SequenceCache
+from ai_gene_review.validation.family_residue_validator import InactiveEntry, SequenceCache
 
 
 class ClaimOutcome(str, Enum):
@@ -94,7 +94,17 @@ def _check_position(
     acc = spec["accession"]
     pos = spec["position"]
     claimed = spec["residue"]
-    seq = cache.get(acc)
+    try:
+        seq = cache.get(acc)
+    except InactiveEntry as exc:
+        return (
+            ClaimCheck(
+                kind, gene, term,
+                f"{label} {acc}:{pos} cannot be checked: {exc}; re-point it to a current entry",
+                ClaimOutcome.UNRESOLVED,
+            ),
+            None,
+        )
     drift = _version_note(cache, spec, acc)
     observed = _residue_at(seq, pos)
     if observed is None:
