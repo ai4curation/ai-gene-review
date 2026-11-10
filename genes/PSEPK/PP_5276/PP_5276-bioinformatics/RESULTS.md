@@ -16,7 +16,8 @@ genes/ECOLI/clsB/clsB-uniprot.txt	length=413	113:HRKIVVID; 290:HGKVALMD
 ```
 
 Interpretation: PP_5276 retains both PLD-superfamily HxK(x4)D catalytic motifs, at
-positions 170 and 414, with the same spacing as E. coli ClsC (130 and 369), whose
-His130 and His369 are required for cardiolipin formation. The motifs are consistent with
+positions 170 and 414 (244 residues apart). That spacing is comparable to E. coli ClsC
+(130 and 369, 239 apart), whose His130 and His369 are required for cardiolipin
+formation, and differs from the ClsA/ClsB proteins in the same output (about 180 apart). The motifs are consistent with
 an active phospholipase D-type phosphatidyltransferase. They do not show which
 phosphatidyl donor (PG or PE) the enzyme uses, or whether it needs a YmdB-like partner.

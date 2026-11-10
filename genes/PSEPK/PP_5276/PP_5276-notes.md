@@ -21,7 +21,7 @@ cardiolipin process require biochemical or genetic confirmation.
 ## 2026-11 update
 
 The HKD motif scan (`PP_5276-bioinformatics/RESULTS.md`) shows that both PLD catalytic
-motifs are intact (H170 and H414), at the same spacing as E. coli ClsC. Together with the
+motifs are intact (H170 and H414), at a spacing comparable to E. coli ClsC. Together with the
 PTHR21248-wide cardiolipin biosynthesis node (PTN000478698, which includes E. coli ClsC
 among its seeds), this is enough to accept the GO:0032049 process row, which was
 previously UNDECIDED. The exact reaction stays at GO:0030572 phosphatidyltransferase
