@@ -343,7 +343,9 @@ to each entry, and the detail is in
   (guideline: don't REMOVE experimental annotations you can't refute).
   *Resolved:* 12 HSPA1B rows changed, among them five direct-assay rows to ACCEPT and
   unfolded protein binding to MODIFY (protein folding chaperone); four HSPA1A rows were
-  changed with them so that the twin genes agree.
+  changed with them so that the twin genes agree. The electronic centriole row of
+  HSPA1B (previously MARK_AS_OVER_ANNOTATED) was aligned with its accepted
+  direct-assay rows.
 
 ## Needs literature (cannot adjudicate from YAML + cache)
 

@@ -55,8 +55,10 @@ pass applies those rules to every REMOVE row.
 4. Edits were applied by a script that rewrites only the `review` block of the
    named row and checks that the rest of the file parses to the same content.
    Each batch was validated with `ai-gene-review validate` against a baseline
-   taken before the pass. Every edited file that was valid before is valid
-   after, and no new error was introduced.
+   taken before the pass, and all 222 edited files were validated together
+   once more at the end: all are valid and no new error was introduced. Two of
+   them (FZD7, GK5) had failed before the pass on three reference quotes that
+   were not verbatim; those quotes were re-quoted from the cached papers.
 
 ## Results
 
@@ -71,7 +73,9 @@ pass applies those rules to every REMOVE row.
 | → `MODIFY` | 20 |
 
 Nine of the rows that stay REMOVE had a wrong or missing reason and were given
-a correct one.
+a correct one. One row that was not REMOVE was changed as well, so that the
+rows of a re-adjudicated term agree: the electronic centriole row of HSPA1B,
+from `MARK_AS_OVER_ANNOTATED` to `ACCEPT`.
 
 The share of rows that changed depends strongly on the evidence code. Removals
 of phylogenetic annotations, where the first-pass reviews argued at the PAINT
@@ -250,9 +254,12 @@ policy is the reason, and they were left as they are.
 
 ## Follow-ups
 
-- **UNDECIDED rows need full text.** The 29 rows moved to `UNDECIDED` are
-  experimental or curated annotations whose papers could not be read here.
-  Each reason states the question the full text must answer.
+- **UNDECIDED rows need full text.** Of the 29 rows moved to `UNDECIDED`, 16
+  are experimental or author-statement annotations whose papers could not be
+  read here, and 12 are electronic or similarity transfers that rest on such
+  papers. Each reason states the question the full text must answer. The
+  last is a phylogenetic annotation (SCGB2A2, androgen receptor signaling
+  pathway) whose PAINT node has not been examined.
 - **Source defects beyond this pass.** A text scan finds about 160 further
   REMOVE rows whose reasons read like a source error (wrong gene, substrate annotated as
   enzyme, wrong InterPro2GO mapping) without a structured defect. Only cases
@@ -260,9 +267,7 @@ policy is the reason, and they were left as they are.
 - **Rows kept beside the ones changed.** The pass covered REMOVE rows only. A
   few inconsistencies among kept rows were seen and left: the TOMM40
   mitochondrion rows are `MARK_AS_OVER_ANNOTATED` against the organelle
-  policy; the electronic centriole row of HSPA1B is marked beside two accepted
-  direct-assay rows for the same term; and the ZP3 immune-response transfers
-  from an immunization study are marked while the transcription transfers from
-  the same study are removed.
+  policy, and the ZP3 immune-response transfers from an immunization study are
+  marked while the transcription transfers from the same study are removed.
 - **Other organisms.** The same patterns are likely in the mouse and model
   organism reviews, which were not touched.
