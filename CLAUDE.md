@@ -1061,7 +1061,8 @@ or comment, never write an upstream issue URL or the shorthand `geneontology/<re
 and never at-mention anyone except cmungall: GitHub turns these into cross-references
 and notifications on the curators' issues. Name an upstream issue as
 `issues/go-annotation/N` or "go-annotation N". Never paste mirrored thread text into a
-PR body. A Bash hook, a commit-msg hook and a PR check enforce this
+PR body. A Claude Code hook (on Bash and GitHub MCP tools), a commit-msg hook, and a
+check on PR text and comments enforce this
 (`src/ai_gene_review/shadow_issues/guard.py`); `just check-upstream-refs FILE` checks a
 body file first.
 

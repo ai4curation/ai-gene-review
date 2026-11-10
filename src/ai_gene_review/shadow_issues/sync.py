@@ -9,7 +9,7 @@ import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -24,6 +24,9 @@ from ai_gene_review.shadow_issues.store import (
 )
 
 API = "https://api.github.com"
+
+#: How far before the cursor each incremental sync starts (see :func:`sync_tracker`).
+CURSOR_OVERLAP = timedelta(hours=1)
 
 
 def github_token() -> str | None:
@@ -75,6 +78,7 @@ class SyncReport:
     issues_seen: int = 0
     stubs_created: int = 0
     records_appended: int = 0
+    items_skipped: int = 0
     newest_updated_at: str | None = None
 
 
@@ -96,13 +100,22 @@ def sync_tracker(
     Only issues created on or after the tracker's ``backfill_since`` are kept.
     Pull requests are skipped. The cursor advances to the newest ``updated_at``
     stored, so an interrupted run resumes where it stopped.
+
+    The query starts :data:`CURSOR_OVERLAP` before the cursor. Results are sorted
+    by ``updated_at``, so an issue updated while a run is paging can move to a
+    page already read and be missed; the next run's overlap picks it up again.
+    Re-reading is free, since thread appends are deduplicated.
     """
     config = TrackerConfig.load(tracker_dir)
-    start = (
-        since
-        or read_cursor(tracker_dir)
-        or datetime.combine(config.backfill_since, time(), timezone.utc).isoformat()
-    )
+    cursor = read_cursor(tracker_dir)
+    if since:
+        start = since
+    elif cursor:
+        start = (parse_time(cursor) - CURSOR_OVERLAP).isoformat()
+    else:
+        start = datetime.combine(
+            config.backfill_since, time(), timezone.utc
+        ).isoformat()
     floor = datetime.combine(config.backfill_since, time(), timezone.utc)
     report = SyncReport()
     params = {"state": "all", "since": start, "sort": "updated", "direction": "asc"}
@@ -112,10 +125,11 @@ def sync_tracker(
         timeline = list(
             client.paginate(f"/repos/{config.repo}/issues/{issue['number']}/timeline")
         )
-        appended, created = store_issue(config, tracker_dir, issue, timeline)
+        result = store_issue(config, tracker_dir, issue, timeline)
         report.issues_seen += 1
-        report.records_appended += appended
-        report.stubs_created += int(created)
+        report.records_appended += result.appended
+        report.stubs_created += int(result.created)
+        report.items_skipped += result.skipped
         report.newest_updated_at = issue["updated_at"]
         write_yaml(
             tracker_dir / "sync-state.yaml", {"last_updated_at": issue["updated_at"]}

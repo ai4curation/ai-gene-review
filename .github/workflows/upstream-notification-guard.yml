@@ -1,16 +1,27 @@
 ---
-# Fails a PR whose title, body or commit messages would cross-reference or
-# @mention an upstream tracker (see projects/GO_ANNOTATION_TRACKER.md).
+# Fails when a PR's title, body or commit messages, or a comment on an issue or
+# PR in this repo, would cross-reference or at-mention an upstream tracker (see
+# projects/GO_ANNOTATION_TRACKER.md).
 #
-# GitHub creates the cross-reference as soon as the PR is opened, so this check
-# cannot undo one; it stops the squash commit (which repeats the PR body) from
-# landing on main and tells the author to edit the text. Prevention happens
-# earlier, in the Claude Code Bash hook and the commit-msg pre-commit hook.
+# GitHub creates the cross-reference as soon as the text is posted, so this check
+# cannot undo one. On a PR it stops the squash commit (which repeats the PR body)
+# from landing on main and tells the author to edit the text; on a comment it
+# makes the leak visible as a failed run. Prevention happens earlier, in the
+# Claude Code hook (Bash and GitHub MCP tools) and the commit-msg pre-commit hook.
+#
+# The check runs main's copy of the guard, so a PR cannot weaken the guard that
+# judges it. A PR that changes the guard is judged by the old one until merged.
 name: Upstream notification guard
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
     types: [opened, edited, synchronize, reopened]
+  issue_comment:
+    types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+  pull_request_review:
+    types: [submitted, edited]
 
 permissions:
   contents: read
@@ -22,16 +33,43 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: main
           persist-credentials: false
-      - name: Check PR text and commit messages
+      - name: Collect text
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          REVIEW_BODY: ${{ github.event.review.body }}
         run: |
           set -euo pipefail
-          printf '%s\n\n%s\n' "$PR_TITLE" "$PR_BODY" > pr-text.md
-          gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits" \
-            --jq '.[].commit.message' > commit-messages.txt
-          python3 src/ai_gene_review/shadow_issues/guard.py pr-text.md commit-messages.txt
+          case "$EVENT" in
+            pull_request)
+              printf '%s\n\n%s\n' "$PR_TITLE" "$PR_BODY" > text-to-check.md
+              gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits" \
+                --jq '.[].commit.message' >> text-to-check.md
+              ;;
+            pull_request_review)
+              printf '%s\n' "$REVIEW_BODY" > text-to-check.md
+              ;;
+            *)
+              printf '%s\n' "$COMMENT_BODY" > text-to-check.md
+              ;;
+          esac
+      - name: Check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          GUARD=src/ai_gene_review/shadow_issues/guard.py
+          if [ ! -f "$GUARD" ] && [ -n "$HEAD_SHA" ]; then
+            # Only until the guard first lands on main: use the PR's copy.
+            gh api -H "Accept: application/vnd.github.raw" \
+              "repos/${{ github.repository }}/contents/${GUARD}?ref=${HEAD_SHA}" > guard.py
+            GUARD=guard.py
+          fi
+          python3 "$GUARD" text-to-check.md

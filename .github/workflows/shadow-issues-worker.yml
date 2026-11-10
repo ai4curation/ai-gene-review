@@ -1,3 +1,4 @@
+---
 name: Shadow Issues Worker
 
 # Works the shadow-issue queues (projects/GO_ANNOTATION_TRACKER.md): triages
@@ -7,9 +8,10 @@ name: Shadow Issues Worker
 # cross-referenced curators' issues from its PRs.
 #
 # It reads only the local mirror kept current by shadow-issues-sync; it never
-# touches the upstream tracker.
+# touches the upstream tracker. It never rates its own work: rating is the
+# separate shadow-issues-rater workflow, on a different model.
 
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: "0 10 * * *"  # daily 10:00 UTC
   workflow_dispatch:
@@ -139,10 +141,12 @@ jobs:
 
             a. PROSPECTIVE issues in `untriaged`: triage all of them (Step 2), then shadow
                the best in-scope one, if any (Step 3). One PR.
-            b. A PROSPECTIVE issue in `needs_shadow`: shadow it (Step 3).
-            c. A RETROSPECTIVE issue in `needs_shadow`: shadow one (Step 3). Prefer open
+            b. An issue in `in_progress` (PROSPECTIVE first): resume it (Step 3), reading
+               its shadow.md first and keeping its recorded blinding and snapshot time.
+            c. A PROSPECTIVE issue in `needs_shadow`: shadow it (Step 3).
+            d. A RETROSPECTIVE issue in `needs_shadow`: shadow one (Step 3). Prefer open
                issues, then issues with `prior_work`.
-            d. RETROSPECTIVE issues in `untriaged`: triage up to MAX_TRIAGE (Step 2),
+            e. RETROSPECTIVE issues in `untriaged`: triage up to MAX_TRIAGE (Step 2),
                preferring issues with `prior_work`, then open issues, then newest. One PR.
 
             Skip any issue whose folder an open PR already touches. List them with:
@@ -155,8 +159,10 @@ jobs:
             `kind` (IssueKindEnum), `in_scope` (true if there is annotation work we can
             shadow: specific annotations, a PAINT node, a mapping or rule, a term-wide
             review, an annotation request), a one- or two-sentence `rationale`,
-            `triaged_by: MODEL`, `triaged_at` (now, UTC). `suggested_kind` is only a label
-            hint; keep it, but decide `kind` yourself. Change nothing else.
+            `triaged_by: MODEL`, `triaged_at` (now, UTC). `suggested_kind`, present only on
+            PROSPECTIVE issues, is a label hint; keep it, but decide `kind` yourself. Do not
+            look up a RETROSPECTIVE issue's labels: they were set while resolving it.
+            Change nothing else.
 
             ## Step 3: Shadow work
 
@@ -175,9 +181,11 @@ jobs:
             PANTHER family, rule or term the issue concerns, if a review file already exists
             (genes/<org>/<GENE>/<GENE>-ai-review.yaml, interpro/panther/<PTHR>/..., rules/...),
             append a `prior_work` entry: `relation: COVERS_SUBJECT`, `path`, `commit` (the
-            last commit touching that path, `git log -1 --format='%h %s' -- PATH`), `subject`,
-            and a `note` on what it already concluded about the issue's claim. This does not
-            change your blinding; it tells the rater how independent your work was.
+            commit that introduced the existing conclusion, e.g. `git log -S '<term id>'
+            --format='%h %s' -- PATH`, not merely the last commit to touch the file),
+            `subject`, and a `note` on what it already concluded about the issue's claim.
+            If you then read that conclusion, set `shadow.saw_prior_work: true`. This does
+            not change your blinding; it tells the rater how independent your work was.
 
             Then do the work this repository would do for the issue kind, following
             CLAUDE.md:
@@ -197,10 +205,15 @@ jobs:
             Record the result:
             - issues/go-annotation/NNN/shadow.md: a dated log of what you read, what you
               concluded and why, and what remains. Cite evidence as in gene reviews.
-            - issue.yaml `shadow`: `status: DONE` (or `IN_PROGRESS` if work remains),
-              `blinding`, `thread_snapshot_at` (prospective), `started_at`, `completed_at`,
-              `worker: MODEL`, `diagnosis`, `proposed_actions` (one per concrete change:
-              `action`, `subject` as a CURIE, `term_id`, `replacement_term_id`, `note`),
+            - issue.yaml `shadow`: `status: DONE` (or `IN_PROGRESS` if work remains; a later
+              run resumes it), `blinding`, `thread_snapshot_at` (prospective), `started_at`,
+              `completed_at`, `worker: MODEL`, `worker_run` (this workflow run's URL, from
+              GITHUB_SERVER_URL, GITHUB_REPOSITORY and GITHUB_RUN_ID), `saw_prior_work`,
+              `diagnosis` with `supported_by` (verbatim quotes: `reference_id`,
+              `supporting_text`, checked by `just validate-quotes`), `proposed_actions` (one
+              per concrete change: `action`, `subject` as a CURIE, `term_id`,
+              `replacement_term_id`, `note`, optional `supported_by`; use `FLAG_FOR_CHECK`
+              for a suspected problem you did not establish, never `KEEP`), and
               `work_products` (`kind`, `path`).
             - issues/go-annotation/NNN/self-rating.yaml (SelfRating): `tracker`, `number`,
               `worker`, `confidence`, `note`. Keep self-assessment out of issue.yaml and
@@ -208,7 +221,8 @@ jobs:
             - Never guess GO ids, PMIDs, symbols or accessions; check them with the OLS MCP
               and the repository tools.
 
-            Run `just validate-shadow-issues go-annotation` before committing.
+            Run `just validate-shadow-issues go-annotation` and `just validate-quotes`
+            before committing.
 
             ## Step 4: Pull request
 

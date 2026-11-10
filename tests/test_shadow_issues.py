@@ -84,23 +84,49 @@ def config(tracker_dir):
 
 def test_store_creates_stub_and_is_idempotent(config, tracker_dir):
     timeline = [comment(1, "Removed from IPR001806.", "2025-03-04T10:00:00Z")]
-    appended, created = store_issue(config, tracker_dir, make_issue(), timeline)
-    assert (appended, created) == (2, True)
+    assert store_issue(config, tracker_dir, make_issue(), timeline) == (2, True, 0)
     issue = yaml.safe_load((tracker_dir / "101" / "issue.yaml").read_text())
     assert issue["study"] == "RETROSPECTIVE"
-    assert issue["triage"] == {"status": "UNTRIAGED", "suggested_kind": "MAPPING_RULE"}
+    # Backfilled labels are post-resolution, so a retrospective stub gets no hint.
+    assert issue["triage"] == {"status": "UNTRIAGED"}
 
     # A re-sync with nothing new appends nothing and leaves curated edits alone.
     issue["triage"] = {"status": "TRIAGED", "kind": "MAPPING_RULE", "in_scope": True}
     (tracker_dir / "101" / "issue.yaml").write_text(yaml.safe_dump(issue))
     later = {**make_issue(), "updated_at": "2025-04-01T00:00:00Z"}
-    assert store_issue(config, tracker_dir, later, timeline) == (0, False)
+    assert store_issue(config, tracker_dir, later, timeline) == (0, False, 0)
     assert (
         yaml.safe_load((tracker_dir / "101" / "issue.yaml").read_text())["triage"][
             "status"
         ]
         == "TRIAGED"
     )
+
+
+def test_prospective_stub_gets_label_hint(config, tracker_dir):
+    new = {**make_issue(number=202), "created_at": "2026-11-12T00:00:00Z"}
+    store_issue(config, tracker_dir, new, [])
+    issue = yaml.safe_load((tracker_dir / "202" / "issue.yaml").read_text())
+    assert issue["study"] == "PROSPECTIVE"
+    assert issue["triage"] == {"status": "UNTRIAGED", "suggested_kind": "MAPPING_RULE"}
+
+
+def test_incomplete_timeline_items_are_skipped_not_fatal(config, tracker_dir):
+    """One odd item (e.g. a cross-reference from a deleted repo) must not wedge the sync."""
+    timeline = [
+        comment(1, "kept", "2025-03-02T00:00:00Z"),
+        {
+            "event": "cross-referenced",
+            "created_at": "2025-03-03T00:00:00Z",
+            "source": {"issue": {"number": 9, "title": "gone"}},
+        },
+        {"event": "labeled", "id": 5, "created_at": "2025-03-03T00:00:00Z"},
+        {"event": "subscribed", "id": 6, "created_at": "2025-03-03T00:00:00Z"},
+    ]
+    result = store_issue(config, tracker_dir, make_issue(), timeline)
+    assert (result.appended, result.skipped) == (2, 2)
+    bodies = [r.get("body") for r in read_thread(tracker_dir / "101" / "thread.jsonl")]
+    assert "kept" in bodies
 
 
 def test_edits_are_appended_as_new_versions(config, tracker_dir):
@@ -158,6 +184,8 @@ def test_snapshot_hides_later_comments_and_edits(config, tracker_dir):
     )
     blind = render_thread(records, opening_only=True)
     assert "IPR001806" in blind and "draft" not in blind and "final" not in blind
+    # Labels can encode the curators' disposition, so the blind view omits them.
+    assert "InterPro mapping" not in blind and "labels" not in blind
 
 
 @pytest.mark.parametrize(
@@ -183,6 +211,13 @@ def test_snapshot_hides_later_comments_and_edits(config, tracker_dir):
             "open",
             False,
             None,
+        ),
+        (
+            {"status": "TRIAGED", "in_scope": True},
+            {"status": "IN_PROGRESS"},
+            "closed",
+            False,
+            "in_progress",
         ),
         (
             {"status": "TRIAGED", "in_scope": True},
@@ -262,6 +297,14 @@ def test_guard_script_keeps_markdown_headings_but_drops_commit_comments(tmp_path
         (f'gh pr create --title t --body "thanks {AT}ValWood"', True),
         ("gh issue view 6606 -R geneontology/go-annotation", False),
         ("grep -r geneontology/go-annotation#1 .", False),
+        (
+            "gh api repos/x/y/issues/1/comments --field body='geneontology/go-annotation#1'",
+            True,
+        ),
+        (
+            "gh api repos/x/y/issues/1/comments --raw-field=body='geneontology/go-annotation#1'",
+            True,
+        ),
     ],
 )
 def test_bash_hook(command, blocked):
@@ -270,6 +313,52 @@ def test_bash_hook(command, blocked):
         [sys.executable, str(HOOK)], input=payload, capture_output=True, text=True
     )
     assert run.returncode == (2 if blocked else 0)
+
+
+@pytest.mark.parametrize(
+    "tool,tool_input,blocked",
+    [
+        (
+            "mcp__github__add_issue_comment",
+            {"body": "Shadows geneontology/go-annotation#6596"},
+            True,
+        ),
+        (
+            "mcp__github_comment__update_claude_comment",
+            {"body": f"done, thanks {AT}ValWood"},
+            True,
+        ),
+        (
+            "mcp__github__create_pull_request",
+            {"title": "t", "body": "Shadows issues/go-annotation/6596"},
+            False,
+        ),
+        ("Read", {"file_path": "issues/go-annotation/6596/thread.jsonl"}, False),
+    ],
+)
+def test_hook_checks_github_mcp_tools(tool, tool_input, blocked):
+    payload = json.dumps({"tool_name": tool, "tool_input": tool_input, "cwd": "."})
+    run = subprocess.run(
+        [sys.executable, str(HOOK)], input=payload, capture_output=True, text=True
+    )
+    assert run.returncode == (2 if blocked else 0)
+
+
+def test_hook_reads_gh_api_input_file(tmp_path):
+    payload_file = tmp_path / "payload.json"
+    payload_file.write_text('{"body": "see geneontology/go-annotation#1"}')
+    payload = json.dumps(
+        {
+            "tool_input": {
+                "command": f"gh api repos/x/y/issues/1/comments --input {payload_file}"
+            },
+            "cwd": str(tmp_path),
+        }
+    )
+    run = subprocess.run(
+        [sys.executable, str(HOOK)], input=payload, capture_output=True, text=True
+    )
+    assert run.returncode == 2
 
 
 def test_bash_hook_reads_body_file(tmp_path):
@@ -345,6 +434,62 @@ def test_cli_validate_show_outstanding(config, tracker_dir):
         app, ["shadow-issues", "validate", "example", "--root", root]
     )
     assert result.exit_code == 1
+
+
+RATING = {
+    "tracker": "example",
+    "number": 101,
+    "rater": "shadow-issues-rater",
+    "rater_model": "claude-sonnet-5",
+    "rater_run": "https://github.com/ai4curation/ai-gene-review/actions/runs/1",
+    "independence": "DIFFERENT_MODEL",
+    "rated_at": "2026-11-11T00:00:00Z",
+    "self_rating_seen": "NEVER",
+    "outcome": "CONCORDANT",
+    "triage": "AGREE",
+    "downstream": "PENDING_RELEASE",
+    "summary": "Same fix.",
+}
+
+
+@pytest.mark.parametrize(
+    "change,error",
+    [
+        ({"self_rating_seen": False}, "self_rating_seen"),
+        ({"independence": "SELF_DECLARED"}, "SELF_DECLARED"),
+        ({"report_url": "ftp://example.org/x"}, "report_url"),
+    ],
+)
+def test_rating_fields_are_checked(config, tracker_dir, change, error):
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "report.md").write_text("# report\n")
+    (tracker_dir / "101" / "rating.yaml").write_text(
+        yaml.safe_dump({**RATING, **change})
+    )
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "validate", "example", "--root", str(tracker_dir.parent)]
+    )
+    assert result.exit_code == 1 and error in result.output
+
+
+def test_rating_needs_report_and_is_tabulated(config, tracker_dir):
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(RATING))
+    root = str(tracker_dir.parent)
+    runner = CliRunner()
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 1 and "no report.md" in result.output
+
+    (tracker_dir / "101" / "report.md").write_text("# report\n")
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 0, result.output
+
+    result = runner.invoke(app, ["shadow-issues", "ratings", "example", "--root", root])
+    assert "| example 101 |" in result.output and "DIFFERENT_MODEL" in result.output
 
 
 def test_committed_tracker_validates():

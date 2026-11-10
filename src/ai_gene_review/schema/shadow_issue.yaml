@@ -47,7 +47,9 @@ classes:
         required: true
         description: >-
           For NAMES_ISSUE, the commit whose message names the issue; for
-          COVERS_SUBJECT, the last commit touching `path` before the shadow work began.
+          COVERS_SUBJECT, the commit that introduced the covering conclusion
+          (find it with `git log -S` or `git log -L`), not merely the last commit
+          to touch `path`.
       subject:
         description: The commit's subject line.
       path:
@@ -99,8 +101,23 @@ classes:
         range: datetime
       worker:
         description: Agent or person who did the work (e.g. claude-opus-5-5).
+      worker_run:
+        description: >-
+          Identifies the run that did the work (a workflow run URL in this repo,
+          or a session id and agent role), so the rater can show it ran apart.
+      saw_prior_work:
+        range: boolean
+        description: >-
+          Whether the worker read the repo's existing conclusions on the issue's
+          subject (prior_work of relation COVERS_SUBJECT) before concluding. This
+          is separate from blinding, which is about the upstream thread.
       diagnosis:
         description: What we think is wrong (or right) with the annotations at issue.
+      supported_by:
+        range: SupportingText
+        multivalued: true
+        inlined_as_list: true
+        description: Verbatim quotes behind the diagnosis, checked by `just validate-quotes`.
       proposed_actions:
         range: ProposedAction
         multivalued: true
@@ -127,6 +144,22 @@ classes:
       replacement_term_id:
         description: GO term to use instead, for MODIFY or REPLACE_MAPPING.
       note:
+      supported_by:
+        range: SupportingText
+        multivalued: true
+        inlined_as_list: true
+
+  SupportingText:
+    description: >-
+      A verbatim quote and its source, as in gene reviews. `just validate-quotes`
+      checks every one against the cached publication or local file.
+    attributes:
+      reference_id:
+        required: true
+        description: The source the quote is taken from (a PMID, a file path, or another reference id).
+      supporting_text:
+        required: true
+      note:
 
   WorkProduct:
     description: A file in this repository produced or changed by the shadow work.
@@ -142,7 +175,6 @@ classes:
         description: Pull request number in this repository.
 
   SelfRating:
-    tree_root: true
     description: >-
       The worker's own assessment (self-rating.yaml), kept out of issue.yaml so
       that a rater reading the shadow record does not see it before scoring.
@@ -191,23 +223,38 @@ classes:
       note:
 
   ShadowRating:
-    tree_root: true
     description: >-
       An independent rater's comparison of our shadow work with the upstream
       resolution (rating.yaml). The rater must not be the worker and should
-      not read the worker's self-rating.yaml before scoring.
+      not read the worker's self-rating.yaml before scoring. Its reasoning is
+      written up in report.md beside it.
     slots:
       - tracker
       - number
     attributes:
       rater:
         required: true
+        description: Agent or person who rated.
+      rater_model:
+        required: true
+        description: >-
+          Model that rated (e.g. claude-sonnet-5), or `human`. Prefer a model
+          different from the worker's.
+      rater_run:
+        required: true
+        description: >-
+          Identifies the rating run (a workflow run URL, or a session id and
+          agent role), distinct from the worker's `worker_run`.
+      independence:
+        range: RaterIndependenceEnum
+        required: true
       rated_at:
         range: datetime
         required: true
-      saw_self_rating:
-        range: boolean
+      self_rating_seen:
+        range: SelfRatingSeenEnum
         required: true
+        description: When, if ever, the rater saw the worker's self-rating.yaml.
       outcome:
         range: RatingOutcomeEnum
         required: true
@@ -233,10 +280,10 @@ classes:
         required: true
       report_url:
         range: uri
-        pattern: "^https://claude\\.ai/"
+        pattern: "^https://"
         description: >-
-          The rater's published Claude artifact describing the approach taken and
-          how well it did (see the shadow-issue-rater skill).
+          Optional published copy of report.md (for example a Claude artifact).
+          The committed report.md is the record; this is a convenience mirror.
 
 slots:
   tracker:
@@ -303,6 +350,10 @@ enums:
         description: Worker saw the resolution; a confirmation study.
   ProposedActionEnum:
     permissible_values:
+      FLAG_FOR_CHECK:
+        description: >-
+          The worker suspects a problem but did not establish it, and asks a
+          curator to check. Not a proposal to keep or to change.
       REMOVE:
       MODIFY:
       ADD:
@@ -363,6 +414,23 @@ enums:
           Upstream has acted but the change is not yet in released data, so the
           downstream comparison must wait. Re-rate after the next release.
       NOT_APPLICABLE:
+  SelfRatingSeenEnum:
+    permissible_values:
+      NEVER:
+      BEFORE_SCORING:
+        description: The scores may have been influenced by the self-rating.
+      AFTER_SCORING:
+        description: Seen only after the scores were set.
+  RaterIndependenceEnum:
+    permissible_values:
+      DIFFERENT_PERSON:
+        description: A person who did not do the shadow work.
+      DIFFERENT_MODEL:
+        description: An agent on a different model from the worker, in a separate run.
+      SAME_MODEL_SEPARATE_RUN:
+        description: >-
+          The same model as the worker, in a separate run that did not share the
+          worker's context. The weakest separation; prefer DIFFERENT_MODEL.
   PriorWorkRelationEnum:
     permissible_values:
       NAMES_ISSUE:

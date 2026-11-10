@@ -3,11 +3,6 @@ title: GO Annotation Tracker Shadowing
 maturity: IN_PROGRESS
 tags: [EVALUATION]
 autolink_gene_symbols: false
-manifest:
-  artifacts:
-    - href: https://claude.ai/artifact/LiT1Binow1FbQQqoQFCG5p
-      title: go-annotation 6596 report
-      description: AI generated
 ---
 
 # GO Annotation Tracker Shadowing
@@ -38,6 +33,7 @@ trackers to be shadowed later.
 | `<N>/shadow.md` | curated | the worker's free-text log (optional) |
 | `<N>/self-rating.yaml` | curated | `SelfRating`: the worker's confidence, kept apart so the rater can read the record without it |
 | `<N>/rating.yaml` | curated | `ShadowRating` from an independent rater (optional) |
+| `<N>/report.md` | curated | the rater's write-up of the approach and how well it did; required beside `rating.yaml` |
 
 The sync creates `issue.yaml` once, as a stub, and never rewrites curated files.
 The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
@@ -48,32 +44,49 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
    one PR with new stubs and thread updates. Locally: `just sync-shadow-issues`.
    It only sends GET requests.
 2. **Triage.** For each `untriaged` issue, decide whether it is annotation work
-   and set `triage.kind`, `in_scope` and `rationale`. The sync's
-   `suggested_kind` (from labels) is only a hint.
+   and set `triage.kind`, `in_scope` and `rationale`, reading only the
+   opening post. For prospective issues the sync adds a `suggested_kind` from
+   the labels, as a hint. Retrospective stubs get none, and
+   `show --opening-only` prints no labels: a backfilled issue's labels were set
+   while it was resolved and can give the disposition away.
 3. **Shadow work.** For each issue in `needs_shadow`, do the work here as
    for any other task: gene reviews, family reviews, curated rules, proposed
-   terms. Record `shadow.diagnosis`, `proposed_actions` (subject, term,
-   replacement) and `work_products` in `issue.yaml`, and the worker's
-   confidence in `self-rating.yaml`. Read the thread with
+   terms. Record `shadow.diagnosis` with quote-checked `supported_by`,
+   `proposed_actions` (subject, term, replacement; `FLAG_FOR_CHECK` for a
+   suspicion not established), `work_products`, `worker_run` and
+   `saw_prior_work` in `issue.yaml`, and the worker's confidence in
+   `self-rating.yaml`. Unfinished work is `IN_PROGRESS` and sits in the
+   `in_progress` queue until a later run resumes it. Read the thread with
    `just show-shadow-issue N --as-of <time>` (or `--opening-only` for BLIND)
    and record that time as `thread_snapshot_at`. Before changing anything,
    record any existing review of an affected gene, family, rule or term as
    `prior_work` with `relation: COVERS_SUBJECT`.
 4. **Rating.** Once upstream closes the issue, a different agent or person
-   fills `resolution` and writes `rating.yaml`. The rater must not open
-   `self-rating.yaml` before scoring. Many threads end in "fixed, thanks", so
+   fills `resolution` and writes `rating.yaml`. The `shadow-issues-rater`
+   workflow does this daily on a different model (`claude-sonnet-5`) from the
+   worker (`claude-opus-5`). Each rating records `rater_model`, `rater_run` and
+   `independence`. `self_rating_seen` records whether the rater saw
+   `self-rating.yaml`, and when (it should be `NEVER`). Many threads end in "fixed, thanks", so
    the rater should check the released artifacts (GOA, interpro2go, ARBA and
    PAINT releases, linked ontology PRs) rather than rely on the thread alone,
    and date each check (`checked_at`). If upstream has acted but the change is
    not yet released, score `downstream: PENDING_RELEASE` and re-rate after the
    next release.
-5. **Report.** At the end, the rater publishes a Claude artifact describing the
-   approach taken and how well it did, and records its URL as
-   `rating.yaml` `report_url`. The procedure for steps 4 and 5 is the
-   `shadow-issue-rater` skill (`.claude/skills/shadow-issue-rater/`).
+5. **Report.** At the end, the rater writes `report.md` beside `rating.yaml`,
+   describing the approach taken and how well it did. It is the committed,
+   diffable record, and validation fails without it. In an interactive
+   session the rater may also publish it as a Claude artifact and record the
+   link as `report_url`, an optional mirror. The procedure for steps 4 and 5
+   is the `shadow-issue-rater` skill (`.claude/skills/shadow-issue-rater/`).
 
-`just outstanding-shadow-issues` lists the three queues (`untriaged`,
-`needs_shadow`, `needs_rating`), prospective issues and newest issues first.
+`just outstanding-shadow-issues` lists the four queues (`untriaged`,
+`in_progress`, `needs_shadow`, `needs_rating`), prospective issues and newest
+issues first. `just shadow-ratings` prints the table of all ratings, generated
+from the `rating.yaml` files.
+
+Throughput is one shadowed issue a day and one rating a day. Only issues that
+have been shadowed can be rated, so the 837 closed backfilled issues are rated
+as the worker reaches them, not all at once.
 
 ### Kinds of issue
 
@@ -163,13 +176,30 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   already removed the row (COVERS_SUBJECT prior work). The run led to five
   protocol fixes: `self-rating.yaml` split out of `issue.yaml`,
   `PENDING_RELEASE`, `checked_at`, `COVERS_SUBJECT` prior work, and the
-  worktree preflight. The rater's report is linked in this page's manifest
-  and in `rating.yaml` `report_url`; publishing that report is now step 5 of
+  worktree preflight. The rater's report is
+  `issues/go-annotation/6596/report.md`; writing that report is now step 5 of
   the protocol.
+- 2026-11-11: changes after PR review. Rating integrity: `self_rating_seen`
+  (NEVER, BEFORE_SCORING, AFTER_SCORING) replaces a boolean that could
+  contradict the summary; `rater_model`, `rater_run` and `independence`
+  make separation from the worker a recorded fact; a rater workflow on a
+  different model runs the `needs_rating` queue; and `report.md` is
+  committed. 6596 is recorded honestly as `SAME_MODEL_SEPARATE_RUN`,
+  self-rating seen `AFTER_SCORING`. Blinding: no label hints or labels for
+  retrospective issues. Evidence: `supported_by` quotes in `issue.yaml` are
+  now checked by `just validate-quotes`. Robustness: an `in_progress` queue,
+  a sync that skips incomplete timeline items, a one-hour cursor overlap, CI
+  validation of `issues/**`, and the notification hook extended to GitHub
+  MCP tools and every `gh api` field form. The PTHR11117 verdict is now
+  enforced (a GO:0004776 term assessment with LSC1 and SPAC16E8.17c as
+  member exceptions), and the SPAC16E8.17c row is REMOVE. NAMES_ISSUE prior
+  work is derived by `shadow-issues backfill-prior-work`, which drops bulk
+  commits naming many issues.
 
 ## Next steps
 
 - Let the worker triage the backfill, starting with the 75 issues that have
   `prior_work` (confirmation batch) and the 272 open issues.
-- Write the rater prompt (a separate agent, not the worker) and a summary
-  report over `rating.yaml` files.
+- Re-rate go-annotation 6596 with a different model, to strengthen the first
+  datapoint.
+- Re-rate PENDING_RELEASE issues after each PANTHER/GO release.

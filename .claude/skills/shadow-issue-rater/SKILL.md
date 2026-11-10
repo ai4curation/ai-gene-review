@@ -3,8 +3,8 @@ name: shadow-issue-rater
 description: >
   Independently rate our shadow work on a mirrored upstream issue
   (issues/<tracker>/<N>/), compare it with what the curators actually did, write
-  rating.yaml and the resolution block, and publish a Claude artifact reporting the
-  approach taken and how well it did. Use after a shadow worker has finished an
+  rating.yaml, the resolution block and a committed report.md on the approach taken
+  and how well it did (optionally mirrored as a Claude artifact). Use after a shadow worker has finished an
   issue that upstream has closed, or when asked to rate or report on shadow work.
 ---
 
@@ -45,23 +45,34 @@ check, `note`). Do not touch `triage` or `shadow`.
 
 ## 3. Score
 
-Write `rating.yaml`: `tracker`, `number`, `rater`, `rated_at`,
-`saw_self_rating: false` (true if you saw it before scoring, and say how in
-`summary`), `outcome`, and the dimensions `triage`, `diagnosis`, `actions`,
-`downstream` (`PENDING_RELEASE` when upstream acted but the change is not yet
-released), `added_value`, `harm`, and `summary`.
+Write `rating.yaml`:
 
-Judge term by term. Credit added value only after verifying it. Spot-check two or
-three of the worker's key factual claims and quotes. Name every confound in
-`summary`, especially `prior_work` (NAMES_ISSUE unblinds the thread;
-COVERS_SUBJECT means the repo already held a conclusion).
+- `tracker`, `number`, `rated_at`;
+- `rater` (who rated), `rater_model` (the model, or `human`), `rater_run` (a
+  workflow run URL, or a session id and agent role), and `independence`:
+  `DIFFERENT_PERSON`, `DIFFERENT_MODEL`, or `SAME_MODEL_SEPARATE_RUN` when your
+  model is the worker's (`shadow.worker`). Prefer a different model; never rate
+  work you did;
+- `self_rating_seen`: `NEVER`, `BEFORE_SCORING` (your scores may be influenced),
+  or `AFTER_SCORING`. Say how it happened in `summary` if not `NEVER`;
+- `outcome`, and the dimensions `triage`, `diagnosis`, `actions`, `downstream`
+  (`PENDING_RELEASE` when upstream acted but the change is not yet released),
+  `added_value`, `harm`;
+- `summary`.
 
-Run `just validate-shadow-issues <tracker>`.
+Judge term by term. A `FLAG_FOR_CHECK` action is a question, not a proposal: it
+neither agrees nor disagrees with what was done. Credit added value only after
+verifying it. Spot-check two or three of the worker's key factual claims, and run
+`just validate-quotes` for its `supported_by` quotes. Name every confound in
+`summary`: `prior_work` (NAMES_ISSUE unblinds the thread; COVERS_SUBJECT with
+`shadow.saw_prior_work: true` means the worker started from the repo's own
+conclusion), and for RETROSPECTIVE issues whether the title alone gave the kind
+away.
 
-## 4. Publish the report artifact
+## 4. Write the report
 
-As the last step, publish a Claude artifact (Artifact tool, a plain HTML page)
-that a reader who has not seen the files can follow. It covers:
+Write `report.md` beside `rating.yaml`. It is the committed record of the rating's
+reasoning, so a reader who has not seen the other files can follow it. It covers:
 
 - the issue in one paragraph (the claim and what kind of issue it is);
 - the approach taken: blinding and what the worker could see, prior work, what
@@ -72,11 +83,15 @@ that a reader who has not seen the files can follow. It covers:
 - confounds, and lessons for the protocol or tooling;
 - cost where known (tokens, wall time).
 
-Title it with the tracker and number, e.g. "go-annotation 6596 shadow". Record the
-URL as `report_url` in `rating.yaml`, then validate again. The coordinator adds
-the link to the PR description.
+In an interactive session with the Artifact tool, also publish the report as a
+Claude artifact (a plain HTML page titled like "go-annotation 6596 shadow") and
+record its URL as `report_url`. It is an optional mirror: workflow runs have no
+artifact tool and leave `report_url` unset.
+
+Run `just validate-shadow-issues <tracker>`; it fails if `report.md` is missing.
+`ai-gene-review shadow-issues ratings` prints the table of all ratings.
 
 ## 5. Commit
 
-Commit locally with a message like "Rate shadow work on go-annotation N", checked
-with `python3 src/ai_gene_review/shadow_issues/guard.py --commit-msg FILE`.
+Commit with a message like "Rate shadow work on go-annotation N", checked with
+`python3 src/ai_gene_review/shadow_issues/guard.py --commit-msg FILE`.

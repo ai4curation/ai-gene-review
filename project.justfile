@@ -376,6 +376,10 @@ outstanding-shadow-issues tracker="go-annotation" *args="":
 show-shadow-issue number *args="":
     uv run ai-gene-review shadow-issues show {{number}} {{args}}
 
+# Print the table of all shadow-issue ratings, generated from rating.yaml files
+shadow-ratings tracker="go-annotation":
+    uv run ai-gene-review shadow-issues ratings {{tracker}}
+
 # Validate issue.yaml and rating.yaml files against the shadow_issue schema
 [group('QC')]
 validate-shadow-issues tracker="go-annotation":

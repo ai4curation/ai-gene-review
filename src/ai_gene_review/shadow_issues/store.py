@@ -25,7 +25,7 @@ import json
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, NamedTuple
 
 import yaml
 
@@ -116,60 +116,113 @@ def issue_record(issue: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _dig(item: dict[str, Any], *keys: str) -> Any:
+    """Follow nested keys, returning None as soon as one is missing.
+
+    GitHub timeline items are not always complete (a cross-reference from a repo
+    that was since deleted or made private has no ``repository``), and one odd
+    item must not stop the mirror.
+
+    >>> _dig({"a": {"b": 1}}, "a", "b"), _dig({"a": None}, "a", "b"), _dig({}, "a")
+    (1, None, None)
+    """
+    value: Any = item
+    for key in keys:
+        if not isinstance(value, dict):
+            return None
+        value = value.get(key)
+    return value
+
+
+#: Timeline events stored in thread.jsonl; others (subscribed, mentioned, ...) are dropped.
+KEPT_EVENTS = frozenset(
+    {
+        "commented",
+        "labeled",
+        "unlabeled",
+        "closed",
+        "reopened",
+        "renamed",
+        "assigned",
+        "unassigned",
+        "referenced",
+        "cross-referenced",
+    }
+)
+
+
 def timeline_record(item: dict[str, Any]) -> dict[str, Any] | None:
-    """Compact a timeline item into a thread record; ``None`` for items we do not keep.
+    """Compact a timeline item into a thread record.
 
     Comments keep their body. Other events keep what is needed to reconstruct the
     resolution: labels, closing, and cross-references to issues or commits elsewhere.
+    Returns None for events not in :data:`KEPT_EVENTS`, and for kept events that
+    lack the fields their record needs; :func:`store_issue` counts the latter as
+    skipped rather than failing.
 
     >>> timeline_record({"event": "labeled", "id": 7, "created_at": "2026-01-01T00:00:00Z",
     ...                  "actor": {"login": "a"}, "label": {"name": "ARBA"}})["label"]
     'ARBA'
     >>> timeline_record({"event": "subscribed", "id": 8, "created_at": "2026-01-01T00:00:00Z"}) is None
     True
+    >>> timeline_record({"event": "cross-referenced", "created_at": "2026-01-01T00:00:00Z",
+    ...                  "source": {"issue": {"number": 3, "title": "gone"}}}) is None
+    True
     """
-    event = item["event"]
+    event = item.get("event")
+    created = item.get("created_at")
+    if event not in KEPT_EVENTS or created is None:
+        return None
     if event == "commented":
+        if item.get("id") is None:
+            return None
         return {
             "type": "comment",
             "key": f"comment:{item['id']}",
-            "created_at": item["created_at"],
-            "updated_at": item["updated_at"],
-            "author": _login(item["user"]),
-            "body": item["body"] or "",
+            "created_at": created,
+            "updated_at": item.get("updated_at") or created,
+            "author": _dig(item, "user", "login"),
+            "body": item.get("body") or "",
         }
     base = {
         "type": "event",
         "event": event,
-        "created_at": item["created_at"],
-        "updated_at": item["created_at"],
-        "author": _login(item.get("actor")),
+        "created_at": created,
+        "updated_at": created,
+        "author": _dig(item, "actor", "login"),
     }
-    if event in ("labeled", "unlabeled"):
-        return {**base, "key": f"event:{item['id']}", "label": item["label"]["name"]}
-    if event in ("closed", "reopened", "renamed", "assigned", "unassigned"):
-        extra: dict[str, Any] = {}
-        if event == "closed":
-            extra["state_reason"] = item.get("state_reason")
-        if event == "renamed":
-            extra["rename"] = item["rename"]
-        if event in ("assigned", "unassigned"):
-            extra["assignee"] = _login(item.get("assignee"))
-        return {**base, "key": f"event:{item['id']}", **extra}
-    if event == "referenced":
-        return {**base, "key": f"event:{item['id']}", "commit_id": item["commit_id"]}
     if event == "cross-referenced":
-        source = item["source"]["issue"]
-        repo = source["repository"]["full_name"]
+        repo = _dig(item, "source", "issue", "repository", "full_name")
+        number = _dig(item, "source", "issue", "number")
+        if repo is None or number is None:
+            return None
         return {
             **base,
-            "key": f"xref:{repo}#{source['number']}",
+            "key": f"xref:{repo}#{number}",
             "source_repo": repo,
-            "source_number": source["number"],
-            "source_title": source["title"],
-            "source_is_pr": "pull_request" in source,
+            "source_number": number,
+            "source_title": _dig(item, "source", "issue", "title"),
+            "source_is_pr": "pull_request" in (_dig(item, "source", "issue") or {}),
         }
-    return None
+    if item.get("id") is None:
+        return None
+    record = {**base, "key": f"event:{item['id']}"}
+    if event in ("labeled", "unlabeled"):
+        label = _dig(item, "label", "name")
+        if label is None:
+            return None
+        return {**record, "label": label}
+    if event == "closed":
+        return {**record, "state_reason": item.get("state_reason")}
+    if event == "renamed":
+        return {**record, "rename": item.get("rename")}
+    if event in ("assigned", "unassigned"):
+        return {**record, "assignee": _dig(item, "assignee", "login")}
+    if event == "referenced":
+        if item.get("commit_id") is None:
+            return None
+        return {**record, "commit_id": item["commit_id"]}
+    return record
 
 
 def read_thread(path: Path) -> list[dict[str, Any]]:
@@ -238,7 +291,12 @@ def latest_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def source_snapshot(
     issue: dict[str, Any], records: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    """Current upstream state of an issue, for ``source.yaml``."""
+    """Current upstream state of an issue, for ``source.yaml``.
+
+    ``comment_count`` counts comments ever mirrored. thread.jsonl is append-only
+    and the timeline does not report deletions, so after an upstream comment is
+    deleted this count stays above upstream's.
+    """
     latest = latest_records(records)
     return {
         "number": issue["number"],
@@ -259,15 +317,24 @@ def source_snapshot(
 
 
 def stub_issue(config: TrackerConfig, issue: dict[str, Any]) -> dict[str, Any]:
-    """Initial curated ``issue.yaml`` for a newly seen issue."""
+    """Initial curated ``issue.yaml`` for a newly seen issue.
+
+    ``suggested_kind`` comes from the labels the issue has when first synced. For
+    a PROSPECTIVE issue that is close to its labels at creation. For a
+    RETROSPECTIVE (backfilled) issue it is the post-resolution label set, which
+    can encode the curators' disposition (``ARBA - checked``, ``no clear
+    request``), so no suggestion is made and triage is not handed the answer.
+    """
+    study = config.study_for(issue["created_at"])
     triage: dict[str, Any] = {"status": "UNTRIAGED"}
-    kind = config.suggest_kind(label["name"] for label in issue["labels"])
-    if kind:
-        triage["suggested_kind"] = kind
+    if study == "PROSPECTIVE":
+        kind = config.suggest_kind(label["name"] for label in issue["labels"])
+        if kind:
+            triage["suggested_kind"] = kind
     return {
         "tracker": config.key,
         "number": issue["number"],
-        "study": config.study_for(issue["created_at"]),
+        "study": study,
         "triage": triage,
         "shadow": {"status": "NOT_STARTED"},
     }
@@ -279,21 +346,33 @@ def write_yaml(path: Path, data: dict[str, Any]) -> None:
     )
 
 
+class StoreResult(NamedTuple):
+    """Outcome of storing one issue."""
+
+    appended: int
+    """Thread records appended."""
+    created: bool
+    """Whether issue.yaml was created."""
+    skipped: int
+    """Kept-kind timeline items dropped because they lacked required fields."""
+
+
 def store_issue(
     config: TrackerConfig,
     tracker_dir: Path,
     issue: dict[str, Any],
     timeline: list[dict[str, Any]],
-) -> tuple[int, bool]:
-    """Write one fetched issue into its folder.
-
-    Returns (records appended, whether issue.yaml was created).
-    """
+) -> "StoreResult":
+    """Write one fetched issue into its folder."""
     folder = issue_dir(tracker_dir, issue["number"])
     folder.mkdir(parents=True, exist_ok=True)
     thread = folder / "thread.jsonl"
     opening = issue_record(issue)
-    records = [r for r in map(timeline_record, timeline) if r is not None]
+    converted = [(item, timeline_record(item)) for item in timeline]
+    records = [r for _, r in converted if r is not None]
+    skipped = sum(
+        1 for item, r in converted if r is None and item.get("event") in KEPT_EVENTS
+    )
     if _changed(opening, read_thread(thread)):
         records.insert(0, opening)
     appended = append_new_records(thread, records)
@@ -302,7 +381,7 @@ def store_issue(
     created = not curated.exists()
     if created:
         write_yaml(curated, stub_issue(config, issue))
-    return appended, created
+    return StoreResult(appended, created, skipped)
 
 
 def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -321,7 +400,7 @@ def iter_issue_folders(tracker_dir: Path) -> list[Path]:
     )
 
 
-QUEUES = ("untriaged", "needs_shadow", "needs_rating")
+QUEUES = ("untriaged", "in_progress", "needs_shadow", "needs_rating")
 
 
 def queue_for(
@@ -330,6 +409,7 @@ def queue_for(
     """Which work queue an issue is waiting in, if any.
 
     - ``untriaged``: nobody has decided whether it is in scope.
+    - ``in_progress``: shadow work started but not finished; resume it.
     - ``needs_shadow``: in scope, and our work has not started.
     - ``needs_rating``: our work is done, upstream has closed the issue, and no
       rating exists yet.
@@ -337,6 +417,8 @@ def queue_for(
     triage, shadow = issue["triage"], issue["shadow"]
     if triage["status"] == "UNTRIAGED":
         return "untriaged"
+    if shadow["status"] == "IN_PROGRESS":
+        return "in_progress"
     if triage.get("in_scope") and shadow["status"] == "NOT_STARTED":
         return "needs_shadow"
     if (
@@ -357,7 +439,9 @@ def render_thread(
 
     ``as_of`` hides every record (and every edit) made after that time, which is
     how a worker is held to a thread snapshot. ``opening_only`` shows just the
-    opening post (the BLIND protocol). Records keep their keys so a resolution can
+    opening post's title, author, date and text (the BLIND protocol), without
+    labels or state: for a backfilled issue those are post-resolution and can
+    encode the curators' disposition. Records keep their keys so a resolution can
     cite them.
 
     >>> recs = [{"type": "issue", "key": "issue", "created_at": "2026-01-01T00:00:00Z",
@@ -367,6 +451,8 @@ def render_thread(
     ...          "updated_at": "2026-01-02T00:00:00Z", "author": "b", "body": "fixed"}]
     >>> "fixed" in render_thread(recs), "fixed" in render_thread(recs, as_of=parse_time("2026-01-01T12:00:00Z"))
     (True, False)
+    >>> "labels" in render_thread(recs, opening_only=True)
+    False
     """
     visible = [
         r for r in records if as_of is None or parse_time(r["updated_at"]) <= as_of
@@ -384,15 +470,18 @@ def render_thread(
         if openings
         else "(withheld: recorded after the snapshot)"
     )
+    byline = f"Opened by {opening['author']} at {opening['created_at']}"
+    if opening_only:
+        return (
+            "\n".join([f"# {opening['title']}", "", byline, "", opening["body"]]) + "\n"
+        )
     lines = [
         f"# {opening['title']}",
         "",
-        f"Opened by {opening['author']} at {opening['created_at']}; labels: {labels or 'none'}",
+        f"{byline}; labels: {labels or 'none'}",
         "",
         opening["body"],
     ]
-    if opening_only:
-        return "\n".join(lines) + "\n"
     for record in latest:
         if record["type"] == "comment":
             lines += [

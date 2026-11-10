@@ -22,6 +22,12 @@ from ai_gene_review.shadow_issues.store import (
     queue_for,
     read_thread,
     render_thread,
+    write_yaml,
+)
+from ai_gene_review.shadow_issues.prior_work import (
+    commits_naming_issues,
+    merge_prior_work,
+    names_issue_entries,
 )
 from ai_gene_review.shadow_issues.sync import GitHubClient, github_token, sync_tracker
 
@@ -54,7 +60,8 @@ def sync_cmd(
     )
     typer.echo(
         f"{tracker}: {report.issues_seen} issues fetched, {report.stubs_created} new stubs, "
-        f"{report.records_appended} thread records appended; cursor {report.newest_updated_at}"
+        f"{report.records_appended} thread records appended, "
+        f"{report.items_skipped} incomplete timeline items skipped; cursor {report.newest_updated_at}"
     )
 
 
@@ -140,6 +147,66 @@ def stats_cmd(
         typer.echo(f"{key}\t{value}")
 
 
+@shadow_issues_app.command("backfill-prior-work")
+def backfill_prior_work_cmd(
+    tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
+) -> None:
+    """Rewrite NAMES_ISSUE prior_work from git history (COVERS_SUBJECT entries are kept)."""
+    found = commits_naming_issues(Path("."), tracker)
+    changed = 0
+    for folder in iter_issue_folders(root / tracker):
+        path = folder / "issue.yaml"
+        issue = yaml.safe_load(path.read_text())
+        merged = merge_prior_work(
+            issue.get("prior_work", []),
+            names_issue_entries(found.get(int(folder.name), [])),
+        )
+        if merged == issue.get("prior_work", []):
+            continue
+        if merged:
+            issue["prior_work"] = merged
+        else:
+            issue.pop("prior_work", None)
+        write_yaml(path, issue)
+        changed += 1
+    typer.echo(f"{tracker}: prior_work updated on {changed} issues")
+
+
+@shadow_issues_app.command("ratings")
+def ratings_cmd(
+    tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
+) -> None:
+    """Print a markdown table of every rated issue, generated from rating.yaml files."""
+    dimensions = ("triage", "diagnosis", "actions", "downstream", "added_value", "harm")
+    header = [
+        "issue",
+        "kind",
+        "blinding",
+        "outcome",
+        *dimensions,
+        "independence",
+        "report",
+    ]
+    typer.echo("| " + " | ".join(header) + " |")
+    typer.echo("|" + "---|" * len(header))
+    for folder in iter_issue_folders(root / tracker):
+        rating_path = folder / "rating.yaml"
+        if not rating_path.exists():
+            continue
+        _, issue = load_issue(folder)
+        rating = yaml.safe_load(rating_path.read_text())
+        row = [
+            f"{tracker} {folder.name}",
+            issue["triage"].get("kind", "-"),
+            issue["shadow"].get("blinding", "-"),
+            rating["outcome"],
+            *(rating.get(d, "-") for d in dimensions),
+            rating["independence"],
+            f"[report](../issues/{tracker}/{folder.name}/report.md)",
+        ]
+        typer.echo("| " + " | ".join(str(c) for c in row) + " |")
+
+
 @shadow_issues_app.command("validate")
 def validate_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
@@ -168,6 +235,8 @@ def validate_cmd(
                 problems.append(
                     f"tracker/number do not match folder {tracker}/{folder.name}"
                 )
+            if filename == "rating.yaml" and not (folder / "report.md").exists():
+                problems.append("rating.yaml has no report.md beside it")
             for problem in problems:
                 failures += 1
                 typer.echo(f"{path}: {problem}", err=True)
