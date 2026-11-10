@@ -32,7 +32,7 @@ def metric(report, name):
     return next(s for s in report.aggregated_scores if s.slot_name == name)
 
 
-@pytest.mark.parametrize("evidence", ["IMP", "IDA", "EXP", "HDA", "TAS"])
+@pytest.mark.parametrize("evidence", ["IMP", "IDA", "EXP", "HDA", "TAS", "ECO:0007744"])
 @pytest.mark.parametrize(
     "action",
     ["ACCEPT", "MODIFY", "REMOVE", "KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "NEW"],
