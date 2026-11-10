@@ -293,30 +293,50 @@ def _is_explicit_success(entry: dict) -> bool:
     return (entry.get("state") or "").upper() == "SUCCESS"
 
 
-def _check_group_key(entry: dict) -> tuple[str, str, str]:
+def _check_group_key(entry: dict, index: int) -> tuple[str, str, str]:
     """Identify which check a rollup entry reports on.
 
     GitHub supersedes a check run by (name, workflow) and a commit status by
     context, so those are the keys a re-run or a duplicate run collides on.
+    A check run that does not name its workflow cannot be matched to the
+    attempt it would supersede, so it gets a key of its own and is never
+    collapsed against anything.
     """
     if _is_check_run(entry):
-        return ("check_run", _check_name(entry), str(entry.get("workflowName") or ""))
+        workflow = str(entry.get("workflowName") or "")
+        if not workflow:
+            return ("check_run_unidentified", _check_name(entry), str(index))
+        return ("check_run", _check_name(entry), workflow)
     return ("status", _check_name(entry), "")
 
 
-def _rollup_entry_time(entry: dict) -> datetime | None:
-    """When this rollup entry last reported, or None if it does not say.
+def _is_terminal_entry(entry: dict) -> bool:
+    """Whether this entry has finished reporting."""
+    if _is_check_run(entry):
+        return (entry.get("status") or "").upper() == "COMPLETED" and bool(
+            entry.get("conclusion")
+        )
+    state = (entry.get("state") or "").upper()
+    return bool(state) and state not in {"PENDING", "EXPECTED"}
 
-    A still-running entry has no completedAt, so startedAt stands in: a re-run
-    that has started but not finished is newer than the finished attempt it
-    supersedes, and must keep the PR pending rather than inherit its result.
+
+def _rollup_entry_time(entry: dict) -> datetime | None:
+    """When this rollup entry began, or None if it does not say.
+
+    Ranks on start time, not completion time, so every entry in a group is
+    compared on one clock. Preferring completedAt would compare a finished
+    attempt's end against an unfinished one's start, and a long attempt that
+    finished late would outrank a later one that finished quickly.
     """
-    for field in ("completedAt", "startedAt", "createdAt"):
+    for field in ("startedAt", "createdAt", "completedAt"):
         raw = entry.get(field)
         if not raw:
             continue
+        text = str(raw)
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
         try:
-            parsed = _parse_ts(str(raw).replace("Z", "+00:00"))
+            parsed = _parse_ts(text)
         except ValueError:
             continue
         # Normalize: a naive stamp beside an aware one makes comparison raise,
@@ -340,21 +360,32 @@ def latest_rollup_entries(rollup: list[dict]) -> list[dict]:
     its twin left `test (3.12)=failure` plus three cancelled entries on three
     successive heads.
 
-    Superseding needs proof. Entries are collapsed only where timestamps give a
-    strict order; where a group carries missing or tied timestamps, every entry
-    is kept, so an unexplained failure still vetoes. That keeps the fail-closed
-    default: this function can only ever discard an attempt that something
-    demonstrably later replaced.
+    Superseding needs proof, in two parts. A group is collapsed only when every
+    entry in it has finished reporting, so an attempt that is still running is
+    never discarded in favour of one that has finished -- otherwise an
+    overlapping re-run would be dropped and the commit would read green while
+    that check was still executing, which is this same race without the
+    cancellation. And then only where timestamps give a strict order; a group
+    with missing or tied timestamps is kept whole, so an unexplained failure
+    still vetoes. That keeps the fail-closed default: this function can only
+    ever discard a finished attempt that a demonstrably later one replaced.
+
+    A rollup member that is not a mapping is dropped, since nothing can be read
+    from it; `check_rollup_decision` treats an empty result as no checks
+    reported, which is itself a veto.
     """
     groups: dict[tuple[str, str, str], list[tuple[int, dict]]] = {}
     for index, entry in enumerate(rollup):
         if not isinstance(entry, dict):
             continue
-        groups.setdefault(_check_group_key(entry), []).append((index, entry))
+        groups.setdefault(_check_group_key(entry, index), []).append((index, entry))
 
     keep: list[tuple[int, dict]] = []
     for members in groups.values():
         if len(members) == 1:
+            keep.extend(members)
+            continue
+        if not all(_is_terminal_entry(entry) for _, entry in members):
             keep.extend(members)
             continue
         stamped: list[tuple[datetime, tuple[int, dict]]] = []
@@ -1310,6 +1341,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"SKIP  #{number}: {decision.reason}")
             skipped.append({"number": number, "reason": decision.reason})
             continue
+        reported_checks = fresh.get("statusCheckRollup") or []
+        ignored = len(reported_checks) - len(latest_rollup_entries(reported_checks))
+        if ignored:
+            print(f"NOTE  #{number}: ignored {ignored} superseded check entry(ies)")
         if queue.active:
             try:
                 hold = queue_retry_hold(args.repo, number, fresh["headRefOid"])

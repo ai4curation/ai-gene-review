@@ -786,6 +786,53 @@ def test_collapsing_cannot_empty_a_populated_rollup():
     assert auto_merge.latest_rollup_entries(rollup) == rollup
 
 
+def test_an_overlapping_unfinished_attempt_is_not_superseded():
+    """A finished attempt must not outrank one that is still running.
+
+    Ranking on completedAt compared a finished end against an unfinished
+    start, so a SUCCESS that completed at 10:30 outranked an attempt started
+    at 10:00:05 and still executing. The in-flight entry was dropped and the
+    commit read green while that check was still running -- this PR's own race
+    without the cancellation.
+    """
+    rollup = [
+        _run(REQUIRED_CHECK, "SUCCESS", "10:00:00", "10:30:00"),
+        _run(REQUIRED_CHECK, None, "10:00:05", status="IN_PROGRESS"),
+    ]
+    assert len(auto_merge.latest_rollup_entries(rollup)) == 2
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "checks still running" in decision.reason
+
+
+def test_an_entry_that_does_not_name_its_workflow_is_never_superseded():
+    """Without a workflow there is nothing to match an attempt against."""
+    rollup = [
+        _run(REQUIRED_CHECK, "SUCCESS", "11:00:00", "11:05:00", wf=""),
+        _run(REQUIRED_CHECK, "FAILURE", "10:00:00", "10:05:00", wf=""),
+    ]
+    assert len(auto_merge.latest_rollup_entries(rollup)) == 2
+    decision = decide(make_pr(statusCheckRollup=rollup))
+    assert not decision.eligible
+    assert "test (3.12)=failure" in decision.reason
+
+
+def test_superseded_entries_are_countable_for_the_sweep_log():
+    """The first question asked of this module is what it ignored.
+
+    The sweep prints a NOTE line from this difference. It is not put in the
+    decision reason, because `evaluate` replaces that with "ready (Nd old)"
+    on success and the sweep prints the title for a queued PR, so a reason
+    suffix would never be read.
+    """
+    rollup = [
+        _run(REQUIRED_CHECK, "CANCELLED", "10:00:00", "10:00:01"),
+        _run(REQUIRED_CHECK, "SUCCESS", "10:00:05", "10:05:00"),
+    ]
+    assert len(rollup) - len(auto_merge.latest_rollup_entries(rollup)) == 1
+    assert decide(make_pr(statusCheckRollup=rollup)).eligible
+
+
 # List stage deferral
 
 
