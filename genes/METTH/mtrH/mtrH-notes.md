@@ -64,7 +64,7 @@ proposed_new_terms entry for the specific half-reaction; whole reaction GO:00302
 
 ## Decisions
 
-- GO:0006730 ACCEPT; GO:0019386 ACCEPT.
+- GO:0006730 KEEP_AS_NON_CORE (revised in PR #6211 review, as for the other C1 enzymes); GO:0019386 ACCEPT.
 - GO:0008168 MODIFY -> GO:0042086.
 - GO:0030269 MARK_AS_OVER_ANNOTATED (pattern 16).
 - GO:0035725 MARK_AS_OVER_ANNOTATED: soluble subunit, catalyses the non-Na+-coupled

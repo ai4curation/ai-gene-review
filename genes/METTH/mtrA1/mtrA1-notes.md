@@ -82,7 +82,7 @@ model for the cobamide-binding mode.
 
 ## Decisions (mirroring METJA/mtrA)
 
-- GO:0005886 ACCEPT; GO:0006730 ACCEPT; GO:0019386 ACCEPT.
+- GO:0005886 ACCEPT; GO:0006730 KEEP_AS_NON_CORE (revised in PR #6211 review, as for the other C1 enzymes); GO:0019386 ACCEPT.
 - GO:0006814 MODIFY -> GO:0035725; GO:0035725 KEEP_AS_NON_CORE.
 - GO:0030269 MARK_AS_OVER_ANNOTATED (pattern 16); contributes_to in core functions.
 - GO:0050897 MODIFY -> GO:0031419 (pattern 17).
