@@ -4,7 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, mouse]
 autolink_exclude: [old, Dark, RPE]
-genes: [PAX6, PAX4, G6pc2, Pax4, ATOH1, OLIG2, MITF, GCG, G6PC1, G6PC2, G6PC3, ACTL8, AGFG1, AGFG2, GBX2, FGF8, PTF1A, RORA, RELN, SHH, SMO, FBXO41, DNER, PTPN11, EN1, EN2]
+genes: [PAX6, G6pc2, Pax4, ATOH1, OLIG2, MITF, GCG, CRYAA, G6PC1, G6PC3, ACTL8, AGFG1, AGFG2, GBX2, FGF8, PTF1A, RORA, RELN, SHH, SMO, FBXO41, DNER, PTPN11, EN1, EN2]
 ---
 
 # Bgee expression as evidence
