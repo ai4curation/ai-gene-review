@@ -28,8 +28,10 @@ eukaryote-wide `MODULE:mitochondrial_protein_import` and
   module makes, and it is what lets the satisfiability engine
   (`ai_gene_review.module_logic`) find gaps in a new genome. Clade-specific
   compendia of the same stage (for example the Drosophila
-  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules, but
-  the umbrella does not reference them.
+  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules. An
+  umbrella may reference such clade-specific or accession-grounded modules only
+  as `optional` parts, named as such in its notes, so that no required part
+  depends on them.
 
 ## Stage skeleton
 
