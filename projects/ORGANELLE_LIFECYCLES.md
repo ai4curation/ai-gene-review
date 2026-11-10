@@ -22,7 +22,11 @@ eukaryote-wide `MODULE:mitochondrial_protein_import` and
   as a membrane-bounded projection.
 - **All eukaryotes.** Each module's taxon context is Eukaryota. Lineage
   differences are modelled as `variant_sets` (different machinery for the same
-  stage) or as `optional` parts (a stage some lineages lack).
+  stage) or as `optional` parts (a stage some lineages lack). The exception is
+  an organelle confined to one lineage (the plastid and the plant vacuole):
+  its umbrella and rule modules take that clade, or the narrower clade their
+  grounding supports, as their context, and their required parts assert "every
+  member of the clade has this".
 - **Rules, not compendia.** A non-optional part asserts "every eukaryote with
   this organelle has this". That is a stronger claim than a descriptive pathway
   module makes, and it is what lets the satisfiability engine
@@ -125,5 +129,7 @@ The organelle-by-stage matrix lives in
 - [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
 - [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
-- [ ] Plastid, plant vacuole, specialized organelles
+- [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
+- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713, VSR sorting with retromer, AVP1, TIPs and NHX1; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
+- [ ] Plastid, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
