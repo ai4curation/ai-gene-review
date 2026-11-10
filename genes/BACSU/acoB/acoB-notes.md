@@ -41,3 +41,10 @@ Full PMID20508247 explains the TPP-bound hydroxyethyl intermediate and E2 lipoyl
 ## PR 5588 follow-up — 2026-10-26
 
 Added explicit PMID:10368162 beta-subunit support to the existing contribution proposal, core and findings. The beta designation occurs in the comparative introduction, and the native Bacillus Results establish similarity of the acoABCL sequences to corresponding components. These support component assignment by sequence; the native acoA disruption assay independently establishes assembled E1 activity, not isolated beta-subunit catalysis. No row or action changes.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- Deep research: no provider deep-research file exists for this gene, and none could be generated
+  in this session (no deep-research provider API keys were configured). No deep-research file was
+  written by hand. The review rests on the cached primary publications, the UniProt record and the
+  PANTHER/PAINT family files cited in the review.

@@ -111,3 +111,33 @@ unknown.
 - `file:human/FOXRED1/FOXRED1-uniprot.txt` quotes are verbatim single-line substrings of the
   UniProt flat file (CC-prefixed lines cannot be spanned across two lines).
 - PMID quotes are verbatim substrings of the cached abstracts in publications/PMID_*.md.
+
+
+## 2026-10-31 evidence audit
+
+The original ten GOA contexts are retained (nine ACCEPT, one KEEP_AS_NON_CORE). The two previously authored NEW molecular-function assertions and the separate FAD-binding core have been retired from active assertions because the inspected evidence does not establish FOXRED1 catalysis or cofactor binding. This does not demonstrate catalytic inactivity. The assembly core retains the established complex I role while treating the myoblast-specific complex II phenotype and molecular mechanism as biological questions.
+
+The [source guide](FOXRED1-source-guide.md) gives original-source URLs, selected sections and assay limits; the [evidence map](FOXRED1-source-evidence.yaml) records current source access. The [source-context archive](FOXRED1-source-contexts.json) preserves the complete prior review, all ten original contexts and all sixteen inherited quotation occurrences: thirteen remain active unchanged and three remain with historical authored assertions. All original machine-source files and previous history remain immutable. Current official donor provenance restores three previously omitted support lists; the single IEA date difference is archived without rewriting the old TSV. All three declared product sequences match the official FASTA, without an isoform-function inference.
+
+The known research-provider credential failure remains unresolved; no new provider job was invoked. Manual selected-primary reading and official source checks supply the evidence. Scoped check outcomes will be appended after execution.
+
+
+### Executed validation and preservation results
+
+Default schema, reference, term and annotation validation passed with one advisory: an inherited core supporting-text entry quotes the UniProt recommended protein name. That quotation remains unchanged as required provenance; it is not used to establish a catalytic reaction. Strict GOA validation confirmed all ten source annotations. The initial status check identified the inherited COMPLETE value as inconsistent with the advisory; only the status was changed to DRAFT, and the subsequent status check passed. The initial diagnostic is retained in the private execution record.
+
+The genuine new history record validated. Private rendering produced ten annotation rows, one core and eleven references, and the source guide and evidence links resolved locally. Conservation checks confirmed the exact eighteen normal source files, unchanged inherited UniProt/GOA/HTML and prior history, all ten original context joins, three verified support-list restorations, three product sequences and both incoming IBA paths. All sixteen original quotation occurrences remain recoverable with their original reference and section context: thirteen active and three associated with retired historical assertions. No new quotation or annotation was introduced. The inherited notes prefix, earlier branch tips and scratch artifacts remain preserved.
+
+The twelve-path candidate contains two modified authored files, three new source-provenance documents, one genuine new history record and six genuinely fetched publication caches. Local preparation used the existing frozen runtime without reseeding the review or invoking a research provider.
+
+
+### Review response prepared on 2026-10-31
+
+The cytoplasm action is refined to TOO_GENERAL using the verified is_a/part_of path through mitochondrial membrane and mitochondrion; all four mitochondrion annotations remain accepted. The protein-name support and both PMID:34800366 paper-title occurrences are moved to historical provenance, leaving ten active and six historical occurrences from the original sixteen. The complete original review, retired authored assertions, source fields and immutable caches remain preserved. The assembly description restores the middle-to-late role. The reason for PMID:25678554 now distinguishes its late-intermediate abstract from the selected original PMID:27215383 mid-assembly observations and the authors' unresolved calibration/breakdown alternatives. Manual similarity inference and the four recorded domain signatures are acknowledged, while the four off-path PAINT activities are not treated as negative functional evidence. The partner question now distinguishes reported co-immunoprecipitation from unresolved direct contacts and biochemical steps. No new quotation or annotation is added; exact original-reading locators and the campaign policy are in the [source guide](FOXRED1-source-guide.md). Scoped checks for these amendments are pending.
+
+
+### Amendment validation completed on 2026-10-31
+
+Default schema, reference and term validation passed with no advisories, and strict GOA validation confirmed all ten original annotations. The initial computed-status check reported that the retained DRAFT value differed from the zero-warning result; that observation was preserved, only the status was changed to COMPLETE, and the subsequent status check passed without mismatch. The genuine new EDIT history validated. Private rendering and local links passed for ten annotation rows, one core and eleven references.
+
+Conservation confirmed all ten original machine contexts, the three restored donor lists, three natural products, both original IBA assertions and all eighteen immutable source hashes. Every original quotation occurrence remains recoverable: ten active associations plus six historical associations, with explicit mapping for the shifted core support indices. The full inherited review and both earlier history records remain exact. No new publication quotation, annotation, source acquisition or research-provider job was added.

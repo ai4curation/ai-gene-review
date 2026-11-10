@@ -2,8 +2,8 @@
 title: "LBNL Hackathon: Dark Protein Atlas genes"
 maturity: SCOPING
 tags: [EVALUATION]
-species: [LACLM, LACLA, SALTY, ECOLI]
-genes: [sufB, ybbO, yxcA]
+species: [LACLM, LACLA, SALTY, ECOLI, SYNE7, RHIME]
+genes: [sufB, ybbO, yxcA, Synpcc7942_0873, dusA]
 ---
 
 # LBNL Hackathon: Dark Protein Atlas genes
@@ -26,9 +26,14 @@ on the dashboard's call in the gene notes file.
 | LACLA/yxcA | *Lactococcus lactis* subsp. *lactis* IL1403 | Q9CDI2 | [NZ_VXKC01000008.1_19](https://gene-annotate-dashboard.kbase.us/review/NZ_VXKC01000008.1_19) | PlsA plasmalogen biosynthesis protein combining activation and reduction/dehydration functions for anaerobic plasmalogen production | supported (GO:0016836 hydro-lyase is an overreach) |
 | SALTY/ybbO | *Salmonella enterica* serovar Typhimurium LT2 | Q7CR11 | [AYCY01000026.1_161](https://gene-annotate-dashboard.kbase.us/review/AYCY01000026.1_161) | Short-chain dehydrogenase/reductase (SDR) family oxidoreductase, substrate undetermined | supported but under-specific (GO:0016491 correct, already in GOA); the protein is an NADPH-dependent aldehyde reductase (GO:0008106), by 1:1 orthology to ECOLI/ybbO |
 | ECOLI/ybbO | *Escherichia coli* K-12 | P0AFP4 | not linked | n/a | NADPH-dependent aldehyde reductase (GO:0008106), direct assays |
+| SYNE7/Synpcc7942_0873 | *Synechococcus elongatus* PCC 7942 (dashboard protein from PCC 6311, identical) | Q31PW6 | [CP088958.1_900](https://gene-annotate-dashboard.kbase.us/review/CP088958.1_900) | DUF4062 domain-containing protein, putative NACHT-family NTPase | wrong: GO:0017111 NTPase is NPI (no P-loop domain); probable DUF4062 TIR-like NAD+ nucleosidase (GO:0003953) |
+| RHIME/dusA | *Sinorhizobium meliloti* 1021 | Q92P85 | [NZ_RPHN01000062.1_55](https://gene-annotate-dashboard.kbase.us/review/NZ_RPHN01000062.1_55) | FMN-binding tRNA-dihydrouridine(20/20a) synthase DusA (EC 1.3.1.91) | supported |
 
 ## Notes
 
+- The dashboard sequence for CP088958.1_900 comes from the *S. elongatus* PCC 6311
+  chromosome (NCBI CP088958.1) and is 100% identical to PCC 7942 Q31PW6
+  (Synpcc7942_0873), so the review is filed under the PCC 7942 entry.
 - The dashboard sequence for NZ_LKLC01000161.1_58 is 100% identical to A2RMK5
   (llmg_1969), so the review is filed under the MG1363 reference proteome.
 - The dashboard sequence for NZ_VXKC01000008.1_19 (UniParc UPI00072AC48C,
@@ -62,3 +67,7 @@ on the dashboard's call in the gene notes file.
   reduction is seen only in engineered strains, has not been assayed with purified
   enzyme or a defined cofactor, and uses a substrate E. coli does not make. Studies in yeast
   disagree on how efficient it is.
+- The dashboard sequence for NZ_RPHN01000062.1_55 (*E. meliloti* USDA1810) contains
+  Q92P85 (SMc04235) exactly as residues 40-398; the 39 extra N-terminal residues
+  come from an upstream start codon. The review is filed under the 1021 reference
+  proteome, and the truncated UniProt start is recorded as a gene model issue.

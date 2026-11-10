@@ -8,3 +8,9 @@
 ## Decisions
 - DNA-templated transcription (UniRule IEA) marked over-annotated (TF regulates, does not execute, transcription).
 - Protein binding (NF-YC Y2H) removed; R7 differentiation kept non-core.
+
+## Thorax development (follow-up on FlyBase description)
+
+- Nf-YA knockdown gives a thorax disclosed phenotype; NF-YA binds the CCAAT-containing basket (JNK) promoter
+  and is needed for basket expression [PMID:18233955 "These results suggest that dNF-Y is necessary for proper bsk expression and activity of JNK pathway during thorax development."].
+  Added to the review description; no process annotation added (single RNAi study, indirect role via basket transcription).

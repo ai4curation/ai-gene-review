@@ -14,3 +14,13 @@
 
 ## YeastPathways
 - YeastPathways PWY3O-19 / PWY3O-862 have no gene for the decarboxylation (RXN3O-73) and assign C1 hydroxylation (RXN3O-12) to COQ6; COQ4 is absent from YeastCyc entirely (no COQ4 reactions in the summary file).
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[0]` GO:0003674 molecular_function (ND) not cited, flagged as possibly
+  stale. These notes cite yeast literature that assigns Coq4 a role in this aspect: the yeast
+  CoQ-synthome study [PMID:24406904 "indicating that Coq4 is a central organizer of the Coq
+  complex"] (a structural/scaffolding role) and the oxidative-decarboxylase paper
+  [PMID:38295803], whose cached abstract does not say whether the yeast protein was among the
+  COQ4 orthologs assayed. If either paper tested S. cerevisiae Coq4, the MF ND is stale; check
+  the PMID:38295803 full text before re-actioning.

@@ -40,3 +40,7 @@ not a new experiment on rab-11.1 function).
 ### Open points
 - Spindle alignment role (PMID:18385514) is a phenotype with unclear mechanism; not annotated.
 - Plasma membrane repair after Cry5B (PMID:21320697) not cached; not annotated.
+
+## Description follow-up (2026-10-30)
+- PMID:21320697 (Los et al. 2011) is now cached, with full text. Diluted rab-11.1 RNAi makes animals hypersensitive to the pore-forming toxin Cry5B [PMID:21320697 "Vector-RNAi control animals are only mildly affected by a low dose of PFT, but animals grown on rab-5 or rab-11.1 RNAi are significantly more intoxicated"]. It also reduces the PGP-1::GFP-positive membrane structures expelled into the intestinal lumen during repair. Added to the description. No NEW GO:0001778 (plasma membrane repair) row was added. The evidence is a single feeding-RNAi study with a protection phenotype, and RAB-11.1 acts through its general exocytic recycling activity, which the review already captures.
+- WormBase says RAB-11.1 is required for peripheral localization of nuclei in the syncytial germline. No cached paper reports this. Grant & Hirsh 1999 (PMID:10588660) reports Ce-rab11 RNAi oocyte and embryo phenotypes but not germline nuclear position, and a PubMed search found no source. Unverified, so not added.

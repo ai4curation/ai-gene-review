@@ -46,3 +46,16 @@
 - No NEW terms: mitophagy/lysosome phenotypes are indirect.
 - Evidence caveat: single laboratory; no independent replication; human peptide detected in brain;
   low/absent in GBM.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IDA (PMID:33406399) and IEA (GO_REF:0000044, SL-0173), both located_in, both ACCEPT.
+
+Checks:
+- Evidence is about the uORF peptide itself (own UniProt entry C0HLV8; projects/MICROPROTEINS.md), not PTEN or
+  PTEN-L: [file:human/MLDHR/MLDHR-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:33406399}."]
+- PMID:33406399 abstract-only; PMID:37280112 (full text) uses MitoTracker staining, no sub-mitochondrial assay.
+- No UniProt transit peptide or TM feature. The 31-aa sequence (MWRDSLCAAAGYALGAGTRLRSVLSSRKLQP) is Arg-rich and
+  acid-free, so a presequence is conceivable, but that is one uncorroborated line.
+
+Outcome: both rows stay ACCEPT (rule 2; site of the core activity), reasons record the check. Stays at root.

@@ -11,8 +11,9 @@ autolink_exclude: [ftsZ, FtsZ]
 eukaryotes. Each one composes existing modules by reference
 (`module_ref`), and each is written so it can be evaluated as a
 satisfiability rule when annotating a new genome. The first pilot is
-`MODULE:mitochondrion_lifecycle`, whose only required stage is the new
-eukaryote-wide `MODULE:mitochondrial_protein_import`.
+`MODULE:mitochondrion_lifecycle`, whose required stages are the
+eukaryote-wide `MODULE:mitochondrial_protein_import` and
+`MODULE:mitochondrial_iron_sulfur_cluster_assembly`.
 
 ## Scope
 
@@ -105,11 +106,24 @@ The organelle-by-stage matrix lives in
 - [ ] Add the kinetoplastid Tim17-lineage realizer to the TIM23 and TIM22 activity steps of `mitochondrial_protein_import` (layer 2, see the [two-layer note](ORGANELLE_LIFECYCLES/two-layer-model.md)), after confirming its PANTHER placement; then mark it `RULE_READY`
 - [x] Engine: label gaps by layer (`variant_kind`, declared or inferred), report gaps inside referenced modules, filter gap candidates to absent atoms, and carry family/domain selectors on atoms for proteome oracles
 - [ ] Revisit a realizer list on each annoton (option 2 in the two-layer note) once proteome runs show how often realizer choices are written as variant sets
-- [x] `mitochondrion_lifecycle` umbrella (import required; other stages optional)
+- [x] `mitochondrion_lifecycle` umbrella (import and iron-sulfur cluster assembly required; other stages optional)
 - [ ] Make mitochondrial division rule-ready (Mff / Mdv1-Fis1 / FtsZ variants), then make it required
-- [ ] Mitochondrial iron-sulfur cluster assembly module (universal to mitochondrion-related organelles; start from the Drosophila-only `dmel_iron_sulfur_cluster_assembly`)
+- [x] `mitochondrial_iron_sulfur_cluster_assembly`: core ISC machinery (NFS1-ISD11, ISCU with frataxin, HSCB-mtHsp70, GLRX5), eukaryote-wide and PAINT-grounded; `RULE_CANDIDATE` (Archamoebae use a NIF system)
+- [ ] Extend the Fe-S module: Archamoebae NIF (and any SUF) realizers for the desulfurase and scaffold steps, the ferredoxin electron supply, and the late [4Fe-4S] machinery; check the frataxin/HSCB/GLRX5 arm against reduced mitosomal proteomes
 - [ ] Extract a shared receptor-to-Atg8 capture module from `mitophagy`
-- [ ] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus referenced modules; add pexophagy
-- [ ] Lysosome/endosome, ER, Golgi, nucleus, lipid droplet, autophagosome
+- [x] Peroxisome: split `peroxisome-lifecycle` into an umbrella plus `peroxisomal_protein_import` (eukaryote-wide, PAINT-grounded per subunit; `RULE_CANDIDATE`); metabolism referenced as optional modules
+- [ ] Peroxisome: ground the receptor E2 (Pex4/Pex22 and animal E2s) and the PEX1/PEX6 anchor (PEX26, Pex15, APEM9) per lineage; check the PEX3 step in kinetoplastid genomes and Pex16 and PTS2 losses against proteomes; add pexophagy
+- [x] Lysosome/endosome: `lysosome_lifecycle` umbrella with two eukaryote-wide rule modules, `vacuolar_atpase_acidification` (V-ATPase, one PANTHER family per subunit) and `escrt_iii_intralumenal_vesicle_formation` (ESCRT-III and Vps4 by subfamily); both `RULE_CANDIDATE`
+- [ ] Lysosome/endosome: add ESCRT-I (TSG101, VPS28, VPS37 reviews exist) and ESCRT-II; model endosome maturation (Rab7, Mon1-Ccz1, HOPS) eukaryote-wide; Vps10/VSR hydrolase sorting; lysophagy
+- [x] ER: `endoplasmic_reticulum_lifecycle` umbrella with two eukaryote-wide rule modules, `er_cotranslational_translocation` (SRP, SRP receptor, Sec61) and `er_oxidative_protein_folding` (BiP, PDI; Ero1 and the calnexin cycle optional); both `RULE_CANDIDATE`
+- [ ] ER: ground ERAD (Hrd1/Hrd3, Derlin, Cdc48-Ufd1-Npl4) once Hrd1's family table and per-lineage Cdc48/Hrd3 subfamilies are in place; add ER shaping, COPII export and a eukaryote-wide (IRE1) UPR; resolve SRbeta's PANTHER placement; add plant SRalpha and SRP68/72 selectors
+- [x] Golgi: `golgi_apparatus_lifecycle` umbrella with one eukaryote-wide rule module, `golgi_copi_vesicle_coat` (GBF1/Gea, Arf1, coatomer); `RULE_CANDIDATE`; COPII referenced as the optional Drosophila module
+- [ ] Golgi: ground a eukaryote-wide COPII module once Sec24, Sec31 and Sec12 have local PANTHER entries; add ArfGAPs, Golgi tethers and SNAREs, and TGN exit
+- [x] Autophagosome: `autophagosome_lifecycle` umbrella with one eukaryote-wide rule module, `autophagosome_core_biogenesis` (Atg1 kinase, PI3-kinase complex I, Atg9/Atg2/Atg18, Atg12 and Atg8 conjugation); `RULE_CANDIDATE`; the metazoan and yeast assembly modules referenced as optional
+- [ ] Autophagosome: add fungal Atg16 and plant Atg14 selectors, FIP200/Atg17 and ATG101, Atg10; model closure and fusion with the lysosome or vacuole
+- [x] Nucleus: `nucleus_lifecycle` umbrella with one partial eukaryote-wide rule module, `nuclear_pore_transport_core` (four nucleoporins, Ran, NTF2, Crm1, Cse1); `RULE_CANDIDATE`
+- [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
+- [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
+- [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
 - [ ] Plastid, plant vacuole, specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)

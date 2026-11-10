@@ -155,3 +155,7 @@ UniProt: **P35736** (YKF0_YEAST); systematic name **YKL050C**; SGD standard name
   in the absolute yeast peroxisomal proteome and reports higher abundance under glucose
   than oleate among the partially peroxisomal proteins. This adds quantitative context
   but does not establish a molecular activity or contradict the MF_DARK call.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[2]` GO:0008150 biological_process (ND) may be stale. Yifrach et al. 2022 [PMID:36164978] report that the ykl050c (LPX2) deletion causes the largest lipidome change in glucose medium, an increase in lyso-phosphatidylglycerol, which is a mutant phenotype in this species tied to a specific process (glycerophospholipid metabolism). A curator should decide whether this supports a process annotation; the row action is unchanged.
