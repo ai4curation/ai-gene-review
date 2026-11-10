@@ -38,7 +38,11 @@ tandem repeat needs alignment- or structure-level checking. See
 
 from __future__ import annotations
 
+import http.client
 import json
+import ssl
+import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -53,6 +57,16 @@ if TYPE_CHECKING:  # annotation only; the runtime import lives in _panther_index
     from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
+
+
+def _retryable_uniprot_error(exc: Exception) -> bool:
+    """Limit retries to transient HTTP and network/read failures."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in {408, 429, 500, 502, 503, 504}
+    if isinstance(exc, urllib.error.URLError):
+        # Certificate/configuration errors will not improve after a short wait.
+        return not isinstance(exc.reason, (ssl.SSLError, PermissionError))
+    return isinstance(exc, (TimeoutError, ConnectionError, http.client.IncompleteRead))
 
 
 class Outcome(str, Enum):
@@ -147,13 +161,25 @@ class SequenceCache:
         req = urllib.request.Request(
             UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
         )
-        try:
-            with urllib.request.urlopen(req, timeout=60) as fh:
-                return json.load(fh)
-        except (OSError, json.JSONDecodeError) as exc:
-            raise RuntimeError(
-                f"Could not retrieve UniProt record {acc} from {req.full_url}"
-            ) from exc
+        # Three total attempts, with only 2s and 4s waits. A successful record
+        # still passes through the same validation and persistent cache paths.
+        attempts = 3
+        for attempt in range(1, attempts + 1):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as fh:
+                    return json.load(fh)
+            except (OSError, json.JSONDecodeError, http.client.HTTPException) as exc:
+                if attempt == attempts or not _retryable_uniprot_error(exc):
+                    # Keep the final HTTPError body available through __cause__;
+                    # only responses discarded before another attempt are closed.
+                    raise RuntimeError(
+                        f"Could not retrieve UniProt record {acc} from {req.full_url}"
+                    ) from exc
+                if isinstance(exc, urllib.error.HTTPError):
+                    # urlopen raised before entering the response context manager.
+                    exc.close()
+                time.sleep(2 ** attempt)
+        raise AssertionError("unreachable")
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
