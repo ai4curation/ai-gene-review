@@ -20,8 +20,12 @@
   (PMID:18832180, PMID:26193363, PMID:28045997); the G-protein mechanism is open
   [PMID:18832180 "Further studies, however, are required to elucidate the mechanism of BOSS-mediated signaling."].
 - Evolution: [PMID:42043338 "Thus, the Boss/Sev signaling module appears to be restricted to Dipterans."]
-  Outside Diptera the BOSS cognate is recognized by its transmembrane stack; its extracellular region is
-  not detectably conserved there, which the authors attribute to fast evolution (PMID:18392882).
+  Outside Diptera the BOSS cognate is recognized by its transmembrane stack
+  [PMID:18392882 "The extracellular region, however, is only detectably conserved within but not outside Diptera."];
+  the authors attribute this to fast co-evolution with Sevenless and raise the possibility of conserved
+  Sevenless signaling in endopterygote insects, which is in tension with the statement above. The CR-0006
+  Diptera scope therefore rests on ectodomain detectability and on the absence of functional evidence
+  outside Drosophila, not on absence of the gene.
 
 ## Consequence for CR-0006
 
