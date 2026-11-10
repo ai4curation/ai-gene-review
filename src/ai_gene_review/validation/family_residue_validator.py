@@ -813,6 +813,63 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
     return results
 
 
+#: Node verdicts that say PAINT's placement (of a gain or of a loss) is wrong.
+PLACEMENT_DISPUTES = frozenset(
+    {"TOO_DEEP", "WRONG_NODE", "NEEDS_PRUNING", "LOSS_CONTRADICTED", "LOSS_TOO_BROAD"}
+)
+#: Files that record what a node covers in the PANTHER tree: the release-derived node
+#: listing (``just phylo-family``), a gene's own extract (``just phylo``), and the
+#: older listing written from the PANTHER treeinfo service by ``tree_check.py``.
+TREE_LISTING_SUFFIXES = ("-tree-nodes.yaml", "-phylo.yaml", "-tree-check.txt")
+
+
+def check_node_tree_evidence(review: dict) -> list[ResidueCheck]:
+    """Ask each verdict that disputes a PAINT placement to cite the tree.
+
+    ``TOO_DEEP``, ``WRONG_NODE``, ``NEEDS_PRUNING``, ``LOSS_CONTRADICTED`` and
+    ``LOSS_TOO_BROAD`` are claims about which leaves sit below a node and where its seeds
+    are. The PAINT slice gives only the node id and the seed ids, so such a verdict should
+    quote a tree listing in ``supported_by``. One that does not is reported UNRESOLVED,
+    never FAIL: the verdict may well be right, but nothing shows that the tree was read.
+    Verdicts that accept the placement are not asked for it.
+
+    >>> a = {"node_id": "PANTHER:PTN1", "asserted_term": {"id": "GO:1"}, "assessment": "TOO_DEEP"}
+    >>> [r.outcome.value for r in check_node_tree_evidence({"node_assessments": [a]})]
+    ['UNRESOLVED']
+    >>> a["supported_by"] = [{"reference_id": "file:interpro/panther/PTHR1/PTHR1-tree-nodes.yaml"}]
+    >>> [r.outcome.value for r in check_node_tree_evidence({"node_assessments": [a]})]
+    ['PASS']
+    >>> check_node_tree_evidence({"node_assessments": [{"assessment": "SOUND"}]})
+    []
+    """
+    family_id = review.get("family_id", "?")
+    results: list[ResidueCheck] = []
+    for assessment in review.get("node_assessments") or []:
+        verdict = assessment.get("assessment")
+        if verdict not in PLACEMENT_DISPUTES:
+            continue
+        node = assessment.get("node_id", "?")
+        term = (assessment.get("asserted_term") or {}).get("id", "?")
+        cited = any(
+            str(item.get("reference_id", "")).endswith(TREE_LISTING_SUFFIXES)
+            for item in assessment.get("supported_by") or []
+            if isinstance(item, dict)
+        )
+        results.append(
+            ResidueCheck(
+                family_id, node, term, 0, [], None,
+                Outcome.PASS if cited else Outcome.UNRESOLVED,
+                f"{verdict} cites a tree listing"
+                if cited
+                else f"{verdict} does not quote the PANTHER tree; run `just phylo-family "
+                f"{str(family_id).split(':')[-1]}` and quote the node's summary from its "
+                "-tree-nodes.yaml in supported_by",
+                kind="NODE_TREE_EVIDENCE",
+            )
+        )
+    return results
+
+
 def check_controls(review: dict, cache: SequenceCache) -> list[ResidueCheck]:
     """Validate the declared positive and negative controls.
 
@@ -1000,6 +1057,7 @@ def validate_family_review(
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
+        + check_node_tree_evidence(review)
         + check_term_assessment_site_refs(review)
         + check_panther_ids(review, labels, members, gaps, alternates)
     )
