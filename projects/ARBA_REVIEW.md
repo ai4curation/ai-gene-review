@@ -306,10 +306,62 @@ ARBA00052213, ARBA00026799, ARBA00028655, ARBA00045851). The recurring errors:
 - **Own notes as literature.** `literature_support: CONTRADICTED` was often backed
   only by the review's own research file.
 
-The reviews were corrected on 2026-11-10. Each flawed review now records the
-condition sets it examined, has the unsupported claims removed, lists what was
-withdrawn under `corrections` with the refuting evidence, and carries an action
-the evidence supports, which for most mega-rules is UNDECIDED.
+The reviews were corrected on 2026-11-10: 72 were rewritten and one empty
+placeholder was reset. Each records the condition sets it examined from the rule
+as UniProt served it on 2026-11-09, has the unsupported claims removed, lists
+what was withdrawn under `corrections` with the refuting evidence (362 entries),
+and carries an action the evidence supports.
+
+| Action | Before | After |
+|---|---:|---:|
+| ACCEPT | 3 | 30 |
+| MODIFY | 26 | 11 |
+| SPLIT | 2 | 1 |
+| DEPRECATE or REMOVE | 46 | 6 |
+| UNDECIDED | 1 | 30 |
+
+What the new verdicts mean, and do not mean:
+
+- **UNDECIDED (30)** is mostly the mega-rules and keyword rules. Sampled sets
+  were sound in every case, but a sample is not a review.
+- **DEPRECATE (6)** now rests only on a withdrawn rule or an obsolete
+  consequent.
+- **ACCEPT (30) is a weaker claim than it looks.** It means every condition set
+  was examined and its reviewed (Swiss-Prot) matches carry the consequent on
+  evidence other than ARBA, usually with at least one experimental annotation
+  per set. It does not measure precision on the unreviewed entries the rule
+  actually annotates, and the reviewed matches are the data the rule was mined
+  from. Read it as "no conflict found", with the confidence given in each file.
+- **New defects with named proteins** replaced the old reasons in several
+  MODIFY reviews: ARBA00035068 set 2 annotates insect Lst2 FYVE proteins that
+  have no phosphatase domain; ARBA00027399 set 13 passes serine-type
+  endopeptidase activity to BMP1/TLL metalloproteases from a Reactome TAS;
+  ARBA00028131 set 14 is one InterPro entry matching 56,399 unreviewed entries
+  whose reviewed members carry the term only from this rule; ARBA00004173 has
+  three sets matching chloroplast ATP synthase subunits.
+
+Corrections by kind of error (one review can have several):
+
+| Error | Corrections |
+|---|---:|
+| Unsupported source (own notes, missing file, unresolvable reference) | 45 |
+| Identifier given the wrong meaning | 37 |
+| Verdict on unexamined rule | 37 |
+| Size as evidence | 36 |
+| Conjunction ignored | 32 |
+| Taxon conditions misread | 30 |
+| Refuted by curated annotation | 29 |
+| General treated as wrong | 25 |
+| Ontology misread | 21 |
+| Stale rule version | 20 |
+| Low recall treated as wrong | 10 |
+| Sample over-generalised | 8 |
+| Other | 32 |
+
+Not done: the GitHub issues several reviews cite (go-annotation #5883, #5899,
+#6008, #6035, #6140, #6179, #6412) could not be read during the correction, so
+claims resting on them were removed, not confirmed. If an issue names a specific
+protein or set, that set should be re-examined.
 
 Prevention is in [docs/rule_review_receipts.md](../docs/rule_review_receipts.md):
 a review must give a checkable receipt for each claim, and `just rules-validate`

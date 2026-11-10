@@ -473,6 +473,10 @@ def _get_json(url: str, timeout: int = 30, attempts: int = 5) -> Any:
             if exc.code not in (408, 429, 500, 502, 503, 504) or attempt == attempts - 1:
                 raise
             time.sleep(2 ** (attempt + 1))
+        except TimeoutError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(2 ** (attempt + 1))
     raise AssertionError("unreachable")
 
 

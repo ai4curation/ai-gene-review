@@ -101,6 +101,22 @@ the paper or database record the lead points to.
 
 Run `--online` before marking a review COMPLETE.
 
+The label checks compare against the committed cache `rules/_labels.json`. InterPro
+renames entries, so a label error can mean the cache is stale. Run
+`uv run python -m ai_gene_review.validation.rule_review_receipts --refresh-labels <file>`:
+it re-fetches only the identifiers whose recorded label disagrees with the cache.
+If the error remains, the review is wrong.
+
+## What ACCEPT means
+
+In the corrected reviews, ACCEPT means every condition set was examined and its
+reviewed (Swiss-Prot) matches carry the consequent on evidence other than ARBA
+itself, usually with an experimental annotation in each set. Swiss-Prot entries can
+carry a term only as an ARBA IEA (GO_REF:0000117); those are the rule's own output
+and are excluded. This is still in-sample evidence: the rule was mined from
+Swiss-Prot, and the unreviewed entries it annotates were counted, not inspected.
+Read ACCEPT as "no conflict found", and keep the confidence modest.
+
 ## What the checks cannot see
 
 Deterministic checks test that a receipt exists and resolves. They do not test that

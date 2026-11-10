@@ -105,11 +105,6 @@ window.searchSchema = {
       "type": "string"
     },
     {
-      "field": "review_summary",
-      "label": "Review Summary",
-      "type": "string"
-    },
-    {
       "field": "status",
       "label": "Status",
       "type": "string"
