@@ -32,8 +32,10 @@ eukaryote-wide `MODULE:mitochondrial_protein_import` and
   module makes, and it is what lets the satisfiability engine
   (`ai_gene_review.module_logic`) find gaps in a new genome. Clade-specific
   compendia of the same stage (for example the Drosophila
-  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules, but
-  the umbrella does not reference them.
+  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules. An
+  umbrella may reference such clade-specific or accession-grounded modules only
+  as `optional` parts, named as such in its notes, so that no required part
+  depends on them.
 
 ## Stage skeleton
 
@@ -47,6 +49,10 @@ Every lifecycle umbrella uses the same part roles, in this order:
 | 4 | function | references to the metabolic and transport modules the organelle hosts |
 | 5 | quality control | stress responses, resident proteases, repair |
 | 6 | turnover | selective autophagy, programmed elimination |
+
+An umbrella part's `order` is the stage's number in this table, not its position
+among the parts the umbrella happens to have: an umbrella with only biogenesis and
+function parts numbers them 1 and 4, and parts of the same stage share a number.
 
 The skeleton is a naming convention. It is not a `conforms_to` template,
 because conformance compares molecular-function terms tier by tier with exact
@@ -126,7 +132,7 @@ The organelle-by-stage matrix lives in
 - [x] Autophagosome: `autophagosome_lifecycle` umbrella with one eukaryote-wide rule module, `autophagosome_core_biogenesis` (Atg1 kinase, PI3-kinase complex I, Atg9/Atg2/Atg18, Atg12 and Atg8 conjugation); `RULE_CANDIDATE`; the metazoan and yeast assembly modules referenced as optional
 - [ ] Autophagosome: add fungal Atg16 and plant Atg14 selectors, FIP200/Atg17 and ATG101, Atg10; model closure and fusion with the lysosome or vacuole
 - [x] Nucleus: `nucleus_lifecycle` umbrella with one partial eukaryote-wide rule module, `nuclear_pore_transport_core` (four nucleoporins, Ran, NTF2, Crm1, Cse1); `RULE_CANDIDATE`
-- [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
+- [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins as family selectors once they have local PANTHER entries (they are modelled by UniProt accession in `karyopherin_nuclear_protein_import`); model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
 - [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
 - [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
