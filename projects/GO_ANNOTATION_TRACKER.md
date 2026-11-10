@@ -3,6 +3,11 @@ title: GO Annotation Tracker Shadowing
 maturity: IN_PROGRESS
 tags: [EVALUATION]
 autolink_gene_symbols: false
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/LiT1Binow1FbQQqoQFCG5p
+      title: go-annotation 6596 report
+      description: AI generated
 ---
 
 # GO Annotation Tracker Shadowing
@@ -62,6 +67,10 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
    and date each check (`checked_at`). If upstream has acted but the change is
    not yet released, score `downstream: PENDING_RELEASE` and re-rate after the
    next release.
+5. **Report.** At the end, the rater publishes a Claude artifact describing the
+   approach taken and how well it did, and records its URL as
+   `rating.yaml` `report_url`. The procedure for steps 4 and 5 is the
+   `shadow-issue-rater` skill (`.claude/skills/shadow-issue-rater/`).
 
 `just outstanding-shadow-issues` lists the three queues (`untriaged`,
 `needs_shadow`, `needs_rating`), prospective issues and newest issues first.
@@ -154,7 +163,9 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   already removed the row (COVERS_SUBJECT prior work). The run led to five
   protocol fixes: `self-rating.yaml` split out of `issue.yaml`,
   `PENDING_RELEASE`, `checked_at`, `COVERS_SUBJECT` prior work, and the
-  worktree preflight.
+  worktree preflight. The rater's report is linked in this page's manifest
+  and in `rating.yaml` `report_url`; publishing that report is now step 5 of
+  the protocol.
 
 ## Next steps
 
