@@ -7,10 +7,13 @@ import subprocess
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import typer
 from typing_extensions import Annotated
+
+if TYPE_CHECKING:
+    from ai_gene_review.etl.arba_match import RuleMatch
 
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
@@ -2703,6 +2706,101 @@ def arba_lookup(
                 typer.echo(f"  Pathway: {ann.pathway}")
             elif ann.text:
                 typer.echo(f"  {ann.comment_type}: {ann.text}")
+
+
+def _echo_rule_match(match: "RuleMatch") -> None:
+    """Print one rule's verdict and, when it fails, its closest condition sets."""
+    if match.matched:
+        sets = ", ".join(str(i) for i in match.matching_sets)
+        typer.echo(f"  {match.rule_id} (modified {match.rule_modified}): matches via set {sets}")
+        return
+    typer.echo(
+        f"  {match.rule_id} (modified {match.rule_modified}): no set matches; "
+        f"closest failure {match.closest_failure}"
+    )
+    for cs in match.closest_sets[:3]:
+        typer.echo(f"    set {cs.index}:")
+        for c in cs.conditions:
+            mark = "ok  " if c.holds else "FAIL"
+            neg = "NOT " if c.condition.is_negative else ""
+            values = ", ".join(cv.value for cv in c.condition.values)
+            typer.echo(f"      {mark} {neg}{c.condition.condition_type}: {values}")
+    if len(match.closest_sets) > 3:
+        typer.echo(f"    ... {len(match.closest_sets) - 3} more sets of this kind")
+
+
+@app.command()
+def arba_check(
+    accession: Annotated[str, typer.Argument(help="UniProtKB accession (e.g., Q88KS6)")],
+    rule_ids: Annotated[List[str], typer.Argument(help="One or more ARBA rule IDs")],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Scratch cache for fetched rules"),
+    ] = Path(".cache/arba"),
+):
+    """Check whether ARBA rules fire on a protein, using current UniProt data.
+
+    Rules are always fetched fresh, since ARBA serves only the current version.
+
+    Examples:
+        ai-gene-review arba-check Q88KS6 ARBA00086692
+        ai-gene-review arba-check Q88KS6 ARBA00086692 ARBA00028620
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+    from ai_gene_review.etl.arba_match import UniProtFeatureClient, evaluate_rule
+
+    protein = UniProtFeatureClient().proteins([accession]).get(accession)
+    if protein is None:
+        typer.echo(f"{accession} not found in UniProtKB", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(f"{accession} (taxon {protein.taxon_id}, UniProt {protein.uniprot_release})")
+    client = ARBAClient(cache_dir=cache_dir)
+    for rule_id in rule_ids:
+        rule = client.fetch_rule(rule_id, use_cache=False)
+        if rule is None:
+            typer.echo(f"  {rule_id}: not found in ARBA")
+            continue
+        _echo_rule_match(evaluate_rule(rule, protein.features))
+
+
+@app.command()
+def arba_check_goa(
+    goa_file: Annotated[Path, typer.Argument(help="GOA TSV, e.g. genes/PSEPK/PP_2213/PP_2213-goa.tsv")],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Scratch cache for fetched rules"),
+    ] = Path(".cache/arba"),
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show condition detail for matching rows too"),
+    ] = False,
+):
+    """Check each ARBA row (GO_REF:0000117) of a GOA file against the rule it cites.
+
+    A row whose rule no longer matches is reported as RULE_EDITED_SINCE_LOAD
+    when the rule's modifiedDate is later than the row's GOA date, since ARBA
+    serves only the current rule version; only MISMATCH rows are candidates
+    for a misapplied rule.
+
+    Examples:
+        ai-gene-review arba-check-goa genes/PSEPK/PP_2213/PP_2213-goa.tsv
+    """
+    from collections import Counter
+
+    from ai_gene_review.etl.arba import ARBAClient
+    from ai_gene_review.etl.arba_match import UniProtFeatureClient, check_goa_file
+
+    checks = check_goa_file(goa_file, ARBAClient(cache_dir=cache_dir), UniProtFeatureClient())
+    if not checks:
+        typer.echo(f"No ARBA rows in {goa_file}")
+        return
+    for check in checks:
+        typer.echo(f"{check.status}  {check.accession}  {check.go_id} {check.go_name}  (loaded {check.load_date})")
+        if verbose or check.status != "MATCH":
+            for match in check.matches:
+                _echo_rule_match(match)
+    counts = Counter(c.status for c in checks)
+    typer.echo("\n" + ", ".join(f"{k}: {v}" for k, v in sorted(counts.items())))
 
 
 @app.command()
