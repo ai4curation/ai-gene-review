@@ -314,13 +314,17 @@ anatomy-bearing GO term for the gene and its sister paralogs:
 - G6pc2: `genes/mouse/G6pc2/G6pc2-bioinformatics/RESULTS.md`
 - Pax4: `genes/mouse/Pax4/Pax4-bioinformatics/RESULTS.md`
 
-**mouse/G6pc2** (17 rows: 12 ACCEPT,
-3 MODIFY, 2 REMOVE).
+**mouse/G6pc2** (17 GOA rows plus 1 NEW: 12 ACCEPT, 3 MODIFY, 2 REMOVE,
+1 NEW).
 
-- **Core function.** Glucose-6-phosphatase activity in the β-cell ER is core.
-  It opposes glucokinase, shifts the glucose dose-response of insulin
-  secretion, and sets fasting blood glucose. *Regulation of insulin
-  secretion* is refined to the negative, glucose-stimulated child.
+- **Core function.** Glucose-6-phosphatase activity in the ER of islet β
+  and α cells is core. It opposes glucokinase and so sets two glucose
+  thresholds. In β cells it shifts the glucose dose-response of insulin
+  secretion, and *regulation of insulin secretion* is refined to the
+  negative, glucose-stimulated child. In α cells it sets the glucose level
+  that suppresses glucagon secretion: α-cell-specific deletion lowers
+  glucagon output at low glucose (PMID:39742505). That adds a NEW
+  *positive regulation of glucagon secretion* row.
 - **Gluconeogenesis.** The IBA and the UniPathway IEA are removed as
   over-propagation from PTN000971890, whose seeds include no G6PC2.
   Deleting G6pc2 in β-cells alone accounts for the phenotype, and islets do
@@ -388,9 +392,34 @@ removal.
   the mammalian G6PC2 node (PTN000287500).
 
 Both reviews record source defects for the upstream resources and pose the
-PAINT node questions as suggested questions. The human genes are still
-unreviewed. Their IBAs come from the same nodes, so the same arguments should
-transfer, but they need their own reviews.
+PAINT node questions as suggested questions.
+
+**Human reviews.** Human G6PC2 and PAX4 were then reviewed, with the mouse
+reviews as the consistency reference and per-gene human Bgee reports.
+
+- **human/G6PC2** (13 GOA rows plus 1 NEW).
+  - **Gluconeogenesis.** All three rows are removed, including a Reactome
+    TAS row that mouse did not have. Reactome places its islet G6PC2
+    reaction inside the Gluconeogenesis pathway, whose own summary says
+    gluconeogenesis "is confined to cells of the liver and kidney"; this is
+    recorded as a Reactome source defect.
+  - **Insulin secretion.** The human variant study behind the IMP rows
+    gives a direction: the fasting-glucose-raising allele lowers
+    first-phase insulin secretion. The row is refined to the same negative,
+    glucose-stimulated term as in mouse.
+  - **Glucagon.** The α-cell glucagon row is added here too, on the human
+    α-cell knockdown in the same paper.
+  - **Expression.** Human Bgee gives weaker expression support than mouse:
+    G6PC2 has only low present calls in the gluconeogenic tissues and no
+    absent calls.
+- **human/PAX4** (30 rows: 16 ACCEPT, 7 MODIFY, 3 MARK_AS_OVER_ANNOTATED,
+  2 TOO_GENERAL, 2 REMOVE). Actions match mouse on every shared term.
+  - The β-cell role is contributory rather than essential in human:
+    knockout stem-cell lines still make β-like cells, and complete loss
+    causes transient neonatal diabetes with "No extra pancreatic features"
+    (PMID:40614820).
+  - The human enteroendocrine rows rest on an organoid CRISPR screen.
+  - MODY9 is recorded as contested and supports no term.
 
 ## Rules of use: when expression can count
 
@@ -424,8 +453,10 @@ reviewers. They are not repository policy.
 |---|---|---|---|
 | IBA | ACTL8 `axon` (GO:0030424) | ACTB detected in neurons; ACTL8 germline-only and absent | reconsider the UNDECIDED row; candidate MARK_AS_OVER_ANNOTATED |
 | IBA | AGFG2 `acrosome assembly` (GO:0001675) | AGFG1 at 98–100 in sperm and male germ cells; AGFG2 absent | re-check the ACCEPT against AGFG2-specific literature |
-| IBA | G6PC2 `gluconeogenesis` (GO:0006094) | islet-dominant; 2/10 top tissues in the gluconeogenic context | **done (mouse G6pc2):** IBA and IEA REMOVEd; IRD suggested at the G6PC2 clade; human G6PC2 still unreviewed |
-| IBA / PAINT | PAX4 retina and forebrain terms from PTN002900580 | PAX6 enriched; PAX4 absent (human) or marginal (mouse) | **done (mouse Pax4):** brain and forebrain REMOVEd, retina and sensory organ MARK_AS_OVER_ANNOTATED; IRDs suggested on PTN000676639 and PTN009180007; human PAX4 still unreviewed |
+| IBA | G6PC2 `gluconeogenesis` (GO:0006094) | islet-dominant; 2/10 top tissues in the gluconeogenic context | **done (mouse and human):** IBA, IEA and the human Reactome TAS REMOVEd; IRD suggested at the mammalian G6PC2 node PTN000287500 |
+| IBA / PAINT | PAX4 retina and forebrain terms from PTN002900580 | PAX6 enriched; PAX4 absent (human) or marginal (mouse) | **done (mouse and human):** brain and forebrain REMOVEd, retina and sensory organ MARK_AS_OVER_ANNOTATED; IRDs suggested on PTN000676639 and PTN009180007 |
+| source (Reactome) | G6PC2 islet reaction R-HSA-3266566 inside Gluconeogenesis R-HSA-70263 | the pathway summary confines gluconeogenesis to liver and kidney | recorded as a Reactome source defect on human G6PC2 |
+| module | `modules/gluconeogenesis_human.yaml` paralog-trap note | calls G6PC2 a "largely catalytically inactive autoantigen", contradicted by the G6PC2 enzymology and mutagenesis papers (PMID:14722102, PMID:38095063) | correct the parenthetical; the paralog-trap decision itself stands |
 | review gap | MITF RPE, heart, skeletal muscle | top tissues unexplained by any retained anatomy term | check whether the review is missing functions |
 | module | cerebellum step 1 context | GBX2/FGF8 expressed at the midbrain-hindbrain boundary and rhombomere 1, not in the declared `cerebellum` | change the step context |
 | module | EN1/EN2 placement | expressed from E8, with the isthmic genes | suggested question for module curators |
