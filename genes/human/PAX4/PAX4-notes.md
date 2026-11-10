@@ -221,3 +221,20 @@ where the human evidence is the same and where it differs.
 - GO:2000227 negative regulation of pancreatic A cell differentiation is_a
   GO:7770019. Not proposed as NEW (descendant of a carried, accepted term;
   same decision as mouse).
+
+## 2026-11-10: blinded OpenScientist check on retina development (GO:0060041)
+
+Run in free-text function-assignment mode so that no review-chosen papers were passed: the prompt
+held only "PAX4 has retina development in camera-type eye (GO:0060041).", the term, the fact that
+the row is an IBA from a PANTHER/PAINT node, and GO_REF:0000033. It did not hold the review's
+MARK_AS_OVER_ANNOTATED decision, its rationale, the Bgee report, or PMID:19012751 / PMID:24951566.
+Report: `PAX4-hypotheses/function-hypothesis-go-0060041/openscientist.md` (3 iterations).
+
+- Verdict agrees: [file:human/PAX4/PAX4-hypotheses/function-hypothesis-go-0060041/openscientist.md
+  "Over-annotated / weakly supported — the term should NOT be retained as a confident PAX4
+  function."] It recommends a PAINT-level fix or keeping the row as non-core and low-confidence.
+- It found the decisive literature itself: the rat photoreceptor paper (PMID:19012751), the human
+  complete-loss patients (PMID:40614820) and the Pax4-null ghrelin-cell phenotype (PMID:14970313).
+  Spot-checked: the rat paper reports Pax4 "not detectable" in the embryonic or neonatal retina.
+- It did not identify the zebrafish pax10 seed or that the rat IEP is itself a PAINT seed, both found
+  by the mouse review.

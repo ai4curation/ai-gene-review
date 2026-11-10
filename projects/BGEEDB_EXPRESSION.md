@@ -420,6 +420,12 @@ reviews as the consistency reference and per-gene human Bgee reports.
     (PMID:40614820).
   - The human enteroendocrine rows rest on an organoid CRISPR screen.
   - MODY9 is recorded as contested and supports no term.
+  - A second blinded OpenScientist run, on PAX4 *retina development*, was
+    stricter than the G6pc2 run: it got no papers at all, only the
+    hypothesis, the GO term and the IBA reference. It still judged the term
+    over-annotated, from the rat photoreceptor and complete-loss evidence it
+    found itself. It missed the PAINT-seed details (the rat expression row and
+    the zebrafish pax10 leaf) that the mouse review found.
 
 ## Rules of use: when expression can count
 
