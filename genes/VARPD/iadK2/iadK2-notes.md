@@ -1,0 +1,9 @@
+# Curation Notes: Variovorax paradoxus `iadK2` (`A0A0H2MF78`, `VPARA_32110`)
+
+## Summary
+- **Gene symbol**: `iadK2` (locus tag `VPARA_32110`, 388 aa; orthologous to *V. paradoxus* CL14 IMG `2643613662` and *V. paradoxus* B4 `VAPA_1c15920` / `UniProtKB:T1X8R6`, `PDB:7YLT`).
+- **Operon context**: Encoded within the conserved *Variovorax* `iad` indole-3-acetic acid (IAA) catabolic operon (`VPARA_32030`–`VPARA_32220`) alongside the paralogous SBP `iadK3` (`VPARA_32100`) and ABC transporter subunits `iadG`/`iadH`/`iadJ` (`PMID:32999461`, `PMID:36266335`, `PMID:37459330`).
+- **Structural & biophysical evidence (`PMID:37459330`)**:
+  - Purified `IadK2` binds IAA with nanomolar affinity by isothermal titration calorimetry (ITC) and shows strong thermal stabilization in thermal shift assays (TSA) [PMID:37459330, "IadK2 could engage IAA with nanomolar affinity, whereas no obvious binding was detected for IadK3 and IAA (Figs 1C and S1B)."].
+  - The 2.3 Å crystal structure of `IadK2` (`PDB:7YLT`) reveals a two-lobed subcluster B-III periplasmic solute-binding protein architecture with three hinge linkers (L1–L3) containing two $\alpha$-helices in L2 [PMID:37459330, "The hinge region comprises 3 linkers (L1–L3) with 2 α-helices in linker L2, resembling SBPs in the subcluster B-III (S3A–S3C Fig), which are usually associated with type I ABC transporters for aromatic acids uptake [19,20]."].
+  - Docking, MD simulations, SAXS, and mutagenesis of `Ser104`, `Phe168`, `Trp172`, `Arg199`, `Phe308`, and `Tyr311` validate the interdomain IAA-binding pocket, and the double substitution `W172L/S104V` (introducing the corresponding `IadK3` residues) completely abolishes IAA binding [PMID:37459330, "Notably, the double mutation replacing both Trp172 and Ser104 with those of IadK3 (W172L/S104V) completely abrogated the binding of IAA."].
