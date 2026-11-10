@@ -7,3 +7,4 @@
 ## 2026-11-09 re-review (Claude, AI-assisted; module audit)
 
 - Nucleic acid binding is MODIFY to four-way junction DNA binding (GO:0000400); DNA endonuclease activity is TOO_GENERAL against GO:0008821. DNA repair and DNA recombination are MODIFY to recombinational repair (GO:0000725). Every row now carries quoted support.
+- 2026-11-10: the GO:0008821 reason now distinguishes the three HAMAP ACT_SITE residues annotated on Q88NJ2 from the four-acidic-residue catalytic center described for E. coli RuvC.

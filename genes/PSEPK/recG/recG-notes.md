@@ -8,3 +8,4 @@
 
 - Generic nucleotide binding, DNA helicase activity and hydrolase activity are TOO_GENERAL (their specific descendants are kept); nucleic acid binding is MODIFY to four-way junction DNA binding; DNA repair and DNA recombination are MODIFY to recombinational repair (GO:0000725).
 - Q88C73 is unreviewed in UniProt and is not in the reviewed PTHR47964 entries list; its RecG identity rests on TIGR00643/IPR004609 and the RecG wedge domain, which separate RecG from Mfd in the mixed PTHR47964:SF1 subfamily.
+- 2026-11-10: added a NEW ISS row and core MF for GO:0009378 four-way junction helicase activity, transferred from E. coli RecG via the RecG-specific family (TIGR00643, IPR004609).

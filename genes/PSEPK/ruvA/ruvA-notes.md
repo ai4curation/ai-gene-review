@@ -10,3 +10,4 @@
 - DNA repair and DNA recombination are MODIFY to recombinational repair (GO:0000725), the term used on the E. coli orthologs; ARBA DNA damage response is TOO_GENERAL.
 - ATP binding stays REMOVE and is now recorded as an InterPro2GO source defect.
 - Q88NJ1 has no PANTHER assignment; E. coli RuvA is in PTHR33796:SF1. The module grounds the RuvA step to InterPro IPR000085 instead (see module notes).
+- 2026-11-10: the ATP-binding source defect is filed for both mapped signatures, IPR013849 and IPR011114.
