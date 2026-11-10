@@ -131,5 +131,7 @@ The organelle-by-stage matrix lives in
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
 - [x] Plastid: `plastid_lifecycle` umbrella (Embryophyta) with two rule modules, `plastid_protein_import` (Toc34 and Toc159 receptors, Toc75, Tic20, Tic110, ClpC, stromal processing peptidase; Tic214 and Tic40 optional) and `plastid_division` (FtsZ1, FtsZ2, ARC6, ARC5; MinD and PDV1/PDV2 optional), Arabidopsis-grounded; both `RULE_CANDIDATE`; photosynthesis modules referenced as optional
 - [ ] Plastid: add the stromal Hsp70/Hsp90C motor and the other 1-MDa TIC subunits, other green lineages' subfamilies (a green-algal import rule needs its own Toc34 selector, as Chlamydomonas TOC34 is in PTHR10903:SF135); a tighter MinD selector; model plastid quality control and chlorophagy; decide how red-algal and secondary plastids are scoped
-- [ ] Plant vacuole, specialized organelles
+- [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
+- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713, VSR sorting with retromer, AVP1, TIPs and NHX1; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
+- [ ] Specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
