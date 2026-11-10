@@ -67,10 +67,15 @@ Edit `rules/arba/RULE_ID/RULE_ID-review.yaml` to replace TODO placeholders:
 
 - `description`: Concise summary of what the rule predicts
 - `status`: COMPLETE when done (IN_PROGRESS otherwise)
-- `action`: ACCEPT | MODIFY | REMOVE
-- `action_rationale`: Detailed justification
-- `review_summary`: Comprehensive narrative
-- `confidence`: 0.0-1.0 based on evidence strength
+- `rule.retrieved_date`, `rule.source_condition_set_count`: when the rule was
+  fetched and how many condition sets it had. Record the sets you examined in
+  `rule.condition_sets` with their official labels.
+- `action`: ACCEPT | MODIFY | SPLIT | MERGE | DEPRECATE | UNDECIDED (see
+  "Action Recommendations"; `REMOVE` is not a rule action)
+- `action_rationale`: Justification, each claim with its receipt
+- `review_summary`: Short narrative; say how many of the rule's sets were examined
+- `confidence`: 0.0-1.0, confidence that the action is right (not confidence in
+  the rule). Below 0.5 the action is UNDECIDED; omit `confidence` then.
 - Assessment sections: parsimony, literature_support, condition_overlap, go_specificity, taxonomic_scope
 - `annotation_assessments`: one entry per consequent the rule assigns (GO term,
   protein name, EC number, catalytic activity). Record `assessment`
@@ -95,6 +100,18 @@ just render-rule RULE_ID
 ```
 
 Creates interactive HTML visualization with domain overlap heatmap.
+
+### Step 7: Validate
+
+```bash
+just rules-validate rules/arba/RULE_ID/RULE_ID-review.yaml
+just rules-validate --online rules/arba/RULE_ID/RULE_ID-review.yaml   # before COMPLETE
+```
+
+The first runs the schema and the offline receipt checks. `--online` also asks
+QuickGO whether any protein you listed as wrongly annotated carries the term on
+experimental evidence, and asks UniProt whether the rule has changed or been
+withdrawn since you fetched it. A review is not COMPLETE until both pass.
 
 ## Assessment Criteria
 
@@ -132,9 +149,56 @@ Creates interactive HTML visualization with domain overlap heatmap.
 
 ## Action Recommendations
 
-- **ACCEPT**: Rule is well-designed and produces accurate annotations
-- **MODIFY**: Rule has correct biological basis but needs refinement
-- **REMOVE**: Rule produces more harm than good through false positives
+Every verdict needs receipts: checkable facts with a named source. Read
+`docs/rule_review_receipts.md` before writing a verdict; `just rules-validate`
+enforces it.
+
+- **ACCEPT**: every condition set of the rule was examined and each is supported.
+- **MODIFY** / **SPLIT**: a specific defect, with the set, protein or term named
+  in `suggested_modifications`.
+- **DEPRECATE**: false positives shown with UniProt accessions in
+  `annotation_assessments[].incorrect_examples`, an obsolete consequent, or a
+  withdrawn rule. A true but general term, a redundant rule and low recall are
+  not reasons to deprecate.
+- **UNDECIDED**: the rule was not examined set by set, or the evidence does not
+  settle it. This is the correct verdict for a mega-rule you sampled.
+
+## Before You Write a Claim
+
+These are the errors an audit found in most earlier reviews. Check each one.
+
+1. **Never name an identifier from memory.** Look up every InterPro, FunFam, GO
+   and EC id (`rules/_labels.json`, the InterPro API, QuickGO) and write it as
+   `ID (official name)`. A FunFam label is the name of one member, not the
+   identity of all of them.
+2. **A condition set is a conjunction.** Judge the proteins that match all of its
+   conditions together with its taxon, never one signature alone. Query
+   UniProtKB for the conjunction and look at what comes back.
+3. **Alternative sets are meant to be disjoint.** Low overlap between sets is not
+   incoherence, and overlap between conditions inside one set is harmless.
+4. **Size is not evidence.** The number of condition sets says nothing about
+   whether an annotation is true. The cap of 12 in the analysis tool is how many
+   sets it reads, not a limit rules should respect. A rule too large to examine
+   is UNDECIDED.
+5. **General is not false.** A broad GO term is harder to get wrong, not easier.
+   If the "better" terms you would propose are descendants of the rule's term,
+   the rule is correct.
+6. **Check the "false positive" first.** Before calling a family or protein a
+   false positive, look up its experimental annotations to the term and its
+   descendants in QuickGO. ARBA rules are mined from Swiss-Prot annotations, so
+   an unexpected family usually reflects a curated annotation you did not know.
+7. **A taxon condition restricts.** A narrow taxon is usually what keeps a set
+   precise. Do not call it arbitrary, and do not recommend widening it, without
+   counting what the wider set would match.
+8. **Counts need a source.** `reviewed_protein_count` is 0 for every ARBA rule
+   because ARBA annotates only unreviewed entries; it does not mean the rule
+   matches nothing. A Swiss-Prot count is a sample, not the rule's coverage.
+9. **Biological process and molecular function are different questions.** A
+   helicase or a ligase can take part in a catabolic process; do not replace a
+   process term with function terms.
+10. **Your notes are not literature.** Deep-research and notes files are where
+    leads come from. Cite the paper or database record itself, and omit
+    `literature_support` if you have none.
 
 ## Key Evaluation Questions
 
@@ -145,7 +209,7 @@ For each rule, systematically address:
 3. **False negative risk**: Does the rule miss proteins that should be annotated?
 4. **GO term choice**: Is the predicted GO term the most appropriate?
 5. **Taxonomic coverage**: Is the taxonomic scope justified by biological evidence?
-6. **Mechanistic coherence**: Do all condition sets share the mechanistic basis for the GO annotation?
+6. **Per-set support**: For each condition set, which proteins does the conjunction match, and what curated annotation supports the term on them? (Sets need not share a mechanism; they share the consequent.)
 
 ## Interpreting Analysis Metrics
 
@@ -174,7 +238,7 @@ Cell (i,j) shows what fraction of proteins with row condition i also have column
 ## Common Issues to Watch For
 
 - **Overly broad GO terms**: Using parent terms when specific child terms are available
-- **Domain promiscuity**: Structural domains that appear in multiple functional contexts
+- **Domain promiscuity**: Structural domains that appear in multiple functional contexts (only a problem when the domain stands alone in a set)
 - **Taxonomic over-annotation**: Applying mammalian-specific functions to all eukaryotes
 - **Catabolic/biosynthetic confusion**: Mixing enzymes that perform opposite reactions
 - **Multifunctional proteins**: Annotations that capture secondary rather than primary functions
@@ -182,18 +246,23 @@ Cell (i,j) shows what fraction of proteins with row condition i also have column
 
 ## Supporting Text Requirements
 
-All assessments should include `supported_by` sections with:
-- `reference_id`: Path to the source document (file:rules/arba/...)
-- `supporting_text`: **Exact verbatim quote** from the document (not paraphrased)
+Assessments that make a factual claim include `supported_by` with:
+- `reference_id`: the primary source: a PMID or DOI, a database record, or a
+  reproducible analysis file in the rule folder (for example `RESULTS.md` written
+  by a script). Not your notes file and not a deep-research file.
+- `supporting_text`: **Exact verbatim quote** from the source (not paraphrased)
 
-This ensures traceability and allows validation of your conclusions.
+If an earlier version of the review made a claim that turned out wrong, remove it
+from the prose and record it under `corrections` with the evidence that refuted it.
 
 ## Lessons Learned
 
 ### On Rule Complexity
-- Limit condition sets to <12 (analysis becomes expensive beyond this)
-- Prefer specificity over breadth
-- Single domain rules are high risk without additional constraints
+- The analysis tool reads 12 condition sets by default (`--max-condition-sets`
+  raises it). That is a tool setting; never cite it as a standard for rules.
+- A large rule is many independent small rules sharing a consequent. Review it
+  set by set, or sample it and return UNDECIDED.
+- A single-signature set deserves a UniProtKB query to see what it matches.
 
 ### On Domain Selection
 - CATH FunFams are more specific than InterPro families
@@ -201,7 +270,8 @@ This ensures traceability and allows validation of your conclusions.
 - Beware promiscuous structural domains (e.g., Rossmann folds)
 
 ### On Taxonomic Scope
-- Narrow scope doesn't mean better - may reflect annotation bias
+- A narrow taxon usually reflects where the training annotations are; it limits
+  risk. Recommend widening only with a count of what the wider set matches.
 - Conserved pathways justify broad scope
 - Lineage-specific innovations justify restriction
 

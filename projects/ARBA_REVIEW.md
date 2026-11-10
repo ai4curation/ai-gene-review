@@ -38,6 +38,16 @@ anything new is only worth asking once we know where it goes wrong.
 | Question | is the rule well built and is its consequent right? | is this annotation true and useful for this gene? |
 | Main bias | rules were mostly picked because GO curators flagged them | genes are weighted toward well-studied organisms |
 
+**The gene-review figures are in-sample.** ARBA rules are mined from Swiss-Prot
+annotations, and the reviewed genes are mostly the well-studied proteins those
+annotations sit on. A kept rate measured there is close to training-set accuracy:
+it shows the rules reproduce what curators already said about these proteins, and
+it cannot be carried over to unreviewed proteins in poorly curated organisms, which
+is where ARBA output matters. The same holds for "96% of accepted annotations
+repeat an existing term" below: on the proteins a rule learned from, repeating is
+all it can do. The out-of-sample test is the *P. putida* check listed under next
+steps.
+
 The two barely overlap: only 26 of the 76 reviewed rules appear in any gene
 review, and the rules whose annotations gene reviewers reject most often have
 no rule review. They can also disagree for good reason. ARBA00028334
@@ -64,6 +74,15 @@ Where both exist they agree on the specific errors:
 Classification of all 76 rule reviews:
 [ARBA_REVIEW/rule_failure_modes.yaml](ARBA_REVIEW/rule_failure_modes.yaml).
 Each rule has one primary mode and any number of secondary ones.
+
+**This table predates the November 2026 audit and overstates the failures.** It
+classifies what the rule reviews said, and the audit found that most of those
+reviews did not support their verdicts (see
+[Quality of the rule reviews themselves](#quality-of-the-rule-reviews-themselves)).
+"Mega-rule", "heterogeneous consequent" and "spurious signature" in particular
+were often assigned without reading the condition sets, or from misidentified
+domains. Treat the counts as what earlier reviews claimed, not as findings, until
+`rule_failure_modes.yaml` is redone from the corrected reviews.
 
 | Mode | Primary | Any | What it means |
 |---|---:|---:|---|
@@ -263,13 +282,40 @@ inventory is in
 
 ## Quality of the rule reviews themselves
 
-The rule reviews are useful but uneven, and some of their arguments do not hold:
+An audit on 2026-11-09 re-derived the facts behind all 78 rule reviews from
+UniProt, InterPro and QuickGO. In about 45 the recommended action did not follow
+from the evidence, and only five were sound as written (ARBA00067001,
+ARBA00052213, ARBA00026799, ARBA00028655, ARBA00045851). The recurring errors:
 
-- Many reviews cite a limit of 12 condition sets as best practice. The limit is
-  the analysis tool's cap, not an ARBA or GO guideline.
-- One review (ARBA00022603) is UNDECIDED with no rule data. Two concern rules
-  already withdrawn from UniProt (ARBA00088072, ARBA00095398).
-- 26 of the 75 reviews that state a confidence put it at 0.5 or below.
+- **Size as evidence.** About 40 reviews treated the number of condition sets as
+  evidence that annotations were false. The "limit of 12" they cite is the
+  analysis tool's default.
+- **Verdicts on unread rules.** About 38 gave a verdict with `condition_sets: []`.
+- **Conditions judged singly.** A signature called "promiscuous" usually sat in a
+  conjunction with other signatures and a taxon that selects one family.
+- **Identifiers named from memory.** ARBA00026480 was to be deprecated because its
+  domains were "kinases, metabolic enzymes and glycosyl transferases"; they are
+  CCCH zinc finger, Ribonuclease III, Pumilio and chromo domains, in sets that
+  define Dicer, HP1 and the TTP family.
+- **False positives that are curated true positives.** ESA1 (ARBA00026647), DUR3
+  (ARBA00089391), RPL12 (ARBA00095398), ATM and the CCT subunits (ARBA00047239),
+  CD46 and DLD (ARBA00004218) all carry the term on experimental or curated
+  evidence.
+- **General treated as wrong.** Reviews proposed "more specific" replacements that
+  are descendants of the rule's own term, then recommended DEPRECATE.
+- **Own notes as literature.** `literature_support: CONTRADICTED` was often backed
+  only by the review's own research file.
+
+The reviews were corrected on 2026-11-10. Each flawed review now records the
+condition sets it examined, has the unsupported claims removed, lists what was
+withdrawn under `corrections` with the refuting evidence, and carries an action
+the evidence supports, which for most mega-rules is UNDECIDED.
+
+Prevention is in [docs/rule_review_receipts.md](../docs/rule_review_receipts.md):
+a review must give a checkable receipt for each claim, and `just rules-validate`
+now checks them (recorded condition sets, official identifier labels, sources that
+exist, a named wrongly annotated protein behind a DEPRECATE, and with `--online`
+that no alleged false positive is experimentally annotated).
 
 ## What ARBA adds
 

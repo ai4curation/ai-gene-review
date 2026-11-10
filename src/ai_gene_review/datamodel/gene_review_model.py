@@ -89,6 +89,8 @@ linkml_meta = LinkMLMeta({'default_prefix': 'gene_review',
                               'prefix_reference': 'http://purl.org/dc/terms/'},
                   'gene_review': {'prefix_prefix': 'gene_review',
                                   'prefix_reference': 'https://w3id.org/ai4curation/gene_review/'},
+                  'kgcl': {'prefix_prefix': 'kgcl',
+                           'prefix_reference': 'http://w3id.org/kgcl/'},
                   'linkml': {'prefix_prefix': 'linkml',
                              'prefix_reference': 'https://w3id.org/linkml/'},
                   'oa': {'prefix_prefix': 'oa',
@@ -151,6 +153,160 @@ class ReferenceProteomeAssessmentStatusEnum(str, Enum):
     NO_SUPPORTED_COUNTERPART = "NO_SUPPORTED_COUNTERPART"
     """
     No counterpart sufficiently supported for a relationship was identified in the documented search; not proof of genomic absence.
+    """
+
+
+class OntologyChangeOriginEnum(str, Enum):
+    """
+    Who wants an ontology change. The distinction decides what work the record implies and which report it belongs in, and it is not recoverable from the other fields: a well-argued obsoletion looks the same whether we thought of it or read it on a tracker.
+    """
+    SELF_PROPOSED = "SELF_PROPOSED"
+    """
+    This repository is asking the ontology to make the change. The record is an outbound request: it needs `confidence`, a justification that stands on its own, and a `request_status` tracking whether it was filed and what came of it.
+    """
+    UPSTREAM_PROPOSED = "UPSTREAM_PROPOSED"
+    """
+    The ontology, or a group curating for it, has proposed the change and it has not landed yet. The record is us tracking somebody else's plan, so it takes a `stance` and no `request_status`. Both obsoletion projects in this repository began in this state.
+    """
+    UPSTREAM_COMPLETED = "UPSTREAM_COMPLETED"
+    """
+    The ontology has already made the change. Nothing is owed upstream; what is owed is migrating our own `affected_annotations`, tracked by `adoption_status`. Record `ontology_state_verified` with the date the term's state was actually looked up.
+    """
+
+
+class OntologyChangeStanceEnum(str, Enum):
+    """
+    This repository's position on a change it did not originate. Absent means nobody has taken one, which is different from agreeing.
+    """
+    AGREE = "AGREE"
+    """
+    The change is right and we will migrate to it.
+    """
+    PARTIALLY_AGREE = "PARTIALLY_AGREE"
+    """
+    The change is right in substance but some part of it is wrong - a replacement that does not fit, a term that should not be in the batch. Say which part in the justification.
+    """
+    DISAGREE = "DISAGREE"
+    """
+    The change should not be made, or not as proposed. Needs the objection argued in the justification; this is the case the schema previously could not express at all.
+    """
+    NEEDS_CONFIRMATION = "NEEDS_CONFIRMATION"
+    """
+    We cannot tell yet - the upstream scope is unclear, or whether a term is in the batch has to be confirmed before we touch our own content. A real and common state, and not the same as agreeing.
+    """
+
+
+class OntologyChangeRequestStatusEnum(str, Enum):
+    """
+    Progress of a request *this repository* made to an ontology. Only applies to a `SELF_PROPOSED` change.
+    """
+    NOT_FILED = "NOT_FILED"
+    """
+    Recorded here, not yet raised with the ontology.
+    """
+    FILED = "FILED"
+    """
+    Raised on the ontology's tracker; see `upstream_tracker_issue`.
+    """
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    """
+    The ontology's curators have responded without deciding.
+    """
+    ACCEPTED = "ACCEPTED"
+    """
+    The ontology made the change. Our own content may still need migrating, which `adoption_status` tracks.
+    """
+    DECLINED = "DECLINED"
+    """
+    The ontology considered the request and kept the term as it is.
+    """
+
+
+class OntologyChangeAdoptionStatusEnum(str, Enum):
+    """
+    How far this repository has got updating its own content for a change that has landed, or will. The counterpart of `request_status`: one tracks what the ontology owes us, this tracks what we owe the ontology's decision.
+    """
+    NOT_STARTED = "NOT_STARTED"
+    """
+    Nothing migrated yet. On a landed change this means our reviews still cite the old term.
+    """
+    IN_PROGRESS = "IN_PROGRESS"
+    """
+    Some `affected_annotations` migrated, others outstanding.
+    """
+    COMPLETE = "COMPLETE"
+    """
+    Every affected record in this repository has been updated.
+    """
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+    """
+    The change touches no content here, so there is nothing to migrate. Say so explicitly rather than leaving the slot unset, which reads as not-assessed.
+    """
+
+
+class OntologyChangeTypeEnum(str, Enum):
+    """
+    Kind of change proposed to an existing ontology term. Each value names a KGCL (Knowledge Graph Change Language) class and carries its URI as `meaning`, so a proposal can be emitted as KGCL and applied with `oaklib apply`. This is a subset of KGCL chosen to cover the changes that actually arise in curation here; add a value when a review needs one rather than forcing a change into OTHER.
+    """
+    NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT = "NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT"
+    """
+    Obsolete the term and name the term that replaces it outright (`term replaced by`). Annotations can be repointed mechanically.
+    """
+    NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT = "NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT"
+    """
+    Obsolete the term with no single equivalent, optionally offering alternatives (`consider`) in `has_nondirect_replacement`. Each annotation must then be re-curated individually. This is the usual shape when a term conflated two things.
+    """
+    NODE_DIRECT_MERGE = "NODE_DIRECT_MERGE"
+    """
+    Merge the term into another, which survives. Use when the two terms denote the same thing, rather than when one is simply preferable.
+    """
+    NODE_TEXT_DEFINITION_CHANGE = "NODE_TEXT_DEFINITION_CHANGE"
+    """
+    Change the term's textual definition. `old_value` and `new_value` carry the definitions. Use this where the term is wanted but its definition admits or excludes the wrong things.
+    """
+    NODE_RENAME = "NODE_RENAME"
+    """
+    Change the term's label, leaving its meaning alone.
+    """
+    NEW_SYNONYM = "NEW_SYNONYM"
+    """
+    Add a synonym, so that literature usage finds the term. `new_value` carries the synonym.
+    """
+    NODE_MOVE = "NODE_MOVE"
+    """
+    Move the term under a different parent, where the new parent is neither an ancestor nor a descendant of the old one.
+    """
+    NODE_DEEPENING = "NODE_DEEPENING"
+    """
+    Move the term to a more specific parent (down the hierarchy).
+    """
+    NODE_SHALLOWING = "NODE_SHALLOWING"
+    """
+    Move the term to a more general parent (up the hierarchy), e.g. when a placement asserts a commitment the evidence does not support.
+    """
+    EDGE_CREATION = "EDGE_CREATION"
+    """
+    Add a relation from the term to another, without removing an existing one; `predicate` and `subject` carry the relation and its other end. The usual way to ask for a `part_of` link from a molecular function to the process it serves.
+    """
+    EDGE_DELETION = "EDGE_DELETION"
+    """
+    Remove a relation that asserts something unsupported.
+    """
+    MAPPING_PREDICATE_CHANGE = "MAPPING_PREDICATE_CHANGE"
+    """
+    Change the predicate of a cross-reference, e.g. an `exactMatch` that should be a `broadMatch`. `old_value` and `new_value` carry the predicates. Note before using this: no slot yet names *which* mapping is being repredicated — `about_node` gives only the GO term, and unlike `REMOVE_MAPPING` there is no field the exported request can point at. Put the mapping's source in `justification` until a slot exists, or the upstream request will name no target.
+    """
+    REMOVE_MAPPING = "REMOVE_MAPPING"
+    """
+    Remove a cross-reference or an external-resource mapping that sends annotations to the wrong term, including an InterPro2GO or UniRule mapping onto a term being obsoleted.
+    """
+    COMPLEX_CHANGE = "COMPLEX_CHANGE"
+    """
+    A change that KGCL has no single class for, most often a class split - KGCL models merges but not splits, so a split is an obsoletion plus several creations and must be described in the justification. Also for any multi-step change that only makes sense applied together.
+    """
+    OTHER = "OTHER"
+    """
+    Any other ontology change; describe it in the justification. Carries no `meaning`, so it cannot be emitted as KGCL.
     """
 
 
@@ -1505,6 +1661,64 @@ class RuleReviewStatusEnum(str, Enum):
     """
 
 
+class RuleReviewErrorTypeEnum(str, Enum):
+    """
+    Kinds of reasoning error found in rule reviews
+    """
+    WRONG_IDENTIFIER_MEANING = "WRONG_IDENTIFIER_MEANING"
+    """
+    An InterPro, FunFam, GO or EC identifier was given the name or meaning of a different entry
+    """
+    CONJUNCTION_IGNORED = "CONJUNCTION_IGNORED"
+    """
+    A condition was judged alone although the rule requires it together with other signatures or a taxon
+    """
+    REFUTED_BY_CURATED_ANNOTATION = "REFUTED_BY_CURATED_ANNOTATION"
+    """
+    A match called a false positive carries the annotation, or a descendant, on experimental or curated evidence
+    """
+    SIZE_AS_EVIDENCE = "SIZE_AS_EVIDENCE"
+    """
+    The number of condition sets, or a tool limit, was used as evidence that the annotation is wrong
+    """
+    GENERAL_IS_NOT_WRONG = "GENERAL_IS_NOT_WRONG"
+    """
+    A true but general or redundant consequent was treated as false
+    """
+    ONTOLOGY_MISREAD = "ONTOLOGY_MISREAD"
+    """
+    The GO hierarchy or a term's scope was misread (a descendant called unrelated, a non-descendant offered as more specific, a process term replaced by function terms)
+    """
+    UNEXAMINED_RULE = "UNEXAMINED_RULE"
+    """
+    A verdict was given on condition sets the review never recorded or read
+    """
+    UNSUPPORTED_SOURCE = "UNSUPPORTED_SOURCE"
+    """
+    The claim cited the review's own notes, an AI research file, a missing file or an unresolvable reference as literature
+    """
+    TAXON_MISREAD = "TAXON_MISREAD"
+    """
+    Taxon conditions were misstated, or a restriction that keeps a set precise was called arbitrary
+    """
+    SAMPLE_OVERGENERALISED = "SAMPLE_OVERGENERALISED"
+    """
+    A count from reviewed (Swiss-Prot) entries, or one example, was generalised to everything the rule matches
+    """
+    LOW_RECALL_IS_NOT_WRONG = "LOW_RECALL_IS_NOT_WRONG"
+    """
+    Missing coverage (false negatives) was treated as making the rule's annotations false
+    """
+    STALE_RULE_VERSION = "STALE_RULE_VERSION"
+    """
+    The claim described a version of the rule that differs from the one served at retrieved_date
+    """
+    OTHER = "OTHER"
+    """
+    Another kind of error, described in the correction
+    """
+
+
 class RuleActionEnum(str, Enum):
     """
     Recommended action for the rule
@@ -2522,6 +2736,7 @@ class GeneReview(ConfiguredBaseModel):
     existing_annotations: Optional[list[ExistingAnnotation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     core_functions: Optional[list[CoreFunction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     proposed_new_terms: Optional[list[ProposedOntologyTerm]] = Field(default=None, description="""Proposed new ontology terms that should exist but don't""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
+    proposed_ontology_changes: Optional[list[ProposedOntologyChange]] = Field(default=None, description="""Proposed changes to ontology terms that already exist - obsoletion, merge, definition or label fix, reparenting, mapping removal. The counterpart of `proposed_new_terms`, which covers only creation. Use this rather than prose when a review concludes that a term itself is wrong, and keep it distinct from `source_defects`, which fix an annotation record that used the wrong term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'ModuleReview']} })
     suggested_questions: Optional[list[Question]] = Field(default=None, description="""Suggested questions to ask experts about the gene. Only include if not obvious from the literature.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview'], 'recommended': True} })
     suggested_experiments: Optional[list[Experiment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview'], 'recommended': True} })
     knowledge_gaps: Optional[list[KnowledgeGap]] = Field(default=None, description="""Curated, literature-grounded statements of what is NOT known — applicable at the level of the whole gene, a single existing annotation, a core function, a whole module, or a single module step/node. The inverse of core_functions: everywhere else the schema records what IS known; here it records, with the same evidentiary discipline, what is not. See the Function Knowledge Gaps project (projects/FUNCTION_KNOWLEDGE_GAPS.md).""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
@@ -2570,7 +2785,8 @@ class ReferenceProteomeAssessment(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
 
     @field_validator('reference_proteomes')
     def pattern_reference_proteomes(cls, v):
@@ -2633,7 +2849,8 @@ class AlternativeRecord(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
 
     @field_validator('id')
     def pattern_id(cls, v):
@@ -2696,12 +2913,14 @@ class AlternativeRecordEvidence(ConfiguredBaseModel):
          'slot_uri': 'dcterms:description'} })
     supported_by: list[SupportingTextInReference] = Field(default=..., min_length=1, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -2798,12 +3017,14 @@ class GeneModelIssue(ConfiguredBaseModel):
 
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -3041,7 +3262,7 @@ class Term(ConfiguredBaseModel):
                        'CuratedRule',
                        'PredictionReview'],
          'slot_uri': 'dcterms:description'} })
-    ontology: Optional[str] = Field(default=None, description="""Ontology of the term. E.g `go`, `cl`, `hp`""", json_schema_extra = { "linkml_meta": {'domain_of': ['Term']} })
+    ontology: Optional[str] = Field(default=None, description="""Ontology of the term. E.g `go`, `cl`, `hp`""", json_schema_extra = { "linkml_meta": {'domain_of': ['Term', 'ProposedOntologyChange']} })
 
 
 class Reference(ConfiguredBaseModel):
@@ -3131,6 +3352,64 @@ class ReferenceReplacement(ConfiguredBaseModel):
                        'ConsistencyException']} })
 
 
+class ProposedOntologyChange(ConfiguredBaseModel):
+    """
+    A proposed change to an *existing* ontology term, stated precisely enough that a term-tracker request can be generated from it and, where the change is mechanical, applied with KGCL tooling.
+    This is the counterpart of `proposed_new_terms`, which covers only creation. Everything else a review might want to ask of an ontology - obsolete this term, merge these two, fix this definition, move this term under a different parent, drop this mapping - has no other structured home, and has historically been written as prose in a `projects/*.md` page with hand-maintained tables of term ids.
+    It is also distinct from `SourceDefect`, which fixes an *annotation record* (a GOA row, a UniProt entry, a GO-CAM activity). A source defect says the annotation used the wrong term; a proposed ontology change says the term itself is wrong. The same review can carry both, and often should: obsoleting a term does not by itself repoint the rows that use it.
+    `change_type` names a KGCL (Knowledge Graph Change Language) class, and the structured slots below carry that class's own fields, so an entry can be emitted as KGCL for `oaklib apply` or as its controlled-English DSL. What KGCL does not model is the argument for a change, or which direction it travels in: `justification`, `supported_by`, `confidence`, `origin`, `stance`, `request_status` and `adoption_status` are this repository's additions, and are the point of recording a proposal here rather than only in a tracker. `confidence` reuses `SourceDefectConfidenceEnum`, since grading our own case means the same thing in both places; the lifecycle does not, because a request made of an ontology and the migration it creates for us move independently. There is no `report_status` on this class: that slot belongs to `SourceDefect`.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    change_type: OntologyChangeTypeEnum = Field(default=..., description="""The kind of change, named after the KGCL class that models it. Each permissible value carries that class's URI as its `meaning`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    ontology: str = Field(default=..., description="""Prefix of the ontology that owns the term and would make the change (GO, UBERON, CL, CHEBI, PR, SO). Free text rather than an enum because a review may touch an ontology no enum here anticipated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Term', 'ProposedOntologyChange']} })
+    about_node: Term = Field(default=..., description="""The existing term the change is about, with its current label copied from the ontology. For a merge this is the term that would be obsoleted, not the one that survives.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    change_dsl: Optional[str] = Field(default=None, description="""The change in KGCL's controlled-English DSL, e.g. `obsolete GO:0099022 with replacement GO:7770062`. Redundant with the structured slots by design: it is what a curator reads and what round-trips through KGCL's parser, so a mismatch between the two is a detectable error rather than a silent one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    has_direct_replacement: Optional[Term] = Field(default=None, description="""The term that replaces `about_node` outright, where one exists (KGCL `has_direct_replacement`; becomes `term replaced by`). Annotations on the obsoleted term can be repointed here mechanically.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    has_nondirect_replacement: Optional[list[Term]] = Field(default=None, description="""Terms offered as alternatives without being equivalent (KGCL `has_nondirect_replacement`; becomes `consider`). A curator must choose per annotation, so these are advice and never a mechanical repoint. More than one is normal, and is the usual case when a term is obsoleted because it conflated two things.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    old_value: Optional[str] = Field(default=None, description="""The current value being changed, in one of three ways.
+For a change that replaces a value rather than a term, it is the existing definition text, label, or synonym, copied from the ontology verbatim.
+For the three reparenting changes (`NODE_MOVE`, `NODE_DEEPENING`, `NODE_SHALLOWING`) it holds the CURIE of the current parent, because that is what KGCL's `from` clause takes, while `subject` holds the new parent.
+For `REMOVE_MAPPING` it identifies the mapping being withdrawn, as the `PREFIX:ID` of the source that carries it (`InterPro:IPR007225`, `UniRule:UR000459766`). Note this is the mapping's subject and not its predicate, and it comes from the mapping file rather than from the ontology: a mapping removal is a request made of InterPro2GO or UniRule, not of GO. It is the only field saying which mapping, and `just export-ontology-changes` renders it as the request's \"Mapping to remove\"; the policy module requires it for this change type.
+`MAPPING_PREDICATE_CHANGE` is the exception to that: there, `old_value` and `new_value` are the mapping's current and proposed *predicate*, which is what the change is about, so they behave like the other value changes. Which mapping is being repredicated has no slot of its own, and `about_node` names only the GO term involved — a real gap, recorded rather than papered over, and the reason no committed record uses this change type yet.
+The slot stays a plain string across all three, so a CURIE here is shape-checked by the policy module rather than resolved as a `Term`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    new_value: Optional[str] = Field(default=None, description="""The proposed replacement for `old_value`, in the same terms: the new definition text, label or synonym, the new parent's CURIE for a reparenting change, or the new predicate for a `MAPPING_PREDICATE_CHANGE`. A `REMOVE_MAPPING` withdraws a mapping rather than replacing it, so it leaves this unset.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    subject: Optional[Term] = Field(default=None, description="""For an edge change (`EDGE_CREATION`, `EDGE_DELETION`, `NODE_MOVE`, `NODE_DEEPENING`, `NODE_SHALLOWING`), the other end of the edge: the parent to add, remove, or move under. `about_node` stays the term the change is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    predicate: Optional[str] = Field(default=None, description="""For an edge change, the relation as a CURIE (`rdfs:subClassOf`, `BFO:0000050` part_of, `RO:0002211` regulates). Needed because moving a term under a new parent and adding a `part_of` link to it are different changes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange',
+                       'ModuleConnection',
+                       'AnnotationExtension',
+                       'TermMapping']} })
+    origin: OntologyChangeOriginEnum = Field(default=..., description="""Who wants this change: this repository, or the ontology itself. The two carry different work and different risks, and conflating them produces records that assert things nobody did. A change we propose needs a ticket filed and chased; a change the ontology has proposed or already made needs our own affected content migrated, and the risk is that we never notice it landed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    stance: Optional[OntologyChangeStanceEnum] = Field(default=None, description="""Our position on a change we did not originate. Only meaningful when `origin` is one of the upstream values; a change we proposed needs no stance, since proposing it is the position. This is what makes \"upstream plans to do this and we think it is wrong\" expressible at all.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    justification: str = Field(default=..., description="""For a change we propose, why the ontology should make it, self-contained enough to paste into a term tracker: state what is wrong with the current term, not merely what this repository would prefer. For a change we did not originate, what the upstream rationale is and - where `stance` is not plain agreement - what we think of it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange', 'ProposedOntologyTerm']} })
+    confidence: Optional[SourceDefectConfidenceEnum] = Field(default=None, description="""How firmly the case for the change is established. Required for a `SELF_PROPOSED` change, where it grades our own argument, and left unset otherwise: on an upstream change the ontology's own decision is not ours to grade, and what a curator has actually verified belongs in `ontology_state_verified`. Reuses the source-defect enum deliberately, since the three levels mean the same thing and a parallel enum would drift from it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange', 'SourceDefect', 'RuleReview']} })
+    affected_annotations: Optional[list[str]] = Field(default=None, description="""Paths or term references in this repository that depend on the term and would need revisiting if the change landed, e.g. `genes/human/TMF1/TMF1-ai-review.yaml`. What makes a proposal actionable rather than abstract, and what the obsoletion project pages currently track as hand-maintained markdown tables.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Verbatim evidence for the change, held to the same exact-quote standard as any other supporting text. An obsoletion argued from nothing but a reviewer's judgement should say so by carrying no quotes, rather than by paraphrasing a source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
+                       'ProposedOntologyChange',
+                       'SourceDefect',
+                       'FindingReview',
+                       'Review',
+                       'CoreFunction',
+                       'ProposedOntologyTerm',
+                       'RuleReview',
+                       'RuleReviewCorrection',
+                       'RuleAnnotationAssessment',
+                       'CuratedRule',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment',
+                       'PredictionAssessment']} })
+    request_status: Optional[OntologyChangeRequestStatusEnum] = Field(default=None, description="""How far *our* request has got with the ontology. Only meaningful for a `SELF_PROPOSED` change: on an upstream change we filed nothing, and the old spelling of this slot made such a record claim that the ontology had acted on a report that never existed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    adoption_status: Optional[OntologyChangeAdoptionStatusEnum] = Field(default=None, description="""How far *we* have got migrating our own content to match, once the change has landed or is certain to. This is the half of the work that an upstream-originated change creates, and the half that silently does not happen: a landed obsoletion whose `affected_annotations` are still unmigrated leaves this repository citing obsolete terms.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    ontology_state_verified: Optional[date] = Field(default=None, description="""When a curator last checked the term's actual state in the ontology, rather than restating a plan. Both obsoletion projects backfilled here had audits that said a term was live after it had been retired, so an undated status is not evidence of anything. Record the date of the lookup, not of the plan.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    upstream_tracker_issue: Optional[str] = Field(default=None, description="""The ontology's own tracker issue for this change, whoever opened it (KGCL `term_tracker_issue`). For GO this is a geneontology/go-ontology or go-annotation issue. Deliberately not named \"ours\": the same slot carries a ticket we filed and one we are reacting to, and `origin` says which.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    pull_request: Optional[str] = Field(default=None, description="""The pull request implementing the change, once opened (KGCL `pull_request`).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+    see_also: Optional[list[str]] = Field(default=None, description="""Related material: a `projects/*.md` page carrying the full argument, a prior tracker discussion, an upstream design document.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange']} })
+
+
 class SourceDefect(ConfiguredBaseModel):
     """
     A defect in a source database record (a GOA/MOD annotation row, a UniProt entry, a GO-CAM activity, an interaction record), stated precisely enough that a report to the responsible resource can be generated from it. It records what the source asserts, what it should assert where that is known, why, and how sure the reviewer is. It does not replace the review action: the action says what this repository does with the claim; the source defect says what the source should fix.
@@ -3146,16 +3425,18 @@ class SourceDefect(ConfiguredBaseModel):
     corrected_value: Optional[str] = Field(default=None, description="""What the source should say instead, as a CURIE, when it can be established (e.g. AGI_LocusCode:AT5G64610). Leave unset when the value is wrong but the right one is unknown (e.g. a mis-keyed reference whose intended paper cannot be identified).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     corrected_label: Optional[str] = Field(default=None, description="""Human-readable label for corrected_value (e.g. \"HAM1 MYST histone acetyltransferase\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     cause: Optional[SourceDefectCauseEnum] = Field(default=None, description="""Most likely mechanism of the error, where it can be inferred.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
-    confidence: SourceDefectConfidenceEnum = Field(default=..., description="""How firmly the defect is established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect', 'RuleReview']} })
+    confidence: SourceDefectConfidenceEnum = Field(default=..., description="""How firmly the defect is established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange', 'SourceDefect', 'RuleReview']} })
     explanation: str = Field(default=..., description="""Self-contained explanation suitable for pasting into a report to the resource's curators.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Verbatim evidence for the defect (and for the corrected value).""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -3222,12 +3503,14 @@ class FindingReview(ConfiguredBaseModel):
     review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Evidence for this assessment, including exact snippets from the papers that contradict, overturn, or corroborate the original finding. Each snippet is attributed to its explicit reference_id, not the parent finding's publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -3369,7 +3652,8 @@ class Descriptor(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3447,7 +3731,8 @@ class ChemicalEntityDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3525,7 +3810,8 @@ class GeneDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3603,7 +3889,8 @@ class GeneProductDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3684,7 +3971,8 @@ class FamilyDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3762,7 +4050,8 @@ class AncestralNodeDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3840,7 +4129,8 @@ class DomainDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3918,7 +4208,8 @@ class CellularComponentDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -3997,7 +4288,8 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4083,7 +4375,8 @@ class ComplexUnit(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4161,7 +4454,8 @@ class CellTypeDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4239,7 +4533,8 @@ class AnatomicalEntityDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4317,7 +4612,8 @@ class DevelopmentalStageDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4395,7 +4691,8 @@ class TaxonDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4480,7 +4777,8 @@ class MolecularFunctionDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4563,7 +4861,8 @@ class BiologicalProcessDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4641,7 +4940,8 @@ class RelationDescriptor(Descriptor):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4738,6 +5038,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'ModuleNode',
                        'Review',
                        'CoreFunction']} })
+    proposed_ontology_changes: Optional[list[ProposedOntologyChange]] = Field(default=None, description="""Proposed changes to ontology terms that already exist - obsoletion, merge, definition or label fix, reparenting, mapping removal. The counterpart of `proposed_new_terms`, which covers only creation. Use this rather than prose when a review concludes that a term itself is wrong, and keep it distinct from `source_defects`, which fix an annotation record that used the wrong term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'ModuleReview']} })
     status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',
                        'GeneModelIssue',
@@ -4767,7 +5068,8 @@ class ModuleReview(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4883,7 +5185,8 @@ class ExecutableModel(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -4994,7 +5297,8 @@ class ModelScenario(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
 
 
 class ScenarioSetting(ConfiguredBaseModel):
@@ -5104,7 +5408,8 @@ class ModuleNode(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5213,7 +5518,8 @@ class ModulePart(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5299,7 +5605,8 @@ class ModuleVariantSet(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5389,7 +5696,8 @@ class ModuleAnnoton(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5474,7 +5782,8 @@ class GoCamAssociation(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5718,7 +6027,8 @@ class GoCamActivityReview(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
@@ -5812,7 +6122,8 @@ class ParticipantSelector(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5873,7 +6184,8 @@ class ModuleContext(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -5915,7 +6227,10 @@ class ModuleConnection(ConfiguredBaseModel):
     source: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'RuleReviewEntry']} })
     target: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ConnectionReference', 'ModuleConnection', 'ResidueClaim']} })
     connection_type: Optional[ModuleConnectionTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection']} })
-    predicate: Optional[RelationDescriptor] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'AnnotationExtension', 'TermMapping']} })
+    predicate: Optional[RelationDescriptor] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange',
+                       'ModuleConnection',
+                       'AnnotationExtension',
+                       'TermMapping']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',
                        'AlternativeProduct',
@@ -5954,7 +6269,8 @@ class ModuleConnection(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
     chaining_status: Optional[ChainingStatusEnum] = Field(default=None, description="""Curator adjudication of reaction continuity across this connection: whether the upstream reaction's product is the downstream reaction's substrate. This is an explicit override for the (advisory, non-blocking) automated chaining check, so a known gap can be acknowledged rather than re-reported each run. Leave unset to let the automated check report its finding.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection']} })
     chaining_note: Optional[str] = Field(default=None, description="""Free-text explanation for the chaining_status, e.g. why a break is a genuine knowledge gap, or which GO/RHEA mapping is missing.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
@@ -6037,12 +6353,14 @@ class Review(ConfiguredBaseModel):
     additional_reference_ids: Optional[list[str]] = Field(default=None, description="""IDs of the references""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -6117,8 +6435,9 @@ class PaintLoss(ConfiguredBaseModel):
                        'ParticipantSelector',
                        'ModuleContext',
                        'ModuleConnection',
-                       'PaintLoss']} })
-    date: Optional[str] = Field(default=None, description="""The loss row's date in PAINT IBD.gaf (YYYYMMDD).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
+    date: Optional[str] = Field(default=None, description="""The loss row's date in PAINT IBD.gaf (YYYYMMDD).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss', 'RuleReviewCorrection']} })
     agreement: PaintLossAgreementEnum = Field(default=..., description="""Whether this review's evidence supports the loss for this gene.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
     argument: Optional[str] = Field(default=None, description="""For a loss the review disputes (CONTRADICTED or TOO_BROAD), the case to put to PAINT curators, with its citations and the scope of the clade. Used in the IRD_EVIDENCE PAINT report in place of the row's reason.""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
     suggestion: Optional[str] = Field(default=None, description="""The change to propose to PAINT for a disputed loss (for example \"Retract the IRD for GO:0031265 only\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss']} })
@@ -6267,12 +6586,14 @@ class CoreFunction(ConfiguredBaseModel):
          'recommended': True} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -6316,7 +6637,10 @@ class AnnotationExtension(ConfiguredBaseModel):
     predicate: str = Field(default=..., description="""Predicate of the extension""", json_schema_extra = { "linkml_meta": {'bindings': [{'binds_value_of': 'id',
                        'obligation_level': 'REQUIRED',
                        'range': 'ROTermEnum'}],
-         'domain_of': ['ModuleConnection', 'AnnotationExtension', 'TermMapping'],
+         'domain_of': ['ProposedOntologyChange',
+                       'ModuleConnection',
+                       'AnnotationExtension',
+                       'TermMapping'],
          'slot_uri': 'rdf:predicate'} })
     term: Optional[Term] = Field(default=None, description="""Term to be annotated""", json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor', 'ExistingAnnotation', 'AnnotationExtension']} })
 
@@ -6327,7 +6651,10 @@ class TermMapping(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    predicate: str = Field(default=..., description="""Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleConnection', 'AnnotationExtension', 'TermMapping']} })
+    predicate: str = Field(default=..., description="""Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange',
+                       'ModuleConnection',
+                       'AnnotationExtension',
+                       'TermMapping']} })
     target_term: Term = Field(default=..., description="""The target term in another ontology""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermMapping']} })
 
 
@@ -6339,17 +6666,19 @@ class ProposedOntologyTerm(ConfiguredBaseModel):
 
     proposed_name: str = Field(default=..., description="""Proposed name for the new term""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     proposed_definition: str = Field(default=..., description="""Proposed definition for the new term""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
-    justification: Optional[str] = Field(default=None, description="""Justification for why this term is needed""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
+    justification: Optional[str] = Field(default=None, description="""Justification for why this term is needed""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange', 'ProposedOntologyTerm']} })
     proposed_parent: Optional[Term] = Field(default=None, description="""Proposed parent term in the ontology hierarchy""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     proposed_mappings: Optional[list[TermMapping]] = Field(default=None, description="""Proposed mappings to equivalent terms in other ontologies""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -6503,15 +6832,66 @@ class RuleReview(ConfiguredBaseModel):
     go_specificity: Optional[GOSpecificityAssessment] = Field(default=None, description="""Assessment of GO term specificity""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     taxonomic_scope: Optional[TaxonomicScopeAssessment] = Field(default=None, description="""Assessment of taxonomic restriction appropriateness""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     annotation_assessments: Optional[list[RuleAnnotationAssessment]] = Field(default=None, description="""Per-consequent assessments: one entry for each GO term, protein name, EC number or catalytic activity the rule assigns, recording whether it is correct for the proteins the rule matches, with example proteins. This is the structured record of a rule problem, for example a naming rule whose conditions also match a paralog with a different function.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
-    confidence: Optional[float] = Field(default=None, description="""Overall confidence in the rule (0.0 to 1.0)""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect', 'RuleReview']} })
+    confidence: Optional[float] = Field(default=None, description="""Confidence that the recommended action is right (0.0 to 1.0). It is confidence in the verdict, never confidence in the rule: a DEPRECATE at 0.95 means \"almost certainly should be retired\". A verdict the reviewer holds below 0.5 should be UNDECIDED instead.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange', 'SourceDefect', 'RuleReview']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this review""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
+                       'RuleAnnotationAssessment',
+                       'CuratedRule',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment',
+                       'PredictionAssessment']} })
+    corrections: Optional[list[RuleReviewCorrection]] = Field(default=None, description="""Claims an earlier version of this review made that a later check showed to be wrong, each with the evidence that refuted it. The wrong claim is removed from the review's prose and recorded here, so that review errors stay countable and can become test cases.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
+
+
+class RuleReviewCorrection(ConfiguredBaseModel):
+    """
+    One withdrawn claim of a rule review and what replaced it. A correction is a receipt for a reviewing error: it names the claim, the check that refuted it, and a source a validator or a person can look up.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    date: Optional[str] = Field(default=None, description="""Date the correction was made (YYYY-MM-DD)""", json_schema_extra = { "linkml_meta": {'domain_of': ['PaintLoss', 'RuleReviewCorrection']} })
+    withdrawn_claim: str = Field(default=..., description="""The claim as the earlier review made it (short quote or paraphrase)""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewCorrection']} })
+    correction: str = Field(default=..., description="""What the check showed instead""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewCorrection']} })
+    error_type: Optional[RuleReviewErrorTypeEnum] = Field(default=None, description="""The kind of reviewing error""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewCorrection', 'PredictionAssessment']} })
+    evidence: Optional[list[str]] = Field(default=None, description="""Checkable facts behind the correction, one per item, each naming its source: a UniProt accession with a GO id, evidence code and reference (P0CX53 GO:0034517 IGI PMID:39934334), an InterPro id with its official name, a UniProtKB query with its count and release, or a GO id with its label and parent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceProteomeAssessment',
+                       'AlternativeRecord',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ExecutableModel',
+                       'ModelScenario',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'GoCamAssociation',
+                       'GoCamActivityReview',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'PaintLoss',
+                       'RuleReviewCorrection']} })
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature or files""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
+                       'GeneModelIssue',
+                       'ProposedOntologyChange',
+                       'SourceDefect',
+                       'FindingReview',
+                       'Review',
+                       'CoreFunction',
+                       'ProposedOntologyTerm',
+                       'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -6539,6 +6919,9 @@ class EmbeddedRule(ConfiguredBaseModel):
     unreviewed_protein_count: Optional[int] = Field(default=None, description="""Number of unreviewed (TrEMBL) proteins annotated by this rule""", json_schema_extra = { "linkml_meta": {'domain_of': ['EmbeddedRule']} })
     created_date: Optional[str] = Field(default=None, description="""Date the rule was created""", json_schema_extra = { "linkml_meta": {'domain_of': ['EmbeddedRule']} })
     modified_date: Optional[str] = Field(default=None, description="""Date the rule was last modified""", json_schema_extra = { "linkml_meta": {'domain_of': ['EmbeddedRule']} })
+    retrieved_date: Optional[str] = Field(default=None, description="""Date (YYYY-MM-DD) the rule was fetched from UniProt for this review. Rules change and are withdrawn, so a review describes the rule as of this date.""", json_schema_extra = { "linkml_meta": {'domain_of': ['EmbeddedRule']} })
+    source_condition_set_count: Optional[int] = Field(default=None, description="""Number of condition sets in the rule as fetched. When it exceeds the number recorded in condition_sets, the review examined only part of the rule and its verdict must say so.""", ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['EmbeddedRule']} })
+    withdrawn: Optional[bool] = Field(default=None, description="""True when UniProt no longer serves the rule (HTTP 404 at retrieved_date)""", json_schema_extra = { "linkml_meta": {'domain_of': ['EmbeddedRule']} })
 
 
 class RuleConditionSet(ConfiguredBaseModel):
@@ -6723,12 +7106,14 @@ class RuleAnnotationAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature or files""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -6850,12 +7235,14 @@ class CuratedRule(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text for the rule's biology""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7209,12 +7596,14 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7270,12 +7659,14 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7331,12 +7722,14 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7392,12 +7785,14 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7453,12 +7848,14 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7579,19 +7976,21 @@ class PredictionAssessment(ConfiguredBaseModel):
                        'TaxonomicScopeAssessment',
                        'PredictionAssessment']} })
     confidence_score: int = Field(default=..., description="""Confidence score following de Crécy-Lagard et al. 2025: 2 = concordant with evidence, 1 = uncertain, 0 = discordant with evidence""", ge=0, le=2, json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionAssessment']} })
-    error_type: Optional[PredictionErrorTypeEnum] = Field(default=None, description="""Type of error that led to the incorrect prediction, following Table 1 of de Crécy-Lagard et al. 2025""", json_schema_extra = { "linkml_meta": {'domain_of': ['PredictionAssessment']} })
+    error_type: Optional[PredictionErrorTypeEnum] = Field(default=None, description="""Type of error that led to the incorrect prediction, following Table 1 of de Crécy-Lagard et al. 2025""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReviewCorrection', 'PredictionAssessment']} })
     summary: str = Field(default=..., description="""Summary of the assessment rationale""", json_schema_extra = { "linkml_meta": {'domain_of': ['GoCamReview',
                        'Review',
                        'InterPro2GORedundancy',
                        'PredictionAssessment']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting evidence for the assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',
+                       'ProposedOntologyChange',
                        'SourceDefect',
                        'FindingReview',
                        'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
+                       'RuleReviewCorrection',
                        'RuleAnnotationAssessment',
                        'CuratedRule',
                        'ParsimonyAssessment',
@@ -7617,6 +8016,7 @@ Term.model_rebuild()
 Reference.model_rebuild()
 ReferenceReview.model_rebuild()
 ReferenceReplacement.model_rebuild()
+ProposedOntologyChange.model_rebuild()
 SourceDefect.model_rebuild()
 Finding.model_rebuild()
 FindingReview.model_rebuild()
@@ -7675,6 +8075,7 @@ KnowledgeGap.model_rebuild()
 Experiment.model_rebuild()
 Question.model_rebuild()
 RuleReview.model_rebuild()
+RuleReviewCorrection.model_rebuild()
 EmbeddedRule.model_rebuild()
 RuleConditionSet.model_rebuild()
 RuleCondition.model_rebuild()
