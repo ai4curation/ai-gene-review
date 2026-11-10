@@ -727,6 +727,12 @@ def check_best_practices_rules(
                         # Skip PENDING actions in consistency check
                         if action == "PENDING":
                             continue
+                        # A NOT row asserts the opposite claim to the positive
+                        # rows on the same term, so its action is not expected
+                        # to match theirs (accepting a function and removing
+                        # its contradicting negation is consistent).
+                        if annotation.get("negated"):
+                            continue
                         evidence_code = annotation.get("evidence_type", "unknown")
 
                         if term_id not in term_actions:
