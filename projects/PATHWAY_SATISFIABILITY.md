@@ -231,5 +231,8 @@ exact commands to reproduce every result above are in the companion notebook:
 
 - A human liver zonation oracle to remove the mouse-ortholog step in the zonation result.
 - Apply the engine to additional curated modules (it is module-agnostic).
+- Developmental modules: [BGEEDB_EXPRESSION](BGEEDB_EXPRESSION.md) runs the engine per developmental
+  stage with a Bgee (anatomy × stage) oracle on the cerebellum-development module, and reuses the
+  gluconeogenic tissue set as the context for testing G6PC paralogs.
 - Promote the resolvers from `modules/experimental/` into a small CLI once the oracle
   interfaces stabilise.
