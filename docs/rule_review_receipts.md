@@ -78,19 +78,20 @@ the paper or database record the lead points to.
 | Check | Severity | Fires when |
 |---|---|---|
 | `verdict_without_conditions` | error | action is not UNDECIDED and `rule.condition_sets` is empty |
+| `missing_rule_snapshot` | error (warning when UNDECIDED) | no `rule.retrieved_date`, or a verdict with no `rule.source_condition_set_count` on a rule that is not withdrawn |
+| `verdict_without_confidence` | error | action is not UNDECIDED and no `confidence` is stated |
 | `accept_on_partial_examination` | error | ACCEPT with fewer sets recorded than `source_condition_set_count` |
 | `condition_label_mismatch`, `go_label_mismatch` | error | a recorded label differs from the official one in `rules/_labels.json` |
 | `prose_identifier_label_mismatch` | error / warning | prose writes `ID (name)` or `name (ID)` and the name shares no word with the official label |
-| `size_as_evidence` | error | prose appeals to a limit, threshold or recommended maximum of condition sets |
+| `size_as_evidence` | error | a review that faults the rule (DEPRECATE, MODIFY, SPLIT, MERGE) appeals to a limit, threshold or recommended maximum of condition sets |
 | `unresolvable_reference` | error | `supported_by` cites something that is not a PMID, DOI, database record, URL or file |
 | `missing_cited_file` | error | a cited `file:` does not exist |
 | `own_notes_as_support` | warning | `supported_by` cites notes or an AI research file |
-| `literature_verdict_without_literature` | error | `literature_support` is STRONG, MODERATE or CONTRADICTED and no publication or curated record is cited |
-| `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples`, obsolete consequent or `withdrawn` rule |
+| `literature_verdict_without_literature` | error | `literature_support` is STRONG, MODERATE or CONTRADICTED and the block itself (its `supported_by` or `notes`) names no publication or curated pathway record |
+| `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples`, no `consequent_obsolete: true` and no `withdrawn` rule |
 | `modify_without_modification` | error | MODIFY, SPLIT or MERGE with no `suggested_modifications` |
 | `low_confidence_verdict` | error | a verdict other than UNDECIDED at confidence below 0.5 |
 | `example_not_an_accession` | error | an example is not a UniProt accession |
-| `missing_rule_snapshot` | warning | no `rule.retrieved_date` |
 
 `just rules-validate --online <file>` adds two checks that need the network:
 
@@ -98,8 +99,18 @@ the paper or database record the lead points to.
 |---|---|---|
 | `false_positive_has_experimental_annotation` | error | an `incorrect_examples` accession carries the consequent, or a descendant, on experimental evidence in QuickGO |
 | `stale_rule_snapshot`, `rule_withdrawn_upstream` | warning | UniProt now serves a different number of condition sets, or no longer serves the rule |
+| `withdrawn_but_served` | error | `rule.withdrawn` is true but UniProt serves the rule |
+| `consequent_not_obsolete` | error | `consequent_obsolete` is true but QuickGO serves the term as current |
+| `online_check_failed` | warning | a lookup failed, so that check did not run; a clean `--online` result with this warning is not a pass |
 
 Run `--online` before marking a review COMPLETE.
+
+**A receipt field left out is not a pass.** The checks that test a field also require
+it: a verdict must state its rule snapshot and its confidence, and the two grounds
+that excuse a DEPRECATE from naming a protein (`withdrawn`, `consequent_obsolete`) are
+both verified online. FunFam labels are compared with the cache but cannot be
+refreshed by `--refresh-labels`, which covers InterPro and GO only; update a renamed
+FunFam label in `rules/_labels.json` by hand, from CATH.
 
 The label checks compare against the committed cache `rules/_labels.json`. InterPro
 renames entries, so a label error can mean the cache is stale. Run

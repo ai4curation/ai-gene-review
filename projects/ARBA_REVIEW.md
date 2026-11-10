@@ -284,8 +284,9 @@ inventory is in
 
 An audit on 2026-11-09 re-derived the facts behind all 78 rule reviews from
 UniProt, InterPro and QuickGO. In about 45 the recommended action did not follow
-from the evidence, and only five were sound as written (ARBA00067001,
-ARBA00052213, ARBA00026799, ARBA00028655, ARBA00045851). The recurring errors:
+from the evidence. Three were sound in their reasoning (ARBA00067001,
+ARBA00052213, ARBA00028655), though ARBA00028655 describes an older version of
+its rule. The recurring errors:
 
 - **Size as evidence.** About 40 reviews treated the number of condition sets as
   evidence that annotations were false. The "limit of 12" they cite is the
@@ -306,10 +307,11 @@ ARBA00052213, ARBA00026799, ARBA00028655, ARBA00045851). The recurring errors:
 - **Own notes as literature.** `literature_support: CONTRADICTED` was often backed
   only by the review's own research file.
 
-The reviews were corrected on 2026-11-10: 72 were rewritten and one empty
-placeholder was reset. Each records the condition sets it examined from the rule
+The reviews were corrected on 2026-11-10: 74 were rewritten (ARBA00026799 and
+ARBA00045851 after a PR review showed they still rested on the reviewer's own
+notes and an unread GitHub issue) and one empty placeholder was reset. Each records the condition sets it examined from the rule
 as UniProt served it on 2026-11-09, has the unsupported claims removed, lists
-what was withdrawn under `corrections` with the refuting evidence (362 entries),
+what was withdrawn under `corrections` with the refuting evidence (365 entries),
 and carries an action the evidence supports.
 
 | Action | Before | After |
@@ -344,7 +346,7 @@ Corrections by kind of error (one review can have several):
 
 | Error | Corrections |
 |---|---:|
-| Unsupported source (own notes, missing file, unresolvable reference) | 45 |
+| Unsupported source (own notes, missing file, unresolvable reference) | 46 |
 | Identifier given the wrong meaning | 37 |
 | Verdict on unexamined rule | 37 |
 | Size as evidence | 36 |
@@ -353,7 +355,7 @@ Corrections by kind of error (one review can have several):
 | Refuted by curated annotation | 29 |
 | General treated as wrong | 25 |
 | Ontology misread | 21 |
-| Stale rule version | 20 |
+| Stale rule version | 22 |
 | Low recall treated as wrong | 10 |
 | Sample over-generalised | 8 |
 | Other | 32 |

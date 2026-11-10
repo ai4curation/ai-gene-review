@@ -519,14 +519,14 @@ window.searchData = [
       "IPR023753 (FAD/NAD(P)-binding domain)"
     ],
     "funfam_ids": [
-      "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)",
       "3.50.50.60:FF:000064 (Thioredoxin reductase)",
-      "3.50.50.60:FF:000190 (Thioredoxin reductase)"
+      "3.50.50.60:FF:000190 (Thioredoxin reductase)",
+      "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)"
     ],
     "condition_types": [
-      "InterPro id",
+      "FunFam id",
       "taxon",
-      "FunFam id"
+      "InterPro id"
     ],
     "parsimony_assessment": null,
     "literature_support": "STRONG",
@@ -746,12 +746,12 @@ window.searchData = [
   {
     "id": "ARBA00026799",
     "rule_id": "ARBA00026799",
-    "description": "Predicts NAD+ kinase activity (GO:0003951) for proteins containing NAD kinase domains across 6 condition sets covering bacterial, eukaryotic, and mitochondrial variants",
-    "review_summary": "Well-designed rule with high biological accuracy for NAD+ kinase annotation. Uses appropriate domain families and taxonomic restrictions to capture evolutionary and functional diversity of NAD kinases. GO term selection is optimal. Main concern is potential overlap between condition sets that could be assessed through quantitative analysis.",
+    "description": "Assigns GO:0003951 (NAD+ kinase activity) from five alternative condition sets: one InterPro and PANTHER conjunction for the NAD kinase family, and four CATH FunFams each limited to a taxon.",
+    "review_summary": "All five condition sets of the rule as served on 2026-11-10 were turned into UniProtKB queries. In every set the reviewed matches are NAD kinases by curated EC number (698 of 704 across the sets), and sets 1 and 5 include members with experimental GO:0003951 annotations. The one soft spot is in set 1, which also matches the mitochondrial NADH kinase POS5 and its S. pombe ortholog; these are curated as NADH kinases (EC 2.7.1.86), and NAD+ kinase activity is not annotated for POS5.",
     "action": "ACCEPT",
     "status": "COMPLETE",
-    "confidence": 0.85,
-    "num_condition_sets": 6,
+    "confidence": 0.75,
+    "num_condition_sets": 5,
     "num_entries": 0,
     "go_terms": [
       {
@@ -768,7 +768,7 @@ window.searchData = [
     "interpro_ids": [],
     "funfam_ids": [],
     "condition_types": [],
-    "parsimony_assessment": "ACCEPTABLE",
+    "parsimony_assessment": null,
     "literature_support": null,
     "review_link": "../ARBA00026799/ARBA00026799-review.html",
     "is_reviewed": true
@@ -1249,7 +1249,7 @@ window.searchData = [
     "funfam_ids": [],
     "condition_types": [],
     "parsimony_assessment": "OVERLY_COMPLEX",
-    "literature_support": "CONTRADICTED",
+    "literature_support": null,
     "review_link": "../ARBA00028655/ARBA00028655-review.html",
     "is_reviewed": true
   },
@@ -1436,11 +1436,11 @@ window.searchData = [
   {
     "id": "ARBA00045851",
     "rule_id": "ARBA00045851",
-    "description": "Annotates MORN repeat-containing proteins, specifically MORN3 family members, with function involving p53 regulation through assembly of a suppression complex that tethers SIRT1 and MDM2",
-    "review_summary": "This ARBA rule provides a highly specific functional annotation for MORN3 proteins based on experimentally characterized human and mouse orthologs. While the molecular mechanism described (p53 regulation via SIRT1/MDM2 tethering) is well-supported for MORN3, applying this specific function broadly to 1802 unreviewed proteins raises concerns about over-annotation. For example, Drosophila protein A1ZB08 (FBgn0034281) was flagged in go-annotation#6179 as an inappropriate annotation target, since this fly gene is not well-expressed in testis and likely does not participate in the mammalian p53/SIRT1/MDM2 pathway. The rule would benefit from additional constraints or a more conservative taxonomic scope given the limited experimental evidence across diverse species.",
+    "description": "Assigns a FUNCTION comment describing assembly of a p53/TP53 suppression complex that tethers SIRT1 and MDM2, and a possible role in spermatogenesis, to proteins of the MORN repeat-containing protein 3 family across Eukaryota.",
+    "review_summary": "Both condition sets were read. Set 1 (IPR003409 (MORN repeat) AND IPR052472 (MORN repeat-containing protein 3) AND PANTHER:PTHR46511:SF1) has no taxon condition and matches 1,648 UniProtKB entries (release 2026_04): 874 vertebrate, 233 arthropod, 75 Viridiplantae and 25 fungal. The comment the rule assigns names p53/TP53 and MDM2. No Viridiplantae or fungal entry in UniProtKB matches the Mdm2/Mdm4 family (IPR016495), and one Viridiplantae and no fungal entry matches the p53 family (IPR002117), so in those lineages the text describes partners that are not there. The Drosophila entry A1ZB08 carries the comment with evidence ECO:0000256 ARBA:ARBA00045851. The mechanism itself was shown for mammalian MORN3 (PMID:29681526), and the spermatogenesis role in mouse (PMID:25248657).",
     "action": "MODIFY",
     "status": "COMPLETE",
-    "confidence": null,
+    "confidence": 0.8,
     "num_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [],
@@ -1449,8 +1449,8 @@ window.searchData = [
     "interpro_ids": [],
     "funfam_ids": [],
     "condition_types": [],
-    "parsimony_assessment": "ACCEPTABLE",
-    "literature_support": "MODERATE",
+    "parsimony_assessment": null,
+    "literature_support": null,
     "review_link": "../ARBA00045851/ARBA00045851-review.html",
     "is_reviewed": true
   },

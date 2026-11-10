@@ -100,6 +100,10 @@ _STOPWORDS = {
 
 NEGATIVE_ASSESSMENTS = {"INCORRECT", "PARTIALLY_CORRECT"}
 
+#: Actions that fault the rule. Naming the analysis cap is only an error in
+#: support of one of these; saying "12 of 343 sets were read, so UNDECIDED" is right.
+_VERDICTS_AGAINST = {"DEPRECATE", "MODIFY", "SPLIT", "MERGE"}
+
 
 # ---------------------------------------------------------------------------
 # Labels
@@ -301,7 +305,7 @@ def check_review(
     ...               "review_summary": "343 sets exceeds the analysis threshold of 12."},
     ...              report)
     >>> sorted({issue.check_type for issue in report.issues if issue.is_error()})
-    ['deprecate_without_counterexample', 'size_as_evidence', 'verdict_without_conditions']
+    ['deprecate_without_counterexample', 'missing_rule_snapshot', 'size_as_evidence', 'verdict_without_conditions']
     >>> ok = ValidationReport(is_valid=True)
     >>> check_review({"id": "ARBA1", "action": "UNDECIDED",
     ...               "rule": {"rule_id": "ARBA1", "condition_sets": [], "retrieved_date": "2026-11-10"}}, ok)
@@ -345,12 +349,22 @@ def check_review(
             "rule.condition_sets",
             "ACCEPT covers the whole rule; record every set or use UNDECIDED and say which sets were sound.",
         )
+    decided = bool(action) and action != "UNDECIDED"
     if not rule.get("retrieved_date"):
         add(
-            warning,
+            error if decided else warning,
             "missing_rule_snapshot",
             "rule.retrieved_date is not set: the review does not say which version of the rule it describes",
             "rule.retrieved_date",
+        )
+    if decided and not isinstance(total, int) and not withdrawn:
+        add(
+            error,
+            "missing_rule_snapshot",
+            f"action is {action} but rule.source_condition_set_count is not set, so nothing shows how much of "
+            "the rule was examined",
+            "rule.source_condition_set_count",
+            "Record the number of condition sets in the rule as fetched. Leaving a receipt field out is not a pass.",
         )
 
     # 2. The label is the checksum of the identifier.
@@ -390,7 +404,7 @@ def check_review(
                     f"{identifier} follows the words {stated!r}; its official name is {official!r}", path,
                     "Check the identifier; write it as 'ID (official name)'.")
         # 3. Size is not evidence.
-        size = _SIZE_AS_EVIDENCE.search(flat)
+        size = _SIZE_AS_EVIDENCE.search(flat) if action in _VERDICTS_AGAINST else None
         if size:
             add(error, "size_as_evidence",
                 f"appeals to a condition-set limit ({size.group(0)!r}); the cap of 12 is this repository's "
@@ -415,24 +429,25 @@ def check_review(
     literature = data.get("literature_support") or {}
     if literature.get("assessment") in {"STRONG", "MODERATE", "CONTRADICTED"}:
         cited = [str(item.get("reference_id") or "") for item in literature.get("supported_by") or [] if isinstance(item, dict)]
-        cited += [str(ref.get("id") or "") for ref in data.get("references") or [] if isinstance(ref, dict)]
         # A publication or pathway named in the note is a checkable receipt too.
         cited += re.findall(r"PMID:\d+|PubMed:\d+|PMC\d+|R-HSA-\d+|DOI:\S+", str(literature.get("notes") or ""))
         if not any(ref.startswith(_LITERATURE_PREFIXES + ("PMC", "R-HSA-", "PubMed:")) for ref in cited):
             add(error, "literature_verdict_without_literature",
-                f"literature_support is {literature.get('assessment')} but the review cites no publication or "
-                "curated database record", "literature_support",
+                f"literature_support is {literature.get('assessment')} but the block cites no publication or "
+                "curated pathway record in its supported_by or notes", "literature_support",
                 "Cite the literature, or remove the block: not having searched is not a finding.")
 
     # 5. A negative verdict names a protein.
     def has_counterexample(assessment: Dict[str, Any]) -> bool:
-        return bool(assessment.get("incorrect_examples")) or "obsolete" in str(assessment.get("notes", "")).lower()
+        return bool(assessment.get("incorrect_examples")) or assessment.get("consequent_obsolete") is True
 
     negative = [a for a in assessments if isinstance(a, dict) and a.get("assessment") in NEGATIVE_ASSESSMENTS]
-    if action == "DEPRECATE" and not withdrawn and not any(has_counterexample(a) for a in negative):
+    obsolete = any(isinstance(a, dict) and a.get("consequent_obsolete") is True for a in assessments)
+    if action == "DEPRECATE" and not withdrawn and not obsolete and not any(has_counterexample(a) for a in negative):
         add(error, "deprecate_without_counterexample",
             "action is DEPRECATE but no annotation_assessments entry names a wrongly annotated protein "
-            "(incorrect_examples), an obsolete consequent, or a withdrawn rule", "annotation_assessments",
+            "(incorrect_examples), an obsolete consequent (consequent_obsolete: true), or a withdrawn rule",
+            "annotation_assessments",
             "Show the false positives with accessions, or use UNDECIDED. 'True but general' is not DEPRECATE.")
     for index, assessment in enumerate(negative):
         if not has_counterexample(assessment):
@@ -451,6 +466,10 @@ def check_review(
 
     # 6. Confidence is confidence in the verdict.
     confidence = data.get("confidence")
+    if action and action != "UNDECIDED" and not isinstance(confidence, (int, float)):
+        add(error, "verdict_without_confidence",
+            f"action is {action} but no confidence is stated", "confidence",
+            "State how sure you are that the action is right; below 0.5, use UNDECIDED.")
     if action and action != "UNDECIDED" and isinstance(confidence, (int, float)) and confidence < 0.5:
         add(error, "low_confidence_verdict",
             f"action is {action} at confidence {confidence}: a verdict held below 0.5 is UNDECIDED",
@@ -521,18 +540,41 @@ def check_review_online(data: Dict[str, Any], report: ValidationReport) -> None:
                         f"on experimental evidence: {'; '.join(rows[:3])}",
                         f"annotation_assessments[{index}].incorrect_examples")
 
+    for index, assessment in enumerate(data.get("annotation_assessments") or []):
+        value = str(assessment.get("value", ""))
+        if assessment.get("consequent_obsolete") is True and value.startswith("GO:"):
+            try:
+                terms = _get_json(
+                    "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/" + urllib.parse.quote(value)
+                ).get("results") or []
+            except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+                add(ValidationSeverity.WARNING, "online_check_failed", f"QuickGO lookup failed: {exc}",
+                    f"annotation_assessments[{index}]")
+                continue
+            if terms and not terms[0].get("isObsolete"):
+                add(ValidationSeverity.ERROR, "consequent_not_obsolete",
+                    f"{value} is marked consequent_obsolete but QuickGO serves it as a current term",
+                    f"annotation_assessments[{index}].consequent_obsolete")
+
     rule_id = str(rule.get("rule_id") or "")
     if rule_id.startswith("ARBA"):
         try:
             live = _get_json(f"https://rest.uniprot.org/arba/{rule_id}")
         except urllib.error.HTTPError as exc:
-            if exc.code == 404 and not rule.get("withdrawn"):
+            if exc.code != 404:
+                add(ValidationSeverity.WARNING, "online_check_failed",
+                    f"UniProt lookup failed with HTTP {exc.code}; the rule's state was not checked", "rule")
+            elif not rule.get("withdrawn"):
                 add(ValidationSeverity.WARNING, "rule_withdrawn_upstream",
                     f"UniProt no longer serves {rule_id}; set rule.withdrawn and re-read the verdict", "rule")
             return
         except (urllib.error.URLError, TimeoutError, ValueError) as exc:
             add(ValidationSeverity.WARNING, "online_check_failed", f"UniProt lookup failed: {exc}", "rule")
             return
+        if rule.get("withdrawn"):
+            add(ValidationSeverity.ERROR, "withdrawn_but_served",
+                f"rule.withdrawn is true but UniProt serves {rule_id}; a verdict that rests on withdrawal has no basis",
+                "rule.withdrawn")
         live_sets = len((live.get("mainRule") or {}).get("conditionSets") or [])
         live_modified = (live.get("information") or {}).get("modifiedDate") or live.get("modifiedDate")
         recorded = rule.get("source_condition_set_count")

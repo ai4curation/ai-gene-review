@@ -87,7 +87,8 @@ def test_clean_review_has_no_issues(tmp_path: Path) -> None:
             id="wrong name in prose",
         ),
         pytest.param(
-            {"action_rationale": "343 condition sets exceed the recommended maximum of 12."},
+            {"action": "MODIFY", "confidence": 0.8, "suggested_modifications": ["x"],
+             "action_rationale": "343 condition sets exceed the recommended maximum of 12."},
             "size_as_evidence",
             id="size as evidence",
         ),
@@ -121,6 +122,36 @@ def test_clean_review_has_no_issues(tmp_path: Path) -> None:
         ),
         pytest.param({"action": "MODIFY"}, "modify_without_modification", id="modify with no change named"),
         pytest.param(
+            {"action": "MODIFY", "suggested_modifications": ["x"]},
+            "verdict_without_confidence",
+            id="verdict with confidence left out",
+        ),
+        pytest.param(
+            {"action": "ACCEPT", "confidence": 0.9,
+             "rule": {"rule_id": "A", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10"}},
+            "missing_rule_snapshot",
+            id="accept with set count left out",
+        ),
+        pytest.param(
+            {"action": "ACCEPT", "confidence": 0.9,
+             "rule": {"rule_id": "A", "condition_sets": [DICER_SET], "source_condition_set_count": 1}},
+            "missing_rule_snapshot",
+            id="accept with retrieval date left out",
+        ),
+        pytest.param(
+            {"action": "DEPRECATE", "confidence": 0.9, "annotation_assessments": [
+                {"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "INCORRECT",
+                 "notes": "The consequent is not obsolete."}]},
+            "deprecate_without_counterexample",
+            id="the word obsolete in a note is not a receipt",
+        ),
+        pytest.param(
+            {"literature_support": {"assessment": "STRONG", "notes": "Well studied."},
+             "references": [{"id": "PMID:1", "title": "Unrelated"}]},
+            "literature_verdict_without_literature",
+            id="a PMID elsewhere in the file does not support the literature block",
+        ),
+        pytest.param(
             {"annotation_assessments": [{"annotation_kind": "GO_TERM", "value": "GO:0010605",
                                          "assessment": "CORRECT", "correct_examples": ["ESA1"]}]},
             "example_not_an_accession",
@@ -145,8 +176,24 @@ def test_deprecate_with_counterexample_passes(tmp_path: Path) -> None:
 
 
 def test_withdrawn_rule_can_be_deprecated_without_sets(tmp_path: Path) -> None:
-    data = review(action="DEPRECATE", rule={"rule_id": "A", "condition_sets": [], "withdrawn": True,
+    data = review(action="DEPRECATE", confidence=0.9, rule={"rule_id": "A", "condition_sets": [], "withdrawn": True,
                                             "retrieved_date": "2026-11-10"})
+    assert checks(data, tmp_path) == set()
+
+
+def test_naming_the_analysis_cap_is_allowed_when_undecided(tmp_path: Path) -> None:
+    data = review(review_summary="12 of 343 sets were read, the analysis limit of 12 being the tool default.")
+    assert checks(data, tmp_path) == set()
+
+
+def test_obsolete_consequent_justifies_deprecate(tmp_path: Path) -> None:
+    data = review(
+        action="DEPRECATE",
+        confidence=0.9,
+        annotation_assessments=[
+            {"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "UNDECIDED", "consequent_obsolete": True}
+        ],
+    )
     assert checks(data, tmp_path) == set()
 
 
