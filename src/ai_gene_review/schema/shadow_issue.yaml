@@ -1,0 +1,342 @@
+id: https://w3id.org/ai4curation/ai-gene-review/shadow_issue
+name: shadow_issue
+title: Shadow issue tracking
+description: >-
+  Records for shadowing an upstream annotation issue tracker (first
+  geneontology/go-annotation). Each upstream issue gets a folder
+  issues/<tracker>/<number>/ holding a machine-owned source.yaml and
+  append-only thread.jsonl written by the sync, plus the curated files
+  described here: issue.yaml (ShadowIssue: triage, our shadow work and the
+  upstream resolution) and rating.yaml (ShadowRating: an independent rater's
+  comparison of our work with the curators'). See
+  projects/GO_ANNOTATION_TRACKER.md.
+license: CC0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  shadow: https://w3id.org/ai4curation/ai-gene-review/shadow_issue/
+default_prefix: shadow
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  ShadowIssue:
+    tree_root: true
+    description: Curated record for one upstream issue (issue.yaml).
+    slots:
+      - tracker
+      - number
+      - study
+      - triage
+      - shadow
+      - resolution
+      - prior_work
+
+  PriorWork:
+    description: >-
+      Work in this repository on the issue that predates the tracker and was
+      done with the thread in view (so UNBLINDED). Recorded so the rater can use
+      it for a confirmation study.
+    attributes:
+      commit:
+        required: true
+        description: Commit on main whose message names the issue.
+      subject:
+        description: The commit's subject line.
+
+  Triage:
+    description: Whether the issue is annotation work we can shadow, and what kind.
+    attributes:
+      status:
+        range: TriageStatusEnum
+        required: true
+      suggested_kind:
+        range: IssueKindEnum
+        description: >-
+          Kind guessed by the sync from upstream labels. A hint for the triager,
+          never a triage decision.
+      kind:
+        range: IssueKindEnum
+        description: Kind assigned by the triager.
+      in_scope:
+        range: boolean
+      rationale:
+        description: Why the issue is in or out of scope.
+      triaged_by:
+      triaged_at:
+        range: datetime
+
+  ShadowWork:
+    description: >-
+      Our own work on the issue. The free-text log lives in shadow.md beside
+      issue.yaml; this records its structured outcome.
+    attributes:
+      status:
+        range: ShadowStatusEnum
+        required: true
+      blinding:
+        range: BlindingEnum
+        description: How much of the upstream discussion the worker saw.
+      thread_snapshot_at:
+        range: datetime
+        description: >-
+          The worker saw the thread only up to this time (the --as-of of
+          `shadow-issues show`). For prospective work this must precede the
+          curators' resolution.
+      started_at:
+        range: datetime
+      completed_at:
+        range: datetime
+      worker:
+        description: Agent or person who did the work (e.g. claude-opus-5-5).
+      diagnosis:
+        description: What we think is wrong (or right) with the annotations at issue.
+      proposed_actions:
+        range: ProposedAction
+        multivalued: true
+        inlined_as_list: true
+      work_products:
+        range: WorkProduct
+        multivalued: true
+        inlined_as_list: true
+      self_rating:
+        range: SelfRating
+
+  ProposedAction:
+    description: One concrete change we propose, at the level a curator would act on.
+    attributes:
+      action:
+        range: ProposedActionEnum
+        required: true
+      subject:
+        description: >-
+          What the action applies to: a gene product (UniProtKB:P12345), a
+          mapping or rule (InterPro:IPR001806, ARBA:ARBA00086155), or a PANTHER
+          node (PANTHER:PTN000461349).
+        required: true
+      term_id:
+        description: GO term the action concerns (the annotated term).
+      replacement_term_id:
+        description: GO term to use instead, for MODIFY or REPLACE_MAPPING.
+      note:
+
+  WorkProduct:
+    description: A file in this repository produced or changed by the shadow work.
+    attributes:
+      kind:
+        range: WorkProductKindEnum
+        required: true
+      path:
+        required: true
+        description: Repository-relative path.
+      pr:
+        range: integer
+        description: Pull request number in this repository.
+
+  SelfRating:
+    attributes:
+      confidence:
+        range: ConfidenceEnum
+      note:
+
+  Resolution:
+    description: >-
+      What upstream actually did, compiled from the thread and from downstream
+      artifacts (GOA, interpro2go, ARBA and PAINT releases, ontology PRs).
+      Many threads end in "fixed, thanks", so the artifacts are usually the
+      better evidence.
+    attributes:
+      status:
+        range: ResolutionStatusEnum
+        required: true
+      resolved_at:
+        range: datetime
+      summary:
+      evidence:
+        range: ResolutionEvidence
+        multivalued: true
+        inlined_as_list: true
+
+  ResolutionEvidence:
+    attributes:
+      kind:
+        range: ResolutionEvidenceKindEnum
+        required: true
+      ref:
+        description: Thread comment key, file path, release, or identifier.
+        required: true
+      note:
+
+  ShadowRating:
+    tree_root: true
+    description: >-
+      An independent rater's comparison of our shadow work with the upstream
+      resolution (rating.yaml). The rater must not be the worker and should
+      not read the worker's self_rating before scoring.
+    slots:
+      - tracker
+      - number
+    attributes:
+      rater:
+        required: true
+      rated_at:
+        range: datetime
+        required: true
+      saw_self_rating:
+        range: boolean
+        required: true
+      outcome:
+        range: RatingOutcomeEnum
+        required: true
+      triage:
+        range: AgreementEnum
+        description: Was our scope and kind call right?
+      diagnosis:
+        range: AgreementEnum
+        description: Did we identify the same problem as the curators?
+      actions:
+        range: AgreementEnum
+        description: Do our proposed actions match what was done, term by term?
+      downstream:
+        range: AgreementEnum
+        description: Do our actions match the observed change in released data?
+      added_value:
+        range: AddedValueEnum
+        description: Did we find anything correct that the curators did not?
+      harm:
+        range: HarmEnum
+        description: Would applying our actions have introduced errors?
+      summary:
+        required: true
+
+slots:
+  tracker:
+    required: true
+    description: Tracker key, the folder under issues/ (e.g. go-annotation).
+  number:
+    range: integer
+    required: true
+  study:
+    range: StudyEnum
+    required: true
+  triage:
+    range: Triage
+    required: true
+  shadow:
+    range: ShadowWork
+    required: true
+  resolution:
+    range: Resolution
+  prior_work:
+    range: PriorWork
+    multivalued: true
+    inlined_as_list: true
+
+enums:
+  StudyEnum:
+    permissible_values:
+      RETROSPECTIVE:
+        description: Issue created before the tracker's prospective_since date (backfill).
+      PROSPECTIVE:
+        description: Issue created on or after prospective_since and picked up by the watcher.
+  TriageStatusEnum:
+    permissible_values:
+      UNTRIAGED:
+      TRIAGED:
+  IssueKindEnum:
+    permissible_values:
+      PAINT_IBA:
+        description: A PAINT/IBA propagation is questioned.
+      TERM_WIDE_REVIEW:
+        description: Review all annotations to a term, usually ahead of an obsoletion.
+      MAPPING_RULE:
+        description: An InterPro2GO, ARBA, UniRule, HAMAP, keyword or other mapping/rule.
+      GENE_ANNOTATION:
+        description: Specific annotations on one or a few gene products.
+      NEW_ANNOTATION_REQUEST:
+        description: A request to add annotations (often complexes or CC terms).
+      OUT_OF_SCOPE:
+        description: Pipeline, technical, process or guideline issue with no annotation work.
+      OTHER:
+  ShadowStatusEnum:
+    permissible_values:
+      NOT_STARTED:
+      IN_PROGRESS:
+      DONE:
+      SKIPPED:
+  BlindingEnum:
+    permissible_values:
+      BLIND:
+        description: Worker saw only the opening post.
+      PARTIAL:
+        description: Worker saw part of the thread (up to thread_snapshot_at).
+      UNBLINDED:
+        description: Worker saw the resolution; a confirmation study.
+  ProposedActionEnum:
+    permissible_values:
+      REMOVE:
+      MODIFY:
+      ADD:
+      KEEP:
+      REPLACE_MAPPING:
+      REMOVE_MAPPING:
+      RESTRICT_MAPPING:
+        description: Narrow a mapping or rule (taxon or condition), keeping it for some members.
+      NEW_TERM:
+        description: A GO term is needed that does not exist.
+      NO_ACTION:
+  WorkProductKindEnum:
+    permissible_values:
+      GENE_REVIEW:
+      FAMILY_REVIEW:
+      CURATED_RULE:
+      RULE_REVIEW:
+      PROPOSED_TERM:
+      MODULE:
+      PROJECT_PAGE:
+      ANALYSIS:
+      OTHER:
+  ConfidenceEnum:
+    permissible_values:
+      HIGH:
+      MEDIUM:
+      LOW:
+  ResolutionStatusEnum:
+    permissible_values:
+      OPEN:
+      RESOLVED:
+      WONT_FIX:
+      UNCLEAR:
+  ResolutionEvidenceKindEnum:
+    permissible_values:
+      THREAD:
+        description: A comment in thread.jsonl (ref is its key).
+      GOA_DIFF:
+      MAPPING_RELEASE:
+      ONTOLOGY_CHANGE:
+      OTHER:
+  RatingOutcomeEnum:
+    permissible_values:
+      CONCORDANT:
+      PARTIAL:
+      DISCORDANT_US_WRONG:
+      DISCORDANT_FLAG_FOR_REVIEW:
+        description: We disagree and may be right; for cmungall to adjudicate.
+      NOT_COMPARABLE:
+        description: Unresolved, won't-fix, or nothing to compare.
+  AgreementEnum:
+    permissible_values:
+      AGREE:
+      PARTIAL:
+      DISAGREE:
+      NOT_APPLICABLE:
+  AddedValueEnum:
+    permissible_values:
+      NONE:
+      SOME:
+      SUBSTANTIAL:
+  HarmEnum:
+    permissible_values:
+      NONE:
+      MINOR:
+      MAJOR:

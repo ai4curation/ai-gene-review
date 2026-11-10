@@ -1,0 +1,415 @@
+"""Local mirror of an upstream issue tracker, one folder per issue.
+
+Layout (``issues/<tracker>/``)::
+
+    tracker.yaml            # config: upstream repo, date windows, label -> kind hints
+    sync-state.yaml         # cursor: newest upstream updated_at seen (machine-owned)
+    <number>/
+      source.yaml           # current upstream state (machine-owned, overwritten)
+      thread.jsonl          # append-only issue/comment/event records (machine-owned)
+      issue.yaml            # ShadowIssue: triage, shadow work, resolution (curated)
+      shadow.md             # our work log (curated, optional)
+      rating.yaml           # ShadowRating from an independent rater (curated, optional)
+
+The sync writes only the machine-owned files and creates ``issue.yaml`` once, as a
+stub; it never rewrites curated files.
+
+``thread.jsonl`` records carry a ``key`` and ``updated_at``. A record is appended
+when that pair is new, so an edited comment appears twice, once per version, and
+:func:`latest_records` returns the newest version of each.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from datetime import date, datetime
+from pathlib import Path
+from typing import Any, Iterable
+
+import yaml
+
+ISSUES_DIR = Path("issues")
+
+
+@dataclass(frozen=True)
+class TrackerConfig:
+    """Configuration for one shadowed tracker (``issues/<key>/tracker.yaml``)."""
+
+    key: str
+    repo: str
+    backfill_since: date
+    prospective_since: date
+    label_kinds: dict[str, str]
+
+    @classmethod
+    def load(cls, tracker_dir: Path) -> "TrackerConfig":
+        """Read ``tracker.yaml`` from a tracker folder."""
+        data = yaml.safe_load((tracker_dir / "tracker.yaml").read_text())
+        return cls(
+            key=tracker_dir.name,
+            repo=data["repo"],
+            backfill_since=date.fromisoformat(str(data["backfill_since"])),
+            prospective_since=date.fromisoformat(str(data["prospective_since"])),
+            label_kinds=data.get("label_kinds", {}),
+        )
+
+    def study_for(self, created_at: str) -> str:
+        """Classify an issue by creation date.
+
+        >>> cfg = TrackerConfig("t", "o/r", date(2024, 1, 1), date(2026, 11, 10), {})
+        >>> cfg.study_for("2026-11-09T23:59:00Z"), cfg.study_for("2026-11-10T00:00:00Z")
+        ('RETROSPECTIVE', 'PROSPECTIVE')
+        """
+        return (
+            "PROSPECTIVE"
+            if parse_time(created_at).date() >= self.prospective_since
+            else "RETROSPECTIVE"
+        )
+
+    def suggest_kind(self, labels: Iterable[str]) -> str | None:
+        """First label (in ``label_kinds`` order) that maps to a kind.
+
+        >>> cfg = TrackerConfig("t", "o/r", date(2024, 1, 1), date(2026, 1, 1),
+        ...                     {"PAINT annotation": "PAINT_IBA", "ARBA": "MAPPING_RULE"})
+        >>> cfg.suggest_kind(["ARBA", "PAINT annotation"])
+        'PAINT_IBA'
+        >>> cfg.suggest_kind(["FlyBase"]) is None
+        True
+        """
+        present = set(labels)
+        return next(
+            (kind for label, kind in self.label_kinds.items() if label in present), None
+        )
+
+
+def parse_time(value: str) -> datetime:
+    """Parse a GitHub ISO timestamp.
+
+    >>> parse_time("2026-07-17T10:00:00Z").isoformat()
+    '2026-07-17T10:00:00+00:00'
+    """
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def issue_dir(tracker_dir: Path, number: int) -> Path:
+    return tracker_dir / str(number)
+
+
+def _login(user: dict[str, Any] | None) -> str | None:
+    return user["login"] if user else None
+
+
+def issue_record(issue: dict[str, Any]) -> dict[str, Any]:
+    """The opening post, as a thread record."""
+    return {
+        "type": "issue",
+        "key": "issue",
+        "created_at": issue["created_at"],
+        "updated_at": issue["updated_at"],
+        "author": _login(issue["user"]),
+        "title": issue["title"],
+        "state": issue["state"],
+        "state_reason": issue.get("state_reason"),
+        "labels": sorted(label["name"] for label in issue["labels"]),
+        "body": issue["body"] or "",
+    }
+
+
+def timeline_record(item: dict[str, Any]) -> dict[str, Any] | None:
+    """Compact a timeline item into a thread record; ``None`` for items we do not keep.
+
+    Comments keep their body. Other events keep what is needed to reconstruct the
+    resolution: labels, closing, and cross-references to issues or commits elsewhere.
+
+    >>> timeline_record({"event": "labeled", "id": 7, "created_at": "2026-01-01T00:00:00Z",
+    ...                  "actor": {"login": "a"}, "label": {"name": "ARBA"}})["label"]
+    'ARBA'
+    >>> timeline_record({"event": "subscribed", "id": 8, "created_at": "2026-01-01T00:00:00Z"}) is None
+    True
+    """
+    event = item["event"]
+    if event == "commented":
+        return {
+            "type": "comment",
+            "key": f"comment:{item['id']}",
+            "created_at": item["created_at"],
+            "updated_at": item["updated_at"],
+            "author": _login(item["user"]),
+            "body": item["body"] or "",
+        }
+    base = {
+        "type": "event",
+        "event": event,
+        "created_at": item["created_at"],
+        "updated_at": item["created_at"],
+        "author": _login(item.get("actor")),
+    }
+    if event in ("labeled", "unlabeled"):
+        return {**base, "key": f"event:{item['id']}", "label": item["label"]["name"]}
+    if event in ("closed", "reopened", "renamed", "assigned", "unassigned"):
+        extra: dict[str, Any] = {}
+        if event == "closed":
+            extra["state_reason"] = item.get("state_reason")
+        if event == "renamed":
+            extra["rename"] = item["rename"]
+        if event in ("assigned", "unassigned"):
+            extra["assignee"] = _login(item.get("assignee"))
+        return {**base, "key": f"event:{item['id']}", **extra}
+    if event == "referenced":
+        return {**base, "key": f"event:{item['id']}", "commit_id": item["commit_id"]}
+    if event == "cross-referenced":
+        source = item["source"]["issue"]
+        repo = source["repository"]["full_name"]
+        return {
+            **base,
+            "key": f"xref:{repo}#{source['number']}",
+            "source_repo": repo,
+            "source_number": source["number"],
+            "source_title": source["title"],
+            "source_is_pr": "pull_request" in source,
+        }
+    return None
+
+
+def read_thread(path: Path) -> list[dict[str, Any]]:
+    """All records in a ``thread.jsonl`` file, in file order."""
+    if not path.exists():
+        return []
+    # Split on "\n" only: str.splitlines() also splits on U+2028 and friends, which
+    # json.dumps(ensure_ascii=False) leaves unescaped inside comment bodies.
+    return [json.loads(line) for line in path.read_text().split("\n") if line.strip()]
+
+
+_ISSUE_CONTENT = ("title", "state", "state_reason", "labels", "body")
+
+
+def _changed(opening: dict[str, Any], existing: list[dict[str, Any]]) -> bool:
+    """Whether the opening post differs from the last version stored.
+
+    The issue's ``updated_at`` moves with every comment or label, so the opening
+    post is versioned by content instead of by timestamp.
+
+    >>> rec = {"type": "issue", "title": "T", "state": "open", "state_reason": None,
+    ...        "labels": [], "body": "B", "updated_at": "1"}
+    >>> _changed(rec, []), _changed(rec, [{**rec, "updated_at": "0"}]), _changed(rec, [{**rec, "state": "closed"}])
+    (True, False, True)
+    """
+    previous = [r for r in existing if r["type"] == "issue"]
+    if not previous:
+        return True
+    last = previous[-1]
+    return any(last.get(field) != opening.get(field) for field in _ISSUE_CONTENT)
+
+
+def append_new_records(path: Path, records: Iterable[dict[str, Any]]) -> int:
+    """Append records whose (key, updated_at) is not already in the file.
+
+    Returns the number appended. Existing lines are never rewritten.
+    """
+    seen = {(r["key"], r["updated_at"]) for r in read_thread(path)}
+    new = [r for r in records if (r["key"], r["updated_at"]) not in seen]
+    if new:
+        with path.open("a") as handle:
+            for record in new:
+                handle.write(
+                    json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n"
+                )
+    return len(new)
+
+
+def latest_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Newest version of each record key, ordered by creation time.
+
+    >>> recs = [{"key": "c1", "created_at": "1", "updated_at": "1", "body": "old"},
+    ...         {"key": "c2", "created_at": "2", "updated_at": "2", "body": "x"},
+    ...         {"key": "c1", "created_at": "1", "updated_at": "3", "body": "new"}]
+    >>> [r["body"] for r in latest_records(recs)]
+    ['new', 'x']
+    """
+    newest: dict[str, dict[str, Any]] = {}
+    for record in records:
+        current = newest.get(record["key"])
+        if current is None or record["updated_at"] >= current["updated_at"]:
+            newest[record["key"]] = record
+    return sorted(newest.values(), key=lambda r: r["created_at"])
+
+
+def source_snapshot(
+    issue: dict[str, Any], records: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Current upstream state of an issue, for ``source.yaml``."""
+    latest = latest_records(records)
+    return {
+        "number": issue["number"],
+        "url": issue["html_url"],
+        "title": issue["title"],
+        "state": issue["state"],
+        "state_reason": issue.get("state_reason"),
+        "labels": sorted(label["name"] for label in issue["labels"]),
+        "author": _login(issue["user"]),
+        "created_at": issue["created_at"],
+        "updated_at": issue["updated_at"],
+        "closed_at": issue.get("closed_at"),
+        "comment_count": sum(1 for r in latest if r["type"] == "comment"),
+        "linked_repos": sorted(
+            {r["source_repo"] for r in latest if r.get("source_repo")}
+        ),
+    }
+
+
+def stub_issue(config: TrackerConfig, issue: dict[str, Any]) -> dict[str, Any]:
+    """Initial curated ``issue.yaml`` for a newly seen issue."""
+    triage: dict[str, Any] = {"status": "UNTRIAGED"}
+    kind = config.suggest_kind(label["name"] for label in issue["labels"])
+    if kind:
+        triage["suggested_kind"] = kind
+    return {
+        "tracker": config.key,
+        "number": issue["number"],
+        "study": config.study_for(issue["created_at"]),
+        "triage": triage,
+        "shadow": {"status": "NOT_STARTED"},
+    }
+
+
+def write_yaml(path: Path, data: dict[str, Any]) -> None:
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=100)
+    )
+
+
+def store_issue(
+    config: TrackerConfig,
+    tracker_dir: Path,
+    issue: dict[str, Any],
+    timeline: list[dict[str, Any]],
+) -> tuple[int, bool]:
+    """Write one fetched issue into its folder.
+
+    Returns (records appended, whether issue.yaml was created).
+    """
+    folder = issue_dir(tracker_dir, issue["number"])
+    folder.mkdir(parents=True, exist_ok=True)
+    thread = folder / "thread.jsonl"
+    opening = issue_record(issue)
+    records = [r for r in map(timeline_record, timeline) if r is not None]
+    if _changed(opening, read_thread(thread)):
+        records.insert(0, opening)
+    appended = append_new_records(thread, records)
+    write_yaml(folder / "source.yaml", source_snapshot(issue, read_thread(thread)))
+    curated = folder / "issue.yaml"
+    created = not curated.exists()
+    if created:
+        write_yaml(curated, stub_issue(config, issue))
+    return appended, created
+
+
+def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(source.yaml, issue.yaml) for one issue folder."""
+    return (
+        yaml.safe_load((folder / "source.yaml").read_text()),
+        yaml.safe_load((folder / "issue.yaml").read_text()),
+    )
+
+
+def iter_issue_folders(tracker_dir: Path) -> list[Path]:
+    """Issue folders, numerically ordered."""
+    return sorted(
+        (p for p in tracker_dir.iterdir() if p.is_dir() and p.name.isdigit()),
+        key=lambda p: int(p.name),
+    )
+
+
+QUEUES = ("untriaged", "needs_shadow", "needs_rating")
+
+
+def queue_for(
+    folder: Path, source: dict[str, Any], issue: dict[str, Any]
+) -> str | None:
+    """Which work queue an issue is waiting in, if any.
+
+    - ``untriaged``: nobody has decided whether it is in scope.
+    - ``needs_shadow``: in scope, and our work has not started.
+    - ``needs_rating``: our work is done, upstream has closed the issue, and no
+      rating exists yet.
+    """
+    triage, shadow = issue["triage"], issue["shadow"]
+    if triage["status"] == "UNTRIAGED":
+        return "untriaged"
+    if triage.get("in_scope") and shadow["status"] == "NOT_STARTED":
+        return "needs_shadow"
+    if (
+        shadow["status"] == "DONE"
+        and source["state"] == "closed"
+        and not (folder / "rating.yaml").exists()
+    ):
+        return "needs_rating"
+    return None
+
+
+def render_thread(
+    records: list[dict[str, Any]],
+    as_of: datetime | None = None,
+    opening_only: bool = False,
+) -> str:
+    """Markdown view of a thread, as a worker or rater should see it.
+
+    ``as_of`` hides every record (and every edit) made after that time, which is
+    how a worker is held to a thread snapshot. ``opening_only`` shows just the
+    opening post (the BLIND protocol). Records keep their keys so a resolution can
+    cite them.
+
+    >>> recs = [{"type": "issue", "key": "issue", "created_at": "2026-01-01T00:00:00Z",
+    ...          "updated_at": "2026-01-01T00:00:00Z", "author": "a", "title": "T",
+    ...          "state": "open", "labels": [], "body": "B"},
+    ...         {"type": "comment", "key": "comment:1", "created_at": "2026-01-02T00:00:00Z",
+    ...          "updated_at": "2026-01-02T00:00:00Z", "author": "b", "body": "fixed"}]
+    >>> "fixed" in render_thread(recs), "fixed" in render_thread(recs, as_of=parse_time("2026-01-01T12:00:00Z"))
+    (True, False)
+    """
+    visible = [
+        r for r in records if as_of is None or parse_time(r["updated_at"]) <= as_of
+    ]
+    latest = latest_records(visible)
+    openings = [r for r in latest if r["type"] == "issue"]
+    # The first stored version of the opening post can postdate as_of (it is
+    # stamped with the issue's updated_at when first synced). Show its text, which
+    # is the best available, but not its labels or state, which would leak.
+    opening = (
+        openings[0] if openings else next(r for r in records if r["type"] == "issue")
+    )
+    labels = (
+        ", ".join(opening["labels"])
+        if openings
+        else "(withheld: recorded after the snapshot)"
+    )
+    lines = [
+        f"# {opening['title']}",
+        "",
+        f"Opened by {opening['author']} at {opening['created_at']}; labels: {labels or 'none'}",
+        "",
+        opening["body"],
+    ]
+    if opening_only:
+        return "\n".join(lines) + "\n"
+    for record in latest:
+        if record["type"] == "comment":
+            lines += [
+                "",
+                f"## [{record['key']}] {record['author']} at {record['created_at']}",
+                "",
+                record["body"],
+            ]
+        elif record["type"] == "event":
+            detail = (
+                record.get("label")
+                or record.get("source_repo")
+                or record.get("state_reason")
+                or ""
+            )
+            lines += [
+                "",
+                f"- [{record['key']}] {record['event']} {detail} by {record['author']} at {record['created_at']}",
+            ]
+    return "\n".join(lines) + "\n"

@@ -1052,6 +1052,19 @@ allows larger deployments below the 10 GB absolute artifact cutoff; that is not
 a hosting-capacity guarantee. A completed upload can be redeployed without
 rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
 
+## Upstream issue trackers: never notify curators
+
+`issues/<tracker>/` mirrors upstream trackers (first geneontology/go-annotation)
+for retrospective and prospective evaluation; see `projects/GO_ANNOTATION_TRACKER.md`
+and `just outstanding-shadow-issues`. In any commit message, PR title or body, issue,
+or comment, never write an upstream issue URL or the shorthand `geneontology/<repo>#N`,
+and never at-mention anyone except cmungall: GitHub turns these into cross-references
+and notifications on the curators' issues. Name an upstream issue as
+`issues/go-annotation/N` or "go-annotation N". Never paste mirrored thread text into a
+PR body. A Bash hook, a commit-msg hook and a PR check enforce this
+(`src/ai_gene_review/shadow_issues/guard.py`); `just check-upstream-refs FILE` checks a
+body file first.
+
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.

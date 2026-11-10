@@ -1,0 +1,37 @@
+---
+# Fails a PR whose title, body or commit messages would cross-reference or
+# @mention an upstream tracker (see projects/GO_ANNOTATION_TRACKER.md).
+#
+# GitHub creates the cross-reference as soon as the PR is opened, so this check
+# cannot undo one; it stops the squash commit (which repeats the PR body) from
+# landing on main and tells the author to edit the text. Prevention happens
+# earlier, in the Claude Code Bash hook and the commit-msg pre-commit hook.
+name: Upstream notification guard
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check PR text and commit messages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          printf '%s\n\n%s\n' "$PR_TITLE" "$PR_BODY" > pr-text.md
+          gh api --paginate "repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits" \
+            --jq '.[].commit.message' > commit-messages.txt
+          python3 src/ai_gene_review/shadow_issues/guard.py pr-text.md commit-messages.txt

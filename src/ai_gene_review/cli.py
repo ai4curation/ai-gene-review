@@ -40,10 +40,12 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.shadow_issues.cli import shadow_issues_app
 from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+app.add_typer(shadow_issues_app, name="shadow-issues")
 
 
 @app.command()
