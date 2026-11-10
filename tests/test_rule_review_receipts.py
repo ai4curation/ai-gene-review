@@ -122,6 +122,17 @@ def test_clean_review_has_no_issues(tmp_path: Path) -> None:
         ),
         pytest.param({"action": "MODIFY"}, "modify_without_modification", id="modify with no change named"),
         pytest.param(
+            {"references": [{"id": "PMID:1", "title": "t", "findings": [
+                {"statement": "Relevant to condition sets 1, 8 and 21."}]}]},
+            "condition_set_out_of_range",
+            id="finding cites a set the rule does not have",
+        ),
+        pytest.param(
+            {"review_summary": "CS25 matches DPM1."},
+            "condition_set_out_of_range",
+            id="prose cites a set the rule does not have",
+        ),
+        pytest.param(
             {"action": "MODIFY", "suggested_modifications": ["x"]},
             "verdict_without_confidence",
             id="verdict with confidence left out",

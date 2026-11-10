@@ -315,7 +315,7 @@ described an older version of its rule; it was redone. The recurring errors:
 The reviews were corrected on 2026-11-10: 75 were rewritten (ARBA00026799,
 ARBA00045851 and ARBA00028655 after a PR review showed they still rested on the reviewer's own
 notes and an unread GitHub issue) and one empty placeholder was reset. Each records the condition sets it examined from the rule
-as UniProt served it on 2026-11-09, has the unsupported claims removed, lists
+as UniProt served it on 2026-11-09 or 2026-11-10 (each file gives its `retrieved_date`), has the unsupported claims removed, lists
 what was withdrawn under `corrections` with the refuting evidence (366 entries),
 and carries an action the evidence supports.
 

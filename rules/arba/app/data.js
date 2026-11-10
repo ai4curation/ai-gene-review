@@ -515,18 +515,18 @@ window.searchData = [
     ],
     "interpro_ids": [
       "IPR005982 (Thioredoxin reductase)",
-      "IPR008255 (Pyridine nucleotide-disulphide oxidoreductase, class-II, active site)",
-      "IPR023753 (FAD/NAD(P)-binding domain)"
+      "IPR023753 (FAD/NAD(P)-binding domain)",
+      "IPR008255 (Pyridine nucleotide-disulphide oxidoreductase, class-II, active site)"
     ],
     "funfam_ids": [
+      "3.50.50.60:FF:000064 (Thioredoxin reductase)",
       "3.50.50.60:FF:000190 (Thioredoxin reductase)",
-      "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)",
-      "3.50.50.60:FF:000064 (Thioredoxin reductase)"
+      "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)"
     ],
     "condition_types": [
-      "InterPro id",
       "taxon",
-      "FunFam id"
+      "FunFam id",
+      "InterPro id"
     ],
     "parsimony_assessment": null,
     "literature_support": "STRONG",

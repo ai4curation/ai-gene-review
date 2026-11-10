@@ -206,6 +206,28 @@ def looks_like_a_name(text: str) -> bool:
     return any(len(word) >= 6 for word in _tokens(text))
 
 
+_SET_REFERENCE = re.compile(
+    r"\b(?:condition\s+sets?|sets?|CS)\s*((?:\d+)(?:\s*(?:,|and|or|to|-)\s*\d+)*)(?!\s*(?:of|condition|sets?|entries|matches|proteins|%))",
+    re.IGNORECASE,
+)
+
+
+def cited_set_numbers(text: str) -> Set[int]:
+    """Condition-set numbers a sentence refers to.
+
+    >>> sorted(cited_set_numbers("relevant to condition sets 1, 8 and 21"))
+    [1, 8, 21]
+    >>> sorted(cited_set_numbers("CS18 and set 37 are sound; sets 1 to 7 too"))
+    [1, 7, 18, 37]
+    >>> cited_set_numbers("12 of 343 sets were read")
+    set()
+    """
+    found: Set[int] = set()
+    for match in _SET_REFERENCE.finditer(text):
+        found.update(int(number) for number in re.findall(r"\d+", match.group(1)))
+    return found
+
+
 def _official_label(identifier: str, labels: Dict[str, Dict[str, str]]) -> Optional[str]:
     if identifier.startswith("IPR"):
         return labels["interpro"].get(identifier)
@@ -425,6 +447,24 @@ def check_review(
                 add(warning, "own_notes_as_support",
                     f"supported_by cites {reference_id}: notes and AI research files are not independent sources", path,
                     "Cite the paper or database record the note relies on.")
+
+    # A numbered condition set must exist in the rule the review describes.
+    numbers = [cs.get("number") for cs in condition_sets if isinstance((cs or {}).get("number"), int)]
+    highest = max([total if isinstance(total, int) else 0, *numbers], default=0)
+    if highest:
+        statements = [
+            (f"references[{r}].findings[{f}].statement", str(finding.get("statement") or ""))
+            for r, reference in enumerate(data.get("references") or [])
+            if isinstance(reference, dict)
+            for f, finding in enumerate(reference.get("findings") or [])
+            if isinstance(finding, dict)
+        ]
+        for path, text in [*iter_prose(data), *statements]:
+            for set_number in sorted(cited_set_numbers(text)):
+                if set_number > highest:
+                    add(error, "condition_set_out_of_range",
+                        f"refers to condition set {set_number}, but the rule as recorded has {highest}", path,
+                        "The text may describe an earlier version of the rule; re-read it against the recorded sets.")
 
     literature = data.get("literature_support") or {}
     if literature.get("assessment") in {"STRONG", "MODERATE", "CONTRADICTED"}:

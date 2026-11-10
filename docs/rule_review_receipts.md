@@ -83,6 +83,7 @@ the paper or database record the lead points to.
 | `accept_on_partial_examination` | error | ACCEPT with fewer sets recorded than `source_condition_set_count` |
 | `condition_label_mismatch`, `go_label_mismatch` | error | a recorded label differs from the official one in `rules/_labels.json` |
 | `prose_identifier_label_mismatch` | error / warning | prose writes `ID (name)` or `name (ID)` and the name shares no word with the official label |
+| `condition_set_out_of_range` | error | prose or a reference finding names a condition set number higher than the rule as recorded has (usually text left over from an earlier version of the rule) |
 | `size_as_evidence` | error | a review that faults the rule (DEPRECATE, MODIFY, SPLIT, MERGE) appeals to a limit, threshold or recommended maximum of condition sets |
 | `unresolvable_reference` | error | `supported_by` cites something that is not a PMID, DOI, database record, URL or file |
 | `missing_cited_file` | error | a cited `file:` does not exist |
