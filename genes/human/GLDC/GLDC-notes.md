@@ -76,3 +76,43 @@ in `GLDC-uniprot.txt`, seeded GOA, and cached `publications/PMID_*.md`.
   supporting MF).
 - BP directly_involved_in GO:0019464 glycine decarboxylation via glycine cleavage system.
 - CC located_in GO:0005759 mitochondrial matrix.
+
+
+## 2026-11-06: current interpretation superseding the earlier judgments
+
+The earlier notes above are retained as a journal. Their categorical electron-transfer
+and lyase objections, unqualified human homodimer statement, broad-process ACCEPTs,
+and attribution of P15505 modulation evidence to rat are superseded here. P15505 is
+the chicken donor. The current decisions are 14 ACCEPT, five TOO_GENERAL, one MODIFY
+and five UNDECIDED, with no NEW assertions and one catalytic core.
+
+Human expression supports the catalytic role: [PMID:1996985](https://pubmed.ncbi.nlm.nih.gov/1996985/),
+“normal P-protein cDNA was expressed”. The specific glycine-cleavage process subsumes
+the three broader metabolic/catabolic terms, equally across evidence codes. PLP binding
+supports the catalytic core rather than forming a separate binding core.
+
+The five uncertainties concern electron transfer, partial-reaction lyase classification,
+human oligomerization and the two chemical-stimulus responses. Their evidence and limits
+are recorded in the review and [external evidence](GLDC-external-evidence.md).
+The structural deposits and published monomer result concern recombinant preparations;
+the native human assembly remains unresolved. No human response process is inferred solely
+from chicken enzyme inhibition/stimulation or from H-protein lipoylation.
+
+Original annotation contexts, historical source/quotation identities and evidence codes
+remain traceable in [the context archive](GLDC-context-archive.json). No new research-provider
+output was generated for this reassessment.
+
+The earlier listing of 6I34 as human is also superseded: it is a Neanderthal
+construct. Modern-human assembly comparisons here use 6I33 and 6I35.
+
+
+## Review follow-up — 2026-11-06
+
+Rechecked the official GO and InterPro records and read the cited family material.
+The lyase row now records over-annotation; the electron-transfer, homodimer and two
+stimulus-response rows retain explicit uncertainty. Added an InterPro scope query, a neutral UniProt provenance question and
+a biological assembly gap without changing machine evidence, core function or sources.
+The retained UniProt record already carries GO:0030170 and GO:0016594 (glycine binding)
+with GO_Central evidence. Neither observation adds a NEW row to the retained GOA set.
+Family research supplies context, not an independent human oligomer measurement.
+The existing JSON records preserve machine/context provenance; the curation remains YAML.
