@@ -91,13 +91,16 @@ def _cc_blocks(lines: list[str]) -> list[tuple[str, str, bool]]:
 
     for line in lines:
         if line.startswith("case ") or line.startswith("case<"):
-            flush(); topic = None
+            flush()
+            topic = None
             depth += 1
         elif line.startswith("end case"):
-            flush(); topic = None
+            flush()
+            topic = None
             depth -= 1
         elif line.startswith("else"):
-            flush(); topic = None
+            flush()
+            topic = None
         elif line.startswith("CC   -!- "):
             flush()
             head = line[9:]
@@ -107,7 +110,8 @@ def _cc_blocks(lines: list[str]) -> list[tuple[str, str, bool]]:
         elif line.startswith("CC       ") and topic is not None:
             text.append(line[9:].strip())
         else:
-            flush(); topic = None
+            flush()
+            topic = None
     flush()
     return blocks
 

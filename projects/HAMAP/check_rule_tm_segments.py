@@ -11,9 +11,15 @@ heuristic, not a test: flagged entries still need review.
 
 Data come live from UniProt REST, so counts change between releases.
 
+Per segment, the test is noisy for multi-pass families, whose weaker helices
+can fall below the threshold. The MF_01093 failure is an entry with no
+hydrophobic rule-assigned segment at all, so ``--summarise`` reports, per
+rule, the entries whose every rule-assigned segment is below the threshold.
+
 Usage:
     python projects/HAMAP/check_rule_tm_segments.py MF_01093 [MF_... ...] > out.tsv
     python projects/HAMAP/check_rule_tm_segments.py --from-scan projects/HAMAP/hamap_rule_scan.yaml > out.tsv
+    python projects/HAMAP/check_rule_tm_segments.py --summarise out.tsv > summary.yaml
 """
 
 from __future__ import annotations
@@ -90,8 +96,37 @@ def rules_from_scan(path: Path) -> list[str]:
     return [r["rule"] for r in d["candidates"]["rules"]]
 
 
+def summarise(tsv: Path) -> dict:
+    """Per rule: entries, segments, and entries with no hydrophobic rule segment."""
+    from collections import defaultdict
+
+    by_entry: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    with tsv.open() as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            by_entry[(row["rule"], row["accession"])].append(row)
+    out: dict[str, dict] = {}
+    for (rule, acc), segs in sorted(by_entry.items()):
+        r = out.setdefault(rule, {"entries": 0, "segments": 0, "segments_below_threshold": 0,
+                                  "entries_without_hydrophobic_segment": []})
+        r["entries"] += 1
+        r["segments"] += len(segs)
+        r["segments_below_threshold"] += sum(s["below_threshold"] == "True" for s in segs)
+        if all(s["below_threshold"] == "True" for s in segs):
+            r["entries_without_hydrophobic_segment"].append({
+                "accession": acc, "reviewed": segs[0]["reviewed"], "organism": segs[0]["organism"],
+                "length": int(segs[0]["length"]),
+                "segments": [f"{s['start']}-{s['end']} ({s['mean_kd']})" for s in segs],
+            })
+    return {"threshold": THRESHOLD, "rules": out}
+
+
 def main(argv: list[str]) -> None:
-    """Print one TSV row per rule-assigned TRANSMEM segment."""
+    """Print one TSV row per rule-assigned TRANSMEM segment, or a summary."""
+    if argv[0] == "--summarise":
+        import yaml
+
+        yaml.safe_dump(summarise(Path(argv[1])), sys.stdout, sort_keys=False, width=100)
+        return
     rules = rules_from_scan(Path(argv[1])) if argv[0] == "--from-scan" else argv
     w = csv.writer(sys.stdout, delimiter="\t", lineterminator="\n")
     w.writerow(["rule", "accession", "reviewed", "organism", "length", "start", "end",
