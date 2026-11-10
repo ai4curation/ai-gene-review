@@ -7,7 +7,7 @@
 - **Protein Length:** 259 aa (29,009 Da); ABC transporter nucleotide-binding domain at residues 13–254 (`PROSITE:PS50893` `ABC_TRANSPORTER_2`, `Pfam:PF00005` `ABC_tran`, `CDD:cd03260` `ABC_PstB_phosphate_transporter`).
 - **Specific Family & Active-Site Conservation:**
   - `InterPro:IPR005670` (`PstB-like`), `NCBIfam:TIGR00972` (`3a0107s01c2`), `PANTHER:PTHR43423:SF3` (`PHOSPHATE IMPORT ATP-BINDING PROTEIN PSTB`).
-  - Conserves the Walker A P-loop ATP-binding motif at residues 45–52 (`45-GPSGCGKS-52`, `FT BINDING 45..52 /ligand="ATP"`) containing `Gly50` and `Lys51` (corresponding to *E. coli* PstB `Gly48` and `Lys49`, whose mutation abolishes Pst phosphate transport and causes constitutive alkaline phosphatase derepression in `PMID:2646285`), the ABC signature motif `146-LSGGQQQRLCIAR-158` (`PROSITE:PS00211`), the Walker B catalytic glutamate `Glu172` (in `167-VLLLDEPCSALD-178`), and the H-loop switch histidine `His204`.
+  - Conserves the Walker A P-loop ATP-binding motif at residues 45–52 (`45-GPSGCGKS-52`, `FT BINDING 45..52 /ligand="ATP"`) containing `Gly50` and `Lys51` (corresponding to *E. coli* PstB `Gly48` and `Lys49`, whose mutation abolishes Pst phosphate transport and causes constitutive alkaline phosphatase derepression in `PMID:2646285`), the ABC signature motif `156-LSGGQQQRLCIAR-168` (`PROSITE:PS00211`), the Walker B catalytic glutamate `Glu181` (in `176-VLLLDEPCSALD-187`), and the H-loop switch histidine `His212`.
 
 ## 2. Operon Context on Contig `JZWI01000005`
 - Encoded immediately between `phoU` (`VPARA_10440`, `KLN58032.1`) and `pstA` (`VPARA_10460`, `KLN58034.1`) within the `phoR1-phoB1-phoU-pstB-pstA-pstC-pstS-ppx` (`VPARA_10420`–`VPARA_10490`) phosphate regulon gene cluster.

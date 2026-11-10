@@ -19,7 +19,7 @@
   - `VPARA_10460` (`KLN58034.1`, `pstA`, `A0A0H2M6I3`): Phosphate transport system permease protein PstA (294 aa)
   - `VPARA_10470` (`KLN58035.1`, `pstC`, `A0A0H2MMT5`): Phosphate transport system permease protein PstC (359 aa)
   - `VPARA_10480` (`KLN58036.1`, `pstS`, `A0A0H2M7F6`): Periplasmic phosphate-binding protein PstS (345 aa)
-  - `VPARA_10490` (`KLN58037.1`, `ppx`, `A0A0H2M767`): Exopolyphosphatase Ppx (510 aa, curated in Tranche 3)
+  - `VPARA_10490` (`KLN58037.1`, `ppx`, `A0A0H2MBK5`): Exopolyphosphatase Ppx (506 aa, curated in Tranche 3)
 
 ## 3. Literature & Comparative Evidence
 - **[PMID:2215649]** (Luecke & Quiocho 1990 *Nature*): 1.7 Å crystal structure of *E. coli* periplasmic phosphate-binding protein PstS showing how the hinged two-domain cleft coordinates tetrahedral orthophosphate via 12 hydrogen bonds and an aspartate carboxylate that confers strict selectivity against sulfate.
@@ -27,7 +27,7 @@
 - **[PMID:24563032]** (Gardner et al. 2014 *J Bacteriol*): Synthesizes the mechanism of the PstSCAB-PhoU-PhoRB complex in high-affinity $\text{P}_i$ uptake and $\text{P}_i$-sufficiency signaling.
 
 ## 4. Annotation Review Decisions
-- `GO:0042301` (`phosphate ion binding`, IEA `GO_REF:0000002`): **ACCEPT** — core molecular function of periplasmic PstS.
+- `GO:0042301` (`phosphate ion binding`, IEA `GO_REF:0000002`): **ACCEPT** — core molecular function of periplasmic PstS (with `contributes_to_molecular_function: GO:0015415` `ATPase-coupled phosphate ion transmembrane transporter activity` on `core_functions`).
 - `GO:0035435` (`phosphate ion transmembrane transport`, IEA `GO_REF:0000002`): **ACCEPT** — core biological process; PstS captures orthophosphate in the periplasm and delivers it to the PstCA permease channel.
 - `GO:0043190` (`ATP-binding cassette (ABC) transporter complex`, IEA `GO_REF:0000002`): **MODIFY** -> `GO:0055052` (`ATP-binding cassette (ABC) transporter complex, substrate-binding subunit-containing`) — refines the generic ABC transporter complex term to the specific child complex that includes the periplasmic substrate-binding subunit (matching `ECOLI/pstS`, `ECOLI/pstC`, `ECOLI/pstA`, `ECOLI/pstB`).
 - `GO:0030288` (`outer membrane-bounded periplasmic space`, IC from `file:VARPD/pstS/pstS-uniprot.txt`): **NEW** — *V. paradoxus* is a diderm Betaproteobacterium and VPARA_10480 carries a canonical 24-aa SignalP signal peptide (`FT SIGNAL 1..24`) for export of mature PstS (`25..345`) to the outer membrane-bounded periplasmic space.

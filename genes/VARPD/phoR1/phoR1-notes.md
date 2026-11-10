@@ -8,7 +8,7 @@
 - **Domain Architecture & Active Sites:**
   - N-terminal transmembrane anchor (`FT TRANSMEM 29..45` / PhoR N-terminal transmembrane domain `Pfam:PF11808` `PhoR`, `InterPro:IPR021766` `PhoR_N`).
   - Cytoplasmic Per-ARNT-Sim (PAS) sensory domain (`Pfam:PF00989` `PAS`, `CDD:cd00130`, `InterPro:IPR000014` / `IPR013767`), which directly interacts with PhoU (`VPARA_10440`) to sense the PstSCAB phosphate-transport state (`PMID:24563032`).
-  - Histidine kinase dimerization/phosphoacceptor (DHp, `HisKA`, `Pfam:PF00512`, `CDD:cd00082`, `InterPro:IPR003661`) and catalytic ATP-binding (`HATPase_c`, `Pfam:PF02518`, `InterPro:IPR003594`) domains (`FT DOMAIN 216..436 /note="Histidine kinase"`, `PROSITE:PS50109`), with the invariant autocatalytic phosphohistidine acceptor `His219` (`FT MOD_RES 219 /note="Phosphohistidine; by autocatalysis"` within `215-NVSHEIRTPL-224`).
+  - Histidine kinase dimerization/phosphoacceptor (DHp, `HisKA`, `Pfam:PF00512`, `CDD:cd00082`, `InterPro:IPR003661`) and catalytic ATP-binding (`HATPase_c`, `Pfam:PF02518`, `InterPro:IPR003594`) domains (`FT DOMAIN 216..436 /note="Histidine kinase"`, `PROSITE:PS50109`), with the invariant autocatalytic phosphohistidine acceptor `His219` (`FT MOD_RES 219 /note="Phosphohistidine; by autocatalysis"` within `216-NVSHEIRTPL-225`).
   - Full-length orthology: `NCBIfam:TIGR02966` (`phoR_proteo`), `InterPro:IPR014310` (`Sig_transdc_His_kinase_PhoR`), `PANTHER:PTHR45453:SF1` (`PHOSPHATE REGULON SENSOR PROTEIN PHOR`).
 
 ## 2. Operon Context on Contig `JZWI01000005`

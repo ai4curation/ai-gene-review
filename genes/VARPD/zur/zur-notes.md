@@ -13,7 +13,7 @@
 
 ## 2. Note on Automated RuleBase / PIRSR Fur-Superfamily Conflation
 - Because `VPARA_33720` belongs to the Fur superfamily (`InterPro:IPR002481`), automated UniProt rules `RuleBase:RU364037` and `PIRSR:PIRSR602481-2` assigned the generic family name `RecName: Full=Ferric uptake regulation protein` (`Synonyms=fur`) and `Name=Mn(2+)` / `Name=Fe(2+)` cofactor binding at `His90` and `His125`.
-- However, the WGS genome annotation (`EMBL:KLN55348.1`) specifically identifies `VPARA_33720` as `zur` (zinc uptake regulator), `PANTHER:PTHR33202` classifies it under `ZINC UPTAKE REGULATION PROTEIN`, and *V. paradoxus* TBEA6 encodes its dedicated ferric uptake regulator `fur1` at `VPARA_18200` (`A0A0H2M8T9`, curated in Tranche 4). Record a `source_defects` (`CONFLATION` on `UNIPROT`) on `file:VARPD/zur/zur-uniprot.txt`!
+- However, the WGS genome annotation (`EMBL:KLN55348.1`) specifically identifies `VPARA_33720` as `zur` (zinc uptake regulator), `PANTHER:PTHR33202:SF14` (`PTHR33202`) classifies it under `ZINC UPTAKE REGULATION PROTEIN`, and *V. paradoxus* TBEA6 encodes its dedicated ferric uptake regulator `fur1` at `VPARA_18200` (`A0A0H2M8T9`, curated in Tranche 4). Record a `source_defects` (`WRONG_STATEMENT`) on `file:VARPD/zur/zur-uniprot.txt`!
 
 ## 3. Annotation Review Decisions
 - Matching our curation of `fur1` (`A0A0H2M8T9`, `VPARA_18200`):
