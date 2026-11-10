@@ -112,10 +112,14 @@ Cases worth knowing:
   in a mega-rule: helicases, superoxide dismutase, UMP biosynthesis, spliceosome
   components, isoprenoid metabolism (64 of 94 sets sound, human subset fully
   correct) and the mitochondrion rule (TOM40, MIC60, COX subunits).
-- **Heterogeneous consequents.** ARBA00028655 assigns phosphatidylinositol
-  biosynthesis from 25 condition sets, of which 2 identify PI synthase; the
-  rest are PI kinases, phosphatases and GPI-anchor enzymes. ARBA00004218 assigns
-  acrosome to 35 families including epithelial sodium channels and complement.
+- **Heterogeneous consequents.** Two rules were listed here and neither holds
+  up. ARBA00028655 (phosphatidylinositol biosynthesis on PI kinases and
+  phosphatases) reproduces curated annotations made directly to that term by
+  Reactome and MGI, so the heterogeneity is in the curated annotations, not the
+  rule; one of its eleven live sets is defective. ARBA00004218 (acrosome on
+  epithelial sodium channels and complement regulators) matches proteins such
+  as CD46 and DLD that Swiss-Prot locates in the acrosome on experimental
+  evidence.
 - **Logic errors.** ARBA00047244 ANDs three urease signatures that sit on
   separate bacterial subunits, so at most 10 of 851 ureases match.
 - **One signature, two consequents.** CATH FunFam `3.40.50.720:FF:000041`
@@ -284,9 +288,10 @@ inventory is in
 
 An audit on 2026-11-09 re-derived the facts behind all 78 rule reviews from
 UniProt, InterPro and QuickGO. In about 45 the recommended action did not follow
-from the evidence. Three were sound in their reasoning (ARBA00067001,
-ARBA00052213, ARBA00028655), though ARBA00028655 describes an older version of
-its rule. The recurring errors:
+from the evidence. Two were sound as written (ARBA00067001, ARBA00052213).
+ARBA00028655, at first counted as sound, argued from the GO hierarchy without
+looking up the matched proteins, which carry the term on curated evidence, and
+described an older version of its rule; it was redone. The recurring errors:
 
 - **Size as evidence.** About 40 reviews treated the number of condition sets as
   evidence that annotations were false. The "limit of 12" they cite is the
@@ -307,18 +312,18 @@ its rule. The recurring errors:
 - **Own notes as literature.** `literature_support: CONTRADICTED` was often backed
   only by the review's own research file.
 
-The reviews were corrected on 2026-11-10: 74 were rewritten (ARBA00026799 and
-ARBA00045851 after a PR review showed they still rested on the reviewer's own
+The reviews were corrected on 2026-11-10: 75 were rewritten (ARBA00026799,
+ARBA00045851 and ARBA00028655 after a PR review showed they still rested on the reviewer's own
 notes and an unread GitHub issue) and one empty placeholder was reset. Each records the condition sets it examined from the rule
 as UniProt served it on 2026-11-09, has the unsupported claims removed, lists
-what was withdrawn under `corrections` with the refuting evidence (365 entries),
+what was withdrawn under `corrections` with the refuting evidence (366 entries),
 and carries an action the evidence supports.
 
 | Action | Before | After |
 |---|---:|---:|
 | ACCEPT | 3 | 30 |
-| MODIFY | 26 | 11 |
-| SPLIT | 2 | 1 |
+| MODIFY | 26 | 12 |
+| SPLIT | 2 | 0 |
 | DEPRECATE or REMOVE | 46 | 6 |
 | UNDECIDED | 1 | 30 |
 
@@ -340,7 +345,8 @@ What the new verdicts mean, and do not mean:
   endopeptidase activity to BMP1/TLL metalloproteases from a Reactome TAS;
   ARBA00028131 set 14 is one InterPro entry matching 56,399 unreviewed entries
   whose reviewed members carry the term only from this rule; ARBA00004173 has
-  three sets matching chloroplast ATP synthase subunits.
+  three sets matching chloroplast ATP synthase subunits; ARBA00028655 set 11
+  puts phosphatidylinositol biosynthesis on Lst2 FYVE proteins.
 
 Corrections by kind of error (one review can have several):
 
@@ -352,7 +358,7 @@ Corrections by kind of error (one review can have several):
 | Size as evidence | 36 |
 | Conjunction ignored | 32 |
 | Taxon conditions misread | 30 |
-| Refuted by curated annotation | 29 |
+| Refuted by curated annotation | 30 |
 | General treated as wrong | 25 |
 | Ontology misread | 21 |
 | Stale rule version | 22 |

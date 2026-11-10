@@ -223,3 +223,27 @@ def test_alleged_false_positive_with_experimental_annotation() -> None:
     """ESA1 was called a false positive for GO:0010629; SGD annotates a descendant by IMP."""
     rows = experimental_annotations("Q08649", "GO:0010629")
     assert any("GO:0000183" in row for row in rows)
+
+
+RULE_REVIEWS = sorted((Path(__file__).resolve().parents[1] / "rules").rglob("*-review.yaml"))
+
+
+@pytest.mark.parametrize("review_file", RULE_REVIEWS, ids=lambda path: path.parent.name)
+def test_committed_rule_reviews_pass_offline_receipt_checks(review_file: Path) -> None:
+    """Every committed rule review keeps its receipts.
+
+    The schema check and ``rules-validate`` are run by hand or by the authoring
+    hook; this test is what makes a later edit that drops a confidence, a rule
+    snapshot or a correct label fail in CI. If a label error appears after an
+    InterPro or GO rename, refresh the cache with ``--refresh-labels``.
+    """
+    from ai_gene_review.validation.rule_review_receipts import validate_rule_review_receipts
+
+    report = ValidationReport(file_path=review_file, is_valid=True)
+    validate_rule_review_receipts(review_file, report)
+    errors = [str(issue) for issue in report.issues if issue.is_error()]
+    assert not errors, "\n".join(errors)
+
+
+def test_rule_reviews_were_found() -> None:
+    assert len(RULE_REVIEWS) >= 78

@@ -519,14 +519,14 @@ window.searchData = [
       "IPR023753 (FAD/NAD(P)-binding domain)"
     ],
     "funfam_ids": [
-      "3.50.50.60:FF:000064 (Thioredoxin reductase)",
       "3.50.50.60:FF:000190 (Thioredoxin reductase)",
-      "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)"
+      "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)",
+      "3.50.50.60:FF:000064 (Thioredoxin reductase)"
     ],
     "condition_types": [
-      "FunFam id",
+      "InterPro id",
       "taxon",
-      "InterPro id"
+      "FunFam id"
     ],
     "parsimony_assessment": null,
     "literature_support": "STRONG",
@@ -1226,12 +1226,12 @@ window.searchData = [
   {
     "id": "ARBA00028655",
     "rule_id": "ARBA00028655",
-    "description": "Assigns GO:0006661 \"phosphatidylinositol biosynthetic process\" to proteins matching any of 25 alternative condition sets built from InterPro entries, CATH FunFams and taxon constraints. Only two of the 25 sets (CS18, CS19) identify the enzyme that actually makes phosphatidylinositol - CDP-diacylglycerol--inositol 3-phosphatidyltransferase (CDIPT/PIS, EC 2.7.8.11). The remaining 23 sets capture phosphoinositide kinases, phosphoinositide phosphatases, non-catalytic PI3K/VPS34 regulatory subunits, GPI-anchor pathway enzymes, DPM1, and two promiscuous structural folds - all of which act on, consume or are merely adjacent to PI rather than synthesising it.",
-    "review_summary": "ARBA00028655 is a wrong-branch, near-total-false-positive rule. GO:0006661 is effectively a leaf term denoting formation of the unphosphorylated phosphatidylinositol molecule itself (CDP-diacylglycerol + myo-inositol -> PI + CMP, EC 2.7.8.11). Only condition sets 18 and 19 (CATH FunFams 1.20.120.1760:FF:000003 in Vertebrata and :FF:000021 in Fungi, both CDIPT/PIS) identify that enzyme. The other 23 condition sets identify PI3K/PI4K/PIP5K/PIP4K catalytic subunits (11 sets), phosphoinositide phosphatases (4 sets), GPI-anchor and dolichol-phosphate-mannose pathway enzymes (5 sets: PIGN, PIGL, PIGO, PGAP5/MPPE1, DPM1), and two non-catalytic regulatory subunits (PIK3R1/p85-alpha, UVRAG). Crucially, the phosphoinositide branch is a SIBLING of GO:0006661, not a descendant: the QuickGO ancestor closure of GO:0046854 \"phosphatidylinositol phosphate biosynthetic process\" (checked 2026-08-15) does not contain GO:0006661 - the two terms first meet at GO:0046474 glycerophospholipid biosynthetic process. So these are not over-broad annotations a curator could refine downward; they are simply in the wrong subtree. A QuickGO census on 2026-08-15 found 4,782 GO:0006661 / ECO:0000256 / GO_REF:0000117 annotations attributed to ARBA00028655; in a stratified sample of 1,000 accessions only 8 (0.8%) were CDIPT/PIS, while 63.8% were myotubularin-family phosphoinositide 3-phosphatases and one hit was cytochrome b-c1 complex subunit 9 (UQCR10), a pure domain-promiscuity artifact. In the human subset (169 annotations, enumerated exhaustively) only 3 (1.8%) are PI synthase. Taxon constraints are biologically unmotivated (Homo-only INPPL1, Mus-only PIP5K1C, Catarrhini-only \"Kinase\"), and eight sets - including the DPM1 set that produced the S. pombe dpm1 annotation queried in geneontology/go-annotation#5835 - carry no taxon constraint at all. The rule is also incomplete in the one direction that would help: no condition set targets CDS1/CDS2, the other family legitimately part of de novo PI biosynthesis.",
-    "action": "SPLIT",
+    "description": "Assigns GO:0006661 (phosphatidylinositol biosynthetic process) from eleven alternative condition sets covering PI synthase, phosphoinositide kinases and phosphatases, and two lipid-transfer protein families.",
+    "review_summary": "All eleven condition sets of the rule as served on 2026-11-10 were queried in UniProtKB, and the reviewed matches of each were looked up in QuickGO. Sets 8 and 9 select PI synthase, the enzyme that forms phosphatidylinositol. Sets 1 to 7 and 10 select phosphoinositide kinases, phosphatases and transfer proteins. In every one of those sets the reviewed human, mouse or Arabidopsis members carry GO:0006661 itself on curated evidence: Reactome TAS from the pathways R-HSA-1660499, R-HSA-1660516, R-HSA-1483248 and R-HSA-1483226, MGI IDA and IGI for the mouse PIP5K1 kinases (PMID:20622009), and TIGR TAS for the plant PI 4-kinases. The rule therefore reproduces what curators annotated, and transfers it to orthologs. Set 11 is the exception: its FunFam is the FYVE zinc finger, and besides MTMR3 and MTMR4 it matches Lst2 homologs, which have no phosphatase domain and carry the term only from this rule.",
+    "action": "MODIFY",
     "status": "COMPLETE",
-    "confidence": 0.95,
-    "num_condition_sets": 25,
+    "confidence": 0.7,
+    "num_condition_sets": 11,
     "num_entries": 0,
     "go_terms": [
       {
@@ -1248,7 +1248,7 @@ window.searchData = [
     "interpro_ids": [],
     "funfam_ids": [],
     "condition_types": [],
-    "parsimony_assessment": "OVERLY_COMPLEX",
+    "parsimony_assessment": null,
     "literature_support": null,
     "review_link": "../ARBA00028655/ARBA00028655-review.html",
     "is_reviewed": true
