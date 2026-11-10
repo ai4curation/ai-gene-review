@@ -260,15 +260,20 @@ _AUTHOR = re.compile(
     r"(?:\(\d+(?:,\d+)*\))*"
 )
 # A group author in a byline ("ADHR Consortium", "GTEx Consortium").
-_GROUP_AUTHOR = re.compile(
-    # Words that are unambiguous as group authors match in any case ("GERAD
-    # consortium"); "Collective Author" is NCBI's placeholder for an unnamed
-    # group. Ordinary words (group, study, network, ...) must be capitalised, so
-    # a sentence such as "In the pilot study, ..." is not read as a byline.
-    r"(?:The )?[\w'.\- ]*\b(?:(?i:Consortium|Collaborators|Investigators|Committee|"
-    r"Collective Author)|Group|Network|Team|Study|Studies|Project|Program|"
-    r"Programme|Initiative)"
-    r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
+_GROUP_WORDS = (
+    r"Consortium|Collaborators|Investigators|Committee|Collective Author|Group|"
+    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative"
+)
+_GROUP_TAIL = r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
+# A group author in a byline ("ADHR Consortium", "GTEx Consortium"); "Collective
+# Author" is NCBI's placeholder for an unnamed group. The group word must be
+# capitalised, so a sentence such as "In the pilot study, ..." is not a byline.
+_GROUP_AUTHOR = re.compile(rf"(?:The )?[\w'.\- ]*\b(?:{_GROUP_WORDS}){_GROUP_TAIL}")
+# PubMed puts a group author after a semicolon. There, and only there, an
+# unambiguous group word may be lower case ("Lambert JC; GERAD consortium").
+_GROUP_AFTER_SEMICOLON = re.compile(
+    rf"(?:The )?[\w'.\- ]*\b(?i:Consortium|Collaborators|Investigators|Committee|"
+    rf"Collective Author){_GROUP_TAIL}"
 )
 
 
@@ -296,13 +301,23 @@ def _is_author_list(paragraph: str) -> bool:
     False
     >>> _is_author_list("In the pilot study, cells were analyzed by FACS.")
     False
+    >>> _is_author_list("In the consortium analysis, samples were typed by PCR.")
+    False
     """
     # PubMed separates a trailing group author with a semicolon:
     # "... Brooks-Wilson A; Ovarian Cancer Association Consortium."
-    items = re.split(r"[,;] ", paragraph.rstrip("."))
-    if items[-1] in {"et al", "et al."}:
+    parts = re.split(r"([,;]) ", paragraph.rstrip("."))
+    # parts alternates item, separator, item, ...; pair each item with the
+    # separator before it.
+    items = list(zip(parts[::2], [None, *parts[1::2]]))
+    if items[-1][0] in {"et al", "et al."}:
         items = items[:-1]
-    people = [i for i in items if not _GROUP_AUTHOR.fullmatch(i)]
+    people = [
+        item
+        for item, sep in items
+        if not _GROUP_AUTHOR.fullmatch(item)
+        and not (sep == ";" and _GROUP_AFTER_SEMICOLON.fullmatch(item))
+    ]
     # A byline names at least one person; a lone group name is not enough to
     # tell it from a sentence.
     return bool(people) and all(_AUTHOR.fullmatch(i) for i in people)

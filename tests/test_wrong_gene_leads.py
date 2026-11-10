@@ -375,6 +375,8 @@ def test_undelimited_full_text_contributes_title_only():
         # Ordinary words are not group authors unless capitalised.
         ("In the pilot study, cells were analyzed by FACS.", False),
         ("The network model, inputs were scaled by CNTF.", False),
+        # A lowercase group word counts only after a semicolon, as in PubMed.
+        ("In the consortium analysis, samples were typed by PCR.", False),
         # Unambiguous group words match in any case.
         ("Harold D, Lambert JC; GERAD consortium.", True),
         ("Earp MA(1), Kelemen LE; Australian Cancer Study; Lu Y.", True),
