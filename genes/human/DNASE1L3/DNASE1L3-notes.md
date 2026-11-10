@@ -48,6 +48,15 @@ Decisions:
 - No immune-process term such as tolerance: the anti-DNA response in deficient mice is carried out by B cells, pDCs and TLRs [PMID:32454024 "anti-DNA responses in Dnase1l3-/- mice require CD40L-mediated T cell help"], not by DNASE1L3.
 - Proposed new term "extracellular DNA catabolic process". GO cannot say *where* DNA is degraded, and that location is the whole point of DNASE1L3: plasma DNA [PMID:30593563 "DNASE1L3 plays a role in circulating plasma DNA homeostasis by enhancing fragmentation and influencing end-motif frequencies"], microparticles, NETs and now the cell surface.
 
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IDA (PMID:23229555) and IEA (GO_REF:0000044, SL-0095), both `located_in`; no ER sub-compartment rows.
+
+- UniProt ER line is curated: "Endoplasmic reticulum {ECO:0000269|PubMed:23229555}" (file:human/DNASE1L3/DNASE1L3-uniprot.txt).
+- PMID:23229555 (Errami et al. 2013; abstract only in cache and through the PubMed tool): [PMID:23229555 "In HT-29 cells, endogenous DNAS1L3 localized to the endoplasmic reticulum (ER) and translocated to the nucleus upon apoptosis induction but prior to INDF manifestation"].
+- Sequence: SIGNAL 1..20, soluble chain 21..305, no KDEL-type C-terminus (ends ...KSKRS, the basic region 284-305 needed by similarity for activity on liposome-coated DNA; not a di-lysine signal, which needs a cytosolic tail). Also secreted (PMID:9714828 per UniProt).
+- Outcome: both rows KEEP_AS_NON_CORE held (endogenous protein in a native cell, ADIPOQ rule). No NEW lumen row: one line (signal peptide) against secretion and an ER-to-nucleus move; stays at the root.
+
 ## 2026-11-07 — review round 1: the B-cell substrate was overstated, and a duplicate core function
 
 Two blocking items, both taken. The first is the one worth recording, because the file already contained the correction and I ignored it.

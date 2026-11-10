@@ -1,0 +1,36 @@
+# E. coli ssuA: manual source-based review
+
+SsuA is the periplasmic substrate-binding component of the Escherichia coli SsuABC alkanesulfonate importer. It supplies substrate recognition to the SsuC membrane permease and SsuB ATP-binding component, supporting uptake of alternative sulfur sources during sulfate limitation. Native deletion and complementation experiments distinguish this system from the related taurine transporter; SsuA is not an independently ATP-driven membrane pump.
+
+## Evidence and decisions
+
+- Row 1, GO:0006790 (IGI; PMID:10506196): **ACCEPT**. The original operon-deletion phenotype in PMID:10506196 is complemented by the component-resolved uptake genetics in PMID:10781534. ssuA performs periplasmic substrate recognition in the sulfur-scavenging system, rather than merely being consumed by it. Retain the informative pathway-level sulfur-metabolism claim; uptake does not itself establish a bond-cleaving catabolic activity for this subunit.
+- Row 2, GO:0006790 (IGI; PMID:10506196): **ACCEPT**. The original operon-deletion phenotype in PMID:10506196 is complemented by the component-resolved uptake genetics in PMID:10781534. ssuA performs periplasmic substrate recognition in the sulfur-scavenging system, rather than merely being consumed by it. Retain the informative pathway-level sulfur-metabolism claim; uptake does not itself establish a bond-cleaving catabolic activity for this subunit.
+- Row 3, GO:0010438 (NAS; PMID:10781534): **ACCEPT**. The sulfur-starvation response includes execution of alternative-sulfur uptake by SsuABC, supported by native genetics and operon regulation. This is not a claim that the transporter is the Cbl transcriptional sensor or regulator.
+- Row 4, GO:0016020 (IEA; GO_REF:0000002): **MODIFY**. The primary transport study identifies a signal sequence and periplasmic binding-protein role, independently supported by the curated periplasm annotation. The broad membrane row is corrected laterally to the supported periplasmic compartment; association with a membrane transport complex is not evidence that SsuA is an integral membrane protein.
+- Row 5, GO:0016020 (NAS; PMID:10781534): **MODIFY**. The primary transport study identifies a signal sequence and periplasmic binding-protein role, independently supported by the curated periplasm annotation. The broad membrane row is corrected laterally to the supported periplasmic compartment; association with a membrane transport complex is not evidence that SsuA is an integral membrane protein.
+- Row 6, GO:0030288 (RCA; PMID:10506196): **ACCEPT**. The primary transport study identifies a signal sequence and periplasmic binding-protein role, independently supported by the curated periplasm annotation. The outer-membrane-bounded periplasm is the precise cellular compartment in E. coli, already represented in this review.
+- Row 7, GO:0042597 (IEA; GO_REF:0000044): **MODIFY**. The primary transport study identifies a signal sequence and periplasmic binding-protein role, independently supported by the curated periplasm annotation. The outer-membrane-bounded periplasm is the precise cellular compartment in E. coli, already represented in this review.
+- Row 8, GO:0042626 (IEA; GO_REF:0000002): **MODIFY**. The ATP-coupled transport class is supported for the SsuABC system, but the alkanesulfonate-specific descendant already represented in this review is more informative. SsuA supplies substrate recognition rather than ATP hydrolysis.
+- Row 9, GO:0042918 (EXP; PMID:10781534): **ACCEPT**. PMID:10781534 tests native in-frame deletions and complementation, with SsuABC substrate specificity distinct from TauABC. ssuA executes periplasmic substrate recognition within that importer. This supports transmembrane transport without treating the subunit as independently sufficient.
+- Row 10, GO:0042959 (EXP; PMID:10781534): **ACCEPT**. The native deletion/complementation evidence in PMID:10781534 establishes the SsuABC transport system and its substrate range. ssuA contributes periplasmic substrate recognition; the accepted activity is interpreted at the functional complex level, not as isolated-subunit transport. The core explicitly records this component contribution. Ordinary machine relationship fields are preserved.
+- Row 11, GO:0055052 (NAS; PMID:10781534): **ACCEPT**. The component-specific genetic experiments support ssuA as a member of the SsuABC system. The periplasmic binding protein, membrane permease and ATP-binding component are distinguished in the primary text. Exact subunit copy numbers were inferred by analogy and are not claimed as directly determined here.
+
+## Acquisition and provenance
+
+All original ordered annotation payloads and both raw files are retained. No NEW annotations were proposed. The genuine Falcon and perplexity-lite attempts failed authentication; actual FEBA attempts returned no usable mapped data (foundation job logs). These failures are not evidence about function. Publication caches were read as retrieved, never hand-edited. Primary abstracts are distinguished from normally recovered full PMC URL text. No GOA assertion or protein name is cited as biological support. Ordinary relationship fields were not used to reject a complex contribution.
+
+PMID:10781534 full text was read at https://pmc.ncbi.nlm.nih.gov/articles/PMC101965/. Native E. coli EC1250 deletions and complementation support the assembled importer, not individual ATP-independent transport. Hybrid Tau/Ssu component combinations failed for tested shared substrates; this does not establish all cross-species combinations fail. Residual propanesulfonate/butanesulfonate entry in double deletions is an unresolved alternative uptake mechanism. Predicted homodimeric transporter subunits are not treated as measured stoichiometry. PMID:10506196 is an operon-level deletion/regulation study.
+
+## Source findings
+
+- [url:https://pmc.ncbi.nlm.nih.gov/articles/PMC101965/] SsuABC uptake supplies organosulfur compounds for cellular sulfur metabolism. “Based on the results from growth experiments and on sequence data, we postulate that TauABC and SsuABC form two distinct ABC transporters for uptake of alkanesulfonates.”
+- [url:https://pmc.ncbi.nlm.nih.gov/articles/PMC101965/] SsuABC uptake supplies organosulfur compounds for cellular sulfur metabolism. “As documented by the mechanisms regulating gene expression in these systems, they both are involved in scavenging sulfur for growth.”
+- [PMID:10480865] SsuABC mediates adaptive sulfur-source acquisition during sulfur limitation. “The Escherichia coli ssuEADCB gene cluster is required for the utilization of
+alkanesulfonates as sulfur sources, and is expressed under conditions of sulfate
+or cysteine starvation.”
+- [file:ECOLI/ssuA/ssuA-uniprot.txt] SsuA functions in the Gram-negative periplasm. “Periplasm {ECO:0000305}.”
+
+### PR 5593 source-audit follow-up (2026-10-26)
+
+Recovered full texts are cited through unchanged local publication files so verbatim quotes are checked. All original annotation payloads, actions and source-cache bytes are preserved.

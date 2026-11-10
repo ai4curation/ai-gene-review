@@ -130,3 +130,22 @@
   single isoform would misstate the GOA row. Left as prose.
 - Also corrected an older line above: the cytoplasm rows are TOO_GENERAL in the review
   file (entailed by axoneme), not KEEP_AS_NON_CORE.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 EXP PMID:12223483, EXP PMID:15863901, IEA GO_REF:0000044 (SL-0173). No
+sub-compartment rows. All three were already MARK_AS_OVER_ANNOTATED; re-checked and kept.
+
+- The deciding point is the isoform. PMID:15863901 (abstract only, cached): "While AAT-1L and
+  AAT-1M were found to be localized diffusely in the cytoplasm, AAT-1S, like AAT-1alpha, was
+  found to be localized in the mitochondria-like structure". UniProt ALTERNATIVE PRODUCTS
+  [file:human/CFAP91/CFAP91-uniprot.txt "Name=7; Synonyms=AAT-1L {ECO:0000303|PubMed:15863901};"]
+  shows isoform 7 is the displayed canonical sequence, i.e. the isoform GOA annotates is the
+  one the abstract calls cytoplasmic. The mitochondrial isoforms (AAT-1alpha, AAT-1S) have no
+  UniProt isoform mapping.
+- PMID:12223483 (abstract only): "AAT-1alpha was found to bind to and be colocalized in
+  mitochondria with AMY-1 in human HeLa and mouse GC-1 cells" - overexpressed short isoform.
+- Endogenous protein is axonemal (sperm, airway cilia). The IEA keyword mapping is correct
+  for the entry, so the IEA row is over-annotated rather than a wrong mapping (no REMOVE).
+- Rule 4: no NEW row; the only sub-mitochondrial hint is AKAP1 (OMM) as a binding partner.
+- No is_active_in rows.

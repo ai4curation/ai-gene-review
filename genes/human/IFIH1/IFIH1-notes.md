@@ -110,3 +110,13 @@ demonstrably binds long viral duplexes; iCLIP reports what MDA5 is crosslinked t
 cell, where viral RNA may be shielded in replication organelles. The authors themselves argue this is
 the resolution rather than a contradiction. I did not find a 2025-26 paper that tests the two models
 against each other directly.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 mitochondrion, IDA PMID:33727702 and IEA GO_REF:0000044 (SL-0173). No sub-compartment rows; qualifier located_in.
+
+Checks:
+- UniProt "Mitochondrion {ECO:0000269|PubMed:33727702}. Note=Upon viral RNA stimulation and ISGylation, translocates from cytosol to mitochondrion." [file:human/IFIH1/IFIH1-uniprot.txt].
+- PMID:33727702 (full text cached): kit-based fractionation, 10,000 g pellet; "Anti-α-tubulin and anti-MAVS immunoblotting served as markers for the cytosolic and mitochondrial fractions, respectively." No ER marker, and MAVS is also on MAM and peroxisomes, so the pellet does not separate mitochondrion from MAM.
+
+Outcome: both rows stay KEEP_AS_NON_CORE; the reason no longer says "outer membrane", which the paper does not show; YAML anchor on supported_by replaced by explicit lists. Stays at root (TRAF3 precedent).

@@ -23,7 +23,9 @@
   IBA from the eukaryotic `PTN000123605` node is a specificity problem rather
   than a bad PAINT transfer, so MODIFY to `GO:0004754`. The exact IDA, IMP, IGI,
   ISS, IEA, and fungal-process IBA rows are all supported. CGD's root `ND`
-  cellular-component row is just a no-data placeholder and should be removed.
+  cellular-component row was first judged a removable placeholder; under the
+  later NO_DATA policy it is accepted, since no Candida localization study was
+  found (see the newer-paper search below).
   The broad PAINT/ARBA cytoplasm rows can stand; unlike budding-yeast Lys1,
   Candida LYS1 has no fetched direct peroxisome evidence or GOA peroxisome row.
 - Newer-paper search: the 2016 Candida lysine-regulation paper showed that

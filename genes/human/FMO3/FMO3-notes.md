@@ -1,0 +1,35 @@
+# FMO3 review notes
+
+## 2026-10-29 — Initial review
+
+Genuine repository fetch produced 23 distinct source contexts, all preserved in the original stored order, with no natural alternative products or original extensions. The three HuRI partner rows remained distinct. Eleven exact-main normal sources were hydrated before fetching the gene; two additional authorized publications and a repository-derived PAINT slice complete the 14-source scope. No cache was rewritten, no provider-named research was authored, and the existing shared runtime and ontology cache were reused.
+
+Applied the annotation-reviewer and core-function-synthesizer criteria, with independent enzyme and binding consultation and an independent check of ER/PAINT provenance. The decisions are nine ACCEPT, nine KEEP_AS_NON_CORE and five MODIFY. The single core is trimethylamine monooxygenase activity at the ER membrane. TMA product formation, cofactor mechanism and adult hepatic emphasis are supported; no dimethylaniline or secondary xenobiotic core, speculative process or NEW annotation is added.
+
+The exact dimethylaniline source assay remains unverified despite authentic PMID:9536088 identity/abstract and credible curated reaction mapping. Actual on-path ancestral evidence supports contextual retention without treating target WITH/FROM as circular. Hypotaurine conversion and taurine participation are supported by human FMO3 baculosomes, while FMO1 knockout/kinetics and physiological dominance remain separate. Albendazole sulfoxidation is a real contextual activity in a mixed hepatic pathway. Human proteins expressed in insect or bacterial hosts retain their actual target identity; engineered substitutions are not natural alternative products.
+
+Five exact human partner contexts are refined using source-specific yeast interaction evidence and established partner classes. CREB3 precursor binding does not establish transcription regulation; CLEC10A association does not establish agonism; SGSM3 and SACM1L partner activities are not assigned to FMO3. The [source guide](FMO3-source-guide.md) records original URLs, exact pair records, assay/access limits, all source hashes and the complete raw-to-stored mapping. No publication quotations were added, following the published campaign instructions.
+
+ER localization is supported by a verified rabbit FMO3 donor and exact human Reactome entities. The FailedReaction title concerns deficient catalysis, not loss of localization. No membrane-side, directly measured topology or universal mutant-abundance inference is made. Selected primary reading and curated source provenance are distinguished throughout the [evidence note](FMO3-source-evidence.md).
+
+Scoped schema/reference/ontology, strict GOA, status, scaffolded history, whitespace and private-render checks follow this authored candidate. Publication requires the separate exact-candidate ROOT review; the existing branches and scratch material remain preserved.
+
+## Validation and independent review
+
+Schema, reference and ontology checks passed without annotation advisories. Strict GOA matching, computed COMPLETE status, scaffolded history validation, private HTML rendering and whitespace checks passed. The PMID helper matched no pathway files and is not claimed to validate these notes. A dependency deprecation warning is separate from annotation quality. The ontology validator added one missing label to its local derived cache; the exact generated row was recorded privately and the original cache bytes restored, with no normal-source change.
+
+Independent canonical review read all 23 reasons, the description, core, questions, all 19 references and all three supporting documents, and confirmed the accepted decisions, replacements and source boundaries. No scientific issue was found. All 23 seed source objects and their order, zero products and zero quotations remain unchanged. All 14 normal sources, 51 prior scratch objects and previous branch pins are preserved. Final history and private rendering were checked after this factual appendix; rendered content/counts and relative/source links were inspected without a pixel-inspection claim.
+
+## Review follow-up — 2026-10-29
+
+The completed PR5720 review raised the CLEC10A term interpretation and several optional refinements. The official receptor-binding definition, synonyms and separate agonist guidance support retaining GO:0005102 for the measured partner class. The revised reason states positive assay evidence first and explicitly leaves physiological encounter unestablished. No native co-expression, shared ER encounter or receptor activation is inferred.
+
+Removed the copied PAINT sentence from the taurine IDA and both hypotaurine non-IBA reasons; the actual taurine IBA explanation remains. Official ancestry checks do not make the TMA or hypotaurine terms children of the dimethylaniline term, so all three dimethylaniline NC decisions and the source-specific access assessment remain. The core already describes bound FAD and NADPH dependence; no redundant cofactor core was added. A concise question records the existing UniProt nicotine reaction for later assessment without a new annotation or source.
+
+See the [source guide](FMO3-source-guide.md#follow-up-receptor-binding-scope-and-reaction-hierarchy) and [evidence note](FMO3-source-evidence.md#follow-up-clarification) for the official ontology URLs and source/assay boundaries. All 23 original source contexts, actions and replacements, 19 references, one core, zero natural alternative products and 14 normal source files remain unchanged. No new quotations or NEW annotations were introduced. Validation and final peer outcomes will be recorded after authoring.
+
+## Follow-up validation - 2026-10-31
+
+The exact independently reviewed proposal was applied without changing any annotation action, replacement, source field, reference, core function, description or normal source. Schema/reference/ontology checks passed with zero annotation advisories; strict GOA matching, computed COMPLETE status, the newly scaffolded Codex history, private HTML rendering and whitespace checks passed. The PMID helper matched no pathway files and is not claimed to validate these notes. A dependency deprecation warning is separate from curation quality. The validator added one local derived label-cache row; its exact addition was recorded and the original cache restored after full-byte comparison. All 14 normal sources remain unchanged.
+
+Independent proposal review read all four revised reasons, the nicotine question and supporting prose against the original record and official ontology evidence. Final source conservation preserves all 23 original contexts and their order, the 19 references, one core, zero natural alternative products and zero quotations. The 51 prior scratch objects and prior branch pins remain preserved. Final history validation and private rendered content, counts and links were checked after this factual appendix; no image or figure-pixel inspection is claimed.

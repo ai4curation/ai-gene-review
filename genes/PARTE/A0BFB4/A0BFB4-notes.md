@@ -25,6 +25,28 @@ Removed limitation/tool-access statements from positive support where applicable
 Read the focused report on the PTHR24348 versus PTHR44167 placement issue. The report supports the same conclusion as the earlier topology snapshot that A0BFB4 is genuinely Atg1/ULK-related rather than misplaced into PTHR24348 by a donor-count artifact. Its new target-relevant argument is narrower: A0BFB4 retains the compact kinase domain but lacks the canonical C-terminal Atg1 interaction module, and ciliates lack the Atg13/Atg17/Atg101 initiation complex. Retained the kinase MF rows and broad PAINT localizations, marked the four autophagy BP/CC rows as over-annotated, and removed autophagosome assembly / phagophore assembly site from the core function pending Paramecium-specific localization or knockdown evidence.
 
 
+## Track C close-out, superseded by the 2026-10-21 re-review (2026-10-20, revised 2026-10-24)
+
+This entry is kept short because almost all of what it described has been overtaken. As part of
+the PROTISTS Track C batch the draft was closed out: automated deep research was unavailable
+(perplexity unregistered, falcon auth failure, OpenAI key rejected), so the existing falcon report
+was re-read rather than regenerated, and it was cited from the `GO:0004674` IBA row and from
+`core_functions` to clear the one content validation warning standing between the file and
+`status: COMPLETE`. No annotation action was changed at that point.
+
+Review of PR #5300 then asked for the four broad catalytic rows to move from `ACCEPT` to
+`TOO_GENERAL`, on the ground that each conceded the entailment in its own reason while arguing
+`ACCEPT` from the term not being false, and that TERT in the same batch used `TOO_GENERAL` for
+the identical pattern. That change was made and has now been dropped: the 2026-10-21 re-review
+below, merged to main first, resolved the same four rows as `MODIFY` to the specific descendant,
+which is the `correct-but-general` rule and is equally sanctioned. Main's version also carries
+motif-level evidence from a new `A0BFB4-bioinformatics/` analysis that the Track C branch did not
+have, so it was taken wholesale rather than re-litigated.
+
+What survives from the Track C branch is only the `DRAFT` to `COMPLETE` flip, which main's version
+earns on its own: it validates with no content warnings, and it cites the falcon report four
+times without needing the citations added here.
+
 ## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
 
 ProtNLM2 output was not opened or used. Evidence used: UniProt record, GOA rows, PTHR24348 PAINT

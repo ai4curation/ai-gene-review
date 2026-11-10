@@ -77,3 +77,34 @@ process and GO:0006235 dTTP biosynthetic process; located in cytosol GO:0005829.
   human enzyme).
 - mitochondrion (GO:0005739) IBA and HTP — MARK_AS_OVER_ANNOTATED (IBA over-propagation +
   HTP proteomics co-purification; the functional compartment is cytosol).
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 IBA (GO_REF:0000033, is_active_in) and GO:0005739 HTP (PMID:34800366,
+MitoCoP). No sub-compartment rows.
+
+Checks:
+- PAINT: `interpro/panther/PTHR10344/PTHR10344-paint.tsv` puts GO:0005739 at PTN000038987
+  (taxon:2759), seeds AGI_LocusCode:AT5G59440 and RGD:1309614. A fungal descendant node
+  (PTN000819740) carries a NOT (IRD).
+  - Arabidopsis seed is isoform-specific: UniProt Q0WW55 "[Isoform 1]: Mitochondrion
+    {ECO:0000269|PubMed:18036198}.; ... [Isoform 2]: Cytoplasm" (UniProt REST, 2026-10-25).
+  - Rat seed: RGD's IDA to GO:0005759 mitochondrial matrix cites RGD ref 5133687 =
+    PMID:220041 (Greger & Fabianowska 1979, "dTMP kinase activity in rat liver mitochondria"),
+    an enzyme-activity assay that cannot attribute the activity to Dtymk rather than CMPK2
+    (CMPK2, Q5EBM0, is PTHR10344:SF4 and seeds its own mitochondrion node PTN001620248).
+    PMID:40967432 (2025, not cached) attributes mitochondrial thymidylate phosphorylation to
+    TK2 with CMPK2.
+- MitoCoP (PMID:34800366, full text cached): per-protein calls are in supplementary tables,
+  DTYMK not named in the cached text. Built by subtractive proteomics.
+- MitoCarta3.0 (Human.MitoCarta3.0.xls, Broad, downloaded 2026-10-25): DTYMK listed,
+  evidence "Rickettsial homolog, MS/MS+", SubMitoLocalization "Matrix", MSMS_Score
+  "75-100ambig" (12 tissues, 85% coverage). Not citable as a cached source.
+- UniProt P23919 has no subcellular location, no transit peptide, no TM.
+
+Outcome: both rows revised MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (as for ADO): the
+earlier call overruled a MitoCoP HTP row without the per-protein data, and the organelle
+claim has two independent proteomic lines. IBA propagation_review root cause changed from
+PROPAGATION_BAD to NO_FAILURE_NON_CORE. `is_active_in` not shown: no evidence that DTYMK
+phosphorylates dTMP inside human mitochondria. Stay at root: the only sub-compartment line is
+MitoCarta's matrix call.

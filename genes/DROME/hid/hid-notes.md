@@ -43,3 +43,11 @@ Rows from PMID:12919673, PMID:14960620, PMID:16168982, PMID:16980964, and severa
 PMID:21035895/PMID:15150408 subcellular or autophagic rows were left `UNDECIDED`
 because the cached abstracts did not expose the specific FlyBase full-text
 evidence.
+
+## Follow-up on description sources (FlyBase, UniProt)
+
+- Ras/MAPK acts on Hid directly as well as transcriptionally: MAPK phosphorylation sites in Hid are needed for Ras to inhibit it
+  [PMID:9814704 "we show that MAPK phosphorylation sites in Hid are critical for this response."]. Added to the description.
+- UniProt says Hid "acts on the effector Dredd". The support is that RHG expression induces dredd RNA and Dredd processing
+  [PMID:9740659 "expression of REAPER, GRIM, and HID was found to trigger processing of DREDD protein precursor"].
+  Dredd is now known mainly as the Imd-pathway caspase [PMID:11269502]; treated as a minor, indirect link and not annotated.

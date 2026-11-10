@@ -2,8 +2,8 @@
 title: "Agent-Based Modeling of Intracellular Trafficking"
 maturity: IN_PROGRESS
 tags: [PIPELINE, BIOLOGY_DOMAIN]
-species: [human, mouse]
-genes: [TFRC, CLTC, AP2M1, ATP6V1A, EHD1, TSG101, RAB7A, Rab7, CTSD, APOB, LDLR, PCSK9, LIPA]
+species: [human, mouse, DROME, SCHPO, worm]
+genes: [TFRC, CLTC, AP2M1, DNM2, ATP6V1A, EHD1, TSG101, RAB7A, Rab7, CTSD, APOB, LDLR, PCSK9, LIPA, ASGR1, ASGR2, ALB, FCGRT, B2M, SNAP23, SORL1, VPS35, VPS26A, VPS29, Vps35, Vps26, Vps29, RAB9A, AP1B1, AP1G1, apl2, apb-1, dpy-23]
 ---
 
 # Agent-Based Modeling of Intracellular Trafficking
@@ -14,6 +14,9 @@ This project extends the [Executable Models](EXECUTABLE_MODELS.md) architecture 
 
 * **[All executable models](../models/index.html)** — unified index of interactive Boolean and Agent-Based models
 * **[Endosomal Trafficking, Sorting & Cytosolic Escape — interactive ABM](../models/endosomal_trafficking_abm.html)** ([module page](../modules/endosomal_trafficking_routing.html))
+* **[Hepatocyte ASGR1/ASGR2 GalNAc Uptake & Endosomal Escape — interactive ABM](../models/asgr_galnac_delivery_abm.html)** ([module page](../modules/asgr_galnac_hepatocyte_delivery.html))
+* **[Neonatal Fc Receptor (FCGRT/B2M) IgG & Albumin Salvage — interactive ABM](../models/fcrn_salvage_transcytosis_abm.html)** ([module page](../modules/fcrn_igg_albumin_salvage_transcytosis.html))
+* **[Retromer (VPS35/VPS26A/VPS29) & SORL1 Endosome-to-TGN Retrieval — interactive ABM](../models/retromer_retrograde_sorting_abm.html)** ([module page](../modules/retromer_endosome_to_tgn_retrieval.html))
 * **[LDLR Endocytosis & Cholesterol Clearance — interactive ABM](../models/ldlr_endocytosis_abm.html)** ([module page](../modules/ldl_receptor_mediated_endocytosis.html))
 
 ---
@@ -76,7 +79,25 @@ In `src/ai_gene_review/module_abm.py`, `module_to_abm()` compiles a `ModuleRevie
 | `ehd1_recycling_block` | `ehd1_recycling_branch: false` | **80%** `ctsd_lysosomal_degradation`, **20%** `cytosolic_cargo_escape` | `EHD1` recycling block diverts the entire sorting pool into late endosomes/lysosomes and pre-lysosomal escape. |
 | `ctsd_proteolysis_block` | `ctsd_lysosomal_degradation: false` | **47%** `ehd1_recycling_branch`, **43%** `escrt_rab7_late_endosome`, **10%** `cytosolic_cargo_escape` | Cathepsin D (`CTSD`) deficiency traps undegraded cargo inside `escrt_rab7_late_endosome` (ceroid/lipofuscin storage phenotype in CLN10). |
 
-### 2. LDL Receptor-Mediated Endocytosis (`ldl_receptor_mediated_endocytosis`)
+### 2. Hepatocyte ASGR1/ASGR2 GalNAc-Conjugate Uptake & Endosomal Escape (`asgr_galnac_hepatocyte_delivery`)
+
+* **Module**: [`modules/asgr_galnac_hepatocyte_delivery.yaml`](../modules/asgr_galnac_hepatocyte_delivery.html)
+* **Interactive ABM**: [`pages/models/asgr_galnac_delivery_abm.html`](../models/asgr_galnac_delivery_abm.html)
+* **Biology & Qualitative Parameterization**: Models hepatocyte-targeted trivalent GalNAc-siRNA/ASO capture by the sinusoidal C-type lectin receptor complex `ASGR1`/`ASGR2` (`PANTHER:PTHR22803`, [PMID:12171918](https://pubmed.ncbi.nlm.nih.gov/12171918/), [PMID:29069408](https://pubmed.ncbi.nlm.nih.gov/29069408/)), clathrin/AP-2/dynamin-2 internalization (`AP2M1`, `CLTC`, `DNM2`, [PMID:24970086](https://pubmed.ncbi.nlm.nih.gov/24970086/)), V-ATPase early endosomal acidification and $\text{Ca}^{2+}$-dependent GalNAc uncoupling (`ATP6V1A`), rapid `EHD1` receptor recycling (`ehd1_receptor_recycling`, **47%**), `TSG101`/`RAB7A` late-endosomal maturation (`escrt_rab7_late_endosome`) and `CTSD` lysosomal sequestration/degradation (`ctsd_lysosomal_degradation`, **43%**), and rate-limiting cytosolic oligonucleotide escape (`cytosolic_galnac_escape`, **10%** in wild-type, rising to **47%** upon `RAB7A` loss). Note that the **10%** baseline escape (`47/43/10`) and `10% -> 47%` shift upon `RAB7A` loss result from uniform uncalibrated ABM rates (`DEFAULT_BASE_RATE = 0.45`, `COMPETING_INHIBITOR_FACTOR = 0.25`) and represent a qualitative cross-modality extrapolation from hepatic LNP delivery ([PMID:41814093](https://pubmed.ncbi.nlm.nih.gov/41814093/)), whereas only a minuscule portion of endocytosed clinical GalNAc-siRNA/ASO conjugates escapes into the cytosol in vivo ([PMID:29069408](https://pubmed.ncbi.nlm.nih.gov/29069408/)).
+
+### 3. Neonatal Fc Receptor (FCGRT/B2M) pH-Dependent IgG & Albumin Salvage (`fcrn_igg_albumin_salvage_transcytosis`)
+
+* **Module**: [`modules/fcrn_igg_albumin_salvage_transcytosis.yaml`](../modules/fcrn_igg_albumin_salvage_transcytosis.html)
+* **Interactive ABM**: [`pages/models/fcrn_salvage_transcytosis_abm.html`](../models/fcrn_salvage_transcytosis_abm.html)
+* **Biology & Qualitative Parameterization**: Models how endothelial and barrier epithelial cells maintain the ~21-day circulatory half-life of human IgG and serum albumin (`ALB`, `PANTHER:PTHR11385:SF15`, [PMID:36979511](https://pubmed.ncbi.nlm.nih.gov/36979511/)). Following pinocytic and clathrin/AP-2/DNM2 uptake (`clathrin_dnm2_endocytic_uptake`) and V-ATPase acidification to pH ~6.0 (`early_endosome_acidification`), protonated histidine residues on IgG and albumin bind the endosomal `FCGRT`/`B2M` (FcRn) heterodimer (`fcrn_ph_dependent_salvage`, [PMID:28330995](https://pubmed.ncbi.nlm.nih.gov/28330995/), [PMID:24469444](https://pubmed.ncbi.nlm.nih.gov/24469444/)). Active FcRn capture negatively regulates `rab7_late_endosome_routing`, rescuing **80%** of internalized cohort via `EHD1`/`SNAP23` exocytic recycling (`ehd1_snap23_salvage_exocytosis`, [PMID:30811271](https://pubmed.ncbi.nlm.nih.gov/30811271/)) vs. **20%** lysosomal catabolism (`ctsd_lysosomal_catabolism`). Inactivating `fcrn_ph_dependent_salvage` (modeling `FCGRT`/`B2M` deficiency or therapeutic anti-FcRn blockers such as efgartigimod) diverts **100%** of internalized IgG/albumin to lysosomal catabolism.
+
+### 4. Retromer (VPS35/VPS26A/VPS29) & SORL1 Endosome-to-TGN Retrograde Retrieval (`retromer_endosome_to_tgn_retrieval`)
+
+* **Module**: [`modules/retromer_endosome_to_tgn_retrieval.yaml`](../modules/retromer_endosome_to_tgn_retrieval.html)
+* **Interactive ABM**: [`pages/models/retromer_retrograde_sorting_abm.html`](../models/retromer_retrograde_sorting_abm.html)
+* **Biology & Qualitative Parameterization**: Models retrograde endosome-to-Golgi retrieval of the Alzheimer-associated sorting receptor `SORL1` (SorLA/LR11, `PANTHER:PTHR12106:SF27`, [PMID:16174740](https://pubmed.ncbi.nlm.nih.gov/16174740/)) by the heterotrimeric retromer cargo-selective complex (`VPS35` `PANTHER:PTHR11099:SF0`, `VPS26A` `PANTHER:PTHR12233:SF4`/`SF1`, `VPS29` `PANTHER:PTHR11124:SF12`, [PMID:15078902](https://pubmed.ncbi.nlm.nih.gov/15078902/), [PMID:18193037](https://pubmed.ncbi.nlm.nih.gov/18193037/), [PMID:18193032](https://pubmed.ncbi.nlm.nih.gov/18193032/), [PMID:32286230](https://pubmed.ncbi.nlm.nih.gov/32286230/)) across early and maturing endosomes and TGN docking via `RAB9A` and `AP-1` (`AP1B1` `PANTHER:PTHR11134:SF31`/`SF3`, `AP1G1` `PANTHER:PTHR22780:SF26`, [PMID:8164745](https://pubmed.ncbi.nlm.nih.gov/8164745/), [PMID:34793709](https://pubmed.ncbi.nlm.nih.gov/34793709/), [PMID:23415225](https://pubmed.ncbi.nlm.nih.gov/23415225/)). In wild-type sorting (`wt_retromer_tgn_retrieval`), active retromer recruitment (`retromer_csc_cargo_selection`) opposes `RAB7A` degradative progression and delivers **80%** of internalized receptors to the TGN (`rab9a_ap1_tgn_delivery`) vs. **20%** lysosomal proteolysis (`ctsd_lysosomal_proteolysis`). Retromer loss (`retromer_vps35_loss_degradation`) diverts **100%** of cargo to lysosomal degradation, whereas `RAB7A` block (`rab7_reduction_suppresses_degradation`) restores **100%** TGN retrieval ([PMID:32286230](https://pubmed.ncbi.nlm.nih.gov/32286230/)).
+
+### 5. LDL Receptor-Mediated Endocytosis (`ldl_receptor_mediated_endocytosis`)
 
 * **Module**: [`modules/ldl_receptor_mediated_endocytosis.yaml`](../modules/ldl_receptor_mediated_endocytosis.html)
 * **Interactive ABM**: [`pages/models/ldlr_endocytosis_abm.html`](../models/ldlr_endocytosis_abm.html) (alongside the existing [Boolean model](../models/ldlr_endocytosis_boolean.html))

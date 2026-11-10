@@ -1,0 +1,13 @@
+# FERMT3 database evidence notes
+
+26 October 2026. Kindlin-3 contributes to integrin activation from the cytoplasmic side of adhesion contacts. The human patient-cell observations in PMID:19234460 separate defective receptor activation from preserved receptor abundance and several upstream responses. Platelets fail to aggregate and spread normally, yet agonist-induced P-selectin expression persists. These observations support an integrin-centered mechanism without a universal secretion defect (Results; Figures 1–2 and 4).
+
+Mouse Fermt3 provides experimental grounding for the orthology inferences. PMID:19234461 distinguishes deficient endothelial arrest from preserved selectin rolling and maps beta2-tail association with motif controls (Figures 1–4). The human-to-mouse Ensembl record is one-to-one, but its representative human translation maps to the short natural product; that comparison does not establish identical activities of both splice products.
+
+The original localization study places mouse Kindlin-3 at the actin-surrounding ring of podosomes. Its endogenous staining and tagged dendritic-cell result are distinct, and diffuse ectopic fibroblast localization is a different cellular setting (PMID:16876785, Kindlin-3 localization Results and Figure 5F). The cell-substrate-junction inference is also consistent with the tagged human patient-cell contact-site observation in PMID:19234460, Figure 4e. The ontology does not currently provide a strict podosome-to-cell-substrate-junction ancestor path, so similar wording is insufficient for a hierarchy-based redundancy decision.
+
+The two Reactome location claims remain unresolved at their original source. The actual model contains Q86UX7 in both the platelet alpha-granule input and extracellular output. The exact target result in PMID:23640497 could not be inspected. Release, even when established, would not uniquely determine a granule-lumen pool. Neither intracellular integrin function nor intact P-selectin responses establish a negative localization claim.
+
+Migration, leukocyte adhesion, platelet aggregation and integrin-signaling outcomes remain positive non-core context around the activation mechanism. The ARBA migration rule was retrieved, but its exact target-matching condition branch remains unverified. The human-cell migration evidence uses mouse EGFP-KINDLIN3 complementation (PMID:19234463, Figure 4 and Methods).
+
+The exact two natural splice products are preserved separately from tagged rescue proteins, isolated domains and patient-derived truncations. No evidence here compares their activities directly. No publication quotation was added; source-specific locators are provided in the source guide.

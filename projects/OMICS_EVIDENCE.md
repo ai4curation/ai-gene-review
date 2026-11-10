@@ -220,8 +220,9 @@ The data and the curators are the same. The difference is the inference step.
    you the provenance, and the use tells you how much the data support.
 2. **Location rows:** accept localization screens and confidence-scored organelle
    proteomes. Keep vesicle and body-fluid rows as non-core unless the protein is a known
-   vesicle component. Prefer a specific membrane over `membrane`, and reject the
-   generic term for proteins with no membrane anchor.
+   vesicle component. Prefer a specific membrane over `membrane`. Assess target-specific evidence for
+   peripheral or transient association as well as membrane anchors; lack of an anchor
+   alone does not establish that a membrane localization claim is over-annotated.
 3. **Function rows:** ask whether the assay measured the activity. If it did not, and the
    function is inferred from co-location or co-purification, treat the row as
    over-annotated unless independent evidence exists. If it did (crosslinking, binding
@@ -425,6 +426,20 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-26: FKBP5 membrane reassessment in the androgen audit
+
+The FKBP5 `GO:0016020 membrane` review in PR #5554 now explicitly supersedes the
+2026-10-10 manual `KEEP_AS_NON_CORE` → `MARK_AS_OVER_ANNOTATED` decision with
+`UNDECIDED`. The original provenance is retained in the gene's rationale.
+PMID:19946888 reports an NK-cell membrane fraction that includes proteins predicted
+to associate transiently with membranes. Its accessible abstract does not establish
+FKBP5's target-specific identification, enrichment or contamination controls, and
+the publisher full text was unavailable. The unresolved question is biological
+membrane association, which does not require an integral membrane anchor. This is
+a source-specific reassessment, not a rule applied to other soluble proteins.
+The location checklist is clarified accordingly; historical audit counts above
+remain snapshots of their original sessions.
 
 ### 2026-10-17: optional follow-ups from the final automated review
 

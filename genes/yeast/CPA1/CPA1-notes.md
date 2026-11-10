@@ -14,3 +14,14 @@ Evidence journal built from UniProt and cached abstracts.
 - Core MF: glutaminase activity (GO:0004359), contributes_to GO:0004088, in CPSase complex (GO:0005951), cytosol, arginine biosynthesis.
 - de novo pyrimidine nucleobase (IEA InterPro) -> MARK_AS_OVER_ANNOTATED (paralog specialisation: URA2 is pyrimidine CPSase). Pyrimidine nucleotide biosynthesis IDA -> KEEP_AS_NON_CORE (shared CP pool).
 - Stress granule HDA -> KEEP_AS_NON_CORE.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 31 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+The small CPSase subunit hydrolyzes glutamine and contributes to whole-complex carbamoyl-phosphate synthesis; it is not assigned autonomous whole-complex catalysis in the core. PMID:8626695, 206535 and 9290206 distinguish subunit reactions and catalytic residues. Secondary pyrimidine participation is retained consistently with shared carbamoyl-phosphate pools in budding yeast. PMID:26777405 was force-fetched to full main text and read; supplementary CPA1 identification remained inaccessible after direct download attempts. Stress-granule localization is therefore UNDECIDED, not dismissed as contamination. The HDA cytoplasm claim is refined using independent localization evidence.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-yeast-CPA1-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 20, KEEP_AS_NON_CORE 2, MODIFY 8, UNDECIDED 1. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.

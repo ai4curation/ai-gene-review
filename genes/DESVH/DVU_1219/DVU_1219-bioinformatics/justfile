@@ -1,0 +1,24 @@
+# DVU_1219 (Q72CR4) analyses. HMM libraries (dbCAN v5.2.9 dbCAN.hmm and Pfam-A.hmm) are downloaded from
+# https://dbcan.s3.us-west-2.amazonaws.com/db_v5-2-9_5-5-2026/ into HMMDB (not committed; ~1.7 GB).
+HMMDB := env_var_or_default("HMMDB", env_var("HOME") + "/.cache/hmmdb/dbcan_v5-2-9")
+
+fetch-hmms:
+    mkdir -p {{HMMDB}}
+    test -s {{HMMDB}}/dbCAN.hmm || curl -s -o {{HMMDB}}/dbCAN.hmm https://dbcan.s3.us-west-2.amazonaws.com/db_v5-2-9_5-5-2026/dbCAN.hmm
+    test -s {{HMMDB}}/Pfam-A.hmm || curl -s -o {{HMMDB}}/Pfam-A.hmm https://dbcan.s3.us-west-2.amazonaws.com/db_v5-2-9_5-5-2026/Pfam-A.hmm
+
+# InterProScan via EBI REST (pass JOBID to poll an existing job; EBI_EMAIL must be set to submit)
+iprscan *JOBID:
+    python3 -I iprscan.py data/Q72CR4.fasta results/iprscan {{JOBID}}
+
+# dbCAN + Pfam hmmscan without gathering thresholds; GH13 catalytic-state mapping;
+# GH13_33 profile at the query residues structurally equivalent to the GH13 nucleophile (349/351),
+# acid/base (391) and transition-state Asp (456) from the Foldseek alignments
+domains: fetch-hmms
+    uv run python domains.py --query data/Q72CR4.fasta --dbcan {{HMMDB}}/dbCAN.hmm --pfam {{HMMDB}}/Pfam-A.hmm --positions 349 351 389 391 456 --output results/domains/domains_results.json
+
+foldseek:
+    python3 -I foldseek.py results/foldseek
+
+fitness:
+    python3 -I fb_fitness.py results/fitness

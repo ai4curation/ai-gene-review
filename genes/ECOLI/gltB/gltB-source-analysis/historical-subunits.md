@@ -1,0 +1,7 @@
+# Historical subunit experiment and modern mechanism
+
+Source: Mäntsälä and Zalkin, 1976, PMID:770440, DOI:10.1128/jb.126.1.539-541.1976, [publisher PDF](https://journals.asm.org/doi/epdf/10.1128/jb.126.1.539-541.1976). All three pages (539–541) were read through the web PDF extractor on 2026-10-27. The cached PMID remains abstract-only; direct publisher downloads returned 403 and PMC downloads returned challenge HTML, not PDFs.
+
+Page 539 identifies K-12 W3110 and separation in SDS followed by urea dialysis, with loss of flavin, iron and sulfide. Table 1 on page 540 reports small-chain NH3-dependent activity at 0.82% of the native enzyme, large-chain 0%, and recombination 0.91%. Table 2 reports large-chain glutaminase 0.13%, small-chain 0%, and recombination 0.15%; alkylation eliminates the large-chain activity. The authors report reproducibility and no detectable cross-contamination in their electrophoretic separation. These are real historical partial-reaction observations; this analysis does not dismiss them as contamination.
+
+Interpretation: the experiment does not localize the physiological FMN/2-oxoglutarate center in intact holoenzyme. Modern homolog biochemistry (PMID:10785395) places that center in alpha and FAD/NADPH in beta; cryo-EM (PMID:31473159) locates beta-chain FAD and two [4Fe-4S] centers. Target GltB GATase/FMN domains and GltD FAD/NAD/ferredoxin domains agree. Native low recovered partial activity and modern architecture are therefore recorded separately, without inventing a resolution or rewriting immutable source records.

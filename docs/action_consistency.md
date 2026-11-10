@@ -102,6 +102,9 @@ the existing reviews that violate it have been fixed.
 | [ACCEPT, KEEP_AS_NON_CORE], negated_1 | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a kept NOT row is on an ancestor of a kept positive term |
 | TOO_GENERAL | ANCESTOR_OF | ACCEPT | OK | the TOO_GENERAL term is more general than an ACCEPTed term |
 | TOO_GENERAL | ANCESTOR_OF | KEEP_AS_NON_CORE | OK | the TOO_GENERAL term is more general than a kept term |
+| REMOVE | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | WARNING | a REMOVEd term is an ancestor of a term the review keeps |
+| REMOVE (term_1 exactly GO:0005515) | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | OK | exception: protein binding is tracked by its own policy |
+| REMOVE (term_1 exactly a root: GO:0003674, GO:0008150, GO:0005575) | ANCESTOR_OF | [ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL] | OK | exception: ND root rows are judged by the ND policy (`nd_policy`), not by ancestry |
 
 When it was introduced, the ACCEPT/REMOVE rule fired on 35 reviews (325 row pairs; the
 REMOVEd rows are mostly TAS, IDA, IMP and IPI); with the protein binding exception,
@@ -110,6 +113,14 @@ RGA, WUS, Akt1), and its ancestor form on 11 reviews (22 row pairs; e.g. ARL6 NO
 `cilium` vs `axoneme`, DNM1L NOT `endoplasmic reticulum` vs `endoplasmic reticulum
 membrane`, APP NOT `dendrite` vs `dendritic spine`). All stay WARNINGs until those are
 fixed, then can become ERRORs.
+
+The REMOVE-on-ancestor rule first fired on 304 REMOVE rows in 209 reviews. Exempting
+ND root-term rows and making hierarchical rules respect qualifiers left 210 rows in
+136 reviews. The 123 rows whose broad term was plainly true (redundant, removed for
+one row's weak evidence, or `cytoplasm`/`membrane` read as cytosol or integral
+membrane) were then changed to TOO_GENERAL, or to the action already on another row for
+the same term. The rest are judgement cases (ontology placements a review disputes,
+pseudoenzymes, unqualified `is_active_in` rows, process terms) and stay WARNINGs.
 
 ### Hierarchical rules and the ontology
 
@@ -133,6 +144,20 @@ narrowed or retired, an unexempted ACCEPT/REMOVE pair is reported by both.
 
 ### Known limitations
 
+- Hierarchical rules compare rows only when the specific row's qualifier carries up to
+  the general row's (`located_in` a part is `located_in` the whole but not
+  `is_active_in` it; `contributes_to` does not entail `enables`). A row with no
+  `qualifier` is assumed to match, so older reviews that omit it can raise false
+  conflicts. The directional `acts_upstream_of_*_effect` variants carry up to
+  `acts_upstream_of`/`acts_upstream_of_or_within`; `enables` does not carry to
+  `contributes_to`, which GO reserves for activity performed only as part of a complex.
+- Same-term rules do not look at qualifiers yet, so `ACCEPT located_in X` beside
+  `REMOVE is_active_in X` is still reported.
+- `action_2` of the REMOVE-on-ancestor rule leaves out MODIFY: a MODIFY row's own term
+  may be the reason it is modified, and its replacement terms are not in the relation
+  graph (below).
+- The ND root-term exception is keyed on the three root terms, not on the ND evidence
+  code; in practice root rows are ND.
 - The pair rules compare each row's own `term.id`. MODIFY `proposed_replacement_terms`
   are not yet part of the relation graph, so a replacement term never takes part in a
   pair conflict. (The TOO_GENERAL precondition below does count them.)
@@ -161,6 +186,10 @@ groups), MARK_AS_OVER_ANNOTATED + REMOVE (44), NEW + REMOVE (14).
 more specific term asserted elsewhere in the same review already entails it:
 `hydrolase activity` beside an accepted `metalloendopeptidase activity`, or `membrane`
 beside an accepted `endoplasmic reticulum membrane`.
+
+Root-term ND rows are the exception: an ND is a statement about the literature, not a
+broad term subsumed by a specific one, so `TOO_GENERAL` is never used for it (the
+`nd_policy` check warns; see `projects/NO_DATA.md`).
 
 It judges the term, not the row's evidence, which is weighed separately, and it never
 means the claim is false. How it differs from the other actions:

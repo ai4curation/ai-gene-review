@@ -3,7 +3,7 @@ title: "IBA Annotation Quality Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR, PSEAE, SHEON]
 genes:
   - DNAH12
   - cao-1
@@ -82,6 +82,33 @@ genes:
   - statC
   - gei-17
   - sta-1
+  - ccmC
+  - estA
+  - lap
+  - fleN
+  - pqsH
+  - PA5458
+  - pilU
+  - hutI
+  - wbpD
+  - PA3760
+  - pilM
+  - PA1055
+  - PA1057
+  - thiI
+  - PA0920
+  - liuC
+  - lasI
+  - cysB
+  - ptrB
+  - lhpL
+  - znuC
+  - pchB
+  - nirJ
+  - fur
+  - mucB
+  - phzC1
+autolink_exclude: [III, PTS, pvdE, fruB, ptsP]
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -99,9 +126,9 @@ manifest:
 **Bottom line:** IBA annotations transfer GO terms along PANTHER family trees
 from experimentally studied proteins to their relatives, and they make up a
 large share of GO for most genomes. Working from gene reviews, we catalogued
-where those transfers go wrong and why: 14 recurring failure patterns (such as
+where those transfers go wrong and why: 16 recurring failure patterns (such as
 pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
-wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
+wrong-paralog and cross-kingdom transfers) plus one positive control, 79 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
 failure modes, per-source status) that reviews now use; 691 gene reviews
 carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
@@ -118,6 +145,11 @@ propagated annotations; 81 genes are reviewed and 65 await adjudication
 >
 > Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
 > [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
+>
+> External check: [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examines Wei *et al.* 2020
+> (PMID:32470107), which reported IBA as the leading non-IEA source of taxon-inconsistent
+> annotations. Most of its 290 flagged pairs are now gone from GOA; its plant lipid A flags
+> are refuted by experiment.
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
 
@@ -128,7 +160,7 @@ While IBA is a powerful curation tool, it can produce problematic annotations wh
 4. **Over-generalization** - Broad terms transferred when specific functions differ
 
 This project covers **both directions** of IBA quality: most of the page catalogs
-where IBA is *wrong* (over-annotation, patterns 1–15), while
+where IBA is *wrong* (over-annotation, patterns 1–16), while
 [IBA Incompleteness](#iba-incompleteness-core-function-that-iba-fails-to-propagate)
 quantifies where IBA *under-calls* established biology — 511 curated human core
 molecular functions that IBA alone would miss.
@@ -1074,7 +1106,7 @@ as a secondary function.
 - **gei-17 (worm, PTHR10782)** — `GO:0046426` (negative regulation of receptor signaling pathway via JAK-STAT): the IBD sits on the eumetazoan PIAS node **PTN000845825**, seeded by human PIAS1 (STAT1 inhibition) and fly Su(var)2-10 — sound for both. GEI-17 inherits it through the ecdysozoan branch, but *C. elegans* has **no conserved JAK homolog** and its STAT STA-1 acts JAK-independently (PMID:28874466). Same nematode gap as sta-2 below it, but reached from the *regulator* side: the inherited term regulates a pathway the organism lacks. The fix is an IRD on the nematode branch (the [PTHR10782 FamilyReview](../interpro/panther/PTHR10782/PTHR10782-review.yaml) rates the node `NEEDS_PRUNING`), not removal from the node, since the node also carries the valid fly seed. SF94 holds both GEI-17 and the fly seed, so no subfamily-level scope can separate them; the family review records GEI-17 as a **member exception** (`member_exceptions` on the term assessment, anchored to the `NEEDS_PRUNING` node), which is what lets the gene review `REMOVE` the row without the family/gene cross-check reporting a disagreement. This is the general pattern for a loss on a branch that PANTHER's subfamilies do not split. The sibling IBD on the same node, `GO:0140416` transcription regulator inhibitor activity, is left UNDECIDED on GEI-17. The term covers inhibition by binding *or* post-translational modification, so ligase-dependent inhibition is within it. An OpenScientist analysis ruled out a binding route through the SAP domain (GEI-17 has none, and human PIAS1 does not need it; PMID:24036127). Binding through PIAS1's SIM-adjacent acidic module is not excluded, since GEI-17 keeps an equivalent module at the same position after the SP-RING (`genes/worm/gei-17/gei-17-bioinformatics/RESULTS.md`). GEI-17 also inhibits the piRNA USTC transcription complex in a SUMOylation-dependent way (PMID:40316696, abstract only), so the modification route is plausible but not shown. An earlier version of the gene review marked this over-annotated on a misreading of the term definition.
 - **fshr-1 (worm)** — `GO:0009755` (hormone-mediated signaling): *C. elegans* lacks gonadotropins (FSH/LH/TSH); FSHR-1 functions in innate immunity/stress.
 - **HEN1 (Arabidopsis)** — `GO:0034587` (piRNA processing): piRNAs are metazoan; plant HEN1 methylates miRNA/siRNA duplexes. Over-transfer from the metazoan HEN1/HENMT1 context.
-- **The JAK-STAT cluster (worm sta-1, sta-2, gei-17; Dictyostelium statA, statC) — one structural cause.** The [STAT family review](../interpro/panther/PTHR11801/PTHR11801-review.yaml) places the STAT JAK-STAT IBD on **PTN000927860, the Unikonts node**, though its seeds support only Bilateria (`TOO_DEEP`); the [JAK family review](../interpro/panther/PTHR45807/PTHR45807-review.yaml) shows JAKs are animal-only (PANTHER root at Eumetazoa, no nematode or amoebozoan leaf). The term sits where STATs arose, the pathway arose with JAKs, so every lineage that kept STATs without JAKs inherits it. Per-gene REMOVEs and PAINT IRDs treat the symptoms; the class-level fix is a GO taxon constraint on `GO:0007259` and `GO:0046425`, proposed with evidence in [TAXON_PATHWAY_VARIANCE](TAXON_PATHWAY_VARIANCE.md) (TPV-001 to TPV-003). A public briefing written for GO editors and PAINT curators summarises the whole case: [JAK-STAT Without JAK](https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM). The same review pair found the reverse error too: a PAINT IRD that wrongly says **TYK2 lost** JAK-STAT signaling (PTN002910252, rated `WRONG_NODE` against TYK2's own IDA evidence).
+- **The JAK-STAT cluster (worm sta-1, sta-2, gei-17; Dictyostelium statA, statC) — one structural cause.** The [STAT family review](../interpro/panther/PTHR11801/PTHR11801-review.yaml) places the STAT JAK-STAT IBD on **PTN000927860, the Unikonts node**, though its seeds support only Bilateria (`TOO_DEEP`); the [JAK family review](../interpro/panther/PTHR45807/PTHR45807-review.yaml) shows JAKs are animal-only (PANTHER root at Eumetazoa, no nematode or amoebozoan leaf). The term sits where STATs arose, the pathway arose with JAKs, so every lineage that kept STATs without JAKs inherits it. Per-gene REMOVEs and PAINT IRDs treat the symptoms; the class-level fix is a GO taxon constraint on `GO:0007259` and `GO:0046425`, proposed with evidence in [TAXON_PATHWAY_VARIANCE](TAXON_PATHWAY_VARIANCE.md) (TPV-001 to TPV-003) and accepted by GO in [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) (2026-11-03). A public briefing written for GO editors and PAINT curators summarises the whole case: [JAK-STAT Without JAK](https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM). The same review pair found the reverse error too: a PAINT IRD that wrongly says **TYK2 lost** JAK-STAT signaling (PTN002910252, rated `WRONG_NODE` against TYK2's own IDA evidence).
 - **Lesson**: check **taxon appropriateness** — does the process even occur in this lineage? GO taxon constraints catch some of these; the WITH/FROM naming a vertebrate/insect source is the tell. Watch especially for organelle-system swaps (plastid↔mitochondrion; cytoplasmic↔axonemal dynein).
 
 ### 15. Regulator / Effector and Direct / Downstream Conflation
@@ -1087,6 +1119,138 @@ as a secondary function.
 - **UBP3 (yeast)** — `GO:0031647` (regulation of protein stability): a downstream *consequence* of its deubiquitinase activity (`GO:0004843`, the direct function), not a separate function.
 - **sigF / sigG / sigK (*B. subtilis*)** — `GO:0003899` (DNA-directed RNA polymerase activity): these are **sigma initiation factors** (UniProt: *"initiation factors that promote…"* promoter recognition) — they confer promoter specificity to RNA polymerase but have **no catalytic polymerase activity**, which belongs to the core enzyme (RpoB/RpoC). A regulatory subunit assigned the **holoenzyme's** catalytic activity.
 - **Lesson**: distinguish "does X" from "regulates/enables/results-in X." Effectors are not signal transducers; repressors are not part of the machinery they inhibit; a specificity subunit does not carry the catalytic activity of the complex it joins; downstream consequences are not direct molecular functions.
+
+### 16. Phenotype-Derived Molecular Function as an IBD Seed
+
+**The Problem**: A loss-of-function phenotype cannot establish a **molecular function**. It can support a biological-process term — the gene is needed for the process — but it does not say what the protein does chemically. Where the other patterns here concern a real source biology that the tree moved to the wrong place, this one concerns a source row that was never a molecular-function claim in the first place; the node placement and the propagation can both be faultless and the annotation still be false. And when such a row becomes the sole seed for a PAINT IBD, the error stops being one record's problem and propagates to every leaf descending from the node that carries it.
+
+**The diagnostic is cheap and worth making routine**: look at the donor's **other rows from the same reference**. A block of IMP rows keyed to one paper and spanning unrelated processes is the signature of a pleiotropic mutant's phenotype list recorded as if each entry were a function of the gene — and the molecular-function row inside such a block is the one that cannot survive the reading, whatever the process rows turn out to be worth.
+
+**Examples (verified):**
+- **ccmC (SHEON, PTHR30071)** — `GO:0004096` (catalase activity): the IBD on node **PTN001247822** is seeded by one donor, `UniProtKB:Q9I3N5` (CCMC_PSEAE), whose own `GO:0004096` is a PseudoCAP **IMP** from PMID:16824107 sitting in a block with five further IMP rows from the same reference — pyoverdine biosynthesis, glycolipid biosynthesis, type IV pilus-dependent motility, and flagellum-dependent swimming and swarming motility. That set reads as the pleiotropic phenotype of a strain with no mature c-type cytochromes. The donor is itself a CcmC, so nothing is wrong with the tree; see §ccmC below.
+
+**The schema already has the vocabulary for this.** This is not a new term to add but the worked example of ones the taxonomy section above already defines: `root_cause: SOURCE_BAD` with `failure_modes: [SOURCE_MISCITATION, SOURCE_EVIDENCE_WEAK]`. `SOURCE_EVIDENCE_WEAK` carries the aspect mismatch — a phenotype is too weak a thing to found an MF on — and `SOURCE_MISCITATION` carries whatever is wrong with the reference the block is keyed to.
+
+**Watch the inter-ontology drag.** A bad molecular function does not stay inside its own aspect: `GO_REF:0000108` derives process terms logically from molecular function, so an MF that should never have existed pulls a BP term along behind it. On ccmC, `GO:0098869` cellular oxidant detoxification arrived as an `IEA` whose only supporting entity is `GO:0004096`. One phenotype row therefore reaches two aspects of a leaf's annotation, and withdrawing the premise has to withdraw the conclusion with it.
+
+**Lesson**: ask what kind of claim the seed row makes before arguing about where the node sits. An experimental evidence code is not an aspect warrant — `IMP` grounds "needed for", and only an assay grounds "does". A sole-seed IBD inherits the seed's weaknesses exactly, so read the donor's own row, its evidence code, and its sibling rows from the same reference before treating a family-wide MF as a phylogenetic judgement at all.
+
+### 17. Seed-Side Errors Found by Auditing One Source: the PseudoCAP Sweep
+
+**The Problem**: Pattern 16 is the clearest case of a wider class. Patterns 1-15 are errors in where a node sits or what it passes
+down; this one is upstream of the tree: the experimental annotation that PAINT
+used as a seed is itself wrong, so the IBD is wrong even at a correctly placed
+node. The commonest form is an IMP row that turns a mutant phenotype into the
+gene's own function. It matters most when the bad row is the node's **only**
+seed, because then nothing else holds the IBD up. Seed-side errors are best
+found by reviewing the seeds of one annotation source, which is what the
+[PSEUDOCAP](PSEUDOCAP.md) project does for *P. aeruginosa* PAO1: 398 PAO1
+proteins carry a PseudoCAP annotation that supports an IBD seeding (522 node
+terms, 51,455 leaf IBAs), and for 139 node terms (4,772 leaf IBAs) the PAO1
+protein is the sole seed. Of those 109 proteins, 106 have full reviews (the
+review files for pvdE, pqsA and PA2403 are still to be written): for 21 the seed is wrong or an indirect phenotype and the IBD should be
+withdrawn or repointed, for 23 the seed is right but the node term does not fit
+the clade, for 30 the claim is true but the seed row misstates its evidence,
+qualifier or reference, and 32 are sound (see [PSEUDOCAP](PSEUDOCAP.md) for the
+per-gene table and the upstream defect reports).
+
+**Examples:**
+- **PSEAE/ccmC (PA1477)**, `GO:0004096` catalase activity on node
+  **PTN001247822** (sole seed, 143 leaf IBAs in 59 taxa, including back onto
+  PSEAE/ccmC). The protein is the six-helix heme-handling membrane subunit of the cytochrome
+  c maturation system and has no catalase domain. The PseudoCAP IMP row records
+  that a *ccmC* mutant has no detectable catalase, which follows from losing
+  heme delivery to the heme catalases. The row also cites the wrong paper
+  (PMID:16824107, *E. coli* CcmABC biochemistry; the phenotypes match the
+  *P. aeruginosa* mutant paper PMID:18174132). The same node's plasma membrane
+  and cytochrome c biosynthesis IBDs rest on *E. coli* seeds and are sound, so
+  the fix is to drop the one term from the node, not to move the node.
+- **estA (PSEAE, PA5112)**, `GO:0008610` lipid biosynthetic process on
+  **PTN005219546** (sole seed, 960 leaf IBAs in 51 taxa). EstA is an
+  outer-membrane autotransporter esterase. The seed rows (UniProt IMP lipid
+  biosynthesis, PseudoCAP IMP glycolipid biosynthesis, both PMID:17631636)
+  record that an *estA* deletion makes little rhamnolipid; the biosynthetic
+  steps are RhlA/B/C and EstA has no activity on their acyl-CoA substrates. The
+  same node's carboxylic ester hydrolase IBD is sound (active-site Ser mutant,
+  kinetics), so again one term should come off a well-placed node.
+- **fleN (PSEAE, PA1454)**, `GO:0005524` ATP binding on **PTN000344128**
+  (sole seed, 149 leaf IBAs in 75 taxa). The term is true (FleN structures with
+  an ATP analogue, PMID:28065505), but the seed is an IDA row on a paper
+  (PMID:10629180) that only reports an ATP-binding sequence motif. The IBD is
+  right for the wrong reason, and needs re-seeding with real evidence before
+  the PseudoCAP row is corrected to ISM.
+- **pvdE (PSEAE, PA2397)**, `GO:0042626` ATPase-coupled transmembrane
+  transporter activity on **PTN000656738** (sole seed, 140 leaf IBAs). The seed
+  is sound (the full-length exporter's mutant fails to move the pyoverdine
+  precursor to the periplasm), but only 6 of the 140 leaves have a
+  transmembrane domain; 126 are stand-alone nucleotide-binding subunits
+  (EcfA/CbiO, ModF, FtsE, plant ABCI). A transporter activity seeded from a
+  fused TMD-NBD exporter does not fit a node made mostly of NBD-only proteins:
+  the term belongs on the PvdE/SyrD clade, or as `contributes_to`.
+- **PA5458 (PSEAE)**, an O-antigen-modifying acyltransferase (PMID:23341552),
+  sole seed of two process IBDs. `GO:0009103` LPS biosynthetic process on
+  **PTN000546841** reaches 31 leaves, 15 in organisms with no LPS (the
+  peptidoglycan O-acetyltransferase OatA of *S. aureus* and *Listeria*,
+  mycobacteria, *Streptomyces*); `GO:0000271` polysaccharide biosynthetic
+  process on **PTN000546715** reaches 113 leaves, 109 of them nematode and
+  oomycete proteins. The seed is fine; the nodes carry a lineage-specific
+  process past the lineage (compare pattern 14).
+- **pqsH (PSEAE, PA2587)**, `GO:0004497` monooxygenase activity on
+  **PTN008173107** (sole seed, 297 leaf IBAs). The seed is sound (purified
+  enzyme, PMID:20662781) and the generic term suits the node, which is the
+  PTHR45934 root. But about 294 of the leaves are plant FAD monooxygenases
+  below a horizontal-transfer node, so a whole plant clade's MF IBA rests on one
+  bacterial enzyme. Sound today; fragile if the seed is ever revised.
+- **pilU (PSEAE, PA0396)**, `GO:0016888` DNA endonuclease activity, producing
+  5'-phosphomonoesters on **PTN000766390** (sole seed). PilU is a PilT-like
+  pilus retraction ATPase. The paper (PMID:18174131) reports ATPase activity of
+  purified PilB, PilT and PilU, and PseudoCAP gave PilB `GO:0016887` ATP
+  hydrolysis activity from it on the same day: the PilU row is a one-digit id
+  slip. The clade's endonuclease IBA exists only because of it. The same
+  GO:0016888 row was also put on fimT, a minor pilin the paper does not
+  describe; fimT seeds no node, so that copy does not propagate.
+- **hutI (PSEAE, PA5092)**, imidazolonepropionase activity on the LUCA-level
+  node **PTN000505272** (sole seed, 52 leaves including human AMDHD1). The term
+  is right, but the only seed is an IMP row on a 1967 pathway paper that
+  predates the gene and does not describe step III. Right answer, no anchor.
+- **thiI (PSEAE, PA5118)**, `GO:0052837` thiazole biosynthetic process on
+  **PTN001804941** (sole seed, 25 leaves). The seed paper (PMID:9209060) is a
+  *Salmonella* genetics study coded as a P. aeruginosa IDA. The node is the ThiI
+  family root, which is mostly short, rhodanese-less ThiI proteins (Firmicutes,
+  archaea) that make tRNA 4-thiouridine but not thiazole; the rhodanese domain is
+  what thiazole synthesis needs (PMID:21724998, PMID:22773787). A seed-side error
+  and a sub-activity loss (pattern 8) at once.
+- **More seed-side cases from the full tier 1 sweep.** A signal synthase given
+  signal transduction (lasI; GO's process starts at reception, quorum sensing is
+  the right term); a transcriptional activator's auxotrophy given the pathway
+  itself (cysB, cysteine biosynthesis); a type III secretion repressor given
+  positive regulation of secondary metabolism with no such phenotype in the
+  paper (ptrB); a 4-hydroxyproline epimerase seed on a protein that Swiss-Prot
+  records experimentally as lacking that activity (lhpL; PAO1's real epimerase
+  is PA1268); an importer ATPase's EDTA growth defect given "response to zinc
+  ion" (znuC, a node reaching ~1,455 GOA rows); and a seed paper from another
+  species in which the gene was never tested (PA1340, *P. putida*).
+- **The node-side counterpart.** For 23 genes the seed is right for PAO1 but
+  the node is the whole family: salicylate synthesis on the chorismate mutase
+  root (pchB), heme d1 synthesis on an archaeal radical SAM clade (nirJ),
+  siderophore repression on Fur proteins of bacteria without siderophores
+  (fur), polysaccharide regulation on sigmaE-regulating RseB orthologs (mucB),
+  and phenazine biosynthesis on housekeeping DAH7P synthases, including PAO1's
+  own PA2843 (phzC1). These are pattern 14 or pattern 8 errors whose single
+  seed makes them easy to trace.
+- **Control: lap (PSEAE, PA2939)**, `GO:0006508` proteolysis on
+  **PTN000254534** (sole seed, 272 leaf IBAs in 109 taxa) is SOUND: the
+  PseudoCAP IDA (PMID:11533066) assays the purified aminopeptidase directly.
+  A sole seed is a reason to look, not a verdict.
+
+**Lesson**: when an IBA looks wrong but the node placement looks right, read
+the seed rows behind the IBD. Seed-side errors seen so far: indirect
+phenotypes (PSEAE/ccmC, estA), a mistyped GO id (pilU), inflated evidence codes
+(fleN), and anchors that predate the gene (hutI). An IMP seed for a molecular-function term is the
+first thing to check: ask whether the mutant lost the activity because the gene
+does it, or because the gene is needed upstream (cofactor supply, export,
+regulation). Record a wrong seed twice, as a `source_defects` item for the
+seed's own resource and one for `GO_CENTRAL` naming the PTN node.
 
 ## Featured Examples
 
@@ -1328,6 +1492,33 @@ and a representative seed) in the corresponding
 > HIGH confidence an `ABSENT` verdict is a strong lead for review, not an
 > automatic `REMOVE`.
 
+### ccmC (PTHR30071) - Phenotype-Derived Catalase Activity Seeding a Heme-Trafficking Family
+
+**Species**: SHEON (*Shewanella oneidensis* MR-1), `UniProtKB:Q8EK42`
+**Status**: DRAFT
+**PANTHER Family**: [PTHR30071](../interpro/panther/PTHR30071/) (HEME EXPORTER PROTEIN C)
+
+**IBA Annotations Flagged**:
+| Term | Issue | Action |
+|------|-------|--------|
+| GO:0004096 catalase activity | Catalase chemistry on a heme-trafficking membrane protein; the IBD's only seed is a phenotype-derived MF | REMOVE |
+
+The row is `GO_REF:0000033` with `WITH/FROM` `PANTHER:PTN001247822|UniProtKB:Q9I3N5`. The companion `GO:0098869` cellular oxidant detoxification is not itself an IBA — it is a `GO_REF:0000108` `IEA` whose only supporting entity is `GO:0004096` — but it is removed with it, and is the reason a seed-level defect here reaches two aspects of the leaf.
+
+**Lesson**: **binding heme is not having heme chemistry.** Catalase (EC 1.11.1.6) is a soluble heme enzyme with a dedicated active site. CcmC is a polytopic inner-membrane protein whose only characterised heme interaction is **non-catalytic** binding at the periplasmic WWD domain, where the heme is handed intact to CcmE (PMID:20599545, PMID:29518410), and no member of the CcmC/CcmF/CcsA heme-handling superfamily has been reported to dismutate hydrogen peroxide. A heme-trafficking family is therefore a standing trap for the propagation of heme-**enzyme** activities: the cofactor is shared across the two, the chemistry is not, and a reviewer who checks only whether the protein handles heme will wave the annotation through.
+
+**Root Cause Analysis**:
+1. `interpro/panther/PTHR30071/PTHR30071-paint.tsv` records the IBD directly — `PTN001247822  GO:0004096  F  IBD  UniProtKB:Q9I3N5` — so the single-donor reading is read off the PAINT file rather than inferred from the `WITH/FROM`.
+2. That donor is `UniProtKB:Q9I3N5` = **CCMC_PSEAE**, the reviewed entry "Heme exporter protein C", gene `ccmC` (PA1477) of *Pseudomonas aeruginosa* PAO1. The donor is itself a CcmC and sits in this very family, so neither the node placement nor the tree is at fault — unusually for this catalog, the whole defect is in the seed row (pattern 16).
+3. The seed row is a PseudoCAP **IMP** from PMID:16824107, alongside five further IMP rows from the same reference: `GO:0002049` pyoverdine biosynthetic process, `GO:0009247` glycolipid biosynthetic process, `GO:0043107` type IV pilus-dependent motility, and `GO:0071977` / `GO:0071978` flagellum-dependent swimming and swarming motility. That set reads as the pleiotropic phenotype of a cytochrome c maturation mutant — a strain with no mature c-type cytochromes — recorded as if each entry were a function of CcmC; and a molecular function cannot be established from a loss-of-function phenotype at all.
+4. The defect is **node**-scoped, not signature-scoped, and a same-subfamily CcmC shows it: `UniProtKB:Q88EX7` (*P. putida* KT2440, `genes/PSEPK/ccmC/`) shares both `PTHR30071` and `PTHR30071:SF1` with Q8EK42, and its GOA — every row dated `20260727`, so current — carries no `GO:0004096` row and no `IBA` row at all; its own plasma-membrane `IEA` cites node `PTN002409360`, which is absent from `PTHR30071-paint.tsv`. Why Q88EX7 falls outside `PTN001247822` is not established here. What the comparison does establish is exactly the distinction pattern 16 turns on: nothing about the family signature or the tree produces this annotation, so there is nothing to fix at family level — one seed row on one node produces it, and withdrawing that row is the whole remedy.
+
+**Two upstream defects, at two different confidences and against two different records.** The gene review keeps them apart deliberately, and the distinction is the substance of the case rather than hedging around it:
+
+- **Against the PAINT IBD** (`PANTHER:PTN001247822`, resource `GO_CENTRAL`, `requested_change: DELETE_ROW`) — **CONFIRMED**. PTHR30071 is the CcmC heme exporter family of the WWD heme-handling superfamily, none of whose members has been shown to have catalase activity, and the IBD's only seed is the row below. This claim is stated firmly: the IBD should be retracted. Its reach, by contrast, is stated only to what the PAINT file supports — the IBD sits on `PTN001247822` and the IBA follows to the leaves descending from that node, `UniProtKB:Q8EK42` among them. It is *not* claimed to reach every bacterial CcmC in the family, and the retraction request does not depend on the reach. `genes/PSEPK/ccmC/` is the in-repo counterexample: `UniProtKB:Q88EX7` (*P. putida* KT2440) is in PTHR30071 and in the same `PTHR30071:SF1` subfamily as Q8EK42 by its own UniProt `DR PANTHER` lines, yet its GOA carries no `GO:0004096` row and no `IBA` row of any kind, and its plasma-membrane `IEA` cites node `PTN002409360`, which does not appear in `PTHR30071-paint.tsv` at all. Why Q88EX7 sits outside `PTN001247822` is not established here; only that it does not carry the row.
+- **Against the PseudoCAP row** (`UniProtKB:Q9I3N5`, resource `OTHER`, `requested_change: DELETE_ROW`) — **PROBABLE**. This one is filed as *suspect, not established*. The phenotype-block reading is an inference about how the six rows were assigned, and the argument against this particular row rests on the aspect mismatch rather than on an assay showing CcmC does not dismutate peroxide. The request is that the catalase row be withdrawn and the process rows rechecked against the intended publication.
+- **Whether PMID:16824107 is mis-keyed is left explicitly open.** The cached record is **abstract-only**. Its abstract is a biochemical account of System I CcmABC-mediated release of the periplasmic heme chaperone holoCcmE and reports none of those *Pseudomonas* phenotypes, which is why the reference *may* be mis-keyed — but the abstract **names no organism at all**, so which organism was assayed cannot be determined from what we hold, and neither defect's request depends on the answer. An earlier round of this review asserted the paper was a study of *E. coli* CcmABC; that was an inference the abstract does not support, and it was corrected.
+
 ## Genes with IBA Issues
 
 | Gene | Species | IBA Issue Type | Severity | Status |
@@ -1389,6 +1580,29 @@ and a representative seed) in the corresponding
 | spiA | DICDI | Compartment mismatch: SCAMP TGN/recycling-endosome on a spore-coat protein | LOW | COMPLETE |
 | acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
 | DNAH12 / Dnah12 | human, mouse | **Ortholog split across PANTHER families** (human PTHR46532, mouse PTHR10676 in PANTHER 19): human gets no IBA, while mouse inherits inner dynein arm assembly (PTN008951089). Mouse also over-inherits microtubule motor activity, although DNAH12 lacks a microtubule-binding domain | MEDIUM | COMPLETE |
+| ccmC | SHEON | Phenotype-derived MF as IBD seed: catalase activity from a PseudoCAP IMP phenotype row, propagated by PTHR30071 node PTN001247822 to its descendant leaves | HIGH | DRAFT |
+| PSEAE/ccmC | PSEAE | **Seed-side error**: catalase activity IBD (PTN001247822, sole seed, 143 leaves) seeded by a PseudoCAP IMP mutant phenotype on a heme exporter; seed also cites the wrong PMID | HIGH | COMPLETE |
+| estA | PSEAE | **Seed-side error**: lipid biosynthetic process IBD (PTN005219546, sole seed, 960 leaves) seeded by a rhamnolipid-deficiency phenotype of an outer-membrane esterase | HIGH | COMPLETE |
+| pilU | PSEAE | **Seed-side error**: DNA endonuclease IBD (PTN000766390, sole seed) from a PseudoCAP GO id slip (GO:0016888 for GO:0016887) on a pilus ATPase | HIGH | COMPLETE |
+| hutI | PSEAE | Seed-side: LUCA imidazolonepropionase IBD (PTN000505272, reaches AMDHD1) anchored only on a 1967 paper that predates the gene | LOW | COMPLETE |
+| wbpD | PSEAE | Seed-side: UDP-glucuronate biosynthesis IBD (PTN001292385, sole seed) from a PseudoCAP row placing a UDP-ManNAc3NAcA-pathway acetyltransferase in the wrong pathway | MEDIUM | COMPLETE |
+| PA3760 | PSEAE | Seed sound, node too broad: N-acetylglucosamine transport (PTN000532509) on a general PTS Enzyme I node (PtsI, PtsP, FruB) | MEDIUM | COMPLETE |
+| pilM | PSEAE | Seed-side: type IV pilus CC IBD (PTN001286216, sole seed) from an IMP 'no pili' phenotype recorded as located_in; node also reaches EutJ | MEDIUM | COMPLETE |
+| PA1055 / PA1057 | PSEAE | Seed-side: Na+/H+ antiporter activity IBDs seeded as IMP `enables` on subunits that were never mutated; complex activity, should be contributes_to | MEDIUM | COMPLETE |
+| thiI | PSEAE | Seed-side + sub-activity loss: thiazole IBD (PTN001804941, sole seed) from a Salmonella paper coded IDA, placed on a root of rhodanese-less ThiI | MEDIUM | COMPLETE |
+| PA0920 | PSEAE | Seed-side: phospholipid homeostasis IBD (PTN002162750) is a consequence of A-PG synthesis; node includes fungal sterol glycyltransferases | MEDIUM | COMPLETE |
+| liuC | PSEAE | Seed-side: terpene catabolic process IBD (PTN001733227) true for PAO1 only through pathway context the other leaves lack | MEDIUM | COMPLETE |
+| lasI | PSEAE | Seed-side: signal transduction IBD (PTN002217335) on a LuxI-family signal synthase; quorum sensing is the right term | MEDIUM | COMPLETE |
+| cysB | PSEAE | Seed-side: L-cysteine biosynthesis IBD (PTN002824317) from the auxotrophy of a mutant of the pathway's activator; all 10 leaves are CysB/Cbl regulators | MEDIUM | COMPLETE |
+| ptrB | PSEAE | Seed-side: positive regulation of secondary metabolism IBD (PTN002215317); paper shows PtrB represses type III secretion | MEDIUM | COMPLETE |
+| lhpL | PSEAE | Seed-side: 4-hydroxyproline epimerase IBD (PTN002433936) on a protein experimentally shown to lack that activity | HIGH | COMPLETE |
+| znuC | PSEAE | Seed-side: response to zinc ion IBD (PTN001952271, ~1,455 GOA rows) from an EDTA growth defect of an importer ATPase | MEDIUM | COMPLETE |
+| pchB, nirJ, fur, mucB, phzC1 | PSEAE | Seed sound, node is the whole family: gene-specific roles (salicylate, heme d1, siderophore repression, alginate regulation, phenazines) propagated to family members without them | MEDIUM | COMPLETE |
+| lap | PSEAE | Control: sole PseudoCAP IDA seed of proteolysis IBD (PTN000254534, 272 leaves) is sound | N/A | COMPLETE |
+| fleN | PSEAE | Seed-side: ATP binding IBD (PTN000344128, sole seed, 149 leaves) seeded by an IDA row that rests on a sequence motif; term true from later structures | MEDIUM | COMPLETE |
+| pvdE | PSEAE | Seed sound but node too deep: transmembrane transporter activity (PTN000656738, sole seed) on 126 NBD-only leaves of 140 | MEDIUM | DRAFT |
+| PA5458 | PSEAE | Seed sound; LPS (PTN000546841) and polysaccharide (PTN000546715) biosynthesis IBDs reach non-LPS bacteria and eukaryotes | MEDIUM | COMPLETE |
+| pqsH | PSEAE | Seed sound; one bacterial seed carries ~294 plant monooxygenase IBAs across an HGT node (PTN008173107) | LOW | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 
@@ -1539,7 +1753,7 @@ should not.
 1. **Flag pseudo-enzyme candidates**: Proteins with enzyme domains but missing catalytic residues
 2. **Flag neo-functionalized subfamilies**: Long branch lengths and different EC numbers indicate potential opposite function
 3. **Validate substrate specificity**: Don't assume identical specificity across orthologs
-4. **Distinguish core vs. secondary**: Mark promiscuous activities as non-core
+4. **Distinguish core vs. secondary**: a genuine secondary activity is non-core, but noise-level promiscuous activity of a paralog is removed; see the promiscuous-activity tiers in [ENZYME_SPECIFICITY](ENZYME_SPECIFICITY.md)
 5. **Prefer specific terms**: Replace generic IBA with specific terms when evidence exists
 6. **Check for functional divergence**: Especially in rapidly evolving families
 7. **Consider organism-specific biases**: Source annotations may reflect experimental systems (e.g., NMJ in flies) that don't apply to target species
@@ -1550,6 +1764,7 @@ should not.
 12. **Don't inherit a paralog's compartment/complex**: family members share folds but not localization or complex membership — verify the protein actually occupies the annotated complex/compartment (EIF4E2, ALDH1L1, PEX2)
 13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
 14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
+15. **Check the seeds, not only the node**: an IBD is only as good as the experimental rows it rests on. When one seed carries a node, especially an IMP row for a molecular function, confirm the paper shows the gene's own activity rather than a downstream mutant phenotype (PSEAE/ccmC catalase; see patterns 16 and 17 and [PSEUDOCAP](PSEUDOCAP.md))
 
 ## Quality Indicators
 
@@ -1747,6 +1962,27 @@ the text defensible was the limb arguing against the action it sat on.
 
 ---
 
+## Single-organism IBA phylogenetic distance analysis
+
+While a short `WITH/FROM` donor list is not by itself evidence against an IBA, a single organism's experimental annotation used to seed a deep ancestral `IBD` node (`Opisthokonta`, `Eukaryota`, `LUCA`) and propagated across kingdoms or subfamily boundaries fails at a much higher rate than close-clade transfers. Across all 25,298 positive GOA `IBA` rows (6,382 GOA genes; 6,379 reviewed genes) in this repository, **3,517 (13.9%)** across 2,165 genes rest on experimental support from a single distinct non-self organism (3,433 rated: 3,426 with a resolved donor lineage and 7 in `Tier 0` with an unresolved donor lineage; and **8,161 / 20,108 = 40.6%** of cached PAINT `IBD` rows rest on a single resolved taxon).
+
+We defined and benchmarked four quantitative phylogenetic distance metrics in [`IBA_REVIEW/single-organism-distance.md`](IBA_REVIEW/single-organism-distance.md) (computed by [`IBA_REVIEW/single_organism_distance.py`](IBA_REVIEW/single_organism_distance.py)), separating **Propagation Failure (`Fail` = `REMOVE` + `MARK_AS_OVER_ANNOTATED`)** from **Term Granularity Refinement (`Refn` = `MODIFY` + `TOO_GENERAL`)**:
+
+1. **Taxonomic LCA Clade Depth ($d_{\text{LCA}}$) & Branch Steps ($s_{\text{up}} + s_{\text{down}}$):** Propagation failure (`% Fail`) and outright `% REMOVE` rates climb substantially as the donor–target LCA moves from close clades to deep cross-kingdom and cross-domain splits (whereas term-refinement rates stay roughly flat around 6%–9%, except in small-$n$ Tier 2):
+   - **Tier 1** (Close clade, e.g. `Euarchontoglires`, `Murinae`, `Caenorhabditis`, $n = 1{,}346$): **8.0%** Fail (`REMOVE` **2.6%**), **5.9%** Refn (**14.0%** total downgraded).
+   - **Tier 2** (Intermediate / unenumerated clade, e.g. `Saccharomycotina`, `Magnoliopsida`, plus residual fallback clades, $n = 73$): **1.4%** Fail (`REMOVE` **0.0%**), **16.4%** Refn (**17.8%** total downgraded; 12 of 13 non-retained rows are `MODIFY`/`TOO_GENERAL` refinements).
+   - **Tier 3–4** (Phylum / Bilateria splits, e.g. `Euteleostomi`, `Ascomycota`, `Bilateria`, $n = 556$ and $n = 500$): **12.2%–13.6%** Fail (`REMOVE` **5.9%** and **4.6%**), **5.8%–7.2%** Refn (**19.4%** total downgraded).
+   - **Tier 5** (`Opisthokonta` Fungi $\leftrightarrow$ Metazoa / `Amorphea` / deep bacterial split, $n = 735$): **13.7%** Fail (`REMOVE` **5.4%**), **7.8%** Refn (**21.5%** total downgraded).
+   - **Tier 6** (`Eukaryota` root, e.g. `Viridiplantae` $\leftrightarrow$ `Opisthokonta`, $n = 83$): **19.3%** Fail (`REMOVE` **10.8%**), **1.2%** Refn (**20.5%** total downgraded).
+   - **Tier 7** (`cellular_organisms` / `LUCA`, `Bacteria`/`Archaea` $\leftrightarrow$ `Eukaryota`, $n = 133$): **22.6%** Fail (`REMOVE` **15.0%** — nearly 6$\times$ the Tier 1 `REMOVE` rate), **9.0%** Refn (**31.6%** total downgraded).
+2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):** Calibrated on close donor–target pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}538$ total: 785 in locally cached PAINT families with an explicit node taxid, 226 in cached families with an unrecorded blank `taxon:` in `*-paint.tsv`, and 527 uncached), single-organism IBAs whose `IBD` was placed at `LUCA`/`Eukaryota`/`Opisthokonta` ($d_{\text{PTN}} \le 1$, $n = 121$) or intermediate pre-vertebrate clades ($2 \le d_{\text{PTN}} \le 5$, $n = 252$) have a **7- to 8-fold higher `REMOVE` rate** (**4.1%** and **3.6%**, with **8.3%** and **7.1%** Fail, **14.9%** and **13.9%** total downgraded) than those scoped within the clade/Vertebrata ($d_{\text{PTN}} \ge 6$, $n = 412$: **0.5%** `REMOVE`, **6.6%** Fail, **13.6%** total downgraded). Rows in cached families with an unrecorded blank `taxon:` string ($n = 226$) show **8.4%** Fail and **4.9%** `REMOVE` (**12.4%** total downgraded).
+3. **PANTHER Subfamily Dilution (`SAME_SF` vs `CROSS_SF`):** Across the 1,156 rated rows with resolved PANTHER subfamilies and donor lineages, crossing a subfamily boundary increases the propagation failure (`% Fail`) rate and nearly doubles the `REMOVE` rate across both close/moderate taxa ($d_{\text{LCA}} \ge 4$: **10.6%** vs **7.4%** Fail; **4.2%** vs **2.3%** `REMOVE`; $n = 189$ vs $n = 430$) and distant taxa ($0 \le d_{\text{LCA}} \le 3$: **19.1%** vs **12.3%** Fail; **8.7%** vs **5.8%** `REMOVE`; $n = 277$ vs $n = 260$).
+4. **Exact PANTHER Tree Edge Steps & Duplications (`projects/TREEGRAFTER/graft_paths_all.tsv`):** Across all 383 rated single-taxon `IBD` paths in `graft_paths_all.tsv` (which audits reviewed **TreeGrafter (`IEA`)** graft paths on non-PANTHER species rather than the 3,433 GOA `IBA` population, and has only $n = 2$ direct row overlap with GOA `IBA` annotations), crossing a gene-duplication node on `< 10` step paths raises the failure rate from **12.9%** (`REMOVE` **4.8%**, $n = 209$) to **17.3%** (`REMOVE` **8.0%**, $n = 162$), and to **20.0%** (`REMOVE` **10.0%**, $n = 10$) on paths of $\ge 10$ tree steps with duplication.
+
+*Methodological note*: Because review actions in this repository were generated under `IBA_REVIEW.md` guidelines that explicitly instruct reviewers to scrutinize deep-node and cross-kingdom propagations, observed failure rates partly reflect reviewer policy rather than an independent experimental ground truth; see [`IBA_REVIEW/single-organism-distance.md`](IBA_REVIEW/single-organism-distance.md) for full discussion of confounds, sample sizes, and candidate re-reviews.
+
+---
+
 ## Project history & methodology
 
 This page records the **synthesized findings**. The dated project log, the per-pass
@@ -1756,3 +1992,6 @@ verification narrative (what was added, what was retracted and why), and the
 A reproducible **multiple-sequence-alignment check** of the two central pseudo-enzyme
 claims (Argonaute catalytic tetrad; CRMP/DPYSL metal-coordinating residues) lives in
 [IBA_REVIEW/msa/](IBA_REVIEW/msa/RESULTS.md) — `uv run python catalytic_residue_msa.py`.
+Quantitative phylogenetic distance analysis for single-organism IBAs lives in
+[IBA_REVIEW/single-organism-distance.md](IBA_REVIEW/single-organism-distance.md) —
+`uv run python projects/IBA_REVIEW/single_organism_distance.py --summary`.

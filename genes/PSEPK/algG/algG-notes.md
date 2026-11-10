@@ -1,0 +1,23 @@
+
+## 2026-10-25 cross-species polymerization/export audit
+
+Q88NC9/PP_1283 has a specific AlgG/D-mannuronate C5-epimerase family classification. PMID24398681 crystal/functional work uses P. syringae; 12775688 uses P. fluorescens; 12581364/16401084/16866359 use Pa. No target-specific kinetic constants, catalytic residue numbering or exact product proportions are transferred. The Pa enzyme can form adjacent G residues in vitro (16401084) and has no M-versus-G neighbor bias (16866359), so native Pseudomonas lack of GG blocks is not a universal intrinsic catalytic restriction. A live OLS GO search for mannuronan and alginate epimerase returned no term; the existing broad NEW MF and precise NTR remain. Sequence caution and by-similarity source are not treated as target experiments.
+
+Normal fetch-gene and fetch-gene-pmids were run. Existing source files that differed from remote were preserved; only pipeline-backed qualifier/supporting-entity backfills were accepted. All original GOA rows were independently assessed. Annotation-state GOA files, module output and unnecessary broad family exports were removed from the evidence bibliography. Primary articles and curated target family/function statements replace unqualified provider synthesis. Existing genuine Falcon reports for AlgG/K/E were read and retained as secondary context. Missing alg8 research was attempted concurrently with publication caching; Falcon authentication and fallback credit/quota failures are recorded in /tmp/polymer-PSEPK-alg8-deep.log, so no provider report was fabricated or repeated for alg44/algL. Fitness fetch was attempted for all six and failed for missing local data/unreachable FEBA, documented in /tmp/polymer-PSEPK-algG-fetch-fitness.log; no fitness inference is made.
+
+Source access: PMID25968647,25817996,20159471,36494359,34990713 and refreshed24398681 have full cached text. PMID17601783,12775688,12581364,16401084,16866359 and21778407 have abstract-only caches; explicit abstract findings are quoted and no absent full-text experiment is rejected. The AlgE full article was additionally inspected on PMC; the cache limitation remains truthful. All molecular-function proposals are backed by enzyme/structural/family evidence; this audit adds no new process term. No relevant accession appeared in gocams/index.tsv. Source fields are preserved and record sections are backfilled with the helper.
+
+Final validation: just validate PSEPK algG passed. Original annotation fields were compared with the pre-fetch snapshot and remain unchanged, apart from supported pipeline additions. Final rows: 3; actions {'ACCEPT': 2, 'NEW': 1}. Existing Falcon-report citation advisories are intentionally tolerated where direct primary sources replace the report in row evidence.
+
+
+## PR #5552 follow-up, 2026-10-26
+
+GO:0016857 was verified live as catalysis altering chiral centers in a carbohydrate molecule (EC5.1.3.-); polymer-bound mannuronate meets that definition. All three cores now use the valid broad term. Pa PMID:8144447 and Azotobacter PMID:8830682 directly assay recombinant target epimerization and support nonredundant IDA MF proposals; the pre-existing KT2440 ISS proposal remains comparative. All three precise-term proposals use an identical definition and GO parent; this is one ontology request with three supported use cases, not three distinct activities. RHEA:45572 was verified directly and is attached as module reaction evidence. No redundant specific NEW row was added.
+
+## 2026-10-26 — explicit ISS comparator and primary support
+
+The retained GO:0016857 ISS proposal now identifies Pseudomonas aeruginosa AlgG UniProtKB:Q51371 in review provenance. That pass left the reviewer-authored NEW proposal's reference and absent sequence-source field unchanged. Its earlier description as a machine-origin annotation was incorrect: this proposal is absent from GOA and its source fields are curator-authored. PMID:8144447 supplies direct donor epimerase chemistry, with E. coli recombinant-host and P. aeruginosa native-complementation scope separated from KT2440 inference. No annotation actions or new rows changed.
+
+## 2026-10-26 — make the ISS proposal source explicit
+
+The NEW ISS proposal now names UniProtKB:Q51371 in supporting_entities. PMID:8144447 replaces the provider report as its original_reference_id and independently supports donor epimerization. This corrects proposal provenance without changing a machine-sourced GOA row, annotation action, qualifier, or molecular-function conclusion. The earlier provenance paragraph and session details are corrected where they falsely described these NEW rows as machine annotations.

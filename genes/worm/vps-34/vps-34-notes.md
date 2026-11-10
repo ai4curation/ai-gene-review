@@ -17,3 +17,7 @@
 - Pleiotropic developmental and trafficking phenotypes (molting, LRP-1 secretion, nuclear envelope, endosome size, life span) kept as non-core.
 - IBA peroxisome and PI-mediated signaling marked as over-annotated.
 - Engulfment terms kept as non-core: the evidence points to phagosome maturation rather than engulfment [PMID:18425118 "accumulation of internalized, but undegraded, corpses"].
+
+## Follow-up on description sources (2026-10-30)
+
+- UniProt FUNCTION also lists a possible role in gut granule (lysosome-related organelle) formation, citing the RNAi screen PMID:15843430, and a role in larval germline stem cell proliferation, citing PMID:28285998. Both cached papers are abstract-only and their abstracts do not name vps-34 [PMID:28285998 "autophagy genes such as bec-1/BECN1/Beclin1, atg-16.2/ATG16L, atg-18/WIPI1/2, and atg-7/ATG7 are required for the late larval expansion of germline stem cell progenitors"]. These are RNAi phenotypes peripheral to the PtdIns3P kinase function and were not added to the description or annotated.

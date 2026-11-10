@@ -119,3 +119,8 @@ The biologically appropriate response to the upstream concern is to keep direct
   proposed obsoletion (go-annotation#6437 → go-ontology#32108), once the NTR
   replacement term is minted, Tom22 will need a MODIFY pass on the
   `core_functions.molecular_function` slot.
+
+## Amyloid-beta import (SGD description follow-up)
+
+- SGD states that Tom22 is implicated in mitochondrial accumulation of amyloid-beta peptides. Hu et al. 2018, using isolated yeast mitochondria, found that Abeta is recognised by Tom22 and that residues 25-42 of the peptide mediate the interaction [PMID:29925587 "we found that residues 25-42 in the Aβ peptide mediate the specific interaction with TOMM22"]. The proposed transfer to Tom40 and passage through the TOM channel is the authors' model [PMID:29925587 "we propose that cytosolic Aβ is recognized by TOMM22; transferred to another translocase subunit, TOMM40; and transported through the TOMM channel into the mitochondria"].
+- Abeta is a heterologous human peptide, so this is a disease-model use of the Tom22 receptor function rather than a physiological yeast role. It is recorded here and in the SGD reference review, and not as an annotation.

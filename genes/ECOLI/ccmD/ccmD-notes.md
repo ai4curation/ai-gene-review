@@ -1,0 +1,53 @@
+# ccmD (P0ABM5, b2198) notes
+
+## Provenance / process
+
+- 2026-10-23: Deep research could not be run. `just deep-research-falcon ECOLI ccmD`
+  failed with `Exception: Failed to authenticate`, and no other provider credentials
+  were available. This review is based on the cached publications cited in GOA and in
+  the system I module, the UniProt record, and the reviewed P. putida ortholog
+  (`genes/PSEPK/ccmD`).
+
+## Biology
+
+- 69-residue single-pass inner-membrane protein, N terminus periplasmic, C terminus cytoplasmic.
+  [PMID:18326572 "Evidence is presented that the topology of CcmD in the cytoplasmic membrane is the N terminus outside and the C terminus inside with one transmembrane domain."]
+- Interacts with CcmC and CcmE; ternary CcmCDE complex; no detectable heme binding.
+  [PMID:15513913 "We demonstrate the formation of a ternary complex consisting of CcmCDE."]
+  [PMID:15513913 "Interactions of CcmD with either ferrochelatase, the last heme biosynthetic enzyme, or directly with heme were not detectable."]
+- Subunit of CcmABCD; essential for holo-CcmE release, not for heme transfer.
+  [PMID:18326572 "CcmD is absolutely required for the release of holo-CcmE from the CcmABCD complex."]
+  [PMID:18326572 "CcmD is not necessary for the CcmC-dependent transfer of heme to CcmE in the periplasm or for interaction of CcmE with CcmABC."]
+- Conflict: Schulz et al. proposed CcmE stabilisation
+  [PMID:10339610 "CcmD was found to be involved in stabilizing the heme chaperone CcmE in the membrane."]
+  but Richard-Fogal et al. saw equal CcmE levels with or without CcmD
+  [PMID:18326572 "we conclude that CcmD is not essential for heme transfer to CcmE or for the stability or membrane insertion of CcmE"].
+  Recorded as a DISPUTED finding_review on PMID:10339610. The module currently phrases
+  CcmD's role as stabilising CcmE; the E. coli evidence favours a holo-CcmE release role.
+  Flag this for the module curator.
+
+## Curation decisions (summary)
+
+- Core: cytochrome c biosynthetic process (GO:1903607) at the plasma membrane; no defined MF
+  (core function omits molecular_function, as in the PSEPK ccmD review).
+- ABC transporter complex NAS accepted (membership experimentally shown; CcmD's essential
+  role is exerted within this complex).
+- Heme transport IEA marked over-annotated; heme import across plasma membrane NAS removed.
+- Cytochrome complex assembly (IEA, NAS) modified to GO:1903607; membrane modified to plasma membrane.
+- Four bare protein-binding IPI rows removed per policy.
+
+
+## 2026-11-06 system I comparative reassessment
+
+Supports assembly and release of heme-loaded CcmE within the CcmABCD membrane machinery. The E. coli evidence is distinguished from heterologous ortholog assays and engineered expression constructs.
+
+Read the full 2023 E. coli structures (PMID:37626034), 2025 CcmB efflux work (PMID:40026579) and CcmCD crosslink mapping (PMID:40167305). The studies disagree about the heme conduit. ATP-dependent holo-CcmE release and covalent loading remain supported; heme contact, engineered overexpression, and proposed channel models are distinguished from purified vectorial transport. Broad intracellular heme handoff is not equivalent to membrane translocation. The 2025 review PMID:40460019 is abstract-only and is not used to settle this disagreement.
+
+Specific reassessment: Supports assembly and release of heme-loaded CcmE within the CcmABCD membrane machinery. CcmCD heme-acceptance contacts provide an additional proposed role, without proving a conserved individual transport activity.
+
+Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.
+
+
+## 2026-11-06: PR6121 round-2 location-evidence audit
+
+Replaced chemistry-only support on location rows 7 and added matching locational evidence to location-bearing cores. CcmD topology was examined directly in the cytoplasmic membrane: an N-out/C-in protein with one transmembrane segment. The membrane refinement rests on this location evidence rather than holo-CcmE release. Annotation actions and every original non-review payload, including historical NEW rows, remain unchanged. Full prior reviews and source hashes were frozen before editing in the round2-location cache; the durable preservation proof records comparison to published head 044f9278bcea364ad66bccc221fdfc78132ba4eb.
