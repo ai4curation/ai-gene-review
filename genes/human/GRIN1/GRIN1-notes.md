@@ -7,9 +7,12 @@
 - `just deep-research-falcon human GRIN1 --fallback perplexity-lite` failed: neither the falcon nor the
   perplexity provider is configured in this environment ("Provider 'falcon' not available. Available:
   openscientist, claude_code").
-- `just deep-research-openscientist human GRIN1` was started as a substitute. If a
-  `GRIN1-deep-research-openscientist.md` file is present beside this file it finished; the review below
-  was written from the cached publications, the UniProt record and the rat/mouse donor papers, not from it.
+- `just deep-research-openscientist human GRIN1` was run as a substitute and finished after the verdicts
+  were drafted (`GRIN1-deep-research-openscientist.md`). It was read as a cross-check. It agrees with the
+  review on every point compared and changed no verdict. It supplied one extra citation for the glutamate
+  binding removal [PMID:12805203 "NMDA receptors require both glycine and glutamate for activation with NR1
+  and NR2 forming glycine and glutamate sites, respectively"]. Its quote attributed to PMID:9089692 is not in
+  that paper's abstract, so it was not used; its other citations were not checked.
 - No provider deep-research file was written by hand.
 
 ### What the gene does
@@ -40,7 +43,7 @@
 ### Decisions worth a second look
 
 1. **glutamate binding (GO:0016595, IDA, PMID:7685113): REMOVE.** The only cached text is the abstract,
-   which reports currents, not binding. The UniProt DOMAIN comment (evidence ECO:0000269) and the structural
+   which reports currents, not binding. PMID:12805203, the UniProt DOMAIN comment (evidence ECO:0000269) and the structural
    literature place glutamate on GluN2 and glycine on GluN1. This is a removal of an experimental row on the
    ground that the function is contradicted, not on the ground that the abstract is about another gene. If
    the full text contains a binding assay on hNR1 alone, revisit.
