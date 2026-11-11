@@ -24,3 +24,4 @@ All 22 GOA rows on `Q1LU93` derive from PAINT phylogenetic propagation (`IBA` fr
   - `GO:0048813` (`dendrite morphogenesis`, IBA, ISS)
   - `GO:0030425` (`dendrite`, IBA, IEA)
   - `GO:0030426` (`growth cone`, ISS, IEA)
+- **Nuclear Speckle Mechanism & `GO:0035063` (`nuclear speck organization`) Evaluation**: Existing BP `GO:0035063` (`nuclear speck organization`) and a `GO:0005198` (`structural molecule activity`) proposed child were evaluated and withheld because mammalian STED core-domain enrichment (`PMID:41617053`) and acute speckle compaction upon anti-Simiate antibody blockade (`PMID:24349419`, `PMID:27167171`) do not yet distinguish structural scaffolding from factor recruitment or regulatory maintenance, and zebrafish `abitram` itself lacks direct functional characterization.
