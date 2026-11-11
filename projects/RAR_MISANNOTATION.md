@@ -181,6 +181,74 @@ IBA is low quality.
   give [TAXON_PATHWAY_VARIANCE](TAXON_PATHWAY_VARIANCE.md) candidate constraints,
   as long as the comparator check is applied before any proposal.
 
+## RAR rerun on current GOA (2026-11-11)
+
+[rar_rerun.py](RAR_MISANNOTATION/scripts/rar_rerun.py) reruns the screen on current data.
+It uses the paper's 20 species and the authors' exact rate-ratio test with Benjamini-Hochberg
+correction. The inputs are the GOA proteome files of 2026-11-04 and GO release 2026-07-26.
+It counts asserted annotations only (NOT rows excluded).
+
+| | Kingdom level | Vertebrates vs invertebrates |
+|---|---|---|
+| Terms with a rate ratio | 8,520 | 8,613 |
+| Rate ratio < 0.1 | 2,862 (paper, 2019: 2,369) | 577 (paper: 618) |
+| Of those, q < 0.05 | 2,615 | 550 |
+| Review candidates | 1,241 | 280 |
+
+The flag counts are close to the paper's, so the method reproduces on current data. Two
+artefacts inflate the raw counts:
+
+- **ND rows on root terms.** They make up 14,456 of the flagged annotations but assert no
+  function, so they are dropped.
+- **The animal denominator.** It is 351,036 proteins, because the human, mouse and chicken
+  proteome files include every unreviewed entry. A term curated only on reviewed animal
+  proteins therefore looks rare in animals.
+
+So the committed [candidates](RAR_MISANNOTATION/data/rar_rerun_direct_candidates.yaml) keep only
+stray annotations: q < 0.05, not a root term, and at most three proteins in the flagged taxon.
+Only 4 candidate terms were also flagged in 2018 or 2019, so nearly all of today's flags are new:
+MBF transcription complex, positive regulation of division septum assembly, periplasmic space,
+and (vertebrate vs invertebrate) sevenless binding. Three of these already have in-repo answers:
+TPV-004, the npp-20 MODIFY, and TPV-008 with CR-0006.
+
+### What is new since 2019
+
+- **Annotations that break an existing GO taxon constraint.** 38 candidate annotations break
+  a constraint GO already has, so they need no judgement about rates. Twelve are IBA from GO
+  Central, for example:
+  - histone deacetylase activity on *B. subtilis* AcuC (`never_in_taxon` Bacteria);
+  - nuclear-transcribed mRNA decapping on three bacterial RppH proteins (`only_in_taxon` Eukaryota);
+  - centrosome on Arabidopsis and *Selaginella* proteins (`never_in_taxon` Viridiplantae).
+
+  The rest are curated rows from TAIR, MGI, CGD, FlyBase and UniProt. Of the 19 terms
+  involved, the first pass finds 13 annotation errors, 4 constraints that look too narrow and
+  2 open cases. The too-narrow constraints are glutamate-gated calcium channel activity and
+  plasma membrane repair (both Metazoa-only, but plant GLR3.3 and SYT1 do this), cholesterol
+  binding (never in Fungi, but CAP/PRY proteins bind sterols), and sperm axoneme assembly
+  (Metazoa-only, but *Selaginella* makes flagellate sperm).
+- **TreeGrafter IEA in prokaryotes.** 47 prokaryote-flagged terms on 44 proteins come from
+  TreeGrafter, PANTHER's automatic transfer of PAINT annotations to unreviewed proteins. Most are
+  eukaryote-only structures and processes on *P. aeruginosa* PA14, *C. difficile* and archaeal
+  proteins: microtubule binding, mitotic spindle, nuclear pore, Golgi organization,
+  telomerase-dependent telomere maintenance, extracellular matrix. TreeGrafter postdates the
+  paper, which saw this pattern only as IBA. Grafting a TrEMBL protein onto a PAINT node
+  without a taxon check turns every node placed too deep into many IEA rows.
+- **Prokaryote IBA, the paper's Udg pattern.** Eighteen PAINT nodes still give bacteria IBAs
+  flagged at the kingdom level. The first pass finds:
+  - 6 errors: ubiquitin/proteasome terms on two *B. subtilis* proteins; sterol metabolism on
+    YjiC; carotenoid biosynthesis on YisP; a eukaryotic multi-synthetase complex on
+    *Mycoplasma* ProS; the AcuC and RppH constraint breaks;
+  - 7 that are rare but right: ecotin, PaaK, LigD NHEJ, PdxS, NhaP2, EnvC, MG002;
+  - 5 open cases.
+
+  The false flags make the paper's point again: a low rate shows curation density as often as
+  error.
+
+Verdicts are in [rar_rerun_triage.yaml](RAR_MISANNOTATION/data/rar_rerun_triage.yaml). They are
+first-pass: they rest on curated UniProt function text, term definitions and constraints, not on
+reading each paper. Plant-, animal- and fungus-flagged candidates (about 1,040 kingdom-level
+terms) are not triaged yet.
+
 ## Next steps
 
 - [x] Gene review: Arabidopsis DDL (At3g08840), on the MF IBA.
@@ -198,7 +266,10 @@ IBA is low quality.
 - [ ] Submit these to GO, InterPro and UniProt (status is PROPOSED in each file).
 - [x] Gene review: Drosophila boss, the positive control for curated rule CR-0006 (2026-11-07). It accepts both rule consequents on experimental evidence. It also narrowed CR-0006 from Arthropoda to Diptera, since experimental evidence for Boss acting as the Sev ligand is restricted to Drosophila, and no Sevenless-binding BOSS ectodomain has been identified outside Diptera (PMID:42043338); 135 of the 211 arthropod matches were non-dipteran.
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
-- [ ] Rerun RAR on current GOA for our reviewed species (script not yet written).
+- [x] Rerun RAR on current GOA (2026-11-11): script, candidates and a first-pass triage of the constraint breaks and prokaryote IBA nodes; see [above](#rar-rerun-on-current-goa-2026-11-11).
+- [ ] Triage the plant-, animal- and fungus-flagged RAR candidates (about 1,040 kingdom-level terms), starting with IBA nodes.
+- [ ] For the 13 annotation errors that break a taxon constraint, find out why GO's constraint check did not filter them; for the 4 questionable constraints, check the cited papers and propose TPV entries.
+- [ ] Look at the TreeGrafter prokaryote annotations by PAINT node, since one deep node yields many rows.
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
 
 ## Sources

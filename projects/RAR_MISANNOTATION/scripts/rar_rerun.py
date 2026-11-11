@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import json
 import re
 import urllib.request
 from collections import defaultdict
@@ -71,6 +72,8 @@ SPECIES = {
     88036: ("Plants", None, "34463.S_moellendorffii.goa"),
 }
 KINGDOMS = ["Animals", "Archaea", "Bacteria", "Fungi", "Plants"]
+ROOTS = {"GO:0003674", "GO:0008150", "GO:0005575"}  # ND rows on roots assert no function
+MAX_FLAGGED = 3
 PHYLA = ["Vertebrates", "Invertebrates"]
 
 
@@ -117,6 +120,64 @@ def read_obo(path: Path) -> tuple[dict, dict, dict]:
     return labels, aspects, parents
 
 
+QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}/constraints"
+UNIPROT_TAXON = "https://rest.uniprot.org/taxonomy/{taxid}.json"
+
+
+def get_json(url: str) -> object:
+    req = urllib.request.Request(url, headers={"Accept": "application/json",
+                                               "User-Agent": "ai-gene-review"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        return json.load(r)
+
+
+def taxon_constraints(terms: list[str]) -> dict[str, list[dict]]:
+    """GO taxon constraints (own and inherited) per term, from QuickGO; cached."""
+    path = CACHE / "taxon_constraints.json"
+    cache = json.loads(path.read_text()) if path.exists() else {}
+    todo = [t for t in terms if t not in cache]
+    for i in range(0, len(todo), 25):
+        batch = todo[i:i + 25]
+        for r in get_json(QUICKGO.format(ids=",".join(batch))).get("results", []):
+            # A constraint can name several taxa as a union, e.g. taxId "2, 2157, 4751".
+            cache[r["id"]] = [
+                {"relationship": c["relationship"],
+                 "taxa": [f"NCBITaxon:{x.strip()}" for x in str(c["taxId"]).split(",")],
+                 "taxon_label": c.get("taxName"), "on_term": c.get("ancestorId")}
+                for c in r.get("taxonConstraints", [])
+            ]
+        for t in batch:
+            cache.setdefault(t, [])
+    path.write_text(json.dumps(cache, indent=0, sort_keys=True))
+    return cache
+
+
+def lineages(taxids) -> dict[int, set[str]]:
+    """NCBITaxon CURIEs of each species and all its ancestors, from UniProt; cached."""
+    path = CACHE / "lineages.json"
+    cache = json.loads(path.read_text()) if path.exists() else {}
+    for t in taxids:
+        if str(t) not in cache:
+            d = get_json(UNIPROT_TAXON.format(taxid=t))
+            cache[str(t)] = [t] + [x["taxonId"] for x in d.get("lineage", [])]
+    path.write_text(json.dumps(cache))
+    return {int(k): {f"NCBITaxon:{x}" for x in v} for k, v in cache.items()}
+
+
+def violates(constraints: list[dict], lineage: set[str]) -> list[str]:
+    """Constraints the taxon breaks: outside every only_in_taxon, or inside a never_in_taxon."""
+    only = [c for c in constraints if c["relationship"] == "only_in_taxon"]
+    broken = [c for c in constraints
+              if c["relationship"] == "never_in_taxon" and lineage & set(c["taxa"])]
+    if only and not any(lineage & set(c["taxa"]) for c in only):
+        broken += only
+    return [describe(c) for c in broken]
+
+
+def describe(c: dict) -> str:
+    return f"{c['relationship']} {' or '.join(c['taxa'])} ({c['taxon_label']})"
+
+
 def ancestors(term: str, parents: dict, memo: dict) -> set:
     """All is_a/part_of ancestors of term, including itself."""
     if term not in memo:
@@ -128,7 +189,7 @@ def ancestors(term: str, parents: dict, memo: dict) -> set:
 
 
 def read_gaf(path: Path):
-    """Yield (protein, term, evidence, reference, assigned_by) for non-NOT GAF rows."""
+    """Yield (protein, term, evidence, reference, assigned_by, with_from) for non-NOT GAF rows."""
     opener = gzip.open if path.suffix == ".gz" else open
     with opener(path, "rt") as fh:
         for line in fh:
@@ -137,7 +198,7 @@ def read_gaf(path: Path):
             f = line.rstrip("\n").split("\t")
             if len(f) < 15 or "NOT" in f[3].split("|"):
                 continue
-            yield f"{f[0]}:{f[1]}", f[4], f[6], f[5], f[14]
+            yield f"{f[0]}:{f[1]}", f[4], f[6], f[5], f[14], f[7]
 
 
 def rate_ratio_p(y: int, n: int, x: int, m: int) -> float:
@@ -220,7 +281,7 @@ def main() -> None:
             head = "".join(next(fh) for _ in range(12))
         m = re.search(r"date-generated:\s*(\S+)", head) or re.search(r"Generated:\s*(\S+)", head)
         gaf_dates[fname] = m.group(1) if m else "unknown"
-        for prot, term, ev, ref, by in read_gaf(path):
+        for prot, term, ev, ref, by, wf in read_gaf(path):
             if term not in labels:
                 continue
             species_of[prot], kingdom_of[prot] = taxid, kingdom
@@ -230,7 +291,7 @@ def main() -> None:
                 prot_by_p[phylum].add(prot)
             terms = ancestors(term, parents, memo) if args.propagate else {term}
             for t in terms:
-                annots[(prot, t)].append((ev, ref, by) if t == term else ("inferred-ancestor", ref, by))
+                annots[(prot, t)].append((ev, ref, by, wf) if t == term else ("inferred-ancestor", ref, by, ""))
 
     reviewed = reviewed_index()
     prior = yaml.safe_load(open(OUT_DIR / "rar_supplement_cases.yaml"))["cases"]
@@ -242,10 +303,11 @@ def main() -> None:
             annotations = []
             for prot in r["low_proteins"]:
                 acc = prot.split(":", 1)[1]
-                for ev, ref, by in sorted(set(annots[(prot, r["term"])])):
+                for ev, ref, by, wf in sorted(set(annots[(prot, r["term"])])):
                     annotations.append({
                         "protein": prot, "taxon": f"NCBITaxon:{species_of[prot]}",
                         "evidence": ev, "reference": ref, "assigned_by": by,
+                        **({"with_from": wf} if wf else {}),
                         **({"gene_review": reviewed[acc]} if acc in reviewed else {}),
                     })
             out.append({
@@ -275,14 +337,43 @@ def main() -> None:
         "kingdom": render(*k, KINGDOMS, "kingdom"),
         "phylum": render(*p, PHYLA, "phylum"),
     }
-    out = OUT_DIR / f"rar_rerun_{scope}.yaml"
-    out.write_text(yaml.safe_dump(doc, sort_keys=False, width=100, allow_unicode=True))
+    full = CACHE / f"rar_rerun_{scope}_full.yaml"
+    full.write_text(yaml.safe_dump(doc, sort_keys=False, width=100, allow_unicode=True))
+    # The committed file keeps the review candidates: significant flags (q < 0.05) on a
+    # non-root term where the flagged taxon has at most MAX_FLAGGED proteins, i.e. a few
+    # stray annotations against an established distribution elsewhere.
     for lvl in ("kingdom", "phylum"):
         d = doc[lvl]
-        sig = sum(1 for t in d["terms"] if t["q_value"] < 0.05)
+        sig = [t for t in d["terms"] if t["q_value"] < 0.05]
+        keep = [t for t in sig if t["go_id"] not in ROOTS
+                and t["annotated_protein_counts"][t["flagged_taxon"]] <= MAX_FLAGGED]
         print(f"{lvl}: {d['terms_with_rate_ratio']} terms with a RAR; {d['flagged_terms']} below "
-              f"{args.threshold} ({sig} with q < 0.05); totals {d['annotated_proteins_per_group']}")
-    print(f"wrote {out}")
+              f"{args.threshold} ({len(sig)} with q < 0.05; {len(keep)} candidates); "
+              f"totals {d['annotated_proteins_per_group']}")
+        d["significant_terms"] = len(sig)
+        d["candidate_terms"] = len(keep)
+        d["terms"] = keep
+    # Annotations that break a taxon constraint GO already has need no judgement.
+    cand_terms = sorted({t["go_id"] for lvl in ("kingdom", "phylum") for t in doc[lvl]["terms"]})
+    cons = taxon_constraints(cand_terms)
+    lin = lineages(SPECIES)
+    n_viol = 0
+    for lvl in ("kingdom", "phylum"):
+        for t in doc[lvl]["terms"]:
+            if cons.get(t["go_id"]):
+                t["go_taxon_constraints"] = [describe(c) for c in cons[t["go_id"]]]
+            for a in t["flagged_annotations"]:
+                broken = violates(cons.get(t["go_id"], []), lin[int(a["taxon"].split(":")[1])])
+                if broken:
+                    a["violates_go_taxon_constraint"] = broken
+                    n_viol += 1
+    print(f"{n_viol} candidate annotations break an existing GO taxon constraint")
+    doc["source"]["candidate_filter"] = (
+        f"q < 0.05, not a root term, at most {MAX_FLAGGED} proteins in the flagged taxon; "
+        f"the unfiltered output is written to {full}")
+    out = OUT_DIR / f"rar_rerun_{scope}_candidates.yaml"
+    out.write_text(yaml.safe_dump(doc, sort_keys=False, width=100, allow_unicode=True))
+    print(f"wrote {out} and {full}")
 
 
 if __name__ == "__main__":
