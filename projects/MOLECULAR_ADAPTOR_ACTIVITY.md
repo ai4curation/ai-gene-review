@@ -151,10 +151,11 @@ and worked separately (a gene may be in more than one, so the counts sum above
 | `scaffold` | 51 | `GO:0140693` molecular condensate scaffold, `GO:0005078` MAP kinase scaffold |
 | `tether_anchor` | 17 | organelle membrane tether / anchor / docking and chromatin-loop anchoring activities |
 
-177 of the 666 already have a `genes/human/<symbol>/` folder in the repo
+178 of the 666 already have a `genes/human/<symbol>/` folder in the repo
 (flagged `existing_folder: true` in the sidecar) — these are the natural
 starting points, though a folder does not mean the adaptor row was reviewed.
-LDLRAP1 (flagged `reviewed: true`) is the first reviewed from this worklist.
+Two genes are reviewed from this worklist so far (flagged `reviewed: true`):
+LDLRAP1 and RPTOR.
 
 **Proposed phase-1 cut:** the `core_adaptor` branch (512 genes). The `reader`
 branch is large and mechanistically distinct (recognising a modified residue to
@@ -193,8 +194,13 @@ the scope boundary above.
   [LDLRAP1 / ARH](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-LDLRAP1.md)
   (clathrin-cargo adaptor; full 90-annotation review now COMPLETE, incl.
   lateral `MODIFY` of two mis-typed signaling-branch adaptor terms).
+- [x] Enzyme-substrate adaptor child, new review:
+  [RPTOR / Raptor](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-RPTOR.md)
+  (mTORC1 substrate-presenting subunit; 170-annotation review now COMPLETE;
+  61 `protein binding` rows split by partner into the MTOR kinase vs. TOS-motif
+  substrates — the `provides input for` / enzyme-substrate case).
 - [ ] Add worked examples for the remaining common children (cytoskeletal,
-  enzyme-substrate, ubiquitin-like ligase-substrate).
+  ubiquitin-like ligase-substrate).
 - [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
   adaptor terms; cross-reference [IBA_REVIEW](IBA_REVIEW.md).
 - [ ] Add the project card to `pages/projects/index.html` when the project
