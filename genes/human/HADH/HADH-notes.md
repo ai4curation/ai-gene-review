@@ -145,3 +145,19 @@ GO:0007283 (IEA from UniProtKB-KW). Downstream/By-similarity; non-core.
    (GO:0006635) / mitochondrial matrix (GO:0005759). PRIMARY.
 2. Enzyme inhibitor activity (GO:0004857) toward GLUD1 / negative regulation of insulin
    secretion (GO:0046676). SECONDARY moonlighting (By similarity / ISS — flag full_text basis).
+
+
+## 2026-11-11 re-review corrections
+
+The dated corrections here supersede the earlier action plan while retaining its original record. See HADH-deep-research-manual.md for source-by-source evidence and access limits.
+
+- Cytoplasm (GO:0005737) includes organelles; the earlier fusion/import artifact explanation was unsupported. Retain the broad compartment.
+- Pig enzyme data (PMID:2817332) support long-chain activity despite medium-chain preference. The human Rhea C16 assertion is an orthology transfer; retain it as non-core rather than calling preference a contradiction.
+- Trace the four rat response transfers to PMIDs 12176671, 18191600, 8231758 and 7050060. Their measured responses support contextual non-core retention without claims of direct human experiments.
+- Accept valid broader core-reaction and mitochondrial-location terms. Accept the insulin-regulatory role consistently with its core_functions entry while stating the mouse mechanistic evidence. No NEW term is proposed.
+- His158/Glu170 and D45G/Y214H in their source papers use mature-chain numbering (precursor His170/Glu182 and D57G/Y226H). P258L already uses precursor numbering. Preserve source quotations.
+- PMID:10231530 solved an NAD+-bound structure and modeled substrate placement; PMID:10840044 reports substrate/ternary structures. The inspected evidence establishes a homodimer, without the former unsupported qualifier obligate.
+- PMID:20670938 and PMID:21990309 report different glucose-stimulated islet responses; retain their contexts separately. The former cached extraction omits methods/results despite its full-text flag.
+- PMID:34800366 remains GOA-curated proteomics support, but the specific HADH supplementary row has not been independently checked. A title quotation does not establish gene-specific detection.
+
+Falcon failed with HTTP403/missingJWT and Perplexity fallback with HTTP401/quota; manual primary-source research is explicitly labeled. Candidate: 41 contexts, 33 ACCEPT and 8 KEEP_AS_NON_CORE, no NEW/PENDING. Canonical application, validation and PR delivery remain pending.
