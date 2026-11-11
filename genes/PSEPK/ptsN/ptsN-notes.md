@@ -25,3 +25,35 @@ Where the only localization assertion is ARBA-derived, compartment adjudication 
 ## 2026-11-11 — target-specific cross-system evidence
 
 The term describes carbohydrate transport/phosphorylation, whereas native PtsN acts in a sugar-independent regulatory branch. The native Discussion also reports that PtsN cannot replace the EIIA(Fru) domain of FruB for phosphorylation of FruA. Shared EIIA architecture and conditional FruB input do not establish sugar-transport activity. For PtsN, the direct failure to phosphorylate FruA through EIIA substitution supports REMOVE despite its receipt of FruB-derived phosphate; receiving that input does not perform the sugar-transfer step.
+
+
+## 2026-11-11 — incoming main journal retained
+
+The following is the incoming review journal; current target-specific adjudication follows below.
+
+# ptsN (Pseudomonas putida KT2440) notes
+
+## Provenance
+
+- Re-reviewed while completing the bacterial nitrogen-regulatory PTS module
+  (modules/bacterial_nitrogen_regulatory_pts.yaml). No new deep-research provider
+  report was generated: no provider API key is configured in this session.
+- Primary evidence: PMID:18296519 (full text; in vivo relay order PEP to PtsP to
+  PtsO/NPr to PtsN, and FruB cross-talk), PMID:17416664, PMID:26224366 and
+  PMID:21236318 (abstracts).
+
+## Decisions in this pass
+
+- Sugar-PTS process and carbohydrate phosphotransferase rows remain removed, now with
+  quoted support ("comprise a branch of the system unrelated to sugar traffic") and
+  source_defects naming the InterPro2GO / UniRule mappings.
+- Correct-but-general MF rows (transferase, kinase, phosphorus-group transferase) are
+  MODIFY to the specific activity rather than KEEP_AS_NON_CORE.
+- For NPr (PP_0948) the phosphocarrier step is captured with GO:0016775
+  (phosphotransferase activity, nitrogenous group as acceptor), matching the E. coli
+  NPr review (genes/ECOLI/ptsO).
+
+
+## 2026-11-11 — reconcile merged parallel PTS review
+
+Retain target-specific cross-system judgments and assay limits from this audit. Incorporate incoming experimentally coded proposals and retire their historical TAS predecessors in place where present. Incoming source-defect records are retained when consistent with the current action; broad sugar-process rejection is superseded where direct target cross-system chemistry supports over-annotation. Core relay activities and all original machine source rows remain unchanged.

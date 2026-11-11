@@ -1271,3 +1271,7 @@ Superseded parent snapshot lines retained for provenance:
 > - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 12 PR_OPEN, 3 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+## 2026-11-11 — resume PR #6206 after disk cleanup
+
+Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6206 at 3e39ea51d6a14f6d98d1b6e0aa0f7935e1c5f142. All 559 branch-specific files outside shared project metadata and the explicitly listed curated merge paths retain their exact Git object ids. The overlapping PTS review is reconciled by preserving audited target-specific judgments and topology, adding incoming experimental proposals, representatives and references, retiring superseded historical TAS proposals in place, and retaining the machine-fetched full publication rather than an abstract-only downgrade. Focused curation checks are required after this integration. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.

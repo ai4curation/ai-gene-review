@@ -28,3 +28,35 @@ The P. putida NPr/EINtr sugar-process assignment is over-annotated in light of r
 ## 2026-11-11 — target-specific cross-system evidence
 
 The native PtsP enzyme supplies the NPr–PtsN regulatory relay, described as unrelated to sugar traffic. The reported cross-system phosphorylation persists in a ptsP deletion and disappears in the ptsP fruB double mutant: FruB substitutes for PtsP upstream of NPr. That experiment therefore demonstrates cross talk involving NPr, not PtsP-mediated phosphate transfer into the carbohydrate branch. The domain-based electronic sugar-process mapping is rejected for this target; no PtsP-specific coupled sugar-phosphorylation assay is cited. This neither borrows the PtsN negative substitution assay nor asserts that every possible cross-reaction is impossible.
+
+
+## 2026-11-11 — incoming main journal retained
+
+The following is the incoming review journal; current target-specific adjudication follows below.
+
+# ptsP (Pseudomonas putida KT2440) notes
+
+## Provenance
+
+- Re-reviewed while completing the bacterial nitrogen-regulatory PTS module
+  (modules/bacterial_nitrogen_regulatory_pts.yaml). No new deep-research provider
+  report was generated: no provider API key is configured in this session.
+- Primary evidence: PMID:18296519 (full text; in vivo relay order PEP to PtsP to
+  PtsO/NPr to PtsN, and FruB cross-talk), PMID:17416664, PMID:26224366 and
+  PMID:21236318 (abstracts).
+
+## Decisions in this pass
+
+- Sugar-PTS process and carbohydrate phosphotransferase rows remain removed, now with
+  quoted support ("comprise a branch of the system unrelated to sugar traffic") and
+  source_defects naming the InterPro2GO / UniRule mappings.
+- Correct-but-general MF rows (transferase, kinase, phosphorus-group transferase) are
+  MODIFY to the specific activity rather than KEEP_AS_NON_CORE.
+- For NPr (PP_0948) the phosphocarrier step is captured with GO:0016775
+  (phosphotransferase activity, nitrogenous group as acceptor), matching the E. coli
+  NPr review (genes/ECOLI/ptsO).
+
+
+## 2026-11-11 — reconcile merged parallel PTS review
+
+Retain target-specific cross-system judgments and assay limits from this audit. Incorporate incoming experimentally coded proposals and retire their historical TAS predecessors in place where present. Incoming source-defect records are retained when consistent with the current action; broad sugar-process rejection is superseded where direct target cross-system chemistry supports over-annotation. Core relay activities and all original machine source rows remain unchanged.
