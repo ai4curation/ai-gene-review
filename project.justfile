@@ -2451,6 +2451,17 @@ init-rule-review rule_id *args:
 arba-sync *args="":
     uv run ai-gene-review arba-sync {{args}}
 
+# Check whether ARBA rules fire on a protein (current UniProt data, rules fetched fresh)
+# Example: just arba-check Q88KS6 ARBA00086692 ARBA00028620
+arba-check accession *rule_ids:
+    uv run ai-gene-review arba-check {{accession}} {{rule_ids}}
+
+# Check each ARBA row (GO_REF:0000117) of a gene's GOA file against the rule it cites.
+# Rows whose rule was edited after the GOA load are RULE_EDITED_SINCE_LOAD, not MISMATCH.
+# Example: just arba-check-gene PSEPK PP_2213
+arba-check-gene organism gene *args:
+    uv run ai-gene-review arba-check-goa genes/{{organism}}/{{gene}}/{{gene}}-goa.tsv {{args}}
+
 # Sync UniRules with GO annotations from UniProt (stores in rules/unirule/)
 # By default only syncs rules that have GO term annotations
 # Examples:
