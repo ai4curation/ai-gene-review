@@ -677,16 +677,18 @@ found, and because two of the figures here were themselves corrections.
    value existed `just export-source-defects` could not produce the report
    that mattered most. #5984 added the value and #6027 re-filed 83 defects
    onto it, so `reports/source-defects/INTERPRO.md` exists. **Its rank among
-   the per-resource reports is deliberately not stated**, and not even as a
-   list of the reports that are larger: on the tree #6027 produces (main's
-   `1e0f33a052` *plus* these 83 flips) five were, but the closest of those led
-   by two defects, and `main` crossed that margin within days — three further
-   `INTERPRO` defects landed in `PSEPK/xdhB`, `RHOCA/xdhA` and `RHOCA/xdhB`,
-   none of them files #6027 touches. On plain `1e0f33a052`, without the flips,
-   twelve reports are larger: the comparison only means anything about the
-   tree that carries the migration. So the superlative above is scoped to the
-   defects *this project* found and does not survive being restated as a
-   corpus-wide rank, in either direction. No
+   the per-resource reports is deliberately not stated, and neither is the set
+   of reports larger than it.** Four attempts to say something true about that
+   rank were each falsified within days: "second only to UniProt" (wrong when
+   written); an unordered list of the five that were larger (`main` then added
+   three `INTERPRO` defects and no `PSEUDOCAP` one); that list pinned to
+   `1e0f33a052` (which is `main`'s commit and does not contain the 83 flips,
+   where twelve are larger); and that list pinned to "the tree this PR
+   produces", which changed under it at the very next merge, `INTERPRO`
+   passing `PSEUDOCAP` to sit fifth. The quantity is a function of two trees
+   that both keep moving, and no phrasing fixes that. So the superlative above
+   is scoped to the defects *this project* found and does not survive being
+   restated as a corpus-wide rank, in either direction. No
    corpus total or ordering is quoted here on purpose: every one of these
    counts moves whenever `main` moves, and an earlier version of this
    paragraph had to be corrected three times for exactly that — the third
