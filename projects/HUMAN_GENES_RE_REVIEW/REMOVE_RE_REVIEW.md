@@ -14,7 +14,7 @@ Back to the [project page](../HUMAN_GENES_RE_REVIEW.md). Tracked in
 22,013 are bare `protein binding` rows, which the protein-binding policy
 removes as uninformative; they were audited by script and none changed
 action. The other 1,789 rows, in 820 reviews, were read one at a time.
-**408 of them (23%) no longer say REMOVE**, 1,381 stand, and 60 errors in
+**408 of them (23%) no longer say REMOVE**, 1,381 stand, and 64 errors in
 source records were written down as structured `source_defects`. 222 review
 files were edited. No row was changed to REMOVE.
 
@@ -74,12 +74,12 @@ pass applies those rules to every REMOVE row.
 | Outcome for the 1,789 substantive REMOVE rows | Rows |
 |---|---|
 | REMOVE stands | 1,381 |
-| → `MARK_AS_OVER_ANNOTATED` | 176 |
-| → `KEEP_AS_NON_CORE` | 127 |
+| → `MARK_AS_OVER_ANNOTATED` | 178 |
+| → `KEEP_AS_NON_CORE` | 121 |
 | → `TOO_GENERAL` | 30 |
-| → `UNDECIDED` | 29 |
+| → `UNDECIDED` | 34 |
 | → `ACCEPT` | 26 |
-| → `MODIFY` | 20 |
+| → `MODIFY` | 19 |
 
 Nine of the rows that stay REMOVE had a wrong or missing reason and were given
 a correct one. One row that was not REMOVE was changed as well, so that the
@@ -114,12 +114,12 @@ Counts are rows. The rule names are the keys used in the data file.
 | same-term-kept | 22 | 9 | | 2 | 23 | 4 | 60 |
 | ancestor-of-kept | 1 | 1 | 30 | | 1 | | 33 |
 | reason-concedes-truth, true-but-broad | 10 | 27 | | | | | 37 |
-| general-to-specific, lateral-correction | | | | | | 16 | 16 |
-| claim-established | | 56 | | | 2 | | 58 |
+| general-to-specific, lateral-correction | | | | | | 15 | 15 |
+| claim-established | | 52 | | | 2 | | 54 |
 | electronic-unsupported-plausible, downstream-readout | 65 | | | | | | 65 |
-| experimental-incomplete-evidence, experimental-fulltext-supports | 6 | 4 | | 24 | | | 34 |
+| experimental-incomplete-evidence, experimental-fulltext-supports | 6 | 4 | | 29 | | | 39 |
 | curated-statement | 6 | | | 2 | | | 8 |
-| omics-location, omics-function | 43 | 5 | | | | | 48 |
+| omics-location, omics-function | 45 | 3 | | | | | 48 |
 | expression-only | 8 | | | | | | 8 |
 | reactome-location, er-transit, organelle-root | 11 | 25 | | | | | 36 |
 | other (cross-gene consistency, IBA node, promiscuous activity) | 4 | | | 1 | | | 5 |
@@ -137,7 +137,7 @@ What the main rules mean in practice:
   contradicts itself. These are now `TOO_GENERAL`. Example: TP53 cell
   population proliferation beside the kept neuroblast, glial cell and T cell
   proliferation rows.
-- **Claims with an experimental basis elsewhere (123 rows, 109 of them IEA or
+- **Claims with an experimental basis elsewhere (119 rows, 105 of them IEA or
   ISS transfers).** Many Ensembl Compara and ISS rows were removed with "no
   evidence" although the mouse or rat donor annotation comes from a targeted
   experiment. Where that experiment
@@ -147,24 +147,30 @@ What the main rules mean in practice:
   consequence the row is `MARK_AS_OVER_ANNOTATED` (TP53 response to salt
   stress; TOMM70 negative regulation of cell growth). Where the donor
   annotation is itself on the wrong gene or uses the wrong term, REMOVE stands.
-- **Rows judged without the full text (31 rows).** Removal of an IDA, IMP or
+  A row is kept on donor evidence only when the donor paper, read as full text
+  or abstract, shows the claim; each such row quotes it.
+- **Rows judged without the full text (36 rows).** Removal of an IDA, IMP or
   IPI row whose paper was available only as an abstract, or of a transfer
-  whose experimental donor paper could not be read, is now `UNDECIDED`, or the
-  row is kept where the function is clearly correct for the gene. In three
+  whose experimental donor paper could not be read or does not show the claim
+  in its abstract, is now `UNDECIDED`, or the row is kept where the function is
+  clearly correct for the gene. In three
   further rows the cached full text supports the annotation. Examples: ASCL1 negative regulation of neuron differentiation, VTI1A,
   several SIRT1 rows. Explicit contradictions in the abstract (wrong sign,
   wrong enzyme class) still support REMOVE.
 - **Omics observations (48 rows).** A protein seen in an exosome, membrane or
   nuclear proteome, or pulled down in the E-cadherin or RNA interactome, was
   observed. Without a positive contradiction that is an over-annotation, not a
-  false claim. REMOVE stands where the location is topologically impossible
+  false claim. Such a row is `KEEP_AS_NON_CORE` only when at least two
+  independent studies find the protein there or a mechanism explains its
+  presence; only the three exosome rows of CHMP1B, an ESCRT-III subunit found
+  in three exosome proteomes, meet that test. A single proteome hit is marked. REMOVE stands where the location is topologically impossible
   for the protein (GCNT1, LRRC32, SCN1A and SYVN1 in nucleoplasm or nuclear
   bodies).
 - **Reactome locations (36 rows with the organelle rows).** TRAF6 carried 21
   endosome membrane rows whose reasons addressed an unrelated claim; the
   Reactome reactions are steps of endosomal Toll-like receptor signalling and
   the rows are now `KEEP_AS_NON_CORE`, as for IRAK4.
-- **MODIFY (20 rows).** Where the reason named the right term, the row is
+- **MODIFY (19 rows).** Where the reason named the right term, the row is
   redirected to it: TXN to protein-disulfide reductase activity, TP53 to the
   negative regulation terms for fibroblast and stem cell proliferation, WT1 to
   retina development in camera-type eye, GAPDH ribonucleoprotein complex to
@@ -188,6 +194,42 @@ CSDE1, CXCR3, LPCAT4 twice, TLR2). Each was checked: the kept row is a
 `MODIFY` that redirects an experiment to another term, a `located_in` row
 beside a removed `is_active_in` row, or an `UNDECIDED` row beside accepted NOT
 rows. Both actions agree that the stated claim is wrong.
+
+## Corrections after review
+
+The pull request for this pass
+([ai4curation/ai-gene-review#6257](https://github.com/ai4curation/ai-gene-review/pull/6257))
+was checked against the steps CI runs and was reviewed. That produced a
+second round of changes, all included in the numbers above.
+
+- **Family cross-check.** PRG2 and PRG3 had kept `extracellular matrix`, which
+  the review of their PANTHER family scopes as not applicable; the four rows
+  are `MARK_AS_OVER_ANNOTATED` (Method, step 5).
+- **Prediction reviews.** The BioReason prediction review of GAPDH had
+  classed four predicted terms as refuted because the gene review removed
+  them. With the terms kept, the deterministic repair
+  (`scripts/auto_review_sft_predictions.py`) returns them to correct but not
+  novel.
+- **Analysis lost in a rewrite.** The two ADGRA2 GPCR rows had carried an
+  earlier reviewer's reference-level analysis (78 annotations from one survey
+  over 27 entities, reproducible with `ADGRA2-bioinformatics/projection_test.py`).
+  The rewritten reasons had dropped it and the sibling membrane row still
+  called the two rows removed. The analysis is restored, the defect of the
+  evidence code is recorded as a source defect, and the sibling row is
+  corrected. The 418 rewritten reasons were then screened against the text
+  they replaced, by the identifiers each had cited and by reading the 65
+  longest or most detailed earlier reasons in full; no other row had lost
+  analysis of this kind.
+- **Summaries.** Twenty-one rows moved to a positive action still had a
+  summary that argued against the claim; the summaries now match.
+- **Evidence for kept rows.** Every paper cited in a rewritten reason is now
+  in the review's `references` (93 entries in 71 reviews) and in
+  `publications/` (67 fetched). Fifty-four rows kept, accepted or refined on
+  the strength of a paper now quote it. Five rows whose donor paper is available
+  only as an abstract that does not show the claim moved to `UNDECIDED`
+  (INTU cell division, two rows; SCN1A Z disc, two rows; GDPD2
+  lamellipodium), and two single-hit exosome rows (BAX, RASAL3) moved to
+  `MARK_AS_OVER_ANNOTATED`.
 
 ## Earlier fence cases, now resolved
 
@@ -217,21 +259,25 @@ The project page listed four fence cases and two literature questions.
 
 When a row is wrong because the source record is wrong, the action says what
 this repository does with the claim and `review.source_defects` says what the
-source should fix. 60 defects were recorded on rows examined in this pass.
+source should fix. 64 defects were recorded on rows examined in this pass,
+and one more on a sibling row of ADGRA2.
 
 | Type | Count |
 |---|---|
-| WRONG_GENE_PRODUCT | 38 |
+| WRONG_GENE_PRODUCT | 40 |
 | WRONG_TERM | 12 |
 | WRONG_REFERENCE | 7 |
 | WRONG_WITH_FROM | 2 |
-| WRONG_EVIDENCE_CODE | 1 |
+| WRONG_EVIDENCE_CODE | 3 |
 
 By responsible resource: UniProt 33, MGI 12, ARUK-UCL 2, ComplexPortal 2,
-IntAct 1, RGD 1, GO Central 1, and 8 assigned by groups the schema does not
-list. 28 are marked CONFIRMED, 31 PROBABLE and 1 SUSPECTED. Examples:
+IntAct 1, RGD 1, GO Central 1, and 12 assigned by groups the schema does not
+list. 28 are marked CONFIRMED, 33 PROBABLE and 3 SUSPECTED. Examples:
 
 - TOLLIP phosphorylation (IDA) cites a 1976 clinical report on lymphoma.
+- ADGRA2 carries three TAS rows from a repertoire survey that gives 27
+  entities, two of them pseudogenes, the same three terms: a bulk import
+  under an author-statement code.
 - CRY2 extracellular region and phosphate transport rows cite the paper that
   cloned stanniocalcin-2.
 - EFEMP1 eye-development rows come from a study of fibrillin-3 (FBN3), not
@@ -263,9 +309,9 @@ policy is the reason, and they were left as they are.
 
 ## Follow-ups
 
-- **UNDECIDED rows need full text.** Of the 29 rows moved to `UNDECIDED`, 16
+- **UNDECIDED rows need full text.** Of the 34 rows moved to `UNDECIDED`, 16
   are experimental or author-statement annotations whose papers could not be
-  read here, and 12 are electronic or similarity transfers that rest on such
+  read here, and 17 are electronic or similarity transfers that rest on such
   papers. Each reason states the question the full text must answer. The
   last is a phylogenetic annotation (SCGB2A2, androgen receptor signaling
   pathway) whose PAINT node has not been examined.

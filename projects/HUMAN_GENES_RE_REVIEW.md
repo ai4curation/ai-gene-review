@@ -43,7 +43,7 @@ errors worth a guideline change.
 discretion, `REMOVE` used for claims that are true, was re-read in full. All
 23,802 REMOVE rows in the 3,588 human review files were checked against the
 current rules. Of the 1,789 that are not bare `protein binding`, 408 (23%)
-moved to another action, 1,381 stand, and 60 errors in source records were
+moved to another action, 1,381 stand, and 64 errors in source records were
 recorded as `source_defects`. The four fence cases and two literature
 questions below are resolved. See
 [Re-review of REMOVE actions](HUMAN_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
@@ -139,12 +139,12 @@ The per-batch progress log is retained below as the audit trail.
   [`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
   - 22,013 bare `protein binding` rows: audited by script against the protein-binding
     policy; no action changed.
-  - 1,789 other rows, read one at a time: 1,381 stand; 176 → MARK_AS_OVER_ANNOTATED,
-    127 → KEEP_AS_NON_CORE, 30 → TOO_GENERAL, 29 → UNDECIDED, 26 → ACCEPT, 20 → MODIFY.
+  - 1,789 other rows, read one at a time: 1,381 stand; 178 → MARK_AS_OVER_ANNOTATED,
+    121 → KEEP_AS_NON_CORE, 34 → UNDECIDED, 30 → TOO_GENERAL, 26 → ACCEPT, 19 → MODIFY.
   - Removals of proteomics observations (HDA) mostly fell (39 of 45); removals of
     phylogenetic annotations (IBA) almost all stand (209 of 216).
-  - 60 `source_defects` recorded (38 wrong gene product, 12 wrong term, 7 wrong
-    reference, 2 wrong With/From, 1 wrong evidence code).
+  - 64 `source_defects` recorded (40 wrong gene product, 12 wrong term, 7 wrong
+    reference, 3 wrong evidence code, 2 wrong With/From).
   - All 12 removed NOT rows and all 11 removed ND rows stand.
 
   Principle: REMOVE is for a claim that is unlikely to be correct. A duplicate row, a
@@ -352,7 +352,7 @@ to each entry, and the detail is in
 (gene — annotation — the specific question a lit search must answer)
 
 Both were given the guideline-preferred fallback in the November 2026 REMOVE
-re-review. The same pass left 27 further rows UNDECIDED for want of full text; each
+re-review. The same pass left 32 further rows UNDECIDED for want of full text; each
 reason states the question, and they are listed in
 [`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
 
