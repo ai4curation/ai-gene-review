@@ -13,3 +13,8 @@
   (SF1 transferases, SF2 dihydrolases); removed and recorded as a source defect.
 - UniProt's SIMILARITY comment ("succinylarginine dihydrolase family") conflicts
   with the entry's AstA Pfam/InterPro domains; recorded as a source defect.
+- Naming: UniProt gives P80357 the primary gene name astA (GN Name=astA;
+  Synonyms=aruF) and GOA uses astA as the symbol, so the review keeps
+  `gene_symbol: astA` to match the source records. The PseudoCAP/literature name
+  aruF (PMID:9393691) is used for the folder and in prose, because astA also names
+  the single-chain E. coli enzyme (P0AE37).
