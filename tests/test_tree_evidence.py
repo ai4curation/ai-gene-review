@@ -122,3 +122,42 @@ def test_residue_rule_covers_other_propagated_rows_but_only_when_overruled() -> 
 def test_rows_without_a_review_are_skipped() -> None:
     assert check({"existing_annotations": [{"term": {"id": "GO:1"}, "evidence_type": "IBA"}, "junk"]}) == []
     assert check({}) == []
+
+
+GOA_COLUMNS = ["GENE PRODUCT DB", "GENE PRODUCT ID", "SYMBOL", "QUALIFIER", "GO TERM", "GO NAME", "GO ASPECT", "GO EVIDENCE CODE", "WITH/FROM"]
+
+
+def gene_folder(tmp_path: Path, goa_rows: list[tuple[str, str, str]]) -> Path:
+    """A ``genes/human/TEST`` folder whose GOA file holds ``(qualifier, term, evidence)`` rows."""
+    folder = tmp_path / "genes" / "human" / "TEST"
+    folder.mkdir(parents=True)
+    lines = ["\t".join(GOA_COLUMNS)]
+    for qualifier, term, evidence in goa_rows:
+        lines.append("\t".join(["UniProtKB", "P00001", "TEST", qualifier, term, "a term", "biological_process", evidence, "PANTHER:PTN000391532|UniProtKB:P62995"]))
+    (folder / "TEST-goa.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return folder / "TEST-ai-review.yaml"
+
+
+def test_a_row_still_in_the_goa_file_is_asked_for_the_tree(tmp_path: Path) -> None:
+    yaml_file = gene_folder(tmp_path, [("involved_in", "GO:0000398", "IBA")])
+    assert [kind for kind, _ in check(review(), yaml_file)] == ["missing_tree_evidence"]
+
+
+def test_a_row_paint_has_withdrawn_is_not_asked_for_the_tree(tmp_path: Path) -> None:
+    # The gene's GOA file no longer has this IBA row, so its extract has no row to quote.
+    yaml_file = gene_folder(tmp_path, [("involved_in", "GO:0005681", "IBA"), ("involved_in", "GO:0000398", "IEA")])
+    assert check(review(), yaml_file) == []
+
+
+def test_a_positive_row_is_not_matched_by_a_negated_goa_row(tmp_path: Path) -> None:
+    yaml_file = gene_folder(tmp_path, [("NOT|involved_in", "GO:0000398", "IBA")])
+    assert check(review(), yaml_file) == []
+    negated = review()
+    negated["existing_annotations"][0]["negated"] = True
+    assert [kind for kind, _ in check(negated, yaml_file)] == ["missing_tree_evidence"]
+
+
+def test_a_withdrawn_row_is_still_asked_for_its_residue_claim(tmp_path: Path) -> None:
+    yaml_file = gene_folder(tmp_path, [("involved_in", "GO:0005681", "IBA")])
+    loss = {"root_cause": "PROPAGATION_BAD", "failure_modes": ["PSEUDO_OR_SUBACTIVITY_LOSS"]}
+    assert [kind for kind, _ in check(review(propagation_review=loss), yaml_file)] == ["missing_residue_evidence"]

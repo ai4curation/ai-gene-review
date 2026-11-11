@@ -26,7 +26,9 @@ Whether a quote is really in the extract is checked separately, like every other
 
 Severity is WARNING, as for the other action policies: the checks guide re-review and do
 not block legacy files. Rows that keep the claim (``ACCEPT``, ``KEEP_AS_NON_CORE``,
-``MODIFY``, ``TOO_GENERAL``) and ``UNDECIDED`` rows are not asked for the tree.
+``MODIFY``, ``TOO_GENERAL``) and ``UNDECIDED`` rows are not asked for the tree. Neither is
+a review row whose IBA is no longer in the gene's GOA file: PAINT has withdrawn the
+annotation, so the extract, which describes the rows of that file, has nothing to quote.
 """
 
 from __future__ import annotations
@@ -57,6 +59,28 @@ def phylo_reference_ids(yaml_file: Optional[Path]) -> set[str]:
     return {f"file:{relative}", f"file:genes/{relative}"}
 
 
+def current_iba_rows(yaml_file: Optional[Path]) -> Optional[set[tuple[str, bool]]]:
+    """``(term id, negated)`` of every IBA row in the GOA file beside a review.
+
+    None when the review has no GOA file beside it, in which case nothing can be said
+    about which of its rows are current.
+
+    >>> current_iba_rows(None) is None
+    True
+    >>> current_iba_rows(Path("genes/human/NO_SUCH_GENE/NO_SUCH_GENE-ai-review.yaml")) is None
+    True
+    """
+    if yaml_file is None:
+        return None
+    folder = Path(yaml_file).parent
+    goa = folder / f"{folder.name}-goa.tsv"
+    if not goa.exists():
+        return None
+    from ai_gene_review.etl.gene_phylo import read_iba_rows
+
+    return {(row.term_id, row.negated) for row in read_iba_rows(goa)}
+
+
 def _quotes(item: dict[str, Any]) -> list[str]:
     """The quoted text of one ``supported_by`` entry (a string or a list of strings)."""
     text = item.get("supporting_text")
@@ -74,6 +98,8 @@ def iter_tree_evidence_violations(
     own = phylo_reference_ids(yaml_file)
     gene = Path(yaml_file).parent.name if own and yaml_file is not None else "GENE"
     organism = Path(yaml_file).parent.parent.name if own and yaml_file is not None else "<org>"
+    current: Optional[set[tuple[str, bool]]] = None
+    goa_read = False
     for index, annotation in enumerate(data.get("existing_annotations") or []):
         if not isinstance(annotation, dict):
             continue
@@ -87,7 +113,13 @@ def iter_tree_evidence_violations(
         propagation = review.get("propagation_review")
         propagation = propagation if isinstance(propagation, dict) else {}
 
+        withdrawn = False
         if evidence == "IBA":
+            if not goa_read:
+                current, goa_read = current_iba_rows(yaml_file), True
+            # No such IBA row in the gene's GOA file any more: the extract has no row to quote.
+            withdrawn = current is not None and (term_id, bool(annotation.get("negated"))) not in current
+        if evidence == "IBA" and not withdrawn:
             cited = [
                 item
                 for item in review.get("supported_by") or []

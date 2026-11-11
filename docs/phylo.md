@@ -126,13 +126,14 @@ In a family review, a node assessment of `TOO_DEEP`, `WRONG_NODE`, `NEEDS_PRUNIN
 
 | Check | Where | Fires when |
 |---|---|---|
-| `missing_tree_evidence` | `just validate` (warning) | an IBA row is overruled without a quote from the gene's own extract |
+| `missing_tree_evidence` | `just validate` (warning) | an IBA row that is still in the gene's GOA file is overruled without a quote from the gene's own extract |
 | `tree_evidence_other_row` | `just validate` (warning) | the extract is quoted, but no quote names the row's term |
 | `missing_residue_evidence` | `just validate` (warning) | a propagated row is overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with neither `residue_claims` nor `residue_claims_not_applicable` |
 | `NODE_TREE_EVIDENCE` | `just validate-families` (UNRESOLVED) | a node assessment disputes a placement without quoting a tree listing |
 
 All four are advisory: they mark verdicts made without the tree, not verdicts that are
-wrong. `projects/IBA_REVIEW/tree_evidence.py` joins every reviewed IBA row with its tree
+wrong. A review row whose IBA has since been withdrawn from GOA is not asked for a quote:
+the extract describes the rows of the current GOA file and has none for it. `projects/IBA_REVIEW/tree_evidence.py` joins every reviewed IBA row with its tree
 facts and lists the rows where the two pull apart
 (see [the IBA project](https://github.com/ai4curation/ai-gene-review/blob/main/projects/IBA_REVIEW.md)).
 
