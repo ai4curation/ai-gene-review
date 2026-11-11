@@ -1256,9 +1256,9 @@ def fetch_goa_data(uniprot_id: str) -> str:
         key=lambda x: (
             0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
             -(
-                int(x.get("date", "0")) if x.get("date", "").isdigit() else 0
+                int(x.get("date") or "0") if (x.get("date") or "").isdigit() else 0
             ),  # Negative for descending date
-            x.get("goId", ""),  # Then by GO ID
+            x.get("goId") or "",  # Then by GO ID
         ),
     )
 

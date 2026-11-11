@@ -718,7 +718,7 @@ class ModuleConnectionTypeEnum(str, Enum):
 class EvidenceType(str, Enum):
     """
     Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms,
-plus explicitly supported ECO identifiers without a GO shorthand. Literal ECO
+plus explicitly supported ECO identifiers when a source row omits its GO shorthand. Literal ECO
 identifiers preserve the source evidence; they are not inferred GO code mappings.
     """
     EXP = "EXP"
@@ -827,7 +827,7 @@ identifiers preserve the source evidence; they are not inferred GO code mappings
     """
     ECOCOLON0007744 = "ECO:0007744"
     """
-    Combinatorial computational and experimental evidence used in manual assertion; supplied by QuickGO without a GO shorthand.
+    combinatorial computational and experimental evidence used in manual assertion
     """
 
 
