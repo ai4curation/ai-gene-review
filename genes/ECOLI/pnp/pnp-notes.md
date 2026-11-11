@@ -18,4 +18,4 @@ membrane-bound RNase E scaffold.
 
 The two GO:0000175 (3'-5'-RNA exonuclease activity) rows are modified to
 GO:0004654: GO:0000175 is_a GO:0016896, a hydrolytic exonuclease term, whereas
-PNPase is phosphorolytic. Recorded as PROBABLE WRONG_TERM source defects.
+PNPase is phosphorolytic. Because GO:0000175 is the community-standard PNPase term, this is raised as an ontology question for GO (suggested_questions), not as per-resource source defects (revised after PR #6245 review).

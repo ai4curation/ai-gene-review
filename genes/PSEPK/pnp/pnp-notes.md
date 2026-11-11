@@ -45,4 +45,4 @@ in this review are TOO_GENERAL rather than KEEP_AS_NON_CORE; ancillary binding
 and cofactor rows are KEEP_AS_NON_CORE. No new provider deep research was run
 (no API keys available in this session).
 The TreeGrafter GO:0000175 row is modified to GO:0004654 because GO:0000175 is a
-hydrolytic exonuclease term and PNPase is phosphorolytic (PROBABLE source defect).
+hydrolytic exonuclease term and PNPase is phosphorolytic; raised as an ontology question for GO in suggested_questions rather than a source defect.

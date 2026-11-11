@@ -21,3 +21,13 @@ degradosome role is shown only by reconstitution, where it replaces RhlB
 [PMID:15554979 "Thus, RhlE can replace the function of RhlB in vitro."]; it is
 used in the module as the characterised RhlE-subfamily exemplar, with that
 caveat stated in the module notes.
+
+## 2026-11-11 (PR #6245 review)
+
+The reconstitution result (RhlE furnishing ATP-dependent activity that
+facilitates PNPase degradation of structured RNA on the RNase E scaffold
+[PMID:15554979 "RhlE can furnish an ATP-dependent activity that facilitates the
+degradation of structured RNA by PNPase"]) was removed from core_functions:
+it is an in vitro capability, not a role E. coli RhlE is shown to perform in
+vivo, where it acts as a ribosome-assembly factor. It is kept here, and in the
+module's rhle_helicase_variant evidence, as module-variant evidence only.
