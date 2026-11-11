@@ -92,11 +92,22 @@ lines: the experimental C-terminal topology assignment above, and the
 biochemistry — the protein required a different detergent at every purification
 step, "illustrating the refractory hydrophobic nature of this protein"
 [PMID:2995359], and had to be extracted from the cell envelope with digitonin
-[PMID:30751]. That supports adding `GO:0005887` integral component of plasma
-membrane as an IC row beside the root rows, which is what the review does. It
-does **not** support a side-of-membrane term: the single experimental topology
-datum is the C-terminus, and the catalytic site has not been localised to a
-face.
+[PMID:30751]. It does **not** support a side-of-membrane term: the single
+experimental topology datum is the C-terminus, and the catalytic site has not
+been localised to a face.
+
+**Correction (2026-11-11, from the PR #6268 review).** An earlier draft of this
+review added `GO:0005887` integral component of plasma membrane as an IC row on
+the strength of the above. That term is **obsolete**: QuickGO resolves
+`GO:0005887` to `GO:0005886`, and `GO:0016021` likewise to `GO:0016020`, in GO's
+membrane-topology merge. Post-merge the row would simply have restated
+`GO:0005886`, which this gene already carries on four rows and which the
+`GO:0016020` MODIFY also targets, so the row was dropped rather than re-pointed.
+Note the asymmetry in evidence strength, too: only the C-terminal `TOPO_DOM`
+datum is experimental, while the eight transmembrane helices and the multi-pass
+assignment are `ECO:0000255` predictions. The integral/polytopic finding is real
+and is kept here; the ontology's inability to express it after the merge is
+raised as a `suggested_questions` entry instead.
 
 No magnesium, metal-binding or lipid-binding row exists in GOA, and the UniProt
 record has no BINDING, metal or ACT_SITE features at all. The 1985 purification
@@ -191,7 +202,9 @@ GO term of its own. What is **not** asserted:
 | GO:0016020 | IEA | GO_REF:0000002 | MODIFY → GO:0005886 (already carried) |
 | GO:0016772 | IEA | GO_REF:0000002 | MODIFY → GO:0004605 (already carried) |
 
-Plus two `NEW` rows: `GO:0005887` (IC) and `GO:0009247` (IMP, PMID:30718729).
+Plus one `NEW` row: `GO:0009247` (IMP, PMID:30718729). A second `NEW` row for
+`GO:0005887` was dropped before merge because that term is obsolete; see the
+correction above.
 
 Nothing is REMOVEd. Every row here is a true claim about the gene; the two
 MODIFYs are refinements to terms the gene already carries, as CLAUDE.md
