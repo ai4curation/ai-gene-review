@@ -1,0 +1,27 @@
+# Research Notes: mouse Abitram (UniProtKB:Q80ZQ9)
+
+## 1. Nomenclature, Sequence, and Family Context
+- **Official MGI Symbol**: `Abitram` (`MGI:2677850`; synonyms `Fam206a`, `Simiate`).
+- **UniProtKB**: `Q80ZQ9` (`ABITM_MOUSE`, reviewed Swiss-Prot entry; 193 amino acids, 21,597 Da, sequence version 2).
+- **PANTHER Family**: `PANTHER:PTHR13651` (`PROTEIN ABITRAM`), subfamily `PANTHER:PTHR13651:SF0` (`PROTEIN ABITRAM`). Mouse `Abitram` (`MGI:MGI:2677850`) is the primary experimental seed donor for all PAINT annotations at `PANTHER:PTN000342113` (and co-seed with *Trypanosoma brucei* `UniProtKB:Q581S9` at `PANTHER:PTN000342111` for `GO:0005634` `nucleus`), as well as the `ISS`/`ISO`/`IEA` ortholog projection donor for human, rat, and zebrafish orthologs.
+
+## 2. Primary Experimental Literature on Mouse Abitram (Simiate)
+1. **Derlig et al. 2013 (`PMID:24349419`, *PLoS ONE*)**:
+   - Cloned `Simiate` (`Abitram`) from mouse brain cDNA via phage display screening for proteins recognizing SH3/GUK domains.
+   - Showed `Simiate` mRNA contains multiple FMRP-binding motifs (`ACUK`/`WGGA`) and co-immunoprecipitates with endogenous FMRP from wild-type (but not `Fmr1-/-`) mouse brain homogenates.
+   - Demonstrated expression of endogenous ~22 kDa mouse Simiate across liver, lung, heart, spleen, kidney, ovary, and multiple brain regions (enriched in hippocampus, cerebellar nuclear layer, cortex, and caudoputamen).
+   - Immunohistochemistry and 3D Imaris reconstructions in mouse brain slices demonstrated localization in neuronal nuclei (`GO:0005634`) and somata, with strong enrichment in `SC35`- and `NeuN`-positive nuclear speckles (`GO:0016607`), which are significantly altered in `Fmr1-/-` mice. Also stained primary rat hippocampal neurons (`DIV 1–21`), showing localization in somata, nuclei, and dendrites (`GO:0030425`) but absence from postsynaptic/presynaptic specializations.
+2. **Derlig et al. 2014 (`PMID:24782708`, *Front Cell Neurosci*)**:
+   - **Direct actin binding & polymerization**: Affinity chromatography of mouse brain cytosol on His-tagged mouse Simiate followed by MALDI-TOF MS identified β-actin (`ACTB`). Coprecipitation with purified recombinant GST-Simiate and pure monomeric G-actin proved direct stoichiometric binding (`GO:0003785` `actin monomer binding`). Endogenous Simiate and actin co-immunoprecipitated from mouse brain lysate. Cosedimentation assays with pre-polymerized F-actin demonstrated direct F-actin binding (`GO:0051015` `actin filament binding`), and pyrene/sedimentation polymerization assays showed Simiate decreases G-actin polymerization by 29% (`GO:0030833` `regulation of actin filament polymerization`).
+   - **Cellular projections & neuronal arborization**: Using recombinant mouse `GFP-Simiate` expressed in HEK-293 cells and E17–E18 rat primary hippocampal neurons alongside anti-Simiate staining of endogenous protein in HEK-293, rat hippocampal neurons, and mouse CA1 brain slices, the authors demonstrated localization to lamellipodia (`GO:0030027`), filopodia tips (`GO:0032433`), growth cones (`GO:0030426`), and nuclei (`GO:0005634`, colocalizing with `FAK` in mouse CA1 pyramidal neurons), modulation of filopodia tip dynamics (`GO:0051489` `regulation of filopodium assembly`), and increased branching of proximal dendrites (`GO:0048813` `dendrite morphogenesis`). Note: UniProt/MGI annotated `Q80ZQ9` from these heterologous expression assays using mouse `GFP-Simiate` as well as cross-mammalian anti-Simiate immunostaining.
+3. **Derlig et al. 2015 (`PMID:26013685`, *Cell Tissue Res*)**:
+   - Demonstrated that in adult mouse (and diurnal *Octodon degus*) retina, endogenous Simiate localizes to nuclear speckles (`GO:0016607`) inside nuclei (`GO:0005634`), concentrating in interior clusters in inner nuclear and ganglion cell layer neurons and at the euchromatic nuclear periphery in inverted-chromatin rod and cone photoreceptors.
+4. **2022 FAK1–Simiate Interaction Study (`PMID:35787638`, *Sci Rep*)**:
+   - Recombinant GST-Simiate coprecipitated endogenous `FAK1` (`Ptk2`) from mouse brain cytosolic and purified nuclear fractions, preferentially enriching the 80 kDa calpain-cleaved `FAK80` fragment in nuclei. Nuclear-targeted `GFP-NLS-Simiate` expressed in primary hippocampal neurons increased primary dendrite number, active RNAP2 nuclear volume, and hnRNP A2/B1 nuclear volume (counterbalanced by `GFP-FAK1`), whereas untagged/somatic `GFP-Simiate` promoted secondary dendrite branching and length.
+5. **2026 STED Super-Resolution Study (`PMID:41617053`, *Exp Cell Res*)**:
+   - STED super-resolution microscopy and 3D reconstructions in mouse brain slices resolved endogenous Simiate into spherical clusters highly enriched in the core domain of nuclear speckles (`GO:0016607`), distinct from peripheral `FAK1`.
+
+## 3. Annotation Review Summary
+- All 28 GOA rows on `Q80ZQ9` (`IDA`, `IMP`, `IBA`, `IEA`) are biologically well supported and internally consistent:
+  - `ACCEPT` (core biochemical & subcellular functions): `GO:0003785` (`actin monomer binding`), `GO:0051015` (`actin filament binding`), `GO:0030833` (`regulation of actin filament polymerization`), `GO:0005634` (`nucleus`), `GO:0016607` (`nuclear speck`), `GO:0030027` (`lamellipodium`), `GO:0032433` (`filopodium tip`).
+  - `KEEP_AS_NON_CORE` (specialized protrusion/neuronal developmental contexts): `GO:0051489` (`regulation of filopodium assembly`), `GO:0048813` (`dendrite morphogenesis`), `GO:0030425` (`dendrite`), `GO:0030426` (`growth cone`).
