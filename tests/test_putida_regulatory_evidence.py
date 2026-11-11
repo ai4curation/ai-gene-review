@@ -8,6 +8,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('regulatory_check', ROOT / 'projects/P_PUTIDA/validate_regulatory_evidence.py')
+assert spec is not None and spec.loader is not None
 checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checker)
 

@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import unquote
 
-import openpyxl
+import openpyxl  # type: ignore[import-untyped]  # Upstream package has no bundled stubs.
 import requests
 import yaml
 
@@ -92,7 +92,7 @@ class SourceCache:
         self.directory = directory
         self.directory.mkdir(parents=True, exist_ok=True)
         self.offline = offline
-        self.records = {}
+        self.records: dict[str, dict] = {}
 
     def get(self, url: str) -> bytes:
         key = hashlib.sha256(url.encode()).hexdigest()
@@ -169,7 +169,7 @@ def check_matrix(data: bytes, modules: dict[str, dict], thresholds: dict) -> dic
     if set(thresholds) != set(modules):
         raise ImportErrorDetail('Threshold IDs do not exactly match source module IDs')
     member_maps = {k: {r['locus']: r for r in m['members']} for k, m in modules.items()}
-    selected = {k: set() for k in modules}
+    selected: dict[str, set[str]] = {k: set() for k in modules}
     seen = set()
     for row in reader:
         locus = row[headers[0]]
@@ -264,7 +264,8 @@ class IModulonDBClient:
         with ThreadPoolExecutor(max_workers=6) as executor:
             list(executor.map(load_members, modules.items()))
         checks = check_matrix(matrix, modules, thresholds)
-        source_genes, source_identities = [], []
+        source_genes: list[dict] = []
+        source_identities: list[dict] = []
         if org.get('supplement_url'):
             url = org['supplement_url']
             requested.append(url)
@@ -344,7 +345,11 @@ class IModulonDBClient:
 def resolve_identity(dataset: dict, query: str, root: Path) -> tuple[dict, list[dict], dict, set[str]]:
     org = dataset['organism']
     metadata_path = root / org.get('metadata_path', '')
-    proteins, loci, aliases, review_data, hashes = {}, {}, {}, [], {}
+    proteins: dict[str, dict] = {}
+    loci: dict[str, set[str]] = {}
+    aliases: dict[str, set[str]] = {}
+    review_data = []
+    hashes = {}
     def add(index, key, accession):
         if key:
             index.setdefault(normalize(str(key)), set()).add(accession)
@@ -380,7 +385,7 @@ def resolve_identity(dataset: dict, query: str, root: Path) -> tuple[dict, list[
         if accession in proteins and taxon == org['taxon_id']:
             add(aliases, review.get('gene_symbol'), accession)
     # Authoritative source regulator-to-locus mapping, retaining multiple loci.
-    regulator_aliases = {}
+    regulator_aliases: dict[str, set[str]] = {}
     for record in dataset['source_regulator_identities']:
         matches = loci.get(normalize(record['locus']), set())
         for accession in matches:

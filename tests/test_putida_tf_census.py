@@ -7,6 +7,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('putida_tf_census', ROOT / 'projects/P_PUTIDA/build_tf_census.py')
+assert spec is not None and spec.loader is not None
 census = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(census)
 
