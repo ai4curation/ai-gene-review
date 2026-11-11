@@ -1,0 +1,21 @@
+# Curation Notes for Drosophila melanogaster CG14717 (UniProtKB:Q9VGJ4)
+
+## 1. Identity, Phylogeny, and Pseudoenzyme Substitution (`PANTHER:PTHR46118:SF4`)
+- **Gene / UniProtKB**: `CG14717` (`FBgn0265271` / `UniProtKB:Q9VGJ4`, unreviewed TrEMBL entry, 306 aa, `sv=1`).
+- **MOD gene description check**: `mod_description_deep_research DROME CG14717` confirmed that FlyBase provides no hand-written `MOD_provided_gene_description` for `FBgn0265271` (`CG14717`).
+- **Dipteran duplication and active-site loss**: Within `PANTHER:PTHR46118:SF4`, *Drosophila* underwent a Diptera-specific duplication (`PANTHER:PTN002451173`) producing catalytically active `CG2059` (`UniProtKB:Q9W3R8`, clade `PANTHER:PTN000106319`) and divergent paralog `CG14717` (`UniProtKB:Q9VGJ4`, clade `PANTHER:PTN002451174`).
+- **Sequence verification (`file:human/ABHD11/ABHD11-bioinformatics/RESULTS.md`)**:
+  - Whereas human `ABHD11` (`Q8NFV4` `sv=2`: `65-HGLGG-69`, `Ser132` in `VVGHSMGGK`, `Asp156`, `His287`) and fly paralog `CG2059` (`Q9W3R8`: `60-HGLGG-64`, `Ser127` in `LLGHSMGGK`, `Asp151`, `His286`) conserve both the oxyanion-hole loop and nucleophilic serine, `CG14717` (`Q9VGJ4`) substitutes the essential beta-5 nucleophilic serine with glycine (`Gly120` in `116-ALGHGMGGR-124`) and remodels the oxyanion loop (`50-HDLNL-54`), while retaining `Asp144` and `His282`.
+  - Consistent with loss of the catalytic serine nucleophile (`Ser132 -> Gly120`), `CG14717` is not detected as an active serine hydrolase in the superfamily-wide fluorophosphonate ABPP activity atlas of *Drosophila melanogaster* (`PMID:33827210`), in which all catalytically active serine hydrolases require a nucleophilic serine residue (`Consistent with the name of this superfamily, all members, without any exception to date, use a nucleophilic serine residue in the enzyme active site to perform hydrolytic-type reactions via a two-step ping-pong mechanism involving a covalent enzyme intermediate.`).
+  - Furthermore, TrEMBL automated ARBA rules erroneously assign `DE RecName: Full=sn-1-specific diacylglycerol lipase ABHD11` (`EC=3.1.1.116`) and six diacylglycerol-lipase `CATALYTIC ACTIVITY` blocks to `Q9VGJ4` despite the `Gly120` active-site loss.
+
+## 2. Literature Search for Species-Specific Function (`ND` Audit)
+- Targeted PubMed and cached-corpus queries for `("CG14717" OR "FBgn0265271" OR "Q9VGJ4" OR "anon-SAGE:Wang-126") AND ("Drosophila" OR "melanogaster")` identified **zero** primary experimental studies characterizing a biological process or molecular function of `CG14717` in *Drosophila melanogaster*; the sole experimental appearance is a single yeast two-hybrid binary interaction with `Q9VR31` (`CG6833`) in the proteome-scale FlyBi screen (`PMID:37061542`).
+- Consequently:
+  - `GO:0008150` (`biological_process`, `ND`, `GO_REF:0000015`) is `ACCEPT` with `nd_case: TRUE_GAP` paired with a `BIOLOGY` `BP_DARK` knowledge gap, because neither `CG14717` nor its active Dipteran sister paralog `CG2059` has an experimentally established endogenous biological process, and loss of the nucleophilic serine (`Gly120`) precludes assuming conservation of mammalian OGDHc lipoyl deglutarylation.
+
+## 3. Annotation Review Decisions
+- `GO:0005515` (`protein binding`, `IPI`, `PMID:37061542`, `UniProtKB:Q9VR31`): `REMOVE` per bare protein-binding policy (uninformative single FlyBi Y2H hit).
+- `GO:0005739` (`mitochondrion`, `IBA`, `GO_REF:0000033`) and `GO:0005759` (`mitochondrial matrix`, `ISS`, `GO_REF:0000024` from `UniProtKB:Q8NFV4`): `ACCEPT` (N-terminal mitochondrial targeting region and `PTHR46118:SF4` matrix localization are conserved; active-site loss in human `ABHD11` `S132A` does not impair mitochondrial matrix import in `PMID:32792488`).
+- `GO:0008233` (`NOT peptidase activity`, `IKR`, `negated: true`, `GO_REF:0000047`, `MEROPS:S33.UNW`): `ACCEPT` (accurately records MEROPS S33 non-peptidase status).
+- `GO:0006629` (`lipid metabolic process`, `IBA`), `GO:0052689` (`carboxylic ester hydrolase activity`, `IBA`), and `GO:0106435` (`carboxylesterase activity`, `ISS` from `UniProtKB:Q9W3R8`): `REMOVE` with `residue_claims` (`LOST` `Q8NFV4:132 S` -> `Q9VGJ4:120 G`) and `source_defects` (`GO_CENTRAL` missing PAINT `NOT` on `PTN002451174`, `FLYBASE` over-propagated `ISS` from active paralog `CG2059`).
