@@ -140,7 +140,7 @@ The per-batch progress log is retained below as the audit trail.
   - 22,013 bare `protein binding` rows: audited by script against the protein-binding
     policy; no action changed.
   - 1,789 other rows, read one at a time: 1,381 stand; 178 → MARK_AS_OVER_ANNOTATED,
-    121 → KEEP_AS_NON_CORE, 34 → UNDECIDED, 30 → TOO_GENERAL, 26 → ACCEPT, 19 → MODIFY.
+    123 → KEEP_AS_NON_CORE, 34 → UNDECIDED, 30 → TOO_GENERAL, 26 → ACCEPT, 17 → MODIFY.
   - Removals of proteomics observations (HDA) mostly fell (39 of 45); removals of
     phylogenetic annotations (IBA) almost all stand (209 of 216).
   - 64 `source_defects` recorded (40 wrong gene product, 12 wrong term, 7 wrong

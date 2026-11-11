@@ -75,11 +75,11 @@ pass applies those rules to every REMOVE row.
 |---|---|
 | REMOVE stands | 1,381 |
 | → `MARK_AS_OVER_ANNOTATED` | 178 |
-| → `KEEP_AS_NON_CORE` | 121 |
+| → `KEEP_AS_NON_CORE` | 123 |
 | → `TOO_GENERAL` | 30 |
 | → `UNDECIDED` | 34 |
 | → `ACCEPT` | 26 |
-| → `MODIFY` | 19 |
+| → `MODIFY` | 17 |
 
 Nine of the rows that stay REMOVE had a wrong or missing reason and were given
 a correct one. One row that was not REMOVE was changed as well, so that the
@@ -113,8 +113,8 @@ Counts are rows. The rule names are the keys used in the data file.
 |---|---|---|---|---|---|---|---|
 | same-term-kept | 22 | 9 | | 2 | 23 | 4 | 60 |
 | ancestor-of-kept | 1 | 1 | 30 | | 1 | | 33 |
-| reason-concedes-truth, true-but-broad | 10 | 27 | | | | | 37 |
-| general-to-specific, lateral-correction | | | | | | 15 | 15 |
+| reason-concedes-truth, true-but-broad | 10 | 29 | | | | | 39 |
+| general-to-specific, lateral-correction | | | | | | 13 | 13 |
 | claim-established | | 52 | | | 2 | | 54 |
 | electronic-unsupported-plausible, downstream-readout | 65 | | | | | | 65 |
 | experimental-incomplete-evidence, experimental-fulltext-supports | 6 | 4 | | 29 | | | 39 |
@@ -170,9 +170,8 @@ What the main rules mean in practice:
   endosome membrane rows whose reasons addressed an unrelated claim; the
   Reactome reactions are steps of endosomal Toll-like receptor signalling and
   the rows are now `KEEP_AS_NON_CORE`, as for IRAK4.
-- **MODIFY (19 rows).** Where the reason named the right term, the row is
-  redirected to it: TXN to protein-disulfide reductase activity, TP53 to the
-  negative regulation terms for fibroblast and stem cell proliferation, WT1 to
+- **MODIFY (17 rows).** Where the reason named the right term, the row is
+  redirected to it: TXN to protein-disulfide reductase activity, WT1 to
   retina development in camera-type eye, GAPDH ribonucleoprotein complex to
   GAIT complex.
 - **Twin genes and complex subunits.** HSPA1B now mirrors HSPA1A, and SDHA,
@@ -222,6 +221,11 @@ second round of changes, all included in the numbers above.
   analysis of this kind.
 - **Summaries.** Twenty-one rows moved to a positive action still had a
   summary that argued against the claim; the summaries now match.
+- **Like rows alike.** Two unsigned proliferation rows of TP53 (fibroblast and
+  stem cell proliferation, `acts_upstream_of`) had been redirected to the
+  negative-regulation terms while the identical rows for neuroblast and glial
+  cell proliferation were kept. All four are now `KEEP_AS_NON_CORE`; the
+  direction is carried by the negative-regulation rows.
 - **Evidence for kept rows.** Every paper cited in a rewritten reason is now
   in the review's `references` (93 entries in 71 reviews) and in
   `publications/` (67 fetched). Fifty-four rows kept, accepted or refined on
@@ -324,5 +328,9 @@ policy is the reason, and they were left as they are.
   mitochondrion rows are `MARK_AS_OVER_ANNOTATED` against the organelle
   policy, and the ZP3 immune-response transfers from an immunization study are
   marked while the transcription transfers from the same study are removed.
+- **A curated rule for GAPDH NADP binding.** The InterPro2GO mapping behind
+  that row gives NAD binding and NADP binding from the same signature; NAD is
+  right and NADP is wrong. A rule in `rules/curated/` would correct it for
+  every member of the signature, not only human GAPDH.
 - **Other organisms.** The same patterns are likely in the mouse and model
   organism reviews, which were not touched.
