@@ -53,5 +53,19 @@ GO:0009055 (electron transfer activity) NAS is mechanistically wrong: 3-HAO is a
 - CC: cytosol (GO:0005829).
 
 Disease: biallelic LoF causes congenital NAD-deficiency malformation syndrome (VCRL1), rescuable in mice by gestational niacin (PMID:28792876).
+
+## 2026-11-11 reassessment
+
+This dated entry supersedes the earlier annotation-disposition commentary above. The review remains DRAFT: 26 ACCEPT, 6 KEEP_AS_NON_CORE, 2 MODIFY and 4 UNDECIDED judgments across 38 stored contexts, with no PENDING or NEW annotations. The [authored source guide](HAAO-source-guide.md) gives source-access limits and precise evidence locations; it is not a provider report. Falcon failed with HTTP 403 and Perplexity-lite with HTTP 401/insufficient quota. Existing publication caches and all 12 inherited supporting quotations are preserved.
+
+The native fetcher archived 35 current QuickGO records and produced the corresponding 35-row TSV. The historical and current 35-context inventories share 32, yielding 38 retained contexts. Native seeding restored the second donor context from PMID:25416956 and added three updated electronic mappings; three older mappings remain explicit historical contexts with `retired: true` lifecycle flags. See the [context audit](HAAO-context-audit.json) and [literal archive](HAAO-context-archive.json). No extension, NOT or isoform-qualified assertion is introduced.
+
+The core is consolidated into one Fe(II)-dependent dioxygenase activity. HAAO produces ACMS; subsequent cyclization to quinolinate is spontaneous. Curated cytosolic localization is accepted with explicit source limits. The Fe(III) state of the air-prepared human crystal is distinguished from physiological Fe(II) [PMID:28375145, original Methods §2.2 and Results §3.3; PMID:12007609, abstract]. Human disease evidence and mouse niacin rescue are kept distinct [PMID:28792876].
+
+Five HAAO–GAD1 contexts are supported by exact IntAct/IMEx records and retained as non-core under the ClinGen project instruction. Both Q8IVA8 and Q99259 contexts from PMID:25416956 are retained. HAAO–POT1 remains UNDECIDED because the paper-specific target/supplementary evidence was not recovered, despite the positive UniProt interaction entry. Missing returned records are not treated as evidence against that interaction.
+
+The older electron-carrier-only objection to GO:0009055 is withdrawn after checking its current definition, which includes enzymatic redox reactions. The broad annotation is non-core. Iron/metal binding is refined to ferrous iron binding. Zinc response, cadmium response and neuron cellular homeostasis remain UNDECIDED rather than being rejected from abstract-only evidence [PMID:12007609; PMID:2967497].
+
+GO:0034354 has a QuickGO/OLS version discrepancy. Its incoming IDs and stored labels are retained; acceptance concerns the supported biological pathway claim, while the authored core uses active terms. The [source-evidence record](HAAO-source-evidence.json) contains the service checks. An inherited PTHR15497/BNA1 prose error misidentifies P46952 as bacterial NbaC; this reassessment uses the literal PAINT donors and verified human identity and does not borrow that label.
 </content>
 </invoke>
