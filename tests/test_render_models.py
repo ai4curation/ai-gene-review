@@ -185,3 +185,48 @@ executable_models:
     index_html = render_models_index(rows, tmp_path / "pages" / "models").read_text()
     assert "fixed point" not in index_html
 
+
+def test_render_module_writes_an_interactive_fba_model_page(tmp_path: Path) -> None:
+    fba_yaml = """id: MODULE:ferment
+title: Simple fermentation
+module:
+  id: ferment
+  label: Simple fermentation
+  module_type: METABOLIC_PATHWAY
+  parts:
+    - node: {id: pdc, label: Pyruvate decarboxylase}
+    - node: {id: adh, label: Alcohol dehydrogenase}
+    - optional: true
+      node: {id: bdh, label: Butanediol branch}
+  connections:
+    - {source: pdc, target: adh, connection_type: PROVIDES_INPUT_FOR}
+    - {source: pdc, target: bdh, connection_type: PROVIDES_INPUT_FOR}
+executable_models:
+  - id: ferment_fba
+    title: Fermentation as a Constraint-Based Model
+    model_type: CONSTRAINT_BASED
+    derivation: DERIVED_FROM_MODULE
+    scenarios:
+      - id: wt_ethanol
+        label: Wild-type ethanol dominance
+        expected_active: [pdc, adh, bdh]
+        expected_outcome_order: [adh, bdh]
+"""
+    modules = tmp_path / "modules"
+    modules.mkdir()
+    yaml_path = modules / "ferment.yaml"
+    yaml_path.write_text(fba_yaml)
+    out = tmp_path / "pages" / "modules"
+
+    page, _ = render_module(yaml_path, output_dir=out, modules_dir=modules)
+    model_page = tmp_path / "pages" / "models" / "ferment_fba.html"
+    assert model_page.exists()
+
+    payload = _payload(model_page.read_text())
+    assert payload["model_type"] == "CONSTRAINT_BASED"
+    assert [r["id"] for r in payload["reactions"]] == ["pdc", "adh", "bdh"]
+    assert payload["scenarios"][0]["failures"] == []
+    assert "Constraint-Based Model" in model_page.read_text()
+    assert 'href="../models/ferment_fba.html"' in page.read_text()
+
+

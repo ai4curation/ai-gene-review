@@ -28,6 +28,11 @@ from ai_gene_review.module_dynamics import (
     boolean_model_payload,
     run_scenario,
 )
+from ai_gene_review.module_fba import (
+    fba_model_payload,
+    module_to_fba,
+    run_fba_scenario,
+)
 from ai_gene_review.render_modules import (
     _environment,
     as_list,
@@ -71,7 +76,7 @@ def model_page_path(models_dir: Path, model_id: str) -> Path:
 
 
 def is_interactive(model: dict[str, Any], doc: dict[str, Any]) -> bool:
-    """Whether a model gets an in-browser page: derived Boolean or agent-based."""
+    """Whether a model gets an in-browser page: derived Boolean, agent-based, or constraint-based."""
     if model.get("derivation") != "DERIVED_FROM_MODULE":
         return False
     mtype = model.get("model_type")
@@ -79,6 +84,8 @@ def is_interactive(model: dict[str, Any], doc: dict[str, Any]) -> bool:
         return len(module_to_boolean(doc).variables) <= MAX_INTERACTIVE_VARIABLES
     if mtype == "AGENT_BASED":
         return len(module_to_abm(doc).stages) > 0
+    if mtype == "CONSTRAINT_BASED":
+        return len(module_to_fba(doc).reactions) > 0
     return False
 
 
@@ -111,6 +118,10 @@ def model_summaries(
             if interactive:
                 if mtype == "AGENT_BASED":
                     result = run_abm_scenario(doc, str(model["id"]), scenario)
+                    entry["passed"] = result.passed
+                    entry["kinds"] = []
+                elif mtype == "CONSTRAINT_BASED":
+                    result = run_fba_scenario(doc, str(model["id"]), scenario)
                     entry["passed"] = result.passed
                     entry["kinds"] = []
                 else:
@@ -167,7 +178,7 @@ def render_model_pages(
     module_page: Path,
     models_dir: Path,
 ) -> list[Path]:
-    """Write the interactive page of every derived Boolean or ABM model of one module."""
+    """Write the interactive page of every derived Boolean, ABM, or FBA model of one module."""
     written: list[Path] = []
     for model in as_list(doc.get("executable_models")):
         if not isinstance(model, dict) or not is_interactive(model, doc):
@@ -176,6 +187,9 @@ def render_model_pages(
         if model.get("model_type") == "AGENT_BASED":
             payload = abm_model_payload(doc, model)
             template_name = "executable_abm.html.j2"
+        elif model.get("model_type") == "CONSTRAINT_BASED":
+            payload = fba_model_payload(doc, model)
+            template_name = "executable_fba.html.j2"
         else:
             payload = boolean_model_payload(doc, model)
             template_name = "executable_model.html.j2"

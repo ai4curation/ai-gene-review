@@ -729,3 +729,140 @@ module:
       gap_kind:
         - BIOLOGY
       status: OPEN
+executable_models:
+  - id: glycerol_metabolism_fba
+    title: Glycerol synthesis and catabolic route selection — constraint-based flux model
+    model_type: CONSTRAINT_BASED
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      Steady-state flux-balance (FBA / pFBA / E-Flux) model compiled from the
+      glycerol synthesis and utilisation reactions, testing S. cerevisiae
+      GUT1-GUT2 versus GCY1-DAK1/2 routing, S. pombe gld1-dak1/2 assimilation,
+      mass-balance coupling under gut2 knockout, and hyperosmotic glycerol
+      accumulation.
+    scenarios:
+      - id: budding_yeast_g3p_dominant
+        label: S. cerevisiae aerobic glycerol catabolism (GUT1-GUT2 dominant over GCY1-DAK)
+        description: >-
+          Budding yeast lacks the bacterial-type NAD-dependent GldA glycerol
+          dehydrogenase and relies on the primary GUT1-GUT2 phosphorylating
+          route alongside the lower-capacity NADP-dependent GCY1-DAK1/2 route.
+        settings:
+          - element: glda_glycerol_dehydrogenase_activity
+            active: false
+        expected_active:
+          - g3p_nad_dehydrogenase_step
+          - g3p_phosphatase_step
+          - glycerol_kinase_step
+          - g3p_quinone_dehydrogenase_step
+          - glycerol_dehydrogenase_step
+          - dihydroxyacetone_kinase_step
+        expected_inactive:
+          - glda_glycerol_dehydrogenase_activity
+        expected_outcome_order:
+          - g3p_quinone_dehydrogenase_step
+          - dihydroxyacetone_kinase_step
+        evidence:
+          - source_id: PMID:8358828
+            statement: GUT1 glycerol kinase is required for the main aerobic glycerol catabolic route in S. cerevisiae.
+          - source_id: PMID:8256521
+            statement: GUT2 mitochondrial FAD-dependent G3P dehydrogenase completes the primary G3P catabolic arm.
+      - id: gut2_knockout_rerouting
+        label: gut2Δ mitochondrial G3P dehydrogenase loss blocks GUT1 flux at steady state and reroutes to DHA
+        description: >-
+          In steady-state FBA (S*v = 0), knocking out GUT2 (g3p_quinone_dehydrogenase_step)
+          prevents sn-glycerol 3-phosphate oxidation in the catabolic arm,
+          forcing steady-state flux through glycerol_kinase_step to zero and
+          diverting glycerol catabolism into the dihydroxyacetone (GCY1-DAK1/2)
+          branch.
+        settings:
+          - element: g3p_quinone_dehydrogenase_step
+            active: false
+        expected_active:
+          - g3p_nad_dehydrogenase_step
+          - g3p_phosphatase_step
+          - glycerol_dehydrogenase_step
+          - dihydroxyacetone_kinase_step
+        expected_inactive:
+          - glycerol_kinase_step
+          - g3p_quinone_dehydrogenase_step
+        expected_outcome_order:
+          - dihydroxyacetone_kinase_step
+          - g3p_quinone_dehydrogenase_step
+        evidence:
+          - source_id: PMID:8256521
+            statement: gut2 mutants cannot oxidize sn-glycerol 3-phosphate at the mitochondrial inner membrane.
+          - source_id: PMID:9038161
+            statement: Salt-induced glycerol dissimilation in S. cerevisiae proceeds via the dihydroxyacetone kinase pathway.
+      - id: fission_yeast_dha_route
+        label: S. pombe glycerol assimilation via Gld1 and Dak1/Dak2 (no glycerol kinase)
+        description: >-
+          Schizosaccharomyces pombe lacks glycerol kinase (GUT1) and budding-yeast
+          GCY1, assimilating glycerol exclusively through the NAD-dependent
+          glycerol dehydrogenase gld1 and dihydroxyacetone kinases dak1/dak2.
+        settings:
+          - element: glycerol_kinase_step
+            active: false
+          - element: akr_glycerol_dehydrogenase_activity
+            active: false
+        expected_active:
+          - g3p_nad_dehydrogenase_step
+          - g3p_phosphatase_step
+          - glda_glycerol_dehydrogenase_activity
+          - glycerol_dehydrogenase_step
+          - dihydroxyacetone_kinase_step
+        expected_inactive:
+          - glycerol_kinase_step
+          - g3p_quinone_dehydrogenase_step
+          - akr_glycerol_dehydrogenase_activity
+        expected_outcome_order:
+          - dihydroxyacetone_kinase_step
+          - g3p_quinone_dehydrogenase_step
+        evidence:
+          - source_id: PMID:20396879
+            statement: S. pombe assimilates glycerol exclusively via gld1+ glycerol dehydrogenase and dak1+/dak2+ DHA kinases.
+      - id: fission_yeast_gld1_null
+        label: S. pombe gld1Δ abolishes glycerol assimilation
+        description: >-
+          Deleting gld1+ in the glycerol-kinase-lacking S. pombe background
+          eliminates both glycerol dehydrogenase isozymes, reducing steady-state
+          flux through the entire glycerol utilisation arm to zero.
+        settings:
+          - element: glycerol_kinase_step
+            active: false
+          - element: akr_glycerol_dehydrogenase_activity
+            active: false
+          - element: glda_glycerol_dehydrogenase_activity
+            active: false
+        expected_active: []
+        expected_inactive:
+          - glycerol_kinase_step
+          - g3p_quinone_dehydrogenase_step
+          - glycerol_dehydrogenase_step
+          - dihydroxyacetone_kinase_step
+        evidence:
+          - source_id: PMID:20396879
+            statement: Deletion of gld1 in S. pombe prevents glycerol assimilation.
+      - id: osmotic_glycerol_synthesis
+        label: Hyperosmotic / anaerobic glycerol synthesis (catabolic handoff repressed)
+        description: >-
+          Severing the opposing-arm PRECEDES link between glycerol synthesis
+          (GPD1/2-GPP1/2) and glucose-repressed glycerol utilisation models
+          net compatible-solute glycerol export under hyperosmotic or anaerobic
+          stress.
+        removed_connections:
+          - source: g3p_phosphatase_step
+            target: glycerol_utilisation
+        expected_active:
+          - g3p_nad_dehydrogenase_step
+          - g3p_phosphatase_step
+        expected_inactive:
+          - glycerol_kinase_step
+          - g3p_quinone_dehydrogenase_step
+          - glycerol_dehydrogenase_step
+          - dihydroxyacetone_kinase_step
+        evidence:
+          - source_id: PMID:8196651
+            statement: GPD1 drives osmoregulatory glycerol synthesis under hyperosmotic stress.
+          - source_id: PMID:9171333
+            statement: GPD1 and GPD2 reoxidize cytosolic NADH through glycerol formation under anaerobic conditions.
