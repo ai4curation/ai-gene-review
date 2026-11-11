@@ -696,8 +696,12 @@ def _validate_gene_review_cli(
 def _validate_rule_review_cli(
     yaml_file: Path,
     schema_path: Path,
+    online: bool = False,
 ) -> ValidationReport:
-    """Validate one rule review with the standard LinkML CLI tools."""
+    """Validate one rule review: LinkML schema, then receipt checks.
+
+    ``online`` adds the receipt checks that query UniProt and QuickGO.
+    """
     yaml_file = yaml_file.resolve()
     schema_path = schema_path.resolve()
     report = ValidationReport(file_path=yaml_file, is_valid=True)
@@ -728,6 +732,10 @@ def _validate_rule_review_cli(
         "linkml_validate",
         cwd=project_root,
     )
+
+    from ai_gene_review.validation.rule_review_receipts import validate_rule_review_receipts
+
+    validate_rule_review_receipts(yaml_file, report, online=online)
 
     return report
 
@@ -3252,10 +3260,20 @@ def rules_validate(
         bool,
         typer.Option("--verbose", "-v", help="Show detailed messages including warnings"),
     ] = False,
+    online: Annotated[
+        bool,
+        typer.Option(
+            "--online",
+            help="Also check receipts against UniProt and QuickGO (alleged false positives, stale rules)",
+        ),
+    ] = False,
 ):
-    """Validate rule review YAML files against the LinkML schema.
+    """Validate rule review YAML files: schema, then receipt checks.
 
-    Validates RuleReview files for schema compliance with the RuleReview class.
+    Validates RuleReview files for schema compliance, then checks that the
+    verdict carries receipts (see docs/rule_review_receipts.md): recorded
+    condition sets, identifier labels that match the official names, sources
+    that exist, and a named wrongly annotated protein behind a DEPRECATE.
 
     Examples:
         # Validate a specific review
@@ -3290,7 +3308,7 @@ def rules_validate(
     schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = _validate_rule_review_cli(yaml_file, schema_path)
+        report = _validate_rule_review_cli(yaml_file, schema_path, online=online)
 
         if report.is_valid:
             valid_count += 1
