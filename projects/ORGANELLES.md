@@ -207,19 +207,29 @@ plastids come later.
      a third route to a sub-compartment row, for a soluble protein with no TM
      or signal peptide. It needs (a) direct evidence that the endogenous
      protein is at the organelle, (b) a named integral membrane protein of the
-     organelle that binds it, and (c) dependence on that partner: losing it
-     (knockout or a binding mutant) releases the protein or destabilises it.
-     Stability alone shows only an obligate partnership, so (a) and (b) carry
-     the location. Add the cytoplasmic-side term as a `NEW` IC row beside the
-     root: `GO:0098554` for the ER, whose definition includes peripherally
-     associated proteins. `GO:0098554` is `part_of` `GO:0005789`, so it is the
+     organelle that binds it, (c) dependence on that partner: losing it
+     (knockout or a binding mutant) releases the protein or destabilises it,
+     and (d) cytosolic synthesis with no signal peptide and no organelle
+     targeting or transit sequence, so the cytoplasmic leaflet is the only face
+     it can reach. (a) carries the location and (b) names what holds it
+     there; stability alone shows only an obligate partnership. A protein that
+     fails (d), such as a mitochondrial matrix protein held by an inner-membrane
+     partner, gets the side term for its own compartment instead (e.g.
+     `GO:0099617` matrix side of mitochondrial inner membrane). Add the
+     cytoplasmic-side term as a `NEW` IC row beside the root: `GO:0098554` for
+     the ER, whose definition includes peripherally associated proteins. `GO:0098554` is `part_of` `GO:0005789`, so it is the
      more specific statement, not an alternative to it. A `NEW` `GO:0005789`
      row that we author still needs the protein's own TM or tail anchor; an
      existing direct-evidence `GO:0005789` row on a tethered protein (UFL1,
      CDK5RAP3) stays `ACCEPT` and can be refined by adding the cytoplasmic-side
      row. Brief or regulated recruitment (signalling, stress, autophagy,
      Rab-dependent docking, a cycling complex such as SRP) is not tethering.
-     The same test will apply to the Golgi and the other organelles.
+     The same test will apply to the other organelles, but GO has no
+     cytoplasmic-side term for the Golgi stack or the peroxisome (only the
+     trans-Golgi network, `GO:0160281`, the lysosome, `GO:0098574`, and the
+     mitochondrial outer membrane, `GO:0032473`). A Golgi or peroxisome case
+     raises a `proposed_new_terms` entry rather than being forced onto a
+     narrower term.
    - **Recruited cytosolic pools stay at the root**, core only when the
      function is shown at the ER. Membership of an ER-acting complex supports
      the organelle root for an obligate subunit but never localises it to a
@@ -337,7 +347,10 @@ Settled the open question from ER batch 4: should a soluble protein stably held
 on the organelle by an integral-membrane partner get a sub-compartment row? Yes,
 the cytoplasmic-side term, under a new bullet in rule 7. GO:0098554 cytoplasmic
 side of endoplasmic reticulum membrane is defined to include proteins
-"peripherally associated with" the cytoplasmic leaflet. It is `part_of` GO:0005789,
+"peripherally associated with" the cytoplasmic leaflet (GO definition: "The leaflet
+of the endoplasmic reticulum membrane that faces the cytoplasm, including any
+protein embedded in, attached to, or peripherally associated with it."). It is
+`part_of` GO:0005789,
 so it says more than the bare membrane term (which side, and that the attachment
 is peripheral) rather than avoiding it. The route needs direct evidence that the
 protein is at the organelle, a named integral partner, and dependence on it; a
@@ -348,7 +361,10 @@ stability result alone shows an obligate partnership, not a location.
   knockout cells, which phenocopy UFSP2 loss (PMID:35926457); and it deUFMylates
   uL24 on membrane-bound 60S subunits (PMID:38383785). The ODR4-UFSP2 complex at
   the ER membrane was first shown in worm and human proteins by Chen et al.
-  (PMID:24603482); the 2022 and 2024 papers cite that work for the anchoring. The
+  (PMID:24603482), including a partner-dependent release test: worm ODR-8 washes
+  out of digitonin-permeabilised HeLa cells alone but is partly retained with
+  ODR-4, which also places it on the cytosolic face. The 2022 and 2024 papers cite
+  that work for the anchoring. The
   location itself rests on the curated IDA row (PMID:35926457). The three root
   rows stay ACCEPT and the second core function names the cytoplasmic side.
 - **What this means for the UFMylation machinery.** UFL1 and CDK5RAP3 are also
