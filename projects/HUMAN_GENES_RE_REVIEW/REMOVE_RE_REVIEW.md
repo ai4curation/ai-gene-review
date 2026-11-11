@@ -59,14 +59,23 @@ pass applies those rules to every REMOVE row.
    once more at the end: all are valid and no new error was introduced. Two of
    them (FZD7, GK5) had failed before the pass on three reference quotes that
    were not verbatim; those quotes were re-quoted from the cached papers.
+5. The checks that CI runs on changed gene reviews were then run on the whole
+   set: the PMID-reference check, the repository-wide quote check and the
+   family/gene cross-check (`just validate-families`). The cross-check found
+   one disagreement with a curated family review: `extracellular matrix` had
+   been kept as non-core on PRG2 and PRG3 from two matrix proteomics studies,
+   while the review of their PANTHER family (PTHR22803) scopes that term as
+   not applicable to any member. Those four rows are
+   `MARK_AS_OVER_ANNOTATED`: the detection is real, the location is not
+   retained.
 
 ## Results
 
 | Outcome for the 1,789 substantive REMOVE rows | Rows |
 |---|---|
 | REMOVE stands | 1,381 |
-| → `MARK_AS_OVER_ANNOTATED` | 172 |
-| → `KEEP_AS_NON_CORE` | 131 |
+| → `MARK_AS_OVER_ANNOTATED` | 176 |
+| → `KEEP_AS_NON_CORE` | 127 |
 | → `TOO_GENERAL` | 30 |
 | → `UNDECIDED` | 29 |
 | → `ACCEPT` | 26 |
@@ -110,7 +119,7 @@ Counts are rows. The rule names are the keys used in the data file.
 | electronic-unsupported-plausible, downstream-readout | 65 | | | | | | 65 |
 | experimental-incomplete-evidence, experimental-fulltext-supports | 6 | 4 | | 24 | | | 34 |
 | curated-statement | 6 | | | 2 | | | 8 |
-| omics-location, omics-function | 39 | 9 | | | | | 48 |
+| omics-location, omics-function | 43 | 5 | | | | | 48 |
 | expression-only | 8 | | | | | | 8 |
 | reactome-location, er-transit, organelle-root | 11 | 25 | | | | | 36 |
 | other (cross-gene consistency, IBA node, promiscuous activity) | 4 | | | 1 | | | 5 |

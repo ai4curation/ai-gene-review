@@ -139,8 +139,8 @@ The per-batch progress log is retained below as the audit trail.
   [`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
   - 22,013 bare `protein binding` rows: audited by script against the protein-binding
     policy; no action changed.
-  - 1,789 other rows, read one at a time: 1,381 stand; 172 → MARK_AS_OVER_ANNOTATED,
-    131 → KEEP_AS_NON_CORE, 30 → TOO_GENERAL, 29 → UNDECIDED, 26 → ACCEPT, 20 → MODIFY.
+  - 1,789 other rows, read one at a time: 1,381 stand; 176 → MARK_AS_OVER_ANNOTATED,
+    127 → KEEP_AS_NON_CORE, 30 → TOO_GENERAL, 29 → UNDECIDED, 26 → ACCEPT, 20 → MODIFY.
   - Removals of proteomics observations (HDA) mostly fell (39 of 45); removals of
     phylogenetic annotations (IBA) almost all stand (209 of 216).
   - 60 `source_defects` recorded (38 wrong gene product, 12 wrong term, 7 wrong
