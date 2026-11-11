@@ -17,3 +17,7 @@ Written as part of the evolutionary review of the succinyl-CoA synthetase famili
 
 - Fitness data: just fetch-fitness failed (the fitness browser was unreachable and no local FEBA database is installed).
 - Most cited papers are abstract-only in the cache.
+
+### OpenScientist deep research (added after the review)
+
+`just deep-research-openscientist ECOLI sucC` completed and is stored as sucC-deep-research-openscientist.md. It agrees with every action in the review and changed none. It added two references that were then cached and checked: solubility and the His246 substitution [PMID:2548486 "No activity was detected after the histidine residue at the phosphorylation site of the alpha-subunit was replaced by aspartate"], and anaerobic repression of the operon [PMID:9209026 "is provided by the arcA and fnr gene products"]. The run was given the gene name, so it is a second reading of the literature, not independent evidence.
