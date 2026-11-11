@@ -129,6 +129,17 @@ passes phosphoglycerate dehydrogenase.
 - `NO_MODEL` is expected for most eukaryote-specific enzymes and says nothing either way.
 - Never use the check alone to remove an experimental annotation.
 
+## Specificity fingerprints
+
+The metXS case shows the gap that remains once family membership is settled:
+paralogs for different reactions can pass the same family models.
+`ai_gene_review.validation.specificity_fingerprint` (`just enzyme-fingerprint-check`)
+adds the step from Kinateder et al. 2024 [PMID:38284491]: read the residues an alanine
+scan showed to decide the reaction, at the matching positions of the query. Fingerprints
+are curated in `conf/specificity_fingerprints.yaml`, each citing its mutagenesis paper.
+The first one, for the *P. aeruginosa* histidinol-phosphate phosphatase PA0335, finds
+its full fingerprint in *P. putida* PP_5147.
+
 ## Limitations
 
 - Only target families and the families InterPro already reports are scored, not the

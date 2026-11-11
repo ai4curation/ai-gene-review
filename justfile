@@ -83,6 +83,12 @@ fix-caches:
 enzyme-cutoff-check ACC *ARGS:
 	uv run python -m ai_gene_review.validation.enzyme_family_cutoff {{ACC}} {{ARGS}}
 
+# Check a protein for the curated substrate-specificity fingerprints in
+# conf/specificity_fingerprints.yaml (Kinateder et al. 2024, PMID:38284491).
+# e.g. just enzyme-fingerprint-check Q88CN3 --fingerprint holpase_hisn_pseudomonas
+enzyme-fingerprint-check ACC *ARGS:
+	uv run python -m ai_gene_review.validation.specificity_fingerprint {{ACC}} {{ARGS}}
+
 # Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
 # thing in a copy of the committed reports and checks the generator refuses with the message
 # it declares, or still renders with the clause it declares.

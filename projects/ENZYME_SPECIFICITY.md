@@ -273,6 +273,12 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
    especially when a family for a different reaction passes, is the overprediction
    pattern of Schnoes et al. 2009 [PMID:20011109]. See the
    [trusted-cutoff check](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
+6. **Check a specificity fingerprint where one is curated**: In superfamilies where
+   close paralogs catalyse different reactions, family membership does not fix the
+   substrate. `just enzyme-fingerprint-check ACC` reads the residues at positions an
+   alanine scan showed to decide the reaction, as in the histidinol-phosphate
+   phosphatase fingerprint of Kinateder et al. 2024 [PMID:38284491]. Fingerprints
+   are curated in `conf/specificity_fingerprints.yaml` from mutagenesis papers only.
 
 ---
 
@@ -287,9 +293,22 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-10-18
+Last updated: 2026-11-11
 
 # NOTES
+
+## 2026-11-11
+
+**Added a specificity-fingerprint check from Kinateder et al. 2024 [PMID:38284491].**
+
+`ai_gene_review.validation.specificity_fingerprint` aligns a protein to a
+characterized reference and reads the residues at curated function-deciding positions.
+The first fingerprint is the HAD-superfamily histidinol-phosphate phosphatase of
+*P. aeruginosa* PA0335 (DxD at 16/18 and Y47 required; Y57 and T113 supporting), which
+separates it from the phosphoserine phosphatases many of its homologues are annotated
+as. *P. putida* PP_5147 (68% identical to PA0335) carries all five residues. A protein
+below the fingerprint's identity floor (45%) is reported as LOW_IDENTITY rather than
+given residue calls from an unreliable alignment.
 
 ## 2026-10-18
 
