@@ -27,7 +27,7 @@ INTERPRO value, so that defect uses `resource: OTHER` with `record: InterPro:IPR
   C-terminal rhodanese domain (406-484) carrying the thiazole signature (IPR026340 /
   TIGR04271). UniProt features give the active site at Cys458 and a Cys346-Cys458 disulfide.
   Global alignment to E. coli ThiI maps D189/K321/C344/C456 to D191/K323/C346/C458.
-- Shewanella oneidensis ThiI (Q8EGR4) sits in PANTHER clade PTN000769419, together with the
-  E. coli, Salmonella, Yersinia, Vibrio and Pseudomonas proteins, all of which carry the
-  rhodanese domain and thiazole signature. The thiazole row is therefore accepted on domain
-  grounds, unlike for rhodanese-less B. subtilis ThiI.
+- The thiazole row is accepted on these domain grounds (rhodanese domain plus thiazole
+  signature), unlike for rhodanese-less B. subtilis ThiI. The TreeGrafter rows in
+  thiI-goa.tsv (GO:0002937, GO:0005829, GO:0052837) cite PANTHER:PTN001804945; the review
+  does not rely on any PANTHER clade placement.
