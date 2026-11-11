@@ -1164,6 +1164,10 @@ validate organism gene:
     set -e
     file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
     uv run ai-gene-review validate --verbose --terms "$file"
+    sidecar="${file%-ai-review.yaml}-regulatory-evidence.yaml"
+    if [[ -f "$sidecar" ]]; then
+        uv run --group dev python projects/P_PUTIDA/validate_regulatory_evidence.py "$sidecar"
+    fi
     echo ""
     echo "Checking PMID references in markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"

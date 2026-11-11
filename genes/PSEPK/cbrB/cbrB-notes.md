@@ -70,3 +70,12 @@ QuickGO searches did not establish a specific regulation-of-carbon-catabolite-re
 ## 2026-11-10 — preserve the original provider research
 
 The 2026-11-08 Falcon command rewrote an existing provider report from cached output. Restored the report byte-for-byte from before this batch (parent of commit 8e42884c19). Provider output must not be manually corrected or incidentally replaced during curation. The primary-source assessments and curation decisions above remain in these notes and the review YAML.
+
+
+## 2026-11-11 — PR review follow-up
+
+Recorded structured source defects on UniProt Q88DX2: the ARBA00073743 DE/AlgB name is CONFIRMED inconsistent with the primary KT2440 locus identification cbrB (PP_4696) in PMID:32214184. The ARBA00060514 CC:PATHWAY alginate assignment is PROBABLE over-transfer and is requested for curator checking; the available CbrAB carbon-control evidence does not experimentally disprove every possible alginate effect. The original UniProt record is preserved.
+
+Linked the gene review and crcZ/crcY evidence to MODULE:pseudomonad_cbr_crc_catabolite_control, element cbrb_transcription_activator. The module remains the mechanism model; the sidecar preserves strain-, condition- and assay-specific assertions, including wider targets outside that module. The module links back to this evidence record.
+
+For PP3420, quoted the verbatim Table 2 cell values with explicit ellipsis separators for readability, and spelled out their column order in assay. The condition now explicitly records that the source prints 11,7 with a decimal comma and that 11.7 is its numeric interpretation. No cached table was rewritten to make the quotation prettier.

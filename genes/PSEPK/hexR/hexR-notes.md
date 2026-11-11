@@ -90,3 +90,8 @@ preceding acceptance of GO:0000976 and brings the specificity judgment into line
 with the comparable BenR/PtxS cases. There are now four MODIFY decisions among
 the nine original rows. The integrated repressor core function and three target
 relationships are unchanged.
+
+
+## 2026-11-11 — PR review follow-up
+
+Replaced the non-specific three-repressor sentence in each promoter evidence entry with the HexR-specific pathway/gene sentence from the same cached PMID:18245293 abstract. PMID:19506074 continues to supply the named Pedd/Pzwf/Pgap-1 binding evidence. Added an expert question about whether a KDPG-specific binding term is warranted, rather than silently treating GO:0097367 as maximal specificity. No provider or manual research report was edited.

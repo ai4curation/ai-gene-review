@@ -68,7 +68,8 @@ from ai_gene_review.validation.supporting_text import (
 BASELINE_PATH = PROJECT_ROOT / "conf" / "quote_check_baseline.yaml"
 
 #: Document kinds checked by ``just validate-quotes``: every committed YAML that
-#: carries quotes and is not a gene review. Prediction reviews are covered by
+#: carries quotes and is not a gene review, including regulatory-evidence sidecars.
+#: Prediction reviews are covered by
 #: ``prediction_evidence`` and are listed so the census is complete.
 DEFAULT_GLOBS = (
     "modules/**/*.yaml",
@@ -78,6 +79,7 @@ DEFAULT_GLOBS = (
     "models/**/*.yaml",
     "projects/**/*.yaml",
     "genes/*/*/*-predictions-review.yaml",
+    "genes/*/*/*-regulatory-evidence.yaml",
 )
 
 #: Directories excluded from the default scope: frozen experiment snapshots whose

@@ -125,3 +125,12 @@ removed; family/subfamily labels do not establish its effector or regulon.
 The review remains complete for the existing annotation set and the three
 characterized promoter relationships, not for all possible targets. Genome-wide
 completeness and integration with other carbon regulators remain open questions.
+
+
+## 2026-11-11 — PR review follow-up
+
+Added GO:0097367 carbohydrate derivative binding (NEW, IDA, PMID:20581202) for the already documented 2-ketogluconate ITC measurement. The apparent KD is 15 micromolar and effector binding derepresses operator-bound PtxS. This is a functional regulatory interaction, not incidental glucose/gluconate induction. The cached abstract provides the verbatim quote; no provider output was modified.
+
+Added PMID:18245293, whose KT2440/PSC303 experiments define the PtxS regulon, and GO:0010906 regulation of glucose metabolic process (NEW, IMP). Read the primary Methods, PtxS regulon results and Table 3 (https://pmc.ncbi.nlm.nih.gov/articles/PMC2293218/). PtxS itself executes regulation through operator binding and repression of genes for the gluconate/2-ketogluconate branch; it does not execute their metabolic reactions. The transcription-regulation term and glucose-regulation term are not is_a/part_of ancestors of each other (QuickGO checked 2026-11-11). Broad pathway regulation is used rather than assigning a net glucose-flux sign from one branch's transcriptional response.
+
+Comparator check (2026-11-11): QuickGO queries for GO:0010906 on same-role regulators HexR/Q88P32, GnuR/Q88HE5 and Cra/P0A9I3 returned zero hits. This supplies no evidence for an overlooked annotation; in particular the proposed HexR row in this PR is not treated as an independent database precedent. The current electronic terms emphasize transcriptional regulation. The new proposal rests on the target-specific experimental regulatory step and the GO definition, not symmetry or pathway completeness. The proposal is for regulation, preserving the distinction that explains why regulators should not receive pathway-execution terms. The metabolic route includes gluconate and 2-ketogluconate as intermediates of glucose utilization, as experimentally established in the cited KT2440 study.

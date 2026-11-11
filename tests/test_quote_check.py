@@ -138,6 +138,7 @@ def test_default_scope_covers_every_non_gene_review_kind():
         assert any(r.startswith(prefix) for r in rel), prefix
     assert not any(r.endswith("-ai-review.yaml") and r.startswith("genes/") for r in rel)
     assert not any("recapitulation-experiment" in r for r in rel)
+    assert "genes/PSEPK/BenR/BenR-regulatory-evidence.yaml" in rel
 
 
 def test_main_reports_unparseable_yaml_and_fails(tmp_path: Path, capsys):

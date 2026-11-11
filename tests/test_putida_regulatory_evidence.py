@@ -32,6 +32,31 @@ def test_valid_record_retains_unknown_directness(case, validator):
     assert data['relationships'][0]['directness'] == 'unresolved'
 
 
+@pytest.mark.parametrize('section', ['relationships', 'pathway_context'])
+def test_reject_quote_absent_from_cited_source(case, validator, section):
+    data, review, metadata = copy.deepcopy(case)
+    data[section][0]['evidence'][0]['supporting_text'] = 'This fabricated sentence has no source.'
+    with pytest.raises(ValueError, match='supporting_text'):
+        checker.check_record(data, review, metadata, validator)
+
+
+def test_author_manuscript_url_does_not_waive_abstract_quote_check(case, validator):
+    """The exact BenR regression: a URL cannot make an absent PMID quote pass."""
+    data, review, metadata = copy.deepcopy(case)
+    evidence = data['relationships'][0]['evidence'][0]
+    evidence.update(reference_id='PMID:38113125',
+                    source_url='https://escholarship.org/uc/item/802967bs',
+                    supporting_text='inducible BenR (PP_3159)')
+    with pytest.raises(ValueError, match='PMID:38113125'):
+        checker.check_record(data, review, metadata, validator)
+
+
+@pytest.mark.parametrize('gene', ['BenR', 'hexR', 'ptxS', 'cbrB'])
+def test_batch_quotes_match_cached_primary_sources(gene):
+    path = ROOT / f'genes/PSEPK/{gene}/{gene}-regulatory-evidence.yaml'
+    checker.check_quotes(yaml.safe_load(path.read_text()))
+
+
 @pytest.mark.parametrize('error', ['wrong_locus', 'wrong_taxon', 'undeclared_reference', 'duplicate_id', 'missing_assay', 'pathway_execution'])
 def test_reject_bad_evidence_record(case, validator, error):
     data, review, metadata = copy.deepcopy(case)

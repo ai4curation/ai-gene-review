@@ -6,7 +6,7 @@ Generated from the pinned inputs in [build_manifest.json](build_manifest.json). 
 
 - Reference metadata: **5527 proteins**.
 - Candidate union: **647 proteins**.
-- Existing review files cover **59 candidates**; **588 candidates** have no accession-matched review.
+- Existing review files cover **60 candidates**; **587 candidates** have no accession-matched review.
 - **27 ambiguous aliases** are retained in [ambiguous_aliases.tsv](ambiguous_aliases.tsv).
 - Unresolved external records: **1**; see [source_mappings.tsv](source_mappings.tsv).
 
@@ -14,7 +14,7 @@ Generated from the pinned inputs in [build_manifest.json](build_manifest.json). 
 
 | Candidate class | Total | With review file | Without review file |
 |---|---:|---:|---:|
-| ambiguous_candidate | 141 | 17 | 124 |
+| ambiguous_candidate | 141 | 18 | 123 |
 | dbtf_candidate | 376 | 19 | 357 |
 | nonregulatory_candidate | 18 | 6 | 12 |
 | nucleoid_associated_candidate | 12 | 0 | 12 |
@@ -60,11 +60,11 @@ Explicitly listed multiple source loci contribute candidates for each resolved p
 
 ## Existing review coverage
 
-Inspected **987 review files**. Full-file mapping results are in [review_coverage.tsv](review_coverage.tsv). No gene validators were run for this inventory; `validation_status` is `not_run`. A declared COMPLETE status, zero PENDING rows, or a core-function section does not certify biological accuracy.
+Inspected **998 review files**. Full-file mapping results are in [review_coverage.tsv](review_coverage.tsv). No gene validators were run for this inventory; `validation_status` is `not_run`. A declared COMPLETE status, zero PENDING rows, or a core-function section does not certify biological accuracy.
 
 - Candidates with PENDING rows: 0.
-- Candidates with UNDECIDED rows: 3.
-- Candidates with at least one core-function section: 59.
+- Candidates with UNDECIDED rows: 4.
+- Candidates with at least one core-function section: 60.
 
 ### Reviews outside the accession/taxon join
 

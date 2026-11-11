@@ -23,8 +23,10 @@ The first four reviews and their results are tracked in the
 - `experimental_strain` retains native strain, derivative and heterologous-host context.
   The reference accession alone does not imply that every experiment was in KT2440.
 - `evidence` records primary publication, assay and short exact support. Its reference
-  must also be declared in the gene review. A source URL identifies inspected full text
-  when the local PMID cache is abstract-only; the gene notes document access limitations.
+  must also be declared in the gene review, and its quotation must match the cached
+  source through the shared reference validator. A `source_url` records access provenance;
+  it does not waive a missing quotation. When only an abstract is cached, quote that
+  abstract and record inaccessible figure/full-text details in the notes.
 - `pathway_context` records how transcriptional control regulates a pathway. An optional
   GO `process` identifies the process being regulated, **not an involved_in annotation**
   on the regulator. A name and mechanism suffice when a suitable term is unestablished.
@@ -38,6 +40,10 @@ responses remain distinguished in the gene review and evidence notes.
 ## Validation and maintenance
 
 From the repository root:
+
+These project validation commands require the `dev` dependency group (`uv sync --group dev`).
+The schema deliberately restricts regulator identity to KT2440 for this pilot;
+reuse in another organism requires an explicit schema generalization.
 
 ```bash
 uv run linkml-validate \
@@ -63,7 +69,11 @@ also needs a complete record and its adjacent gene review to check cross-file li
 
 The project validator uses LinkML for structure and checks unique assertion IDs, accession/locus/taxon joins,
 known target loci, declared references and PMID cache presence. It does not certify
-experimental interpretation or verify web quotations; those require manual source
-inspection. Run `just validate PSEPK GENE` separately for the GO review and add a
-gene history record for changes to either artifact. No automatic conversion to GO
+experimental interpretation, which still requires manual source inspection. It also
+checks every quotation with the shared reference validator, failing on missing,
+unmatched or unchecked sources without baseline exemptions. `just validate PSEPK GENE`
+runs the sidecar validator when the companion file exists. `just validate-quotes`
+includes this file kind in its default scope, so the existing whole-repository CI
+quote gate checks it even when only a source file changes. Add a gene history record
+for changes to either artifact. No automatic conversion to GO
 annotation extensions or GO-CAM edges is performed.

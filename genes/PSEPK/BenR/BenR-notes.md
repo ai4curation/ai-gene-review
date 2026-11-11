@@ -211,3 +211,12 @@ See BenR-regulatory-evidence.yaml for the supported promoter relationship, exper
 ## 2026-11-10 — preserve the original provider research
 
 The 2026-11-08 Falcon command rewrote an existing provider report from cached output. Restored the report and its associated artifacts byte-for-byte from before this batch (parent of commit 8e42884c19). Provider output must not be manually corrected or incidentally replaced during curation. The primary-source assessments and curation decisions above remain in these notes and the review YAML.
+
+
+## 2026-11-11 — PR review follow-up
+
+Replaced notes-as-evidence with primary cached quotations: PMID:11053377 supplies the benA reporter activation and XylS-like promoter-repeat observations; PMID:18156252 explicitly identifies BenR as the ben-gene activator. The former is PRS2000/heterologous evidence, the latter uses KT2442 derivatives of KT2440. Neither is relabeled as a purified KT2440 binding assay. GO:0000987 remains an explicitly inferred molecular function from promoter function, the promoter-repeat comparison and the KT2440 AraC HTH domain. This is compatible with the stricter sidecar criterion leaving physical directness unresolved.
+
+The PMID:38113125 cache is abstract-only. Removed the uncheckable Fig. 3 quotation from the regulatory evidence, rather than treating the source URL or our notes as a substitute for cached primary text. Earlier author-manuscript observations remain in the dated access record above, but the machine-validated target assertions now cite the available primary quotations with their strain limitations. Provider files and publication caches were not edited.
+
+Refined the metabolic-regulation row to GO:0062013 positive regulation of small molecule metabolic process, keeping GO:0045893 on the transcription row. QuickGO definitions and is_a/part_of ancestry checked on 2026-11-11 show that GO:0062013 is a descendant of GO:0009893. BenR supplies the regulatory step, not BenABC/BenD chemistry. The earlier inference that coexpression establishes additional direct targets is superseded by the corrected iModulon comparison.
