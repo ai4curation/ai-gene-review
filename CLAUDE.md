@@ -465,6 +465,15 @@ same claim.
 See `projects/IBA_REVIEW.md` for the full propagation taxonomy and catalogued failure
 patterns.
 
+In a family review (`interpro/panther/<PTHR>/<PTHR>-review.yaml`), a node assessment that
+disputes a PAINT row records the fix in `proposed_action` as well as in prose:
+`paint_action` (MOVE_IBD, REMOVE_IBD, ADD_IRD, ADD_IKR, REMOVE_LOSS, MOVE_LOSS) and, for
+the moves and added losses, `target_node_id`. `family_residue_validator` checks that the
+action fits the verdict and that the target sits correctly in the family's PANTHER tree
+(below the node for TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD). PAINT prunes per
+annotation: a loss of a general term does not block a more specific term asserted at an
+ancestral node, so request each change separately.
+
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
 Validation deliberately treats the two sources of GO term ids differently:
