@@ -60,3 +60,8 @@ The following is the incoming review journal; current target-specific adjudicati
 ## 2026-11-11 — reconcile merged parallel PTS review
 
 Retain target-specific cross-system judgments and assay limits from this audit. Incorporate incoming experimentally coded proposals and retire their historical TAS predecessors in place where present. Incoming source-defect records are retained when consistent with the current action; broad sugar-process rejection is superseded where direct target cross-system chemistry supports over-annotation. Core relay activities and all original machine source rows remain unchanged.
+
+
+## 2026-11-11 — review follow-up: evidence and source routing
+
+Quote the Discussion inference that FruB delivers phosphate to NPr where that target-specific claim distinguishes NPr from PtsP. Route InterPro2GO and TreeGrafter source defects to INTERPRO and PANTHER respectively, retaining their claims and requested corrections. No annotation payload or action changes.
