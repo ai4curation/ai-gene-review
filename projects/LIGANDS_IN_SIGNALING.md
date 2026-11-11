@@ -398,23 +398,22 @@ validators.
   signaling pathway*, `GO:0160135`). Two-step pan-species module. Ligands: EDN1
   (`PANTHER:PTHR13874:SF10`), EDN2 (`PANTHER:PTHR13874:SF9`), and EDN3 (`PANTHER:PTHR13874:SF11`,
   within `PANTHER:PTHR13874` `ENDOTHELIN`, PAINT node `PTN000356323`), *hormone activity*
-  (`GO:0005179`) and *endothelin receptor binding* (`GO:0031708`). Receptors: EDNRA
-  (`PANTHER:PTHR46099:SF2`) and EDNRB (`PANTHER:PTHR46099:SF3`), *endothelin receptor activity*
-  (`GO:0004962`). GOA Category B/A gaps resolved in the new human `EDN1` and `EDN3` gene reviews
-  (`EDN1` accepts existing `GO:0086100`, `GO:0005179`, `GO:0031707`, and `GO:0031708`, adds `NEW`
-  `IC` `GO:0160135`, modifies `GO:0007166`, `GO:0007186`, `GO:0007267`, `GO:0023019`, `GO:0035556`,
-  and `GO:0160195` → `GO:0086100` and `GO:0160135`, and modifies `GO:0005102` and `GO:0048018` →
-  `GO:0005179`, `GO:0031707`, and `GO:0031708`; `EDN3` adds `NEW` `IDA` `GO:0086100`, `GO:0160135`,
-  `GO:0031707`, and `GO:0007204`, accepts existing `GO:0005179` and `GO:0031708`, modifies
-  `GO:0007165`, `GO:0007166`, and `GO:0007267` → `GO:0086100` and `GO:0160135`, and modifies
-  `GO:0005102` → `GO:0031708` and `GO:0031707`).
+  (`GO:0005179`; `PTN000356323` also propagates *endothelin B receptor binding*, `GO:0031708`).
+  Receptors: EDNRA (`PANTHER:PTHR46099:SF2`) and EDNRB (`PANTHER:PTHR46099:SF3`), *endothelin
+  receptor activity* (`GO:0004962`). GOA Category B/A gaps resolved in the new human `EDN1` and
+  `EDN3` gene reviews (`EDN1` accepts existing `GO:0086100`, `GO:0005179`, `GO:0031707`, and
+  `GO:0031708`, adds `NEW` `IC` `GO:0160135`, modifies `GO:0007166`, `GO:0007186`, `GO:0007267`,
+  `GO:0023019`, `GO:0035556`, and `GO:0160195` → `GO:0086100` and `GO:0160135`, and modifies
+  `GO:0005102` and `GO:0048018` → `GO:0005179`, `GO:0031707`, and `GO:0031708`; `EDN3` adds `NEW`
+  `IDA` `GO:0086100`, `GO:0160135`, `GO:0031707`, and `GO:0007204`, accepts existing `GO:0005179`
+  and `GO:0031708`, modifies `GO:0007165`, `GO:0007166`, and `GO:0007267` → `GO:0086100` and
+  `GO:0160135`, and modifies `GO:0005102` → `GO:0031708` and `GO:0031707`).
 - **[Galanin-activated signaling](../modules/galanin_signaling.yaml)** (*galanin-activated
   signaling pathway*, `GO:0090663`). Two-step pan-species module. Ligands: GAL
   (`PANTHER:PTHR16839:SF1`, PAINT node `PTN008359337`) and GALP (`PANTHER:PTHR20950:SF1`, PAINT node
-  `PTN001463568`), *neuropeptide hormone activity* (`GO:0005184`) and *G protein-coupled receptor
-  binding* (`GO:0001664`). Receptors: GALR1 (`PANTHER:PTHR24230:SF31`), GALR2
-  (`PANTHER:PTHR24230:SF13`), and GALR3 (`PANTHER:PTHR24230:SF17`), *galanin receptor activity*
-  (`GO:0004966`). GOA Category A gap resolved in the new human `GAL` and `GALP` gene reviews (`GAL`
+  `PTN001463568`), *neuropeptide hormone activity* (`GO:0005184`). Receptors: GALR1
+  (`PANTHER:PTHR24230:SF31`), GALR2 (`PANTHER:PTHR24230:SF13`), and GALR3
+  (`PANTHER:PTHR24230:SF17`), *galanin receptor activity* (`GO:0004966`). GOA Category A gap resolved in the new human `GAL` and `GALP` gene reviews (`GAL`
   adds `NEW` `IC` `GO:0090663`, retains `GO:0005184`, `GO:0007218` *neuropeptide signaling
   pathway*, and `GO:0031764`/`GO:0031765`/`GO:0031766` as `ACCEPT`, and modifies `GO:0007165` and
   `GO:0045944` → `GO:0090663`, `GO:0005179` → `GO:0005184`, and `GO:0004966` → `GO:0005184`,
