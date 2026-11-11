@@ -69,3 +69,9 @@ The older electron-carrier-only objection to GO:0009055 is withdrawn after check
 GO:0034354 has a QuickGO/OLS version discrepancy. Its incoming IDs and stored labels are retained; acceptance concerns the supported biological pathway claim, while the authored core uses active terms. The [source-evidence record](HAAO-source-evidence.json) contains the service checks. An inherited PTHR15497/BNA1 prose error misidentifies P46952 as bacterial NbaC; this reassessment uses the literal PAINT donors and verified human identity and does not borrow that label.
 </content>
 </invoke>
+
+## 2026-11-11 11:54 UTC interaction follow-up
+
+This follow-up supersedes the earlier POT1 uncertainty. Updated IntAct evidence resolves target verification; the [source guide](HAAO-source-guide.md) records the access limits.
+
+The existing binding context is now KEEP_AS_NON_CORE under the project instruction. Final decisions are 26 ACCEPT, 7 KEEP_AS_NON_CORE, 2 MODIFY and 3 UNDECIDED across the same 38 stored contexts, with zero NEW or PENDING. The catalytic core, all machine source fields, all 12 inherited quotations and all publication caches remain unchanged; status remains DRAFT.

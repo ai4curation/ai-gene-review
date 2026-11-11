@@ -30,9 +30,13 @@ The [archived IntAct response](HAAO-interactions.tsv) contains 13 positive HAAO-
 | [25416956](https://pubmed.ncbi.nlm.nih.gov/25416956/) | GAD1, Q99259 | IM-23318-32712; validated two-hybrid | KEEP_AS_NON_CORE |
 | [31515488](https://pubmed.ncbi.nlm.nih.gov/31515488/) | GAD1, Q99259 | IM-27438-3932; two-hybrid array | KEEP_AS_NON_CORE |
 | [32296183](https://pubmed.ncbi.nlm.nih.gov/32296183/) | GAD1, Q99259 | IM-25472-131849 and associated screening records | KEEP_AS_NON_CORE |
-| [21044950](https://pubmed.ncbi.nlm.nih.gov/21044950/) | POT1, Q9NUX5 | Positive UniProt interaction entry; the paper-specific target/supplementary row was not recovered | UNDECIDED |
+| [21044950](https://pubmed.ncbi.nlm.nih.gov/21044950/) | POT1, Q9NUX5 | EBI-11306959 and EBI-11312191; see below | KEEP_AS_NON_CORE |
 
 Supported generic binding is retained under the [ClinGen project instruction](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions). These interactions do not establish a more specific molecular function. Both partner-accession contexts from PMID:25416956 are retained separately.
+
+Updated [IntAct records](HAAO-POT1-interactions.json) identify P46952/Q9NUX5 in PMID:21044950: [EBI-11306959](https://www.ebi.ac.uk/intact/interaction/EBI-11306959), BiFC in HTC75 (table S1); [EBI-11312191](https://www.ebi.ac.uk/intact/interaction/EBI-11312191), FLAG-HAAO/GST-POT1 pull-down in HEK293T (table S2; author score 1.31). Curators selected the S2 log2 threshold above 0.33 to reproduce the reported approximately 72% positive fraction. Original supplements remained inaccessible (403); these are curated records, not direct table inspection. No affinity, endogenous telomere function or specific molecular role is inferred.
+
+Three judgments remain UNDECIDED: zinc response, cadmium response and neuronal homeostasis.
 
 ## Ontology and propagation checks
 
