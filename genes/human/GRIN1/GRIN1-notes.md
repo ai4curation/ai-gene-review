@@ -51,6 +51,13 @@
    function is contradicted and the paper holds no direct binding evidence. The glycine binding row from the
    same paper is also functional (glycine EC50 0.45 uM, block by 7-chlorokynurenate) but is kept, because
    glycine binding by GluN1 is confirmed structurally.
+   An OpenScientist hypothesis run (2026-11-11, `GRIN1-hypotheses/homomeric-glun1-oocyte-currents-need-xenopus-glun2/`)
+   confirmed the removal with direct evidence [PMID:16641235 "binding of glutamate to NR1 was not detectable
+   even at a 300 mm concentration"; PMID:16214956 "In HEK293 cells, we did not get receptor response unless
+   an NR2 subunit was coexpressed"]. It also refuted my first-draft explanation that the GluN1-alone oocyte
+   currents come from an endogenous Xenopus GluN2 partner: the named candidate XenU1 was experimentally
+   excluded [PMID:11809857] and is a kainate-binding protein, not a GluN2. The reason text was corrected to
+   drop that mechanism; the origin of those currents is left as unresolved.
 2. **propylene metabolic process (GO:0018964, ISS from mouse P35438): REMOVE, with a source defect** for
    ARUK-UCL/BHF-UCL. The mouse IDA cites PMID:21795692 (Shank3 and mGluR5); the full text does not contain
    the word propylene.
@@ -61,6 +68,22 @@
    proximity to NMDA-Rs, triggering neuronal damage through NMDA-R-dependent calcium flux"].
 5. **calcium ion binding (ISS from mouse): UNDECIDED.** Donor PMID:15663482 is abstract-only and shows a
    Ca2+/calmodulin dependence, not Ca2+ binding by NR1.
+
+### OpenScientist hypothesis runs (2026-11-11)
+
+Two focused hypothesis jobs were run (`just gene-hypothesis-research openscientist human GRIN1 ...`),
+in `GRIN1-hypotheses/`:
+
+- `glun1-glycine-site-inhibits-glun1-glun3-current`: **SUPPORTED.** In GluN1/GluN3 receptors glycine at
+  GluN3 opens the channel and glycine at GluN1 auto-inhibits; GluN1 glycine-site antagonists potentiate
+  10-30x (PMID:17214961, PMID:30425244 native neurons, PMID:19726695). Confirms the correction already made
+  to the module's negative GluN1->GluN1/GluN3 connection and the two GluN3 GO-CAM defect queries. Citations
+  added to core function 3; no verdict changed.
+- `homomeric-glun1-oocyte-currents-need-xenopus-glun2`: **PARTIALLY SUPPORTED** (see item 1 above). The
+  glutamate-binding REMOVE is confirmed by direct evidence; the Xenopus-partner mechanism is refuted.
+
+Key primary citations from both reports were verified against PubMed before use. The reports themselves are
+cited as `file:` references with `reference_review`, and most of their other citations are unchecked.
 6. **"regulation of" terms changed to the process itself** (GO:2000463 to GO:0060079, GO:1904062 to
    GO:0098655, GO:0010524 to GO:0097553): the channel carries the current or flux, it does not regulate it.
 7. **General terms changed to specific descendants already on the gene** (relationships checked in
