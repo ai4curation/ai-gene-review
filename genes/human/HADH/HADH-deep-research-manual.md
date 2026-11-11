@@ -45,9 +45,11 @@ The pig record cites [PMID:2817332](https://pubmed.ncbi.nlm.nih.gov/2817332/),
 whose abstract reports assays with different chain lengths and medium-chain
 preference alongside long-chain activity. GO:0016509 covers substrates with
 13–22 carbons. The C16 mapping is therefore not refuted by short/medium-chain
-preference. The candidate retains this as secondary substrate activity, with
-the pig-to-human inference explicit; it does not claim a directly measured
-human C16 rate or an established physiological long-chain flux contribution.
+preference. The biochemical activity is credible, but the updated review marks the human
+long-chain functional assignment as over-annotated because its physiological
+relevance is unresolved. Similar Km values do not establish comparable catalytic
+efficiency. This does not deny the pig activity, assert assay noise or establish
+a wrong-paralog transfer; HADHA supplies the dedicated long-chain pathway step.
 The full 1989 methods and tables were not independently inspected.
 
 ## Regulatory function and differing islet observations
@@ -92,6 +94,9 @@ with the RGD/QuickGO attribution. Native publication fetching produced the five
 new caches, including PMID2817332, without editing their contents. The rat
 response evidence supports contextual non-core retention; it does not establish
 direct human responses, hormone receptor activity, or insulin secretion itself.
+The inspected abstracts do not supply substrate/isozyme-selectivity methods, so
+they do not independently resolve HADH from HADHA or other enzyme contributors.
+The retained gene attribution is RGD's; it is not independently verified here.
 
 ## Proteomics and source limits
 
@@ -107,13 +112,15 @@ localization evidence; it does not allege that the curator made an error.
 The native source refresh contains 41 rows and 41 review contexts, all canonical
 Q16836, with no NOT flags or annotation extensions. Native seeding retained all
 41 inherited judgments and added 21 source-entity links before curation. No NEW
-GO assertion is proposed. Broad, valid statements of the core reaction or its
-location are accepted; being less specific is not itself a non-core role.
+GO assertion is proposed. Broad molecular-function ancestors are refined to the
+experimentally supported GO:0003857 with MODIFY; pathway-level metabolism and
+valid compartment assertions remain accepted. Genericity is not a non-core role.
 
 Open PR search hits #6203, #6122 and #5076 had no direct HADH gene/history/cache
 file overlap in their full paginated filename lists. #5076 does edit the
 beta-oxidation module and #6203 has a separate HADH HMM benchmark; neither is
 changed here. Exact inbound `human/HADH/` references were absent from the
 inspected gene, family, module and GO-CAM review sources at main 0ca78c07.
-This remains a private candidate pending canonical application, history,
-validation and its own PR after HACD1 delivery.
+Canonical application was submitted in PR #6312. The subsequent review follow-up
+refines molecular-function granularity and evidence limits; remote checks and
+verified merged delivery remain pending.

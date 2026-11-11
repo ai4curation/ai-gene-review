@@ -161,3 +161,12 @@ The dated corrections here supersede the earlier action plan while retaining its
 - PMID:34800366 remains GOA-curated proteomics support, but the specific HADH supplementary row has not been independently checked. A title quotation does not establish gene-specific detection.
 
 Falcon failed with HTTP403/missingJWT and Perplexity fallback with HTTP401/quota; manual primary-source research is explicitly labeled. Candidate: 41 contexts, 33 ACCEPT and 8 KEEP_AS_NON_CORE, no NEW/PENDING. Canonical application, validation and PR delivery remain pending.
+
+
+## PR #6312 review follow-up — 2026-11-11
+
+Refined the two generic molecular-function ancestors (GO:0016491 and GO:0016616) to MODIFY → the already supported GO:0003857, while retaining the pathway-level fatty acid metabolic process and valid compartment annotations. The long-chain row now uses MARK_AS_OVER_ANNOTATED for uncertain physiological relevance, without denying the measured pig activity or calling it assay noise. Similar Km values alone do not establish comparable catalytic efficiency. Added the unresolved isozyme-selectivity limit to all four rat tissue-response rows, distinguishing RGD attribution from independent evidence inspection.
+
+Recorded the PMID:10231530 UniProt RP discrepancy as a PROBABLE/CHECK source query because only the primary abstract was accessible. Removed the PMID:34800366 title-only quote, retaining its evidence-limit finding; all biological quotations are retained. Omitted the optional full_text_unavailable flag for the partially extracted PMID:20670938 and retained the explicit missing-Methods/Results caveat. Restored GLUD1, tissue expression and the supported catalytic-pair mechanism in the biological description; pig-to-human annotation provenance stays in the annotation rationale.
+
+This follow-up supersedes the earlier candidate accounting: 41 native contexts, 31 ACCEPT, 7 KEEP_AS_NON_CORE, 2 MODIFY and 1 MARK_AS_OVER_ANNOTATED; no NEW/PENDING. A new append-only history record links PR #6312; the prior history record remains unchanged. The project checkbox remains unset until verified merge and delivery.
