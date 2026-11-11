@@ -96,26 +96,26 @@ def main(argv=None):
                 continue
             node, _ = index[ptn]
             lv = leaves_under[ptn]
-            sfc = collections.Counter(l["sf"] for l in lv)
+            sfc = collections.Counter(tree_leaf["sf"] for tree_leaf in lv)
             sfs = "; ".join(f"{k} ({v})" for k, v in sfc.most_common())
             print(f"| {ptn} | yes | {node.get('tree_node_type','INTERNAL')} | "
                   f"{node.get('event_type','')} | {node.get('taxonomic_range','')} | "
                   f"{len(lv)} | {sfs} | {terms} |")
         print()
         for t in args.targets:
-            hit = [l for l in leaves if l["acc"] == t]
+            hit = [tree_leaf for tree_leaf in leaves if tree_leaf["acc"] == t]
             if not hit:
                 continue
-            l = hit[0]
-            annotated = [p for p in l["chain"] if p in seen]
-            print(f"- target {t} ({l['sym']}, {l['org']}, {l['sf']}): annotated ancestors "
+            tree_leaf = hit[0]
+            annotated = [p for p in tree_leaf["chain"] if p in seen]
+            print(f"- target {t} ({tree_leaf['sym']}, {tree_leaf['org']}, {tree_leaf['sf']}): annotated ancestors "
                   f"{', '.join(annotated) if annotated else 'none'}")
         print()
         for sf in args.show_sf:
             if not sf.startswith(fam + ":"):
                 continue
             print(f"- leaves of {sf}: " + "; ".join(
-                f"{l['acc']} {l['sym']} ({l['org']})" for l in leaves if l["sf"] == sf))
+                f"{tree_leaf['acc']} {tree_leaf['sym']} ({tree_leaf['org']})" for tree_leaf in leaves if tree_leaf["sf"] == sf))
         print()
 
 
