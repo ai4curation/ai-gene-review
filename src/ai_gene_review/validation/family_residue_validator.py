@@ -801,6 +801,10 @@ def evaluate_proposed_action(
 def proposed_action_problem(assessment: dict, under: dict[str, list[str]]) -> str | None:
     """Return why a ``proposed_action`` fails, or None when it passes or is undecidable.
 
+    A boolean-style view of ``evaluate_proposed_action`` for callers (chiefly the tests)
+    that only need to know whether the action is rejected; the validator itself uses
+    ``evaluate_proposed_action`` so it can report UNRESOLVED.
+
     >>> under = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"]}
     >>> proposed_action_problem({"node_id": "PANTHER:PTN1", "assessment": "TOO_DEEP",
     ...     "proposed_action": {"paint_action": "MOVE_IBD",
