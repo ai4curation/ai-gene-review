@@ -28,6 +28,7 @@ Usage (from the repository root):
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py inputs g001 g002 --out DIR   # dossiers + workflow args
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py record g001 --analysis A.json [--verification V.json] --date YYYY-MM-DD
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py apply g001
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py finish --journal JOURNAL --date YYYY-MM-DD   # record + apply a workflow run
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py status
 """
 
@@ -678,6 +679,8 @@ def row_edit(row: dict[str, Any]) -> RowEdit | str:
         return "the verifier disagrees with the reading"
     if row["kind"] == "kept_under_loss":
         return "a kept row under a PAINT loss needs a decision on the loss, not a quote"
+    if verifier is None and (row.get("flags") or row["kind"] == "node"):
+        return "a row that must be verified was not checked by the verifier"
     if reading not in ADDITIVE and reading != "REASON_CONTRADICTED":
         return f"reading {reading or '(none)'} calls for a judgement the script does not apply"
     if reading == "REASON_CONTRADICTED" and verifier is None:
@@ -860,6 +863,48 @@ def apply_batch(batch: str, jobs: int = 4) -> Counter[str]:
     return Counter(row["outcome"] for row in record["rows"])
 
 
+def collect(journal: Path) -> dict[str, dict[str, Any]]:
+    """The results of a reading workflow, by batch: ``{"g001": {"analysis": ..., "verification": ...}}``.
+
+    The workflow journal has a ``started`` line per agent, labelled ``read:<batch>`` or
+    ``verify:<batch>``, and a ``result`` line with what the agent returned.
+    """
+    labels: dict[str, str] = {}
+    results: dict[str, dict[str, Any]] = {}
+    for line in journal.read_text(encoding="utf-8").splitlines():
+        rec = json.loads(line)
+        if rec.get("type") == "started":
+            labels[rec["agentId"]] = rec.get("label", "")
+        elif rec.get("type") == "result" and isinstance(rec.get("result"), dict):
+            stage, _, batch = labels.get(rec.get("agentId"), "").partition(":")
+            if stage in ("read", "verify") and batch:
+                results.setdefault(batch, {})["analysis" if stage == "read" else "verification"] = rec["result"]
+    return results
+
+
+def finish(journal: Path, date: str, jobs: int = 4) -> list[str]:
+    """Record and apply every batch of a finished workflow run; returns one line per batch."""
+    RUNS.mkdir(exist_ok=True)
+    lines = []
+    for batch, results in sorted(collect(journal).items()):
+        if run_path(batch).exists():
+            lines.append(f"{batch}: already recorded, left alone")
+            continue
+        if "analysis" not in results or "verification" not in results:
+            lines.append(f"{batch}: {'no reading' if 'analysis' not in results else 'no verification'} returned; nothing recorded")
+            continue
+        record = make_record(batch, results["analysis"], results["verification"], date)
+        run_path(batch).write_text(dump(record), encoding="utf-8")
+        readings = Counter(row.get("tree_reading", "(not read)") for row in record["rows"])
+        checked = [row["verifier"]["agrees"] for row in record["rows"] if "verifier" in row]
+        outcomes = apply_batch(batch, jobs)
+        lines.append(
+            f"{batch}: {len(record['rows'])} rows; readings {dict(readings)}; verifier checked {len(checked)}, "
+            f"disagreed on {checked.count(False)}; outcomes {dict(outcomes)}"
+        )
+    return lines
+
+
 def status() -> str:
     """Progress over the committed plan and run records."""
     lines = []
@@ -904,6 +949,10 @@ def main(argv: list[str] | None = None) -> int:
     apply = commands.add_parser("apply")
     apply.add_argument("batch")
     apply.add_argument("--jobs", type=int, default=4)
+    done = commands.add_parser("finish")
+    done.add_argument("--journal", type=Path, required=True)
+    done.add_argument("--date", required=True)
+    done.add_argument("--jobs", type=int, default=4)
     commands.add_parser("status")
     args = parser.parse_args(argv)
 
@@ -926,6 +975,8 @@ def main(argv: list[str] | None = None) -> int:
         print(Counter(row.get("tree_reading", row["outcome"]) for row in made["rows"]))
     elif args.command == "apply":
         print(dict(apply_batch(args.batch, args.jobs)))
+    elif args.command == "finish":
+        print("\n".join(finish(args.journal, args.date, args.jobs)))
     else:
         print(status())
     return 0
