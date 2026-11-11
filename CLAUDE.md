@@ -555,6 +555,35 @@ them; when a term is wrong for every member, record a removal instead. Module
 conditions are exclusion-only. See `rules/curated/README.md`; check with
 `just validate-curated-rules`.
 
+### Reviewing rules: every verdict needs receipts
+
+A review of an ARBA or UniRule rule (`rules/**/<ID>-review.yaml`) is a verdict on
+someone else's rule, and an audit in November 2026 found most earlier verdicts did
+not follow from their evidence. `just rules-validate` now checks receipts as well
+as schema (`src/ai_gene_review/validation/rule_review_receipts.py`); read
+`docs/rule_review_receipts.md` first. In short:
+
+- **Record what you examined.** `rule.condition_sets` from the fetched rule, with
+  `retrieved_date` and `source_condition_set_count`. A verdict on a rule whose
+  sets are not recorded is an error; a rule you only sampled is `UNDECIDED`.
+- **Never name an identifier from memory.** Write `IPR000999 (Ribonuclease III
+  domain)`; the label is the checksum of the id, and it is checked.
+- **Judge the conjunction, not the signature.** A condition set is everything it
+  requires together, taxon included. Alternative sets are meant to be disjoint.
+- **Size, generality, redundancy and low recall are not errors.** The "limit of 12
+  condition sets" is the analysis tool's default, not a standard. A true but
+  general term is `MODIFY` or `UNDECIDED`, never `DEPRECATE`.
+- **`DEPRECATE` names a wrongly annotated protein** (accessions in
+  `annotation_assessments[].incorrect_examples`), an obsolete consequent or a
+  withdrawn rule. Before listing a protein as a false positive, look up its
+  experimental annotations to the term and its descendants; `--online` does this.
+- **Your notes and deep-research files are not literature.** Cite the paper or
+  record they point to, or omit `literature_support`.
+- **`confidence` is confidence in the verdict**; below 0.5 the verdict is
+  `UNDECIDED`.
+- **Withdraw wrong claims in `corrections`**, with the evidence that refuted them,
+  and delete them from the prose.
+
 ## Reviewing references
 
 Entries in the top-level `references:` list can carry an optional `reference_review` object recording
@@ -905,9 +934,18 @@ not the live site. The Pages source setting must separately be `GitHub Actions`.
 ### Gene review HTML
 ```bash
 just render <organism> <gene>    # render one gene
-just render-all                  # render all genes (~1200 files)
+just render-all                  # render all genes
 ```
 Output: `genes/<org>/<gene>/<gene>-ai-review.html`
+
+This HTML is gitignored and must not be committed (not even with `git add -f`):
+the Pages workflow renders every review from `main`, and CI rejects a PR that
+adds one. Use `just render` only to preview a page locally. Older copies are
+still tracked while they are untracked in batches (#6221); do not stage
+re-rendered versions of them. `deploy-browser` and the prediction evals only
+link to a review page when its HTML exists on disk, so run `just render-all`
+first if you need those links in a local build. The propagation browser links
+whenever the review YAML exists.
 
 ### Project pages
 Project docs live in `projects/`. Render with:
