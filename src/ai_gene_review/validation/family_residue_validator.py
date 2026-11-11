@@ -46,7 +46,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 from enum import Enum
 from pathlib import Path
 from typing import Iterable
@@ -738,8 +738,10 @@ def _proposed_action_fit_problem(assessment: dict) -> str | None:
     return None
 
 
-def proposed_action_problem(assessment: dict, under: dict[str, list[str]]) -> str | None:
-    """Return why a node assessment's ``proposed_action`` is invalid, or None.
+def evaluate_proposed_action(
+    assessment: dict, under: dict[str, list[str]]
+) -> tuple[Outcome, str]:
+    """Judge a node assessment's ``proposed_action`` against its verdict and the tree.
 
     ``under`` maps each internal PANTHER node of the family to the leaves below it (the
     ``under`` table of ``ai_gene_review.etl.panther_trees``). The action must fit the
@@ -747,38 +749,72 @@ def proposed_action_problem(assessment: dict, under: dict[str, list[str]]) -> st
     node of the family other than the assessed one, and for TOO_DEEP, NEEDS_PRUNING and
     LOSS_TOO_BROAD it must lie strictly below the assessed node.
 
-    >>> tree = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"]}
-    >>> proposed_action_problem({"node_id": "PANTHER:PTN1", "assessment": "TOO_DEEP",
+    Ancestry is read from leaf sets, which cannot order two nodes of a single-child chain
+    (they share every leaf). Such a pair is reported UNRESOLVED rather than FAIL, so a
+    correct move along the chain is never rejected.
+
+    >>> under = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"], "PTN3": ["a", "b"]}
+    >>> evaluate_proposed_action({"node_id": "PANTHER:PTN1", "assessment": "TOO_DEEP",
     ...     "proposed_action": {"paint_action": "MOVE_IBD",
-    ...                         "target_node_id": "PANTHER:PTN2"}}, tree) is None
-    True
-    >>> proposed_action_problem({"node_id": "PANTHER:PTN2", "assessment": "NEEDS_PRUNING",
+    ...                         "target_node_id": "PANTHER:PTN2"}}, under)[0].value
+    'PASS'
+    >>> evaluate_proposed_action({"node_id": "PANTHER:PTN2", "assessment": "NEEDS_PRUNING",
     ...     "proposed_action": {"paint_action": "ADD_IKR",
-    ...                         "target_node_id": "PANTHER:PTN1"}}, tree)
-    'target PTN1 is not below the assessed node PTN2'
+    ...                         "target_node_id": "PANTHER:PTN1"}}, under)
+    (<Outcome.FAIL: 'FAIL'>, 'target PTN1 is not below the assessed node PTN2')
+    >>> evaluate_proposed_action({"node_id": "PANTHER:PTN2", "assessment": "TOO_DEEP",
+    ...     "proposed_action": {"paint_action": "MOVE_IBD",
+    ...                         "target_node_id": "PANTHER:PTN3"}}, under)[0].value
+    'UNRESOLVED'
     """
+    action = (assessment.get("proposed_action") or {}).get("paint_action", "?")
     fit = _proposed_action_fit_problem(assessment)
     if fit:
-        return fit
-    proposal = assessment["proposed_action"]
-    target = (proposal.get("target_node_id") or "").split(":")[-1]
+        return Outcome.FAIL, fit
+    target = (assessment["proposed_action"].get("target_node_id") or "").split(":")[-1]
     if not target:
-        return None
+        return Outcome.PASS, f"{action} fits the verdict"
     node = (assessment.get("node_id") or "").split(":")[-1]
     if target == node:
-        return f"target {target} is the assessed node itself"
+        return Outcome.FAIL, f"target {target} is the assessed node itself"
     if target not in under:
-        return f"target {target} is not an internal node of this family's PANTHER tree"
+        return Outcome.FAIL, (
+            f"target {target} is not an internal node of this family's PANTHER tree"
+        )
     if assessment.get("assessment") in DESCENDANT_TARGET_VERDICTS:
         node_leaves = set(under.get(node, []))
+        target_leaves = set(under[target])
         if not node_leaves:
-            return f"assessed node {node} is not an internal node of this family's tree"
-        if not set(under[target]) < node_leaves:
-            return f"target {target} is not below the assessed node {node}"
-    return None
+            return Outcome.FAIL, (
+                f"assessed node {node} is not an internal node of this family's tree"
+            )
+        if target_leaves == node_leaves:
+            return Outcome.UNRESOLVED, (
+                f"target {target} and node {node} share every leaf (a single-child "
+                "chain), so the leaf table cannot tell which is below the other"
+            )
+        if not target_leaves < node_leaves:
+            return Outcome.FAIL, f"target {target} is not below the assessed node {node}"
+    return Outcome.PASS, f"{action} fits the verdict and the PANTHER tree"
 
 
-def check_proposed_actions(review: dict, tree_loader) -> list[ResidueCheck]:
+def proposed_action_problem(assessment: dict, under: dict[str, list[str]]) -> str | None:
+    """Return why a ``proposed_action`` fails, or None when it passes or is undecidable.
+
+    >>> under = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"]}
+    >>> proposed_action_problem({"node_id": "PANTHER:PTN1", "assessment": "TOO_DEEP",
+    ...     "proposed_action": {"paint_action": "MOVE_IBD",
+    ...                         "target_node_id": "PANTHER:PTN2"}}, under) is None
+    True
+    """
+    outcome, message = evaluate_proposed_action(assessment, under)
+    return message if outcome is Outcome.FAIL else None
+
+
+TreeLoader = Callable[[str], "dict[str, Any] | None"]
+
+
+def check_proposed_actions(review: dict, tree_loader: TreeLoader) -> list[ResidueCheck]:
     """Check every node assessment's ``proposed_action`` against its verdict and the tree.
 
     ``tree_loader(family)`` returns the compact PANTHER tree (``{"under": ...}``) for a bare
@@ -804,9 +840,7 @@ def check_proposed_actions(review: dict, tree_loader) -> list[ResidueCheck]:
                 f"{action} fits the verdict; target not checked: PANTHER tree unavailable"
             )
         else:
-            problem = proposed_action_problem(assessment, under)
-            outcome = Outcome.FAIL if problem else Outcome.PASS
-            message = problem or f"{action} fits the verdict and the PANTHER tree"
+            outcome, message = evaluate_proposed_action(assessment, under)
         results.append(
             ResidueCheck(family_id, node, term, 0, [], None, outcome, message,
                          kind="NODE_PROPOSED_ACTION")
@@ -1096,7 +1130,10 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
 
 
 def validate_family_review(
-    path: Path, cache_dir: Path, panther_dir: Path = Path("interpro/panther")
+    path: Path,
+    cache_dir: Path,
+    panther_dir: Path = Path("interpro/panther"),
+    tree_cache_dir: Path = Path(".cache/panther_trees"),
 ) -> list[ResidueCheck]:
     """Run all residue checks for one family review file.
 
@@ -1119,7 +1156,7 @@ def validate_family_review(
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
-        + check_proposed_actions(review, load_family)
+        + check_proposed_actions(review, lambda fam: load_family(fam, tree_cache_dir))
         + check_term_assessment_site_refs(review)
         + check_panther_ids(review, labels, members, gaps, alternates)
     )
@@ -1151,6 +1188,10 @@ def main(argv: list[str] | None = None) -> int:
         "--cache-dir", type=Path, default=Path(".cache/uniprot_seq"),
         help="Where UniProt sequences are cached.",
     )
+    parser.add_argument(
+        "--tree-cache-dir", type=Path, default=Path(".cache/panther_trees"),
+        help="Where PANTHER family trees (for proposed_action checks) are cached.",
+    )
     args = parser.parse_args(argv)
 
     paths = args.paths or sorted(Path("interpro/panther").glob("PTHR*/PTHR*-review.yaml"))
@@ -1160,7 +1201,9 @@ def main(argv: list[str] | None = None) -> int:
 
     all_results: list[ResidueCheck] = []
     for path in paths:
-        results = validate_family_review(path, args.cache_dir)
+        results = validate_family_review(
+            path, args.cache_dir, tree_cache_dir=args.tree_cache_dir
+        )
         all_results.extend(results)
         for r in results:
             if r.outcome is not Outcome.PASS:
@@ -1171,6 +1214,16 @@ def main(argv: list[str] | None = None) -> int:
         f"residue-site validation over {len(paths)} family review(s): "
         f"{counts['PASS']} pass, {counts['FAIL']} fail, {counts['UNRESOLVED']} unresolved"
     )
+    unchecked = [
+        r for r in all_results
+        if r.kind == "NODE_PROPOSED_ACTION" and r.outcome is Outcome.UNRESOLVED
+    ]
+    if unchecked:
+        print(
+            f"WARNING: {len(unchecked)} proposed PAINT action(s) were not checked against "
+            "the PANTHER tree (tree unavailable or single-child chain); see UNRESOLVED "
+            "NODE_PROPOSED_ACTION lines above."
+        )
     return 1 if counts["FAIL"] else 0
 
 

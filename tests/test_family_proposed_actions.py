@@ -1,11 +1,17 @@
 """Tests for the structured PAINT ``proposed_action`` on family-review node assessments."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+import yaml
 
 from ai_gene_review.validation.family_residue_validator import (
+    ALLOWED_PAINT_ACTIONS,
+    TARGETED_PAINT_ACTIONS,
     Outcome,
     check_proposed_actions,
+    evaluate_proposed_action,
     proposed_action_problem,
 )
 
@@ -123,3 +129,51 @@ def test_family_tree_loaded_once_and_only_when_needed() -> None:
         _assessment("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN2"),
         _assessment("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN4")]}, loader)
     assert calls == ["PTHR1"]
+
+
+def test_single_child_chain_is_unresolved_not_fail() -> None:
+    """Two nodes of a single-child chain share every leaf, so their order is undecidable.
+
+    ``compact_tree`` keeps unary internal nodes, giving a parent and child identical leaf
+    sets. A correct move along such a chain must not be rejected.
+    """
+    under = {"PTN1": ["L1", "L2"], "PTN2": ["L1", "L2"]}
+    outcome, message = evaluate_proposed_action(
+        _assessment("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN2"), under
+    )
+    assert outcome is Outcome.UNRESOLVED
+    assert "single-child chain" in message
+    assert proposed_action_problem(
+        _assessment("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN2"), under) is None
+
+
+def test_action_table_matches_schema_enums() -> None:
+    """ALLOWED_PAINT_ACTIONS covers every verdict and uses only declared PAINT actions.
+
+    The table duplicates knowledge held in the schema; this pins the two together so a new
+    verdict or action cannot silently fall through to "takes no proposed action".
+    """
+    schema = yaml.safe_load(Path("src/ai_gene_review/schema/family_review.yaml").read_text())
+    verdicts = set(schema["enums"]["NodeAssessmentEnum"]["permissible_values"])
+    actions = set(schema["enums"]["PaintActionEnum"]["permissible_values"])
+    no_action = {"SOUND", "LOSS_SUPPORTED", "UNRESOLVED"}
+    assert set(ALLOWED_PAINT_ACTIONS) | no_action == verdicts
+    assert not set(ALLOWED_PAINT_ACTIONS) & no_action
+    assert set().union(*ALLOWED_PAINT_ACTIONS.values()) == actions
+    assert TARGETED_PAINT_ACTIONS <= actions
+
+
+@pytest.mark.integration
+def test_real_pthr24416_proposed_actions_check_out() -> None:
+    """The committed PTHR24416 actions sit correctly in the real PANTHER tree.
+
+    Fails, rather than going UNRESOLVED, if the tree cannot be fetched, so the claim that
+    PTN007801558 is below PTN002400507 and PTN002400510 below PTN001230349 stays checkable.
+    """
+    from ai_gene_review.etl.panther_trees import load_family
+
+    review = yaml.safe_load(
+        Path("interpro/panther/PTHR24416/PTHR24416-review.yaml").read_text())
+    results = check_proposed_actions(review, load_family)
+    assert len(results) == 3, [str(r) for r in results]
+    assert all(r.outcome is Outcome.PASS for r in results), [str(r) for r in results]
