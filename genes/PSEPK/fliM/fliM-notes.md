@@ -12,3 +12,14 @@ TrEMBL entry Q88EU5 (PP_4358), FliM family (PIRSF002888, TIGR01397). No KT2440 f
 
 Decisions: GO:0003774 cytoskeletal motor activity MODIFY -> GO:0005198 structural molecule activity (lateral: torque made by stator/FliG, FliM is structural/switch); plasma membrane KEEP_AS_NON_CORE (peripheral); flagellum and basal body MODIFY -> GO:0009433 C ring; positive chemotaxis MODIFY -> GO:0006935 (switch serves both directions); cell motility ACCEPT; swarming MARK_AS_OVER_ANNOTATED (consistent with PSEPK motA).
 Module: complex-level GO:0005198 for C ring; recorded GO:0005198 as FliM's own best-supported MF. Considered GO:0140031 phosphorylation-dependent protein binding for CheY-P docking but did not add (binding term, family-level only).
+
+
+## 2026-11-06 comparative flagellar audit
+
+Reviewed every existing annotation and the biological summary/core functions. Original annotation payloads, including historical NEW proposals, are preserved. Family/domain evidence supports conserved structural assignments; comparative Salmonella or other bacterial assays are not presented as KT2440 experiments. Exact subunit counts and interaction geometries are not transferred as target measurements.
+
+The normal Falcon research attempt failed (HTTP 403; provider output was not fabricated). This entry records manual review of the cached primary/comparative literature.
+
+General flagellar motility does not by itself establish swarming. The electronically transferred swarming term is qualified against the KT2440 physiological context in PMID:36409076, not rejected because an experimental source is unavailable.
+
+GO:0003774 explicitly includes electrochemical-gradient-driven flagellar rotation. Rotor/switch structural roles are distinguished from autonomous torque generation. The C-ring/MS-ring CC terms were verified against ontology ancestry and remain valid substructure locations.
