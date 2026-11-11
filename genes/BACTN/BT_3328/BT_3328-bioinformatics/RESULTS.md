@@ -73,15 +73,36 @@ does not survive is the interpretation layered on it in the dashboard's topology
 panel, that the mature protein is therefore soluble: a lipoprotein is lipid-anchored
 rather than soluble, even though it is not membrane-embedded either.
 
-### DeepTMHMM2
+### DeepTMHMM2, run locally
 
-A DeepTMHMM2 preprint exists (doi:10.64898/2026.08.24.746435; re-entrant regions,
-interfacial helices and localisation over 17 membrane types) and `DTU/DeepTMHMM2`
-is published on BioLib, so it was attempted here. It is not usable through
-`pybiolib`: arguments do reach the `dtm2` CLI and it runs on the supplied FASTA,
-but the app's only retrievable output is a report generated from a built-in
-`CLV3_ARATH` example regardless of input, and the real per-sequence files stay in
-the container. `--override_command` is refused by the app. The run records both
-attempts with `input_sequence_found_in_output: false` so they cannot be mistaken
-for results about this protein. Its membrane-type head would be worth having here,
-and needs either the web GUI or a local install.
+DeepTMHMM2 (preprint doi:10.64898/2026.08.24.746435) was installed from its own
+distribution, `github.com/fteufel/DeepTMHMM2` (MIT; package
+`deeptmhmm2_predictor 0.1.0`, CLI `dtm2`, commit `526f6c60f93c0868c7315413da8e669d12373cc3`),
+and run on CPU with the checkpoints that ship in that repository and the
+`esm2_t33_650M_UR50D` encoder. No licence step is involved, unlike DeepTMHMM 1.x.
+Run record: `projects/hackathon/runs/20261111T081528Z-deeptmhmm2-local-bt3328`.
+
+| Sequence | Protein type | Segments | Membrane types |
+|---|---|---|---|
+| CAKXSP010000006.1_105 | Globular + SP | signal 1-18; outside 19-868 | none assigned |
+| Q8A2H7 | Globular + SP | signal 1-18; outside 19-868 | none assigned |
+
+DeepTMHMM2 agrees with DeepTMHMM 1.0 residue for residue, and adds two things.
+It classifies the protein as **globular with a signal peptide**, so not
+membrane-spanning. And its membrane-type head, which covers 17 environments
+including the bacterial Gram-negative outer membrane, assigns **no membrane type at
+all**: every one of the 21 probabilities is 0.0, the outer membrane included.
+
+That is the expected output for a lipid-anchored protein. A lipoprotein is tethered
+by its N-terminal acyl chains and is not embedded in the bilayer, so a predictor of
+membrane-spanning topology has nothing to report. DeepTMHMM2 also has no
+lipoprotein state: its segment vocabulary has one `signal`, as 1.x has one `S`. So
+the newer version does not resolve Sec/SPI from Sec/SPII either, and the
+under-resolution is a property of this family of predictors rather than of one
+release.
+
+The consequence for this review is that **no topology predictor provides positive
+evidence for `GO:0009279`**, and none contradicts it. The outer-membrane call rests
+on the lipoprotein signal peptide (SignalP 6.0 `LIPO`, UniProt `FT LIPID 19`, the
+acidic export motif) together with the experimental protease accessibility of the
+protein on intact cells.
