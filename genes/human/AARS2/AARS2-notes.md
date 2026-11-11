@@ -113,3 +113,42 @@ Validation: `just validate human AARS2` passes with no warnings; history schema
 validation passes; the gene HTML was regenerated. A direct comparison to the base
 review confirms all 25 machine-seeded annotation bodies are unchanged, and every
 propagation block now has source status and an explanatory comment.
+
+## 2026-10-18 ORGANELLES pilot: mitochondrial sub-compartment
+
+Applied the `projects/ORGANELLES.md` policy to the five GO:0005739 mitochondrion rows.
+No direct sub-mitochondrial assay (fractionation, protease protection, matrix-targeted
+proximity labelling) for AARS2 was found in the cached literature; the cached APEX matrix
+proteome paper was checked but its text does not name AARS2, so it was not used. Several
+inferential lines agree on the mitochondrial matrix (GO:0005759):
+
+1. Targeting: UniProt annotates a cleavable N-terminal transit peptide and no
+   transmembrane or intramembrane segment [file:human/AARS2/AARS2-uniprot.txt
+   "FT   TRANSIT         1..23" (HAMAP MF_03133); chain 24..985].
+2. Core function: AARS2 charges mtDNA-encoded mitochondrial tRNA(Ala), which is
+   transcribed, matured and used in translation in the matrix [PMID:32080176 "Hs mt AlaRS
+   charges cognate mt tRNAAla but not mt tRNAs specific for Asp, Leu, or Ser.";
+   PMID:32080176 "mtDNA-encoded mt tRNAs have undergone an unprecedented metamorphosis"].
+3. Editing context: the serine-editing requirement is related to the matrix amino acid
+   pool [PMID:29228266 "Recent study measuring metabolites and amino acid levels in the
+   mitochondrial matrix of HeLa cells showed that while alanine levels were high within
+   mitochondria, the serine levels were negligible"].
+4. Secondary activity: the lactylation substrate PDHA1 (pyruvate dehydrogenase E1 alpha)
+   is a matrix enzyme [PMID:38163844 "ectopically overexpressing AARS2 to double cellular
+   AARS2 levels decreased the specific activity of PDHA1"].
+
+Nothing found argues for a membrane or intermembrane-space location. Caveats: the
+transit peptide is a HAMAP rule prediction, not an N-terminal sequencing result; the
+other lactylation substrate CPT2 is an inner-membrane protein and the reported cGAS
+substrate is extramitochondrial, so the lactyltransferase core function keeps the root
+mitochondrion location.
+
+Changes: IBA (PTN002622939, whose IBD is seeded only by Q5JTZ9's own root annotation)
+and IEA (GO_REF:0000044, SL-0173) mitochondrion rows ACCEPT -> MODIFY to GO:0005759;
+the three direct rows (HPA IDA, HTP PMID:34800366, IDA PMID:21549344) stay ACCEPT; a NEW
+IC GO:0005759 row was added; the aminoacylation and both editing core functions now
+locate to mitochondrial matrix.
+
+## 2026-10-18 (ORGANELLES revision)
+
+After the PR #5208 review, the IBA/IEA mitochondrion rows are kept (not MODIFYed to the matrix): their sources correctly assert the organelle and could not resolve further. The mitochondrial matrix stays as the NEW IC row, added alongside the root rows as GO does for DARS2 and MMUT.

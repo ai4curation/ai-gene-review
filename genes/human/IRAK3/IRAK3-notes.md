@@ -33,3 +33,23 @@ The following annotation scopes need source-specific follow-up: cytokine-mediate
 
 
 Research provenance: external Falcon/Edison was attempted with Perplexity fallback. Some requests returned HTTP 429 and fallback returned insufficient-quota HTTP 401; successful external reports are preserved separately. Primary-source manual synthesis is explicitly labeled manual where no external report was available.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 outputs were not opened or used.
+
+**Identity.** Benchmark accession Q9Y616 is the reviewed canonical human IRAK3 (IRAK-M), 596 aa, isoform 1 (displayed). It is not a fragment or alternative gene model: death domain (41-106), pseudokinase domain and C-terminal TRAF6-binding region are all present. PANTHER PTHR24419:SF7 (IRAK3 subfamily).
+
+**Pseudokinase status.** The HRD catalytic motif is replaced by CGS (Ser-293) and the DFG by DFA, conserved across 134 vertebrate orthologues; MgCl2 and Mg-ATP give no thermal shift, ATP binds weakly (Kd ~196 uM) [PMID:33238146 "MgCl2 and ATP did not induce significant thermal shifts in IRAK3"]. The 1999 paper itself reports "only a negligible autophosphorylation activity" [PMID:10383454]. Kinase activity, protein phosphorylation and Mg binding rows were therefore REMOVED as contradicted (not merely unverified). ATP binding kept non-core. A guanylate cyclase activity has been proposed [PMID:31664109 "We demonstrate that wildtype IRAK3 is capable of producing cGMP."] but is not corroborated; recorded as a question, not annotated.
+
+**Mechanism.** IRAK3 binds MyD88/IRAK-4 via death-domain Trp74 [PMID:38268724], transiently binds phosphorylated IRAK4 kinase domain via its pseudokinase domain [PMID:33238146], prevents IRAK1/IRAK4 release from MyD88 [PMID:12150927], and forms an IRAK-M myddosome driving MEKK3-dependent second-wave NF-kB that induces inhibitory genes (SOCS1, SHIP1, A20, IkBa) [PMID:23376919]. Net function: TLR/IL-1R negative feedback. IL-33/PIN1 context gives nuclear translocation and positive gene induction in DCs [PMID:29686383].
+
+**Evolutionary grounding.** Mouse Irak3 (Q8K4B2; source of ISS/Compara rows) is the orthologue in the same PANTHER subfamily SF7, so the mouse knockout regulatory phenotypes transfer. Catalytic terms from IRAK1/IRAK4 subfamilies do not transfer. IBA node PTN000701353 (Pelle/Tube donors) gives GO:0008063 Toll signaling pathway, which is defined by the Drosophila Toll receptor: marked over-annotated (vertebrate TLR/IL-1R terms already present). Plasma membrane IBA from the same node kept non-core.
+
+**Actions:** ACCEPT 31, KEEP_AS_NON_CORE 20, MODIFY 13, REMOVE 7, MARK_AS_OVER_ANNOTATED 4.
+
+**Relative.** Closest experimentally characterised relative: mouse Irak3 (Q8K4B2), same PANTHER subfamily SF7; no review in repo (genes/mouse/Irak3 absent).
+
+**Family review.** interpro/panther/PTHR24419 places Q9Y616 in SF7, consistent with UniProt; its protein kinase activity assessment is UNRESOLVED, which agrees with removing kinase activity for IRAK3. No placement disagreement.
+
+**Modules.** No module lists IRAK3 as a part; relevant pathway modules: modules/il1_signaling.yaml, modules/toll_like_receptor_signaling.yaml, modules/tlr4_md2_lps_signaling.yaml, modules/tlr2_heterodimer_lipopeptide_signaling.yaml.

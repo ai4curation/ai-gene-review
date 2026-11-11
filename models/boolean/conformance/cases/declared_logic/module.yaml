@@ -1,0 +1,51 @@
+# Synthetic: declared activation_logic (all_of, any_of, nested none_of) replaces
+# the default rule; an omitted regulator stays an edge but leaves the rule; a
+# scenario may remove the omitted regulator's connection without breaking the logic.
+id: MODULE:conformance_declared_logic
+module:
+  id: logic
+  label: Declared logic
+  parts:
+  - node: {id: substrate, label: Loaded binding protein}
+  - node: {id: atpase, label: ATPase}
+  - node: {id: modulator, label: Modulator}
+  - node: {id: brake, label: Brake}
+  - node: {id: bypass, label: Bypass}
+  - node:
+      id: transport
+      label: Transport
+      activation_logic:
+        any_of:
+        - all_of:
+          - element: substrate
+          - element: atpase
+          - none_of:
+            - element: brake
+        - element: bypass
+      omitted_regulators: [modulator]
+  - node: {id: response, label: Response}
+  connections:
+  - {source: substrate, target: transport, connection_type: CAUSES}
+  - {source: atpase, target: transport, connection_type: CAUSES}
+  - {source: bypass, target: transport, connection_type: CAUSES}
+  - {source: modulator, target: transport, connection_type: POSITIVELY_REGULATES}
+  - {source: brake, target: transport, connection_type: NEGATIVELY_REGULATES}
+  - {source: transport, target: response, connection_type: CAUSES}
+executable_models:
+- id: logic_boolean
+  model_type: BOOLEAN
+  derivation: DERIVED_FROM_MODULE
+  scenarios:
+  - id: both_inputs
+    settings: [{element: substrate, active: true}, {element: atpase, active: true}, {element: brake, active: false}, {element: bypass, active: false}, {element: modulator, active: false}]
+    expected_active: [transport, response]
+  - id: one_input_only
+    settings: [{element: substrate, active: true}, {element: atpase, active: false}, {element: brake, active: false}, {element: bypass, active: false}, {element: modulator, active: true}]
+    expected_inactive: [transport, response]
+  - id: brake_overridden_by_bypass
+    settings: [{element: substrate, active: true}, {element: atpase, active: true}, {element: brake, active: true}, {element: bypass, active: true}, {element: modulator, active: false}]
+    expected_active: [transport]
+  - id: modulator_connection_removed
+    settings: [{element: substrate, active: true}, {element: atpase, active: true}, {element: brake, active: false}, {element: bypass, active: false}]
+    removed_connections: [{source: modulator, target: transport}]
+    expected_active: [transport]

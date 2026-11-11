@@ -218,3 +218,13 @@ problematic ones:
 3. Whether CASP4 or CASP1 carries most GSDMD cleavage in human macrophages. Does not change
    the MF annotation but would change how a GO-CAM should wire the pathway.
 4. Whether CASP4 directly processes pro-IL-1β (PMID:37558421 yes; UniProt/1995 papers no).
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+- GO:0005739 rows: IEA (GO_REF:0000044, SL-0173), EXP (PMID:23661706), IDA (PMID:15123740). No sub-compartment rows.
+- IEA source: UniProt curated line "Mitochondrion {ECO:0000269|PubMed:15123740, ECO:0000269|PubMed:23661706}", i.e. the same two papers as the direct rows; no independent line.
+- PMID:15123740 full text read. Fractionation is a crude-fraction case the authors acknowledge [PMID:15123740 "Although we could not eliminate contamination of ER marker proteins in the mitochondria-enriched fraction using SK-N-SH cells"], so fractionation alone cannot separate mitochondrion from ER/MAM. But immuno-EM is independent [PMID:15123740 "The immunoelectron microscopic analysis showed that the immunoreactive signals for caspase-4 were found on the ER and mitochondria"], and immunofluorescence shows partial Mitotracker overlap. Organelle claim stands.
+- PMID:23661706 cache covers only TMEM214/ER results; the curator's EXP mitochondrion observation is not second-guessed.
+- The old supported_by quote on the three mitochondrion rows was the TMEM214 ER sentence, which says nothing about mitochondria; replaced with the PMID:15123740 immuno-EM and fraction-contamination quotes (and the UniProt line on the IEA row).
+- Rule 4: no transit peptide, no TM, immuno-EM does not say which surface is labelled, no mitochondrial activity. Stays at root.
+- Outcome: all three rows stay KEEP_AS_NON_CORE, reasons record the check.

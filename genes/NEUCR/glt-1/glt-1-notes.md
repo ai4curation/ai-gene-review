@@ -28,3 +28,25 @@ Actual PTHR48022 tree places Q1K4S3 leaf PTN002362095 below PTN000627328, which 
 The focused OpenScientist report reconciled the PANTHER symporter IBA with target-specific evidence. I changed GO:0005351 carbohydrate:proton symporter activity from `UNDECIDED` to `MARK_AS_OVER_ANNOTATED`: PTN000627328 ancestry is current, but GLT-1 has Val48 at the TM1 position corresponding to the obligatory acidic protonation-site residue in XylE/STP symporters, while Neurospora HGT-1 and HGT-2 retain acidic residues there. The exact energetics still need a GLT-1 proton-flux assay, but the mechanism-specific symporter term is too strong for the established low-affinity D-glucose transporter.
 
 The dependent GO:1902600 proton transmembrane transport IEA now moves to `REMOVE`, because it comes from the unsupported symport assumption rather than independent GLT-1 evidence. The D-glucose transporter core function remains unchanged.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: all nine existing_annotations rows, description and core function re-examined against PMID:24581151, PMID:28115989 (full text), PMID:16418173 (MstE abstract), the falcon deep-research file and the PANTHER/PAINT lineage. ProtNLM2 files were not opened.
+
+Identity: Q1K4S3 is the sole UniProt entry for NCU01633 (532 aa, sequence version 1, TrEMBL, PE 3). It is the full-length product, not a fragment, isoform or alternative gene model: full MFS sugar-porter architecture (Pfam PF00083, TIGR00879, PROSITE PS00217) and the length matches HGT-1/HGT-2 (553/527 aa).
+
+Evolutionary placement: PANTHER PTHR48022:SF92 "LOW AFFINITY GLUCOSE TRANSPORTER MSTE". PAINT lineage (glt-1-paint-lineage.json): leaf PTN002362095 -> SF92 nodes PTN001174959/PTN001174958/PTN002362094 (Pezizomycotina speciation) -> SF91 duplication -> SF2 nodes -> PTN000627328 (LUCA root, which carries the membrane, carbohydrate transport and carbohydrate:proton symporter IBDs). The A. nidulans low-affinity glucose transporter MstE (Q5B0S0, AN5860; PMID:16418173 [“fluorescence at the periphery of conidia and hyphae is consistent with MstE location in the plasma membrane”]) is in SF92 and is the closest characterised relative. MstE is a donor to the membrane and carbohydrate-transport IBDs but not to the symporter IBD; the symporter donors are SF6 Aspergillus transporters (Q5ASJ3, Q5AYG1), S. cerevisiae MAL11/AGT1 (S000003521) and S. pombe SPCC548.07c. MstE has its own IDA/IMP for GO:0055056 and IDA plasma membrane (AspGD), which supports transferring the glucose transporter activity and plasma membrane location within SF92.
+
+Bioinformatics re-check (new files glt-1-bioinformatics/tm1_site_rereview.py, RESULTS-rereview.md): residue aligned to XylE Asp27 is Val48 in GLT-1, Ser67 in MstE, Asp52 in HGT-1, Asp35 in HGT-2, Asn29 in GLUT1 (control). This reproduces the earlier OpenScientist Val48 finding and extends it: the non-acidic residue is shared by the SF92 relative, which fits a subfamily-level loss of the protonation site.
+
+Changes:
+- Description rewritten (Km 18.42 mM, system I, SF92/MstE relation, energetics caveat).
+- GO:0005351 IBA kept MARK_AS_OVER_ANNOTATED; reason extended with the MstE Ser67 result and donor analysis. GO:1902600 kept MARK_AS_OVER_ANNOTATED (dependent logical inference). Note that the 2026-10-10 section above says REMOVE for GO:1902600; the YAML had already been softened to MARK_AS_OVER_ANNOTATED and that stays.
+- Broad but correct rows changed from ACCEPT to MODIFY, following the repo rule that correct-but-general terms get a specific replacement: GO:0008643 (IBA), GO:0034219, GO:0055085 -> GO:1904659 D-glucose transmembrane transport; GO:0016020 (IBA and IEA) -> GO:0005886 plasma membrane; GO:0022857 -> GO:0055056 D-glucose transmembrane transporter activity.
+- GO:0055056 NEW (IDA, PMID:24581151) retained.
+- Added references PMID:16418173 and file:NEUCR/glt-1/glt-1-bioinformatics/RESULTS-rereview.md; extra support for the core function from PMID:28115989.
+- Not added: glucose sensing or carbon catabolite repression signalling. Transceptor evidence in PMID:28115989 is for HGT-1/HGT-2, not GLT-1, and the Avicel/cellulase phenotypes are downstream.
+
+Family review: interpro/panther/PTHR48022/PTHR48022-review.yaml places glt-1 in SF92, which agrees with UniProt and the PAINT lineage. No disagreement. No module under modules/ references glt-1, NCU01633 or PTHR48022.
+
+Next relative: A. nidulans mstE (Q5B0S0), SF92, no review in the repo (genes/EMENI has no mstE folder).

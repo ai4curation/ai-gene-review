@@ -56,3 +56,20 @@ Main row-level calls:
 Follow-up cleanup: kept the H2A core-function text biological rather than
 GOA-facing, and expanded several UniProt continuation-fragment
 `supporting_text` snippets to the complete relevant lines.
+
+## 2026-10-11
+
+Refetched `NEUCR/esa-1`; UniProt, GOA, and the single cached PMID were already
+up to date. A fresh PAINT audit again supports all six PTHR10615 IBA rows:
+`PTN000834946` is the fungal ESA1 node for H4 acetyltransferase activity, and
+the broad `PTN004172926` MYST-root chromatin, nucleus, chromatin-binding,
+transcription-coregulator, and Pol II-regulation calls remain appropriate for
+the Neurospora ESA1 subfamily member.
+
+`falcon` plus the `perplexity-lite` fallback failed because `agentapi` and
+provider keys are absent in this environment. A fresh web/PubMed search again
+found Wang et al. 2023 as the only direct Neurospora ESA-1/NuA4 paper; newer
+Neurospora chromatin results were broader HDAC or genome-organization context.
+The only YAML edits needed in this pass were support-text cleanups for
+UniProt-backed nucleus, chromosome, DNA-repair, cell-cycle, and alternate
+acyltransferase rows.

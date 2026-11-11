@@ -39,3 +39,23 @@ The exact 133-aa C6Y4C2 sequence matches the terminal segment of the large Vps13
 ## Research provenance
 
 The genuine [Falcon report](spo2-deep-research-falcon.md) is retained with its provider metadata and artifact. Its conclusions were checked against the target record, exact accession and primary sources described above. Scientific uncertainties are recorded as UNC/UNDECIDED findings rather than a request for another reviewer to perform this assessment.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: re-examined every GOA row, the description and core functions against PMID:18367542 (abstract-only in cache; Europe PMC full-text XML for PMC2397300 not retrievable today), the curated UniProt entry, and a new sequence/signature analysis. ProtNLM2 output was not consulted.
+
+### Identity
+- C6Y4C2 is the reviewed Swiss-Prot entry for PomBase locus SPBC16C6.14 (spo2); it is the canonical product of this gene, not an isoform or fragment of another entry for the same gene.
+- New analysis ([RESULTS-rereview.md](spo2-bioinformatics/RESULTS-rereview.md), script `compare_vps1302_rereview.py`): all 133 residues equal Vps1302 (O42926, SPBC16C6.02c, 3131 aa) residues 2999-3131; Spo2 Met1 = Vps1302 Met2999. Spo2 has no InterPro/Pfam/PANTHER match, and no VPS13 domain signature of Vps1302 (all end by residue 2938) overlaps the Spo2 segment; only the whole-protein fungal-Vps13 family spans (IPR017148/PIRSF037235, 1-3042) overlap its first 44 residues.
+- So UniProt's "Belongs to the VPS13 family" (ECO:0000305) reflects nested sequence identity with the vps1302 3' coding region, not a VPS13 lipid-transfer module. No VPS13 function is transferable. PomBase keeps two loci; the Falcon summary of the full text reports an independent spo2 cDNA. Whether the vps1302 model genuinely extends through spo2 is an open gene-model question (suggested_questions).
+- No PANTHER assignment for C6Y4C2; PTHR16166 (interpro/panther/PTHR16166) lists O42926 but not C6Y4C2, and its span stops at 2938, so there is no subfamily-placement disagreement. No PAINT node covers Spo2. No orthologue outside fission yeasts is recognised (abstract: "15-kDa nonconserved protein").
+
+### Annotation decisions (changes vs previous review)
+- protein binding IPI x2 (Spo15 = Q10411/SPAC1F3.06c; Spo13 = C6Y4C9/SPCC1183.12): MODIFY, replacement now GO:0030674 protein-macromolecule adaptor activity (is_a GO:0060090, verified in OLS) instead of the root adaptor term; added the recruitment-hierarchy quote.
+- spindle pole body IEA: MODIFY to GO:0035974 meiotic spindle pole body (unchanged).
+- ascospore formation IMP: changed ACCEPT -> MODIFY to GO:0031322 (an is_a/part_of descendant the gene already carries; OLS ancestors verified), per the correct-but-general rule.
+- GO:0031322 IMP and GO:0035974 IDA: ACCEPT (unchanged). SPB remodeling definition includes recruitment of sporulation proteins to the outer plaque; Spo2 is one and recruits Spo13, so this is participation, not mere necessity.
+- No NEW terms. Forespore membrane formation was considered but not added: Spo2 acts at the SPB upstream of membrane initiation, and the SPB remodeling term already captures its contribution.
+
+### Relative
+- Closest sequence relative is Vps1302 (O42926) by nested identity, not by PANTHER/PAINT phylogeny; it is a distinct locus and the shared segment carries no VPS13 domain. No review exists in genes/SCHPO/. No modules in modules/ cover meiotic SPB / forespore membrane assembly.

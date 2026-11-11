@@ -44,3 +44,28 @@ human CASP9 review, and the project apoptosis-module decisions.
 - Nucling and ER-stress papers support specialized Casp9-containing complexes
   or stimulus branches, but the synthesized core function remains cytosolic
   Apaf-1 apoptosome recruitment and downstream procaspase maturation.
+
+## 2026-10-12 Ortholog/family consistency audit
+
+- GOA refresh (`just fetch-gene mouse Casp9`): no new annotations; all 86 unique
+  GOA term/reference rows covered, no stale rows.
+- PANTHER: Casp9 is in PTHR47901 (SF8) [file:mouse/Casp9/Casp9-uniprot.txt "PTHR47901; CASPASE RECRUITMENT DOMAIN-CONTAINING PROTEIN 18"],
+  not PTHR48169 (the Casp8/CASP10 DED family).
+- Compared against `genes/human/CASP9` (COMPLETE), `genes/mouse/Casp8`,
+  `genes/human/CASP8`, `genes/mouse/Casp3`, `genes/DROME/Dronc`, `genes/worm/ced-3`.
+  Mouse and human Casp9 agree on all shared terms in action, including
+  apoptotic process IBA/IEA MODIFY -> GO:0097193, apoptosome, intrinsic
+  apoptotic signaling, positive regulation of execution phase of apoptosis,
+  protein maturation, and the stimulus-response IEA over-annotations.
+- Remaining difference: `GO:0008630` intrinsic apoptotic signaling in response to
+  DNA damage IBA is KEEP_AS_NON_CORE in mouse but MODIFY -> GO:0097193 in human.
+  Mouse is retained because Casp9-null neural precursors resist DNA-damage-induced
+  apoptosis (PMID:11092819); the human MODIFY is a generalization rather than an
+  error, so the COMPLETE human file was not edited.
+- Family: Casp9 MODIFYs the caspase-wide apoptotic-process IBA to intrinsic
+  signaling whereas Casp8 and Casp3 ACCEPT it; this reflects Casp9's restriction to
+  the apoptosome pathway versus Casp8's multiple activation platforms. Core MF
+  (GO:0004197) and the caspase-wide IBA rows (endopeptidase activity, cytoplasm,
+  positive regulation of neuron apoptotic process) are treated identically across
+  Casp3/Casp8/Casp9 and their human orthologs.
+- No changes to the Casp9 review YAML were needed.

@@ -61,3 +61,23 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG30288-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: the benchmark accession Q8IRK6 is the only UniProt product of CG30288 (FBgn0050288, SP225): 282 aa, sequence version 2, complete. It is not a fragment, an isoform or an alternative gene model. The signal peptide, propeptide, full S1 domain (43-275) and all three catalytic residues are present.
+
+New sequence checks are in `CG30288-bioinformatics/sequence_features_rereview.py` and `RESULTS-rereview.md`, both new files:
+- The triad His83/Asp132/Ser225 is intact, with Ser225 in the GDSGGP motif.
+- Position 189 of the S1 pocket (chymotrypsinogen numbering) is Asp219. This predicts trypsin-like (Arg/Lys) P1 specificity. The UniProt name "Chymotrypsin"/EC 3.4.21.1 is a PROSITE-ProRule assignment and is not supported.
+- The activation site is Arg42-|-Ile43 (IDGG), which predicts activation by a trypsin-like protease.
+- The propeptide is only 19 residues, so there is no clip domain. This contradicts the ARBA-only statement "CLIP subfamily", and the Falcon deep-research framing of CG30288 as a CLIP protease is wrong on architecture. The SP (not cSP) name in PMID:30367934 agrees.
+
+Phylogeny: PANTHER 19.0 places CG30288 in PTHR24256:SF546 (MIP11562P-RELATED). That subfamily contains only Drosophila proteins: CG30288, CG30289 (Q8IRK5, the neighbouring gene), CG30414 (C5WLM7) and SPH158 (Q9VWD8), none of them characterized. All three IBAs (GO:0004252, GO:0005576, GO:0006508) come from the deep node PTN001207268, which is seeded by easter (FB:FBgn0000533, SF527), human tryptases and mouse mast-cell proteases among others. PAINT placed IKR NOT GO:0004252 losses on several SPH clades, and CG30288 is not under any of them. That agrees with its retained triad. No subfamily-specific function (Toll activation, as for easter) is transferred, because easter is in a different subfamily and is a CLIP protease.
+
+The family review `interpro/panther/PTHR24256/PTHR24256-review.yaml` lists CG30288 under "Benchmark members without resolved subfamily placement". This is not a disagreement: the PANTHER placement is SF546, and the review does not resolve subfamilies.
+
+Literature: no gene-specific study. The deep research also found none.
+
+Actions changed from the previous review: none flipped. Reasons were rewritten around the PAINT node and loss nodes, the chymotrypsin EC was flagged as unsupported, and the supporting quotes were trimmed to ones relevant to each row. The description and core function were rewritten: single-domain, trypsin-like, Drosophila-specific subfamily.
+
+Modules: no module under modules/ mentions CG30288 or PTHR24256.

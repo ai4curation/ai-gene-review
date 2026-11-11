@@ -1,0 +1,31 @@
+history_version: 1
+target:
+  kind: other
+  slug: module_logic
+  path: src/ai_gene_review/module_logic.py
+session:
+  id: 2026-10-24T044208Z-claude-code-ea782f
+  timestamp: '2026-10-24T04:42:08Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/5333
+  urls: []
+events:
+- type: REVIEW
+  outcome: changed
+  summary: Re-key the grounding guard on cause rather than a corpus-wide count
+  details: |
+    Third round on PR 5333, acting on ai4c-reviewer[bot]'s re-review of fb27b2d4f, which verified the previous round's numbers as exact and raised one blocking finding against the new test code.
+
+    The finding is correct and the defect was mine. UNGROUNDED_ATOM_BUDGET=354 and UNSATISFIABLE_MODULE_BUDGET=127 were totals over a growing corpus, not ratchets over a fixed population. 194 of 698 modules already carry a PROTEIN_COMPLEX participant, so roughly one newly authored module in four would add an ungrounded atom, push the count to 355 and fail an unrelated contributor's PR with the message 'a grounding slot is being missed' -- a wrong diagnosis whose obvious remedy is to bump the constant, after which the guard guards nothing. That is the same erosion the PR is about.
+
+    Replaced both count assertions with a single cause-keyed invariant: no atom may be ungrounded while its participant carries a slot the engine actually reads (gene, gene_product). The known-unread slots (protein_complex, ortholog_of, homolog_of) and descriptor-less ANY_WITH_FUNCTION steps are named in module constants with the reason each is unread, and are expected to come out ungrounded. This is corpus-size independent: adding a 195th complex module does not trip it, while a slot regression does. Verified by reverting the gene_product grounding, which makes it fail with 611 offenders and the correct cause named ('carries [gene_product]') rather than a count.
+
+    The two totals are retained in a separate reporting test that prints them without asserting, so the visibility survives without the false positives. Also added a session-scoped curated_corpus fixture: the corpus was being compiled three times across three tests, with module_ref inlining on top.
+
+    Also from the same review: recorded in the module's node notes that EXACTLY_ONE records the biology without constraining the engine, since compile_node emits an Or and is_satisfied treats it as at-least-one. Noted for the record that an empty Or is vacuously satisfied (module_logic is_satisfied), the same vacuity class as the bug this PR fixes, but unreachable from curated YAML because ModuleVariantSet.variants is required.

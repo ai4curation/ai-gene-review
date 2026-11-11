@@ -6,7 +6,7 @@ Source method: ProtNLM2. Source version: live API snapshot 2026-09-09T03:00:51.8
 
 - Original identifier: `SL-0086`. Original text: **Cytoplasm**.
 
-Assessment: **LSP (2)**. Cytoplasm is supported by the fungal MAPKK context and current ortholog-derived GOA, and direct target microscopy provides a more precise prior localization: MEK-1-GFP accumulates at contact sites of fusing Neurospora germlings (PMID:41071819, Figure 7B). Thus the broad compartment prediction loses known spatial detail. This is not evidence that MEK-1 is uniformly cytosolic, or that it resides at division septa. The emitted evidence is an exact sanitized match to GO:0005737, preserved below.
+Assessment: **CNN (2)**. Cytoplasm is correct for Q7RYZ6, the single full-length 518-residue MEK-1 product, which has no signal peptide or transmembrane segment. Direct target microscopy shows functional MEK-1-GFP in the cytoplasm, accumulating at contact sites of fusing Neurospora germlings (PMID:41071819, Figure 7B); that contact-site pool is cortical cytoplasm. The same location is already in GOA for this gene (GO:0005737 cytoplasm, is_active_in, ortholog-derived IEA), and the curated gene review accepts it as the most precise GO location currently supported and uses it as the core-function location. The claim is therefore correct but not novel. This is not evidence that MEK-1 is uniformly cytosolic, or that it resides at division septa. The emitted evidence is an exact sanitized match to GO:0005737, preserved below.
 
 ## Inspected evidence
 

@@ -1,0 +1,47 @@
+# DNAJC19 source and evidence guide
+
+DNAJC19 (HGNC:30528; UniProt Q96DA6; TIMM14/TIM14/Pam18) is reviewed here as an existing curated gene. The 23 review rows retain 22 historical source assertions and add one genuinely fetched current assertion. The judgments are 11 ACCEPT, 6 KEEP_AS_NON_CORE and 6 MODIFY, with one integrated ATPase-activation/import core and no authored NEW annotation.
+
+## Human activity and the import core
+
+[PMID:20053669, original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2838536/) provides the direct human biochemical evidence: Figure 9B and the ATPase Methods test DNAJC19 stimulation of purified human Mortalin under single-turnover conditions. Association with PAM16/Magmas attenuates this stimulation. Figures 5 and 7 address the DNAJC19–Magmas association; Figure 8B uses anti-Tim17 immunoprecipitation from digitonin-solubilized human mitochondria to associate DNAJC19 with the translocon. The import-kinetics and precursor-accumulation experiments concern Magmas mutants in yeast. They are not human DNAJC19 depletion experiments.
+
+[PMID:19564938, original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2695266/), Results 2.1–2.2 and Methods 3.1–3.3, demonstrates purified human soluble-domain heterodimerization and biophysical stability. Its ATPase experiment uses yeast Pam18 and yeast mitochondrial Hsp70 with human Magmas. The engineered human DNAJC19 24–116 fragment differs from natural isoform 2, which begins at residue 26. Together these papers support one import-associated co-chaperone unit; they do not establish two independent ATPase functions.
+
+The two positive protein-binding assertions name PAM16/Magmas (Q9Y3D7), not Mortalin/HSPA9. They remain non-core. Replacing the literal pair with ATPase activator activity would change its biological claim. PAM16's inhibitory regulatory role does not establish it as an ATPase or unfolded-substrate-binding chaperone. This follows the explicit [ClinGen project binding instruction](https://github.com/ai4curation/ai-gene-review/blob/864cafe6233e8f9ba6edf74a76c053bc31f6c4cf/projects/CLINGEN_MENDELIAN.md#curation-instructions).
+
+## Localization and historical proteomics identifiers
+
+[PMID:12592411, publisher article and supplementary information](https://www.nature.com/articles/nbt793) has an abstract-only local cache. The genuine supplementary experimental protocol and Tables 1–4 were recovered separately. Supplementary Table 2 lists GI 16307227 as an unidentified protein. The [current GenBank record AAH09702.1](https://www.ncbi.nlm.nih.gov/protein/AAH09702.1) identifies human DNAJC19; its 116-residue sequence exactly matches Q96DA6-1. This verifies the historical target identity without claiming unique peptide evidence for one natural isoform. Independent target biology supplies the inner-membrane refinement.
+
+[PMID:34800366, original MitoCoP study](https://doi.org/10.1016/j.cmet.2021.11.001) was read in the full local cache, including its subtractive/spatial proteomics, importomics and membrane-association Methods. The genuine Supplementary Table S1 workbook was also recovered. Sheet A, Excel row 321, contains DNAJC19 protein group 9092: subtractive Class 1, spatial Cluster 1 and importomics Class 1. The majority identifiers are Q96DA6 and Q96DA6-2; sheet B, row 291, lists Q96DA6 in MitoCoP. The group has a membrane-associated percentage of approximately 85.68, but its integral-membrane percentage is NaN. Thus the dataset is not used to distinguish isoforms or measure the membrane face. The PAM16 row elsewhere in this workbook is a separate protein group.
+
+The inner-membrane and matrix-side assertions combine official sequence/topology annotation, human translocon association and curated mouse topology evidence. Human co-IP is not described as a direct membrane-face assay. The 91-residue product lacks the predicted N-terminal anchor, and its localization remains unresolved.
+
+## Prohibitin and cardiolipin context
+
+[PMID:24856930](https://pubmed.ncbi.nlm.nih.gov/24856930/) is newly cached through the normal publication fetcher. The cache is abstract-only. Publisher full text/PDF, institutional repository and full-view API attempts did not provide the original Methods; an HTTP 200 publisher API response contained metadata only. The abstract positively reports a PHB2-associated DNAJC19 membrane assembly and altered cardiolipin acylation/acyl-chain composition after loss of the complexes. Current [mouse Q9CQV7 annotations](https://www.ebi.ac.uk/QuickGO/annotations?geneProductId=Q9CQV7) include IMP cardiolipin regulation and IDA matrix-side/inner-membrane-complex evidence from this paper.
+
+These assertions are retained with curator deference. The positive donor experiment is not reduced to a prediction merely because the human annotation is transferred. The prohibitin-associated complex context is kept distinct from PAM; changing both broad complex rows to PAM would substitute a different source claim. The regulation term is GO:1900208, without a negative-regulation qualifier. No lipid-transfer catalysis, fixed prohibitin stoichiometry, precise source construct or separate settled human lipid-remodeling core is inferred from the abstract.
+
+## Disease and products
+
+The cache for [PMID:16055927](https://pmc.ncbi.nlm.nih.gov/articles/PMC2564511/) remains abstract-only, but the genuine PMC original was recovered and its Methods, Results and Discussion read separately. Human mapping, segregation and RT-PCR demonstrate exon 4 skipping. The predicted disease-associated truncation is 47 residues, not the current 91-residue alternative product. The paper proposes impaired import from homology and topology; the disease phenotype is not treated as a direct import assay. The older statement that this citation was unverified or uncached is superseded.
+
+Fresh official sequences independently reconstruct Q96DA6-1 (116 residues) and Q96DA6-2 (91 residues, canonical residues 26–116). Isoform 2 loses the predicted helix at residues 4–24 but retains the J-domain sequence at 62–116. Neither retained sequence nor absent anchor establishes its cellular activity, localization or inactivity. Soluble assay constructs are not assigned to natural isoforms by approximate length.
+
+[PMID:10339406](https://pubmed.ncbi.nlm.nih.gov/10339406/) remains abstract-only after failed publisher access. Its accessible abstract describes human TIM17/TIM23/TIM44 organization. Later direct DNAJC19 evidence supports the retained gene-level localization and import assertions; unseen target-specific experiments in the 1999 article are not invented.
+
+## Propagation and term scope
+
+The protected PTHR12763 PAINT records place the three import-related IBDs at PTN000298641 (taxon 2759, dated 2017-02-28). The actual family tree places human Q96DA6 leaf PTN002489628 below that node. SGD descendant evidence grounds the phylogenetic judgment; donor count is not used as a quality score. The mouse transfer is traced to experimental Q9CQV7 records, with the full-text limit above.
+
+Current typed paths support GO:0030150 as a descendant of GO:0006886, GO:0005743 under membrane and within mitochondrion, and GO:0001405 as a protein-containing complex. These support six gene-level specificity refinements without claiming that each original assay measured the finer localization or complete native complex. GO:0001671 remains the suitable ATPase-activator term; its DNA-topoisomerase-II-specific child is inapplicable.
+
+## Source lifecycle and access record
+
+The pre-review GOA is preserved byte for byte at [DNAJC19-goa-before-5157.tsv](source-snapshots/DNAJC19-goa-before-5157.tsv), with [source provenance](source-snapshots/DNAJC19-goa-refresh-20261017.yaml). The normal forced fetch on 2026-10-17 returned 22 current records. The one source-reference transition is GO:0005743 / IEA from GO_REF:0000120 to GO_REF:0000044 with SL-0168. The historical row retains its original fields and ACCEPT verdict, with only `retired: true` lifecycle metadata added. The current row is appended as a genuine imported annotation, not NEW. All other historical source dictionaries remain exact; newly fetched donor fields are used as evidence without overwriting the historical dictionaries.
+
+The previous review originates in #1434 and was updated in #1492. A shallow local history boundary at #3214 is not a DNAJC19 review or sign-off. Old notes and generated PN notes remain preserved; the dated notes appendix supersedes stale scientific/access statements. The configured Falcon attempt failed authentication, and its perplexity-lite fallback failed for insufficient quota. No provider report was invented. Existing machine records and publication caches remain unchanged except for the explicit genuine GOA refresh; the new cardiolipin publication is an additive normal cache.
+
+Short primary-source anchors appear once in the YAML: the human ATPase assay beside the core, human translocon association beside the TIM23-complex assertion, and purified human heterodimerization beside the complex refinement from PMID:19564938. The new excerpts total 22 words from PMID:20053669 and 9 words from PMID:19564938. The inherited notes contain longer historical excerpts and remain unchanged; these new-excerpt totals do not describe the combined historical files. This guide supplies public source locators, while annotation support cites the primary publications and database records themselves. Source access is reported per paper rather than inferred from a cache flag or HTTP status alone.

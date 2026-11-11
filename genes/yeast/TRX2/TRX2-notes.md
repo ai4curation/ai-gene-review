@@ -12,3 +12,21 @@
 - Core: GO:0015035 cytosol/nucleus; BPs cell redox homeostasis, deglutathionylation, sulfate assimilation (IGI accepted); LMA1 complex as separate core function.
 - Golgi membrane IEA (UniProt citing Huh 2003, abstract only) UNDECIDED. Protein binding removed.
 - Glutathione metabolic process IGI kept non-core.
+
+
+## 2026-10-26 complete fungal-member reassessment
+
+Reassessed all 31 existing rows, core functions, biological summary and references under the current review and annotation-reviewer guidance. Original term, evidence, reference, qualifier and supporting-entity payloads are preserved; no annotation row was added in this session. Correct claims are assessed holistically across evidence codes. Generic protein-binding removals implement the uninformative-binding policy and do not deny the measured association or transfer a partner's activity.
+
+The sulfate-assimilation role overlaps Trx1 under standard tested conditions; the double mutant phenotype is not universal proof that no other donor can ever work. PMID:10844700 establishes conditional bypass under low-oxidant conditions and leaves the alternative donor unidentified. The former glutaredoxin-dependent-backup wording is corrected. Disulfide-reductase activity retains glutathione-disulfide as well as protein substrate scope (PMID:23242256); glutathione homeostasis, Yvc1 deglutathionylation (PMID:27708136), redox stress, and LMA1 transport roles were considered independently. Genetic redundancy and curated complex evidence support Trx2 in LMA1; redox-inactive cysteine-mutant rescue in PMID:9015301 was performed with Trx1, not Trx2. The Golgi claim remains UNDECIDED because the available localization evidence does not resolve it; no misattribution is inferred from an incomplete source. No new row is added.
+
+Research provenance: the existing real research reports and curated primary/publication caches were read. The requested normal Falcon run with perplexity-lite fallback was attempted in parallel with publication caching; Falcon returned HTTP 403 and the fallback returned HTTP 401 insufficient quota. No provider report was fabricated. `just fetch-gene-pmids yeast TRX2` completed successfully. Manual primary-source assessment and source-access limits are documented above and in the review; abstract-only evidence was not used to overturn experimental assertions as wrong-gene errors. Run logs are under `.cache/module-audit-logs/fungal-yeast-TRX2-*.log`.
+
+## 2026-11-03 Golgi membrane rows (APS sulfate-reduction module completion, PR #5934)
+
+TRX1 and TRX2 Golgi membrane rows got different actions (TRX1 MARK_AS_OVER_ANNOTATED; TRX2
+KEEP_AS_NON_CORE). That difference is about where each citation comes from, not about the biology.
+UniProt attributes TRX2's peripheral Golgi localization to the genome-wide GFP survey (PMID:14562095),
+which is a direct observation. TRX1's Golgi statement cites the mitochondrial IMS proteome
+(PMID:22984289), whose full text has no Golgi data; that is recorded as a WRONG_REFERENCE source defect.
+The two paralogs are not claimed to differ in localization.

@@ -1,0 +1,149 @@
+# Frozen from modules/p38_cascade.yaml by scripts/build_boolean_conformance.py;
+# translation-relevant keys only. Refresh with --refresh-inputs.
+id: MODULE:p38_cascade
+title: p38 stress-activated MAPK cascade module
+module:
+  id: p38_cascade
+  label: p38 (stress-activated) MAPK cascade
+  module_type: SIGNALING_PATHWAY
+  parts:
+  - node:
+      id: stress_input
+      label: Stress/cytokine activation of the p38 MAP3K tier
+      module_type: REGULATORY_STEP
+      annotons:
+      - id: stress_activation
+        label: stress-activated MAP3K input
+        participant: {}
+  - node:
+      id: p38_relay
+      label: p38 kinase relay (MAP3K -> MKK3/6 -> p38)
+      module_type: REACTION
+      parts:
+      - node:
+          id: p38_map3k
+          label: Stress-activated MAP3K activation
+          module_type: REACTION
+          annotons:
+          - id: p38_map3k_activity
+            label: p38-pathway MAP3K activity
+            participant: {}
+      - node:
+          id: p38_map2k
+          label: MKK3/MKK6 MAP kinase kinase activation
+          module_type: REACTION
+          annotons:
+          - id: p38_map2k_activity
+            label: MKK3/MKK6 MAP2K activity
+            participant: {}
+      - node:
+          id: p38_mapk
+          label: p38 MAP kinase activation
+          module_type: REACTION
+          annotons:
+          - id: p38_mapk_activity
+            label: p38 MAP kinase activity
+            participant: {}
+      connections:
+      - source: p38_map3k
+        target: p38_map2k
+        connection_type: CAUSES
+      - source: p38_map2k
+        target: p38_mapk
+        connection_type: CAUSES
+  - node:
+      id: p38_output
+      label: p38 effector and transcriptional output
+      module_type: REGULATORY_STEP
+      annotons:
+      - id: p38_substrate_output
+        label: p38 substrate phosphorylation and transcriptional activation
+        participant: {}
+  - node:
+      id: p38_negative_regulation
+      label: DUSP/MKP dephosphorylation of p38
+      module_type: REACTION
+      annotons:
+      - id: p38_dusp_role
+        label: DUSP/MKP phosphatase function
+        participant: {}
+  connections:
+  - source: stress_input
+    target: p38_relay
+    connection_type: CAUSES
+  - source: p38_relay
+    target: p38_output
+    connection_type: PROVIDES_INPUT_FOR
+  - source: p38_negative_regulation
+    target: p38_mapk
+    connection_type: NEGATIVELY_REGULATES
+  - source: p38_output
+    target: p38_negative_regulation
+    connection_type: CAUSES
+executable_models:
+- id: p38_cascade_boolean
+  model_type: BOOLEAN
+  derivation: DERIVED_FROM_MODULE
+  scenarios:
+  - id: unstimulated
+    label: No stress
+    description: No stress input; the cascade rests with every tier off.
+    settings:
+    - element: stress_input
+      active: false
+    expected_attractor_kind: FIXED_POINT
+    expected_attractor_count: 1
+    expected_inactive:
+    - p38_mapk
+  - id: sustained_stress
+    label: Sustained stress
+    description: 'Stress input held on. p38 output induces the DUSP phosphatase, which
+      inactivates p38, so p38 activity has no steady state: the single attractor is
+      cyclic, a transient response in Boolean terms. The upstream MAP3K and MAP2K
+      tiers stay on because nothing feeds back on them.'
+    settings:
+    - element: stress_input
+      active: true
+    expected_attractor_kind: CYCLIC
+    expected_attractor_count: 1
+    expected_active:
+    - p38_map3k
+    - p38_map2k
+    expected_oscillating:
+    - p38_mapk
+    - p38_negative_regulation
+  - id: mkp1_lost
+    label: MKP-1 lost
+    description: The DUSP phosphatase held off under sustained stress, as when MKP-1
+      expression is blocked. p38 locks on.
+    settings:
+    - element: stress_input
+      active: true
+    - element: p38_negative_regulation
+      active: false
+    expected_attractor_kind: FIXED_POINT
+    expected_attractor_count: 1
+    expected_active:
+    - p38_mapk
+    - p38_output
+    evidence:
+    - source_id: PMID:16978838
+      statement: Blocking p38 reduces MKP-1 expression, which correlates with prolonged
+        p38 activation.
+      supporting_text: inhibition of p38 MAP kinase by specific inhibitor SB 203580
+        or RNA interference (RNAi) markedly reduced the expression of MKP-1 in LPS
+        or PGN-treated macrophages, which is correlated with prolonged activation
+        of p38 and JNK
+  - id: map2k_inhibited
+    label: MKK3/6 inhibited
+    description: The MAP2K tier held off. p38 cannot be activated whatever the stress
+      input.
+    settings:
+    - element: stress_input
+      active: true
+    - element: p38_map2k
+      active: false
+    expected_attractor_kind: FIXED_POINT
+    expected_attractor_count: 1
+    expected_inactive:
+    - p38_mapk

@@ -31,3 +31,12 @@ other met genes.
 - The GOA IMP rows for GO:0004781 rest on mutant enzyme-activity measurements
   (PMID:14723223) and complementation (PMID:18388974); no purified-enzyme kinetics for the
   pombe protein are known to me.
+
+
+## 2026-10-26 complete fungal-member reassessment
+
+Reassessed all 10 existing rows, core functions, biological summary and references under the current review and annotation-reviewer guidance. Original term, evidence, reference, qualifier and supporting-entity payloads are preserved; no annotation row was added in this session. Correct claims are assessed holistically across evidence codes. Generic protein-binding removals implement the uninformative-binding policy and do not deny the measured association or transfer a partner's activity.
+
+PMID:18388974 native complementation and yeast met3 complementation support ATP sulfurylase activity. PMID:14723223 establishes cysteine auxotrophy and rescue by sulfite, thiosulfate, cysteine or glutathione but not methionine, reflecting the different sulfur-amino-acid physiology from budding yeast. The description does not transfer the budding-yeast reverse-transsulfurylation phenotype indiscriminately. Native oligomer stoichiometry is unresolved; the kinase-like domain is an ortholog-based architectural inference and does not confer the separate met14 reaction. Broad sulfur-compound metabolism is refined to sulfate assimilation while preserving upstream participation in the multistep sulfide biosynthetic process.
+
+Research provenance: the existing real research reports and curated primary/publication caches were read. The requested normal Falcon run with perplexity-lite fallback was attempted in parallel with publication caching; Falcon returned HTTP 403 and the fallback returned HTTP 401 insufficient quota. No provider report was fabricated. `just fetch-gene-pmids SCHPO sua1` completed successfully. Manual primary-source assessment and source-access limits are documented above and in the review; abstract-only evidence was not used to overturn experimental assertions as wrong-gene errors. Run logs are under `.cache/module-audit-logs/fungal-SCHPO-sua1-*.log`.

@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from ai_gene_review.validation.family_residue_validator import (
+    InactiveEntryError,
     Outcome,
     SequenceCache,
     check_anchor_residues,
@@ -252,6 +253,63 @@ def test_sequence_cache_writes_and_reads_disk(tmp_path):
     assert cache.get("P12345") == "MACDEF"
 
 
+DELETED_RECORD = {
+    "entryType": "Inactive",
+    "primaryAccession": "C0H4F3",
+    "inactiveReason": {
+        "inactiveReasonType": "DELETED",
+        "deletedReason": "Deleted from sequence source (ENSEMBL)",
+    },
+    "extraAttributes": {"uniParcId": "UPI0001981FEE"},
+}
+
+
+def test_sequence_cache_raises_inactive_entry_error(tmp_path, monkeypatch):
+    """A deleted UniProt entry has no sequence; the cache says so instead of KeyError.
+
+    Regression for issue #6003 (C0H4F3 in PTHR21340). Nothing is written to disk, so the
+    accession is looked up again if UniProt restores it.
+    """
+    cache = SequenceCache(tmp_path)
+    monkeypatch.setattr(cache, "_fetch_json", lambda acc: DELETED_RECORD)
+    with pytest.raises(InactiveEntryError, match="DELETED"):
+        cache.get("UniProtKB:C0H4F3")
+    assert not (tmp_path / "C0H4F3.seq").exists()
+
+
+class _InactiveStub(StubCache):
+    def get(self, accession: str) -> str:
+        acc = accession.split(":")[-1]
+        if acc == "C0H4F3":
+            raise InactiveEntryError(acc, DELETED_RECORD)
+        return super().get(accession)
+
+
+def test_inactive_control_is_reported_as_a_failure_not_a_crash():
+    """One deleted control fails its own check; the other checks still run."""
+    review = _review(
+        [{"position": 3, "expected": ["C"]}],
+        pos_ctl=[
+            {"id": "UniProtKB:C0H4F3", "control_position": 3, "control_residue": "C"},
+            {"id": "UniProtKB:P00002", "control_position": 3, "control_residue": "C"},
+        ],
+    )
+    cache = _InactiveStub({"P00001": TOY, "P00002": TOY})
+    results = [r for r in check_controls(review, cache) if r.kind == "CONTROL_RESIDUE"]
+    by_acc = {r.accession: r for r in results}
+    assert by_acc["UniProtKB:C0H4F3"].outcome is Outcome.FAIL
+    assert "inactive" in by_acc["UniProtKB:C0H4F3"].message
+    assert by_acc["UniProtKB:P00002"].outcome is Outcome.PASS
+
+
+def test_inactive_anchor_is_reported_as_a_failure_not_a_crash():
+    review = _review([{"position": 3, "expected": ["C"]}])
+    review["residue_sites"][0]["anchor"] = {"id": "UniProtKB:C0H4F3"}
+    results = check_anchor_residues(review, _InactiveStub({}))
+    assert [r.outcome for r in results] == [Outcome.FAIL]
+    assert "inactive" in results[0].message
+
+
 @pytest.mark.integration
 def test_real_pgrp_family_review_validates():
     """The committed PGRP family review checks out against real UniProt sequences."""
@@ -311,9 +369,11 @@ def test_tandem_residues_hide_off_by_one_errors():
 class FakePaintRow:
     """Stand-in for module_validator.PaintAnnotationRow."""
 
-    def __init__(self, family: str, go_id: str):
+    def __init__(self, family: str, go_id: str, evidence: str = "IBD", negated: bool = False):
         self.family = family
         self.go_id = go_id
+        self.evidence = evidence
+        self.negated = negated
 
 
 PAINT = {
@@ -357,7 +417,8 @@ def test_node_assessment_outcomes(node, term, outcome, fragment):
     """A node/term pairing is checked against the family's own PAINT rows."""
     from ai_gene_review.validation.family_residue_validator import check_node_assessments
 
-    (result,) = check_node_assessments(_node_review(node, term), PAINT)
+    results = check_node_assessments(_node_review(node, term), PAINT)
+    (result,) = [r for r in results if r.kind != "NODE_POLARITY"]
     assert result.outcome is outcome
     assert fragment in result.message
 
@@ -370,6 +431,77 @@ def test_cross_family_node_names_the_real_family():
         _node_review("PANTHER:PTN000999", "GO:0008168"), PAINT
     )
     assert "PTHR99999" in result.message
+
+
+LOSS_PAINT = {
+    "PANTHER:PTN000002": [FakePaintRow("PTHR00001", "GO:0007259", "IRD", True)],
+    "PANTHER:PTN000003": [FakePaintRow("PTHR00001", "GO:0004181", "IKR", True)],
+}
+
+
+def _loss_review(node, verdict, **declared):
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "node_assessments": [
+            {
+                "node_id": node,
+                "asserted_term": {"id": LOSS_PAINT[node][0].go_id, "label": "x"},
+                "assessment": verdict,
+                "assessment_reason": "test",
+                **declared,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    "node,verdict,declared,outcome,fragment",
+    [
+        # a correctly declared IRD judged with a loss verdict
+        ("PANTHER:PTN000002", "LOSS_CONTRADICTED", {"negated": True, "evidence": "IRD"},
+         Outcome.PASS, "agree"),
+        ("PANTHER:PTN000003", "LOSS_SUPPORTED", {"negated": True, "evidence": "IKR"},
+         Outcome.PASS, "agree"),
+        # the pre-existing TYK2 pattern: an IRD assessed with a gain verdict, undeclared
+        ("PANTHER:PTN000002", "WRONG_NODE", {}, Outcome.FAIL, "declare negated: true"),
+        # declared as a loss but judged with a gain verdict
+        ("PANTHER:PTN000002", "SOUND", {"negated": True, "evidence": "IRD"},
+         Outcome.FAIL, "is for gain rows"),
+        # wrong evidence code for the row
+        ("PANTHER:PTN000002", "LOSS_SUPPORTED", {"negated": True, "evidence": "IKR"},
+         Outcome.FAIL, "PAINT records ['IRD']"),
+        # UNRESOLVED is allowed on either polarity
+        ("PANTHER:PTN000002", "UNRESOLVED", {"negated": True, "evidence": "IRD"},
+         Outcome.PASS, "agree"),
+    ],
+)
+def test_loss_rows_need_loss_declarations(node, verdict, declared, outcome, fragment):
+    """IRD/IKR rows must be declared negated and judged with LOSS_* verdicts."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    results = check_node_assessments(_loss_review(node, verdict, **declared), LOSS_PAINT)
+    (result,) = [r for r in results if r.kind == "NODE_POLARITY"]
+    assert result.outcome is outcome
+    assert fragment in result.message
+
+
+@pytest.mark.parametrize(
+    "verdict,declared,outcome",
+    [
+        ("SOUND", {}, Outcome.PASS),
+        ("LOSS_SUPPORTED", {}, Outcome.FAIL),  # loss verdict on a gain row
+        ("SOUND", {"negated": True, "evidence": "IRD"}, Outcome.FAIL),  # gain declared as loss
+    ],
+)
+def test_gain_rows_reject_loss_declarations(verdict, declared, outcome):
+    """An IBD row may not be declared negated or judged with a LOSS_* verdict."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    review = _node_review("PANTHER:PTN000001", "GO:0008745")
+    review["node_assessments"][0].update({"assessment": verdict, **declared})
+    results = check_node_assessments(review, PAINT)
+    (result,) = [r for r in results if r.kind == "NODE_POLARITY"]
+    assert result.outcome is outcome
 
 
 @pytest.mark.integration

@@ -1,0 +1,10 @@
+# Nicotinic receptor source tracing
+
+This directory records normal read-only QuickGO queries used to identify the original experimental publications behind the human nicotinic panel's transferred annotations. The response is provenance, not biological support for GO assertions. Review support cites the original normally cached publications or curated UniProt statements, never the annotation list itself. No relationship qualifier is requested or used in judgment.
+
+`trace_sources.py` reproduces the donor query and term-definition acquisition, with pagination. Stored responses intentionally omit relationship qualifiers. Donor traces cover rat/mouse neuronal subunits and mouse/rat/monkey alpha7. The initial eight-donor file has fewer than200 hits for each target; alpha7 includes second pages for the two donors with more than200. Query results are time-dependent; the checked-in responses preserve the inspected state.
+
+Molecular channel identity is supported by human functional/structural experiments. Native rodent experiments resolve physiology and compartments, but are not relabeled as human assays. Alpha7 PMID:18458158 directly resolves axolemma localization. The full text of PMID:20164328 is available: alpha7 deletion in Tg2576 mice reduces total amyloid-beta and beta-secretase APP products while increasing soluble OC-positive fibrillar oligomers; older animals also show reduced plaque burden. Production, soluble fibrillar assembly and deposited plaques are therefore reviewed separately, with mouse-to-human inference and disease-model context explicit. GO:0017081 requires chloride-channel binding/modulation, whereas PMID:8145738 describes secondary chloride-current activation after alpha7 calcium influx.
+
+
+PR #5582 follow-up: `TERM_QUERIES` in the script is the literal input list. Previous JSON output is not an input dependency; a clean destination can bootstrap all donor and term requests. Existing preserved response files were not regenerated during this prose/source audit.

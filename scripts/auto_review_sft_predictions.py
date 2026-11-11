@@ -91,6 +91,11 @@ class OntologyPairDecision:
 
 
 MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
+    ("human", "FXN", "GO:0004322"): ManualOverride(
+        assessment="CNN",
+        annotation_action_exceptions=frozenset({"MARK_AS_OVER_ANNOTATED"}),
+        summary='The predicted ferroxidase activity is a demonstrated biochemical capability and is already in GOA, so CNN is appropriate for this unqualified activity prediction. PMID:15641778 reports ferroxidase activity of assembled recombinant human frataxin, and PMID:15581888 independently reports assembled frataxin species in human-heart mitochondria. These observations do not establish a physiological iron-oxidation or detoxification function, and the accessible abstracts do not justify claims about catalytic inefficiency, noise or promiscuity. The main annotation review marks the activity over-annotated as an established biological function while retaining the positive measurement; that annotation-suitability judgment does not refute the capability predicted here.',
+    ),
     ("rat", "Uggt1", "GO:0051082"): ManualOverride(
         assessment="CNN",
         annotation_action_exceptions=frozenset({"MARK_AS_OVER_ANNOTATED"}),
@@ -98,7 +103,9 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
             "Correct but not novel for the predicted biological binding concept. "
             "Rat UGGT1 preferentially recognizes non-native glycoprotein substrates: "
             "PMID:10764828 characterizes recombinant rat liver UGGT and its preference "
-            "for unfolded glycoprotein substrates, and GOA carries the exact term with IDA. "
+            "for unfolded glycoprotein substrates, and GOA carried the exact term with IDA "
+            "from that paper until the 2026-10 refresh retired the row, a curation-status "
+            "change that does not refute the binding. "
             "The current AIGR review explicitly affirms this recognition while marking "
             "GO:0051082 over-annotated as a standalone molecular-function annotation. "
             "That annotation-suitability judgment does not refute substrate binding, "

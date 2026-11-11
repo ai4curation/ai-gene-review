@@ -1,6 +1,6 @@
 # BCAT2: ProtNLM function-description review
 
-**Finding: Supported conserved catalytic function; mitochondrial targeting is not assessed by this claim.**
+**CNN (score 2): correct conserved catalytic function, already carried by GOA for this accession as branched-chain amino acid catabolism and branched-chain transaminase activity.**
 
 Target: [A0A9L0TSN4](https://www.uniprot.org/uniprotkb/A0A9L0TSN4/entry), Equus caballus. The exact source is the frozen [ProtNLM API](https://rest.uniprot.org/uniprotkb/A0A9L0TSN4?annotation=protnlm) response dated 2026-09-08, retained in `projects/PROTNLM_EVALUATION/mammal-benchmark/predictions.jsonl.gz`.
 
@@ -12,14 +12,14 @@ Target: [A0A9L0TSN4](https://www.uniprot.org/uniprotkb/A0A9L0TSN4/entry), Equus 
 
 ### First step in branched-chain amino acid catabolism
 
-**Supported.** Human mitochondrial BCAT2 structural and kinetic work establishes transamination of branched-chain substrates (PMID:17050531). The horse protein aligns across the full human enzyme and preserves the mapped substrate-contact residues. The extra 60-residue N-terminal segment does not remove that catalytic domain.
+**CNN.** Human mitochondrial BCAT2 structural and kinetic work establishes transamination of branched-chain substrates (PMID:17050531). The horse protein aligns across the full human enzyme and preserves the PLP Schiff-base lysine, the CXXC motif and the mapped substrate-contact residues. The extra 59-residue N-terminal segment does not remove that catalytic domain. GOA already annotates this accession to branched-chain amino acid catabolic process (GO:0009083) and branched-chain-amino-acid:2-oxoglutarate transaminase activity (GO:0004084), so the claim is not novel.
 
 ### Leucine, isoleucine and valine are substrates
 
-**Supported.** The experimentally characterized human enzyme has the substrate spectrum given in the prediction. Its human UniProt functional statement is grounded in biochemical papers, including PMID:17050531 and PMID:25653144; mapped contacts and broad sequence conservation support transfer to this horse enzyme.
+**CNN.** The experimentally characterized human enzyme has the substrate spectrum given in the prediction. Its human UniProt functional statement is grounded in biochemical papers, including PMID:17050531 and PMID:25653144; mapped contacts and broad sequence conservation support transfer to this horse enzyme. Leucine, isoleucine and valine are the three proteinogenic branched-chain amino acids, so naming them is equivalent to the annotated branched-chain amino acid catabolic process and branched-chain transaminase activity rather than a more specific novel claim.
 
 ## Evidence and limits
 
-The statement is a plausible conserved mammalian enzyme function, not an equine-specific experimental observation. The selected model has a long N-terminal extension; this analysis does not certify mitochondrial targeting. The narrative adds a substrate-level description to target GOA branched-chain amino acid catabolism; training membership is unknown.
+The statement is a plausible conserved mammalian enzyme function, not an equine-specific experimental observation. The selected model has a long N-terminal extension; this analysis does not certify mitochondrial targeting. The narrative restates, at substrate level, the branched-chain amino acid catabolism and transaminase activity that GOA already carries for this accession, which is the only horse BCAT2 product reviewed here; training membership is unknown.
 
 The reproducible [paired sequence comparison](BCAT2-bioinformatics/RESULTS.md) records residue-level findings and sequence hashes. The [human UniProt source](../../human/BCAT2/BCAT2-uniprot.txt) distinguishes experimental supporting papers from inferred statements. ARBA assertions and generated review prose are not used as validating evidence.

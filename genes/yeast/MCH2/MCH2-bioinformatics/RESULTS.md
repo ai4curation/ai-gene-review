@@ -39,7 +39,8 @@ homolog with no demonstrated transport substrate.
   (`results/uniprot_topology.tsv`) — the canonical 12-TMS MFS architecture, including a
   large central cytoplasmic loop between TM6 and TM7 (TOPO_DOM 221–243). The N/C-in,
   even-TM topology was experimentally constrained for MCH2 in the yeast global topology
-  map (PMID:16847258).
+  map (PMID:16847258); UniProt links that study directly to MCH2 via the P36032
+  `RN [5]` / `RP TOPOLOGY [LARGE SCALE ANALYSIS]` reference block.
 - All **12/12** annotated helices carry a positive Kyte–Doolittle hydropathy peak
   (`results/tm_hydropathy_corroboration.tsv`), independently corroborating that each
   annotated segment is genuinely hydrophobic.

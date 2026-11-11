@@ -41,3 +41,12 @@ thioredoxin.
   may reflect the trx1/trx2 synonym confusion. Abstract-only, so UNDECIDED rather than REMOVE.
 - 'protein binding' IPI rows (trr1, tpx1) are informative only as the redox partners; the
   activity is captured by GO:0015035.
+
+
+## 2026-10-26 complete fungal-member reassessment
+
+Reassessed all 26 existing rows, core functions, biological summary and references under the current review and annotation-reviewer guidance. Original term, evidence, reference, qualifier and supporting-entity payloads are preserved; no annotation row was added in this session. Correct claims are assessed holistically across evidence codes. Generic protein-binding removals implement the uninformative-binding policy and do not deny the measured association or transfer a partner's activity.
+
+Native cytosolic Trx1 donates reducing equivalents to multiple substrates, including the sulfate-assimilation system; it is not itself PAPS reductase or methionine-sulfoxide reductase. PMID:18758731 supports native deletion, sulfite rescue and stress physiology; PMID:22245228 supports competition among oxidized protein substrates and Tpx1. Electron transfer and antioxidant activities are core at the verified GO definitions. The ROS-response claim is accepted using independent native evidence, while the original PMID:12020831 abstract foregrounds mitochondrial Trx2 and cannot settle the complete assay scope. No wrong-paralog inference is made. PMID:28640807 supports redox/RNR context, but a pathway schematic does not establish the exact met16 catalytic intermediate. The PAPS-system core uses electron transfer rather than asserting an experimentally demonstrated Met16 disulfide substrate. Other peroxide, osmotic, thermal, protein repair and localization assertions were reviewed independently.
+
+Research provenance: the existing real research reports and curated primary/publication caches were read. The requested normal Falcon run with perplexity-lite fallback was attempted in parallel with publication caching; Falcon returned HTTP 403 and the fallback returned HTTP 401 insufficient quota. No provider report was fabricated. `just fetch-gene-pmids SCHPO trx1` completed successfully. Manual primary-source assessment and source-access limits are documented above and in the review; abstract-only evidence was not used to overturn experimental assertions as wrong-gene errors. Run logs are under `.cache/module-audit-logs/fungal-SCHPO-trx1-*.log`.

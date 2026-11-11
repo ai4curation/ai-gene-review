@@ -20,7 +20,7 @@
 - `interpro/panther/PTHR15184/PTHR15184-paint.tsv`: the GO:0046933 IBD sits at **PTN008558586**, seeded by
   PomBase SPAC222.12c, SGD S000003882, UniProtKB:P06576 (human ATP5F1B), UniProtKB:P0ABB4 (E. coli AtpD) —
   all genuine F1-beta subunits.
-- `projects/TREEGRAFTER/rotary_atpase/node_placement.tsv`: **PTN001807733** (the WITH/FROM on this gene's
+- `projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv`: **PTN001807733** (the WITH/FROM on this gene's
   GO:0046933 row) is a TreeGrafter graft node in clade **PTN000390097**, the eubacterial sister clade of the
   F1-beta clade PTN008558588 under the same IBD node. PTN000390097 contains exactly the export-ATPase
   subfamilies SF9 / SF62 / SF81. So the graft sits under an IBD node whose function arose in (and is

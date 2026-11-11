@@ -6,6 +6,48 @@ This project is for managing AI reviews of gene annotations. The overall goal is
 review existing GO annotations using strict defined criteria, and to summarize the resulting
 high quality annotations.
 
+## Local parallel work and storage
+
+- Keep at most six unfinished workstreams, including the coordinator. An idle
+  agent or an open PR still occupies a slot until its work is delivered and its
+  workspace is retired. At the limit, finish existing PRs before starting genes.
+- Keep campaign working storage around 30 GB total, including the coordinator,
+  child checkouts, temporary files, environments, and caches. Count shared stores
+  once. Use fewer or sparse checkouts if six do not fit. When over budget, stop
+  intake and reduce storage before resuming research.
+- Use Orca-managed worktrees when running in Orca; otherwise use standard
+  registered Git worktrees or isolation explicitly provided by the environment.
+  Verify the checkout's top level and Git directory before writing. Never copy a
+  repository into `tmp/` to simulate isolation: Git discovery there may resolve
+  to the parent checkout and share its index.
+  Resolve metadata access through the environment's supported worktree interface;
+  do not work around a Git permission error by making a nested repository copy.
+- Assign one writer, branch, and PR to each checkout. Read-only helpers may
+  share it; concurrent writers must have distinct registered worktrees. Share
+  existing runtimes and immutable source caches rather than copying them per task.
+  Identify retained cache versions by source revision or content hash; never
+  overwrite a keeper that an earlier cleanup receipt or active review depends on.
+  Workers must use project code from their own registered checkout and must not
+  reinstall or mutate a shared environment concurrently. Check editable installs
+  and shared cache references before retiring the checkout they point into.
+  Calling the shared Python interpreter does not constrain nested `uv run`
+  subprocesses. Prefer direct validation helpers; set `UV_PROJECT_ENVIRONMENT`
+  to the retained runtime and set `UV_NO_SYNC=1`, `UV_FROZEN=1`, `UV_OFFLINE=1`,
+  and `PYTHONDONTWRITEBYTECODE=1` before validation. Verify that neither a local
+  `.venv` nor `uv.lock` changed unexpectedly after running a wrapper.
+- At delivery, verify that the PR and retained Git history contain the intended
+  work, preserve unpublished changes and unique evidence, then retire completed
+  worktrees through their owning tool. Remove redundant temporary copies against
+  explicit retained copies or recoverable Git objects, with a compact receipt.
+  Treat evidence archives, keeper catalogs, retention registries, and recovery
+  refs as retained data even when they live under `tmp/`. Verify and record any
+  replacement before removing them; a missing original path is not proof of loss
+  or permission to discard its recovery archive.
+  Do not retain full source snapshots, API payloads, or environments per review.
+- Report measured campaign storage and unfinished workstreams before starting a
+  new batch. File allocation and APFS physical free-space changes are different
+  measurements; do not claim one proves the other.
+
 ## Repository layout
 
 src/
@@ -144,9 +186,13 @@ This will create a file like `GENE-deep-research-perplexity.md`. You can also ma
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
 
+For worm, fly and yeast genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`). Other organisms are skipped: MGI's note summarises mutant phenotypes, and RGD, ZFIN and Xenbase have no hand-written text (see `projects/MOD_DESCRIPTIONS.md`). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
+
 A review judges claims about the gene, not evidence codes. Rows that share a term (e.g. the same
 term from IBA, IEA and NAS) reinforce each other; their actions must be consistent, and REMOVE is never
-the way to deduplicate them or to drop a true-but-broad term. Consistency rules live in
+the way to deduplicate them or to drop a true-but-broad term. (The one sanctioned exception is bare `GO:0005515` protein
+binding, which the protein-binding policy removes as uninformative; see
+`src/ai_gene_review/validation/protein_binding_policy.py`.) Consistency rules live in
 `src/ai_gene_review/schema/action_consistency.yaml` and are explained in `docs/action_consistency.md`.
 
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
@@ -156,7 +202,8 @@ always use a holistic synthesized picture of the gene function that you have obt
 ActionEnum:
     permissible_values:
       ACCEPT:
-        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene
+        description: Accept the existing annotation as-is, no modifications, and retain as representing the core function of the gene.
+          For an ND root-term row, ACCEPT means the annotation follows the evidence-code guideline (see "ND annotations" below)
       KEEP_AS_NON_CORE:
         description: Keep the existing annotation as-is, but mark it as non-core. For pleiotropic genes, this may be the developmental
           processes, or other processes that are not the core function of the gene.
@@ -192,6 +239,93 @@ match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the te
 When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
 separate, long-standing use of `MODIFY` whose replacement is not a descendant.
+
+**Measured activity is not automatically function.** For an enzyme activity that
+was assayed but is weak or promiscuous, decide whether the protein evolved to
+catalyse the reaction: a genuine secondary activity is `KEEP_AS_NON_CORE`; real
+in vitro activity of unknown relevance is `MARK_AS_OVER_ANNOTATED`; noise-level
+activity of a paralog, when a dedicated enzyme for the same reaction exists in
+the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
+the judgement in `reason`. See the promiscuous-activity tiers in
+`projects/ENZYME_SPECIFICITY.md`.
+
+**Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
+went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
+model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
+was itself the over-annotation). Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
+retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
+not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
+`replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
+`replaced_by` upstream.
+See `projects/INVOLVED_IN_PRECOMPOSITION.md`.
+
+### ND annotations: reward adherence to the evidence-code guideline
+
+An ND (No biological Data available, `GO_REF:0000015`) row says a curator searched
+the literature for one aspect and found nothing to annotate. **ACCEPT it when no
+literature on this gene product, in this species, identifies a function in that
+aspect.** IBA, ISO, ISS or IEA rows in the same aspect do not make it stale: they are
+not literature on the gene, so never REMOVE an ND "because an IBA now covers the
+aspect". Only when such literature exists is the ND stale: REMOVE it (or MODIFY,
+when no fitting term existed) with `nd_case: STALE` or `ONTOLOGY_BLOCKED`, and quote
+the paper. Never use `KEEP_AS_NON_CORE`, `MARK_AS_OVER_ANNOTATED` or `TOO_GENERAL` on
+an ND, and never propose a `NEW` ND (record a `knowledge_gaps` entry instead).
+Record why there is no data in `review.nd_case`; `TRUE_GAP` and `EXISTENCE` need a
+BIOLOGY knowledge gap whose `dark_aspect` matches the ND aspect. What counts as
+literature on the gene: a bare protein-binding IPI does not (it identifies no function,
+so it does not make an MF ND stale); a paper on an ortholog does not, however strong;
+an `NAS` or Reactome `TAS` row on the gene itself does. An accepted ND must cite the
+search: the publications checked (PMID, DOI, PMC), or a `supported_by`
+`supporting_text` quote from the gene's own deep-research or notes file where it
+records the queries and their result; the UniProt record and MOD gene
+descriptions are not a search. The `nd_policy` check warns on deviations, and the
+compliance score credits an accepted ND that cites the literature search. See
+`projects/NO_DATA.md` for the case taxonomy.
+
+### Root organelle terms: keep the organelle, add the sub-compartment
+
+Cellular-component rows on a root organelle term (`GO:0005739` mitochondrion,
+`GO:0005783` endoplasmic reticulum, `GO:0005794` Golgi apparatus, `GO:0005777`
+peroxisome, `GO:0005764` lysosome) follow the policy in `projects/ORGANELLES.md`.
+The nucleus, the series organelles (endosome, vacuole, autophagosome) and plastids
+are not covered yet. For these five terms the policy is an exception to the
+"correct but general is `MODIFY`" rule above:
+
+- **The organelle term is informative.** Never use `TOO_GENERAL` for it, and never
+  `MODIFY` it to a sub-compartment. Knowing a protein is in the mitochondrion is a real
+  claim even when its membrane or lumen is also known. (A generic term such as
+  `GO:0016020` membrane is not a root organelle term, so the rules above still apply
+  to it.)
+- **Direct evidence** (IDA, EXP, HDA, HTP, ...) from an assay that cannot resolve the
+  sub-compartment (organelle proteomics, whole-organelle co-staining, GFP fusion) is
+  `ACCEPT`, or `KEEP_AS_NON_CORE` if the location is peripheral to the function.
+- **Existing synthesis rows** (IBA, IEA, ISS, ISO, IC, ...) are a red flag for
+  granularity, not soundness: examine what the source rests on (the PAINT IBD seeds, the
+  UniProt keyword, the ortholog's own annotation) to see why the row stops at the
+  organelle and whether the organelle claim holds. For IBA this is the phylogenetic
+  reading described below, not a donor count. If the organelle claim holds, keep the row and record the check in
+  `reason`; if it does not, `MARK_AS_OVER_ANNOTATED`, or `REMOVE` for a demonstrably
+  wrong electronic mapping or over-propagation.
+- **Be bold about the sub-compartment, but add it, don't substitute.** When the gene
+  has no sub-compartment row and at least two independent lines agree (a TM segment, a
+  cleavable presequence, a sub-organelle assay, a function that only makes sense on one
+  side), add the matrix, membrane or lumen term as a `NEW` row (usually IC, an
+  inference you author and justify) beside the root rows. With one line, or lines that
+  disagree, stay at the root and say why.
+- **`core_functions.locations`** names the sub-compartment only where the core activity
+  is shown to happen; a well-supported sub-compartment location is not by itself
+  where the function acts (see the MMADHC note in the project).
+- **Check crude fractions for ER.** A "mitochondrial" fraction that was not checked for
+  an ER marker cannot separate mitochondrion from mitochondria-associated ER membranes;
+  transient recruitment to the organelle surface (signalling, innate immunity) is not an
+  outer-membrane location.
+- **ER: transit is not residence.** A secreted or plasma-membrane protein's ER row is
+  `KEEP_AS_NON_CORE` only with direct evidence on the gene or the endogenous protein in its
+  native cell; a synthesis row resting only on transit or on retention of an overexpressed or
+  mutant protein is `MARK_AS_OVER_ANNOTATED`. Never add a topology-forced ER membrane row for a
+  protein that only passes through. An ER membrane (`GO:0005789`) row needs a TM or tail anchor
+  plus an ER-specific assay on the endogenous protein; a lumen (`GO:0005788`) row needs a
+  soluble signal-peptide protein shown to be retained. See rule 7 in `projects/ORGANELLES.md`.
 
 ### Do not overrule curators from incomplete evidence
 
@@ -411,6 +545,45 @@ broken real PAINT links. The same rule applies to evolutionary claims generally:
 the PAINT evidence for a step is not clear, say nothing about it rather than
 asserting an inference the data does not support.
 
+## Curated annotation rules
+
+`rules/curated/CR-nnnn.yaml` holds annotation rules this project owns (`CuratedRule`).
+A rule couples sequence-feature conditions with taxon or module-context conditions
+and names the InterPro2GO mapping or UniProt rule it replaces. Use one when a
+mapping is right for some members and wrong for others and a condition can separate
+them; when a term is wrong for every member, record a removal instead. Module
+conditions are exclusion-only. See `rules/curated/README.md`; check with
+`just validate-curated-rules`.
+
+### Reviewing rules: every verdict needs receipts
+
+A review of an ARBA or UniRule rule (`rules/**/<ID>-review.yaml`) is a verdict on
+someone else's rule, and an audit in November 2026 found most earlier verdicts did
+not follow from their evidence. `just rules-validate` now checks receipts as well
+as schema (`src/ai_gene_review/validation/rule_review_receipts.py`); read
+`docs/rule_review_receipts.md` first. In short:
+
+- **Record what you examined.** `rule.condition_sets` from the fetched rule, with
+  `retrieved_date` and `source_condition_set_count`. A verdict on a rule whose
+  sets are not recorded is an error; a rule you only sampled is `UNDECIDED`.
+- **Never name an identifier from memory.** Write `IPR000999 (Ribonuclease III
+  domain)`; the label is the checksum of the id, and it is checked.
+- **Judge the conjunction, not the signature.** A condition set is everything it
+  requires together, taxon included. Alternative sets are meant to be disjoint.
+- **Size, generality, redundancy and low recall are not errors.** The "limit of 12
+  condition sets" is the analysis tool's default, not a standard. A true but
+  general term is `MODIFY` or `UNDECIDED`, never `DEPRECATE`.
+- **`DEPRECATE` names a wrongly annotated protein** (accessions in
+  `annotation_assessments[].incorrect_examples`), an obsolete consequent or a
+  withdrawn rule. Before listing a protein as a false positive, look up its
+  experimental annotations to the term and its descendants; `--online` does this.
+- **Your notes and deep-research files are not literature.** Cite the paper or
+  record they point to, or omit `literature_support`.
+- **`confidence` is confidence in the verdict**; below 0.5 the verdict is
+  `UNDECIDED`.
+- **Withdraw wrong claims in `corrections`**, with the evidence that refuted them,
+  and delete them from the prose.
+
 ## Reviewing references
 
 Entries in the top-level `references:` list can carry an optional `reference_review` object recording
@@ -438,6 +611,31 @@ If `just fetch-gene` or a re-run deep-research file changes a source so that a q
 no longer matches, re-quote the new text in the same change; if a review file is
 renamed, move its key in the baseline unchanged.
 
+The same checks apply to every other YAML kind that carries quotes: modules,
+family reviews, GO-CAM reviews, rules and projects. `just validate-quotes`
+(`src/ai_gene_review/validation/quote_check.py`) finds every `supporting_text`,
+whether its source is named by `source_id`, `reference_id`, `reference` or the
+enclosing `references[].id`. It runs on every PR, not only when the quoting file
+changes, because a quote breaks when its *source* changes: editing a gene review
+can break a family review or module that quotes it, so re-run it after rewriting
+any file that others cite. A quote whose source has no readable text (`url`, `GO:`,
+`PMCID:`, no reference id) is reported as unchecked, never as verified. Failures
+that predate the check are in `conf/quote_check_baseline.yaml`, which only shrinks
+(`just validate-quotes --prune-baseline`).
+
+**Never cite a GOA file as support.** `GENE-goa.tsv` lists the annotations
+under review: it says what is annotated, never why it is true, so a
+`supported_by` entry pointing at it cites an annotation as evidence for itself.
+Another gene's GOA file is no better: that a paralog or partner carries a term is
+the state of its annotation, not evidence. This is a blocking error whatever the
+action (`supporting_text_goa_file`, `src/ai_gene_review/validation/goa_support.py`).
+Quote the publication or curated UniProt statement behind the annotation, or your
+own analysis; if nothing independent supports the row, use `UNDECIDED`. A
+comparator argument ("paralog X carries this term") belongs in `reason`. The same
+holds in prediction reviews (`validate-predictions`): `supported_by` shows the
+predicted term is true or false, and that it is already in GOA (CNN, LSP) is said
+in `summary`.
+
 **Quote UniProt for evidence, not for labels or unvetted predictions.** These rules
 apply to every UniProt quote, whatever it supports.
 
@@ -448,16 +646,36 @@ apply to every UniProt quote, whatever it supports.
   use membership to argue for a function: NCBIfam, InterPro/Pfam/PROSITE signature
   matches, the curated UniRule systems (HAMAP, PIRSR, PIRNR, RuleBase), "Belongs to
   the X family" notes (unless their only evidence is ARBA) and family
-  cross-references. Structure-derived automatic evidence (`ECO:0007…`) counts too.
+  cross-references. Structure-derived automatic evidence (`ECO:0007…`) counts too,
+  and so do sequence-analysis features (`ECO:0000256|SAM:...`: Phobius
+  transmembrane helices, SignalP signal peptides, MobiDB-lite disordered regions,
+  Coils coiled coils), which are valid computational evidence.
 - **Not support, unvetted predictions:** a statement whose only evidence is an ARBA
   association rule (`{ECO:0000256|ARBA:...}`), annotation imported unchecked from the
-  submitter (`ECO:0000313`), or an electronic GO line (`IEA:`). Citing one repeats a
+  submitter (`ECO:0000313`), a name generated by a machine-learning model such as
+  ProtNLM (`ECO:0008006`), or an electronic GO line (`IEA:`). Citing one repeats a
   prediction; citing ARBA text for an ARBA annotation is circular.
 - **Not support, labels:** protein names and EC numbers (`DE`), keywords, and the
   record's own `DR GO` lines restate an annotation rather than support it.
+- **Protein existence (`PE`) is not evidence of function.** Quote it to argue that an
+  annotation rests on prediction (e.g. `MARK_AS_OVER_ANNOTATED`, `KEEP_AS_NON_CORE`,
+  `MODIFY`, `UNDECIDED`), never to support an `ACCEPT`, a `NEW` or a core function.
+  An accepted `ND` annotation needs evidence that the literature was searched, not
+  the existence level.
 
-Validation warns on both (`uniprot_quote_unvetted_prediction`,
-`uniprot_quote_restating_field`; `src/ai_gene_review/validation/uniprot_quote_source.py`).
+Validation warns on all three (`uniprot_quote_unvetted_prediction`,
+`uniprot_quote_restating_field`, `uniprot_quote_existence_as_support`;
+`src/ai_gene_review/validation/uniprot_quote_source.py`).
+
+**Record which section a UniProt quote comes from.** A UniProt quote's
+`supporting_text` item carries `record_section`, the section(s) of the record
+it quotes: `CC:CAUTION`, `CC:FUNCTION`, `FT:BINDING`, `DR:Pfam`, `DE` and so on.
+This is the database-record counterpart of `reference_section_type` (which is for
+manuscript sections such as RESULTS) and makes questions like "which UniProt
+cautions does this review use?" answerable by query. Do not write it by hand: run
+`just backfill-record-sections genes/<org>/<GENE>` after editing, which derives it
+from the cited file and changes nothing else. Validation warns
+(`record_section_mismatch`) when a stated value disagrees with the cited file.
 
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
@@ -499,6 +717,14 @@ For a statement from P1 contradicted by P2, use P1's
 `supported_by` containing P2's exact snippet. See
 [Reference Curation](docs/reference_curation.md) for examples and validation rules.
 
+**Errors that live in the source record** (an annotation or GO-CAM activity on
+the wrong gene, a mis-keyed reference, a wrong evidence code) go in
+`review.source_defects` (or `activity_reviews[].source_defects` for GO-CAMs), with
+`asserted_value` → `corrected_value`, the responsible `resource` and a
+`confidence`. That is how "that gene, not this gene" is recorded;
+`just export-source-defects` turns them into per-resource upstream reports. See
+`docs/source_defects.md`.
+
 ## Tools
 
 Use the OLS MCP to find relevant ontology terms, if the terms you need are not in existing_annotations.
@@ -507,6 +733,14 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
+
+For the ClinGen Mendelian project, follow its standing
+[curation instructions](projects/CLINGEN_MENDELIAN.md#curation-instructions):
+supported generic binding may remain `KEEP_AS_NON_CORE` when no evidence-backed
+specific function is available. Inaccessible or unadjudicated evidence remains
+`UNDECIDED`. The generic validator still emits `protein_binding_policy` warnings
+for these non-core binding rows; retain and report the resulting computed status.
+This project-specific instruction does not change validation.
 
 ### A curation gap is not a knowledge gap
 
@@ -573,6 +807,32 @@ just backfill-isoforms-organism human  # all genes in organism
 
 See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
 
+### When UniProt's isoforms and the literature disagree
+
+Two kinds of mismatch are recorded in structured form, not prose:
+
+- **An isoform the literature describes is missing from the reviewed entry**
+  (SYNGAP1: the alpha1 PDZ-ligand C-terminus is not among Q96PV0's isoforms).
+  Add a `functional_isoforms` entry, map it to the sequences that do carry it
+  (`REFSEQ_PROTEIN`, `UNIPROTKB_UNREVIEWED`), and record a `source_defects`
+  item with `defect_type: MISSING_ISOFORM`, `resource: UNIPROT`,
+  `requested_change: ADD`. `just export-source-defects` includes it in the
+  report for UniProt.
+- **A paper numbers residues on a non-displayed isoform** (RASAL2 "S351" is
+  Ser351 of Q9UJF2-2 and Ser203 of the displayed Q9UJF2, where 351 is Asp).
+  UniProt is not wrong here, so this is not a source defect. Add
+  `residue_mappings` to the finding: `as_reported` is the residue in the
+  numbering the paper used, `canonical` the same residue in the review's own
+  displayed sequence (the CURIE without an isoform suffix, `UniProtKB:Q9UJF2`,
+  never `-1`: the displayed isoform is not always isoform 1). Pin
+  `sequence_version` on both sides, as for any `ResiduePosition`. Each side is checked against the real sequence
+  (`python -m ai_gene_review.validation.finding_residue_mappings`, run by
+  `just validate-families`), so a number read on the wrong sequence fails;
+  a side that is not a UniProtKB sequence (a RefSeq-only isoform) is reported
+  unresolved rather than checked.
+  Never state a residue number in a finding without knowing which sequence it
+  refers to.
+
 ### Alternative-ORF peptides: one folder per UniProt accession
 
 Isoforms and polyprotein cleavage products share the host's UniProt accession, so they
@@ -590,6 +850,18 @@ gene's symbol (for example, L0R8F8 AltMIEF1 is gene `MIEF1`). Such a peptide get
 - It has no gene symbol at all: use the accession as the folder name.
 
 Never model such a peptide as a `functional_isoform` of its host. See `projects/MICROPROTEINS.md`.
+
+### Gene model problems
+
+When the entry's sequence is not a single real gene product (two neighbouring
+genes fused into one model, a split or truncated model, a wrong start site),
+record it in the top-level `gene_model_issues` list rather than only in prose:
+`issue_type`, `status` (`SUSPECTED` or `CONFIRMED`), a `description` of how it
+affects the entry's name and annotations, optional `components` and
+`reviewed_segment` for fused models, `evidence_types`, and `supported_by` quotes.
+A genuine biological fusion is not a gene model issue, and an entry UniProt
+already flags as a fragment (`DE   Flags: Fragment`) needs an entry only when the
+review finds more than the flag records. See `projects/GENE_MODEL_ERRORS.md`.
 
 ## Bioinformatics analyses
 
@@ -662,9 +934,18 @@ not the live site. The Pages source setting must separately be `GitHub Actions`.
 ### Gene review HTML
 ```bash
 just render <organism> <gene>    # render one gene
-just render-all                  # render all genes (~1200 files)
+just render-all                  # render all genes
 ```
 Output: `genes/<org>/<gene>/<gene>-ai-review.html`
+
+This HTML is gitignored and must not be committed (not even with `git add -f`):
+the Pages workflow renders every review from `main`, and CI rejects a PR that
+adds one. Use `just render` only to preview a page locally. Older copies are
+still tracked while they are untracked in batches (#6221); do not stage
+re-rendered versions of them. `deploy-browser` and the prediction evals only
+link to a review page when its HTML exists on disk, so run `just render-all`
+first if you need those links in a local build. The propagation browser links
+whenever the review YAML exists.
 
 ### Project pages
 Project docs live in `projects/`. Render with:

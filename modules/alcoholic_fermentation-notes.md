@@ -1,0 +1,43 @@
+# Alcoholic fermentation cross-species audit
+
+## 2026-10-25: scope and literature
+
+The existing boundary is pyruvate to acetaldehyde to ethanol, with an optional acetoin/butanediol branch. Glycolysis supplies substrate and reducing equivalents but is outside the two-reaction core. ATP yield belongs to that upstream pathway: the existing universal two ATP per hexose statement is inappropriate for Zymomonas, which uses ED rather than EMP. A pyruvate-formate lyase/acetyl-CoA/AdhE route is a distinct implementation and is not silently conflated with direct PDC chemistry.
+
+Review literature identified: PMID18479436 (yeast ADH isoenzymes), PMID27629544 (Zymomonas model metabolism), PMID22404754 (EMP versus ED energy coupling), and PMID35050092 (plant respiratory/hypoxic adaptation). Primary PMID30861072 compares land-plant fermentation and demonstrates substantial ethanol production in Arabidopsis adh1 mutants, so a plant ethanol phenotype does not establish a universal ADH1-family implementation. Marchantia putative ADH1 is not a safe ethanol-enzyme exemplar.
+
+The original eighteen representatives are being individually audited. Zymomonas ADHI and Bacillus BdhA are additional candidates to connect family alternatives and avoid stitching a bacterial acetoin branch to yeast-only terminal enzyme evidence. PANTHER labels and each representative membership will be checked; the initial module includes several subfamilies without matching exemplars.
+
+A separate natural implementation occurs in Carassius (PMID28801642): mitochondrial E1-derived decarboxylase plus muscle ADH8a3. Target UniProt records map through their submitted sequences: A0A288DRL8 to KF960826/AHG05818.1 (E1alpha3); A0A288DUG2 to KF960828/AHG05820.1 (E1beta2); A0A1P7XEJ9 to JX975104/AGT03967.1 (ADH8a3). ENA descriptions verify alpha3/beta2 numbering. The beta2 record is a C-terminal fragment, despite the article discussing full-length cloning; that limitation is preserved. The molecular complex assignment is supported by expression, localization, sequence and structural modeling, not an asserted purified alpha3/beta2 reconstitution. Generic PDH transfer annotations need adjudication against this specialized role.
+
+The module provider command failed quota/authentication and no generated report was invented. Manual primary-source research and genuinely existing gene research reports support the audit. New gene provider attempts are recorded separately.
+
+## Integrated audit and GO-CAM verification
+
+All 23 representatives now have individual reviews: six budding-yeast, six fission-yeast, two Arabidopsis, six bacterial and three Carassius proteins; all 487 original rows are retained. The added bacterial AdhA and BdhA close native reaction-context gaps. Carassius is a separate E1-derived implementation; neither ordinary PDH-family membership nor the modeled E1-E2 interface establishes direct purified-complex kinetics.
+
+The 2023 comparative review PMID:37644496 distinguishes R-selective MDR BDHs from S/meso-selective SDR enzymes. The modeled optional endpoint is R,R-butanediol; generic bacterial acetoin production is not evidence that all lineages make that stereoisomer. Primary Bacillus physiology, structure and enzyme studies corroborate the actual AlsS/AlsD/BdhA sequence. Six comparative reviews complement the primary evidence. PANTHER family labels were read verbatim from panther.obo, including unexpected Zymomonas AdhA SF8 and Bacillus BdhA SF26 names; membership checking, not renaming, determines their appropriateness. Taxon labels were verified through OLS on 2026-10-25. Root Bacteria/Eukaryota is a non-universal evidence envelope, with Carassius and canonical PDC alternatives separated.
+
+All 15 original GO-CAM associations resolve to cached models/activities. GLUCFERMEN-PWY has 34 indexed activity/member combinations under GO:0019658 (bifid shunt), which does not describe yeast glucose fermentation; each activity needs its own actual process, not a blanket ethanol replacement. Its ALD4/ALD5 cytosol placements, and PWY3O-335 ILV2/ILV6 cytosol placement, conflict with publication-linked mitochondrial UniProt statements. Broader inclusion of FBP1 and PomBase pyk1, atd1, tnr3 and Phx1 is a scope difference rather than an error by itself.
+
+The earlier PWY3O-981 GO:0019152 direction criticism is withdrawn: the current definition explicitly states that the reaction is catalyzed in reverse, and the cached diacetyl/NADH inputs and acetoin/NAD+ outputs are consistent. PWY3O-335 instead types that same diacetyl-reduction activity as GO:0000721, which describes acetoin/butanediol interconversion and is a genuine molecular-function/participant mismatch. Broad GO:1902652 is biologically compatible with acetoin/butanediol chemistry. PDC carboligation associations identify the intended enzymes but their generic pyruvate-decarboxylase typing does not independently describe carboligation chemistry.
+
+Independent annotation reviewers checked the gene decisions, root fish inference limits and GO-CAM interpretation. No original annotation ids were rewritten to pass validation. Provider attempts failed authentication/quota and are documented without invented output. No PAINT ancestral-node assertion is introduced merely from family membership.
+
+Family conformance exposed three unresolved exact functional-clade boundaries: broad PTHR42940:SF8 includes AdhA plus CoA reductases; PTHR43161:SF26 includes BdhA plus other polyol activities; the PTHR43880 review has not established whole-SF3 ethanol activity. These roles are now separate, activity-filtered free-text family descriptors with verified representatives. Actual broad PANTHER assignments remain documented, but no narrower identifier is invented and no broad-family activity is asserted merely to satisfy validation. The other family selectors retain verified exact ids.
+
+
+## 2026-10-25 PR #5545 approved-review follow-up
+
+Removed bacterial PMID:36781054 and PMID:18820069 from the fungal Bdh1 annoton's function/evidence lists and removed its bacterial-route aside. Yeast Bdh1 remains grounded in PMID:10938079, PMID:19329666 and PMID:26729717; both bacterial sources remain on the separate bacterial BdhA variant. No reaction, member, family selector or reference inventory changed.
+
+Other suggestions were assessed explicitly. CARAX ADH8a3 retains its inferred ethanol-reaction refinement after checking the live GO definition: the reaction term does not assert ethanol exclusivity, and target physiology/expression plus ADH8a comparative biochemistry support a qualified inference. The two row reasons now spell out these limits; exact carp kinetics remain unresolved. Arabidopsis ADH1 core prose now explains why fermentation is emphasized while measured broader alcohol activity remains accepted in the annotations.
+
+CARAX E1alpha3 already states in its core description that the PDC contribution is inferred, complex-level and not an isolated-subunit assay or proof of absent residual PDH activity. Its three UNDECIDED rows ask different source claims; no unsupported NEW or extra annotation was manufactured. A YAML-anchor rewrite of repeated same-term/protein-binding reasons was declined as style-only churn: their identical biological claims intentionally receive consistent judgments, and the existing reasons remain independently readable. All 487 annotation rows and action totals are unchanged.
+
+
+## 2026-10-26 adh4 organelle-policy correction
+
+The SCHPO adh4 review now retains both informative mitochondrion annotations (PMID:16999687 biochemical/genetic evidence; PMID:16823372 curated YFP screen) as ACCEPT, alongside its two unchanged matrix annotations. The screen is not attributed the biochemical study's detergent-latency or knockout experiments. All 15 gene annotation payloads and all module YAML data are unchanged apart from the two gene review decisions and their reasons/support.
+
+The module already makes the appropriate directional distinction: matrix localization is demonstrated for ethanol oxidation, whereas the compartment of adh4-dependent compensatory reductive fermentation remains unestablished. No module location, member, selector, activity, causal edge or scope change is warranted by retaining the correct root-organelle assertions. This correction repairs the earlier gene-note narrative without inventing a new reaction or physiological route.

@@ -66,3 +66,12 @@
   (ARAF performs, not regulates, the phosphorylation), consistent with BRAF review.
 - GO:0036211 protein modification process (TAS) -> MODIFY to GO:0006468 protein phosphorylation.
 - PMID:19593445 (known batch miscitation) is not present in the ARAF GOA set.
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+- Rows: GO:0005739 IBA (PTN000584576) and IEA (GO_REF:0000107, Ensembl projection from mouse Araf P04627). Both stay KEEP_AS_NON_CORE; reasons now record the check.
+- IBA: interpro/panther/PTHR44329/PTHR44329-paint.tsv seeds PTN000584576 → GO:0005739 with MGI:88065 and MGI:88190 (taxon 33511, 2017). In QuickGO, mouse Araf has a mitochondrion IDA (MGI, PMID:12931191, the liver mitochondrial BAD/glucokinase complex study; abstract-only in cache) and mouse Braf an IDA (MGI, PMID:16116448). So the node rests on experimental rows.
+- IEA (GO_REF:0000107): the source ortholog is mouse Araf, whose row is that MGI IDA. It is not circular.
+- Independent support for A-RAF: fetched PMID:10848612 (Yuryev et al. 2000, full text). Rat liver mitochondria were purified with markers [PMID:10848612 "The purified mitochondrial fractions were highly enriched with cytochrome oxidase IV and cytochrome c (Table 2 ), while ERK-1 and RACK-1 were absent."]. A-RAF was protease-protected [PMID:10848612 "A-RAF remained present in mitochondria treated with either protease K or osmotic shock or in mitochondrion-mitoplast preparations."]. A review also notes it [PMID:21779496 "Both A-Raf and MST2 are localized at the mitochondria in tumor cell lines as well as primary tumors."]. No ER marker was reported, but immunogold over mitochondria plus protease protection goes beyond a crude fraction. The organelle claim stands.
+- Rule 4: stays at the root, because the lines disagree. Yuryev place a pool in the IMS and maybe the matrix [PMID:10848612 "it can be concluded that A-RAF is transported into mitochondria intermembranous space and may additionally exist in the matrix compartment."], but they hedge [PMID:10848612 "The results imply, but do not prove, that A-RAF may be partitioned both in mitochondria and in the cytoplasm."]. The better-supported MST2 sequestration and BAD-related roles need the cytosolic face. ARAF has no recognised presequence or anchor. PMID:10848612 and PMID:21779496 were added to references and as supported_by on both rows.
+- Outcome: root.

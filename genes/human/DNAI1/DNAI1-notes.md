@@ -1,0 +1,28 @@
+# DNAI1 review notes
+
+## 2026-10-17 — source-based review
+
+DNAI1 is an outer-dynein-arm intermediate chain, not an autonomous ATPase. The integrated core represents its conserved subunit contacts and contribution to motor activity. Human respiratory and sperm evidence supports the mature axonemal location; direct human staining also identifies a cytoplasmic DynAP pool. Assembly, storage and deployment within DynAPs remain possible roles of that compartment rather than a fully resolved reaction sequence. See the [source guide](DNAI1-source-guide.md) for original sections and access limits.
+
+All 38 imported annotation objects and both official product identifiers are retained. The 699-residue reference product and the 168-residue alternative product are not treated as functionally interchangeable. The short product lacks the reference WD-repeat regions, but sequence shortening alone does not prove universal inactivity.
+
+Two inherited annotations require a source correction. The mouse Dnai1 centrosome and insulin-pathway assertions cite experiments on cytoplasmic dynein: the actual original identifies rat EGFP-IC1B, Santa Cruz clone 74.1 and purified bovine-brain dynein. The manufacturer's data sheet identifies DYNC1I1/DYNC1I2 as the antibody targets. The source annotation is wrong; the paper itself is not invalid. The independent human DynAP evidence still supports a cytoplasmic DNAI1 pool.
+
+The BICD2 interaction is a separate unresolved case. Its original Methods specify an Abcam monoclonal DIC antibody without a recovered clone/catalog identifier. The 74.1 identity from the other paper cannot resolve that reagent by assumption. CFAP52 association, by contrast, is explicitly target-positive in the original and supports the cytoskeletal-partner binding class, with co-immunoprecipitation rather than purified-interface limits.
+
+HPA reports primary-cilium staining in serum-starved hTERT-RPE1 cells as well as sperm-tail regions. That contextual observation is preserved separately from the respiratory motor sources refined to axoneme. Mouse manchette localization is likewise retained with its developmental and species scope. Laterality annotations describe physiological consequences of ciliary motor dysfunction, not a second biochemical activity.
+
+The source papers do not justify uniform outer-arm loss for every DNAI1 variant. In the examined human mutant cells, some proximal components remain while distal components are lost. PMID:18950741 contains an abstract/type-label inconsistency; the review follows its explicit target-specific Results and Discussion.
+
+The five PAINT assertions are linked to their actual ancestral nodes. Target self-evidence and a small donor list are not propagation failures. Light/heavy-chain binding is retained as a conserved family inference, without turning its donor assays into direct human DNAI1 measurements.
+
+Ordinary fetching succeeded. Falcon research failed authentication and the configured fallback failed quota/authentication; no provider narrative was created. Manual source reading supplied the review. Existing publication text and cache availability flags were preserved, including abstract-only caches for which separate originals were recovered. Decisions follow the [project curation instructions](https://github.com/ai4curation/ai-gene-review/blob/864cafe6233e8f9ba6edf74a76c053bc31f6c4cf/projects/CLINGEN_MENDELIAN.md#curation-instructions), including supported specificity changes and preservation of positive interactions when their class or physiological interpretation remains uncertain.
+
+
+## Follow-up: cilium type and noncatalytic motor contribution (2026-10-17)
+
+This entry supersedes the earlier proposal to replace the motile-cilium and 9+2 motile-cilium locations with axoneme. Current typed GO relationships distinguish the axonemal microtubule structure from the cilium type: GO:0097729 is a descendant of motile cilium, whereas GO:0005930 does not specify motility or a 9+2 arrangement. Human respiratory ultrastructure in [PMID:10577904](https://doi.org/10.1086/302683) and direct human airway DNAI1 staining in [PMID:33263282](https://elifesciences.org/articles/58662), Figure 7A and human-imaging Methods, support retaining 9+2 motile cilium alongside axoneme and DynAP in the existing core. The broad motile-cilium row is refined to that supported cilium type.
+
+The original cloning, sequence and ultrastructure experiments establish a noncatalytic intermediate-chain contribution to the outer-arm motor. They do not establish that DNAI1 itself generates force. The earlier motor replacement could not express the needed qualifier change and would retain the imported enables assertion. That annotation is therefore marked over-annotated, while the core retains its explicit contributes_to microtubule motor activity. The original source fields are preserved. Heavy- and light-chain binding are not substituted on the strength of intermediate-chain identification alone.
+
+The HPA cilium observation remains non-core at its measured resolution: the inspected record text does not assign the primary-cilium signal specifically to the axonemal bundle. This is a localization-resolution limit, not an inferred antibody defect or a claim that primary cilia lack axonemes. Curated UniProt statements provide short, once-only YAML anchors for CFAP52 association and the PMID:27120127 axoneme attribution. The latter original remains unavailable beyond its abstract; PMID:33139725 was independently recovered and read. The [source guide](DNAI1-source-guide.md) retains the separate original-access and organism/assay scopes.

@@ -57,3 +57,19 @@ redundant. But an earlier draft concluded it "added nothing", and **that was wro
 citation list contained PMID:40378955, which I had missed and which materially qualifies the
 framing. A concrete case where the provider's value was in its **reference list**, not its
 narrative.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- GO:0005739 rows: IEA GO_REF:0000044 ACCEPT (reason added: UniProt line ECO:0000269 to PMID:34800366 and
+  PMID:40903572, plus predicted transit peptide 1-55); HTP PMID:34800366 ACCEPT (reason added: whole-organelle
+  proteome cannot resolve the sub-compartment). Actions unchanged.
+- Added NEW GO:0005743 mitochondrial inner membrane, **IC** (original_reference_id PMID:40378955). Lines:
+  1. UniProt TRANSIT 1..55 (ECO:0000255), no TM/intramembrane segment -> imported, not an OMM anchor.
+  2. Substrate: [PMID:40378955 "In eukaryotes, it is found predominantly in the inner mitochondrial membrane"], and
+     nascent CL is made on the matrix leaflet [PMID:23637464 "how does immature CL synthesized on the matrix-facing leaflet of the IM gain access to tafazzin"].
+  3. Functional homologue yeast Cld1 is IM, matrix-facing: [PMID:23637464 "Cld1p is embedded in the IM facing the mitochondrial matrix"].
+     Caveat: [PMID:40378955 "Among the 23 mammalian ABHD proteins annotated in UniProt, ABHD4 is most closely related to Cld1 by phylogenetic analysis"],
+     so this is analogy, not orthology; corroborating only.
+- Used the generic inner-membrane term, not GO:0099617 matrix side of mitochondrial inner membrane: the leaflet is not
+  shown for ABHD18. core_functions locations left at mitochondrion (MMADHC lesson: no assay places the human activity
+  at the IMM). A protease-protection/carbonate-extraction experiment on human ABHD18 would settle it.

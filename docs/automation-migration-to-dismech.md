@@ -549,10 +549,13 @@ the live schedule. Manual `review_retry_mode` remains independent. This switch
 does not cancel requests accepted by previous sweeps.
 
 The retry sweep checks the current PR and attempt again before acting, skips
-superseded commits, completed formal verdicts, generated-page branches, and
+superseded commits, generated-page branches, and
 already running or newer reviews, and reports actions and deferrals in the
 Actions summary. Draft state, author identity, assignment, PR age, and merge
-eligibility do not suppress recovery of an already-triggered review. GitHub's
+eligibility do not suppress recovery of an already-triggered review. A formal
+approval or change request does not suppress recovery either: the verdict can
+predate a later failed run, or a job can fail after posting its verdict. The
+failed Actions check still needs recovery. GitHub's
 [rerun limits](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs)
 restrict this lane to runs less than 30 days old and below the attempt limit.
 Missing/cancelled reviews, successful runs without a verdict, and expired or

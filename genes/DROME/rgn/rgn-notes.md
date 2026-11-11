@@ -50,3 +50,29 @@ PAINT provenance: `just fetch-panther-paint PTHR23211` returned exactly one anno
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `rgn-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: re-examined all six GOA rows, the description and core functions against PMID:18485344 (full text), PMID:41935796 (abstract), the falcon deep research, the UniProt record and a new sequence analysis (`rgn-bioinformatics/rgn_architecture.py`, `RESULTS.md`, `rgn_architecture_results.json`). ProtNLM2 output was not consulted.
+
+### Identity
+- M9PFV8 (808 aa; FlyBase isoforms B/C) is the longer of the two UniProt products of rgn/CG6014 (FBgn0261258). The other, Q9Y102 (800 aa; isoforms A/D), is identical except that it lacks YVQLISNS (M9PFV8 residues 160-167) inside the CTLD. Both entries are unreviewed (TrEMBL), neither is a fragment, and both share PTHR23211:SF0. The benchmark accession is therefore a full-length gene product, not a fragment. No reviewed canonical entry exists, so the same-gene-canonical rule does not apply.
+- Architecture: signal peptide 1-23 (SignalP), CTLD 70-199 (PROSITE PS50041), long charged disordered tail (MobiDB-lite 244-808 in segments). No transmembrane segment: UniProt has no TRANSMEM feature, and a Kyte-Doolittle scan found none after residue 30.
+
+### Evolutionary placement
+- PANTHER puts Rgn in PTHR23211 "TGN38" (single subfamily SF0, together with TGOLN2/TGN38). PAINT has a single annotated node, PTN000575073 (taxon Eukaryota), with IBDs for trans-Golgi network and TGN transport vesicle, seeded by the vertebrate TGN38 proteins.
+- Rgn lacks both determinants of TGN38 localization: the TM anchor and the cytoplasmic YQRL motif. Local alignment of Rgn to TGOLN2 (score 95) and rat TGN38 (79.5) falls within the composition-matched shuffle distributions (34.5% and 12% of shuffles score as high or higher) and maps to Rgn's charged disordered region. Rgn's CTLD aligns to REG1A (161), REG3A (101) and lectin-galC1 (81) well above every shuffle; these are all PTHR22803 proteins.
+- Conclusion: no residue-level support was detected for the TGN38 grouping beyond compositional bias. This is a family-placement concern for PTHR23211 (see the PANTHER review, interpro/panther/PTHR23211/PTHR23211-review.yaml, which marks coherence UNKNOWN). Note that the CTLD similarity to REG proteins also does not make Rgn a REG ortholog. PANTHER separates them, and the McClure et al. "predicted ortholog of mammalian Reg" claim rests on BLAST of the CTLD alone.
+- The CTLD keeps its cysteines (74, 91, 174, 190, 198) but lacks the EPN/QPD and WND motifs, and UniProt's PROSITE-ProRule caution says conserved residues are missing.
+
+### Decisions (changes from the previous version)
+- GO:0005802 trans-Golgi network (IBA): UNDECIDED -> REMOVE. Propagation is bad for this target because it lacks the TM and sorting determinants, and pairwise similarity to the seeds is not above shuffles.
+- GO:0030140 TGN transport vesicle (IBA): UNDECIDED -> REMOVE, for the same reason.
+- GO:0030246 carbohydrate binding (IEA, ISS): UNDECIDED -> MARK_AS_OVER_ANNOTATED. The fold is present but lacks the sugar/Ca2+ motifs. The ISS donor DL1 is in a different PANTHER family, and no ligand has been measured.
+- GO:0042246 tissue regeneration (IEP, IMP): ACCEPT, unchanged. Supporting quotes were replaced by quotes that state the genetic requirement. GO has no more specific imaginal-disc regeneration term.
+- I proposed no NEW terms. Notch-signalling and ISC-maintenance terms from the abstract-only gut paper were not added: the mechanism is unclear, and the paper reads as a necessity phenotype rather than participation.
+- Description and core function were rewritten to state the architecture, the two isoforms, the absence of a TM segment and the unknown molecular activity.
+
+### Relative to review next
+- By PANTHER subfamily, Rgn's only experimentally characterised relatives are TGOLN2 (human O43493) and the rodent TGN38/Tgoln proteins (PTHR23211:SF0). None has a review in the repo. Given the placement concern above, TGOLN2 is a family member, not a demonstrated ortholog.
+- Modules: none found under modules/ that include rgn, TGOLN2 or imaginal-disc regeneration.

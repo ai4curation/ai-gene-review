@@ -112,3 +112,75 @@ Corrected the annotation summary/reason and supporting_text accordingly (in vitr
 binding cited; in vivo caveat stated), and refined the PMID:31283754 reference finding.
 Action remains KEEP_AS_NON_CORE (uninformative MF term; in vitro direct binding still
 supports the IPI).
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Context: requested as the experimentally characterised same-gene relative of the ProtNLM2
+benchmark fragment CAEEL/A0A061AL94 (residues 750-823 of Q95XQ8, the C-terminal WHD
+region). No ProtNLM2 output was opened or used.
+
+Folder: the task named `genes/CAEEL/mcm-4`, but this gene already has a complete review at
+`genes/worm/mcm-4`, the canonical C. elegans directory that projects/IBA_REVIEW refers to.
+`just fetch-gene CAEEL mcm-4` created a duplicate stub (3 files, never committed). I
+removed it and re-reviewed this folder instead, so Q95XQ8 keeps a single review.
+
+Inputs refreshed with `just fetch-gene worm mcm-4 --force` (UniProt entry v180, GOA 28
+rows). GOA changes since the last review: a new IBA `is_active_in nucleus`
+(PTN000179712), and the nucleus IEA now comes from GO_REF:0000120 (ARBA + SubCell)
+instead of GO_REF:0000044. The stale GO_REF:0000044 nucleus row is no longer in GOA, so I
+dropped it from the review.
+
+Deep research: `just deep-research-falcon CAEEL mcm-4 --fallback perplexity-lite` failed
+(Edison "Failed to authenticate"; the perplexity-lite fallback timed out after 600 s). The
+existing `mcm-4-deep-research-falcon.md` from the earlier review is still used. Primary
+evidence was re-read from the full text of PMID:21146520 and PMID:31283754.
+
+Evolutionary grounding:
+- PANTHER PTHR11630:SF66 (MCM4 subfamily) [UniProt DR line]. IBA nodes:
+  PTN000179711 (MCM2-7 clade: MCM complex, ssDNA binding, ssDNA helicase contributes_to),
+  PTN000179968 (eukaryotic MCM4 node, taxon:2759: strand elongation, mitotic replication
+  initiation, BIR; seeds yeast Mcm4 SGD:S000006223 [verified via SGD API = MCM4/YPR019W]
+  and S. pombe cdc21), PTN000179712 (nucleus). See interpro/panther/PTHR11630/PTHR11630-paint.tsv.
+  The IRD negations in that file are on other branches (taxon 7227 and 33511 nodes), not
+  on the MCM4 lineage.
+- ISS donor P49717 is mouse MCM4, in the same subfamily.
+- Catalytic motifs are intact (new analysis, `mcm-4-bioinformatics/motif_check_rereview.py`,
+  RESULTS-rereview.md): Walker A 469-476 GDPGTSKS, Walker B 533-536 DEFD, SRF at 601.
+
+What is experimental in C. elegans and what is inferred:
+- Experimental (PMID:21146520): nuclear localization (immunostaining, RNAi- and
+  mutant-controlled); chromatin association from late anaphase, absent from condensed
+  prophase, metaphase and meiosis I chromosomes; required for postembryonic somatic DNA
+  synthesis (BrdU/EdU; e1466 behaves as null over tDf3) and for embryonic DNA replication
+  (RNAi); cell-autonomous for DNA synthesis and endoreduplication (elt-2 rescue);
+  needed for the rnr-1/HU-induced checkpoint delay; epidermal (dpy-7) expression rescues
+  growth and viability. In vitro direct binding to NMAD-1 (PMID:31283754), not confirmed in vivo.
+- Inferred only (orthology/PAINT plus motifs): MCM2-7 complex membership as a physical
+  fact, ssDNA binding, ATP hydrolysis, ssDNA helicase contribution, and the specific
+  roles in initiation, elongation and BIR. No C. elegans biochemistry exists.
+
+Action changes from the previous review, and why:
+- BIR IBA: MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE. The IBA node placement is sound and
+  the MCM helicase does the unwinding in BIR. The only objection had been the lack of
+  worm-specific data, which is not a valid challenge to an IBA.
+- DNA binding IEA → MODIFY to ssDNA binding. DNA helicase activity (IEA and ISS) → MODIFY
+  to GO:0017116, keeping contributes_to semantics. DNA replication IEA → MODIFY to
+  mitotic replication initiation plus strand elongation. DNA replication initiation IEA →
+  MODIFY to GO:1902975. Chromosome (EXP and IEA) → MODIFY to GO:0000785 chromatin, which
+  is what the paper observes. All ancestor relations were checked with OLS
+  hierarchicalAncestors.
+- Protein binding IPI: KEEP_AS_NON_CORE → REMOVE, per the GO:0005515 policy.
+- Nervous system development, gonad development, locomotion (IMP, PMID:7262539):
+  KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED. These are downstream consequences of failed
+  DNA synthesis in dividing blast cells (necessity, not participation). Not REMOVE, because
+  the original paper is abstract-only here.
+- Core functions rewritten: contributes_to ssDNA helicase in the MCM complex (nucleus and
+  chromatin), and ATP hydrolysis. I dropped the earlier "checkpoint" core function, which
+  had been attached to the generic DNA replication term. Whether the checkpoint
+  requirement is direct signalling or simply the absence of forks to signal from is now a
+  suggested question; no GO term is proposed for it.
+
+For transfer to the fragment A0A061AL94: it covers only residues 750-823, after the AAA+
+domain (400-735). It contains none of the Walker A/B or SRF catalytic motifs, so
+catalytic or helicase claims cannot be assessed from the fragment sequence alone. Any
+transfer rests on its being the same gene (WBGene00003156).

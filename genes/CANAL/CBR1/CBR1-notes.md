@@ -9,10 +9,11 @@
   `GO:0004128 cytochrome-b5 reductase activity, acting on NAD(P)H` and
   `GO:0005886 plasma membrane` on Saccharomycetales
   `PANTHER:PTN001064671`.
-- The CBR1 activity IBA is phylogenetically sound and the broad NAD(P)H parent
-  was kept as a non-core PAINT assertion. The Candida UniProt record already
-  carries the exact RHEA-backed NADH-specific child, `GO:0090524`, so the
-  non-PAINT `GO:0004128` transfers were changed to `MODIFY -> GO:0090524`.
+- The CBR1 activity IBA is phylogenetically sound at the Saccharomycetales
+  node, but its broad NAD(P)H parent term is too general for Cbr1 because the
+  Candida UniProt record already carries the exact RHEA-backed NADH-specific
+  child, `GO:0090524`; it and the non-PAINT `GO:0004128` transfers were
+  changed to `MODIFY -> GO:0090524`.
 - C. albicans CBR1 was identified in a plasma membrane proteomics experiment,
   but the local `PMID:19824013` cache is abstract-only and does not expose the
   protein table. Following CGD's direct curation, the IDA row is kept; the IBA

@@ -184,3 +184,11 @@ review is blocked.
   GO:0102039 as the whole-system peroxidase activity that AhpF contributes to,
   but scopes AhpF's own molecular function to GO:0047134
   *protein-disulfide reductase [NAD(P)H] activity*.
+- 2026-10-16 — Reviewed E. coli ahpC (UniProtKB:P0AE08; UniProt symbol
+  `ahpC`, folder `genes/ECOLI/ahpC/`) from current GOA (33 rows). Following the
+  PSEPK ahpC precedent, the EXP and IEA GO:0102039 rows are refined to the
+  single-subunit GO:0051920 *peroxiredoxin activity*, and the core function
+  records AhpC as contributing to GO:0102039, mirroring AhpF. Added the AhpC
+  peroxide-reduction annoton to `modules/bacterial_alkyl_hydroperoxide_reductase.yaml`
+  with an AhpF-to-AhpC PROVIDES_INPUT_FOR connection, completing the
+  two-subunit module. P. aeruginosa PA3529 remains unreviewed.

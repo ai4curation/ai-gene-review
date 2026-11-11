@@ -7,10 +7,13 @@ import subprocess
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import typer
 from typing_extensions import Annotated
+
+if TYPE_CHECKING:
+    from ai_gene_review.etl.arba_match import RuleMatch
 
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
@@ -693,8 +696,12 @@ def _validate_gene_review_cli(
 def _validate_rule_review_cli(
     yaml_file: Path,
     schema_path: Path,
+    online: bool = False,
 ) -> ValidationReport:
-    """Validate one rule review with the standard LinkML CLI tools."""
+    """Validate one rule review: LinkML schema, then receipt checks.
+
+    ``online`` adds the receipt checks that query UniProt and QuickGO.
+    """
     yaml_file = yaml_file.resolve()
     schema_path = schema_path.resolve()
     report = ValidationReport(file_path=yaml_file, is_valid=True)
@@ -725,6 +732,10 @@ def _validate_rule_review_cli(
         "linkml_validate",
         cwd=project_root,
     )
+
+    from ai_gene_review.validation.rule_review_receipts import validate_rule_review_receipts
+
+    validate_rule_review_receipts(yaml_file, report, online=online)
 
     return report
 
@@ -1658,6 +1669,64 @@ def backfill_isoforms(
 
     except (ValueError, FileNotFoundError) as e:
         typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def backfill_record_sections(
+    paths: Annotated[
+        Optional[list[Path]],
+        typer.Argument(help="Review YAML files or directories (default: genes/)"),
+    ] = None,
+    fix: Annotated[
+        bool,
+        typer.Option("--fix", help="Also rewrite existing values that disagree with the cited file"),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Report what would change without writing files"),
+    ] = False,
+):
+    """Fill record_section on quotes from cached UniProt flat files.
+
+    Each supporting_text quoting a file:...-uniprot.txt record gets the
+    section(s) of the record it comes from (e.g. CC:CAUTION, CC:FUNCTION,
+    FT:BINDING, DR:Pfam). Only the new lines are written; the rest of each
+    file is left as it was. Existing values are kept unless --fix is given.
+
+    Examples:
+        ai-gene-review backfill-record-sections genes/human/TP53/TP53-ai-review.yaml
+        ai-gene-review backfill-record-sections genes/human --dry-run
+        ai-gene-review backfill-record-sections --fix
+    """
+    from ai_gene_review.tools.backfill_record_sections import backfill_file, review_files
+
+    files = review_files(paths or [Path("genes")])
+    counts = ("added", "fixed", "mismatched", "unlocated", "unsearchable", "ambiguous", "unplaceable")
+    totals = dict.fromkeys(("files",) + counts, 0)
+    failed: list[Path] = []
+    for f in files:
+        try:
+            r = backfill_file(f, fix=fix, dry_run=dry_run)
+        except ValueError as e:  # the edit would change more than record_section: skip this file
+            typer.echo(f"{f}: skipped, {e}", err=True)
+            failed.append(f)
+            continue
+        totals["files"] += int(r.changed)
+        for key in counts:
+            totals[key] += getattr(r, key)
+        if r.changed or r.mismatched:
+            typer.echo(f"{f}: added {r.added}, fixed {r.fixed}, mismatched {r.mismatched}")
+    verb = "would update" if dry_run else "updated"
+    typer.echo(
+        f"{verb} {totals['files']} of {len(files)} files: added {totals['added']}, "
+        f"fixed {totals['fixed']}; left {totals['mismatched']} mismatched, "
+        f"{totals['unlocated']} not located in the cited file, "
+        f"{totals['unsearchable']} with nothing searchable, "
+        f"{totals['ambiguous']} in more than one section, {totals['unplaceable']} unplaceable"
+    )
+    if failed:
+        typer.echo(f"{len(failed)} file(s) skipped because the edit was unsafe", err=True)
         raise typer.Exit(code=1)
 
 
@@ -2645,6 +2714,101 @@ def arba_lookup(
                 typer.echo(f"  {ann.comment_type}: {ann.text}")
 
 
+def _echo_rule_match(match: "RuleMatch") -> None:
+    """Print one rule's verdict and, when it fails, its closest condition sets."""
+    if match.matched:
+        sets = ", ".join(str(i) for i in match.matching_sets)
+        typer.echo(f"  {match.rule_id} (modified {match.rule_modified}): matches via set {sets}")
+        return
+    typer.echo(
+        f"  {match.rule_id} (modified {match.rule_modified}): no set matches; "
+        f"closest failure {match.closest_failure}"
+    )
+    for cs in match.closest_sets[:3]:
+        typer.echo(f"    set {cs.index}:")
+        for c in cs.conditions:
+            mark = "ok  " if c.holds else "FAIL"
+            neg = "NOT " if c.condition.is_negative else ""
+            values = ", ".join(cv.value for cv in c.condition.values)
+            typer.echo(f"      {mark} {neg}{c.condition.condition_type}: {values}")
+    if len(match.closest_sets) > 3:
+        typer.echo(f"    ... {len(match.closest_sets) - 3} more sets of this kind")
+
+
+@app.command()
+def arba_check(
+    accession: Annotated[str, typer.Argument(help="UniProtKB accession (e.g., Q88KS6)")],
+    rule_ids: Annotated[List[str], typer.Argument(help="One or more ARBA rule IDs")],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Scratch cache for fetched rules"),
+    ] = Path(".cache/arba"),
+):
+    """Check whether ARBA rules fire on a protein, using current UniProt data.
+
+    Rules are always fetched fresh, since ARBA serves only the current version.
+
+    Examples:
+        ai-gene-review arba-check Q88KS6 ARBA00086692
+        ai-gene-review arba-check Q88KS6 ARBA00086692 ARBA00028620
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+    from ai_gene_review.etl.arba_match import UniProtFeatureClient, evaluate_rule
+
+    protein = UniProtFeatureClient().proteins([accession]).get(accession)
+    if protein is None:
+        typer.echo(f"{accession} not found in UniProtKB", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(f"{accession} (taxon {protein.taxon_id}, UniProt {protein.uniprot_release})")
+    client = ARBAClient(cache_dir=cache_dir)
+    for rule_id in rule_ids:
+        rule = client.fetch_rule(rule_id, use_cache=False)
+        if rule is None:
+            typer.echo(f"  {rule_id}: not found in ARBA")
+            continue
+        _echo_rule_match(evaluate_rule(rule, protein.features))
+
+
+@app.command()
+def arba_check_goa(
+    goa_file: Annotated[Path, typer.Argument(help="GOA TSV, e.g. genes/PSEPK/PP_2213/PP_2213-goa.tsv")],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Scratch cache for fetched rules"),
+    ] = Path(".cache/arba"),
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show condition detail for matching rows too"),
+    ] = False,
+):
+    """Check each ARBA row (GO_REF:0000117) of a GOA file against the rule it cites.
+
+    A row whose rule no longer matches is reported as RULE_EDITED_SINCE_LOAD
+    when the rule's modifiedDate is later than the row's GOA date, since ARBA
+    serves only the current rule version; only MISMATCH rows are candidates
+    for a misapplied rule.
+
+    Examples:
+        ai-gene-review arba-check-goa genes/PSEPK/PP_2213/PP_2213-goa.tsv
+    """
+    from collections import Counter
+
+    from ai_gene_review.etl.arba import ARBAClient
+    from ai_gene_review.etl.arba_match import UniProtFeatureClient, check_goa_file
+
+    checks = check_goa_file(goa_file, ARBAClient(cache_dir=cache_dir), UniProtFeatureClient())
+    if not checks:
+        typer.echo(f"No ARBA rows in {goa_file}")
+        return
+    for check in checks:
+        typer.echo(f"{check.status}  {check.accession}  {check.go_id} {check.go_name}  (loaded {check.load_date})")
+        if verbose or check.status != "MATCH":
+            for match in check.matches:
+                _echo_rule_match(match)
+    counts = Counter(c.status for c in checks)
+    typer.echo("\n" + ", ".join(f"{k}: {v}" for k, v in sorted(counts.items())))
+
+
 @app.command()
 def arba_search(
     query: Annotated[
@@ -3096,10 +3260,20 @@ def rules_validate(
         bool,
         typer.Option("--verbose", "-v", help="Show detailed messages including warnings"),
     ] = False,
+    online: Annotated[
+        bool,
+        typer.Option(
+            "--online",
+            help="Also check receipts against UniProt and QuickGO (alleged false positives, stale rules)",
+        ),
+    ] = False,
 ):
-    """Validate rule review YAML files against the LinkML schema.
+    """Validate rule review YAML files: schema, then receipt checks.
 
-    Validates RuleReview files for schema compliance with the RuleReview class.
+    Validates RuleReview files for schema compliance, then checks that the
+    verdict carries receipts (see docs/rule_review_receipts.md): recorded
+    condition sets, identifier labels that match the official names, sources
+    that exist, and a named wrongly annotated protein behind a DEPRECATE.
 
     Examples:
         # Validate a specific review
@@ -3134,7 +3308,7 @@ def rules_validate(
     schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = _validate_rule_review_cli(yaml_file, schema_path)
+        report = _validate_rule_review_cli(yaml_file, schema_path, online=online)
 
         if report.is_valid:
             valid_count += 1
@@ -3738,6 +3912,45 @@ def fetch_descriptions_bulk(
 
 
 @app.command()
+def mod_description_deep_research(
+    organism: Annotated[
+        str, typer.Argument(help="Organism name (e.g., worm, fly, yeast, mouse)")
+    ],
+    genes: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="Gene folder name(s) (default: every gene of the organism)"),
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Write even when the Alliance record names a different gene"),
+    ] = False,
+    delay: Annotated[
+        float,
+        typer.Option("--delay", "-d", help="Delay between API calls in seconds"),
+    ] = 0.3,
+):
+    """Write each gene's curated MOD description as GENE-deep-research-<mod>.md.
+
+    The file is a verbatim copy of the MOD's hand-written gene description
+    (Alliance MOD_provided_gene_description); judge it in the review's
+    references[].reference_review.
+
+    Examples:
+        ai-gene-review mod-description-deep-research worm fshr-1
+        ai-gene-review mod-description-deep-research worm
+    """
+    from ai_gene_review.etl.mod_description_deep_research import emit_organism
+
+    results = emit_organism(organism, genes=genes, force=force, delay=delay)
+    for status, names in sorted(results.items()):
+        typer.echo(f"{status}: {len(names)}")
+        if status in ("blocked", "error"):
+            typer.echo("  " + ", ".join(names))
+    if results.get("blocked") or results.get("error"):
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def descriptions_status(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., yeast, human)")
@@ -4091,6 +4304,119 @@ def gocam_index(
     index = build_gene_index(cache_dir=cache_dir)
     n_rows = len(index.read_text().strip().splitlines()) - 1
     typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def gocam_compartments(
+    model_ids: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="GO-CAM model ids (default: every cached model)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    ontology: Annotated[
+        str,
+        typer.Option("--ontology", help="oaklib handle for GO (e.g. sqlite:obo:go, simpleobo:go-basic.obo)"),
+    ] = "sqlite:obo:go",
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write the YAML report here instead of stdout"),
+    ] = None,
+    all_rows: Annotated[
+        bool,
+        typer.Option("--all-rows", help="Report every location and edge, not only problems"),
+    ] = False,
+    modules_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--modules-dir",
+            help="Modules whose gocam_associations pins can explain non-adjacent edges ('' to skip)",
+        ),
+    ] = Path("modules"),
+    genes_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--genes-dir",
+            help="Gene folders giving known protein locations for regulation edges ('' to skip)",
+        ),
+    ] = Path("genes"),
+):
+    """Check GO-CAM activity locations against a disjoint compartment model.
+
+    Flags `occurs_in` terms that no is_a/part_of path places in a distinct
+    compartment (e.g. chromatin), and causal edges between activities in
+    compartments that share no boundary (e.g. cytosol -> extracellular region).
+    A non-adjacent edge is EXPLAINED when a module pinned to both activities has
+    a path through a transport step, and RELOCATING when it regulates a protein
+    known (from its gene folder) to sit next to the regulator.
+    The compartment set and adjacency live in
+    src/ai_gene_review/data/gocam_compartments.yaml; see
+    projects/GOCAM_COMPARTMENTS.md.
+
+    Examples:
+        ai-gene-review gocam-compartments 59cc772c00000000 600ced8500002343
+        ai-gene-review gocam-compartments -o reports/gocam-compartments.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.etl.gocam import normalize_gocam_id
+    from ai_gene_review.gocam_compartments import (
+        CompartmentModel,
+        ProteinLocationIndex,
+        check_cached_models,
+        iter_cached_models,
+        oak_ancestor_fn,
+        summarize,
+    )
+    from ai_gene_review.gocam_module_bridges import ModuleBridgeIndex
+
+    if model_ids:
+        paths = []
+        for mid in model_ids:
+            bare = normalize_gocam_id(mid)
+            p = cache_dir / bare / f"{bare}-src.yaml"
+            if not p.exists():
+                raise typer.BadParameter(f"model not cached: {p} (run fetch-gocam first)")
+            paths.append(p)
+    else:
+        paths = list(iter_cached_models(cache_dir))
+    ancestors = oak_ancestor_fn(ontology)
+    cm = CompartmentModel.load()
+    explainer = (
+        ModuleBridgeIndex.from_dir(modules_dir).explain
+        if modules_dir and str(modules_dir) not in ("", ".")
+        else None
+    )
+    protein_locations = (
+        ProteinLocationIndex(genes_dir, cm, ancestors)
+        if genes_dir and str(genes_dir) not in ("", ".")
+        else None
+    )
+    reports = check_cached_models(paths, ancestors, cm, explainer, protein_locations)
+    doc = {
+        "summary": summarize(reports),
+        "models": [
+            r.to_dict(all_rows=all_rows)
+            for r in reports
+            if all_rows or r.unresolved or r.nonadjacent or r.relocating or r.explained
+        ],
+    }
+    text = _yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=120)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text)
+        s = doc["summary"]
+        typer.echo(
+            f"✓ Wrote {output}: {s['n_models']} models, "
+            f"{s['n_models_with_unresolved']} with unresolved locations, "
+            f"{s['n_models_with_nonadjacent']} with unexplained non-adjacent causal edges, "
+            f"{s['n_models_with_relocating']} with relocating, "
+            f"{s['n_models_with_explained']} with module-explained"
+        )
+    else:
+        typer.echo(text)
 
 
 @app.command()

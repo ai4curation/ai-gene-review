@@ -27,3 +27,54 @@ Telomerase assembly is supported at ring level by [PMID:29422501]: "Co-immunopre
 The Falcon report and its structural evidence summary were inspected. It correctly distinguishes recombinant Lsm5/6/7 hexamers from physiological heteroheptamers, but its absence-of-complete-target-ring-evidence claim is incomplete: PMID:32518066 directly reconstitutes S. pombe Lsm1-7 and Lsm2-8. The primary full text was inspected.
 
 Additional structural-source check: the [publisher article PDF mirrored by Georgia Tech](https://williams.chemistry.gatech.edu/course_Information/2024_3521_Spring/papers/Yan_2015_spliceosome.pdf) was inspected. Its main text describes heptameric Sm rings at U2 and U5. The accessible main text of PMID:26292707 describes Sm rings associated with U2 and U5, while fission yeast Lsm6 is experimentally established in Lsm RNA-binding rings. The exact protein identities and contacts underlying the PomBase U2/U5 assignment require resolution against the supplementary models and chain mappings. The broader spliceosome context is compatible with Lsm6 function, but it does not by itself settle this precise RNA or particle assignment. The experimental assignments remain UNDECIDED.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: Q9UUI1 is the canonical, Swiss-Prot reviewed, full-length (75 aa) lsm6 product
+(SPAC2F3.17c); not an isoform, fragment or alternative gene model. Single Sm domain
+(IPR047575, PF01423), Lsm6/SmF entry IPR016487. PANTHER PTHR11021:SF1 (U6 snRNA-associated
+Sm-like protein LSM6), the same subfamily as S. cerevisiae LSM6 (Q06406), human LSM6
+(P62312) and mouse Lsm6 (P62313) (interpro/panther/PTHR11021/PTHR11021-entries.csv). The SmF
+branch (smf1, SPBC3E7.14) is a separate subfamily of the same family. The family review
+(interpro/panther/PTHR11021/PTHR11021-review.yaml) agrees on SF1 placement and already warns that
+Lsm6 should not inherit U2/U5 membership from SmF; no disagreement.
+
+Main change: the three PomBase annotations from PMID:26292707 (U2 snRNA binding IDA, U2 snRNP
+EXP, U5 snRNP IDA), previously UNDECIDED, are now REMOVE with a PROBABLE source defect.
+Evidence: lsm6-bioinformatics/check_3jb9_composition.py (new; RESULTS-rereview.md). The PDB 3JB9 model of
+that paper contains 27 S. pombe proteins including smf1 and all seven Sm proteins, but no Lsm
+protein. Lsm6 is not cross-referenced to 3JB9. smf1 carries no annotation citing the paper. So this
+is a deposited-model argument, not a title-based one. The likely cause is a SmF to Lsm6 mix-up; it
+is flagged for PomBase to check (requested_change CHECK, corrected_value smf1).
+
+Other changes:
+- GO:0005515 protein binding (Lsm5, Lsm7 IPI) KEEP_AS_NON_CORE -> REMOVE (protein-binding policy;
+  ring packing is captured by the complex terms). The old reason wrongly mentioned "nuclease".
+- RNA binding (IBA, IEA) ACCEPT -> MODIFY to poly(U) RNA binding (already IDA).
+- Sm-like protein family complex (ARBA) ACCEPT -> MODIFY to Lsm2-8 complex / Lsm1-7-Pat1 complex.
+- NEW contributes_to GO:0030629 U6 snRNA 3'-end binding (PMID:32518066 S. pombe Lsm2-8 structures with
+  U6 3' cyclic-phosphate RNA). Used as the core MF for the Lsm2-8 function.
+- Added a separate core function for the fission-yeast telomerase holoenzyme role (PMID:35277511,
+  PMID:29422501).
+- Nucleolus, snoRNP and SSU-rRNA maturation IBAs (PTN000111600, budding-yeast LSM6 donor) are kept
+  as non-core. The node is the Lsm6 branch containing the target; there is no fission yeast data.
+- PAINT did not propagate decapping or mRNA decay terms to the Lsm6 node. I treat that omission
+  as deliberate: no NEW decapping process term, raised as a suggested question instead.
+
+Relative to review next: S. cerevisiae LSM6 (Q06406, YDR378C, SGD:S000002786), which is in the same
+PANTHER subfamily SF1 and is the donor for the Lsm6-node IBAs. No review exists in the repo
+(no genes/yeast/LSM6). Human LSM6 (P62312) is also unreviewed.
+
+Modules: none in modules/ model the Lsm2-8 or Lsm1-7 rings. modules/dmel_spliceosome.yaml
+mentions the U6-associated LSm ring only in passing (Drosophila).
+
+## 2026-10-21: PR #5306 review follow-up
+
+The three PMID:26292707 rows (GO:0030620 U2 snRNA binding IDA, GO:0005686 U2 snRNP EXP,
+GO:0005682 U5 snRNP IDA) are returned from REMOVE to UNDECIDED. The PDB 3JB9 cross-reference
+check shows what was modelled, not the full particle composition or the paper's
+compositional data, and the cached publication is abstract-only; RESULTS-rereview.md and the
+source defect (CHECK, PROBABLE) already say this is a query rather than a certainty. The
+source defect proposing smf1 as the intended gene product is kept unchanged as the vehicle
+for the correction. The PMID:26292707 reference_review is changed from NONE/MISCITED to
+LOW/DISPUTED to match.

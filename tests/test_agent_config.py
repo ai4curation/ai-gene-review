@@ -82,6 +82,19 @@ def test_matrix_mode_round_trips():
     ]
 
 
+@pytest.mark.parametrize("turns", [0, -5, "40 --foo", True, 4.5])
+def test_matrix_rejects_invalid_max_turns(turns):
+    cfg = {"workflows": {"x": {"matrix": [{"model": "m", "max_turns": turns}]}}}
+    with pytest.raises(resolver.ConfigError):
+        resolver.resolve_matrix(cfg, "x")
+
+
+def test_curation_scanner_tiers_set_max_turns(config):
+    """The workflow interpolates `matrix.max_turns`; every tier must define it."""
+    matrix = resolver.resolve_matrix(config, "curation-scanner")
+    assert all(isinstance(entry.get("max_turns"), int) for entry in matrix)
+
+
 def test_single_model_mode_rejects_matrix_workflow():
     cfg = {"workflows": {"fan-out": {"matrix": [{"model": "claude-opus-5"}]}}}
     with pytest.raises(resolver.ConfigError):

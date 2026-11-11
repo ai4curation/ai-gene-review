@@ -48,3 +48,28 @@
 - plasma membrane (GO:0005886) EXP PMID:18566107 — CK-B co-localizes with KCC3 at membrane microcompartment; KEEP_AS_NON_CORE (peripheral/recruited, not a transmembrane protein).
 - extracellular exosome (GO:0070062) HDA, extracellular region (GO:0005576/IBA/ISS), extracellular space — CKB detected in exosomes/secretome (proteomic). KEEP_AS_NON_CORE (real proteomic detection but not the functional compartment); the IBA extracellular_region is questionable for a cytosolic enzyme → MARK_AS_OVER_ANNOTATED for the IBA/ISS extracellular_region (likely over-propagation), KEEP exosome HDA as non-core.
 - substantia nigra development (GO:0021762) HEP PMID:22926577 — differential expression in a substantia nigra proteomic disease study; HEP from an abstract about differential protein expression in neurodegenerative disease does not establish a developmental role. MARK_AS_OVER_ANNOTATED.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 IEA GO_REF:0000120 (Q04447 + SL-0173), ISS GO_REF:0000024 located_in,
+ISS GO_REF:0000024 is_active_in (all from mouse Q04447). No sub-compartment rows.
+
+- Source check (QuickGO, 2026-10-25): mouse Q04447 has is_active_in GO:0005739 IDA
+  PMID:33597756 (UniProt) and four MGI HDA rows from PMID:14651853 (mitochondrial proteomics).
+- PMID:33597756 (Rahbani et al. 2021, fetched; full text) is strong organelle evidence:
+  "FLAG was internalized into mitochondria in vivo, as determined by its protection from
+  proteolysis, whilst CANX, TOM70 and PMP70 were completely degraded"; "In BAT, ~10% of the
+  total CKB pool was internalized by mitochondria, a substantially greater (~30-fold) amount
+  than other CKB-expressing tissues"; activity in protease-treated mitochondria is lost in
+  Ckb-null cells and restored by CKB-WT but not the iMTS-L deletion ("Notably, creatine
+  kinase activity was re-established in Ckb−/− adipocyte mitochondria following CKBWT, but
+  not CKBΔiMTS-L, expression"). CANX degradation rules out MAM contamination.
+- UniProt [file:human/CKB/CKB-uniprot.txt "Localizes to the mitochondria of thermogenic fat
+  cells via the internal MTS-like signal (iMTS-L) region."] (ECO:0000250 from Q04447).
+- Outcome: all three rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (ADO precedent: a
+  tissue-restricted, well-evidenced minor pool of a mainly cytosolic protein). Added
+  PMID:33597756 to references.
+- is_active_in: activity in the organelle IS shown for mouse (CK activity in protected
+  mitochondria); not shown for human.
+- Rule 4: stay at root. Protease protection shows the protein is inside the outer membrane
+  but does not resolve IMS from matrix; no TM, no cleavable presequence.

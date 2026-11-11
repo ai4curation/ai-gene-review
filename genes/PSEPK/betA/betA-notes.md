@@ -59,3 +59,8 @@ KT2440 protein.
   authored core process now use GO:0031456 (glycine betaine biosynthetic process), the
   term the bacterial_choline_to_glycine_betaine_biosynthesis module grounds the same
   step on. The evidence and reasoning are unchanged.
+
+## 2026-11-03 completion pass (choline-to-glycine-betaine module)
+- GO:0008802 (NAD+ betaine-aldehyde dehydrogenase) changed UNDECIDED -> REMOVE. The term is NAD+-specific, and BetA is a respiratory-chain-linked flavoprotein. Purified E. coli BetA "failed to further oxidize betaine aldehyde to betaine" [PMID:39510372]. A. baumannii BetA "also mediates in vitro the oxidation of glycine betaine aldehyde to glycine betaine", but as a flavoprotein "donating electrons into the respiratory chain" [PMID:34431198]. Recorded as a HAMAP MF_00750 source defect; same call on E. coli P17444.
+- Generic rows (membrane, GO:0016491, GO:0016614) changed to MODIFY, toward GO:0005886 and GO:0008812, consistent with E. coli BetA.
+- Status set to COMPLETE.

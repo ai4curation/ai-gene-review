@@ -41,3 +41,8 @@ Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230.
 - Do not promote choline specificity into the reviewed annotations or core
   function until a directly checkable source or substrate assay is available.
 - Keep choline uptake as the leading locus-based hypothesis.
+
+## 2026-11-03 completion pass
+- Every row now cites vetted support (Phobius TM helices, InterPro/NCBIfam BCCT signatures). Membrane changed MARK_AS_OVER_ANNOTATED -> MODIFY to plasma membrane.
+- Substrate stays neutral. PTHR30047:SF7, where BetT-I is classified, mixes choline (E. coli BetT, Acinetobacter BetT1/BetT2), glycine betaine (BetP, OpuD, BetL), ectoine (EctP, EctT) and trimethylamine (TmaT) carriers, so family or subfamily membership does not predict choline.
+- Status set to COMPLETE. The module keeps BetT-I out of its choline-specific selector.

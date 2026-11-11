@@ -864,42 +864,100 @@ def test_validate_module_file_flags_bad_conformance(tmp_path):
     )
 
 
+def _umbrella_doc(module_ref: str) -> dict:
+    return {
+        "id": "MODULE:umbrella",
+        "title": "umbrella",
+        "module": {
+            "id": "umbrella",
+            "label": "umbrella",
+            "parts": [{"node": {"id": "stage", "label": "stage", "module_ref": module_ref}}],
+        },
+    }
+
+
+def test_validate_module_file_accepts_resolvable_module_ref(tmp_path):
+    (tmp_path / "leaf.yaml").write_text(
+        yaml.safe_dump({"id": "MODULE:leaf", "title": "leaf",
+                        "module": {"id": "leaf", "label": "leaf"}}),
+        encoding="utf-8",
+    )
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc("leaf")), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not [e for e in result.errors if "module_ref" in e], result.errors
+
+
+@pytest.mark.parametrize(
+    ("module_ref", "message"),
+    [("no_such_module", "not found"), ("umbrella", "cycle: umbrella -> umbrella")],
+)
+def test_validate_module_file_flags_bad_module_ref(tmp_path, module_ref, message):
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc(module_ref)), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not result.is_valid
+    assert any("module_ref [stage" in e and message in e for e in result.errors), result.errors
+
+
 # --------------------------------------------------------------------------- #
 # supporting_text snippet validation
 # --------------------------------------------------------------------------- #
 
 from ai_gene_review.validation.module_validator import (  # noqa: E402
-    iter_evidence_snippets,
     validate_supporting_text,
 )
 
 PUBLICATIONS_DIR = PROJECT_ROOT / "publications"
 
 
-def test_iter_evidence_snippets_only_literature_with_text():
-    """Only PMID/DOI EvidenceItems carrying a non-empty quote are yielded."""
+def test_validate_supporting_text_reports_unreadable_sources_as_unchecked():
+    """A quote citing a source with no readable text is reported, not silently passed (#6021)."""
     doc = {
         "module": {
-            "annotons": [
-                {
-                    "evidence": [
-                        {"source_id": "PMID:123", "supporting_text": "a real quote"},
-                        {"source_id": "GO:0001", "supporting_text": "grounding, skip"},
-                        {"source_id": "PMID:999", "statement": "no quote here"},
-                        {"source_id": "DOI:10.1/x", "supporting_text": "doi quote"},
-                    ]
-                }
+            "evidence": [
+                {"source_id": "GO:1", "supporting_text": "x"},
+                {"source_id": "url:https://example.org", "supporting_text": "y"},
             ]
         }
     }
-    got = sorted(iter_evidence_snippets(doc))
-    assert got == [("DOI:10.1/x", "doi quote"), ("PMID:123", "a real quote")]
-
-
-def test_validate_supporting_text_no_literature_is_noop():
-    doc = {"module": {"evidence": [{"source_id": "GO:1", "supporting_text": "x"}]}}
     errors, warnings = validate_supporting_text(doc)
-    assert errors == [] and warnings == []
+    assert errors == []
+    assert len(warnings) == 1
+    assert "2 supporting_text quote(s)" in warnings[0] and "not verified" in warnings[0]
+
+
+TP53_UNIPROT = "file:human/TP53/TP53-uniprot.txt"
+BDH1_REACTION = "Reactome:R-HSA-73912"
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        # EvidenceItem.source_id, the slot #6021 found unchecked for local sources.
+        lambda item: {"module": {"evidence": [{"source_id": item[0], "supporting_text": item[1]}]}},
+        # knowledge_gaps[].provenance uses reference_id, which was never read at all.
+        lambda item: {"module": {"knowledge_gaps": [{"provenance": [
+            {"reference_id": item[0], "supporting_text": item[1]}]}]}},
+        # references[].findings inherit the reference id.
+        lambda item: {"references": [{"id": item[0], "findings": [{"supporting_text": item[1]}]}]},
+    ],
+    ids=["source_id", "reference_id", "findings"],
+)
+@pytest.mark.parametrize(
+    "reference_id,quote,ok",
+    [
+        (TP53_UNIPROT, "Nucleus. Cytoplasm. Note=Predominantly nuclear but localizes to the cytoplasm", True),
+        (TP53_UNIPROT, "TP53 is a fabricated sentence that is in no UniProt record", False),
+        (BDH1_REACTION, "catalyzes the reversible reaction of acetoacetate with NADH + H+ to form", True),
+        (BDH1_REACTION, "an invented Reactome summary", False),
+        ("file:human/NO_SUCH_GENE/NO_SUCH_GENE-uniprot.txt", "anything", False),
+    ],
+)
+def test_validate_supporting_text_checks_local_sources_in_modules(location, reference_id, quote, ok):
+    """file:/Reactome: quotes in modules are checked in every slot that can carry one."""
+    errors, _ = validate_supporting_text(location((reference_id, quote)))
+    assert (errors == []) is ok, errors
 
 
 def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):

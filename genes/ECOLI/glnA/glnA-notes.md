@@ -1,0 +1,21 @@
+# E. coli K-12 ammonia-assimilation review
+
+## 2026-10-27 evidence assessment
+
+Original annotation payloads and both raw source files were snapshotted before review. The three-gene panel contains 50 existing rows; no NEW row is introduced. Provider research and fitness attempts are recorded in the shared ammonia acquisition logs. No generated provider text was fabricated or substituted for primary evidence.
+
+GlnA is an ATP-dependent glutamine synthetase. Native E. coli enzyme purification is explicit in the accessible PMID:6102984 abstract: “We used the PEG procedure to purify GS from Klebsiella aerogenes, K. pneumoniae, Escherichia coli”. The PMC landing acquisition is abstract plus references, not recovered full methods. The target UniProt FUNCTION/CATALYTIC ACTIVITY and homooligomeric architecture are curated orthology transfers. They support established chemistry without being mislabeled as new native kinetic measurements. The relevant broad catalytic, glutamine-metabolic and nitrogen-utilization rows refine to glutamine synthetase, L-glutamine biosynthesis and the existing ammonia-assimilation-cycle term.
+
+Native cytosol experiments (PMID:15911532, PMID:16858726 and full PMID:18304323) agree with curated cytoplasmic localization. The latter reports 1103 proteins from MC4100 cytosol; its target-specific supplemental spreadsheets could not be recovered (HTML challenges). Existing coherent experimental location claims are retained with that limit stated. No absence of membrane-spanning helices is used to exclude peripheral attachment.
+
+The membrane HDA source PMID:16858726 is abstract-only and does not resolve the actual GlnA fraction or carryover. Actual PTHR43407 PAINT evidence places the membrane IBD at PTN000464923, seeded by mouse MGI:2672844/Lgsn; authoritative identity and full PMID:18178558 were checked in the PSEPK source-tracing package. Mouse lens-fiber/cytoskeletal membrane localization is not a bacterial GS assay. Both membrane rows remain UNDECIDED, with no experimental REMOVE based on inaccessible full text.
+
+PMID:27718375 explicitly includes glnA in radiation-sensitive native K-12 Keio mutants. Keep response to radiation as non-core. The abstract supports this phenotype but does not identify GlnA as a DNA repair enzyme or resolve the particular radiation subtype. Functional GS homooligomerization supports identical-protein binding, distinct from uninformative generic binding.
+
+## 2026-10-28 — PR #5696 direct structural evidence
+
+The earlier description of the oligomeric evidence as only an orthology transfer was incomplete. The UniProt CC:SUBUNIT sentence is indeed transferred from P0A1P6, but the same immutable target record lists PDB 8V22, a 2.20-Angstrom cryo-EM structure mapped to all 469 residues of P0A9C5. The normally retrieved [RCSB deposition](https://www.rcsb.org/structure/8V22) assigns an author-defined D6 homo-12-mer biological assembly and links primary PMID:40849408. Full-text GlnA results, expression/purification and cryo-EM methods were read; the paper directly reconstructs recombinant AMPylated E. coli GlnA as a dodecamer, despite its title foregrounding mammalian mitochondrial AMPylation.
+
+The 8V22 polymer entity has 474 residues. Its [RCSB polymer-entity API](https://data.rcsb.org/rest/v1/core/polymer_entity/8V22/1) maps residues 6-474 to UniProt residues 1-469 by SIFTS. Direct comparison with the immutable target UniProt sequence confirms exact identity across all 469 residues and an additional N-terminal SEFEL segment. No target mutation is present. API responses and the sequence-identity proof are retained in `.cache/module-audit-logs/pr5696-glna-followup/`. The structure is therefore direct evidence for the target protein, with a documented recombinant construct extension.
+
+PMID:40849408 reports expression from GlnA ppSumo in BL21, purification of AMPylated protein, removal of the His-SUMO tag, and cryo-EM reconstruction of its assembly. This supports the description's two-ring dodecamer and the existing GO:0042802 ACCEPT decision. It is not an in-cell K-12 stoichiometry measurement, a localization assay, or a basis to annotate the engineered hinT H101N enrichment interaction as a physiological GlnA function. The two membrane decisions remain UNDECIDED. No new annotation is proposed.

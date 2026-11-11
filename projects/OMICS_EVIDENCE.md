@@ -220,8 +220,9 @@ The data and the curators are the same. The difference is the inference step.
    you the provenance, and the use tells you how much the data support.
 2. **Location rows:** accept localization screens and confidence-scored organelle
    proteomes. Keep vesicle and body-fluid rows as non-core unless the protein is a known
-   vesicle component. Prefer a specific membrane over `membrane`, and reject the
-   generic term for proteins with no membrane anchor.
+   vesicle component. Prefer a specific membrane over `membrane`. Assess target-specific evidence for
+   peripheral or transient association as well as membrane anchors; lack of an anchor
+   alone does not establish that a membrane localization claim is over-annotated.
 3. **Function rows:** ask whether the assay measured the activity. If it did not, and the
    function is inferred from co-location or co-purification, treat the row as
    over-annotated unless independent evidence exists. If it did (crosslinking, binding
@@ -319,7 +320,10 @@ The data and the curators are the same. The difference is the inference step.
    experimental cell-surface or plasma-membrane pool (HSPD1, ATP5F1A/B, CALR, GOT2, P4HB; LMAN2 and
    SYNE2 in pass 1) also stay KEEP_AS_NON_CORE, since small EVs budding from the plasma membrane can
    carry that pool, and the same holds for secreted proteins with such a pool (SMPD1, LPO here;
-   C3, CLU and NEU1 in pass 1). 71 rows in 43 genes
+   C3, CLU and NEU1 in pass 1). The surface-pool rule does not override category 3b:
+   RACK1 and RPS3 have experimental plasma-membrane rows, but MISEV2018 lists ribosomal
+   proteins as co-isolated aggregates, and a transient membrane-recruited pool does not make
+   the aggregate an EV component, so their rows stay MARK_AS_OVER_ANNOTATED. 71 rows in 43 genes
    changed
    ([`decisions_settled.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions_settled.yaml)):
 
@@ -423,6 +427,39 @@ The data and the curators are the same. The difference is the inference step.
 
 ## Session notes
 
+### 2026-10-26: FKBP5 membrane reassessment in the androgen audit
+
+The FKBP5 `GO:0016020 membrane` review in PR #5554 now explicitly supersedes the
+2026-10-10 manual `KEEP_AS_NON_CORE` → `MARK_AS_OVER_ANNOTATED` decision with
+`UNDECIDED`. The original provenance is retained in the gene's rationale.
+PMID:19946888 reports an NK-cell membrane fraction that includes proteins predicted
+to associate transiently with membranes. Its accessible abstract does not establish
+FKBP5's target-specific identification, enrichment or contamination controls, and
+the publisher full text was unavailable. The unresolved question is biological
+membrane association, which does not require an integral membrane anchor. This is
+a source-specific reassessment, not a rule applied to other soluble proteins.
+The location checklist is clarified accordingly; historical audit counts above
+remain snapshots of their original sessions.
+
+### 2026-10-17: optional follow-ups from the final automated review
+
+Three suggestions from the review that approved the merged PR, none of which changes a
+decision:
+
+- The page now says that the surface-pool rule does not override category 3b (RACK1,
+  RPS3).
+- The positive `CAT5_BOUND` check now requires a directly assayed GOA row (EXP, IDA, IMP
+  or IPI), matching the "(IDA)" its bases cite; the negative `CAT5` check keeps the wider
+  evidence set, which is the conservative direction there. All ten genes still pass.
+- `CAT3B`'s "ribosomal protein" is now checked against GO (ribosome or structural
+  constituent of ribosome). RPS3 and RACK1 pass. Category 2a's "lipid or membrane-protein
+  binding" half is the one template clause still taken on trust.
+
+Re-running the first pass on current `main` reports three files (AHCY, CTNNB1, CUL3) whose
+vesicle-row text has been rewritten by later reviews, CUL3's with row-level evidence from
+the urinary-exosome database. Their actions all still match this project's decisions, so
+they are left as the later curators wrote them, not reverted to the template text.
+
 ### 2026-10-12: fourth round of automated-review fixes
 
 The reviewer found one category-5 protein the GOA check had missed: GM2A, whose lipid
@@ -511,8 +548,9 @@ deposition, EXP ×5), CLU (receptor-bound, IDA), SMPD1, LPO and NEU1 now share a
 three rows move from UNDECIDED, CLU's four from ACCEPT and NEU1's two from
 MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. The category-5 template now also states that the
 protein's review keeps no experimental surface pool, which the script checks. Two template
-clauses are still taken on trust: the "lipid or membrane-protein binding" half of
-category 2a, and category 3b's "ribosomal protein" (RPS3, RACK1).
+clauses were then still taken on trust: the "lipid or membrane-protein binding" half of
+category 2a, and category 3b's "ribosomal protein" (RPS3, RACK1). The second is now
+checked (see the 2026-10-17 note); the first remains on trust.
 
 ### 2026-10-10: third round of automated-review fixes
 

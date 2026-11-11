@@ -16,6 +16,14 @@ coverage problem, not a discovery. Three distinct mechanisms account for the thr
 flagship examples — verified against the live InterPro API and the current InterPro2GO
 release (`!version date: 2025/09/01`).
 
+**Current status of the three examples (review snapshot 2026-10-24).** Only A2FPI7
+DNA binding is still COR. The rescoring judges correctness for the deposited sequence.
+On that basis the OLFML2A record A0A8C9H4D2, a short isoform without a signal peptide,
+is NPI for extracellular matrix and UNC for matrix organization, and both MCM-4
+A0A061AL94 predictions, made on a 74-residue C-terminal fragment, are UNC. The
+mechanisms below still explain why these terms are absent from GOA; they do not by
+themselves make the predictions correct.
+
 ## The three mechanisms
 
 ### 1. No InterPro2GO mapping exists for the domain — olfactomedin (A0A8C9H4D2 / OLFML2A)

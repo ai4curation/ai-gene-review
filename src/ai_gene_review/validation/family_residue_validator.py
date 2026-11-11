@@ -38,7 +38,11 @@ tandem repeat needs alignment- or structure-level checking. See
 
 from __future__ import annotations
 
+import http.client
 import json
+import ssl
+import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -53,6 +57,16 @@ if TYPE_CHECKING:  # annotation only; the runtime import lives in _panther_index
     from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
+
+
+def _retryable_uniprot_error(exc: Exception) -> bool:
+    """Limit retries to transient HTTP and network/read failures."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in {408, 429, 500, 502, 503, 504}
+    if isinstance(exc, urllib.error.URLError):
+        # Certificate/configuration errors will not improve after a short wait.
+        return not isinstance(exc.reason, (ssl.SSLError, PermissionError))
+    return isinstance(exc, (TimeoutError, ConnectionError, http.client.IncompleteRead))
 
 
 class Outcome(str, Enum):
@@ -90,6 +104,41 @@ class ResidueCheck:
         )
 
 
+class InactiveEntryError(LookupError):
+    """Raised when UniProtKB returns an inactive (deleted/merged/demerged) entry.
+
+    Such a record carries no sequence. This is a property of the cited accession, not a
+    retrieval failure, so callers report it as a FAIL on the claim that cites it rather
+    than letting one stale accession stop validation of every other family.
+    """
+
+    def __init__(self, accession: str, data: dict) -> None:
+        self.accession = accession
+        reason = data.get("inactiveReason") or {}
+        self.reason_type = reason.get("inactiveReasonType") or data.get("entryType") or "INACTIVE"
+        self.detail = reason.get("deletedReason") or ""
+        self.merged_into = list(reason.get("mergeDemergeTo") or [])
+        super().__init__(self.describe())
+
+    def describe(self) -> str:
+        """Human-readable explanation, for use in a check message.
+
+        >>> InactiveEntryError("C0H4F3", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "DELETED",
+        ...     "deletedReason": "Deleted from sequence source (ENSEMBL)"}}).describe()
+        'accession C0H4F3 is inactive in UniProtKB (DELETED: Deleted from sequence source (ENSEMBL))'
+        >>> InactiveEntryError("P1", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "MERGED", "mergeDemergeTo": ["P2"]}}).describe()
+        'accession P1 is inactive in UniProtKB (MERGED; now P2)'
+        """
+        msg = f"accession {self.accession} is inactive in UniProtKB ({self.reason_type}"
+        if self.detail:
+            msg += f": {self.detail}"
+        if self.merged_into:
+            msg += f"; now {', '.join(self.merged_into)}"
+        return msg + ")"
+
+
 @dataclass
 class SequenceCache:
     """Fetches and caches UniProt sequences.
@@ -106,18 +155,64 @@ class SequenceCache:
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
     _versions: dict[str, int] = field(default_factory=dict)
+    _inactive: dict[str, InactiveEntryError] = field(default_factory=dict)
 
     def _fetch_json(self, acc: str) -> dict:
         req = urllib.request.Request(
             UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
         )
+        # Three total attempts, with only 2s and 4s waits. A successful record
+        # still passes through the same validation and persistent cache paths.
+        attempts = 3
+        for attempt in range(1, attempts + 1):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as fh:
+                    return json.load(fh)
+            except (OSError, json.JSONDecodeError, http.client.HTTPException) as exc:
+                if attempt == attempts or not _retryable_uniprot_error(exc):
+                    # Keep the final HTTPError body available through __cause__;
+                    # only responses discarded before another attempt are closed.
+                    raise RuntimeError(
+                        f"Could not retrieve UniProt record {acc} from {req.full_url}"
+                    ) from exc
+                if isinstance(exc, urllib.error.HTTPError):
+                    # urlopen raised before entering the response context manager.
+                    exc.close()
+                time.sleep(2 ** attempt)
+        raise AssertionError("unreachable")
+
+    def _record_sequence(self, acc: str, data: object) -> str:
+        """Validate a response before caching or classifying a cited accession.
+
+        Only explicit inactive metadata denotes an inactive accession. Other
+        sequence-less or malformed responses remain contextual hard errors.
+        """
+        entry_type = data.get("entryType") if isinstance(data, dict) else None
         try:
-            with urllib.request.urlopen(req, timeout=60) as fh:
-                return json.load(fh)
-        except (OSError, json.JSONDecodeError) as exc:
+            if not isinstance(data, dict):
+                raise TypeError("expected a JSON object")
+            reason = data.get("inactiveReason")
+            if reason is not None and not isinstance(reason, dict):
+                raise TypeError("inactiveReason must be an object")
+            reason_type = (reason or {}).get("inactiveReasonType")
+            if entry_type == "Inactive" or (
+                isinstance(reason_type, str) and bool(reason_type.strip())
+            ):
+                # Memory only: a later run must be able to observe reactivation.
+                err = InactiveEntryError(acc, data)
+                self._inactive[acc] = err
+                raise err
+            seq = data["sequence"]["value"]
+            if not isinstance(seq, str) or not (
+                seq and seq.isascii() and seq.isalpha() and seq.isupper()
+            ):
+                raise ValueError("sequence.value must be nonempty uppercase letters")
+        except (KeyError, TypeError, ValueError) as exc:
             raise RuntimeError(
-                f"Could not retrieve UniProt record {acc} from {req.full_url}"
+                f"UniProt record {acc} from {UNIPROT_JSON.format(acc=acc)} "
+                f"has an invalid sequence payload (entryType={entry_type!r})"
             ) from exc
+        return seq
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
@@ -127,6 +222,8 @@ class SequenceCache:
         of everything the first time versions were introduced.
         """
         acc = accession.split(":")[-1]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         if acc in self._mem:
             return self._mem[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -135,7 +232,7 @@ class SequenceCache:
             seq = seq_path.read_text().strip()
         else:
             data = self._fetch_json(acc)
-            seq = data["sequence"]["value"]
+            seq = self._record_sequence(acc, data)
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is not None:
@@ -151,6 +248,8 @@ class SequenceCache:
         an unversioned corpus costs no extra requests.
         """
         acc = accession.split(":")[-1]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         if acc in self._versions:
             return self._versions[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -158,7 +257,9 @@ class SequenceCache:
         if ver_path.exists():
             version = int(ver_path.read_text().strip())
         else:
-            version = self._fetch_json(acc).get("entryAudit", {}).get("sequenceVersion")
+            data = self._fetch_json(acc)
+            self._record_sequence(acc, data)
+            version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is None:
                 return None
             ver_path.write_text(str(version))
@@ -199,11 +300,21 @@ def check_anchor_residues(
             )
             continue
 
-        seq = cache.get(anchor)
-        pinned = site.get("anchor_sequence_version")
+        try:
+            seq = cache.get(anchor)
+            pinned = site.get("anchor_sequence_version")
+            current = cache.sequence_version(anchor) if pinned is not None else None
+        except InactiveEntryError as exc:
+            results.append(
+                ResidueCheck(
+                    family, site_id, anchor, 0, [], None, Outcome.FAIL,
+                    f"{exc.describe()}; choose a live anchor protein",
+                    kind="ANCHOR_RESIDUE",
+                )
+            )
+            continue
         drift = ""
         if pinned is not None:
-            current = cache.sequence_version(anchor)
             if current is not None and current != pinned:
                 drift = (
                     f" [anchor sequence version has moved {pinned} -> {current} "
@@ -529,6 +640,62 @@ def check_panther_ids(
     return results
 
 
+GAIN_VERDICTS = frozenset({"SOUND", "TOO_DEEP", "WRONG_NODE", "NEEDS_PRUNING"})
+LOSS_VERDICTS = frozenset({"LOSS_SUPPORTED", "LOSS_CONTRADICTED", "LOSS_TOO_BROAD", "LOSS_STALE"})
+
+
+def node_polarity_problem(assessment: dict, term_rows: list) -> str | None:
+    """Return why a node assessment's evidence/negation/verdict disagree with PAINT, or None.
+
+    ``term_rows`` are the family's PAINT rows for this node and term. A PAINT loss (IRD,
+    IKR or a rare NOT|IBD) must be declared ``negated: true`` with its evidence code and
+    judged with a LOSS_* verdict; a gain must not be. Without this an IRD can be assessed
+    as though it were an IBD, and a "WRONG_NODE" on a loss reads, to the family/gene
+    cross-check, as the opposite of what the reviewer meant.
+
+    >>> class Row:
+    ...     def __init__(self, evidence, negated):
+    ...         self.evidence, self.negated = evidence, negated
+    >>> ird = [Row("IRD", True)]
+    >>> node_polarity_problem({"assessment": "LOSS_SUPPORTED", "negated": True,
+    ...                        "evidence": "IRD"}, ird) is None
+    True
+    >>> node_polarity_problem({"assessment": "WRONG_NODE"}, ird)
+    'PAINT records this as a loss (IRD); declare negated: true and evidence: IRD'
+    >>> node_polarity_problem({"assessment": "SOUND", "negated": True, "evidence": "IRD"}, ird)
+    "verdict SOUND is for gain rows; a loss row needs one of ['LOSS_CONTRADICTED', 'LOSS_STALE', 'LOSS_SUPPORTED', 'LOSS_TOO_BROAD'] or UNRESOLVED"
+    >>> node_polarity_problem({"assessment": "SOUND"}, [Row("IBD", False)]) is None
+    True
+    >>> node_polarity_problem({"assessment": "SOUND", "evidence": "IKR"}, [Row("IBD", False)])
+    "declared evidence IKR, but PAINT records ['IBD'] for this node and term"
+    """
+    paint_negated = {bool(getattr(r, "negated", False)) for r in term_rows}
+    paint_evidence = sorted({getattr(r, "evidence", "") for r in term_rows} - {""})
+    declared_negated = bool(assessment.get("negated", False))
+    declared_evidence = assessment.get("evidence")
+    verdict = assessment.get("assessment", "")
+
+    if declared_evidence and paint_evidence and declared_evidence not in paint_evidence:
+        return (
+            f"declared evidence {declared_evidence}, but PAINT records {paint_evidence} "
+            "for this node and term"
+        )
+    if True in paint_negated and False not in paint_negated:
+        if not declared_negated or not declared_evidence:
+            ev = "/".join(paint_evidence) or "IRD/IKR"
+            return f"PAINT records this as a loss ({ev}); declare negated: true and evidence: {ev}"
+    elif declared_negated and paint_negated == {False}:
+        return "declared negated: true, but PAINT records a gain (not a NOT) here"
+    if declared_negated and verdict in GAIN_VERDICTS:
+        return (
+            f"verdict {verdict} is for gain rows; a loss row needs one of "
+            f"{sorted(LOSS_VERDICTS)} or UNRESOLVED"
+        )
+    if not declared_negated and verdict in LOSS_VERDICTS:
+        return f"verdict {verdict} is for loss rows; declare negated: true and evidence"
+    return None
+
+
 def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck]:
     """Check every ``node_assessment`` against the family's own cached PAINT rows.
 
@@ -622,6 +789,16 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
                     family_id, node, term, 0, [], None, Outcome.PASS,
                     f"PAINT records {term} at this node in {bare_family}",
                     kind="NODE_ASSERTION",
+                )
+            )
+            term_rows = [r for r in family_rows if getattr(r, "go_id", "") == term]
+            problem = node_polarity_problem(assessment, term_rows)
+            results.append(
+                ResidueCheck(
+                    family_id, node, term, 0, [], None,
+                    Outcome.FAIL if problem else Outcome.PASS,
+                    problem or "evidence, negation and verdict agree with PAINT",
+                    kind="NODE_POLARITY",
                 )
             )
         else:
@@ -745,7 +922,15 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
             f"{kind} control declares no position/residue, so its assertion is unchecked",
             kind="CONTROL_RESIDUE",
         )
-    observed = _residue_at(cache.get(acc), pos)
+    try:
+        seq = cache.get(acc)
+    except InactiveEntryError as exc:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
+            f"{kind} control {exc.describe()}; replace or drop this control",
+            kind="CONTROL_RESIDUE",
+        )
+    observed = _residue_at(seq, pos)
     if observed is None:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,

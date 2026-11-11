@@ -62,3 +62,40 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG30287-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: I re-examined every existing annotation, the description and the core function from the UniProt record, the cited literature, the Falcon deep research, and the PANTHER 19.0 tree. I did not consult ProtNLM2 output. New analysis: `CG30287-bioinformatics/sequence_features_rereview.py` and `RESULTS-rereview.md`.
+
+Identity: Q8MLV8 is the canonical and only UniProt product of FBgn0050287: 284 aa, sequence version 1, complete from signal peptide to C-terminus. It is not a fragment, isoform or alternative gene model.
+
+Sequence:
+- Intact triad: His82, Asp136, Ser232 (GDSGGP).
+- S1-pocket position 189 is Ser226, so not trypsin-like Asp. P1 specificity is not assigned.
+- Candidate activation cleavage after Arg41, giving the atypical mature N-terminus VINGK.
+- The 20-residue propeptide has one Cys and no clip domain. UniProt's ARBA "CLIP subfamily" statement is therefore not supported.
+- The UniProt CAUTION about missing conserved residues refers to ProRule feature propagation, not to the triad.
+
+Literature: no gene-specific study exists. The deep research confirms this and warns that the Skanda findings (CG15046) do not apply to CG30287. PMID:30367934 classifies SP and SPH by triad retention, which is the basis for the ISM row.
+
+Evolution: CG30287 is in PTHR24256:SF553 (IP20273P-RELATED), an insect clade (PTN002799547) whose nine *D. melanogaster* members include Jon99Ciii and CG4914. That clade sits in an unresolved polytomy with the Easter/Sp7/CLIPB clade, the SP20/tpr clade, CG11836, and the CG30288 clade. The GO:0004252, GO:0006508 and GO:0005576 IBDs are at PTN001207268, which is on the CG30287 lineage. None of the NOT|GO:0004252 IKR nodes is an ancestor of CG30287. The innate-immune-response IBD (PTN000667087) is not on its lineage either. I treat that omission as deliberate and propose no immune process term.
+
+Not transferred:
+- Vertebrate PRSS55 lies in a different PANTHER family (PTHR24253:SF90), so it is not a relative.
+- Easter's patterning and Spätzle roles are subfamily-specific (SF527, clip-domain protease) and are not transferred.
+
+Decisions:
+- ACCEPT GO:0004252 (IBA, IEA and ISM).
+- ACCEPT GO:0005576 (IBA).
+- ACCEPT GO:0006508 (IBA and IEA).
+- MODIFY GO:0008233 and GO:0016787 to GO:0004252.
+
+Description rewritten: I removed the PRSS55 framing and added the facts that the protein has no clip domain and belongs to subfamily SF553.
+
+Relative for next review:
+- No SF553 member has a characterised function. CG4914 and Jon99Ciii have only HDA serine-hydrolase rows from ABPP (PMID:33827210).
+- The nearest well-characterised relative by tree placement is Easter (ea, P13582). It is in the sister clade of the PTN002799546 polytomy and is a donor of the PTN001207268 catalytic-activity IBD. The repo has no review for it.
+
+Family review: `interpro/panther/PTHR24256/PTHR24256-review.yaml` lists Q8MLV8 under "Benchmark members without resolved subfamily placement". PANTHER 19.0 does resolve it to SF553. There is no disagreement about function.
+
+Modules: no module contains CG30287. `modules/dmel_toll_signaling.yaml` covers Drosophila extracellular protease signalling, but nothing places CG30287 in it.

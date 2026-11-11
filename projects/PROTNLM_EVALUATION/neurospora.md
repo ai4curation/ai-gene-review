@@ -29,14 +29,16 @@ This is a focused evaluation of the available outputs, not a random proteome sam
 
 | Assessment | GO claims | Interpretation |
 |---|---:|---|
-| LSP | 19 | Supported, with a more specific established annotation |
-| CNN | 1 | Supported equivalent biology already annotated: NCU03033 nucleus |
+| LSP | 14 | Supported, with a more specific established annotation |
+| CNN | 6 | Supported equivalent biology already annotated: NCU01245 transcription by RNA polymerase III, NCU02539 nuclear DNA replication and DNA replication initiation, NCU03033 nucleus, NCU04637 cytoplasm, NCU09880 spliceosomal complex |
 | UNC | 1 | NCU04937 DNA binding lacks decisive supporting or contrary evidence |
 | **Total** | **21** | **GO predictions only** |
 
+Counts are as of the 2026-10-29 review snapshot (commit `ac95c69686`); see the [cross-cohort results](benchmark-results.md).
+
 No GO claim is classified as COR, PLI, NPI or REP. The incorrect claims occur in the function paragraphs, demonstrating why those paragraphs require their own assessment. Across the three paragraphs, ubiquitin transfer and neuronal context are contradicted, glycerol phosphorylation and metabolism are supported, and a strong claim about regulating glycerol uptake remains uncertain. Fragment counts depend on how sentences are divided and are not pooled with GO terms.
 
-The ten localization claims have separate assessments: **four LSP, two COR and four UNC**. The two supported additions are cytoplasmic-vesicle and clathrin-coated-vesicle-membrane association of NCU09721, grounded in conserved fungal AP-1 biology. The uncertain claims are NCU04937 nucleus, NCU06296 ER membrane, NCU12035 nucleus and NCU06005 cytoplasm. For the last case, classical Neurospora literature establishes cytosolic glycerokinase, but an explicit mapping of that historical glp-4 gene to NCU06005 is unresolved. The enzyme-family assignment alone does not settle compartmental targeting.
+The ten localization claims have separate assessments: **five LSP, two CNN and three UNC**. All three NCU09721 claims are LSP: its cytoplasmic-vesicle, clathrin-coated-vesicle-membrane and Golgi-membrane associations are all less specific than the AP-1 adaptor complex the gene already carries. NCU06005 cytoplasm is LSP against the cytosol term in the curated gene review, and NCU08990 cytoplasm is LSP against the cytosolic large ribosomal subunit. mek-1 and NCU04637 cytoplasm are CNN, because GOA carries that exact term. The uncertain claims are NCU04937 nucleus, NCU06296 ER membrane and NCU12035 nucleus.
 
 ## Review coverage
 
@@ -49,7 +51,7 @@ The [validation summary](neurospora-benchmark/validation-summary.json) records c
 | Target | Prediction | Biological assessment |
 |---|---|---|
 | <gene species="NEUCR" symbol="NCU04302">NCU04302</gene> | “Accepts the ubiquitin from the E1 complex and catalyzes its covalent attachment to other proteins” | The target belongs to the SUMO E2/Ubc9 lineage. Its conserved reaction transfers SUMO, so both ubiquitin-specific claims are PLI. The broad transferase GO prediction is LSP. The recorded match is Arabidopsis ubiquitin E2 UBC2; agreement with that protein does not establish the target's modifier specificity. |
-| <gene species="NEUCR" symbol="NCU04637">NCU04637</gene> | Presynaptic function at a neuromuscular junction; synaptic-vesicle endocytosis | The Rvs167-specific assignment and BAR–SH3 architecture support conserved fungal endocytosis. Neurospora has no neuromuscular junction or synaptic vesicles, making the literal neuronal claims NPI. General cytoplasmic localization remains supported and less precise than the cortical-actin-patch annotation. |
+| <gene species="NEUCR" symbol="NCU04637">NCU04637</gene> | Presynaptic function at a neuromuscular junction; synaptic-vesicle endocytosis | The Rvs167-specific assignment and BAR–SH3 architecture support conserved fungal endocytosis. Neurospora has no neuromuscular junction or synaptic vesicles, making the literal neuronal claims NPI. General cytoplasmic localization is supported and already annotated (CNN); the gene also carries the more specific cortical-actin-patch term. |
 | <gene species="NEUCR" symbol="NCU04937">NCU04937</gene> | DNA binding and nuclear localization | Both remain UNC. This short glutamine-rich protein has no established DNA-binding subfamily placement or recovered target assay. A recorded low-scoring match to human THAP11 does not justify the transfer, while absence of a diagnostic domain does not refute every possible DNA-binding role. |
 | <gene species="NEUCR" symbol="NCU11362">NCU11362</gene> | Primary metabolic process | The broad claim is LSP. METTL16-specific placement and characterized fungal U6 methylation support RNA metabolism; a generic METTL16/RlmF fold alone would not identify the RNA substrate. Target-specific mRNA substrates remain unresolved. |
 | <gene species="NEUCR" symbol="NCU08990">NCU08990</gene> | Ribosome, ribonucleoprotein complex and cytoplasm | A Neurospora ribosome structure identifies this exact eL39 protein in the cytosolic large subunit. The GO complex predictions are LSP; cytoplasmic localization is supported. This case has direct target structural evidence despite its TrEMBL record status. |

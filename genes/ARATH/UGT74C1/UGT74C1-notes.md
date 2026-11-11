@@ -27,3 +27,25 @@ No falcon deep-research file was present at review time.
   (deep family 1 node seeded by flavonol UGTs; no evidence for UGT74C1)
 - GO:0005737 IBA -> ACCEPT
 - NEW GO:0019761 glucosinolate biosynthetic process (IMP, PMID:24779768)
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (8) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+PMID24779768 supports genetic complementation and thiohydroximate UGT activity in planta, not a requirement that every UGT74 member has identical substrate preference. Broad UDP-glycosyltransferase is refined consistently to the experimentally supported thiohydroximate activity. Retained the pre-existing biosynthesis NEW based on catalytic participation; no additional process row added. Unchecked peroxisomal HDA is undecided.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.
+
+### Final consistency QA, 2026-10-26
+
+Removed chain-length feature text as localization evidence. Retained the PAINT cytoplasm judgment at its warranted precision, and left the unverified plastid prediction unresolved because absent targeting annotations do not establish absence.
+
+
+## 2026-10-26 — PR #5550 source-level correction
+
+Revisited review findings 1–3 against the actual publication cache and the primary sources. Removed generic source-unresolved boilerplate where the assay design is adjudicable. Restored relevant verbatim biochemical and localization evidence; did not restore label-only CHAIN features, unrelated introductory statements, or quotations that no longer support the revised claim. Existing source annotation fields were preserved.
+
+Read PMID:28887381 full text, especially "Identification of True Membrane-associated Proteins" and Fig. 7: washed microsomes and sucrose gradients distinguish membrane association but do not separate organelles; named compartments are imported from SUBAcon/GFP knowledge. The paper states "no organelle fell in a single cluster". Mark the specific compartment claim as over-annotated while preserving proteomic detection. This applies projects/ORGANELLES.md at the actual resolution of the assay.
+
+AtSubP ISM chloroplast prediction is now MARK_AS_OVER_ANNOTATED. This is an unsupported positive computational compartment assignment, not failure to access an experimental publication, and not proof of absolute absence.

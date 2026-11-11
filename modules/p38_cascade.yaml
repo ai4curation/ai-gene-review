@@ -339,3 +339,83 @@ module:
           supporting_text: inhibition of p38 MAP kinase by specific inhibitor SB 203580 or RNA interference (RNAi) markedly reduced the expression of MKP-1 in LPS or PGN-treated macrophages, which is correlated with prolonged activation of p38 and JNK
         - source_id: file:models/boolean/bbm-070-mapk-cancer-cell-fate/model.bnet
           statement: The published MAPK logical model (Grieco 2013, PMID:24250280) routes DUSP1 induction through MSK and CREB downstream of p38.
+executable_models:
+  - id: p38_cascade_boolean
+    title: p38 cascade as a Boolean network
+    model_type: BOOLEAN
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      The module's connections read as a signed regulatory graph and
+      translated by ai-gene-review module-to-bnet with the default rule
+      (active when any activator is active and no inhibitor is). Its one loop
+      is p38 output inducing the MKP-1/DUSP1 phosphatase that dephosphorylates
+      p38.
+    scenarios:
+      - id: unstimulated
+        label: No stress
+        description: No stress input; the cascade rests with every tier off.
+        settings:
+          - element: stress_input
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - p38_mapk
+      - id: sustained_stress
+        label: Sustained stress
+        description: >-
+          Stress input held on. p38 output induces the DUSP phosphatase, which
+          inactivates p38, so p38 activity has no steady state: the single
+          attractor is cyclic, a transient response in Boolean terms. The
+          upstream MAP3K and MAP2K tiers stay on because nothing feeds back on
+          them.
+        settings:
+          - element: stress_input
+            active: true
+        expected_attractor_kind: CYCLIC
+        expected_attractor_count: 1
+        expected_active:
+          - p38_map3k
+          - p38_map2k
+        expected_oscillating:
+          - p38_mapk
+          - p38_negative_regulation
+      - id: mkp1_lost
+        label: MKP-1 lost
+        description: >-
+          The DUSP phosphatase held off under sustained stress, as when MKP-1
+          expression is blocked. p38 locks on.
+        settings:
+          - element: stress_input
+            active: true
+          - element: p38_negative_regulation
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - p38_mapk
+          - p38_output
+        evidence:
+          - source_id: PMID:16978838
+            statement: >-
+              Blocking p38 reduces MKP-1 expression, which correlates with
+              prolonged p38 activation.
+            supporting_text: >-
+              inhibition of p38 MAP kinase by specific inhibitor SB 203580 or
+              RNA interference (RNAi) markedly reduced the expression of MKP-1
+              in LPS or PGN-treated macrophages, which is correlated with
+              prolonged activation of p38 and JNK
+      - id: map2k_inhibited
+        label: MKK3/6 inhibited
+        description: >-
+          The MAP2K tier held off. p38 cannot be activated whatever the stress
+          input.
+        settings:
+          - element: stress_input
+            active: true
+          - element: p38_map2k
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - p38_mapk

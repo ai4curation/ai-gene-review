@@ -26,3 +26,12 @@
 - Wounding / JA response (IEP) -> KEEP_AS_NON_CORE.
 - Everything else ACCEPT; no NEW annotations.
 - Falcon deep research not available at time of review.
+
+
+## 2026-10-25 independent chain-elongation audit
+
+Re-examined every existing annotation and core against the primary studies and exact GO reactions; preserved all machine-sourced fields and prior rows. Normal fetch-gene and fetch-gene-pmids completed. The default Falcon attempt for this panel (MAM1) failed authentication and perplexity-lite failed insufficient quota; no fabricated provider report was created. Existing provider reports were contextual only; primary sources govern decisions. Plant proteins do not require bacterial fitness fetches.
+
+Correct broad terms now refine to supported descendants. IIL1 and SSU3 catalytic claims refer to heterodimers, with contributes_to in cores; catalytic-site ownership alone does not establish autonomous subunit activity. MAM1 lacks measured IPMS activity, whereas MAM3 retains a weak non-core activity without established native leucine-pathway participation. IMDH1 biochemical comparisons distinguish its specialized methylthioalkylmalate substrate from 3-isopropylmalate; IPMDH2 structural data are not direct IMDH1 structures. BCAT3 terminal transamination is distinct from unelongated methionine transamination and does not establish exclusivity over all chain lengths.
+
+UniProt CC:INDUCTION gives experimental wounding/MeJA induction tied to PMID:19674406; retained IEP using this curated source, not generic coexpression. Publisher full text inspected at https://onlinelibrary.wiley.com/doi/10.1111/j.1365-313X.2009.03990.x; local cache remains abstract-only. Cytosolic proteomics detection remains UNDECIDED rather than assuming contamination. Experimental UniProt CC:FUNCTION supports target developmental phenotypes despite the paper abstract foregrounding IPMDH2/3. QuickGO confirmed GO:0003862 exact 3-IPM chemistry and obsolete GO:0103093; a replacement pointer does not broaden a chemical definition.

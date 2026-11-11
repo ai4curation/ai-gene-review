@@ -88,3 +88,13 @@
   direct S. pombe substrate specificity is unresolved, while L-ascorbic acid
   biosynthesis remains `PLI` because the PAINT IRD explicitly removes that
   process from the Dikarya branch.
+
+## 2026-10-24 completion recheck
+
+- Rechecked the PTHR43762 PAINT rows and PomBase NOT IGC rows before marking the
+  review complete. The four broad parent rows for membrane, mitochondrial membrane,
+  and oxidoreductase activity are now `TOO_GENERAL` because the review retains more
+  specific positive assertions in the same branches.
+- Recorded the anomalous PomBase `GO_REF:0000025` citation as a `WRONG_REFERENCE`
+  `source_defects` entry on the NOT `GO:0003885` row, so source-defect export can
+  surface the upstream follow-up.

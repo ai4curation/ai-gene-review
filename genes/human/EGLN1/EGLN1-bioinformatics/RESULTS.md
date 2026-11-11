@@ -1,0 +1,9 @@
+# EGLN1 reproducible database and PDZ-table evidence
+
+The replay reconstructs the 426-, 404- and 325-residue official natural products and resolves Q9GZT9 as PTHR12907 target PTN002490115. Literal ancestral IBDs and target descent are retained. Nine inspected family sequences share the aligned catalytic metal-binding residues corresponding to H313, D315 and H374; this does not establish identical tissue-specific biology.
+
+The original workbook contains 133 EGLN1 peptide measurements and 11 quantified positive domains. Three of the 21 imported partners have a positive domain: IL16 PDZ4 (BI 0.07007436), DLG3 PDZ2 (BI 0.17058929) and WHRN/DFNB31 PDZ1 (BI 0.05223779). Only DLG3 PDZ2 matches a current IntAct-positive domain record. The other 18 partners have only below-threshold measurements; absence of a quantified affinity is not evidence of nonbinding. Binding intensity, not pKd, is compared with 0.05. All three positive imported pairs are single DAPF measurements with estimated affinities; WHRN is just above threshold.
+
+Source-specific interaction joins retain stable record IDs, PSI-MI methods, organisms, host cells, participant sides and construct features. Partner-class refinements do not transfer catalytic, transcriptional or scaffold activity to EGLN1. PDB 5V18 entity 1 is GGS plus canonical EGLN1 residues 181–416 and nonpolymer entity 4 is FE2; no electron-density assessment is implied. Five Reactome roots yield nine literal target paths to Q9GZT9 in cytosol. The signed mouse donor record is preserved independently of the primary experiment's interpretation.
+
+These outputs reproduce database content and source measurements. They are not new assays, automated annotation verdicts, evidence of all-isoform equivalence or a substitute for the source-specific access limits in the guide.

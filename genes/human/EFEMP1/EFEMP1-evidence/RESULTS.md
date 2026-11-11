@@ -1,0 +1,13 @@
+# Reproduced records and interpretation limits
+
+The saved IntAct query contains 204 records and MINT contains 13. Forty-six literal source/partner joins correspond to the imported binding annotations; 44 joins have matching current records, totaling 126 record occurrences. Repeated records and joins are retained, not counted as 126 independent physiological interactions. The two absent current joins are the HCV NS5A and ECM1 assertions. Their original source evidence is described separately; current database-query absence is not negative evidence.
+
+The HCV Table SI workbook has two EFEMP1 rows. Physical row 180 is NS3; row 375 is NS5A, with an IMAP2 entry and positive co-affinity purification. The last column concerns liver expression, not a second binding confirmation. The imported NS5A processed-chain identity is distinct from viral polymerase activity. The table's human/viral construct and assay context remains necessary for interpretation.
+
+Additional File 2 from the human colon/liver matrisome study contains EFEMP1 at physical row 43 in both the complete-data and matrisome sheets. The extract retains all 77 cells in each target row, including normal/tumor contexts and the full accession group. That group includes multiple protein identifiers and does not resolve natural splice products. The signatures sheet has no exact target match; this does not refute detection in the other sheets.
+
+The human aorta XML supplies three target tables. FBLN3_HUMAN has 38 unique peptides and 22.0% coverage in salt extracts, 22 and 15.0% in guanidine extracts, and 6 and 10.6% in detergent extracts. These are protein-detection measurements, not tests of mechanical strength or unique splice-product identity.
+
+The current PTHR24039 responses contain 330 nodes and 330 aligned sequences. Human Q12805 is PTN002542817 and its ungapped aligned sequence matches the 493-residue official reference. Its 19-node path contains PTN000620536, the literal ancestor used by the two imported IBAs. Both ancestral GAF records, including their distinct dates and donor lists, are retained. The older PTHR24050 pointer is preserved in the machine source; this extract does not rewrite it. The complete scientific assessment also considered experimental donor annotations and absence of relevant negative assertions on the target path, as documented in the source guide.
+
+The parser output was compared with independent projections of every selected interaction field, target workbook cell, aorta table and target lineage. It does not use those projections as input. A changed-input control is rejected at the hash check, and an empty target/pair selection produces no selected interactions or workbook targets. No GO action is encoded in the parser.

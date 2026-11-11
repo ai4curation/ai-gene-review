@@ -54,3 +54,13 @@
 - GO:0007601 visual perception: Pax6 Sey-Dey eyeless mice used only as blind controls -> over-annotation.
 - GO:0030216 keratinocyte differentiation -> MODIFY to GO:0160122 corneal epithelial cell differentiation.
 - protein binding rows -> REMOVE, except Tle6/Grg6 row -> MODIFY to GO:0001222 transcription corepressor binding.
+
+## 2026-10-12 Ortholog/family audit (human PAX6, DROME ey/toy, DANRE pax6a/pax6b)
+
+- GOA refresh (`just fetch-gene mouse Pax6`): 266 rows fetched; review already covered all 242 distinct (term, evidence, reference) keys; no new or stale rows. No review actions changed in the mouse file.
+- PANTHER: mouse and human both PTHR45636:SF48 (PAX-6); fly ey/toy PTHR45636:SF41. Shared family IBAs (brain/forebrain/retina development, sensory organ development, type B pancreatic cell differentiation) are KEEP_AS_NON_CORE in both mouse and human; core MF (GO:0000981, GO:0000978 accepted) agree across mouse, human, ey and toy.
+- Mouse-vs-human contradictions resolved on the human side (human IEA rows are Ensembl projections of the mouse experimental rows):
+  - GO:0003723 RNA binding: mouse IDA KEEP_AS_NON_CORE (Paupar lncRNA association) vs human IEA REMOVE claiming no experimental support. The human projection derives from the mouse IDA [PMID:24488179 "in part through physical association with PAX6 protein"], so the human row was changed to KEEP_AS_NON_CORE.
+  - GO:0031625 ubiquitin protein ligase binding: mouse IPI KEEP_AS_NON_CORE vs human IEA ACCEPT. PAX6 is the TRIM11 substrate [PMID:18628401 "Trim11, a member of the TRIM/RBCC protein family of E3 ubiquitin ligases, interacts with Pax6"]; human changed to KEEP_AS_NON_CORE.
+- Left as-is: GO:0003682 chromatin binding IDA PMID:23637604 stays UNDECIDED (PubMed confirms this PMID is a Candida albicans/dectin-1 paper, so the MGI row likely carries a wrong PMID; the function itself is accepted from other rows). GO:0007601 visual perception is MARK_AS_OVER_ANNOTATED (mouse IMP) vs KEEP_AS_NON_CORE (human TAS); both express "downstream of eye development, not core", so not harmonised.
+- Zebrafish pax6a/pax6b ACCEPT several developmental IBAs that mammals keep as non-core, and pax6a REMOVEs the type B pancreatic cell differentiation IBA that pax6b accepts; flagged for the zebrafish reviewers, not edited here.

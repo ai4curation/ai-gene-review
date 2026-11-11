@@ -18,3 +18,23 @@ Review based on cached GOA-cited publications and the UniProt entry.
 - identical protein binding -> MODIFY to GO:0042803.
 - Indirect physiology (insulin metabolism, H2O2 response, mitochondrion, inner nuclear membrane, positive regulation of ER UPR) marked over-annotated.
 - Core MFs: GO:0004521 RNA endonuclease activity; GO:0004674 protein Ser/Thr kinase activity; GO:0042803 homodimerization.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Row: GO:0005739 IEA (GO_REF:0000107, Ensembl projection from mouse Q9EQY0). No sub-compartment
+rows; no MAM (GO:0044233) row in GOA.
+
+Checks:
+- QuickGO (2026-10-25): mouse Q9EQY0's only GO:0005739 row is an MGI IDA from PMID:23028046
+  (Ha et al. 2012, anthrax lethal toxin and MLN64 in macrophages). The cached copy is
+  abstract-only and does not mention IRE1/Ern1; Europe PMC and BioC full text for PMC3497600
+  could not be retrieved, so the assay behind the MGI row is unknown and not called wrong.
+- Human ERN1: [file:human/ERN1/ERN1-uniprot.txt "SUBCELLULAR LOCATION: Endoplasmic reticulum
+  membrane {ECO:0000269|PubMed:9637683}; Single-pass type I membrane protein"], signal peptide
+  1-18, TM 444-464. Not in MitoCarta3.0 (evidence column: "mito protein domain" only).
+- An ER-membrane protein enriched at ER-mitochondria contacts will co-purify with crude
+  mitochondrial fractions (STOM lesson).
+
+Outcome: row stays MARK_AS_OVER_ANNOTATED (not REMOVE: the projection faithfully transfers a
+real MGI row). No sub-compartment row. A MAM row would need a cached source showing IRE1 at
+MAM with a MAM marker; none is cached here.

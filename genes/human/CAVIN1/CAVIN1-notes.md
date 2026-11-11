@@ -55,3 +55,24 @@ Accordingly, the electronic initiation transfer (row 61, GO_REF:0000107, mouse O
 The initiation IBA (row 59) remains UNDECIDED. The dated donor join identifies one experimental source but does not reconstruct the IBD at PTN002689946, its complete evidence or placement in the family tree. A short donor list and the human target’s presence in WITH/FROM are not objections. The original human initiation IDA (row 60) also remains unresolved: the original human truncated interaction clone and full-length murine functional assays are different provenance. The human IDA termination and pre-rRNA-binding rows (63 and 70) likewise retain their mapping uncertainty, while their conserved biological functions remain supported through inherited and ortholog evidence. This asymmetry is about an unresolved particular experimental attribution, not denial of conserved release or RNA recognition. The expert question now explicitly asks for the initiation IBD and direct human step evidence.
 
 The proposed document therefore contains 78 annotations: 77 unchanged machine source objects plus one NEW assembly assertion. Actions are 20 ACCEPT, 43 KEEP_AS_NON_CORE, 12 UNDECIDED, one MODIFY, one MARK_AS_OVER_ANNOTATED and one NEW. It retains 25 reference identities, three products and two distinct cores. DRAFT reflects the unresolved biological/provenance questions. The old notes remain an exact prefix, source caches remain unchanged, and the added short cached anchors stay within the per-source quotation limit. Normal validation and the independent focused review are recorded separately.
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+- GO:0005739 rows: EXP (PMID:17026959), IDA (PMID:15242332), IEA (GO_REF:0000044, SL-0173). All already UNDECIDED. No sub-compartment rows.
+- IEA source: UniProt curated line "Mitochondrion {ECO:0000269|PubMed:15242332, ECO:0000269|PubMed:17026959}", the same two adipocyte papers; no independent line.
+- Both caches are abstract-only and neither abstract mentions mitochondria. PMID:17026959 has no PMC id; PMID:15242332 is PMC1134064 but PubMed/efetch return no machine-readable body, so the earlier reading (low PTRF in a combined mitochondrial/nuclear fraction) could not be re-checked. A pellet pooling mitochondria and nuclei is the crude-fraction pattern that cannot establish the organelle.
+- CAVIN1 has no transit peptide or TM in UniProt FT; it is a cytosolic caveolar coat protein; HPA reports plasma membrane; the MRPL45 interaction-screen partner is not a localization assay.
+- Outcome: all three rows stay UNDECIDED (experimental rows not overruled without full text; IEA kept consistent). Reasons record the check. No sub-compartment. If the PMID:15242332 full text confirms only a combined mito/nuclear pellet, all three rows would be candidates for MARK_AS_OVER_ANNOTATED.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000120; with UniProtKB:O54724, ensembl:ENSMUSP00000058321, SL-0095). Action UNDECIDED (unchanged).
+
+Source trace:
+- Human UniProt: "Endoplasmic reticulum {ECO:0000250|UniProtKB:P85125}" [file:human/CAVIN1/CAVIN1-uniprot.txt].
+- Rat P85125 (UniProt REST, 2026-11-05): "Endoplasmic reticulum {ECO:0000305}", next to "Microsome {ECO:0000269|PubMed:11512676, ECO:0000269|PubMed:16236245}", i.e. a curator inference beside a microsome fraction; microsomes without an ER marker are not ER.
+- Mouse O54724 (UniProt REST): "Endoplasmic reticulum {ECO:0000269|PubMed:30188967}"; QuickGO shows mouse IDA PMID:30188967 for GO:0005783.
+- PMID:30188967 fetched (abstract only; DOI full text not reachable through the proxy). The abstract is about Fam198a: "In mouse embryo fibroblasts (MEFs) obtained from cavin-1-/- or caveolin-1-/- mice, Fam198a precursor was retained in ER and no mature Fam198a could be formed in these cells." It does not say cavin-1 itself was seen in the ER.
+- Human cavin-1: "Polymerase I and transcript release factor (PTRF) is in human adipocytes mainly localized at the plasma membrane." [PMID:17026959]. No signal peptide or TM: any ER pool would be recruited, at the root.
+
+Outcome: stays UNDECIDED (the one experimental source cannot be read). Expected resolution: MARK_AS_OVER_ANNOTATED if the full text shows only an indirect role in cargo ER export; KEEP_AS_NON_CORE at the root if it shows a marker-controlled cavin-1 ER pool. PMID:30188967 added to references (UNVERIFIED, LOW). No sub-compartment.

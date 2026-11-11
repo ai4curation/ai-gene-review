@@ -1,5 +1,22 @@
 # lys-4 notes
 
+## 2026-10-24
+
+Re-reviewed Neurospora `lys-4` after the S. cerevisiae `LYS1`,
+C. albicans `LYS1`, and S. pombe `lys3` PTHR11133 passes. The existing
+2026-10-10 calls still line up with PAINT: `Q7SFX6` is an SF23
+NAD(+), L-lysine-forming enzyme that legitimately inherits
+`GO:0009085 L-lysine biosynthetic process` from `PANTHER:PTN000875292`, and
+the broad `PANTHER:PTN000123605` `GO:0004753 saccharopine dehydrogenase
+activity` remains over-generic rather than biologically wrong.
+
+Newer-paper search: repeated searches for `Neurospora lys-4`, `NCU03118`,
+`Q7SFX6`, and saccharopine dehydrogenase. Newer hits were CAoGDX/FGSC/locus
+pages, reagent pages, old Neurospora pathway compendia, and genome-scale or
+transcriptomic studies that mention `NCU03118` only as pathway context; no new
+paper changed the lys-4 activity, L-lysine-biosynthesis, or broad cytoplasm
+decisions.
+
 ## 2026-10-10
 
 Reviewed Neurospora `lys-4` as the next compact fungal PAINT family after the

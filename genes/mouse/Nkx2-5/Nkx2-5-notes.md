@@ -114,3 +114,15 @@ file exists. These notes were assembled manually from the cached publications in
   sodium ion transport and negative regulation of canonical Wnt signaling (indirect expression
   effects), cytosol, protein-containing complex, tissue development.
 - No GO-CAM model in `gocams/index.tsv` includes Nkx2-5 (P42582).
+
+## 2026-10-12 Ortholog/family audit (human NKX2-5, DROME tin)
+
+- GOA refresh (`just fetch-gene mouse Nkx2-5`): 214 rows fetched; review already covered all 206 distinct (term, evidence, reference) keys; no new or stale rows.
+- PANTHER: mouse and human PTHR24340:SF28 (NKX-2.5); fly tin PTHR24340:SF41. Core MF agrees across all three (GO:0000981 and GO:0000978 accepted; GO:0061629 partner-TF binding core in mouse and human).
+- Contradictions resolved:
+  - GO:0003162 atrioventricular node development: mouse IMP KEEP_AS_NON_CORE vs human ACCEPT (in a human core function). Changed mouse to ACCEPT and added to the conduction-system core function [PMID:15085192 "Null mutant embryos appear to lack the primordium of the atrioventricular node"].
+  - GO:0060413 atrial septum morphogenesis: mouse IEA/ISO KEEP_AS_NON_CORE vs human IMP ACCEPT (core). Changed mouse rows to ACCEPT and added to the same core function [PMID:9651244 "These data indicate that NKX2-5 is important for regulation of septation during cardiac morphogenesis"].
+  - GO:0048536 spleen development: mouse ACCEPT (with a core function) vs human KEEP_AS_NON_CORE. Changed human IMP/ISS rows to ACCEPT and added a matching spleen core function to human [PMID:22560297 "This study establishes that a Pbx/Nkx2-5/p15 regulatory module is essential for spleen development"; the same paper reports the human P236H asplenia allele].
+  - GO:0030154 cell differentiation (shared IBA, PTN000678271): mouse KEEP_AS_NON_CORE vs human ACCEPT. Changed human IBA and ISS rows to KEEP_AS_NON_CORE (too general; the specific core process is cardiac muscle cell differentiation).
+- Stylistic differences left as-is: the mouse review MODIFYs parent MF terms (GO:0003700 -> GO:0000981; GO:0043565, GO:0000976, GO:0003677, GO:0003682 -> GO:0000978) where human ACCEPTs them. Both reviews treat the same function as core, so there is no disagreement about the biology. Finer heart-development BPs (septum secundum, ventricular septum, cardiac muscle cell development, embryonic heart tube development) are ACCEPT in human and KEEP_AS_NON_CORE in mouse; this granularity choice was not harmonised.
+- Fly tin accepts the cell differentiation IBA; flagged, not edited.

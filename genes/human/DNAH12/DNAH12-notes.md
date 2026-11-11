@@ -93,3 +93,28 @@ Checked against the cached full texts:
   DNAH12 all in SF70.
 - Human DNAH12 is listed in projects/paint/human-no-IBA.tsv under
   PTHR46532.
+
+
+## Expression species and description precision (2026-10-17)
+
+The tissue panel in [PMID:40146200](https://pmc.ncbi.nlm.nih.gov/articles/PMC11949491/) is explicitly mouse evidence: Results, “DNAH12 protein is conserved in mammals and highly expressed in the testes,” and Figure 1—figure supplement 2A–C describe high testicular expression with lower lung and tracheal expression in male mice and oviduct expression in female mice. These mouse tissues are now identified as such in the biological summary and core description. The Introduction separately reports the earlier human trachea/testis mRNA detection; the preserved human UniProt record also records testis and trachea as source tissues. The mouse expression panel is not evidence of measured human lung or oviduct expression.
+
+The closest-paralog statement remains attributed to [PMID:34089056](https://pubmed.ncbi.nlm.nih.gov/34089056/). A published phylogeny establishing that specific DNAH12–DNAH1 relationship has not been examined in this review. This evidence-scope caveat belongs in the notes, and its removal from the standalone description adds no evolutionary claim. The established physical interaction and recruitment evidence remains unchanged.
+
+This precision follow-up changes no annotation action, source dictionary, product, reference assessment or supporting quotation. The approval's separate tooling observation is outside this biological correction.
+
+
+### Human germ-cell transcript evidence and tested cilia (2026-10-17)
+
+The spermatocyte-to-early-spermatid statement has independent human transcript support in [PMID:39267058](https://pmc.ncbi.nlm.nih.gov/articles/PMC11391607/): Methods, Differential expression analysis of candidate genes, identifies GSE109037 and Seurat analysis; Results, Differential expression of candidate genes, explicitly identifies the human testis single-cell database and places DNAH12 expression mainly in spermatocytes and early spermatids (Figure 1D; cell-type abbreviations in the Figure 1 caption). This is human RNA evidence, distinct from the mouse protein localization during spermiogenesis in PMID:40146200. It does not establish an exclusive expression window or a new protein-localization measurement.
+
+The cilia comparison is confined to the tested tissues and readouts. [PMID:40146200](https://pmc.ncbi.nlm.nih.gov/articles/PMC11949491/) Results on IDA recruitment and Figure 7F–K compare mouse tracheal and oviductal DNALI1/DNAH1 abundance and localization; the Discussion reports no observed ciliary morphological defects in the tested mouse lung, trachea and oviduct. The summary and core ending now retain that experimental scope rather than asserting that every motile cilium is unaffected. No annotation or source identity changes follow from this wording correction.
+
+
+## 2026-10-17: complete scope of the cilia comparison
+
+The earlier morphology-only summary omitted additional readouts in [PMID:40146200](https://pmc.ncbi.nlm.nih.gov/articles/PMC11949491/). The Results accompanying Figure 5—figure supplement 3 and Videos 3–4 report preserved mouse tracheal ciliary motility and morphology; the supplement's TEM comparison concerns knockout and wild-type tracheal axonemes. Figure 7F–K and its Results report comparable DNALI1 and DNAH1 abundance and localization in knockout versus control trachea and oviduct. Figure 4—figure supplement 2 additionally documents female mouse oviductal/tracheal morphology. The Discussion reports no PCD symptoms in the patients, while the human-subject Methods describe clinical consultation and a questionnaire. That clinical observation is retained separately from the mouse functional and structural assays; it is not described as human beat-frequency or ultrastructural testing. Text and captions were inspected here; the videos and figure pixels were not independently reanalyzed.
+
+The description, core description, motile-cilium rationale, primary reference finding and suggested question now consistently reflect these distinctions. The core description no longer repeats the cilia contrast. The paper's existing broad quotations remain exact source quotations; the surrounding prose states the actual experimental scope. The review does not infer complete absence of DNAH12 from somatic cilia or exclusion of every possible ciliary role. All imported source objects, annotation actions, core term slots, products and supporting quotations are unchanged.
+
+[PMID:39267058](https://pubmed.ncbi.nlm.nih.gov/39267058/) is assessed as MEDIUM relevance because its Methods and Results support the human testis single-cell expression context used in the description; it is not a direct assay of DNAH12 molecular activity. The prior statement that a mouse expression panel is not a human measurement remains true. Separately, the cached human UniProt entry carries an HPA cross-reference describing group enrichment in choroid plexus, fallopian tube, lung and testis. That annotation is independent of the mouse panel and is not evidence that the mouse experiment measured human tissues.

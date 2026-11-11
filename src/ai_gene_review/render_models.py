@@ -18,6 +18,11 @@ import json
 from pathlib import Path
 from typing import Any, Optional
 
+from ai_gene_review.module_abm import (
+    abm_model_payload,
+    module_to_abm,
+    run_abm_scenario,
+)
 from ai_gene_review.module_boolean import module_to_boolean
 from ai_gene_review.module_dynamics import (
     boolean_model_payload,
@@ -66,13 +71,15 @@ def model_page_path(models_dir: Path, model_id: str) -> Path:
 
 
 def is_interactive(model: dict[str, Any], doc: dict[str, Any]) -> bool:
-    """Whether a model gets an in-browser page: derived, Boolean, small enough."""
-    if (
-        model.get("model_type") != "BOOLEAN"
-        or model.get("derivation") != "DERIVED_FROM_MODULE"
-    ):
+    """Whether a model gets an in-browser page: derived Boolean or agent-based."""
+    if model.get("derivation") != "DERIVED_FROM_MODULE":
         return False
-    return len(module_to_boolean(doc).variables) <= MAX_INTERACTIVE_VARIABLES
+    mtype = model.get("model_type")
+    if mtype == "BOOLEAN":
+        return len(module_to_boolean(doc).variables) <= MAX_INTERACTIVE_VARIABLES
+    if mtype == "AGENT_BASED":
+        return len(module_to_abm(doc).stages) > 0
+    return False
 
 
 def model_summaries(
@@ -92,6 +99,7 @@ def model_summaries(
         if not isinstance(model, dict) or not model.get("id"):
             continue
         interactive = is_interactive(model, doc)
+        mtype = model.get("model_type")
         scenarios = []
         for scenario in as_list(model.get("scenarios")):
             if not isinstance(scenario, dict):
@@ -101,9 +109,14 @@ def model_summaries(
                 "label": scenario.get("label") or scenario.get("id"),
             }
             if interactive:
-                result = run_scenario(doc, str(model["id"]), scenario)
-                entry["passed"] = result.passed
-                entry["kinds"] = [a.kind for a in result.attractors]
+                if mtype == "AGENT_BASED":
+                    result = run_abm_scenario(doc, str(model["id"]), scenario)
+                    entry["passed"] = result.passed
+                    entry["kinds"] = []
+                else:
+                    result = run_scenario(doc, str(model["id"]), scenario)
+                    entry["passed"] = result.passed
+                    entry["kinds"] = [a.kind for a in result.attractors]
             scenarios.append(entry)
         out.append(
             {
@@ -154,14 +167,19 @@ def render_model_pages(
     module_page: Path,
     models_dir: Path,
 ) -> list[Path]:
-    """Write the interactive page of every derived Boolean model of one module."""
+    """Write the interactive page of every derived Boolean or ABM model of one module."""
     written: list[Path] = []
     for model in as_list(doc.get("executable_models")):
         if not isinstance(model, dict) or not is_interactive(model, doc):
             continue
         page = model_page_path(models_dir, str(model["id"]))
-        payload = boolean_model_payload(doc, model)
-        html = _template("executable_model.html.j2").render(
+        if model.get("model_type") == "AGENT_BASED":
+            payload = abm_model_payload(doc, model)
+            template_name = "executable_abm.html.j2"
+        else:
+            payload = boolean_model_payload(doc, model)
+            template_name = "executable_model.html.j2"
+        html = _template(template_name).render(
             payload=payload,
             payload_json=json.dumps(payload, sort_keys=True).replace("</", "<\\/"),
             model=model,

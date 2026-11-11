@@ -1,0 +1,15 @@
+# FLK curation notes
+
+
+## 2026-10-26 complete annotation audit
+
+All 16 original rows reviewed, no NEW annotations. PMID:15310842 full text explicitly places functional GFP-FLK in nuclei and cytosol; both compartments are retained. PMID:25658099 full text establishes a second RNA-processing context involving AGAMOUS/HUA1/HEN4/PEP, so the standalone summary is not limited to FLC. The normal cached PMID:37050878 abstract explicitly reports direct m6A-site recognition, vir-1 dependence and reader-mutant rescue failure. The initial audit recorded mRNA binding but overlooked the existing m6A reader term; the specificity assessment is corrected in the follow-up below. These experiments do not make FLK a COOLAIR factor. The RNA-processing IBA is refined with its real PTN source; no ancestral failure is alleged.
+
+All seeded rows were reviewed, with original term, evidence, source, supporting-entity and qualifier/NOT payloads preserved. The shared normal Falcon attempt and perplexity-lite fallback both failed; logs are retained under `.cache/module-audit-logs/autonomous-flowering-fetch/ARATH-FLK-provider.log`. No provider report was fabricated. Manual primary-literature assessment and normal publication fetching supplied this review. Source access limits are stated per reference/claim. Generic protein binding follows the current informative-function policy; its removal does not reject the physical interactions. Nuclear localization does not by itself exclude additional compartments.
+
+
+## PR #5574 follow-up: reader specificity and original-row provenance
+
+GO:1990247 N6-methyladenosine-containing RNA reader activity is live. QuickGO defines an adaptor recognizing m6A-modified RNA; its is_a/part_of ancestors are GO:0140517, GO:0030674, GO:0060090 and GO:0003674. Neither RNA binding nor mRNA binding is an ancestor. Preserve all 16 original machine-seeded rows, including the existing GO:0003729 IBA ACCEPT, and add one IDA reader proposal supported by PMID:37050878 (17 total rows, one NEW). There was no prior NEW mRNA-binding row in the reviewed PR head. The new proposal supplies modification-reader coverage, not a duplicate ancestor/descendant claim or a new biological process. The specific reader core is restricted to the reported FLC mechanism; a separate mRNA-binding core preserves AG-processing biology without assigning untested m6A dependence.
+
+Normal force refresh of PMID:37050878 remained abstract-only. Direct publisher HTML/PDF access and normal PDF lookup failed; no full-text claim is made. The abstract explicitly states direct FLC m6A-site binding, vir-1 dependence and reader-defective complementation failure. No assay format, residue substitution or quantitative binding selectivity is inferred beyond that accessible statement. The earlier caution about a missing specific term was wrong and is superseded here. Status is COMPLETE because every seeded row and the targeted evidence have been assessed; this does not imply that every paper was available in full.

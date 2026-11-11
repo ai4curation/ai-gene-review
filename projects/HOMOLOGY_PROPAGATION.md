@@ -72,6 +72,7 @@ The shared vocabulary for recording the answer is the
 | [IBA annotation quality](IBA_REVIEW.md) | IBA (GO_REF:0000033) | Whether the PAINT node placement fits the target: paralog subfamilies, lost sub-activities, lineage mismatches. |
 | [PAINT no-IBA genes](PAINT.md) | IBA gaps | Human genes with no IBA — missing PAINT coverage or genuinely lineage-specific function. |
 | [TreeGrafter](TREEGRAFTER.md) | IEA (GO_REF:0000118) | Automatic placement onto PANTHER trees and inheritance of PAINT annotations. |
+| [eggNOG-mapper](EGGNOG_MAPPER_EVALUATION.md) | eggNOG orthology (not in GOA) | How the union of every ortholog's GO terms holds up against reviews, with and without the query's own species, and on non-model genomes. |
 | [Ortholog conjecture](ORTHOLOG_CONJECTURE.md) | Orthologs vs paralogs | Whether orthologs retain function more than paralogs in the reviewed corpus. |
 | [InterPro2GO](INTERPRO.md) | IEA (GO_REF:0000002) | Family- and domain-signature transfers and where they over-reach. |
 | [NCBIFam / CDD](NCBIFam.md) | Family HMMs | What NCBI family models add or mis-assign. |

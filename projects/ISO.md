@@ -122,6 +122,34 @@ filter now finds the same pattern automatically
 Ghr also shows an isoform trap: extracellular-space rows fit the GH-binding
 protein, signaling rows fit the full-length receptor.
 
+### Akt1 and Pck1: a GO-CAM causal chain flattened, then transferred
+
+Targets: mouse Akt1 and Pck1. Both carry `acts_upstream_of_or_within`
+GO:0036316 (SREBP-SCAP complex retention in endoplasmic reticulum), ISO via
+GO_REF:0000119 from human AKT1 (`UniProtKB:P31749`) and PCK1
+(`UniProtKB:P35558`). Neither human donor carries the term today. The rows
+match the human GO-CAM `gomodel:6205c24300000880`, built from one study of
+human hepatocellular carcinoma cells (PMID:32322062). In that model AKT1
+phosphorylates and activates PCK1. PCK1 then uses GTP to phosphorylate INSIG1/2,
+which lowers their sterol binding and *releases* SCAP-SREBP to the Golgi. The
+PCK1 activity directly negatively regulates the INSIG activities that sit in
+GO:0036316. Export to annotation rows turns every activity causally upstream of
+an activity in process P into `acts_upstream_of_or_within` P, regardless of
+sign or distance. Orthology transfer then copies the flattened row to mouse.
+
+The result names a kinase two steps upstream (AKT1), and a moonlighting enzyme
+reported by one lab (PCK1), as acting in a retention process that both oppose.
+The INSIG1/2 rows for the same term, by contrast, are sound. Both mouse rows
+were marked `MARK_AS_OVER_ANNOTATED` with root cause `TERM_SCOPING_PROBLEM` and
+failure modes `ROLE_CONFLATION` and `CONTEXT_OR_TISSUE_MISMATCH`. The human
+donor is recorded as `SOURCE_STALE_OR_MISSING`. A knock-on row followed:
+mouse Akt1's endoplasmic reticulum location (IEA, GO_REF:0000108) is inferred
+only from the GO:0036316 row, so it went with it. The GO-CAM itself is
+reasonable; the defect arises in the conversion and transfer. The fix belongs
+on the export side: when an upstream activity *negatively* regulates an
+activity in P, the derived row should say so, or it should not be emitted.
+[Browse the rows](../app/propagation/index.html?evidence=ISO&q=GO:0036316).
+
 ## What ISO adds on top of IBA
 
 For each ISO row the browser records the closest IBA on the same target, using
@@ -160,6 +188,10 @@ verdict:
 - **Stale source.** The donor no longer carries the term. The row outlives the
   evidence that justified it.
 - **Transfer of a transfer.** The donor's own support is inferred.
+- **Flattened causal chain.** The donor row came from a GO-CAM export, where
+  `acts_upstream_of_or_within` drops the sign and distance of the causal path.
+  ISO then carries a regulator, or an antagonist, into the process it
+  regulates. Mouse Akt1 and Pck1 for SREBP-SCAP retention are examples.
 
 ## Failure Taxonomy
 
@@ -294,5 +326,9 @@ Use this checklist before making a strong `REMOVE` call on ISO or IBA.
       hand-maintained counts.
 - [ ] Map automated donor support onto `propagation_review.source_entities[].source_status`
       suggestions for reviewers (e.g. `ABSENT` → `SOURCE_STALE_OR_MISSING`).
+- [ ] Flag ISO rows with qualifier `acts_upstream_of_or_within` whose donor
+      term traces to a GO-CAM causal edge that negatively regulates the process
+      (see Akt1 and Pck1), and report the pattern to the GO-CAM export
+      maintainers.
 - [ ] Distinguish one-to-one from one-to-many orthology calls in the browser
       (needs Alliance/HCOP orthology type, not yet cached).

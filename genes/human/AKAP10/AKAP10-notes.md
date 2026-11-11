@@ -450,3 +450,8 @@ natural response (deleting the reference, rewriting the quote) would corrupt cor
 **Trust `just validate <org> <gene>` run from the worktree root** — that resolved everything
 correctly and reports `✓ Valid`. The one substantive thing the hook did catch was real: three
 `statement:` strings contained `": "` inside plain YAML scalars, which is a parse error.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- GO:0005739 rows: HTP, IBA and IEA all stay ACCEPT, with ORGANELLES check notes added to the IBA and IEA reasons. The IBD at PTN001775426 (PTHR13155) has a single seed, mouse Akap10 MGI:1890218, which has organelle-level IDA [PMID:11248059 "D-AKAP2 from all three species is highly enriched in mitochondria."].
+- Stayed at root. The transit peptide (1-28) is predicted only (ECO:0000255), there are no sub-mitochondrial data, and the organelle itself is contested [PMID:19797056 "Cell fractionation showed that endogenous D-AKAP2 is almost entirely cytosolic"]. Outer-membrane association has not been shown.

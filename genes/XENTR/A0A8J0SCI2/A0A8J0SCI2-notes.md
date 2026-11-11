@@ -176,3 +176,73 @@ Response to a PR review-bot suggestion on `A0A8J0SCI2-ai-review.yaml`:
    (method descriptors, nothing to adjudicate).
 
 Validation (`just validate XENTR A0A8J0SCI2`) passes after edits.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Full re-review of all five GOA rows, the description and core_functions, without
+using ProtNLM2 output (no protnlm files or prediction-evidence folders opened).
+
+### Identity
+
+- NCBI Gene 101732730 (LOC101732730): single-exon locus on chromosome 9
+  (NC_030685.2:3977832-3978912, minus strand), one RefSeq protein
+  (XP_012810399.1); UniProt holds a single entry for this GeneID (A0A8J0SCI2,
+  265 aa). Not an isoform or fragment of another UniProt entry. The sequence
+  ends a few residues into a ninth finger-linker (`...HERTHKGEKPFSYSK`, with Tyr
+  in place of the first Cys), so the C-terminus sits in the repeat array; with
+  no second gene model to compare, this is recorded as an observation, not
+  called a truncation. Single-exon structure raises the possibility of a
+  retrocopy (put as a suggested question).
+- No KRAB/SCAN/BTB: the N-terminal 36 residues are a polar disordered segment,
+  then 8 tandem C2H2 fingers (37-260).
+
+### PANTHER placement
+
+- Live InterPro (2026-10-21) PANTHER match for A0A8J0SCI2: PTHR24381:SF440
+  "OOCYTE ZINC FINGER PROTEIN XLCOF7.1-LIKE", E = 2.9e-63, residues 111-262.
+  This agrees with the cached UniProt xref and **disagrees with the 2026-08-31
+  addendum above** (member index -> PTHR24377:SF929). The family review
+  `interpro/panther/PTHR24381/PTHR24381-review.yaml` removed SF440 on the
+  strength of that index entry; live InterPro does not support the
+  reclassification. Not edited here (outside this gene folder); reported to the
+  orchestrator.
+- SF440 (UniProt xref query, 51 entries) is restricted to amphibians and
+  teleosts. Its only Swiss-Prot member, X. laevis XlCOF7.2 (P18752), is a
+  transcript-level fragment (PE 2) with only IBA GO terms; no member has
+  experimental functional data. There is no mammalian member, so no ortholog
+  in a model organism or human can be named.
+- All four IBA rows come from PTN001225435 (Eumetazoa), a deep node: the seeds
+  are mammalian KZNFs, none specifically closer to the target than any other.
+  So no single "closest characterised relative" can be chosen phylogenetically;
+  function is transferred only at the generic family tier that PAINT asserted.
+
+### Changes to the review
+
+1. Description rewritten: removed the inference from the protein name
+   ("gastrula zinc finger" -> early-embryo expression). The name is an automatic
+   RefSeq similarity name (ECO:0000313), not evidence. Added SF440 placement,
+   single-exon gene structure, and an explicit list of unknowns.
+2. Replaced ARBA-sourced UniProt quotes (FUNCTION, SUBCELLULAR LOCATION,
+   SIMILARITY lines - all `ECO:0000256|ARBA`) as support on every row with
+   PANTHER/PROSITE/SMART/InterPro cross-references from the UniProt file and
+   quotes from the PTHR24381 family review node assessments.
+3. GO:0000978 changed KEEP_AS_NON_CORE -> ACCEPT (root_cause
+   NO_FAILURE_NON_CORE -> NO_FAILURE_CORE). Sequence-specific cis-regulatory DNA
+   binding is part of the core TF function, not peripheral.
+4. Removed all ProtNLM2 mentions from summaries and propagation comments, to keep
+   the review independent of the predictions.
+5. core_functions: removed the Klf/gastrulation analogy (KLFs are a different
+   PANTHER family). Supported by family/domain evidence instead of ARBA text.
+6. References: removed non-quote supporting_text on the GO_REF findings;
+   corrected the UniProt finding that claimed the current PANTHER release
+   reassigns the accession; added the PTHR24381 family review as a reference.
+   The falcon deep-research reference is kept, now used only for the GO:0000978
+   mechanism quote (noted in its review_notes).
+7. Added suggested_questions and suggested_experiments.
+
+No NEW annotations: GO:0008270 zinc ion binding / GO:0006351 (UniProt KW IEA,
+not in GOA) add nothing over the accepted terms.
+
+Modules: none in modules/ cover Krueppel C2H2 zinc finger TFs.
+
+`just validate XENTR A0A8J0SCI2` passes.

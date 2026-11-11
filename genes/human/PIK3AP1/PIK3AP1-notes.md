@@ -1,0 +1,8 @@
+# PIK3AP1 functional review
+
+
+## BCR comparative audit, 2026-10-26
+
+All 34 original rows reviewed. Human BCAP direct evidence is strongest in full27909057 (TIR structure, full-length/DBB-dependent dimerization, TLR2/4 yeast-two-hybrid and adaptor co-IP) and full31527084 (purified GRB2/p85 domains, kinase comparisons and peptide arrays). The six original GRB2 generic-binding rows are refined to SH3 domain binding using independent same-target, same-partner domain evidence; no NEW row. Native TLR physiology and membrane fractionation are mouse22187458/22187460, whereas11163197 is chicken DT40. TLR7/9 process annotations retain explicit conserved-mammal inference rather than invented human direct receptor binding.20728433 is RAW264.7 BCAP-L-specific cytokine regulation, not universal BCAP inhibition. The initial provider jobs failed; no generated report was fabricated. PANTHER UniProt placement is PTHR16267:SF12, official PHOSPHOINOSITIDE 3-KINASE ADAPTER PROTEIN 1; the broad family also includes BANK/Dof relatives. Retained IBA claims are corroborated by target experiments; ancestral gain nodes were not reconstructed or moved.
+
+All original annotation payloads, evidence codes, supporting entities, relationship fields and flags are preserved. Review decisions judge biological claims; ordinary relationship qualifiers are not used to change their meaning. No new annotation rows were proposed. Actual Falcon and perplexity-lite attempts failed authentication/quota; manual source inspection is documented here instead of a fabricated provider report. The existing PIK3R1 provider report was reused as discovery, with primary evidence assessed separately.
