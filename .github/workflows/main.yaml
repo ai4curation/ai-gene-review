@@ -51,23 +51,10 @@ jobs:
           fetch-depth: 1
 
       # Rendered gene review HTML is gitignored and built by the Pages workflow
-      # (#6221). Reject HTML this change adds, so `git add -f` cannot re-add it.
-      # Edits to still-tracked copies pass until the batch untracking is done.
-      # HEAD is the merge (or squash) commit; its first parent is the base.
+      # (#6221). Runs ungated, before the path filter, so `git add -f` in an
+      # agent PR cannot re-add it.
       - name: Reject newly added gene review HTML
-        run: |
-          base=$(git cat-file -p HEAD | awk '/^parent /{print $2; exit}')
-          if [ -z "$base" ]; then
-            echo "No parent commit; nothing to compare."
-            exit 0
-          fi
-          git fetch --quiet --depth=1 origin "$base"
-          added=$(git diff --no-renames --name-only --diff-filter=A "$base" HEAD -- 'genes/*-ai-review.html')
-          if [ -n "$added" ]; then
-            echo "::error title=Rendered HTML added::Gene review HTML is a build product; remove it with git rm --cached:"
-            echo "$added"
-            exit 1
-          fi
+        run: bash .github/scripts/reject_added_review_html.sh
 
       - name: Check for source changes
         uses: dorny/paths-filter@v4 # merge_group support requires >=4.0.1
@@ -473,7 +460,8 @@ jobs:
           uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
-            tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py -q
+            tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py \
+            tests/test_reject_added_review_html.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \

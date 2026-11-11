@@ -913,9 +913,10 @@ This HTML is gitignored and must not be committed (not even with `git add -f`):
 the Pages workflow renders every review from `main`, and CI rejects a PR that
 adds one. Use `just render` only to preview a page locally. Older copies are
 still tracked while they are untracked in batches (#6221); do not stage
-re-rendered versions of them. Tools that link to review pages (`deploy-browser`,
-prediction evals) only emit a link when the HTML exists on disk, so run
-`just render-all` first if you need those links in a local build.
+re-rendered versions of them. `deploy-browser` and the prediction evals only
+link to a review page when its HTML exists on disk, so run `just render-all`
+first if you need those links in a local build. The propagation browser links
+whenever the review YAML exists.
 
 ### Project pages
 Project docs live in `projects/`. Render with:
