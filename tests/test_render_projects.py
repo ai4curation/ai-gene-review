@@ -1505,3 +1505,83 @@ def test_batch_symbol_index_preserves_individual_page_output(tmp_path):
         batch = (tmp_path / "batch" / individual.name).read_text()
         assert batch == individual.read_text()
         assert f"genes/{source.stem}/TP53/TP53-ai-review.html" in batch
+
+
+def test_proposed_ontology_changes_render_the_slots_the_schema_actually_has(tmp_path):
+    """The ontology-change table must read live slot names, not renamed ones.
+
+    This exists because a rename reached the schema, the policy module and the
+    exporter but not `project.html.j2`, which kept reading `report_status` and
+    `term_tracker_issue`. Every page therefore showed a Status of `NOT_REPORTED`
+    -- a value in no current enum -- and a blank Tracker for records linking a
+    real ticket. The three existing tests over `proposed_ontology_changes` all
+    assert at the `project_ontology_changes()` data level and passed throughout,
+    because the bug was in Jinja. Asserting on the rendered HTML is what catches
+    the next rename.
+    """
+    from ai_gene_review.render_projects import render_project
+
+    source = tmp_path / "projects/OC.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\n"
+        "title: Ontology changes\n"
+        "proposed_ontology_changes:\n"
+        "- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT\n"
+        "  ontology: GO\n"
+        "  about_node:\n"
+        "    id: GO:0006419\n"
+        "    label: alanyl-tRNA aminoacylation\n"
+        "  has_direct_replacement:\n"
+        "    id: GO:0006418\n"
+        "    label: tRNA aminoacylation for protein translation\n"
+        "  justification: Restates an existing molecular function.\n"
+        "  origin: UPSTREAM_COMPLETED\n"
+        "  stance: AGREE\n"
+        "  ontology_state_verified: '2026-11-01'\n"
+        "  adoption_status: IN_PROGRESS\n"
+        "  upstream_tracker_issue: https://example.invalid/go/15375\n"
+        "---\n\n# Body\n"
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+
+    # the renamed slots are read
+    assert "https://example.invalid/go/15375" in html
+    assert "IN_PROGRESS" in html
+    # origin and stance are surfaced, since they decide how to read the status
+    assert "UPSTREAM_COMPLETED" in html
+    assert "AGREE" in html
+    # and the value that only the stale template could produce is gone
+    assert "NOT_REPORTED" not in html
+
+
+def test_a_self_proposed_change_renders_its_request_status_not_its_adoption(tmp_path):
+    """Status is keyed on direction: an outbound request has no adoption status."""
+    from ai_gene_review.render_projects import render_project
+
+    source = tmp_path / "projects/OC2.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\n"
+        "title: Ontology changes\n"
+        "proposed_ontology_changes:\n"
+        "- change_type: NODE_RENAME\n"
+        "  ontology: GO\n"
+        "  about_node:\n"
+        "    id: GO:0000001\n"
+        "    label: old label\n"
+        "  old_value: old label\n"
+        "  new_value: new label\n"
+        "  justification: The label is miscased.\n"
+        "  origin: SELF_PROPOSED\n"
+        "  confidence: PROBABLE\n"
+        "  request_status: FILED\n"
+        "  upstream_tracker_issue: https://example.invalid/go/2\n"
+        "---\n\n# Body\n"
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+    assert "SELF_PROPOSED" in html
+    assert "FILED" in html
+    assert "NOT_REPORTED" not in html
