@@ -676,14 +676,18 @@ found, and because two of the figures here were themselves corrections.
    source of defects this project has found, and for as long as no `INTERPRO`
    value existed `just export-source-defects` could not produce the report
    that mattered most. #5984 added the value and #6027 re-filed 83 defects
-   onto it, so `reports/source-defects/INTERPRO.md` now exists and carries
-   90. Corpus-wide that is sixth, behind `UNIPROT`, `GO_CENTRAL`, `RGD`,
-   `PSEUDOCAP` and the `OTHER` pile it is draining — the superlative above is
-   scoped to the defects *this project* found, and does not survive being
-   restated as a corpus-wide rank. The ~130 figure above was the estimate
-   made before that migration ran; #6027 moved 85 defects in all and left 112
-   `resource: OTHER`, of which 45 name no resource at all and so cannot be
-   triaged without reading each explanation.
+   onto it, so `reports/source-defects/INTERPRO.md` exists. It is not the
+   largest report: `UNIPROT`, `GO_CENTRAL`, `RGD`, `PSEUDOCAP` and the
+   `OTHER` pile it is draining were each larger than it when #6027 merged.
+   So the superlative above is scoped to the defects *this project* found and
+   does not survive being restated as a corpus-wide rank. No corpus total is
+   quoted here on purpose: every one of these counts moves whenever `main`
+   moves, and an earlier version of this paragraph had to be corrected twice
+   for exactly that. The ~130 figure above was the estimate made before the
+   migration ran; #6027 itself re-filed 85 defects, 83 of them onto
+   `INTERPRO`, and left 112 `resource: OTHER` at that point, of which 45
+   named no resource at all and so cannot be triaged without reading each
+   explanation.
 2. **`SourceDefectTypeEnum` could not express the same assertion entered
    twice, and had no duplicate-related value at all** — **done in #5984**,
    which added `DUPLICATE_ASSERTION`, named so as not to collide with the
