@@ -10,5 +10,5 @@
   KDO-pathway terms that the gene carries experimentally.
 - PMID:12639950 (Wu and Woodard 2003, "Escherichia coli YrbI is
   3-deoxy-D-manno-octulosonate 8-phosphate phosphatase") was fetched for this
-  review; its PubMed id was confirmed by a title search. A NEW GO:0019294 row
+  review; its PubMed id was confirmed by a title search. A NEW GO:0019294 row (IDA, on the cloned yrbI product)
   records KdsC's role in completing KDO formation.
