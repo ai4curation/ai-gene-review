@@ -23,3 +23,8 @@
 - GO:0005975 -> MODIFY GO:1902777.
 - GO:0030246 carbohydrate binding (IPR011013) -> MARK_AS_OVER_ANNOTATED.
 - PANTHER PTHR46959:SF2 (with YihQ).
+
+## 2026-11-11 PR review follow-up
+- GO:0005975 replacement changed from GO:1902777 to GO:0016139 glycoside catabolic process, to agree
+  with the E. coli YihQ review: SmoI hydrolyses the glycoside SQGro and produces SQ, but does none
+  of the work of SQ breakdown (participation test), so GO:1902777 is not proposed.

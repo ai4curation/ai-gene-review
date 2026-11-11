@@ -46,3 +46,10 @@ session), PMID:24463506 (abstract only), PMID:33791429 (full text), PMID:4167606
   catalytic activity, no separate carbohydrate-binding module function shown.
 - PAINT node PTN002333608 belongs to PTHR46959 (owned by another worker); not
   re-adjudicated here.
+
+## 2026-11-11 PR review follow-up
+- GO:0005975 replacement changed from GO:0019377 glycolipid catabolic process to GO:0016139
+  glycoside catabolic process. Checked in GO (local OLS-equivalent GO db): neither term is an
+  is_a descendant of GO:0005975, so the reason now calls it a sister-branch refinement.
+  GO:0016139 covers SQGro (the demonstrated E. coli growth substrate, PMID:30276262) as well as
+  SQDG. SmoI (AGRFC) and the module's sulfoquinovosidase annoton were aligned to the same term.
