@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR #6125: main 65bf77f958 integrated at 7324c09b1c; 204 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
+- [ ] `bacterial_dnak_dnaj_refolding_cycle`: PR #6125: main ac30fe31cf integrated at 40d22c3864; 207 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
@@ -1335,3 +1335,11 @@ Superseded parent snapshot lines retained for provenance:
 ## 2026-11-11 — resume PR #6125 after disk cleanup
 
 Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6125 at d150de850141dd71b01a502b9aa5e050d123088d. All 207 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-11 — reconcile resumed PR #6125 tracker
+
+PR #6125: main ac30fe31cf integrated at 40d22c3864; 207 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/resume-round4-20261111/integration-proof.json](../analysis/module_audits/bacterial_dnak_dnaj_refolding_cycle/resume-round4-20261111/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+
+Superseded parent snapshot lines retained for provenance:
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 10 PR_OPEN, 1 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
