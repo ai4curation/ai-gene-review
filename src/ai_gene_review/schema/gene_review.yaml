@@ -2792,11 +2792,59 @@ classes:
         range: float
         minimum_value: 0.0
         maximum_value: 1.0
-        description: Overall confidence in the rule (0.0 to 1.0)
+        description: >-
+          Confidence that the recommended action is right (0.0 to 1.0). It is
+          confidence in the verdict, never confidence in the rule: a DEPRECATE
+          at 0.95 means "almost certainly should be retired". A verdict the
+          reviewer holds below 0.5 should be UNDECIDED instead.
       supported_by:
         range: SupportingTextInReference
         multivalued: true
         description: Supporting text from literature for this review
+      corrections:
+        range: RuleReviewCorrection
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Claims an earlier version of this review made that a later check
+          showed to be wrong, each with the evidence that refuted it. The
+          wrong claim is removed from the review's prose and recorded here, so
+          that review errors stay countable and can become test cases.
+
+  RuleReviewCorrection:
+    description: >-
+      One withdrawn claim of a rule review and what replaced it. A correction
+      is a receipt for a reviewing error: it names the claim, the check that
+      refuted it, and a source a validator or a person can look up.
+    attributes:
+      date:
+        range: string
+        description: Date the correction was made (YYYY-MM-DD)
+      withdrawn_claim:
+        range: string
+        required: true
+        description: The claim as the earlier review made it (short quote or paraphrase)
+      correction:
+        range: string
+        required: true
+        description: What the check showed instead
+      error_type:
+        range: RuleReviewErrorTypeEnum
+        description: The kind of reviewing error
+      evidence:
+        range: string
+        multivalued: true
+        description: >-
+          Checkable facts behind the correction, one per item, each naming its
+          source: a UniProt accession with a GO id, evidence code and reference
+          (P0CX53 GO:0034517 IGI PMID:39934334), an InterPro id with its official
+          name, a UniProtKB query with its count and release, or a GO id with
+          its label and parent.
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Supporting text from literature or files
 
   EmbeddedRule:
     description: >-
@@ -2859,6 +2907,22 @@ classes:
       modified_date:
         range: string
         description: Date the rule was last modified
+      retrieved_date:
+        range: string
+        description: >-
+          Date (YYYY-MM-DD) the rule was fetched from UniProt for this review.
+          Rules change and are withdrawn, so a review describes the rule as of
+          this date.
+      source_condition_set_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of condition sets in the rule as fetched. When it exceeds the
+          number recorded in condition_sets, the review examined only part of
+          the rule and its verdict must say so.
+      withdrawn:
+        range: boolean
+        description: True when UniProt no longer serves the rule (HTTP 404 at retrieved_date)
 
   RuleConditionSet:
     description: >-
@@ -3032,6 +3096,12 @@ classes:
         range: string
         multivalued: true
         description: UniProt accessions for which the consequent is incorrect
+      consequent_obsolete:
+        range: boolean
+        description: >-
+          True when the consequent itself no longer exists (an obsolete GO
+          term). This is a ground for DEPRECATE that needs no wrongly
+          annotated protein; the online receipt check confirms it against GO.
       gene_reviews:
         range: string
         multivalued: true
@@ -4923,6 +4993,36 @@ enums:
         description: Review is underway
       COMPLETE:
         description: Review is complete
+
+  RuleReviewErrorTypeEnum:
+    description: Kinds of reasoning error found in rule reviews
+    permissible_values:
+      WRONG_IDENTIFIER_MEANING:
+        description: An InterPro, FunFam, GO or EC identifier was given the name or meaning of a different entry
+      CONJUNCTION_IGNORED:
+        description: A condition was judged alone although the rule requires it together with other signatures or a taxon
+      REFUTED_BY_CURATED_ANNOTATION:
+        description: A match called a false positive carries the annotation, or a descendant, on experimental or curated evidence
+      SIZE_AS_EVIDENCE:
+        description: The number of condition sets, or a tool limit, was used as evidence that the annotation is wrong
+      GENERAL_IS_NOT_WRONG:
+        description: A true but general or redundant consequent was treated as false
+      ONTOLOGY_MISREAD:
+        description: The GO hierarchy or a term's scope was misread (a descendant called unrelated, a non-descendant offered as more specific, a process term replaced by function terms)
+      UNEXAMINED_RULE:
+        description: A verdict was given on condition sets the review never recorded or read
+      UNSUPPORTED_SOURCE:
+        description: The claim cited the review's own notes, an AI research file, a missing file or an unresolvable reference as literature
+      TAXON_MISREAD:
+        description: Taxon conditions were misstated, or a restriction that keeps a set precise was called arbitrary
+      SAMPLE_OVERGENERALISED:
+        description: A count from reviewed (Swiss-Prot) entries, or one example, was generalised to everything the rule matches
+      LOW_RECALL_IS_NOT_WRONG:
+        description: Missing coverage (false negatives) was treated as making the rule's annotations false
+      STALE_RULE_VERSION:
+        description: The claim described a version of the rule that differs from the one served at retrieved_date
+      OTHER:
+        description: Another kind of error, described in the correction
 
   RuleActionEnum:
     description: Recommended action for the rule

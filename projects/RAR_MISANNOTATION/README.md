@@ -8,12 +8,16 @@ Supporting material for [RAR_MISANNOTATION](../RAR_MISANNOTATION.md).
 | `scripts/check_current_goa.py` | Looks up every protein–term pair in current GOA (QuickGO API) and UniProt. |
 | `data/rar_supplement_cases.yaml` | The 93 flagged term rows (43 for 2019-06-03, 50 for 2018-11-06) with all 440 protein–term pairs. |
 | `data/rar_current_status.yaml` | Per pair: organism, UniProt status, whether GOA still has the annotation, and with what evidence. |
+| `scripts/rar_rerun.py` | Reruns the RAR screen on current GOA proteome files and GO, with a taxon-constraint check; downloads to `.cache/rar/`. |
+| `data/rar_rerun_direct_candidates.yaml` | Generated: flagged terms that pass the candidate filter, with every flagged annotation, its evidence, PAINT node and any GO taxon constraint it breaks. The unfiltered output stays in `.cache/rar/`. |
+| `data/rar_rerun_triage.yaml` | First-pass verdicts on the constraint breaks and the prokaryote IBA nodes. |
 
 Run from the repository root:
 
 ```bash
 uv run python projects/RAR_MISANNOTATION/scripts/parse_supplement.py
 uv run python projects/RAR_MISANNOTATION/scripts/check_current_goa.py
+uv run python projects/RAR_MISANNOTATION/scripts/rar_rerun.py
 ```
 
 ## How the tables are reconstructed

@@ -1739,6 +1739,24 @@ def build_heatmap_table_data(
     }
 
 
+def rule_page_is_current(page_html: str, review_yaml: str) -> bool:
+    """Whether a rendered rule page shows the review YAML as it now stands.
+
+    Every page embeds the review's YAML source, so a page is current exactly
+    when it contains the current text (HTML-escaped as the template escapes it).
+
+    >>> from markupsafe import escape
+    >>> review = "action: ACCEPT / notes: a < b"
+    >>> rule_page_is_current(f"<pre><code>{escape(review)}</code></pre>", review)
+    True
+    >>> rule_page_is_current("<pre><code>action: DEPRECATE</code></pre>", review)
+    False
+    """
+    from markupsafe import escape
+
+    return str(escape(review_yaml)) in page_html
+
+
 def render_rule_review_html(
     rule_id: str,
     cache_dir: Path,
@@ -1796,8 +1814,17 @@ def render_rule_review_html(
             )
         )
         if missing_analysis or missing_mappings:
-            print(f"Preserving {existing_output}: analysis cache unavailable")
-            return existing_output
+            # Preserve only a page that renders the review as it now stands. A page
+            # built from an earlier version of the review shows that version's verdict
+            # and reasoning; keeping it would publish a verdict the review has since
+            # withdrawn, so it is re-rendered without the cached tables instead.
+            if rule_page_is_current(existing_html, review_yaml_path.read_text(encoding='utf-8')):
+                print(f"Preserving {existing_output}: analysis cache unavailable")
+                return existing_output
+            print(
+                f"Re-rendering {existing_output} without cached analysis: "
+                "the page shows an earlier version of the review"
+            )
 
     # Read raw YAML content for preview
     with open(review_yaml_path, 'r') as f:

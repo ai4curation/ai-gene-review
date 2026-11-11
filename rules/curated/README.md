@@ -12,7 +12,8 @@ auditable record, and names the external source it replaces.
 | [CR-0003](CR-0003.yaml) | GO:0006511 ubiquitin-dependent protein catabolic process | IPR000426 AND ubiquitin relay module not absent | interpro2go IPR000426 | PROPOSED |
 | [CR-0004](CR-0004.yaml) | EC 1.2.1.75 name, RHEA:26446 | FunFam 3.40.50.720:FF:000411 AND MCR-type CDD AND Archaea | ARBA00067001, ARBA00052213 | PROPOSED |
 | [CR-0005](CR-0005.yaml) | GO:0044548 S100 protein binding | IPR037893 AND Chordata | interpro2go IPR037893 | PROPOSED |
-| [CR-0006](CR-0006.yaml) | GO:0005118 sevenless binding, GO:0045500 sevenless signaling pathway | IPR002956 AND IPR050726 AND Arthropoda | interpro2go IPR002956 (sevenless binding) | PROPOSED |
+| [CR-0006](CR-0006.yaml) | GO:0005118 sevenless binding, GO:0045500 sevenless signaling pathway | IPR002956 AND IPR050726 AND Diptera | interpro2go IPR002956 (sevenless binding) | PROPOSED |
+| [CR-0007](CR-0007.yaml) | GO:0020037 heme binding, GO:0009055 electron transfer activity | CDD cd21555 | (new coverage; model unintegrated in InterPro) | PROPOSED |
 
 ## Semantics
 
@@ -25,6 +26,11 @@ auditable record, and names the external source it replaces.
   unsatisfiable in the protein's organism or context, and holds when it is
   satisfiable or not evaluated. A missing component may be a detection gap, so
   absence of evidence never blocks an annotation. They cannot be negated.
+  This default has a cost where the module is rare in a lineage: CR-0003 keeps 149
+  archaeal annotations on unevaluated proteomes although the relay was found in 3 of
+  504 complete ones (see its notes). Before choosing a module condition over a taxon
+  condition, count what each keeps and what each drops, and record both in
+  `validation_runs`.
 
 ## When to use which condition
 
