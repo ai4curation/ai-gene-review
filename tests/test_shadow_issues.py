@@ -436,6 +436,42 @@ def test_cli_validate_show_outstanding(config, tracker_dir):
     assert result.exit_code == 1
 
 
+def _commit(repo, path, message):
+    target = repo / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(message)
+    subprocess.run(["git", "add", path], cwd=repo, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@example.org",
+            "commit",
+            "-qm",
+            message,
+        ],
+        cwd=repo,
+        check=True,
+    )
+
+
+def test_prior_work_finds_mandated_forms_and_skips_own_records(tmp_path):
+    from ai_gene_review.shadow_issues.prior_work import commits_naming_issues
+
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    _commit(tmp_path, "genes/a.yaml", "Fix annotation (issues/go-annotation/7001)")
+    _commit(tmp_path, "genes/b.yaml", "Review gene, cf. go-annotation 7003")
+    _commit(
+        tmp_path,
+        "issues/go-annotation/7002/issue.yaml",
+        "Shadow go-annotation 7002: the shadow work itself",
+    )
+    found = commits_naming_issues(tmp_path, "go-annotation")
+    assert sorted(found) == [7001, 7003]
+
+
 RATING = {
     "tracker": "example",
     "number": 101,
@@ -508,6 +544,37 @@ def test_rating_needs_report_and_is_tabulated(config, tracker_dir):
         "rating-same-model" in result.output
         and "SAME_MODEL_SEPARATE_RUN" in result.output
     )
+
+
+def test_adjudication_is_shown_and_checked(config, tracker_dir):
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "report.md").write_text("# report\n")
+    ruling = {
+        "dimension": "downstream",
+        "rater_value": "PARTIAL",
+        "adjudicated_value": "PENDING_RELEASE",
+        "by": "coordinator",
+        "at": "2026-11-11T00:00:00Z",
+        "reason": "Nothing released yet.",
+    }
+    rating_path = tracker_dir / "101" / "rating.yaml"
+    root = str(tracker_dir.parent)
+    runner = CliRunner()
+    rating_path.write_text(yaml.safe_dump({**RATING, "adjudications": [ruling]}))
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 0, result.output
+    result = runner.invoke(app, ["shadow-issues", "ratings", "example", "--root", root])
+    assert "PARTIAL → PENDING_RELEASE*" in result.output
+
+    rating_path.write_text(
+        yaml.safe_dump({**RATING, "adjudications": [{**ruling, "dimension": "vibes"}]})
+    )
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 1 and "vibes" in result.output
 
 
 def test_committed_tracker_validates():

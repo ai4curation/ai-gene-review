@@ -80,6 +80,10 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
    link as `report_url`, an optional mirror. The procedure for steps 4 and 5
    is the `shadow-issue-rater` skill (`.claude/skills/shadow-issue-rater/`).
 
+A disputed score is not edited. The dispute is recorded as an `adjudications`
+entry on the rating (dimension, rater's value, adjudicated value, by whom,
+why), and `just shadow-ratings` shows it as `rater → adjudicated*`.
+
 `just outstanding-shadow-issues` lists the four queues (`untriaged`,
 `in_progress`, `needs_shadow`, `needs_rating`), prospective issues and newest
 issues first. `just shadow-ratings` prints the table of all ratings, generated
@@ -212,18 +216,19 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   | Added value | SOME | SUBSTANTIAL |
 
   Both raters found the same facts: the curator's fix was a primary NOT on
-  P53598, nothing is released yet, and the *S. pombe* alpha subunit O13750
-  still carries the IBA. They weigh them differently. Sonnet reads the
-  worker's family-wide proposal (a Fungi-node NOT reaching about 18 other
-  fungal recipients) as more than the curator did, which lowers agreement and
-  raises added value. Opus counted only what the thread establishes. Two
-  points in the Sonnet rating overreach. It treats the absence of a Fungi-node
-  NOT as established, though the thread does not say either way. And it scores
-  `downstream: PARTIAL` although nothing upstream has reached released data,
-  which the definitions call `PENDING_RELEASE`. A single issue cannot settle
-  which rater is better calibrated, but it shows the rating depends on the
-  rater. That argues for rating a sample of issues twice and reporting
-  agreement, not one score.
+  P53598, and QuickGO still shows the pre-fix IBA on P53598 and on the
+  *S. pombe* alpha subunit O13750. Neither checked release dates, and no
+  release postdates the fix: GO 2026-08-05, PAINT 2026-08-28, fix 2026-10-02.
+  So the downstream rows carry no information about the fix. The Sonnet
+  rating reads the P53598 row as release lag but the identical O13750 row as
+  "never fixed", and treats a Fungi-node NOT as absent where the thread is
+  silent. Those inferences raised its added value and lowered its downstream
+  score. Its resolution text in `issue.yaml` has been restored to what the
+  evidence supports, and two adjudications on the rating record downstream
+  PARTIAL → PENDING_RELEASE and added value SUBSTANTIAL → SOME, with reasons.
+  Its other scores stand. A single issue cannot settle which rater is better
+  calibrated, but it shows the rating depends on the rater, which argues for
+  rating a sample of issues twice and reporting agreement, not one score.
 
 ## Next steps
 
@@ -232,5 +237,6 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
 - Re-rate PENDING_RELEASE issues after each PANTHER/GO release.
 - Rate a sample of shadowed issues with two raters on different models, and
   report inter-rater agreement per dimension.
-- Tighten the rater skill: an absence the thread does not state is unknown,
-  and `downstream` is `PENDING_RELEASE` whenever nothing upstream is released.
+- Record each downstream source's release date on resolution evidence, and
+  for PAINT issues compare IBD/IKR rows across PAINT releases rather than
+  propagated IBAs only.

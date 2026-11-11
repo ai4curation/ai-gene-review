@@ -22,29 +22,84 @@ BULK_THRESHOLD = 3
 def issue_numbers(message: str, tracker: str) -> set[int]:
     """Upstream issue numbers a commit message names.
 
-    Matches ``<tracker>#N``, ``<tracker>/issues/N`` and ``<tracker> issue N``.
+    Matches the forms this project asks authors to use, ``issues/<tracker>/N`` and
+    ``<tracker> N``, and the older forms ``<tracker>#N``, ``<tracker>/issues/N``
+    and ``<tracker> issue N``. The bare ``<tracker> N`` form needs a number of at
+    least three digits that does not start a range, so "go-annotation 5516-6649"
+    (a span of issues, not one) is not read as naming issue 5516.
 
     >>> sorted(issue_numbers("Fix (go-annotation#6591); see geneontology/go-annotation/issues/6414", "go-annotation"))
     [6414, 6591]
     >>> sorted(issue_numbers("go-annotation issue #5886 and the go-annotation tracker", "go-annotation"))
     [5886]
-    >>> issue_numbers("Bump (#168)", "go-annotation")
+    >>> sorted(issue_numbers("Shadows issues/go-annotation/6700; cf. go-annotation 6701.", "go-annotation"))
+    [6700, 6701]
+    >>> issue_numbers("Backfilled go-annotation 5516-6649 and go-annotation 5516–6649", "go-annotation")
+    set()
+    >>> issue_numbers("Bump (#168); go-annotation 12 rows", "go-annotation")
     set()
     """
-    pattern = re.compile(rf"{re.escape(tracker)}(?:#|/issues/| issue #?)(\d+)\b")
-    return {int(n) for n in pattern.findall(message)}
+    t = re.escape(tracker)
+    pattern = re.compile(
+        rf"(?:issues/{t}/|{t}(?:#|/issues/| issue #?))(\d+)\b"
+        rf"|(?<![/\w]){t} (\d{{3,}})\b(?!\s*[-–]\s*\d)"
+    )
+    return {int(a or b) for a, b in pattern.findall(message)}
+
+
+def _is_shallow(repo_root: Path) -> bool:
+    out = subprocess.run(
+        ["git", "rev-parse", "--is-shallow-repository"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    return out == "true"
+
+
+def shallow_boundary(repo_root: Path) -> list[str]:
+    """Commits whose parents a shallow clone hides; empty for a full clone."""
+    path = subprocess.run(
+        ["git", "rev-parse", "--git-path", "shallow"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    shallow = (repo_root / path) if not Path(path).is_absolute() else Path(path)
+    return (
+        shallow.read_text().split()
+        if _is_shallow(repo_root) and shallow.exists()
+        else []
+    )
 
 
 def commits_naming_issues(
-    repo_root: Path, tracker: str
+    repo_root: Path, tracker: str, allow_shallow: bool = False
 ) -> dict[int, list[dict[str, Any]]]:
     """Map issue number to the commits naming it, newest first.
 
     Each entry has ``commit`` (12-character hash), ``subject``, and ``bulk`` (the
     commit names more than :data:`BULK_THRESHOLD` issues).
+
+    A commit that touches the issue's own folder ``issues/<tracker>/N/`` is the
+    shadow protocol's own record (triage, shadow work, a rating, or the commit
+    that created the mirror), not prior work, so it is skipped for that issue.
+
+    Raises on a shallow clone, whose truncated history would silently drop
+    entries, unless ``allow_shallow`` is set by someone who has checked that the
+    hidden commits name no issue (see :func:`shallow_boundary`).
     """
+    if _is_shallow(repo_root) and not allow_shallow:
+        raise RuntimeError(
+            "git history is shallow (boundary: "
+            + ", ".join(c[:12] for c in shallow_boundary(repo_root))
+            + "); fetch the full history (git fetch --unshallow), or pass "
+            "--allow-shallow after checking the hidden commits name no issue"
+        )
     log = subprocess.run(
-        ["git", "log", "--format=%H%x00%s%x00%B%x1e"],
+        ["git", "log", "--name-only", "--format=%x1e%H%x00%s%x00%B%x1f"],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -54,9 +109,14 @@ def commits_naming_issues(
     for entry in log.split("\x1e"):
         if not entry.strip():
             continue
-        sha, subject, body = entry.strip("\n").split("\x00", 2)
+        header, _, files = entry.partition("\x1f")
+        sha, subject, body = header.strip("\n").split("\x00", 2)
+        touched = set(files.split())
         numbers = issue_numbers(f"{subject}\n{body}", tracker)
         for number in numbers:
+            own = f"issues/{tracker}/{number}/"
+            if any(path.startswith(own) for path in touched):
+                continue
             found[number].append(
                 {
                     "commit": sha[:12],

@@ -30,6 +30,7 @@ from ai_gene_review.shadow_issues.prior_work import (
     commits_naming_issues,
     merge_prior_work,
     names_issue_entries,
+    shallow_boundary,
 )
 from ai_gene_review.shadow_issues.sync import GitHubClient, github_token, sync_tracker
 
@@ -151,10 +152,25 @@ def stats_cmd(
 
 @shadow_issues_app.command("backfill-prior-work")
 def backfill_prior_work_cmd(
-    tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
+    tracker: TrackerArg = "go-annotation",
+    root: RootOpt = ISSUES_DIR,
+    allow_shallow: Annotated[
+        bool,
+        typer.Option(
+            help="Run on a shallow clone; only after checking the hidden commits name no issue."
+        ),
+    ] = False,
 ) -> None:
     """Rewrite NAMES_ISSUE prior_work from git history (COVERS_SUBJECT entries are kept)."""
-    found = commits_naming_issues(Path("."), tracker)
+    boundary = shallow_boundary(Path("."))
+    if boundary and allow_shallow:
+        typer.echo(
+            "warning: shallow clone; history behind "
+            + ", ".join(c[:12] for c in boundary)
+            + " is not searched",
+            err=True,
+        )
+    found = commits_naming_issues(Path("."), tracker, allow_shallow=allow_shallow)
     changed = 0
     for folder in iter_issue_folders(root / tracker):
         path = folder / "issue.yaml"
@@ -178,7 +194,10 @@ def backfill_prior_work_cmd(
 def ratings_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
 ) -> None:
-    """Print a markdown table of every rating (rating.yaml and rating-<label>.yaml files)."""
+    """Print a markdown table of every rating (rating.yaml and rating-<label>.yaml files).
+
+    An adjudicated dimension shows as ``rater value → adjudicated value*``.
+    """
     dimensions = ("triage", "diagnosis", "actions", "downstream", "added_value", "harm")
     header = [
         "issue",
@@ -199,6 +218,11 @@ def ratings_cmd(
         _, issue = load_issue(folder)
         for rating_path in ratings:
             rating = yaml.safe_load(rating_path.read_text())
+            for ruling in rating.get("adjudications", []):
+                # Show the ruling, marked, beside what the rater scored.
+                rating[ruling["dimension"]] = (
+                    f"{ruling['rater_value']} → {ruling['adjudicated_value']}*"
+                )
             row = [
                 f"{tracker} {folder.name}",
                 rating_path.stem,
