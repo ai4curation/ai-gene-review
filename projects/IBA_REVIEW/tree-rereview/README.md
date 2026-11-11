@@ -10,9 +10,10 @@ the re-read: every such row, read again next to what the gene's tree extract
 
 ## Scope
 
-`plan.yaml` is the frozen work list: 1,699 rows in 1,180 genes, in 39 batches of about 45
-rows. Genes with a row on the candidate list
-([`tree-evidence-candidates.yaml`](../tree-evidence-candidates.yaml)) come first.
+`plan.yaml` is the frozen work list for gene reviews: 1,699 rows in 1,180 genes, in 73
+batches of about 24 rows, which is what one agent reads in one go. Genes with a row on the
+candidate list ([`tree-evidence-candidates.yaml`](../tree-evidence-candidates.yaml)) come
+first.
 
 - 1,686 rows are IBA rows with an overruling verdict that are still in the gene's GOA
   file and do not yet quote the extract.
@@ -20,7 +21,12 @@ rows. Genes with a row on the candidate list
   gene. They need a decision about the loss, not a quote, and are read but never edited
   by the script.
 
-The 386 disputed node assessments in family reviews are not in this plan.
+`plan-families.yaml` is the work list for family reviews: 386 node assessments in 218
+families that dispute a PAINT placement (`TOO_DEEP`, `WRONG_NODE`, `NEEDS_PRUNING`,
+`LOSS_CONTRADICTED`, `LOSS_TOO_BROAD`) without citing a tree listing, in 18 batches. They
+are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the same way,
+with two additions from the release tree: where each seed sits, and how many leaves of
+each subfamily the review names as affected lie below the node.
 
 ## Method
 
@@ -32,9 +38,9 @@ One batch at a time:
    sits, where the gene sits, each seed with its relation to the gene and its identity in
    the family alignment, PAINT losses on the path, and the extract's summary by numbered
    sentence.
-2. **Reading.** An agent reads the dossier and returns one reading per row (below), the
-   summary sentences to quote, and one or two sentences on what the tree shows. It edits
-   nothing.
+2. **Reading.** An agent reads the dossier, and nothing else, and returns one reading per
+   row (below), the summary sentences to quote, and one or two sentences on what the tree
+   shows. It edits nothing.
 3. **Verification.** A second agent tries to fault the first: every correction, every row
    on the candidate list, and one in four of the rest. It checks the reading against the
    definitions and every fact in the sentence against the dossier.
@@ -62,7 +68,7 @@ the edit cannot be placed. No verdict is changed by the script.
 
 ## Files
 
-- `plan.yaml`: the batches. Made once and kept.
+- `plan.yaml`, `plan-families.yaml`: the batches. Made once and kept.
 - `runs/<batch>.yaml`: one record per batch. Every row with its reading, the sentence, the
   verifier's check where there was one, and the outcome: `applied`, `adjudicate` (with the
   reason) or `not_read`.

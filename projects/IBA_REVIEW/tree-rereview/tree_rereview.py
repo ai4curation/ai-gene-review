@@ -39,6 +39,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import textwrap
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
@@ -61,7 +62,10 @@ RUNS = HERE / "runs"
 CANDIDATES = HERE.parent / "tree-evidence-candidates.yaml"
 Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
-ROWS_PER_BATCH = 45
+#: A batch is what one agent reads in one go: its dossier has to fit in a single file read.
+ROWS_PER_BATCH = 24
+DOSSIER_WIDTH = 220
+SEEDS_SHOWN = 8
 #: Readings whose edit is a quote plus a sentence: nothing in the review is contradicted.
 ADDITIVE = {"SUPPORTS", "NOT_A_TREE_ARGUMENT", "PAINT_ALREADY_REMOVED"}
 READINGS = [*sorted(ADDITIVE), "REASON_CONTRADICTED", "VERDICT_UNSUPPORTED", "LOSS_TOO_BROAD", "LOSS_APPLIES", "CANNOT_TELL"]
@@ -300,7 +304,7 @@ def dossier_rows(gene: str, flags: dict[tuple[str, str], list[str]]) -> Iterator
     in_extract = extract_rows(load(extract_path) or {})
     annotations = [a for a in review.get("existing_annotations") or [] if isinstance(a, dict)]
     yield f"## GENE {gene} ({review.get('id', '?')}, {review.get('gene_symbol', '?')})"
-    yield f"description: {_clip(review.get('description'), 500)}"
+    yield f"description: {_clip(review.get('description'), 320)}"
     for target in target_rows(gene, flags):
         term, negated = target["term"], target["negated"]
         annotation = next(
@@ -375,8 +379,11 @@ def dossier_rows(gene: str, flags: dict[tuple[str, str], list[str]]) -> Iterator
             (seeds[token] for token in row["seeds"] if token in seeds),
             key=lambda seed: (seed.get("relation") != "SELF", seed.get("tree_distance", 99.0)),
         )
-        yield f"seeds of this row ({len(row['seeds'])}; nearest first{', first 15 shown' if len(listed) > 15 else ''}):"
-        for seed in listed[:15]:
+        relations = Counter(seed.get("relation", "not in this tree") for seed in listed)
+        counted = ", ".join(f"{count} {name.lower()}" for name, count in relations.most_common())
+        shown = f"; the {SEEDS_SHOWN} nearest shown" if len(listed) > SEEDS_SHOWN else ""
+        yield f"seeds of this row ({len(row['seeds'])}: {counted}{shown}):"
+        for seed in listed[:SEEDS_SHOWN]:
             yield _seed_line(seed, names)
         yield "extract summary, by sentence (quote by number):"
         for number, sentence in enumerate(sentences(row["summary"]), 1):
@@ -399,7 +406,12 @@ def write_dossier(batch: str, out: Path) -> Path:
             lines.append("")
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"{batch}.md"
-    path.write_text("\n".join(lines), encoding="utf-8")
+    wrapped = [
+        textwrap.fill(line, width=DOSSIER_WIDTH, subsequent_indent="      ", break_long_words=False, break_on_hyphens=False)
+        if len(line) > DOSSIER_WIDTH else line
+        for line in lines
+    ]
+    path.write_text("\n".join(wrapped), encoding="utf-8")
     return path
 
 
