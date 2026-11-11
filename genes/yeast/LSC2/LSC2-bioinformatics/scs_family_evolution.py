@@ -132,6 +132,60 @@ def lineage_label(root, leaf_pid):
     return path
 
 
+def path_to(root, acc):
+    """Nodes on the path from the tree root to the leaf with UniProt accession `acc`."""
+    def walk(n, trail):
+        trail = trail + [n]
+        if not kids(n):
+            return trail if acc_of(n) == acc else None
+        for c in kids(n):
+            r = walk(c, trail)
+            if r:
+                return r
+        return None
+    return walk(root, [])
+
+
+def node_record(n):
+    return {"node": n.get("persistent_id"), "event_type": n.get("event_type"), "taxon": n.get("species"),
+            "n_leaves": len(leaves(n))}
+
+
+def organism_clade(root, organism):
+    """Smallest internal node containing every leaf of `organism` (None if the organism is absent)."""
+    target = {x["persistent_id"] for x in leaves(root) if x.get("organism") == organism}
+    if not target:
+        return None
+    best = None
+
+    def walk(n):
+        nonlocal best
+        ids = {x["persistent_id"] for x in leaves(n)}
+        if target <= ids:
+            best = n
+            for c in kids(n):
+                walk(c)
+    walk(root)
+    return best
+
+
+def tree_nodes(alpha, beta):
+    """PANTHER node ids that the family reviews cite, read from the trees rather than typed in."""
+    out = {}
+    for fam, root, acc, label in ((ALPHA_FAMILY, alpha, "P53598", "LSC1"), (BETA_FAMILY, beta, Q["LSC2"], "LSC2")):
+        pth = path_to(root, acc)
+        out[f"{fam}_path_root_to_{label}"] = [node_record(n) for n in pth[:-1]] if pth else "leaf not found"
+        tv = organism_clade(root, "Trichomonas vaginalis")
+        out[f"{fam}_Trichomonas_vaginalis_clade"] = node_record(tv) if tv is not None else None
+    xc = [x for x in leaves(beta) if x.get("organism") == "Xanthomonas campestris"]
+    out[f"{BETA_FAMILY}_Xanthomonas_campestris_leaves"] = []
+    for x in xc:
+        pth = path_to(beta, acc_of(x)) if acc_of(x) else None
+        out[f"{BETA_FAMILY}_Xanthomonas_campestris_leaves"].append(
+            {"leaf": x["persistent_id"], "parent_path": [node_record(n) for n in pth[-4:-1]] if pth else None})
+    return out
+
+
 def fetch_fasta(accs):
     out = {}
     accs = list(accs)
@@ -169,6 +223,8 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--ml-bootstraps", type=int, default=1000, help="ultrafast bootstraps for the ML tree; 0 skips it")
     ap.add_argument("--out", default=str(Path(__file__).parent / "results.yaml"))
+    ap.add_argument("--nodes-only", action="store_true",
+                    help="only refresh the panther_tree_nodes section of an existing results file")
     args = ap.parse_args()
     random.seed(args.seed)
     res: dict = {}
@@ -177,6 +233,18 @@ def main():
     bver, beta = get_tree(BETA_FAMILY)
     aver, alpha = get_tree(ALPHA_FAMILY)
     res["panther_version"] = {"beta": bver, "alpha": aver}
+    res["panther_tree_nodes"] = tree_nodes(alpha, beta)
+    if args.nodes_only:
+        old = yaml.safe_load(Path(args.out).read_text())
+        merged = {}
+        for k, v in old.items():
+            merged[k] = v
+            if k == "panther_version":
+                merged["panther_tree_nodes"] = res["panther_tree_nodes"]
+        merged["panther_tree_nodes"] = res["panther_tree_nodes"]
+        Path(args.out).write_text(yaml.safe_dump(merged, sort_keys=False, width=110))
+        yaml.safe_dump(res["panther_tree_nodes"], sys.stdout, sort_keys=False, width=110)
+        return
     dup = find(beta, BETA_EUK_DUPLICATION)
     daughters = kids(dup)
     gdp_node = find(beta, PAINT_GDP_NODE)

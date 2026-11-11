@@ -81,6 +81,26 @@ Yeast LSC2 has Pro at this position, the ancestral state shared with E. coli Suc
 Gln at position 20 is confined to the animal, choanoflagellate and Dictyostelium members of the G clade, which is exactly the clade (PTN000929335) where PAINT records the gain of GDP-forming activity and the loss of ADP-forming activity.
 Plant, stramenopile and excavate beta subunits are on the SUCLG2 side of the duplication in the PANTHER tree but keep the ancestral residue, so position relative to the duplication does not by itself predict GDP specificity.
 
+### 4. PANTHER node ids used in the family reviews
+
+These ids are read from the PANTHER release 19 trees by the script (`panther_tree_nodes` in `results.yaml`), not typed in.
+
+| Family | Node | PANTHER label | Leaves | Role in the reviews |
+|---|---|---|---|---|
+| PTHR11117 (alpha) | PTN000122012 | LUCA, speciation | 187 | root node; PAINT places the ADP- and GDP-forming terms here |
+| PTHR11117 (alpha) | PTN004231559 | horizontal transfer | 166 | joins the eukaryotic clade to Proteobacteria |
+| PTHR11117 (alpha) | PTN000122014 | Eukaryota, speciation | 150 | eukaryotic clade; PAINT places mitochondrion here |
+| PTHR11117 (alpha) | PTN000874203 | Fungi, speciation | 21 | fungal clade containing LSC1; proposed place for a loss of GDP-forming activity |
+| PTHR11117 (alpha) | PTN008961326 | duplication | 3 | Trichomonas vaginalis alpha subunits |
+| PTHR11815 (beta) | PTN000212531 | LUCA, speciation | 208 | root node |
+| PTHR11815 (beta) | PTN000212530 | duplication | 176 | eukaryotic beta duplication |
+| PTHR11815 (beta) | PTN008330414 | Eukaryota, speciation | 63 | A-type daughter clade, contains LSC2 and SUCLA2 |
+| PTHR11815 (beta) | PTN000929379 | Fungi, speciation | 16 | fungal beta subunits |
+| PTHR11815 (beta) | PTN008982090 | duplication | 3 | Trichomonas vaginalis beta subunits |
+| PTHR11815 (beta) | PTN001721370 | leaf | 1 | Xanthomonas campestris SucC, placed below a horizontal-transfer node (PTN008982084) inside the animal G clade |
+
+The fungal alpha-subunit clade is node PTN000874203 (21 leaves), on the path from the root to LSC1.
+
 ## Interpretation
 
 - LSC2 is ADP-specific by descent: it belongs to the A-type lineage that also gave rise to animal SUCLA2, and it carries the ancestral Pro at the position where GDP-specific enzymes have Gln.
