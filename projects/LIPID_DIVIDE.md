@@ -217,11 +217,15 @@ Two modules have been built for this project:
    still link the bacterial and archaeal halves once both sides are reviewed.
 7. **Follow-ups from the modules.** YvoF (O34993) and LhaT/YpjA (P54392) are
    both reviewed and complete, so the ether-lipid module's four assigned steps
-   now all have gene reviews behind them. Bacterial CdsA (PA to CDP-DAG) remains
-   the open item: it is the single reaction joining
+   now all have gene reviews behind them. Bacterial CdsA is also done:
+   [ECOLI cdsA](../genes/ECOLI/cdsA/cdsA-ai-review.yaml) (P0ABG1) reviews the
+   single reaction joining
    [bacterial_phosphatidic_acid_synthesis](../modules/bacterial_phosphatidic_acid_synthesis.yaml)
-   to the CDP-DAG modules, and had no bacterial gene review anywhere in the
-   repository.
+   to the CDP-DAG modules, which previously had no bacterial gene review
+   anywhere in the repository. It reports a `WRONG_QUALIFIER` defect to EcoCyc
+   and adds a non-core `GO:0009247` row for the MPIase branch, where CdsA itself
+   forms the first intermediate of the glycolipid that drives membrane-protein
+   integration.
 
 ## Open questions
 
