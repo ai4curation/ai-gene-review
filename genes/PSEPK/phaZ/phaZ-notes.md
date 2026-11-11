@@ -57,3 +57,8 @@ The KT2442 derivative evidence supports qualified KT2440 core molecular function
 ## 2026-11-11 — explicit target-specific molecular-function gap
 
 Retain the supported GO:0050527 core inference and all existing annotation payloads/actions. The purified, product-resolved enzyme is KT2442-derived, so no KT2440 IDA row or accession-free ISS row is manufactured. The specific core now carries a BIOLOGY/CURATION MF_DARK gap for the unmeasured target-matched substrate/product profile and unresolved construct identity, with the positive close-strain evidence stated as its boundary. The broader proposed activity and immutable capacity fixtures remain unchanged. Restore three missing PAINT citations in PTHR43798 and correct the module gap that erroneously denied the retained core claim.
+
+
+## 2026-11-11 — supported activity with a residual construct-specific gap
+
+The earlier MF_DARK classification was incorrect: GO:0050527 chemistry is already supported by the close-strain product-resolved assay. Use RESIDUAL_SUBGAP for the exact target/construct comparison and native substrate profile. Add an ISS proposal identifying KT2442 PhaZ pPAZ3 by its publication and construct name, without inventing an accession, sequence identity, or KT2440 IDA assay. This supersedes the preceding decision to withhold an annotation solely because a stable donor accession is unavailable. All pre-existing annotation payloads/actions and broader activity proposals are retained.
