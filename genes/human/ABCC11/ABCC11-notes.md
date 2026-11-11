@@ -76,6 +76,17 @@ It belongs to the ABC transporter superfamily, ABCC family, conjugate transporte
 - GO:0015216 purine nucleotide transporter kept ACCEPT (covers cAMP, which the more specific
   cyclic-GMP term does not entail), not TOO_GENERAL.
 
+Steroid-sulfate (DHEAS) efflux is ABCC11's highest-affinity characterized endogenous activity
+(DHEAS Km ~21 µM; also estrone 3-sulfate) and the basis of its description as "an apical efflux
+pump for steroid sulfates" [PMID:16359813 "an ATP-dependent efflux pump for steroid sulfates,
+including dehydroepiandrosterone 3-sulfate"; "mediated ATP-dependent transport of
+dehydroepiandrosterone 3-sulfate with a Km value of 21 microM"]. GO has no current
+molecular-function (or biological-process) term for ABC-type steroid sulfate transport — the
+fitting terms are obsolete — so this activity is captured as a core function via
+`proposed_molecular_function` pointing to a new `proposed_new_terms` entry ("ABC-type steroid
+sulfate transporter activity"), with a matching `suggested_questions` entry flagging the
+ontology gap. When GO creates the term, move its id into `molecular_function`.
+
 No REMOVE actions were warranted: all rows are either correct, correct-but-general
 (TOO_GENERAL/MODIFY), or real non-core localizations. No bare GO:0005515 protein binding row
 present. All cited publications are abstract-only (full_text_available: false); supporting
