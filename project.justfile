@@ -1084,7 +1084,7 @@ validate-prediction-terms +files:
     #!/usr/bin/env bash
     set -uo pipefail
     uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
-    out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
+    out=$(bash scripts/retry_ontology_validation.sh uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
     rc=$?
     echo "$out"
     if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
@@ -1184,7 +1184,7 @@ test-examples:
         ok=true
         uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1 || ok=false
         if $ok; then
-            uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || ok=false
+            bash scripts/retry_ontology_validation.sh uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || ok=false
         fi
         if $ok; then
             echo "  ✓ $name"
@@ -1205,7 +1205,7 @@ test-examples:
             echo "  ✓ $name (correctly rejected by schema)"
             pass=$((pass + 1))
         # If schema passes, try term validation
-        elif ! uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1; then
+        elif ! bash scripts/retry_ontology_validation.sh uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1; then
             echo "  ✓ $name (correctly rejected by term validator)"
             pass=$((pass + 1))
         else
@@ -1349,7 +1349,7 @@ validate-all:
     # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
     # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
     # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
-    term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
+    term_out="$(bash scripts/retry_ontology_validation.sh uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
     printf '%s\n' "$term_out"
     # "Unable to validate" is LTV's ontology-service-unavailable message: every check was skipped.
     if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate"; then
@@ -2884,7 +2884,7 @@ validate-families: ensure-panther-members
     uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
         --target-class FamilyReview "${files[@]}" || rc=1
     echo "Validating GO term ids and labels (batch)..."
-    uv run linkml-term-validator validate-data "${files[@]}" \
+    bash scripts/retry_ontology_validation.sh uv run linkml-term-validator validate-data "${files[@]}" \
         -s src/ai_gene_review/schema/family_review.yaml \
         -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
     echo "Validating supporting_text quotes against cached publications..."
