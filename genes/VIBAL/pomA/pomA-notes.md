@@ -25,3 +25,26 @@ Primary strain-table check: PMID22343296 Table 1 on the publisher/PMC article ex
 ## 2026-11-06 — PR #6100 review follow-up
 
 Moved the ontology-only knowledge gap to suggested_questions. The GO stator-complex definition retains A4B2/nonrotating wording despite A5B2 structures and models with rotation of the A-subunit ring around the anchored B-subunit dimer. The sodium-driven PomAB stator identity and ion-conducting role are established; this is an ontology-description mismatch rather than uncertainty about the target being a stator. Update the definition of GO:0120101 using modern stator structures while retaining the concept that includes both proton- and sodium-driven stators. Evidence remains in the reference findings: PMID:37500658 (5:2 structure) and PMID:39793043 (sodium pathway). No biological uncertainty about the stator role is implied.
+
+
+## Preserved parallel flagellar-audit notes from merged main
+
+# pomA research notes
+
+
+## 2026-11-06 comparative flagellar audit
+
+Current UniProt O06873 is a species-level V.alginolyticus record. Its complete sequence matches RCSB 8ZYW; PomB has only an added C-terminal His6. The alternative SIFTS accession A0A7H8DMV8 differs at residue132 and was rejected as an exact match. PMID39793043 uses recombinant BL21(DE3)/pLysS production and separate functional V.alginolyticus assays. PMID18326582 distinguishes native NMB191 ΔpomAB/VIO5 from an E.coli hybrid. PMID37500658 takes DNA from ATCC17749, inserts a cleavage site in PomB for some structural preparations and tests VaPotAB hybrid function in Salmonella LT2. Those hybrid results are not native Vibrio assays. No NEW biological-process row is needed here. The GO0120101 definition requires a stoichiometry update; the review uses the experimentally resolved A5B2 count.
+
+Default Falcon was attempted once and returned HTTP403 authentication failure; the genuine command log is retained in the ignored comparative-panel audit directory. No provider report was fabricated.
+
+All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Added motor-level gradient and CheY-control context (PMID27439872; PMID17376072), with the YM4 microfluidic assay distinguished from the selected reference/structural protein. The mechanical-effector inference does not assert a PomA-specific gradient assay.
+
+
+## 2026-11-11 — reconcile chemotaxis and merged flagellar audits
+
+Retain exact-sequence channel/stator proposals and PomB motility contribution. Use primary swimming and gradient-response evidence from main; chemotaxis is non-core. Preserve main's broader transport and duplicate IC complex proposals as retired historical rows; the more precise channel and target-matched structural IDA remain active. No target-direct flux assay is claimed.

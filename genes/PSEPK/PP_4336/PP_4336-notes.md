@@ -23,3 +23,22 @@ PP_4336 is MotC, the A-type subunit, not PP_4905/MotA. The deletion is of the pa
 Source anchor: [PMID:36409076 "P. putida has a large gene cluster for flagellar motility comprising the genes for the stator MotCD (PP4336 and PP4335)."]
 
 All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
+
+
+
+## 2026-11-06 comparative flagellar audit
+
+The existing COMPLETE review and its three authored NEW proposals were frozen before changes. PMID36409076 maps MotCD to PP_4336/PP_4335 and tests an engineered KT2440 FliC_S267C labeling background reported to retain motility, followed by stator deletions and complementation. MotCD supports spreading and prevents sessile clusters in semisolid agar; MotAB dominates liquid swimming. Being a motor rather than a sensor does not refute participation in chemotaxis. Proton coupling remains inferred: this primary study does not measure ion flux. No inherited NEW payload or action was changed.
+
+Default Falcon was attempted once and returned HTTP403 authentication failure; the genuine command log is retained in the ignored comparative-panel audit directory. No provider report was fabricated.
+
+All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+## 2026-11-06 — PR6138 evidence follow-up
+
+Strengthened the chemotaxis inference with direct KT2440 gradient context (PMID32766440) and source-qualified stator phenotypes (PMID36409076). Mechanical execution is distinct from sensing or prior assembly. The MotCD clustering result is retained explicitly; agar spreading is not treated as a gradient-response assay.
+
+
+## 2026-11-11 — reconcile chemotaxis and merged flagellar audits
+
+Retain merged flagellar evidence and decisions, including gradient-guided stator mechanics and FliG switching; retain branch primary structural references, target-specific caveats, and broad-family limits. FliN direct CheY-contact uncertainty is preserved.

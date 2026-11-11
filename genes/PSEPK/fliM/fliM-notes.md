@@ -21,3 +21,20 @@ The primary Salmonella structure uses constitutively active CheY D13K/Y106W; it 
 Source anchor: [PMID:39179739 "The CheY proteins are bound into an open groove between two adjacent protomers on the surface of the middle subring of the C ring and interact with the FliG and FliM subunits."]
 
 All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
+
+
+
+## 2026-11-06 comparative flagellar audit
+
+Reviewed every existing annotation and the biological summary/core functions. Original annotation payloads, including historical NEW proposals, are preserved. Family/domain evidence supports conserved structural assignments; comparative Salmonella or other bacterial assays are not presented as KT2440 experiments. Exact subunit counts and interaction geometries are not transferred as target measurements.
+
+The normal Falcon research attempt failed (HTTP 403; provider output was not fabricated). This entry records manual review of the cached primary/comparative literature.
+
+General flagellar motility does not by itself establish swarming. The electronically transferred swarming term is qualified against the KT2440 physiological context in PMID:36409076, not rejected because an experimental source is unavailable.
+
+GO:0003774 explicitly includes electrochemical-gradient-driven flagellar rotation. Rotor/switch structural roles are distinguished from autonomous torque generation. The C-ring/MS-ring CC terms were verified against ontology ancestry and remain valid substructure locations.
+
+
+## 2026-11-11 — reconcile chemotaxis and merged flagellar audits
+
+Retain merged flagellar evidence and decisions, including gradient-guided stator mechanics and FliG switching; retain branch primary structural references, target-specific caveats, and broad-family limits. FliN direct CheY-contact uncertainty is preserved.
