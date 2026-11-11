@@ -676,14 +676,19 @@ found, and because two of the figures here were themselves corrections.
    source of defects this project has found, and for as long as no `INTERPRO`
    value existed `just export-source-defects` could not produce the report
    that mattered most. #5984 added the value and #6027 re-filed 83 defects
-   onto it, so `reports/source-defects/INTERPRO.md` exists. It is not the
-   largest report: `UNIPROT`, `GO_CENTRAL`, `RGD`, `PSEUDOCAP` and the
-   `OTHER` pile it is draining were each larger than it when #6027 merged.
-   So the superlative above is scoped to the defects *this project* found and
-   does not survive being restated as a corpus-wide rank. No corpus total is
-   quoted here on purpose: every one of these counts moves whenever `main`
-   moves, and an earlier version of this paragraph had to be corrected twice
-   for exactly that. The ~130 figure above was the estimate made before the
+   onto it, so `reports/source-defects/INTERPRO.md` exists. **Its rank among
+   the per-resource reports is deliberately not stated**, and not even as a
+   list of the reports that are larger: at `1e0f33a052` five were, but the
+   closest of those led by two defects, and `main` crossed that margin within
+   days — three further `INTERPRO` defects landed in `PSEPK/xdhB`,
+   `RHOCA/xdhA` and `RHOCA/xdhB`, none of them files #6027 touches. So the
+   superlative above is scoped to the defects *this project* found and does
+   not survive being restated as a corpus-wide rank, in either direction. No
+   corpus total or ordering is quoted here on purpose: every one of these
+   counts moves whenever `main` moves, and an earlier version of this
+   paragraph had to be corrected three times for exactly that — the third
+   time as a comparison written in words rather than digits, which is the
+   same claim and goes stale the same way. The ~130 figure above was the estimate made before the
    migration ran; #6027 itself re-filed 85 defects, 83 of them onto
    `INTERPRO`, and left 112 `resource: OTHER` at that point, of which 45
    named no resource at all and so cannot be triaged without reading each

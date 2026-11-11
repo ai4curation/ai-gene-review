@@ -136,6 +136,20 @@ manual step. When it is done, set `report_status: REPORTED` and
   upstream of any gene. Use `INTERPRO` for the InterPro2GO mappings behind
   `GO_REF:0000002` and for signature descriptions, and `PANTHER` for a family or
   ancestral-node GO association propagated by TreeGrafter (`GO_REF:0000118`).
+- **`INTERPRO` is not `GOA_EBI`.** Ask what the fix changes. The *content* of a
+  mapping - its GO term, its qualifier, the signatures it covers - or the
+  signature's own description is `INTERPRO`, and stays `INTERPRO` however the
+  row reached the gene: a defect that says "check the IPRnnnnnn mapping" is an
+  InterPro defect even when the row carrying it is IEA from GOA, and it should
+  name the mapping in `record:`. `GOA_EBI` is GOA's own curation, including the
+  transfer machinery itself - `worm/dpm-1` asks for "a minimum-coverage
+  requirement on the catalytic domain before InterPro2GO transfer", which is
+  the pipeline and not any mapping's content. This split is easy to reopen: it
+  was closed corpus-wide in #6027, and while that PR waited to merge the same
+  IPR006327 symporter mapping was filed both ways again - `INTERPRO` with a
+  `record:` in `XANCP/fruA`, and `GOA_EBI` with none in `RHOCA/fruA` and
+  `AZOBR/fruA1`, each of which also carries a correctly-filed `INTERPRO`
+  defect on the same mapping.
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.
