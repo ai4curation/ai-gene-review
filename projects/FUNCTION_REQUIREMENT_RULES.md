@@ -18,9 +18,12 @@ experimentally supported proteins for the five large rules (497 to 3984 proteins
 each), and most flags are themselves annotation problems: non-catalytic subunits
 annotated `enables` instead of `contributes_to`, regulators annotated with the
 activity they regulate, or wrong terms. Applied to the GOA files in this repository,
-the rules flag 178 rows; reviewers removed, modified, marked over-annotated or left
-undecided 149 of them (84%). Seven new full reviews started from rule flags each
-confirmed the flag (see [Full reviews from leads](#full-reviews-from-leads)).
+the rules flagged 285 rows on 2026-11-10; reviewers rejected the flagged term on the
+protein in 171 of them (60%) and kept it in 104 (36%), with wide variation between
+rules (see [How often a flag is right](#how-often-a-flag-is-right)). Seven new full
+reviews started from rule flags each agreed with the flag, but those reviews were
+written knowing the flag, so they are not an independent test (see
+[Full reviews from leads](#full-reviews-from-leads)).
 
 ## Why
 
@@ -117,7 +120,8 @@ mouse, rat; IDA), a GPCR that activates G proteins rather than hydrolysing GTP;
 regulators of GTPases (Rho GDI 2, the tubulin-folding cofactor TBCC); and proteins
 with no GTPase relationship at all (SEC14L8, an annexin, a sarcoplasmic
 calcium-binding protein, methylmalonyl-CoA mutase). G beta and gamma subunits
-annotated `enables` should be `contributes_to`.
+annotated `enables` do not hydrolyse GTP; they hold G alpha in the GDP-bound state,
+so the term is wrong for them and a qualifier change would not fix it.
 
 ### Other flags on experimental annotations
 
@@ -139,7 +143,79 @@ annotated `enables` should be `contributes_to`.
 - **FRR:0007.** E. coli YjdM (P0AFJ1, IDA), which this repository already marks
   over-annotated.
 
+## How often a flag is right
+
+An earlier version of this page said reviewers "removed, modified, marked
+over-annotated or left undecided" 84% of flagged rows. That figure overstated the
+agreement in four ways, so it is withdrawn:
+
+- it counted UNDECIDED as agreement;
+- it counted every MODIFY, although a MODIFY to a more specific descendant keeps
+  the flagged claim (this repository's rule for a correct but general term);
+- it was computed after the rules had been amended to stop flagging rows that
+  reviewers had kept (skn-1, atfs-1, ROF1, T7 0.7, trpm7, manX, asp1), which
+  removes disagreements from the denominator;
+- it included the seven reviews written because of a flag.
+
+Recount on 2026-11-10 (`just function-requirements sweep`, 285 flagged rows; each
+MODIFY row classed by whether a proposed replacement has the flagged term as an
+is_a ancestor in QuickGO):
+
+| Rule | Flagged | Term rejected | Term kept | Open |
+|---|---:|---:|---:|---:|
+| FRR:0001 | 6 | 6 | 0 | 0 |
+| FRR:0002 | 1 | 1 | 0 | 0 |
+| FRR:0003 | 20 | 20 | 0 | 0 |
+| FRR:0004 | 74 | 41 | 30 | 3 |
+| FRR:0005 | 80 | 30 | 48 | 2 |
+| FRR:0006 | 17 | 6 | 9 | 2 |
+| FRR:0007 | 2 | 2 | 0 | 0 |
+| FRR:0008 | 1 | 1 | 0 | 0 |
+| FRR:0009 | 60 | 42 | 17 | 1 |
+| FRR:0010 | 24 | 22 | 0 | 2 |
+| All | 285 | 171 (60%) | 104 (36%) | 10 (4%) |
+
+"Term rejected" is REMOVE (64), MARK_AS_OVER_ANNOTATED (28) and MODIFY to a term
+that is not a descendant (79). "Term kept" is ACCEPT (45), KEEP_AS_NON_CORE (30),
+MODIFY to a descendant (28) and TOO_GENERAL (1). "Open" is UNDECIDED or PENDING.
+The protein kinase rule (FRR:0005) is wrong more often than right, and the
+transporter and ATPase rules are close to even; only the narrow rules and the
+GTPase rule are reliable as leads. The reviews are not independent of the rules
+either: reviewers and rules share the same domain arguments, so even these figures
+are an upper bound on precision.
+
+What the rules cannot support, and should not be read as supporting:
+
+- **"Should be `contributes_to`" does not follow from "lacks the catalytic
+  domain".** The flag shows the protein does not catalyse the reaction. Whether it
+  is a necessary part of a complex that does (`contributes_to`), a regulator, or
+  neither is a separate question answered per protein. G beta and gamma subunits
+  are the clear case: FRR:0010's own rationale says they regulate GTPases without
+  carrying the activity, which argues for a regulator term or removal, not
+  `contributes_to`.
+- **Peripheral ATPase subunits are treated inconsistently.** FRR:0004 exempts
+  primary active transporter terms because their peripheral catalytic subunit
+  (SecA, F1/V1) correctly carries `enables`, while this page lists ABC
+  nucleotide-binding subunits among the misannotations. An ABC ATPase subunit is
+  the same kind of subunit. It is flagged only when annotated to a term outside
+  the exempt subtree, and then the right fix is usually the ABC-type term, not a
+  qualifier change.
+- **REQUIRED rests on a claim that no other family exists.** FRR:0001 names the
+  "two known" peptidoglycan polymerase families. SEDS proteins were recognised as
+  polymerases only in 2016; the same rule written earlier would have flagged FtsW
+  and RodA. A REQUIRED flag on an experimental annotation is a reason to read the
+  paper, never a verdict.
+- **FRR:0007 and FRR:0008 are untested.** They were written from one case each
+  and have three and two experimental proteins to test against. FRR:0008 asserts
+  for one term the inference ("NAD(P)-dependent, so Rossmann fold") that failed
+  for 151 of 998 proteins at the parent term.
+- **FRR:0009's coverage is in-sample.** Its domain list was extended until the
+  remaining flags "were mostly not transcription factors", on the same 2759
+  proteins the 92% coverage is measured on.
+
 ## Local sweep (2026-10-24)
+
+The table below is the 2026-10-24 snapshot and predates the recount above.
 
 Flagged GOA rows in `genes/`, by the existing review action (after the seven new
 reviews below):
@@ -187,7 +263,9 @@ fixes below) was looked at again. Outcomes:
 Seven human genes flagged on experimental annotations were given full reviews
 (2026-10-24). Falcon deep research failed with an Edison authentication error, so the
 reviews are built from the cached papers and recorded in each gene's notes file. In
-every case the flag was right about the term, and the experiment itself stood:
+every case the review agreed with the flag about the term, and the experiment itself
+stood. The reviews were started from the flags, so this is consistency, not
+confirmation:
 
 | Gene | Flagged row | Rule | Outcome |
 |---|---|---|---|
