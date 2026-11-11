@@ -15,3 +15,6 @@ refresh:
 clean:
 	latexmk -C
 .PHONY: all data stats pdf refresh clean
+explainer: stats
+	$(PY) scripts/build_explainer.py
+.PHONY: explainer

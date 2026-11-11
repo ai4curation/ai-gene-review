@@ -3,6 +3,10 @@
 Build: `make` (extracts corpus tables into `data/` (git-ignored, ~1.5 min), regenerates
 `generated/` macros and tables and `figures/`, then runs latexmk). `make refresh` re-extracts.
 
+**Explainer:** `make explainer` rebuilds `explainer/index.html` from `generated/stats.json`, the
+deep-dive files and `main.log`; republish it to https://claude.ai/artifact/2vpZJok8Ki5rRw4Lqff9DT.
+Hand-written claims, figure list and next steps live in `scripts/build_explainer.py`.
+
 **Rule:** every corpus number in the text is a macro from `generated/stats.tex` or a table
 from `generated/tab_*.tex`, produced by `scripts/compute_stats.py`. Numbers taken from
 project pages are marked `\proj{...}` and must be re-derived by a script before submission.
