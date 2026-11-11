@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162: main 65bf77f958 integrated at 0ee4b20c62; 143 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
+- [ ] `bacterial_glycerol_uptake_catabolism`: PR #6162: main ac30fe31cf integrated at 8535b2a215; 146 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
@@ -1299,3 +1299,11 @@ Superseded parent snapshot lines retained for provenance:
 ## 2026-11-11 — resume PR #6162 after disk cleanup
 
 Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6162 at 037ccd3b5a58d95e7b725d4e3dc8fe96cf016ad8. All 146 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-11 — reconcile resumed PR #6162 tracker
+
+PR #6162: main ac30fe31cf integrated at 8535b2a215; 146 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_glycerol_uptake_catabolism/resume-round4-20261111/integration-proof.json](../analysis/module_audits/bacterial_glycerol_uptake_catabolism/resume-round4-20261111/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+
+Superseded parent snapshot lines retained for provenance:
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 43 COMPLETE, 10 PR_OPEN, 0 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
