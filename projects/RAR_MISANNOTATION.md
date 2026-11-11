@@ -250,26 +250,27 @@ TPV-004, the npp-20 MODIFY, and TPV-008 with CR-0006.
 Verdicts are in [rar_rerun_triage.yaml](RAR_MISANNOTATION/data/rar_rerun_triage.yaml). They are
 first-pass: they rest on curated UniProt function text, term definitions and constraints, not on
 reading each paper. Where a verdict rests on a cached paper or UniProt record, the file quotes it
-verbatim, so `just validate-quotes` checks it. Plant-, animal- and fungus-flagged candidates (about 1,040 kingdom-level
-terms) are not triaged yet.
+verbatim, so `just validate-quotes` checks it. Plant- and animal-flagged candidates are
+screened in the next section; the fungus-flagged ones are not yet.
 
 ### Plant and animal candidates (2026-11-11)
 
-All 958 kingdom-level candidates flagged in plants (604) or animals (354) are triaged in
+All 958 kingdom-level candidates flagged in plants (604) or animals (354) have a first-pass
+verdict in
 [rar_rerun_triage_plant_animal.yaml](RAR_MISANNOTATION/data/rar_rerun_triage_plant_animal.yaml).
-They were triaged in five groups, by lineage and by evidence type: plant IBA, plant inferred,
+They were screened in five groups, by lineage and by evidence type: plant IBA, plant inferred,
 plant experimental, animal inferred and animal experimental. A merge step checked that every
 term is covered and that every proposed replacement is a live GO term (109 ids); `quote_check`
 verifies all 39 quotes.
 
 | Verdict | Entries |
 |---|---|
-| Annotation wrong | 142 |
+| Annotation wrong | 139 |
 | Rare but right (flag fails) | 363 |
 | Experimental, deferred to the curator | 379 |
 | Right but too general | 36 |
 | Constraint looks too narrow | 4 |
-| Uncertain | 63 |
+| Uncertain | 66 |
 
 Experimental rows are not overruled on first-pass evidence. They are called wrong only when
 the term's definition or GO taxon constraint excludes the lineage, which makes the error a term
@@ -281,7 +282,7 @@ Most flags fail. The flag measures curation density as often as error, as in the
 - many animal flags are real enzymology that is rare in animals, such as the nematode
   glyoxylate cycle, phytochelatin synthase and insect trehalose metabolism.
 
-The 142 errors fall into a few kinds:
+The 139 errors fall into a few kinds:
 
 - **PAINT nodes placed above a lineage that lacks the function (IBA).** Examples:
   - GATOR2 (SEACAT) complex terms on plant SEH1 and SEC13. Neither Arabidopsis nor
@@ -314,9 +315,10 @@ The 142 errors fall into a few kinds:
 The four too-narrow constraints repeat the first round's cases: glutamate-gated calcium channel
 and plasma membrane repair (both Metazoa-only, but plant GLR3.3 and SYT1 do these), sperm
 axoneme assembly (*Selaginella*), and ionotropic glutamate receptor signalling. One verdict
-disagrees with an existing review. Mouse Acadl's carnitine catabolic process row is kept as
-non-core in its review, but the term means breaking down carnitine itself, which mammals do
-not do. The review should be revisited.
+disagreed with an existing review. Mouse Acadl's carnitine catabolic process row was kept as
+non-core, but the term means breaking down carnitine itself, which mammals do not do; the
+knockout paper shows only acylcarnitine build-up from blocked beta-oxidation. The Acadl
+review now removes the row.
 
 ## Next steps
 
@@ -339,7 +341,7 @@ not do. The review should be revisited.
 - [x] Triage the plant- and animal-flagged RAR candidates (958 terms, 2026-11-11); see [above](#plant-and-animal-candidates-2026-11-11).
 - [ ] Triage the 81 fungus-flagged RAR candidates and the 280 vertebrate-vs-invertebrate candidates.
 - [ ] Turn the family-wide mapping errors into SSSOM rows or curated rules: InterPro2GO for Deltex, HMMR and IPR021006; UniRules UR000414538 (RCK_C) and UR000345849 (PEMT/PLMT); GO's SL-0038 cell-junction mapping.
-- [ ] Revisit the mouse Acadl review's carnitine catabolic process row (KEEP_AS_NON_CORE; the triage says the term does not apply).
+- [x] Revisit the mouse Acadl review's carnitine catabolic process row: now REMOVE (2026-11-11).
 - [ ] For the 14 annotation errors that break a taxon constraint, find out why GO's constraint check did not filter them; for the 5 questionable constraints, check the cited papers and propose TPV entries.
 - [ ] Look at the TreeGrafter prokaryote annotations by PAINT node, since one deep node yields many rows.
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
