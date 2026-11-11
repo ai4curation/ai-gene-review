@@ -335,6 +335,9 @@ def test_protein_name_in_abstract_penalises_aurkc_lead():
         ),
         # A byline with a generational suffix ("Wharton KA Jr") is still a byline.
         ("11274052", ["dishevelled"], ["Wharton", "Nusse R", "Cadigan KM"]),
+        # NCBI's "New Collective Author" placeholder ends the byline, and a
+        # "Collaborators:" paragraph follows it.
+        ("9634588", ["IBC6", "cytokinin"], ["Brandstatter", "Kieber JJ", "Evans ML"]),
         # A group author after a semicolon ends a long consortium byline.
         ("24190013", ["ovarian"], ["Brooks-Wilson", "Pharoah PD", "Ramus SJ"]),
     ],
@@ -364,3 +367,23 @@ def test_undelimited_full_text_contributes_title_only():
         abstract_text(PUBLICATIONS_DIR / "PMID_10357231.md")
         == "Glutamate synthase: a complex iron-sulfur flavoprotein."
     )
+
+
+@pytest.mark.parametrize(
+    "paragraph,expected",
+    [
+        # Ordinary words are not group authors unless capitalised.
+        ("In the pilot study, cells were analyzed by FACS.", False),
+        ("The network model, inputs were scaled by CNTF.", False),
+        # A lowercase group word counts only after a semicolon, as in PubMed.
+        ("In the consortium analysis, samples were typed by PCR.", False),
+        # Unambiguous group words match in any case.
+        ("Harold D, Lambert JC; GERAD consortium.", True),
+        ("Earp MA(1), Kelemen LE; Australian Cancer Study; Lu Y.", True),
+    ],
+)
+def test_group_author_matching_does_not_swallow_sentences(paragraph, expected):
+    """Only unambiguous group words are case-insensitive, so prose is not a byline."""
+    from ai_gene_review.tools.wrong_gene_leads import _is_author_list
+
+    assert _is_author_list(paragraph) is expected
