@@ -934,9 +934,18 @@ not the live site. The Pages source setting must separately be `GitHub Actions`.
 ### Gene review HTML
 ```bash
 just render <organism> <gene>    # render one gene
-just render-all                  # render all genes (~1200 files)
+just render-all                  # render all genes
 ```
 Output: `genes/<org>/<gene>/<gene>-ai-review.html`
+
+This HTML is gitignored and must not be committed (not even with `git add -f`):
+the Pages workflow renders every review from `main`, and CI rejects a PR that
+adds one. Use `just render` only to preview a page locally. Older copies are
+still tracked while they are untracked in batches (#6221); do not stage
+re-rendered versions of them. `deploy-browser` and the prediction evals only
+link to a review page when its HTML exists on disk, so run `just render-all`
+first if you need those links in a local build. The propagation browser links
+whenever the review YAML exists.
 
 ### Project pages
 Project docs live in `projects/`. Render with:
