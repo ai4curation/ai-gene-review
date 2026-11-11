@@ -681,7 +681,9 @@ found, and because two of the figures here were themselves corrections.
    of reports larger than it.** Four attempts to say something true about that
    rank were each falsified within days: "second only to UniProt" (wrong when
    written); an unordered list of the five that were larger (`main` then added
-   three `INTERPRO` defects and no `PSEUDOCAP` one); that list pinned to
+   further `INTERPRO` defects and no `PSEUDOCAP` one, reversing the closest
+   pair — the count of them is itself a moving figure, which is the point);
+   that list pinned to
    `1e0f33a052` (which is `main`'s commit and does not contain the 83 flips,
    where twelve are larger); and that list pinned to "the tree this PR
    produces", which changed under it at the very next merge, `INTERPRO`
