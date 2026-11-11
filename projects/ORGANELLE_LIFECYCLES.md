@@ -22,14 +22,20 @@ eukaryote-wide `MODULE:mitochondrial_protein_import` and
   as a membrane-bounded projection.
 - **All eukaryotes.** Each module's taxon context is Eukaryota. Lineage
   differences are modelled as `variant_sets` (different machinery for the same
-  stage) or as `optional` parts (a stage some lineages lack).
+  stage) or as `optional` parts (a stage some lineages lack). The exception is
+  an organelle confined to one lineage (the plastid and the plant vacuole):
+  its umbrella and rule modules take that clade, or the narrower clade their
+  grounding supports, as their context, and their required parts assert "every
+  member of the clade has this".
 - **Rules, not compendia.** A non-optional part asserts "every eukaryote with
   this organelle has this". That is a stronger claim than a descriptive pathway
   module makes, and it is what lets the satisfiability engine
   (`ai_gene_review.module_logic`) find gaps in a new genome. Clade-specific
   compendia of the same stage (for example the Drosophila
-  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules, but
-  the umbrella does not reference them.
+  `dmel_mitochondrial_protein_import`) are legitimate descriptive modules. An
+  umbrella may reference such clade-specific or accession-grounded modules only
+  as `optional` parts, named as such in its notes, so that no required part
+  depends on them.
 
 ## Stage skeleton
 
@@ -43,6 +49,10 @@ Every lifecycle umbrella uses the same part roles, in this order:
 | 4 | function | references to the metabolic and transport modules the organelle hosts |
 | 5 | quality control | stress responses, resident proteases, repair |
 | 6 | turnover | selective autophagy, programmed elimination |
+
+An umbrella part's `order` is the stage's number in this table, not its position
+among the parts the umbrella happens to have: an umbrella with only biogenesis and
+function parts numbers them 1 and 4, and parts of the same stage share a number.
 
 The skeleton is a naming convention. It is not a `conforms_to` template,
 because conformance compares molecular-function terms tier by tier with exact
@@ -122,8 +132,13 @@ The organelle-by-stage matrix lives in
 - [x] Autophagosome: `autophagosome_lifecycle` umbrella with one eukaryote-wide rule module, `autophagosome_core_biogenesis` (Atg1 kinase, PI3-kinase complex I, Atg9/Atg2/Atg18, Atg12 and Atg8 conjugation); `RULE_CANDIDATE`; the metazoan and yeast assembly modules referenced as optional
 - [ ] Autophagosome: add fungal Atg16 and plant Atg14 selectors, FIP200/Atg17 and ATG101, Atg10; model closure and fusion with the lysosome or vacuole
 - [x] Nucleus: `nucleus_lifecycle` umbrella with one partial eukaryote-wide rule module, `nuclear_pore_transport_core` (four nucleoporins, Ran, NTF2, Crm1, Cse1); `RULE_CANDIDATE`
-- [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins once they have local PANTHER entries; model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
+- [ ] Nucleus: add importin beta and alpha, RCC1, RanGAP and the remaining scaffold and FG nucleoporins as family selectors once they have local PANTHER entries (they are modelled by UniProt accession in `karyopherin_nuclear_protein_import`); model envelope sealing (CHMP7, LEM2) and open-mitosis disassembly
 - [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
-- [ ] Plastid, plant vacuole, specialized organelles
+- [x] Plastid: `plastid_lifecycle` umbrella (Embryophyta) with two rule modules, `plastid_protein_import` (Toc34 and Toc159 receptors, Toc75, Tic20, Tic110, ClpC, stromal processing peptidase; Tic214 and Tic40 optional) and `plastid_division` (FtsZ1, FtsZ2, ARC6, ARC5; MinD and PDV1/PDV2 optional), Arabidopsis-grounded; both `RULE_CANDIDATE`; photosynthesis modules referenced as optional
+- [x] Plastid: stromal motor partners (cpHsc70 required; Hsp90C, FtsHi optional), Tic236 linker (required) and the remaining TIC subunits (Tic56, Tic100, Tic21, Tic22, Tic62, Tic32, Tic55, optional) added to `plastid_protein_import`
+- [ ] Plastid: model Ycf2 once it has a reviewed entry; resolve the PANTHER-file placements of Tic100, Tic32 and ClpC1; make the required cpHsc70 step checkable per genome (the PTHR19375 entries table is capped at 1,000 rows); other green lineages' subfamilies (a green-algal import rule needs its own Toc34 selector, as Chlamydomonas TOC34 is in PTHR10903:SF135); a tighter MinD selector; model plastid quality control and chlorophagy; decide how red-algal and secondary plastids are scoped
+- [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
+- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713, VSR sorting with retromer, AVP1, TIPs and NHX1; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
+- [ ] Specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
