@@ -29,8 +29,8 @@ c1 = motif_match.start() + 1  # 1-based
 c2 = c1 + 1
 c3 = c2 + 11
 c4 = c3 + 3
-window_start = 226
-window_end = 250
+window_start = max(1, c1 - 4)
+window_end = min(len(seq), c4 + 5)
 window_seq = seq[window_start - 1 : window_end]
 
 out = f"""# Sequence, Topology, and [2Fe-2S] Motif Audit: Var13 (UniProtKB:A0A0N9M354)
