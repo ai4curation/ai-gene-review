@@ -12,3 +12,13 @@ division of labor among KT2440 paralogs.
 The exact synthase activity, cardiolipin biosynthesis, and inner-membrane
 location are appropriate core annotations. Comparative deletion lipidomics is
 needed to distinguish ClsA from ClsB and candidate ClsC-like enzymes.
+
+## 2026-11 update
+
+Re-reviewed to completion alongside the E. coli exemplar in `genes/ECOLI/` used by the
+module `bacterial_phosphatidylglycerol_cardiolipin_biosynthesis`. Broad parent terms
+(membrane, phospholipid or lipid biosynthesis, generic transferase or catalytic activity)
+that were previously kept as non-core are now refined with MODIFY to the specific terms
+the gene carries, so that same-term rows are treated the same way across the PSEPK and
+E. coli orthologues. Every row now cites vetted family-level or curated evidence. No
+deep-research provider key was available.
