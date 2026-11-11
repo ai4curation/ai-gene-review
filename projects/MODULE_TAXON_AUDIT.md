@@ -45,7 +45,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: main ac30fe31cf integrated at 48d2cc6eca; 455 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
+- [ ] `bacterial_chemotaxis_signal_transduction`: PR #6100: main 0ca78c07ea integrated at 52e47317f6; 434 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope.
 
 - [ ] `bacterial_flagellar_assembly_export`: PR #6138: main ac30fe31cf integrated at 5bb074ac23; 316 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
@@ -1454,3 +1454,7 @@ Superseded parent snapshot lines retained for provenance:
 ## 2026-11-11 — resume PR #6100 after disk cleanup
 
 Integrate main 0ca78c07ea0a7ee0ce4760193cc5b22848471d21 into paused PR #6100 at 6a1db9f98266696cd916ed733cf435a1344b80ef. All 434 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review. Nine shared gene reviews reconcile positive gradient-response evidence with target-specific structural caveats. All source annotation payloads from both parents survive; redundant inherited PomAB proposals are retained as retired history. Both refreshed publication caches retain full text. See the committed integration decisions and validation receipts.
+
+## 2026-11-11 — current integration accounting for PR #6100
+
+PR #6100: main 0ca78c07ea integrated at 52e47317f6; 434 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope. [Preservation and follow-up record](../analysis/module_audits/bacterial_chemotaxis_signal_transduction/resume-round5-20261111/integration-proof.json).
