@@ -89,9 +89,14 @@
   against a cached primary paper), long-term synaptic potentiation (covered by the accepted plasticity
   terms).
 - PAINT losses: `just paint-losses human GRIN1` reports no IRD or IKR on the lineage.
-- GO-CAM models containing GRIN1 (gocams/index.tsv: 6690711d00000596, 66c7d41500000672,
-  66c7d41500001120, 66c7d41500001953, 66c7d41500003371, 66c7d41500003458, 66e382fb00000049) use
-  NMDA glutamate receptor activity or glycine-gated cation channel activity with cation transmembrane
-  transport at the postsynaptic membrane, which matches the core functions here. They were not reviewed.
+- The seven GO-CAM models containing GRIN1 (6690711d00000596, 66c7d41500000672, 66c7d41500001120,
+  66c7d41500001953, 66c7d41500003371, 66c7d41500003458, 66e382fb00000049) were reviewed after the gene
+  review; see `gocams/<model>/<model>-review.yaml`. Their GRIN1 activities match the core functions here.
+  The two GluN3 models are queried on the sign of the GRIN1 edge and on calcium as a transported ion.
+- The module `modules/nmda_receptor_gating.yaml` covers gating of GluN1-containing receptors. The gene
+  review schema has no slot for a back-link to a module (`module_associations` exists only inside
+  `decomposed_into`), so the link is recorded here.
+- Row count: the GOA file has 185 lines and the review 181 rows; the four extra lines are exact duplicates
+  that differ only by date, and `just validate human GRIN1` passes its completeness check.
 - Several early papers are cached as abstracts only (PMID:7679115, 7681588, 7685113, 9489750, 21376300),
   so their rows were accepted on the abstract plus the curator's reading.
