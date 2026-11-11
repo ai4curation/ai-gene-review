@@ -16,12 +16,11 @@
    - Catalyzes the reaction: `D-glucose + a quinone = D-glucono-1,5-lactone + a quinol` (EC 1.1.5.2).
 
 ## Review of Existing GOA Annotations
-- `GO:0008876` (`quinoprotein glucose dehydrogenase activity`, IEA via EC 1.1.5.2 and PANTHER `PTHR32303:SF4`) -> **ACCEPT** (core catalytic activity of `Gcd`).
+- `GO:0008876` (`quinoprotein glucose dehydrogenase activity`, IEA via `EC:1.1.5.2` and `PANTHER:PTN002427004`) -> **ACCEPT** (core catalytic activity of `Gcd`).
 - `GO:0048038` (`quinone binding`, IEA via InterPro `IPR017511`) -> **ACCEPT** (binds membrane ubiquinone via the N-terminal 5-TM domain as physiological electron acceptor).
-- `GO:0016020` (`membrane`, IEA via InterPro `IPR017511`) -> **MODIFY** to `GO:0005886` (`plasma membrane`) (as Gram-negative `Gcd` is an integral inner-membrane protein with 5 N-terminal transmembrane helices).
+- `GO:0016020` (`membrane`, IEA via InterPro `IPR017511`) -> **MODIFY** to `GO:0005886` (`plasma membrane`) (as Gram-negative `Gcd` is an integral inner-membrane protein with 5 N-terminal transmembrane helices, `FT TRANSMEM 14..147`).
 - `GO:0016491` (`oxidoreductase activity`, IEA via ARBA) -> **TOO_GENERAL** (subsumed by the accepted child term `GO:0008876` `quinoprotein glucose dehydrogenase activity`).
 - `GO:0016614` (`oxidoreductase activity, acting on CH-OH group of donors`, IEA via InterPro) -> **TOO_GENERAL** (subsumed by the accepted child term `GO:0008876` `quinoprotein glucose dehydrogenase activity`).
 
 ## Proposed New Annotations
-- `GO:0005886` (`plasma membrane`) — `located_in` (`IC`), supported by the 5 transmembrane helices (`FT TRANSMEM 14..147`) and `InterPro:IPR017511` in `UniProtKB:A0A0H2LUW4`.
 - `GO:0019521` (`D-gluconate metabolic process`) — `involved_in` (`IC`), supported by `NCBIfam:TIGR03074` / `InterPro:IPR017511` in `UniProtKB:A0A0H2LUW4` (periplasmic oxidation of D-glucose to D-glucono-1,5-lactone initiates D-gluconate metabolism).
