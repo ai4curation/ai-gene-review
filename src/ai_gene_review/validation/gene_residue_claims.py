@@ -41,7 +41,10 @@ from pathlib import Path
 import yaml
 from yaml import CSafeLoader as _Loader
 
-from ai_gene_review.validation.family_residue_validator import SequenceCache
+from ai_gene_review.validation.family_residue_validator import (
+    InactiveEntryError,
+    SequenceCache,
+)
 
 
 class ClaimOutcome(str, Enum):
@@ -94,8 +97,18 @@ def _check_position(
     acc = spec["accession"]
     pos = spec["position"]
     claimed = spec["residue"]
-    seq = cache.get(acc)
-    drift = _version_note(cache, spec, acc)
+    try:
+        seq = cache.get(acc)
+        drift = _version_note(cache, spec, acc)
+    except InactiveEntryError as exc:
+        return (
+            ClaimCheck(
+                kind, gene, term,
+                f"{label} {acc}:{pos} cannot be validated: {exc.describe()}",
+                ClaimOutcome.FAIL,
+            ),
+            None,
+        )
     observed = _residue_at(seq, pos)
     if observed is None:
         return (
