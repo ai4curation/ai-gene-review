@@ -151,9 +151,10 @@ and worked separately (a gene may be in more than one, so the counts sum above
 | `scaffold` | 51 | `GO:0140693` molecular condensate scaffold, `GO:0005078` MAP kinase scaffold |
 | `tether_anchor` | 17 | organelle membrane tether / anchor / docking and chromatin-loop anchoring activities |
 
-176 of the 666 already have a `genes/human/<symbol>/` folder in the repo
+177 of the 666 already have a `genes/human/<symbol>/` folder in the repo
 (flagged `existing_folder: true` in the sidecar) — these are the natural
 starting points, though a folder does not mean the adaptor row was reviewed.
+LDLRAP1 (flagged `reviewed: true`) is the first reviewed from this worklist.
 
 **Proposed phase-1 cut:** the `core_adaptor` branch (512 genes). The `reader`
 branch is large and mechanistically distinct (recognising a modified residue to
@@ -185,11 +186,15 @@ the scope boundary above.
   manual literature triage; not deterministically queryable).
 - [ ] Confirm the phase-1 cut (core_adaptor 512 vs. splitting the reader
   branch) and prioritise the 176 genes that already have a review folder.
-- [x] First worked example: [GRB2](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-GRB2.md)
+- [x] Worked example on a reviewed gene: [GRB2](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-GRB2.md)
   (signaling / RTK / GEF adaptor; 567 `protein binding` rows vs. the adaptor
   function, read through the decision rules).
-- [ ] Add worked examples for the other common children (cargo, cytoskeletal,
-  enzyme-substrate) tying each to a reviewed gene.
+- [x] Worked example driving a *new* review of a previously unreviewed gene:
+  [LDLRAP1 / ARH](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-LDLRAP1.md)
+  (clathrin-cargo adaptor; full 90-annotation review now COMPLETE, incl.
+  lateral `MODIFY` of two mis-typed signaling-branch adaptor terms).
+- [ ] Add worked examples for the remaining common children (cytoskeletal,
+  enzyme-substrate, ubiquitin-like ligase-substrate).
 - [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
   adaptor terms; cross-reference [IBA_REVIEW](IBA_REVIEW.md).
 - [ ] Add the project card to `pages/projects/index.html` when the project
