@@ -2,7 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2, SERCA]
 ---
 
 # Organelles
@@ -186,6 +186,37 @@ plastids come later.
    organelle-level claim is independently supported. A well-supported
    sub-compartment location is not by itself where the function acts (MMADHC,
    2026-10-18).
+7. **ER and secretory-pathway rows** (settled in ER batches 1-4, 2026-11-04
+   to 2026-11-06):
+   - **Transit is not residence.** Every secreted, plasma-membrane and
+     lysosomal protein passes through the ER. A biosynthetic ER pool stays
+     `KEEP_AS_NON_CORE` when there is direct evidence on the gene itself or
+     the endogenous protein is seen in its native cell; a synthesis row whose
+     source shows only transit, or retention of an overexpressed or mutant
+     protein, is `MARK_AS_OVER_ANNOTATED`.
+   - **Topology does not force a sub-compartment on a transit pool.** A
+     membrane protein that only passes through the ER gets no ER membrane row.
+   - **Membrane and lumen lines.** A tail anchor or TM without a signal
+     peptide, plus one ER-specific assay on the endogenous protein (a
+     marker-controlled fraction, an ER Ca2+ function, ER-membrane partners),
+     supports `GO:0005789`; a predicted TM with only an overexpression assay
+     does not. A soluble signal-peptide protein that is retained, by a
+     KDEL-type motif or shown by protease protection, supports `GO:0005788`.
+     The ER exit site (`GO:0070971`) needs a marker of transitional ER.
+   - **Recruited cytosolic pools stay at the root**, core only when the
+     function is shown at the ER. Membership of an ER-acting complex supports
+     the organelle root for an obligate subunit but never localises it to a
+     sub-compartment, and it is not core when the subunit's own data place it
+     elsewhere (TRAPPC4).
+   - **A new sub-compartment row refines generic rows**: the gene's
+     `GO:0016020` membrane rows become `MODIFY` to it, all rows on the term
+     alike.
+   - **Microsomes are not ER** without an ER marker, and an isoform-restricted
+     UniProt ER location on a GO row with no isoform is a `source_defects`
+     entry.
+   - **Unreadable sources:** a curated human `ECO:0000269` line from a paper
+     we cannot read is kept on curator deference; a projection whose donor
+     paper is also unreadable is `UNDECIDED`.
 
 ## Survey under this policy
 
@@ -255,7 +286,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
       2026-10-20 run), starting with human; apply rules 3 and 4
   - [x] Batch 1: 20 human genes (2026-10-20)
   - [x] Batch 2: 20 human genes (2026-10-24)
-  - [x] Batch 3: 20 human genes (2026-10-25); 24 human genes remain
+  - [x] Batch 3: 20 human genes (2026-10-25)
+  - [x] Batch 4: the last 24 human genes (2026-11-03); human root-only list done
 - [x] Pilot rule 4 on AARS2, CLYBL, PYCR2, MMADHC (3 matrix, 1 unresolved)
 - [x] Revise to "add, don't substitute" after PR #5208 review: synthesis
       root rows ACCEPT, sub-compartment as a NEW row; validator exemption
@@ -267,9 +299,300 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [x] Add the policy to CLAUDE.md (2026-10-25, after batches 1 and 2); the
       annotation-reviewer guidance still to do
 - [ ] Repeat for ER, peroxisome, lysosome and Golgi
+  - [x] ER batch 1: 20 human genes (2026-11-04); 60 human genes remain on the
+        root-only ER list (survey regenerated 2026-11-04)
+  - [x] ER batch 2: 20 human genes (2026-11-05); 40 human genes remain (39
+        distinct, since GBA duplicates GBA1)
+  - [x] ER batch 3: 20 human genes (2026-11-05); 20 human genes remain (19
+        distinct)
+  - [x] ER batch 4: the last 19 human genes (2026-11-06); human root-only ER
+        list done except GBA, a duplicate folder of GBA1
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-06 (ER batch 4: the last 19 human genes)
+
+The last 19 human genes on the root-only ER list (SMPD2 to ZDHHC23); with GBA
+left to the duplicate-folder cleanup, this finishes the human ER list. Two gained
+a sub-compartment term (SMPD2 ER membrane, TRAPPC3 ER exit site) and three
+changed action (STAU2, TP53, TRAPPC4, UFM1). The same PR carries the optional SCP2 and
+PGRMC2 wording fixes from the ER batch 3 review and corrects NRXN1's mouse donor
+claim on three non-ER rows.
+
+| gene | outcome | evidence |
+|---|---|---|
+| SMPD2 | root; NEW GO:0005789 ER membrane (IC) | two predicted TM helices whose removal abolishes activity; overexpressed nSMase1 with ER and Golgi markers (PMID:10681556); endogenous phospho-nSMase1 co-stains with calnexin (PMID:25168245) |
+| SPG11 | root | endogenous spatacsin fractionates with REEP5 and STIM1 and resists extraction (PMID:37871017), but no TM is predicted, so no membrane row |
+| SPHK2 | root | serum starvation raises the ER share of overexpressed SphK2 (PMID:16118219); soluble kinase, recruited pool |
+| SQSTM1 | root | curated from an abstract-only TRIM13 paper (PMID:22178386), curator deference; consistent with its mitochondrion rows |
+| SRP68 | root; rows stay ACCEPT | tagged SRP68 co-stains with an ER marker and a point mutant loses it (PMID:28369529); core because SRP hands over at the ER |
+| SRP72 | root; rows stay ACCEPT | GFP-SRP72 co-localises with ER-Tracker (PMID:28369529); soluble SRP subunit on the cytosolic face |
+| STAU2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | by similarity only; mouse donor's abstract calls wild-type Stau2 mostly cytosolic (PMID:15166236) |
+| TMF1 | root; rows stay MARK_AS_OVER_ANNOTATED | the sole mouse source calls TMF/ARA160 "a Golgi-associated protein" (PMID:23000399); human TMF1 at Golgi cisternal tips (PMID:17698061) |
+| TP53 | root; IEA ACCEPT to KEEP_AS_NON_CORE | Synoviolin sequesters p53 at the ER (PMID:17170702); wild-type p53 at ER and MAM binding SERCA (PMID:25624484); recruited pool of a nuclear factor |
+| TRAPPC1 | root; row stays ACCEPT | TRAPP acts at ER exit sites or ERGIC (PMID:21525244); support is at complex level |
+| TRAPPC3 | root; NEW GO:0070971 ER exit site (IC) | endogenous mammalian Bet3 on Sec31-marked transitional ER, 7.6-22-fold enriched there by immuno-EM (PMID:16880271); binds SEC23 |
+| TRAPPC4 | root; IEA and ISS ACCEPT to KEEP_AS_NON_CORE | mouse ER line is a curator inference; its own synbindin immuno-EM shows Golgi and vesicles, not ER (PMID:11018053); the ER is plausible only through TRAPP membership |
+| TRAPPC5 | root | by similarity with no named source; holds through TRAPP membership (PMID:16880271) |
+| UFM1 | root; IEA and ISS KEEP_AS_NON_CORE to ACCEPT | endogenous UFM1 partly in the BiP-marked ER fraction with UFBP1 (PMID:21494687); UFMylated RPL26 on ER-bound ribosomes (PMID:30626644) |
+| UFSP2 | root | ER localization depends on the TM protein ODR4, and ODR4 loss phenocopies UFSP2 loss for RPL26 deUFMylation (PMID:35926457) |
+| USO1 | root | fly p115 on tERs, Golgi and ER cisternae (PMID:12876273); soluble peripheral protein |
+| UVRAG | root | "depends on PtdIns(3)P for its ER localization" in the RINT-1 tether (PMID:24056303); recruited C2-domain protein |
+| VEGFA | root | ER line is for the L-VEGF189 isoform (PMID:11731620), curator deference; secreted, no retention signal |
+| human/ZDHHC23 | root; IBA stays MARK_AS_OVER_ANNOTATED | ZDHHC23 itself is at the Golgi and TGN (PMID:22399288); the ER evidence comes from paralogs |
+
+What ER batch 4 showed:
+
+- **A new sub-compartment can be the exit site.** TRAPPC3's immuno-EM puts it
+  on Sec31-marked transitional ER, so GO:0070971 is the right sub-compartment,
+  not membrane or lumen. TRAPPC1, TRAPPC4 and TRAPPC5 stay at the root: complex
+  membership alone does not localise a subunit.
+- **Tethered without a TM.** UFSP2 has no anchor of its own but is held at the
+  ER by ODR4; that is a location, not a sub-compartment, so it stays at the
+  root.
+- **Paralog evidence behind an IBA is not the gene's own.** ZDHHC23's ER
+  claim rests on other ZDHHC enzymes; its own data say Golgi.
+- **`is_active_in`:** UFSP2 (IBA and IDA) and SPG11 IEA are justified; SMPD2
+  and USO1 IBA are soft; TMF1 and ZDHHC23 IBA are not supported.
+
+## 2026-11-05 (ER batch 3: 20 human genes)
+
+The next 20 human genes on the root-only ER list (LOXL2 to SLC22A5). Three
+gained an ER lumen row (POFUT1, PRDX4) or ER membrane row (PGRMC2); four
+changed action (LRP2, NENF, PARK7, RIPK2). Four of the genes (NENF, NLRP3,
+PYCARD, SCP2) had their mitochondrion rows reviewed in mitochondrion batch 4,
+and the ER calls were kept consistent with them.
+
+| gene | outcome | evidence |
+|---|---|---|
+| LOXL2 | root | endogenous LOXL2 mainly in calnexin-positive ER, read by the authors as precursor awaiting export (PMID:28332555); soluble and secreted |
+| LRP2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | sole mouse donor is a cubilin paper, abstract-only, with no ER result (PMID:15616221) |
+| LRP5 | root | curated from an abstract-only variant paper (PMID:25920554); MESD is its ER chaperone (PMID:12581525); receptor in transit |
+| LRP6 | root | GRP94-dependent ER exit (PMID:23572575) and MESD chaperoning show a wild-type transit pool; the curated line comes from a variant paper (PMID:26387593) |
+| human/MTMR9 | root | "Partially localizes to the endoplasmic reticulum" (PMID:19038970), curator deference; soluble pseudophosphatase |
+| NENF | root; IBA, IEA and IDA ACCEPT to KEEP_AS_NON_CORE | endogenous protein in a marker-controlled ER fraction (PMID:31536960); secreted, no retention motif, so a transit pool |
+| NLRP3 | root | mouse NLRP3 on the ER with ASC brought from mitochondria (PMID:23502856); soluble NLR bound to membranes by a polybasic linker (PMID:34861190) |
+| NPHS2 | root; isoform `source_defects` | ER location is for the Pod-short isoform retained in the ER (PMID:23648087); canonical podocin is at the plasma membrane |
+| NRXN1 | root; ISS stays MARK_AS_OVER_ANNOTATED | mouse source shows PDZ-dependent ER/Golgi exit and inactive retention signals (PMID:19036990) |
+| NT5C3A | root | interferon-induced p36 co-stains with PDI (PMID:8557639); one line toward membrane, so no membrane row |
+| PARK7 | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | endogenous DJ-1 in a marker-controlled ER fraction (PMID:31536960); soluble, surface-associated pool |
+| human/PCK1 | root | AKT-phosphorylated PCK1 moves to the ER (PMID:32322062); recruited cytosolic enzyme |
+| PGRMC2 | root; NEW GO:0005789 ER membrane (IC) | single predicted TM and no signal peptide; endogenous staining of central ER and nuclear envelope in three cell types (PMID:27754849), no named ER marker |
+| PINK1 | root | endogenous PINK1 in marker-controlled ER fractions (PMID:31536960); the IEA's ARBA source is no longer in UniProt |
+| POFUT1 | root; NEW GO:0005788 ER lumen (IC) | signal peptide, no TM, C-terminal RDEF retention motif; "soluble protein ... retained in the ER by a KDEL-like sequence" (PMID:15653671) |
+| PRDX4 | root; NEW GO:0005788 ER lumen (IC) | cleaved signal peptide; protease-protected like calnexin's lumenal domain and retained without a motif (PMID:18052930); removes Ero1-derived H2O2 (PMID:20627953) |
+| PYCARD | root | activation-induced move to perinuclear ER/mitochondria clusters (PMID:21124315); recruited adaptor |
+| RIPK2 | root; EXP and IEA ACCEPT to KEEP_AS_NON_CORE | endogenous RIPK2 in a PDI-positive ER fraction where ZNRF4 degrades it (PMID:28656966); a regulatory recruited pool |
+| SCP2 | root; isoform `source_defects` | mouse source is overexpressed SCP-2 in L-cells (PMID:11003606); soluble PTS1 protein |
+| SLC22A5 | root; isoform `source_defects` | ER location is for the OCTN2VT splice form retained in the ER (PMID:17509700) |
+
+What ER batch 3 showed:
+
+- **Retention without a motif.** PRDX4 has no KDEL-type signal, but protease
+  protection, topology and a lumenal partner (Ero1) agree on the lumen. A
+  retention motif is one line, not a requirement.
+- **When the sub-compartment enters `core_functions`.** Only when an assay
+  places the activity itself there, not when it is inferred from the protein's
+  location (rule 6). PRDX4 qualifies: it is shown consuming H2O2 made by the
+  lumenal oxidase Ero1. POFUT1 does not yet: O-fucosylation is shown in the ER,
+  so its core location stays at the root even though its NEW lumen row is
+  well supported.
+- **A new membrane row refines generic membrane rows.** Once PGRMC2 has
+  GO:0005789, its GO:0016020 membrane rows are correct but too general, so they
+  become MODIFY to the ER membrane term rather than staying ACCEPT.
+- **Isoform-restricted ER locations are common.** NPHS2, SCP2 and SLC22A5 join
+  ABCA7 and ATP7A: UniProt ties the ER to one splice form, often a retained
+  quality-control product, while the GO rows carry no isoform. Each now has a
+  `source_defects` entry.
+- **Shared fractionation papers need one reading.** PMID:31536960 (marker-
+  controlled mito, ER and MAM fractions) underlies NENF, PARK7 and PINK1. All
+  three are read as real but non-core ER pools, with no MAM row.
+- **The membrane bar.** PGRMC2's membrane row rests on a predicted TM plus
+  endogenous ER-pattern staining without a marker. It is the weakest membrane
+  row so far, above CGRRF1 (overexpressed construct) and below C18orf32 and
+  C19orf12 (marker-controlled fractions).
+- **`is_active_in`:** POFUT1 IBA (O-fucosylation shown in the ER) and PRDX4
+  IBA (peroxidase acting on Ero1 H2O2) are justified; PGRMC2 IBA is soft.
+- **For later checks:** NRXN1's ISS rows on GO:0031965, GO:0031982 and
+  GO:0043025 repeat a wrong claim that mouse Nrxn1 has no experimental
+  annotation.
+
+## 2026-11-05 (ER batch 2: 20 human genes)
+
+The next 20 human genes on the root-only ER list (C18orf32 to KIFAP3). GBA was
+skipped: `genes/human/GBA` and `genes/human/GBA1` are two folders for the same
+accession (P04062), and only GBA1 was reviewed, so KIFAP3 made up the 20. Two
+genes gained an ER membrane row (C18orf32, C19orf12) and three changed action
+(CHRNA3, HMGB1, KEAP1). The brief carried the batch 1 rules, and the six
+optional review findings on batch 1 were fixed in the same PR (caveats on the
+BCL2L1 and BAK1 membrane rows, AHSA1's alternative stated, APEX1's quote
+extended, and isoform `source_defects` on ABCA7 and ATP7A).
+
+| gene | outcome | evidence |
+|---|---|---|
+| C18orf32 | root; rows stay ACCEPT; NEW GO:0005789 ER membrane (IC) | N-terminal hydrophobic anchor necessary and sufficient for ER and lipid-droplet targeting; endogenous protein only in ER-enriched and buoyant fractions; membrane ERAD by gp78/derlin-1 (PMID:29275994) |
+| C19orf12 | root; rows stay ACCEPT; NEW GO:0005789 ER membrane (IC) | one predicted TM and no signal peptide; endogenous protein in a marker-controlled ER fraction (PMID:26136767); MAM not asserted |
+| CAVIN1 | root; row stays UNDECIDED | UniProt ER line by similarity to rat, which rests on a curator inference; mouse source paper is abstract-only and about Fam198a export (PMID:30188967) |
+| CERKL | root | all ER data on overexpressed tagged constructs (PMID:19158957); soluble protein |
+| CGRRF1 | root; rows stay ACCEPT | partial PDI overlap of overexpressed V5-tagged protein (PMID:27485036); TM predicted only, so no membrane row |
+| CHRNA3 | root; IEA and ISS ACCEPT to KEEP_AS_NON_CORE | ERAD extraction of alpha3 by p97 shows a real quality-control pool (PMID:26265139); the channel acts at the plasma membrane |
+| DDX41 | root | soluble helicase co-fractionating with STING, microsomes and MAM (PMID:21892174); recruited pool |
+| DLG4 | root; rows stay UNDECIDED | sole mouse source is an abstract-only knockout paper that never shows the PSD-95 experiment (PMID:16814779) |
+| DNASE1L3 | root | endogenous protein in the ER of HT-29 cells, moving to the nucleus in apoptosis (PMID:23229555); secreted and no retention motif |
+| FGFR3 | root | direct immunofluorescence plus curated ER N-glycosylation of the wild type; type I receptor in transit |
+| FGFR4 | root | core-glycosylated FGFR4 held by ER-resident beta-Klotho (PMID:20683963); transit pool with direct evidence |
+| GBA1 | root | mouse immunogold with PGRN in ER and lysosome (PMID:27789271); GCase/LIMP-2 complex forms in the ER (PMID:40159502); soluble hydrolase in transit |
+| GLUD1 | root | overexpressed hGDH1-EGFP partly overlaps an ER marker (PMID:19448744); mitochondrial transit peptide |
+| HADHB | root | UniProt curated from an abstract-only paper whose abstract shows viperin, not HADHB, at the ER (PMID:21527675); deferred |
+| HMGB1 | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | SARS-CoV-2 ORF3a recruits HMGB1 to the ER (PMID:35239449); leaderless protein, recruited pool; the old reason's "secretory pathway" claim was wrong |
+| HSPA13 | root; row stays ACCEPT | ER-luminal proximity labelling and translocon binding show residence (PMID:36244454); signal peptide predicted only and no retention motif, so no lumen row |
+| IFIT2 | root | UniProt curated from PMID:21190939, whose localization data could not be retrieved; soluble TPR protein |
+| KCNRG | root; rows stay ACCEPT | "an ER-associated protein" retaining Kv1 channels (PMID:19968958, abstract only); PAINT node seeded by KCNRG itself |
+| KEAP1 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | sole mouse source's abstract calls Keap1 cytoplasmic (PMID:14517290); the old Nrf1 rationale is refuted (PMID:16687406) |
+| KIFAP3 | root | mouse immuno-EM of endogenous KAP3 along ER and Golgi membranes (PMID:19384852); soluble kinesin-II subunit |
+
+What ER batch 2 showed:
+
+- **The batch 1 rules held.** Transit pools with direct evidence stayed
+  non-core (FGFR3, FGFR4, GBA1, DNASE1L3), and no transit pool got a
+  topology-forced membrane row.
+- **The membrane line needs more than a predicted TM.** C18orf32 and C19orf12
+  have an ER-specific assay on the endogenous protein plus an anchor; CGRRF1
+  has only a predicted TM and an overexpression assay, so it stays at the root.
+- **ER does not mean "secretory".** HMGB1 is secreted without passing through
+  the ER; its pool is recruited by a viral protein.
+- **Unreadable sources: defer to a curated human line, otherwise UNDECIDED.**
+  When the human UniProt entry carries a curated `ECO:0000269` ER line from a
+  paper we cannot read, the row stays KEEP_AS_NON_CORE on curator deference
+  (HADHB, IFIT2). When the row is only an ortholog projection whose donor
+  paper also cannot be read, it is UNDECIDED (KEAP1, DLG4, CAVIN1). Either
+  way the reason says which result would settle it.
+- **`is_active_in`:** one ER row carries it (KCNRG IBA), defensible because
+  the channel-retention activity is proposed to act at the ER.
+- **Duplicate folder.** `genes/human/GBA` duplicates `genes/human/GBA1`
+  (same accession); it should be retired in a separate change. Done in
+  #6088, which removes the GBA folder and points its history at GBA1.
+
+## 2026-11-04 (ER batch 1: 20 human genes)
+
+The first endoplasmic reticulum (GO:0005783) batch: the first 20 human genes
+alphabetically (A1CF to BRSK2) on the regenerated root-only ER list, which now
+has 80 human genes. Four gained a sub-compartment term: AGR3 the ER lumen,
+and BAK1, BCL2L1 and BNIP3L the ER membrane. Five rows changed action. The
+brief adapted the mitochondrion policy to the ER: biosynthetic transit is not
+residence, retention motifs are positive evidence, topology decides membrane
+vs lumen, microsomes are not ER without a marker, and overexpressed
+constructs can be retained artefactually.
+
+| gene | outcome | evidence |
+|---|---|---|
+| A1CF | root | UniProt by similarity from rodent immuno-EM: a minor pool on the cytosolic face of rough ER (PMID:12881431) |
+| ABCA4 | root | wild-type in calnexin-positive vesicles with "some" ER staining; ER retention is strongest for misfolded mutants (PMID:29847635) |
+| ABCA7 | root | ER location is for isoform 2 only, which lacks TM1; canonical type I is at the plasma membrane (PMID:14592415) |
+| ADIPOQ | root | endogenous protein partly overlaps GRP94 in 3T3-L1 adipocytes and insulin speeds its ER export (PMID:10444069); transit pool, no retrieval motif |
+| AGR3 | NEW GO:0005788 ER lumen (IC) | cleaved signal peptide and no TM; C-terminal QSEL motif whose deletion sends it to the Golgi (PMID:18086916) |
+| AHCY | root | overexpressed mCherry fusion against GFP-calreticulin only (PMID:28647132) |
+| AHSA1 | root | curated from an abstract that calls the transient ER association "preliminary" (PMID:11554768) |
+| AIMP1 | root | HeLa staining with calnexin and GM130 markers (PMID:17525271); route to luminal gp96 unresolved |
+| AMBRA1 | root; rows stay ACCEPT | moves from dynein to calnexin-positive ER on starvation, where it nucleates autophagosomes (PMID:20921139); recruited, so no membrane term |
+| APEX1 | root | SET complex "associated with the endoplasmic reticulum" (PMID:12524539); minor pool of a nuclear enzyme |
+| ASB11 | root; rows stay ACCEPT | ER-associated E3 whose substrates (ribophorin 1, BIK) are ER membrane proteins (PMID:24337577, abstract only) |
+| ATP1A1 | root; ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | rat source paper shows assembly in transit and retention only when export is blocked (PMID:18768923) |
+| ATP1A2 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | mouse source: overexpressed wild-type "slightly" ER, FHM2 mutant retained and degraded (PMID:21731499) |
+| ATP2B2 | root; IEA UNDECIDED to MARK_AS_OVER_ANNOTATED | mouse source is a CHO overexpression paper: retained PMCA "normally inactive", no ER marker (PMID:17234811) |
+| ATP7A | root | exon-10-skipped isoform without TM3-4 co-localises with BiP (PMID:9467005); quality-control retention of a natural splice form |
+| BACE2 | root | type I protease seen in its biosynthetic ER pool (PMID:11423558); no retention motif |
+| human/BAK1 | NEW GO:0005789 ER membrane (IC) | tail anchor without signal peptide; endogenous Bak in the calnexin-positive fraction free of COX IV and Tom40; ER-targeted Bak depletes ER Ca2+ (PMID:12847083, mouse) |
+| BCL2L1 | root; IEA ACCEPT to KEEP_AS_NON_CORE; NEW GO:0005789 ER membrane (IC) | tail anchor, cytoplasmic side; ER fractionation (PMID:17428862) and reticulon partners (PMID:11126360) |
+| BNIP3L | root; NEW GO:0005789 ER membrane (IC) | tail anchor; endogenous cardiac NIX at ER/SR sets SR Ca2+ stores (PMID:19065046, mouse) |
+| BRSK2 | root | soluble kinase recruited to the ER under tunicamycin stress (PMID:22713462) |
+
+What ER batch 1 showed:
+
+- **Where transit stops being a location.** Direct evidence on the gene
+  itself (ABCA4, BACE2) or the endogenous protein in its native cell
+  (ADIPOQ) keeps a biosynthetic ER pool as KEEP_AS_NON_CORE. A synthesis row
+  whose source shows only transit, or retention of an overexpressed or
+  mutant protein (ATP1A1, ATP1A2, ATP2B2), is MARK_AS_OVER_ANNOTATED.
+- **Topology does not force a sub-compartment on a transit pool.** ABCA4,
+  ABCA7 and BACE2 would be in the ER membrane if they resided there, but they
+  only pass through, so no GO:0005789 row: a NEW row would claim residence.
+- **Tail anchors are the ER counterpart of the TM line.** A tail-anchored
+  protein with no signal peptide cannot be lumenal, so with one ER-specific
+  assay (a marker-controlled fraction, an ER Ca2+ function, ER-membrane
+  partners) it earns GO:0005789 (BAK1, BCL2L1, BNIP3L). No MAM was asserted;
+  none of the sources had a MAM marker.
+- **Retention plus signal peptide means lumen.** AGR3's KDEL-like motif,
+  shown necessary by deletion, plus a soluble signal-peptide chain is the
+  lumenal case.
+- **Recruited cytosolic pools stay at the root,** as on mitochondria (A1CF,
+  AHSA1, AMBRA1, APEX1, BRSK2). AMBRA1 stays core because its autophagy
+  function is shown at the ER.
+- **`is_active_in`:** three ER rows carry it. AGR3 IBA and ATP1A2 IEA have no
+  activity shown in the ER and join the open-question worklist; BNIP3L IBA is
+  defensible for its Ca2+-store role.
+- **For the Golgi batches:** ATP1A1's Golgi ISS row has the same rat source and
+  the same transit logic.
+
+## 2026-11-03 (batch 4: the last 24 human genes)
+
+The remaining 24 human genes on the root-only mitochondrion list (MAP2K1 to
+TICAM1). None gained a compartment term; all 24 stay at the root. Eight
+changed action: MAP2K1, MAP2K2, MAPK1, MAPK3, PNPO and SCP2 went up to
+KEEP_AS_NON_CORE, and MOTS-c, humanin and NENF went down from ACCEPT to
+KEEP_AS_NON_CORE. The brief carried the batch 3 lessons (source defects,
+proteome rescue, contact sites) plus cautions for mitochondrially encoded
+peptides and for signalling genes recruited to the surface.
+
+| gene | outcome | evidence |
+|---|---|---|
+| MAP2K1 | root; IEA and TAS UNDECIDED to KEEP_AS_NON_CORE | mouse subfractionation puts MEK1/2 in outer membrane and IMS fractions (PMID:18545666); phospho-MEK1/2 in rat brain mitochondria (PMID:15030409); pan antibodies, no ER marker, recruited pool |
+| human/MAP2K2 | root; IEA and TAS UNDECIDED to KEEP_AS_NON_CORE | same evidence as MAP2K1; the antibodies cannot separate MEK2 from MEK1 |
+| MAPK1 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | projection from mouse cardiac IDA (PMID:11884367); ERK1/2 in outer membrane and IMS fractions (PMID:18545666); transient pool |
+| MAPK3 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | ~15% of ERK1 in purified HeLa mitochondria checked for ER markers, leaving on serum stimulation (PMID:19847302) |
+| MBTPS1 | root | fraction separated from ER and Golgi markers (PMID:35362222); proteinase K reading of matrix conflicts with ER/Golgi type I topology, one study |
+| MLDHR | root; rows stay ACCEPT | evidence is on the uORF peptide itself (PMID:33406399), not PTEN; no sub-mitochondrial assay |
+| <gene species="human" symbol="MT-RNR1__A0A0C5B5G6">MT-RNR1 (MOTS-c)</gene> | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE | organelle-level imaging of the endogenous peptide; its activities are nuclear and extracellular |
+| <gene species="human" symbol="MT-RNR2__Q8IVG9">MT-RNR2 (humanin)</gene> | root; 3 IDA and IEA ACCEPT to KEEP_AS_NON_CORE | organelle-level co-staining and uptake; activities are as an extracellular ligand and BAX sequestration in the cytosol |
+| MYL10 | root | IBA rests on a LIFEdb GFP fusion; mouse MitoCarta HDA is independent |
+| NENF | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | fractionation with mito, ER and MAM markers (PMID:31536960); soluble secreted protein, so no MAM membrane term |
+| NLRP3 | root | recruited via MAVS on activation; the authors call it a "mitochondrial/MAM fraction" (PMID:23582325) |
+| PFDN2 | root | UniProt curation from an abstract-only paper that names only URI; deferred; HPA is a second line |
+| PFDN4 | root | same URI paper (PMID:17936702) as PFDN2; deferred to the curator |
+| PNPO | root; IBA and HTP MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | MitoCoP (human, PMID:34800366) and MitoCarta3.0; PAINT seeds are plant and yeast mitochondrial orthologues; matrix vs IMS disagree |
+| PYCARD | root | activation-induced move to perinuclear ER/mitochondria clusters, no MAM marker (PMID:21124315) |
+| RRM2B | root; IEA stays MARK_AS_OVER_ANNOTATED | inferred from mtDNA replication; the enzyme supplies dNTPs from the cytosol (PMID:18997010) |
+| SCP2 | root; IEA, ISS and EXP MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE; source defect | EXP paper PMID:17157249 never mentions mitochondria (full text); pool stands on mouse PMID:26901662 and MitoCarta3.0 |
+| SHMT1 | root; IBA stays MARK_AS_OVER_ANNOTATED; source defect | PAINT node seeded only by SHMT2-type enzymes; recorded as MISSING_NEGATION for GO_CENTRAL |
+| SQSTM1 | root | projection from mouse CCCP colocalisation (PMID:32047033); recruited mitophagy pool |
+| STUB1 | root | stress-induced pool in rat neurons (PMID:29934347); no targeting sequence |
+| SYNE2 | root | immunogold EM paper is abstract-only (PMID:15671068); KASH anchor is in the nuclear envelope and SR |
+| TARDBP | root | protease-protected pool (PMID:28794432, PMID:33031745); matrix (mt-tRNA binding) and inner membrane (TIM22 import) lines disagree |
+| TAX1BP1 | root | virus-induced recruitment to MAVS (PMID:27736772) |
+| TICAM1 | root | poly I:C-induced recruitment of tagged TRIF (PMID:21703541) |
+
+What batch 4 showed:
+
+- **Signalling genes are the bulk of the tail.** Ten of the 24 (the four
+  MAPK-pathway kinases, NLRP3, PYCARD, SQSTM1, STUB1, TAX1BP1 and TICAM1)
+  reach mitochondria on a stimulus. All stay at the
+  root as non-core; none earns an outer-membrane term (TRAF3/BRAF precedent).
+- **Location is not activity.** Rule 2 cuts both ways: MOTS-c, humanin and
+  NENF are shown in mitochondria by direct assays, but their activities are
+  elsewhere, so the organelle is non-core rather than ACCEPT.
+- **Conflicting sub-compartment lines are common.** TARDBP, MAPK3, PNPO and
+  MBTPS1 each have a sub-mitochondrial assay, but the lines point to
+  different compartments, so rule 4 keeps them at the root.
+- **Two more source defects.** SCP2's EXP row cites a peroxisome paper, and
+  SHMT1 inherits an SHMT2-only PAINT node with no NOT on the SHMT1 clade.
+- **`is_active_in`:** four GO:0005739 rows carry it. MYL10, PNPO and
+  SHMT1 (all IBA) have no activity shown in the organelle; TAX1BP1's IDA is
+  defensible for its virus-induced pool. The first three join the
+  open-question worklist.
+- **To follow up:** the URI paper (PMID:17936702) behind PFDN2 and PFDN4 is
+  abstract-only; its full text would settle both. SYNE2's immunogold paper
+  likewise.
 
 ## 2026-10-25 (batch 3: 20 human genes)
 

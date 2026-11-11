@@ -6,3 +6,13 @@
 
 ## Curation observations
 - YeastPathways RCA cytosol (GLYCLEAV-PWY) is a default-compartment artefact -> REMOVE.
+
+## 2026-11-04 audit to COMPLETE
+- Provider deep research was not generated in this session (no API keys); cached abstracts and the SGD description only.
+- Added reasons to every row and completed truncated quotes (all cached papers are abstract-only).
+- GO:0006546 glycine catabolic process (IEA, IMP, NAS) -> MODIFY to GO:0019464 glycine decarboxylation via glycine
+  cleavage system (is_a descendant, already on the gene by IBA/RCA).
+- GO:0005829 cytosol RCA (GO_REF:0000123) REMOVE kept; WRONG_TERM source defect for SGD (should be mitochondrion).
+- Mitochondrion rows kept at the root organelle; only one line (predicted transit peptide) for the matrix, so no
+  sub-compartment NEW row.
+- Summaries quoted by interpro/panther/PTHR43757/PTHR43757-review.yaml left unchanged.

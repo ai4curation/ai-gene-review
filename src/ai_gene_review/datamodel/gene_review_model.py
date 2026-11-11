@@ -206,6 +206,10 @@ class SourceDefectTypeEnum(str, Enum):
     """
     An isoform established in the literature is not among the isoforms of the reviewed UniProt entry. asserted_value is the entry (UniProtKB:Q96PV0); corrected_value names a sequence that carries the isoform (RefSeq:NP_001123538.1 or an unreviewed accession).
     """
+    DUPLICATE_ASSERTION = "DUPLICATE_ASSERTION"
+    """
+    One assertion is present more than once in a source's annotation set: the same gene product, term, reference and evidence code entered repeatedly, differing only in incidentals such as date or qualifier. Distinct from ReferenceReplacementReasonEnum's DUPLICATE_RECORD, which is about two reference records for one paper. asserted_value names the duplicated rows (dates or qualifiers that distinguish them) and requested_change is DELETE_ROW for the copies to retire; the explanation says which row to keep and why.
+    """
     OTHER = "OTHER"
     """
     Any other source-record defect; describe it in the explanation.
@@ -274,6 +278,46 @@ class SourceResourceEnum(str, Enum):
     """
     PINC curation group (assigned_by PINC in GOA).
     """
+    INTERPRO = "INTERPRO"
+    """
+    InterPro, including the InterPro2GO mappings behind GO_REF:0000002 and the signature descriptions those mappings are drawn from. The fix is to the entry's GO mapping or its description, not to any gene's annotation.
+    """
+    PANTHER = "PANTHER"
+    """
+    A PANTHER family or ancestral-node GO association, as propagated by UniProt's TreeGrafter (GO_REF:0000118). Distinct from GO_CENTRAL, which is PAINT's own IBD/IBA curation: a term can be wrong on a PANTHER node without PAINT asserting it, and the two are fixed in different places.
+    """
+    COMPLEX_PORTAL = "COMPLEX_PORTAL"
+    """
+    Complex Portal curation of macromolecular complexes.
+    """
+    ENSEMBL = "ENSEMBL"
+    """
+    An Ensembl gene build or its gene model, including models propagated into UniProt TrEMBL.
+    """
+    NCBI = "NCBI"
+    """
+    NCBI Gene or RefSeq records and their gene models.
+    """
+    ENZYME = "ENZYME"
+    """
+    The ExPASy ENZYME / EC nomenclature record, e.g. a transferred or deleted EC class still cited as live.
+    """
+    DISPROT = "DISPROT"
+    """
+    DisProt curation of intrinsically disordered regions.
+    """
+    HPA = "HPA"
+    """
+    Human Protein Atlas, including its antibody-based localisations.
+    """
+    CAFA = "CAFA"
+    """
+    A CAFA challenge annotation set.
+    """
+    GOC = "GOC"
+    """
+    The GO Consortium's ontology editors, for a defect in a term itself - its label, definition, or placement in the graph - rather than in any annotation using it.
+    """
     OTHER = "OTHER"
     """
     Name the resource in the explanation.
@@ -303,6 +347,26 @@ class SourceDefectCauseEnum(str, Enum):
     CONTAMINANT = "CONTAMINANT"
     """
     A common affinity-purification contaminant recorded as a real partner.
+    """
+    OVER_PROPAGATION = "OVER_PROPAGATION"
+    """
+    An annotation was propagated beyond the clade, family or node where its evidence holds - a single seed spread across a heterogeneous family, or a node association emitted to every descendant. The fix is at the seed or the node, not on the rows that inherit it.
+    """
+    SCOPE_OVER_REACH = "SCOPE_OVER_REACH"
+    """
+    A mapping or rule correct for some members of a signature or family was applied to members outside that scope, most often across a taxon boundary (e.g. an own-process term applied to the viral members of a family whose bacterial members it fits).
+    """
+    LABEL_WITHOUT_DEFINITION = "LABEL_WITHOUT_DEFINITION"
+    """
+    A term was chosen from its label while its definition says something else, including near-miss labels that sit in unrelated parts of the graph (nucleoside vs nucleotide binding; "dark reaction" read as "light-independent").
+    """
+    SPECULATION_AS_ASSERTION = "SPECULATION_AS_ASSERTION"
+    """
+    A hedged statement in the source - "may function as", "probable", a family description's surviving speculation - was promoted into an asserted annotation.
+    """
+    PRACTICE_CHANGE = "PRACTICE_CHANGE"
+    """
+    A curation programme's convention changed, so a dated cohort of rows shares a defect that is not a per-row judgement (e.g. a qualifier used consistently across one campaign's output). Fixable in bulk, and the explanation should give the date range and row count.
     """
     OTHER = "OTHER"
     UNKNOWN = "UNKNOWN"
@@ -653,7 +717,9 @@ class ModuleConnectionTypeEnum(str, Enum):
 
 class EvidenceType(str, Enum):
     """
-    Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
+    Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms,
+plus explicitly supported ECO identifiers when a source row omits its GO shorthand. Literal ECO
+identifiers preserve the source evidence; they are not inferred GO code mappings.
     """
     EXP = "EXP"
     """
@@ -758,6 +824,10 @@ class EvidenceType(str, Enum):
     IEA = "IEA"
     """
     Inferred from Electronic Annotation
+    """
+    ECOCOLON0007744 = "ECO:0007744"
+    """
+    combinatorial computational and experimental evidence used in manual assertion
     """
 
 
@@ -2354,6 +2424,14 @@ class GoCamQcFlagEnum(str, Enum):
     COMPLEX_SUBUNIT_REPRESENTATION = "COMPLEX_SUBUNIT_REPRESENTATION"
     """
     Complex represented with a complex term where a specific active subunit is known (or vice versa).
+    """
+    UNRESOLVED_COMPARTMENT = "UNRESOLVED_COMPARTMENT"
+    """
+    The activity's 'occurs in' term cannot be traced through is_a/part_of to any distinct spatial compartment (organelle lumen or membrane, cytosol, plasma membrane, extracellular region). The location may be obvious from context, e.g. chromatin (GO places chromosome outside the nucleus), but the model does not state it. See projects/GOCAM_COMPARTMENTS.md.
+    """
+    NONADJACENT_COMPARTMENTS = "NONADJACENT_COMPARTMENTS"
+    """
+    A causal edge from or to this activity connects compartments that do not share a boundary (e.g. cytosol directly to extracellular region, plasma membrane directly to nuclear lumen), implying a missing transport, secretion or translocation step or a wrong 'occurs in'. See projects/GOCAM_COMPARTMENTS.md.
     """
 
 
@@ -5921,7 +5999,7 @@ class ExistingAnnotation(ConfiguredBaseModel):
     qualifier: Optional[AnnotationQualifierEnum] = Field(default=None, description="""The GO annotation qualifier specifying the relationship between the gene product and the term. For MF annotations, distinguishes 'enables' (gene product has the activity independently) from 'contributes_to' (gene product contributes to a complex's activity but does not have the activity alone). For BP, distinguishes 'involved_in', 'acts_upstream_of', etc. For CC, distinguishes 'located_in', 'part_of', 'is_active_in', 'colocalizes_with'.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     extensions: Optional[list[AnnotationExtension]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     negated: Optional[bool] = Field(default=None, description="""Whether the term is negated""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation', 'RuleCondition', 'CuratedRuleCondition']} })
-    evidence_type: EvidenceType = Field(default=..., description="""Evidence code (e.g., IDA, IBA, ISS, TAS)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
+    evidence_type: EvidenceType = Field(default=..., description="""Source GO evidence code (e.g., IDA, IBA, ISS, TAS), or an explicitly supported ECO identifier when the source supplies no GO shorthand.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     original_reference_id: Optional[str] = Field(default=None, description="""ID of the original source reference, preserved as supplied by GOA/UniProt. Curate identifier replacements in references.reference_review.replacement and cite the actual evidence source in review.supported_by; do not rewrite this provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     retired: Optional[bool] = Field(default=None, description="""Whether the annotation is retired or replaced""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     isoform: Optional[str] = Field(default=None, description="""UniProt isoform identifier (e.g., \"P19544-1\" for WT1 isoform 1). Only populated when the annotation is specific to a particular isoform rather than the canonical protein sequence. Note that just because an experiment used a particular isoform doesn't mean the annotation is isoform-specific - it may apply to all isoforms. Use this field only when there is clear evidence the annotation is isoform-specific.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })

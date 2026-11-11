@@ -78,3 +78,22 @@ All 26 source rows reviewed and preserved. The old claims that crotonyl-CoA is n
 Actual PTHR42807 target Q92947/PTN002533783 descends from PTN005130278 for all five IBAs. The beta-oxidation IBD uses human GCDH itself, correctly reflecting target experimental grounding. Neither donor count nor a supposed lipid-enzyme wrong branch explains this case. Both beta-oxidation rows and broad fatty-acid oxidation become UNDECIDED pending focused adjudication. PMID:25416781 cache lacks Methods/Results; indexed Figure5 distinguishes glutaryl-CoA/GCDH and octanoyl-CoA/MCAD. PMID:21974953 is a relevant rat specificity study, available only as abstract here. Do not turn this access limit into a claim of absent alternative activity. Existing mitochondrial, nuclear, lysine, catalytic and cofactor assignments remain; the nucleus is a context-specific pool. Exact source metadata are untouched.
 
 No existing human-hypothesis OpenScientist report was found: the three exact-symbol cache hits are bacterial Pseudomonas module briefs. A focused human oxidation request is registered. Live ontology and actual-lineage checks are recorded in the project evidence artifact.
+
+
+## 2026-11-04 — Current catalytic and compartment synthesis
+
+One mitochondrial matrix core represents glutaryl-CoA dehydrogenation/decarboxylation and its direct crotonyl-CoA product. Amino-acid catabolism and fatty-acyl-CoA production are complementary facets rather than a claim that a complete fatty-acid beta-oxidation cycle was demonstrated. The actual ontology paths and source distinctions are collected in the source guide and compact evidence archive.
+
+The current source assessment preserves measured alternative-substrate activity while leaving physiological fatty-acid utilization unresolved ([PMID:11024031](https://pubmed.ncbi.nlm.nih.gov/11024031/)). The three incoming fatty-acid process assertions therefore remain source-specific uncertainties. The GCDH experiment in [PMID:25416781](https://pubmed.ncbi.nlm.nih.gov/25416781/) and legitimate target self-evidence in PAINT correct two earlier hypotheses without rewriting the historical report.
+
+The human tumor-cell nuclear pool is retained outside the single mitochondrial core; its metabolic contribution is distinct from CBP’s transfer reaction ([PMID:37198486](https://pubmed.ncbi.nlm.nih.gov/37198486/)). Natural long and short products are documented separately from mature-chain and engineered constructs. Product-specific gaps remain questions rather than inferred activities.
+
+All prior journal text, generated hypothesis artifacts, original review objects and history records remain preserved. The compact archive locates the old quotation associations and current complete source contexts; current reference assessments specify what was actually read.
+
+## 2026-11-04 — Process specificity and resolved assay scope
+
+The original protocol now resolves the beta-oxidation citation’s assay scope; the two associated process judgments are marked over-annotated. The separate rat-derived broad oxidation claim retains its uncertainty. Crotonyl-CoA formation remains a direct product-forming role: the ontology explicitly includes comparable amino-acid-catabolic intermediates in fatty-acyl-CoA biosynthesis. Amino-acid and acyl-CoA parent terms are refined through verified descendants, with lysine, hydroxylysine and tryptophan scope preserved. The four previous excerpts and all original machine fields remain unchanged.
+
+## 2026-11-05 — Broad-process redundancy and oxidation scope
+
+Acyl-CoA metabolism is true but already entailed by the retained, more specific product-forming process, so its judgment becomes TOO_GENERAL. The separate rat-derived oxidation context remains unresolved after considering the selected additional primary literature. Its broader scope is not decided by overreach of the iterative beta-oxidation child. Direct crotonyl-CoA production, the single catalytic core, both natural products and all original contexts remain unchanged. One short introductory clause supplements the inherited process rationale without repeating or replacing the existing assay excerpt.

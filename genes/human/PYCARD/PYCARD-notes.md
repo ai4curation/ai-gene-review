@@ -149,3 +149,39 @@ signaling adaptor activity (GO:0035591); NLRP3 also carries signaling adaptor ac
 own nucleation step but ASC is the canonical adaptor. ASC also carries
 cysteine-type endopeptidase activator activity (GO:0140608) because its CARD filament directly
 drives procaspase-1 proximity-induced autoactivation. Avoid "protein binding".
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 EXP (PMID:21124315), IDA (PMID:14730312), IEA (GO_REF:0000044, SL-0173),
+all located_in, all KEEP_AS_NON_CORE. No sub-compartment or MAM rows.
+
+Checks:
+- UniProt Q9ULZ3 curates Mitochondrion to the two direct papers
+  (ECO:0000269|PubMed:14730312, PubMed:21124315), so the IEA is derived from them.
+- PMID:21124315 (abstract-only): activation-induced redistribution to perinuclear ER and
+  mitochondria clusters [PMID:21124315 "on inflammasome activation both NLRP3 and its adaptor ASC redistribute to the perinuclear space where they co-localize with endoplasmic reticulum and mitochondria organelle clusters"].
+  Imaging cannot separate mitochondrion from ER contacts; no MAM marker.
+- PMID:14730312 (abstract-only): overexpressed ASC co-localizes with Bax
+  [PMID:14730312 "When ectopically expressed, ASC interacted directly with Bax, colocalized with Bax to the mitochondria"].
+- No presequence or TM; MitoCarta3.0 does not list PYCARD; HPA "Nucleoplasm (Supported)".
+
+Outcome: actions unchanged (KEEP_AS_NON_CORE), reasons record the check. Transient,
+stimulus-dependent recruitment of a soluble adaptor, not an outer-membrane location
+(TRAF3/BRAF precedent); stays at the root. The IDA row's quote was about Bax translocation;
+added the sentence about ASC's own colocalization. EXP row given a supporting quote.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 EXP (PMID:21124315) and IEA (GO_REF:0000044, SL-0095), both located_in,
+both KEEP_AS_NON_CORE. No ER sub-compartment or MAM rows.
+
+Checks:
+- UniProt Q9ULZ3 curates "Endoplasmic reticulum {ECO:0000269|PubMed:21124315}" only, so the IEA
+  derives from the EXP row.
+- PMID:21124315 (abstract-only): [PMID:21124315 "on inflammasome activation both NLRP3 and its adaptor ASC redistribute to the perinuclear space where they co-localize with endoplasmic reticulum and mitochondria organelle clusters"].
+  Imaging of organelle clusters, no ER-specific marker or fractionation in the abstract.
+- Soluble PYD-CARD adaptor: no signal peptide, TM or retention motif.
+
+Outcome: actions unchanged (KEEP_AS_NON_CORE); reasons record the check. Recruited pool on the
+cytosolic face, stays at the root (A1CF, BRSK2 precedent), consistent with the batch 4
+mitochondrion rows. IEA row given a UniProt quote.

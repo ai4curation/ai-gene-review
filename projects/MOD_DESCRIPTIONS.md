@@ -3,35 +3,71 @@ title: "MOD gene descriptions as review input"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [worm, yeast, DROME]
-autolink_exclude: [MOD, MODS, GET3]
+autolink_exclude: [MOD, MODS, GET3, EGF]
 ---
 
 # MOD gene descriptions as review input
 
 **Bottom line:** model organism databases (MODs) publish hand-written gene
 descriptions, for example WormBase's paragraph for
-[rab-11.1](https://www.alliancegenome.org/gene/WB:WBGene00004274). Until this
-pilot the review workflow did not use them. A fetcher and sidecar format
-existed (`ai-gene-review fetch-descriptions`, `<gene>-descriptions.yaml`), but
-they had only been run on 118 yeast genes, and nothing in `fetch-gene` or the
-reviewer skills read the files. The fetcher had also stopped working: the
-Alliance API changed its response shape, and the worm cross-reference was
-parsed wrongly. Both are now fixed.
+[rab-11.1](https://www.alliancegenome.org/gene/WB:WBGene00004274). This project
+fetches them for every worm, yeast and fly gene we review, saves each as a
+deep-research source, scores it against our review, and acts on what it finds.
 
-A pilot on all 432 worm genes found that **374 (87%) have a curated WormBase
-description**. In the 16 genes read by hand, our review `description` is
-usually more mechanistic and more current. The WormBase text is still worth
-reading as a **recall checklist**, though: in 7 of the 16 pairs it
-names a phenotype, process or regulator that our review leaves out, and in one
-case (fshr-1) a whole functional role that our review never mentions.
+| | Worm (WormBase) | Yeast (SGD) | Fly (FlyBase) |
+|---|---|---|---|
+| Genes reviewed | 432 | 890 | 539 |
+| With a curated MOD description | 374 (87%) | 890 (100%) | 345 (64%) |
+| Median MOD text length (words) | 75 | 33 | 37 |
+| MOD text correctness, 1-5 (UniProt) | 4.2 (4.5) | 4.8 (4.6) | 4.7 (4.6) |
+| Description-text defects recorded (MOD + UniProt) | 100 (73 + 27) | 89 (44 + 45) | 73 (39 + 34) |
+| Reviews edited in the follow-up | about 60 | 249 | 124 |
+| NEW annotation rows | 0 | 2 | 1 |
+
+What we learned:
+
+- **The MOD text is a recall checklist, not an authority.** Our review descriptions
+  are usually more mechanistic and more current. The MOD text still names roles,
+  phenotypes and regulators our reviews had missed. fshr-1's synaptic role is the
+  clearest case: the worm review never mentioned it.
+- **SGD and FlyBase are the most accurate sources, WormBase the least.** SGD and
+  FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
+  often the more informative source, especially for fly.
+- **Most errors are stale, transferred or copied text, in both MOD and UniProt
+  descriptions.** The 262 recorded defects split 156 MOD and 106 UniProt. They are the
+`WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects (plus one worm
+`WRONG_REFERENCE`) on the cited MOD and UniProt files, counted per resource across
+`genes/worm`, `genes/yeast` and `genes/DROME`. Other source defects in those folders,
+mostly on GO annotations, are not included. Typical
+  cases are a claim later overturned (FlyBase says amon cleaves Slit; Tolkin is the
+  Slit protease), text carried over from another species (UniProt gives fly SCAP the
+  mammalian sterol-sensing mechanism) and a copy error (UniProt names Gurken, another
+  ligand, as the receptor for Spitz). Each defect quotes the offending sentence, and
+  `just export-source-defects` turns them into per-resource reports. Filing those
+  reports is a manual step that has not been done yet.
+- **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
+  NEW rows. Most gaps are mutant phenotypes, which show that the gene is needed,
+  not that it does the work, so they become description sentences instead.
+- **The Alliance automated text is the weakest source.** It is generated from the
+  GO annotations under review, so it is never cited as evidence, and it scores lowest
+  on every species. Several automated texts have also lost content between releases,
+  listed in [alliance-automated-regressions](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
+- **No other MOD adds anything.** MGI's note is a phenotype summary, RGD's is
+  automated text, and ZFIN and Xenbase have none.
 
 **Decision (2026-10-30): treat the curated description as a deep-research
 source**, the same way as Affinage. It is written verbatim to
-`<gene>-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`, `mgi`, `rgd`,
-`zfin`, `xenbase`). It is cited as a `file:` reference, and the reviewer's
-judgment goes in `references[].reference_review`. The source is sparse,
-uncited, undated and only partly trusted, but no new data structures or
-processes are needed for it. See [Deep-research integration](#deep-research-integration).
+`<gene>-deep-research-<mod>.md` (`wormbase`, `sgd`, `flybase`) by
+`just mod-description-deep-research`. It is cited as a `file:` reference, and the
+reviewer's judgment goes in `references[].reference_review`. The source is sparse,
+uncited, undated and only partly trusted, but no new data structures or processes
+are needed for it. See [Deep-research integration](#deep-research-integration).
+
+The work began with repairs. A fetcher and sidecar format existed
+(`ai-gene-review fetch-descriptions`, `<gene>-descriptions.yaml`). They had only been
+run on 118 yeast genes, nothing in `fetch-gene` or the reviewer skills read the
+files, and the fetcher had stopped working. The Alliance API had changed its response
+shape, and the worm cross-reference was parsed wrongly. Both are now fixed.
 
 ## Data and method
 
@@ -395,6 +431,27 @@ each other only.
     orthologs (ey given PAX4, tin given NKX2-2), in
     [alliance-automated-regressions](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
 
+## Mouse (MGI): not used
+
+MGI's `MOD_provided_gene_description` is a summary of mutant phenotypes, not a
+description of what the gene does. In a random sample of 25 of the 221 mouse
+genes, 22 have text and all 22 describe allele phenotypes:
+
+- mouse/Src: "Homozygotes for a targeted null mutation exhibit growth retardation, failure of
+  tooth eruption, osteopetrosis ...".
+- Ccne1: "Mice homozygous for disruptions in this gene display no abnormal phenotype."
+
+Cd79a and Cd79b, outside the sample, share the same sentence word for word. The sample
+and these two notes are in [mouse-mgi-sample.yaml](MOD_DESCRIPTIONS/mouse-mgi-sample.yaml),
+written by [mgi_sample.py](MOD_DESCRIPTIONS/mgi_sample.py). Mutant phenotypes establish
+necessity, not participation, so under the NEW bar they almost never support an
+annotation, and a worm- or fly-style review would mostly list phenotypes that are
+correctly left out. The mouse run was therefore stopped after the sample (2026-11-02),
+and `mod-description-deep-research` now skips MGI, so no `-deep-research-mgi.md` files
+are written. The sample also exposed a latent bug,
+now fixed: MGI's own UniProt line carries the prefix (`DR   MGI; MGI:106913;`), so the
+descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
+
 ## Recommendations
 
 1. **Use the curated MOD description as an input, not as an authority.** This
@@ -404,8 +461,8 @@ each other only.
 2. **Treat a claim that appears only in the MOD text as a literature lead.**
    fshr-1 is the model case: the gap is a missed role, not wording.
 3. **Re-audit existing reviews** with the comparison script, starting with the
-   lowest-overlap genes, then repeat for mouse (MGI), whose Alliance records carry
-   the same note type.
+   lowest-overlap genes. The remaining Alliance MODs add nothing here: MGI's note is a
+   phenotype summary, RGD's is automated text, and ZFIN and Xenbase have none.
 4. The NCBI step hits rate limits (HTTP 429) on bulk runs. It should honour an
    `NCBI_API_KEY`, or back off and retry.
 
@@ -426,4 +483,4 @@ each other only.
 - [x] Yeast: score descriptions (890 COMPLETE)
 - [x] Yeast: act on gap and discrepancy findings (89 source defects, 249 reviews edited)
 - [x] Fly: fetch, score and act on findings (345 FlyBase files, 73 source defects, 124 reviews edited)
-- [ ] Mouse (MGI); skip rat (RGD has no hand-written text); zebrafish and frog have none
+- [x] Mouse (MGI): sampled and not used, because the note is a phenotype summary; rat (RGD) has only automated text; zebrafish and frog have none

@@ -63,3 +63,21 @@ encephalopathy). GCSH accounts for <1% of NKH.
 All cited PMIDs and Reactome entries are cached. PMID:1671321 and PMID:3348809 are abstract-only
 (full_text_available: false) — abstracts confirm H-protein/GCS identity and lipoylation/cofactor.
 PMID:36190515 full text available (the key functional paper).
+
+
+## 2026-11-05 — human H-protein carrier reassessment
+
+The current evidence supports one mitochondrial glycine-cleavage carrier role. The natural precursor has 173 residues and the processed chain spans residues 49–173. Precursor Lys107 is mature residue 59 by coordinate conversion, not position 107 in both numbering systems. No separate natural alternative product is established.
+
+The prior authored lipoic-acid-binding proposal is retained in the historical archive but is not carried into the current annotations. Covalent lipoylation does not itself demonstrate the noncovalent interaction named by the binding parent. The original human study's main text on pages 351–360 was read from its scan; its normal cache contains the abstract. The yeast GCV3 annotation is an explicit convention exception, so absence across all H-proteins is not claimed. Carrier-term mapping remains a question rather than a replacement NEW.
+
+Protein maturation remains unresolved because a donor substrate is not automatically a participant in the modifying step. The question is whether GCSH supplies additional structural or cofactor work beyond donating its lipoyl group. The current core therefore records the established glycine-cleavage process, complex and matrix location without inventing a catalytic or carrier MF identifier.
+
+The eight positive interaction contexts are preserved. Four receive informative partner-class binding refinements; four generic protein-binding annotations are removed without denying the observed pairs. The MAGEA11 historical accession crosswalk remains gene-level, and the RHBDD2 isoform identity remains literal. MitoCoP's membrane category is Ambiguous; its pre-existing matrix column is not a new submitochondrial experiment. Source-specific readings and exact model paths are documented in the source guide and evidence companion.
+
+
+## 2026-11-05 — carrier terminology and evidence context
+
+The H-protein carrier activity is now represented explicitly as a proposed lipoyl-dependent child of molecular carrier activity. The PomBase gcv3 GO-CAM supplies a same-role precedent, and GO:0140414 shows that a covalent prosthetic arm is compatible with the carrier branch. The earlier four-target negative query did not establish universal absence. Budding-yeast GCV3 and bacterial sucB/dlaT lipoic-acid-binding annotations document a competing convention; the human cDNA study still does not supply a noncovalent affinity assay.
+
+The four partner-class binding refinements retain the positive assay pairs and independently supported NMI, MAGEA11 and MED11 classes. They do not assign transcriptional activity or physiological nuclear colocalization to GCSH. Uncertainty about whether GCSH does additional structural work in protein maturation remains distinct from its established lipoyl-donor role. The quoted UniProt statements retain their exact wording and now cite the local record.
