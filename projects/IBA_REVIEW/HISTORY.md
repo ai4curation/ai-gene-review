@@ -135,7 +135,7 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
-## 2026-11-11 — High-distance & shallow-parent IBA curation batches (Batches A–D: PRs #6213, #6236, #6271, and Batch D)
+## 2026-11-11 — High-distance & shallow-parent IBA curation batches (Batches A–D: PRs #6213, #6236, #6271, and #6289)
 
 Continued systematic triage of candidates surfaced by
 `uv run python projects/IBA_REVIEW/single_organism_distance.py --candidates --all-regimes`
@@ -161,7 +161,7 @@ IBAs**, **3,988 rated**; **9,243 rated non-self resolved IBA rows** with known d
   - `SCHPO/pik3` (`GO:0005777 peroxisome`, `R1` Tier 3 from *S. cerevisiae* `VPS34` `SGD:S000004240` pexophagy context via `PTN000005955`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `worm/vps-34`).
   - `yeast/AHP1` (`GO:0005777 peroxisome`, `R3` Tier 5 via `PTN000046537`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `SCHPO/pmp20`).
   - `XENLA/gbx2` (`GO:0051960 regulation of nervous system development` rationale cleanup matching `human/GBX2`) & `yeast/YMR1` (`GO:0016020 membrane` rationale cleanup matching `human/MTMR12`).
-- **Batch D — Deep-node eukaryotic/metazoan over-propagations, broad PPP5C/BSU1/PPEF ancestor lumping, and shallow parent `MODIFY` refinements (this PR):**
+- **Batch D — Deep-node eukaryotic/metazoan over-propagations, broad PPP5C/BSU1/PPEF ancestor lumping, and shallow parent `MODIFY` refinements ([PR #6289](https://github.com/ai4curation/ai-gene-review/pull/6289)):**
   - `human/TOMM20` (`GO:0016031 tRNA import into mitochondrion`, `R1` Tier 5 from *S. cerevisiae* `TOM20` `SGD:S000003314` via `PTN000277108`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED` because yeast co-imports cytosolic $\text{tRNA}^{\text{Lys}}_{\text{CUU}}$ via pre-Msk1p/Tom20 whereas human mitochondria encode a complete 22-tRNA set and import tRNA via PNPASE (`PNPT1`); plus `GO:0030943` `MODIFY` $\to$ `GO:0140436` `propagation_review` and `IEA` `MODIFY` refinements).
   - `human/SGPP2` (`GO:0046839 phospholipid dephosphorylation`, `R1` Tier 5 from *S. cerevisiae* `LCB3` `SGD:S000001761` via `PTN000384324`; `KEEP_AS_NON_CORE` $\to$ `MODIFY` to `GO:0006670 sphingosine metabolic process` because `SGPP2` specifically dephosphorylates sphingoid-base 1-phosphates rather than glycerophospholipids, and `GO:0005783 endoplasmic reticulum` `IDA` $\to$ `ACCEPT` per the root-organelle policy).
   - `human/PFAS` (`GO:0005737 cytoplasm` and `GO:0006164 purine nucleotide biosynthetic process`, `R3`/`R4` via `PTN000409986`; `ACCEPT` $\to$ `MODIFY` to `GO:0005829 cytosol` and `GO:0006189 'de novo' IMP biosynthetic process` as `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`).
