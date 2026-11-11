@@ -7900,3 +7900,50 @@ Each linked merge-group run executed its integration suite and required checks s
 Only GNB4, GNB2, GPKOW, GMNN and GRIA1 are checked in this fixed window, accepted ordinals 736–740. All other genes remain unchanged. The ClinGen seed, catalogue identities and order, earlier progress journal, 235 dated queue records, 169 previous completion updates, scientific sources and prior histories are preserved.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-07T093537Z-codex-01121a.yaml).
+
+## Completion checkpoint 743 — 2026-11-08 14:45:16 UTC
+
+743 complete; 2,133 of 2,876 remain. This checkpoint publishes three previously accepted actual merges after checkpoint 740; it grants no new gene acceptance.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Literal raw / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | ---: | --- |
+| GRXCR2 | 741 | [#6183](https://github.com/ai4curation/ai-gene-review/pull/6183) | [4667b403](https://github.com/ai4curation/ai-gene-review/commit/4667b4030f633b90427e50d855ef353e965905b4) | [42366408865](https://github.com/ai4curation/ai-gene-review/actions/runs/42366408865) | 11 / 12 | COMPLETE |
+| GRIA4 | 742 | [#6181](https://github.com/ai4curation/ai-gene-review/pull/6181) | [1ed9a994](https://github.com/ai4curation/ai-gene-review/commit/1ed9a99400508b683b9a851719ffb47ae0794d85) | [42367054898](https://github.com/ai4curation/ai-gene-review/actions/runs/42367054898) | 55 / 53 | COMPLETE |
+| GSX2 | 743 | [#6189](https://github.com/ai4curation/ai-gene-review/pull/6189) | [ed63914b](https://github.com/ai4curation/ai-gene-review/commit/ed63914b75acabedd0e7f313c3df4bc5f9d72c12) | [42371674797](https://github.com/ai4curation/ai-gene-review/actions/runs/42371674797) | 18 / 18 | COMPLETE |
+
+All three actual merges are ancestors of checked main 7066962c40d3e93a7c979b254bcc0d6690c0dda9, and their committed reviews match that main revision byte-for-byte. Each retains its genuine COMPLETE status. GRIA4 still has one UNDECIDED judgment and preserves 55 literal records in 53 schema contexts. GRXCR2 preserves 11 incoming records plus one previously accepted NEW annotation in 12 stored contexts. GSX2 retains 18 contexts without a NEW assertion. Campaign acceptance and the stored review status are distinct from whether every biological question has been resolved.
+
+The three linked merge-group runs executed their full integration suites and required checks successfully. Their recorded warnings, skipped tests and unrelated corpus diagnostics remain in the accepted evidence; ordinary PR runs that skipped the suite are not substituted for integration. This checkpoint records ROOT's existing acceptance receipts for GRXCR2 and GRIA4 and its November 8 acceptance of the already merged GSX2 work.
+
+Only GRXCR2, GRIA4 and GSX2 are newly checked in this window. All other catalogue identities and checkboxes, 235 dated queue records, 170 earlier completion updates, the complete prior journal, scientific files and earlier histories remain unchanged. The accompanying instruction change carries forward the approved six-workstream/storage limits, keeper protection, registered-checkout rule and explicit nested-uv runtime safeguards; it creates no additional workstream or environment.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-08T144516Z-codex-d44ee8.yaml).
+
+## Completion checkpoint 747 (2026-11-08 16:06:16 UTC)
+
+747 complete; 2,129 of 2,876 remain. This checkpoint publishes four previously accepted actual merges after checkpoint 743; it grants no new gene acceptance.
+
+| Gene | Accepted ordinal | PR | Actual merge | Executed merge-group run | Literal raw / stored contexts | Review status |
+| --- | ---: | --- | --- | --- | ---: | --- |
+| H1-4 | 744 | [#6197](https://github.com/ai4curation/ai-gene-review/pull/6197) | [88991cd3](https://github.com/ai4curation/ai-gene-review/commit/88991cd3a901501dd3a2510c7e6a72b1ee461fb8) | [42492099265](https://github.com/ai4curation/ai-gene-review/actions/runs/42492099265) | 52 / 51 | DRAFT |
+| GSDME | 745 | [#6187](https://github.com/ai4curation/ai-gene-review/pull/6187) | [704ef96a](https://github.com/ai4curation/ai-gene-review/commit/704ef96a523dcb219d66d93a389eea2f17184168) | [42492101186](https://github.com/ai4curation/ai-gene-review/actions/runs/42492101186) | 35 / 35 | DRAFT |
+| GUCY2D | 746 | [#6195](https://github.com/ai4curation/ai-gene-review/pull/6195) | [e276db44](https://github.com/ai4curation/ai-gene-review/commit/e276db44cd1111435c1320c5f0ca0ebdbd3d94f0) | [42492424060](https://github.com/ai4curation/ai-gene-review/actions/runs/42492424060) | 49 / 49 | DRAFT |
+| GUCA1A | 747 | [#6192](https://github.com/ai4curation/ai-gene-review/pull/6192) | [60e9a8d9](https://github.com/ai4curation/ai-gene-review/commit/60e9a8d98cd083f04cafceddbe2a68622eb6bd5b) | [42494116477](https://github.com/ai4curation/ai-gene-review/actions/runs/42494116477) | 39 / 39 | DRAFT |
+
+All four actual merges are ancestors of checked main 9404d53df530b1c13ffb853c7c86a0b80684eba7, and their committed reviews match that main revision byte-for-byte. Each retains its genuine DRAFT status. H1-4 retains three UNDECIDED judgments and preserves 52 literal input records in 51 stored contexts; GUCY2D retains five UNDECIDED judgments in 49 contexts. GSDME and GUCA1A retain 35 and 39 contexts respectively. None adds a NEW annotation. Campaign acceptance records completed review and verified delivery without erasing scientific uncertainty or changing computed review status.
+
+The linked merge-group runs executed their full integration suites and required checks successfully. Their warnings, test skips, deselections and unrelated corpus diagnostics remain in the delivery evidence; ordinary runs that skipped the suite are not substituted for integration. ROOT acceptance is recorded separately in the local immutable `clingen-acceptance-20261108-747.json` (SHA256 `c9bfb1d86febe5faf3f26f42479720491844bd855fef076ba72817ebc0bdd822`, records 0–3). The queue identifies that acceptance receipt and the separately hashed local delivery audits; these artifact names are provenance identifiers, not public download links. The PR, merge and run links above provide durable public evidence.
+
+Only H1-4, GSDME, GUCY2D and GUCA1A are newly checked in this fixed window. All other catalogue identities and checkboxes, 235 dated queue records, 171 previous completion updates, the complete prior journal, scientific files, instructions and earlier histories remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-08T160616Z-codex-73c0e1.yaml).
+
+## Completion checkpoint 748 (2026-11-10 04:45:41 UTC)
+
+748 complete; 2,128 of 2,876 remain. This publishes ROOT's prior acceptance of H3-3A and grants no new acceptance.
+
+H3-3A: [PR #6217](https://github.com/ai4curation/ai-gene-review/pull/6217), [actual merge dc1892ff](https://github.com/ai4curation/ai-gene-review/commit/dc1892ffdbd2e436f6b843ca2981e053bec3177a), [executed merge-group run 42747632016](https://github.com/ai4curation/ai-gene-review/actions/runs/42747632016). The merged review remains DRAFT with six UNDECIDED judgments and zero NEW annotations. All 147 literal input records, 146 downloaded TSV rows, 147 stored contexts and three extension atoms are retained.
+
+ROOT acceptance: local immutable `h3-root-acceptance-20261110T044541Z.json` (SHA256 `3aac8742127f2e9dc26c249db1fe9e7d51751618eccd16da2f10ace25cae8474`, pointer `/records/0`). This provenance identifier is not a public download link. Only H3-3A is newly checked; 235 dated queue records, 172 earlier completion updates and the full earlier journal remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-10T044620Z-codex-3c96b8.yaml).
