@@ -182,3 +182,13 @@ Scope: full re-review of all 28 GOA rows, description and core functions for Q9H
 
 ### Relative for next review
 - Mouse Gpam (Q61586, MGI:109162) is the SF16 ortholog with knockout, hepatocyte and GO-CAM (63a86a8600001386, 6446bfcb00000006) evidence. It has no review in the repo.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 26, Q9HCL2. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-377); interfacial(378-383); Cytoplasmic(384-828)`
+
+**Assessment: Retain structural correction; retain root organelle.** The review already incorporates the human GPAT1 structure (PMID:36522428), whose abstract explicitly reports no transmembrane regions and identifies an amphipathic surface plus an N-terminal loop-helix anchor. S20 detects only one of the membrane-contact elements. Preserve that structural interpretation and restore root mitochondrion actions to ACCEPT. Existing PAINT node placement was retained; paint-losses found no IRD/IKR loss.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

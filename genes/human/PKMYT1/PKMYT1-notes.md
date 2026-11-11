@@ -223,3 +223,13 @@ nothing is asserted that the annotation review does not already sanction.
 `just validate human PKMYT1` → ✓ Valid, 0 warnings.
 `just validate-references` → all checks passed (every `supporting_text` verbatim).
 `just validate-terms` → ✅ passed. Status set to `COMPLETE`.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 25, Q99640. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-386); interfacial(387-397); Cytoplasmic(398-499)`
+
+**Assessment: Retain targeting mechanism; refine broad term.** PMID:9001210 identifies a hydrophobic targeting region by deletion and localizes human Myt1 to ER and Golgi. Deletion establishes the importance of the region, not the exact membrane geometry or the narrower S20 387-397 endpoints. Retain existing locations and refine all three generic membrane rows to ER membrane plus Golgi membrane.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

@@ -113,3 +113,13 @@ position, yielding demethyl-ubiquinol, which is then O-methylated by COQ3 to giv
 ## 2026-10-11 completion pass (claude-code)
 
 GO:0160224 is defined on the quinone: "a 5-methoxy-2-methyl-3-(all-trans-polyprenyl)benzoquinone + NADH + O2 = a 3-demethylubiquinone" (RHEA:81211). The description and core function now say DMQ (quinone) -> 3-demethylubiquinone, where they previously said demethoxyubiquinol. UniProt's recommended name says NADPH, but its catalytic-activity line says NADH [PMID:23445365 "mediates reduction of the diiron center by nicotinamide adenine dinucleotide (NADH)"]. Iron ion binding was removed from core_functions because it is cofactor binding. Status COMPLETE.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 4, Q99807. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`transit_peptide(1-35); Cytoplasmic(36-117); interfacial(118-125); Cytoplasmic(126-197); interfacial(198-214); Cytoplasmic(215-217)`
+
+**Assessment: Retain topology; retain root organelle.** Human COQ7:COQ9 structural analysis (PMID:36306796) describes a membrane-interacting hydrophobic surface and models membrane deformation. This supports the existing peripheral membrane mechanism; this audit did not remap exact S20 endpoints onto atomic coordinates. Correct root mitochondrion actions to ACCEPT alongside the inner-membrane annotations.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

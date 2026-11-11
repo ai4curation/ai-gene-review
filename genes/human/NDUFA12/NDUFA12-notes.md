@@ -51,3 +51,13 @@
 - BP: **GO:0006120 mitochondrial electron transport, NADH to ubiquinone** only (structural role in a mature, functional complex; the process counterpart of the contributes_to MF above). **GO:0032981 mitochondrial respiratory chain complex I assembly is NOT asserted** — revised 2026-09-28, following the reasoning already given at the top of this file: assembly is unaffected in NDUFA12-knockout cells because NDUFAF2 substitutes at the same site, so NDUFA12 is dispensable for assembly per se, unlike the other accessory subunits (which do carry GO:0032981 alongside GO:0006120, e.g. NDUFA11). This is the one place NDUFA12 should differ from its paralogous accessory subunits.
 - location: **GO:0005743 mitochondrial inner membrane** (matrix-side peripheral).
 - in_complex: **GO:0045271 respiratory chain complex I**.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 30, Q9UI09. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Mitochondrial matrix(1-6); interfacial(7-15); Mitochondrial matrix(16-20); interfacial(21-28); Mitochondrial matrix(29-145)`
+
+**Assessment: Retain peripheral placement; consistent actions.** S20 points to human respiratory-complex structure 5XTI (PMID:28844695). The review already places NDUFA12 on the matrix-facing peripheral arm; no standalone proton-pumping function follows from membrane contact. Correct inconsistent actions based on evidence duplication: inner-membrane rows are ACCEPT regardless of evidence type, mitochondrion remains an informative root location, and generic membrane is refined to inner membrane. Exact IF endpoints were not independently remapped onto 5XTI.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.
