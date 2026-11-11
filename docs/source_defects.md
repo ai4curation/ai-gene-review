@@ -149,11 +149,16 @@ manual step. When it is done, set `report_status: REPORTED` and
   fragment, and only GOA can repoint the row. (Its explanation also suggests a
   minimum-coverage requirement before InterPro2GO transfer, which is a change
   to the pipeline - also GOA's, and also not the mapping's content.) This split
-  is easy to reopen: it was closed corpus-wide in #6027, and while that PR
-  waited to merge the same IPR006327 symporter mapping was filed both ways
-  again - `INTERPRO` with a `record:` in `XANCP/fruA`, and `GOA_EBI` with none
-  in `RHOCA/fruA` and `AZOBR/fruA1`, each of which also carries a
-  correctly-filed `INTERPRO` defect on the same mapping.
+  is easy to reopen. It was closed corpus-wide in #6027, and reopened twice
+  while that PR waited to merge, in reviews that had carried no defects at all.
+  As of `485113c854`: `ECOLI/pssA` and `PSEPK/pssA` each file two `GOA_EBI`
+  defects asking that the IPR016270 PGS1 mapping be suppressed for the type-I
+  PssA members - that is mapping scope, so `INTERPRO` - and none of the four
+  names the mapping in `record:`. The same shape sits on IPR006327, filed
+  `INTERPRO` with a `record:` in `XANCP/fruA` but `GOA_EBI` with none in
+  `RHOCA/fruA` and `AZOBR/fruA1`, each of which also carries a correctly-filed
+  `INTERPRO` defect on that very mapping. So check the filing whenever a
+  defect's fix is a mapping, whatever the row's `assigned_by` says.
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.
