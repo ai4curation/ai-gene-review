@@ -47,7 +47,10 @@ from typing import Any, Iterable
 
 import yaml
 
-from ai_gene_review.evidence import LITERATURE_EVIDENCE_CODES as LITERATURE_CODES, source_evidence_code
+from ai_gene_review.evidence import (
+    LITERATURE_EVIDENCE_CODES as LITERATURE_CODES,
+    source_evidence_code,
+)
 
 from ai_gene_review.tools.function_requirements import REPO_ROOT, _get, _write_tsv
 
@@ -257,10 +260,20 @@ _AUTHOR = re.compile(
     r"(?:\(\d+(?:,\d+)*\))*"
 )
 # A group author in a byline ("ADHR Consortium", "GTEx Consortium").
-_GROUP_AUTHOR = re.compile(
-    r"(?:The )?[\w'.\- ]*\b(?:Consortium|Group|Collaborators|Investigators|"
-    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative|Committee)"
-    r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
+_GROUP_WORDS = (
+    r"Consortium|Collaborators|Investigators|Committee|Collective Author|Group|"
+    r"Network|Team|Study|Studies|Project|Program|Programme|Initiative"
+)
+_GROUP_TAIL = r"\b[\w'.\- ]*(?:\(\d+(?:,\d+)*\))*"
+# A group author in a byline ("ADHR Consortium", "GTEx Consortium"); "Collective
+# Author" is NCBI's placeholder for an unnamed group. The group word must be
+# capitalised, so a sentence such as "In the pilot study, ..." is not a byline.
+_GROUP_AUTHOR = re.compile(rf"(?:The )?[\w'.\- ]*\b(?:{_GROUP_WORDS}){_GROUP_TAIL}")
+# PubMed puts a group author after a semicolon. There, and only there, an
+# unambiguous group word may be lower case ("Lambert JC; GERAD consortium").
+_GROUP_AFTER_SEMICOLON = re.compile(
+    rf"(?:The )?[\w'.\- ]*\b(?i:Consortium|Collaborators|Investigators|Committee|"
+    rf"Collective Author){_GROUP_TAIL}"
 )
 
 
@@ -280,15 +293,31 @@ def _is_author_list(paragraph: str) -> bool:
     True
     >>> _is_author_list("Cook LS, Brooks-Wilson A; Ovarian Cancer Association Consortium.")
     True
+    >>> _is_author_list("Brandstatter I(1), Kieber JJ; New Collective Author.")
+    True
+    >>> _is_author_list("Harold D, Lambert JC; GERAD consortium.")
+    True
     >>> _is_author_list("ENaC is regulated by Nedd4-2, which binds PY motifs.")
+    False
+    >>> _is_author_list("In the pilot study, cells were analyzed by FACS.")
+    False
+    >>> _is_author_list("In the consortium analysis, samples were typed by PCR.")
     False
     """
     # PubMed separates a trailing group author with a semicolon:
     # "... Brooks-Wilson A; Ovarian Cancer Association Consortium."
-    items = re.split(r"[,;] ", paragraph.rstrip("."))
-    if items[-1] in {"et al", "et al."}:
+    parts = re.split(r"([,;]) ", paragraph.rstrip("."))
+    # parts alternates item, separator, item, ...; pair each item with the
+    # separator before it.
+    items = list(zip(parts[::2], [None, *parts[1::2]]))
+    if items[-1][0] in {"et al", "et al."}:
         items = items[:-1]
-    people = [i for i in items if not _GROUP_AUTHOR.fullmatch(i)]
+    people = [
+        item
+        for item, sep in items
+        if not _GROUP_AUTHOR.fullmatch(item)
+        and not (sep == ";" and _GROUP_AFTER_SEMICOLON.fullmatch(item))
+    ]
     # A byline names at least one person; a lone group name is not enough to
     # tell it from a sentence.
     return bool(people) and all(_AUTHOR.fullmatch(i) for i in people)
@@ -296,7 +325,7 @@ def _is_author_list(paragraph: str) -> bool:
 
 # Paragraphs of a PubMed text record that are bibliographic, not the abstract.
 _RECORD_PARAGRAPH = re.compile(
-    r"^(?:\d+\. \S|Author information:|DOI:|PMID:|PMCID:|Copyright|©|"
+    r"^(?:\d+\. \S|Author information:|Collaborators:|DOI:|PMID:|PMCID:|Copyright|©|"
     r"Comment in|Comment on|Erratum in|Update of|Conflict of interest)"
 )
 
@@ -491,7 +520,8 @@ def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | 
         for row in csv.DictReader(fh, delimiter="\t"):
             ref = row.get("REFERENCE") or ""
             if (
-                source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID")) in LITERATURE_CODES
+                source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID"))
+                in LITERATURE_CODES
                 and ref.startswith("PMID:")
                 and ref[5:] not in own.cited_pmids
                 and row.get("GO TERM") not in SKIPPED_TERMS
