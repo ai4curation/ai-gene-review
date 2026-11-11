@@ -18,9 +18,9 @@ tatA/tatB/tatC and the six P. putida KT2440 paralogs):
   are MARK_AS_OVER_ANNOTATED with a WRONG_QUALIFIER source defect (should be
   contributes_to), as in the September 2026 TreeGrafter re-review of tatC-I;
   core functions record contributes_to.
-- GO:0015031 MODIFY to GO:0043953; GO:0065002 MODIFY to GO:0043953 (lateral, matching
-  the Sec subunit precedent GO:0065002 -> GO:0043952); GO:0016020 MODIFY to
-  GO:0005886.
+- GO:0015031 MODIFY to GO:0043953; GO:0065002 MODIFY to GO:0043953 (lateral,
+  matching the Sec subunit precedent GO:0065002 -> GO:0043952); GO:0016020
+  MODIFY to GO:0005886.
 - Bare GO:0005515 REMOVE (policy); homo-oligomer and lipid-binding rows
   KEEP_AS_NON_CORE.
 - TatB and TatC get a NEW GO:0005048 signal sequence receptor activity row
