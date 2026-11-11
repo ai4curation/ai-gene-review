@@ -47,6 +47,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
+| `PTHR32385` MANNOSYL PHOSPHORYLINOSITOL CERAMIDE SYNTHASE | fungal IPC mannosyltransferase node | `SUR1`/`CSH1`/`imt1`/`imt2`/`imt3`/`MIT1`/`Q4WDG6` |
 
 ---
 
@@ -464,12 +465,42 @@ vegetative `sec2` and sporulation-specific `spo13`.
 - [x] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member;
   drafted in this branch
 
+## Family 21: IPC Mannosyltransferases
+
+`PTHR32385` contains the fungal GT32 IPC mannosyltransferases that transfer
+mannose from GDP-mannose to inositol phosphorylceramide to form
+mannosyl-inositol phosphorylceramide. PAINT places generic
+`GO:0000030 mannosyltransferase activity` and
+`GO:0051999 mannosyl-inositol phosphorylceramide biosynthetic process` on
+`PANTHER:PTN001285482`, a node seeded by SGD `SUR1`/`CSH1`, the three
+PomBase `imt` paralogs, a CGD *Candida albicans* member, and the
+*Aspergillus fumigatus* MitA protein. The node is sound, but each review should
+prefer the exact `GO:0103064 inositol phosphorylceramide mannosyltransferase
+activity` term when enough evidence is present.
+
+- [ ] `yeast/SUR1` - *S. cerevisiae* Csg2-dependent IPC mannosyltransferase;
+  existing review to recheck in this fungal-family context
+- [ ] `yeast/CSH1` - *S. cerevisiae* Csh1-Csg2 IPC mannosyltransferase;
+  existing review to recheck in this fungal-family context
+- [x] `SCHPO/imt1` - fission-yeast IPC mannosyltransferase in the Imt1
+  subfamily; drafted in this branch
+- [ ] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog
+- [ ] `SCHPO/SPAC17G8.11c` - fission-yeast imt3, an SF20 imt paralog
+- [ ] `CGD:CAL0000176496` - CGD-seeded *Candida albicans* IPC mannosyltransferase
+- [ ] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
+  mannosyltransferase PAINT seed
+
 ---
 
 # NOTES
 
 ## 2026-11-06
 
+- Reopened `PTHR32385`, the fungal IPC mannosyltransferase family, for
+  PAINT-focused re-review. The first new review covers `SCHPO/imt1`: both
+  `PTN001285482` PAINT assertions are sound for the fission-yeast
+  Imt1/Imt2/Imt3 trio, with the generic mannosyltransferase IBD marked too broad
+  because the exact `GO:0103064` IPC mannosyltransferase term already exists.
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
