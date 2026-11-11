@@ -17,3 +17,8 @@ No process proposal was added merely to populate the module. Gene core activitie
 The action discriminator is target evidence, not species labels or donor count: P. putida has a native sugar-independent route and a documented failure of PtsN to replace fructose EIIA; Caulobacter separates its Ntr effectors from sugar permeases and its mannose assignments originate in an incorrect transporter EC mapping. E. coli has measured cross-system phosphate exchange in vitro but lacks demonstrated native sugar-uptake participation for the Ntr branch, so physiological process assignment is over-annotation rather than an absolute negative. Bona fide E. coli/Bacillus HPr controls retain the sugar process because they feed sugar-specific EIIA proteins in the native carbohydrate route; common ancestry at PTN002135312 does not erase this functional divergence.
 
 Where the only localization assertion is ARBA-derived, compartment adjudication remains UNDECIDED and the core location is omitted. PtsN–KdpD target interaction plus regulatory output supports direction-neutral regulator inference without claiming an isolated kinase assay. Source annotation payloads are unchanged.
+
+
+## 2026-11-11 — target-specific cross-system evidence
+
+The native study separates this PtsP–HPr–PtsN regulatory relay from carbohydrate permeases. Transferring the sugar-transport process from shared PTS domains misidentifies the experimentally characterized role. This is a wrong functional propagation, not a claim that phosphate exchange is impossible. This target belongs to the experimentally separated non-permease relay, and no target-specific cross-system sugar-phosphorylation result is available to soften the erroneous electronic process transfer.

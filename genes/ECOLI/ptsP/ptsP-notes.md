@@ -37,3 +37,8 @@ Where the only localization assertion is ARBA-derived, compartment adjudication 
 ## 2026-11-10 — phosphate-flow direction and propagation status
 
 The P. putida NPr/EINtr sugar-process assignment is over-annotated in light of real in vivo FruB-to-Ntr cross talk, without borrowing the PtsN-specific negative replacement assay. E. coli EINtr GlcNAc rejection now has propagation metadata matching its measured acceptor-specificity argument. Original annotation payloads are unchanged.
+
+
+## 2026-11-11 — target-specific cross-system evidence
+
+The domain mapping joins a regulatory relay enzyme to the coupled carbohydrate uptake process. Native PtsP preferentially serves NPr, but in-vitro coupling assays and exchange between PTS components preclude using specialization as proof that all sugar-related participation is impossible. A target-specific physiological sugar-transport role is not established by the present evidence. Demonstrated cross-system chemistry involving this target supports MARK_AS_OVER_ANNOTATED, while native sugar transport remains unestablished.
