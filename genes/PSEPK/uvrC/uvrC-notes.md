@@ -25,7 +25,10 @@ Both incision active sites are predicted intact.
 - GO:0009381 excinuclease ABC activity: ACCEPT (was MARK_AS_OVER_ANNOTATED). Both
   incision chemistries reside in UvrC, so it enables the activity as catalytic subunit;
   consistent with the E. coli review. Core MF is GO:0009381 (is_a GO:0004520).
-- GO:0004520 NEW (ISS from P0A8G0) retained: KT2440 has no IBA row from PTN000778007.
+- GO:0004520 NEW (ISS from P0A8G0) removed on PR review (2026-11-10): it is an ancestor of the accepted core
+  GO:0009381, so adding it is redundancy, not new coverage. Propagation gap noted for follow-up: KT2440 UvrC
+  receives no IBA row from the PTHR30562 PAINT node PTN000778007 (GO:0004520), although its E. coli ortholog
+  does; this is a PAINT/GOA propagation gap, not missing biology.
 - DNA repair and DNA damage response: MODIFY to nucleotide-excision repair (were
   KEEP_AS_NON_CORE while arguing they were too general).
 - SOS response: MARK_AS_OVER_ANNOTATED (was KEEP_AS_NON_CORE). E. coli uvrC is not
