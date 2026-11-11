@@ -47,3 +47,8 @@ Add an explicitly inferred depolymerase MF proposal with KT2442 biochemical and 
 ## 2026-11-11 — withhold exact cross-strain GO transfer
 
 The authored GO:0050527 IC proposal is withdrawn: the evidence is a cross-strain biochemical inference, not inference from another annotation of the same protein. ISS would require a verified donor; no stable KT2442 pPAZ3 accession or complete sequence bridge has been established. Preserve the qualified broader intracellular mcl-PHA role through the existing proposed activity, and request the missing donor sequence explicitly. The 2007 methods identify the KT2442 construct, and the 2025 title does not override its KT2442 methods. All pre-audit source annotation rows remain intact.
+
+
+## 2026-11-11 — consistent close-strain inference across aspects
+
+The KT2442 derivative evidence supports qualified KT2440 core molecular function, process and location at the same confidence. Restore GO:0050527 in core_functions for the HO-rich substrate/product component; keep the broader mcl-PHA proposed function as additive coverage of aliphatic/aromatic substrates. Do not manufacture a donor accession, an experimental KT2440 annotation, or an accession-free ISS row. Full-text Table 1/methods were re-read at https://www.researchgate.net/publication/6630171_Biochemical_Evidence_That_phaZ_Gene_Encodes_a_Specific_Intracellular_Medium_Chain_Length_Polyhydroxyalkanoate_Depolymerase_in_Pseudomonas_putida_KT2442_CHARACTERIZATION_OF_A_PARADIGMATIC_ENZYME ; KT2442 is explicitly a derivative of KT2440, while pPAZ3 uses KT2442 DNA. The earlier reasoning that withheld only MF while accepting BP/CC was inconsistent and is superseded.
