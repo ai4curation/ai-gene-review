@@ -4,7 +4,7 @@
 - **UniProt Accession:** `A0A0H2M4T4` (`A0A0H2M4T4_VARPD`)
 - **Ordered Locus Name:** `VPARA_28600`
 - **Gene Symbol:** `ppk`
-- **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, strain TBEA6; see species genomic context in [PMID:21183664 "Genomic analysis has revealed multiple metabolic features for autotrophic and heterotrophic lifestyles. These metabolic diversities enable independent survival, as well as a symbiotic lifestyle."])
+- **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, strain TBEA6; for species-level genomic context in the sequenced strain S110 genome announcement, see [PMID:21183664 "Genomic analysis has revealed multiple metabolic features for autotrophic and heterotrophic lifestyles. These metabolic diversities enable independent survival, as well as a symbiotic lifestyle."])
 - **Protein Function:** Polyphosphate kinase 1 (`PPK1`, 710 aa, EC 2.7.4.1) that catalyzes the reversible transfer of the terminal $\gamma$-phosphate of ATP to long-chain inorganic polyphosphate (`polyP`).
 
 ## Domain Architecture & Biochemical Mechanism (`UniProtKB:A0A0H2M4T4`)
@@ -18,7 +18,7 @@
    - `FT ACT_SITE 441` (`Phosphohistidine intermediate`) within the conserved C1 domain (`UniProtKB:A0A0H2M4T4`).
    - Catalyzes `ATP + (phosphate)n = ADP + (phosphate)n+1` (EC 2.7.4.1), requiring $\text{Mg}^{2+}$ as a cofactor (`FT BINDING 381`, `ligand="Mg(2+)"`).
 3. **Prospective Hypothesis on Intracellular Metal & REE Sequestration:**
-   - As a prospective hypothesis (not yet experimentally assayed in *V. paradoxus*), polyanionic polyphosphate chains synthesized by `PPK1` (`VPARA_28600`) may form intracellular granules that chelate divalent transition metals ($\text{Cd}^{2+}, \text{Zn}^{2+}, \text{Co}^{2+}, \text{Ni}^{2+}, \text{Cu}^{2+}$) and trivalent lanthanides ($\text{Ln}^{3+}$), complementing the polyphosphate-mobilizing PPK2 phosphotransferases `ppk2` (`VPARA_00520`, `A0A0H2MPR3`) and `VPARA_50220` (`A0A0H2LUF2`).
+   - As a prospective hypothesis (not yet experimentally assayed in *V. paradoxus*), polyanionic polyphosphate chains synthesized by `PPK1` (`VPARA_28600`) may form intracellular granules that chelate divalent transition metals ($\text{Cd}^{2+}, \text{Zn}^{2+}, \text{Co}^{2+}, \text{Ni}^{2+}, \text{Cu}^{2+}$) and trivalent lanthanides ($\text{Ln}^{3+}$), complementing the polyphosphate-mobilizing `PF03976` PPK2 phosphotransferases `VPARA_00520` (`UniProtKB:A0A0H2MPR3`, `DR InterPro; IPR022300; PPK2-rel_1.`) and `VPARA_50220` (`UniProtKB:A0A0H2LUF2`, `DR NCBIfam; TIGR03707; PPK2_PA0141; 1.`) encoded in the same strain TBEA6 proteome (`Proteomes:UP000035170`).
 
 ## Review of Existing GOA Annotations
 - `GO:0008976` (`polyphosphate kinase activity`, IEA via UniProtKB-EC / InterPro / ARBA) -> **ACCEPT** (core enzymatic activity, EC 2.7.4.1).

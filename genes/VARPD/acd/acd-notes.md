@@ -2,7 +2,7 @@
 
 ## Overview
 - **UniProt Accession:** `B9U6P5` (`SPCAD_VARPD`)
-- **Ordered Locus Name:** `VPARA_05440` (strain B4 / TBEA6 `acd`)
+- **Ordered Locus Name:** `VPARA_05440` (strain TBEA6 `acd`, `UniProtKB:B9U6P5`)
 - **Gene Symbol:** `acd`
 - **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, characterized in strain TBEA6)
 - **Protein Function:** 3-sulfinopropanoyl-CoA (3SP-CoA) desulfinase (`Acd`, 399 aa, EC 3.13.1.4), a neofunctionalized member of the acyl-CoA dehydrogenase (ACD) fold family that catalyzes the non-oxidative, hydrolytic C–S bond cleavage of 3-sulfinopropanoyl-CoA into propanoyl-CoA and sulfite (`SO3(2-)`), utilizing non-covalently bound FAD strictly as a structural cofactor rather than a redox cofactor.
@@ -23,11 +23,11 @@
 Because `AcdTBEA6` (`B9U6P5`) retains the canonical acyl-CoA dehydrogenase 3-domain fold (`Pfam:PF02771`, `PF02770`, `PF00441`; `PANTHER:PTHR43884`), automated pipelines (InterPro2GO, UniProtKB-KW, and PANTHER TreeGrafter) annotated it as a fatty acid $\beta$-oxidation / butyrate-degrading acyl-CoA dehydrogenase. Four of its 5 existing GOA rows are false positives directly refuted by `PMID:24317404`:
 1. `GO:0003995` (`acyl-CoA dehydrogenase activity`, IEA via InterPro) -> **REMOVE** (directly refuted by `PMID:24317404`: `AcdTBEA6` lacks the catalytic glutamate base and shows no dehydrogenase activity toward any tested acyl-CoA substrate).
 2. `GO:0016627` (`oxidoreductase activity, acting on the CH-CH group of donors`, IEA via InterPro / UniProtKB-KW) -> **REMOVE** (directly refuted by `PMID:24317404`: `AcdTBEA6` is a carbon-sulfur bond hydrolase [EC 3.13.1.4], not an oxidoreductase).
-3. `GO:0033539` (`fatty acid beta-oxidation using acyl-CoA dehydrogenase`, IEA via TreeGrafter `PTN000246038`) -> **REMOVE** (TreeGrafter over-propagation; `AcdTBEA6` functions in 3,3'-thiodipropionate / 3-sulfinopropionate organosulfur catabolism, not fatty acid $\beta$-oxidation, `PMID:19001372`, `PMID:24317404`).
-4. `GO:0046359` (`butyrate catabolic process`, IEA via TreeGrafter `PTN000246038`) -> **REMOVE** (TreeGrafter over-propagation; `AcdTBEA6` cannot oxidize butyryl-CoA, `PMID:24317404`).
+3. `GO:0033539` (`fatty acid beta-oxidation using acyl-CoA dehydrogenase`, IEA via TreeGrafter `PTN005188827`) -> **REMOVE** (TreeGrafter over-propagation; `AcdTBEA6` functions in 3,3'-thiodipropionate / 3-sulfinopropionate organosulfur catabolism, not fatty acid $\beta$-oxidation, `PMID:19001372`, `PMID:24317404`).
+4. `GO:0046359` (`butyrate catabolic process`, IEA via TreeGrafter `PTN005188827`) -> **REMOVE** (TreeGrafter over-propagation; `AcdTBEA6` cannot oxidize butyryl-CoA, `PMID:24317404`).
 5. `GO:0050660` (`flavin adenine dinucleotide binding`, IEA via InterPro / UniProtKB-KW) -> **ACCEPT** (confirmed by UV-Vis spectroscopy in `PMID:24317404`: binds 1 FAD molecule per subunit non-covalently as a structural cofactor).
 
-## Proposed New Annotations
-- `GO:0046508` (`hydrolase activity, acting on carbon-sulfur bonds`) — `enables`, supported by `PMID:24317404` (EC 3.13.1.4, hydrolytic cleavage of 3-sulfinopropanoyl-CoA to propanoyl-CoA and sulfite).
-- `GO:0044273` (`sulfur compound catabolic process`) — `involved_in`, supported by `PMID:19001372` and `PMID:24317404`.
-- `GO:0051289` (`protein homotetramerization`) or `GO:0042803` (`protein homodimerization activity`) / `GO:0005737` (`cytoplasm`) — supported by size-exclusion chromatography in `PMID:24317404`.
+## Proposed New Annotations & Ontology Terms
+- **Proposed new MF term (`proposed_new_terms`):** `3-sulfinopropanoyl-CoA desulfinase activity` (EC 3.13.1.4, `RHEA:41560`), supported by `PMID:24317404` (GO currently lacks a dedicated Molecular Function term for non-oxidative sulfinylacyl-CoA desulfinases).
+- `GO:0044273` (`sulfur compound catabolic process`) — `involved_in` (`IDA`), supported by purified enzyme assays in `PMID:24317404` and pathway context in `PMID:19001372`.
+- `GO:0005829` (`cytosol`) — `located_in` (`IC`), supported by purification as a soluble homotetrameric intracellular enzyme lacking signal peptides or transmembrane spans (`PMID:24317404`).

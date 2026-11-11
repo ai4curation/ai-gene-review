@@ -4,7 +4,7 @@
 - **UniProt Accession:** `A0A0H2LUW4` (`A0A0H2LUW4_VARPD`)
 - **Ordered Locus Name:** `VPARA_65850`
 - **Gene Symbol:** `gcd`
-- **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, strain TBEA6; see species-level metabolic versatility in [PMID:21183664 "Genomic analysis has revealed multiple metabolic features for autotrophic and heterotrophic lifestyles. These metabolic diversities enable independent survival, as well as a symbiotic lifestyle."])
+- **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, strain TBEA6; for species-level metabolic versatility in the sequenced strain S110 genome announcement, see [PMID:21183664 "Genomic analysis has revealed multiple metabolic features for autotrophic and heterotrophic lifestyles. These metabolic diversities enable independent survival, as well as a symbiotic lifestyle."])
 - **Protein Function:** Membrane-bound pyrroloquinoline quinone (PQQ)-dependent glucose dehydrogenase (`mGDH` / `Gcd`, 818 aa, EC 1.1.5.2) that catalyzes the direct oxidation of D-glucose to D-glucono-1,5-lactone at the periplasmic face of the inner membrane, coupling electron transfer to ubiquinone in the respiratory chain.
 - **Prospective Hypothesis (Unverified in *V. paradoxus*):** Periplasmic/extracellular hydrolysis of D-glucono-1,5-lactone yields D-gluconic acid, a candidate organic-acid lixiviant that could contribute to mineral phosphate solubilization and rare earth element (REE / lanthanide) or metal bioleaching in soil and rhizosphere environments; this ecological role remains a prospective hypothesis awaiting targeted $\Delta gcd$ mutant testing in *V. paradoxus*.
 
@@ -23,5 +23,5 @@
 - `GO:0016614` (`oxidoreductase activity, acting on CH-OH group of donors`, IEA via InterPro) -> **TOO_GENERAL** (subsumed by the accepted child term `GO:0008876` `quinoprotein glucose dehydrogenase activity`).
 
 ## Proposed New Annotations
-- `GO:0005886` (`plasma membrane`) — `located_in`, supported by the 5 transmembrane helices (`FT_TRANSMEM`) and `InterPro:IPR017511` in `UniProtKB:A0A0H2LUW4`.
-- `GO:0019595` (`non-phosphorylated glucose catabolic process`) — `involved_in`, supported by `InterPro:IPR017511` and `PANTHER:PTHR32303:SF4` in `UniProtKB:A0A0H2LUW4`.
+- `GO:0005886` (`plasma membrane`) — `located_in` (`IC`), supported by the 5 transmembrane helices (`FT TRANSMEM 14..147`) and `InterPro:IPR017511` in `UniProtKB:A0A0H2LUW4`.
+- `GO:0019521` (`D-gluconate metabolic process`) — `involved_in` (`IC`), supported by `NCBIfam:TIGR03074` / `InterPro:IPR017511` in `UniProtKB:A0A0H2LUW4` (periplasmic oxidation of D-glucose to D-glucono-1,5-lactone initiates D-gluconate metabolism).
