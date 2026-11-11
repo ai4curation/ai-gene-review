@@ -229,6 +229,78 @@ counter-example — and refreshes the index. All nine pass `just validate-pfam-r
 Each PROPOSED annotation remains a **candidate needing curator / experimental
 validation**, not an asserted fact.
 
+## Part 3 — Which new mappings are high value and unique
+
+Part 2 counts families that get no GO term through InterPro. Two objections make
+that count a poor guide to where the gain is. Many of the obvious mappings, SH2
+to phosphotyrosine binding among them, are binding terms, which say little about
+what a protein does. And a family whose own InterPro entry has no GO term may
+still get the function through a different InterPro entry that the same proteins
+match. [`high_value_unique.py`](PFAM/high_value_unique.py) tests both on the
+reviewed members of every Pfam family, then asks UniProt how many unreviewed
+members would actually gain the term. Full results:
+[HIGH_VALUE_UNIQUE.md](PFAM/HIGH_VALUE_UNIQUE.md). Figures below are from the run
+of 2026-11-11 (InterPro 111.0, UniProtKB 2026_04).
+
+**Both objections hold.**
+
+- **Binding.** Only 28% of the 402 reviewed SH2-domain proteins carry
+  phosphotyrosine residue binding, so the mapping fails the purity test before
+  its value is even considered.
+- **Another entry.** Of 3,562 specific, non-binding (family, term) pairs that a
+  family's reviewed members share, InterPro2GO already supplies 2,229, and 1,389
+  of those arrive only through an entry other than the family's own. Two of the
+  five mappings proposed above are in this group: LeuD (PF27512) gets
+  3-isopropylmalate dehydratase activity from IPR004431 on all members, and
+  Chalcone (PF02431) gets chalcone isomerase activity from IPR044164 on 94%.
+  Those two add nothing InterPro lacks.
+- **Another pipeline.** Of the 1,333 pairs InterPro2GO does not supply, 954 are
+  already on more than half of the family's unreviewed members through UniRule,
+  ARBA or EC2GO.
+
+**What is left.** 379 open pairs; 227 after requiring experimental evidence on a
+reviewed member and counting families that hit the same proteins once. Of those,
+129 are enzyme or transporter terms, and 47 of those are well supported (no
+reviewed member with a different function, at least ten reviewed members, at
+least five species). Examples: PMSR (PF01625) to L-methionine (S)-S-oxide
+reductase activity, where InterPro gives only a general oxidoreductase term;
+the MAPEG family (PF01124) to glutathione transferase activity; RAI1 (PF08652)
+to RNA NAD+-cap hydrolase activity; ERO1 (PF04137) to flavin-dependent
+sulfhydryl oxidase activity.
+
+**Few of them need Pfam.** For most candidates the family is the only signature
+of its InterPro entry, or the term holds equally well across the entry, so adding
+the term to interpro2go on that entry does the same job. A mapping written at
+Pfam level is the only route for 17 headline pairs, six of them in the
+well-supported set: SIR2_2 (PF13289) to NAD+ nucleosidase activity, GH16_XgeA
+(PF26113) to endo-1,3(4)-beta-glucanase activity, zf-CCCH_DUS3L (PF25585) to mRNA
+dihydrouridine synthase activity and BphC_D1 (PF22632), all unintegrated; and
+WGR (PF05406) to two protein ADP-ribosyltransferase terms, which its entry holds
+less well. The answer to the project's opening question is therefore narrow:
+mapping from Pfam instead of InterPro adds a handful of families, while the
+larger gain is a list of terms to request on existing InterPro entries.
+
+**Paralog traps are flagged, not dropped.** 34 headline pairs have reviewed
+members with a different function: the IF-2B family (PF01008) is 91%
+S-methyl-5-thioribose-1-phosphate isomerase by count, and the rest are eIF2B
+subunits. A plain mapping would mis-annotate those, so each needs a restricting
+condition and belongs in a curated rule (`rules/curated`).
+
+**Pfam in the restricting rules we have.** None of the seven curated rules uses a
+Pfam condition (they use InterPro, taxon, CDD, FunFam and one module condition),
+and none negates a condition. The 23 InterPro entries with a proposed removal or
+narrowing in `projects/INTERPRO/interpro2go.sssom.yaml` mention Pfam only in
+comments. For thirteen of those entries a Pfam family is found on between 5% and
+95% of the reviewed members and could serve as a splitting condition, for example
+PF00069 against PF07714 within the protein kinase domain entry. Whether any of
+them separates right from wrong members is untested; the
+[census](PFAM/HIGH_VALUE_UNIQUE.md) lists them.
+
+Limits: purity is measured on reviewed members only; a Swiss-Prot term may itself
+be electronic; only molecular function is tested; and several headline families
+are regions of a single eukaryotic protein known from a few orthologs. Every row
+is a candidate for curation.
+
 ## Implications for AIGR / GO annotation
 
 - **Do not mine `pfam2go` for extra precision over `interpro2go`.** For
@@ -273,6 +345,7 @@ cd projects/PFAM
 python3 analyze_pfam_go_gaps.py --download   # Part 1: existing pfam2go vs interpro2go
 python3 headroom_analysis.py                 # Part 2: headroom for new mappings
 python3 validate_pfam_reviews.py             # Part 2: validate the hand-curated reviews + refresh index
+python3 high_value_unique.py --download      # Part 3: high-value, unique candidates (queries UniProt)
 just validate-pfam-reviews                   # the above + LinkML structural + GO-label validation
 ```
 
@@ -288,6 +361,11 @@ Inputs (cached under `PFAM/data/`, git-ignored; reproducible via `--download`):
 - `go-basic.obo` — current.geneontology.org (GO `is_a`/`part_of` DAG)
 - `Pfam-A.clans.tsv.gz` — Pfam FTP (full family universe + clan + description; fetch
   manually for `headroom_analysis.py`)
+- `ec2go`, and two UniProt REST streams of reviewed entries (Pfam and InterPro
+  cross-references, EC numbers, GO terms with evidence; species) — fetched by
+  `high_value_unique.py --download`. The GO site rejects Python's default client, so
+  that script downloads with `curl`; `analyze_pfam_go_gaps.py --download` currently
+  fails for the same reason and its inputs can be fetched the same way.
 
 Outputs (committed):
 
@@ -297,6 +375,9 @@ Outputs (committed):
   5 proposed, 4 rejected-on-verification), schema
   [`pfam_entry_review.yaml`](../../src/ai_gene_review/schema/pfam_entry_review.yaml);
   index in [`PROPOSED_MAPPINGS.md`](PFAM/PROPOSED_MAPPINGS.md), validated by `validate_pfam_reviews.py`
+- [`HIGH_VALUE_UNIQUE.md`](PFAM/HIGH_VALUE_UNIQUE.md) — Part 3 summary (auto-generated)
+- `PFAM/high_value_unique_candidates.yaml` — Part 3 open candidates, ranked, with
+  counter-examples, supplying entries and UniProt counts
 - `PFAM/pfam_go_precision_gaps.tsv` — Part 1 non-SAME classified assertions
 - `PFAM/unintegrated_pfam_with_go.tsv` — pfam2go terms for unintegrated families
 - `PFAM/lumped_entries_headroom.tsv` — multi-Pfam GO-bearing entries, ranked
