@@ -106,10 +106,10 @@ then put in tiers:
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 128 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 131 |
 | `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 6 |
-| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 3 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 4 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 2 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -918,6 +918,86 @@ Possible upstream errors found in this set:
 - **RGD.** The PW:0001344 text gives phosphatidylglycerol as TAMM41's substrate;
   it is phosphatidic acid, as RGD's own diagram shows.
 
+### Seventh set: chromatin remodelers, calcium transport and kinin signaling
+
+The seventh set split the two pathways that mix unrelated families into one
+human module per family, and covered kinin signaling by extending an existing
+module. Each new module cites only its parent PW id as evidence. The re-run gives
+131 `has_module`, 4 `related_module_only` and 2 `no_specific_go_term`; chromatin
+remodeling (PW:0001339), calcium transport (PW:0001139) and kinin signaling
+(PW:0001480) moved to `has_module`.
+
+- **Chromatin remodeling** ([PW:0001339](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001339.yaml),
+  74 genes, no diagram), one module per SNF2-family complex group:
+  - [`modules/swi_snf_chromatin_remodeling.yaml`](../modules/swi_snf_chromatin_remodeling.yaml):
+    cBAF, PBAF and ncBAF as alternative complexes, with paralogue groups as family
+    units. BICRA/BICRAL, SS18/SS18L1 and BCL7A-C are added because they define the
+    classes.
+  - [`modules/iswi_chromatin_remodeling.yaml`](../modules/iswi_chromatin_remodeling.yaml):
+    SMARCA5/SMARCA1 in ACF, CHRAC, WICH, NURF, RSF, NoRC and CERF.
+  - [`modules/nurd_complex.yaml`](../modules/nurd_complex.yaml): the MTA/RBBP/HDAC
+    deacetylase core and the MBD/GATAD2/CHD remodeling module; CDK2AP1 is added.
+  - [`modules/ino80_complex.yaml`](../modules/ino80_complex.yaml): the motor, HSA
+    and metazoan N-terminal modules of human INO80.
+  - [`modules/srcap_h2az_deposition.yaml`](../modules/srcap_h2az_deposition.yaml)
+    and [`modules/tip60_p400_complex.yaml`](../modules/tip60_p400_complex.yaml):
+    the two H2A.Z exchange complexes. Their shared subunits (RUVBL1/2, VPS72,
+    YEATS4, DMAP1, ACTL6A, ACTB) are written identically. H2A.Z is their cargo,
+    not a subunit.
+- **Calcium transport** ([PW:0001139](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001139.yaml),
+  55 genes), one module per transport system:
+  - [`modules/store_operated_calcium_entry.yaml`](../modules/store_operated_calcium_entry.yaml):
+    STIM1/2 sensing and ORAI1-3 gating, with STIMATE and SARAF added.
+  - [`modules/er_calcium_store_cycling.yaml`](../modules/er_calcium_store_cycling.yaml):
+    IP3 receptor and ryanodine receptor release (RYR1 with CACNA1S), SERCA
+    re-uptake, phospholamban/sarcolipin and calsequestrin.
+  - [`modules/plasma_membrane_calcium_extrusion.yaml`](../modules/plasma_membrane_calcium_extrusion.yaml):
+    PMCA, NCX and NCKX as alternative routes. SLC24A5 is left out because the
+    native protein is a trans-Golgi exchanger.
+  - [`modules/mitochondrial_calcium_uniporter.yaml`](../modules/mitochondrial_calcium_uniporter.yaml):
+    the MCU-EMRE pore, MICU gatekeepers, MCUB and NCLX efflux.
+  - The voltage-gated and CNG channels, TRPV5/6, TPCN/MCOLN1 and the SPCA pumps
+    stay unmodelled; each module's notes list them.
+- **Kinin signaling** ([PW:0001480](RGD_PATHWAY_ONTOLOGY/pathways/PW_0001480.yaml)).
+  [`modules/kallikrein_kinin_cascade.yaml`](../modules/kallikrein_kinin_cascade.yaml)
+  already modelled B1/B2 receptor signalling, so it gained a B2 desensitization
+  step instead of a separate module: GRK2 (with GRK3 as an alternative)
+  phosphorylates the B2 receptor and beta-arrestins 1 and 2 bind it. B1 escapes
+  this. RGD's GRK4 is left out because no source ties it to either receptor.
+- **Follow-ups from the sixth set.** TBC1D7 is now the third unit of the TSC
+  complex in `ampk_energy_sensing`, which `mtor_complex_signaling` references.
+  `il22_signaling` types IL10RB as coreceptor activity, as `il10_signaling` does.
+  The proposed reference from `pi3k_akt_mtor` to `mtor_complex_signaling#mtorc1`
+  is dropped: `pi3k_akt_mtor` is taxon-neutral and should not refer to a human
+  module.
+- **New-term requests**, now in `proposed_new_terms`: calcium channel activator
+  activity (from both `store_operated_calcium_entry` and `er_calcium_store_cycling`)
+  and bradykinin receptor signaling pathway (`kallikrein_kinin_cascade`).
+
+Possible upstream errors found in this set:
+
+- **GOA.**
+  - STIM2 has "enables store-operated calcium channel activity" (IDA), though it
+    is a sensor, and the cited paper describes it as an inhibitor of entry.
+  - Non-catalytic SWI/SNF subunits (SMARCB1, SMARCC1/2, SMARCD1-3, SMARCE1,
+    ARID1A, ARID2) carry "enables ATP-dependent chromatin remodeler activity"
+    from an assay of the purified complex; `contributes_to` would fit. CECR2 and
+    RSF1 show the same pattern.
+  - SMARCE1 has an N-acetyltransferase IDA row from a paper on REST/CoREST
+    repression that reports no such activity.
+  - MBD3 has methyl-CpG binding (IDA), but the module's source says MBD3 does not
+    bind methylated DNA directly.
+  - Human EP400, KAT5, TRRAP, ING3 and BRD8 are part_of Swr1 complex (IDA), which
+    likely reflects TIP60's exchange activity rather than SRCAP membership. EP400
+    has no experimental molecular function at all.
+  - INO80 has remodeler activity only by IEA, despite sliding assays.
+  - SLC8B1 (NCLX) is annotated to the plasma membrane (TAS), probably left over
+    from its old NCKX6 description.
+- **GO-CAM.** gomodel:617b481400000460 types one KAT5 activity as bare protein
+  binding.
+- **RGD.** PW:0001480 names GRK4 as the kinin receptor kinase; the literature
+  names GRK2 and GRK3.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -932,24 +1012,18 @@ Possible upstream errors found in this set:
 - Reconcile `gpcr_camp_pka_signaling` with the fuller
   `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
   compact module's cyclase and PKA steps.
-- Raise the missing bradykinin (kinin) receptor signalling and CaMKII signalling
-  terms with GO, or record them as `proposed_new_terms` in the modules that need
-  them.
+- Submit the new-term requests now recorded in module `proposed_new_terms`
+  (`export_proposed_terms.py modules` lists them) to GO.
 - Review the blood-set member genes, starting with the proteases and cofactors
   that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
-- Model the remaining pathways. Chromatin remodeling and calcium transport mix
-  unrelated complex or channel families and need splitting by family. The broad
-  ones (RNA polymerase II, translation, ribosome biogenesis, the spliceosome and
-  histone modification, plus RNA polymerase transcription and calcium-mediated
-  signaling, which match only by gene overlap) need splitting first. Kinin
-  signaling (PW:0001480) needs a decision on `kallikrein_kinin_cascade`'s
-  scope.
-- Make `pi3k_akt_mtor`'s mTORC1 step a reference to
-  `mtor_complex_signaling#mtorc1`, and move TBC1D7 into the TSC complex in
-  `ampk_energy_sensing`.
-- Revisit IL10RB's function in `il22_signaling` (`GO:0004896`, PAINT-derived):
-  `il10_signaling` uses its experimental coreceptor activity `GO:0015026`, which
-  fits a subunit that cannot bind ligand alone.
+- Model the remaining pathways. The broad ones (RNA polymerase II, translation,
+  ribosome biogenesis, the spliceosome and histone modification, plus RNA
+  polymerase transcription and calcium-mediated signaling, which match only by
+  gene overlap) need a split plan first. The unmodelled calcium transport
+  families (voltage-gated and CNG channels, TRPV5/6, TPCN/MCOLN1, SPCA) are
+  candidates for further modules.
+- Add the obligatory PMCA subunits NPTN and BSG to
+  `plasma_membrane_calcium_extrusion`.
 - Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
   NER and mismatch repair modules, and point
   `retinoic_acid_receptor_signaling`'s production step at
@@ -980,6 +1054,7 @@ Possible upstream errors found in this set:
 - [x] Model the 14 candidates from the curated mappings (13 modules, fourth set)
 - [x] Model the mammalian pathways whose only match was another taxon's module, and the RAS cascade (11 modules, fifth set)
 - [x] Model the remaining mid-sized mammalian pathways and IL-10 (9 modules, sixth set)
+- [x] Split chromatin remodeling and calcium transport by family, and cover kinin signaling (10 modules and one extension, seventh set)
 
 ## Notes
 
@@ -1027,3 +1102,11 @@ signaling, leptin receptor and IL-10 signaling, cardiolipin metabolism,
 intestinal retinoid absorption, CaMKII and calcium-sensing receptor signaling.
 The re-run gives 128 `has_module`, 6 `related_module_only` and 3
 `no_specific_go_term`.
+
+### 2026-11-11
+
+Seventh set: six chromatin remodeler modules (SWI/SNF, ISWI, NuRD, INO80, SRCAP,
+TIP60/p400) and four calcium transport modules (store-operated entry, ER store
+cycling, plasma membrane extrusion, mitochondrial uniporter), plus a B2 receptor
+desensitization step in `kallikrein_kinin_cascade` for kinin signaling. The re-run
+gives 131 `has_module`, 4 `related_module_only` and 2 `no_specific_go_term`.
