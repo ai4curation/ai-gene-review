@@ -133,6 +133,47 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
     control before trusting the contrast — a mislabelled control (PGRP-LE for PGRP-LB)
     makes real enzymes look degenerate.
 
+14. **Read the tree before arguing with a node.** For most of this project I judged node
+    placements from the GOA row: a node id and a seed list. That is not what the PAINT
+    curator saw, and it let three errors stand in this project's own flagship examples
+    for months: a branch called the longest that was the second longest (Cds1), the
+    family root called a gene's own subfamily node, with an IRD recommended there
+    (CIRBP), and two rat RBMX-family seeds called rat Tra2 (CIRBP). `just phylo` states
+    where the node sits, where the seeds sit and where the gene sits, in a file a review
+    can quote. Quote it, and if it does not support the verdict, change the verdict.
+    Corollary: never count residues along a PANTHER alignment row. The rows leave out
+    unaligned stretches, so the count is not a position in the protein.
+
+---
+
+## 2026-11-10 — Tree and alignment evidence
+
+Asked how deeply these reviews look at the full tree and the alignment, I counted the
+artifacts committed behind every IBA row: 1.8% of 29,084 rows, and 4.5% of the 1,586 we
+had overruled, had any tree or alignment artifact. The live PANTHER tree service timed
+out from this environment, so the fix reads PANTHER's release files instead.
+
+- **Tooling.** `just fetch-panther-release` (trees with events and branch lengths,
+  family alignments, full-length sequences, node table), `just phylo <org> <GENE>`
+  (`GENE-phylo.yaml`), `just phylo-family <PTHR>` (`<PTHR>-tree-nodes.yaml`). Format and
+  limits: `docs/phylo.md`.
+- **Checks.** `missing_tree_evidence`, `tree_evidence_other_row` and
+  `missing_residue_evidence` in `just validate`; `NODE_TREE_EVIDENCE` in
+  `just validate-families`. All advisory. A review row whose IBA has since been
+  withdrawn from GOA is not asked for a quote: its extract has no row for it.
+- **Backfill.** Extracts for the 1,184 genes whose review overrules an IBA row; node
+  listings for 220 families.
+- **Join.** `tree_evidence.py` joins all 29,101 reviewed IBA rows with their tree facts.
+  Results, corrections and the 233 rows to re-review are in
+  [tree-evidence.md](tree-evidence.md).
+- **Three reviews re-read with the tree** (MYCTU and VIBCH `cds1`, human CIRBP): verdicts
+  unchanged, reasons corrected, extracts quoted.
+
+Two things found while building it, both now handled in the tool: a family's rows in
+PANTHER's node table are not contiguous (its internal nodes and its leaves sit in
+different places), and the alignment rows are trimmed to the model's match columns, with
+selenocysteine written as `X`.
+
 ---
 
 ## 2026-11-06 — Donor-support topology regimes ($d_{\text{MRCA}}$ vs $d_{\text{LCA}}$) and single-clade jump audit
@@ -464,6 +505,12 @@ neo-functionalization in SF135: longest branch length (0.528), different EC clas
 ~24% identity with synthases (synthases share 43%), distinct active-site motif
 (ASSGST vs PTSGNTG). Experimental: PMID:34439535 (M. tuberculosis), PMID:34283874
 (V. cholerae). Detail: `interpro/panther/PTHR10314/PTHR10314-notes.md`.
+
+*Correction (2026-11-10): "longest branch length (0.528)" was wrong. The five branches below
+the PTHR10314 root are 0.412, 0.528, 0.659, 0.458 and 0.402, so the Cds1 branch is the
+second longest; the threonine synthase branch is the longest. What the tree does show is
+that all 19 seeds sit in three of the other four branches and none in the Cds1 branch. See
+[tree-evidence.md](tree-evidence.md).*
 
 **RIMBP2** — organism/tissue context transfer: `GO:0007274` (neuromuscular synaptic
 transmission) transferred from the Drosophila ortholog (FB:FBgn0262483, NMJ is the

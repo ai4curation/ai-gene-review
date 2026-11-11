@@ -98,6 +98,30 @@ evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a nega
 review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
 `MARK_AS_OVER_ANNOTATED` just to silence the check.
 
+**Read the tree before you overrule an IBA.** The GOA row gives the node id and the seed
+ids, nothing else. Run `just phylo <organism> <GENE>` (it needs `just fetch-panther-release`
+once per machine). It writes `GENE-phylo.yaml`, which states for every IBA row what the
+PAINT curator had in view:
+
+- where the PAINT node sits (speciation, duplication or transfer; taxon; leaves, species
+  and subfamilies below it) and how many steps and duplications separate it from the gene;
+- whether the seeds bracket the node or all sit in one branch below it, and whether the
+  gene is inside the clade the seeds span;
+- how each seed is related to the gene by the tree (one-to-one ortholog, ortholog across
+  later duplications, paralog, xenolog), their tree distance, and their identity and
+  coverage in the family alignment;
+- PAINT losses on the path, and the family's curated residue sites read off the alignment.
+
+A `REMOVE` or `MARK_AS_OVER_ANNOTATED` on an IBA row argues with a placement, so it quotes
+that row's `summary` in `supported_by` (start the quote at the term id), with
+`reference_id: file:<organism>/<GENE>/<GENE>-phylo.yaml`. Say in `reason` what the tree
+shows and how it bears on the verdict. If the tree does not support the verdict (a
+one-to-one ortholog seed, no duplication on the path, the gene inside the seed clade),
+the verdict needs other evidence or needs changing; do not drop the citation instead.
+Validation warns on an overruled IBA row without it (`missing_tree_evidence`). Positions
+in the extract are in each protein's own numbering. Never count residues along a PANTHER
+alignment row: the rows leave out unaligned stretches. See `docs/phylo.md`.
+
 **Check the PAINT losses on the gene's lineage.** Run `just paint-losses <organism> <GENE>`
 before judging IBA rows. It lists every IRD or IKR whose PANTHER node lies above the gene,
 the IBD node each one blocks, whether PAINT re-annotates the term below the loss, and the

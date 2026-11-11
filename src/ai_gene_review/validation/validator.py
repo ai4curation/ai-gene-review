@@ -60,6 +60,7 @@ from ai_gene_review.validation.uniprot_quote_source import (
     validate_uniprot_quote_sources,
 )
 from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.tree_evidence import check_tree_evidence
 from ai_gene_review.validation.source_statement_defects import validate_statement_defects
 from ai_gene_review.mod_providers import is_mod_description_file
 from ai_gene_review.taxon import is_ncbitaxon_curie
@@ -506,6 +507,7 @@ def check_best_practices_rules(
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
     check_nd_policy(data, report, yaml_file)
+    check_tree_evidence(data, report, Path(yaml_file) if yaml_file is not None else None)
     check_ontology_change_policy(data, report)
     check_decomposition(
         data,

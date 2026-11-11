@@ -1,0 +1,85 @@
+# Re-reading overruled IBA rows with the tree
+
+[← tree and alignment evidence](../tree-evidence.md)
+
+A review that marks an IBA row `REMOVE` or `MARK_AS_OVER_ANNOTATED` argues with a PAINT
+curator's placement of a term on a tree node. Until 2026-11 almost none of those verdicts
+was made with the tree in view ([tree-evidence.md](../tree-evidence.md)). This folder is
+the re-read: every such row, read again next to what the gene's tree extract
+(`GENE-phylo.yaml`) says about it.
+
+## Scope
+
+`plan.yaml` is the frozen work list for gene reviews: 1,699 rows in 1,180 genes, in 73
+batches of about 24 rows, which is what one agent reads in one go. Genes with a row on the
+candidate list ([`tree-evidence-candidates.yaml`](../tree-evidence-candidates.yaml)) come
+first.
+
+- 1,686 rows are IBA rows with an overruling verdict that are still in the gene's GOA
+  file and do not yet quote the extract.
+- 13 rows are kept or refined although PAINT has removed the term on the path to the
+  gene. They need a decision about the loss, not a quote, and are read but never edited
+  by the script.
+
+`plan-families.yaml` is the work list for family reviews: 386 node assessments in 218
+families that dispute a PAINT placement (`TOO_DEEP`, `WRONG_NODE`, `NEEDS_PRUNING`,
+`LOSS_CONTRADICTED`, `LOSS_TOO_BROAD`) without citing a tree listing, in 18 batches. They
+are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the same way,
+with two additions from the release tree: where each seed sits, and how many leaves of
+each subfamily the review names as affected lie below the node.
+
+## Method
+
+One batch at a time:
+
+1. **Dossier.** `tree_rereview.py dossier` writes, for every row, the review's verdict,
+   summary, reason, `propagation_review`, existing support and the other rows of the same
+   review on the same term, next to the extract's facts for that row: where the PAINT node
+   sits, where the gene sits, each seed with its relation to the gene and its identity in
+   the family alignment, PAINT losses on the path, and the extract's summary by numbered
+   sentence.
+2. **Reading.** An agent reads the dossier, and nothing else, and returns one reading per
+   row (below), the summary sentences to quote, and one or two sentences on what the tree
+   shows. It edits nothing.
+3. **Verification.** A second agent tries to fault the first: every correction, every row
+   on the candidate list, and one in four of the rest. It checks the reading against the
+   definitions and every fact in the sentence against the dossier.
+4. **Applying.** `tree_rereview.py apply` makes the edits from this one checkout:
+   - quotes are assembled from the extract's own sentences and checked verbatim, so an
+     agent never types a quote;
+   - each edit changes the text of one row
+     (`src/ai_gene_review/tools/review_row_edit.py`) and is refused if the reloaded file
+     differs from the original by anything but the edit;
+   - the review is validated afterwards and put back as it was if it no longer validates;
+   - a history record is scaffolded for every review that changed.
+
+| Reading | Meaning | What the script does |
+|---|---|---|
+| `SUPPORTS` | The verdict argues about placement and the tree agrees | Quote the row; add the sentence to the reason |
+| `NOT_A_TREE_ARGUMENT` | The verdict rests on something the tree cannot settle, and the tree contradicts nothing the review says | Quote the row; add the sentence |
+| `PAINT_ALREADY_REMOVED` | PAINT has itself removed the term on the path; the cached row is stale | Quote the row, including the loss; add the sentence |
+| `REASON_CONTRADICTED` | The review says something about placement, relatedness or the seeds that the tree contradicts, but the verdict stands on other stated grounds | If the verifier agrees: quote the row and replace the reason with the corrected one |
+| `VERDICT_UNSUPPORTED` | The tree contradicts the argument the verdict depends on | Nothing. Listed for adjudication |
+| `LOSS_APPLIES`, `LOSS_TOO_BROAD` | For the 13 kept rows under a PAINT loss | Nothing. Listed for adjudication |
+| `CANNOT_TELL` | The dossier is not enough | Nothing. Listed for adjudication |
+
+A row is also left for adjudication when the verifier disagrees with its reading, or when
+the edit cannot be placed. No verdict is changed by the script.
+
+## Files
+
+- `plan.yaml`, `plan-families.yaml`: the batches. Made once and kept.
+- `runs/<batch>.yaml`: one record per batch. Every row with its reading, the sentence, the
+  verifier's check where there was one, and the outcome: `applied`, `adjudicate` (with the
+  reason) or `not_read`.
+- `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `status`.
+
+## Reproduce
+
+```bash
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py status
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py dossier g001 --out /tmp/dossiers
+```
+
+The readings themselves are agent output and are not regenerated by a command; the run
+records are their record.
