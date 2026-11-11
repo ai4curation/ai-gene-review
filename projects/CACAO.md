@@ -690,12 +690,13 @@ found, and because two of the figures here were themselves corrections.
    passing `PSEUDOCAP` to sit fifth. The quantity is a function of two trees
    that both keep moving, and no phrasing fixes that. So the superlative above
    is scoped to the defects *this project* found and does not survive being
-   restated as a corpus-wide rank, in either direction. No
-   corpus total or ordering is quoted here on purpose: every one of these
-   counts moves whenever `main` moves, and an earlier version of this
-   paragraph had to be corrected three times for exactly that — the third
-   time as a comparison written in words rather than digits, which is the
-   same claim and goes stale the same way. The ~130 figure above was the
+   restated as a corpus-wide rank, in either direction. No corpus total or
+   ordering is quoted here on purpose: every one of these counts moves
+   whenever `main` moves, which is what the four attempts above record. (A
+   previous sentence here counted how many times this paragraph had been
+   corrected. That count was three when written and is now wrong for the same
+   reason everything else in it was: it increments whenever the page is
+   touched. Deleted rather than bumped.) The ~130 figure above was the
    estimate made before the migration ran; #6027 itself re-filed 85 defects,
    83 of them onto `INTERPRO`, and left 112 `resource: OTHER` at that point,
    of which 45 named no resource at all and so cannot be triaged without
