@@ -14,14 +14,14 @@
 ## 2. Key Annotation Decisions (Harmonized with `human/ACD`, `mouse/Acd`, and `PANTHER:PTHR14487`)
 
 - **`ACCEPT` (core)**: `GO:0070187` (`shelterin complex`), `GO:0016233` (`telomere capping`), `GO:0031848` (`protection from non-homologous end joining at telomere`), `GO:0007004` (`telomere maintenance via telomerase`), `GO:0032211` (`negative regulation of telomere maintenance via telomerase`), `GO:0070198` (`protein localization to chromosome, telomeric region`), `GO:0070200` (`establishment of protein localization to telomere`), `GO:0032202` (`telomere assembly`), `GO:0070182` (`DNA polymerase binding`).
-- **`NEW` (`ISS` from `UniProtKB:Q96AP0`)**:
-  - `GO:0060090` (`molecular adaptor activity`) and `GO:0032212` (`positive regulation of telomere maintenance via telomerase`), matching the conserved shelterin-bridging and TEL-patch telomerase-activating roles established in human `Q96AP0` and mouse `Q5EE38`.
+- **`NEW` (`ISO` from `UniProtKB:Q96AP0`)**:
+  - `GO:0030674` (`protein-macromolecule adaptor activity`) and `GO:0032212` (`positive regulation of telomere maintenance via telomerase`), matching the conserved shelterin-bridging and TEL-patch telomerase-activating roles established in human `Q96AP0` and mouse `Q5EE38` (neither term is present in rat GOA).
 - **`MODIFY` (refinement)**:
-  - `GO:0000781` (`chromosome, telomeric region`) → `GO:0140445` (`chromosome, telomeric repeat region`).
+  - `GO:0000781` (`chromosome, telomeric region`) & `GO:0005654` (`nucleoplasm`) → `GO:0140445` (`chromosome, telomeric repeat region`).
   - `GO:0000783` (`nuclear telomere cap complex`) → `GO:0070187` (`shelterin complex`).
   - `GO:0000723` (`telomere maintenance`) → `GO:0016233` (`telomere capping`) and `GO:0007004` (`telomere maintenance via telomerase`).
   - `GO:0006886` (`intracellular protein transport`) → `GO:0070200` (`establishment of protein localization to telomere`).
-- **`KEEP_AS_NON_CORE`**: `GO:0005634` (`nucleus`), `GO:0005654` (`nucleoplasm`), `GO:0016604` (`nuclear body`), `GO:0044877` (`protein-containing complex binding`), and `ISO` projections of mouse *acd* p53-dependent developmental phenotypes (`GO:0001501` `skeletal system development`, `GO:0001655` `urogenital system development`, `GO:0030326` `embryonic limb morphogenesis`, `GO:0035282` `segmentation`, all with `acts_upstream_of_or_within`).
+- **`TOO_GENERAL` / `KEEP_AS_NON_CORE` / `MARK_AS_OVER_ANNOTATED`**: `GO:0005634` (`nucleus` → `TOO_GENERAL`), `GO:0016604` (`nuclear body` → `KEEP_AS_NON_CORE`), `GO:0044877` (`protein-containing complex binding` → `KEEP_AS_NON_CORE`), and `ISO` projections of mouse *acd* p53-dependent developmental phenotypes (`GO:0001501` `skeletal system development`, `GO:0001655` `urogenital system development`, `GO:0030326` `embryonic limb morphogenesis`, `GO:0035282` `segmentation`, all `MARK_AS_OVER_ANNOTATED`).
 - **`REMOVE` (refuted / mis-propagated)**:
   - `GO:0005697` (`telomerase holoenzyme complex`, `IEA` `IPR019437`).
   - `GO:0042162` (`telomeric repeat DNA binding`, `IBA`/`IEA`/`ISO`): Acd/TPP1 does not bind DNA directly; POT1/TRF1/TRF2 do (`PMID:31216472`, `PMID:35201900`).

@@ -30,16 +30,14 @@ Tpz1 is the central architectural hub at the single-stranded/double-stranded jun
 - **GO Annotation Decisions (aligned with `genes/SCHPO/poz1/poz1-ai-review.yaml` and `PANTHER:PTHR14487`)**:
   - **`ACCEPT`**: `GO:0070187` (`shelterin complex`), `GO:0140445` (`chromosome, telomeric repeat region`), `GO:0016233` (`telomere capping`), `GO:0007004` (`telomere maintenance via telomerase`), `GO:1905324` (`telomere-telomerase complex assembly`).
   - **`MODIFY`**:
-    - `GO:0005515` (`protein binding` IPI rows with Pot1, Ccq1, Poz1, Trt1) → `GO:0060090` (`molecular adaptor activity`) (or `GO:0070182` `DNA polymerase binding` for Trt1 IPI rows from `PMID:27253066`!).
+    - `GO:0005515` (`protein binding` IPI rows with Pot1 `SPAC26H5.06`, Ccq1 `SPCC188.07`/`Q10432`, Poz1 `SPAC19G12.13c`) → `GO:0030674` (`protein-macromolecule adaptor activity`), and `GO:0005515` (`protein binding` IPI row with Trt1 `SPBC29A3.14c` from `PMID:27253066`) → `GO:0070182` (`DNA polymerase binding`).
     - `GO:0000781` (`chromosome, telomeric region`) → `GO:0140445` (`chromosome, telomeric repeat region`).
     - `GO:0000782` (`telomere cap complex`) & `GO:0000783` (`nuclear telomere cap complex`) → `GO:0070187` (`shelterin complex`).
     - `GO:0000723` (`telomere maintenance`) → `GO:0016233` (`telomere capping`) and `GO:0007004` (`telomere maintenance via telomerase`).
     - `GO:0032206` (`positive regulation of telomere maintenance`) → `GO:0032212` (`positive regulation of telomere maintenance via telomerase`).
-  - **`KEEP_AS_NON_CORE`**: `GO:0005634` (`nucleus`).
+  - **`TOO_GENERAL`**: `GO:0005634` (`nucleus`, subsumed by `GO:0070187` `shelterin complex`).
   - **`REMOVE`**:
     - `GO:0005697` (`telomerase holoenzyme complex`, `IEA` `IPR019437`): Tpz1 is a shelterin subunit, not an integral telomerase holoenzyme subunit (`PMID:18535244`, `PMID:25131669`).
     - `GO:0042162` (`telomeric repeat DNA binding`, `IEA` `IPR019437`): Pot1 and Taz1 bind telomeric DNA directly, whereas Tpz1 is a protein–protein bridge (`PMID:18535244`, `PMID:24013504`).
   - **`NEW`**:
-    - `GO:0060090` (`molecular adaptor activity`, `IPI`, `PMID:24013504`) — core shelterin bridge connecting Pot1, Poz1, and Ccq1.
-    - `GO:0032212` (`positive regulation of telomere maintenance via telomerase`, `IMP`, `PMID:25131669`) — direct OB-fold TEL-patch activation of Trt1 after recruitment (`tpz1-K75A` / `tpz1-R81E`).
-    - `GO:0032211` (`negative regulation of telomere maintenance via telomerase`, `IMP`, `PMID:24013504`) — Tpz1–Poz1 (`tpz1-I501R`), Tpz1–Pot1 (`tpz1-I200R`), and Tpz1-K242 SUMOylation (`PMID:24925530`) restrict telomerase-mediated telomere elongation.
+    - `GO:0032211` (`negative regulation of telomere maintenance via telomerase`, `IMP`, `PMID:24013504`) — Tpz1–Poz1 (`tpz1-I501R`), Tpz1–Pot1 (`tpz1-I200R`), and Tpz1-K242 SUMOylation (`PMID:24925530`) restrict telomerase-mediated telomere elongation (whereas `GO:0030674`, `GO:0070182`, and `GO:0032212` are already introduced via `MODIFY` replacements on existing GOA rows).
