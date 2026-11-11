@@ -203,6 +203,17 @@ plastids come later.
      does not. A soluble signal-peptide protein that is retained, by a
      KDEL-type motif or shown by protease protection, supports `GO:0005788`.
      The ER exit site (`GO:0070971`) needs a marker of transitional ER.
+   - **Stable tethering by an integral partner** (added 2026-11-11, UFSP2) is
+     a third route, for a soluble protein with no TM or signal peptide. When
+     the endogenous protein depends on a named integral membrane protein of
+     the organelle, shown by losing the partner (knockout or a binding
+     mutant) releasing it from the membrane or destabilising it, add the
+     cytoplasmic-side term as a `NEW` IC row beside the root: `GO:0098554`
+     for the ER, whose definition includes peripherally associated proteins.
+     Use `GO:0005789` only for a protein with its own TM or tail anchor.
+     Brief or regulated recruitment (signalling, stress, autophagy,
+     Rab-dependent docking, a cycling complex such as SRP) is not tethering.
+     The same test will apply to the Golgi and the other organelles.
    - **Recruited cytosolic pools stay at the root**, core only when the
      function is shown at the ER. Membership of an ER-acting complex supports
      the organelle root for an obligate subunit but never localises it to a
@@ -265,7 +276,10 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   are mechanical, using the script's ancestor test.
 - How should we say "peripheral, cytosolic face" now that intrinsic-component
   terms are obsolete? Is the bare membrane term enough, or is this a
-  `proposed_new_terms` or GO-ticket question?
+  `proposed_new_terms` or GO-ticket question? *Answered 2026-11-11 for stably
+  tethered proteins:* the "cytoplasmic side of X membrane" terms (e.g.
+  `GO:0098554` for the ER) include peripherally associated proteins; see the
+  tethering bullet in rule 7. Briefly recruited proteins stay at the root.
 - For IBA red flags with a consistent pattern (a PAINT node at the root term
   whose experimental descendants all show the same sub-compartment), should
   we raise this with PAINT rather than fixing gene by gene?
@@ -310,6 +324,29 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-11 (tethering route added to rule 7)
+
+Settled the open question from ER batch 4: should a soluble protein stably held
+on the organelle by an integral-membrane partner get a sub-compartment row? Yes,
+the cytoplasmic-side term, under a new bullet in rule 7. GO:0098554 cytoplasmic
+side of endoplasmic reticulum membrane is defined to include proteins
+"peripherally associated with" the cytoplasmic leaflet, so it records tethering
+without claiming a membrane anchor the protein does not have.
+
+- **UFSP2** gains a NEW GO:0098554 IC row. It has no TM or signal peptide; its
+  partner ODR4 is a transmembrane ER protein; endogenous UFSP2 is lost in ODR4
+  knockout cells, which phenocopy UFSP2 loss (PMID:35926457); and it deUFMylates
+  uL24 on membrane-bound 60S subunits (PMID:38383785). The three root rows stay
+  ACCEPT and the second core function names the cytoplasmic side. The ODR4
+  result is destabilisation rather than release, which the rule counts: it
+  leaves no off-membrane pool.
+- **Checked and left at the root.** The other ER-batch reviews whose reasons
+  mention tethering or peripheral pools do not meet the test. UVRAG reaches the ER
+  through PtdIns(3)P and RINT-1, a peripheral complex, and leaves on autophagy;
+  USO1 is Rab1-recruited; the TRAPP subunits and SRP72 belong to complexes that
+  cycle on and off the membrane; UFM1 is a modifier whose ER pool is its
+  conjugates; KIFAP3, CAVIN1 and DLG4 have no named integral ER partner.
 
 ## 2026-11-06 (ER batch 4: the last 19 human genes)
 
