@@ -635,9 +635,11 @@ def make_record(batch: str, analysis: dict[str, Any], verification: dict[str, An
                 if reading.get(field) not in (None, "", []):
                     row[field] = reading[field]
             if key in checked:
+                fixed = mapping(checked[key].get("fixed"))
                 row["verifier"] = {
                     "agrees": bool(checked[key].get("agrees")),
                     **({"problem": checked[key]["problem"]} if checked[key].get("problem") else {}),
+                    **({"fixed": fixed} if one_paragraph(str(fixed.get("tree_sentence", ""))) else {}),
                 }
             row["outcome"] = "pending"
         rows.append(row)
@@ -672,11 +674,20 @@ def quote_source(row: dict[str, Any]) -> tuple[str, str, str] | None:
 
 
 def row_edit(row: dict[str, Any]) -> RowEdit | str:
-    """The edit a reading calls for, or the reason it is left for adjudication."""
-    reading = row.get("tree_reading", "")
+    """The edit a reading calls for, or the reason it is left for adjudication.
+
+    Where the verifier faults a reading but gives a corrected one that only quotes the row
+    and adds a sentence, the corrected reading is used.
+    """
     verifier = row.get("verifier")
     if verifier is not None and not verifier["agrees"]:
-        return "the verifier disagrees with the reading"
+        fixed = mapping(verifier.get("fixed"))
+        if fixed.get("tree_reading") not in ADDITIVE:
+            return "the verifier disagrees with the reading"
+        row = {**row, "tree_reading": fixed["tree_reading"], "tree_sentence": fixed.get("tree_sentence", ""),
+               "quote_sentences": fixed.get("quote_sentences") or row.get("quote_sentences") or [],
+               "proposed_action": "", "reason_replacement": ""}
+    reading = row.get("tree_reading", "")
     if row["kind"] == "kept_under_loss":
         return "a kept row under a PAINT loss needs a decision on the loss, not a quote"
     if verifier is None and (row.get("flags") or row["kind"] == "node"):
@@ -784,6 +795,8 @@ def history_details(unit: str, rows: list[dict[str, Any]]) -> str:
         ]
         source = "the family's node listing"
     for row in rows:
+        if row.get("outcome_detail") == "applied as corrected by the verifier":
+            row = {**row, **row["verifier"]["fixed"]}
         what = {
             "SUPPORTS": "the tree agrees with the stated reason",
             "NOT_A_TREE_ARGUMENT": "the verdict rests on evidence the tree does not speak to, and the tree contradicts nothing stated",
@@ -801,7 +814,7 @@ def history_details(unit: str, rows: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def history_arguments(unit: str, applied: list[dict[str, Any]]) -> list[str]:
+def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "") -> list[str]:
     """Arguments for the history scaffolder for one changed review."""
     count = f"{len(applied)} {'row' if len(applied) == 1 else 'rows'}"
     if "/" in unit:
@@ -816,11 +829,12 @@ def history_arguments(unit: str, applied: list[dict[str, Any]]) -> list[str]:
         summary = f"Re-read {count} of disputed node placement against the PANTHER tree; node listing quoted"
     return [
         *target, "--event", "REVIEW", "--outcome", "changed", "--agent-tool", "claude-code",
+        *(["--pr", pr] if pr else []),
         "--summary", summary, "--details", history_details(unit, applied),
     ]
 
 
-def apply_batch(batch: str, jobs: int = 4) -> Counter[str]:
+def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
     """Make the edits of one batch record, validate, write history, update the record."""
     path = run_path(batch)
     record = load(path)
@@ -843,6 +857,8 @@ def apply_batch(batch: str, jobs: int = 4) -> Counter[str]:
                 row["outcome"], row["outcome_detail"] = "adjudicate", f"edit refused: {error}"
                 continue
             row["outcome"] = "applied"
+            if row.get("verifier") and not row["verifier"]["agrees"]:
+                row["outcome_detail"] = "applied as corrected by the verifier"
         if text != originals[gene]:
             review_path.write_text(text, encoding="utf-8")
     changed = [gene for gene, rows in by_gene.items() if any(row["outcome"] == "applied" for row in rows)]
@@ -858,7 +874,7 @@ def apply_batch(batch: str, jobs: int = 4) -> Counter[str]:
             for row in applied:
                 row["outcome"], row["outcome_detail"] = "adjudicate", f"edit undone, the review no longer validated: {first_error[:300]}"
             continue
-        scaffolder.main(history_arguments(gene, applied))
+        scaffolder.main(history_arguments(gene, applied, pr))
     path.write_text(dump(record), encoding="utf-8")
     return Counter(row["outcome"] for row in record["rows"])
 
@@ -882,7 +898,7 @@ def collect(journal: Path) -> dict[str, dict[str, Any]]:
     return results
 
 
-def finish(journal: Path, date: str, jobs: int = 4) -> list[str]:
+def finish(journal: Path, date: str, jobs: int = 4, pr: str = "") -> list[str]:
     """Record and apply every batch of a finished workflow run; returns one line per batch."""
     RUNS.mkdir(exist_ok=True)
     lines = []
@@ -897,7 +913,7 @@ def finish(journal: Path, date: str, jobs: int = 4) -> list[str]:
         run_path(batch).write_text(dump(record), encoding="utf-8")
         readings = Counter(row.get("tree_reading", "(not read)") for row in record["rows"])
         checked = [row["verifier"]["agrees"] for row in record["rows"] if "verifier" in row]
-        outcomes = apply_batch(batch, jobs)
+        outcomes = apply_batch(batch, jobs, pr)
         lines.append(
             f"{batch}: {len(record['rows'])} rows; readings {dict(readings)}; verifier checked {len(checked)}, "
             f"disagreed on {checked.count(False)}; outcomes {dict(outcomes)}"
@@ -949,10 +965,12 @@ def main(argv: list[str] | None = None) -> int:
     apply = commands.add_parser("apply")
     apply.add_argument("batch")
     apply.add_argument("--jobs", type=int, default=4)
+    apply.add_argument("--pr", default="", help="pull request number or URL for the history records")
     done = commands.add_parser("finish")
     done.add_argument("--journal", type=Path, required=True)
     done.add_argument("--date", required=True)
     done.add_argument("--jobs", type=int, default=4)
+    done.add_argument("--pr", default="", help="pull request number or URL for the history records")
     commands.add_parser("status")
     args = parser.parse_args(argv)
 
@@ -974,9 +992,9 @@ def main(argv: list[str] | None = None) -> int:
         run_path(args.batch).write_text(dump(made), encoding="utf-8")
         print(Counter(row.get("tree_reading", row["outcome"]) for row in made["rows"]))
     elif args.command == "apply":
-        print(dict(apply_batch(args.batch, args.jobs)))
+        print(dict(apply_batch(args.batch, args.jobs, args.pr)))
     elif args.command == "finish":
-        print("\n".join(finish(args.journal, args.date, args.jobs)))
+        print("\n".join(finish(args.journal, args.date, args.jobs, args.pr)))
     else:
         print(status())
     return 0
