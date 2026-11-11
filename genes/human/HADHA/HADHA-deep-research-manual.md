@@ -30,10 +30,12 @@ Current QuickGO defines [GO:0018812](https://www.ebi.ac.uk/QuickGO/term/GO:00188
 as a specific child of [GO:0004300](https://www.ebi.ac.uk/QuickGO/term/GO:0004300).
 Both definitions use dehydration equations; the hydratase parent explicitly
 discusses the reverse hydration direction. The label alone therefore does not
-justify replacing the dehydratase annotations. The generic dehydrogenase parent,
-catalytic/oxidoreductase terms, NAD+ binding and broad mitochondrial location
-also correctly describe core capabilities. A valid broad term does not become
-non-core solely because a specific child is also present.
+justify replacing the dehydratase annotations. The nine broader molecular-function
+rows are refined with MODIFY to the supported specific activities, including
+GO:0018812 for its GO:0004300 parent. This is a specificity correction, not a
+rejection of the broader chemistry. NAD+ binding, root mitochondrial location
+and the informative pathway-level fatty acid metabolic process remain accepted;
+the latter is distinct from an uninformative generic molecular-function class.
 
 GO:0003985 describes the C4 acetyl-CoA/acetoacetyl-CoA reaction. The alpha/beta
 activity separation and absent C4 activity support removing that assertion from
@@ -54,8 +56,11 @@ Table 2 tests lysophospholipid specificity: other tested lysophospholipids did
 not show detectable acyltransferase activity. The definition of
 [GO:0071617](https://www.ebi.ac.uk/QuickGO/term/GO:0071617), lysophospholipid
 acyltransferase activity, fits acyl-CoA-dependent MLCL reacylation. Using it for
-the core function does not imply activity on all lysophospholipids. No NEW
-annotation is proposed.
+the core function does not imply activity on all lysophospholipids. The follow-up
+proposes exactly one NEW molecular-function row from this direct full-length
+protein assay. No specific transferase branch is present among the 60 native
+contexts; the broad catalytic-activity row is refined to the three supported
+activities. Existing cardiolipin-remodeling BP rows need no new process term.
 
 The full-length assay must be distinguished from the previously described
 MLCLAT1 protein corresponding to alphaTFP without its first 227 residues.
@@ -114,7 +119,8 @@ independently supported biological assertions are preserved.
 
 ## Source and scope checks
 
-Fresh QuickGO has 60 source rows and 60 seeded contexts; the prior 57-context
+Fresh QuickGO has 60 source rows and 60 seeded contexts; one evidence-backed NEW
+MF is now proposed separately; the prior 57-context
 review collapsed three additional ATG8 partner contexts. All native annotation
 fields and 28 inherited supporting-text occurrences are preserved. The five
 PTHR43612 quotations of HADHA UniProt remain supported by the refreshed native

@@ -175,3 +175,12 @@ and 2026-11-10 history are preserved as provenance.
 See HADHA-deep-research-manual.md for primary-source links, access limits and
 provider failure details. The draft has 47 ACCEPT, 11 KEEP_AS_NON_CORE,
 1 REMOVE and 1 UNDECIDED; all 28 inherited quotations are preserved.
+
+
+## PR #6313 review follow-up — 2026-11-11
+
+Refine nine broad MF rows with MODIFY to the supported specific activities: GO:0004300 → GO:0018812 (four contexts); GO:0003857, GO:0016491 and GO:0016616 → GO:0016509 (four contexts); GO:0003824 → all three supported catalytic activities. The hydratase core uses GO:0018812 with explicit physiological reverse-hydration semantics. This does not deny the broader chemistry or measured medium-chain activity. Retain the informative pathway-level fatty acid metabolic process and root mitochondrial locations; neither needs to be demoted simply because a more specific process or compartment is also known.
+
+Propose one NEW GO:0071617 molecular-function annotation, supported by direct full-length recombinant HADHA MLCL acylation in PMID:23152787. This fills a distinct catalytic branch, not a new process claim inferred from necessity or a missing database row. Keep donor and acceptor limits explicit, distinguish truncated MLCLAT1, and retain the unresolved GO:0052816 hydrolase assertion as UNDECIDED. The existing separation-of-function experiment remains the appropriate prospective test; no broader claim that the literature has established every mechanistic relationship is added.
+
+Final accounting supersedes the preceding candidate: 60 preserved native GOA contexts plus 1 NEW; 38 ACCEPT, 11 KEEP_AS_NON_CORE, 9 MODIFY, 1 REMOVE, 1 UNDECIDED, 1 NEW. The description is phrased as biology rather than a study narrative. A fresh history links PR #6313 with correctly spaced counts; existing history records remain append-only. Native source files and publication caches are unchanged.
