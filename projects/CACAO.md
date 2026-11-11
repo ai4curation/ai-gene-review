@@ -678,21 +678,24 @@ found, and because two of the figures here were themselves corrections.
    that mattered most. #5984 added the value and #6027 re-filed 83 defects
    onto it, so `reports/source-defects/INTERPRO.md` exists. **Its rank among
    the per-resource reports is deliberately not stated**, and not even as a
-   list of the reports that are larger: at `1e0f33a052` five were, but the
-   closest of those led by two defects, and `main` crossed that margin within
-   days — three further `INTERPRO` defects landed in `PSEPK/xdhB`,
-   `RHOCA/xdhA` and `RHOCA/xdhB`, none of them files #6027 touches. So the
-   superlative above is scoped to the defects *this project* found and does
-   not survive being restated as a corpus-wide rank, in either direction. No
+   list of the reports that are larger: on the tree #6027 produces (main's
+   `1e0f33a052` *plus* these 83 flips) five were, but the closest of those led
+   by two defects, and `main` crossed that margin within days — three further
+   `INTERPRO` defects landed in `PSEPK/xdhB`, `RHOCA/xdhA` and `RHOCA/xdhB`,
+   none of them files #6027 touches. On plain `1e0f33a052`, without the flips,
+   twelve reports are larger: the comparison only means anything about the
+   tree that carries the migration. So the superlative above is scoped to the
+   defects *this project* found and does not survive being restated as a
+   corpus-wide rank, in either direction. No
    corpus total or ordering is quoted here on purpose: every one of these
    counts moves whenever `main` moves, and an earlier version of this
    paragraph had to be corrected three times for exactly that — the third
    time as a comparison written in words rather than digits, which is the
-   same claim and goes stale the same way. The ~130 figure above was the estimate made before the
-   migration ran; #6027 itself re-filed 85 defects, 83 of them onto
-   `INTERPRO`, and left 112 `resource: OTHER` at that point, of which 45
-   named no resource at all and so cannot be triaged without reading each
-   explanation.
+   same claim and goes stale the same way. The ~130 figure above was the
+   estimate made before the migration ran; #6027 itself re-filed 85 defects,
+   83 of them onto `INTERPRO`, and left 112 `resource: OTHER` at that point,
+   of which 45 named no resource at all and so cannot be triaged without
+   reading each explanation.
 2. **`SourceDefectTypeEnum` could not express the same assertion entered
    twice, and had no duplicate-related value at all** — **done in #5984**,
    which added `DUPLICATE_ASSERTION`, named so as not to collide with the
