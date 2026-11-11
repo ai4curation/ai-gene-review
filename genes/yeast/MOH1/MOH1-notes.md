@@ -236,3 +236,7 @@ report) were grep-verified as verbatim substrings before use.
   found that changes the current curation boundary: Moh1 has strong stress and
   cell-envelope phenotypes but still lacks a direct ligand, biochemical output,
   and reliable subcellular localization.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[3]` GO:0008150 biological_process (ND) may be stale. Martinez et al. 2004 [PMID:15456898] identify MOH1 as one of the genes essential for stationary-phase survival (moh1 deletion loses viability in stationary phase but grows on nonfermentable carbon), and Ashrafi et al. 1998 [PMID:9748261] link its deletion to stationary-phase survival; this is a specific mutant phenotype in this species tied to a process (stationary-phase survival / cellular quiescence). A curator should decide whether this supports a process annotation; the row action is unchanged.

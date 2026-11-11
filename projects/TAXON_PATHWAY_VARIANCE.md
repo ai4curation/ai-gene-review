@@ -161,10 +161,12 @@ REJECTED), and where in this repo the case was found.
 | TPV-005 | GO:0033309 SBF transcription complex | only_in_taxon | Fungi | the same 41 TreeGrafter IEAs | kept separate from TPV-004 | PROPOSED |
 | TPV-006 | GO:0044548 S100 protein binding | only_in_taxon | Chordata | fly CG3226 and 1,194 InterPro2GO IEAs from IPR037893 | pairs with narrowing the IPR037893 mapping | PROPOSED |
 | TPV-007 | GO:0021987 cerebral cortex development | never_in_taxon | Aves | chicken BTBD3 and KIF14 IBAs, NTRK2 ISS, 1,756 IEAs | avian pallium homology is debated; least certain | PROPOSED |
+| TPV-008 | GO:0005118 sevenless binding | only_in_taxon | Arthropoda | 195 InterPro2GO IEAs from IPR002956: 172 vertebrate (170 GPRC5-family), 10 other animal, 11 bacterial, 1 fungal, 1 plant | matches GO's Arthropoda constraint on sevenless signaling pathway; Metazoa is the fallback | PROPOSED |
 
 TPV-004 to TPV-007 tighten constraints GO already has (Eukaryota, never in Fungi, Bilateria); each
-YAML entry records the existing one. They come from the [RAR_MISANNOTATION](RAR_MISANNOTATION.md)
-re-examination of Wei et al. 2020, and the counts are exact-term QuickGO annotations on 2026-11-05.
+YAML entry records the existing one. TPV-008 adds a constraint to a term that has none. They come
+from the [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examination of Wei et al. 2020, and the counts
+are exact-term QuickGO annotations on 2026-11-05 (TPV-008: 2026-11-07).
 
 ### Outcome for TPV-001 to TPV-003
 

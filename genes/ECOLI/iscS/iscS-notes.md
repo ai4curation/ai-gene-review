@@ -47,3 +47,15 @@ PMID:22194618, PMID:24561554 and PMID:18304323.
 - Removed: detection of UV (NAS; s4U-tRNA, not IscS, is the near-UV chromophore);
   bare protein-binding rows from interactome screens. Sulfur compound transport
   marked over-annotated: persulfide relay between proteins is not transport.
+
+
+## 2026-11-07 ISC whole-gene re-review
+
+Retained the independent thiamine and tRNA sulfur-delivery branches as core work. Sulfur-compound transport includes intracellular directed transfer and is supported by persulfide handoff, not restricted to a pore. The electronic [2Fe-2S] binding claim is unresolved: the structural intermediate highlighted in PMID36605734 derives from Archaeoglobus IscS–IscU(D35A), while native E. coli ligand occupancy is not established. No claim that transient binding cannot be a molecular function.
+
+All original ordered annotation payloads and historical NEW actions were preserved. Existing raw/provider/publication files were not refreshed. A genuine new default Falcon attempt returned HTTP 403; no provider report was fabricated. Manual source review is recorded here and in `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/ecoli-consultation/`. Focused validation, render, and append-only helper-history results are recorded in the final handoff.
+
+
+## 2026-11-07 PR6175 evidence-specific follow-up
+
+Reviewed the disputed folding, oligomerization and sulfur-transport interpretations against fresh official GO definitions and primary assay context. See `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/round1/ecoli-psepk-consultation/evidence.md` and source-provenance.json for exact access limits and the newly read full9852006 negative luciferase assay. Original ordered source payloads, all historical NEW rows and immutable sources are preserved. E. coli negative folding assays are not relabeled as KT2440 experiments; HscB structured-state stabilization remains distinct from HscA holdase behavior. The PSEPK HscA retired proposal lifecycle is deliberately untouched pending parent adjudication. No new annotation is added.
