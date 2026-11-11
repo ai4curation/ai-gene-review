@@ -36,3 +36,8 @@
 1. Glucuronoside efflux — GO:0015164 at basolateral plasma membrane.
 2. Glutathione S-conjugate / LTC4 efflux — GO:0015431 at basolateral plasma membrane.
 3. Xenobiotic/drug-conjugate efflux and multidrug resistance — GO:0008559 at basolateral plasma membrane.
+
+
+## Generic CC/MF term convention (batch-2 review, 2026-11-11)
+Applied consistently across ABCA8/ABCC1/ABCC3/ABCC4: GO:0016020 membrane -> MODIFY to GO:0005886 plasma membrane (paradigm MODIFY case); GO:0022857 transmembrane transporter activity -> TOO_GENERAL (entailed by the specific accepted transporter activities); GO:0005886 plasma membrane -> ACCEPT (the generic PM term is informative, and apical/basolateral sidedness is carried by the gene's own GO:0016324/GO:0016323 rows, not by blanket-MODIFYing the PM parent to a sub-domain).
+This gene: reverted its 9 GO:0005886 rows from MODIFY->GO:0016323 back to ACCEPT (basolateral sidedness remains on the gene's distinct GO:0016323 rows).

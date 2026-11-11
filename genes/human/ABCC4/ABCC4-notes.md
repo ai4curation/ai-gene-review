@@ -101,3 +101,8 @@ All quoted `supporting_text` was verified as a verbatim (whitespace-collapsed) s
 cached publication. Many primary transport papers are abstract-only in the cache
 (`full_text_available: false`); experimental (EXP/IDA/IMP) annotations were accepted/deferred to the
 curator per project policy rather than overruled on abstract-only evidence.
+
+
+## Generic CC/MF term convention (batch-2 review, 2026-11-11)
+Applied consistently across ABCA8/ABCC1/ABCC3/ABCC4: GO:0016020 membrane -> MODIFY to GO:0005886 plasma membrane (paradigm MODIFY case); GO:0022857 transmembrane transporter activity -> TOO_GENERAL (entailed by the specific accepted transporter activities); GO:0005886 plasma membrane -> ACCEPT (the generic PM term is informative, and apical/basolateral sidedness is carried by the gene's own GO:0016324/GO:0016323 rows, not by blanket-MODIFYing the PM parent to a sub-domain).
+This gene: changed its 3 GO:0016020 rows from TOO_GENERAL to MODIFY->GO:0005886, and GO:0022857 from ACCEPT to TOO_GENERAL; GO:0005886 rows already ACCEPT.

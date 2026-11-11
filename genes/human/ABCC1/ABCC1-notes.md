@@ -93,3 +93,8 @@ STING regulation (GO:0140359, substrate cGAMP); (5) S1P export → mast-cell sig
 (GO:0034040). Localization: basolateral plasma membrane (GO:0016323).
 </content>
 </invoke>
+
+
+## Generic CC/MF term convention (batch-2 review, 2026-11-11)
+Applied consistently across ABCA8/ABCC1/ABCC3/ABCC4: GO:0016020 membrane -> MODIFY to GO:0005886 plasma membrane (paradigm MODIFY case); GO:0022857 transmembrane transporter activity -> TOO_GENERAL (entailed by the specific accepted transporter activities); GO:0005886 plasma membrane -> ACCEPT (the generic PM term is informative, and apical/basolateral sidedness is carried by the gene's own GO:0016324/GO:0016323 rows, not by blanket-MODIFYing the PM parent to a sub-domain).
+This gene already conformed (GO:0005886 ACCEPT; GO:0016020 MODIFY->GO:0005886; GO:0022857 TOO_GENERAL); no change needed here.

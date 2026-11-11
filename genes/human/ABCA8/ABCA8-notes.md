@@ -71,3 +71,8 @@ organic anion transporter ABCA8". ABCA6-like subgroup of the ABCA family.
 - All four cited publications are abstract-only in the cache (full_text_available:
   false), so experimental (IDA/IMP/EXP) rows are not overruled on abstract gaps;
   claims are anchored to abstract text and the curated UniProt ECO:0000269 record.
+
+
+## Generic CC/MF term convention (batch-2 review, 2026-11-11)
+Applied consistently across ABCA8/ABCC1/ABCC3/ABCC4: GO:0016020 membrane -> MODIFY to GO:0005886 plasma membrane (paradigm MODIFY case); GO:0022857 transmembrane transporter activity -> TOO_GENERAL (entailed by the specific accepted transporter activities); GO:0005886 plasma membrane -> ACCEPT (the generic PM term is informative, and apical/basolateral sidedness is carried by the gene's own GO:0016324/GO:0016323 rows, not by blanket-MODIFYing the PM parent to a sub-domain).
+This gene already conformed (GO:0005886 ACCEPT; GO:0016020 MODIFY->GO:0005886); no change needed here.
