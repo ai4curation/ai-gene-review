@@ -52,3 +52,8 @@ The authored GO:0050527 IC proposal is withdrawn: the evidence is a cross-strain
 ## 2026-11-11 — consistent close-strain inference across aspects
 
 The KT2442 derivative evidence supports qualified KT2440 core molecular function, process and location at the same confidence. Restore GO:0050527 in core_functions for the HO-rich substrate/product component; keep the broader mcl-PHA proposed function as additive coverage of aliphatic/aromatic substrates. Do not manufacture a donor accession, an experimental KT2440 annotation, or an accession-free ISS row. Full-text Table 1/methods were re-read at https://www.researchgate.net/publication/6630171_Biochemical_Evidence_That_phaZ_Gene_Encodes_a_Specific_Intracellular_Medium_Chain_Length_Polyhydroxyalkanoate_Depolymerase_in_Pseudomonas_putida_KT2442_CHARACTERIZATION_OF_A_PARADIGMATIC_ENZYME ; KT2442 is explicitly a derivative of KT2440, while pPAZ3 uses KT2442 DNA. The earlier reasoning that withheld only MF while accepting BP/CC was inconsistent and is superseded.
+
+
+## 2026-11-11 — explicit target-specific molecular-function gap
+
+Retain the supported GO:0050527 core inference and all existing annotation payloads/actions. The purified, product-resolved enzyme is KT2442-derived, so no KT2440 IDA row or accession-free ISS row is manufactured. The specific core now carries a BIOLOGY/CURATION MF_DARK gap for the unmeasured target-matched substrate/product profile and unresolved construct identity, with the positive close-strain evidence stated as its boundary. The broader proposed activity and immutable capacity fixtures remain unchanged. Restore three missing PAINT citations in PTHR43798 and correct the module gap that erroneously denied the retained core claim.
