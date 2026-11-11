@@ -15,3 +15,9 @@
   projects/TREEGRAFTER/rereview-2026-09-24/batch-07.yaml.
 - Most K-12 lines are O-antigen negative (rfb-50/rfb-51)
   [PMID:7512872 "the rough phenotype of this strain is due to the presence of one of two independent mutations in the rfb gene cluster"].
+
+## Review follow-up (2026-11-11, PR #6252)
+
+- involved_in polymer-level rows (GO:0000271, GO:0009103, GO:0009243) stay
+  MARK_AS_OVER_ANNOTATED: involved_in claims participation, and these enzymes only supply the
+  dTDP-L-rhamnose donor.
