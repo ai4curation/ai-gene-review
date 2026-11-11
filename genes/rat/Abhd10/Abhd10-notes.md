@@ -4,10 +4,8 @@
 
 - **Protein**: Palmitoyl-protein thioesterase ABHD10, mitochondrial (`UniProtKB:Q5I0K5`, sequence version 2; 297 aa precursor; `RGD:1308084`, chromosome 11).
 - **Mitochondrial Matrix Targeting & Active Site**:
-  - Carries a conserved 43-residue N-terminal mitochondrial transit peptide (`FT TRANSIT 1..43`) cleaved to the 254-aa soluble mature chain `44..297` (`PRO_0000280736`).
-  - Shares >92% sequence identity with mouse `Q6PE15` (`PDB:6NY9`) and ~78% mature-domain identity with human `Q9NUJ1`, strictly conserving the alpha/beta-hydrolase charge-relay catalytic triad at **Ser143** (`GSSLG` nucleophilic elbow), **Asp240**, and **His270** (`PMID:22294686`, `PMID:31740833`).
-- **Rat Experimental Proteomics (`PMID:20966424`)**:
-  - Suryawanshi et al. (`PMID:20966424`, abstract-only in cache) compared rat testicular vs cauda epididymal sperm domain proteomes (head and flagellum) by 2D-DIGE/MS and detected rat ABHD10 in epididymal sperm, consistent with mammalian ABHD10 enrichment in sperm midpiece mitochondrial sheaths demonstrated genetically and ultrastructurally in mouse (`PMID:41285782`).
+  - Carries a conserved 43-residue N-terminal mitochondrial transit peptide (`FT TRANSIT 1..43`) corresponding to the 254-aa soluble mature chain `44..297` (`PRO_0000280736`).
+  - Shares >92% sequence identity with mouse `Q6PE15` (`PDB:6NY9`) and ~78% mature-domain identity with human `Q9NUJ1`, strictly conserving the alpha/beta-hydrolase charge-relay catalytic triad at **Ser143** (`GSSLG` nucleophilic elbow), **Asp240**, and **His270** (`PMID:22294686`, `PMID:31740833`). Note that `PMID:20966424` (listed in `Abhd10-uniprot.txt` `RN [2]`, abstract-only in `publications/`) is not cited in `Abhd10-goa.tsv` and does not mention `Abhd10` in cached text, so no unverified rat sperm proteomic claims are drawn from it; `PMID:41285782`'s `"testis-specific"` phrasing in mouse is also adjudicated as `DISPUTED` relative to hepatic mammalian expression (`PMID:22294686`, `PMID:31740833`).
 
 ## Key Curation Decisions
 
