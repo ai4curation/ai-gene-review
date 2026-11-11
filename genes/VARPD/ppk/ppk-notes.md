@@ -4,16 +4,16 @@
 - **UniProt Accession:** `A0A0H2M4T4` (`A0A0H2M4T4_VARPD`)
 - **Ordered Locus Name:** `VPARA_28600`
 - **Gene Symbol:** `ppk`
-- **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, strain TBEA6; see species genomic context in [PMID:21183664, "Genomic analysis has revealed multiple metabolic features for autotrophic and heterotrophic lifestyles. These metabolic diversities enable independent survival, as well as a symbiotic lifestyle."])
+- **Organism:** *Variovorax paradoxus* (`NCBITaxon:34073`, strain TBEA6; see species genomic context in [PMID:21183664 "Genomic analysis has revealed multiple metabolic features for autotrophic and heterotrophic lifestyles. These metabolic diversities enable independent survival, as well as a symbiotic lifestyle."])
 - **Protein Function:** Polyphosphate kinase 1 (`PPK1`, 710 aa, EC 2.7.4.1) that catalyzes the reversible transfer of the terminal $\gamma$-phosphate of ATP to long-chain inorganic polyphosphate (`polyP`).
 
 ## Domain Architecture & Biochemical Mechanism (`UniProtKB:A0A0H2M4T4`)
 1. **Conserved Four-Domain PPK1 Architecture:**
-   - N-terminal domain (`FT DOMAIN 16..121`, `Pfam:PF02503` / `InterPro:IPR024954`)
-   - Head/middle domain (`FT DOMAIN 131..314`, `Pfam:PF13089` / `InterPro:IPR024953`)
-   - C1 catalytic domain (`FT DOMAIN 325..503`, `Pfam:PF13090` / `InterPro:IPR003414`)
-   - C2 C-terminal domain (`FT DOMAIN 517..683`, `Pfam:PF13090`)
-   - Matches full-length `HAMAP:MF_00347` / `InterPro:IPR003414` (`polyphosphate kinase 1`).
+   - N-terminal domain (`FT DOMAIN 18..119`, `Pfam:PF13089` `PP_kinase_N` / `InterPro:IPR025198` `PPK_N_dom`, `InterPro:IPR036832` `PPK_N_dom_sf`)
+   - Middle domain (`FT DOMAIN 128..310`, `Pfam:PF02503` `PP_kinase` / `InterPro:IPR024953` `PP_kinase_middle`, `InterPro:IPR036830` `PP_kinase_middle_dom_sf`)
+   - C1 catalytic domain (`FT DOMAIN 338..501`, `Pfam:PF17941` `PP_kinase_C_1` / `InterPro:IPR041108` `PP_kinase_C_1`)
+   - C2 C-terminal domain (`FT DOMAIN 511..674`, `Pfam:PF13090` `PP_kinase_C` / `InterPro:IPR025200` `PPK_C_dom2`)
+   - Matches full-length `HAMAP:MF_00347` (`Polyphosphate_kinase`), `NCBIfam:TIGR03705` (`poly_P_kin`), and `InterPro:IPR003414` (`PP_kinase`).
 2. **Autophosphorylation Active Site (`His441`):**
    - `FT ACT_SITE 441` (`Phosphohistidine intermediate`) within the conserved C1 domain (`UniProtKB:A0A0H2M4T4`).
    - Catalyzes `ATP + (phosphate)n = ADP + (phosphate)n+1` (EC 2.7.4.1), requiring $\text{Mg}^{2+}$ as a cofactor (`FT BINDING 381`, `ligand="Mg(2+)"`).
