@@ -13,9 +13,8 @@ tatA/tatB/tatC and the six P. putida KT2440 paralogs):
 
 - Reconstitution needs TatABC plus membrane potential and no ATP
   [PMID:11350936 "requires TatABC, an intact membrane potential and the
-  twin-arginine targeting motif"]. For TatA, which performs the translocation
-  step, GO:0009977 is ACCEPT and GO:0008320 is MODIFY to GO:0009977. For the
-  receptor subunits TatB and TatC, GO:0009977/GO:0008320 rows with 'enables'
+  twin-arginine targeting motif"]. No subunit transports substrate alone, so
+  for TatA, TatB and TatC alike the GO:0009977/GO:0008320 rows with 'enables'
   are MARK_AS_OVER_ANNOTATED with a WRONG_QUALIFIER source defect (should be
   contributes_to), as in the September 2026 TreeGrafter re-review of tatC-I;
   core functions record contributes_to.
@@ -29,3 +28,15 @@ tatA/tatB/tatC and the six P. putida KT2440 paralogs):
   comparator SecY carries the same term.
 - The IDA cytosol row (PMID:18644791) comes from tatABC overexpression ("only
   a 15-fold overexpression"), so it is MARK_AS_OVER_ANNOTATED.
+
+## 2026-11-11 review follow-up (PR #6246)
+
+The first pass accepted TatA 'enables GO:0009977' while the core function used
+contributes_to. Resolved toward contributes_to: reconstituted transport needs
+TatA, TatB and TatC together [PMID:11350936], and the TatA mechanism is still
+hedged in the sources [UniProt "TatA could form the protein-conducting channel
+of the Tat system."; PMID:16027357 "strongly supports the proposal"]. The
+TatA 'enables' transporter rows are now MARK_AS_OVER_ANNOTATED with a
+WRONG_QUALIFIER source defect, like TatB/TatC, and the subunit's own activity
+is a proposed term, "Tat translocon conduit assembly activity" (parent
+GO:0140318). Deep research was not generated for this gene (no provider run).

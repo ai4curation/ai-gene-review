@@ -13,9 +13,8 @@ tatA/tatB/tatC and the six P. putida KT2440 paralogs):
 
 - Reconstitution needs TatABC plus membrane potential and no ATP
   [PMID:11350936 "requires TatABC, an intact membrane potential and the
-  twin-arginine targeting motif"]. For TatA, which performs the translocation
-  step, GO:0009977 is ACCEPT and GO:0008320 is MODIFY to GO:0009977. For the
-  receptor subunits TatB and TatC, GO:0009977/GO:0008320 rows with 'enables'
+  twin-arginine targeting motif"]. No subunit transports substrate alone, so
+  for TatA, TatB and TatC alike the GO:0009977/GO:0008320 rows with 'enables'
   are MARK_AS_OVER_ANNOTATED with a WRONG_QUALIFIER source defect (should be
   contributes_to), as in the September 2026 TreeGrafter re-review of tatC-I;
   core functions record contributes_to.
