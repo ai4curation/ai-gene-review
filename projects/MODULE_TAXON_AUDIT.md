@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_mannose_pts`: PR #6193: main ac30fe31cf integrated at 75df6879b3; 427 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
+- [ ] `bacterial_mannose_pts`: PR #6193: main 0ca78c07ea integrated at 15c985907e; 430 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope.
 
 - [ ] `bacterial_flagellar_assembly_export`: PR #6138: main ac30fe31cf integrated at 5bb074ac23; 316 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
@@ -1402,3 +1402,7 @@ Superseded parent snapshot lines retained for provenance:
 ## 2026-11-11 — resume PR #6193 after disk cleanup
 
 Integrate main 0ca78c07ea0a7ee0ce4760193cc5b22848471d21 into paused PR #6193 at 8a657a82e0ae0be65130eb51a543af1231b33a26. All 430 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-11 — current integration accounting for PR #6193
+
+PR #6193: main 0ca78c07ea integrated at 15c985907e; 430 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope. [Preservation and follow-up record](../analysis/module_audits/bacterial_mannose_pts/resume-round5-20261111/integration-proof.json).
