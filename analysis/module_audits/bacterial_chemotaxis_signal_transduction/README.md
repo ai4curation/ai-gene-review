@@ -69,3 +69,11 @@ Current integration and input accounting are linked below. Actual merge remains 
 - [validated-head-main5-integration.json](validated-head-main5-integration.json)
 - [validated-head-main6-integration.json](validated-head-main6-integration.json)
 - [Current provenance scope](main9-provenance-scope.json)
+
+## Resume integration receipts
+
+The following dated receipts supersede the older integration pointers above. They record content preservation at their named commits, not fresh full-corpus validation.
+
+- [resume-20261108/integration-proof.json](resume-20261108/integration-proof.json)
+- [resume-round2-20261108/integration-proof.json](resume-round2-20261108/integration-proof.json)
+- [resume-round3-20261110/integration-proof.json](resume-round3-20261110/integration-proof.json)
