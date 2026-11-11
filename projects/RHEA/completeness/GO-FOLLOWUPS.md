@@ -77,7 +77,20 @@ The GO edits themselves are staged as rows in [`../rhea2go.sssom.yaml`](../rhea2
    sulfurtransferase activity. 267 Swiss-Prot ThiI entries get the CCA-adding activity from
    InterPro2GO alone. The mapping should move to GO:0140741.
 
-8. **IPR004803 "tRNA-guanine transglycosylase" → GO:0008479 tRNA-guanosine(34) queuine
+8. **DONE (2026-11-09).** The preQ1 Tgt term requested in
+   [geneontology/go-ontology#32883](https://github.com/geneontology/go-ontology/issues/32883)
+   exists as **GO:7770158** tRNA-guanosine(34) preQ1 transglycosylase activity
+   (go-ontology PR #32911), with `xref: RHEA:24104 {source="skos:exactMatch"}` and EC:2.4.2.29.
+   RHEA:24104 (461 Swiss-Prot entries) is therefore mapped in GO, and its staged
+   NoTermFound/broadMatch rows were removed from `rhea2go.sssom.yaml` (the term is not yet
+   in a GO release, so the term validator cannot check a row pointing at it). The
+   follow-on mapping fixes are tracked in
+   [geneontology/go-annotation#6652](https://github.com/geneontology/go-annotation/issues/6652)
+   (UniRule UR000079182, HAMAP MF_00168) and
+   [geneontology/go-annotation#6653](https://github.com/geneontology/go-annotation/issues/6653)
+   (InterPro). Original note:
+
+   **IPR004803 "tRNA-guanine transglycosylase" → GO:0008479 tRNA-guanosine(34) queuine
    transglycosylase activity.** The family spans bacterial preQ1-dependent Tgt (RHEA:24104,
    EC 2.4.2.29), eukaryotic queuine QTRT1 (EC 2.4.2.64), non-catalytic QTRT2, and archaeal ArcTGT
    (guanine15, RHEA:43164 → GO:0043867). All 35 Swiss-Prot ArcTGTs receive the queuine term from
