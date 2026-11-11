@@ -198,8 +198,8 @@ It counts asserted annotations only (NOT rows excluded).
 The flag counts are close to the paper's, so the method reproduces on current data. Two
 artefacts inflate the raw counts:
 
-- **ND rows on root terms.** They make up 14,456 of the flagged annotations but assert no
-  function, so they are dropped. The script records this and the other dropped counts in the
+- **ND rows on root terms.** Flagged rows on the three root terms number 14,456, all of them
+  ND, and assert no function, so they are dropped. The script records this and the other dropped counts in the
   candidates file.
 - **The animal denominator.** It is 351,036 proteins, because the human, mouse and chicken
   proteome files include every unreviewed entry. A term curated only on reviewed animal
@@ -222,8 +222,8 @@ TPV-004, the npp-20 MODIFY, and TPV-008 with CR-0006.
   - centrosome on Arabidopsis and *Selaginella* proteins (`never_in_taxon` Viridiplantae).
 
   The rest are curated rows from TAIR, MGI, CGD, FlyBase and UniProt. Of the 21 terms
-  involved, the first pass finds 13 annotation errors, 5 constraints that look too narrow and
-  3 open cases. The too-narrow constraints are:
+  involved, the first pass finds 14 annotation errors, 5 constraints that look too narrow and
+  2 open cases. The too-narrow constraints are:
   - glutamate-gated calcium channel activity, plus the signalling term inferred from it, and
     plasma membrane repair: all Metazoa-only, but plant GLR3.3 and SYT1 do these;
   - cholesterol binding: never in Fungi, but CAP/PRY proteins bind sterols;
@@ -272,7 +272,7 @@ terms) are not triaged yet.
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
 - [x] Rerun RAR on current GOA (2026-11-11): script, candidates and a first-pass triage of the constraint breaks and prokaryote IBA nodes; see [above](#rar-rerun-on-current-goa-2026-11-11).
 - [ ] Triage the plant-, animal- and fungus-flagged RAR candidates (about 1,040 kingdom-level terms), starting with IBA nodes.
-- [ ] For the 13 annotation errors that break a taxon constraint, find out why GO's constraint check did not filter them; for the 5 questionable constraints, check the cited papers and propose TPV entries.
+- [ ] For the 14 annotation errors that break a taxon constraint, find out why GO's constraint check did not filter them; for the 5 questionable constraints, check the cited papers and propose TPV entries.
 - [ ] Look at the TreeGrafter prokaryote annotations by PAINT node, since one deep node yields many rows.
 - [ ] Check the archived neXtProt release for how IBA rows were graded.
 

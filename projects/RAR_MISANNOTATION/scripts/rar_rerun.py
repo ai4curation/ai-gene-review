@@ -12,8 +12,8 @@ Method, following the paper (PMID:32470107) and its supplement (Text S1, Tables 
   lowest non-zero rate is the one the term is potentially misannotated to (Table S2,
   footnote a). Terms annotated in only one taxon have no RAR.
 * The p-value is the exact two-sided rate ratio test between those two taxa (the
-  authors' rateratio.py, a port of the R rateratio.test package, which takes twice the
-  smaller one-sided p-value), with Benjamini-
+  authors' rateratio.py, their port of the R rateratio.test package, which takes twice
+  the smaller one-sided p-value), with Benjamini-
   Hochberg correction over all terms that have a RAR.
 * Terms with RAR < 0.1 are flagged; every flagged annotation still needs a human pass
   and the comparator check before it is called an error.
@@ -100,6 +100,8 @@ def read_obo(path: Path) -> tuple[dict, dict, dict, dict]:
     for line in path.read_text().splitlines() + ["[Term]"]:
         if line.startswith("["):
             if cur and obsolete:
+                for a in [k for k, v in alt.items() if v == cur]:
+                    del alt[a]
                 labels.pop(cur, None)
                 aspects.pop(cur, None)
                 parents.pop(cur, None)
@@ -367,6 +369,9 @@ def main() -> None:
             "root_terms": sum(1 for t in sig if t["go_id"] in ROOTS),
             "root_term_flagged_annotations": sum(
                 len(t["flagged_annotations"]) for t in sig if t["go_id"] in ROOTS),
+            "root_term_flagged_nd_annotations": sum(
+                1 for t in sig if t["go_id"] in ROOTS
+                for a in t["flagged_annotations"] if a["evidence"] == "ND"),
             "terms_over_max_flagged": sum(
                 1 for t in sig if t["go_id"] not in ROOTS
                 and t["annotated_protein_counts"][t["flagged_taxon"]] > MAX_FLAGGED),
