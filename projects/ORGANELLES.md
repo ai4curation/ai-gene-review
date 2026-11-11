@@ -204,14 +204,20 @@ plastids come later.
      KDEL-type motif or shown by protease protection, supports `GO:0005788`.
      The ER exit site (`GO:0070971`) needs a marker of transitional ER.
    - **Stable tethering by an integral partner** (added 2026-11-11, UFSP2) is
-     a third route, for a soluble protein with no TM or signal peptide. When
-     the endogenous protein depends on a named integral membrane protein of
-     the organelle, shown by losing the partner (knockout or a binding
-     mutant) releasing it from the membrane or destabilising it, add the
-     cytoplasmic-side term as a `NEW` IC row beside the root: `GO:0098554`
-     for the ER, whose definition includes peripherally associated proteins.
-     Use `GO:0005789` only for a protein with its own TM or tail anchor.
-     Brief or regulated recruitment (signalling, stress, autophagy,
+     a third route to a sub-compartment row, for a soluble protein with no TM
+     or signal peptide. It needs (a) direct evidence that the endogenous
+     protein is at the organelle, (b) a named integral membrane protein of the
+     organelle that binds it, and (c) dependence on that partner: losing it
+     (knockout or a binding mutant) releases the protein or destabilises it.
+     Stability alone shows only an obligate partnership, so (a) and (b) carry
+     the location. Add the cytoplasmic-side term as a `NEW` IC row beside the
+     root: `GO:0098554` for the ER, whose definition includes peripherally
+     associated proteins. `GO:0098554` is `part_of` `GO:0005789`, so it is the
+     more specific statement, not an alternative to it. A `NEW` `GO:0005789`
+     row that we author still needs the protein's own TM or tail anchor; an
+     existing direct-evidence `GO:0005789` row on a tethered protein (UFL1,
+     CDK5RAP3) stays `ACCEPT` and can be refined by adding the cytoplasmic-side
+     row. Brief or regulated recruitment (signalling, stress, autophagy,
      Rab-dependent docking, a cycling complex such as SRP) is not tethering.
      The same test will apply to the Golgi and the other organelles.
    - **Recruited cytosolic pools stay at the root**, core only when the
@@ -331,16 +337,27 @@ Settled the open question from ER batch 4: should a soluble protein stably held
 on the organelle by an integral-membrane partner get a sub-compartment row? Yes,
 the cytoplasmic-side term, under a new bullet in rule 7. GO:0098554 cytoplasmic
 side of endoplasmic reticulum membrane is defined to include proteins
-"peripherally associated with" the cytoplasmic leaflet, so it records tethering
-without claiming a membrane anchor the protein does not have.
+"peripherally associated with" the cytoplasmic leaflet. It is `part_of` GO:0005789,
+so it says more than the bare membrane term (which side, and that the attachment
+is peripheral) rather than avoiding it. The route needs direct evidence that the
+protein is at the organelle, a named integral partner, and dependence on it; a
+stability result alone shows an obligate partnership, not a location.
 
 - **UFSP2** gains a NEW GO:0098554 IC row. It has no TM or signal peptide; its
   partner ODR4 is a transmembrane ER protein; endogenous UFSP2 is lost in ODR4
   knockout cells, which phenocopy UFSP2 loss (PMID:35926457); and it deUFMylates
-  uL24 on membrane-bound 60S subunits (PMID:38383785). The three root rows stay
-  ACCEPT and the second core function names the cytoplasmic side. The ODR4
-  result is destabilisation rather than release, which the rule counts: it
-  leaves no off-membrane pool.
+  uL24 on membrane-bound 60S subunits (PMID:38383785). The ODR4-UFSP2 complex at
+  the ER membrane was first shown in worm and human proteins by Chen et al.
+  (PMID:24603482); the 2022 and 2024 papers cite that work for the anchoring. The
+  location itself rests on the curated IDA row (PMID:35926457). The three root
+  rows stay ACCEPT and the second core function names the cytoplasmic side.
+- **What this means for the UFMylation machinery.** UFL1 and CDK5RAP3 are also
+  soluble and held at the ER by DDRGK1, and both already carry direct-evidence
+  GO:0005789 rows ACCEPTed in their reviews. Those rows stay: they are true,
+  because the cytoplasmic side is part of the ER membrane, and an assay on the
+  endogenous protein cannot be second-guessed by topology. A cytoplasmic-side row
+  would refine them and is left for a later pass. DDRGK1 has its own TM segment,
+  so GO:0005789 is the right term for it.
 - **Checked and left at the root.** The other ER-batch reviews whose reasons
   mention tethering or peripheral pools do not meet the test. UVRAG reaches the ER
   through PtdIns(3)P and RINT-1, a peripheral complex, and leaves on autophagy;

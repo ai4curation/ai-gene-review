@@ -32,3 +32,9 @@ Added a NEW GO:0098554 cytoplasmic side of endoplasmic reticulum membrane IC row
 GO:0005783 rows stay ACCEPT, and the 60S-recycling core function names the cytoplasmic side.
 The ODR4 knockout result is loss of the protein rather than release to the cytosol, so no
 off-membrane pool is evident; an ER-marker fractionation of UFSP2 itself is still missing (hence IC).
+
+### 2026-11-11 review follow-up (PR #6297)
+
+- The primary source for the ODR4-UFSP2 complex is Chen et al. 2014 [PMID:24603482 "Thus, ODR-4 and ODR-8 form a physical complex at the ER membrane."; "ODR-4 is a conserved tail-anchored transmembrane protein"], with overexpressed worm proteins in HeLa cells and a human ODR4-UfSP2 co-IP. The anchoring statements in PMID:35926457 ("thought to anchor") and PMID:38383785 ("membrane anchor ODR4 (ref. 2)") cite it, so they are not independent evidence.
+- The cached text of PMID:35926457 does not say UFSP2 itself was blotted with an ER marker in its fractions; the location rests on the curated IDA row.
+- The rule now requires direct evidence that the protein is at the organelle, a named integral partner, and dependence on it. UFSP2 meets all three. GO:0098554 is part_of GO:0005789, so it refines rather than avoids the membrane term.
