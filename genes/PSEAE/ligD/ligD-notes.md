@@ -36,3 +36,8 @@ Strengthen ATP, duplex/end-binding and multistep rNMP-extension support where ap
 ## 2026-11-10 — terminal synthesis and phosphate removal
 
 Retain nucleotidyltransferase activity to cover both templated synthesis and non-templated ribonucleotide/deoxyribonucleotide addition. GO:0003912 names deoxynucleotide addition and cannot replace the preferred ribonucleotide terminal addition. Added the direct all-DNA 3-prime phosphatase annotation already supported in core synthesis. Original source rows remain unchanged.
+
+
+## 2026-11-11 — template-directed RNA synthesis
+
+Add the directly assayed DNA-directed RNA polymerase activity already supported in the core functions. The multistep ribonucleotide extension in PMID:20018881 is distinct from non-templated terminal addition. Original source rows remain unchanged.
