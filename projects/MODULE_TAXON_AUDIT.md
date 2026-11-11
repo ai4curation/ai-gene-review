@@ -44,7 +44,7 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160: main 65bf77f958 integrated at 1d9d1dba84; 201 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
+- [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160: main ac30fe31cf integrated at 27ad45b599; 204 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
 
 - [x] `bacterial_cysteine_biosynthesis_via_o_acetylserine`: [PR #6120](https://github.com/ai4curation/ai-gene-review/pull/6120) merged as `5ee4a089482fe5f950d583d7355f5df7aa5ef9aa` at 2026-11-06T14:52:34Z. All 152 scoped files match the reviewed head. [Merged-content proof](MODULE_TAXON_AUDIT/proofs/pr6120-merged-content.json).
 
@@ -1319,3 +1319,11 @@ Superseded parent snapshot lines retained for provenance:
 ## 2026-11-11 — resume PR #6160 after disk cleanup
 
 Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6160 at d81e5d148abea46167f74950806258462330a4a2. All 204 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
+
+## 2026-11-11 — reconcile resumed PR #6160 tracker
+
+PR #6160: main ac30fe31cf integrated at 27ad45b599; 204 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/resume-round4-20261111/integration-proof.json](../analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/resume-round4-20261111/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+
+Superseded parent snapshot lines retained for provenance:
+
+> - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 10 PR_OPEN, 1 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
