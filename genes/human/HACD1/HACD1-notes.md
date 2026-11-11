@@ -113,3 +113,52 @@ GO:0102158 is the more specific, experimentally-matched term.
   long-chain fatty-acyl-CoA biosynthetic process (Reactome pathway framing).
 - GO:0005515 protein binding (two IPI): MARK_AS_OVER_ANNOTATED — bare, uninformative
   MF term; not removed per experimental/IPI policy.
+
+
+## 2026-11-12: primary-source reassessment
+
+This dated reassessment supersedes the earlier action summary and its
+reaction-direction, indirect-pathway and generic-binding rationales. The earlier
+notes are retained as the prior curation record. Evidence access and its limits
+are documented in [the manual research report](HACD1-deep-research-manual.md).
+
+Fresh QuickGO retrieval yields 22 source rows and 21 distinct review contexts.
+Five HuRI partner contexts are now separate. The HACD1–TECR annotation from
+PMID:38422897 has two source-provider/date rows (IntAct and UniProt); both remain
+in the downloaded TSV and map to one shared annotation context. No source row
+has a target isoform, NOT flag or annotation extension. Do not convert a partner
+isoform, such as RNF170-5, into an HACD1 target-isoform flag.
+
+The reassessed draft has 15 ACCEPT and six KEEP_AS_NON_CORE actions, with no
+PENDING or NEW annotation. Supported generic binding follows the ClinGen policy.
+The five HuRI edges were checked in original author portal data and separately
+against IntAct curation. Those assays do not establish a physiological ER role
+for each partner. PMID:38422897 explicitly supports HACD1–TECR association, but
+its isolated stable complex and modeled active sites concern HACD2. We make no
+HACD1 substrate-channeling or adaptor-function assertion.
+
+GO:0080023 defines the dehydration reaction despite its hydratase label.
+Changing it for reaction direction would be wrong. Its Rhea-supported reaction
+scope and the generic dehydratase activity remain appropriate; the specific
+VLCFA enzyme-class annotation is already present. The prior PAINT granularity
+failure claim is removed. The retained IBD and independent functional evidence
+are respected; the actual tree/MSA was not independently retrieved.
+
+The original PMID:18554506 directly tests C16 substrate, human HACD1 ER
+localization and rescue of PHS1-suppressed yeast, including sphingolipid synthesis.
+This supports catalytic participation in fatty-acid and sphingolipid precursor
+biosynthesis. Pathway breadth does not by itself make those existing annotations
+non-core. Neither that assay nor PMID:23933735 supplies a measured C18–C26
+substrate panel. Retaining the established VLCFA enzyme-class annotation does
+not imply otherwise.
+
+Canonical HACD1-288, CAP140 and p.Tyr248Stop remain distinct. CAP lacks the
+canonical catalytic region, but an independently inspected negative CAP
+activity assay is not claimed. CAP mineralization annotations are absent from
+this fresh GOA set; no NEW mineralization, differentiation or adhesion
+annotation is introduced from the separate CAP literature.
+
+All 18 inherited supporting-text occurrences and the seven existing
+record-section fields are preserved. Source fields were seeded by the project
+pipeline and are not edited as biological judgments. The draft remains DRAFT;
+canonical validation, history scaffolding and PR delivery still follow.
