@@ -33,7 +33,7 @@ Step 4 of the DXP-dependent de novo PLP module
   `GO:0036001`, and the separate NEW `GO:0036001` row was dropped because the
   MODIFY replacement carries it. `GO:0046872` metal ion binding was
   MARK_AS_OVER_ANNOTATED while arguing redundancy; it is now TOO_GENERAL.
-- Cytoplasm changed KEEP_AS_NON_CORE -> ACCEPT (location of the core activity),
-  matching E. coli PdxA.
+- Cytoplasm kept KEEP_AS_NON_CORE (location as context), consistent with the
+  E. coli PdxA and the PdxJ/PdxH location rows of this pathway.
 - Removed the reference to the GOA tsv (never support).
 - Actions mirror genes/ECOLI/pdxA term by term.

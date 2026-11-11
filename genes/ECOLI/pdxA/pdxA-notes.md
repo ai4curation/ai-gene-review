@@ -51,3 +51,5 @@ PAINT node PTN002408757 (PTHR30004).
   `GO:0042803` protein homodimerization activity, which the protein carries by
   IDA (crystal structure); that row is KEEP_AS_NON_CORE.
 - `just paint-losses ECOLI pdxA`: no IRD/IKR on the lineage.
+- Cytoplasm KEEP_AS_NON_CORE (location as context), the same treatment as the
+  cytosol rows of PdxJ (fixed by the P. putida TreeGrafter re-review) and PdxH.
