@@ -13,5 +13,5 @@
   isoprenoid/terpene rows are refined to GO:0016100 monoterpenoid catabolic process, matching the liuC review.
 - LiuA is upstream of methylcrotonyl-CoA and purified LiuA does not oxidize citronellyl-CoA or
   5-methyl-hex-4-enoyl-CoA [PMID:18625020 "citronellyl-CoA or 5-methyl-hex-4-enoyl-CoA were not utilized"],
-  yet the complemented liuA mutant cannot grow on terpenes. The isoprenoid IMP row is therefore UNDECIDED:
-  the requirement is shown, the step LiuA performs is not.
+  yet the complemented liuA mutant cannot grow on terpenes. For the isoprenoid IMP row,
+  the requirement is shown, the step LiuA performs is not, so the row is marked over-annotated.
