@@ -71,9 +71,14 @@ accessions) and are counted as unavailable.
   and/or Asp69, including the deuterostomes: Ciona F6RMP9 (H47), amphioxus
   A0A9J7LMZ0 (H51, V55), sea urchin A0A7M7RDB0 (Y54, A74); arthropods (Phe, Tyr or
   His at Trp52 and Gly at Asp69 in Tribolium, Daphnia, Drosophila and Anopheles);
-  and nematodes (C. elegans DDR-2 F47, S65). The Arg105-Glu113 salt bridge and the
-  Cys73-Cys177 disulfide are conserved throughout. The cnidarian, placozoan and
-  leech sequences do not cover the pocket.
+  and nematodes (C. elegans DDR-2 F47, S65). Not every lineage has lost both: Ciona
+  keeps Asp69 (D64) and C. briggsae A8XJG8 keeps Trp52 (W97, with F150 at Asp69). The
+  Arg105-Glu113 salt bridge is conserved in every covered leaf, and the Cys73-Cys177
+  disulfide in every covered leaf except C. briggsae A8XJG8 (S154 at Cys73). The
+  cnidarian, placozoan and leech sequences do not cover the pocket.
+- Alignment register check: in distant leaves the calls keep DDR2's spacings, for
+  example fly Ddr C150/C254 (104 apart, as Cys73/Cys177) and R181/E189 (8 apart, as
+  Arg105/Glu113), so the DS domain, not only the kinase domain, is aligned in frame.
 
 ## Interpretation
 

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import re
 import sys
+import urllib.error
 import urllib.request
 
 from Bio import Align
@@ -56,8 +57,13 @@ def expected(site: str) -> str:
 def fetch(acc: str) -> str:
     """Canonical UniProt sequence for an accession."""
     url = f"https://rest.uniprot.org/uniprotkb/{acc}.fasta"
-    with urllib.request.urlopen(url, timeout=60) as fh:
-        lines = fh.read().decode().splitlines()
+    try:
+        with urllib.request.urlopen(url, timeout=60) as fh:
+            lines = fh.read().decode().splitlines()
+    except urllib.error.HTTPError as err:  # retired or unknown accession: record, don't abort
+        if err.code in (400, 404, 410):
+            return ""
+        raise
     return "".join(x.strip() for x in lines if not x.startswith(">"))
 
 
@@ -107,8 +113,8 @@ def main() -> None:
         acc = info.get("uniprot")
         seq = fetch(acc)
         if not seq:  # accession retired or merged in UniProt since the PANTHER release
-            print(f"{leaf}\t{acc}\t{info.get('organism')}\t" + "\t".join("?" * len(SITES))
-                  + "\tsequence unavailable")
+            print(f"{leaf}\t{acc}\t{info.get('organism')}\t" + "\t".join("?" * (len(SITES) + len(POCKET)))
+                  + "\tunavailable\tunavailable")
             continue
         pmap = position_map(al.align(ref, seq)[0])
         row = {}
