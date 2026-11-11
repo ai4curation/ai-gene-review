@@ -93,3 +93,8 @@ Retain target-specific cross-system judgments and assay limits from this audit. 
 ## 2026-11-11 — review follow-up: evidence and source routing
 
 Quote the Discussion inference that FruB delivers phosphate to NPr where that target-specific claim distinguishes NPr from PtsP. Route InterPro2GO and TreeGrafter source defects to INTERPRO and PANTHER respectively, retaining their claims and requested corrections. No annotation payload or action changes.
+
+
+## 2026-11-11 — separate coupled transporter activity from process scope
+
+Remove the obsolete cross-species BP contrast from the GO:0008982 MF reason. This coupled transmembrane carbohydrate transport/phosphorylation activity remains REMOVE for soluble PtsN effectors, regardless of measured cross-system protein phosphate exchange. The target-specific BP judgments are unchanged.

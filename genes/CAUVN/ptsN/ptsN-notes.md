@@ -22,3 +22,8 @@ Where the only localization assertion is ARBA-derived, compartment adjudication 
 ## 2026-11-11 — target-specific cross-system evidence
 
 The native study separates this PtsP–HPr–PtsN regulatory relay from carbohydrate permeases. Transferring the sugar-transport process from shared PTS domains misidentifies the experimentally characterized role. This is a wrong functional propagation, not a claim that phosphate exchange is impossible. This target belongs to the experimentally separated non-permease relay, and no target-specific cross-system sugar-phosphorylation result is available to soften the erroneous electronic process transfer.
+
+
+## 2026-11-11 — separate coupled transporter activity from process scope
+
+Remove the obsolete cross-species BP contrast from the GO:0008982 MF reason. This coupled transmembrane carbohydrate transport/phosphorylation activity remains REMOVE for soluble PtsN effectors, regardless of measured cross-system protein phosphate exchange. The target-specific BP judgments are unchanged.
