@@ -1291,3 +1291,7 @@ Superseded parent snapshot lines retained for provenance:
 > - [ ] Ledger snapshot after this integration: 777 modules; 38 COMPLETE, 11 PR_OPEN, 3 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+## 2026-11-11 — resume PR #6182 after disk cleanup
+
+Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6182 at 570672b6cec32ef536aea00e8cf804ab1b599f30. All 333 branch-specific files outside shared project metadata and the explicitly reconciled PTHR48075 review retain their exact Git object ids. The family reconciliation retains incoming PaaH evidence, verified nonanimal SF1 topology, and conservative native-process scope; the exact GO:0008691 node changes to UNRESOLVED on the newly incorporated NAD+-specific primary assay. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
