@@ -42,3 +42,8 @@ Clarify that the supported C8-specific GO0050527 inference and broader mcl-PHA p
 ## 2026-11-08 — PR #6194 evidence and scope follow-up
 
 Add an explicitly inferred depolymerase MF proposal with KT2442 biochemical and target-context limits. See review-followup-20261108 for the prior review and change receipt. Original source annotation payloads are unchanged; authored proposal code changes and new rows are explicit.
+
+
+## 2026-11-11 — withhold exact cross-strain GO transfer
+
+The authored GO:0050527 IC proposal is withdrawn: the evidence is a cross-strain biochemical inference, not inference from another annotation of the same protein. ISS would require a verified donor; no stable KT2442 pPAZ3 accession or complete sequence bridge has been established. Preserve the qualified broader intracellular mcl-PHA role through the existing proposed activity, and request the missing donor sequence explicitly. The 2007 methods identify the KT2442 construct, and the 2025 title does not override its KT2442 methods. All pre-audit source annotation rows remain intact.
