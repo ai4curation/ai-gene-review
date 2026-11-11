@@ -138,6 +138,13 @@ curated core molecular functions (across 423 genes) have no IBA support at
 all. A corpus-wide re-review started on 2026-09-20 over 3,427 genes and 11,829
 propagated annotations; 81 genes are reviewed and 65 await adjudication
 ([rereview-2026-09-20](IBA_REVIEW/rereview-2026-09-20/README.md)).
+Until 2026-11 these verdicts were made from the GOA row alone, which carries a node id
+and a seed list: a census found a tree or alignment artifact behind 4.5% of the IBA rows
+we had overruled. Each review can now read the PANTHER tree and family alignment for its
+own rows (`just phylo`), an overruled IBA row is asked to quote it, and a join of all
+29,101 reviewed IBA rows with their tree facts shows where our verdicts and the tree
+agree and where they do not
+([tree and alignment evidence](IBA_REVIEW/tree-evidence.md)).
 
 ## Overview
 
@@ -145,6 +152,9 @@ propagated annotations; 81 genes are reviewed and 65 await adjudication
 >
 > Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
 > [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
+>
+> Tree and alignment evidence behind the verdicts, what it corrected in this page's own
+> examples, and the rows to re-review: [IBA_REVIEW/tree-evidence.md](IBA_REVIEW/tree-evidence.md).
 >
 > External check: [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examines Wei *et al.* 2020
 > (PMID:32470107), which reported IBA as the leading non-IEA source of taxon-inconsistent
@@ -254,6 +264,16 @@ GRPEL1 co-donor, and `Gulo GO:0016491` said the same while carrying seven gene d
 spanning fungi, plants and bacteria. Both now enumerate their full `WITH/FROM`.
 
 ### Resolving a donor before calling it unresolvable
+
+**Start with the gene's phylo extract.** `GENE-phylo.yaml` (`just phylo <org> <GENE>`)
+lists every seed of every IBA row with the tree leaf it resolves to: organism, gene id,
+UniProt accession and subfamily. A PANTHER leaf id carries the MOD id and the accession
+together (`RAT|RGD=1565256|UniProtKB=Q4V898`), so there a MOD-id seed *is* a lookup, not a
+name match, and "resolved" is the right verb for it. The 29,075 reviewed IBA rows placed
+in a PANTHER 19.0 tree carry 198,437 seed tokens, and all but 514 resolve this way. The
+rest of this section, written before the extract existed, applies where a gene has no
+extract or a seed is not a leaf of the release tree. Its `entries.csv` route is still how
+a resolved accession gets its protein name.
 
 `interpro/panther/<FAMILY>/<FAMILY>-entries.csv` is keyed on **UniProt accession** and
 covers the whole family, not just `representative_members`. It gives the protein name,
@@ -866,6 +886,11 @@ grounding exists, and on the target itself.
 
 Before a strong `REMOVE` on an IBA row, record that these checks were done:
 
+- `just phylo <org> <GENE>` was run and the row's `summary` from `GENE-phylo.yaml` is
+  quoted in `supported_by`: where the PAINT node sits, whether the gene is inside the
+  clade the seeds span, how each seed is related to it (one-to-one ortholog, ortholog
+  across later duplications, paralog) and how similar they are in the family alignment.
+  Validation warns when an overruled IBA row lacks it. See [docs/phylo.md](../docs/phylo.md).
 - The GO term definition, aspect, qualifier, and taxon constraints were checked.
 - The GOA `WITH/FROM` field was read and the PANTHER `PTN...` node and seed
   proteins were recorded.
@@ -941,11 +966,14 @@ ubiquitin terms.
 |----------|--------------|-------------------------|
 | EC Number | **4.4.1.1** (lyase) | 2.5.1.47 (transferase) |
 | Reaction | L-Cys → H2S + pyruvate | O-Ac-Ser + H2S → L-Cys |
-| Branch length | **0.528** (longest) | 0.402-0.458 |
+| Position in the PANTHER 19.0 tree | own branch below the root duplication (PTN008304321, 15 leaves in 11 species) | three of the other four branches below the same duplication |
+| Seeds of the root IBD | **none** | all 19 |
 | Seq identity to synthases | **~24%** | 40-43% between each other |
 | Active site motif | **ASSGST** | PTSGNTG |
 
-The subfamily SF135 shares only 24% identity with synthases - less than synthases share with each other (43%). The longest branch length indicates maximum divergence and neo-functionalization.
+The term sits on the family root, which the PANTHER 19.0 tree marks as a duplication that predates LUCA, with five branches below it. All 19 seeds lie in three of the other four branches and none in the Cds1 branch, so every seed is a paralog of Cds1, and *M. tuberculosis* Cds1 is 21-27% identical to them in the family alignment (`genes/MYCTU/cds1/cds1-phylo.yaml`). SF135 shares less identity with the synthases than they share with each other (43%).
+
+*Correction (2026-11): this section used to call the Cds1 branch the longest from the root and read that as the sign of neo-functionalization. It is the second longest: 0.528, against 0.659 for the threonine synthase branch. Branch length was never the evidence; the seed distribution is. See [tree and alignment evidence](IBA_REVIEW/tree-evidence.md).*
 
 ### 5. Paralog/Secondary Activity Transfer
 
@@ -1023,7 +1051,7 @@ as a secondary function.
 - **ALDH1L1 (rat)** — `GO:0005739` (mitochondrion): UniProt names it *Cytosolic 10-formyltetrahydrofolate dehydrogenase* with `SUBCELLULAR LOCATION: Cytoplasm, cytosol` and a cytosol IDA. Mitochondrial one-carbon oxidation is the job of the distinct paralog **ALDH1L2**.
 - **HMGCS2 (rat)** — `GO:0010142` (farnesyl-PP biosynthesis, mevalonate pathway): a **paralog-pathway conflation**. The IBA comes from a PANTHER node (PTN000222418) that lumps the HMGCS paralogs. The cytosolic paralog **HMGCS1** feeds mevalonate→FPP→sterol/isoprenoid synthesis; mitochondrial HMGCS2's HMG-CoA is cleaved by HMG-CoA lyase to acetoacetate (ketogenesis). The shared HMG-CoA-synthase *reaction* is correctly classified under mevalonate biosynthesis (UniProt UniPathway tag), but assigning HMGCS2 to **FPP/isoprenoid** biosynthesis follows the wrong paralog's flux — an over-annotation. *(Nuance: the enzymatic step is real, so this is paralog over-annotation, not a fabricated activity.)*
 - **PEX2 (human)** — `GO:0016593` (Cdc73/Paf1 complex): PEX2 is a peroxisomal RING E3 ligase for PEX5 retrotranslocation (UniProt) and has no role in RNA Pol II transcription elongation, so membership in the Cdc73/Paf1 complex is clearly wrong. *(Caveat: the cause is unconfirmed — the IBA WITH/FROM is a PANTHER node, not a PAF1 gene. A legacy synonym collision — PEX2's old name "PAF1"/Peroxisome Assembly Factor 1 vs the unrelated transcription factor PAF1 — is a plausible but unverified explanation.)*
-- **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2, rat Tra2 — all bona fide splicing factors), while CIRBP's own subfamily node **PTN008729690** carries only `mRNA binding`. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `interpro/panther/PTHR48034/PTHR48034-review.md`.)*
+- **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2 and the rat RBMX-family proteins Rbmx and Rbmxrtl), while the family root **PTN008729690** carries only `mRNA binding`. In the PANTHER 19.0 tree PTN000391532 is a speciation node at Eukaryota one step below the root, covering 373 of the family's 405 leaves. CIRBP and RBM3 have their own branch 14 steps further down (**PTN008483167**, 45 leaves), which holds no splicing seed. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `interpro/panther/PTHR48034/PTHR48034-review.md`.)*
 - **Lesson**: complex membership, compartment, and downstream pathway are not conserved across paralogs even when the fold/reaction is; verify the protein actually occupies the annotated complex/compartment and that its product reaches the annotated pathway.
 
 ### 11. Substrate Over-Propagation From a Multi-Specificity Enzyme Family
@@ -1378,7 +1406,7 @@ The IBA inference of "transmembrane transporter activity" comes from propagating
 2. Root annotation propagates to ALL descendants, including subfamily SF135 (Cds1)
 3. SF135 underwent **neo-functionalization**: same fold, opposite reaction
 4. Evidence of neo-functionalization:
-   - Longest branch length (0.528) from root = most divergent
+   - In the PANTHER 19.0 tree the root is a duplication with five branches; all 19 seeds sit in three of the other four and none in the Cds1 branch (PTN008304321), so every seed is a paralog of Cds1 (`genes/MYCTU/cds1/cds1-phylo.yaml`). The Cds1 branch is not the longest from the root, as this list used to say: its length is 0.528 and the threonine synthase branch is 0.659
    - Different EC class: 4.4.1.1 (lyase/catabolism) vs 2.5.1.47 (transferase/biosynthesis)
    - Only 24% sequence identity with synthases (synthases share 40-43% with each other)
    - Distinct active site motif: ASSGST (Cds1) vs PTSGNTG (synthases)
@@ -1408,18 +1436,20 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 **Lesson**: PTHR48034 is a heterogeneous RRM family that lumps two functionally divergent groups sharing only the N-terminal RRM: (i) **transformer-2/RBMX/SR-type splicing regulators** (RS-domain C-terminus) and (ii) **cold-inducible mRNA-stability/translation proteins** CIRBP and RBM3 (glycine-rich/RGG C-terminus). The splicing terms are real for group (i) but were propagated across the divergence boundary into group (ii). This is the RNA-biology analogue of the arnF case — homology correctly identifies the fold, but the annotation does not track the functional split (pre-mRNA splicing → mRNA stabilization/translational control). CIRBP's verified activities are 3'-UTR binding (IDA: RPA2, TXN), mRNA stabilization, and translational control, with stress-granule recruitment — none of which is splicing.
 
 **Root Cause Analysis** (PANTHER PAINT, `interpro/panther/PTHR48034/PTHR48034-paint.tsv`):
-1. Splicing IBD is anchored at **internal node PTN000391532**, seeded *only* by splicing factors: `GO:0000398` from TRA2A (Q13595), TRA2B (P62995), *Drosophila* tra2 (FBgn0003742), rat Tra2 (RGD:1306751, RGD:1565256); `GO:0005681` from TRA2B (P62995), RBMX (P38159), rat Tra2 (RGD:1306751).
+1. Splicing IBD is anchored at **internal node PTN000391532**, seeded *only* by splicing factors: `GO:0000398` from TRA2A (Q13595), TRA2B (P62995), *Drosophila* tra2 (FBgn0003742), rat Rbmx (RGD:1565256, Q4V898) and rat Rbmxrtl (RGD:1306751, P84586); `GO:0005681` from TRA2B (P62995), RBMX (P38159) and rat Rbmxrtl (RGD:1306751). *Correction (2026-11): the two RGD seeds were listed here as "rat Tra2". The PANTHER leaf ids resolve them to the rat RBMX-family proteins (`RAT|RGD=1565256|UniProtKB=Q4V898`, `RAT|RGD=1306751|UniProtKB=P84586`; names from `interpro/panther/PTHR48034/PTHR48034-entries.csv`). Rat Tra2b (P62997) is not a seed.*
 2. The node's annotations descend as IBA to **all** descendants, including the cold-shock branch.
-3. CIRBP's own subfamily node **PTN008729690** carries only `GO:0003729` mRNA binding (and lists CIRBP, Q14011, as a seed) — the correct, generic call.
-4. CIRBP's GOA WITH/FROM names the source node explicitly: `PANTHER:PTN000391532|...|UniProtKB:P62995|UniProtKB:Q13595` — a textbook case of mis-grouping revealed by the WITH/FROM column (pattern 12).
-5. PAINT already prunes other branches of this family (node PTN001924395 carries IRD/NOT records blocking `GO:0003729`, `GO:0000381`, `GO:0016607`), so the gap is the absence of an equivalent pruning on the CIRBP/RBM3 branch.
+3. The family root **PTN008729690** carries `GO:0003729` mRNA binding for the whole family (CIRBP, Q14011, is one of its seeds) — the correct, generic call. *Correction (2026-11): earlier versions called PTN008729690 CIRBP's own subfamily node. It is the root of the tree, with all 405 leaves below it.*
+4. CIRBP's own branch is **PTN008483167**, a speciation node at Euteleostomi with 45 leaves (25 in the CIRBP subfamily SF5, 16 in the RBM3 subfamily SF12). It is one of the two branches below the duplication PTN009224850; the other, PTN002690247, holds RBMX. No splicing seed lies in it. By the tree the five `GO:0000398` seeds are four paralogs of CIRBP and one ortholog across later duplications (fly tra2), and the nearest of them is 52% identical to CIRBP over 157 aligned columns that span 91% of CIRBP but only 40% of the seed (`genes/human/CIRBP/CIRBP-phylo.yaml`).
+5. CIRBP's GOA WITH/FROM names the source node explicitly: `PANTHER:PTN000391532|...|UniProtKB:P62995|UniProtKB:Q13595` — a textbook case of mis-grouping revealed by the WITH/FROM column (pattern 12).
+6. PAINT already prunes other branches of this family (node PTN001924395 carries IRD/NOT records blocking `GO:0003729`, `GO:0000381`, `GO:0016607`), so the gap is the absence of an equivalent pruning on the CIRBP/RBM3 branch.
 
 **Seed (mod) genes verified as bona fide splicing factors** (no change needed):
 - TRA2B (P62995): UniProt "participates in the control of pre-mRNA splicing"; direct IDA GO:0000398 (PMID:9546399); controls SMN2 exon 7 / MAPT exon 10. Falcon: "Belongs to the splicing factor SR family."
-- TRA2A (Q13595), RBMX (P38159), *Drosophila* tra2 (P19018), rat Tra2b (P62997): all UniProt-confirmed pre-mRNA / alternative splicing regulators.
+- TRA2A (Q13595), RBMX (P38159), *Drosophila* tra2 (P19018): all UniProt-confirmed pre-mRNA / alternative splicing regulators.
+- Rat Rbmx (Q4V898) and Rbmxrtl (P84586), the two RGD seeds: identified from the PANTHER leaf ids; their own experimental annotations were not re-read for this page.
 
 **Recommendation for PANTHER Curators**:
-- Add an IRD/NOT (or restrictive re-annotation) for GO:0000398 and GO:0005681 on the CIRBP/RBM3 subfamily branch (node PTN008729690 and descendants), so the splicing terms stop descending to the cold-inducible mRNA-stability members.
+- Add an IRD/NOT (or restrictive re-annotation) for GO:0000398 and GO:0005681 on the CIRBP/RBM3 branch (node **PTN008483167** and its descendants), so the splicing terms stop descending to the cold-inducible mRNA-stability members. *Correction (2026-11): this recommendation used to name PTN008729690. That is the family root, above the node that carries the splicing terms, so a loss placed there would stop nothing.*
 
 See detailed family analysis: `interpro/panther/PTHR48034/PTHR48034-review.md`
 
@@ -1751,7 +1781,7 @@ should not.
 ## Recommendations for IBA Curation
 
 1. **Flag pseudo-enzyme candidates**: Proteins with enzyme domains but missing catalytic residues
-2. **Flag neo-functionalized subfamilies**: Long branch lengths and different EC numbers indicate potential opposite function
+2. **Flag neo-functionalized subfamilies**: a branch with no seed of its own, only paralogous seeds, and a different EC number indicate a potential opposite function (read `GENE-phylo.yaml`; branch length alone is not the signal, see the Cds1 correction)
 3. **Validate substrate specificity**: Don't assume identical specificity across orthologs
 4. **Distinguish core vs. secondary**: a genuine secondary activity is non-core, but noise-level promiscuous activity of a paralog is removed; see the promiscuous-activity tiers in [ENZYME_SPECIFICITY](ENZYME_SPECIFICITY.md)
 5. **Prefer specific terms**: Replace generic IBA with specific terms when evidence exists
@@ -1770,7 +1800,7 @@ should not.
 
 **Signs of problematic IBA**:
 - Enzymatic activity for proteins with degenerate active sites
-- **Long branch lengths from family root** (indicates divergence/neo-functionalization)
+- **The gene's own branch holds no seed and every seed is a paralog** (in `GENE-phylo.yaml`; this, not the branch length first cited, is what the tree shows for Cds1)
 - **Different EC numbers between subfamilies** (may catalyze opposite reactions!)
 - Generic terms when specific function is known
 - Process annotations that don't match organism biology
@@ -1978,6 +2008,8 @@ We defined and benchmarked four quantitative phylogenetic distance metrics in [`
 2. **Excess PAINT Node Depth ($\Delta_{\text{depth}} = d_{\text{LCA}} - d_{\text{PTN}}$):** Calibrated on close donor–target pairs ($d_{\text{LCA}} \ge 6$, $n = 1{,}538$ total: 785 in locally cached PAINT families with an explicit node taxid, 226 in cached families with an unrecorded blank `taxon:` in `*-paint.tsv`, and 527 uncached), single-organism IBAs whose `IBD` was placed at `LUCA`/`Eukaryota`/`Opisthokonta` ($d_{\text{PTN}} \le 1$, $n = 121$) or intermediate pre-vertebrate clades ($2 \le d_{\text{PTN}} \le 5$, $n = 252$) have a **7- to 8-fold higher `REMOVE` rate** (**4.1%** and **3.6%**, with **8.3%** and **7.1%** Fail, **14.9%** and **13.9%** total downgraded) than those scoped within the clade/Vertebrata ($d_{\text{PTN}} \ge 6$, $n = 412$: **0.5%** `REMOVE`, **6.6%** Fail, **13.6%** total downgraded). Rows in cached families with an unrecorded blank `taxon:` string ($n = 226$) show **8.4%** Fail and **4.9%** `REMOVE` (**12.4%** total downgraded).
 3. **PANTHER Subfamily Dilution (`SAME_SF` vs `CROSS_SF`):** Across the 1,156 rated rows with resolved PANTHER subfamilies and donor lineages, crossing a subfamily boundary increases the propagation failure (`% Fail`) rate and nearly doubles the `REMOVE` rate across both close/moderate taxa ($d_{\text{LCA}} \ge 4$: **10.6%** vs **7.4%** Fail; **4.2%** vs **2.3%** `REMOVE`; $n = 189$ vs $n = 430$) and distant taxa ($0 \le d_{\text{LCA}} \le 3$: **19.1%** vs **12.3%** Fail; **8.7%** vs **5.8%** `REMOVE`; $n = 277$ vs $n = 260$).
 4. **Exact PANTHER Tree Edge Steps & Duplications (`projects/TREEGRAFTER/graft_paths_all.tsv`):** Across all 383 rated single-taxon `IBD` paths in `graft_paths_all.tsv` (which audits reviewed **TreeGrafter (`IEA`)** graft paths on non-PANTHER species rather than the 3,433 GOA `IBA` population, and has only $n = 2$ direct row overlap with GOA `IBA` annotations), crossing a gene-duplication node on `< 10` step paths raises the failure rate from **12.9%** (`REMOVE` **4.8%**, $n = 209$) to **17.3%** (`REMOVE` **8.0%**, $n = 162$), and to **20.0%** (`REMOVE` **10.0%**, $n = 10$) on paths of $\ge 10$ tree steps with duplication.
+
+*What this distance is*: the depth of the donor and target **species'** common ancestor, plus PAINT's node taxon and PANTHER subfamily labels. It is a proxy for the gene tree: two proteins of one species can be paralogs across the family root, and two from different kingdoms can be one-to-one orthologs. [Tree and alignment evidence](IBA_REVIEW/tree-evidence.md) asks the same question of the gene tree for all 29,101 reviewed IBA rows: we overrule 1.3% of rows where the gene is itself a seed and 20.0% where it lies outside the clade the seeds span with no one-to-one ortholog among them, and 3.6% of rows at least 80% identical to a seed against 25.3% of rows under 20%.
 
 *Methodological note*: Because review actions in this repository were generated under `IBA_REVIEW.md` guidelines that explicitly instruct reviewers to scrutinize deep-node and cross-kingdom propagations, observed failure rates partly reflect reviewer policy rather than an independent experimental ground truth; see [`IBA_REVIEW/single-organism-distance.md`](IBA_REVIEW/single-organism-distance.md) for full discussion of confounds, sample sizes, and candidate re-reviews.
 

@@ -44,10 +44,11 @@ annotations to internal tree nodes; these descend to leaves as IBA. The relevant
 - **Node PTN000391532** — carries the splicing terms:
   - `GO:0000398` mRNA splicing, via spliceosome — IBD seeds:
     `FB:FBgn0003742` (Dros tra2), `UniProtKB:Q13595` (TRA2A), `UniProtKB:P62995` (TRA2B),
-    `RGD:1306751`, `RGD:1565256` (rat Tra2)
+    `RGD:1306751` (rat Rbmxrtl, P84586), `RGD:1565256` (rat Rbmx, Q4V898)
   - `GO:0005681` spliceosomal complex — IBD seeds:
-    `UniProtKB:P62995` (TRA2B), `UniProtKB:P38159` (RBMX), `RGD:1306751` (rat Tra2)
-- **Node PTN008729690** — the CIRBP/RBM3-containing subfamily node — carries **only**:
+    `UniProtKB:P62995` (TRA2B), `UniProtKB:P38159` (RBMX), `RGD:1306751` (rat Rbmxrtl)
+- **Node PTN008729690** — the root of the family tree (all 405 leaves; an earlier version
+  of this page called it the CIRBP/RBM3-containing subfamily node) — carries **only**:
   - `GO:0003729` mRNA binding — IBD seeds include `UniProtKB:Q14011` (CIRBP itself),
     `O93235` (Xenopus cirbp-a), plus RBMX/TRA2B/RBMY
 
@@ -57,8 +58,11 @@ CIRBP's GOA row for the splicing IBA names the source node explicitly in its WIT
 **The error:** the splicing IBD annotations are anchored *only* by transformer-2/RBMX
 splicing factors at the ancestral node PTN000391532, but were propagated down to the
 diverged cold-shock branch (CIRBP/RBM3). The annotation crosses a functional-divergence
-boundary: CIRBP's own subfamily node (PTN008729690) is annotated only with the generic,
-correct `mRNA binding`. PAINT curators *did* prune annotations in other branches of this
+boundary: the family root (PTN008729690) is annotated only with the generic, correct
+`mRNA binding`, and the CIRBP/RBM3 branch itself (PTN008483167, a speciation node at
+Euteleostomi with 45 leaves, 14 steps below PTN000391532) holds none of the splicing
+seeds. By the PANTHER 19.0 tree the five `GO:0000398` seeds are four paralogs of CIRBP and
+one ortholog across later duplications (see `genes/human/CIRBP/CIRBP-phylo.yaml`). PAINT curators *did* prune annotations in other branches of this
 family (e.g. node PTN001924395 carries IRD "NOT" records blocking `GO:0003729`,
 `GO:0000381`, `GO:0016607`), so the absence of a pruning/NOT on the CIRBP branch for the
 splicing terms is the gap that produced the over-annotation.
@@ -91,9 +95,13 @@ target, not the seeds. Verified from UniProt and experimental GO evidence:
   "Required for female sex determination in somatic cells and specific splicing and/or
   polyadenylation of doublesex (dsx) pre-mRNA." The classical sex-determination splicing
   regulator. Seed for `GO:0000398`.
-- **rat Tra2 (RGD:1306751, RGD:1565256; cf. rat Tra2b P62997).** Rat orthologs of the
-  transformer-2 splicing factors; UniProt (P62997, Tra2b/Sfrs10) FUNCTION matches human
-  TRA2B (pre-mRNA splicing; SMN2; MAPT/Tau). Seeds for both splicing terms.
+- **rat Rbmx (RGD:1565256, Q4V898) and rat Rbmxrtl (RGD:1306751, P84586).** Rat members
+  of the RBMX group, in the same branch of the PANTHER 19.0 tree as human RBMX. Rbmx seeds
+  `GO:0000398`; Rbmxrtl seeds both splicing terms. An earlier version of this page called
+  these two seeds "rat Tra2" and described rat Tra2b (P62997) in their place. The PANTHER
+  leaf ids (`RAT|RGD=1565256|UniProtKB=Q4V898`, `RAT|RGD=1306751|UniProtKB=P84586`) and
+  the names in `PTHR48034-entries.csv` settle the identity; rat Tra2b is not a seed. Their
+  own experimental annotations were not re-read here.
 
 ## Conclusion and recommendation
 
@@ -105,9 +113,11 @@ target, not the seeds. Verified from UniProt and experimental GO evidence:
 - The seed/mod genes themselves are **correctly** annotated as splicing factors and need
   no change.
 - **Upstream fix (PANTHER PAINT):** the cleanest correction is at the tree, not the leaf —
-  the CIRBP/RBM3 subfamily branch (node PTN008729690 and its descendants) should carry an
+  the CIRBP/RBM3 branch (node PTN008483167 and its descendants) should carry an
   IRD/NOT (or a more restrictive re-annotation) for the splicing terms `GO:0000398` and
-  `GO:0005681`, mirroring how PAINT already pruned other branches of this family. This
+  `GO:0005681`, mirroring how PAINT already pruned other branches of this family. (An
+  earlier version named PTN008729690 here; that is the family root, above the node that
+  carries the splicing terms, so a loss placed there would stop nothing.) This
   would stop the splicing terms from descending to the cold-inducible mRNA-stability
   members.
 
@@ -118,6 +128,7 @@ target, not the seeds. Verified from UniProt and experimental GO evidence:
 - `interpro/panther/PTHR48034/PTHR48034-entries.csv` (reviewed members)
 - `interpro/panther/PTHR48034/PTHR48034-paint.tsv` (PAINT node-level IBD/IBA/IRD)
 - UniProt: Q14011 (CIRBP), P62995/Q13595 (TRA2B/TRA2A), P38159 (RBMX), P19018 (Dros tra2),
-  P62997 (rat Tra2b)
+  Q4V898 (rat Rbmx), P84586 (rat Rbmxrtl)
+- `genes/human/CIRBP/CIRBP-phylo.yaml` (PANTHER 19.0 tree placement and alignment for CIRBP's IBA rows)
 - `genes/human/TRA2B/TRA2B-deep-research-falcon.md` (falcon deep research on the anchor
   seed gene; see TRA2B folder)
