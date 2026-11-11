@@ -1319,3 +1319,7 @@ Superseded parent snapshot lines retained for provenance:
 > - [ ] Ledger snapshot after this integration: 777 modules; 38 COMPLETE, 11 PR_OPEN, 3 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
+
+## 2026-11-11 — resume PR #6138 after disk cleanup
+
+Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6138 at a309252f42500ef45a6829983fac88e9c7180984. All 316 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
