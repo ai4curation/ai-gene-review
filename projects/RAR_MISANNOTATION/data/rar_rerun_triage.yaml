@@ -8,7 +8,9 @@ source:
     read for this pass, so no verdict here is a gene review, and nothing is filed upstream.
     Verdicts: ANNOTATION_WRONG (the term does not apply to this protein), CONSTRAINT_QUESTIONABLE
     (the annotation looks right and the GO taxon constraint looks too narrow), FLAG_FAILS
-    (the low rate is a curation-density artefact; the annotation is right), UNCERTAIN.
+    (the low rate is a curation-density artefact; the annotation is right), TRUE_BUT_GENERAL
+    (right, but a more specific term fits; a MODIFY candidate), UNCERTAIN. Where a verdict
+    rests on a cached paper or UniProt record, supported_by gives the verbatim text.
 # Tranche A: candidate annotations that break a taxon constraint GO already has. These are
 # mechanical; the only question is whether the annotation or the constraint is wrong.
 constraint_violations:
@@ -20,6 +22,10 @@ constraint_violations:
   reason: Bacteria have no histones. AcuC deacetylates Lys of acetyl-CoA synthetase AcsA (UniProt
     FUNCTION, PubMed:16855235), so the right activity is GO:0033558 protein lysine deacetylase
     activity. The IBA crosses a constraint GO already has.
+  supported_by:
+  - reference_id: PMID:16855235
+    supporting_text: Unlike sirtuins, the AcuC protein did not require NAD(+) as cosubstrate to
+      deacetylate AcsA(Ac).
 - go_id: GO:0000290
   label: deadenylation-dependent decapping of nuclear-transcribed mRNA
   constraint: only_in_taxon NCBITaxon:2759 (Eukaryota)
@@ -29,6 +35,10 @@ constraint_violations:
   reason: Bacterial RppH removes 5' pyrophosphate from triphosphorylated RNA to start 5'-end-dependent
     decay (UniProt FUNCTION, PubMed:18202662); bacteria have neither nuclear transcription nor
     deadenylation-dependent decapping. The PTN000561806 node is placed above the bacterial clade.
+  supported_by:
+  - reference_id: PMID:18202662
+    supporting_text: In vitro, RppH efficiently removes pyrophosphate from the 5' end of triphosphorylated
+      RNA
 - go_id: GO:0005813
   label: centrosome
   constraint: never_in_taxon NCBITaxon:33090 (Viridiplantae)
@@ -42,8 +52,13 @@ constraint_violations:
       (IMP, CACAO)]
   verdict: ANNOTATION_WRONG
   reason: GO keeps apoptosis to opisthokonts; plant cell death is annotated to GO:0043069 negative
-    regulation of programmed cell death. Same for GO:0043065 on Arabidopsis Q9LSF1 (IMP, TAIR),
-    which should be GO:0043068.
+    regulation of programmed cell death.
+- go_id: GO:0043065
+  label: positive regulation of apoptotic process
+  constraint: only_in_taxon NCBITaxon:33154 (Opisthokonta)
+  annotations: [UniProtKB:Q9LSF1 Arabidopsis (IMP, TAIR)]
+  verdict: ANNOTATION_WRONG
+  reason: As for GO:0043066; the plant term is GO:0043068 positive regulation of programmed cell death.
 - go_id: GO:0043682
   label: P-type divalent copper transporter activity
   constraint: only_in_taxon NCBITaxon:2 (Bacteria)
@@ -57,7 +72,8 @@ constraint_violations:
   annotations: [UniProtKB:Q93088 BHMT human (IMP), UniProtKB:O35490 mouse (ISO)]
   verdict: ANNOTATION_WRONG
   reason: BHMT remethylates homocysteine, which regenerates methionine; mammals cannot make it de novo.
-    The parent L-methionine biosynthetic process (or a homocysteine remethylation term) fits.
+    GO:0071267 L-methionine salvage ("generates L-methionine from derivatives of it, without de novo
+    synthesis") fits exactly.
 - go_id: GO:0030682
   label: symbiont-mediated perturbation of host defenses
   constraint: never_in_taxon NCBITaxon:7742 (Vertebrata)
@@ -73,9 +89,18 @@ constraint_violations:
 - go_id: GO:0044732
   label: mitotic spindle pole body
   constraint: only_in_taxon NCBITaxon:4751 (Fungi)
-  annotations: [UniProtKB:P07911 UMOD human (IDA, assigned by MGI)]
-  verdict: ANNOTATION_WRONG
-  reason: The spindle pole body is the fungal MTOC; in animals the location is GO:0000922 spindle pole.
+  annotations: [UniProtKB:P07911 UMOD human (IDA, PMID:20172860, assigned by MGI)]
+  verdict: UNCERTAIN
+  reason: The spindle pole body is the fungal MTOC, so the term cannot apply to a human protein. The
+    paper studies human kidney biopsies, so the species is right, but its abstract reports UMOD in
+    renal primary cilia and says nothing of spindle poles, and uromodulin is a secreted GPI-anchored
+    protein. Whether the curator meant spindle pole (GO:0000922), a ciliary term, or keyed the row
+    wrongly needs the full text, which is not cached. A confirmed error would be recorded as a
+    source defect (docs/source_defects.md), not as a term swap.
+  supported_by:
+  - reference_id: PMID:20172860
+    supporting_text: We demonstrate that UMOD is expressed in the primary cilia of renal tubules, using
+      immunofluorescent studies in human kidney biopsy samples.
 - go_id: GO:0010973
   label: positive regulation of division septum assembly
   constraint: only_in_taxon NCBITaxon:2 or NCBITaxon:4751 (Fungi or Bacteria)
@@ -107,12 +132,18 @@ constraint_violations:
 - go_id: GO:0022849
   label: glutamate-gated calcium ion channel activity
   constraint: only_in_taxon NCBITaxon:33208 (Metazoa)
-  annotations: [UniProtKB:Q9C8E7 GLR3.3 Arabidopsis (IMP, TAIR); GO:0035235 ionotropic glutamate
-      receptor signaling pathway (IEA, inferred from it) is flagged with the same constraint]
+  annotations: [UniProtKB:Q9C8E7 GLR3.3 Arabidopsis (IMP, TAIR)]
   verdict: CONSTRAINT_QUESTIONABLE
   reason: Plant GLRs are glutamate-receptor-like, ligand-gated cation channels, and GLR3.3 conducts
     calcium in response to glutamate. A Metazoa-only constraint looks too narrow; check the TAIR paper
     before proposing a change.
+- go_id: GO:0035235
+  label: ionotropic glutamate receptor signaling pathway
+  constraint: only_in_taxon NCBITaxon:33208 (Metazoa)
+  annotations: [UniProtKB:Q9C8E7 GLR3.3 Arabidopsis (IEA, GOC, inferred from GO:0022849)]
+  verdict: CONSTRAINT_QUESTIONABLE
+  reason: Follows from the GO:0022849 row by GO's inference rule, so it stands or falls with that
+    constraint.
 - go_id: GO:0001778
   label: plasma membrane repair
   constraint: only_in_taxon NCBITaxon:33208 (Metazoa)
@@ -178,12 +209,20 @@ prokaryote_iba:
   verdict: ANNOTATION_WRONG
   reason: Neither organism makes sterols. YjiC is a promiscuous glycosyltransferase of flavonoids and
     other aromatics (UniProt FUNCTION, PubMed:28315700).
+  supported_by:
+  - reference_id: PMID:28315700
+    supporting_text: Bs-YjiC, with uridine diphosphate glucose (UDPG) as sugar donor, exhibited robust
+      capabilities to glycosylate 19 structurally diverse types of drug-like scaffolds
 - node: PANTHER:PTN000770577
   terms: [GO:0016117 carotenoid biosynthetic process]
   annotations: [UniProtKB:O06728 YisP, B. subtilis]
   verdict: ANNOTATION_WRONG
   reason: YisP is a farnesyl diphosphate phosphatase that makes farnesol for biofilm formation and was
     first mistaken for a squalene synthase (UniProt FUNCTION, PubMed:25308276).
+  supported_by:
+  - reference_id: PMID:25308276
+    supporting_text: We find that YisP acts as a phosphatase, catalyzing formation of farnesol from farnesyl
+      diphosphate
 - node: PANTHER:PTN002682344
   terms: [GO:0140378 protein complex scaffold activity]
   annotations: [UniProtKB:P62672 ApaG E. coli, UniProtKB:Q56017 S. typhimurium]
@@ -202,6 +241,10 @@ prokaryote_iba:
   verdict: UNCERTAIN
   reason: PksG makes an HMG unit on an acyl carrier protein during bacillaene synthesis (UniProt FUNCTION,
     PubMed:16757561); the CoA-substrate term is a near miss.
+  supported_by:
+  - reference_id: PMID:16757561
+    supporting_text: they act to incorporate an acetate-derived beta-methyl branch on an acetoacetyl-S-carrier
+      protein
 - node: PANTHER:PTN008451158
   terms: [GO:0004737 pyruvate decarboxylase activity]
   annotations: [UniProtKB:H9L492, S. typhimurium]
@@ -219,11 +262,18 @@ prokaryote_iba:
   verdict: FLAG_FAILS
   reason: Ecotin inhibits chymotrypsin, trypsin, elastases and other serine proteases (UniProt FUNCTION,
     PubMed:35483450). Rare in bacteria, but correct.
+  supported_by:
+  - reference_id: PMID:35483450
+    supporting_text: Escherichia coli ecotin inhibits trypsin-like, chymotrypsin-like, and elastase-like
+      enzymes
 - node: PANTHER:PTN000644795
   terms: [GO:0047475 phenylacetate-CoA ligase activity]
   annotations: [UniProtKB:P76085 PaaK, E. coli]
   verdict: FLAG_FAILS
   reason: PaaK activates phenylacetate to phenylacetyl-CoA (PubMed:20660314); see genes/ECOLI/paaK.
+  supported_by:
+  - reference_id: file:ECOLI/paaK/paaK-uniprot.txt
+    supporting_text: Catalyzes the activation of phenylacetic acid (PA) to phenylacetyl-CoA (PA-CoA).
 - node: PANTHER:PTN001627042
   terms: [GO:0006303 double-strand break repair via nonhomologous end joining]
   annotations: [UniProtKB:O34398 LigD, B. subtilis]
@@ -232,13 +282,18 @@ prokaryote_iba:
 - node: PANTHER:PTN000782634
   terms: [GO:0016843 amine-lyase activity]
   annotations: [UniProtKB:P37527 PdxS, B. subtilis]
-  verdict: FLAG_FAILS
-  reason: Pyridoxal 5'-phosphate synthase is EC 4.3.3.6, an amine-lyase. True, if general.
+  verdict: TRUE_BUT_GENERAL
+  reason: Pyridoxal 5'-phosphate synthase is EC 4.3.3.6, an amine-lyase, so the term is true but
+    general.
 - node: PANTHER:PTN009136753
   terms: [GO:0030007 intracellular potassium ion homeostasis]
   annotations: [UniProtKB:P76007 NhaP2 E. coli, UniProtKB:P65524 S. typhimurium]
   verdict: FLAG_FAILS
   reason: NhaP2 extrudes K+ to keep internal potassium below toxic levels (UniProt FUNCTION, PubMed:11700351).
+  supported_by:
+  - reference_id: PMID:11700351
+    supporting_text: Measurement of cytoplasmic alkali cations showed that an abrupt loss of about one-half
+      of the intracellular K+ preceded the pause.
 - node: PANTHER:PTN001092783
   terms: [GO:0000920 septum digestion after cytokinesis]
   annotations: [UniProtKB:P37690 EnvC E. coli, UniProtKB:Q8ZL55 S. typhimurium]
@@ -249,5 +304,6 @@ prokaryote_iba:
 - node: PANTHER:PTN002376512
   terms: [GO:0051787 misfolded protein binding]
   annotations: [UniProtKB:P47248 MG002 DnaJ-like, M. genitalium]
-  verdict: FLAG_FAILS
-  reason: DnaJ-family co-chaperones bind unfolded and misfolded client proteins; plausible for MG002.
+  verdict: UNCERTAIN
+  reason: DnaJ-family co-chaperones bind unfolded and misfolded client proteins, so the term is
+    plausible for MG002, but nothing shown here tests it.

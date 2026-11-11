@@ -12,7 +12,8 @@ Method, following the paper (PMID:32470107) and its supplement (Text S1, Tables 
   lowest non-zero rate is the one the term is potentially misannotated to (Table S2,
   footnote a). Terms annotated in only one taxon have no RAR.
 * The p-value is the exact two-sided rate ratio test between those two taxa (the
-  authors' rateratio.py, a port of the R rateratio.test package), with Benjamini-
+  authors' rateratio.py, a port of the R rateratio.test package, which takes twice the
+  smaller one-sided p-value), with Benjamini-
   Hochberg correction over all terms that have a RAR.
 * Terms with RAR < 0.1 are flagged; every flagged annotation still needs a human pass
   and the comparator check before it is called an error.
@@ -32,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import re
 import urllib.request
@@ -90,9 +92,9 @@ def fetch(url: str, dest: Path) -> Path:
     return dest
 
 
-def read_obo(path: Path) -> tuple[dict, dict, dict]:
-    """Return labels, aspects and is_a/part_of parents for non-obsolete terms."""
-    labels, aspects, parents = {}, {}, defaultdict(set)
+def read_obo(path: Path) -> tuple[dict, dict, dict, dict]:
+    """Return labels, aspects, is_a/part_of parents and alt_id -> id for non-obsolete terms."""
+    labels, aspects, parents, alt = {}, {}, defaultdict(set), {}
     ns = {"biological_process": "BP", "molecular_function": "MF", "cellular_component": "CC"}
     cur, obsolete = None, False
     for line in path.read_text().splitlines() + ["[Term]"]:
@@ -115,9 +117,11 @@ def read_obo(path: Path) -> tuple[dict, dict, dict]:
             parents[cur].add(line[6:16])
         elif line.startswith("relationship: part_of "):
             parents[cur].add(line[22:32])
+        elif line.startswith("alt_id: GO:"):
+            alt[line[8:].strip()] = cur
         elif line.startswith("is_obsolete: true"):
             obsolete = True
-    return labels, aspects, parents
+    return labels, aspects, parents, alt
 
 
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}/constraints"
@@ -166,16 +170,25 @@ def lineages(taxids) -> dict[int, set[str]]:
 
 def violates(constraints: list[dict], lineage: set[str]) -> list[str]:
     """Constraints the taxon breaks: outside every only_in_taxon, or inside a never_in_taxon."""
-    only = [c for c in constraints if c["relationship"] == "only_in_taxon"]
+    # Taxa listed in one constraint are a union; separate constraints must all hold.
     broken = [c for c in constraints
-              if c["relationship"] == "never_in_taxon" and lineage & set(c["taxa"])]
-    if only and not any(lineage & set(c["taxa"]) for c in only):
-        broken += only
+              if (c["relationship"] == "never_in_taxon" and lineage & set(c["taxa"]))
+              or (c["relationship"] == "only_in_taxon" and not lineage & set(c["taxa"]))]
     return [describe(c) for c in broken]
 
 
 def describe(c: dict) -> str:
-    return f"{c['relationship']} {' or '.join(c['taxa'])} ({c['taxon_label']})"
+    """Render a constraint, naming the term it sits on (its own or an ancestor)."""
+    return (f"{c['relationship']} {' or '.join(c['taxa'])} ({c['taxon_label']}), "
+            f"on {c['on_term']}")
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        while chunk := fh.read(1 << 20):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def ancestors(term: str, parents: dict, memo: dict) -> set:
@@ -233,7 +246,7 @@ def reviewed_index() -> dict[str, str]:
 
 
 def screen(groups: list[str], group_of: dict, annots: dict, proteins_by_group: dict,
-           threshold: float) -> list[dict]:
+           threshold: float) -> tuple[list[dict], int, dict]:
     """Compute RAR for every term over the given groups and return flagged rows."""
     counts = defaultdict(lambda: defaultdict(set))
     for (prot, term), _rows in annots.items():
@@ -267,7 +280,7 @@ def main() -> None:
     ap.add_argument("--threshold", type=float, default=0.1)
     args = ap.parse_args()
 
-    labels, aspects, parents = read_obo(fetch(OBO, CACHE / "go-basic.obo"))
+    labels, aspects, parents, alt = read_obo(fetch(OBO, CACHE / "go-basic.obo"))
     obo_version = next((ln.split(": ", 1)[1] for ln in (CACHE / "go-basic.obo").read_text().splitlines()[:5]
                         if ln.startswith("data-version")), "unknown")
     memo: dict = {}
@@ -278,10 +291,12 @@ def main() -> None:
     for taxid, (kingdom, phylum, fname) in SPECIES.items():
         path = fetch(GOA + fname, CACHE / "goa" / fname)
         with open(path) as fh:
-            head = "".join(next(fh) for _ in range(12))
+            head = "".join(line for _, line in zip(range(12), fh))
         m = re.search(r"date-generated:\s*(\S+)", head) or re.search(r"Generated:\s*(\S+)", head)
-        gaf_dates[fname] = m.group(1) if m else "unknown"
+        gaf_dates[fname] = {"date_generated": m.group(1) if m else "unknown",
+                            "sha256": sha256(path)}
         for prot, term, ev, ref, by, wf in read_gaf(path):
+            term = alt.get(term, term)
             if term not in labels:
                 continue
             species_of[prot], kingdom_of[prot] = taxid, kingdom
@@ -294,7 +309,8 @@ def main() -> None:
                 annots[(prot, t)].append((ev, ref, by, wf) if t == term else ("inferred-ancestor", ref, by, ""))
 
     reviewed = reviewed_index()
-    prior = yaml.safe_load(open(OUT_DIR / "rar_supplement_cases.yaml"))["cases"]
+    with open(OUT_DIR / "rar_supplement_cases.yaml") as fh:
+        prior = yaml.safe_load(fh)["cases"]
     prior_terms = {c["go_id"] for c in prior}
 
     def render(flagged, n_tested, totals, groups, level):
@@ -347,9 +363,17 @@ def main() -> None:
         sig = [t for t in d["terms"] if t["q_value"] < 0.05]
         keep = [t for t in sig if t["go_id"] not in ROOTS
                 and t["annotated_protein_counts"][t["flagged_taxon"]] <= MAX_FLAGGED]
+        d["dropped"] = {
+            "root_terms": sum(1 for t in sig if t["go_id"] in ROOTS),
+            "root_term_flagged_annotations": sum(
+                len(t["flagged_annotations"]) for t in sig if t["go_id"] in ROOTS),
+            "terms_over_max_flagged": sum(
+                1 for t in sig if t["go_id"] not in ROOTS
+                and t["annotated_protein_counts"][t["flagged_taxon"]] > MAX_FLAGGED),
+        }
         print(f"{lvl}: {d['terms_with_rate_ratio']} terms with a RAR; {d['flagged_terms']} below "
               f"{args.threshold} ({len(sig)} with q < 0.05; {len(keep)} candidates); "
-              f"totals {d['annotated_proteins_per_group']}")
+              f"dropped {d['dropped']}; totals {d['annotated_proteins_per_group']}")
         d["significant_terms"] = len(sig)
         d["candidate_terms"] = len(keep)
         d["terms"] = keep
