@@ -185,8 +185,11 @@ the scope boundary above.
   manual literature triage; not deterministically queryable).
 - [ ] Confirm the phase-1 cut (core_adaptor 512 vs. splitting the reader
   branch) and prioritise the 176 genes that already have a review folder.
-- [ ] Draft worked examples for the common children (signaling, cargo,
-  cytoskeletal, enzyme-substrate) tying each to a reviewed gene.
+- [x] First worked example: [GRB2](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-GRB2.md)
+  (signaling / RTK / GEF adaptor; 567 `protein binding` rows vs. the adaptor
+  function, read through the decision rules).
+- [ ] Add worked examples for the other common children (cargo, cytoskeletal,
+  enzyme-substrate) tying each to a reviewed gene.
 - [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
   adaptor terms; cross-reference [IBA_REVIEW](IBA_REVIEW.md).
 - [ ] Add the project card to `pages/projects/index.html` when the project
