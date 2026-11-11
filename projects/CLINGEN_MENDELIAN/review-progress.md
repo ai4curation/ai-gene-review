@@ -7937,3 +7937,13 @@ The linked merge-group runs executed their full integration suites and required 
 Only H1-4, GSDME, GUCY2D and GUCA1A are newly checked in this fixed window. All other catalogue identities and checkboxes, 235 dated queue records, 171 previous completion updates, the complete prior journal, scientific files, instructions and earlier histories remain unchanged.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-08T160616Z-codex-73c0e1.yaml).
+
+## Completion checkpoint 748 (2026-11-10 04:45:41 UTC)
+
+748 complete; 2,128 of 2,876 remain. This publishes ROOT's prior acceptance of H3-3A and grants no new acceptance.
+
+H3-3A: [PR #6217](https://github.com/ai4curation/ai-gene-review/pull/6217), [actual merge dc1892ff](https://github.com/ai4curation/ai-gene-review/commit/dc1892ffdbd2e436f6b843ca2981e053bec3177a), [executed merge-group run 42747632016](https://github.com/ai4curation/ai-gene-review/actions/runs/42747632016). The merged review remains DRAFT with six UNDECIDED judgments and zero NEW annotations. All 147 literal input records, 146 downloaded TSV rows, 147 stored contexts and three extension atoms are retained.
+
+ROOT acceptance: local immutable `h3-root-acceptance-20261110T044541Z.json` (SHA256 `3aac8742127f2e9dc26c249db1fe9e7d51751618eccd16da2f10ace25cae8474`, pointer `/records/0`). This provenance identifier is not a public download link. Only H3-3A is newly checked; 235 dated queue records, 172 earlier completion updates and the full earlier journal remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-10T044620Z-codex-3c96b8.yaml).
