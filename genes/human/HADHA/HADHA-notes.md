@@ -137,3 +137,41 @@ mitochondrial inner membrane; in_complex GO:0016507.
 A third, independent (subunit-beta-independent) activity: monolysocardiolipin acyltransferase
 in cardiolipin remodeling (GO:0035965), arguably a secondary/non-core but well-supported
 moonlighting function.
+
+
+## 2026-11-11: evidence and annotation-context audit
+
+This audit supersedes the earlier restrictive chain-length, reaction-direction,
+wrong-paper and HADHA-specific DNA-crosslink claims above; the original notes
+and 2026-11-10 history are preserved as provenance.
+
+- Fresh native GOA seeding retains 60 contexts, including four distinct
+  PMID:20562859 ATG8-family partners previously collapsed into one context.
+- PMID:1550553 reports C6-and-longer activity and maximal measured dehydrogenase
+  activity at C10-C16, not a strict C10-C16 substrate boundary. QuickGO defines
+  GO:0018812 under GO:0004300; both use dehydration equations. Valid parent
+  terms, NAD+ binding and broad mitochondrial location remain core assertions.
+- Keep the HADHA thiolase REMOVE on subunit-specific experimental grounds;
+  GO:0003985 has a C4 reaction scope and should not be mechanically reassigned
+  to the long-chain thiolase HADHB.
+- Set the GO:0052816/PMID:22586271 annotation to UNDECIDED. The original main
+  text was inspected, but the complete supplement could not be read. The
+  partial cache's full-text flag did not justify the earlier universal-absence
+  or wrong-gene claims. GO-CAM 67b1629100002092 repeats this hydrolase assertion
+  with tetralinoleoyl cardiolipin as output; ask the curator to reconcile the
+  activity, reference and output mapping rather than declaring a repair.
+- PMID:23152787 assays full-length recombinant HADHA separately from truncated
+  MLCLAT1. Figure 2 favors linoleoyl-CoA, despite native UniProt prose favoring
+  oleoyl-CoA. The native record is unchanged. GO:0071617 better describes this
+  core MLCL acyltransferase chemistry; no NEW annotation is added. The broader
+  term does not imply activity on other tested lysophospholipids.
+- PMID:22453275 provides positive human HEK293T purification/SILAC evidence for
+  nucleoid association, without proving HADHA DNA binding or a nucleic-acid
+  function. Retain non-core association and original PMID:18063578 provenance.
+- PMID:8651282 is present in the retained cache; the older absence note is stale.
+  Other target-specific supplemental proteomics assertions not inspected are
+  explicitly distinguished from independently supported location/binding.
+
+See HADHA-deep-research-manual.md for primary-source links, access limits and
+provider failure details. The draft has 47 ACCEPT, 11 KEEP_AS_NON_CORE,
+1 REMOVE and 1 UNDECIDED; all 28 inherited quotations are preserved.
