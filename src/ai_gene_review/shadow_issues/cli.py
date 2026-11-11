@@ -21,7 +21,9 @@ from ai_gene_review.shadow_issues.store import (
     parse_time,
     queue_for,
     read_thread,
+    rating_files,
     render_thread,
+    report_for,
     write_yaml,
 )
 from ai_gene_review.shadow_issues.prior_work import (
@@ -176,10 +178,11 @@ def backfill_prior_work_cmd(
 def ratings_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
 ) -> None:
-    """Print a markdown table of every rated issue, generated from rating.yaml files."""
+    """Print a markdown table of every rating (rating.yaml and rating-<label>.yaml files)."""
     dimensions = ("triage", "diagnosis", "actions", "downstream", "added_value", "harm")
     header = [
         "issue",
+        "rating",
         "kind",
         "blinding",
         "outcome",
@@ -190,21 +193,23 @@ def ratings_cmd(
     typer.echo("| " + " | ".join(header) + " |")
     typer.echo("|" + "---|" * len(header))
     for folder in iter_issue_folders(root / tracker):
-        rating_path = folder / "rating.yaml"
-        if not rating_path.exists():
+        ratings = rating_files(folder)
+        if not ratings:
             continue
         _, issue = load_issue(folder)
-        rating = yaml.safe_load(rating_path.read_text())
-        row = [
-            f"{tracker} {folder.name}",
-            issue["triage"].get("kind", "-"),
-            issue["shadow"].get("blinding", "-"),
-            rating["outcome"],
-            *(rating.get(d, "-") for d in dimensions),
-            rating["independence"],
-            f"[report](../issues/{tracker}/{folder.name}/report.md)",
-        ]
-        typer.echo("| " + " | ".join(str(c) for c in row) + " |")
+        for rating_path in ratings:
+            rating = yaml.safe_load(rating_path.read_text())
+            row = [
+                f"{tracker} {folder.name}",
+                rating_path.stem,
+                issue["triage"].get("kind", "-"),
+                issue["shadow"].get("blinding", "-"),
+                rating["outcome"],
+                *(rating.get(d, "-") for d in dimensions),
+                rating["independence"],
+                f"[report](../issues/{tracker}/{folder.name}/{report_for(rating_path).name})",
+            ]
+            typer.echo("| " + " | ".join(str(c) for c in row) + " |")
 
 
 @shadow_issues_app.command("validate")
@@ -221,12 +226,11 @@ def validate_cmd(
     failures = 0
     folders = iter_issue_folders(root / tracker)
     for folder in folders:
-        for filename, target in (
-            ("issue.yaml", "ShadowIssue"),
-            ("self-rating.yaml", "SelfRating"),
-            ("rating.yaml", "ShadowRating"),
-        ):
-            path = folder / filename
+        checks = [
+            (folder / "issue.yaml", "ShadowIssue"),
+            (folder / "self-rating.yaml", "SelfRating"),
+        ] + [(path, "ShadowRating") for path in rating_files(folder)]
+        for path, target in checks:
             if not path.exists():
                 continue
             data = yaml.safe_load(path.read_text())
@@ -235,8 +239,8 @@ def validate_cmd(
                 problems.append(
                     f"tracker/number do not match folder {tracker}/{folder.name}"
                 )
-            if filename == "rating.yaml" and not (folder / "report.md").exists():
-                problems.append("rating.yaml has no report.md beside it")
+            if target == "ShadowRating" and not report_for(path).exists():
+                problems.append(f"{path.name} has no {report_for(path).name} beside it")
             for problem in problems:
                 failures += 1
                 typer.echo(f"{path}: {problem}", err=True)

@@ -491,6 +491,24 @@ def test_rating_needs_report_and_is_tabulated(config, tracker_dir):
     result = runner.invoke(app, ["shadow-issues", "ratings", "example", "--root", root])
     assert "| example 101 |" in result.output and "DIFFERENT_MODEL" in result.output
 
+    # A second rating is kept beside the primary one and needs its own report.
+    second = {**RATING, "independence": "SAME_MODEL_SEPARATE_RUN", "outcome": "PARTIAL"}
+    (tracker_dir / "101" / "rating-same-model.yaml").write_text(yaml.safe_dump(second))
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 1 and "no report-same-model.md" in result.output
+    (tracker_dir / "101" / "report-same-model.md").write_text("# second\n")
+    result = runner.invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 0, result.output
+    result = runner.invoke(app, ["shadow-issues", "ratings", "example", "--root", root])
+    assert (
+        "rating-same-model" in result.output
+        and "SAME_MODEL_SEPARATE_RUN" in result.output
+    )
+
 
 def test_committed_tracker_validates():
     """The committed mirror stays schema-valid."""

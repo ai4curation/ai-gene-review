@@ -60,7 +60,14 @@ Write `rating.yaml`:
   `added_value`, `harm`;
 - `summary`.
 
-Judge term by term. A `FLAG_FOR_CHECK` action is a question, not a proposal: it
+If the issue already has a `rating.yaml`, do not read it (or its report)
+before scoring; write yours as `rating-<label>.yaml` with `report-<label>.md`,
+and the coordinator decides which is primary (the most independent one).
+
+Judge term by term. Score only what the evidence shows: if the thread does not
+say whether upstream made a change, that is unknown, not a "no". Score
+`downstream: PENDING_RELEASE` whenever upstream acted and none of it is in
+released data yet; use PARTIAL or DISAGREE only for released changes. A `FLAG_FOR_CHECK` action is a question, not a proposal: it
 neither agrees nor disagrees with what was done. Credit added value only after
 verifying it. Spot-check two or three of the worker's key factual claims, and run
 `just validate-quotes` for its `supported_by` quotes. Name every confound in

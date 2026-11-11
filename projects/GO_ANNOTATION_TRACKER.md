@@ -34,6 +34,7 @@ trackers to be shadowed later.
 | `<N>/self-rating.yaml` | curated | `SelfRating`: the worker's confidence, kept apart so the rater can read the record without it |
 | `<N>/rating.yaml` | curated | `ShadowRating` from an independent rater (optional) |
 | `<N>/report.md` | curated | the rater's write-up of the approach and how well it did; required beside `rating.yaml` |
+| `<N>/rating-<label>.yaml`, `report-<label>.md` | curated | further ratings of the same work, for comparing raters; `rating.yaml` is the primary (most independent) one |
 
 The sync creates `issue.yaml` once, as a stub, and never rewrites curated files.
 The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
@@ -196,10 +197,40 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   work is derived by `shadow-issues backfill-prior-work`, which drops bulk
   commits naming many issues.
 
+- 2026-11-11: go-annotation 6596 re-rated on a different model
+  (`claude-sonnet-5`, `DIFFERENT_MODEL`). The first rater's files and
+  resolution were set aside before the run, and the new rater saw neither
+  them nor the self-rating (`self_rating_seen: NEVER`). The Sonnet rating is
+  now the primary `rating.yaml`; the first is kept as
+  `rating-same-model.yaml`. The raters agree on triage, diagnosis, actions and
+  harm, and disagree on three dimensions:
+
+  | Dimension | Same model (Opus) | Different model (Sonnet) |
+  |---|---|---|
+  | Outcome | CONCORDANT | PARTIAL |
+  | Downstream | PENDING_RELEASE | PARTIAL |
+  | Added value | SOME | SUBSTANTIAL |
+
+  Both raters found the same facts: the curator's fix was a primary NOT on
+  P53598, nothing is released yet, and the *S. pombe* alpha subunit O13750
+  still carries the IBA. They weigh them differently. Sonnet reads the
+  worker's family-wide proposal (a Fungi-node NOT reaching about 18 other
+  fungal recipients) as more than the curator did, which lowers agreement and
+  raises added value. Opus counted only what the thread establishes. Two
+  points in the Sonnet rating overreach. It treats the absence of a Fungi-node
+  NOT as established, though the thread does not say either way. And it scores
+  `downstream: PARTIAL` although nothing upstream has reached released data,
+  which the definitions call `PENDING_RELEASE`. A single issue cannot settle
+  which rater is better calibrated, but it shows the rating depends on the
+  rater. That argues for rating a sample of issues twice and reporting
+  agreement, not one score.
+
 ## Next steps
 
 - Let the worker triage the backfill, starting with the 75 issues that have
   `prior_work` (confirmation batch) and the 272 open issues.
-- Re-rate go-annotation 6596 with a different model, to strengthen the first
-  datapoint.
 - Re-rate PENDING_RELEASE issues after each PANTHER/GO release.
+- Rate a sample of shadowed issues with two raters on different models, and
+  report inter-rater agreement per dimension.
+- Tighten the rater skill: an absence the thread does not state is unknown,
+  and `downstream` is `PENDING_RELEASE` whenever nothing upstream is released.

@@ -400,6 +400,29 @@ def iter_issue_folders(tracker_dir: Path) -> list[Path]:
     )
 
 
+def report_for(rating_path: Path) -> Path:
+    """The report that must accompany a rating file.
+
+    >>> report_for(Path("6596/rating.yaml")).name, report_for(Path("6596/rating-same-model.yaml")).name
+    ('report.md', 'report-same-model.md')
+    """
+    return rating_path.with_name(
+        rating_path.name.replace("rating", "report", 1).replace(".yaml", ".md")
+    )
+
+
+def rating_files(folder: Path) -> list[Path]:
+    """An issue's ratings: the primary ``rating.yaml`` first, then ``rating-<label>.yaml``.
+
+    An issue can be rated more than once, for example by raters of different
+    independence. ``rating.yaml`` is the primary rating (the most independent);
+    the others are kept so that raters can be compared.
+    """
+    primary = folder / "rating.yaml"
+    others = sorted(folder.glob("rating-*.yaml"))
+    return ([primary] if primary.exists() else []) + others
+
+
 QUEUES = ("untriaged", "in_progress", "needs_shadow", "needs_rating")
 
 
