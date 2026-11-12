@@ -31,14 +31,23 @@ protein-macromolecule adaptor activity and children), and bare `GO:0005515`
 protein binding rows that the literature shows to be adaptor/bridging
 functions and should be modelled as such.
 
-Out of scope: `GO:0005515` rows that are genuinely uninformative with no known
-bridging role (those are handled by the protein-binding removal policy,
-`src/ai_gene_review/validation/protein_binding_policy.py`), and the distinct
-but neighbouring molecular functions below, each of which has its own GO-CAM
-guideline — a reviewer should not collapse them into "adaptor":
+The **protein-binding policy**
+(`src/ai_gene_review/validation/protein_binding_policy.py`) is the governing
+machinery here, not merely an out-of-scope exclusion: its
+`COMPLIANT_ACTIONS = {MODIFY, REMOVE, UNDECIDED, PENDING}` and its docstring
+**prefer MODIFY to an informative MF over REMOVE**, so it is exactly what the
+`protein binding` → adaptor `MODIFY` in this project runs through. Genuinely
+uninformative `GO:0005515` rows with no bridging role are the REMOVE case of the
+same policy.
 
-- scaffold / condensate scaffold (`GO:0140693` molecular condensate scaffold
-  activity; `GO:0032947` protein-containing complex scaffold activity)
+Out of scope: the distinct but neighbouring molecular functions below, each with
+its own GO-CAM guideline — a reviewer should not collapse them into "adaptor":
+
+- `GO:0032947` protein-containing complex scaffold activity — this term is
+  **outside** the `GO:0030674` branch and is the genuine scaffold exclusion.
+  (Note: `GO:0140693` molecular condensate scaffold activity is **inside** the
+  adaptor subtree — it `is_a GO:0030674` — so it is in scope as an adaptor child;
+  see [CONDENSATES](CONDENSATES.md) for its tested rules, and decision rule 3.)
 - protein sequestering activity (guideline `Protein_sequestering_activity`)
 - molecular carrier activity (guideline `Molecular_carrier_activity`)
 
@@ -47,7 +56,11 @@ guideline — a reviewer should not collapse them into "adaptor":
 Root term: **`GO:0060090` molecular adaptor activity** — *"The binding activity
 of a molecule that brings together two or more molecules, permitting those
 molecules to function in a coordinated way."* Exact synonym **"binding,
-bridging"**. Adaptors are **non-catalytic** by definition.
+bridging"**. Adaptors are **non-catalytic** by definition — with one standing
+exception inside the subtree: the SNARE pair `GO:0005484` (now
+*helical-bundle zippering fusogenic activity*) and `GO:0005483` sit under
+`GO:0030674` yet describe a fusogenic activity, so they are the case where an
+"adaptor" subtree term is not merely a passive bridge. Flag them when they come up.
 
 The protein-adaptor workhorse is **`GO:0030674` protein-macromolecule adaptor
 activity**, whose 16 children are where a reviewer usually lands:
@@ -68,8 +81,15 @@ activity**, whose 16 children are where a reviewer usually lands:
 | molecular condensate scaffold activity | GO:0140693 |
 | ubiquitin-like protein reader activity | GO:0140035 |
 | microtubule site clamp | GO:1990644 |
-| SNAP receptor activity | GO:0005484 |
+| helical-bundle zippering fusogenic activity (was *SNAP receptor activity*) | GO:0005484 |
 | soluble NSF attachment protein activity | GO:0005483 |
+
+Relations were read from QuickGO on 2026-11-07; the table may mix direct
+children with grandchildren (e.g. `GO:0160247` under `GO:0140312`; `GO:0005484`
+under `GO:0005483`), and the sidecar's `branch_terms` list surfaces 21
+`core_adaptor` terms where the experimental evidence actually sits (including
+`GO:0035615`, `GO:1990756`) — so when picking a term, prefer the specific
+**descendant** the evidence supports, not only these headline children.
 
 > `GO:0035591` signaling adaptor activity: *"…brings together two or more
 > molecules in a signaling pathway… Adaptor molecules themselves do not have
@@ -104,13 +124,16 @@ modelling rules:
 ## Propagation / IBA picture
 
 Adaptor activity is **heavily propagated by homology**, so most existing rows
-are computational, not experimental. From QuickGO annotation statistics
-(descendant usage over `is_a`/`part_of`/`occurs_in`):
+are computational, not experimental. From the QuickGO annotation-statistics API
+(retrieved 2026-11-07; exact queries, URLs and facet counts in
+[data/propagation-stats.yaml](MOLECULAR_ADAPTOR_ACTIVITY/data/propagation-stats.yaml)).
+The two figures below are over **different roots** (`GO:0030674` vs `GO:0060090`)
+and so are not a single comparable breakdown:
 
-- The **`GO:0030674` subtree has ~446,000 annotations**, dominated by
-  TreeGrafter / PANTHER phylogenetic propagation (~48%, ECO:0007826) and
+- The **`GO:0030674` subtree has 446,453 annotations**, dominated by
+  TreeGrafter / PANTHER phylogenetic propagation (48.1%, ECO:0007826) and
   UniProt/InterPro sequence-model matches (~34% combined, ARBA/UniRule etc.);
-  GO_Central IBD/IBA is a small slice.
+  GO_Central IBD/IBA is 4.1% (ECO:0000318).
 - The **full `GO:0060090` tree carries 20,948 IBA annotations (ECO:0000318),
   100% assigned by GO_Central** — manually reviewed phylogenetic inferences
   propagated from an experimentally-characterised ancestor down a PANTHER
@@ -141,14 +164,18 @@ decisions — the full table, grouped by branch and with per-term evidence and
 references, is in [genes.yaml](MOLECULAR_ADAPTOR_ACTIVITY/genes.yaml).
 
 Genes are tagged with one or more *branches* so the sub-domains can be scoped
-and worked separately (a gene may be in more than one, so the counts sum above
-666):
+and worked separately. **The branches are a pragmatic surface-role grouping, not
+strict `is_a` cuts, and they deliberately cross the ontology:** the whole
+`reader` sub-branch nests under `GO:0140463` (itself a `core_adaptor` term), and
+`GO:0005078` MAP kinase scaffold activity `is_a GO:0035591` signaling adaptor
+(so it is tagged `core_adaptor`, not `scaffold`, despite its "scaffold" name). A
+gene may be in more than one branch, so the counts sum above 666:
 
 | Branch | Genes | What it covers |
 |---|---:|---|
-| `core_adaptor` | 512 | protein-macromolecule / signaling / cargo / enzyme-substrate / ubiquitin-like ligase-substrate adaptors — the primary `protein binding` → adaptor target |
+| `core_adaptor` | 516 | protein-macromolecule / signaling / cargo / enzyme-substrate / ubiquitin-like ligase-substrate adaptors — the primary `protein binding` → adaptor target |
 | `reader` | 114 | histone, RNA and ubiquitin/UFM1 modification "reader" activities (epigenetic/RNA readers; a distinct curation domain) |
-| `scaffold` | 51 | `GO:0140693` molecular condensate scaffold, `GO:0005078` MAP kinase scaffold |
+| `scaffold` | 45 | `GO:0140693` molecular condensate scaffold activity (in-branch; see [CONDENSATES](CONDENSATES.md)) |
 | `tether_anchor` | 17 | organelle membrane tether / anchor / docking and chromatin-loop anchoring activities |
 
 178 of the 666 already have a `genes/human/<symbol>/` folder in the repo
@@ -157,24 +184,44 @@ starting points, though a folder does not mean the adaptor row was reviewed.
 Two genes are reviewed from this worklist so far (flagged `reviewed: true`):
 LDLRAP1 and RPTOR.
 
-**Proposed phase-1 cut:** the `core_adaptor` branch (512 genes). The `reader`
+**Proposed phase-1 cut:** the `core_adaptor` branch (516 genes). The `reader`
 branch is large and mechanistically distinct (recognising a modified residue to
 recruit downstream machinery) and overlaps the chromatin/epigenetics work, so it
-is a candidate for its own phase; `scaffold` must stay distinct from adaptor per
-the scope boundary above.
+is a candidate for its own phase. Because the branches cut across the ontology
+(above), the cut is a work-planning convenience, not an ontological claim; the
+`GO:0032947` scaffold exclusion is the only true out-of-branch boundary.
 
 ## Decision rules (draft)
 
-1. Bare `protein binding` → replace with an adaptor term **only when the
-   function is bridging two or more partners**; otherwise apply the
-   protein-binding policy / find a different informative MF.
-2. Pick the most specific child of `GO:0030674` the evidence supports; fall
-   back to `GO:0060090` only when no child fits.
-3. Distinguish adaptor from scaffold (`GO:0140693`/`GO:0032947`), sequestering,
-   and carrier activities — do not collapse them.
-4. Name the bridged partners (`has input`) in the review rationale, even though
-   standard annotation does not store the MF-to-MF relation.
-5. Treat IBA/TreeGrafter adaptor rows as inference: verify the family is
+1. Bare `protein binding` that is a bridging function → **`MODIFY` with the
+   adaptor term in `proposed_replacement_terms`** (the protein-binding policy's
+   preferred action). Only when there is no bridging role does the same policy's
+   `REMOVE` apply. Note that a single binary interaction (an IPI hit) evidences
+   *binding*, not the bridging *activity* — so refine such a row to a specific
+   **binding** term the partner supports (e.g. `protein kinase binding`,
+   `AP-2 adaptor complex binding`); assert the adaptor *activity* only where an
+   assay shows the bridging, and do not stack a second, unsupported adaptor-activity
+   row on top of one already present by IDA.
+2. Pick the most specific **descendant** of `GO:0030674` the evidence supports
+   (the sidecar surfaces 21 `core_adaptor` terms where the experimental evidence
+   sits — e.g. `GO:0035615`, `GO:1990756` — beyond the 16 headline children);
+   fall back to `GO:0060090` only when nothing more specific fits.
+3. Distinguish adaptor from sequestering and carrier activities, and from the
+   one true out-of-branch scaffold term `GO:0032947`. `GO:0140693` molecular
+   condensate scaffold activity is *inside* the adaptor subtree — defer to
+   [CONDENSATES](CONDENSATES.md)'s rules for it rather than excluding it.
+4. Name the bridged partners (`has input`) in the review rationale. This is the
+   adaptor's inputs, a separate thing from the MF-to-MF relation (`provides input
+   for` / `directly positively regulates`) that only a GO-CAM captures; do not
+   conflate the two.
+5. A general adaptor term (`GO:0030674`) may be kept **beside** a more specific
+   child **only** when it covers a *distinct* bridging event the child does not
+   (e.g. GRB2 keeps `GO:0030674` for LAT-microcluster organisation separate from
+   its RTK/GEF adaptor children; RPTOR keeps it for Rag-GTPase lysosomal
+   recruitment separate from its enzyme-substrate adaptor activity). Otherwise a
+   parent beside its own descendant is `TOO_GENERAL` — state the distinct event
+   or drop the parent.
+6. Treat IBA/TreeGrafter adaptor rows as inference: verify the family is
    coherent and the target is not a divergent paralog before `ACCEPT`.
 
 ## Plan / open items
@@ -185,8 +232,8 @@ the scope boundary above.
 - [ ] Add the complementary set: human genes whose GOA carries a bare
   `protein binding` row plus literature evidence of a bridging role (needs
   manual literature triage; not deterministically queryable).
-- [ ] Confirm the phase-1 cut (core_adaptor 512 vs. splitting the reader
-  branch) and prioritise the 176 genes that already have a review folder.
+- [ ] Confirm the phase-1 cut (core_adaptor 516 vs. splitting the reader
+  branch) and prioritise the 178 genes that already have a review folder.
 - [x] Worked example on a reviewed gene: [GRB2](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-GRB2.md)
   (signaling / RTK / GEF adaptor; 567 `protein binding` rows vs. the adaptor
   function, read through the decision rules).

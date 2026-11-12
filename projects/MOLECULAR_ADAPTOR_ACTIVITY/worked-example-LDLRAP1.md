@@ -12,8 +12,8 @@ review, **LDLRAP1 was unreviewed when this project picked it** — so it is a re
 review driven by the project, not a narration of one. It is a clean
 `clathrin-cargo adaptor` (a different child from GRB2's signaling adaptor),
 a Mendelian disease gene, and compact enough (90 GOA annotations) to review in
-full. See the [full review](../../genes/human/LDLRAP1/LDLRAP1-ai-review.yaml)
-and [notes](../../genes/human/LDLRAP1/LDLRAP1-notes.md).
+full. See the full review of LDLRAP1 (linked from the gene symbol) and its
+[notes](../../../genes/human/LDLRAP1/LDLRAP1-notes.md).
 
 ## The gene in one line
 
@@ -66,9 +66,20 @@ different senses of the action:
    gene's own IDA term).
 
 Core functions settled on two: `GO:0035615` **clathrin-cargo adaptor activity**
-(the integrative function — clathrin + AP-2 + PIP2 contacts) and `GO:0001784`
-**phosphotyrosine residue binding** (the PTB domain reading the LDLR NPxY motif
-for cargo selection).
+(the integrative function — clathrin + AP-2 + PIP2 contacts) and `GO:0050750`
+**LDL particle receptor binding** (the PTB domain reading the LDLR NPxY motif for
+cargo selection).
+
+> **Term-precision note.** An earlier draft used `GO:0001784` phosphotyrosine
+> residue binding for the cargo-recognition core function. That is wrong for
+> LDLRAP1: its ARH/Dab2-class PID/PTB domain binds the **unphosphorylated** FxNPxY
+> motif (PMID:12451172, *"PTB domains bind to the consensus sequence FXNPXY"*) —
+> "PTB" is a fold name inherited from the phospho-dependent Shc/IRS class, not a
+> claim of phosphotyrosine binding here. `core_functions` ids are author-supplied
+> and hard-validated, so the core function now uses `GO:0050750` (already present
+> as an IPI row); the GOA `GO:0001784` IDA row is kept non-core by deference to the
+> curator. Contrast GRB2, where `GO:0001784` is genuinely phospho-dependent (its
+> SH2 domain) — the same term is right there and wrong here.
 
 ## What this example adds beyond GRB2
 
