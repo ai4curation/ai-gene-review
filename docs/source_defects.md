@@ -136,6 +136,29 @@ manual step. When it is done, set `report_status: REPORTED` and
   upstream of any gene. Use `INTERPRO` for the InterPro2GO mappings behind
   `GO_REF:0000002` and for signature descriptions, and `PANTHER` for a family or
   ancestral-node GO association propagated by TreeGrafter (`GO_REF:0000118`).
+- **`INTERPRO` is not `GOA_EBI`.** Ask what the fix changes. The *content* of a
+  mapping - its GO term, its qualifier, the signatures it covers - or the
+  signature's own description is `INTERPRO`, and stays `INTERPRO` however the
+  row reached the gene: a defect that says "check the IPRnnnnnn mapping" is an
+  InterPro defect even when the row carrying it is IEA from GOA, and it should
+  name the mapping in `record:`. `GOA_EBI` is GOA's own curation: the row, not
+  the mapping. `worm/dpm-1` is the clean case, and its structured fields say so
+  more plainly than its prose - `defect_type: WRONG_GENE_PRODUCT`,
+  `slot: DB_Object_ID`, `requested_change: REPOINT`, `UniProtKB:U4PF58` ->
+  `UniProtKB:Q9TYJ7`. The mapping is not wrong; GOA applied it to a 51-residue
+  fragment, and only GOA can repoint the row. (Its explanation also suggests a
+  minimum-coverage requirement before InterPro2GO transfer, which is a change
+  to the pipeline - also GOA's, and also not the mapping's content.) This split
+  is easy to reopen. It was closed corpus-wide in #6027, and reopened twice
+  while that PR waited to merge, in reviews that had carried no defects at all.
+  As of `485113c854`: `ECOLI/pssA` and `PSEPK/pssA` each file two `GOA_EBI`
+  defects asking that the IPR016270 PGS1 mapping be suppressed for the type-I
+  PssA members - that is mapping scope, so `INTERPRO` - and none of the four
+  names the mapping in `record:`. The same shape sits on IPR006327, filed
+  `INTERPRO` with a `record:` in `XANCP/fruA` but `GOA_EBI` with none in
+  `RHOCA/fruA` and `AZOBR/fruA1`, each of which also carries a correctly-filed
+  `INTERPRO` defect on that very mapping. So check the filing whenever a
+  defect's fix is a mapping, whatever the row's `assigned_by` says.
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.
