@@ -45,7 +45,8 @@ discretion, `REMOVE` used for claims that are true, was re-read in full. All
 current rules. Of the 1,789 that are not bare `protein binding`, 408 (23%)
 moved to another action, 1,381 stand, and 64 errors in source records were
 recorded as `source_defects`. The four fence cases and two literature
-questions below are resolved. See
+questions below are resolved. Of the 34 rows that the pass left `UNDECIDED` for
+want of full text, 15 were settled in a follow-up on 12 November and 19 remain. See
 [Re-review of REMOVE actions](HUMAN_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
 
 ## Purpose
@@ -141,6 +142,10 @@ The per-batch progress log is retained below as the audit trail.
     policy; no action changed.
   - 1,789 other rows, read one at a time: 1,381 stand; 178 → MARK_AS_OVER_ANNOTATED,
     123 → KEEP_AS_NON_CORE, 34 → UNDECIDED, 30 → TOO_GENERAL, 26 → ACCEPT, 17 → MODIFY.
+  - Follow-up, 12 November: 15 of the 34 UNDECIDED rows settled from annotation
+    provenance, curated UniProt statements and independent papers (9 → KEEP_AS_NON_CORE,
+    4 → MODIFY, 1 → ACCEPT, 1 → MARK_AS_OVER_ANNOTATED), with 7 further `source_defects`;
+    19 rows remain UNDECIDED, each waiting on the full text of one paper.
   - Removals of proteomics observations (HDA) mostly fell (39 of 45); removals of
     phylogenetic annotations (IBA) almost all stand (209 of 216).
   - 64 `source_defects` recorded (40 wrong gene product, 12 wrong term, 7 wrong
@@ -355,6 +360,8 @@ Both were given the guideline-preferred fallback in the November 2026 REMOVE
 re-review. The same pass left 32 further rows UNDECIDED for want of full text; each
 reason states the question, and they are listed in
 [`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+A follow-up on 12 November settled 15 of the 34, the ASCL1 rows among them; the 19
+that remain are listed in the same file under `undecided_followup`.
 
 - **ASCL1** — GO:0045665 negative regulation of neuron differentiation (**IDA** and
   IEA) both REMOVEd. ASCL1 is the canonical proneural bHLH activator, so the
@@ -363,7 +370,12 @@ reason states the question, and they are listed in
   (Kageyama oscillatory-vs-sustained model) that could underlie a genuine "negative
   regulation of neuron differentiation" IDA. Verify the IDA source paper before
   endorsing removal; guideline-preferred fallback would be UNDECIDED for the IDA.
-  *Now UNDECIDED* (IDA and IEA rows); the source paper still needs to be read in full.
+  *Now KEEP_AS_NON_CORE* (IDA and IEA rows). The pass left both UNDECIDED; the
+  follow-up found that the IEA donor is rat Ascl1, annotated by direct assay from a
+  study whose abstract reports that forced Mash1 expression lowered the yield of GABA
+  neurons from hindbrain and spinal cord precursors (PMID:17936272). The claim is kept
+  as a non-core, region-dependent effect. The paper of the human IDA row was read only
+  as an abstract, which shows an expression change and no functional assay.
 - **ATF3** — GO:0001228 DNA-binding transcription activator activity (**IDA**) and
   GO:0045944 positive regulation of transcription by Pol II (**IDA**) REMOVEd; the
   reviewer treats ATF3 as primarily a repressor. But ATF3 has documented context-
