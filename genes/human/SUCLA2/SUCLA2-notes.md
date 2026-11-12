@@ -21,3 +21,8 @@ the rule turns on. Nothing else in this file refines a mitochondrial-location an
 does not treat one argument two ways. Whether GOA's
 organelle-level rows should be refined wherever a compartment row exists is a real question, and it
 is a slice-wide one rather than anything specific to this gene.
+
+## 2026-11-11 Affinage added; one action harmonised
+
+- Affinage record fetched (trust gates clear) and added as a reference with correctness DISPUTED: the checkable narrative claims hold (for example ALAS2 binding [PMID:22740690 "Wild type ALAS2 bound strongly to a SUCLA2 affinity column, but the adjacent XLSA mutant enzymes and the truncated mutant did not bind."]), but its GO grounding with transferase activity and molecular function regulator activity presents indirect effects on protein succinylation as activities of SUCLA2. No annotation imported; one suggested question added.
+- GO:0042709 succinate-CoA ligase complex IBA changed from ACCEPT to TOO_GENERAL so that it matches SUCLG2, LSC2 and S. pombe SPCC1620.08: each carries a nucleotide-specific child complex term, and the family root correctly carries the parent.
