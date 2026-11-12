@@ -7947,3 +7947,13 @@ H3-3A: [PR #6217](https://github.com/ai4curation/ai-gene-review/pull/6217), [act
 ROOT acceptance: local immutable `h3-root-acceptance-20261110T044541Z.json` (SHA256 `3aac8742127f2e9dc26c249db1fe9e7d51751618eccd16da2f10ace25cae8474`, pointer `/records/0`). This provenance identifier is not a public download link. Only H3-3A is newly checked; 235 dated queue records, 172 earlier completion updates and the full earlier journal remain unchanged.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-10T044620Z-codex-3c96b8.yaml).
+
+## Completion checkpoint 749 (2026-11-11 18:04:57 UTC)
+
+749 complete; 2,127 of 2,876 remain. This publishes ROOT's prior acceptance of HAAO and grants no new acceptance.
+
+HAAO: [PR #6272](https://github.com/ai4curation/ai-gene-review/pull/6272), [actual merge 3f52339d](https://github.com/ai4curation/ai-gene-review/commit/3f52339d309d36e8a224b4f7467fba8c40b36fe0), [executed merge-group run 43068188719](https://github.com/ai4curation/ai-gene-review/actions/runs/43068188719). The merged review remains DRAFT with three UNDECIDED judgments and zero NEW annotations. The current input has 35 literal records and 35 downloaded TSV rows; all 38 stored contexts are preserved, including three explicitly retired historical contexts.
+
+ROOT acceptance: local immutable `HAAO-root-acceptance-749.json` (SHA256 `5334d4e245407026a7a537484472d952a589a8b4b8187598be4eaecb12b43ffd`, pointer `/records/0`). Delivery proof: local `haao-delivery-candidate-v2.json` (SHA256 `e2d3452432ae8371a6247ae96005059492925e54bb4f140d60dfc4489e81f805`). These provenance identifiers are not public download links. Only HAAO is newly checked; 235 dated queue records, 173 earlier completion updates and the full earlier journal remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-11T180530Z-codex-f52412.yaml).
