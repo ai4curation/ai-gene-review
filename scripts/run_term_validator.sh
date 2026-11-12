@@ -29,14 +29,32 @@ elif grep -q -- "--fail-on-warnings" <<<"$help_output"; then
     strict_args+=(--fail-on-warnings)
 fi
 
-set +e
 cmd=(uv run linkml-term-validator validate-data "$@")
 if [[ ${#strict_args[@]} -gt 0 ]]; then
     cmd+=("${strict_args[@]}")
 fi
-output="$("${cmd[@]}" 2>&1)"
-exit_code=$?
-set -e
+
+# The validator exits 2 with "ontology service unavailable" when a lookup times
+# out. That is an outage, not a data error, and one slow response from the
+# service has failed a whole validate-all run. Retry those, and only those.
+attempts=${TERM_VALIDATOR_ATTEMPTS:-3}
+delay=${TERM_VALIDATOR_RETRY_DELAY:-10}
+attempt=1
+while true; do
+    set +e
+    output="$("${cmd[@]}" 2>&1)"
+    exit_code=$?
+    set -e
+    if [[ $exit_code -eq 2 && $attempt -lt $attempts ]] \
+        && grep -q "ontology service unavailable" <<<"$output"; then
+        echo "Ontology service unavailable (attempt $attempt of $attempts); retrying in ${delay}s." >&2
+        sleep "$delay"
+        attempt=$((attempt + 1))
+        delay=$((delay * 2))
+        continue
+    fi
+    break
+done
 
 printf '%s\n' "$output"
 

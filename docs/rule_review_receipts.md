@@ -28,6 +28,49 @@ The "limit of 12 condition sets" is `max_condition_sets=12` in
 `src/ai_gene_review/etl/rule_analysis.py`, the number of sets the overlap analysis
 reads by default. It says nothing about whether a rule is right.
 
+## Two questions, both with receipts
+
+A rule review answers two questions, and a verdict needs both.
+
+1. **Accuracy.** Is the annotation true for the proteins each condition set
+   matches? This is what most of this page is about.
+2. **Meaning and parsimony.** Is the rule a useful biological statement, made
+   with conditions that are necessary and sufficient? A rule can be accurate set
+   by set and still say nothing: 343 families under one umbrella term, each of
+   which curators annotate with a more specific descendant.
+
+The audit found the first question answered from memory. The corrections that
+followed answered it from evidence and dropped the second question, which left
+reviews that test a rule the way one tests a classifier and say nothing about
+its biology. Both are required.
+
+The second question is answered in three fields:
+
+- `biological_units`: the families, complexes or pathways the condition sets
+  resolve into. Each unit lists its sets, example proteins, and the most
+  informative GO term that curated annotation puts on its members, with the
+  annotation (accession, GO id, evidence code, reference) in `evidence`, and
+  `term_relation` saying how that term relates to the rule's consequent.
+- `biological_meaning.assessment`: `COHERENT` (the consequent is the most
+  informative term true of all the units), `TRUE_BUT_UNINFORMATIVE` (units carry
+  more specific descendants), `HETEROGENEOUS` (the best term of some units lies
+  outside the consequent), or `NOT_ASSESSED` with the reason.
+- `parsimony`, `go_specificity`, `taxonomic_scope`: the rule-level judgements,
+  with numbers. The receipts are `projects/ARBA_REVIEW/rule_redundancy.tsv`
+  (how many descendants the consequent has, and how many of the rule's sets are
+  already matched by a rule asserting a more specific term, so emit nothing),
+  per-set match counts, and `rules/arba/_interpro2go.txt` (whether one InterPro
+  family already maps to the consequent).
+
+Size and generality are not evidence that an annotation is false. They are what
+the second question is about. "343 sets is too many" is not a finding;
+"320 of 355 sets are covered by rules for more specific terms" is, and so is
+"each of these six families is curated to a descendant of the consequent". A
+taxon restriction that follows where the training annotations happen to be
+(Primates, because the support is human Reactome TAS) rather than where the
+biology is, is narrow coverage; say so in `taxonomic_scope`, and do not call the
+annotation wrong.
+
 ## What a receipt is
 
 | Claim | Receipt |
@@ -38,6 +81,8 @@ reads by default. It says nothing about whether a rule is right.
 | "This protein is wrongly annotated" | a UniProt accession in `annotation_assessments[].incorrect_examples`, and no experimental annotation to the term or a descendant |
 | "This set is right" | accessions in `correct_examples`, each with the GO id, evidence code and reference in `notes` |
 | "N proteins match" | the UniProtKB query, the count and the release |
+| "The term is too general for this family" | a `biological_units` entry: the family's curated annotation to a descendant of the consequent |
+| "These sets do no work" | the set numbers with a match count of 0, or `sets_covered_by_more_specific_rule` from `rule_redundancy.tsv` |
 | "The literature says" | a PMID or DOI, and a `supporting_text` that is verbatim in the cached paper |
 
 A note the reviewer wrote, an AI deep-research file, and a file that does not exist
@@ -49,13 +94,21 @@ the paper or database record the lead points to.
 - **UNDECIDED is the verdict for a rule that was not examined.** A rule with
   hundreds of condition sets that nobody read set by set is UNDECIDED, however
   general its term. Say which sets were sampled and what they showed.
-- **ACCEPT covers the whole rule.** Every condition set served at `retrieved_date`
-  is recorded and supported.
-- **MODIFY and SPLIT name the change.** A specific set, protein or term, in
+- **ACCEPT covers the whole rule, on both questions.** Every condition set served
+  at `retrieved_date` is recorded and supported, `biological_meaning` is
+  `COHERENT`, and `parsimony` is `PARSIMONIOUS` or `ACCEPTABLE`.
+- **SPLIT is the verdict for an umbrella term.** At least two `biological_units`,
+  each with its own more informative term; `suggested_modifications` says which
+  sets go to which term. A sample is enough to show this for a large rule: state
+  the sample, and let `confidence` reflect it.
+- **MODIFY names the change.** A specific set, protein, term or taxon, in
   `suggested_modifications`.
-- **DEPRECATE needs a wrongly annotated protein, an obsolete consequent or a
-  withdrawn rule.** A true but general term, a redundant rule and a rule with low
-  recall are not wrong.
+- **DEPRECATE is for a rule that is still served and should go**: a wrongly
+  annotated protein (accessions in `incorrect_examples`) or an obsolete
+  consequent. A true but general term is SPLIT or MODIFY; low recall alone is not
+  a defect.
+- **WITHDRAWN records that UniProt no longer serves the rule** (`rule.withdrawn`).
+  It is a fact about the rule, not a verdict, and needs no confidence.
 - **Read condition sets as conjunctions.** A set is the proteins that match all its
   conditions, including the taxon. Judge that set, never one of its signatures.
   Alternative sets are expected to be disjoint.
@@ -89,7 +142,15 @@ the paper or database record the lead points to.
 | `missing_cited_file` | error | a cited `file:` does not exist |
 | `own_notes_as_support` | warning | `supported_by` cites notes or an AI research file |
 | `literature_verdict_without_literature` | error | `literature_support` is STRONG, MODERATE or CONTRADICTED and the block itself (its `supported_by` or `notes`) names no publication or curated pathway record |
-| `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples`, no `consequent_obsolete: true` and no `withdrawn` rule |
+| `verdict_without_meaning` | error | a verdict (ACCEPT, MODIFY, SPLIT, MERGE, DEPRECATE) with no `biological_meaning`, or ACCEPT/SPLIT with `NOT_ASSESSED` |
+| `accept_of_uninformative_rule` | error | ACCEPT with `biological_meaning` `TRUE_BUT_UNINFORMATIVE` or `HETEROGENEOUS` |
+| `accept_without_parsimony` | error | ACCEPT with `parsimony` missing, or not `PARSIMONIOUS`/`ACCEPTABLE` |
+| `split_without_units` | error | SPLIT with fewer than two `biological_units` that carry a term |
+| `uninformative_without_units`, `heterogeneous_without_units` | error | the meaning assessment is not backed by units showing it |
+| `unit_term_label_mismatch`, `unit_term_without_label`, `unit_term_without_evidence` | error | a unit's term label differs from GO's, is missing, or the term has no curated annotation cited |
+| `redundancy_receipt_mismatch` | error | `consequent_descendant_count` or `sets_covered_by_more_specific_rule` differs from `rule_redundancy.tsv` |
+| `withdrawn_action_mismatch` | error | WITHDRAWN without `rule.withdrawn`, or DEPRECATE on a withdrawn rule |
+| `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples` and no `consequent_obsolete: true` |
 | `modify_without_modification` | error | MODIFY, SPLIT or MERGE with no `suggested_modifications` |
 | `low_confidence_verdict` | error | a verdict other than UNDECIDED at confidence below 0.5 |
 | `example_not_an_accession` | error | an example is not a UniProt accession |

@@ -244,6 +244,28 @@ def _official_label(identifier: str, labels: Dict[str, Dict[str, str]]) -> Optio
     return labels["funfam"].get(identifier)
 
 
+@lru_cache(maxsize=2)
+def _redundancy_table(path: Optional[Path] = None) -> Dict[str, Dict[str, str]]:
+    """Rows of ``projects/ARBA_REVIEW/rule_redundancy.tsv`` keyed by rule id."""
+    table = path or PROJECT_ROOT / "projects" / "ARBA_REVIEW" / "rule_redundancy.tsv"
+    if not table.exists():
+        return {}
+    lines = table.read_text().splitlines()
+    header = lines[0].split("\t")
+    return {cells[0]: dict(zip(header, cells)) for cells in (line.split("\t") for line in lines[1:]) if cells and cells[0]}
+
+
+def redundancy_row(rule_id: str) -> Optional[Dict[str, str]]:
+    """The redundancy measurements for one rule, if the table has it.
+
+    >>> redundancy_row("ARBA00026480")["term"]
+    'GO:0010605'
+    >>> redundancy_row("ARBA99999999") is None
+    True
+    """
+    return _redundancy_table().get(rule_id)
+
+
 # ---------------------------------------------------------------------------
 # Walking the review
 # ---------------------------------------------------------------------------
@@ -272,6 +294,7 @@ def iter_prose(node: Any, path: str = "") -> Iterator[Tuple[str, str]]:
         "action_rationale",
         "suggested_modifications",
         "notes",
+        "statement",
     }:
         yield path, node
 
@@ -335,7 +358,7 @@ def check_review(
     ...               "review_summary": "343 sets exceeds the analysis threshold of 12."},
     ...              report)
     >>> sorted({issue.check_type for issue in report.issues if issue.is_error()})
-    ['deprecate_without_counterexample', 'missing_rule_snapshot', 'size_as_evidence', 'verdict_without_conditions']
+    ['deprecate_without_counterexample', 'missing_rule_snapshot', 'size_as_evidence', 'verdict_without_conditions', 'verdict_without_meaning']
     >>> ok = ValidationReport(is_valid=True)
     >>> check_review({"id": "ARBA1", "action": "UNDECIDED",
     ...               "rule": {"rule_id": "ARBA1", "condition_sets": [], "retrieved_date": "2026-11-10"}}, ok)
@@ -362,7 +385,7 @@ def check_review(
     error, warning = ValidationSeverity.ERROR, ValidationSeverity.WARNING
 
     # 1. A verdict needs the thing it is a verdict on.
-    if action and action != "UNDECIDED" and not condition_sets and not (withdrawn and action == "DEPRECATE"):
+    if action and action != "UNDECIDED" and not condition_sets and not (withdrawn and action in {"DEPRECATE", "WITHDRAWN"}):
         add(
             error,
             "verdict_without_conditions",
@@ -503,7 +526,7 @@ def check_review(
                 f"assessment {assessment.get('assessment')} has no incorrect_examples",
                 f"annotation_assessments[{index}]")
     for index, assessment in enumerate(assessments):
-        for key in ("correct_examples", "incorrect_examples"):
+        for key in ("correct_examples", "incorrect_examples", "would_match_examples"):
             for accession in (assessment or {}).get(key) or []:
                 if not _ACCESSION_RE.match(str(accession)):
                     add(error, "example_not_an_accession", f"{accession!r} is not a UniProt accession",
@@ -514,7 +537,7 @@ def check_review(
 
     # 6. Confidence is confidence in the verdict.
     confidence = data.get("confidence")
-    if action and action != "UNDECIDED" and not isinstance(confidence, (int, float)):
+    if action and action not in {"UNDECIDED", "WITHDRAWN"} and not isinstance(confidence, (int, float)):
         add(error, "verdict_without_confidence",
             f"action is {action} but no confidence is stated", "confidence",
             "State how sure you are that the action is right; below 0.5, use UNDECIDED.")
@@ -522,6 +545,119 @@ def check_review(
         add(error, "low_confidence_verdict",
             f"action is {action} at confidence {confidence}: a verdict held below 0.5 is UNDECIDED",
             "confidence", "confidence is confidence that the action is right, not confidence in the rule.")
+
+    # 7. Withdrawal is a fact about the rule, not a verdict on it.
+    if action == "WITHDRAWN" and not withdrawn:
+        add(error, "withdrawn_action_mismatch",
+            "action is WITHDRAWN but rule.withdrawn is not true", "action",
+            "WITHDRAWN means UniProt no longer serves the rule; record rule.withdrawn and retrieved_date.")
+    if action == "DEPRECATE" and withdrawn:
+        add(error, "withdrawn_action_mismatch",
+            "the rule is withdrawn, so the action is WITHDRAWN, not DEPRECATE", "action",
+            "DEPRECATE is for a rule that is still served and should be retired.")
+
+    check_meaning(data, add, labels)
+
+
+def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, str]]) -> None:
+    """Checks on the second axis: is the rule a meaningful, parsimonious statement?
+
+    Accuracy (is each annotation true?) is not enough for a verdict. A rule whose
+    sets are each true for one umbrella term can still say nothing, so every
+    decided verdict states a judgement of meaning, and the judgement names the
+    biological units and the terms it rests on.
+
+    >>> issues = []
+    >>> def add(severity, check, message, path, suggestion=None):
+    ...     issues.append(check)
+    >>> check_meaning({"action": "ACCEPT", "rule": {"condition_sets": [{"number": 1}]},
+    ...                "biological_meaning": {"assessment": "TRUE_BUT_UNINFORMATIVE"}}, add, load_labels())
+    >>> sorted(set(issues))
+    ['accept_of_uninformative_rule', 'accept_without_parsimony', 'uninformative_without_units']
+    """
+    error, warning = ValidationSeverity.ERROR, ValidationSeverity.WARNING
+    action = data.get("action")
+    rule = data.get("rule") or {}
+    meaning = data.get("biological_meaning") or {}
+    assessment = meaning.get("assessment")
+    units = [u for u in data.get("biological_units") or [] if isinstance(u, dict)]
+    parsimony = (data.get("parsimony") or {}).get("assessment")
+
+    if action in {"ACCEPT", "MODIFY", "SPLIT", "MERGE", "DEPRECATE"} and not assessment:
+        add(error, "verdict_without_meaning",
+            f"action is {action} but biological_meaning is not recorded: the review judges whether "
+            "annotations are true, not whether the rule is a meaningful statement", "biological_meaning",
+            "Group the condition sets into biological units, find each unit's most informative term, "
+            "and record the judgement. See docs/rule_review_receipts.md.")
+    if action in {"ACCEPT", "SPLIT"} and assessment == "NOT_ASSESSED":
+        add(error, "verdict_without_meaning",
+            f"action is {action} but biological_meaning is NOT_ASSESSED", "biological_meaning.assessment",
+            "ACCEPT and SPLIT are judgements of meaning; without one the action is UNDECIDED or MODIFY.")
+    if action == "ACCEPT" and assessment in {"TRUE_BUT_UNINFORMATIVE", "HETEROGENEOUS"}:
+        add(error, "accept_of_uninformative_rule",
+            f"action is ACCEPT but biological_meaning is {assessment}", "action",
+            "A true but uninformative rule is SPLIT toward the specific terms; a heterogeneous one is SPLIT or MODIFY.")
+    if action == "ACCEPT" and parsimony not in {"PARSIMONIOUS", "ACCEPTABLE"}:
+        add(error, "accept_without_parsimony",
+            f"action is ACCEPT but parsimony is {parsimony or 'not recorded'}", "parsimony",
+            "ACCEPT needs a parsimony judgement of PARSIMONIOUS or ACCEPTABLE, with the numbers in notes.")
+
+    with_term = [u for u in units if u.get("most_informative_term_id")]
+    if action == "SPLIT" and len(with_term) < 2:
+        add(error, "split_without_units",
+            f"action is SPLIT but {len(with_term)} biological unit(s) carry a term to split toward",
+            "biological_units", "Name at least two units, each with its most informative term.")
+    relations = {u.get("term_relation") for u in units}
+    if assessment == "TRUE_BUT_UNINFORMATIVE" and "DESCENDANT_OF_CONSEQUENT" not in relations:
+        add(error, "uninformative_without_units",
+            "biological_meaning is TRUE_BUT_UNINFORMATIVE but no biological unit carries a more specific "
+            "descendant term", "biological_units",
+            "Show the more specific term on at least one unit, with the curated annotation behind it.")
+    if assessment == "HETEROGENEOUS" and "OUTSIDE_CONSEQUENT" not in relations and len(units) < 2:
+        add(error, "heterogeneous_without_units",
+            "biological_meaning is HETEROGENEOUS but the units that differ are not named", "biological_units")
+    if assessment == "COHERENT" and not units:
+        add(warning, "coherent_without_units",
+            "biological_meaning is COHERENT but no biological unit is named", "biological_units")
+
+    numbers = [cs.get("number") for cs in rule.get("condition_sets") or [] if isinstance((cs or {}).get("number"), int)]
+    total = rule.get("source_condition_set_count")
+    highest = max([total if isinstance(total, int) else 0, *numbers], default=0)
+    for index, unit in enumerate(units):
+        path = f"biological_units[{index}]"
+        term_id, stated = unit.get("most_informative_term_id"), unit.get("most_informative_term_label")
+        if term_id:
+            official = labels["go"].get(str(term_id))
+            if not stated:
+                add(error, "unit_term_without_label", f"{term_id} has no label", f"{path}.most_informative_term_label")
+            elif official and _norm(str(stated)) != _norm(official):
+                add(error, "unit_term_label_mismatch",
+                    f"{term_id} is labelled {stated!r}; GO calls it {official!r}", f"{path}.most_informative_term_label")
+            if not unit.get("evidence") and unit.get("term_relation") != "NONE_KNOWN":
+                add(error, "unit_term_without_evidence",
+                    f"unit {unit.get('name')!r} names {term_id} with no curated annotation as evidence", f"{path}.evidence",
+                    "Give an accession, GO id, evidence code and reference.")
+        for number in unit.get("condition_sets") or []:
+            if highest and isinstance(number, int) and number > highest:
+                add(error, "condition_set_out_of_range",
+                    f"unit {unit.get('name')!r} refers to condition set {number}, but the rule as recorded has {highest}",
+                    f"{path}.condition_sets")
+        for accession in unit.get("example_proteins") or []:
+            if not _ACCESSION_RE.match(str(accession)):
+                add(error, "example_not_an_accession", f"{accession!r} is not a UniProt accession",
+                    f"{path}.example_proteins")
+
+    # The generality and coverage figures are copied from the project's redundancy table; check the copy.
+    go_ids = [a.get("go_id") for a in rule.get("go_annotations") or [] if a.get("go_id")]
+    row = redundancy_row(str(rule.get("rule_id") or data.get("id") or ""))
+    if row and len(go_ids) == 1 and row["term"] == go_ids[0]:
+        for field, column in (("consequent_descendant_count", "go_descendants"),
+                              ("sets_covered_by_more_specific_rule", "covered_sets")):
+            stated_value = meaning.get(field)
+            if isinstance(stated_value, int) and stated_value != int(row[column]):
+                add(error, "redundancy_receipt_mismatch",
+                    f"biological_meaning.{field} is {stated_value}; rule_redundancy.tsv gives {row[column]}",
+                    f"biological_meaning.{field}")
 
 
 # ---------------------------------------------------------------------------
@@ -564,6 +700,27 @@ def experimental_annotations(accession: str, go_id: str) -> List[str]:
     return [f"{row['goId']} {row['goEvidence']} {row['reference']} ({row['assignedBy']})" for row in results]
 
 
+def go_ancestors(go_id: str) -> Set[str]:
+    """The is_a/part_of ancestors of a GO term, from QuickGO (the term itself excluded)."""
+    data = _get_json(
+        "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/"
+        + urllib.parse.quote(go_id)
+        + "/ancestors?relations=is_a,part_of"
+    )
+    results = data.get("results") or []
+    if not results:
+        raise ValueError(f"QuickGO does not know {go_id}")
+    return set(results[0].get("ancestors") or []) - {go_id}
+
+
+# term_relation value -> predicate(unit term, consequent, ancestors of the unit term)
+_RELATION_HOLDS: Dict[str, Any] = {
+    "SAME_AS_CONSEQUENT": lambda term, consequent, ancestors: term == consequent,
+    "DESCENDANT_OF_CONSEQUENT": lambda term, consequent, ancestors: term != consequent and consequent in ancestors,
+    "OUTSIDE_CONSEQUENT": lambda term, consequent, ancestors: term != consequent and consequent not in ancestors,
+}
+
+
 def check_review_online(data: Dict[str, Any], report: ValidationReport) -> None:
     """Checks that need UniProt and QuickGO; failures to connect are reported, not raised."""
 
@@ -603,6 +760,24 @@ def check_review_online(data: Dict[str, Any], report: ValidationReport) -> None:
                 add(ValidationSeverity.ERROR, "consequent_not_obsolete",
                     f"{value} is marked consequent_obsolete but QuickGO serves it as a current term",
                     f"annotation_assessments[{index}].consequent_obsolete")
+
+    # A unit's stated relation to the consequent is a claim about the ontology; check it.
+    if len(go_ids) == 1:
+        consequent = go_ids[0]
+        for index, unit in enumerate(data.get("biological_units") or []):
+            term_id, relation = unit.get("most_informative_term_id"), unit.get("term_relation")
+            if not term_id or relation not in _RELATION_HOLDS:
+                continue
+            try:
+                ancestors = go_ancestors(str(term_id))
+            except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+                add(ValidationSeverity.WARNING, "online_check_failed", f"QuickGO lookup failed: {exc}",
+                    f"biological_units[{index}]")
+                continue
+            if not _RELATION_HOLDS[relation](str(term_id), consequent, ancestors):
+                add(ValidationSeverity.ERROR, "unit_term_relation_mismatch",
+                    f"unit {unit.get('name')!r}: {term_id} is stated to be {relation} ({consequent}), "
+                    "which the ontology does not bear out", f"biological_units[{index}].term_relation")
 
     rule_id = str(rule.get("rule_id") or "")
     if rule_id.startswith("ARBA"):

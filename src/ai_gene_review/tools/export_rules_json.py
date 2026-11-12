@@ -7,6 +7,44 @@ from pathlib import Path
 import sys
 
 
+# Review condition types, as the browser's facets name them (the UniProt API's names).
+FACET_CONDITION_TYPES = {
+    "INTERPRO": "InterPro id",
+    "FUNFAM": "FunFam id",
+    "PANTHER": "PANTHER id",
+    "TAXON": "taxon",
+}
+
+
+def facets_from_review(rule_obj: dict) -> tuple[list[str], list[str], list[str]]:
+    """InterPro, FunFam and condition-type facets from a review's recorded condition sets.
+
+    Used when no enriched API payload is cached for the rule, which is the usual
+    case in a fresh checkout.
+
+    >>> rule = {"condition_sets": [{"conditions": [
+    ...     {"condition_type": "INTERPRO", "value": "IPR000999", "label": "Ribonuclease III domain"},
+    ...     {"condition_type": "TAXON", "value": "NCBITaxon:2759", "label": "Eukaryota"}]}]}
+    >>> facets_from_review(rule)
+    (['IPR000999 (Ribonuclease III domain)'], [], ['InterPro id', 'taxon'])
+    """
+    interpro_ids: list[str] = []
+    funfam_ids: list[str] = []
+    condition_types: list[str] = []
+    for cond_set in rule_obj.get("condition_sets") or []:
+        for cond in cond_set.get("conditions") or []:
+            kind = cond.get("condition_type", "")
+            if kind in FACET_CONDITION_TYPES:
+                condition_types.append(FACET_CONDITION_TYPES[kind])
+            value, label = cond.get("value", ""), cond.get("label", "")
+            shown = f"{value} ({label})" if label else value
+            if value and kind == "INTERPRO":
+                interpro_ids.append(shown)
+            elif value and kind == "FUNFAM":
+                funfam_ids.append(shown)
+    return interpro_ids, funfam_ids, condition_types
+
+
 def export_rules_json(cache_dir: str = "rules/arba"):
     """Export rule reviews to JSON including both reviewed and enriched data."""
     cache_path = Path(cache_dir)
@@ -79,6 +117,12 @@ def export_rules_json(cache_dir: str = "rules/arba"):
                                 if funfam_id:
                                     funfam_ids.append(f"{funfam_id} ({funfam_label})" if funfam_label else funfam_id)
 
+            if not condition_types:
+                interpro_ids, funfam_ids, condition_types = facets_from_review(rule_obj)
+
+            source_sets = rule_obj.get('source_condition_set_count')
+            meaning = data.get('biological_meaning') or {}
+
             rule_info = {
                 'id': rule_id,
                 'rule_id': rule_id,
@@ -87,15 +131,17 @@ def export_rules_json(cache_dir: str = "rules/arba"):
                 'action': data.get('action', None),
                 'status': data.get('status', 'REVIEWED'),
                 'confidence': data.get('confidence', None),
-                'num_condition_sets': len(rule_obj.get('condition_sets', [])),
+                'num_condition_sets': source_sets if isinstance(source_sets, int)
+                else len(rule_obj.get('condition_sets') or []),
                 'num_entries': total_entries,
                 'go_terms': go_terms,
                 'go_term_ids': [f"{t['id']} ({t['label']})" if t.get('label') else t['id'] for t in go_terms],
                 'go_term_labels': [t['label'] for t in go_terms],
-                'interpro_ids': list(set(interpro_ids)),
-                'funfam_ids': list(set(funfam_ids)),
-                'condition_types': list(set(condition_types)),
+                'interpro_ids': sorted(set(interpro_ids)),
+                'funfam_ids': sorted(set(funfam_ids)),
+                'condition_types': sorted(set(condition_types)),
                 'parsimony_assessment': parsimony.get('assessment', None),
+                'meaning_assessment': meaning.get('assessment', None),
                 'literature_support': literature.get('assessment', None),
                 'review_link': f"../{rule_id}/{rule_id}-review.html",
                 'is_reviewed': True
@@ -177,9 +223,9 @@ def export_rules_json(cache_dir: str = "rules/arba"):
             'go_terms': go_terms,
             'go_term_ids': [f"{t['id']} ({t['label']})" if t.get('label') else t['id'] for t in go_terms],
             'go_term_labels': [t['label'] for t in go_terms],
-            'interpro_ids': list(set(interpro_ids)),  # Remove duplicates
-            'funfam_ids': list(set(funfam_ids)),
-            'condition_types': list(set(condition_types)),
+            'interpro_ids': sorted(set(interpro_ids)),
+            'funfam_ids': sorted(set(funfam_ids)),
+            'condition_types': sorted(set(condition_types)),
             'parsimony_assessment': None,
             'literature_support': None,
             'review_link': None,

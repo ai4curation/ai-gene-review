@@ -31,6 +31,23 @@ DICER_SET = {
 }
 
 
+UNIT = {
+    "name": "Dicer-like RNase III",
+    "unit_kind": "FAMILY",
+    "condition_sets": [1],
+    "example_proteins": ["Q9UPY3"],
+    "most_informative_term_id": "GO:0010605",
+    "most_informative_term_label": "negative regulation of macromolecule metabolic process",
+    "term_relation": "SAME_AS_CONSEQUENT",
+    "evidence": ["Q9UPY3 GO:0010605 IDA PMID:1"],
+}
+MEANING: dict[str, Any] = {
+    "biological_meaning": {"assessment": "COHERENT", "notes": "One family, one term."},
+    "biological_units": [UNIT],
+    "parsimony": {"assessment": "PARSIMONIOUS", "notes": "One set."},
+}
+
+
 def review(**overrides: Any) -> dict[str, Any]:
     """A minimal review that passes every offline check."""
     base: dict[str, Any] = {
@@ -178,6 +195,7 @@ def test_deprecate_with_counterexample_passes(tmp_path: Path) -> None:
     data = review(
         action="DEPRECATE",
         confidence=0.9,
+        **MEANING,
         annotation_assessments=[
             {"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "INCORRECT",
              "incorrect_examples": ["P12345"]}
@@ -187,9 +205,66 @@ def test_deprecate_with_counterexample_passes(tmp_path: Path) -> None:
 
 
 def test_withdrawn_rule_can_be_deprecated_without_sets(tmp_path: Path) -> None:
-    data = review(action="DEPRECATE", confidence=0.9, rule={"rule_id": "A", "condition_sets": [], "withdrawn": True,
-                                            "retrieved_date": "2026-11-10"})
-    assert checks(data, tmp_path) == set()
+    withdrawn_rule = {"rule_id": "A", "condition_sets": [], "withdrawn": True, "retrieved_date": "2026-11-10"}
+    assert checks(review(action="WITHDRAWN", rule=withdrawn_rule), tmp_path) == set()
+    assert "withdrawn_action_mismatch" in checks(review(action="DEPRECATE", confidence=0.9, rule=withdrawn_rule), tmp_path)
+    assert "withdrawn_action_mismatch" in checks(review(action="WITHDRAWN"), tmp_path)
+
+
+def test_accept_with_a_meaning_judgement_passes(tmp_path: Path) -> None:
+    assert checks(review(action="ACCEPT", confidence=0.8, **MEANING), tmp_path) == set()
+
+
+def _meaning(assessment: str, units: list[dict[str, Any]], parsimony: str = "PARSIMONIOUS") -> dict[str, Any]:
+    return {"biological_meaning": {"assessment": assessment}, "biological_units": units,
+            "parsimony": {"assessment": parsimony}}
+
+
+@pytest.mark.parametrize(
+    "overrides,expected",
+    [
+        pytest.param({"action": "ACCEPT", "confidence": 0.8}, "verdict_without_meaning",
+                     id="accurate per set, never asked whether the rule means anything"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("NOT_ASSESSED", [UNIT])},
+                     "verdict_without_meaning", id="accept with meaning not assessed"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("TRUE_BUT_UNINFORMATIVE", [UNIT])},
+                     "accept_of_uninformative_rule", id="accepting an umbrella term"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("COHERENT", [UNIT], "REDUNDANT")},
+                     "accept_without_parsimony", id="accepting a redundant rule"),
+        pytest.param({"action": "SPLIT", "confidence": 0.8, **_meaning("HETEROGENEOUS", [UNIT, {"name": "other"}])},
+                     "split_without_units", id="split with one target term"),
+        pytest.param({"action": "MODIFY", "confidence": 0.8, "suggested_modifications": "x",
+                      **_meaning("TRUE_BUT_UNINFORMATIVE", [UNIT])},
+                     "uninformative_without_units", id="uninformative with no more specific term shown"),
+        pytest.param({"action": "MODIFY", "confidence": 0.8, "suggested_modifications": "x",
+                      **_meaning("HETEROGENEOUS", [UNIT])},
+                     "heterogeneous_without_units", id="heterogeneous with one unit"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8,
+                      **_meaning("COHERENT", [{**UNIT, "most_informative_term_label": "gene silencing"}])},
+                     "unit_term_label_mismatch", id="unit term label from memory"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("COHERENT", [{**UNIT, "evidence": []}])},
+                     "unit_term_without_evidence", id="unit term with no curated annotation"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("COHERENT", [{**UNIT, "condition_sets": [7]}])},
+                     "condition_set_out_of_range", id="unit cites a set the rule lacks"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8,
+                      **_meaning("COHERENT", [{**UNIT, "example_proteins": ["DICER1"]}])},
+                     "example_not_an_accession", id="unit example is a gene symbol"),
+    ],
+)
+def test_meaning_error_is_caught(overrides: dict[str, Any], expected: str, tmp_path: Path) -> None:
+    assert expected in checks(review(**overrides), tmp_path)
+
+
+def test_redundancy_figures_are_checked_against_the_table(tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 355,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    data = review(id="ARBA00026480", rule=rule,
+                  biological_meaning={"assessment": "NOT_ASSESSED", "consequent_descendant_count": 12})
+    assert "redundancy_receipt_mismatch" in checks(data, tmp_path)
+    data["biological_meaning"]["consequent_descendant_count"] = 524
+    assert "redundancy_receipt_mismatch" not in checks(data, tmp_path)
 
 
 def test_naming_the_analysis_cap_is_allowed_when_undecided(tmp_path: Path) -> None:
@@ -201,6 +276,7 @@ def test_obsolete_consequent_justifies_deprecate(tmp_path: Path) -> None:
     data = review(
         action="DEPRECATE",
         confidence=0.9,
+        **MEANING,
         annotation_assessments=[
             {"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "UNDECIDED", "consequent_obsolete": True}
         ],
@@ -258,3 +334,24 @@ def test_committed_rule_reviews_pass_offline_receipt_checks(review_file: Path) -
 
 def test_rule_reviews_were_found() -> None:
     assert len(RULE_REVIEWS) >= 78
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "term,relation,expected",
+    [
+        ("GO:0010605", "SAME_AS_CONSEQUENT", False),
+        ("GO:0010629", "DESCENDANT_OF_CONSEQUENT", False),  # negative regulation of gene expression
+        ("GO:0010629", "OUTSIDE_CONSEQUENT", True),
+        ("GO:0006412", "DESCENDANT_OF_CONSEQUENT", True),  # translation is not under GO:0010605
+    ],
+)
+def test_unit_term_relation_is_checked_against_the_ontology(term: str, relation: str, expected: bool) -> None:
+    from ai_gene_review.validation.rule_review_receipts import check_review_online
+
+    unit = {**UNIT, "most_informative_term_id": term, "term_relation": relation}
+    data = review(rule={"rule_id": "X", "go_annotations": [{"go_id": "GO:0010605"}]}, biological_units=[unit])
+    report = ValidationReport(is_valid=True)
+    check_review_online(data, report)
+    fired = any(issue.check_type == "unit_term_relation_mismatch" for issue in report.issues)
+    assert fired is expected

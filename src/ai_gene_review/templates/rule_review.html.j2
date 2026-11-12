@@ -151,9 +151,40 @@
             color: white;
         }
 
-        .action-MODIFY {
+        .action-MODIFY, .action-SPLIT, .action-MERGE {
             background-color: var(--color-modify);
             color: white;
+        }
+
+        .action-DEPRECATE {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-UNDECIDED, .action-WITHDRAWN {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .receipt-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .receipt-table th, .receipt-table td {
+            text-align: left;
+            vertical-align: top;
+            padding: 0.5rem 0.625rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .receipt-list {
+            margin: 0.25rem 0 0 1.1rem;
+            padding: 0;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
         }
 
         .section {
@@ -377,6 +408,21 @@
             font-weight: 600;
         }
 
+        .assessment-COHERENT {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .assessment-TRUE_BUT_UNINFORMATIVE, .assessment-HETEROGENEOUS {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .assessment-NOT_ASSESSED {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
         .assessment-APPROPRIATE {
             background-color: #d1fae5;
             color: #065f46;
@@ -538,6 +584,22 @@
                 <span class="badge">{{ "%.2f"|format(rule.confidence) }}</span>
             </div>
             {% endif %}
+            {% if rule.rule and rule.rule.retrieved_date %}
+            <div class="info-item">
+                <span class="info-label">Rule as retrieved:</span>
+                <span class="badge">{{ rule.rule.retrieved_date }}</span>
+            </div>
+            {% endif %}
+            {% if rule.rule and rule.rule.withdrawn %}
+            <div class="info-item">
+                <span class="badge">no longer served by UniProt</span>
+            </div>
+            {% elif rule.rule and rule.rule.source_condition_set_count is not none %}
+            <div class="info-item">
+                <span class="info-label">Condition sets examined:</span>
+                <span class="badge">{{ rule.rule.condition_sets | default([]) | length }} of {{ rule.rule.source_condition_set_count }}</span>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -576,8 +638,8 @@
     {% if not heatmap_table %}
     <div class="section">
         <p style="color: var(--text-muted); font-size: 0.875rem;">
-            No domain overlap table is shown: the cached overlap analysis for this version of the review is not available.
-            Run <code>just analyze-rule {{ rule.id }}</code> and re-render to add it.
+            The domain overlap table is not shown for this review. It is drawn from a cached analysis of the
+            rule's condition sets, and the cache does not match the sets recorded here.
         </p>
     </div>
     {% endif %}
@@ -732,6 +794,51 @@
     </div>
     {% endif %}
 
+    {% if rule.biological_meaning or rule.biological_units %}
+    <div class="section">
+        <h2>Biological Meaning</h2>
+        {% if rule.biological_meaning %}
+        <div class="card">
+            <div style="margin-bottom: 0.75rem;">
+                <span class="assessment-badge assessment-{{ rule.biological_meaning.assessment }}">{{ rule.biological_meaning.assessment | replace('_', ' ') }}</span>
+            </div>
+            {% if rule.biological_meaning.notes %}<p>{{ rule.biological_meaning.notes }}</p>{% endif %}
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+                {% if rule.biological_meaning.consequent_descendant_count is not none %}The consequent term has {{ rule.biological_meaning.consequent_descendant_count }} descendant terms. {% endif %}
+                {% if rule.biological_meaning.sets_covered_by_more_specific_rule is not none %}{{ rule.biological_meaning.sets_covered_by_more_specific_rule }} condition set(s) are also matched by a rule asserting a more specific term. {% endif %}
+                {% if rule.biological_meaning.sets_examined_for_meaning is not none %}{{ rule.biological_meaning.sets_examined_for_meaning }} condition set(s) were examined for this judgement.{% endif %}
+            </p>
+        </div>
+        {% endif %}
+        {% if rule.biological_units %}
+        <div class="card" style="overflow-x: auto;">
+            <table class="receipt-table">
+                <thead>
+                    <tr><th>Biological unit</th><th>Condition sets</th><th>Most informative curated term</th><th>Relation to the rule's term</th></tr>
+                </thead>
+                <tbody>
+                {% for unit in rule.biological_units %}
+                    <tr>
+                        <td>
+                            <strong>{{ unit.name }}</strong>{% if unit.unit_kind %} <small>({{ unit.unit_kind | replace('_', ' ') | lower }})</small>{% endif %}
+                            {% if unit.example_proteins %}<br><small>{% for acc in unit.example_proteins %}<a href="https://www.uniprot.org/uniprotkb/{{ acc }}" target="_blank">{{ acc }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</small>{% endif %}
+                            {% if unit.notes %}<br><small>{{ unit.notes }}</small>{% endif %}
+                        </td>
+                        <td>{{ unit.condition_sets | default([]) | join(', ') }}</td>
+                        <td>
+                            {% if unit.most_informative_term_id %}<a href="https://amigo.geneontology.org/amigo/term/{{ unit.most_informative_term_id }}" target="_blank">{{ unit.most_informative_term_id }}</a> {{ unit.most_informative_term_label }}{% else %}none known{% endif %}
+                            {% if unit.evidence %}<ul class="receipt-list">{% for item in unit.evidence %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+                        </td>
+                        <td>{{ unit.term_relation | default('') | replace('_', ' ') | lower }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     {% if rule.rule and rule.rule.go_annotations %}
     <div class="section">
         <h2>GO Annotations</h2>
@@ -821,6 +928,11 @@
                 {% for acc in aa.incorrect_examples %}<a href="https://www.uniprot.org/uniprotkb/{{ acc }}" target="_blank">{{ acc }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
             </div>
             {% endif %}
+            {% if aa.would_match_examples %}
+            <p style="font-size: 0.875rem;"><strong>Match the conditions and should not carry the term (not annotated by the rule itself):</strong>
+                {% for acc in aa.would_match_examples %}<a href="https://www.uniprot.org/uniprotkb/{{ acc }}" target="_blank">{{ acc }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+            </p>
+            {% endif %}
             {% if aa.correct_examples %}
             <div style="font-size: 0.875rem;">Correct examples:
                 {% for acc in aa.correct_examples %}<a href="https://www.uniprot.org/uniprotkb/{{ acc }}" target="_blank">{{ acc }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
@@ -891,7 +1003,7 @@
         {% for cs in rule.rule.condition_sets %}
         <div class="condition-set">
             <div class="condition-set-header">
-                <h3 style="margin: 0;">Condition Set {{ loop.index }}</h3>
+                <h3 style="margin: 0;">Condition Set {{ cs.number | default(loop.index) }}</h3>
                 <span class="badge">{{ cs.conditions | length }} condition(s)</span>
             </div>
 
@@ -1071,6 +1183,26 @@
             {% endif %}
         </div>
     </div>
+
+    {% if rule.corrections %}
+    <div class="section">
+        <h2>Corrections ({{ rule.corrections | length }})</h2>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Claims made by an earlier version of this review that were withdrawn, with the evidence that refuted them.</p>
+        <div class="card" style="overflow-x: auto;">
+            <table class="receipt-table">
+                <thead><tr><th>Withdrawn claim</th><th>Correction</th></tr></thead>
+                <tbody>
+                {% for c in rule.corrections %}
+                    <tr>
+                        <td><s>{{ c.withdrawn_claim }}</s>{% if c.error_type %}<br><small>{{ c.error_type | replace('_', ' ') | lower }}{% if c.date %} · {{ c.date }}{% endif %}</small>{% endif %}</td>
+                        <td>{{ c.correction }}{% if c.evidence %}<ul class="receipt-list">{% for item in c.evidence %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 
     {% if rule.references %}
     <div class="section">

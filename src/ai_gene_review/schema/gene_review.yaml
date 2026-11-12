@@ -2797,6 +2797,24 @@ classes:
         range: SupportingTextInReference
         multivalued: true
         description: Supporting text from literature for this review
+      biological_meaning:
+        range: BiologicalMeaningAssessment
+        inlined: true
+        description: >-
+          Whether the rule is a sensible biological statement: do its condition
+          sets pick out recognisable biological units, and is the consequent the
+          most informative true statement about them? This is judged separately
+          from accuracy (annotation_assessments): a rule can be true for every
+          protein it matches and still say almost nothing.
+      biological_units:
+        range: BiologicalUnit
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          The biological units (families, complexes, pathway steps) the condition
+          sets resolve into, each with the most informative term that is true
+          of it. This is the evidence for biological_meaning, and the plan for a
+          SPLIT.
       corrections:
         range: RuleReviewCorrection
         multivalued: true
@@ -2806,6 +2824,85 @@ classes:
           showed to be wrong, each with the evidence that refuted it. The
           wrong claim is removed from the review's prose and recorded here, so
           that review errors stay countable and can become test cases.
+
+  BiologicalMeaningAssessment:
+    description: >-
+      Rule-level judgement of biological meaning, with the measurements it rests on.
+    attributes:
+      assessment:
+        range: RuleMeaningEnum
+        required: true
+        description: The judgement
+      notes:
+        range: string
+        description: Reasoning, naming the units and terms in biological_units
+      consequent_descendant_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of is_a/part_of descendants of the consequent GO term, as a measure
+          of how general it is (projects/ARBA_REVIEW/rule_redundancy.tsv
+          go_descendants, or QuickGO). The project treats more than 200 as very general.
+      sets_covered_by_more_specific_rule:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of this rule's condition sets that a rule asserting a more
+          specific term also matches (rule_redundancy.tsv covered_sets). UniProt
+          keeps only the most specific ARBA term on a protein, so a covered set
+          emits nothing.
+      covering_terms:
+        range: string
+        multivalued: true
+        description: GO ids of the more specific terms that cover sets of this rule
+      sets_examined_for_meaning:
+        range: integer
+        minimum_value: 0
+        description: >-
+          How many condition sets were assigned to a biological unit. When this is
+          less than the rule's set count, the judgement is from a sample and
+          notes must say how the sample was taken.
+
+  BiologicalUnit:
+    description: >-
+      A recognisable biological unit that one or more condition sets select, with
+      the most informative GO term that is true of it.
+    attributes:
+      name:
+        range: string
+        required: true
+        description: Name of the unit (e.g. "Dicer", "ESCRT-III", "PI synthase")
+      unit_kind:
+        range: BiologicalUnitKindEnum
+        description: What kind of unit it is
+      condition_sets:
+        range: integer
+        multivalued: true
+        description: Numbers of the condition sets that select this unit
+      example_proteins:
+        range: string
+        multivalued: true
+        description: UniProt accessions of members that match those sets
+      most_informative_term_id:
+        range: string
+        description: >-
+          GO id of the most informative term that curated annotation supports for
+          this unit, in the same aspect as the rule's consequent
+      most_informative_term_label:
+        range: string
+        description: Official label of that term (checked against the label cache)
+      term_relation:
+        range: UnitTermRelationEnum
+        description: How that term relates to the rule's consequent
+      evidence:
+        range: string
+        multivalued: true
+        description: >-
+          Checkable facts: accession, GO id, evidence code and reference for the
+          curated annotation that supports the term on a member
+      notes:
+        range: string
+        description: Anything else, e.g. why no better term exists
 
   RuleReviewCorrection:
     description: >-
@@ -2939,6 +3036,26 @@ classes:
       notes:
         range: string
         description: Reviewer notes on this specific condition set
+      uniprot_query:
+        range: string
+        description: UniProtKB query equivalent to this condition set
+      uniprot_release:
+        range: string
+        description: UniProtKB release the counts below were taken from (e.g. 2026_04)
+      matched_count:
+        range: integer
+        minimum_value: 0
+        description: UniProtKB entries matching the set
+      reviewed_matched_count:
+        range: integer
+        minimum_value: 0
+        description: Reviewed (Swiss-Prot) entries matching the set
+      reviewed_supported_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Reviewed matches that carry the consequent, or a descendant, on evidence
+          other than this rule (not IEA GO_REF:0000117)
       pairwise_overlap:
         range: PairwiseOverlap
         multivalued: true
@@ -3091,7 +3208,18 @@ classes:
       incorrect_examples:
         range: string
         multivalued: true
-        description: UniProt accessions for which the consequent is incorrect
+        description: >-
+          UniProt accessions that carry the consequent from this rule and for
+          which it is incorrect. A protein that only matches the conditions goes
+          in would_match_examples.
+      would_match_examples:
+        range: string
+        multivalued: true
+        description: >-
+          UniProt accessions that match the rule's conditions and should not
+          carry the consequent, but that the rule does not annotate (typically
+          reviewed entries). They show what the rule does to unreviewed
+          relatives; they are weaker evidence than incorrect_examples.
       consequent_obsolete:
         range: boolean
         description: >-
@@ -4990,6 +5118,52 @@ enums:
       COMPLETE:
         description: Review is complete
 
+  RuleMeaningEnum:
+    description: Whether a rule is a sensible biological statement
+    permissible_values:
+      COHERENT:
+        description: >-
+          The condition sets select one biological unit, or closely related ones,
+          and the consequent is the most informative term true of all of them
+      TRUE_BUT_UNINFORMATIVE:
+        description: >-
+          The consequent is true of what the sets select, but it is an umbrella
+          term: the units carry more specific terms (descendants of the
+          consequent) that say what they do. The remedy is to split toward those terms.
+      HETEROGENEOUS:
+        description: >-
+          The sets select unrelated units and the consequent fits only some of
+          them, or fits them for unrelated reasons (e.g. a term copied from a
+          pathway mapping onto enzymes that do different things)
+      NOT_ASSESSED:
+        description: Not judged, with the reason in notes
+
+  BiologicalUnitKindEnum:
+    description: Kinds of biological unit a condition set can select
+    permissible_values:
+      FAMILY:
+        description: A protein family or subfamily
+      COMPLEX:
+        description: Subunits of one complex
+      PATHWAY:
+        description: Enzymes or components of one pathway
+      ARCHITECTURE:
+        description: A domain architecture shared by several families
+      OTHER:
+        description: Something else, described in notes
+
+  UnitTermRelationEnum:
+    description: How a unit's most informative term relates to the rule's consequent
+    permissible_values:
+      SAME_AS_CONSEQUENT:
+        description: The consequent is already the most informative term
+      DESCENDANT_OF_CONSEQUENT:
+        description: A more specific term under the consequent
+      OUTSIDE_CONSEQUENT:
+        description: A term that is not under the consequent (the consequent does not fit this unit)
+      NONE_KNOWN:
+        description: No curated term was found for the unit
+
   RuleReviewErrorTypeEnum:
     description: Kinds of reasoning error found in rule reviews
     permissible_values:
@@ -5007,6 +5181,10 @@ enums:
         description: The GO hierarchy or a term's scope was misread (a descendant called unrelated, a non-descendant offered as more specific, a process term replaced by function terms)
       UNEXAMINED_RULE:
         description: A verdict was given on condition sets the review never recorded or read
+      MEANING_NOT_JUDGED:
+        description: >-
+          The review checked that annotations were true but did not judge whether the
+          rule is a meaningful or parsimonious biological statement
       UNSUPPORTED_SOURCE:
         description: The claim cited the review's own notes, an AI research file, a missing file or an unresolvable reference as literature
       TAXON_MISREAD:
@@ -5031,6 +5209,11 @@ enums:
         description: Rule should be removed or retired
       SPLIT:
         description: Rule should be split into multiple more specific rules
+      WITHDRAWN:
+        description: >-
+          UniProt no longer serves the rule (rule.withdrawn is true). This is a
+          fact about the rule's state, not a judgement that it was wrong; use
+          DEPRECATE for a rule that is still served and should be retired.
       MERGE:
         description: Rule should be merged with another related rule
       UNDECIDED:
