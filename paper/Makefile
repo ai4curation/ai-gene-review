@@ -8,6 +8,7 @@ data/goa_meta.tsv:
 data: data/annotations.tsv data/goa_meta.tsv
 stats: data
 	$(PY) scripts/compute_stats.py
+	$(PY) scripts/figures.py
 pdf:
 	latexmk -pdf -interaction=nonstopmode main.tex
 refresh:

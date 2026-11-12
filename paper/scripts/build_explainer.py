@@ -117,24 +117,29 @@ n_todo, n_proj = alltex.count("\\todo{"), alltex.count("\\proj{")
 
 # Figures and tables: (name, state). Update as they land.
 FIGS = [
- ("Fig. 1: the review system, from fetch to upstream reports", "planned"),
- ("Fig. 2: how one annotation is made, three provenance lanes", "planned"),
- ("Fig. 3: review actions by evidence class", "done"),
- ("Fig. 4: review actions by electronic pipeline", "table done, figure planned"),
- ("Fig. 5: corpus composition by taxon and campaign type", "planned"),
- ("Fig. 6: per-pipeline error rates scaled to all of UniProt-GOA", "planned"),
- ("Fig. 7: predictor outcomes aligned with the deep-dive error classes", "planned"),
- ("One figure per deep dive", "planned"),
- ("Table 1: corpus composition vs share of UniProt-GOA", "planned"),
- ("Tables 2–4: actions by evidence class, pipeline, aspect", "done"),
- ("Table 5: actions by annotating group", "done"),
- ("Supplement: actions by code, taxon; protein binding", "done"),
+ ("Fig. 1: how one annotation is made, three provenance routes (TikZ)", "done"),
+ ("Fig. 2: the review system, from fetch to upstream reports (TikZ)", "done"),
+ ("Fig. 3: corpus composition by clade and by evidence class and aspect", "done"),
+ ("Fig. 4: review actions by evidence class", "done"),
+ ("Fig. 5: rejected vs modified rates by evidence code and pipeline", "done"),
+ ("Fig. 6: review actions by clade", "done"),
+ ("Fig. 7: experimental annotation outcome by annotation date", "done"),
+ ("Fig. 8: deep-dive panels (experimental codes, ISO, keywords, domain pipelines)", "done"),
+ ("Corpus composition by campaign type", "planned"),
+ ("Per-pipeline error rates scaled to all of UniProt-GOA", "planned"),
+ ("Predictor outcomes aligned with the deep-dive error classes", "planned"),
+ ("Figures for the project-based deep dives (IBA seeds, obsoletion, citations, ...)", "planned"),
+ ("Table 1: corpus composition by evidence class and aspect", "done, GOA share planned"),
+ ("Tables: actions by evidence class, pipeline, aspect, annotating group", "done"),
+ ("Table: GO terms with the highest rejection rate", "done"),
+ ("Supplement: actions by code, taxon folder, clade; protein binding", "done"),
 ]
 figs_html = "".join(f'<li><span class="chip {"ok" if s == "done" else "warn" if "done" in s else "plain"}">{e(s)}</span>{e(n)}</li>' for n, s in FIGS)
 
 NEXT = [
  ("Show the calls are right", "Expert grading of a stratified sample of about 500 decisions. Self-consistency (≈99.7% on re-review) is not accuracy."),
- ("More figures and data tables", "Work through the list on the right, starting with the system diagram and corpus composition."),
+ ("Remaining figures", "Campaign-type breakdown, GOA-wide extrapolation, predictor figure, and figures for the project-based deep dives."),
+ ("Reconcile keyword numbers", "Corpus-wide keyword2GO rejection (14–24%) is far below the SPKW project subsets (79–100%); state the selection."),
  ("Re-derive project numbers", f"{n_proj} numbers are still copied from project pages; each needs a script under paper/scripts/."),
  ("Gene selection", "Not a random sample: report results by campaign type (whole proteome, thematic, term audit)."),
  ("Extrapolate", "Multiply per-pipeline error rates by current UniProt-GOA volumes."),

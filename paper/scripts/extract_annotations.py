@@ -22,6 +22,24 @@ def ref_source(ref):
         return ref
     return ref.split(":")[0] if ":" in ref else ref
 
+def clade(path, taxon_id):
+    """Coarse clade from the UniProt OC lineage lines in the gene folder."""
+    oc = ""
+    for f in glob.glob(os.path.join(os.path.dirname(path), "*-uniprot.txt")):
+        with open(f, errors="replace") as fh:
+            oc = " ".join(l[5:].strip() for l in fh if l.startswith("OC   "))
+        break
+    if taxon_id == "NCBITaxon:9606": return "Human"
+    if oc.startswith("Viruses"): return "Viruses and phages"
+    if oc.startswith("Archaea"): return "Archaea"
+    if oc.startswith("Bacteria"): return "Bacteria"
+    if not oc.startswith("Eukaryota"): return "Unknown"
+    if "Mammalia" in oc: return "Other mammals"
+    if "Metazoa" in oc: return "Other animals"
+    if "Viridiplantae" in oc: return "Plants and algae"
+    if "Fungi" in oc: return "Fungi"
+    return "Protists"
+
 def one(path):
     rel = os.path.relpath(path, ROOT)
     org = rel.split(os.sep)[1]
@@ -33,6 +51,7 @@ def one(path):
     if not isinstance(d, dict):
         return None, [], rel
     anns = d.get("existing_annotations") or []
+    grp = clade(path, (d.get("taxon") or {}).get("id"))
     rows = []
     for a in anns:
         if not isinstance(a, dict):
@@ -40,7 +59,7 @@ def one(path):
         t = a.get("term") or {}
         r = a.get("review") or {}
         rows.append({
-            "organism": org,
+            "organism": org, "clade": grp,
             "gene": d.get("gene_symbol"),
             "id": d.get("id"),
             "term_id": t.get("id"),
@@ -54,7 +73,7 @@ def one(path):
             "has_source_defects": bool(r.get("source_defects")),
         })
     rev = {
-        "organism": org, "gene": d.get("gene_symbol"), "id": d.get("id"),
+        "organism": org, "clade": grp, "gene": d.get("gene_symbol"), "id": d.get("id"),
         "path": rel, "n_annotations": len(rows),
         "n_core_functions": len(d.get("core_functions") or []),
         "n_references": len(d.get("references") or []),
