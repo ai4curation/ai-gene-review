@@ -119,8 +119,9 @@ ND root-term rows and making hierarchical rules respect qualifiers left 210 rows
 136 reviews. The 124 rows whose broad term was plainly true (redundant, removed for
 one row's weak evidence, or `cytoplasm`/`membrane` read as cytosol or integral
 membrane) were then changed to TOO_GENERAL, or to the action already on another row for
-the same term. A second batch fixed 16 more rows in 14 reviews (47 rows in 43 reviews
-were still flagged on main by then). The rest are judgement cases and stay WARNINGs:
+the same term. By the second batch, 47 rows in 43 reviews were still flagged on main;
+the rest had been re-curated by other PRs or dropped by GOA and GO refreshes in between.
+That batch fixed 15 more rows in 13 reviews. The rest are judgement cases and stay WARNINGs:
 ontology placements a review disputes (some GO edges look wrong, such as microtubule
 motor activity under an isomerase term), pseudoenzymes, genuine biological disputes, and
 rows on GO:0061753, which GOA's ontology now marks obsolete but the local GO release
