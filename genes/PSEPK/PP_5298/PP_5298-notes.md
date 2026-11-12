@@ -11,3 +11,10 @@ The E. coli pathway paper includes "hydrolysis of the gamma-glutamyl linkage of
 gamma-glutamyl-gamma-aminobutyrate" as the terminal deglutamylation reaction
 [PMID:15590624]. KT2440 also contains PP_2179 and PP_3598 with the same exact EC
 assignment, so relative in-vivo flux remains unresolved.
+
+## 2026-11-12 review round
+
+- The UniRule L-glutamine metabolic process row was changed from REMOVE to
+  MARK_AS_OVER_ANNOTATED: it rests on the GATase fold, the characterized
+  ortholog SpuA prefers gamma-Glu-GABA [PMID:34605433], and PP_5298 itself is
+  unassayed.

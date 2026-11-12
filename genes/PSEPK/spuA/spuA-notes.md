@@ -10,8 +10,9 @@ file (projects/P_PUTIDA/deep-research/PSEPK__gamma-glutamyl-putrescine-catabolis
   TreeGrafter rows descend from PAINT node PTN000230196, seeded by E. coli PuuD.
 - P. aeruginosa SpuA "exhibits a preference for γ-Glu-GABA as a substrate"
   [PMID:34605433].
-- The UniRule L-glutamine metabolic process row is removed: the PuuD subfamily
-  does not use glutamine, and a glutamine-using GATase was inactive on
-  gamma-Glu-GABA [PMID:34605433].
+- The UniRule L-glutamine metabolic process row is marked over-annotated: it
+  rests on the class I GATase fold, and the characterized ortholog SpuA prefers
+  gamma-Glu-GABA [PMID:34605433], but this paralog is unassayed, so glutamine use
+  is not excluded (same treatment as the GS rows on the KT2440 PuuA paralogs).
 - KT2440 has three PuuD-family paralogs (PP_5298, PP_2179 spuA, PP_3598); none
   has been assayed.
