@@ -100,7 +100,7 @@ Eukaryota restriction for IPR000426 to ubiquitin-dependent protein catabolic
 process and IPR005024 to vacuolar transport; and narrowing IPR000534 to NAD
 binding. interpro2go has no conditions, so the two restriction rows each name a
 curated replacement rule in [rules/curated](../rules/curated/README.md) (CR-0001,
-CR-0003) that couples the InterPro condition with a taxon or module condition.
+CR-0003) that couples the InterPro condition with a taxon condition.
 
 ## What curators can act on
 

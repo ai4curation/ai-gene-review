@@ -153,15 +153,29 @@ Every verdict needs receipts: checkable facts with a named source. Read
 `docs/rule_review_receipts.md` before writing a verdict; `just rules-validate`
 enforces it.
 
-- **ACCEPT**: every condition set of the rule was examined and each is supported.
-- **MODIFY** / **SPLIT**: a specific defect, with the set, protein or term named
-  in `suggested_modifications`.
-- **DEPRECATE**: false positives shown with UniProt accessions in
-  `annotation_assessments[].incorrect_examples`, an obsolete consequent, or a
-  withdrawn rule. A true but general term, a redundant rule and low recall are
-  not reasons to deprecate.
-- **UNDECIDED**: the rule was not examined set by set, or the evidence does not
-  settle it. This is the correct verdict for a mega-rule you sampled.
+A review answers two questions. **Accuracy**: is the annotation true for the
+proteins each set matches? **Meaning and parsimony**: is the rule a useful
+biological statement made with necessary and sufficient conditions? Answer the
+second by grouping the sets into `biological_units` (families, complexes,
+pathways), finding the most informative curated GO term for each, and recording
+`biological_meaning`, `parsimony`, `go_specificity` and `taxonomic_scope` with
+numbers from `projects/ARBA_REVIEW/rule_redundancy.tsv`, per-set counts and
+`rules/arba/_interpro2go.txt`.
+
+- **ACCEPT**: every condition set was examined and each is supported, the rule
+  is `COHERENT`, and parsimony is `PARSIMONIOUS` or `ACCEPTABLE`.
+- **SPLIT**: an umbrella term over units that each have a more informative term.
+  Name at least two units with their terms; say which sets go where. A stated
+  sample is enough for a large rule.
+- **MODIFY**: a specific defect, with the set, protein, term or taxon named in
+  `suggested_modifications`.
+- **DEPRECATE**: the rule is still served and should go: false positives shown
+  with UniProt accessions in `annotation_assessments[].incorrect_examples`, an
+  obsolete consequent, or every set covered by a rule for a more specific term
+  (the rule emits nothing). Otherwise a true but general term is SPLIT or MODIFY.
+- **WITHDRAWN**: UniProt no longer serves the rule (`rule.withdrawn: true`).
+- **UNDECIDED**: the evidence settles neither question. A sampled mega-rule is
+  UNDECIDED on accuracy, but its sample may still show it is an umbrella (SPLIT).
 
 ## Before You Write a Claim
 
@@ -176,13 +190,17 @@ These are the errors an audit found in most earlier reviews. Check each one.
    UniProtKB for the conjunction and look at what comes back.
 3. **Alternative sets are meant to be disjoint.** Low overlap between sets is not
    incoherence, and overlap between conditions inside one set is harmless.
-4. **Size is not evidence.** The number of condition sets says nothing about
-   whether an annotation is true. The cap of 12 in the analysis tool is how many
-   sets it reads, not a limit rules should respect. A rule too large to examine
-   is UNDECIDED.
-5. **General is not false.** A broad GO term is harder to get wrong, not easier.
-   If the "better" terms you would propose are descendants of the rule's term,
-   the rule is correct.
+4. **Size is not evidence of error, and is not nothing either.** The number of
+   condition sets says nothing about whether an annotation is true, and the cap
+   of 12 in the analysis tool is how many sets it reads, not a limit. What size
+   can show is a parsimony problem, and that needs a number: sets that match no
+   protein, sets already covered by a more specific rule, a single InterPro
+   family that would replace the construction.
+5. **General is not false, but it can be uninformative.** A broad GO term is
+   harder to get wrong. If the better terms you would propose are descendants of
+   the rule's term, the annotation is correct and the rule is
+   `TRUE_BUT_UNINFORMATIVE`: the verdict is SPLIT toward those terms, shown per
+   unit with the curated annotation, never DEPRECATE.
 6. **Check the "false positive" first.** Before calling a family or protein a
    false positive, look up its experimental annotations to the term and its
    descendants in QuickGO. ARBA rules are mined from Swiss-Prot annotations, so

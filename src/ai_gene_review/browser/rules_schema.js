@@ -28,6 +28,12 @@ window.searchSchema = {
       "sortBy": "alphabetical"
     },
     {
+      "field": "meaning_assessment",
+      "label": "Biological meaning",
+      "type": "string",
+      "sortBy": "alphabetical"
+    },
+    {
       "field": "parsimony_assessment",
       "label": "Parsimony",
       "type": "string",
@@ -128,6 +134,11 @@ window.searchSchema = {
       "field": "funfam_ids",
       "label": "FunFams",
       "type": "array"
+    },
+    {
+      "field": "meaning_assessment",
+      "label": "Meaning",
+      "type": "string"
     },
     {
       "field": "parsimony_assessment",
