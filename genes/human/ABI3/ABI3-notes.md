@@ -69,3 +69,9 @@ Open expert questions already captured in the YAML:
   phosphorylation, migration, phagocytosis, and microglial surveillance?
 - How do phosphorylation sites S213, S216, and S342 regulate ABI3 stability and
   WRC incorporation in vivo?
+
+## PTHR10460 Family Harmonization Notes
+
+- **`GO:0030334` (`regulation of cell migration`, `IBA` and `IDA` `PMID:11956071`)**: Retained as `ACCEPT` at the sign-neutral term rather than refining to `GO:0030336` (`negative regulation of cell migration`), because all directional motility-suppression evidence (`PMID:11956071` reduced motility in NESH transfectants; `PMID:26428302` reduced WAVE2 plasma-membrane translocation upon exogenous NESH/Abi-3 expression) comes from forced/ectopic overexpression, whereas endogenous loss-of-function migration directionality in microglia remains unestablished.
+- **`GO:0002357` (`defense response to tumor cell`, `IEA` and `IMP` `PMID:21223585`)**: Harmonized to `MARK_AS_OVER_ANNOTATED` (cell-autonomous motility/senescence modulation upon ectopic ABI3 re-expression in carcinoma cell lines rather than host immune defense against tumor cells).
+- **Protein-binding policy & `PMID:18480067` audit**: Resolved the nine bare `GO:0005515` `IPI` rows (`MODIFY` -> `GO:0035591` on `PMID:17101133`; `REMOVE` on eight high-throughput binary interactome rows), harmonized `GO:0042802` (`identical protein binding`) to `KEEP_AS_NON_CORE`, hedged the C-terminal SH3 PAK interaction per `PMID:11956071` ("seems to interact"), and recorded `correctness: UNVERIFIED` (`full_text_unavailable: true`) on the title-only *Ann Oncol* letter `PMID:18480067`.
