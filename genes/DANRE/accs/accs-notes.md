@@ -12,7 +12,7 @@
     2. `PMID:27189481` (Pasquier et al. 2016, *BMC Genomics* 17:368): PhyloFish multi-tissue RNA-seq de novo transcriptome database across 23 ray-finned fishes (`relevance: LOW`).
 
 ## 3. Active-Site Residue Comparison (`A0A8M1N4R4` sv 1 vs Human `Q96QU6` sv 1)
-- `Tyr83` / `Trp86` (`Q96QU6` `Tyr132` / `Trp135`): **Retained** — partner-subunit PLP H-bond / SAM-blocking tyrosine and aromatic side-pocket tryptophan.
+- `Tyr83` / `Trp86` (`Q96QU6` `Tyr132` / `Trp135`): **Retained** — partner-subunit PLP H-bond tyrosine (modeled in AlphaFold2/AutoDock Vina docking on human `ACCS` as sterically impeding productive SAM binding, `PMID:39876065`) and aromatic side-pocket tryptophan.
 - `Asp237` (`Q96QU6` `Asp286`): **Retained** — fold-type I pyridinium-stabilizing aspartate.
 - `Lys274` (`Q96QU6` `Lys323`): **Retained** (matched by `PROSITE:PS00105` / `InterPro:IPR004838` class-I aminotransferase PLP attachment site) — covalent internal-aldimine Schiff-base lysine.
 - `Cys302` (`Q96QU6` `Arg351`): **Diverged / Lost** (`R -> C`) — whereas mammalian `ACCS` orthologs conserve cationic `Arg351` in the partner-monomer substrate pocket (`PMID:39876065` Figure 7), teleost `accs` carries `Cys302` at this position (and appends a distinct ~95-residue C-terminal extension at residues 460..556).

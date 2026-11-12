@@ -18,4 +18,4 @@
 
 ## 4. Annotation Decisions
 - `GO:0006520` (`IBA`, `PTN002887088`) & `GO:0008483` (`IBA`, `PTN002887088`): `REMOVE` — stale propagations from retired plant aminotransferase PAINT node `PTN002887088`; current PAINT blocks catalytic propagation into `SF1` via an explicit `IKR` loss gate at `PTN000202914`.
-- `GO:0030170` (`IEA`, `InterPro:IPR004839`): `MARK_AS_OVER_ANNOTATED` — unverified InterPro2GO domain projection onto a predicted (`PE 4`) member of putative pseudoenzyme clade `PTHR43795:SF1` that substitutes `Tyr447` at the inter-subunit pocket and has never been assayed for PLP binding.
+- `GO:0030170` (`IEA`, `InterPro:IPR004839`): `MARK_AS_OVER_ANNOTATED` — while cofactor-anchoring residues (`Lys419`, `Asp382`, plus `Arg553`) are retained, the partner-subunit substrate-binding pocket residue diverges (`Tyr447` at `Arg351` of `ACCS`) on an unassayed predicted (`PE 4`) member of putative pseudoenzyme clade `PTHR43795:SF1`, so `MARK_AS_OVER_ANNOTATED` reflects an unverified electronic cofactor-binding prediction on a putative pseudoenzyme rather than a demonstrably broken PLP site.

@@ -10,7 +10,7 @@
   - Zero rat-specific publications biochemically purify or genetically perturb rat `Accs` directly; functional inference rests on 1:1 orthology and active-site identity with human `ACCS` (`PMID:11470512`, `PMID:39876065`).
 
 ## 3. Active-Site Residue Conservation (`A0A8J8YIP6` sv 2 vs Human `Q96QU6` sv 1)
-- `Tyr133` (`Q96QU6` `Tyr132`): **Retained** — partner-subunit PLP H-bond donor and steric blocker of SAM cyclization.
+- `Tyr133` (`Q96QU6` `Tyr132`): **Retained** — partner-subunit PLP H-bond donor; AlphaFold2 modeling and AutoDock Vina docking on human `ACCS` hypothesize that `Tyr132(B)` sterically impedes productive SAM binding (`PMID:39876065`).
 - `Trp136` (`Q96QU6` `Trp135`): **Retained** — partner-subunit aromatic pocket residue (`PMID:39876065` Figure 7).
 - `Asp287` (`Q96QU6` `Asp286`): **Retained** — fold-type I pyridinium-stabilizing aspartate.
 - `Lys324` (`Q96QU6` `Lys323`): **Retained** — covalent PLP Schiff-base lysine and general base.
@@ -18,6 +18,6 @@
 - `Arg458` (`Q96QU6` `Arg457`): **Retained** — substrate alpha-carboxylate-anchoring arginine.
 
 ## 4. Annotation Decisions
-- `GO:0006520` (`IBA`, `PTN002887088`) & `GO:0008483` (`IBA`, `PTN002887088`): `REMOVE` — stale propagations from retired plant aminotransferase PAINT node `PTN002887088`.
+- `GO:0006520` (`IBA`, `PTN002887088`) & `GO:0008483` (`IBA`, `PTN002887088`): `REMOVE` — stale propagations from retired plant aminotransferase PAINT node `PTN002887088` (resting on *Arabidopsis* PAT transamination; cleavage of L-cysteine S-conjugates/S-sulfoxides falls under `GO:0006575` *modified amino acid metabolic process*, not `GO:0006520`, and no `NEW` `GO:0006575` BP row is asserted while the endogenous in vivo substrate remains unidentified).
 - `GO:0030170` (`IEA`, `InterPro:IPR004839`): `ACCEPT` — supported by complete conservation of `Lys324` and `Asp287` and stoichiometric PLP binding in 1:1 human ortholog `Q96QU6`.
-- `NEW` `GO:0016846` (`carbon-sulfur lyase activity`, `ISS`, `with: UniProtKB:Q96QU6`, `PMID:39876065`): Proposed based on 1:1 orthology and strict conservation of `K324`, `D287`, `R458`, `W136`, `Y133`, and `R352`.
+- `NEW` `GO:0047804` (`cysteine-S-conjugate beta-lyase activity`, `ISS`, `with: UniProtKB:Q96QU6`, `PMID:39876065`): Proposed based on 1:1 orthology, strict conservation of `K324`, `D287`, `R458`, `W136`, `Y133`, and `R352`, and full Michaelis–Menten saturation kinetics of `Q96QU6` on `S-phenyl-L-cysteine` (substrate 4, EC 4.4.1.13) alongside cysteine S-sulfoxides.
