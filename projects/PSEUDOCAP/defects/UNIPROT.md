@@ -63,7 +63,7 @@ ARBA00086662 assigns the ArgJ ornithine acetyltransferase term to an ArgA-type N
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/aruG/aruG-ai-review.yaml`
 
-P80358 carries Pfam PF04958 (AstA) and InterPro IPR007041 (Arg_succinylTrfase_AstA/AruG), and is a subunit of arginine N-succinyltransferase. E. coli AstA (P0AE37) is classified in the arginine N-succinyltransferase family; this chain should be too. The dihydrolase-family statement probably echoes the PANTHER PTHR30420 family name.
+P80358 carries Pfam PF04958 (AstA) and InterPro IPR007041 (Arg_succinylTrfase_AstA/AruG), and is a subunit of arginine N-succinyltransferase. E. coli AstA (P0AE37) is classified in the arginine N-succinyltransferase family; this chain should be too. The dihydrolase-family statement probably echoes the PANTHER PTHR30420 family name. The identical error on the alpha chain is reported from the astA review (UniProtKB:P80357), and both chains of the one heterotetramer should be corrected together.
 
 > Pfam; PF04958; AstA; 1.
 > — file:PSEAE/aruG/aruG-uniprot.txt
