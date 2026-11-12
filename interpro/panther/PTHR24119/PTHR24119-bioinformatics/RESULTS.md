@@ -25,7 +25,7 @@ activator activity`) across the family, this survey verifies for all 27 members:
 
 ## Summary of Findings (`member_architectures.tsv`)
 
-1. **Soluble eukaryotic ACBD6 orthologs in `PTHR24119:SF0` (15 entries)**:
+1. **Soluble eukaryotic ACBD6 orthologs in `PTHR24119:SF0` (14 entries)**:
    - Mammalian (`Q9BR61`, `Q9D061`, `Q5RJK8`, `A2VDR2`, `G3N0L6`), avian (`E1C483`),
      amphibian (`Q4V869`, `Q66JD7`, `Q28E11`, `A0A8J1N1S3`), teleost (`Q4V8X4`), insect
      (`Q9VRG6` / `anox`), nematode (`Q9XVJ0` / `acbp-5`), and amoebozoan (`Q54GC8` /
@@ -33,10 +33,11 @@ activator activity`) across the family, this survey verifies for all 27 members:
      have **no** `FT TRANSMEM` segment (`ft_transmem=none`), and strictly conserve the
      CoA-headgroup triad (`Tyr69`/`Lys73`/`Lys95` in `Q9BR61`; `Y87/K91/K113` in `Q4V8X4`;
      `Y36/K40/K62` in `Q9VRG6`; `Y55/K59/K82` in `Q9XVJ0`; `Y36/K40/K62` in `Q54GC8`).
-   - All reviewed orthologs conserve helix-`alpha4` `Tyr114` (`Y132` in `Q4V8X4`, `Y81` in
+   - All ACB-domain orthologs conserve helix-`alpha4` `Tyr114` (`Y132` in `Q4V8X4`, `Y81` in
      `Q9VRG6` and `Q54GC8`, `Y101` in `Q9XVJ0`). At the mammalian `Ser106`/`Ser108` regulatory
-     loop, zebrafish `Q4V8X4` retains `Ser124` (`S124`) and carries glutamate (`E126`) at the
-     `Ser108`-equivalent position (`Y87/K91/K113/S124/E126/Y132`).
+     loop, zebrafish `Q4V8X4` retains `Ser124` (`S124`) and carries glutamate (`E126`, a
+     proposed structural phosphomimic shared with land-plant Class-II ACBPs; `PMID:30642881`)
+     at the `Ser108`-equivalent position (`Y87/K91/K113/S124/E126/Y132`).
 2. **Land-plant Class-II ACBPs in `PTHR24119:SF4` and `PTHR24119:SF0` (5 entries)**:
    - *Arabidopsis* `ACBP2` (`Q9STP8`, `SF4`, `FT TRANSMEM 11..31`), *Arabidopsis* `ACBP1`
      (`Q9SM23`, `SF0`, `FT TRANSMEM 11..31`), and *Oryza sativa* `ACBP4` (`A3AYR1`, `SF0`,
@@ -46,7 +47,7 @@ activator activity`) across the family, this survey verifies for all 27 members:
    - Full-length *Populus trichocarpa* `B9IDN1` (353 aa, `ACB:106..196`) retains the N-terminal
      extension upstream of the ACB domain, whereas N-terminally truncated *Populus* entry
      `A0A2K1Y7F9` (246 aa, `ACB:1..88`, `ft_transmem=none`) begins directly at the ACB domain.
-3. **ACB-less repeat/domain-creep and truncated entries (`has_ipr000582=False`, 7 entries)**:
+3. **ACB-less repeat/domain-creep and truncated entries (`has_ipr000582=False`, 8 entries)**:
    - Inside `PTHR24119:SF0`:
      - `UniProtKB:O50999` (*Borreliella burgdorferi* `BB_B28`, reviewed, 414 aa): `interpro_domains=IPR002110;IPR036770`, `ft_transmem=none`, `ANK 1:326..355;ANK 2:359..389`, `no_ACB_domain`.
      - `UniProtKB:A0A1L8GMQ7` (*Xenopus laevis* truncated `acbd6.L`, unreviewed, 169 aa): `interpro_domains=IPR002110;IPR036770`, `ft_transmem=none`, `ANK:65..97;ANK:98..130`, `no_ACB_domain`.

@@ -11,7 +11,7 @@
 
 ## Domain Architecture & Sequence-Verified Pocket Residues (`Q9VRG6`, SV=2)
 - Soluble 243-aa intracellular protein lacking any transmembrane domain or signal peptide.
-- **N-terminal ACB domain** (residues 9–94; `InterPro:IPR000582`): conserves CoA headgroup triad `Tyr36`/`Lys40`/`Lys62` (aligning to human `Q9BR61` `Tyr69`/`Lys73`/`Lys95`) and helix-`αH4` acyl-chain pocket `Tyr81` (aligning to human `Tyr114`). Lacks the vertebrate-specific `Ser106`/`Ser108` regulatory phosphorylation loop motif.
+- **N-terminal ACB domain** (residues 9–94; `InterPro:IPR000582`): conserves CoA headgroup triad `Tyr36`/`Lys40`/`Lys62` (aligning to human `Q9BR61` `Tyr69`/`Lys73`/`Lys95`) and helix-`αH4` acyl-chain pocket `Tyr81` (aligning to human `Tyr114`), as well as serines `Ser73` and `Ser75` at the positions aligning to human regulatory loop `Ser106` and `Ser108` (insect phosphorylation not yet assayed).
 - **C-terminal ANK-repeat domain** (`ANK1` residues 148–180, `ANK2` residues 181–213; `InterPro:IPR002110`): two tandem ankyrin repeats homologous to the NMT-binding ANK module of human `ACBD6`. *Drosophila* encodes a single essential cytosolic N-myristoyltransferase (`Nmt`, `FBgn0002942`), making NMT interaction/activation plausible though not yet directly assayed in fly.
 
 ## Physiological Biology (`PMID:18773904`, `PMID:21917925`)
