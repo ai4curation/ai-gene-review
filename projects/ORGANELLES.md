@@ -356,7 +356,9 @@ protein embedded in, attached to, or peripherally associated with it."). It is
 so it says more than the bare membrane term (which side, and that the attachment
 is peripheral) rather than avoiding it. The route needs direct evidence that the
 protein is at the organelle, a named integral partner, dependence on it, and
-cytosolic synthesis with no signal or targeting sequence (which fixes the side); a
+cytosolic synthesis with no signal or targeting sequence (which fixes the side),
+checked both in the UniProt features and in the literature (for UFSP2, worm ODR-8 is
+diffusely cytosolic without its partner); a
 stability result alone shows an obligate partnership, not a location.
 
 - **UFSP2** gains a NEW GO:0098554 IC row. It has no TM or signal peptide; its
