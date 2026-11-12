@@ -5,7 +5,7 @@
 - **MOD gene description check**: `mod_description_deep_research DROME CG2059` confirmed that FlyBase provides no hand-written `MOD_provided_gene_description` for `FBgn0029942` (`CG2059`).
 - **Active catalytic triad (`file:human/ABHD11/ABHD11-bioinformatics/RESULTS.md`)**:
   - `CG2059` (`PANTHER:PTN000106319`) is the catalytically active *Drosophila melanogaster* member of the Diptera duplication (`PTN002451173`, sister to `Gly120` pseudoenzyme `CG14717` `Q9VGJ4`).
-  - `Q9W3R8` conserves the canonical oxyanion-hole motif (`60-HGLGG-64`) and complete charge-relay catalytic triad: `Ser127` (`123-LLGHSMGGK-131`), `Asp151` (`147-IITIDISPS-155`), and `His286` (`282-PKAGHWIHA-290`), corresponding 1:1 to human `ABHD11` (`Q8NFV4` `sv=2`) `Ser132`, `Asp156`, and `His287`.
+  - `Q9W3R8` conserves the canonical oxyanion-hole motif (`59-HGLFG-63` within `56-LTYHGLFGSK-65`) and complete charge-relay catalytic triad: `Ser127` (`123-CMGHSMGGR-131`), `Asp151` (`147-LIVVDISPI-155`), and `His286` (`282-LDAGHLVHF-290`), corresponding 1:1 to human `ABHD11` (`Q8NFV4` `sv=2`) `Ser132`, `Asp156`, and `His287`.
 
 ## 2. Biochemical Evidence and Literature Search (`ND` Audit)
 - **Direct chemoproteomic / functional proteomic catalysis in *Drosophila melanogaster***:

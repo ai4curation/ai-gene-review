@@ -3,7 +3,7 @@
 ## 1. Gene Identity and Orthology
 
 - **Gene / Accession**: *Rattus norvegicus* `Abhd11` (`RGD:1304681`, `UniProtKB:A0A8I6AS56`, unreviewed TrEMBL entry, 342 aa, `sv=1`), `PANTHER:PTHR46118:SF4` (`PROTEIN ABHD11`).
-- **Active-site conservation**: Contains a 36-aa N-terminal extension relative to canonical 306-aa human `ABHD11` (`Q8NFV4` `sv=2`), placing the conserved oxyanion-hole motif at `101-HGLGG-105`, the nucleophilic elbow serine at **`Ser168`** (`166-GHSMG-170`), the beta-6 charge-relay aspartate at **`Asp192`** (`LIAVDISPV`), and the general-base histidine at **`His323`** (`PNASHWIHA`) (`genes/human/ABHD11/ABHD11-bioinformatics/RESULTS.md`).Rat `Abhd11` is the 1:1 murine ortholog of mouse `Abhd11` (`UniProtKB:Q8K4F5`, ~95% identity across the mature chain) and human `ABHD11` (`UniProtKB:Q8NFV4`).
+- **Active-site conservation**: Contains a 36-aa N-terminal extension relative to canonical 306-aa human `ABHD11` (`Q8NFV4` `sv=2`; internal `Met72` precedes conserved `78-RPLPLSYNLL-87`), placing the conserved oxyanion-hole motif at `100-HGLFG-104` (within `97-VLLHGLFGSK-106`), the nucleophilic elbow serine at **`Ser168`** (`164-LVGHSMGGK-172`, `166-GHSMG-170`), the beta-6 charge-relay aspartate at **`Asp192`** (`188-LVVVDISPA-196`), and the general-base histidine at **`His323`** (`319-PNAGHWVHS-327`) (`genes/human/ABHD11/ABHD11-bioinformatics/RESULTS.md`). Rat `Abhd11` is the 1:1 murine ortholog of mouse `Abhd11` (`UniProtKB:Q8K4F5`, ~95% identity across the mature chain) and human `ABHD11` (`UniProtKB:Q8NFV4`).
 
 ## 2. Targeted Literature Search for *Rattus norvegicus* `Abhd11` (`ND` Verification)
 
