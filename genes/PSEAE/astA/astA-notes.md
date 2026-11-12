@@ -40,3 +40,30 @@ The GO:0009015 node defect is recorded here once and cross-referenced from astB 
 |---|---|---|---|---|---|---|---|---|
 | PTN000764516 | GO:0006527 L-arginine catabolic process | 4 | 12 (6 taxa) | GO:0006527, IDA, PMID:16593724 (PseudoCAP) | SOUND | AstA is the alpha subunit of arginine N-succinyltransferase, step 1 of the AST pathway. The 1986 paper establishes the pathway (extract assays, aru mutants); gene identity came later (PMID:7523119, PMID:9393691). Abstract only. | E. coli AstB P76216 (IMP PMID:9696779), astB O50175, aruG P80358 | Yes |
 | PTN000764516 | GO:0009015 N-succinylarginine dihydrolase activity | 1 | 12 | not seeded by astA (sole seed E. coli AstB P76216, IDA PMID:15703173) | n/a (not a PseudoCAP seed) | Node term does not suit the clade: the node spans the AstA/AruG succinyltransferase subfamily, which has no dihydrolase activity. GO_CENTRAL defect recorded here. | — | Stands for AstB (SF2) only; must move to the SF2 node |
+
+## Session 2026-11-12: consolidated with the retired aruF review
+
+This folder duplicated `genes/PSEAE/aruF`, which main had added for the same accession (P80357)
+through the AST-module pass. astA survives as the folder name: GOA/PseudoCAP give the symbol as
+astA, UniProt has `GN Name=astA` with `aruF` only as a synonym, and main's aruF file itself already
+carried `gene_symbol: astA`. The two reviews agreed on all five actions; where they differed, the
+aruF pass was right, so its readings were carried across and the notes above are superseded on two
+points:
+
+- The SIMILARITY line **is** now recorded as a structured defect. The note above said it was "not
+  recorded as a structured defect (not tied to an annotation row)". That rationale was wrong:
+  `references[].reference_review.source_defects` is exactly the slot for a defect in the record
+  rather than in an annotation row, and it is the slot the aruG review uses for the identical error
+  on the beta chain (UniProtKB:P80358). Leaving it out meant UniProt was told that one of the two
+  chains of one heterotetramer has a wrong family line while the other, with the same evidence, was
+  not reported. The P80357 entry is restored here as WRONG_STATEMENT / CC:SIMILARITY, PROBABLE,
+  cross-referencing the beta chain so both are corrected together.
+- GO:0008791 IEA now carries a WRONG_QUALIFIER UniProt defect (enables -> contributes_to), and the
+  core function uses `contributes_to_molecular_function` rather than `molecular_function`. The
+  purified enzyme is a heterotetramer of two different chains and no single chain is shown active
+  alone, so the activity belongs to the complex; this is the idiom used for E. coli NuoB/NuoC and
+  CysI. The action stays ACCEPT, since the term itself is right.
+- Source defect count for this review is therefore 2, not the 1 recorded above: the node-level
+  GO_CENTRAL WRONG_TERM (CONFIRMED) and this UniProt WRONG_STATEMENT (PROBABLE). The
+  `full_text_unavailable: true` flags the aruF pass carried on PMID:16593724, PMID:7523119 and
+  PMID:9393691 are also restored, so the abstract-only status is machine-readable and not only prose.

@@ -34,3 +34,27 @@ seeds).
 No GO_CENTRAL defect. Open point: GO:0000270 propagates to Dictyostelium pscA, which has no cell
 wall peptidoglycan; recorded as a suggested question rather than a defect, because pscA may act
 on ingested bacterial peptidoglycan.
+
+## Session 2026-11-12: consolidated with the retired dacB review; two decisions changed
+
+This folder duplicated `genes/PSEAE/dacB`, which main had added for the same accession (Q9HZG1)
+through the peptidoglycan-module pass. PA3047 survives as the folder name, because GOA/PseudoCAP
+give the symbol as PA3047 and UniProt records no `GN Name` for the accession, only
+`OrderedLocusNames=PA3047`. The dacB pass was right on both rows where the two disagreed, so the
+Review decisions above are superseded on those two points:
+
+- GO:0004175 endopeptidase activity IDA: was ACCEPT, on the stated ground that GO has no term for
+  the 4,3 DD-endopeptidase reaction on peptidoglycan. That premise was false. GO:0061785
+  peptidoglycan endopeptidase activity exists ("An endopeptidase activity that uses peptidoglycan as
+  a substrate"), is in `cache/go/terms.csv`, and OLS lists GO:0004175 among its ancestors (checked
+  2026-11-12). Now MODIFY to GO:0061785, and the second core function declares it.
+- GO:0006508 proteolysis IEA: was MARK_AS_OVER_ANNOTATED. Now REMOVE, with an INTERPRO
+  DELETE_VALUE defect on the IPR000667 (Peptidase S13) to GO:0006508 mapping. PBP4 acts on the stem
+  peptides and cross-links of the sacculus, not on proteins, so the claim is wrong rather than
+  merely broad — the sanctioned use of REMOVE on a demonstrably wrong electronic mapping, with the
+  upstream fix recorded as well as the local one.
+
+Also carried across from the dacB pass: a NEW IC row for GO:0030288 outer membrane-bounded
+periplasmic space (SignalP signal peptide 1-22 in the UniProt record, plus the periplasmic location
+of the peptidoglycan substrate), `locations` on both core functions, and PMID:27716106 with its
+in vivo finding that the D,D-endopeptidase activity predominates.

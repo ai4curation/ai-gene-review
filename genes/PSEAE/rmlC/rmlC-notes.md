@@ -29,3 +29,30 @@ One PSEUDOCAP defect (WRONG_EVIDENCE_CODE, PROBABLE) on GO:0009244. No GO_CENTRA
   (checked is_a/part_of in the local GO).
 - Consistent with the wbp reviews (wbpE, wbpI): nucleotide-sugar precursor enzymes are accepted for the
   specific glycan biosynthesis term and the generic polysaccharide rows are TOO_GENERAL.
+
+## Correction, 2026-11-12: the polysaccharide-process rows are over-annotations, not TOO_GENERAL
+
+The seed verdict SOUND in the table above, and the "TOO_GENERAL, entailed by accepted GO:0009244"
+decision under Other decisions, are both superseded. They stand above as written.
+
+`just validate-families` flagged a PRUNING_CONFLICT after main was merged in: the PTHR21047 family
+review assesses the PTN000471580 GO:0000271 IBD as WRONG_NODE, with the reasoning that the members
+below the node make a soluble nucleotide-sugar donor and form no glycosidic bond, so the term
+"supports this term at no node". That is right, and this review was wrong. RmlC supplies the
+dTDP-L-rhamnose donor; the rhamnosyl transferases build the polymer. Under the project's rule on
+`involved_in` (participation means doing some of the work; necessity evidence is not participation),
+supplying a donor does not make the gene a participant in polysaccharide biosynthesis.
+
+The GO:0009244 row had made the conflation explicit, calling precursor supply "a step of core
+synthesis" on the strength of the mutant phenotype — which is necessity, not participation.
+
+Now: GO:0000271 (IBA, IDA), GO:0009103 (IDA, IEA) and GO:0009244 (IDA) are all
+MARK_AS_OVER_ANNOTATED; GO:0009244 is dropped from the core function, leaving GO:0019305
+dTDP-rhamnose biosynthetic process, which is the process RmlC does perform a step of; and the IBA
+row carries a `propagation_review` with `root_cause: TERM_SCOPING_PROBLEM` and `SOURCE_BAD` on
+PTN000471580, so "No GO_CENTRAL defect" above no longer describes the review either.
+
+This matches the three sibling reviews of the same clade, which already read the propagated row as
+over-annotated: ECOLI rfbC (IBA and ISS), PSEPK rfbC and PSEPK rmlC. The comparison with the wbp
+reviews in Other decisions above is the part that misled this pass: it reasoned by analogy with how
+those reviews were written rather than from what the enzyme does.
