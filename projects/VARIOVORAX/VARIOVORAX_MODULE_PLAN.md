@@ -185,6 +185,9 @@ Completes the *Variovorax paradoxus* TBEA6 (`VARPD`) 3,3'-thiodipropionic acid (
 | Pho regulon activator | `phoB1` | `A0A0H2M7F4` (`VPARA_10430`) | Phosphate regulon response regulator PhoB1 (230 aa, `TIGR02154`, `PTHR48111:SF40`) | Receiver domain (`PS50110`, residues 5-121, `Asp54`) + OmpR/PhoB winged-helix (`PS51755`, residues 130-226) | `GO:0000156`, `GO:0001216`, `GO:0000976`, `GO:0000160`, `GO:0016036`, `GO:0045893`, `GO:0005829` |
 | Pho regulon sensor kinase | `phoR1` | `A0A0H2MMT2` (`VPARA_10420`) | Phosphate regulon sensor histidine kinase PhoR1 (EC 2.7.13.3, 464 aa, `TIGR02966`, `PTHR45453:SF1`) | N-terminal TM (`PF11808`, 29-45) + PAS (`PF00989`) + HisKA/HATPase_c (`PS50109`, residues 216-436, `His219`) | `GO:0000155`, `GO:0004721` (phosphoprotein phosphatase activity), `GO:0000160`, `GO:0016036`, `GO:0005886` |
 
+- **Related Module:**
+  - [`modules/bacterial_pst_phosphate_uptake.yaml`](../../modules/bacterial_pst_phosphate_uptake.html) (`MODULE:bacterial_pst_phosphate_uptake` — reusable `COMPLETE` bacterial PstSACB phosphate-uptake module; `phoU`, `phoB1`, and `phoR1` encode the cognate phosphate-homeostasis and starvation-signaling regulators)
+
 ---
 
 ### Batch 5B: Copper Efflux P1B-1 ATPase (`copA2`) and Zinc Uptake Repressor (`zur`)
