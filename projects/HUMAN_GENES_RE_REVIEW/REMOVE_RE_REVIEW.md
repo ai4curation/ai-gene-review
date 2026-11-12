@@ -372,7 +372,7 @@ Nineteen rows stay `UNDECIDED`. Each needs the full text of one paper.
 | GDPD2, lamellipodium (IEA from mouse) | PMID:12933806 | The donor rows are lamellipodium, actin filament and plasma membrane; the abstract says only "cell periphery". |
 | HSPA1A and HSPA1B, virus receptor activity and symbiont entry into host cell (4 IEA rows) | PMID:16537599 | The rows rest on a UniProt statement about rotavirus entry whose paper, by its abstract, studied hsc70 (HSPA8). |
 | INTU, cell division and negative regulation of cell division (2 IEA rows from mouse) | PMID:22935613 | The abstract reports loss of cilia and failed differentiation of follicular keratinocytes, and no division phenotype. |
-| LPA, serine-type endopeptidase activity and proteolysis (2 IEA rows) | the paper of the experimental row in the LPA review | The rows follow the experimental serine-type endopeptidase row, which that review leaves undecided. |
+| LPA, serine-type endopeptidase activity and proteolysis (2 IEA rows) | PMID:2531657 | The rows follow the experimental serine-type endopeptidase row of the LPA review (IDA, from the report that lipoprotein(a) cleaves fibronectin), which that review leaves undecided. |
 | MTIF2, ribosome disassembly (ISS from bovine IF2mt) | PMID:12095986 | The abstract attributes subunit dissociation to IF3mt; the same paper gave the term to MTIF3 the day before. |
 | PCSK1, identical protein binding (IEA from mouse) | PMID:19376969 | The donor is an IntAct self-interaction from a structural study of the sorting domain. |
 | PRG3, negative regulation of translation (IDA) | PMID:10318872 | One of seven process terms made from the paper in 2003; the abstract reports cell killing and stimulation of neutrophils and basophils. |
