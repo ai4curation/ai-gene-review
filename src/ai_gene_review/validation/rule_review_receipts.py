@@ -180,7 +180,7 @@ def labels_agree(stated: str, official: str) -> bool:
 
 
 _NOT_A_NAME = re.compile(
-    r"[=%|;]|\b(?:jaccard|containment|overlap|subset|proteins?\b.*\d|quickgo|ipr2go|interpro2go|uniprotkb|quer(?:y|ies))\b"
+    r"[=%|;/]|\.(?:tsv|txt|ya?ml|md|json|py)\b|\b(?:jaccard|containment|overlap|subset|proteins?\b.*\d|quickgo|ipr2go|interpro2go|uniprotkb|quer(?:y|ies))\b"
     r"|^(?:or|for|a|an|the|its|see|already|as|in|cs\d*|iea|ida|imp)\b",
     re.IGNORECASE,
 )
@@ -199,6 +199,8 @@ def looks_like_a_name(text: str) -> bool:
     >>> looks_like_a_name("or GO:0036092")
     False
     >>> looks_like_a_name("TLC domain")
+    False
+    >>> looks_like_a_name("rule_redundancy.tsv")
     False
     """
     if _NOT_A_NAME.search(text.strip()):
@@ -858,6 +860,10 @@ def refresh_labels(files: Sequence[Path], labels_file: Optional[Path] = None) ->
             for condition in (condition_set or {}).get("conditions") or []
         ]
         stated += [(a.get("go_id", ""), a.get("go_label")) for a in rule.get("go_annotations") or []]
+        stated += [
+            (str(unit.get("most_informative_term_id") or ""), unit.get("most_informative_term_label"))
+            for unit in data.get("biological_units") or []
+        ]
         for identifier, label in stated:
             if not _ID_RE.fullmatch(identifier):
                 continue
