@@ -95,3 +95,28 @@
   fatty-acyl-CoA biosynthetic process, plain ER, and enzyme binding → KEEP_AS_NON_CORE.
 </content>
 </invoke>
+
+## 2026-11-12: correct the GO:0080023 refinement rationale
+
+This entry supersedes the reaction-direction explanation in the earlier curation
+summary. The existing `MODIFY` action and replacement `GO:0102158` are retained.
+The [official GO:0080023 definition](https://www.ebi.ac.uk/QuickGO/term/GO:0080023)
+is “Catalysis of the reaction: a (3R)-3-hydroxyacyl-CoA = a (2E)-enoyl-CoA + H2O.”
+Thus its hydratase label does not make the annotation chemically wrong.
+
+The official `is_a` chain is `GO:0102158` → `GO:0080023` → `GO:0018812`.
+[GO:0102158](https://www.ebi.ac.uk/QuickGO/term/GO:0102158) supplies the more
+specific ER elongation enzyme class already supported for HACD2 by its retained
+IDA annotation from PMID:18554506 and UniProt Q6Y1H2 catalytic record
+[file:human/HACD2/HACD2-uniprot.txt, “a very-long-chain (3R)-3-hydroxyacyl-CoA = a very-long-chain”].
+This supports refinement by specificity without claiming a measured C18-C26
+substrate-kinetics panel. The original physiological-direction quotation remains
+valid source evidence and is preserved.
+
+Definitions and parent relationships were checked on 2026-11-12 using the
+[QuickGO term API](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0080023,GO:0018812,GO:0102158).
+The 1,634-byte response has SHA256
+`d4659da499d24a79087d692c55437c99aabc82813f9c6336f6a59076e9c9efe7`.
+This is a bounded rationale correction: the other 26 annotation contexts,
+all actions, native source fields, earlier quotations and `INITIALIZED` status
+are preserved. It is not a full reassessment or ClinGen completion.
