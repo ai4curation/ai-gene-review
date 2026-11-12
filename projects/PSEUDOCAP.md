@@ -552,6 +552,80 @@ The algC audit in the same batch also went unwritten; it found the
 PMID:22513190 IMP seed to be an indirect phenotype, since that paper measures
 polysaccharide output and never assays phosphomannomutase.
 
+
+## Tier 3: experimental rows that are not seeds
+
+Tiers 1 and 2 selected proteins that *seed* a PAINT node, because an error there
+propagates to every descendant. That set is reviewed. Tier 3 is the remainder of
+the PseudoCAP corpus, built by
+[`build_pseudocap_mf_worklist.py`](PSEUDOCAP/build_pseudocap_mf_worklist.py) into
+[`pseudocap_mf_worklist.yaml`](PSEUDOCAP/pseudocap_mf_worklist.yaml), and the
+ordering principle is different. Nothing here propagates, so the question is no
+longer "does this node suit its clade" but "does this row say what the experiment
+showed".
+
+The first cut takes IMP rows on **molecular-function** terms: **142** of the 930
+PAO1 proteins carrying a PseudoCAP row. Of those, 98 were already reviewed
+through tiers 1 and 2, 6 are the cbb3 subunits reviewed here, and **38 remain**. An IMP is a mutant phenotype, which is evidence
+about what the cell does without the gene, not about what the protein does. Using
+one for a molecular function asserts an activity from an absence, so each row is
+either grounded in a paper that also assayed the protein or it is the kind of
+over-annotation this project exists to find. Reviewed entries stay in the file
+with their `review_folder` set, so it is a progress record rather than a shrinking
+queue; unreviewed entries sort first.
+
+The builder also emits a `shared_claims` block, which turned out to be the more
+useful half: one paper asserting one term across several proteins is usually one
+judgement, not several. There are **22** such groups. Four were entirely
+unreviewed when tier 3 opened:
+
+| term | reference | proteins |
+|---|---|---|
+| `GO:0004129` cytochrome-c oxidase activity | PMID:14763990 | the 6 cco subunits below |
+| `GO:0004485` methylcrotonoyl-CoA carboxylase activity | PMID:16517656 | liuB, liuD |
+| `GO:0015232` heme transmembrane transporter activity | PMID:10658665 | hasR, phuR |
+| `GO:0097351` toxin sequestering activity | PMID:24589350 | tse6, tsi6 |
+
+The rest span reviewed and unreviewed members, and those are worth re-reading as
+groups even where the members are done, because a shared claim reviewed gene by
+gene is where parallel batches drifted apart in tier 2. The largest are
+`GO:0015385` from PMID:16030218 across PA1054-PA1059, `GO:0016987` from
+PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
+opmQ/pvdR/pvdT, which carries three separate references for the same term.
+
+### The cbb3 oxidases: one phenotype, eight subunits
+
+The first group is reviewed, and it is now the only `shared_claims` group whose
+members are all done. PseudoCAP entered the identical `GO:0004129` IMP row
+on 20190311 for all eight subunits of the two cbb3 operons, from a paper whose
+experiments are whole-operon deletions: the abstract reports that "only loss of
+cbb3-1 influenced growth". The `ccoP1` review had already spotted this and filed
+a qualifier defect; the six remaining subunits are now reviewed, and rather than
+applying one verdict eight times they are separated by what each chain actually
+contributes, following the principle the human COX reviews state — that the
+catalytic activity resides in the subunit carrying the binuclear centre.
+
+| subunits | evidence on the record | `GO:0004129` row | core function |
+|---|---|---|---|
+| CcoN1, CcoN2 | copper B and two hemes (PIRSR), PROSITE `COX1_CUB`, 12 TM helices | `ACCEPT`, `enables` kept, no defect | `molecular_function` |
+| CcoO1, CcoO2, CcoP1, CcoP2 | one or two heme c sites, single TM anchor, relay electrons | `ACCEPT`, qualifier defect | `contributes_to` |
+| CcoQ1, CcoQ2 | 61 residues, one TM helix, no cofactor, `PE 4: Predicted` | `MARK_AS_OVER_ANNOTATED` | `contributes_to`, with a BIOLOGY knowledge gap |
+
+A structural check settled what the sequence records could not. Both CcoO entries
+cross-reference PDB 8SMR and 8SNH, which the RCSB API shows to be 2.7 A cryo-EM
+models of the bc1-cbb3 supercomplex. Their cbb3 chains are the orphan CcoN
+paralogue PA4133 (Q9HWP8) with CcoO1 and CcoP1/CcoP2 — so neither CcoN1 nor
+CcoN2 is the subunit in the solved complexes, which is raised as a question
+rather than claimed as evidence, and **no CcoQ chain is present in either model**.
+That is not proof CcoQ is outside the holoenzyme, since a 61-residue single-helix
+chain is easily lost or left unmodelled, which is why these rows are marked
+over-annotated rather than removed: `REMOVE` is reserved for the `SURF1` case, a
+protein shown to be an assembly factor rather than a subunit.
+
+Two CcoN rows also propose `GO:0005507` copper ion binding as `NEW`. Copper B is
+curated on both records and the `COX1_CUB` site matches, yet only heme binding was
+annotated.
+
 ## Plan
 
 1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA, PA2403 and
@@ -573,7 +647,9 @@ polysaccharide output and never assays phosphomannomutase.
    indirect phenotype, where the earlier fur review called the same seed
    reasonable.
 6. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
-   prioritising IMP rows on molecular-function terms.
+   prioritising IMP rows on molecular-function terms. Started: see
+   "Tier 3" below. 142 proteins carry such a row: 98 were covered by tiers 1-2,
+   6 are reviewed here, 38 remain.
 
 Re-run the builder when PAINT or QuickGO data change; it only re-downloads
 files missing from `.cache/paint/`, so delete that folder to refresh.
