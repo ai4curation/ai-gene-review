@@ -26,7 +26,7 @@ row, so there are **7 adaptor rows, not 6** — see Rule 5.
 | GO term | id | rows | evidence |
 |---|---|---:|---|
 | protein binding | GO:0005515 | **567** | IPI (uninformative — not an adaptor term) |
-| protein-macromolecule adaptor activity | GO:0030674 | 4 | IDA ×2 + IEA + IBA |
+| protein-macromolecule adaptor activity | GO:0030674 | 4 | IDA ×3 + IEA |
 | guanyl-nucleotide exchange factor adaptor activity | GO:0005091 | 2 | IDA + IEA |
 | transmembrane receptor protein tyrosine kinase adaptor activity | GO:0005068 | 1 | **IEA only** (mouse `Q60631`) |
 
