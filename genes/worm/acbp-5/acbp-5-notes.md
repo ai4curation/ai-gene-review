@@ -5,7 +5,7 @@
 - **PANTHER Subfamily**: `PANTHER:PTHR24119:SF0` (*ACYL-COA-BINDING DOMAIN-CONTAINING PROTEIN 6*).
 - **Domain Architecture & Verified Pocket Residues (`Q9XVJ0`, SV=2)**:
   - Soluble 274-aa nematode ankyrin-repeat acyl-CoA-binding protein (`CeACBP-5`) lacking transmembrane helices or signal peptides; one of three multidomain ACBP-domain paralogs alongside four basal cytosolic ACBPs in *C. elegans* (`PMID:21539519`).
-  - **N-terminal ACB domain** (residues 28–114; `InterPro:IPR000582`): conserves CoA headgroup triad `Tyr56`/`Lys60`/`Lys82` (aligning to human `Q9BR61` `Tyr69`/`Lys73`/`Lys95`) and helix-`αH4` acyl-chain pocket `Tyr101` (aligning to human `Tyr114`).
+  - **N-terminal ACB domain** (residues 28–114; `InterPro:IPR000582`): conserves CoA headgroup triad `Tyr55`/`Lys59`/`Lys82` (aligning to human `Q9BR61` `Tyr69`/`Lys73`/`Lys95`) and helix-`αH4` acyl-chain pocket `Tyr101` (aligning to human `Tyr114`).
   - **C-terminal ANK-repeat domain** (UniProt `FT REPEAT` 222–254 within the C-terminal two-ankyrin-repeat module; `InterPro:IPR002110`): tandem ankyrin repeats homologous to the NMT-binding module of human `ACBD6` (*C. elegans* encodes cytosolic N-myristoyltransferase `nmt-1`, `WBGene00003771`).
 
 ## Experimental Biology in *C. elegans* (`PMID:21539519`, `PMID:36551154`)

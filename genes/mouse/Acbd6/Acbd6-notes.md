@@ -1,7 +1,7 @@
 # Acbd6 (mouse, UniProtKB:Q9D061) Curation Notes
 
 ## Identity and Domain Architecture
-- **Gene / Protein**: Mouse `Acbd6` (`UniProtKB:Q9D061`, sequence version 2, 282 aa; `MGI:1919987`; `NCBITaxon:10090`).
+- **Gene / Protein**: Mouse `Acbd6` (`UniProtKB:Q9D061`, sequence version 2, 282 aa; `MGI:1919732`; `NCBITaxon:10090`).
 - **PANTHER Subfamily**: `PANTHER:PTHR24119:SF0` (*ACYL-COA-BINDING DOMAIN-CONTAINING PROTEIN 6*).
 - **Orthology & Sequence Conservation**: 1:1 mammalian ortholog of human `ACBD6` (`UniProtKB:Q9BR61`, 282 aa; ~93% sequence identity). Retains the soluble monomeric architecture with no transmembrane helices:
   - **N-terminal ACB domain** (residues 42–127; `InterPro:IPR000582`): 100% conservation of the human acyl-CoA binding pocket residues `Phe46`, `Tyr69`, `Lys73`, `Lys95`, regulatory phosphorylation serines `Ser106` and `Ser108`, and helix-`αH4` pocket `Tyr114`.

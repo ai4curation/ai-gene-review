@@ -5,7 +5,7 @@
 - **PANTHER Subfamily**: `PANTHER:PTHR24119:SF0` (*ACYL-COA-BINDING DOMAIN-CONTAINING PROTEIN 6*).
 - **Domain Architecture & Verified Pocket Residues (`Q4V8X4`, SV=1)**:
   - Soluble 300-aa vertebrate ACBD6 ortholog lacking transmembrane helices or peroxisomal signals; carries an 18-residue N-terminal extension relative to mammalian `ACBD6`.
-  - **N-terminal ACB domain** (residues 60–145; `InterPro:IPR000582`): conserves `Phe64` (aligning to human `Phe46`), CoA headgroup triad `Tyr87`/`Lys91`/`Lys113` (human `Tyr69`/`Lys73`/`Lys95`), regulatory loop `Ser124`/`Ser126` (human `Ser106`/`Ser108`), and helix-`αH4` pocket `Tyr132` (human `Tyr114`).
+  - **N-terminal ACB domain** (residues 60–145; `InterPro:IPR000582`): conserves `Phe64` (aligning to human `Phe46`), CoA headgroup triad `Tyr87`/`Lys91`/`Lys113` (human `Tyr69`/`Lys73`/`Lys95`), regulatory loop `Ser124` (human `Ser106`, whereas the human `Ser108`-equivalent position is `Glu126`), and helix-`αH4` pocket `Tyr132` (human `Tyr114`).
   - **C-terminal ANK-repeat domain** (`ANK1` residues 209–238, `ANK2` residues 242–271; `InterPro:IPR002110`): conserved NMT interaction module; human pathogenic ANK-domain missense equivalent `p.Asp201Gly` introduced into zebrafish `acbd6` cDNA fails to rescue `acbd6` knockout microphthalmia (`PMID:37951597`).
 
 ## Experimental Biology in *Danio rerio* (`PMID:37951597`)

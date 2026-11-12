@@ -1,7 +1,7 @@
 # Acbd6 (rat, UniProtKB:Q5RJK8) Curation Notes
 
 ## Identity and Domain Architecture
-- **Gene / Protein**: Rat `Acbd6` (`UniProtKB:Q5RJK8`, sequence version 1, 282 aa; `RGD:1306338`; `NCBITaxon:10116`).
+- **Gene / Protein**: Rat `Acbd6` (`UniProtKB:Q5RJK8`, sequence version 1, 282 aa; `RGD:1305030`; `NCBITaxon:10116`).
 - **PANTHER Subfamily**: `PANTHER:PTHR24119:SF0` (*ACYL-COA-BINDING DOMAIN-CONTAINING PROTEIN 6*).
 - **Orthology & Sequence Conservation**: 1:1 mammalian ortholog of human `ACBD6` (`UniProtKB:Q9BR61`, 282 aa) and mouse `Acbd6` (`UniProtKB:Q9D061`, 282 aa). Soluble monomeric intracellular protein lacking transmembrane helices:
   - **N-terminal ACB domain** (residues 42–127; `InterPro:IPR000582`): preserves `Phe46`, CoA-headgroup triad `Tyr69`/`Lys73`/`Lys95`, regulatory loop `Ser106`/`Ser108`, and essential acyl-CoA cavity `Tyr114`. Multi-organ rat phosphoproteomics (`PMID:22673903`) directly detected endogenous phosphorylation at `Ser41` immediately preceding helix `αH1` of the ACB domain.
