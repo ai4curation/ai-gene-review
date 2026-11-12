@@ -110,3 +110,14 @@ human structure paper identifies His186 ["confirming that His186 is the site of
 uridylylation" PMID:27005423], which the review uses.
 
 Status set to COMPLETE.
+
+## Update 2026-11-12: Golgi IDA resolved
+
+- GO:0005794 Golgi apparatus IDA PMID:20605918: now REMOVE, with a WRONG_GENE_PRODUCT
+  source defect (GALT P07902 → B4GALT1 P15291, cause SYMBOL_COLLISION, resource UNIPROT).
+  The publisher full text (https://journals.biologists.com/jcs/article/123/15/2649/31141/The-Lyn-kinase-C-lobe-mediates-Golgi-export-of-Lyn)
+  defines the paper's GalT as the Golgi marker: "ACSL3 was seen with the Golgi caveolin and
+  β-1,4-galactosyltransferase (GalT) where Lyn accumulated", and uses it with GM130 ("knockdown
+  of ACSL3 did not affect Golgi localization of GalT and GM130"). Galactose-1-phosphate
+  uridylyltransferase is not studied. The quotations are from the full text, which is not cached,
+  so they are recorded here and in the row's reason rather than as supporting_text.
