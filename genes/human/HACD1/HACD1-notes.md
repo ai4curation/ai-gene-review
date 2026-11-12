@@ -162,3 +162,12 @@ All 18 inherited supporting-text occurrences and the seven existing
 record-section fields are preserved. Source fields were seeded by the project
 pipeline and are not edited as biological judgments. The draft remains DRAFT;
 canonical validation, history scaffolding and PR delivery still follow.
+
+
+## PR #6311 review follow-up — 2026-11-12 UTC
+
+This update supersedes the preceding 15-ACCEPT/6-non-core candidate. Refine three broad MF rows to the supported GO:0102158 enzyme class, by specificity rather than reaction direction. Refine both TECR interactions to GO:0019899 enzyme binding while retaining the other four HuRI partners as non-core. Keep pathway-level fatty-acid and long-chain acyl-CoA biosynthesis accepted; retain the supported sphingolipid context as non-core, with exact yeast-rescue evidence in the manual report. Final counts: 11 ACCEPT, 5 KEEP_AS_NON_CORE, 5 MODIFY across all 21 original contexts; no NEW or PENDING.
+
+The committed manual now contains compact official ontology definitions/relations and exact original-paper excerpts for C16-only assays and yeast sphingolipid rescue; the broken private receipt link is removed. The main text was inspected independently of the unchanged abstract-only cache. Individual C18–C26 UniProt Rhea evidence links are a curator question, not an alleged curation error. PAINT tree/MSA placement remains uninspected.
+
+Correct the earlier blanket CAP claim: six UniProt GO lines are absent from canonical QuickGO, but explicit isoform queries also return zero rows; this does not establish a fetcher bug. ER localization is assigned to isoform 1, and enzyme binding is not uniquely attributable to CAP. Preserve all native source fields and isoform information rather than inventing missing rows. The family assessment follows the HACD1 specificity decision; the separately identified HACD2 reaction-direction rationale requires its own gene follow-up. Existing notes and histories remain append-only.

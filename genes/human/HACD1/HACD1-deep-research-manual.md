@@ -1,10 +1,10 @@
-# HACD1: manual primary-source preparation
+# HACD1: manual primary-source research and source checks
 
 Prepared 2026-11-12 JST. This is manual research, not a provider-generated report.
 Falcon failed with an authentication error; the configured Perplexity fallback
 failed with insufficient quota. Neither produced a research report. Existing
-publication caches were checked without modification. Final annotation decisions
-will follow fresh deterministic seeding in the registered curation checkout.
+publication caches were checked without modification. The review was seeded in the registered checkout and submitted as PR #6311;
+the dated follow-up below records review corrections and source checks.
 
 ## Product identity and scope
 
@@ -30,6 +30,12 @@ but is not a measured C18–C26 substrate panel. Supplements were not inspected.
 The local publication cache remains abstract-only; access to the original main
 text is recorded separately here.
 
+Rechecked original main text on 2026-11-11 UTC. Results section 3.1 / Figure 2C:
+“Introducing the HACD1 gene into SAY32 cells completely restored sphingolipid synthesis”. Discussion:
+“we used only 3-hydroxypalmitoyl-CoA as a substrate due to limited commercial availability.”
+These excerpts support rescue and the stated assay limit. They do not replace
+the unchanged abstract-only publication cache or claim supplementary inspection.
+
 [PMID:23933735](https://pmc.ncbi.nlm.nih.gov/articles/PMC3842179/):
 the original full text and cached full text support congenital myopathy associated
 with homozygous p.Tyr248Stop. FLAG-tagged wild-type and mutant HACD1 were expressed
@@ -41,13 +47,22 @@ These experiments do not test the CAP splice product.
 
 ## Reaction terminology
 
-Official QuickGO definitions were retrieved on 2026-11-11 UTC for GO:0018812,
-GO:0080023 and GO:0102158; selected facts are recorded in
-`../ontology-definition-check-v1.json`. Despite its hydratase label, GO:0080023
-defines the dehydration reaction and has GO:0102158 as a child. Therefore the
-existing review's claim that this is a wrong-direction annotation is incorrect.
-Any refinement must be justified by substrate and pathway specificity. Preserve
-machine-sourced IDs and labels. [QuickGO](https://www.ebi.ac.uk/QuickGO/term/GO:0080023)
+Official QuickGO definitions were checked on 2026-11-11 UTC. The following
+compact facts make the evidence available within this PR:
+
+| Term | Definition scope |
+|---|---|
+| GO:0018812 | Dehydration of a 3-hydroxy-fatty acyl-CoA to a (2E)-enoyl-CoA and water. |
+| GO:0080023 | The (3R)-hydroxyacyl-CoA dehydration reaction, despite its hydratase label. |
+| GO:0102158 | The very-long-chain (3R)-hydroxyacyl-CoA dehydratase class in the ER elongation cycle; the definition includes extension of C16-or-longer starting fatty acids by two carbons. |
+
+The asserted `is_a` chain is GO:0102158 → GO:0080023 → GO:0018812.
+[Official QuickGO definitions and child relations](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0080023,GO:0018812,GO:0102158)
+were the source; the selected-response receipt pins SHA256
+`d4659da499d24a79087d692c55437c99aabc82813f9c6336f6a59076e9c9efe7`.
+No private relative link is needed. The three general MF rows are refined to
+GO:0102158 for enzyme-class specificity, not reaction direction. A class/context
+assignment is distinct from a measured panel of individual chain-length kinetics.
 
 ## Interaction evidence
 
@@ -89,8 +104,11 @@ Full Methods and Results remained unavailable after bounded publisher and
 Europe PMC attempts. The abstract plus curated HACD1 interaction records support
 the plain association, but not HACD1-specific stoichiometry, assay host, tags,
 catalytic enhancement, substrate channeling or CAP involvement. Do not transfer
-HACD2's structural conclusions to HACD1. Supported generic binding is non-core
-under the ClinGen project policy; a new adaptor annotation is not warranted.
+HACD2's structural conclusions to HACD1. The two TECR contexts can be refined
+to enzyme binding (GO:0019899), without an adaptor or channeling inference. The
+other four HuRI partners retain non-core generic binding.
+[Official enzyme-binding definition](https://www.ebi.ac.uk/QuickGO/term/GO:0019899)
+specifies binding to a protein with catalytic activity.
 
 ## CAP literature, assessed separately
 
@@ -156,3 +174,36 @@ rescue, and fatty-acid elongation supplies a structural part of sphingolipids.
 Avoid substituting genericity for biological evidence when judging binding.
 Do not add a process annotation without the required participation and comparator
 checks. No final action table or new annotation is asserted by this preparation.
+
+
+## UniProt / QuickGO discrepancy — checked 2026-11-11 23:53:55 UTC
+
+UniProt entry version 133 contains six GO lines absent from the current canonical
+QuickGO result: GO:0019899 enzyme binding, GO:0046848 hydroxyapatite binding,
+GO:0071529 cementum mineralization, GO:0010811 positive regulation of cell-substrate
+adhesion, GO:0065003 protein-containing complex assembly, and GO:0005783 ER.
+Complete queries returned 22 canonical B0YJ81 rows and zero rows for each explicit
+isoform B0YJ81-1 and B0YJ81-2. The canonical response SHA256 was
+`fc4e2dd48133ce0da3a233b7d879eb015a868504978315f0f760f95e4852dd78`.
+[Canonical query](https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB%3AB0YJ81&includeFields=goName&limit=200),
+[isoform 1](https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB%3AB0YJ81-1&includeFields=goName&limit=200),
+[isoform 2](https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB%3AB0YJ81-2&includeFields=goName&limit=200).
+
+These results do not establish omitted isoform rows or a fetcher defect. No GOA
+row or isoform field is manufactured. The six unqualified UniProt GO lines do
+not prove that all six describe CAP: ER localization is explicitly assigned to
+isoform 1 in the native location block, and enzyme binding is not uniquely
+attributable to CAP. The earlier notes' blanket CAP attribution is superseded.
+
+## Final follow-up decisions
+
+Three general MF rows are MODIFY → GO:0102158; two TECR binding rows are MODIFY
+→ GO:0019899. Sphingolipid biosynthesis is retained as a supported non-core use
+of the elongation activity, with direct yeast rescue explicitly documented.
+The informative long-chain acyl-CoA and fatty-acid biosynthetic processes remain
+accepted; a distilled core-function summary is not an exhaustive list of every
+accepted process ancestor. The family assessment records the revised HACD1
+specificity decision without alleging a PAINT placement error. HACD2's separate
+wrong-direction rationale also needs a gene-specific correction; it is not
+evidence that the shared family reaction is unsound and is not silently changed
+in this HACD1 PR. Final counts: 11 ACCEPT, 5 KEEP_AS_NON_CORE, 5 MODIFY; no NEW.
