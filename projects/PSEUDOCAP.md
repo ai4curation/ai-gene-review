@@ -169,10 +169,13 @@ lasB, which are given secretion-system terms for being secretion cargo).
 
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
 `source_defects` recorded in all PAO1 reviews into one report per resource in
-[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2 they
-stand at 272 for PseudoCAP (123 wrong term, 84 wrong evidence code, 41 wrong
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2, and after
+the merge from main that brought in the AST-module and eut reviews, they stand
+at 272 for PseudoCAP (123 wrong term, 84 wrong evidence code, 41 wrong
 reference, 14 wrong qualifier, 8 wrong gene product), 116 for PAINT/GO Central,
-15 for UniProt and 12 for other resources (mostly InterPro2GO mappings). They
+22 for UniProt, 7 for InterPro (which now has its own report, since the
+InterPro2GO mappings outgrew the catch-all) and 5 for other resources: 422 in
+all, matching the 422 `source_defects` entries recorded under `genes/PSEAE`. They
 include defects from PAO1 reviews made before this project. The tier-1 counts
 quoted below are the totals as they stood at the end of tier 1 (116, 75, 5 and
 11).
@@ -213,8 +216,11 @@ fetched this way; the other two (hutH, pfeS) were resolved by hand, and pfeS tur
 not to sit in the family UniProt assigns it.
 
 Every defect that had been left SUSPECTED pending the tree was re-examined on 2026-11-05.
-The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **32 CONFIRMED,
-83 PROBABLE and 1 SUSPECTED**. The check does three different things:
+The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **37 CONFIRMED,
+77 PROBABLE and 2 SUSPECTED** (116 entries in all). The 32/83/1 split quoted here earlier was
+exact when first written, but the leaf-evidence audit in `1f556e0` regenerated the reports and
+changed it; the totals still summed to 116, which is why the stale figures survived several
+reading passes. The check does three different things:
 
 - **It names the target.** A request to move an IBD can now give the node to move it to:
   astA's dihydrolase term to PTN000764522 (the node is a duplication whose two children
@@ -231,8 +237,9 @@ The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **32 C
 - **It refutes.** hutI's 52 leaves really are all imidazolonepropionases, so that breadth
   objection was withdrawn and the defect narrowed to its citation. PA4521's clade is a
   clean one-ortholog-per-organism group, so the breadth objection was withdrawn entirely
-  and only the unverified seed remains — the one defect still SUSPECTED, waiting on the
-  full text of PMID:9835532. arcA's flagged leaves mostly survived scrutiny: three of four
+  and only the unverified seed remains — SUSPECTED, waiting on the full text of
+  PMID:9835532. It is one of the two entries still SUSPECTED; the other is mucB's
+  PTN002215378 GO:0032885 entry, which states its own counter-consideration. arcA's flagged leaves mostly survived scrutiny: three of four
   are arginine deiminases whose names lag, leaving one archaeal duplication pair.
   xcpV is the sharpest case: our own leaf-count analysis had read the node as spanning the
   GspI/PilV split, but no PilV leaf is in the tree at all — the extra proteins were

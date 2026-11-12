@@ -1,6 +1,6 @@
 # Source-record defects for UNIPROT
 
-15 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+22 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
@@ -54,7 +54,41 @@ ARBA00086662 assigns the ArgJ ornithine acetyltransferase term to an ArgA-type N
 > Reaction=L-glutamate + acetyl-CoA = N-acetyl-L-glutamate + CoA + H(+)
 > — file:PSEAE/argA/argA-uniprot.txt
 
-## 5. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 5. WRONG_STATEMENT (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:P80358
+- **Subject:** UniProtKB:P80358
+- **Field:** CC:SIMILARITY
+- **Change:** revise "Belongs to the succinylarginine dihydrolase family." in CC:SIMILARITY (see explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/aruG/aruG-ai-review.yaml`
+
+P80358 carries Pfam PF04958 (AstA) and InterPro IPR007041 (Arg_succinylTrfase_AstA/AruG), and is a subunit of arginine N-succinyltransferase. E. coli AstA (P0AE37) is classified in the arginine N-succinyltransferase family; this chain should be too. The dihydrolase-family statement probably echoes the PANTHER PTHR30420 family name.
+
+> Pfam; PF04958; AstA; 1.
+> — file:PSEAE/aruG/aruG-uniprot.txt
+
+## 6. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:P80358 enables GO:0008791 L-arginine N-succinyltransferase activity (IEA, GO_REF:0000120)
+- **Field:** Qualifier
+- **Change:** enables → contributes_to
+- **Likely cause:** SCOPE_OVER_REACH
+- **Recorded in:** `genes/PSEAE/aruG/aruG-ai-review.yaml`
+
+P80358 is one chain of the two-chain heterotetrameric arginine/ornithine N-succinyltransferase (PMID:7523119); the GO:0008791 row should use contributes_to unless each chain is shown to be active alone.
+
+## 7. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:P80357 enables GO:0008791 L-arginine N-succinyltransferase activity (IEA, GO_REF:0000120)
+- **Field:** Qualifier
+- **Change:** enables → contributes_to
+- **Likely cause:** SCOPE_OVER_REACH
+- **Recorded in:** `genes/PSEAE/astA/astA-ai-review.yaml`
+
+P80357 is one chain of the two-chain heterotetrameric arginine/ornithine N-succinyltransferase (PMID:7523119); the GO:0008791 row should use contributes_to unless each chain is shown to be active alone.
+
+## 8. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I5F3 enables GO:0003960 quinone reductase (NADPH) activity (EXP, PMID:24915188)
 - **Field:** GO_ID
@@ -67,7 +101,7 @@ UniProt EXP row for Q9I5F3 (paAzoR1) from PMID:24915188 and its CATALYTIC ACTIVI
 > Two electron reduction reactions of quinones are carried out by a group of enzymes known as NAD(P)H quinone oxidoreductases.
 > — PMID:24915188
 
-## 6. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 9. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniRule:UR000101231
 - **Subject:** UniProtKB:Q9I5F3
@@ -78,7 +112,7 @@ UniProt EXP row for Q9I5F3 (paAzoR1) from PMID:24915188 and its CATALYTIC ACTIVI
 
 UniRule UR000101231 (azoreductase type 1, HAMAP MF_01216) maps GO:0016652 oxidoreductase activity, acting on NAD(P)H, NAD(P) as acceptor. That term is for enzymes in which NAD(P)H reduces NAD(P)+ (EC 1.6.1). Azoreductases transfer electrons from NAD(P)H to quinones and azo compounds; the appropriate terms are GO:0016655 and its child GO:0003955. Checked against the GO definition. The same mapping reaches azoR2 (Q9I2E2) and azoR3 (Q9HZ17) and every MF_01216 member.
 
-## 7. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 10. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:O33407 involved_in GO:0008610 lipid biosynthetic process (IMP, PMID:17631636)
 - **Field:** GO_ID
@@ -88,7 +122,59 @@ UniRule UR000101231 (azoreductase type 1, HAMAP MF_01216) maps GO:0016652 oxidor
 
 The IMP lipid biosynthetic process row on EstA (O33407) from PMID:17631636 is based on reduced rhamnolipid in an estA deletion mutant. The UniProt entry itself says the role of EstA is unclear, and EstA is a surface-exposed outer-membrane esterase, not a rhamnolipid synthase. Unless the full text shows EstA acting on a biosynthetic intermediate, please consider removing the row. It is the sole seed of the PAINT IBD at PTN005219546 (960 leaf IBAs).
 
-## 8. WRONG_STATEMENT (CONFIRMED, NOT_REPORTED)
+## 11. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX03
+- **Subject:** UniProtKB:Q9HX03
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031469 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutB/eutB-ai-review.yaml`
+
+Review organism-specific scope of MF_00861 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 12. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX03
+- **Subject:** UniProtKB:Q9HX03
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031471 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutB/eutB-ai-review.yaml`
+
+Review organism-specific scope of MF_00861 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 13. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX02
+- **Subject:** UniProtKB:Q9HX02
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031469 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutC/eutC-ai-review.yaml`
+
+Review organism-specific scope of MF_00601 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 14. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** Q9HX02
+- **Subject:** UniProtKB:Q9HX02
+- **Field:** GO annotation / CC:SUBCELLULAR LOCATION
+- **Change:** check GO:0031471 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/eutC/eutC-ai-review.yaml`
+
+Review organism-specific scope of MF_00601 / its UniRule propagation. PAO1 has the enzyme pair but no recognized shell signatures in its complete reference proteome; an enterobacterial Eut compartment location should not be inferred from enzyme-family membership alone.
+
+> PAO1 has zero matches for each of PF00936,PF03319,IPR000249 and IPR004992; the Ecoli control recovers four BMC-domain proteins and one EutN/CcmL vertex protein.
+> — file:PSEAE/eutB/eutB-source-analysis/shell-inventory.yaml
+
+## 15. WRONG_STATEMENT (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I648   UniProt entry Q9I648 (Q9I648_PSEAE) (, file:PSEAE/fiuA/fiuA-uniprot.txt)
 - **Field:** DE RecName
@@ -100,7 +186,7 @@ The ARBA-derived recommended name (ARBA00072467) names Q9I648 after CntO, the ps
 > ferrichrome is transported across the outer membrane primarily (80%) by the FiuA receptor and to a lesser extent (20%) by a secondary transporter
 > — PMID:20047910
 
-## 9. OTHER (CONFIRMED, NOT_REPORTED)
+## 16. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9K3C5 located_in GO:0009421 bacterial-type flagellum filament cap (IDA, PMID:9488388)
 - **Field:** SUBUNIT
@@ -113,7 +199,7 @@ The UniProt entry Q9K3C5 records "SUBUNIT: Homopentamer {ECO:0000250}", an infer
 > Thus, we confirmed that the hexameric assembly of FliD78–405 occurs not only in the crystalline environment but also in solution using negative stain EM class averaging (Tang et al.
 > — PMID:27664419
 
-## 10. WRONG_STATEMENT (CONFIRMED, NOT_REPORTED)
+## 17. WRONG_STATEMENT (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I116   UniProt entry Q9I116 (Q9I116_PSEAE) (, file:PSEAE/foxA/foxA-uniprot.txt)
 - **Field:** DE RecName
@@ -125,7 +211,7 @@ The ARBA-derived recommended name (ARBA00072467) and the ARBA FUNCTION text name
 > FoxA of the ferric forms of nocardamine, bisucaberin, DFOB and DFOG
 > — PMID:39138320
 
-## 11. OTHER (CONFIRMED, NOT_REPORTED)
+## 18. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I296
 - **Subject:** UniProtKB:Q9I296
@@ -138,7 +224,7 @@ The unreviewed entry Q9I296 (LiuA, PA2015) of the bacterium Pseudomonas aerugino
 > Isovaleryl-CoA dehydrogenase, mitochondrial
 > — file:PSEAE/liuA/liuA-uniprot.txt
 
-## 12. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 19. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HZZ4 involved_in GO:0006351 DNA-templated transcription (IEA, GO_REF:0000104)
 - **Field:** GO_ID
@@ -151,7 +237,7 @@ involved_in GO:0006351 DNA-templated transcription (IEA, GO_REF:0000104) on PA28
 > PANTHER; PTHR33164:SF5; ORGANIC HYDROPEROXIDE RESISTANCE TRANSCRIPTIONAL REGULATOR; 1.
 > — file:PSEAE/ohrR/ohrR-uniprot.txt
 
-## 13. OTHER (PROBABLE, NOT_REPORTED)
+## 20. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD94 located_in GO:0016020 membrane (IEA, GO_REF:0000044)
 - **Change:** delete the record asserting GO:0016020
@@ -160,7 +246,7 @@ involved_in GO:0006351 DNA-templated transcription (IEA, GO_REF:0000104) on PA28
 
 G3XD94 (WbpA) carries a predicted TRANSMEM 13..32 (ECO:0000255) and a Membrane / single-pass subcellular location, which generate GO:0016020. The segment SRQALIGIVGLGYVGLPLML contains the GxGxxG NAD-binding motif at the N-terminus of the UDP-glucose/GDP-mannose dehydrogenase Rossmann fold, and WbpA was purified as a soluble His-tagged oligomer (PMID:15226302). Please review the TRANSMEM feature and location.
 
-## 14. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 21. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD61 enables GO:0008761 UDP-N-acetylglucosamine 2-epimerase activity (IDA, PMID:17346239)
 - **Change:** check GO:0008761 (alternatives in the explanation)
@@ -172,7 +258,7 @@ GO:0008761 is defined as UDP-N-acetyl-D-glucosamine = UDP-N-acetyl-D-mannosamine
 > Neither enzyme utilized UDP-alpha-D-GlcNAc, UDP-alpha-D-GlcNAcA (UDP-2-acetamido-2,3-dideoxy-alpha-D-glucuronic acid) or UDP-alpha-D-GlcNAc3NAc (UDP-2,3-diacetamido-2,3-dideoxy-alpha-D-glucose) as substrates.
 > — PMID:17346239
 
-## 15. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+## 22. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT73
 - **Subject:** UniProtKB:Q9HT73
