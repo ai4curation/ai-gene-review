@@ -104,8 +104,11 @@ the paper or database record the lead points to.
 - **MODIFY names the change.** A specific set, protein, term or taxon, in
   `suggested_modifications`.
 - **DEPRECATE is for a rule that is still served and should go**: a wrongly
-  annotated protein (accessions in `incorrect_examples`) or an obsolete
-  consequent. A true but general term is SPLIT or MODIFY; low recall alone is not
+  annotated protein (accessions in `incorrect_examples`), an obsolete consequent,
+  or a rule that does no work because every condition set is also matched by a
+  rule asserting a more specific term (`sets_covered_by_more_specific_rule` equal
+  to the number of sets, as `rule_redundancy.tsv` gives it). A true but general
+  term whose sets are not all covered is SPLIT or MODIFY; low recall alone is not
   a defect.
 - **WITHDRAWN records that UniProt no longer serves the rule** (`rule.withdrawn`).
   It is a fact about the rule, not a verdict, and needs no confidence.
@@ -150,7 +153,7 @@ the paper or database record the lead points to.
 | `unit_term_label_mismatch`, `unit_term_without_label`, `unit_term_without_evidence` | error | a unit's term label differs from GO's, is missing, or the term has no curated annotation cited |
 | `redundancy_receipt_mismatch` | error | `consequent_descendant_count` or `sets_covered_by_more_specific_rule` differs from `rule_redundancy.tsv` |
 | `withdrawn_action_mismatch` | error | WITHDRAWN without `rule.withdrawn`, or DEPRECATE on a withdrawn rule |
-| `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples` and no `consequent_obsolete: true` |
+| `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples`, no `consequent_obsolete: true`, and not every set covered by a more specific rule |
 | `modify_without_modification` | error | MODIFY, SPLIT or MERGE with no `suggested_modifications` |
 | `low_confidence_verdict` | error | a verdict other than UNDECIDED at confidence below 0.5 |
 | `example_not_an_accession` | error | an example is not a UniProt accession |

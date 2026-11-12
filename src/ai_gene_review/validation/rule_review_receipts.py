@@ -514,12 +514,19 @@ def check_review(
 
     negative = [a for a in assessments if isinstance(a, dict) and a.get("assessment") in NEGATIVE_ASSESSMENTS]
     obsolete = any(isinstance(a, dict) and a.get("consequent_obsolete") is True for a in assessments)
-    if action == "DEPRECATE" and not withdrawn and not obsolete and not any(has_counterexample(a) for a in negative):
+    # A rule whose every set is also matched by a rule for a more specific term emits
+    # nothing (UniProt keeps the most specific ARBA term), so it can go on parsimony alone.
+    covered = (data.get("biological_meaning") or {}).get("sets_covered_by_more_specific_rule")
+    does_no_work = isinstance(covered, int) and isinstance(total, int) and total > 0 and covered >= total
+    if (action == "DEPRECATE" and not withdrawn and not obsolete and not does_no_work
+            and not any(has_counterexample(a) for a in negative)):
         add(error, "deprecate_without_counterexample",
-            "action is DEPRECATE but no annotation_assessments entry names a wrongly annotated protein "
-            "(incorrect_examples), an obsolete consequent (consequent_obsolete: true), or a withdrawn rule",
+            "action is DEPRECATE but the review names no wrongly annotated protein (incorrect_examples), no "
+            "obsolete consequent (consequent_obsolete: true), and does not show that every condition set is "
+            "covered by a rule for a more specific term (biological_meaning.sets_covered_by_more_specific_rule)",
             "annotation_assessments",
-            "Show the false positives with accessions, or use UNDECIDED. 'True but general' is not DEPRECATE.")
+            "Show the false positives with accessions, or that the rule emits nothing. A true but general "
+            "term whose sets are not all covered is SPLIT or MODIFY.")
     for index, assessment in enumerate(negative):
         if not has_counterexample(assessment):
             add(warning, "negative_assessment_without_example",

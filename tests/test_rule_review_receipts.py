@@ -355,3 +355,10 @@ def test_unit_term_relation_is_checked_against_the_ontology(term: str, relation:
     check_review_online(data, report)
     fired = any(issue.check_type == "unit_term_relation_mismatch" for issue in report.issues)
     assert fired is expected
+
+
+def test_deprecate_of_a_rule_that_does_no_work(tmp_path: Path) -> None:
+    meaning = {**MEANING, "biological_meaning": {"assessment": "COHERENT", "sets_covered_by_more_specific_rule": 1}}
+    assert checks(review(action="DEPRECATE", confidence=0.8, **meaning), tmp_path) == set()
+    meaning["biological_meaning"]["sets_covered_by_more_specific_rule"] = 0
+    assert "deprecate_without_counterexample" in checks(review(action="DEPRECATE", confidence=0.8, **meaning), tmp_path)

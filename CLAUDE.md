@@ -580,8 +580,9 @@ as schema (`src/ai_gene_review/validation/rule_review_receipts.py`); read
   general term is `SPLIT` or `MODIFY`, never `DEPRECATE`; "too many sets" needs a
   count of sets that do no work.
 - **`DEPRECATE` names a wrongly annotated protein** (accessions in
-  `annotation_assessments[].incorrect_examples`) or an obsolete consequent. A rule
-  UniProt no longer serves is `WITHDRAWN`. Before listing a protein as a false positive, look up its
+  `annotation_assessments[].incorrect_examples`), an obsolete consequent, or a rule
+  whose every set is covered by a rule for a more specific term. A rule UniProt no
+  longer serves is `WITHDRAWN`. Before listing a protein as a false positive, look up its
   experimental annotations to the term and its descendants; `--online` does this.
 - **Your notes and deep-research files are not literature.** Cite the paper or
   record they point to, or omit `literature_support`.

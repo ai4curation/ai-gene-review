@@ -170,8 +170,9 @@ numbers from `projects/ARBA_REVIEW/rule_redundancy.tsv`, per-set counts and
 - **MODIFY**: a specific defect, with the set, protein, term or taxon named in
   `suggested_modifications`.
 - **DEPRECATE**: the rule is still served and should go: false positives shown
-  with UniProt accessions in `annotation_assessments[].incorrect_examples`, or
-  an obsolete consequent. A true but general term is SPLIT or MODIFY.
+  with UniProt accessions in `annotation_assessments[].incorrect_examples`, an
+  obsolete consequent, or every set covered by a rule for a more specific term
+  (the rule emits nothing). Otherwise a true but general term is SPLIT or MODIFY.
 - **WITHDRAWN**: UniProt no longer serves the rule (`rule.withdrawn: true`).
 - **UNDECIDED**: the evidence settles neither question. A sampled mega-rule is
   UNDECIDED on accuracy, but its sample may still show it is an umbrella (SPLIT).
