@@ -1092,9 +1092,9 @@ validate-prediction-terms +files:
     out=$(scripts/term_validate.sh validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
     rc=$?
     echo "$out"
-    if [ "$rc" -eq 3 ]; then
+    if [ "$rc" -eq 97 ]; then
         echo "::warning::Ontology service unavailable; prediction term validation skipped (not a data error)."
-    elif [ "$rc" -eq 2 ]; then
+    elif [ "$rc" -eq 96 ]; then
         echo "❌ ERROR: ontology service unavailable during strict term validation"
         exit 1
     elif [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Label mismatch for '?NCBITaxon:"; then
@@ -1211,10 +1211,10 @@ test-examples:
             fi
             trc=0
             scripts/term_validate.sh validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || trc=$?
-            if [ "$trc" -eq 3 ]; then
+            if [ "$trc" -eq 97 ]; then
                 svc_state=skip
                 echo "  ⊘ $name (term check skipped: ontology service unavailable)"; skipped=$((skipped + 1)); continue
-            elif [ "$trc" -eq 2 ]; then
+            elif [ "$trc" -eq 96 ]; then
                 svc_state=fail
                 echo "  ✗ $name (ontology service unavailable, strict)"; errors+=("VALID $name: service unavailable (strict)"); fail=$((fail + 1)); continue
             elif [ "$trc" -ne 0 ]; then
@@ -1251,10 +1251,10 @@ test-examples:
         fi
         trc=0
         scripts/term_validate.sh validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || trc=$?
-        if [ "$trc" -eq 3 ]; then
+        if [ "$trc" -eq 97 ]; then
             svc_state=skip
             echo "  ⊘ $name (term check skipped: ontology service unavailable)"; skipped=$((skipped + 1))
-        elif [ "$trc" -eq 2 ]; then
+        elif [ "$trc" -eq 96 ]; then
             svc_state=fail
             echo "  ✗ $name (ontology service unavailable, strict)"; errors+=("INVALID $name: service unavailable (strict)"); fail=$((fail + 1))
         elif [ "$trc" -ne 0 ]; then
@@ -1413,9 +1413,9 @@ validate-all:
     term_out="$(scripts/term_validate.sh validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)"
     term_rc=$?
     printf '%s\n' "$term_out"
-    if [ "$term_rc" -eq 3 ]; then
+    if [ "$term_rc" -eq 97 ]; then
         echo "::warning::Ontology service unavailable; term validation skipped (not a data error)."
-    elif [ "$term_rc" -eq 2 ]; then
+    elif [ "$term_rc" -eq 96 ]; then
         echo "✗ Ontology service unavailable during strict term validation (full pass blocks)"
         exit_code=1
     elif printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
@@ -2958,7 +2958,7 @@ validate-families: ensure-panther-members
         -s src/ai_gene_review/schema/family_review.yaml \
         -t FamilyReview --labels -c conf/oak_config.yaml
     trc=$?
-    if [ "$trc" -eq 3 ]; then
+    if [ "$trc" -eq 97 ]; then
         echo "::warning::Ontology service unavailable; family term validation skipped (not a data error)."
     elif [ "$trc" -ne 0 ]; then
         rc=1

@@ -15,26 +15,35 @@
 #
 # This wrapper normalizes only that one case and passes everything else through
 # unchanged, so each caller's own output grep (which classifies ❌ ERROR vs
-# advisory ⚠️ WARN -- validate-data exits 1 for both) keeps working:
+# advisory ⚠️ WARN -- validate-data exits 1 for both) keeps working. It reports
+# an outage with exit codes linkml-term-validator itself never returns (it exits
+# 0/1/2), so a real LTV status can never be mistaken for the outage sentinel:
 #   exit 0      -> validated, no issues
 #   exit 1      -> validate-data reported issues (caller greps to classify)
-#   exit 2      -> ontology-service outage, STRICT: treat as fatal (block)
-#   exit 3      -> ontology-service outage, skipped (non-strict)
-#   other       -> passed through unchanged
-# The caller decides what a skip (3) means for it and emits the GitHub Actions
+#   exit 96     -> ontology-service outage, STRICT: caller must block
+#   exit 97     -> ontology-service outage, skipped (non-strict)
+#   other       -> linkml-term-validator's own status, passed through unchanged
+# The caller decides what a skip (97) means for it and emits the GitHub Actions
 # ::warning:: itself (so it survives the caller capturing this script's stdout).
 # linkml-term-validator's own stdout/stderr is always reprinted here.
 #
 # Env:
-#   TERM_VALIDATION_STRICT  non-empty -> an outage exits 2 (block) instead of 3.
+#   TERM_VALIDATION_STRICT  non-empty -> an outage exits 96 (block) instead of 97.
 #                           Set on the weekly/manual full pass so an unverified
 #                           term is still caught once the service is reachable.
-#   TERM_VALIDATE_RETRIES   extra attempts on an outage (default 2), 8s apart,
-#                           to ride out a brief blip. Set 0 in per-file loops.
+#   TERM_VALIDATE_RETRIES   extra attempts on an outage (default 1, non-numeric
+#                           treated as 1), 8s apart, to ride out a brief blip.
+#                           Set 0 in per-file loops.
 set -uo pipefail
 
+EXIT_OUTAGE_STRICT=96   # outage under TERM_VALIDATION_STRICT: caller blocks
+EXIT_OUTAGE_SKIP=97     # outage, non-strict: caller skips with a ::warning::
+
 banner_re='ontology service unavailable|could not reach ontology service'
-retries="${TERM_VALIDATE_RETRIES:-2}"
+case "${TERM_VALIDATE_RETRIES:-}" in
+    '' | *[!0-9]*) retries=1 ;;   # default / non-numeric -> one retry
+    *) retries="${TERM_VALIDATE_RETRIES}" ;;
+esac
 attempt=0
 while :; do
     out="$(uv run linkml-term-validator "$@" 2>&1)"
@@ -42,14 +51,15 @@ while :; do
     if [ "$rc" -eq 2 ] && printf '%s\n' "$out" | grep -qE "$banner_re"; then
         if [ "$attempt" -lt "$retries" ]; then
             attempt=$((attempt + 1))
+            echo "::notice::ontology service unavailable; retrying term validation ($attempt/$retries)" >&2
             sleep 8
             continue
         fi
         printf '%s\n' "$out"
         if [ -n "${TERM_VALIDATION_STRICT:-}" ]; then
-            exit 2
+            exit "$EXIT_OUTAGE_STRICT"
         fi
-        exit 3
+        exit "$EXIT_OUTAGE_SKIP"
     fi
     printf '%s\n' "$out"
     exit "$rc"

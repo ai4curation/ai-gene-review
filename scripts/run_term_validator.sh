@@ -29,8 +29,15 @@ elif grep -q -- "--fail-on-warnings" <<<"$help_output"; then
     strict_args+=(--fail-on-warnings)
 fi
 
+# Route through term_validate.sh (resolved next to this script, so cwd does not
+# matter) so a transient ontology-service outage is a skip (exit 97) rather than
+# a hard failure. This path -- `ai-gene-review validate --terms`, i.e.
+# `just validate-changed` and `just validate <org> <gene>` -- is how most gene
+# PRs get their terms checked, so without this an EBI blip reddens every gene
+# PR's own validation check (and a red PR can't enter the merge queue either).
+here="$(cd "$(dirname "$0")" && pwd)"
 set +e
-cmd=(uv run linkml-term-validator validate-data "$@")
+cmd=("$here/term_validate.sh" validate-data "$@")
 if [[ ${#strict_args[@]} -gt 0 ]]; then
     cmd+=("${strict_args[@]}")
 fi
@@ -39,6 +46,20 @@ exit_code=$?
 set -e
 
 printf '%s\n' "$output"
+
+# 97 = outage, non-strict: the term check was skipped, not passed. The only
+# output is the outage banner, so do not run the WARN grep below.
+if [[ $exit_code -eq 97 ]]; then
+    echo "::warning::Ontology service unavailable; strict term validation skipped (not a data error)." >&2
+    exit 0
+fi
+
+# 96 = outage under TERM_VALIDATION_STRICT (weekly/manual full pass): block, so
+# the unverified terms are caught once the service is back.
+if [[ $exit_code -eq 96 ]]; then
+    echo "Ontology service unavailable during strict term validation." >&2
+    exit 1
+fi
 
 if [[ $exit_code -ne 0 ]]; then
     exit "$exit_code"
