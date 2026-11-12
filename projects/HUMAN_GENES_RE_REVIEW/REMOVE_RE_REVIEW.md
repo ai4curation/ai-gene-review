@@ -323,8 +323,10 @@ policy is the reason, and they were left as they are.
 
 ## The UNDECIDED rows, revisited
 
-*Added 12 November 2026, after the pass was merged. The tables above describe
-the pass as merged and are not changed by this section.*
+*Added 12 November 2026, after the pass was merged
+([ai4curation/ai-gene-review#6331](https://github.com/ai4curation/ai-gene-review/pull/6331)).
+The tables above describe the pass as merged and are not changed by this
+section.*
 
 The pass left 34 rows `UNDECIDED` because the paper behind each could not be
 read. A second attempt to obtain the 22 papers failed: none is in the
