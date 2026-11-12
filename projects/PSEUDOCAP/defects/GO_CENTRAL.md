@@ -584,7 +584,8 @@ PTN000241318 (PTHR11986) is a SPECIATION node at the Eubacteria level holding 37
 
 ## 43. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:P80357 enables GO:0009015 N-succinylarginine dihydrolase activity (IBA, GO_REF:0000033)
+- **Record:** PANTHER:PTN000764516
+- **Subject:** UniProtKB:P80357
 - **Field:** GO_ID
 - **Change:** check GO:0009015 (alternatives in the explanation)
 - **Likely cause:** OTHER
