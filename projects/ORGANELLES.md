@@ -211,7 +211,9 @@ plastids come later.
      (knockout or a binding mutant) releases the protein or destabilises it,
      and (d) cytosolic synthesis with no signal peptide and no organelle
      targeting or transit sequence, so the cytoplasmic leaflet is the only face
-     it can reach. (a) carries the location and (b) names what holds it
+     it can reach. Check (d) against the literature as well as UniProt
+     features: non-cleavable import signals (PTS1/PTS2, internal carrier
+     signals, twin-CX9C motifs) have no transit feature. (a) carries the location and (b) names what holds it
      there; stability alone shows only an obligate partnership. A protein that
      fails (d), such as a mitochondrial matrix protein held by an inner-membrane
      partner, gets the side term for its own compartment instead (e.g.
@@ -353,7 +355,8 @@ protein embedded in, attached to, or peripherally associated with it."). It is
 `part_of` GO:0005789,
 so it says more than the bare membrane term (which side, and that the attachment
 is peripheral) rather than avoiding it. The route needs direct evidence that the
-protein is at the organelle, a named integral partner, and dependence on it; a
+protein is at the organelle, a named integral partner, dependence on it, and
+cytosolic synthesis with no signal or targeting sequence (which fixes the side); a
 stability result alone shows an obligate partnership, not a location.
 
 - **UFSP2** gains a NEW GO:0098554 IC row. It has no TM or signal peptide; its
