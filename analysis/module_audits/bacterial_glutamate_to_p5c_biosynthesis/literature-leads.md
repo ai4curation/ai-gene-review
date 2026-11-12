@@ -1,0 +1,14 @@
+# Initial comparative literature leads
+
+Audit begun from main 0f30fca1c9 on 2026-11-07 UTC; these are research leads, not completed curation.
+
+- Fichman et al., Evolution of proline biosynthesis: enzymology, bioinformatics, genetics, and transcriptional regulation (2015), DOI:10.1111/brv.12146. Full publisher text accessible via https://onlinelibrary.wiley.com/doi/10.1111/brv.12146. Comparative survey separates split bacterial/fungal enzymes from fused plant/animal P5CS and alternative ornithine routes. Useful for bacterial scope without implying all bacteria have this pathway. PMID:25367752 verified against PubMed DOI/title on 2026-11-07.
+- Newton et al. (2024), PMID:39514317, https://pmc.ncbi.nlm.nih.gov/articles/PMC11573504/. Primary work experimentally challenges obligatory ProB–ProA channeling in E. coli; GP diffusion/instability calculations support capture from solution. Do not generalize the experimental result to every organism or to fused eukaryotic filaments. Check any current channeling/complex assertions against this newer paper.
+- Csonka and Leisinger, Biosynthesis of Proline, PMID:26443591, https://pubmed.ncbi.nlm.nih.gov/26443591/. Comparative enzymology review; resolve chapter publication/indexing dates and distinguish older channeling hypothesis from 2024 evidence.
+- Bacillus subtilis: ProB/ProA supports anabolic synthesis whereas ProJ shares ProA in osmoadaptation. Primary genetic article PMID:21784929, DOI:10.1128/JB.05490-11 and later https://pmc.ncbi.nlm.nih.gov/articles/PMC3406149/ identify the two routes. Verify exact strain/accessions before adding exemplars; ProH/ProI are downstream outside this two-step module.
+
+Current four exemplars represent only E. coli and Pseudomonas. Seek characterized Bacillota and Actinomycetota members, checking the same two chemical activities rather than assuming family membership or physiological regulation is universal.
+
+- PMID:21784929 uses JH642 derivatives (Table1), not direct strain168 assays. Preserve this strain distinction when citing BACSU reference entries.
+- PMID:8755867 (1996), https://pmc.ncbi.nlm.nih.gov/articles/PMC178206/, studies Corynebacterium ATCC17965. proA disruption permits slow residual growth and asd complementation suggests a bypass; this is not proof that every proA-negative genome lacks the reaction. Target CORGL entries are ATCC13032, so classify evidence as strain comparison unless exact sequence identity is verified.
+- 2023 primary DOI:10.3390/ijms241411536, https://pmc.ncbi.nlm.nih.gov/articles/PMC10380284/, reports specific E. coli ProB RNA binding in SELEX/EMSA. This contradicts the current family note that no ProB member binds RNA. The binding site and physiological regulatory significance are unresolved; do not transfer the E. coli result uncritically to other family members. Existing-review consultation is checking construct identity and source evidence.
