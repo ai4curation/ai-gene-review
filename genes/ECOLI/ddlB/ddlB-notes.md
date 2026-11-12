@@ -29,10 +29,10 @@
 - Oligomeric state: UniProt SUBUNIT says monomer
   [file:ECOLI/ddlB/ddlB-uniprot.txt "Monomer."], with no evidence tag, while GOA has an
   IDA homodimerization row from PMID:1993184 whose abstract does not describe the
-  measurement. MEDLINE indexing of PMID:1993184 lists gel chromatography among its
-  methods, so the curator (who read the full text) likely had a native-size measurement;
-  the row is kept as non-core, deferring to the curator, and the conflict is left as a
-  suggested question.
+  measurement; the abstract-only cache cannot show what the curator saw. Crystal
+  structures split: RCSB entries 1IOV, 1IOW and 2DLN have one DdlB chain, 4C5B and
+  4C5C have two (4C5A three), per the RCSB entry records (data.rcsb.org, checked
+  2026-11-12). Left UNDECIDED pending a solution oligomeric-state measurement.
 - Localisation: cytosolic proteome [PMID:18304323 "We performed approximately 200 individual LC-MS/MS runs of the E. coli MC4100 cytosol"].
 
 ## Curation decisions
@@ -41,5 +41,5 @@
   cytosol.
 - cytoplasm IEA: MODIFY to cytosol; metal ion binding IEA: MODIFY to magnesium
   ion binding; ATP binding IEA: KEEP_AS_NON_CORE.
-- protein homodimerization IDA: KEEP_AS_NON_CORE, deferring to the curator
-  (conflicts with UniProt "Monomer"; see suggested question).
+- protein homodimerization IDA: UNDECIDED (abstract-only source; conflicts with
+  UniProt "Monomer"; structures split; see suggested question).
