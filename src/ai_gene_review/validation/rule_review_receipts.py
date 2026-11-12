@@ -60,7 +60,7 @@ _NAME_BEFORE_ID = re.compile(r"([A-Za-z0-9][^()\n.;:]{2,90}?)\s*\((IPR\d{6}|GO:\
 
 _SIZE_AS_EVIDENCE = re.compile(
     r"(?:limit|threshold|maximum|max|cap)\s+of\s+(?:12|20|30|50)\b"
-    r"|\b12[- ]condition[- ]set"
+    r"|\b12[- ]condition[- ]sets?\s+(?:limit|threshold|maximum|cap)"
     r"|>\s*12\s+condition"
     r"|recommended\s+(?:maximum|limit|threshold)"
     r"|analysis\s+(?:threshold|limit)s?"
