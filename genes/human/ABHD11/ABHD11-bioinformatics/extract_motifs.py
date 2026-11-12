@@ -2,10 +2,9 @@
 """Deterministic active-site and oxyanion-motif extractor for PANTHER:PTHR46118.
 
 Parses the exact 1-indexed protein sequences and sequence versions from:
-  1. All 11 in-repo `genes/*/*/*-uniprot.txt` records (`SQ` block + `DT` version), and
+  1. All 11 in-repo `genes/*/*/*-uniprot.txt` records (`SQ` block + `DT` version) offline, and
   2. The 4 non-local PANTHER control members (`P75736`, `Q8ZQX0`, `Q57427`, `Q54QK2`)
-     via `.cache/uniprot_seq/` (`.fasta` or `.seq`/`.sv`, falling back to
-     `ai_gene_review.validation.sequence_cache.SequenceCache` / UniProt REST when online).
+     via `.cache/uniprot_seq/` (`SequenceCache`, which fetches from UniProt REST on a cold cache).
 
 Emits:
   - `genes/human/ABHD11/ABHD11-bioinformatics/motif_table.tsv`
@@ -16,9 +15,15 @@ from __future__ import annotations
 
 import csv
 import re
-import urllib.request
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "src"))
+
+from ai_gene_review.validation.family_residue_validator import SequenceCache  # noqa: E402
 
 AA3 = {
     "A": "Ala",
@@ -195,37 +200,13 @@ def parse_uniprot_flatfile(path: Path) -> tuple[str, int]:
     return seq, sv
 
 
-def load_cached_or_remote_sequence(repo_root: Path, accession: str) -> tuple[str, int, str]:
-    """Load sequence + version for non-local control accessions from `.cache/uniprot_seq` or REST."""
-    cache_dir = repo_root / ".cache" / "uniprot_seq"
-    fasta_path = cache_dir / f"{accession}.fasta"
-    seq_path = cache_dir / f"{accession}.seq"
-    sv_path = cache_dir / f"{accession}.sv"
-
-    if fasta_path.exists():
-        lines = [ln.strip() for ln in fasta_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
-        sv_m = re.search(r"SV=(\d+)", lines[0])
-        sv = int(sv_m.group(1)) if sv_m else 1
-        seq = "".join(lines[1:])
-        return seq, sv, f".cache/uniprot_seq/{accession}.fasta"
-
-    if seq_path.exists():
-        seq = seq_path.read_text(encoding="utf-8").strip()
-        sv = int(sv_path.read_text(encoding="utf-8").strip()) if sv_path.exists() else 1
-        return seq, sv, f".cache/uniprot_seq/{accession}.seq"
-
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    url = f"https://rest.uniprot.org/uniprotkb/{accession}.fasta"
-    with urllib.request.urlopen(url, timeout=30) as resp:
-        raw_fasta = resp.read().decode("utf-8")
-    fasta_path.write_text(raw_fasta, encoding="utf-8")
-    lines = [ln.strip() for ln in raw_fasta.splitlines() if ln.strip()]
-    sv_m = re.search(r"SV=(\d+)", lines[0])
-    sv = int(sv_m.group(1)) if sv_m else 1
-    seq = "".join(lines[1:])
-    seq_path.write_text(seq + "\n", encoding="utf-8")
-    sv_path.write_text(f"{sv}\n", encoding="utf-8")
-    return seq, sv, f".cache/uniprot_seq/{accession}.fasta"
+def load_cached_or_remote_sequence(
+    cache: SequenceCache, accession: str
+) -> tuple[str, int, str]:
+    """Load sequence + version for non-local control accessions via SequenceCache (`.cache/uniprot_seq/`)."""
+    seq = cache.get(accession)
+    sv = cache.sequence_version(accession) or 1
+    return seq, sv, f".cache/uniprot_seq/{accession}.seq"
 
 
 def extract_member_motifs(spec: MemberSpec, seq: str, sv: int, source_label: str) -> dict[str, str | int]:
@@ -320,6 +301,9 @@ def verify_auxiliary_claims(seqs: dict[str, str]) -> None:
     assert seqs["O62202"][40:50] == "VPGLFGTKEN"
     # Verify Q8NFV4 nucleophilic 5-mer `130-GHSMG-134`
     assert seqs["Q8NFV4"][129:134] == "GHSMG"
+    # Verify E. coli YbfF (P75736) helical-cap substrate-anchoring Arg123 and Tyr208 (PMID:18215690 abstract)
+    assert seqs["P75736"][122] == "R", f"P75736:123 expected R, got {seqs['P75736'][122]}"
+    assert seqs["P75736"][207] == "Y", f"P75736:208 expected Y, got {seqs['P75736'][207]}"
 
 
 def render_results_md(rows: list[dict[str, str | int]]) -> str:
@@ -359,7 +343,7 @@ def render_results_md(rows: list[dict[str, str | int]]) -> str:
     table_block = "\n".join(table_lines)
     return f"""# PTHR46118 (PROTEIN ABHD11) Phylogeny, Active-Site Conservation, and Coordinate Crosswalk
 
-Generated deterministically by `genes/human/ABHD11/ABHD11-bioinformatics/extract_motifs.py` (with full machine-readable coordinates in `genes/human/ABHD11/ABHD11-bioinformatics/motif_table.tsv`) from the 11 in-repo `genes/*/*/*-uniprot.txt` sequence blocks and 4 cached UniProt control sequences (`P75736`, `Q8ZQX0`, `Q57427`, `Q54QK2`).
+Generated deterministically by `genes/human/ABHD11/ABHD11-bioinformatics/extract_motifs.py` (with full machine-readable coordinates in `genes/human/ABHD11/ABHD11-bioinformatics/motif_table.tsv`). **Sequence-provenance boundary**: the 11 in-scope eukaryotic rows are parsed completely offline directly from the committed `genes/<species>/<gene>/<gene>-uniprot.txt` `SQ` blocks and `DT` sequence-version lines, whereas the 4 out-of-scope PANTHER control rows (`P75736`, `Q8ZQX0`, `Q57427`, `Q54QK2`) have no local `genes/` directory and resolve via `.cache/uniprot_seq/` (`SequenceCache`, requiring network access to UniProt REST on a fresh checkout if `.cache/uniprot_seq/` is unpopulated).
 
 ## 1. PANTHER 19.0 Family and Subfamily Architecture (`PANTHER:PTHR46118`)
 
@@ -371,12 +355,12 @@ Generated deterministically by `genes/human/ABHD11/ABHD11-bioinformatics/extract
 
 ## 2. Verified 1-Based Catalytic Triad and Oxyanion-Hole Alignment Across PTHR46118 Members
 
-Structural alignment against the 1.1-A crystal structure of *Escherichia coli* K-12 YbfF (`UniProtKB:P75736`, `PDB:3BF7`, `PMID:18215690`; `Ser89` OG–`His234` NE2 = 2.89 A, `His234` ND1–`Asp113` OD1 = 2.66 A) and experimentally mapped active-site residues of yeast Eat1 (`UniProtKB:P53208`, `FT ACT_SITE 115 / 139 / 302`) and human ABHD11 (`UniProtKB:Q8NFV4`, `sv=2`, 306 aa) identifies the canonical alpha/beta-hydrolase oxyanion loop (`beta-3`–`alpha-A`, `64-HGLFG-68` within `61-VFLHGLFGSK-70` in `Q8NFV4`) and catalytic triad at `beta-5` (`GxSxG` nucleophilic elbow; `GFSMG` in `EAT1`), `beta-6` (`Asp`/`Glu` charge-relay acid), and the `beta-8`–`alpha-F` loop (`His` general base), shown below with symmetric `[-4,+4]` 9-aa flanking windows:
+Sequence alignment against *Escherichia coli* K-12 YbfF (`UniProtKB:P75736`, 254 aa, `sv=1`)—whose 1.1-A and 1.68-A crystal structures (`PDB:3BF7`, `PMID:18215690`, cached abstract-only in-repo) describe an alpha/beta-hydrolase domain with a `Ser-His-Asp-Ser` catalytic tetrad (whose sequence-derived canonical alpha/beta-hydrolase charge-relay triad positions in `P75736` are nucleophilic `Ser89`, `beta-6` `Asp113`, and `His234`, alongside oxyanion loop `23-HGLFG-27`) plus helical-cap substrate-anchoring residues `Arg123` and `Tyr208`—together with experimentally mapped active-site features of yeast Eat1 (`UniProtKB:P53208`, `FT ACT_SITE 115 / 139 / 302`) and human ABHD11 (`UniProtKB:Q8NFV4`, `sv=2`, 306 aa, `FT ACT_SITE 132 / 287`), identifies the canonical alpha/beta-hydrolase oxyanion loop (`beta-3`–`alpha-A`, `64-HGLFG-68` within `61-VFLHGLFGSK-70` in `Q8NFV4`) and catalytic triad at `beta-5` (`GxSxG` nucleophilic elbow; `GFSMG` in `EAT1`), `beta-6` (`Asp`/`Glu` charge-relay acid), and the `beta-8`–`alpha-F` loop (`His` general base), shown below with symmetric `[-4,+4]` 9-aa flanking windows:
 
 {table_block}
 
 - **Note on *C. elegans* `abhd-11.1` (`UniProtKB:O62202`, `PTHR46118:SF3`) oxyanion-loop variation**: At residues `41-VPGLFGTKEN-50` (`39-ILVPGLFGTK-48`), `abhd-11.1` retains the core `-GLFG-` oxyanion-loop backbone (`42-PGLFG-46`, where the backbone amide NH contributes to the oxyanion hole) alongside the complete `Ser114`–`Asp140`–`His267` charge-relay triad, although the canonical N-terminal histidine of `-HGLFG-` (`52-HGLFG-56` in sister paralog `abhd-11.2` `O45707`) is substituted by `Pro42`.
-- **Note on `beta-6` triad acid vs cap-domain `FT ACT_SITE` homology call**: UniProt `Q8NFV4` (`FT ACT_SITE 228`, `Asp228` in `223-WRVNLDALT-231`), `Q8K4F5` (`229`, `Asp229` in `224-WRLNLDTLA-232`), `Q6DRD9` (`238`, `Glu238` in `233-WRINLESIS-241`), and `O94437` (`190`, `Glu190` in `185-FRVPIELIS-193`) carry an automated `ECO:0000250` homology projection in the cap/core linker region, whereas the 1.1-A *E. coli* YbfF crystal structure (`PDB:3BF7`, `PMID:18215690`) and *S. cerevisiae* Eat1 (`FT ACT_SITE 139`) establish the conserved `beta-6` aspartate/glutamate (`Asp156` in human `Q8NFV4`, `Asp113` in `P75736`, `Asp139` in `P53208`, `Glu176` in `P53219`) as the structural triad carboxylate; the `FT ACT_SITE 228`-aligned position is non-acidic in *E. coli* YbfF (`Pro176` in `171-WRFNVPVLW-179`), *Drosophila* `CG2059` (`His225` in `220-WACNAHVLR-228`), and *C. elegans* `abhd-11.2` (`Asn220` in `215-WKININTID-223`).
+- **Note on `beta-6` triad acid vs cap-domain `FT ACT_SITE` homology call**: UniProt `Q8NFV4` (`FT ACT_SITE 228`, `Asp228` in `223-WRVNLDALT-231`), `Q8K4F5` (`229`, `Asp229` in `224-WRLNLDTLA-232`), `Q6DRD9` (`238`, `Glu238` in `233-WRINLESIS-241`), and `O94437` (`190`, `Glu190` in `185-FRVPIELIS-193`) carry an automated `ECO:0000250` homology projection in the cap/core linker region, whereas family-wide sequence alignment with *E. coli* YbfF (`UniProtKB:P75736` `Asp113`, `PDB:3BF7`, `PMID:18215690`) and *S. cerevisiae* Eat1 (`FT ACT_SITE 139`) identifies the conserved `beta-6` aspartate/glutamate (`Asp156` in human `Q8NFV4`, `Asp113` in `P75736`, `Asp139` in `P53208`, `Glu176` in `P53219`) as the conserved triad carboxylate; the `FT ACT_SITE 228`-aligned position is non-acidic in *E. coli* YbfF (`Pro176` in `171-WRFNVPVLW-179`), *Drosophila* `CG2059` (`His225` in `220-WACNAHVLR-228`), and *C. elegans* `abhd-11.2` (`Asn220` in `215-WKININTID-223`).
 
 ## 3. Human `ABHD11` (`UniProtKB:Q8NFV4`) Sequence Version and Isoform Coordinate Crosswalk
 
@@ -390,6 +374,7 @@ Structural alignment against the 1.1-A crystal structure of *Escherichia coli* K
 def main() -> None:
     out_dir = Path(__file__).resolve().parent
     repo_root = out_dir.parents[3]
+    seq_cache = SequenceCache(repo_root / ".cache" / "uniprot_seq")
 
     rows: list[dict[str, str | int]] = []
     seqs: dict[str, str] = {}
@@ -399,7 +384,7 @@ def main() -> None:
             seq, sv = parse_uniprot_flatfile(repo_root / spec.uniprot_relpath)
             source_label = spec.uniprot_relpath
         else:
-            seq, sv, source_label = load_cached_or_remote_sequence(repo_root, spec.accession)
+            seq, sv, source_label = load_cached_or_remote_sequence(seq_cache, spec.accession)
         seqs[spec.accession] = seq
         rows.append(extract_member_motifs(spec, seq, sv, source_label))
 
