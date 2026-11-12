@@ -12,8 +12,8 @@ review, **LDLRAP1 was unreviewed when this project picked it** — so it is a re
 review driven by the project, not a narration of one. It is a clean
 `clathrin-cargo adaptor` (a different child from GRB2's signaling adaptor),
 a Mendelian disease gene, and compact enough (90 GOA annotations) to review in
-full. See the full review of LDLRAP1 (linked from the gene symbol) and its
-[notes](../../../genes/human/LDLRAP1/LDLRAP1-notes.md).
+full. See the full review of LDLRAP1 (linked from the gene symbol) and its notes
+at `genes/human/LDLRAP1/LDLRAP1-notes.md`.
 
 ## The gene in one line
 

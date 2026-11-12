@@ -13,8 +13,8 @@ prototype of the **`GO:0140767` enzyme-substrate adaptor activity** child — th
 case the project's modelling rule singles out, where the adaptor's job is to
 bring an **enzyme together with its substrate** (`provides input for`), not to
 regulate a partner's activity. See the
-full review of RPTOR (linked from the gene symbol) and its
-[notes](../../../genes/human/RPTOR/RPTOR-notes.md).
+full review of RPTOR (linked from the gene symbol) and its notes at
+`genes/human/RPTOR/RPTOR-notes.md`.
 
 ## The gene in one line
 
@@ -54,6 +54,9 @@ the three IDA rows that actually assay the bridging:
 | **S6K1 / RPS6KB1** (P23443), a protein kinase | 3 | MODIFY | `GO:0019901` protein kinase binding |
 | **4E-BP1** (Q13541), **PRAS40** (Q96B36) — TOS-motif substrates, not kinases | 8 | REMOVE | bare protein binding (no specific binding term; the adaptor *activity* is already asserted by IDA) |
 | everything else (MLST8, BRAF, singletons) | 24 | REMOVE | bare protein binding, per policy |
+
+(The rows sum to 59, not 61: the 61 GOA `GO:0005515` lines collapse to 59
+distinct reference+partner entries in the review, as with GRB2.)
 
 That triage reconstructs the mechanism without over-claiming: RPTOR binds the
 **MTOR kinase** and the kinase substrate **S6K1** (→ protein kinase binding), and

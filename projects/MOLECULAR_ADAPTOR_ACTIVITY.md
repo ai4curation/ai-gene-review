@@ -85,8 +85,8 @@ activity**, whose 16 children are where a reviewer usually lands:
 | soluble NSF attachment protein activity | GO:0005483 |
 
 Relations were read from QuickGO on 2026-11-07; the table may mix direct
-children with grandchildren (e.g. `GO:0160247` under `GO:0140312`; `GO:0005484`
-under `GO:0005483`), and the sidecar's `branch_terms` list surfaces 21
+children with grandchildren (e.g. `GO:0160247` is under `GO:0140312`, not a
+direct child of `GO:0030674`), and the sidecar's `branch_terms` list surfaces 22
 `core_adaptor` terms where the experimental evidence actually sits (including
 `GO:0035615`, `GO:1990756`) — so when picking a term, prefer the specific
 **descendant** the evidence supports, not only these headline children.
@@ -131,9 +131,11 @@ The two figures below are over **different roots** (`GO:0030674` vs `GO:0060090`
 and so are not a single comparable breakdown:
 
 - The **`GO:0030674` subtree has 446,453 annotations**, dominated by
-  TreeGrafter / PANTHER phylogenetic propagation (48.1%, ECO:0007826) and
-  UniProt/InterPro sequence-model matches (~34% combined, ARBA/UniRule etc.);
-  GO_Central IBD/IBA is 4.1% (ECO:0000318).
+  TreeGrafter / PANTHER phylogenetic propagation (48.1% by evidence,
+  ECO:0007826); a further ~35% is **assigned by** UniProt (22.6%) + InterPro
+  (12.3%) — ARBA/UniRule and sequence-model matches — and GO_Central IBD/IBA is
+  4.1% by evidence (ECO:0000318). (The two percentages are from different facets,
+  evidence-code vs assigned-by; see the data file.)
 - The **full `GO:0060090` tree carries 20,948 IBA annotations (ECO:0000318),
   100% assigned by GO_Central** — manually reviewed phylogenetic inferences
   propagated from an experimentally-characterised ancestor down a PANTHER
@@ -181,8 +183,11 @@ gene may be in more than one branch, so the counts sum above 666:
 178 of the 666 already have a `genes/human/<symbol>/` folder in the repo
 (flagged `existing_folder: true` in the sidecar) — these are the natural
 starting points, though a folder does not mean the adaptor row was reviewed.
-Two genes are reviewed from this worklist so far (flagged `reviewed: true`):
-LDLRAP1 and RPTOR.
+Three genes in this worklist carry a COMPLETE review (flagged `reviewed: true`):
+GRB2 (reviewed independently, before this project), and LDLRAP1 and RPTOR
+(reviewed here). The `reviewed` flag — not `existing_folder` — is the filter for
+picking un-reviewed genes; its semantics are defined in the sidecar's `source`
+block.
 
 **Proposed phase-1 cut:** the `core_adaptor` branch (516 genes). The `reader`
 branch is large and mechanistically distinct (recognising a modified residue to
@@ -203,7 +208,7 @@ is a candidate for its own phase. Because the branches cut across the ontology
    assay shows the bridging, and do not stack a second, unsupported adaptor-activity
    row on top of one already present by IDA.
 2. Pick the most specific **descendant** of `GO:0030674` the evidence supports
-   (the sidecar surfaces 21 `core_adaptor` terms where the experimental evidence
+   (the sidecar surfaces 22 `core_adaptor` terms where the experimental evidence
    sits — e.g. `GO:0035615`, `GO:1990756` — beyond the 16 headline children);
    fall back to `GO:0060090` only when nothing more specific fits.
 3. Distinguish adaptor from sequestering and carrier activities, and from the
