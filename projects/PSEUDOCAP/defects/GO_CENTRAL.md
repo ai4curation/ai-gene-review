@@ -555,7 +555,7 @@ The GO:0043858 arginine:ornithine antiporter activity IBD at PTN000208945 (sole 
 
 ## 41. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
-- **Record:** PTN004744913
+- **Record:** PANTHER:PTN004744913
 - **Subject:** UniProtKB:P22567
 - **Field:** GO_ID
 - **Change:** GO:0004358 → GO:0004042 (L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor)
@@ -631,7 +631,8 @@ PTN002435498 carries an IBD of GO:0004129 cytochrome-c oxidase activity whose on
 
 ## 47. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9HTH9 enables GO:0047617 fatty acyl-CoA hydrolase activity (IBA, GO_REF:0000033)
+- **Record:** PANTHER:PTN001273712
+- **Subject:** UniProtKB:Q9HTH9
 - **Field:** GO ID
 - **Change:** GO:0047617 → GO:0016289
 - **Likely cause:** OTHER

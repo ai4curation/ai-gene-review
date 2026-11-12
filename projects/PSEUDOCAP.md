@@ -172,7 +172,7 @@ lasB, which are given secretion-system terms for being secretion cargo).
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2, and after
 the merge from main that brought in the AST-module and eut reviews, they stand
 at 272 for PseudoCAP (123 wrong term, 84 wrong evidence code, 41 wrong
-reference, 14 wrong qualifier, 8 wrong gene product), 116 for PAINT/GO Central,
+reference, 14 wrong qualifier, 8 wrong gene product, 2 other), 116 for PAINT/GO Central,
 23 for UniProt, 7 for InterPro (which now has its own report, since the
 InterPro2GO mappings outgrew the catch-all) and 5 for other resources: 423 in
 all, matching the 423 `source_defects` entries recorded under `genes/PSEAE`. They
