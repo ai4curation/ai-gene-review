@@ -76,10 +76,12 @@ coenzyme B contact of P11558. The one exception is a Tyr-to-Phe change at a
 coenzyme M contact in both *Methanosarcina* sequences
 ([RESULTS](mcrA-across-clades/RESULTS.md)).
 
-One P11558 row is weakly supported: the IDA for activity from the 1988 gene-cloning
-paper (PMID:2448287). Its abstract reports expression of the subunits in *E. coli*
-but no assay. It was accepted in deference to the curator, who read the full text,
-and the reference is marked unverified.
+One P11558 row cites the wrong paper: the IDA for activity from the 1988 gene-cloning
+paper (PMID:2448287). The full text, read from a PDF supplied during review, contains
+no activity assay; the only protein work is Western-blot detection of the subunits
+expressed in *E. coli*. The claim stays accepted because four EXP rows support it, the
+reference is marked miscited, and a source defect asks for the row (assigned by MENGO
+in 2013) to be withdrawn.
 
 ### 2. Methanogenesis should name the route
 

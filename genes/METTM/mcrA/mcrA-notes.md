@@ -61,3 +61,16 @@ Fetched the six UniProt references not previously cached and added them to the r
 Full text for PMID:2448287 (the IDA activity row) is still unavailable: PMC210692 refuses
 automated download (403) and the open-access warming chain found nothing for any of the
 abstract-only P11558 papers.
+
+## PMID:2448287 full text read (2026-11-13)
+
+Read all ten pages from a reviewer-supplied PDF (J Bacteriol 170:568-577; PMC210692
+scan). Not cached in publications/: not openly licensed. Contents: cloning of the mcr
+cluster of strain Marburg in lambda gt11/EMBL4, expression of subclones in E. coli with
+Western-blot detection (Fig. 2), sequence of the beta-ORF1-ORF2-gamma-alpha cluster
+(Fig. 3), S1/primer-extension mapping of transcript ends, Northern blot. No activity
+assay anywhere; MCR activity appears only as introductory background with citations to
+other papers. Discussion: the E. coli-expressed alpha subunit was unstable, possibly
+because F430 was missing. Outcome: the IDA GO:0050524 row (assigned_by MENGO, 2013) is
+miscited; claim kept as ACCEPT (four EXP rows), reference MISCITED, source defect
+WRONG_REFERENCE / DELETE_ROW filed (resource OTHER, naming MENGO).
