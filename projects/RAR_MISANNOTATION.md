@@ -318,7 +318,8 @@ axoneme assembly (*Selaginella*), and ionotropic glutamate receptor signalling. 
 disagreed with an existing review. Mouse Acadl's carnitine catabolic process row was kept as
 non-core, but the term means breaking down carnitine itself, which mammals do not do; the
 knockout paper shows only acylcarnitine build-up from blocked beta-oxidation. The Acadl
-review now removes the row.
+review now removes the row, and the two CoA-linked carnitine metabolic process rows that
+rest on the same paper.
 
 ## Next steps
 
