@@ -19,3 +19,7 @@
   FUNCTION comment says "D-glutarate", which looks like a typo for
   D-glucarate; it is recorded as a UniProt source defect.
 - PANTHER PTHR43353:SF3, the same subfamily as KT2440 PP_1256.
+- Glucarate/galactarate module: Q6FFQ0 is also the characterized
+  representative of the KGSADH step (PANTHER PTHR43353:SF3) in the oxidative
+  route of modules/glucarate_galactarate_catabolism.yaml, alongside KT2440
+  PP_3602.
