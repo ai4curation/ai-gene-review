@@ -102,3 +102,14 @@ The same E3 core now includes membrane raft, supported by the human osteoblast b
 The optional PTK6 question is partly resolved from the existing complete human Reactome records [Reactome:R-HSA-8849469; Reactome:R-HSA-8848818; Reactome:R-HSA-8848829]. The specific autoubiquitination event explicitly assigns CBL an executed ubiquitin-transfer step before its degradation. The existing TAS positive-EGFR process is therefore retained as non-core in that defined route; CBL is not treated solely as a passive inhibited target. The source primary full text was not inspected; this remains deference to the explicit curated reaction, with no change to the well-supported general negative receptor-regulatory role.
 
 This focused revision preserves all 305 machine assertions and the one genuine historical NEW record, all 166 reference identities/titles, source flags, current source bytes, previous histories and research artifacts. No NEW assertion is created. The new membrane-raft snippet occurs once in YAML and once in this appendix; combined with pre-existing uses, the per-source word audit remains bounded. The earlier journal above is preserved verbatim as historical provenance. The biological description is shortened by removing two explanatory contrasts. Temporary source-recovery and consultation records support this work but are not represented as canonical primary caches.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Rows: GO:0005794 IDA (PMID:29237719) and GO:0005794 IEA (GO_REF:0000120, SL-0132, mouse P22682 as supporting entity). Both `located_in`. No Golgi sub-compartment rows.
+
+Checks:
+- PMID:29237719 (full text cached): "Initially, GFP-tagged c-Cbl was shown to localize predominantly at the base and the proximal part of the primary cilium as well as in the Golgi complex in unstimulated NIH3T3 cells". The construct is human (Origene RC214069). Fig. 4 legend: "IFM of WT NIH3T3 cells expressing either GFP-tagged c-Cbl (h) or stained with anti–c-Cbl (i). The Golgi complex (dashed line) was labeled with anti–GM130", so the endogenous (mouse) protein is also imaged against a cis-Golgi marker. "After 10 min of PDGF-AA stimulation, endogenous c-Cbl was enriched in the primary cilium, whereas Golgi localization was largely unaffected".
+- The human UniProt line "Golgi apparatus {ECO:0000269|PubMed:29237719}" is curated from that same paper, so the IEA carries the same claim.
+- CBL is a soluble RING E3 with no TM; the authors only suggest the Golgi as a place where CBL meets IFT20/PDGFRA; no ubiquitination is shown there.
+
+Outcome: both rows stay KEEP_AS_NON_CORE, reasons rewritten with the marker check; root only (recruited peripheral protein, light-microscope GM130 co-staining does not resolve a cisterna). Added a `file:human/CBL/CBL-uniprot.txt` reference entry.
