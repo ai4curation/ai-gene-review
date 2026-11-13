@@ -65,3 +65,16 @@
 
 No automated deep-research file was generated during this pass; curation used
 the cached UniProt, GOA, PANTHER, and publication records.
+
+
+## 2026-11-07 evidence re-audit
+
+All original annotation payloads and row order are preserved. No NEW annotation was added. The catalytic reaction and proline-biosynthetic participation remain supported. Direct E. coli primary studies and newer experiments are distinguished from inferred KT2440 function.
+
+The normal Falcon research attempt failed with HTTP 403 authentication/access error; no provider report was fabricated. Manual source review used the protected existing caches and normally fetched new publications.
+
+PMID:39514317 (full text) challenges required ProA–ProB channeling: heterologous kinase replacements and overexpressed alternative reductases support E. coli growth; failed crosslinking alone is not universal proof of no interaction. ProA is reduced glutamyl-phosphate chemistry; spontaneous GSA cyclization supplies P5C. The computed GP half-life and diffusion times are calculations, not intracellular measurements. Native-locus monomeric-GFP fusions show dispersed cytoplasmic localization. Expression/purification used engineered BL21 derivatives, while growth experiments used K-12 BW25113 derivatives. No matched-protein complex requirement is imposed.
+
+PMID:37511294 (full text) overturns the previous claim that no ProB binds RNA. K-12 ASKA-derived proB was recloned into pET21a with C-terminal His tag, expressed in BL21-Gold(DE3), and tested by SELEX/competition EMSA. Estimated KD >>10 micromolar, no mapped binding site, no established native target or RNA-regulatory function. The original RNA-binding row is retained as non-core intrinsic in-vitro capability.
+
+PAINT loss checks reported no IRD/IKR on the target lineage. Existing abstract-only primary caches were not refreshed. Curated experimental annotations remain supported where independent evidence agrees; no target-table detail was invented. Complete validation, ontology snapshots and preservation proof are in the member-review audit and ignored existing-review logs.
