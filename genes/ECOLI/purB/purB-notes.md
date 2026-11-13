@@ -4,6 +4,12 @@
 
 PurB is the adenylosuccinate lyase of Escherichia coli, a homotetrameric cytosolic enzyme of the fumarase/argininosuccinate lyase superfamily. It catalyses two beta-elimination reactions releasing fumarate: cleavage of SAICAR to AICAR in de novo IMP biosynthesis, and cleavage of adenylosuccinate to AMP in AMP synthesis from IMP. During infection by phages that encode 2-aminoadenine (Z) DNA synthesis, it also cleaves the phage-made dZ precursor.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purB/purB-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+- During infection by phages that make 2-aminoadenine (Z) DNA, PurB converts the phage-made 2-amino-2'-deoxyadenylosuccinate to dZMP and fumarate (UniProt, citing PMID:33926954). [file:ECOLI/purB/purB-uniprot.txt "deoxyadenylo-succinate to dZMP and fumarate, when the bacterium is"]
+
 ### Core function evidence
 
 - (S)-2-(5-amino-1-(5-phospho-D-ribosyl)imidazole-4-carboxamido) succinate lyase (fumarate-forming) activity (GO:0070626):

@@ -4,6 +4,11 @@
 
 PurT is the formate-dependent glycinamide ribonucleotide (GAR) transformylase of Escherichia coli, a cytosolic ATP-grasp enzyme that uses ATP and free formate, via a formyl phosphate intermediate, to formylate GAR to FGAR in de novo IMP biosynthesis. It is an alternative to the folate-dependent PurN; only purN purT double mutants require purines. Purified PurT also shows side reactions with acetate and carbamoyl phosphate.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purT/purT-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+
 ### Core function evidence
 
 - phosphoribosylglycinamide formyltransferase 2 activity (GO:0043815):

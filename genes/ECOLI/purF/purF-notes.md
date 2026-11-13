@@ -4,6 +4,11 @@
 
 PurF is the glutamine phosphoribosylpyrophosphate (PRPP) amidotransferase of Escherichia coli, a cytosolic homotetramer that catalyses the committed first step of de novo IMP biosynthesis: transfer of the glutamine amide nitrogen, generated in an N-terminal Ntn glutaminase domain with an N-terminal cysteine nucleophile, through an ammonia channel to PRPP in a C-terminal phosphoribosyltransferase domain, giving 5-phosphoribosylamine. It is feedback-inhibited by AMP and GMP and is also inhibited by the stringent-response alarmone ppGpp.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purF/purF-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+
 ### Core function evidence
 
 - amidophosphoribosyltransferase activity (GO:0004044):

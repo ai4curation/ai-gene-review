@@ -4,6 +4,11 @@
 
 PurM is the aminoimidazole ribonucleotide (AIR) synthetase of Escherichia coli, a soluble homodimeric ATP-dependent cyclo-ligase that closes the imidazole ring of formylglycinamidine ribonucleotide (FGAM) to form AIR, the fifth step of de novo IMP biosynthesis. It is a standalone enzyme; in animals and fungi the same activity is a domain of multifunctional GART or ADE5,7-type proteins.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purM/purM-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+
 ### Core function evidence
 
 - phosphoribosylformylglycinamidine cyclo-ligase activity (GO:0004641):

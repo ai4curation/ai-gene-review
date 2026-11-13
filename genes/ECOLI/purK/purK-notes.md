@@ -4,6 +4,11 @@
 
 PurK is the N5-carboxyaminoimidazole ribonucleotide (N5-CAIR) synthetase of Escherichia coli, a homodimeric ATP-grasp enzyme that uses MgATP and bicarbonate to carboxylate the exocyclic amine of aminoimidazole ribonucleotide (AIR), forming N5-CAIR. PurE then rearranges N5-CAIR to CAIR; together the two enzymes perform AIR carboxylation, step 6 of de novo IMP biosynthesis. PurK has no counterpart in animals.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purK/purK-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+
 ### Core function evidence
 
 - 5-(carboxyamino)imidazole ribonucleotide synthase activity (GO:0034028):

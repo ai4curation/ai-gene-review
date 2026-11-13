@@ -4,6 +4,11 @@
 
 PurN is the folate-dependent glycinamide ribonucleotide (GAR) transformylase of Escherichia coli, a soluble cytosolic monomer that transfers the formyl group of 10-formyltetrahydrofolate to GAR to give N-formylglycinamide ribonucleotide (FGAR), the third step of de novo IMP biosynthesis. E. coli has a second, ATP- and formate-dependent GAR transformylase (PurT); only purN purT double mutants require purines.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purN/purN-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+
 ### Core function evidence
 
 - phosphoribosylglycinamide formyltransferase activity (GO:0004644):

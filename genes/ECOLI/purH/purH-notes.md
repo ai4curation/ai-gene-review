@@ -4,6 +4,11 @@
 
 PurH is the bifunctional AICAR transformylase/IMP cyclohydrolase of Escherichia coli, a soluble cytosolic enzyme that catalyses the last two steps of de novo IMP biosynthesis: formylation of 5-aminoimidazole-4-carboxamide ribonucleotide (AICAR) with 10-formyltetrahydrofolate to FAICAR, and cyclodehydration of FAICAR to IMP. It is encoded with purD in the purHD operon.
 
+### Provenance
+
+No provider deep-research report was generated for this gene. These notes were written by the reviewer from: the fetched UniProt record (file:ECOLI/purH/purH-uniprot.txt), the cached primary publications cited below (most abstract-only; full_text_available is recorded in each publications/PMID_*.md file), the PANTHER family reviews under interpro/panther/, and the P. putida, yeast and human orthologue reviews used as precedents.
+
+
 ### Core function evidence
 
 - phosphoribosylaminoimidazolecarboxamide formyltransferase activity (GO:0004643):
