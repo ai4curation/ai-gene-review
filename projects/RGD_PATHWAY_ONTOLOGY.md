@@ -1013,7 +1013,12 @@ Possible upstream errors found in this set:
   `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
   compact module's cyclase and PKA steps.
 - Submit the new-term requests now recorded in module `proposed_new_terms`
-  (`export_proposed_terms.py modules` lists them) to GO.
+  (`export_proposed_terms.py modules` lists them) to GO. Deduplicate by
+  `proposed_name`: calcium channel activator activity is requested by both
+  `store_operated_calcium_entry` and `er_calcium_store_cycling`.
+- Once a calcium channel activator activity term exists, sweep the three
+  "opens a calcium channel" functions onto it: STIM1/2 (`GO:0005246`),
+  EMRE (`GO:0099103`) and CACNA1S (`GO:0005245`).
 - Review the blood-set member genes, starting with the proteases and cofactors
   that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
 - Model the remaining pathways. The broad ones (RNA polymerase II, translation,
