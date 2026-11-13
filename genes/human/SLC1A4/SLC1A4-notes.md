@@ -63,8 +63,8 @@ substrate. Resolution used in this review:
   PMID:21757002), **GO:0015813 L-glutamate transmembrane transport** (IBA), **GO:0098712
   L-glutamate import across plasma membrane** (TAS PMID:21757002): glutamate is not an ASCT1
   substrate (direct human evidence PMID:8340364). The IBA glutamate rows rest on the broad
-  SLC1 node (PANTHER:PTN000238242 / PTN002278999) whose donors are EAATs (P43003/EAAT2,
-  P43004/EAAT3, P43005/EAAT1, P48664/EAAT5, etc.). ASCT1 sits in the neutral-AA subfamily
+  SLC1 node (PANTHER:PTN000238242 / PTN002278999) whose donors are EAATs (P43003/SLC1A3/EAAT1,
+  P43004/SLC1A2/EAAT2, P43005/SLC1A1/EAAT3, P48664/EAAT5, etc.). ASCT1 sits in the neutral-AA subfamily
   (PTN002632762) — the glutamate function was not inherited into this branch; this is
   propagation from the wrong subfamily. The TAS rows rest on PMID:21757002, an FXR/hepatic
   glutamine-glutamate metabolism paper that does **not** demonstrate glutamate transport by
@@ -136,3 +136,19 @@ MARK_AS_OVER_ANNOTATED.
    (L-/D-serine, L-alanine, L-threonine, L-cysteine, L-asparagine).
 2. Brain L-serine / D-serine homeostasis (astrocyte-neuron serine shuttle; regulation of the
    NMDA co-agonist D-serine).
+
+## Update (2026-11-13): cystine/cysteine NOT rows + antiport MF (PR #6338 review)
+- The NOT|L-cystine rows (GO:0015184 MF, GO:0015811 BP; UniProt, PMID:8340364) are kept ACCEPT
+  (cystine dimer genuinely not transported), but the dimer-vs-monomer distinction is NOT asserted
+  as coming from PMID:8340364 (which tested the monomer L-cysteine). The cystine↔cysteine term
+  mis-mapping is now recorded as `review.source_defects` (WRONG_TERM, resource UNIPROT, REPOINT to
+  GO:0033229 / GO:0042883), and the genuine conflict (cysteine-negative in HeLa vs cysteine-positive
+  in oocytes PMID:8101838 + UniProt Rhea:RHEA:84347) is recorded as a `finding_review`
+  (finding_status DISPUTED, superseded_by PMID:8101838) on the PMID:8340364 reference.
+- GO:0015293 symporter activity (IEA/InterPro) is a lateral transport-mode correction → MODIFY to
+  GO:0015297 antiporter activity (not MARK_AS_OVER_ANNOTATED).
+- Added a core_functions entry for GO:0015297 antiporter activity (the obligate-exchange mechanism),
+  mirroring ASCT2/SLC1A5.
+- EAAT accession mapping corrected: P43003=SLC1A3=EAAT1, P43004=SLC1A2=EAAT2, P43005=SLC1A1=EAAT3.
+- PMID:8340364 quotes re-cut to begin at "did not induce the transport of ..." so the negation is
+  explicit; removed the PMID:34630942 glutamine quote from the GO:0005313 REMOVE row.
