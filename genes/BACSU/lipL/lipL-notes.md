@@ -17,4 +17,4 @@ the LipM-GcvH-LipL relay).
   [PMID:21338421 "LipL represents a new enzyme activity."].
 - LipM and LipL are both in PANTHER PTHR43679:SF2 and share PAINT node PTN008684097, which
   assigns GO:0033819 (octanoyl-ACP donor) to both; correct for LipM, not for LipL.
-- GO has no term for the LipL reaction; GO:7770091 lipoyl-GcvH:protein N-lipoyltransferase activity exists in current GO (QuickGO, EC 2.3.1.204, RHEA:20213 and RHEA:16413) but not in the configured release; recorded as a proposed term until then.
+- The configured GO release has no term for the LipL reaction (octanoyl-GcvH donor, RHEA:20213, EC 2.3.1.204); recorded as the proposed term "octanoyl-[GcvH]:protein N-octanoyltransferase activity". Newer GO has GO:7770091 lipoyl-GcvH:protein N-lipoyltransferase activity (QuickGO), defined by the lipoyl-donor reaction but cross-referencing EC 2.3.1.204 and RHEA:20213; whether LipL belongs under it is to be decided on swap-in. A lipoyl-donor activity for LipL is not asserted.

@@ -23,4 +23,4 @@ No deep-research provider is configured in this session (no provider API key), s
 ## dam regulation row
 
 PMID:11072067 maps the cde-4 insertion (raising dam P2 promoter activity) to lipB. No mechanism;
-treated as an indirect consequence of loss of lipoylation (MARK_AS_OVER_ANNOTATED).
+full text not obtainable (paywalled, no PMC), so the IMP row is kept as non-core, deferring to the curator.
