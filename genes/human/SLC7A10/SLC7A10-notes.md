@@ -10,8 +10,9 @@ NOT a CAT-type single-chain transporter.
 
 asc-1 is the catalytic **light chain** of a disulfide-linked heterodimer with the
 heavy chain **SLC3A2 / 4F2hc (CD98hc)**, which is required for its functional
-surface expression. It is a **Na+- and Cl--independent obligate antiporter
-(exchanger)** of **small neutral amino acids** — glycine, L-alanine, L-serine,
+surface expression. It is a **Na+- and Cl--independent antiporter
+(exchanger)** — operating preferentially though not exclusively in exchange mode —
+of **small neutral amino acids** — glycine, L-alanine, L-serine,
 L-threonine, L-cysteine and alpha-aminoisobutyrate — and, distinctively,
 **D-isomers**, most notably **D-serine** (and D-alanine), transporting D-serine
 with high affinity (Km ≈ 22.8 µM, close to its physiological brain concentration).
@@ -47,7 +48,7 @@ commitment via D-serine release.
   lists Rhea exchange reactions (all X(out)/L-alanine(in) antiport): glycine
   (CHEBI:57305), L-serine (CHEBI:33384), L-threonine, L-cysteine (CHEBI:35235),
   D-serine (CHEBI:35247), D-alanine, L-alanine (CHEBI:57972), etc. — confirming the
-  obligate-antiporter mechanism and substrate set.
+  antiporter (exchange) mechanism and substrate set.
 - Structure: cryo-EM PDBs 8QEY, 8WNS/T/Y (asc-1–4F2hc complex), 9 TM helices modeled.
 - ComplexPortal CPX-8189 "ASC1-4F2 heteromeric amino acid transporter complex".
 
@@ -69,7 +70,7 @@ commitment via D-serine release.
   GO:0015194 (L-serine transporter). GO:0015179 (L-amino acid transporter) is
   TOO_GENERAL (parent of accepted GO:0015175). GO:0022857 (transmembrane transporter)
   TOO_GENERAL (root).
-- Mechanism: asc-1 is an obligate antiporter; captured as core MF GO:0015297
+- Mechanism: asc-1 is an antiporter operating preferentially in exchange mode; captured as core MF GO:0015297
   (antiporter activity) + proposed combined term. None of the existing MF rows are
   explicitly uniporter/symporter-flavored, so no lateral MODIFY of existing substrate
   MFs is required — substrate-specific transporter terms are kept as accurate.
