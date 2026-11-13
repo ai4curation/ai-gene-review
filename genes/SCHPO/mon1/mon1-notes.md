@@ -18,10 +18,10 @@ PAINT places the ancestral IBD at Opisthokonta `PTN000315023`, but a
 IBA for S. pombe. The existing `GO:0035658` row is therefore a PomBase ISO
 transfer from S. cerevisiae MON1 rather than an active GO_Central IBA. I left
 the row accepted because PomBase's ISO is plausible and PomBase now identifies a
-fission-yeast Ccz1 partner; the PAINT loss is recorded as contradicted and
-should be revisited with SPAC1805.10/ccz1 in hand. `just paint-losses SCHPO
-mon1` reports `PTN008545077 | GO:0035658 | IRD | 20250903 | PTN000315023 | 2 |
-no | ISO:ACCEPT; CORE_FUNCTION`.
+fission-yeast Ccz1 partner; the PAINT loss is recorded as too broad and should
+be revisited with SPAC1805.10/ccz1 in hand. `just paint-losses SCHPO mon1`
+reports `PTN008545077 | GO:0035658 | IRD | 20250903 | PTN000315023 | 2 | no |
+ISO:ACCEPT; CORE_FUNCTION`.
 
 ## 2026-10-17 review
 
