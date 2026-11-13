@@ -58,3 +58,23 @@ reviewed. Marked over-annotated (with the inferred bacteriocin transport row).
 - REMOVE: signaling receptor activity (IEA, InterPro2GO).
 - KEEP_AS_NON_CORE: enterobactin binding (IDA).
 - No PSEUDOCAP defect; GO_CENTRAL CHECK (SUSPECTED) for the colicin IBD reaching PfeA.
+
+## PANTHER tree check (2026-11-05)
+
+Topology fetched with `projects/PSEUDOCAP/panther_tree.py node PTN000763909 --depth 3
+--leaves` (PTHR30069). The node is a Gammaproteobacteria SPECIATION node, 3 leaves, all
+PTHR30069:SF51.
+
+| Child node | Event / taxon | Leaves | Subfamilies | Verdict |
+|---|---|---|---|---|
+| PTN002409317 | LEAF, P. aeruginosa | 1 (Q05098 PfeA) | SF51 | Ferric-enterobactin receptor; no colicin evidence |
+| PTN002012591 | SPECIATION, Enterobacteriaceae | 2 (P05825 E. coli FepA, Q8ZR40 S. typhimurium FepA) | SF51:2 | Colicin B/D receptors; correct home for the GO:0042912 IBD |
+
+The topology settles the earlier concern cleanly. The node's only non-enterobacterial
+leaf is PfeA itself, and the two colicin-receptor leaves form a single child clade, so
+GO:0042912 colicin transmembrane transporter activity can be moved from PTN000763909 to
+PTN002012591 with no loss: the FepA IBAs survive and the PfeA IBA (reviewed here as
+MARK_AS_OVER_ANNOTATED, unchanged) disappears. No NOT annotation is needed. The
+GO:0042930 enterobactin transport IBD is right where it is: all three leaves are
+ferric-enterobactin receptors. The GO_CENTRAL defect is kept and raised SUSPECTED ->
+CONFIRMED, now naming PTN002012591 as the target node.
