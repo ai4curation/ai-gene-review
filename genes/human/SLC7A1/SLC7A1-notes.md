@@ -48,12 +48,17 @@ Provenance for the central claims:
 
 The MOUSE ortholog mCAT-1 (Q09143) is the receptor for ecotropic murine leukemia
 virus. The gene was originally cloned as a homolog of the murine ecotropic
-retroviral receptor [PMID:1718082]. Human CAT-1 is a structural homolog; the
-virus-receptor (GO:0001618) and "symbiont entry into host cell" (GO:0046718)
-annotations on P30825 are IEA, propagated from the mouse ortholog, and concern a
-mouse (non-human) pathogen. Kept as KEEP_AS_NON_CORE, out of core functions.
-(Note: ecotropic MLV restriction is species-specific; this is a non-core,
-non-human-pathogen capacity of the family.)
+retroviral receptor [PMID:1718082]. Human CAT-1 is only a structural homolog and
+is NOT a functional ecotropic-MLV receptor: host range is set by the third
+extracellular loop (ECL3), human cells resist ecotropic MLV entry, and receptor
+function is conferred on human CAT-1 only by substituting murine ECL3 residues
+(Albritton et al., J Virol 1993; Yoshimoto et al. 1993). UniProt itself names
+P30825 only an "Ecotropic retroviral leukemia receptor homolog", never a
+receptor. The virus-receptor (GO:0001618) and "symbiont entry into host cell"
+(GO:0046718) annotations on P30825 are therefore over-propagated IEAs from the
+mouse ortholog that are contradicted on biological grounds for the human protein,
+and are REMOVEd (GO:0046718 inherits the fate of its GO:0001618 supporting
+entity).
 
 ## Oligomeric state / complex
 
