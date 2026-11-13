@@ -70,13 +70,14 @@ molecular function → KEEP_AS_NON_CORE.
   import across plasma membrane** + **GO:0106001 intestinal hexose absorption**
   (Reactome TAS) → ACCEPT.
 - Glucose terms are cross-paralog over-propagation from the broad GLUT node
-  (PTN008599990, the class I GLUT1-4 node) and the superseded 1990 "glucose
+  (PTN008599990, the broad SLC2/GLUT-family node spanning the sugar-porter
+  classes — it also seeds the class II GLUT5/GLUT9 IBAs) and the superseded 1990 "glucose
   carrier" description: GO:0055056 D-glucose transmembrane transporter activity
   (IBA+TAS), GO:0098708 D-glucose import across plasma membrane (IBA),
   GO:1904659 D-glucose transmembrane transport (TAS) → MARK_AS_OVER_ANNOTATED
   (real but low/negligible glucose activity; dedicated GLUT1-4 exist).
-  GO:0070837 dehydroascorbic acid transport (IBA, same class-I node) → GLUT5 is
-  not a DHA transporter (that is GLUT1/3/4) → MARK_AS_OVER_ANNOTATED.
+  GO:0070837 dehydroascorbic acid transport (IBA, same broad GLUT-family node) → GLUT5 is
+  not a DHA transporter (DHA transport is a GLUT1/3/4 function) → MARK_AS_OVER_ANNOTATED.
 - GO:0005975 carbohydrate metabolic process (TAS) → MARK_AS_OVER_ANNOTATED: GLUT5
   is a facilitative transporter and catalyses no metabolic step.
 - GO:0016020 membrane (IEA) → MODIFY → GO:0005886 plasma membrane.
