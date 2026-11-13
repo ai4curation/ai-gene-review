@@ -524,7 +524,7 @@ evidence for the budding-yeast seed.
 - [x] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member;
   rechecked against PTHR13027 with no IBA action changes
 - [x] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member; rechecked
-  against PTHR13027 with no IBA action changes
+  against PTHR13027 and marked the Mon1-Ccz1-complex IBA over-annotated
 
 ---
 
@@ -609,8 +609,11 @@ evidence for the budding-yeast seed.
 - Rechecked `EMENI/mon1`, the *A. nidulans* `PTHR13027:SF7` MonA ortholog. Its
   existing review already paired the Aspergillus MonA deletion paper with the
   yeast and Fusarium Mon1 seeds; the 2026 follow-up search did not find a newer
-  direct MonA paper or an Aspergillus Ccz1/Rab7 assay, so the IBA and ISS
-  decisions still stand.
+  direct MonA paper or an Aspergillus Ccz1/Rab7 assay. Son & Park's failure to
+  find Ccz1 orthologs in Aspergillus/Fusarium/Penicillium makes the
+  Mon1-Ccz1-complex IBA over-annotated for `EMENI/mon1`, while the GEF,
+  vacuolar-membrane, vacuolar-protein-targeting and ISS autophagy decisions
+  still stand.
 
 ## 2026-11-01
 
