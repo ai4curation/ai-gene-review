@@ -91,8 +91,8 @@ from `MARK_AS_OVER_ANNOTATED` to `ACCEPT`.
 
 These are the outcomes of the pass as merged. Fifteen of the 34 `UNDECIDED`
 rows were settled afterwards (see "The UNDECIDED rows, revisited"), so the
-1,789 rows now stand at 1,381 REMOVE, 179 `MARK_AS_OVER_ANNOTATED`, 132
-`KEEP_AS_NON_CORE`, 30 `TOO_GENERAL`, 27 `ACCEPT`, 21 `MODIFY` and 19
+1,789 rows now stand at 1,381 REMOVE, 179 `MARK_AS_OVER_ANNOTATED`, 128
+`KEEP_AS_NON_CORE`, 30 `TOO_GENERAL`, 27 `ACCEPT`, 25 `MODIFY` and 19
 `UNDECIDED`.
 
 The share of rows that changed depends strongly on the evidence code. Removals
@@ -353,8 +353,8 @@ could still be settled, from three kinds of evidence that are accessible:
 | SIRT2, DNA-binding transcription factor binding | IPI, PMID:15126506 | `ACCEPT` | UniProt records binding of FOXO1 and RELA by SIRT2 from other papers, and the term is accepted on another row. The row's own paper is about hSir2 (SIRT1); recorded as a source defect. |
 | ASCL1, negative regulation of neuron differentiation (2 rows) | IEA; IDA, PMID:12000752 | `KEEP_AS_NON_CORE` | The electronic row's donor is rat Ascl1 (direct assay); its abstract reports that forced Mash1 expression lowered the yield of GABA neurons from hindbrain and spinal cord precursors (PMID:17936272). The experimental row follows the same claim. |
 | BBC3 and BCL2L11, positive regulation of IRE1-mediated unfolded protein response | TAS, PMID:22013210 | `KEEP_AS_NON_CORE` | The primary study behind the review's statement: PUMA and BIM bind IRE1-alpha, and cells lacking both do not sustain XBP1 mRNA splicing (PMID:22510886). Same action as the same rows of BAX and BAK1. |
-| CRY1, positive regulation of protein ubiquitination (2 rows) | IEA; ISS | `KEEP_AS_NON_CORE` | CRY1 promotes MDM2-mediated poly-ubiquitination of FOXO1 (PMID:27412556, read in full); the donor paper's abstract reports the rise in FOXO1 on Cry1 depletion. |
-| CRY1, phosphatase binding (2 rows) | IPI, PMID:9383998; IEA | `KEEP_AS_NON_CORE` | UniProt records the interaction of CRY1 with protein phosphatase 5 from a later experimental study (PMID:16790549). |
+| CRY1, positive regulation of protein ubiquitination (2 rows) | IEA; ISS | `MODIFY` to positive regulation of protein polyubiquitination (a child term) | CRY1 promotes MDM2-mediated poly-ubiquitination of FOXO1 (PMID:27412556, read in full); the donor paper's abstract reports the rise in FOXO1 on Cry1 depletion. Not a core function. |
+| CRY1, phosphatase binding (2 rows) | IPI, PMID:9383998; IEA | `MODIFY` to protein phosphatase binding (a child term) | UniProt records the interaction of CRY1 with protein phosphatase 5 from a later experimental study (PMID:16790549). Not a core function. |
 | SCGB2A2, androgen receptor signaling pathway | IBA | `MARK_AS_OVER_ANNOTATED` | The PAINT node is seeded only by the paralog SCGB2A1, whose annotation records that its gene is induced by androgen (PMID:16020486): a target of the pathway, not a participant. Treated like the SCGB2A1 rows, with a `propagation_review`. |
 | JAK1, nucleus | IDA, PMID:10502458 | `KEEP_AS_NON_CORE` | The study gave nucleus and cytoplasm rows to JAK1, JAK2 and TYK2 alike, and the JAK2 and TYK2 reviews keep theirs as non-core; JAK1-dependent histone H3 Tyr-41 phosphorylation of chromatin is reported independently (PMID:27799566). |
 | PMAIP1, positive regulation of apoptotic process | IMP, PMID:21525171 | `MODIFY` to positive regulation of mitochondrial outer membrane permeabilization involved in apoptotic signaling pathway | The claim is supported by UniProt and is narrowed as on the other rows of the term. The row's own abstract reports that silencing of Noxa gave no protection; recorded as a source defect. |
@@ -384,24 +384,49 @@ Nineteen rows stay `UNDECIDED`. Each needs the full text of one paper.
 | SIRT1, regulation of mitotic cell cycle (IDA) | PMID:15692560 | The abstract reports no cell-cycle experiment. |
 | VTI1A, voluntary musculoskeletal movement (IMP) | PMID:22958904 | The paper identifies a VAMP1 mutation in spastic ataxia; UniProt cites it in the VAMP1 entry and not in the VTI1A entry. Recorded as a probable wrong gene product. |
 
-**SIRT2 and the Sir2 papers.** Settling the SIRT2 row showed that UniProt made
-six SIRT2 annotations from a study of "Sir2" in skeletal muscle
-differentiation (PMID:12887892), a paper that UniProt cites in its mouse Sirt1
-entry for the same findings. Only the transcription factor binding row was
-touched here. The other five rows of the SIRT2 review that cite the paper
-(protein binding, histone acetyltransferase binding, negative regulation of
-striated muscle tissue development, negative regulation of DNA-templated
-transcription, response to redox state) are `MODIFY`, `ACCEPT` or
-`KEEP_AS_NON_CORE`; they were never REMOVE and need a review of their own.
+**Changes after review of the pull request.** The review asked that a term
+kept as non-core be refined where the evidence is more specific. The two CRY1
+phosphatase binding rows are `MODIFY` to protein phosphatase binding, because
+the partner is protein phosphatase 5, and the two CRY1 ubiquitination rows are
+`MODIFY` to positive regulation of protein polyubiquitination, because the
+study shows poly-ubiquitination. All four stay outside the core function. The
+SIRT1 and ASCL1 reasons now say what the paper shows and what is UniProt's
+reading of it, and a quote that underpins a source defect is recorded on the
+defect, not on the row. With these changes the 15 settled rows are 8 `MODIFY`,
+5 `KEEP_AS_NON_CORE`, 1 `ACCEPT` and 1 `MARK_AS_OVER_ANNOTATED`.
+
+### SIRT2 and the Sir2 paper
+
+Settling the SIRT2 row showed that six rows of the SIRT2 review cite a study
+of "Sir2" in skeletal muscle differentiation (PMID:12887892). Its abstract
+does not say which sirtuin Sir2 is. UniProt cites the paper in its mouse Sirt1
+entry for the same findings and not in its SIRT2 entry, so the Sir2 of the
+study is probably SIRT1. The five rows other than the settled one were never
+REMOVE. They were reviewed in the same pull request, each claim judged on
+evidence about SIRT2 itself:
+
+| Row | Evidence | Before | Now | Basis |
+|---|---|---|---|---|
+| protein binding (with KAT2B) | IPI, IntAct | `MODIFY` to transcription factor binding | REMOVE | Bare protein binding, removed as uninformative under the protein-binding policy. The partner is an acetyltransferase, not MyoD, and the paper gives no function for SIRT2 to redirect the row to. |
+| histone acetyltransferase binding | IPI | `ACCEPT` | `ACCEPT` | Supported for SIRT2 by its interaction with p300 (PMID:18722353 and UniProt). |
+| negative regulation of DNA-templated transcription | IDA | `KEEP_AS_NON_CORE` | `TOO_GENERAL` | True of SIRT2 (RELA, HIF1A) and entailed by negative regulation of transcription by RNA polymerase II, which the review keeps on three rows. |
+| negative regulation of striated muscle tissue development | IDA | `KEEP_AS_NON_CORE` | `UNDECIDED` | No support from studies of Sirt2 itself: its deletion delays muscle regeneration (PMID:35636510), while in aged muscle it weakens Myf5 activity (PMID:41904135). |
+| response to redox state | NAS | `ACCEPT` | `UNDECIDED` | The author statement is about Sir2; nothing read shows SIRT2 mediating a response to the redox state itself. |
+
+Each of the six rows carries a `WRONG_GENE_PRODUCT` defect that asks the
+source to check (five more defects, twelve in the pull request). The reference
+has a `reference_review`, and the two findings recorded from the paper no
+longer name SIRT2. The cell differentiation row, which had cited the paper for
+a role in muscle, now cites the Sirt2 knockout study. Two papers were added to
+`publications/` (PMID:35636510, PMID:41904135).
 
 ## Follow-ups
 
 - **UNDECIDED rows need full text.** Nineteen of the 34 rows moved to
   `UNDECIDED` are still there (see "The UNDECIDED rows, revisited"). Each
   needs the full text of one paper, and each reason states the question that
-  paper must answer.
-- **SIRT2 rows from a Sirt1 paper.** Five kept rows of the SIRT2 review cite
-  PMID:12887892, whose "Sir2" is probably SIRT1 (see above).
+  paper must answer. Two SIRT2 rows are `UNDECIDED` for the same reason and
+  wait on PMID:12887892.
 - **Source defects beyond this pass.** A text scan finds about 160 further
   REMOVE rows whose reasons read like a source error (wrong gene, substrate annotated as
   enzyme, wrong InterPro2GO mapping) without a structured defect. Only cases

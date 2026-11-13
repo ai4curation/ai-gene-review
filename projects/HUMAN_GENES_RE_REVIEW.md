@@ -143,9 +143,12 @@ The per-batch progress log is retained below as the audit trail.
   - 1,789 other rows, read one at a time: 1,381 stand; 178 → MARK_AS_OVER_ANNOTATED,
     123 → KEEP_AS_NON_CORE, 34 → UNDECIDED, 30 → TOO_GENERAL, 26 → ACCEPT, 17 → MODIFY.
   - Follow-up, 12 November: 15 of the 34 UNDECIDED rows settled from annotation
-    provenance, curated UniProt statements and independent papers (9 → KEEP_AS_NON_CORE,
-    4 → MODIFY, 1 → ACCEPT, 1 → MARK_AS_OVER_ANNOTATED), with 7 further `source_defects`;
+    provenance, curated UniProt statements and independent papers (8 → MODIFY,
+    5 → KEEP_AS_NON_CORE, 1 → ACCEPT, 1 → MARK_AS_OVER_ANNOTATED), with 7 further `source_defects`;
     19 rows remain UNDECIDED, each waiting on the full text of one paper.
+  - Same change: five SIRT2 rows that cite a study of "Sir2", probably SIRT1
+    (PMID:12887892), reviewed on evidence about SIRT2 itself; 5 more `source_defects`,
+    and two of the rows are now UNDECIDED.
   - Removals of proteomics observations (HDA) mostly fell (39 of 45); removals of
     phylogenetic annotations (IBA) almost all stand (209 of 216).
   - 64 `source_defects` recorded (40 wrong gene product, 12 wrong term, 7 wrong
