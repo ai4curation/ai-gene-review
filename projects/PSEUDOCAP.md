@@ -566,7 +566,7 @@ showed".
 
 The first cut takes IMP rows on **molecular-function** terms: **142** of the 930
 PAO1 proteins carrying a PseudoCAP row. Of those, 98 were already reviewed
-through tiers 1 and 2, 6 are the cbb3 subunits reviewed here, and **38 remain**. An IMP is a mutant phenotype, which is evidence
+through tiers 1 and 2, 12 are reviewed here, and **32 remain**. An IMP is a mutant phenotype, which is evidence
 about what the cell does without the gene, not about what the protein does. Using
 one for a molecular function asserts an activity from an absence, so each row is
 either grounded in a paper that also assayed the protein or it is the kind of
@@ -581,10 +581,14 @@ unreviewed when tier 3 opened:
 
 | term | reference | proteins |
 |---|---|---|
-| `GO:0004129` cytochrome-c oxidase activity | PMID:14763990 | the 6 cco subunits below |
+| `GO:0004129` cytochrome-c oxidase activity | PMID:14763990 | the 6 cco subunits |
 | `GO:0004485` methylcrotonoyl-CoA carboxylase activity | PMID:16517656 | liuB, liuD |
 | `GO:0015232` heme transmembrane transporter activity | PMID:10658665 | hasR, phuR |
 | `GO:0097351` toxin sequestering activity | PMID:24589350 | tse6, tsi6 |
+
+All four are now reviewed, and each turned out to be a different kind of error,
+which is the argument for grouping by shared claim rather than reviewing gene by
+gene.
 
 The rest span reviewed and unreviewed members, and those are worth re-reading as
 groups even where the members are done, because a shared claim reviewed gene by
@@ -593,10 +597,7 @@ gene is where parallel batches drifted apart in tier 2. The largest are
 PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
 opmQ/pvdR/pvdT, which carries three separate references for the same term.
 
-### The cbb3 oxidases: one phenotype, eight subunits
-
-The first group is reviewed, and it is now the only `shared_claims` group whose
-members are all done. PseudoCAP entered the identical `GO:0004129` IMP row
+### The cbb3 oxidases: one phenotype, eight subunits PseudoCAP entered the identical `GO:0004129` IMP row
 on 20190311 for all eight subunits of the two cbb3 operons, from a paper whose
 experiments are whole-operon deletions: the abstract reports that "only loss of
 cbb3-1 influenced growth". The `ccoP1` review had already spotted this and filed
@@ -626,6 +627,62 @@ Two CcoN rows also propose `GO:0005507` copper ion binding as `NEW`. Copper B is
 curated on both records and the `COX1_CUB` site matches, yet only heme binding was
 annotated.
 
+
+### MCC: the qualifier, settled from full text
+
+`liuB` and `liuD` are the two subunits of 3-methylcrotonyl-CoA carboxylase, and
+both carry the holoenzyme term `GO:0004485` as `enables`. Both papers behind the
+rows are cached with full text, and that is what let this group be settled rather
+than deferred. The IDA was measured on a **reconstituted** enzyme: the subunits
+were purified separately, mixed and renatured, so no single chain was ever shown
+active. The structure of this organism's own enzyme says why — the α subunit
+carries the biotin carboxylase and BCCP domains, the β subunit supplies the
+carboxyltransferase activity, and the two active sites are about 80 Å apart, so
+the carboxyl group is handed between chains. Both rows on both subunits are
+`ACCEPT` with a `WRONG_QUALIFIER` defect at **CONFIRMED** — where the cbb3 group's
+equivalent defect could only be PROBABLE from an abstract.
+
+Each subunit also gained its own half-reaction: `GO:0004075` biotin carboxylase
+was already annotated on `liuD` and is accepted as its own function, while
+`liuB`'s carboxyltransferase step was unannotated and is proposed as `NEW`
+(`GO:0016743`).
+
+### The haem receptors: a substrate term on the wrong subfamilies
+
+`hasR` and `phuR` are haem receptors that carry **siderophore** annotations —
+`GO:0015344` and `GO:0044718` by IBA, plus `GO:0033214` inferred from them. All
+trace to `PTN004738955`, which the tree tool shows to be the **LUCA root of
+PTHR30069**: 149 leaves across 18 subfamilies, seeded by five siderophore and
+colicin receptors from five *other* subfamilies. The targets sit in the haem
+subfamilies, and PANTHER's own names say so — SF41 "Heme uptake outer membrane
+receptor HasR" and SF29 "Heme_hemoglobin uptake outer membrane receptor".
+
+The seeds are not the problem: two of them, PA4675 and PA4156, were reviewed in
+tier 2 and their siderophore rows accepted as sound. The depth is. What the node
+supports is the shared TonB-dependent mechanism, not the substrate, which varies
+by subfamily. Relocation was tested rather than assumed and does not work — the
+smallest clade containing all five seeds is `PTN002824128` (145 leaves), which
+contains the haem subfamilies too — so the remedy is to generalise the node terms
+or block them in SF29 and SF41. One `CONFIRMED` request, recorded on `hasR` with
+`phuR` cross-referencing it.
+
+### The T6SS pair: the term is on the wrong half
+
+`GO:0097351` **toxin sequestering activity** is annotated to both halves of the
+`tse6`-`tsi6` effector–immunity bicistron. The term means binding a toxin to stop
+it acting, so it fits the immunity protein and inverts the role of the effector.
+The full text is explicit: the Tse6 Toxin_61 domain "is a potent cytoplasmic
+toxin whose activity can be specifically neutralized by Tsi6", with the
+non-cognate Tsi2 as the control. So the row is removed from `tse6` — a
+`WRONG_GENE_PRODUCT` request to delete it on Q9I739 and keep it on Q9I740 — and
+accepted as the core function of `tsi6`. Nothing is lost for the effector, whose
+real activity is already annotated as NAD(P)+ nucleosidase.
+
+The same pair-level experiment also gave `tsi6` a protein-secretion row.
+`tsi6` is a cytoplasmic immunity determinant; it is required for the outcome of
+those competition experiments without doing any of the work of secretion, which
+is the line the `involved_in` rule draws, so that row is marked over-annotated.
+
 ## Plan
 
 1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA, PA2403 and
@@ -649,7 +706,7 @@ annotated.
 6. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
    prioritising IMP rows on molecular-function terms. Started: see
    "Tier 3" below. 142 proteins carry such a row: 98 were covered by tiers 1-2,
-   6 are reviewed here, 38 remain.
+   12 are reviewed here, 32 remain.
 
 Re-run the builder when PAINT or QuickGO data change; it only re-downloads
 files missing from `.cache/paint/`, so delete that folder to refresh.
