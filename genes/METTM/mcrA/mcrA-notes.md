@@ -45,3 +45,19 @@ papers (queries recorded in the project page).
 - GO:0015948 methanogenesis -> MODIFY GO:0019386 (as for O27232).
 - NEW: GO:0044674 MCR complex (IDA, PMID:9367957); GO:0046906 tetrapyrrole binding
   (IDA, PMID:9367957), plus proposed term "coenzyme F430 binding".
+
+## Added UniProt-cited papers (2026-11-13, PR #6335)
+
+Fetched the six UniProt references not previously cached and added them to the review:
+- PMID:9030728: Ni(I) activation of purified MCR I (strain Marburg); specific activity
+  2 -> ~100 U/mg on reduction [PMID:9030728 "methyl-coenzyme-M reductase is activated when
+  the enzyme-bound coenzyme F430 is reduced to the Ni(I) oxidation state"]. Added to the
+  activity IEA row and the tetrapyrrole binding row.
+- PMID:10660523: methyl groups of the modified residues come from SAM. Description only.
+- PMID:11491299: 1.16 A structure with exact F430 geometry. Tetrapyrrole binding row.
+- PMID:20707311 (full text): methyl-SCoM binds before CoB; added to the ordered-mechanism row.
+- PMID:21438550 (full text): Ni-methyl intermediate structure. Reference only.
+- PMID:20802048: genome; "chemolithoautotrophic". Added to the methanogenesis MODIFY.
+Full text for PMID:2448287 (the IDA activity row) is still unavailable: PMC210692 refuses
+automated download (403) and the open-access warming chain found nothing for any of the
+abstract-only P11558 papers.
