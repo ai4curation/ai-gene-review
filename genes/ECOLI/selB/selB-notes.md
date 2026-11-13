@@ -23,7 +23,9 @@ record.
 - PANTHER: UniProt places P14081 in PTHR42854 (SF3, eIF2gamma-like display name)
   [file:ECOLI/selB/selB-uniprot.txt "DR   PANTHER; PTHR42854; EUKARYOTIC TRANSLATION
   INITIATION FACTOR 2 SUBUNIT 3 FAMILY MEMBER; 1."], while P. putida SelB Q88QJ7 is
-  PTHR43721. The IBA node PTN000562733 (GO:0035368, GO:0001514) lies in the PTHR43721
-  PAINT tree and is seeded by P14081 itself
-  (interpro/panther/PTHR43721/PTHR43721-paint.tsv). Recorded, not acted on.
+  PTHR43721. The IBA node PTN000562733 (GO:0035368, GO:0001514), seeded by P14081
+  itself, is the bacterial SelB clade node of the PTHR42854 tree, with 8 leaves
+  including P14081 (interpro/panther/PTHR42854/PTHR42854-tree-check.txt; assessed SOUND
+  in the PTHR42854 family review). A stale copy of the row in the PTHR43721 PAINT slice
+  has 0 leaves there (WRONG_NODE in the PTHR43721 family review).
 - PAINT: no IRD/IKR loss on the lineage.
