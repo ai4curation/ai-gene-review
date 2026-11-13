@@ -14,3 +14,13 @@ This synteny independently supports a polyamine-catabolic role. In Pseudomonas,
 however, SpuC is described as "the major putrescine-pyruvate transaminase" and
 gamma-glutamylation as an alternative route [PMID:18192388], so native KT2440
 flux through PuuA-I remains an experimental question.
+
+## 2026-11-11 completion pass
+
+- Generic MF parents (catalytic activity, ligase activity) changed to MODIFY
+  toward GO:0034024; the glutamine synthetase row changed from REMOVE to
+  MARK_AS_OVER_ANNOTATED, consistent with E. coli PuuA and puuA-II (no assay
+  excludes ammonium; KT2440 GlnA is in PTHR43407).
+- The TreeGrafter polyamine catabolic process row can only derive from
+  PTN001839150, the PuuA/PauA clade, the sole PTHR43785 node with GO:0006598.
+- Deep research by an external provider was not run in this session.
