@@ -70,3 +70,8 @@ factor rather than a subunit, is the only one where the term is REMOVEd. Applyin
   protein existence 4 (Predicted), and are absent from both structures: MARK_AS_OVER_ANNOTATED,
   with the unknown recorded as a BIOLOGY knowledge gap. Not REMOVE, which would assert that
   CcoQ is not in the complex — the SURF1 case — and that has not been shown.
+
+## Correction, 2026-11-13 (PR #6341 review): the core function overstated
+
+As ccoQ1: `directly_involved_in: GO:0019646` is dropped, leaving `contributes_to` and the BIOLOGY
+knowledge gap, and the GO:0004129 row now says why no separate qualifier defect is filed for CcoQ.

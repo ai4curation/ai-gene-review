@@ -49,3 +49,17 @@ On GO:0020037 heme binding (IDA, same paper): the abstract describes *hasA*, not
 haem-binding protein, and we hold abstract only. Per the project rule that is not grounds to doubt
 an experimental row whose full text we have not read, and a haem receptor does bind haem, so the
 row is accepted with the ambiguity recorded rather than acted on.
+
+## Correction, 2026-11-13 (PR #6341 review): quotes that did not support their rows
+
+Three rows carried a `supporting_text` that established something other than the claim, with the
+`reason` honestly saying so -- which left a quote sitting in the evidence slot arguing against the
+row it supported.
+
+- `GO:0020037 heme binding`: the quote was the operon sentence attributing haem binding to **HasA**,
+  not HasR. The ACCEPT stands on curator deference, as the reason explains, but no quote is asserted
+  now, because none in the abstract supports binding by HasR itself.
+- `GO:0007166` and `GO:0038023`: the same operon quote established context, not signalling. Both
+  remain KEEP_AS_NON_CORE on similarity evidence, with no quote asserted.
+
+Better to assert no quote than one that does not carry the claim.

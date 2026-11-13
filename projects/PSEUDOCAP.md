@@ -597,7 +597,9 @@ gene is where parallel batches drifted apart in tier 2. The largest are
 PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
 opmQ/pvdR/pvdT, which carries three separate references for the same term.
 
-### The cbb3 oxidases: one phenotype, eight subunits PseudoCAP entered the identical `GO:0004129` IMP row
+### The cbb3 oxidases: one phenotype, eight subunits
+
+PseudoCAP entered the identical `GO:0004129` IMP row
 on 20190311 for all eight subunits of the two cbb3 operons, from a paper whose
 experiments are whole-operon deletions: the abstract reports that "only loss of
 cbb3-1 influenced growth". The `ccoP1` review had already spotted this and filed

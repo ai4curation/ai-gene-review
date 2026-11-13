@@ -77,3 +77,15 @@ factor rather than a subunit, is the only one where the term is REMOVEd. Applyin
   protein existence 4 (Predicted), and are absent from both structures: MARK_AS_OVER_ANNOTATED,
   with the unknown recorded as a BIOLOGY knowledge gap. Not REMOVE, which would assert that
   CcoQ is not in the complex — the SURF1 case — and that has not been shown.
+
+## Correction, 2026-11-13 (PR #6341 review): the core function overstated
+
+`core_functions` asserted `directly_involved_in: GO:0019646` while the BIOLOGY gap on the same
+entry says that even membership of the holoenzyme is open, and while the `GO:1902600` row is only
+KEEP_AS_NON_CORE. The process claim was the strongest thing in the file and the least supported, so
+it is dropped; what remains is `contributes_to` plus the gap, which is what the review actually
+argues.
+
+Also recorded on the `GO:0004129` row: no separate WRONG_QUALIFIER defect is filed for CcoQ, unlike
+CcoO and CcoP. The `enables` qualifier is as wrong here as there, but the over-annotation call
+subsumes it -- this review asks PseudoCAP to reconsider the row itself, not merely its qualifier.

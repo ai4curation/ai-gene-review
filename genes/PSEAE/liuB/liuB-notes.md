@@ -36,3 +36,17 @@ equivalent defect could only be PROBABLE from an abstract.
   records is the alpha-beta pairing, which the GO:1905202 complex rows state precisely.
 - NEW: GO:0016743 carboxyl- or carbamoyltransferase activity (IC). The entry had no annotation of
   the half-reaction LiuB itself performs; the full text names it and the Pfam domain matches.
+
+## Correction, 2026-11-13 (PR #6341 review): GO:0008300 is MODIFY, not ACCEPT
+
+The first version of this review kept `GO:0008300 isoprenoid catabolic process` as ACCEPT on the
+ground that this entry, unlike liuD, carries no `GO:0046247` row. That argued from what GOA
+happens to assert rather than from the evidence, and it contradicted the liuD review's own
+sentence that "the asymmetry is in GOA, not in the biology" -- an ACCEPT while arguing the term is
+too general, which CLAUDE.md rules out. The replacement term is *preferably* one the gene already
+carries, not necessarily.
+
+Now MODIFY to `GO:0046247 terpene catabolic process`, matching liuD, with
+`core_functions.directly_involved_in` updated to match. Worth noting where this slipped through:
+the shared-claim grouping exists precisely to stop two halves of one enzyme drifting apart, and
+this pair drifted anyway, inside the group.

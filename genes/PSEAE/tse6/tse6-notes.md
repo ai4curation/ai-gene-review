@@ -34,3 +34,20 @@ tier-3 worklist was built to surface -- one pair-level experiment entered on bot
 A first draft attributed the quote "Tse5 and Tse6 delivery strictly required a cognate VgrG" to
 PMID:24794869; it is in PMID:24589350. The reference validator caught it, and the row citing
 PMID:24794869 now quotes that paper's own statement about VgrG1a-dependent toxicity and PA0093.
+
+## Corrections, 2026-11-13 (PR #6341 review)
+
+**The catalytic rows cited a quote about neutralisation.** `GO:0050135` and `GO:0003953` were
+anchored to the PMID:24589350 sentence about Tsi6 neutralising the toxin, which says nothing about
+catalysis, and so was the core function. PMID:26456113 was cached with full text in this very PR
+and states it outright: [PMID:26456113 "Tse6, acts on target cells by degrading the universally
+essential dinucleotides NAD(+) and NADP(+)"]. Both rows and the core function now rest on that.
+
+**The GO:0033103 argument was the wrong one.** The reason given was that delivery required a
+cognate VgrG -- but being carried by a secretion system is being its *cargo*, and a substrate is
+not a participant; that is the same rule used two files away to downgrade tsi6's identical row, so
+the two calls read as one argument applied two ways. The verdict stands, on a different basis:
+Tse6 is an evolved PAAR protein, and [PMID:26456113 "PAAR repeat sequences, which fold into a
+pyramidal structure that interacts with the tip of the VgrG spike"], so it supplies a structural
+component the apparatus depends on -- the scaffold case CLAUDE.md works through for thyroglobulin.
+That is also exactly what distinguishes it from Tsi6, which contributes nothing to the apparatus.
