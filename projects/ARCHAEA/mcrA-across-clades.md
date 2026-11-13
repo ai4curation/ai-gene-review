@@ -120,6 +120,12 @@ IPR009024, IPR009047, IPR015811 and IPR015823 (interpro2go of 2026-07-06).
   UniProt cites the ECR structure paper, and the ANME-2d entry is given the
   methane-forming direction.
 
+Neither unreviewed entry has a cellular-component row in GOA, so what is wrong on
+them is the process row (and, for the ethane enzyme, the activity row), not a
+location. No cytoplasm row was added for them, to keep `NEW` rows conservative,
+although MCR is cytoplasmic in methane-oxidizing biofilms (PMID:23533332) and ECR
+was purified as a soluble enzyme.
+
 These are recorded as `source_defects` (resource `INTERPRO` on the process and activity
 rows, `UNIPROT` on the cited UniProt text) and are listed as pattern 17 in
 [annotation-patterns](annotation-patterns.md).

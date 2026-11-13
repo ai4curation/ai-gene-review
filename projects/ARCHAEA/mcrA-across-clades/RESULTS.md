@@ -6,8 +6,10 @@ autolink_gene_symbols: false
 # MCR alpha-subunit active sites across clades: results
 
 Script: `compare_active_sites.py` (this folder). Output: `RESULTS.tsv`.
-Run from the repository root with the project environment:
+Run from the repository root with the project environment (Biopython is a
+project dependency in `pyproject.toml`, so no separate environment is needed):
 `python projects/ARCHAEA/mcrA-across-clades/compare_active_sites.py`.
+`compare_anme2d_strains.py` also needs network access to NCBI E-utilities.
 
 ## Method
 
