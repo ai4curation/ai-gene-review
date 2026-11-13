@@ -1085,7 +1085,7 @@ validate-prediction-terms +files:
     set -uo pipefail
     uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
     # scripts/term_validate.sh normalizes a transient ontology-service outage
-    # (exit 3 skip, or exit 2 under TERM_VALIDATION_STRICT) so an EBI blip cannot
+    # (exit 97 skip, or exit 96 under TERM_VALIDATION_STRICT) so an EBI blip cannot
     # jam the merge queue; every other case passes through unchanged, so the grep
     # below still classifies ❌ ERROR / NCBITaxon mismatch (blocking) vs advisory
     # ⚠️ WARN (validate-data exits 1 for both). See the script header.
@@ -1190,7 +1190,7 @@ test-examples:
     # Route the term-validator stages through scripts/term_validate.sh so a
     # transient ontology-service outage does not mark a valid example as failed
     # or (worse) score an invalid example as "correctly rejected" when nothing
-    # was actually checked. Exit 3 = outage skip (non-strict), exit 2 = outage
+    # was actually checked. Exit 97 = outage skip (non-strict), exit 96 = outage
     # under TERM_VALIDATION_STRICT (the weekly/manual pass blocks). No per-file
     # retries (the first outage short-circuits the rest via svc_state) so a
     # sustained outage cannot stall this per-file loop. Set -e is active, so the
@@ -1405,9 +1405,9 @@ validate-all:
     # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
     # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
     # scripts/term_validate.sh normalizes a transient ontology-service outage so
-    # an EBI blip cannot jam the merge queue (exit 3 = skip), while the weekly /
+    # an EBI blip cannot jam the merge queue (exit 97 = skip), while the weekly /
     # manual full pass runs with TERM_VALIDATION_STRICT set so an outage blocks
-    # (exit 2) and the unverified terms are caught once the service is back. All
+    # (exit 96) and the unverified terms are caught once the service is back. All
     # other cases pass through, so the grep still classifies ❌ ERROR / NCBITaxon
     # mismatch (blocking) vs advisory ⚠️ WARN. See the script header.
     term_out="$(scripts/term_validate.sh validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)"
@@ -2951,8 +2951,8 @@ validate-families: ensure-panther-members
         --target-class FamilyReview "${files[@]}" || rc=1
     echo "Validating GO term ids and labels (batch)..."
     # Via scripts/term_validate.sh so a transient ontology-service outage does
-    # not block (exit 3 skip); the weekly/manual pass runs TERM_VALIDATION_STRICT
-    # and an outage blocks (exit 2). Any real validator error (exit 1) still sets
+    # not block (exit 97 skip); the weekly/manual pass runs TERM_VALIDATION_STRICT
+    # and an outage blocks (exit 96). Any real validator error (exit 1) still sets
     # rc=1. An EBI blip here otherwise jams the merge queue (runs every merge_group).
     scripts/term_validate.sh validate-data "${files[@]}" \
         -s src/ai_gene_review/schema/family_review.yaml \
@@ -2960,6 +2960,9 @@ validate-families: ensure-panther-members
     trc=$?
     if [ "$trc" -eq 97 ]; then
         echo "::warning::Ontology service unavailable; family term validation skipped (not a data error)."
+    elif [ "$trc" -eq 96 ]; then
+        echo "✗ Ontology service unavailable during strict family term validation (full pass blocks)"
+        rc=1
     elif [ "$trc" -ne 0 ]; then
         rc=1
     fi

@@ -18,6 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "scripts" / "term_validate.sh"
+RUN_TERM_VALIDATOR = ROOT / "scripts" / "run_term_validator.sh"
 
 
 def test_ltv_service_unavailable_exit_code_is_2():
@@ -27,14 +28,19 @@ def test_ltv_service_unavailable_exit_code_is_2():
     assert EXIT_SERVICE_UNAVAILABLE == 2
 
 
-def _run_helper(tmp_path, *, simulate, strict=False, extra_env=None):
-    """Run the helper with a stub `uv` that fakes linkml-term-validator."""
+def _run_helper(tmp_path, *, simulate, strict=False, extra_env=None, script=None):
+    """Run the helper (or another wrapper) with a stub `uv` faking LTV."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     # The helper invokes `uv run linkml-term-validator ...`; the stub decides the
     # faked outcome from SIMULATE without touching the network.
     stub = f"""#!{sys.executable}
 import os, sys
+# `linkml-term-validator validate-data --help` (run_term_validator.sh probes for
+# --strict) must not touch the network, so it succeeds regardless of SIMULATE.
+if "--help" in sys.argv:
+    sys.stdout.write("usage: linkml-term-validator validate-data [OPTIONS]\\n")
+    sys.exit(0)
 sim = os.environ["SIMULATE"]
 if sim == "outage":
     sys.stderr.write("\\n\U0001f310 Unable to validate at this time: "
@@ -67,7 +73,8 @@ sys.exit(0)
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
-        ["bash", str(HELPER), "validate-data", "x.yaml"],
+        ["bash", str(script or HELPER), "validate-data", "x.yaml",
+         "-s", "schema.yaml", "-t", "GeneReview", "--labels", "-c", "oak.yaml"],
         capture_output=True, text=True, env=env, timeout=30,
     )
 
@@ -87,3 +94,33 @@ def test_helper_exit_mapping(tmp_path, simulate, strict, expected):
         pytest.skip("bash is not available")
     result = _run_helper(tmp_path, simulate=simulate, strict=strict)
     assert result.returncode == expected, result.stdout + result.stderr
+
+
+def test_run_term_validator_outage_is_visible_and_nonblocking(tmp_path):
+    """On an outage the wrapper must exit 0 AND emit a WARN line on stdout.
+
+    `ai-gene-review validate --terms` runs run_term_validator.sh under
+    subprocess.run(capture_output=True), so a stderr-only ::warning:: is
+    swallowed and the skip would be a silent green. The stdout WARN line is what
+    cli.py's _warning_lines matches, turning the skip into a visible, advisory
+    (non-blocking) validation warning.
+    """
+    if shutil.which("bash") is None:
+        pytest.skip("bash is not available")
+    result = _run_helper(tmp_path, simulate="outage", strict=False,
+                         script=RUN_TERM_VALIDATOR)
+    assert result.returncode == 0, result.stdout + result.stderr
+    # cli.py:_warning_lines matches a line with "WARN" or "⚠" on stdout.
+    assert any(("WARN" in line) or ("⚠" in line)
+               for line in result.stdout.splitlines()), result.stdout
+    # Must not look like the blocking NCBITaxon label-mismatch warning.
+    assert "Label mismatch for" not in result.stdout, result.stdout
+
+
+def test_run_term_validator_strict_outage_blocks(tmp_path):
+    """Under TERM_VALIDATION_STRICT (weekly pass) an outage must block."""
+    if shutil.which("bash") is None:
+        pytest.skip("bash is not available")
+    result = _run_helper(tmp_path, simulate="outage", strict=True,
+                         script=RUN_TERM_VALIDATOR)
+    assert result.returncode != 0, result.stdout + result.stderr

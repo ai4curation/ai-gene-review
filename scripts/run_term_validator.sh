@@ -48,9 +48,18 @@ set -e
 printf '%s\n' "$output"
 
 # 97 = outage, non-strict: the term check was skipped, not passed. The only
-# output is the outage banner, so do not run the WARN grep below.
+# captured output is the outage banner, so the WARN grep below is not reached.
+# The ::warning:: (stderr) is for direct terminal / Actions use. The stdout WARN
+# line is the one that matters for the dominant path: `ai-gene-review validate
+# --terms` runs this wrapper under subprocess.run(capture_output=True), and
+# cli.py's _warning_lines matches a "⚠"/"WARN" line, so without it an outage
+# would be recorded as no issue at all and the gene PR would go green with no
+# trace the terms were skipped. It is emitted after the $output capture, so the
+# wrapper's own WARN grep is unaffected; it does not match the NCBITaxon
+# label-mismatch pattern, so cli.py keeps it advisory (non-blocking).
 if [[ $exit_code -eq 97 ]]; then
-    echo "::warning::Ontology service unavailable; strict term validation skipped (not a data error)." >&2
+    echo "::warning::Ontology service unavailable; term validation skipped (not a data error)." >&2
+    echo "⚠️  WARN: ontology service unavailable; term validation skipped (not a data error)"
     exit 0
 fi
 
