@@ -8,3 +8,8 @@
 - No GCS-specific GO MF term for the lipoyl/aminomethyl swinging-arm carrier; GO:0031405 lipoic acid
   binding used as the closest, while GO:0140104 molecular carrier activity may be an appropriate parent.
 - protein lipoylation (IMP) accepted: Gcv3 is the first lipoylated intermediate in the relay, not just a substrate (same logic as Bacillus GcvH).
+
+## 2026-11-10 glycine cleavage module completion pass (Claude, AI-assisted)
+
+- Every row now carries a verbatim supporting quote; truncated UniProt quotes were completed to the end of the claim.
+- Broad parent rows shared across the module's P/H/T/L reviews were harmonized: glycine metabolic/catabolic process (and amino acid metabolic process) -> MODIFY to GO:0019464; for the L proteins 2-oxoglutarate metabolic process and tricarboxylic acid cycle -> MODIFY to GO:0120551, generic oxidoreductase parents -> MODIFY to GO:0004148, FAD binding ACCEPT.
