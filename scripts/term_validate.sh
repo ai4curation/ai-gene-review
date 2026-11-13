@@ -56,6 +56,17 @@ while :; do
             continue
         fi
         printf '%s\n' "$out"
+        # Record the outage on the run's step summary too, so it is visible even
+        # when a caller captures both stdout and stderr (e.g. cli.py's multi-file
+        # validate-changed prints issue detail only for invalid files, so the
+        # stdout WARN line is counted but not shown). Best-effort: never fail here.
+        if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            if [ -n "${TERM_VALIDATION_STRICT:-}" ]; then
+                echo "⚠️ Ontology service unavailable; term validation blocked (strict full pass)." >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+            else
+                echo "⚠️ Ontology service unavailable; term validation skipped (not a data error)." >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+            fi
+        fi
         if [ -n "${TERM_VALIDATION_STRICT:-}" ]; then
             exit "$EXIT_OUTAGE_STRICT"
         fi

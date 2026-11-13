@@ -36,6 +36,15 @@ fi
 # PRs get their terms checked, so without this an EBI blip reddens every gene
 # PR's own validation check (and a red PR can't enter the merge queue either).
 here="$(cd "$(dirname "$0")" && pwd)"
+# This wrapper is always a per-file path: cli.py's `ai-gene-review validate
+# --terms` and `just validate-terms-all` call it once per file in a sequential
+# loop. A retry there is paid per file and can't short-circuit across processes,
+# so on a large gene PR during a sustained outage it adds N×(timeouts + sleep)
+# serially -- enough to trip the merge queue's response timeout. The skip here
+# is advisory (97), so a retry buys only coverage, never pass/fail; default to
+# none (the helper's own header prescribes 0 for per-file loops). An explicit
+# TERM_VALIDATE_RETRIES still wins.
+export TERM_VALIDATE_RETRIES="${TERM_VALIDATE_RETRIES:-0}"
 set +e
 cmd=("$here/term_validate.sh" validate-data "$@")
 if [[ ${#strict_args[@]} -gt 0 ]]; then

@@ -1095,7 +1095,7 @@ validate-prediction-terms +files:
     if [ "$rc" -eq 97 ]; then
         echo "::warning::Ontology service unavailable; prediction term validation skipped (not a data error)."
     elif [ "$rc" -eq 96 ]; then
-        echo "❌ ERROR: ontology service unavailable during strict term validation"
+        echo "✗ Ontology service unavailable during strict term validation (full pass blocks)"
         exit 1
     elif [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Label mismatch for '?NCBITaxon:"; then
         exit 1
