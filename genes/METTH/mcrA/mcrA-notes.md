@@ -79,3 +79,13 @@ be TOO_GENERAL/MODIFY per CLAUDE.md); cytoplasm ACCEPT supported only by a non-v
 methyltransferase, not the MCR activity — miscited); NEW GO:0051291 protein
 heterooligomerization (assembly, not a physiological process the subunit performs);
 nickel cation binding for an F430 (nickel-tetrapyrrole) cofactor; status DRAFT.
+
+## Cross-clade harmonization (2026-11-13)
+
+Reviewed together with seven other MCR/ACR alpha subunits
+(`projects/ARCHAEA/mcrA-across-clades.md`). GOA unchanged since the last review.
+Changes: added NEW GO:0046906 tetrapyrrole binding (ISS from P11558) and the proposed
+term "coenzyme F430 binding", reversing the earlier "no cofactor-binding term" note
+above, because the METAC review had already adopted tetrapyrrole binding (not nickel
+cation binding) and the set should be consistent. Noted in the methanogenesis row that
+the InterPro2GO term is wrong for ANME and alkane-oxidizer members.
