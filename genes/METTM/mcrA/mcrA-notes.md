@@ -74,3 +74,5 @@ other papers. Discussion: the E. coli-expressed alpha subunit was unstable, poss
 because F430 was missing. Outcome: the IDA GO:0050524 row (assigned_by MENGO, 2013) is
 miscited; claim kept as ACCEPT (four EXP rows), reference MISCITED, source defect
 WRONG_REFERENCE / DELETE_ROW filed (resource OTHER, naming MENGO).
+The August 1988 erratum (J Bacteriol 170(8):3792, listed on the PubMed record) has no
+PubMed entry of its own and could not be obtained; it was not checked.

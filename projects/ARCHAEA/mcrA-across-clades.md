@@ -78,8 +78,8 @@ coenzyme M contact in both *Methanosarcina* sequences
 
 One P11558 row cites the wrong paper: the IDA for activity from the 1988 gene-cloning
 paper (PMID:2448287). The full text, read from a PDF supplied during review, contains
-no activity assay; the only protein work is Western-blot detection of the subunits
-expressed in *E. coli*. The claim stays accepted because four EXP rows support it, the
+no activity assay; its only protein work is raising antisera against the purified
+subunits and detecting the *E. coli*-expressed subunits by Western blot. The claim stays accepted because four EXP rows support it, the
 reference is marked miscited, and a source defect asks for the row (assigned by MENGO
 in 2013) to be withdrawn.
 
