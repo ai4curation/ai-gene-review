@@ -156,3 +156,7 @@ Checks:
 - UniProt human location is Secreted plus lamellipodium; signal peptide 1-16; no retention signal.
 
 Outcome: KEEP_AS_NON_CORE stays (tagged wild-type protein with markers on the gene itself, plus intracellular furin processing of the endogenous protein in hepatocytes). Close alternative MARK_AS_OVER_ANNOTATED: a secreted protein in transit, imaged only as overexpressed tags; endogenous ANGPTL3 with a Golgi/TGN marker in hepatocytes would settle it. No lumen or TGN row (transit, and the TGN placement was the authors' surmise from a cis marker). Propagation sources set to SOURCE_WEAK_OR_INFERRED.
+
+### 2026-11-13 review follow-up (PR #6353): what was read outside the cache
+
+- PMID:23918928 (PMC3772187, DOI 10.1074/jbc.M113.501304): the cache holds the abstract only. The Golgi details in the GO:0005794 reason come from the PMC full text, read on 2026-11-13: transiently expressed mouse ANGPTL3-V5 in HuH7 cells co-stains with GM130, EEA1 and the cell surface, with the authors placing it "likely" in the trans-Golgi network (images as data not shown); endogenous ANGPTL3 in primary mouse hepatocytes is cleaved intracellularly by furin only. No supporting_text quotes this full text; the quotes come from cached sources.

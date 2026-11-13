@@ -205,3 +205,7 @@ Checks:
 - No SIGNAL or TRANSMEM features; side of membrane unresolved; no integral Golgi tether known.
 
 Outcome: KEEP_AS_NON_CORE stays, consistent with the ER rows. Root only. If Figure 2 turned out to use an overexpressed tag, MARK_AS_OVER_ANNOTATED would be the alternative.
+
+### 2026-11-13 review follow-up (PR #6353)
+
+- The GO:0005794 reason no longer relies on a Figure 2 reading of PMID:17525271, which is abstract-only in the cache and cannot be checked; the root claim now rests on curator deference to the mouse P31230 line curated from that paper. Action unchanged (KEEP_AS_NON_CORE).

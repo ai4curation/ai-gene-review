@@ -98,3 +98,7 @@ Checks:
 - Human: PMID:11390434 cites that "in Jurkat T cells, ζ is transported to the Golgi apparatus independently from other TCR chains" (export route).
 
 Outcome: UNDECIDED -> MARK_AS_OVER_ANNOTATED under transit-is-not-residence (close alternative UNDECIDED; the donor full text, with its marker and whether wild-type endogenous zeta accumulates at steady state, would settle it). Added PMID:24638062 to references and updated the GO_REF:0000107 reference_review. The existing suggested question about the mouse donor assay is now partly answered (left untouched in this batch).
+
+### 2026-11-13 review follow-up (PR #6353)
+
+- The GO:0005794 IEA row goes back to UNDECIDED, as ORGANELLES rule 7 prescribes for a projection whose donor paper (PMID:24638062) cannot be read. The abstract points both ways: newly synthesized zeta and a Golgi-localizing mutant suggest transit, while LAPTM5 targeting zeta in the Golgi is a sorting step there. The donor's full text (Golgi marker, steady-state wild-type pool) would settle it.

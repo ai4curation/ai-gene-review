@@ -350,9 +350,9 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 The first Golgi apparatus (GO:0005794) batch: the first 20 human genes on the
 root-only list with a synthesis row (ABCA1 to CEPT1), from the survey regenerated
-on 2026-11-13. Rule 7's ER logic carried over almost unchanged. One gene gained a
-sub-compartment term (BST2, trans-Golgi network) and eleven Golgi rows on eight
-genes changed action.
+on 2026-11-13. Rule 7's ER logic carried over almost unchanged. No gene gained a
+sub-compartment term (a BST2 trans-Golgi network row was withdrawn in review), and
+ten Golgi rows on seven genes changed action.
 
 | gene | outcome | evidence |
 |---|---|---|
@@ -369,11 +369,11 @@ genes changed action.
 | APLP1 | root; IBA and IEA stay KEEP_AS_NON_CORE | both rows rest on a 1992 mouse IDA describing "a pattern reminiscent of Golgi staining" without a marker (PMID:1279693); live imaging puts APLP1 mainly at the surface (PMID:19126676) |
 | ATP1A1 | root; ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the same rat source as the ER row measures ER-to-Golgi transit with reporters; alpha1 is never shown in a marker-defined Golgi compartment (PMID:18768923); matches the ER batch 1 call |
 | BICD2 | root; all five rows stay ACCEPT | endogenous BICD2 enriched at the Golgi with p230 and MG160 in fibroblasts (PMID:23664116); stabilises RAB6-GTP on Golgi membranes (PMID:25962623); Rab-dependent docking, so no sub-compartment |
-| BST2 | root rows ACCEPT to KEEP_AS_NON_CORE; NEW GO:0005802 trans-Golgi network (IC) | endogenous tetherin co-stains with TGN46 (PMID:19244337); AP1 returns internalised CD317 to the TGN (PMID:17940069); UniProt says "trans-Golgi network" but the IEA mapped to the root; tethering acts at the plasma membrane |
+| BST2 | root; rows ACCEPT to KEEP_AS_NON_CORE | AP1 returns internalised CD317 to the TGN (PMID:17940069, abstract only); the TGN46 co-stain (PMID:19244337) was in cells carrying a Vpu-encoding provirus, which traps tetherin in the TGN, and the UniProt shuttling note is untagged, so no TGN row (one unperturbed line); tethering acts at the plasma membrane |
 | CABP2 | root; IDA and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | full text: overexpressed CaBP2 only "resembling the Golgi apparatus"; all marker work was on CaBP7/8 (PMID:19338761) |
 | CBL | root; IDA and IEA stay KEEP_AS_NON_CORE | GFP-c-Cbl and endogenous c-Cbl with GM130 in NIH3T3 cells (PMID:29237719); soluble recruited E3 ligase, no activity shown at the Golgi |
 | CD14 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: CD14-containing TLR2 clusters are targeted to the Golgi after ligand (PMID:16880211); curator deference; GPI-anchored, so a trafficking destination |
-| CD247 | root; IEA UNDECIDED to MARK_AS_OVER_ANNOTATED | the mouse donor shows newly synthesised CD3 zeta diverted by LAPTM5 in the Golgi, plus a Golgi-localising mutant (PMID:24638062); a pool in transit |
+| CD247 | root; IEA stays UNDECIDED | the mouse donor paper is abstract-only (PMID:24638062): newly synthesised CD3 zeta and a Golgi-localising mutant suggest transit, but LAPTM5 targeting zeta in the Golgi is a sorting step there; rule 7's unreadable-donor line applies |
 | CEP83 | root; IBA and IDA stay KEEP_AS_NON_CORE | abstract-only: "a pool of CCDC41 colocalizes with ... IFT20 ... at the Golgi complex" (PMID:23530209); activity at the mother centriole |
 | CEPT1 | root; IBA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the PAINT Golgi IBD is seeded only by the CHPT1 lineage; brefeldin A moves CPT1 but not CEPT1, which sits in the ER and nuclear membranes (PMID:12221122); the ZDHHC23 pattern |
 
@@ -382,8 +382,9 @@ Lessons for a Golgi rule (to write up after more batches):
 - **Three kinds of non-resident pool.** Besides biosynthetic transit, there are
   retrograde or ligand-driven pools reached from the plasma membrane (ADRB2, CD14)
   and adaptor-dependent recycling stops (BST2). All are real; none is core when
-  the activity acts elsewhere. A recycling stop resolved by a sub-compartment
-  marker can earn that sub-compartment row (BST2).
+  the activity acts elsewhere. A recycling stop could earn a sub-compartment row,
+  but only from unperturbed, marker-resolved lines: a pool seen only under a viral
+  or other perturbation (BST2 with Vpu) does not count.
 - **Wild-type tagged proteins.** A minor, marker-confirmed Golgi pool beside a
   mainly surface signal counts as direct evidence (ABCA1, ANGPTL3); a mainly
   perinuclear overexpression signal does not (CABP2).
@@ -402,11 +403,10 @@ Lessons for a Golgi rule (to write up after more batches):
   as ZDHHC23 for the ER).
 - **Trace Ensembl projections** (GO_REF:0000107) to the donor paper: several
   rest on an unmarked staining pattern or "data not shown" (ABCA1, ANGPTL3, APLP1).
-- **Judgement calls left open for review:** CD247 moved off UNDECIDED on an
-  abstract that explicitly describes newly synthesised protein; BST2's TGN46
-  co-stain was done in cells carrying a Vpu-encoding provirus, which enlarges the
-  TGN pool; AP-3 rows are non-core rather than over-annotated because of the
-  neuronal EM.
+- **Settled in review:** the BST2 TGN row was withdrawn (two of its three lines
+  were Vpu-perturbation results) and CD247 stayed UNDECIDED under the
+  unreadable-donor line. Still a judgement call: AP-3 rows are non-core rather
+  than over-annotated because of the neuronal TGN data.
 
 ## 2026-11-11 (tethering route added to rule 7)
 
