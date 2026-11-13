@@ -342,6 +342,9 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Golgi batch 1: 20 human genes (2026-11-13); 53 human genes remain on
         the root-only Golgi list with a synthesis row (73 at the 2026-11-13
         survey; 118 human genes are root-only for GO:0005794)
+  - [ ] Write the Golgi rule after more batches; promote "curator deference
+        stops at a readable paper" into the numbered rules, since it now
+        governs direct-evidence rows too (CABP2, Golgi batch 1 review)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
