@@ -35,8 +35,7 @@ still the main open biology.
 
 2026-11-06 searches for A. fumigatus Q4WHL1/AFUA_2G05010 and Mon1-Ccz1/MonA
 did not find a direct Af293 mon1 paper or a newer Aspergillus MonA paper after
-Son and Park 2019. The 2023 Talaromyces marneffei Mon1 network paper adds
-family-level context but does not change the A. fumigatus PAINT calls.
+Son and Park 2019.
 
 ## Annotation decisions
 
