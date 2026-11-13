@@ -40,8 +40,11 @@ PANTHER PTHR46925:SF1 NEUROMEDIN-K RECEPTOR).
   [PMID:19079066 "NK3R activation is linked to Gq proteins and its action results in an increase in intracellular calcium."]
   [PMID:19079066 "In transiently transfected cells, identified on the basis of coexpressed GFP, NKB elicited a robust increase in intracellular calcium"]
 - cAMP: shown for the rat receptor in CHO cells, about tenfold less efficient than PI
-  hydrolysis. Not shown for the human receptor in the papers I read; UniProt records it
-  "By similarity" to rat P16177.
+  hydrolysis. UniProt records it "By similarity" to rat P16177. For the human receptor,
+  Oury-Donat et al. 1995 report agonist-evoked cAMP accumulation in CHO cells with an EC50
+  about 25-fold higher than for inositol monophosphate formation; neither paper identifies Gs.
+  [PMID:7616392 "NK3 agonists such as [MePhe7]-NKB and senktide stimulated inositol monophosphate formation with EC50 values of 2.0 +/- 1.4 and 2.1 +/- 0.7 nM, respectively."]
+  [PMID:7616392 "The cyclic AMP accumulation induced by 10(-7) M [MePhe7]-NKB (EC50 of 54 +/- 2 nM) also was antagonized by SR142801"]
   [PMID:1370820 "The three receptors commonly showed a rapid and marked stimulation in both phosphatidylinositol (PI) hydrolysis and cyclic AMP formation in response to tachykinin interaction."]
   [PMID:1370820 "The stimulation of cyclic AMP formation was less efficient than that of PI hydrolysis"]
   Decision: Gq/PLC pathway (GO:0007209) is core; GO:0007189 kept as non-core.
