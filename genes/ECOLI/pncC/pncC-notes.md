@@ -11,3 +11,9 @@
 - Decisions on general terms (cytoplasm, NAD+ biosynthetic process, parent activity
   terms) follow the "correct but general is MODIFY" rule, using descendants already
   supported for this protein.
+- No biological-process term is proposed for E. coli PncC. The physiological role
+  of PncC in NAD+ salvage was confirmed by deletion-mutant phenotypes in Shewanella
+  oneidensis, not in E. coli (PMID:21953451, "Enzymatic characterization of the PncC
+  protein, as well as phenotype analysis of deletion mutants, confirmed its proposed
+  biochemical and physiological function in S. oneidensis"), and the authors also
+  raise NMN detoxification after DNA ligase action as a possible role.
