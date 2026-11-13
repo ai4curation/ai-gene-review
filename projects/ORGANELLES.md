@@ -339,9 +339,74 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         distinct)
   - [x] ER batch 4: the last 19 human genes (2026-11-06); human root-only ER
         list done except GBA, a duplicate folder of GBA1
+  - [x] Golgi batch 1: 20 human genes (2026-11-13); 53 human genes remain on
+        the root-only Golgi list with a synthesis row (73 at the 2026-11-13
+        survey; 118 human genes are root-only for GO:0005794)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-13 (Golgi batch 1: 20 human genes)
+
+The first Golgi apparatus (GO:0005794) batch: the first 20 human genes on the
+root-only list with a synthesis row (ABCA1 to CEPT1), from the survey regenerated
+on 2026-11-13. Rule 7's ER logic carried over almost unchanged. One gene gained a
+sub-compartment term (BST2, trans-Golgi network) and eleven Golgi rows on eight
+genes changed action.
+
+| gene | outcome | evidence |
+|---|---|---|
+| ABCA1 | root; IEA stays KEEP_AS_NON_CORE | stably transduced wild-type HA-ABCA1 in HEK293H has a minor intracellular pool with giantin, and brefeldin A cuts surface ABCA1 by about 60% (PMID:20025763); the mouse donor (PMID:10878804) is abstract-only and never mentions the Golgi |
+| ACTL7A | root; IEA and two ISS rows stay KEEP_AS_NON_CORE | endogenous mouse Arp7A co-stains with GM130 in testis (PMID:21278383); soluble, light microscopy only |
+| ADRB2 | root; IEA and IDA stay KEEP_AS_NON_CORE | isoproterenol sends surface receptor to the Golgi, where it meets zDHHC9/14/18; brefeldin A blocks Cys-265 palmitoylation (PMID:27481942); a regulated retrograde pool |
+| AIMP1 | root; IEA stays KEEP_AS_NON_CORE | by similarity to mouse, curated from PMID:17525271: endogenous AIMP1 in HeLa is mostly calnexin-positive with a minor GM130 pool; consistent with its ER rows |
+| ANGPTL3 | root; IEA stays KEEP_AS_NON_CORE | the mouse IDA rests on transient ANGPTL3-V5 with GM130, data not shown (PMID:23918928); tagged human ANGPTL3 sits with YFP-GalT (PMID:37634084) |
+| AP3B1 | root; IEA and TAS ACCEPT to KEEP_AS_NON_CORE; Golgi out of core_functions | endogenous AP-3 in the Golgi region, brefeldin A-sensitive but distinct from TGN markers (PMID:9151686); neuronal AP-3 on TGN buds by immuno-EM (PMID:8666661); no AP-3 on the TGN in HepG2, where it acts on early-endosome tubules (PMID:15051738) |
+| AP3B2 | root; IEA ACCEPT to KEEP_AS_NON_CORE | by similarity; the neuronal TGN immuno-EM (PMID:8666661) is contradicted by the marker and HepG2 EM data, so no TGN row |
+| AP3S1 | root; KEEP_AS_NON_CORE confirmed | same sources as AP3B1, plus "in the area of the TGN" (PMID:9118953) |
+| AP3S2 | root; IEA ACCEPT to KEEP_AS_NON_CORE; Golgi out of core_functions | the old reason read the vesicle items' ECO:0000250 tag as the Golgi item's; same sources as AP3S1 |
+| APC2 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: endogenous APC2 "colocalizes with both the Golgi apparatus" (PMID:11691822); curator deference |
+| APLP1 | root; IBA and IEA stay KEEP_AS_NON_CORE | both rows rest on a 1992 mouse IDA describing "a pattern reminiscent of Golgi staining" without a marker (PMID:1279693); live imaging puts APLP1 mainly at the surface (PMID:19126676) |
+| ATP1A1 | root; ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the same rat source as the ER row measures ER-to-Golgi transit with reporters; alpha1 is never shown in a marker-defined Golgi compartment (PMID:18768923); matches the ER batch 1 call |
+| BICD2 | root; all five rows stay ACCEPT | endogenous BICD2 enriched at the Golgi with p230 and MG160 in fibroblasts (PMID:23664116); stabilises RAB6-GTP on Golgi membranes (PMID:25962623); Rab-dependent docking, so no sub-compartment |
+| BST2 | root rows ACCEPT to KEEP_AS_NON_CORE; NEW GO:0005802 trans-Golgi network (IC) | endogenous tetherin co-stains with TGN46 (PMID:19244337); AP1 returns internalised CD317 to the TGN (PMID:17940069); UniProt says "trans-Golgi network" but the IEA mapped to the root; tethering acts at the plasma membrane |
+| CABP2 | root; IDA and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | full text: overexpressed CaBP2 only "resembling the Golgi apparatus"; all marker work was on CaBP7/8 (PMID:19338761) |
+| CBL | root; IDA and IEA stay KEEP_AS_NON_CORE | GFP-c-Cbl and endogenous c-Cbl with GM130 in NIH3T3 cells (PMID:29237719); soluble recruited E3 ligase, no activity shown at the Golgi |
+| CD14 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: CD14-containing TLR2 clusters are targeted to the Golgi after ligand (PMID:16880211); curator deference; GPI-anchored, so a trafficking destination |
+| CD247 | root; IEA UNDECIDED to MARK_AS_OVER_ANNOTATED | the mouse donor shows newly synthesised CD3 zeta diverted by LAPTM5 in the Golgi, plus a Golgi-localising mutant (PMID:24638062); a pool in transit |
+| CEP83 | root; IBA and IDA stay KEEP_AS_NON_CORE | abstract-only: "a pool of CCDC41 colocalizes with ... IFT20 ... at the Golgi complex" (PMID:23530209); activity at the mother centriole |
+| CEPT1 | root; IBA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the PAINT Golgi IBD is seeded only by the CHPT1 lineage; brefeldin A moves CPT1 but not CEPT1, which sits in the ER and nuclear membranes (PMID:12221122); the ZDHHC23 pattern |
+
+Lessons for a Golgi rule (to write up after more batches):
+
+- **Three kinds of non-resident pool.** Besides biosynthetic transit, there are
+  retrograde or ligand-driven pools reached from the plasma membrane (ADRB2, CD14)
+  and adaptor-dependent recycling stops (BST2). All are real; none is core when
+  the activity acts elsewhere. A recycling stop resolved by a sub-compartment
+  marker can earn that sub-compartment row (BST2).
+- **Wild-type tagged proteins.** A minor, marker-confirmed Golgi pool beside a
+  mainly surface signal counts as direct evidence (ABCA1, ANGPTL3); a mainly
+  perinuclear overexpression signal does not (CABP2).
+- **Curator deference stops at a readable paper.** A curated ECO:0000269 line
+  from a paper that can be read and shows no marker is MARK_AS_OVER_ANNOTATED
+  (CABP2); deference is for papers that cannot be read (APC2, CD14).
+- **Coats.** Brefeldin A sensitivity of a coat shows ARF-dependent binding, not
+  Golgi dispersal of the protein. Early light microscopy of adaptors is often
+  overturned by later immuno-EM; sub-compartment lines that disagree by cell type
+  keep the gene at the root (AP-3).
+- **Read the ECO tag per location item** in a UniProt SUBCELLULAR LOCATION line
+  (AP3S2), and look for sub-locations the IEA mapping dropped (BST2, the Golgi
+  version of the "fix the IEA upstream" question).
+- **Paralog-seeded IBDs** at a node shared by ER and Golgi paralogs are
+  MARK_AS_OVER_ANNOTATED when the target's own data place it elsewhere (CEPT1,
+  as ZDHHC23 for the ER).
+- **Trace Ensembl projections** (GO_REF:0000107) to the donor paper: several
+  rest on an unmarked staining pattern or "data not shown" (ABCA1, ANGPTL3, APLP1).
+- **Judgement calls left open for review:** CD247 moved off UNDECIDED on an
+  abstract that explicitly describes newly synthesised protein; BST2's TGN46
+  co-stain was done in cells carrying a Vpu-encoding provirus, which enlarges the
+  TGN pool; AP-3 rows are non-core rather than over-annotated because of the
+  neuronal EM.
 
 ## 2026-11-11 (tethering route added to rule 7)
 

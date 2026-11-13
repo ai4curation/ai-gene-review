@@ -194,3 +194,14 @@ The coordinator independently accepted the biological delta and identified this 
 - Row: GO:0005783 IEA (GO_REF:0000044, SL-0095), no qualifier; kept KEEP_AS_NON_CORE.
 - Check: UniProt "Endoplasmic reticulum {ECO:0000250|UniProtKB:P31230}" [file:human/AIMP1/AIMP1-uniprot.txt] is by similarity to mouse, but the human HeLa data in PMID:17525271 (Figure 2, recorded above) put endogenous AIMP1 in calnexin-positive ER as well as a smaller GM130 Golgi pool, so the microsomal fraction is backed by an ER marker. Abstract: "AIMP1 enhances gp96 dimerization and the interaction between gp96 and KDEL receptor-1 (KDELR-1)" [PMID:17525271].
 - No signal peptide or TM segment; how a cytosolic MSC component reaches luminal gp96 is unresolved, so membrane vs lumen cannot be called. Root only, no NEW row.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Row: GO:0005794 Golgi apparatus, IEA GO_REF:0000044 (UniProt SL-0132), located_in. No sub-compartment rows.
+
+Checks:
+- Human UniProt: "Golgi apparatus {ECO:0000250|UniProtKB:P31230}" [file:human/AIMP1/AIMP1-uniprot.txt], by similarity to mouse.
+- Mouse P31230 (UniProt REST, 2026-11-13): "Golgi apparatus {ECO:0000269|PubMed:17525271}"; QuickGO also lists a mouse Golgi EXP from PMID:17525271. So the donor chain ends in the same gp96 study recorded above (2026-11-04 ER batch), whose HeLa Figure 2 shows endogenous AIMP1 mostly with calnexin and a smaller pool with GM130. The cached copy is abstract-only; PMC full text could not be retrieved this session (reCAPTCHA; PubMed MCP returned only the abstract), so the Figure 2 reading rests on the earlier verified notes entry.
+- No SIGNAL or TRANSMEM features; side of membrane unresolved; no integral Golgi tether known.
+
+Outcome: KEEP_AS_NON_CORE stays, consistent with the ER rows. Root only. If Figure 2 turned out to use an overexpressed tag, MARK_AS_OVER_ANNOTATED would be the alternative.

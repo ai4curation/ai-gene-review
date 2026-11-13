@@ -145,3 +145,14 @@ The concise curated rationales now use the cache-supported inhibitory result and
 6. [GO:0060192 negative regulation of lipase activity](https://amigo.geneontology.org/amigo/term/GO:0060192) exists and has a narrower LPL-specific child GO:0051005. Its activity-regulation relationship deserves consideration alongside the existing inhibitory MF and process annotations; existence of a term alone does not establish an omitted assertion. The general term is currently marked as an obsoletion candidate in AmiGO. A suggested question records this representation issue without manufacturing another NEW BP.
 
 The follow-up changes evidence traceability and explanation, with all 55 original source objects, action decisions, immutable raw records and normal source caches preserved. No new biological-process or molecular-function annotation is introduced.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Row: GO:0005794 Golgi apparatus, IEA GO_REF:0000107 (Ensembl projection from mouse Q9R182 / ENSMUSP00000030280), located_in. No sub-compartment rows.
+
+Checks:
+- Donor traced (QuickGO): mouse Q9R182 Golgi apparatus IDA PMID:23918928 (MGI). The cache is abstract-only, but the PMC full text (PMC3772187) was read: "The subcellular co-localization of the transiently expressed mouse ANGPTL3-V5 using V5-mAb, as well as antibodies against the Golgi marker GM130, the early endosome marker EEA1, and the cell surface marker EGFR revealed that cellular ANGPTL3 was present in the Golgi (likely the trans Golgi network, TGN), early endosomes, as well as at the cell surface ( data not shown )" (HuH7 cells). Abstract: "In primary hepatocytes, ANGPTL3 was processed into a shorter form of ANGPTL3 intracellularly by furin only" [PMID:23918928].
+- Human: tagged ANGPTL3 with YFP-GalT in HEK293T (PMID:37634084, already in the row).
+- UniProt human location is Secreted plus lamellipodium; signal peptide 1-16; no retention signal.
+
+Outcome: KEEP_AS_NON_CORE stays (tagged wild-type protein with markers on the gene itself, plus intracellular furin processing of the endogenous protein in hepatocytes). Close alternative MARK_AS_OVER_ANNOTATED: a secreted protein in transit, imaged only as overexpressed tags; endogenous ANGPTL3 with a Golgi/TGN marker in hepatocytes would settle it. No lumen or TGN row (transit, and the TGN placement was the authors' surmise from a cis marker). Propagation sources set to SOURCE_WEAK_OR_INFERRED.

@@ -61,3 +61,10 @@ All 49 machine-sourced assertions, their actions, both named products, the audit
 ### Retinal follow-up application
 
 The independently approved candidate passed full normal canonical validation, status reporting, targeted rendering and standard EDIT history validation. DRAFT retains 33 expected standing-policy binding advisories. All 49 source assertions and actions, both products, the core, earlier sources and history are preserved. See the [retinal follow-up history](https://github.com/ai4curation/ai-gene-review/blob/main/history/genes/human/CABP2/2026-10-03T232702Z-codex-1f111a.yaml).
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IDA PMID:19338761 (UniProt) and IEA GO_REF:0000044 (SL-0132, mapping the same curated UniProt line "Golgi apparatus {ECO:0000269|PubMed:19338761}"). No Golgi sub-compartment rows.
+- PMID:19338761 (full text read): tagged human CaBP2 overexpressed in differentiated Neuro2A cells; reported together with CaBP1-L/S as [PMID:19338761 "localising to both a peri-nuclear region resembling the Golgi apparatus and the plasma membrane"]. All marker work (cis/medial EYFP-Golgi, syntaxin-6, ts045 VSVG-GFP TGN trap) was done on CaBP7/8 only: [PMID:19338761 "Initially, we examined the distributions of CaBPs7 and 8 with endogenous, immunolabelled, syntaxin 6"].
+- Under the Golgi marker requirement, a perinuclear signal of an overexpressed N-myristoylated protein is not a Golgi assignment. No other CaBP2 Golgi data found.
+- Outcome: both rows KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (close call with KEEP_AS_NON_CORE on deference to the curated UniProt line; the paper is readable and only says "resembling"). A GM130/giantin/TGN46 co-stain of CaBP2 would settle it. No sub-compartment row. The older note above ("Golgi and perinuclear annotations are retained") is superseded for the Golgi rows; the perinuclear-region row was not in scope.

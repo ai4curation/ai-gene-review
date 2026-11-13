@@ -87,3 +87,14 @@ The [PubMed record](https://pubmed.ncbi.nlm.nih.gov/1390434/) and [publisher rec
 For PMID:23858057, the normal HTML cache has abstract and partial introduction/discussion; it does not contain the zeta construct Methods or Figure 4 caption. Those particular details are externally sourced only, from the selected [official primary Methods, Results and caption](https://pmc.ncbi.nlm.nih.gov/articles/PMC3753866/) already inspected in the first follow-up. They identify zeta-tagged constructs and controlled phasorFLIM-FRET in human J77 cells. The canonical cache's CD3-delta yeast-two-hybrid account is a different observation. The reference remains VERIFIED on the inspected external primary support for qualitative proximity, without implying cache completeness, purified binary binding, or new figure-pixel/supplement inspection.
 
 The live PR body was independently checked at head fd9be20ef4295736c714d0404d21cbedec1f1a7f and already reports 91 ACCEPT, 18 KEEP_AS_NON_CORE, 16 MODIFY and 3 UNDECIDED, with eight canonical advisories. Those counts are preserved. A subsequent publication body should remove its superseded MGI-date argument; the reviewer's stale-count observation does not require an annotation change. No new biological expansion or verbatim quotation is needed for this bounded provenance and readability correction.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Row: GO:0005794 IEA (GO_REF:0000107, Ensembl projection from mouse P24161), `located_in`. Previously UNDECIDED pending the donor assay.
+
+Checks:
+- QuickGO: mouse P24161 has one Golgi apparatus annotation, IDA PMID:24638062 (ARUK-UCL). Fetched that paper: abstract only, no PMC record.
+- PMID:24638062 abstract: "Kinetic analysis of the subcellular localization of the newly synthesized CD3ζ suggests that LAPTM5 targets CD3ζ in the Golgi apparatus and promotes its lysosomal translocation" and "a Golgi-localizing mutant CD3ζ can be transported to and degraded in the lysosome by LAPTM5". That is a biosynthetic transit pool plus a mutant.
+- Human: PMID:11390434 cites that "in Jurkat T cells, ζ is transported to the Golgi apparatus independently from other TCR chains" (export route).
+
+Outcome: UNDECIDED -> MARK_AS_OVER_ANNOTATED under transit-is-not-residence (close alternative UNDECIDED; the donor full text, with its marker and whether wild-type endogenous zeta accumulates at steady state, would settle it). Added PMID:24638062 to references and updated the GO_REF:0000107 reference_review. The existing suggested question about the mouse donor assay is now partly answered (left untouched in this batch).
