@@ -51,11 +51,18 @@ def _assessment(verdict: str, node: str, action: str | None = None,
         ("LOSS_CONTRADICTED", "PTN2", "REMOVE_LOSS", None),
         ("LOSS_STALE", "PTN2", "REMOVE_LOSS", None),
         ("LOSS_TOO_BROAD", "PTN2", "MOVE_LOSS", "PTN4"),
+        # leaf targets: a loss or a move to a single gene
+        ("NEEDS_PRUNING", "PTN1", "ADD_IKR", "L4"),
+        ("NEEDS_PRUNING", "PTN2", "ADD_IRD", "L3"),
+        ("TOO_DEEP", "PTN1", "MOVE_IBD", "L1"),
+        ("LOSS_TOO_BROAD", "PTN2", "MOVE_LOSS", "L1"),
+        ("WRONG_NODE", "PTN2", "MOVE_IBD", "L5"),
     ],
 )
 def test_valid_actions(verdict: str, node: str, action: str, target: str | None) -> None:
-    """Actions that fit the verdict and the tree pass."""
-    assert proposed_action_problem(_assessment(verdict, node, action, target), UNDER) is None
+    """Actions that fit the verdict and the tree pass, including leaf targets."""
+    assert proposed_action_problem(
+        _assessment(verdict, node, action, target), UNDER, LEAVES) is None
 
 
 @pytest.mark.parametrize(
@@ -71,17 +78,22 @@ def test_valid_actions(verdict: str, node: str, action: str, target: str | None)
         ("TOO_DEEP", "PTN1", "REMOVE_IBD", "PTN2", "takes no target_node_id"),
         # tree relation
         ("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN1", "is the assessed node itself"),
-        ("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN99", "not an internal node"),
+        ("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN99", "not a node of this family"),
+        ("WRONG_NODE", "PTN2", "MOVE_IBD", "L99", "not a node of this family"),
         ("TOO_DEEP", "PTN2", "MOVE_IBD", "PTN1", "is not below"),
         ("NEEDS_PRUNING", "PTN2", "ADD_IKR", "PTN3", "is not below"),
         ("LOSS_TOO_BROAD", "PTN2", "MOVE_LOSS", "PTN3", "is not below"),
-        ("TOO_DEEP", "PTN1", "MOVE_IBD", "L1", "not an internal node"),
+        # a leaf outside the assessed clade is not below it
+        ("NEEDS_PRUNING", "PTN2", "ADD_IKR", "L4", "is not below"),
+        # nothing lies below a leaf
+        ("TOO_DEEP", "L1", "MOVE_IBD", "PTN2", "nothing lies below it"),
     ],
 )
 def test_invalid_actions(verdict: str, node: str, action: str, target: str | None,
                          fragment: str) -> None:
     """Mismatched verdicts, missing or extra targets and bad tree relations are reported."""
-    problem = proposed_action_problem(_assessment(verdict, node, action, target), UNDER)
+    problem = proposed_action_problem(
+        _assessment(verdict, node, action, target), UNDER, LEAVES)
     assert problem is not None
     assert fragment in problem
 
@@ -177,3 +189,28 @@ def test_real_pthr24416_proposed_actions_check_out() -> None:
     results = check_proposed_actions(review, load_family)
     assert len(results) == 3, [str(r) for r in results]
     assert all(r.outcome is Outcome.PASS for r in results), [str(r) for r in results]
+
+
+def test_leaf_known_only_from_leaf_table() -> None:
+    """A leaf target needs the leaf table: without it, the leaf cannot be told from an
+    id outside the family, so the check falls back to "not a node of this family"."""
+    assessment = _assessment("NEEDS_PRUNING", "PTN1", "ADD_IKR", "L4")
+    assert proposed_action_problem(assessment, UNDER, LEAVES) is None
+    assert "not a node of this family" in (proposed_action_problem(assessment, UNDER) or "")
+
+
+def test_check_passes_leaf_table_through() -> None:
+    """check_proposed_actions uses the tree's leaf table, so a leaf target passes."""
+    review = {"family_id": "PANTHER:PTHR1", "node_assessments": [
+        _assessment("NEEDS_PRUNING", "PTN1", "ADD_IKR", "L4")]}
+    tree = {"under": UNDER, "leaves": {leaf: {} for leaf in LEAVES}}
+    results = check_proposed_actions(review, lambda fam: tree)
+    assert [r.outcome for r in results] == [Outcome.PASS]
+
+
+def test_tree_without_internal_nodes_is_unresolved() -> None:
+    """A tree that parses but has no internal nodes is treated as unavailable."""
+    review = {"family_id": "PANTHER:PTHR1", "node_assessments": [
+        _assessment("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN2")]}
+    results = check_proposed_actions(review, lambda fam: {"under": {}, "leaves": {}})
+    assert [r.outcome for r in results] == [Outcome.UNRESOLVED]
