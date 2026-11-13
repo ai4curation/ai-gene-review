@@ -31,7 +31,7 @@ def test_ltv_service_unavailable_exit_code_is_2():
 def _run_helper(tmp_path, *, simulate, strict=False, extra_env=None, script=None):
     """Run the helper (or another wrapper) with a stub `uv` faking LTV."""
     bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
+    bin_dir.mkdir(exist_ok=True)  # may be called more than once per tmp_path
     # The helper invokes `uv run linkml-term-validator ...`; the stub decides the
     # faked outcome from SIMULATE without touching the network.
     stub = f"""#!{sys.executable}
@@ -70,6 +70,11 @@ sys.exit(0)
         env["TERM_VALIDATION_STRICT"] = "1"
     else:
         env.pop("TERM_VALIDATION_STRICT", None)
+    # GITHUB_STEP_SUMMARY is set on every Actions step and inherited here; the
+    # stubbed-outage cases would otherwise append "term validation skipped" lines
+    # to the real `test` job's run summary on every (green) PR. Scrub it so the
+    # tests never write to the actual summary.
+    env.pop("GITHUB_STEP_SUMMARY", None)
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
@@ -124,3 +129,22 @@ def test_run_term_validator_strict_outage_blocks(tmp_path):
     result = _run_helper(tmp_path, simulate="outage", strict=True,
                          script=RUN_TERM_VALIDATOR)
     assert result.returncode != 0, result.stdout + result.stderr
+
+
+def test_step_summary_written_only_on_outage(tmp_path):
+    """The outage line lands on $GITHUB_STEP_SUMMARY; a clean run writes nothing."""
+    if shutil.which("bash") is None:
+        pytest.skip("bash is not available")
+    outage_summary = tmp_path / "outage.md"
+    outage_summary.write_text("")
+    r = _run_helper(tmp_path, simulate="outage", strict=False,
+                    extra_env={"GITHUB_STEP_SUMMARY": str(outage_summary)})
+    assert r.returncode == 97, r.stdout + r.stderr
+    assert "Ontology service unavailable" in outage_summary.read_text()
+
+    clean_summary = tmp_path / "clean.md"
+    clean_summary.write_text("")
+    r = _run_helper(tmp_path, simulate="ok", strict=False,
+                    extra_env={"GITHUB_STEP_SUMMARY": str(clean_summary)})
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert clean_summary.read_text() == ""
