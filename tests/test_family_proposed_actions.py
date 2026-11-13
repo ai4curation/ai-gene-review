@@ -214,3 +214,17 @@ def test_tree_without_internal_nodes_is_unresolved() -> None:
         _assessment("TOO_DEEP", "PTN1", "MOVE_IBD", "PTN2")]}
     results = check_proposed_actions(review, lambda fam: {"under": {}, "leaves": {}})
     assert [r.outcome for r in results] == [Outcome.UNRESOLVED]
+
+
+def test_sole_leaf_below_node_is_decidable() -> None:
+    """A leaf that is the only leaf under the assessed node is below it: PASS, not UNRESOLVED.
+
+    Only two *internal* nodes of a single-child chain are undecidable from leaf sets.
+    """
+    under = {"PTN1": ["L1"]}
+    outcome, _ = evaluate_proposed_action(
+        _assessment("NEEDS_PRUNING", "PTN1", "ADD_IKR", "L1"), under, ["L1", "L2"])
+    assert outcome is Outcome.PASS
+    outcome, message = evaluate_proposed_action(
+        _assessment("NEEDS_PRUNING", "PTN1", "ADD_IKR", "L2"), under, ["L1", "L2"])
+    assert outcome is Outcome.FAIL and "is not below" in message

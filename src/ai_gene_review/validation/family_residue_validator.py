@@ -758,9 +758,10 @@ def evaluate_proposed_action(
     TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD the target must lie strictly below the
     assessed node.
 
-    Ancestry is read from leaf sets (a leaf's set is itself), which cannot order two nodes
-    of a single-child chain (they share every leaf). Such a pair is reported UNRESOLVED
-    rather than FAIL, so a correct move along the chain is never rejected.
+    Ancestry is read from leaf sets. A leaf target is below the assessed node exactly when
+    the node's clade contains it. Two internal nodes of a single-child chain share every
+    leaf and cannot be ordered this way; such a pair is reported UNRESOLVED rather than
+    FAIL, so a correct move along the chain is never rejected.
 
     >>> under = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"], "PTN3": ["a", "b"]}
     >>> leaves = ["a", "b", "c"]
@@ -800,6 +801,12 @@ def evaluate_proposed_action(
                 f"assessed node {node} is not an internal node of this family's tree, so "
                 "nothing lies below it"
             )
+        if target not in under:
+            # A leaf target: it is below the assessed node exactly when the node's clade
+            # contains it, even when it is that clade's only leaf.
+            if target in node_leaves:
+                return Outcome.PASS, f"{action} fits the verdict and the PANTHER tree"
+            return Outcome.FAIL, f"target {target} is not below the assessed node {node}"
         if target_leaves == node_leaves:
             return Outcome.UNRESOLVED, (
                 f"target {target} and node {node} share every leaf (a single-child "
