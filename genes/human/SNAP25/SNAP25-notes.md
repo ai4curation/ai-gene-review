@@ -33,3 +33,5 @@ mentions SNAP-25, so left UNDECIDED.
 
 GO:0005484 now carries the label "helical-bundle zippering fusogenic activity" in QuickGO; the
 local term cache still has "SNAP receptor activity", which produces a label warning only.
+
+GO has renamed GO:0005484 from "SNAP receptor activity" to "helical-bundle zippering fusogenic activity" (the GOA/QuickGO label, kept in `existing_annotations`); the validators' local ontology snapshot lags, so `core_functions` uses the old label it accepts.

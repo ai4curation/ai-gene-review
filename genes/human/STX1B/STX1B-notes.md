@@ -45,3 +45,5 @@ paralog syntaxin-1A.
   binding; the rest REMOVED as uninformative. Note the AlphaFold-interface paper abstract names an FBXO23-STX1B
   interface while GOA/IntAct records the partner as FBXO28 (Q9NVF7); not resolved here (row removed either way).
 - Cytosol (Reactome TAS) marked over-annotated: tail-anchored membrane protein.
+
+GO has renamed GO:0005484 from "SNAP receptor activity" to "helical-bundle zippering fusogenic activity" (the GOA/QuickGO label, kept in `existing_annotations`); the validators' local ontology snapshot lags, so `core_functions` uses the old label it accepts.

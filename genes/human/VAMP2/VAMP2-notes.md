@@ -95,3 +95,5 @@ whether VAMP2 performs any of the work of synaptic vesicle endocytosis or is onl
 and which R-SNARE carries insulin-stimulated GLUT4 exocytosis in human tissue — are recorded
 as `suggested_questions` with matching experiments. `synaptic vesicle endocytosis` is kept as
 non-core for exactly that reason.
+
+GO has renamed GO:0005484 from "SNAP receptor activity" to "helical-bundle zippering fusogenic activity" (the GOA/QuickGO label, kept in `existing_annotations`); the validators' local ontology snapshot lags, so `core_functions` uses the old label it accepts.
