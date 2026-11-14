@@ -23,9 +23,8 @@ the original main Methods, Results and Discussion were inspected. Human HACD1
 purified from HeLa cells dehydrates C16 3-hydroxypalmitoyl-CoA. Localization was
 tested against an ER marker in HeLa cells. HACD1 rescued growth and restored
 sphingolipid synthesis in doxycycline-suppressed PHS1 yeast. ELOVL associations
-were studied by co-immunoprecipitation in HEK293T cells. Only C16 substrate was
-available for the biochemical assays; the article leaves other chain-length
-preferences unresolved. Complementation supports the VLCFA elongation context
+were studied by co-immunoprecipitation in HEK293T cells. The inspected biochemical assays used C16 substrate;
+they did not measure a panel of other chain lengths. Complementation supports the VLCFA elongation context
 but is not a measured C18–C26 substrate panel. Supplements were not inspected.
 The local publication cache remains abstract-only; access to the original main
 text is recorded separately here.
@@ -63,6 +62,17 @@ were the source; the selected-response receipt pins SHA256
 No private relative link is needed. The three general MF rows are refined to
 GO:0102158 for enzyme-class specificity, not reaction direction. A class/context
 assignment is distinct from a measured panel of individual chain-length kinetics.
+
+### Literal ontology provenance — checked 2026-11-14 UTC
+
+[QuickGO GO/about](https://www.ebi.ac.uk/QuickGO/services/ontology/go/about) reports
+`http://purl.obolibrary.org/obo/go/releases/2026-11-12/extensions/go-plus.owl`.
+The [term response](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0080023,GO:0018812,GO:0102158)
+gives GO:0080023 `definition.text` as "Catalysis of the reaction: a
+(3R)-3-hydroxyacyl-CoA = a (2E)-enoyl-CoA + H2O." GO:0018812's `children` include
+`{"id":"GO:0080023","relation":"is_a"}`; GO:0080023's `children` include
+`{"id":"GO:0102158","relation":"is_a"}`. These parent-to-child fragments establish
+the asserted child-to-parent chain GO:0102158 → GO:0080023 → GO:0018812.
 
 ## Interaction evidence
 
@@ -109,6 +119,19 @@ to enzyme binding (GO:0019899), without an adaptor or channeling inference. The
 other four HuRI partners retain non-core generic binding.
 [Official enzyme-binding definition](https://www.ebi.ac.uk/QuickGO/term/GO:0019899)
 specifies binding to a protein with catalytic activity.
+
+### RNF170 partner isoform — checked 2026-11-14 UTC
+
+The mapped RNF170 isoform Q96K19-5 is 116 residues long and lacks part of the canonical RING domain.
+The official [RNF170 record](https://rest.uniprot.org/uniprotkb/Q96K19.json) places the
+canonical RING domain at residues 87-130. Isoform 5 replaces residues 109-116 with
+NLTPNSIW (VSP_023853) and omits residues 117-258 (VSP_023854); the official
+[Q96K19-5 sequence](https://rest.uniprot.org/uniprotkb/Q96K19-5.fasta) has 116 residues.
+These are database sequence/domain observations, not an inspected catalytic assay.
+They do not show the isoform is inactive or invalidate the interaction. Original
+HuRI clone sequences remain uninspected, so the mapped isoform is not independently
+sequence-verified as the experimental construct. TECR has separate positive enzyme
+and interaction evidence.
 
 ## CAP literature, assessed separately
 
@@ -193,7 +216,7 @@ These results do not establish omitted isoform rows or a fetcher defect. No GOA
 row or isoform field is manufactured. The six unqualified UniProt GO lines do
 not prove that all six describe CAP: ER localization is explicitly assigned to
 isoform 1 in the native location block, and enzyme binding is not uniquely
-attributable to CAP. The earlier notes' blanket CAP attribution is superseded.
+attributable to CAP. The earlier notes' blanket CAP attribution was incorrect and is corrected in place.
 
 ## Final follow-up decisions
 
@@ -201,9 +224,8 @@ Three general MF rows are MODIFY → GO:0102158; two TECR binding rows are MODIF
 → GO:0019899. Sphingolipid biosynthesis is retained as a supported non-core use
 of the elongation activity, with direct yeast rescue explicitly documented.
 The informative long-chain acyl-CoA and fatty-acid biosynthetic processes remain
-accepted; a distilled core-function summary is not an exhaustive list of every
-accepted process ancestor. The family assessment records the revised HACD1
-specificity decision without alleging a PAINT placement error. HACD2's separate
-wrong-direction rationale also needs a gene-specific correction; it is not
-evidence that the shared family reaction is unsound and is not silently changed
-in this HACD1 PR. Final counts: 11 ACCEPT, 5 KEEP_AS_NON_CORE, 5 MODIFY; no NEW.
+accepted and explicitly listed under the same existing dehydratase core-function
+object. Both describe direct catalytic biosynthetic participation. The family assessment records the revised HACD1
+specificity decision without alleging a PAINT placement error. HACD2's separate [PR #6316](https://github.com/ai4curation/ai-gene-review/pull/6316)
+tracks its gene-specific correction. Its earlier rationale is not evidence that the
+shared family reaction is unsound; HACD2 is not edited in this HACD1 PR. Final counts: 11 ACCEPT, 5 KEEP_AS_NON_CORE, 5 MODIFY; no NEW.
