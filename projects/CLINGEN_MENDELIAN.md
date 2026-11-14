@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**748 of 2,876 genes are complete; 2,128 remain.**
-This checkpoint records the previously accepted H3-3A actual merge and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-748-2026-11-10-044541-utc) records the evidence and retained uncertainties.
+**750 of 2,876 genes are complete; 2,126 remain.**
+This checkpoint records the previously accepted HADH actual merge and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-750-2026-11-12-012839-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3920,9 +3920,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **GYS2** — HGNC:4707; [glycogen storage disorder due to hepatic glycogen synthase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fd645894-0fa6-4d63-8b8d-16731978ca6b-2024-03-22T160000.000Z) (MONDO:0009414; AR; Definitive).
 - [x] **H1-4** — HGNC:4718; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cd0a9f58-4fb1-4904-9c38-c3e4b70c536e-2023-05-03T060000.000Z) (MONDO:0000508; AD; Definitive).
 - [x] **H3-3A** — HGNC:4764; [Bryant-Li-Bhoj neurodevelopmental syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92b54362-8c84-407b-bf92-5f67bee55ed3-2024-03-19T160000.000Z) (MONDO:0030606; AD; Definitive).
-- [ ] **HAAO** — HGNC:4796; [vertebral, cardiac, renal, and limb defects syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89484d6b-0af1-4b77-9dcb-95c18331e3b7-2022-06-24T160000.000Z) (MONDO:0060554; AR; Definitive).
+- [x] **HAAO** — HGNC:4796; [vertebral, cardiac, renal, and limb defects syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_89484d6b-0af1-4b77-9dcb-95c18331e3b7-2022-06-24T160000.000Z) (MONDO:0060554; AR; Definitive).
 - [ ] **HACD1** — HGNC:9639; [congenital myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_10c52aaf-cd58-4448-bac7-12b653bfa962-2021-06-28T160000.000Z) (MONDO:0019952; AR; Definitive).
-- [ ] **HADH** — HGNC:4799; [obsolete hyperinsulinism due to short chain 3-hydroxylacyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c2f238b9-4eb5-426c-a27a-ecb7b468d9e4-2018-06-26T160000.000Z) (MONDO:0009278; AR; Definitive).
+- [x] **HADH** — HGNC:4799; [obsolete hyperinsulinism due to short chain 3-hydroxylacyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c2f238b9-4eb5-426c-a27a-ecb7b468d9e4-2018-06-26T160000.000Z) (MONDO:0009278; AR; Definitive).
 - [ ] **HADHA** — HGNC:4801; [long chain 3-hydroxyacyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c8a5e15b-21f7-49cc-987c-5f3585742bbe-2018-02-12T050000.000Z) (MONDO:0012173; AR; Definitive).
 - [ ] **HADHB** — HGNC:4803; [mitochondrial trifunctional protein deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_65cb0124-8476-422c-924f-15fac7c95592-2018-05-08T160000.000Z) (MONDO:0012172; AR; Definitive).
 - [ ] **HAMP** — HGNC:15598; [hemochromatosis type 2B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b814eee-9d88-4a9b-88bf-3e9b4e6613b1-2025-10-10T160000.000Z) (MONDO:0013220; AR; Definitive).
