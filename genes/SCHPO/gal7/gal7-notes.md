@@ -12,3 +12,8 @@
 
 ## GO-CAM
 - 6796b94c00002484: gal7 enables GO:0008108 (IMP PMID:19942659 + IBA), cytosol, part_of GO:0033499. Consistent.
+
+## 2026-11-12 audit (to COMPLETE)
+- No deep-research provider file was available; none was generated. Literature check: cached abstracts PMID:19942659, PMID:21075050, PMID:16823372; web search found no further gal7-specific primary paper.
+- PAINT: PTHR11943 has an IRD, NOT GO:0033499 at PTN008530881 (Schizosaccharomyces, 20260828), blocking the Leloir IBD from PTN000235304; not yet reflected in the cached GOA file (`just paint-losses SCHPO gal7`). Read as contradicted: wild-type silencing of the subtelomeric gal cluster is a regulatory state, and gal7 functions when expressed [PMID:19942659 "is converted into UDP-galactose via galactose 1-phosphate by Gal7p"]; [PMID:21075050 "these transformants grew on galactose medium"]. GO:0033499 rows kept ACCEPT; question raised in suggested_questions. The family-level assessment is handled in the PTHR11943 family review.
+- Corrected the EXP GO:0033499 summary: the gal7delta::ura4+ result in PMID:21075050 is a silencing reporter (5-FOA growth), not a galactose-growth requirement test.
