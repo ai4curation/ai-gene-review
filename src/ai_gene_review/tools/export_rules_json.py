@@ -133,6 +133,8 @@ def export_rules_json(cache_dir: str = "rules/arba"):
                 'confidence': data.get('confidence', None),
                 'num_condition_sets': source_sets if isinstance(source_sets, int)
                 else len(rule_obj.get('condition_sets') or []),
+                # The InterPro and FunFam facets come from the recorded sets only.
+                'num_recorded_condition_sets': len(rule_obj.get('condition_sets') or []),
                 'num_entries': total_entries,
                 'go_terms': go_terms,
                 'go_term_ids': [f"{t['id']} ({t['label']})" if t.get('label') else t['id'] for t in go_terms],

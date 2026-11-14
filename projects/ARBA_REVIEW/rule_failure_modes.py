@@ -82,7 +82,8 @@ def findings(review: dict[str, Any]) -> list[str]:
         found.append("HETEROGENEOUS")
     if meaning.get("assessment") == "TRUE_BUT_UNINFORMATIVE":
         found.append("UMBRELLA_TERM")
-    if isinstance(total, int) and isinstance(covered, int) and total > 0 and covered >= total:
+    # GO rules only: keywords from different rules stack, so a covered keyword set still emits.
+    if rule.get("go_annotations") and isinstance(total, int) and isinstance(covered, int) and total > 0 and covered >= total:
         found.append("EMITS_NOTHING")
     elif (review.get("parsimony") or {}).get("assessment") in {"REDUNDANT", "OVERLY_COMPLEX"}:
         found.append("SETS_DO_NO_WORK")

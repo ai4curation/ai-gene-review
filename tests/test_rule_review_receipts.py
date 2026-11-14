@@ -362,3 +362,55 @@ def test_deprecate_of_a_rule_that_does_no_work(tmp_path: Path) -> None:
     assert checks(review(action="DEPRECATE", confidence=0.8, **meaning), tmp_path) == set()
     meaning["biological_meaning"]["sets_covered_by_more_specific_rule"] = 0
     assert "deprecate_without_counterexample" in checks(review(action="DEPRECATE", confidence=0.8, **meaning), tmp_path)
+
+
+def test_correct_assessment_cannot_name_wrong_proteins(tmp_path: Path) -> None:
+    data = review(annotation_assessments=[{"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "CORRECT",
+                                           "incorrect_examples": ["P12345"]}])
+    assert "correct_assessment_with_incorrect_examples" in checks(data, tmp_path)
+
+
+@pytest.mark.parametrize(
+    "field,text,fires",
+    [
+        ("review_summary", "rule_redundancy.tsv finds 320 of 355 sets already matched.", True),
+        ("review_summary", "rule_redundancy.tsv finds 313 of 343 sets already matched.", False),
+        ("corrections", "projects/ARBA_REVIEW/rule_redundancy.tsv: ARBA00026480 condition_sets 355, covered_sets 320", True),
+        ("review_summary", "In the sample, 11 of 40 sets are matched; totals are in rule_redundancy.tsv.", False),
+    ],
+)
+def test_prose_quoting_the_redundancy_table_must_match_it(field: str, text: str, fires: bool, tmp_path: Path) -> None:
+    from ai_gene_review.validation.rule_review_receipts import redundancy_row
+
+    row = redundancy_row("ARBA00026480")
+    assert row is not None and (row["condition_sets"], row["covered_sets"]) == ("343", "313"), "fixture row changed"
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    extra: dict[str, Any] = (
+        {"corrections": [{"withdrawn_claim": "x", "correction": "y", "evidence": [text]}]}
+        if field == "corrections" else {field: text}
+    )
+    data = review(id="ARBA00026480", rule=rule, **extra)
+    assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is fires
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "evidence,expected",
+    [
+        pytest.param("Q704Y3 GO:0002024 IMP PMID:12161756 (assigned by MGI)", False, id="held"),
+        pytest.param("Q704Y3 GO:0002024 IDA PMID:12161756 (assigned by MGI)", True, id="wrong-code"),
+        pytest.param("Q704Y3 GO:0002024 IMP PMID:1 (assigned by MGI)", True, id="wrong-reference"),
+        pytest.param("Q704Y3: no curated annotation under the term", False, id="not-a-receipt"),
+    ],
+)
+def test_unit_evidence_is_looked_up(evidence: str, expected: bool) -> None:
+    from ai_gene_review.validation.rule_review_receipts import check_review_online
+
+    unit = {**UNIT, "most_informative_term_id": "GO:0002024", "term_relation": "NONE_KNOWN", "evidence": [evidence]}
+    data = review(rule={"rule_id": "X", "go_annotations": [{"go_id": "GO:1990845"}]}, biological_units=[unit])
+    report = ValidationReport(is_valid=True)
+    check_review_online(data, report)
+    assert any(issue.check_type == "unit_evidence_not_found" for issue in report.issues) is expected

@@ -156,6 +156,11 @@ window.searchSchema = {
       "type": "string"
     },
     {
+      "field": "num_recorded_condition_sets",
+      "label": "# Sets recorded in the review (facets cover these)",
+      "type": "string"
+    },
+    {
       "field": "num_entries",
       "label": "# Entries",
       "type": "string"

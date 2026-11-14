@@ -82,6 +82,8 @@ annotation wrong.
 | "This set is right" | accessions in `correct_examples`, each with the GO id, evidence code and reference in `notes` |
 | "N proteins match" | the UniProtKB query, the count and the release |
 | "The term is too general for this family" | a `biological_units` entry: the family's curated annotation to a descendant of the consequent |
+| "These proteins match the conditions and should not carry the term, though the rule does not annotate them" | accessions in `would_match_examples` (typically reviewed entries). They show what the rule does to unreviewed relatives and are weaker than `incorrect_examples`, which lists proteins that carry the rule's annotation |
+| "N of M sets are covered" | the row of `projects/ARBA_REVIEW/rule_redundancy.tsv` (GO rules) or `keyword_redundancy.tsv` (keyword rules); prose that names the file must quote its figures |
 | "These sets do no work" | the set numbers with a match count of 0, or `sets_covered_by_more_specific_rule` from `rule_redundancy.tsv` |
 | "The literature says" | a PMID or DOI, and a `supporting_text` that is verbatim in the cached paper |
 
@@ -107,9 +109,14 @@ the paper or database record the lead points to.
   annotated protein (accessions in `incorrect_examples`), an obsolete consequent,
   or a rule that does no work because every condition set is also matched by a
   rule asserting a more specific term (`sets_covered_by_more_specific_rule` equal
-  to the number of sets, as `rule_redundancy.tsv` gives it). A true but general
-  term whose sets are not all covered is SPLIT or MODIFY; low recall alone is not
-  a defect.
+  to the number of sets, as `rule_redundancy.tsv` gives it). The validator checks
+  only that count. The judgement has a second half it cannot check: nothing in
+  the rule is worth re-homing. A rule that emits nothing but has uncovered sets
+  selecting families worth keeping under their own terms is SPLIT (ARBA00026480,
+  ARBA00027624, ARBA00026572). This ground is for GO rules only: UniProt keeps
+  the most specific ARBA GO term on a protein, but keywords from different rules
+  stack, so a covered keyword set still emits. A true but general term whose
+  sets are not all covered is SPLIT or MODIFY; low recall alone is not a defect.
 - **WITHDRAWN records that UniProt no longer serves the rule** (`rule.withdrawn`).
   It is a fact about the rule, not a verdict, and needs no confidence.
 - **Read condition sets as conjunctions.** A set is the proteins that match all its
@@ -152,17 +159,22 @@ the paper or database record the lead points to.
 | `uninformative_without_units`, `heterogeneous_without_units` | error | the meaning assessment is not backed by units showing it |
 | `unit_term_label_mismatch`, `unit_term_without_label`, `unit_term_without_evidence` | error | a unit's term label differs from GO's, is missing, or the term has no curated annotation cited |
 | `redundancy_receipt_mismatch` | error | `consequent_descendant_count` or `sets_covered_by_more_specific_rule` differs from `rule_redundancy.tsv` |
+| `redundancy_prose_mismatch` | error | prose or a correction's evidence names `rule_redundancy.tsv` or `keyword_redundancy.tsv` with a figure (`N of M sets`, `covered_sets N`, `condition_sets N`, `go_descendants N`) the committed table does not contain |
+| `correct_assessment_with_incorrect_examples` | error | an annotation assessment is `CORRECT` and lists `incorrect_examples` |
+| `sample_not_described` | warning | `sets_examined_for_meaning` is below the rule's set count and the meaning notes do not say how the sets were chosen |
 | `withdrawn_action_mismatch` | error | WITHDRAWN without `rule.withdrawn`, or DEPRECATE on a withdrawn rule |
 | `deprecate_without_counterexample` | error | DEPRECATE with no `incorrect_examples`, no `consequent_obsolete: true`, and not every set covered by a more specific rule |
 | `modify_without_modification` | error | MODIFY, SPLIT or MERGE with no `suggested_modifications` |
 | `low_confidence_verdict` | error | a verdict other than UNDECIDED at confidence below 0.5 |
 | `example_not_an_accession` | error | an example is not a UniProt accession |
 
-`just rules-validate --online <file>` adds two checks that need the network:
+`just rules-validate --online <file>` adds checks that need the network:
 
 | Check | Severity | Fires when |
 |---|---|---|
 | `false_positive_has_experimental_annotation` | error | an `incorrect_examples` accession carries the consequent, or a descendant, on experimental evidence in QuickGO |
+| `unit_evidence_not_found` | error | a `biological_units[].evidence` line of the form `ACCESSION GO:id CODE reference` names an annotation QuickGO does not hold (that accession, exactly that term, that evidence code and, when given, that reference) |
+| `unit_term_relation_mismatch` | error | a unit's `term_relation` to the rule's term is not borne out by the ontology |
 | `stale_rule_snapshot`, `rule_withdrawn_upstream` | warning | UniProt now serves a different number of condition sets, or no longer serves the rule |
 | `withdrawn_but_served` | error | `rule.withdrawn` is true but UniProt serves the rule |
 | `consequent_not_obsolete` | error | `consequent_obsolete` is true but QuickGO serves the term as current |

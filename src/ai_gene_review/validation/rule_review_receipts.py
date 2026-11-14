@@ -254,18 +254,71 @@ def _redundancy_table(path: Optional[Path] = None) -> Dict[str, Dict[str, str]]:
         return {}
     lines = table.read_text().splitlines()
     header = lines[0].split("\t")
-    return {cells[0]: dict(zip(header, cells)) for cells in (line.split("\t") for line in lines[1:]) if cells and cells[0]}
+    rows: Dict[str, Dict[str, str]] = {}
+    for number, line in enumerate(lines[1:], start=2):
+        cells = line.split("\t")
+        if not line.strip():
+            continue
+        if len(cells) < len(header):
+            raise ValueError(f"{table}:{number}: {len(cells)} columns, expected {len(header)}")
+        rows[cells[0]] = dict(zip(header, cells))
+    return rows
 
 
-def redundancy_row(rule_id: str) -> Optional[Dict[str, str]]:
+def redundancy_row(rule_id: str, table: Optional[Path] = None) -> Optional[Dict[str, str]]:
     """The redundancy measurements for one rule, if the table has it.
 
-    >>> redundancy_row("ARBA00026480")["term"]
-    'GO:0010605'
-    >>> redundancy_row("ARBA99999999") is None
-    True
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as folder:
+    ...     path = Path(folder) / "t.tsv"
+    ...     _ = path.write_text("rule\\tterm\\tgo_descendants\\nARBA1\\tGO:1\\t7\\n")
+    ...     redundancy_row("ARBA1", path)["go_descendants"], redundancy_row("ARBA2", path)
+    ('7', None)
     """
-    return _redundancy_table().get(rule_id)
+    return _redundancy_table(table).get(rule_id)
+
+
+def keyword_redundancy_row(rule_id: str, table: Optional[Path] = None) -> Optional[Dict[str, str]]:
+    """The redundancy measurements for one keyword rule (``keyword_redundancy.tsv``), if listed."""
+    path = table or PROJECT_ROOT / "projects" / "ARBA_REVIEW" / "keyword_redundancy.tsv"
+    return _redundancy_table(path).get(rule_id)
+
+
+_CITES_REDUNDANCY_TABLE = re.compile(r"(?:rule|keyword)_redundancy\.tsv")
+_TABLE_FIELD = re.compile(r"\b(go_descendants|condition_sets|covered_sets)\s+(\d[\d,]*)")
+_N_OF_M = re.compile(r"(?<![\d.:])(\d[\d,]*)\s+of\s+(?:the\s+)?(?:rule's\s+)?(\d[\d,]*)\s+(?:condition\s+)?sets\b")
+
+
+def redundancy_figures_cited(text: str) -> List[Tuple[str, int]]:
+    """Figures a text attributes to ``rule_redundancy.tsv``, as ``(column, value)``.
+
+    Only sentences that name the file are read, and only the two forms reviews
+    use: a column name followed by a number, and ``N of M sets``.
+
+    >>> redundancy_figures_cited("rule_redundancy.tsv: 320 of 355 condition sets are matched. Sets 3 of 9 differ.")
+    [('covered_sets', 320), ('condition_sets', 355)]
+    >>> redundancy_figures_cited("projects/ARBA_REVIEW/rule_redundancy.tsv: ARBA1 go_descendants 524, covered_sets 313")
+    [('go_descendants', 524), ('covered_sets', 313)]
+    >>> redundancy_figures_cited("27 of the 40 sampled sets are matched (rule_redundancy.tsv: 651 of 929 sets).")
+    [('covered_sets', 651), ('condition_sets', 929)]
+    >>> redundancy_figures_cited("Figures are from rule_redundancy.tsv; in the sample, 11 of 40 sets are matched.")
+    []
+    """
+    figures: List[Tuple[str, int]] = []
+    flat = " ".join(text.split())
+    for sentence in re.split(r"(?<=[.;])\s+", flat):
+        found = _CITES_REDUNDANCY_TABLE.search(sentence)
+        if not found:
+            continue
+        for match in _TABLE_FIELD.finditer(sentence):
+            figures.append((match.group(1), int(match.group(2).replace(",", ""))))
+        # "N of M sets" counts only when it follows the file name or shares its parenthesis.
+        for match in _N_OF_M.finditer(sentence):
+            between = sentence[min(match.end(), found.start()):max(match.start(), found.end())]
+            if match.start() > found.start() or ("(" in between and ")" not in between and len(between) < 40):
+                figures.append(("covered_sets", int(match.group(1).replace(",", ""))))
+                figures.append(("condition_sets", int(match.group(2).replace(",", ""))))
+    return figures
 
 
 # ---------------------------------------------------------------------------
@@ -519,7 +572,9 @@ def check_review(
     # A rule whose every set is also matched by a rule for a more specific term emits
     # nothing (UniProt keeps the most specific ARBA term), so it can go on parsimony alone.
     covered = (data.get("biological_meaning") or {}).get("sets_covered_by_more_specific_rule")
-    does_no_work = isinstance(covered, int) and isinstance(total, int) and total > 0 and covered >= total
+    # Only for GO rules: keywords from different rules stack, so a covered keyword set still emits.
+    does_no_work = (bool(rule.get("go_annotations")) and isinstance(covered, int) and isinstance(total, int)
+                    and total > 0 and covered >= total)
     if (action == "DEPRECATE" and not withdrawn and not obsolete and not does_no_work
             and not any(has_counterexample(a) for a in negative)):
         add(error, "deprecate_without_counterexample",
@@ -529,6 +584,11 @@ def check_review(
             "annotation_assessments",
             "Show the false positives with accessions, or that the rule emits nothing. A true but general "
             "term whose sets are not all covered is SPLIT or MODIFY.")
+    for index, assessment in enumerate(assessments):
+        if isinstance(assessment, dict) and assessment.get("assessment") == "CORRECT" and assessment.get("incorrect_examples"):
+            add(error, "correct_assessment_with_incorrect_examples",
+                "assessment is CORRECT but incorrect_examples names wrongly annotated proteins",
+                f"annotation_assessments[{index}].assessment", "Use PARTIALLY_CORRECT.")
     for index, assessment in enumerate(negative):
         if not has_counterexample(assessment):
             add(warning, "negative_assessment_without_example",
@@ -667,6 +727,43 @@ def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, st
                 add(error, "redundancy_receipt_mismatch",
                     f"biological_meaning.{field} is {stated_value}; rule_redundancy.tsv gives {row[column]}",
                     f"biological_meaning.{field}")
+        # Prose and correction evidence that quote the table must quote what it says.
+        quoted = list(iter_prose(data)) + [
+            (f"corrections[{c}].evidence[{e}]", str(item))
+            for c, correction in enumerate(data.get("corrections") or []) if isinstance(correction, dict)
+            for e, item in enumerate(correction.get("evidence") or [])
+        ]
+        for path, text in quoted:
+            for column, value in redundancy_figures_cited(text):
+                if value != int(row[column]):
+                    add(error, "redundancy_prose_mismatch",
+                        f"cites rule_redundancy.tsv for {column} {value}; the table gives {row[column]}", path,
+                        "Quote the committed table, or say where the other figure comes from.")
+
+    keywords = [str(a.get("value")) for a in data.get("annotation_assessments") or []
+                if isinstance(a, dict) and a.get("annotation_kind") == "KEYWORD"]
+    keyword_row = keyword_redundancy_row(str(rule.get("rule_id") or data.get("id") or ""))
+    if keyword_row and not go_ids and keyword_row["keyword"] in keywords:
+        stated_value = meaning.get("sets_covered_by_more_specific_rule")
+        if isinstance(stated_value, int) and stated_value != int(keyword_row["covered_sets"]):
+            add(error, "redundancy_receipt_mismatch",
+                f"biological_meaning.sets_covered_by_more_specific_rule is {stated_value}; "
+                f"keyword_redundancy.tsv gives {keyword_row['covered_sets']}",
+                "biological_meaning.sets_covered_by_more_specific_rule")
+        for path, text in iter_prose(data):
+            if "keyword_redundancy.tsv" not in text:
+                continue
+            for column, value in redundancy_figures_cited(text):
+                if column in keyword_row and value != int(keyword_row[column]):
+                    add(error, "redundancy_prose_mismatch",
+                        f"cites keyword_redundancy.tsv for {column} {value}; the table gives {keyword_row[column]}", path)
+
+    examined, total_sets = meaning.get("sets_examined_for_meaning"), rule.get("source_condition_set_count")
+    if (isinstance(examined, int) and isinstance(total_sets, int) and examined < total_sets
+            and not re.search(r"sampl|chos|pick|random|recorded|select|drawn|seed|assigned (?:from|by)|by signature", str(meaning.get("notes") or ""), re.I)):
+        add(warning, "sample_not_described",
+            f"{examined} of {total_sets} condition sets were examined for meaning and the notes do not say how "
+            "they were chosen", "biological_meaning.notes")
 
 
 # ---------------------------------------------------------------------------
@@ -707,6 +804,47 @@ def experimental_annotations(accession: str, go_id: str) -> List[str]:
     )
     results = _get_json(f"https://www.ebi.ac.uk/QuickGO/services/annotation/search?{query}").get("results", [])
     return [f"{row['goId']} {row['goEvidence']} {row['reference']} ({row['assignedBy']})" for row in results]
+
+
+_GO_EVIDENCE_CODES = (
+    "EXP|IDA|IMP|IGI|IPI|IEP|HDA|HMP|HGI|HEP|HTP|TAS|NAS|IC|ISS|ISO|ISA|ISM|IBA|IGC|RCA|IKR|IEA|ND"
+)
+_UNIT_EVIDENCE = re.compile(
+    r"^(?:UniProtKB:)?([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2})\b"
+    r"(?P<gap>.*?)\b(GO:\d{7})\b(?P<rest>.*)$"
+)
+
+
+def parse_unit_evidence(text: str) -> Optional[Tuple[str, str, str, Optional[str]]]:
+    """Read ``accession, GO id, evidence code, reference`` from a unit evidence line.
+
+    Returns None for a line that is not a positive annotation receipt (a
+    negative statement, or one without an evidence code after the term).
+
+    >>> parse_unit_evidence("Q9UPY3 GO:0031047 IDA PMID:15066283 (assigned by UniProt)")
+    ('Q9UPY3', 'GO:0031047', 'IDA', 'PMID:15066283')
+    >>> parse_unit_evidence("P00742 (human F10, set 2) GO:0004252 serine-type endopeptidase activity IDA PMID:17469850")
+    ('P00742', 'GO:0004252', 'IDA', 'PMID:17469850')
+    >>> parse_unit_evidence("Q9VB70: no non-IEA molecular function annotation in QuickGO") is None
+    True
+    >>> parse_unit_evidence("P0CH08 carries GO:0000055 only as IEA GO_REF:0000117") is None
+    True
+    """
+    match = _UNIT_EVIDENCE.match(" ".join(text.split()))
+    if not match or re.search(r"\b(?:no|not|only|lacks?|without)\b", match.group("gap") + match.group("rest"), re.I):
+        return None
+    code = re.search(rf"\b({_GO_EVIDENCE_CODES})\b", match.group("rest"))
+    if not code:
+        return None
+    reference = re.search(r"\b(PMID:\d+|GO_REF:\d+|Reactome:R-[A-Z]{3}-\d+|DOI:\S+)", match.group("rest")[code.end():])
+    return match.group(1), match.group(3), code.group(1), reference.group(1) if reference else None
+
+
+def annotation_rows(accession: str, go_id: str) -> List[Tuple[str, str]]:
+    """``(evidence code, reference)`` of every GOA row putting ``accession`` on exactly ``go_id`` (network)."""
+    query = urllib.parse.urlencode({"geneProductId": accession, "goId": go_id, "goUsage": "exact", "limit": 100})
+    results = _get_json(f"https://www.ebi.ac.uk/QuickGO/services/annotation/search?{query}").get("results", [])
+    return [(str(row.get("goEvidence")), str(row.get("reference"))) for row in results]
 
 
 def go_ancestors(go_id: str) -> Set[str]:
@@ -769,6 +907,26 @@ def check_review_online(data: Dict[str, Any], report: ValidationReport) -> None:
                 add(ValidationSeverity.ERROR, "consequent_not_obsolete",
                     f"{value} is marked consequent_obsolete but QuickGO serves it as a current term",
                     f"annotation_assessments[{index}].consequent_obsolete")
+
+    # A unit's evidence is a claim that a curated annotation exists; look it up.
+    for index, unit in enumerate(data.get("biological_units") or []):
+        for position, item in enumerate(unit.get("evidence") or []):
+            parsed = parse_unit_evidence(str(item))
+            if not parsed:
+                continue
+            accession, term_id, code, reference = parsed
+            try:
+                unit_rows = annotation_rows(accession, term_id)
+            except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+                add(ValidationSeverity.WARNING, "online_check_failed", f"QuickGO lookup failed: {exc}",
+                    f"biological_units[{index}].evidence[{position}]")
+                continue
+            with_code = [row_reference for row_code, row_reference in unit_rows if row_code == code]
+            if not with_code or (reference and not reference.startswith("DOI:") and reference not in with_code):
+                held = "; ".join(sorted({f"{c} {r}" for c, r in unit_rows})[:4]) or "no annotation to that term"
+                add(ValidationSeverity.ERROR, "unit_evidence_not_found",
+                    f"{accession} {term_id} {code} {reference or ''} is cited as evidence, but QuickGO has: {held}",
+                    f"biological_units[{index}].evidence[{position}]")
 
     # A unit's stated relation to the consequent is a claim about the ontology; check it.
     if len(go_ids) == 1:

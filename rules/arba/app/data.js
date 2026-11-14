@@ -8,6 +8,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.55,
     "num_condition_sets": 304,
+    "num_recorded_condition_sets": 7,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -48,6 +49,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.6,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -76,6 +78,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.85,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -107,6 +110,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 1525,
+    "num_recorded_condition_sets": 14,
     "num_entries": 0,
     "go_terms": [
       {
@@ -168,6 +172,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 38,
+    "num_recorded_condition_sets": 38,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -267,6 +272,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.65,
     "num_condition_sets": 26,
+    "num_recorded_condition_sets": 26,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -330,6 +336,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -361,6 +368,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.6,
     "num_condition_sets": 9,
+    "num_recorded_condition_sets": 9,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -400,6 +408,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 90,
+    "num_recorded_condition_sets": 90,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -566,6 +575,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 65,
+    "num_recorded_condition_sets": 65,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -677,6 +687,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 624,
+    "num_recorded_condition_sets": 624,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -1504,6 +1515,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.6,
     "num_condition_sets": 1010,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -1546,6 +1558,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.55,
     "num_condition_sets": 4603,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -1593,6 +1606,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 538,
+    "num_recorded_condition_sets": 538,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -2419,6 +2433,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.55,
     "num_condition_sets": 320,
+    "num_recorded_condition_sets": 11,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -2468,6 +2483,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.55,
     "num_condition_sets": 1392,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -2514,6 +2530,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 4171,
+    "num_recorded_condition_sets": 46,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -2604,6 +2621,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 335,
+    "num_recorded_condition_sets": 335,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -3099,6 +3117,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 244,
+    "num_recorded_condition_sets": 244,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -3442,6 +3461,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 214,
+    "num_recorded_condition_sets": 214,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -3759,6 +3779,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.6,
     "num_condition_sets": 2158,
+    "num_recorded_condition_sets": 35,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -3833,6 +3854,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 100,
+    "num_recorded_condition_sets": 100,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -4005,6 +4027,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 908,
+    "num_recorded_condition_sets": 31,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -4077,6 +4100,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.6,
     "num_condition_sets": 3,
+    "num_recorded_condition_sets": 3,
     "num_entries": 0,
     "go_terms": [
       {
@@ -4115,11 +4139,12 @@ window.searchData = [
     "id": "ARBA00026302",
     "rule_id": "ARBA00026302",
     "description": "Assigns GO:1901137 carbohydrate derivative biosynthetic process through 188 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams; 94 sets carry a taxon condition.",
-    "review_summary": "Accuracy: all 188 live condition sets were queried against Swiss-Prot on 2026-11-09, counting a match as supported when it carries GO:1901137 (carbohydrate derivative biosynthetic process) or an is_a/part_of descendant with evidence other than ARBA. In 164 sets every reviewed match is supported and in 24 some are not; no set is unsupported or without reviewed matches. The partly supported sets were not adjudicated match by match. QuickGO lists 75875 annotations attributed to the rule. Meaning and parsimony: the term is a chemical grouping, not a process a biologist would recognise. Under it the rule puts protein O-glycosylation enzymes, heparan sulfate and hyaluronan synthases, purine nucleotide enzymes, guanylate cyclases, lipid A acyltransferases and ATP synthase subunits, each of which carries a specific curated descendant (protein O-linked glycosylation via N-acetylgalactosamine, heparan sulfate proteoglycan biosynthetic process, cGMP biosynthetic process, lipid A biosynthetic process and so on). For some sets the term is true only by a side reaction or a genetic interaction: lysosomal glucosylceramidase (set 148) is a degradative enzyme whose curated role is glucosylceramide catabolism, and the yeast 14-3-3 proteins (set 111) are signalling adaptors linked to chitin synthesis by one genetic interaction. rule_redundancy.tsv finds 88 of 191 sets already matched by a rule with a more specific term.",
+    "review_summary": "Accuracy: all 188 live condition sets were queried against Swiss-Prot on 2026-11-09, counting a match as supported when it carries GO:1901137 (carbohydrate derivative biosynthetic process) or an is_a/part_of descendant with evidence other than ARBA. In 164 sets every reviewed match is supported and in 24 some are not; no set is unsupported or without reviewed matches. The partly supported sets were not adjudicated match by match. QuickGO lists 75875 annotations attributed to the rule. Meaning and parsimony: the term is a chemical grouping, not a process a biologist would recognise. Under it the rule puts protein O-glycosylation enzymes, heparan sulfate and hyaluronan synthases, purine nucleotide enzymes, guanylate cyclases, lipid A acyltransferases and ATP synthase subunits, each of which carries a specific curated descendant (protein O-linked glycosylation via N-acetylgalactosamine, heparan sulfate proteoglycan biosynthetic process, cGMP biosynthetic process, lipid A biosynthetic process and so on). For some sets the term is true only by a side reaction or a genetic interaction: lysosomal glucosylceramidase (set 148) is a degradative enzyme whose curated role is glucosylceramide catabolism, and the yeast 14-3-3 proteins (set 111) are signalling adaptors linked to chitin synthesis by one genetic interaction. rule_redundancy.tsv finds 80 of 188 sets already matched by a rule with a more specific term.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 188,
+    "num_recorded_condition_sets": 188,
     "num_entries": 0,
     "go_terms": [
       {
@@ -4413,6 +4438,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.85,
     "num_condition_sets": 6,
+    "num_recorded_condition_sets": 6,
     "num_entries": 0,
     "go_terms": [
       {
@@ -4453,11 +4479,12 @@ window.searchData = [
     "id": "ARBA00026480",
     "rule_id": "ARBA00026480",
     "description": "Assigns GO:0010605 negative regulation of macromolecule metabolic process through 343 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams; 107 sets carry a taxon condition. GO:0010605 is a high-level grouping term whose descendants include negative regulation of gene expression, mRNA catabolism and RNA-mediated gene silencing.",
-    "review_summary": "Accuracy: all 343 live condition sets were queried against Swiss-Prot on 2026-11-09, counting a match as supported when it carries GO:0010605 (negative regulation of macromolecule metabolic process) or an is_a/part_of descendant with evidence other than ARBA. Every set has reviewed matches; in 249 sets every reviewed match is supported, in 94 some are not, and no set is wholly unsupported (2649 reviewed matches: 2116 supported, 403 carrying the term only from ARBA, 130 not carrying it). The partly supported sets were not adjudicated one by one. Meaning and parsimony: the term is true of most matches and says almost nothing. GO:0010605 has 524 descendants and is in the GO subset gocheck_do_not_annotate, that is, a grouping term not meant for direct annotation. The sets resolve into unrelated families that each carry a far more specific curated term: Dicer (miRNA processing), HP1 chromobox proteins (heterochromatin formation), Hes/Hey and LexA repressors (negative regulation of transcription), DCP2 (mRNA decapping), ZFP36L1/2 (3'-UTR-mediated mRNA destabilization), APOBEC3 (restriction of retroviral replication) and others. For a few units the term holds only through a phenotype annotation, for example the FGF receptors of set 60. rule_redundancy.tsv finds 320 of the rule's 355 sets already matched by a rule asserting a more specific term, and QuickGO holds no annotation attributed to this rule (2026-11-12), so as served the rule produces nothing.",
+    "review_summary": "Accuracy: all 343 live condition sets were queried against Swiss-Prot on 2026-11-09, counting a match as supported when it carries GO:0010605 (negative regulation of macromolecule metabolic process) or an is_a/part_of descendant with evidence other than ARBA. Every set has reviewed matches; in 249 sets every reviewed match is supported, in 94 some are not, and no set is wholly unsupported (2649 reviewed matches: 2116 supported, 403 carrying the term only from ARBA, 130 not carrying it). The partly supported sets were not adjudicated one by one. Meaning and parsimony: the term is true of most matches and says almost nothing. GO:0010605 has 524 descendants and is in the GO subset gocheck_do_not_annotate, that is, a grouping term not meant for direct annotation. The sets resolve into unrelated families that each carry a far more specific curated term: Dicer (miRNA processing), HP1 chromobox proteins (heterochromatin formation), Hes/Hey and LexA repressors (negative regulation of transcription), DCP2 (mRNA decapping), ZFP36L1/2 (3'-UTR-mediated mRNA destabilization), APOBEC3 (restriction of retroviral replication) and others. For a few units the term holds only through a phenotype annotation, for example the FGF receptors of set 60. rule_redundancy.tsv finds 313 of the rule's 343 sets already matched by a rule asserting a more specific term, and QuickGO holds no annotation attributed to this rule (2026-11-12), so as served the rule produces nothing.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 343,
+    "num_recorded_condition_sets": 343,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5112,11 +5139,12 @@ window.searchData = [
     "id": "ARBA00026572",
     "rule_id": "ARBA00026572",
     "description": "Assigns GO:0006139 nucleobase-containing compound metabolic process through 773 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, some with a taxon condition.",
-    "review_summary": "Accuracy: 40 of the 773 live condition sets were examined in this pass; the first pass had examined none. In 36 of them the Swiss-Prot matches carry an experimental annotation to a descendant of GO:0006139 (nucleobase-containing compound metabolic process), and in 3 more (sets 221, 280 and 378) the only manual support is a NAS, TAS or IC annotation. One set has no support: set 278 selects yeast glyceraldehyde-3-phosphate dehydrogenases (P00359, P00358, P00360), whose curated process is GO:0006096 (glycolysis), which is not under the consequent in the current ontology. Meaning and parsimony: the consequent has 1,374 descendants and says only that a protein handles nucleic acids or nucleotides. The sampled sets resolve into RNA processing enzymes, aminoacyl-tRNA synthetases, DNA repair and replication factors, transcription factors, RNA decay enzymes and nucleotide metabolism enzymes, each with its own term, plus enzymes that reach the term only because acetyl-CoA counts as a nucleotide derivative. rule_redundancy.tsv counts 711 of 799 sets as already matched by a rule for a more specific term, and QuickGO holds no annotation attributed to this rule at all.",
+    "review_summary": "Accuracy: 40 of the 773 live condition sets were examined in this pass; the first pass had examined none. In 36 of them the Swiss-Prot matches carry an experimental annotation to a descendant of GO:0006139 (nucleobase-containing compound metabolic process), and in 3 more (sets 221, 280 and 378) the only manual support is a NAS, TAS or IC annotation. One set has no support: set 278 selects yeast glyceraldehyde-3-phosphate dehydrogenases (P00359, P00358, P00360), whose curated process is GO:0006096 (glycolysis), which is not under the consequent in the current ontology. Meaning and parsimony: the consequent has 1,374 descendants and says only that a protein handles nucleic acids or nucleotides. The sampled sets resolve into RNA processing enzymes, aminoacyl-tRNA synthetases, DNA repair and replication factors, transcription factors, RNA decay enzymes and nucleotide metabolism enzymes, each with its own term, plus enzymes that reach the term only because acetyl-CoA counts as a nucleotide derivative. rule_redundancy.tsv counts 706 of 773 sets as already matched by a rule for a more specific term, and QuickGO holds no annotation attributed to this rule at all.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 773,
+    "num_recorded_condition_sets": 40,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5228,6 +5256,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 131,
+    "num_recorded_condition_sets": 131,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5501,6 +5530,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 40,
+    "num_recorded_condition_sets": 40,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5570,11 +5600,12 @@ window.searchData = [
     "id": "ARBA00026708",
     "rule_id": "ARBA00026708",
     "description": "Assigns GO:0007031 (peroxisome organization) through 12 alternative condition sets that identify peroxins (PEX5, PEX7, PEX11, PEX12, PEX14/PEX33, the PEX28-PEX32 family), the dynamin-related fission GTPases DNM1/DRP3/DNM1L and VPS1, plant FIS1, and the fungal kinases KIN4 and FRK1.",
-    "review_summary": "Accuracy: all 12 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations. Every set has at least one Swiss-Prot match with an experimental annotation to GO:0007031 (peroxisome organization) or an is_a/part_of descendant. The dynamin, VPS1 and FIS1 sets match proteins that also act in mitochondrial fission; their peroxisome annotations are experimental. Set 8 rests on one genetic-interaction paper, and sets 7 and 12 have no taxon condition; set 7 also matches Toxoplasma gondii DrpA (S8EYU3), which has no curated annotation to the term. Meaning and parsimony: the sets do not select one thing. They resolve into the matrix protein import machinery (PEX5, PEX7, PEX14/PEX33, PEX12), the fission machinery (PEX11, FIS1, the dynamin-related GTPases, VPS1), an inheritance pair (KIN4, FRK1) and the PEX28-PEX32 family. Curated annotation gives the first three groups more specific terms under the consequent: GO:0016558 (protein import into peroxisome matrix), GO:0016559 (peroxisome fission) and GO:0045033 (peroxisome inheritance). Only the PEX28-PEX32 set has nothing better than the consequent. Rules for the import and fission terms already cover part of this rule (rule_redundancy.tsv counts 5 of 12 sets; the rule set downloaded on 2026-11-12 gives sets 2, 5 and 10 for import and 3, 9 and 12 for fission), and those sets emit nothing here. The rule is true but says less than its own evidence supports.",
+    "review_summary": "Accuracy: all 12 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations. Every set has at least one Swiss-Prot match with an experimental annotation to GO:0007031 (peroxisome organization) or an is_a/part_of descendant. The dynamin, VPS1 and FIS1 sets match proteins that also act in mitochondrial fission; their peroxisome annotations are experimental. Set 8 rests on one genetic-interaction paper, and sets 7 and 12 have no taxon condition; set 7 also matches Toxoplasma gondii DrpA (S8EYU3), which has no curated annotation to the term. Meaning and parsimony: the sets do not select one thing. They resolve into the matrix protein import machinery (PEX5, PEX7, PEX14/PEX33, PEX12), the fission machinery (PEX11, FIS1, the dynamin-related GTPases, VPS1), an inheritance pair (KIN4, FRK1) and the PEX28-PEX32 family. Curated annotation gives the first three groups more specific terms under the consequent: GO:0016558 (protein import into peroxisome matrix), GO:0016559 (peroxisome fission) and GO:0045033 (peroxisome inheritance). Only the PEX28-PEX32 set has nothing better than the consequent. Rules for the import and fission terms already cover part of this rule (rule_redundancy.tsv counts 6 of 12 sets; the rule set downloaded on 2026-11-12 gives sets 2, 5 and 10 for import and 3, 9 and 12 for fission), and those sets emit nothing here. The rule is true but says less than its own evidence supports.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 12,
+    "num_recorded_condition_sets": 12,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5628,6 +5659,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.6,
     "num_condition_sets": 5,
+    "num_recorded_condition_sets": 5,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5672,6 +5704,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 69,
+    "num_recorded_condition_sets": 69,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5822,11 +5855,12 @@ window.searchData = [
     "id": "ARBA00027164",
     "rule_id": "ARBA00027164",
     "description": "Assigns GO:0006401 (RNA catabolic process) through 52 alternative condition sets built from InterPro, PANTHER and CATH FunFam signatures of RNA decay factors, most of them with a taxon condition.",
-    "review_summary": "Accuracy: all 52 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations to GO:0006401 (RNA catabolic process) and its is_a/part_of descendants. In 51 sets at least one Swiss-Prot match has an experimental annotation; the exception is set 28 (pelota FunFams), whose two matches carry GO:0070481 (nuclear-transcribed mRNA catabolic process, non-stop decay) by IEP only. Helicases, nucleotidyltransferases and RNA-binding proteins in the rule take part in decay pathways, which is what a process term records. Meaning and parsimony: the 52 sets resolve into eleven units, and for nine of them curated annotation uses a more specific descendant of the consequent: decapping, poly(A) tail shortening, deadenylation-dependent decay, nonsense-mediated decay, polyadenylation-dependent ncRNA decay, polyuridylation-dependent mRNA decay, miRNA catabolism, nuclear RNA surveillance and mitochondrial RNA catabolism. Only the exosome and its helicase cofactors are curated at the level of the consequent itself. Rules asserting more specific terms already cover a large part of the rule: rule_redundancy.tsv counts 20 covered sets, and on the rule set downloaded 2026-11-12 it is 21 of 52, 18 of them by the mRNA catabolic process rule ARBA00027180. Those sets emit nothing here. A minority of sets select proteins that reach the term through one paper on an indirect role (HSP70, the 3',5'-bisphosphate nucleotidase MET22, the cap-binding protein CBC2), which a parent term absorbs without comment.",
+    "review_summary": "Accuracy: all 52 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations to GO:0006401 (RNA catabolic process) and its is_a/part_of descendants. In 51 sets at least one Swiss-Prot match has an experimental annotation; the exception is set 28 (pelota FunFams), whose two matches carry GO:0070481 (nuclear-transcribed mRNA catabolic process, non-stop decay) by IEP only. Helicases, nucleotidyltransferases and RNA-binding proteins in the rule take part in decay pathways, which is what a process term records. Meaning and parsimony: the 52 sets resolve into eleven units, and for nine of them curated annotation uses a more specific descendant of the consequent: decapping, poly(A) tail shortening, deadenylation-dependent decay, nonsense-mediated decay, polyadenylation-dependent ncRNA decay, polyuridylation-dependent mRNA decay, miRNA catabolism, nuclear RNA surveillance and mitochondrial RNA catabolism. Only the exosome and its helicase cofactors are curated at the level of the consequent itself. Rules asserting more specific terms already cover a large part of the rule: rule_redundancy.tsv counts 21 of 52 sets covered, 18 of them by the mRNA catabolic process rule ARBA00027180. Those sets emit nothing here. A minority of sets select proteins that reach the term through one paper on an indirect role (HSP70, the 3',5'-bisphosphate nucleotidase MET22, the cap-binding protein CBC2), which a parent term absorbs without comment.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 52,
+    "num_recorded_condition_sets": 52,
     "num_entries": 0,
     "go_terms": [
       {
@@ -5949,6 +5983,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 27,
+    "num_recorded_condition_sets": 27,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6023,11 +6058,12 @@ window.searchData = [
     "id": "ARBA00027389",
     "rule_id": "ARBA00027389",
     "description": "Assigns GO:0042546 cell wall biogenesis through 34 alternative condition sets. Every set combines one to three InterPro, PANTHER or CATH FunFam conditions with a taxon condition; the taxa range from single fungal and plant clades to Bacteria and \"not Vertebrata\".",
-    "review_summary": "Accuracy: all 34 live condition sets were queried against Swiss-Prot, counting a match as supported when it carries GO:0042546 (cell wall biogenesis) or a descendant with evidence other than ARBA. In 22 sets every reviewed match is supported; in 12 sets (CS2, CS3, CS4, CS6, CS7, CS8, CS10, CS11, CS20, CS21, CS22, CS32) only some are; no set is without support. Support is thin for CS11 (fungal mannose-1-phosphate guanylyltransferases, 1 of 12) and CS20 (phosphoglucosamine mutase GlmM, 71 of 316). The conditions of CS4 and CS8 also match two natural-product fatty acyl-AMP ligases outside the actinobacteria, JamA (Q6E7K9) and TtuA (C5BK10), for which a cell wall term is not true; these were listed as unsupported in the first pass and not adjudicated. Meaning and parsimony: \"cell wall\" here means four structures that share nothing but the name. The sets fall into plant wall units (cellulose synthase, xylan synthesis and acetylation, and other plant wall factors), the mycobacterial envelope lipid and arabinogalactan enzymes, fungal wall glucan and mannan enzymes with their regulators, bacterial peptidoglycan enzymes and the Bacillus spore coat protein SpoIVA. Each has a specific curated descendant: plant-type primary cell wall biogenesis, xylan biosynthetic process, Actinobacterium-type cell wall biogenesis, fungal-type cell wall biogenesis, peptidoglycan biosynthetic process, spore wall assembly. rule_redundancy.tsv finds 16 of 34 sets already matched by rules asserting exactly such terms. Two sets select precursor-supply or signalling proteins with no curated wall term on the member looked up (CS11, CS22).",
+    "review_summary": "Accuracy: all 34 live condition sets were queried against Swiss-Prot, counting a match as supported when it carries GO:0042546 (cell wall biogenesis) or a descendant with evidence other than ARBA. In 22 sets every reviewed match is supported; in 12 sets (CS2, CS3, CS4, CS6, CS7, CS8, CS10, CS11, CS20, CS21, CS22, CS32) only some are; no set is without support. Support is thin for CS11 (fungal mannose-1-phosphate guanylyltransferases, 1 of 12) and CS20 (phosphoglucosamine mutase GlmM, 71 of 316). The conditions of CS4 and CS8 also match two natural-product fatty acyl-AMP ligases outside the actinobacteria, JamA (Q6E7K9) and TtuA (C5BK10), for which a cell wall term is not true; these were listed as unsupported in the first pass and not adjudicated. Meaning and parsimony: \"cell wall\" here means four structures that share nothing but the name. The sets fall into plant wall units (cellulose synthase, xylan synthesis and acetylation, and other plant wall factors), the mycobacterial envelope lipid and arabinogalactan enzymes, fungal wall glucan and mannan enzymes with their regulators, bacterial peptidoglycan enzymes and the Bacillus spore coat protein SpoIVA. Each has a specific curated descendant: plant-type primary cell wall biogenesis, xylan biosynthetic process, Actinobacterium-type cell wall biogenesis, fungal-type cell wall biogenesis, peptidoglycan biosynthetic process, spore wall assembly. rule_redundancy.tsv finds 13 of 34 sets already matched by rules asserting exactly such terms. Two sets select precursor-supply or signalling proteins with no curated wall term on the member looked up (CS11, CS22).",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 34,
+    "num_recorded_condition_sets": 34,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6119,6 +6155,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 45,
+    "num_recorded_condition_sets": 45,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6235,6 +6272,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 83,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6282,11 +6320,12 @@ window.searchData = [
     "id": "ARBA00027624",
     "rule_id": "ARBA00027624",
     "description": "Assigns GO:0031090 organelle membrane through 472 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams; 107 sets carry a taxon condition.",
-    "review_summary": "Accuracy: the first 60 of 472 live condition sets (CS1 to CS60) were queried against Swiss-Prot on 2026-11-09; the other 412 were not examined. A match counts as supported when it carries GO:0031090 (organelle membrane) or an is_a/part_of descendant with evidence other than ARBA. Of the 60, 50 are fully supported, 10 partly, and none is unsupported or without reviewed matches. Meaning and parsimony: the judgement does not need the other 412 sets. GO:0031090 has 333 descendants and is in the GO subset gocheck_do_not_annotate, a grouping term not meant for direct annotation; it says a protein is in the membrane of some organelle without saying which. The recorded sets select families whose membrane is known and curated: inositol trisphosphate and ryanodine receptors and seipin in the endoplasmic reticulum membrane, prohibitin, the pyruvate carrier and TIM44 in the mitochondrial inner membrane, PEX11 and PEX14 in the peroxisomal membrane, V-ATPase proteolipids in the vacuolar V0 domain, ESCRT-III, AP-2 and coatomer on their vesicle membranes, magnetosome proteins in the magnetosome membrane. For MHC class I heavy chains (sets 1 and 2) the term holds only through Reactome trafficking steps; their curated location is the plasma membrane. rule_redundancy.tsv finds 193 of the rule's 322 sets already matched by a rule asserting a more specific term, and QuickGO holds no annotation attributed to this rule (2026-11-12).",
+    "review_summary": "Accuracy: the first 60 of 472 live condition sets (CS1 to CS60) were queried against Swiss-Prot on 2026-11-09; the other 412 were not examined. A match counts as supported when it carries GO:0031090 (organelle membrane) or an is_a/part_of descendant with evidence other than ARBA. Of the 60, 50 are fully supported, 10 partly, and none is unsupported or without reviewed matches. Meaning and parsimony: the judgement does not need the other 412 sets. GO:0031090 has 333 descendants and is in the GO subset gocheck_do_not_annotate, a grouping term not meant for direct annotation; it says a protein is in the membrane of some organelle without saying which. The recorded sets select families whose membrane is known and curated: inositol trisphosphate and ryanodine receptors and seipin in the endoplasmic reticulum membrane, prohibitin, the pyruvate carrier and TIM44 in the mitochondrial inner membrane, PEX11 and PEX14 in the peroxisomal membrane, V-ATPase proteolipids in the vacuolar V0 domain, ESCRT-III, AP-2 and coatomer on their vesicle membranes, magnetosome proteins in the magnetosome membrane. For MHC class I heavy chains (sets 1 and 2) the term holds only through Reactome trafficking steps; their curated location is the plasma membrane. rule_redundancy.tsv finds 200 of the rule's 472 sets already matched by a rule asserting a more specific term, and QuickGO holds no annotation attributed to this rule (2026-11-12).",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 472,
+    "num_recorded_condition_sets": 60,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6444,6 +6483,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 82,
+    "num_recorded_condition_sets": 82,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6602,6 +6642,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 1340,
+    "num_recorded_condition_sets": 14,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6653,11 +6694,12 @@ window.searchData = [
     "id": "ARBA00027853",
     "rule_id": "ARBA00027853",
     "description": "Assigns GO:0006720 isoprenoid metabolic process through 89 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, 70 of them with a taxon condition. The sets cover terpene synthases and cyclases, prenyl diphosphate synthases, carotenoid synthesis and cleavage enzymes, gibberellin and abscisic acid oxidases, mevalonate pathway enzymes and retinoid-metabolising enzymes.",
-    "review_summary": "Accuracy: all 89 live condition sets were queried against Swiss-Prot on 2026-11-09, counting a match as supported when it carries GO:0006720 (isoprenoid metabolic process) or an is_a/part_of descendant with evidence other than ARBA. Every set has reviewed matches; in 75 sets every match is supported and in 14 some are not. One defect is demonstrable: CS18 (PANTHER PTHR43734 in Pseudomonadati) matches GlpB, a glycerol-3-phosphate dehydrogenase subunit with no isoprenoid role, in 8 of its 22 reviewed matches. Q6PQJ9, a 3-oxo-Delta(4,5)-steroid 5-beta-reductase (CS37), and Q54E48 (CS1) are doubtful. QuickGO lists 9043 annotations attributed to the rule. Meaning and parsimony: isoprenoid metabolic process is the common ancestor of pathways that have little else in common, and the sets divide among them: plant and microbial terpene synthases, carotenoid biosynthesis enzymes, animal carotenoid oxygenases, retinoid-metabolising enzymes, gibberellin oxidases, prenyl diphosphate synthases, the mevalonate and methylerythritol phosphate pathways and juvenile hormone synthesis. Each has a specific curated descendant. rule_redundancy.tsv finds 63 of 97 sets already matched by a rule asserting a more specific term. Four sets select proteins for which the term is nominal: the triglyceride lipases LIPE and PNPLA2 (sets 40, 59), the endocytic receptors LRP1 and LRP2 (set 57) and the drug-metabolising cytochromes P450 2C and 3A4 (sets 35, 74). Their curated roles are triglyceride catabolism, receptor-mediated endocytosis and xenobiotic metabolism; the isoprenoid term comes from a retinyl ester side activity, a Reactome pathway step or one terpene substrate.",
+    "review_summary": "Accuracy: all 89 live condition sets were queried against Swiss-Prot on 2026-11-09, counting a match as supported when it carries GO:0006720 (isoprenoid metabolic process) or an is_a/part_of descendant with evidence other than ARBA. Every set has reviewed matches; in 75 sets every match is supported and in 14 some are not. One defect is demonstrable: CS18 (PANTHER PTHR43734 in Pseudomonadati) matches GlpB, a glycerol-3-phosphate dehydrogenase subunit with no isoprenoid role, in 8 of its 22 reviewed matches. Q6PQJ9, a 3-oxo-Delta(4,5)-steroid 5-beta-reductase (CS37), and Q54E48 (CS1) are doubtful. QuickGO lists 9043 annotations attributed to the rule. Meaning and parsimony: isoprenoid metabolic process is the common ancestor of pathways that have little else in common, and the sets divide among them: plant and microbial terpene synthases, carotenoid biosynthesis enzymes, animal carotenoid oxygenases, retinoid-metabolising enzymes, gibberellin oxidases, prenyl diphosphate synthases, the mevalonate and methylerythritol phosphate pathways and juvenile hormone synthesis. Each has a specific curated descendant. rule_redundancy.tsv finds 65 of 89 sets already matched by a rule asserting a more specific term. Four sets select proteins for which the term is nominal: the triglyceride lipases LIPE and PNPLA2 (sets 40, 59), the endocytic receptors LRP1 and LRP2 (set 57) and the drug-metabolising cytochromes P450 2C and 3A4 (sets 35, 74). Their curated roles are triglyceride catabolism, receptor-mediated endocytosis and xenobiotic metabolism; the isoprenoid term comes from a retinyl ester side activity, a Reactome pathway step or one terpene substrate.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 89,
+    "num_recorded_condition_sets": 89,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6804,6 +6846,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 167,
+    "num_recorded_condition_sets": 9,
     "num_entries": 0,
     "go_terms": [
       {
@@ -6860,6 +6903,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 104,
+    "num_recorded_condition_sets": 104,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7068,11 +7112,12 @@ window.searchData = [
     "id": "ARBA00028334",
     "rule_id": "ARBA00028334",
     "description": "Assigns GO:0010468 regulation of gene expression through 929 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, some with a taxon condition.",
-    "review_summary": "Accuracy: 40 of the 929 live condition sets were examined in this pass; the first pass had examined none. In all 40 the Swiss-Prot matches carry a manual annotation to a descendant of GO:0010468 (regulation of gene expression), from an experiment in every sampled set, and no wrongly annotated protein was found. The other 889 sets remain unexamined, so nothing is claimed about them. Meaning and parsimony: the consequent has 874 descendants. Thirty of the 40 sampled sets select transcription factors, cofactors or sigma factors, whose curated term is GO:0006355 (regulation of DNA-templated transcription) or something below it; seven select translational and mRNA-stability regulators; two select cytokine-production regulators. Rules for those terms exist, and 27 of the 40 sampled sets are matched exactly by one of them (rule_redundancy.tsv: 648 of 932 sets). The rule nevertheless still emits 185,510 annotations in QuickGO, so it is not dead weight: it is the uncovered third that is doing the annotating, with a term that names no mechanism.",
+    "review_summary": "Accuracy: 40 of the 929 live condition sets were examined in this pass; the first pass had examined none. In all 40 the Swiss-Prot matches carry a manual annotation to a descendant of GO:0010468 (regulation of gene expression), from an experiment in every sampled set, and no wrongly annotated protein was found. The other 889 sets remain unexamined, so nothing is claimed about them. Meaning and parsimony: the consequent has 874 descendants. Thirty of the 40 sampled sets select transcription factors, cofactors or sigma factors, whose curated term is GO:0006355 (regulation of DNA-templated transcription) or something below it; seven select translational and mRNA-stability regulators; two select cytokine-production regulators. Rules for those terms exist, and 27 of the 40 sampled sets are matched exactly by one of them (rule_redundancy.tsv: 651 of 929 sets). The rule nevertheless still emits 185,510 annotations in QuickGO, so it is not dead weight: it is the uncovered third that is doing the annotating, with a term that names no mechanism.",
     "action": "SPLIT",
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 929,
+    "num_recorded_condition_sets": 40,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7169,6 +7214,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.95,
     "num_condition_sets": 51,
+    "num_recorded_condition_sets": 51,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7271,6 +7317,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 16,
+    "num_recorded_condition_sets": 16,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7332,6 +7379,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 11,
+    "num_recorded_condition_sets": 11,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7383,6 +7431,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.65,
     "num_condition_sets": 392,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7432,6 +7481,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 375,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7484,6 +7534,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 88,
+    "num_recorded_condition_sets": 10,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7537,6 +7588,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 19,
+    "num_recorded_condition_sets": 19,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7597,6 +7649,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.85,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7634,6 +7687,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.75,
     "num_condition_sets": 14,
+    "num_recorded_condition_sets": 14,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7694,6 +7748,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -7726,6 +7781,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 4,
+    "num_recorded_condition_sets": 4,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7768,6 +7824,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 8,
+    "num_recorded_condition_sets": 8,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7818,6 +7875,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.9,
     "num_condition_sets": 4,
+    "num_recorded_condition_sets": 4,
     "num_entries": 0,
     "go_terms": [
       {
@@ -7863,6 +7921,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.85,
     "num_condition_sets": 23,
+    "num_recorded_condition_sets": 23,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -7918,6 +7977,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -7945,6 +8005,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -7972,6 +8033,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 14,
+    "num_recorded_condition_sets": 14,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8022,6 +8084,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 4,
+    "num_recorded_condition_sets": 4,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8065,6 +8128,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 4,
+    "num_recorded_condition_sets": 4,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8104,6 +8168,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.65,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8145,6 +8210,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 5,
+    "num_recorded_condition_sets": 5,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8188,6 +8254,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.95,
     "num_condition_sets": 0,
+    "num_recorded_condition_sets": 0,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8219,6 +8286,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8256,6 +8324,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8293,6 +8362,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8332,6 +8402,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.8,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8371,6 +8442,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.65,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8407,6 +8479,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.9,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [],
     "go_term_ids": [],
@@ -8434,6 +8507,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.95,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8470,6 +8544,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.7,
     "num_condition_sets": 2,
+    "num_recorded_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8509,6 +8584,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.85,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8546,6 +8622,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.9,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -8582,6 +8659,7 @@ window.searchData = [
     "status": "COMPLETE",
     "confidence": 0.65,
     "num_condition_sets": 1,
+    "num_recorded_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
