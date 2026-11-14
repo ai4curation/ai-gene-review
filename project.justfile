@@ -321,6 +321,12 @@ wrong-gene-leads *args="":
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
+# Report structural anomalies in cached GO-CAM models (see docs/gocam_lint.md)
+# Example: just gocam-lint 59cc772c00000000
+# Example: just gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+gocam-lint *args="":
+    uv run ai-gene-review gocam-lint {{args}}
+
 # Check GO-CAM activity locations against the disjoint compartment model
 # (unresolved occurs_in terms; causal edges between non-adjacent compartments)
 # Example: just gocam-compartments 59cc772c00000000
