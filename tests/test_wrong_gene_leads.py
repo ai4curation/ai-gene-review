@@ -13,10 +13,13 @@ from ai_gene_review.tools.wrong_gene_leads import (
     CitingEntry,
     GeneRecord,
     MAX_CITING_ENTRIES,
+    SHARED_ANNOTATION_GENES,
     candidate_rows,
     fetch_citing_entries,
     find_leads,
+    named_in_abstract,
     score_lead,
+    shared_annotation_counts,
 )
 
 GENES = Path(__file__).resolve().parents[1] / "genes"
@@ -387,3 +390,86 @@ def test_group_author_matching_does_not_swallow_sentences(paragraph, expected):
     from ai_gene_review.tools.wrong_gene_leads import _is_author_list
 
     assert _is_author_list(paragraph) is expected
+
+
+PUBLICATIONS = GENES.parent / "publications"
+
+
+@pytest.mark.parametrize(
+    "gene, pmid",
+    [
+        ("DROME/spz", "19018662"),  # "Spätzle": diacritic, name is "Protein spatzle"
+        ("DROME/btl", "16831830"),  # "Breathless": name is "Protein breathless"
+        ("SCHPO/cds1", "11027263"),  # "Cds1p-dependent": yeast protein suffix
+        ("SCHPO/fas2", "9693066"),  # "lsd1+/fas2+": allele mark, slash pair
+        ("SCHPO/idh1", "7903653"),  # "glu3": old name only PomBase lists
+        ("human/ABL1", "18280240"),  # "c-Abl": cellular-homolog prefix
+        ("human/AKR1C4", "21851338"),  # "AKR1C1-AKR1C4": a range
+        ("human/ACADVL", "16020546"),  # "very-long-chain acyl-CoA dehydrogenase"
+    ],
+)
+def test_name_forms_found_in_fourth_lead_batch(gene, pmid):
+    """Each paper names the gene in a form the fourth lead review found missed."""
+    own, _ = candidate_rows(GENES / gene)
+    assert named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+
+
+@pytest.mark.parametrize(
+    "gene, pmid",
+    [
+        ("human/ADAM17", "24990881"),  # "ADAM proteases" only
+        ("human/ALDOB", "6696436"),  # muscle aldolase (ALDOA)
+        ("DROME/rl", "8946916"),  # DJNK/basket
+        ("mouse/Rbpj", "23571214"),  # BEND6
+    ],
+)
+def test_confirmed_leads_stay_unnamed(gene, pmid):
+    """Papers found to be about another gene must still not name the annotated one."""
+    own, _ = candidate_rows(GENES / gene)
+    assert not named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+
+
+@pytest.mark.parametrize(
+    "text, names, expected",
+    [
+        ("proteins (AKR1C1-AKR1C3) were assayed", {"AKR1C4"}, False),
+        ("proteins (AKR1C1-AKR1C3) were assayed", {"AKR1C2"}, True),
+        ("isoforms AKR1C1-4 were assayed", {"AKR1C4"}, True),
+        ("phosphorylation by c-Abl", {"ABL2"}, False),
+        ("phosphorylation by c-Abl", {"ABL"}, True),
+        ("Rad21p was cleaved", {"RAD21"}, True),
+        ("the Hsp70 chaperone", {"HSP7"}, False),
+        ("GFP-tagged GDI/D4 was diffuse", {"GDID4"}, True),
+    ],
+)
+def test_token_name_forms(tmp_path, text, names, expected):
+    """Ranges, prefixes and suffixes are expanded without matching neighbours."""
+    (tmp_path / "PMID_1.md").write_text(f"title: X\n## Abstract\n{text}\n")
+    assert named_in_abstract("1", names, tmp_path) is expected
+
+
+@pytest.mark.parametrize(
+    "shared, expected",
+    [
+        (1, (1, "few_citing_entries")),
+        (SHARED_ANNOTATION_GENES - 1, (1, "few_citing_entries")),
+        (SHARED_ANNOTATION_GENES, (-1, "few_citing_entries;shared_by_many_genes")),
+    ],
+)
+def test_rows_shared_by_many_genes_are_down_weighted(shared, expected):
+    """A row its source gave to many genes (a complex, a proteomics list) ranks lower."""
+    own = GeneRecord("P1", "9606", frozenset(), frozenset({"ABC1"}), frozenset())
+    others = [CitingEntry("P2", "X", "10090", frozenset())]
+    assert score_lead(own, others, None, shared) == expected
+
+
+def test_shared_annotation_counts_real_complex_rows():
+    """ComplexPortal's bBAF rows reach several local subunits; ALDOB's row does not."""
+    dirs = list(GENES.glob("human/*"))
+    counts = shared_annotation_counts(dirs)
+    assert (
+        counts[("PMID:12192000", "GO:0000785", "ComplexPortal")]
+        >= SHARED_ANNOTATION_GENES
+    )
+    assert counts[("PMID:6696436", "GO:0004332", "Reactome")] < SHARED_ANNOTATION_GENES
+    assert counts[("PMID:24990881", "GO:0004175", "UniProt")] < SHARED_ANNOTATION_GENES

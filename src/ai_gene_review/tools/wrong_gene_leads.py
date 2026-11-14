@@ -39,9 +39,11 @@ import csv
 import json
 import os
 import re
+import unicodedata
 import urllib.parse
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from functools import cache
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -72,6 +74,20 @@ SKIPPED_TERMS = frozenset({"GO:0005515"})
 # Protein names with only this evidence are unvetted predictions (ARBA rules,
 # submitter text), so they are not used to decide whether an abstract names a gene.
 UNVETTED_NAME_EVIDENCE = ("ECO:0000256|ARBA", "ECO:0000313")
+# PomBase gene names and synonyms, keyed by UniProt accession. UniProt's GN lines
+# omit old genetic names that fission yeast papers use (glu3 for idh1).
+POMBASE_NAMES = (
+    REPO_ROOT
+    / "projects/PROTNLM_EVALUATION/pombe-benchmark/snapshot/pombase-identifiers.tsv"
+)
+POMBE_TAXON = "284812"
+# A range such as AKR1C1-AKR1C4 or AKR1C1-4 is expanded only up to this many names.
+MAX_RANGE = 20
+# A row whose source gave the same term from the same paper to at least this many
+# gene folders here is a complex-wide or list annotation (every subunit of a
+# complex, every protein of a proteomics list), not a single-gene claim.
+SHARED_ANNOTATION_GENES = 4
+ShareKey = tuple[str, str, str]
 
 
 @dataclass(frozen=True)
@@ -204,9 +220,48 @@ def parse_protein_names_field(field: str) -> frozenset[str]:
     return frozenset(n.strip() for n in names if n.strip())
 
 
+def _fold(text: str) -> str:
+    """Drop diacritics, so "Spätzle" reads "Spatzle".
+
+    >>> _fold("Spätzle")
+    'Spatzle'
+    """
+    decomposed = unicodedata.normalize("NFKD", text)
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+
+
 def _norm(token: str) -> str:
     """Upper-case and strip non-alphanumerics, so ``GDI/D4`` matches ``GDID4``."""
-    return re.sub(r"[^A-Z0-9]", "", token.upper())
+    return re.sub(r"[^A-Z0-9]", "", _fold(token).upper())
+
+
+_RANGE = re.compile(r"([A-Z0-9]*[A-Z])(\d+)[-\u2013](?:\1)?(\d+)")
+
+
+def token_forms(token: str) -> set[str]:
+    """The normalised names a whitespace token can stand for.
+
+    Besides the whole token, each part between slashes or hyphens counts
+    ("lsd1+/fas2+", "c-Abl", "Cds1p-dependent"), a yeast protein suffix is dropped
+    from a name ending in a digit ("Cds1p"), and a numbered range is expanded
+    ("AKR1C1-AKR1C4", "AKR1C1-4").
+
+    >>> sorted(token_forms("lsd1+/fas2+"))
+    ['FAS2', 'LSD1', 'LSD1FAS2']
+    >>> sorted(token_forms("Cds1p-dependent"))
+    ['CDS1', 'CDS1P', 'CDS1PDEPENDENT', 'DEPENDENT']
+    >>> sorted(token_forms("(AKR1C1-AKR1C3)"))
+    ['AKR1C1', 'AKR1C1AKR1C3', 'AKR1C2', 'AKR1C3']
+    """
+    raw = _fold(token).strip("()[]{},.;:'\"")
+    forms = {_norm(raw)} | {_norm(part) for part in re.split(r"[/\-\u2013]", raw)}
+    m = _RANGE.fullmatch(raw.upper())
+    if m:
+        start, end = int(m.group(2)), int(m.group(3))
+        if start < end and end - start <= MAX_RANGE:
+            forms |= {f"{m.group(1)}{n}" for n in range(start, end + 1)}
+    forms |= {f[:-1] for f in forms if re.fullmatch(r"[A-Z][A-Z0-9]*\dP", f)}
+    return {f for f in forms if f}
 
 
 def same_gene_symbol(symbol: str, names: Iterable[str]) -> bool:
@@ -223,7 +278,32 @@ def same_gene_symbol(symbol: str, names: Iterable[str]) -> bool:
 
 def _phrase(text: str) -> str:
     """Lower-case and turn punctuation into spaces, so "Filamin-C" reads "filamin c"."""
-    return " " + " ".join(re.sub(r"[^a-z0-9,]+", " ", text.lower()).split()) + " "
+    return (
+        " " + " ".join(re.sub(r"[^a-z0-9,]+", " ", _fold(text).lower()).split()) + " "
+    )
+
+
+def protein_name_forms(name: str) -> set[str]:
+    """A protein name plus the shorter forms papers use for it.
+
+    A one-word "Protein X" name (common for fly and plant genes) is also matched as
+    X, and a trailing location qualifier after a comma is dropped.
+
+    >>> sorted(protein_name_forms("Protein breathless"))
+    ['Protein breathless', 'breathless']
+    >>> sorted(protein_name_forms("Very long-chain acyl-CoA dehydrogenase, mitochondrial"))
+    ['Very long-chain acyl-CoA dehydrogenase', 'Very long-chain acyl-CoA dehydrogenase, mitochondrial']
+    >>> sorted(protein_name_forms("Protein kinase C"))
+    ['Protein kinase C']
+    """
+    forms = {name}
+    m = re.fullmatch(r"Protein (\S+)", name)
+    if m:
+        forms.add(m.group(1))
+    base, sep, tail = name.rpartition(", ")
+    if sep and " " not in tail:
+        forms.add(base)
+    return forms
 
 
 def _names_protein(text: str, name: str) -> bool:
@@ -436,12 +516,16 @@ def named_in_abstract(
     if not path.exists():
         return None
     text = abstract_text(path)
-    tokens = {_norm(tok) for tok in text.split()}
+    tokens = {form for tok in text.split() for form in token_forms(tok)}
     wanted = {_norm(n) for n in names}
     if {w for w in wanted if len(w) >= 3} & tokens:
         return True
     phrased = _phrase(text)
-    return any(_names_protein(phrased, n) for n in protein_names)
+    return any(
+        _names_protein(phrased, form)
+        for n in protein_names
+        for form in protein_name_forms(n)
+    )
 
 
 def gene_specific_names(own: GeneRecord, citing: Iterable[CitingEntry]) -> set[str]:
@@ -473,13 +557,17 @@ def gene_specific_names(own: GeneRecord, citing: Iterable[CitingEntry]) -> set[s
 
 
 def score_lead(
-    own: GeneRecord, citing: list[CitingEntry], abstract_names_gene: bool | None
+    own: GeneRecord,
+    citing: list[CitingEntry],
+    abstract_names_gene: bool | None,
+    shared_genes: int = 1,
 ) -> tuple[int, str]:
     """Score how likely the cited paper is about one of the citing entries instead.
 
     A paralog in the same species +3, another gene in the same species +2, the
     same-named gene in another species +2, three or fewer citing entries +1, and an
-    abstract that does not name the annotated gene +2 (or -3 if it does).
+    abstract that does not name the annotated gene +2 (or -3 if it does). A row
+    whose source gave it to ``SHARED_ANNOTATION_GENES`` or more local genes -2.
     """
     reasons = []
     score = 0
@@ -505,7 +593,50 @@ def score_lead(
     elif abstract_names_gene:
         score -= 3
         reasons.append("gene_named_in_abstract")
+    if shared_genes >= SHARED_ANNOTATION_GENES:
+        score -= 2
+        reasons.append("shared_by_many_genes")
     return score, ";".join(reasons)
+
+
+def _share_key(row: dict[str, str]) -> ShareKey:
+    return (
+        row.get("REFERENCE") or "",
+        row.get("GO TERM") or "",
+        row.get("ASSIGNED BY") or "",
+    )
+
+
+def shared_annotation_counts(gene_dirs: Iterable[Path]) -> Counter[ShareKey]:
+    """How many gene folders carry each (reference, GO term, assigned-by) row.
+
+    Only literature references are counted; GO_REF rows are shared by design.
+    """
+    genes: dict[ShareKey, set[Path]] = {}
+    for gene_dir in gene_dirs:
+        for goa in gene_dir.glob("*-goa.tsv"):
+            with goa.open() as fh:
+                for row in csv.DictReader(fh, delimiter="\t"):
+                    key = _share_key(row)
+                    if key[0].startswith("PMID:"):
+                        genes.setdefault(key, set()).add(gene_dir)
+    return Counter({key: len(dirs) for key, dirs in genes.items()})
+
+
+@cache
+def pombase_names(path: Path = POMBASE_NAMES) -> dict[str, frozenset[str]]:
+    """PomBase gene names and synonyms keyed by UniProt accession.
+
+    Returns an empty map when the snapshot is not present.
+    """
+    if not path.exists():
+        return {}
+    names: dict[str, frozenset[str]] = {}
+    with path.open() as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            found = {row["gene_name"], *row["synonyms"].split(",")}
+            names[row["external_id"]] = frozenset(n.strip() for n in found if n.strip())
+    return names
 
 
 def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | None:
@@ -515,6 +646,10 @@ def candidate_rows(gene_dir: Path) -> tuple[GeneRecord, list[dict[str, str]]] | 
     if not uniprot or not goa:
         return None
     own = parse_uniprot_flatfile(uniprot[0].read_text(errors="replace"))
+    if own.taxon == POMBE_TAXON:
+        own = replace(
+            own, gene_names=own.gene_names | pombase_names().get(own.accession, set())
+        )
     rows = []
     with goa[0].open() as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
@@ -668,9 +803,9 @@ def find_leads(
     ``citing`` maps PMIDs to the entries citing them; when omitted it is fetched
     from UniProt for every candidate PMID.
     """
-    candidates = [
-        (d, c) for d in sorted(gene_dirs) if (c := candidate_rows(d)) and c[1]
-    ]
+    gene_dirs = sorted(gene_dirs)
+    shared = shared_annotation_counts(gene_dirs)
+    candidates = [(d, c) for d in gene_dirs if (c := candidate_rows(d)) and c[1]]
     if citing is None:
         citing = fetch_citing_entries(
             {r["REFERENCE"][5:] for _, (_, rows) in candidates for r in rows}, cache_dir
@@ -708,6 +843,7 @@ def find_leads(
                     publications_dir,
                     gene_specific_names(own, others),
                 ),
+                shared[_share_key(row)],
             )
             leads.append(
                 {
