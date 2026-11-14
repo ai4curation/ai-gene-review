@@ -80,3 +80,44 @@ recessive, ~1/50,000 newborns (US screening). Most severe galactosemia form:
 falcon deep-research file did NOT land within the 8-minute poll window; review grounded
 in UniProt, GOA, dismech Galactosemia.yaml, and cached PMIDs (structure PMID:27005423,
 kinetics PMID:22461411, mutation PMID:1897530, gene PMID:1427861).
+
+## 2026-11-12: completion audit (supersedes the provisional calls above)
+
+All rows re-audited against cached publications and project rules. Final decisions that
+differ from the earlier provisional notes:
+
+- GO:0005515 protein binding IPI (7 review rows covering 10 GOA rows; PMID:16189514,
+  25416956, 25910212, 26871637, 28514442, 32296183, 33961781): REMOVE under the
+  protein-binding policy (MARK_AS_OVER_ANNOTATED is not permitted for GO:0005515). None of
+  the screens supports a more informative MF; removal does not deny the interactions.
+- GO:0005794 Golgi apparatus IDA PMID:20605918: UNDECIDED (not REMOVE / not
+  over-annotated). The cache is abstract-only and the publisher full text returned 403;
+  the abstract concerns Lyn/ACSL3 Golgi export and does not mention GALT. A "GalT"
+  Golgi marker (beta-1,4-galactosyltransferase) mapped to GALT is a plausible explanation
+  but cannot be confirmed, so no mis-attribution or source defect is asserted.
+- GO:0005737 cytoplasm IBA: MODIFY to GO:0005829 cytosol (correct but general; cytosol is
+  already on the gene from Reactome), with propagation_review on PTN000235304.
+- GO:0006012 galactose metabolic process (IEA, IDA PMID:27005423, TAS PMID:1427861):
+  MODIFY to GO:0033499 (correct but general; specific descendant already on the gene).
+  GO:0006012 dropped from core_functions.
+- GO:0006011 UDP-alpha-D-glucose metabolic process IDA: KEEP_AS_NON_CORE (true; a
+  consequence of the core Leloir step, not separate core role).
+- GO:0033499 label updated to the current ontology label in core_functions.
+
+Deep research: the falcon file has since landed. It is used only as a retrieval aid. Note
+that it names His166 as the catalytic nucleophile, which is the E. coli numbering; the
+human structure paper identifies His186 ["confirming that His186 is the site of
+uridylylation" PMID:27005423], which the review uses.
+
+Status set to COMPLETE.
+
+## Update 2026-11-12: Golgi IDA resolved
+
+- GO:0005794 Golgi apparatus IDA PMID:20605918: now REMOVE, with a WRONG_GENE_PRODUCT
+  source defect (GALT P07902 → B4GALT1 P15291, cause SYMBOL_COLLISION, resource UNIPROT).
+  The publisher full text (https://journals.biologists.com/jcs/article/123/15/2649/31141/The-Lyn-kinase-C-lobe-mediates-Golgi-export-of-Lyn)
+  defines the paper's GalT as the Golgi marker: "ACSL3 was seen with the Golgi caveolin and
+  β-1,4-galactosyltransferase (GalT) where Lyn accumulated", and uses it with GM130 ("knockdown
+  of ACSL3 did not affect Golgi localization of GalT and GM130"). Galactose-1-phosphate
+  uridylyltransferase is not studied. The quotations are from the full text, which is not cached,
+  so they are recorded here and in the row's reason rather than as supporting_text.
