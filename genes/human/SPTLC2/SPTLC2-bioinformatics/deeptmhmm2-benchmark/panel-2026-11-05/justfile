@@ -1,0 +1,19 @@
+repo := "../../../../../.."
+
+# Use the parent benchmark's locked environment, source commit and checkpoints.
+prepare:
+    ../.venv/bin/python ../panel_tools.py prepare --targets targets.tsv --repo {{repo}} --organism human --taxon 9606 --output .
+
+api:
+    /usr/bin/time -l ../.venv/bin/python -u ../benchmark.py inputs.fasta api --model-dir ../.cache/deeptmhmm2 --threads 8 --repeats 2 --unbatch-api > api.stdout.txt 2> api.stderr.txt
+
+cli:
+    /usr/bin/time -l ../.venv/bin/dtm2 inputs.fasta cli --model-dir ../.cache/deeptmhmm2 --device cpu --threads 8 --batch-size 1 > cli.stdout.txt 2> cli.stderr.txt
+
+summarize:
+    ../.venv/bin/python ../panel_tools.py summarize --manifest inputs.tsv --api api --cli cli/predictions.json --s20 {{repo}}/projects/DEEPTMHMM2/s20.tsv --precision-api precision --output .
+
+# Three cases with small API/CLI differences; vary only task-model precision.
+precision:
+    ../.venv/bin/python ../panel_tools.py prepare --targets precision-targets.tsv --repo {{repo}} --organism human --taxon 9606 --output precision-inputs
+    /usr/bin/time -l ../.venv/bin/python -u ../benchmark.py precision-inputs/inputs.fasta precision --model-dir ../.cache/deeptmhmm2 --threads 8 --repeats 1 --unbatch-api --cpu-autocast > precision.stdout.txt 2> precision.stderr.txt

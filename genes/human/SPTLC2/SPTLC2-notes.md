@@ -60,3 +60,24 @@ Core MF term present in GOA and current: **GO:0004758 serine C-palmitoyltransfer
   SPT-generated long-chain bases -> KEEP_AS_NON_CORE.
 </content>
 </invoke>
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 17, O15270. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-71); interfacial(72-87); Cytoplasmic(88-562)`
+
+**Assessment: Correct topology from human structure.** The human SPT structure (PMID:33558761) describes an amphipathic SPTLC2 helix and ssSPTa-mediated anchoring and says SPTLC2 appears to lack transmembrane regions. Replace the single-pass description, retain ER membrane and cytoplasmic-face annotations, and record the conflicting inherited UniProt description as a source defect. The earlier local benchmark reproduces S20 IF72-87; it corroborates the mechanism but does not supply the experimental evidence.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.
+
+## 2026-11-05: expanded local DeepTMHMM2 panel
+
+SPTLC2 was rerun with 30 other human proteins, including its membrane-spanning
+partner SPTLC1. Both API repeats and the unmodified CLI reproduce SPTLC2 IF72–87,
+with no transmembrane segment or membrane-type assignment. SPTLC1 is assigned
+one TM segment and ER membrane, although its predicted segment is short (26–36).
+The expanded run confirms reproducibility, not independent biological evidence;
+the curated SPTLC2 interpretation remains grounded in the human structure.
+See [the panel report](SPTLC2-bioinformatics/deeptmhmm2-benchmark/panel-2026-11-05/RESULTS.md)
+for all 31 outputs, CPU costs and the API/CLI precision diagnostic.

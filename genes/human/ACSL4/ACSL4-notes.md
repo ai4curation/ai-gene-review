@@ -198,3 +198,13 @@ Current-head review 5330408790 and comment 5856073399 were read in full. The gen
 All 51 annotation decisions, core functions, source assertions, alternative products and 82 supporting quotations remain unchanged. The suggested additional quotes from [PMID:38552012] and [PMID:38471082] are not required to repair existing support: their actual assay scope is already documented in the source15 assessments, and the existing ligase and ferroptosis evidence remains intact. Reference-assessment rendering is a shared template issue outside this gene follow-up. Five spacing errors in authored prose were corrected. The previous citation-format normalization preserved scientific text and source destinations while avoiding duplicated links in rendered notes; this paragraph records that earlier formatting-only journal change explicitly.
 
 The recursive authored/provider census remains 64 valid PMIDs and four Reactome records, now all cached, plus the two previously assessed DOI-only works with no established PMID. The three identified wrong provider PMID citations remain explicitly excluded rather than silently remapped. No new source was requested. Citation closure and schema status are distinct: `DRAFT` is retained if the pre-existing unused-provider advisory remains after validation; it does not indicate a missing publication cache.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 42, O60488. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-9); interfacial(10-31); Cytoplasmic(32-711)`
+
+**Assessment: Retain; homolog-based candidate.** PMID:22357706 studies ACSL3, not ACSL4, and favors an amphipathic helix embedded in the cytosolic ER leaflet. The ACSL4 N-terminal prediction is a plausible homolog-based candidate; it does not independently establish ACSL4 residue boundaries or choose between its ER, mitochondrial outer-membrane and other context-dependent pools. Retain the current membrane-associated description and locations.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

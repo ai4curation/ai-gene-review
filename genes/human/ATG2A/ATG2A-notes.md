@@ -41,3 +41,13 @@ Live QuickGO checked 2026-09-20 marks GO:0034045 obsolete and provides GO:777011
 ## Recovery PR evidence follow-up (2026-09-22)
 
 Incorporate the existing OpenScientist report and its route-specific divergence argument, recording the remaining lysosome/junction equivalence question for a second opinion.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 36, Q2TAZ0. Author evidence category: **Peripheral**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-1893); reentrant(1894-1902); Cytoplasmic(1903-1938)`
+
+**Assessment: Retain; segment unvalidated.** The existing review describes a membrane-contact lipid-transfer protein supported by PMID:30952800. S20 itself says the predicted tail is structurally unresolved and low-confidence in AlphaFold. A nine-residue predicted reentrant segment is insufficient to establish insertion geometry or revise the ER/phagophore and lipid-droplet locations.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

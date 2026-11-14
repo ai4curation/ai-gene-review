@@ -63,6 +63,19 @@ known to carry it:
 
 ## Files
 
+The [DeepTMHMM2 topology companion](DEEPTMHMM2/TOPOLOGY_FLAGS.md) adds a pilot
+sequence-based cross-check of FRR:0004, plus spanning-versus-interfacial and
+lipid-droplet context flags. It preserves the existing rule's qualifier, family
+and exemption scope and records literature-supported predictor counterexamples.
+It emits review flags, not GO NOT assertions, and is not a validation gate.
+The [205-protein follow-up](../genes/human/SPTLC2/SPTLC2-bioinformatics/deeptmhmm2-benchmark/flag-pilot-2026-11-12/RESULTS.md)
+shows why this matters: broad proton-transporter annotations on soluble V1
+subunits still trigger outside the exempt ATPase subtree, and membrane anchors
+do not distinguish pore-forming from regulatory subunits. APOL1 and ATP5ME gain
+predicted spans despite lacking the original UniProt requirements; this weakens
+the absence argument without settling their precise activities. Existing rule
+configuration and validation-gate status remain unchanged.
+
 | What | Where |
 |---|---|
 | Schema | `src/ai_gene_review/schema/function_requirement_rules.yaml` |
