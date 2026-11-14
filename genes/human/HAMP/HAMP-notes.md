@@ -180,3 +180,37 @@ Follow-up validation passed: `just validate human HAMP`, the new history record,
 and canonical rendering in memory. References and all supporting quotations were
 preserved exactly from the previously validated revision. The runtime guard
 confirmed unchanged `uv.lock` and no checkout-local environment.
+
+
+### Upstream ontology evidence — 2026-11-14
+
+The replacement direction is **GO:0005615 → GO:0005576**. This is independently
+documented by the ontology's own history, not inferred from another gene review:
+
+- [GO issue #31545](https://github.com/geneontology/go-ontology/issues/31545)
+  explicitly names obsoletion of extracellular space and replacement by
+  extracellular region.
+- [GO commit f297a4a, 2026-03-05](https://github.com/geneontology/go-ontology/commit/f297a4aea51f48e1023f76e53fecf89a179f95c9)
+  contains the obsolete extracellular-space stanza with `is_obsolete: true` and
+  `replaced_by: GO:0005576`.
+- [GO commit 1fb09f6, 2026-04-23](https://github.com/geneontology/go-ontology/commit/1fb09f6d67dbaa312ac6c4616263a6c180ac098c)
+  removes the outdated GO:0005576 comment that recommended GO:0005615 for
+  secreted proteins in blood or interstitial fluid.
+- A fresh [QuickGO read](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0005615,GO:0005576)
+  returned `obsolete extracellular space`, `isObsolete: true` for GO:0005615 and
+  a non-obsolete GO:0005576.
+- An independent [OLS4 read](https://www.ebi.ac.uk/ols4/api/ontologies/go/terms?obo_id=GO:0005615)
+  returned `is_obsolete: true` and `term_replaced_by: GO_0005576`.
+  [OLS4 ontology metadata](https://www.ebi.ac.uk/ols4/api/ontologies/go) identified
+  GO release 2026-07-26, loaded on 2026-11-14.
+
+These live responses and upstream commits agree. The repository's retained
+ontology table, other reviews and native annotation rows can reflect an older
+ontology state; their presence does not reverse the documented replacement.
+Accordingly, the four GO:0005576 ACCEPT decisions and the earlier dated
+verification statement are retained. No native GOA field, annotation action,
+supporting quotation or biological claim was changed by this evidence follow-up.
+
+The upstream-evidence follow-up passed `just validate human HAMP` with no
+curation warnings and validation of its new audit history record. All supporting
+quotations remain exactly as previously verified.
