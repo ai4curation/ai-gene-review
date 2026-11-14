@@ -11,6 +11,7 @@ Supporting material for [RAR_MISANNOTATION](../RAR_MISANNOTATION.md).
 | `scripts/rar_rerun.py` | Reruns the RAR screen on current GOA proteome files and GO, with a taxon-constraint check; downloads to `.cache/rar/`. |
 | `data/rar_rerun_direct_candidates.yaml` | Generated: flagged terms that pass the candidate filter, with every flagged annotation, its evidence, PAINT node and any GO taxon constraint it breaks. The unfiltered output stays in `.cache/rar/`. |
 | `data/rar_rerun_triage.yaml` | First-pass verdicts on the constraint breaks and the prokaryote IBA nodes. |
+| `data/rar_rerun_triage_plant_animal.yaml` | First-pass verdicts on all 958 plant- and animal-flagged kingdom-level candidates, in five groups by lineage and evidence type. |
 
 Run from the repository root:
 
