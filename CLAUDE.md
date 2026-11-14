@@ -356,6 +356,36 @@ Therefore:
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
 
+### Claiming a wrong gene or wrong reference: judge what the evidence can show
+
+A `WRONG_GENE_PRODUCT` or `WRONG_REFERENCE` source defect goes to the resource as a
+correction request, so its confidence must match what you actually saw. This is a
+judgement, not a rule keyed to whether the full text was read: ask whether the
+unread part of the paper could overturn the claim.
+
+- **It could not, so the claim can be confident from a title, abstract or record.**
+  A PMID whose title is on an unrelated subject (a thyroid-surgery paper on an
+  *E. coli* gene), especially when a near-identical PMID is the obvious intended
+  paper; a paper that predates the cloning of the gene; an abstract that defines
+  the entity as another protein ("p43, the precursor of EMAP II"; an 802-residue
+  enzyme when the annotated protein has 532); a WITH/FROM allele that belongs to
+  another gene; the identical row already present on the right gene.
+- **It could, so the claim is a query at most.** The title or abstract foregrounds
+  a paralog, another family member or another organism; the abstract "does not
+  mention" the gene; a TAS is faulted because the paper "does not assay" the
+  process (a TAS needs only an author statement, which may sit in a table); a
+  Reactome event summary does not name the gene (check the participant list,
+  including complexes and sets). Use `SUSPECTED` or `PROBABLE`, `requested_change:
+  CHECK`, and not `REMOVE`.
+- **Before claiming a mis-attribution, look at how the resource annotated the
+  paper as a whole.** The same row made on the same day across a family, or on
+  every isozyme an unfractionated assay cannot separate, is a deliberate practice,
+  not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
+  reference page) shows this in one query.
+- **Say in `explanation` what depth the claim rests on**, and name a candidate
+  correction as a candidate when the intended paper or gene was inferred and not
+  read.
+
 ### Do not add what curators deliberately declined to add
 
 The mirror image of the rule above, and the one that governs `NEW`. Everything else
