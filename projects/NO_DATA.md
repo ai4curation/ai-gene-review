@@ -385,9 +385,15 @@ no longer restore them.
 review's notes record the literature on the gene: sequencing, gene-cluster
 descriptions, RNA expression, misattributed GOA rows (Krtap21-1) or a binding
 study of unstated species (Krtap8-1). None identifies a function for the mouse
-gene, so all 37 became `ACCEPT`, each citing its notes file as the record of the
-search. The 33 replacement terms the reviews did not carry elsewhere became `ISS`
-`NEW` rows. Applied with `apply_acceptance_rule.py mouse/Krtap`.
+gene, so all 37 became `ACCEPT`. On 2026-11-14 each gene was searched in PubMed
+(E-utilities, the symbol and its earlier names in All Fields). The queries and
+hits are appended to each notes file and listed in its review's `references`.
+Each accepted row quotes the line in the notes that records the negative result
+(decision field `searched`). Apart from that line, the mouse hits are only
+sequencing, cluster descriptions, RNA expression and one plasma biomarker list;
+the rest are on sheep, goat, cattle or human. The 33 replacement terms the
+reviews did not carry elsewhere became `ISS` `NEW` rows. Applied with
+`apply_acceptance_rule.py mouse/Krtap`.
 
 **Not yet swept.** Five `REMOVE` or `MODIFY` ND rows from reviews merged after
 the pass have no `nd_case`: human/CDKAL1 BP, ARATH/PGR3 CC, and rat Actl7a,
