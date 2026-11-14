@@ -12,6 +12,16 @@ TrEMBL entry Q88EU6 (PP_4357), FliN/MopA/SpaO family (TIGR02480). No KT2440 fliN
 Decisions: GO:0003774 MODIFY -> GO:0005198 (same reasoning as FliM); plasma membrane KEEP_AS_NON_CORE; membrane MODIFY -> GO:0005886; chemotaxis ACCEPT; flagellum and basal body MODIFY -> GO:0009433; cell motility ACCEPT. Core MF GO:0005198 (module C-ring complex-level MF).
 
 
+## Taxon/module audit, 2026-11-06
+
+PMID:20439729 reports E. coli CheY-P/FliN binding; PMID:39179739 instead finds no such contact in its Salmonella active-CheY-mutant structure. These need not imply that the earlier experiment was false, but prohibit an unqualified universal docking claim. Retain structural switch participation and chemotaxis; describe the KT2440 direct binding interface as unresolved. Primary PMID:38632342 supports the lower C-ring organization. FliH docking remains comparative-family evidence.
+
+Source anchor: [PMID:39179739 "CheY** has no interactions with FliN and the bottom subring in the structure."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
+
+
+
 ## 2026-11-06 comparative flagellar audit
 
 Reviewed every existing annotation and the biological summary/core functions. Original annotation payloads, including historical NEW proposals, are preserved. Family/domain evidence supports conserved structural assignments; comparative Salmonella or other bacterial assays are not presented as KT2440 experiments. Exact subunit counts and interaction geometries are not transferred as target measurements.
@@ -19,3 +29,8 @@ Reviewed every existing annotation and the biological summary/core functions. Or
 The normal Falcon research attempt failed (HTTP 403; provider output was not fabricated). This entry records manual review of the cached primary/comparative literature.
 
 GO:0003774 explicitly includes electrochemical-gradient-driven flagellar rotation. Rotor/switch structural roles are distinguished from autonomous torque generation. The C-ring/MS-ring CC terms were verified against ontology ancestry and remain valid substructure locations.
+
+
+## 2026-11-11 — reconcile chemotaxis and merged flagellar audits
+
+Retain merged flagellar evidence and decisions, including gradient-guided stator mechanics and FliG switching; retain branch primary structural references, target-specific caveats, and broad-family limits. FliN direct CheY-contact uncertainty is preserved.

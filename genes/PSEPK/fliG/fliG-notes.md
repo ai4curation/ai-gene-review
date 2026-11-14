@@ -8,6 +8,16 @@
 - Added NEW GO:0005198 structural molecule activity (IC) as a second core function: the C-ring module asserts this complex-level activity and FliG forms the ring scaffold. Status remains COMPLETE.
 
 
+## Taxon/module audit, 2026-11-06
+
+Retain FliG torque transmission as a contribution to motor activity and its separate structural role. The new Salmonella structure is comparative support for C-ring rearrangement; it is not KT2440 structural evidence or proof of a target-specific CheY interface. Existing non-core chemotaxis judgment remains defensible for the broadly required rotor component.
+
+Source anchor: [PMID:39179739 "The CheY proteins are bound into an open groove between two adjacent protomers on the surface of the middle subring of the C ring and interact with the FliG and FliM subunits."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.
+
+
+
 ## 2026-11-06 comparative flagellar audit
 
 Reviewed every existing annotation and the biological summary/core functions. Original annotation payloads, including historical NEW proposals, are preserved. Family/domain evidence supports conserved structural assignments; comparative Salmonella or other bacterial assays are not presented as KT2440 experiments. Exact subunit counts and interaction geometries are not transferred as target measurements.
@@ -17,3 +27,8 @@ GO:0003774 explicitly includes electrochemical-gradient-driven flagellar rotatio
 ## 2026-11-06 — PR6138 evidence follow-up
 
 Restored explicit CheY-P-to-FliG switching and rotor–stator interface evidence from PMID31452860. Comparative residue labels remain attributed to that source. Current GO0140605 descends from GO0003774; the older wrong-kind-of-motor wording would be incorrect. Removed unused PMID39766194 reference.
+
+
+## 2026-11-11 — reconcile chemotaxis and merged flagellar audits
+
+Retain merged flagellar evidence and decisions, including gradient-guided stator mechanics and FliG switching; retain branch primary structural references, target-specific caveats, and broad-family limits. FliN direct CheY-contact uncertainty is preserved.
