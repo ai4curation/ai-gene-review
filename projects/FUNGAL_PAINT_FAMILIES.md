@@ -48,6 +48,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`ASPFU/rmt2`/`EMENI/rmt2` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 | `PTHR32385` MANNOSYL PHOSPHORYLINOSITOL CERAMIDE SYNTHASE | fungal IPC mannosyltransferase node | `SUR1`/`CSH1`/`imt1`/`imt2`/`imt3`/`MIT1`/`Q4WDG6` |
+| `PTHR13027` SAND PROTEIN-RELATED | eukaryotic and fungal Mon1-Ccz1/Ypt7 GEF nodes | `MON1`/`mon1`/`MON1`/`apg-13`/`ASPFU/mon1`/`EMENI/mon1` |
 
 ---
 
@@ -501,6 +502,31 @@ activity` term when enough evidence is present.
   mannosyltransferase PAINT seed; the `PTN001285482` IBAs are sound, with the
   generic MF row and older AspGD generic IMP rows replaced by exact `GO:0103064`
 
+## Family 22: Mon1-Ccz1 Rab7 GEF Subunits
+
+`PTHR13027` contains the conserved Mon1/SAND family. PAINT places the
+`contributes_to` guanyl-nucleotide exchange factor activity on the eukaryotic
+`PANTHER:PTN000315021` node, Mon1-Ccz1 complex membership on the
+Opisthokonta `PANTHER:PTN000315023` node with a fungal IRD branch, and fungal
+vacuole-membrane and vacuolar-protein-targeting rows on
+`PANTHER:PTN000989606`. The first pass should keep Mon1 separate from the Ccz1
+subunit and from upstream Vps21/Ypt10 regulators while checking direct
+stationary-phase lipid-droplet, Cvt/autophagy, and endosomal-maturation
+evidence for the budding-yeast seed.
+
+- [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1/Ypt7 GEF subunit; rechecked in
+  PTHR13027 after 2026 VINE/Ypt10 and lipid-droplet papers
+- [x] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows;
+  rechecked against PTHR13027 and its Schizosaccharomyces Mon1-Ccz1 IRD
+- [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member; rechecked
+  against PTHR13027 after the yeast/MON1 refresh
+- [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member; rechecked
+  against PTHR13027 with no IBA action changes
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member;
+  rechecked against PTHR13027 with no IBA action changes
+- [x] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member; rechecked
+  against PTHR13027 and marked the Mon1-Ccz1-complex IBA over-annotated
+
 ---
 
 # NOTES
@@ -561,6 +587,39 @@ activity` term when enough evidence is present.
   direct to A. fumigatus `sec2` and reports hyphal-tip, autophagy, cell-wall,
   and virulence phenotypes, but it does not support adding new process
   annotations for those downstream outputs.
+- Started `PTHR13027`, the Mon1/SAND family. The existing `yeast/MON1` review
+  already accepted the fungal `PTN000989606` vacuole-membrane and
+  vacuolar-protein-targeting IBAs, the eukaryotic `PTN000315021`
+  `contributes_to` GEF row, and the Opisthokonta `PTN000315023` Mon1-Ccz1
+  complex row; newer 2026 papers add VINE/Ypt10 upstream regulation and a
+  stationary-phase Pdr16-lipid-droplet context without changing those GO calls.
+- Rechecked `CANAL/MON1` as the *Candida albicans* `PTHR13027:SF7` ortholog.
+  Its four IBA rows still match the fungal `PTN000989606`, eukaryotic
+  `PTN000315021`, and Opisthokonta `PTN000315023` placements; the only review
+  edits cite the no-direct-Candida-literature search for CGD's accepted `ND`
+  placeholders.
+- Rechecked `NEUCR/apg-13`, the *Neurospora crassa* `PTHR13027:SF7` Mon1
+  ortholog. The existing review already accepted the same fungal, eukaryotic,
+  and Opisthokonta IBA rows; the 2026 follow-up search did not find direct
+  Q870Q4 literature, and the newer N. crassa prevacuolar and autophagy
+  morphology papers add Rab7/vacuole context without assaying Mon1.
+- Rechecked `ASPFU/mon1`, the *A. fumigatus* Af293 `PTHR13027:SF7` Mon1
+  member. The PAINT IBA decisions remain sound against the Aspergillus MonA and
+  Fusarium FgMon1 literature; the review only needed a `PMID:12364329` quote
+  normalized to the exact cached text.
+- Rechecked `EMENI/mon1`, the *A. nidulans* `PTHR13027:SF7` MonA ortholog. Its
+  existing review already paired the Aspergillus MonA deletion paper with the
+  yeast and Fusarium Mon1 seeds; the 2026 follow-up search did not find a newer
+  direct MonA paper or an Aspergillus Ccz1/Rab7 assay. Son & Park's failure to
+  find Ccz1 orthologs in Aspergillus/Fusarium/Penicillium makes the
+  Mon1-Ccz1-complex IBA over-annotated for `EMENI/mon1`, while the GEF,
+  vacuolar-membrane, vacuolar-protein-targeting and ISS autophagy decisions
+  still stand.
+- Rechecked `SCHPO/mon1`, the fission-yeast `PTHR13027:SF7` Mon1 ortholog. The
+  fungal vacuole-membrane/protein-targeting and eukaryotic GEF IBAs still align
+  with PAINT; the Mon1-Ccz1 complex row is PomBase ISO-only because the
+  2025-09-03 `PTN008545077` IRD blocks the broad Opisthokonta complex IBA on the
+  Schizosaccharomyces branch.
 
 ## 2026-11-01
 
