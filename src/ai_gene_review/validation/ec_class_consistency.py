@@ -24,9 +24,13 @@ What is flagged (WARNING, ``check_type: ec_class_conflict``):
 * an ``ACCEPT``, ``KEEP_AS_NON_CORE`` or ``NEW`` existing-annotation row, or a
   ``core_functions`` molecular function, whose term's fully specified EC
   numbers are all in a class the protein's UniProt EC numbers never use;
+* a ``TOO_GENERAL`` row on such a term. ``TOO_GENERAL`` asserts the term is
+  true but uninformative, which is wrong for a term naming a different reaction;
 * a ``MODIFY`` row on such a term whose ``reason``/``summary`` treats it as too
-  broad or general. A term for a different reaction is not a broader one: the
-  row is either a lateral correction (say so) or a ``REMOVE``.
+  broad or general.
+
+A term for a different reaction is not a broader one: the row is either a
+lateral correction (say so) or a ``REMOVE``.
 
 What is not flagged:
 
@@ -67,6 +71,9 @@ TermEcLookup = Callable[[str], FrozenSet[str]]
 CHECK_TYPE = "ec_class_conflict"
 
 KEPT_ACTIONS = frozenset({"ACCEPT", "KEEP_AS_NON_CORE", "NEW"})
+
+#: Actions that assert the term is true but too broad (always checked).
+GRANULARITY_ACTIONS = frozenset({"TOO_GENERAL"})
 
 _FULL_EC = re.compile(r"^\d+\.\d+\.\d+\.n?\d+$")
 _UNIPROT_EC = re.compile(r"EC=(\d+\.[0-9n.\-]+)")
@@ -201,9 +208,13 @@ class EcClassConflict:
     protein_ecs: FrozenSet[str]
 
     @property
-    def is_refinement_modify(self) -> bool:
-        """True for a MODIFY row (only refinement-worded MODIFYs are collected)."""
-        return self.action == "MODIFY"
+    def claims_granularity(self) -> bool:
+        """True when the row treats the term as true but too broad.
+
+        That is a TOO_GENERAL row, or a MODIFY row (only refinement-worded MODIFYs
+        are collected).
+        """
+        return self.action == "MODIFY" or self.action in GRANULARITY_ACTIONS
 
 
 def find_ec_class_conflicts(
@@ -239,7 +250,7 @@ def find_ec_class_conflicts(
             text = f"{review.get('reason') or ''} {review.get('summary') or ''}"
             if not _REFINEMENT.search(text):
                 continue
-        elif action not in KEPT_ACTIONS:
+        elif action not in KEPT_ACTIONS and action not in GRANULARITY_ACTIONS:
             continue
         term_id = term.get("id")
         if not term_id:
@@ -290,9 +301,14 @@ def _message(conflict: EcClassConflict) -> tuple[str, str]:
         f"protein's UniProt EC is {protein_ecs}: a different EC class, so the term "
         "names a different reaction"
     )
-    if conflict.is_refinement_modify:
+    if conflict.claims_granularity:
+        how = (
+            "TOO_GENERAL treats it as true but too broad"
+            if conflict.action in GRANULARITY_ACTIONS
+            else "the MODIFY reason treats it as too broad"
+        )
         return (
-            f"{head}, yet the MODIFY reason treats it as too broad",
+            f"{head}, yet {how}",
             "A wrong-reaction term is not a general one: use REMOVE with "
             "source_defects (or a MODIFY whose reason says the reaction is wrong). "
             "Check for synthase/synthetase or similar name confusion.",

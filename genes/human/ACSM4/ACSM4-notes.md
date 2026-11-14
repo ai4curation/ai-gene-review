@@ -17,3 +17,13 @@ These are kept consistent with the rat and mouse Acsm4 reviews.
 - GO:0006637 IBA: MODIFY to GO:0046949.
 - GO:0015645 IBA and ISS: MODIFY to GO:0031956.
 - Other rows: ACCEPT.
+
+## 2026-11-14: correction on the high-throughput mitochondrion row
+
+The cited proteome paper does not name this gene; its per-protein results are
+in supplementary data not held here. The GOA row is therefore the only record
+that the gene was called mitochondrial in that study, and it cannot be cited as
+its own support. The review now accepts the mitochondrion location on the
+predicted transit peptide and on the rat ortholog's experimental localization
+[PMID:12709059 "protein localization to mitochondria like other MACS family proteins"],
+and no longer quotes the proteome paper as evidence for this gene.

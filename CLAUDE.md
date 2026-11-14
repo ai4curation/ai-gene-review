@@ -252,7 +252,7 @@ the judgement in `reason`. See the promiscuous-activity tiers in
 **A term in another EC class names a different reaction, not a broader one.**
 Watch for synthase/synthetase swaps: `GO:0004321` fatty-acyl-CoA synthase is
 the fatty acid synthase reaction (EC 2.3.1.86), while an acyl-CoA synthetase is
-a ligase (EC 6.2.1). When a kept or MODIFYed term's EC class differs from every
+a ligase (EC 6.2.1). When a kept, MODIFYed or TOO_GENERAL term's EC class differs from every
 EC on the protein's UniProt record, `just validate` warns (`ec_class_conflict`,
 `src/ai_gene_review/validation/ec_class_consistency.py`). Fix it with `REMOVE`
 and `source_defects`, or say in `reason` why the activity is genuine (a

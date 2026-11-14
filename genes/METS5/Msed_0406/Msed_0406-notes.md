@@ -84,7 +84,8 @@ No `-deep-research-*.md` file was created.
   medium-chain acyl-CoA ligase with a C4-C11 range, whereas GO medium-chain means C6-C12.
 - GO:0004321 fatty-acyl-CoA synthase activity is the fatty acid synthase reaction
   (EC 2.3.1.86, acetyl-CoA + malonyl-CoA + NAD(P)H), not an acyl-CoA synthetase.
-  "Synthase" vs "synthetase" mix-up in the PANTHER TreeGrafter node (PTN008683229).
+  "Synthase" vs "synthetase" mix-up, inherited by TreeGrafter through graft node
+  PTN008683229 from the PAINT IBD on the PTHR43605 root PTN001944787.
   Remove.
 - GO:0006633 fatty acid biosynthetic process: archaeal membranes are isoprenoid ether
   lipids. The enzyme activates short acids; it plays no part in fatty acid synthesis.

@@ -5,7 +5,99 @@ tags: [OBSOLETION]
 species: [yeast, SCHPO, rat, mouse, human, PSEPK, METS5, BACSU]
 genes: [FAS1, FAS2, fas1, fas2, Acsm4, ACSM4, PP_2213, Msed_0406, ytcI]
 autolink_exclude: [FAS]
-last_reviewed: 2026-11-02
+last_reviewed: 2026-11-14
+proposed_ontology_changes:
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0004321
+    label: fatty-acyl-CoA synthase activity
+  has_nondirect_replacement:
+  - id: GO:0004313
+    label: '[acyl-carrier-protein] S-acetyltransferase activity'
+  - id: GO:0004314
+    label: '[acyl-carrier-protein] S-malonyltransferase activity'
+  - id: GO:0004315
+    label: 3-oxoacyl-[acyl-carrier-protein] synthase activity
+  - id: GO:0004316
+    label: 3-oxoacyl-[acyl-carrier-protein] reductase (NADPH) activity
+  - id: GO:0019171
+    label: (3R)-hydroxyacyl-[acyl-carrier-protein] dehydratase activity
+  - id: GO:0141148
+    label: enoyl-[acyl-carrier-protein] reductase (NADPH) activity
+  - id: GO:0005835
+    label: fatty acid synthase complex
+  - id: GO:0006633
+    label: fatty acid biosynthetic process
+  change_dsl: obsolete GO:0004321
+  justification: >-
+    GO:0004321 turns EC 2.3.1.86, the fungal "fatty-acyl-CoA synthase system" (an
+    alpha6beta6 complex of two multifunctional chains), into a single-reaction
+    molecular function that no single gene product performs; each component step
+    already has its own GO term. Rhea's RHEA:22896 has no EC link and no UniProtKB
+    entries, and Swiss-Prot gives the overall reaction only as free text. Of 17,305
+    annotations (QuickGO, 2026-11-01) about 21% are on fungal FAS subunits; the rest
+    reach acyl-CoA ligases, bacterial polyketide synthases and unrelated proteins by
+    four independent routes, mostly synthase/synthetase confusions. SGD and PomBase
+    annotate fungal FAS to GO:0004312 instead. No direct replacement: the components,
+    the complex and the process are curator choices per annotation. The full case and
+    the draft ticket are on this page.
+  supported_by:
+  - reference_id: PMID:17431175
+    supporting_text: The alpha and beta polypeptide chains form the six catalytic domains
+      required for fatty acid synthesis
+  - reference_id: PMID:12709059
+    supporting_text: Recombinant O-MACS protein tagged with c-Myc and His6 demonstrated
+      an acyl-CoA synthetase activity for fatty acid activation
+  origin: SELF_PROPOSED
+  confidence: PROBABLE
+  request_status: NOT_FILED
+  ontology_state_verified: '2026-11-01'
+  affected_annotations:
+  - genes/yeast/FAS1/FAS1-ai-review.yaml
+  - genes/yeast/FAS2/FAS2-ai-review.yaml
+  - genes/SCHPO/fas1/fas1-ai-review.yaml
+  - genes/SCHPO/fas2/fas2-ai-review.yaml
+  - modules/fatty_acid_de_novo_synthesis.yaml
+  see_also:
+  - https://github.com/geneontology/go-annotation/issues/6642
+  - https://github.com/geneontology/go-ontology/issues/8102
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0005836
+    label: fatty-acyl-CoA synthase complex
+  has_nondirect_replacement:
+  - id: GO:0005835
+    label: fatty acid synthase complex
+  change_dsl: obsolete GO:0005836
+  justification: >-
+    GO:0005836 is defined only as "a protein complex that possesses fatty-acyl-CoA
+    synthase activity", so it cannot outlive GO:0004321. It has no annotations, and
+    GO:0005835 fatty acid synthase complex already covers the fungal type I FAS
+    complex (its synonyms include "cytosolic type I FAS complex").
+  origin: SELF_PROPOSED
+  confidence: PROBABLE
+  request_status: NOT_FILED
+  ontology_state_verified: '2026-11-01'
+- change_type: REMOVE_MAPPING
+  ontology: GO
+  about_node:
+    id: GO:0004321
+    label: fatty-acyl-CoA synthase activity
+  old_value: EC:2.3.1.86
+  justification: >-
+    The ec2go mapping from EC:2.3.1.86 to GO:0004321 is how UniProt EC assignments
+    become GO annotations, including EC 2.3.1.86 that genome submitters typed on
+    acyl-CoA ligases and that ARBA00048237 adds to bacterial polyketide synthases.
+    It should go with the obsoletion; if GO keeps the term instead, the mapping should
+    still be restricted so that it cannot reach non-fungal proteins. The Rhea
+    (RHEA:22896) and MetaCyc (FATTY-ACYL-COA-SYNTHASE-RXN) cross-references on the
+    term would go with it.
+  origin: SELF_PROPOSED
+  confidence: PROBABLE
+  request_status: NOT_FILED
+  ontology_state_verified: '2026-11-01'
 ---
 
 # Fatty-acyl-CoA Synthase Activity — Proposed Obsoletion of GO:0004321

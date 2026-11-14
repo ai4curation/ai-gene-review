@@ -87,6 +87,8 @@ def test_class_conflict(term_ecs: set, protein_ecs: set, expected: bool) -> None
             ),
             False,
         ),
+        (row("GO:0004321", "TOO_GENERAL"), True),
+        (row("GO:0031956", "TOO_GENERAL"), False),
         (row("GO:0004321", "REMOVE"), False),
         (row("GO:0004321", "MARK_AS_OVER_ANNOTATED"), False),
         (row("GO:0004321", "ACCEPT", negated=True), False),
@@ -145,6 +147,19 @@ def test_check_reports_warning_with_check_type(tmp_path: Path) -> None:
     assert [i.check_type for i in report.issues] == [CHECK_TYPE]
     assert "treats it as too broad" in report.issues[0].message
     assert report.is_valid
+
+
+def test_too_general_warning_names_the_action(tmp_path: Path) -> None:
+    """A TOO_GENERAL row on a wrong-reaction term gets the granularity message."""
+    (tmp_path / "X-uniprot.txt").write_text(
+        "DE   RecName: Full=Acyl-CoA synthetase;\nDE            EC=6.2.1.3;\n"
+    )
+    review = tmp_path / "X-ai-review.yaml"
+    data = {"existing_annotations": [row("GO:0004321", "TOO_GENERAL")]}
+    report = ValidationReport(file_path=review, is_valid=True)
+    check_ec_class_consistency(data, report, review, lookup)
+    assert [i.check_type for i in report.issues] == [CHECK_TYPE]
+    assert "TOO_GENERAL treats it as true but too broad" in report.issues[0].message
 
 
 def test_check_is_skipped_without_ontology(tmp_path: Path) -> None:
