@@ -33,6 +33,10 @@ filamentous-fungal Ccz1 candidates are findable with newer remote-homology
 methods, but direct A. fumigatus Mon1-Ccz1 binding and Rab7 GEF assays are
 still the main open biology.
 
+2026-11-06 searches for A. fumigatus Q4WHL1/AFUA_2G05010 and Mon1-Ccz1/MonA
+did not find a direct Af293 mon1 paper or a newer Aspergillus MonA paper after
+Son and Park 2019.
+
 ## Annotation decisions
 
 - `GO:0000329 fungal-type vacuole membrane` and `GO:0006623 protein targeting to
