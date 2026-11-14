@@ -137,12 +137,42 @@ InterPro IPR003635 (Neurokinin-B/TAC3) and IPR013055 (tachykinin C-terminal sign
 - Rat: ablating NK3-expressing arcuate KNDy neurons lowers tail-skin temperature (less
   cutaneous vasodilatation) and removes the estradiol effect.
   [PMID:23150555 "KNDy neuron ablation consistently reduced tail-skin temperature (T(SKIN)), indicating that KNDy neurons facilitate cutaneous vasodilatation, an important heat dissipation effector."]
-- Decision, same as TACR3: no NEW BP. GO:0031653 heat dissipation, GO:0031654 regulation
-  of heat dissipation and GO:0031656 positive regulation of heat dissipation carry no
-  annotations in any species (QuickGO, descendants, 2026-11-13), so GO practice gives no
-  precedent for annotating a neuropeptide to them, and the human circuit is not defined.
+- What the infusion study measured, beyond the symptom: skin temperature rose during the
+  flush episodes and sternal skin conductance, an objective marker of sweating, rose with
+  them, in healthy premenopausal women.
+  [PMID:25683060 "In summary, our data shows that intravenous infusion of NKB acutely induces hot flushes in premenopausal healthy women."]
+  [PMID:25683060 "Mean skin temperature increased significantly during flushing symptoms when compared with the pre-symptom period"]
+  [PMID:25683060 "Concordant increases in sternal skin conductance (suggestive of sweating) were evident in six of the eight participants at the time of flushing during their NKB infusion"]
+  And what it did not: nothing changed across the infusion as a whole, and core temperature
+  was not measured (visits were scheduled in the follicular phase for its stability).
+  [PMID:25683060 "overall mean levels of HR, MAP and skin temperature were similar between entire NKB and vehicle infusions in healthy women, which suggests that NKB per se does not affect these parameters"]
+  [PMID:25683060 "All study visits were scheduled during days 3 to 10 of the menstrual cycle (follicular phase) when core body temperature is most stable."]
+- Receptor-side requirement, from the trials of NK3R-selective antagonists in postmenopausal
+  women. Evidence about the estrogen-deprived state, and about the receptor rather than the
+  peptide, but it shows the pathway this peptide signals through is required for the
+  episodes.
+  [PMID:28385352 "MLE4901 significantly reduced the total weekly number of hot flushes by 45"]
+  [PMID:36924778 "Compared with placebo, fezolinetant 30 mg and fezolinetant 45 mg significantly reduced the frequency of vasomotor symptoms at week 4"]
+  The trial literature is also where the flush is defined as effector activation rather than
+  a sensation only, which is what makes it a thermoregulatory process at all.
+  [PMID:28385352 "A hot flush is characterised by an intense feeling of heat, which often rises through the body, and intermittent activation of heat dissipation effectors, including peripheral cutaneous vasodilatation, sweating, and behavioural change, to reduce temperature."]
+- Decision, revised 2026-11-14, same revision as TACR3: **NEW GO:0001659 temperature
+  homeostasis** (EXP, PMID:25683060). The earlier "no NEW BP" rested on the heat-dissipation
+  terms having no annotations in any species, which is true and remains true, but only their
+  parent was ever the usable term. GO:0001659 has 26 human rows and 42 mouse rows; the human
+  rows are **all** transfers (IEA, ISS, IBA, TAS) and include the neuropeptides HCRT and NMU,
+  while about twenty of the mouse rows are IMP (QuickGO, 2026-11-13). So the term is used for
+  secreted neuropeptides, and the thin human side reflects the rarity of human
+  thermoregulation experiments rather than a curator decision; nothing existed to transfer
+  either, since neither rodent ortholog carries a GO:0001659 row in GOA. Participation test:
+  the peptide is the signal acting on receptors in the thermoregulatory circuit. Evidence
+  code EXP, on the ECO reasoning recorded in the TACR3 notes (ECO:0006053 pharmacological
+  assay evidence is neither IMP's nor IDA's class, and resolves to EXP); IDA is also
+  defensible here because the experiment administers the gene product itself, and GO's own
+  guidance pages were unreachable from this environment.
   [PMID:25683060 "However, the central mechanisms through which sex steroid deficiency triggers flushing remain unclear."]
-  Recorded in description and as a BIOLOGY knowledge gap.
+  The human circuit is still undefined, so the BIOLOGY knowledge gap stays, with the
+  infusion study's two limits added to its boundary.
 
 ## Blood pressure and pregnancy rows
 

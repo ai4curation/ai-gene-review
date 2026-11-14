@@ -106,10 +106,48 @@ PANTHER PTHR46925:SF1 NEUROMEDIN-K RECEPTOR).
   [PMID:36924778 "Compared with placebo, fezolinetant 30 mg and fezolinetant 45 mg significantly reduced the frequency of vasomotor symptoms at week 4"]
 - The human site and circuit are unresolved.
   [PMID:25683060 "However, the central mechanisms through which sex steroid deficiency triggers flushing remain unclear."]
-- Decision: no NEW BP. GO:0031654/GO:0031656 (regulation of heat dissipation) have no
-  annotations in human, mouse or rat, so the existing practice gives no precedent for
-  annotating a receptor in thermoregulatory neurons to them. Recorded in description and a
-  BIOLOGY knowledge gap.
+- Additional human evidence, added when this decision was revisited (see below): the flush
+  is defined in the trial literature as effector activation, not a sensation only, the
+  MLE4901 result was confirmed objectively by skin conductance, and a third antagonist
+  replicates it.
+  [PMID:28385352 "A hot flush is characterised by an intense feeling of heat, which often rises through the body, and intermittent activation of heat dissipation effectors, including peripheral cutaneous vasodilatation, sweating, and behavioural change, to reduce temperature."]
+  [PMID:28385352 "The reported subjective effect of decreased flushes by MLE4901 was confirmed by objective measurement using the skin conductance monitor and detection algorithm software"]
+  [PMID:39172446 "Elinzanetant significantly reduced VMS frequency at week 4"]
+  Note elinzanetant is not NK3R-selective, so it supports the pathway rather than this
+  receptor.
+  [PMID:39172446 "To evaluate the efficacy and safety of elinzanetant, a selective neurokinin-1,3 receptor antagonist, for the treatment of moderate to severe menopausal vasomotor symptoms."]
+- Decision, revised 2026-11-14: **NEW GO:0001659 temperature homeostasis** (EXP,
+  PMID:28385352). The earlier decision here was "no NEW BP", on the ground that
+  GO:0031653/GO:0031654/GO:0031656 carry no annotations in any species. That is still true,
+  but it was an incomplete check: it looked only at the heat-dissipation subtree and not at
+  their parent, GO:0001659 ("A homeostatic process in which an organism modulates its
+  internal body temperature"), which is the term the corpus actually uses.
+  - Comparator check (QuickGO, GO:0001659 exact, 2026-11-13). Human: 26 rows, **every one a
+    transfer** (IEA, ISS, IBA or TAS), including the GPCRs ADORA1, DRD2, GRM5, HTR2A, MC5R
+    and NTSR1 and the neuropeptides HCRT and NMU. Mouse: 42 rows, about twenty of them IMP
+    (Drd1, Drd2, Trpv1, Mc5r, Nmu, Fto, Stat3, Nox3 ...). So the term is used for receptors
+    of this kind; the human side is thin because human thermoregulation is rarely perturbed
+    experimentally, not because curators decided against the term. There was also nothing to
+    transfer: neither mouse nor rat Tacr3 carries a GO:0001659 row in GOA (the mouse one in
+    this corpus is this project's own proposal).
+  - Participation test: the receptor transduces the NKB signal onto the heat-loss circuit, so
+    it performs a step in the regulatory process. Receptor blockade is evidence about *this*
+    gene product, because the drug's target is the receptor.
+  - Population caveat, carried on the row: the antagonist trials are in postmenopausal women,
+    so they establish the receptor's role in the estrogen-deprived state. The eugonadal arm
+    comes from the ligand side (NKB infusion in healthy premenopausal women) and from the
+    rodent MnPO data; no human experiment has measured core temperature during NK3R agonism
+    or blockade.
+  - Evidence code: EXP. ECO classes assaying an organism's response to a receptor agonist or
+    antagonist as pharmacological assay evidence (ECO:0006053), which sits under experimental
+    phenotypic evidence, **not** under mutant-phenotype evidence (ECO:0000315, the IMP class
+    -- its descendants cover mutation, RNAi, morpholino, antisense and over-expression, but no
+    drug) and not under direct-assay evidence; the manual-assertion form resolves to EXP. GO's
+    own IMP and IDA guidance pages could not be read from this environment
+    (wiki.geneontology.org returns 403), so this is reasoning from ECO and not a verified
+    consortium convention.
+  - The human circuit is still undefined, so the BIOLOGY knowledge gap stays, with the two
+    limits above added to its boundary.
 
 ## Rat pharmacology behind the Ensembl Compara IEA rows (source: rat Tacr3 P16177 GOA)
 
