@@ -27,15 +27,15 @@ gel-filtration evidence for stabilization of the assembled complex. Its previous
 review note incorrectly said the cache was missing.
 
 Current QuickGO defines [GO:0018812](https://www.ebi.ac.uk/QuickGO/term/GO:0018812)
-as a specific child of [GO:0004300](https://www.ebi.ac.uk/QuickGO/term/GO:0004300).
-Both definitions use dehydration equations; the hydratase parent explicitly
-discusses the reverse hydration direction. The label alone therefore does not
-justify replacing the dehydratase annotations. The nine broader molecular-function
-rows are refined with MODIFY to the supported specific activities, including
-GO:0018812 for its GO:0004300 parent. This is a specificity correction, not a
-rejection of the broader chemistry. NAD+ binding, root mitochondrial location
-and the informative pathway-level fatty acid metabolic process remain accepted;
-the latter is distinct from an uninformative generic molecular-function class.
+as a narrower child of [GO:0004300](https://www.ebi.ac.uk/QuickGO/term/GO:0004300):
+the child specifies the reversible (2E)-enoyl-CoA reaction, while the parent also
+covers position-3 chemistry. The definitions are not equivalent. Both fit HADHA's
+established hydration reaction; dehydration wording does not invalidate the child.
+The four hydratase rows and first core function retain the established EC 4.2.1.17
+catalytic class. Three native child rows remain accepted for their narrower chemistry.
+Other generic catalytic categories retain evidence-grounded refinements. Fatty acid
+metabolic process is accepted because HADHA directly catalyzes two fatty-acid-degradation
+reactions, without attributing that biological judgment to a special policy rule.
 
 GO:0003985 describes the C4 acetyl-CoA/acetoacetyl-CoA reaction. The alpha/beta
 activity separation and absent C4 activity support removing that assertion from

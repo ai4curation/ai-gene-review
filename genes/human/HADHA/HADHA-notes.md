@@ -184,3 +184,15 @@ Refine nine broad MF rows with MODIFY to the supported specific activities: GO:0
 Propose one NEW GO:0071617 molecular-function annotation, supported by direct full-length recombinant HADHA MLCL acylation in PMID:23152787. This fills a distinct catalytic branch, not a new process claim inferred from necessity or a missing database row. Keep donor and acceptor limits explicit, distinguish truncated MLCLAT1, and retain the unresolved GO:0052816 hydrolase assertion as UNDECIDED. The existing separation-of-function experiment remains the appropriate prospective test; no broader claim that the literature has established every mechanistic relationship is added.
 
 Final accounting supersedes the preceding candidate: 60 preserved native GOA contexts plus 1 NEW; 38 ACCEPT, 11 KEEP_AS_NON_CORE, 9 MODIFY, 1 REMOVE, 1 UNDECIDED, 1 NEW. The description is phrased as biology rather than a study narrative. A fresh history links PR #6313 with correctly spaced counts; existing history records remain append-only. Native source files and publication caches are unchanged.
+
+## 2026-11-14 UTC — PR #6313 review follow-up
+
+Restore four GO:0004300 rows to ACCEPT and use enoyl-CoA hydratase activity for the
+first core function and generic catalytic replacement. Retain all three GO:0018812
+rows: this is a genuine narrower (2E)-reaction child, not a synonym or wrong-direction
+annotation. Replace the unsupported policy attribution for GO:0006631 with the
+biological rationale. Add a bounded BIOLOGY gap about separation of HADHA activities
+in the reviewed cardiomyocyte experiments, with primary-source provenance. All 60
+native contexts, one NEW molecular-function row, native fields and sources are
+preserved. No family or cached-source edit is made. This supersedes earlier notes
+that directed every hydratase parent row to GO:0018812.
