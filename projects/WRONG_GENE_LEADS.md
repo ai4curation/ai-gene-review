@@ -83,18 +83,19 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    protein suffix `p` after a final digit is dropped (the yeast Cds1p). Numbered ranges are expanded
    (AKR1C1-AKR1C4, AKR1C1-4). A one-word "Protein X" name also matches X when X is
    written capitalised and not at the start of a sentence (Breathless, but not prose
-   "similar" for Protein similar). A one-word qualifier after a comma is dropped ("…dehydrogenase,
+   "similar" for Protein similar), outside a Title-Case title; an X with a digit,
+   hyphen or inner capital (jagged-1) is matched like any other name. A one-word qualifier after a comma is dropped ("…dehydrogenase,
    mitochondrial"). Fission yeast genes also take their PomBase gene name and
    synonyms (glu3 for idh1), from the PomBase identifiers snapshot under
-   `projects/PROTNLM_EVALUATION/`.
+   `projects/PROTNLM_EVALUATION/`. Protein names that a citing paralog shares after
+   these short forms are expanded (MDH1 and MDH2 are both "Malate dehydrogenase"
+   once ", cytoplasmic" and ", mitochondrial" are dropped) do not count as naming
+   the gene.
 
    The last signal marks complex-wide and list annotations: ComplexPortal giving one
    term to every subunit, or a proteomics paper annotated to every protein it found.
    It counts the gene folders in the sweep (every folder in a default run), so it
-   undercounts for complexes whose subunits are not reviewed here. Protein names
-   that a citing paralog shares after these short forms are expanded (MDH1 and MDH2
-   are both "Malate dehydrogenase" once ", cytoplasmic" and ", mitochondrial" are
-   dropped) do not count as naming the gene.
+   undercounts for complexes whose subunits are not reviewed here.
 
 The report is written to `reports/wrong-gene-leads/leads.tsv`. It is generated and
 git-ignored, never committed, because it aggregates every review. It joins each lead
@@ -294,7 +295,7 @@ No review action was changed on the strength of an abstract alone.
 
 The fourth batch found that most false positives came from names the check did not
 recognise, plus complex-wide rows. Both are now handled (see Method). A fresh sweep
-finds 10,981 leads in 2,993 genes. 464 rows that were read as not naming the gene are
+finds 10,981 leads in 2,993 genes. 465 rows that were read as not naming the gene are
 now read as naming it, and none moved the other way. 2,302 rows are marked as shared by
 four or more local genes. The top tier (score 6 or more) shrank from 466 rows to 382,
 in 193 genes.
@@ -325,6 +326,9 @@ On the genes already checked by hand:
 - **The name check misses names UniProt does not list.** An abstract that uses an
   unlisted synonym (DSP21 for rat Dusp21) is read as not naming the gene, which leaves
   some multi-gene papers ranked too high.
+- **Gene synonyms that are ordinary words match prose.** A lowercase synonym such as
+  "tube" (fly *tub*) is matched as a token, so "the polar tube" reads as naming the
+  gene. Protein short names are guarded against this; gene names are not yet.
 - **IPI rows are noisy.** An interaction paper is often cited by UniProt for only one
   partner.
 - **Uncached papers** get no name-check adjustment.

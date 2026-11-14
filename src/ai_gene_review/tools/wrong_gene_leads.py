@@ -290,9 +290,12 @@ def _phrase(text: str) -> str:
 class NameForm(NamedTuple):
     """One form of a protein name to look for in an abstract.
 
-    ``word`` marks the bare X of a one-word "Protein X" name. Such names are often
-    ordinary words ("Protein similar", "Protein rolled"), so X counts only when
-    written capitalised and not at the start of a sentence.
+    ``word`` marks the bare X of a one-word "Protein X" name when X is a plain
+    alphabetic word. Such names are often ordinary words ("Protein similar",
+    "Protein rolled", "Protein Tube"), so X counts only when written capitalised
+    and not at the start of a sentence. An X with a digit, a hyphen or an inner
+    capital ("jagged-1", "FAM10A1", "GrpE") cannot be prose and is matched as an
+    ordinary phrase.
     """
 
     text: str
@@ -303,7 +306,7 @@ def protein_name_forms(name: str) -> set[NameForm]:
     """A protein name plus the shorter forms papers use for it.
 
     A one-word "Protein X" name (common for fly and plant genes) is also matched as
-    the word X, and a trailing one-word qualifier after a comma is dropped.
+    X, and a trailing one-word qualifier after a comma is dropped.
 
     >>> sorted(f.text for f in protein_name_forms("Protein breathless"))
     ['Protein breathless', 'breathless']
@@ -311,11 +314,14 @@ def protein_name_forms(name: str) -> set[NameForm]:
     ['Very long-chain acyl-CoA dehydrogenase', 'Very long-chain acyl-CoA dehydrogenase, mitochondrial']
     >>> sorted(f.text for f in protein_name_forms("Protein kinase C"))
     ['Protein kinase C']
+    >>> sorted(protein_name_forms("Protein jagged-1"))
+    [NameForm(text='Protein jagged-1', word=False), NameForm(text='jagged-1', word=False)]
     """
     forms = {NameForm(name)}
     m = re.fullmatch(r"Protein (\S+)", name)
     if m:
-        forms.add(NameForm(m.group(1), word=True))
+        short = _fold(m.group(1))
+        forms.add(NameForm(m.group(1), word=short.isalpha() and short[1:].islower()))
     base, sep, tail = name.rpartition(", ")
     if sep and " " not in tail:
         forms.add(NameForm(base))
@@ -324,6 +330,12 @@ def protein_name_forms(name: str) -> set[NameForm]:
 
 def _capitalised_words(text: str) -> set[str]:
     """Capitalised words that do not start a sentence, split at slashes and hyphens.
+
+    Any token ending in ".", "!", "?" or ":" counts as a sentence end, so a word
+    after "et al." or "Fig." is skipped, and so is the first word of an abstract
+    after a title ending in ".". Both errors keep leads rather than hiding them, so
+    the check is not exhaustive. A Title-Case title is skipped entirely
+    (``_skip_title_case_title``).
 
     >>> sorted(_capitalised_words("Similar results. We find that Similar and Tango-bound Spätzle act."))
     ['Similar', 'Spatzle', 'Tango']
@@ -338,6 +350,34 @@ def _capitalised_words(text: str) -> set[str]:
                     words.add(part)
         previous = token
     return words
+
+
+def _skip_title_case_title(text: str) -> str:
+    """Drop a leading Title-Case title, whose capitals say nothing about names.
+
+    ``abstract_text`` puts the title first, as its own paragraph. A title in which
+    most words of four or more letters are capitalised is dropped, together with
+    the copy of it that many cached abstracts repeat at the start of the body.
+
+    >>> _skip_title_case_title("Interaction between SWP9 and Polar Tube Proteins\\n\\nThe body.")
+    'The body.'
+    >>> _skip_title_case_title("Polar Tube Proteins.\\n\\nPolar Tube\\nProteins. The body.")
+    'The body.'
+    >>> _skip_title_case_title("Breathless signalling in the trachea\\n\\nThe body.")
+    'Breathless signalling in the trachea\\n\\nThe body.'
+    """
+    title, sep, body = text.partition("\n\n")
+    words = [w for w in title.split() if len(w) >= 4 and w.isalpha()]
+    if not (sep and words and sum(w[0].isupper() for w in words) > len(words) / 2):
+        return text
+    # Drop the repeated title from the body, matching it word by word across
+    # line breaks. Only word positions matter downstream, so words are rejoined.
+    title_words = [w.strip(".") for w in title.split()]
+    body_words = body.split()
+    n = len(title_words)
+    if [w.strip(".") for w in body_words[:n]] == title_words:
+        return " ".join(body_words[n:])
+    return body
 
 
 def _names_protein(text: str, name: str) -> bool:
@@ -561,7 +601,11 @@ def named_in_abstract(
     for n in protein_names:
         forms |= {n} if isinstance(n, NameForm) else protein_name_forms(n)
     phrased = _phrase(text)
-    words = _capitalised_words(text) if any(f.word for f in forms) else set()
+    words = (
+        _capitalised_words(_skip_title_case_title(text))
+        if any(f.word for f in forms)
+        else set()
+    )
     return any(
         _fold(f.text).capitalize() in words
         if f.word
@@ -693,7 +737,7 @@ def pombase_names(path: Path = POMBASE_NAMES) -> dict[str, frozenset[str]]:
     names: dict[str, frozenset[str]] = {}
     with path.open() as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
-            found = {row["gene_name"], *row["synonyms"].split(",")}
+            found = {row["gene_name"] or "", *(row["synonyms"] or "").split(",")}
             acc = row["external_id"]
             names[acc] = names.get(acc, frozenset()) | {
                 n.strip() for n in found if n.strip()

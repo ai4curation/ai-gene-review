@@ -531,3 +531,22 @@ def test_range_expansion_is_capped(token, expanded):
     """A range is expanded only when it names at most MAX_RANGE (20) genes."""
     assert MAX_RANGE == 20
     assert ("X10" in token_forms(token)) is expanded
+
+
+def test_short_name_that_cannot_be_prose_matches_case_insensitively(tmp_path):
+    """rat/Jag1 is "Protein jagged-1": a hyphenated, numbered name needs no capital."""
+    own, _ = candidate_rows(GENES / "rat/Jag1")
+    (tmp_path / "PMID_1.md").write_text(
+        "title: X\n## Abstract\nNotch signalling requires jagged-1 in the ear.\n"
+    )
+    assert named_in_abstract("1", own.gene_names, tmp_path, own.protein_names)
+
+
+def test_title_case_title_does_not_name_a_one_word_gene():
+    """DROME/tub is "Protein Tube"; "Polar Tube Proteins" in a Title-Case title is not it.
+
+    Only the protein-name path is tested: tub also has the gene synonym "tube",
+    which the gene-name token check matches in "polar tube" (a known limitation).
+    """
+    own, _ = candidate_rows(GENES / "DROME/tub")
+    assert not named_in_abstract("28031263", [], PUBLICATIONS, own.protein_names)
