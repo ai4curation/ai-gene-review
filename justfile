@@ -77,6 +77,18 @@ lint-caches:
 fix-caches:
 	uv run python -m ai_gene_review.tools.cache_lint --fix
 
+# Score a protein against the NCBIfam family HMMs for an annotated enzyme activity and
+# compare with each model's trusted/noise cutoffs (Schnoes et al. 2009, PMID:20011109).
+# e.g. just enzyme-cutoff-check Q88KF6 --go GO:0004451
+enzyme-cutoff-check ACC *ARGS:
+	uv run python -m ai_gene_review.validation.enzyme_family_cutoff {{ACC}} {{ARGS}}
+
+# Check a protein for the curated substrate-specificity fingerprints in
+# conf/specificity_fingerprints.yaml (Kinateder et al. 2024, PMID:38284491).
+# e.g. just enzyme-fingerprint-check Q88CN3 --fingerprint holpase_hisn_pseudomonas
+enzyme-fingerprint-check ACC *ARGS:
+	uv run python -m ai_gene_review.validation.specificity_fingerprint {{ACC}} {{ARGS}}
+
 # Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
 # thing in a copy of the committed reports and checks the generator refuses with the message
 # it declares, or still renders with the clause it declares.
