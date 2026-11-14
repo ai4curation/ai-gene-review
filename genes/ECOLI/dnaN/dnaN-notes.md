@@ -17,3 +17,13 @@ Original rows: 61; current rows: 61; inherited NEW: 0; added NEW: 0. Actions: {'
 Unresolved claims remain explicit despite COMPLETE review status:
 
 - GO:0006974 (PMID:11967071): The expression-screen annotation is compatible with DNA-damage regulation, but the exact dnaN expression result in the cited study has not been independently verified here. Damage-tolerance functions do not alone establish this specific expression result.
+
+## 2026-11-13: GO:0006974 DNA damage response (IEP, PMID:11967071)
+
+Resolved the remaining UNDECIDED row as KEEP_AS_NON_CORE. Khil & Camerini-Otero 2002 is
+abstract-only in the cache and the Wiley full text returned HTTP 403, so its dnaN table entry
+was not seen. The claim itself is independently supported: lacZ fusions show mitomycin C
+induction of dnaN [PMID:2515428 "the mitomycin C induction of dnaN and dnaQ is not a simple
+lexA-regulated process"], and dnaN is listed among DNA damage-inducible replication genes
+[PMID:7476872 "In contrast to other DNA damage-inducible replication genes, such as dnaA, dnaN,
+dnaQ, and polA"]. The expression response is peripheral to clamp function, hence non-core.
