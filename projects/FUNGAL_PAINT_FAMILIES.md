@@ -516,14 +516,16 @@ evidence for the budding-yeast seed.
 
 - [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1/Ypt7 GEF subunit; rechecked in
   PTHR13027 after 2026 VINE/Ypt10 and lipid-droplet papers
-- [ ] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows
+- [x] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows;
+  rechecked against PTHR13027 and its Schizosaccharomyces Mon1-Ccz1 IRD
 - [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member; rechecked
   against PTHR13027 after the yeast/MON1 refresh
 - [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member; rechecked
   against PTHR13027 with no IBA action changes
 - [x] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member;
   rechecked against PTHR13027 with no IBA action changes
-- [ ] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member
+- [x] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member; rechecked
+  against PTHR13027 and marked the Mon1-Ccz1-complex IBA over-annotated
 
 ---
 
@@ -605,6 +607,19 @@ evidence for the budding-yeast seed.
   member. The PAINT IBA decisions remain sound against the Aspergillus MonA and
   Fusarium FgMon1 literature; the review only needed a `PMID:12364329` quote
   normalized to the exact cached text.
+- Rechecked `EMENI/mon1`, the *A. nidulans* `PTHR13027:SF7` MonA ortholog. Its
+  existing review already paired the Aspergillus MonA deletion paper with the
+  yeast and Fusarium Mon1 seeds; the 2026 follow-up search did not find a newer
+  direct MonA paper or an Aspergillus Ccz1/Rab7 assay. Son & Park's failure to
+  find Ccz1 orthologs in Aspergillus/Fusarium/Penicillium makes the
+  Mon1-Ccz1-complex IBA over-annotated for `EMENI/mon1`, while the GEF,
+  vacuolar-membrane, vacuolar-protein-targeting and ISS autophagy decisions
+  still stand.
+- Rechecked `SCHPO/mon1`, the fission-yeast `PTHR13027:SF7` Mon1 ortholog. The
+  fungal vacuole-membrane/protein-targeting and eukaryotic GEF IBAs still align
+  with PAINT; the Mon1-Ccz1 complex row is PomBase ISO-only because the
+  2025-09-03 `PTN008545077` IRD blocks the broad Opisthokonta complex IBA on the
+  Schizosaccharomyces branch.
 
 ## 2026-11-01
 
