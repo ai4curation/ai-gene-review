@@ -257,6 +257,40 @@ slots:
       The PAINT row date (YYYYMMDD) this assessment was made against, copied from the
       family's paint.tsv. Cached PAINT slices in this repo range from 2017 to 2026, so an
       assessment without a snapshot cannot be told apart from one made against stale data.
+  proposed_action:
+    range: ProposedPaintAction
+    inlined: true
+    description: >-
+      The change to PAINT this assessment recommends, in machine-readable form: which
+      action, and at which node. ``assessment`` says what is wrong with the row;
+      ``proposed_action`` says what to do about it, so that a list of requested PAINT
+      changes can be produced without reading ``assessment_reason``. Optional, and absent
+      for SOUND, LOSS_SUPPORTED and UNRESOLVED rows. The action must fit the verdict and
+      its target node is checked against the family's PANTHER tree (see
+      ``ProposedPaintAction``).
+
+  # --- ProposedPaintAction ---
+  paint_action:
+    range: PaintActionEnum
+    required: true
+    description: The kind of PAINT change requested.
+  target_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      The PANTHER node the action applies to: where a moved IBD should go, or where a new
+      IRD/IKR loss should be placed. Required for MOVE_IBD, MOVE_LOSS, ADD_IRD and ADD_IKR;
+      omitted for REMOVE_IBD and REMOVE_LOSS, which act on the assessed node itself. Must be
+      a node of this family's PANTHER tree, internal or leaf: a loss in a single gene is
+      placed at its leaf. For TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD it must lie
+      strictly below ``node_id``; for WRONG_NODE it may be anywhere in the family except
+      ``node_id``.
+  target_node_taxon:
+    range: Term
+    inlined: true
+    description: >-
+      Optional taxon of the target node, as an id/label pair with an NCBITaxon CURIE, for
+      readers who cannot resolve the PTN id.
 
   # --- ResidueSite ---
   site_id:
@@ -624,7 +658,21 @@ classes:
       - evidence
       - negated
       - paint_snapshot
+      - proposed_action
       - supported_by
+
+  ProposedPaintAction:
+    description: >-
+      A requested change to PAINT for the row a node assessment judges. Allowed actions by
+      verdict: TOO_DEEP -> MOVE_IBD (to a descendant) or REMOVE_IBD; WRONG_NODE -> MOVE_IBD
+      (to another node of the family) or REMOVE_IBD; NEEDS_PRUNING -> ADD_IRD or ADD_IKR
+      (at a descendant); LOSS_CONTRADICTED and LOSS_STALE -> REMOVE_LOSS; LOSS_TOO_BROAD ->
+      MOVE_LOSS (to a descendant). SOUND, LOSS_SUPPORTED and UNRESOLVED take no action.
+      ``family_residue_validator`` enforces the pairing and the tree relation.
+    slots:
+      - paint_action
+      - target_node_id
+      - target_node_taxon
 
   ResidueSite:
     description: >-
@@ -832,6 +880,27 @@ enums:
         description: >-
           (Loss rows only.) The ancestral node named in with/from no longer carries the IBD
           this row overrides, so the loss stops nothing and can be retired.
+
+  PaintActionEnum:
+    description: Kinds of change a family review can request of PAINT.
+    permissible_values:
+      MOVE_IBD:
+        description: Retire the IBD at the assessed node and place it at target_node_id.
+      REMOVE_IBD:
+        description: Retire the IBD at the assessed node without replacing it.
+      ADD_IRD:
+        description: >-
+          Add an IRD (loss inferred from rapid divergence) at target_node_id, stopping the
+          assessed node's IBD from descending into that clade.
+      ADD_IKR:
+        description: >-
+          Add an IKR (loss inferred from key residues) at target_node_id, stopping the
+          assessed node's IBD from descending into that clade. Use when the loss rests on
+          named residues, ideally a residue site in this review.
+      REMOVE_LOSS:
+        description: Retire the IRD/IKR at the assessed node so the ancestral IBD descends.
+      MOVE_LOSS:
+        description: Retire the IRD/IKR at the assessed node and place it at target_node_id.
 
   RequirementStrengthEnum:
     permissible_values:
