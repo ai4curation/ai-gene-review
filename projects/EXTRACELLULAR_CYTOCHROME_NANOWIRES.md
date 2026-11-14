@@ -6,6 +6,10 @@ species: [GEOSL, SHEON]
 genes: [omcS, omcE, omcZ]
 # "III" is the oxidation state in Fe(III), not the BPM13 phage gene of that name.
 autolink_exclude: [III]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/J6iDADErEjrJXDAc3SwtJS
+      title: Project brief
 ---
 
 # Extracellular Cytochrome Nanowires
