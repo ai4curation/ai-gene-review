@@ -57,3 +57,35 @@ Node leaves were taken from the PAINT leaf GAF (`.cache/paint/leaf.gaf.gz`).
 - KEEP_AS_NON_CORE: regulation of polysaccharide biosynthetic process (IMP, IBA).
 - GO_CENTRAL defect (PROBABLE): remove/restrict the GO:0032885 IBD at PTN002215378.
 - No PSEUDOCAP defect.
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the leaf claims in the `GO_CENTRAL` source defect on PTN002215378.
+Membership confirmed with
+`uv run python projects/PSEUDOCAP/panther_tree.py node PTN002215378 --leaves`
+(7 leaves, all PTHR38782:SF1); UniProt flat files fetched for all seven. All
+seven are 310-321 aa and match Pfam PF03888 MucB_RseB plus PF17188
+MucB_RseB_C; six also match NCBIfam NF006990 rseB (Shewanella Q8EH85 does not).
+
+| Leaf | Name and its evidence | Experimental annotations | Verdict |
+|---|---|---|---|
+| P0AFX9 (E. coli RseB) | RecName, curated (Reviewed); PE 1 | **GO:0045152 antisigma factor binding (IDA), GO:0050821 protein stabilization (IDA), GO:0042597 periplasmic space (EXP), GO:1903865 sigma factor antagonist complex (IPI), GO:0030288 (IDA)**; ECO:0000269 FUNCTION/SUBUNIT incl. LPS binding | "RseB ortholog" claim survives on evidence. No polysaccharide-related annotation of any kind |
+| H9L461 (S. typhimurium) | RecName from **ECO:0000256\|ARBA** (an association rule, not curation); PE 3 | none | Identity rests on the family signature, not on the name or on ARBA text |
+| A0A2U2GWS2 (Y. pestis) | **SubName** {ECO:0000313\|EMBL}; PE 3 | none | Same |
+| P44792 (H. influenzae) | RecName, curated (Reviewed); PE 3 | none; FUNCTION all ECO:0000250 "By similarity" | Curated name, but no experimental data behind it |
+| Q8EH85 (S. oneidensis) | **SubName** {ECO:0000313\|EMBL}; PE 3 | none | Family signature only; lacks NF006990 |
+| Q9KPA8 (V. cholerae) | **SubName** {ECO:0000313\|EMBL}; PE 3 | none | Family signature only |
+
+Outcome: the clade is genuinely homogeneous, so the "spans RseB orthologs"
+observation survives — but on the domain architecture, not on the names (four of
+six are SubName/ARBA). The load-bearing claim "with no reported role in
+polysaccharide synthesis" **does not survive** as stated: it is an absence, and
+there is a real counter-consideration. E. coli RseB binds LPS (curated
+ECO:0000269 statements) and the sigmaE regulon includes LPS biogenesis genes, so
+the broad GO:0032885 may be defensible for the enterobacterial leaves by a
+mechanism unrelated to the seed's. What we can assert is narrower: the *route*
+in the seed phenotype is lineage-restricted, because the alginate *algD* operon
+is confined to *Pseudomonas* and *Azotobacter*.
+
+Confidence lowered PROBABLE -> SUSPECTED, and the entry rewritten to query the
+IBD rather than to assert the term is false for the other leaves.
