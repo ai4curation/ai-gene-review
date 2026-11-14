@@ -84,6 +84,27 @@ a histidine from the next — recurs in OmcS, OmcE and the archaeal filaments, a
 the OmcE authors describe it as unique among c-type cytochrome structures solved
 to date. It is the best candidate for a structural definition of the class.
 
+### The invariant, measured
+
+Both statements above are geometric claims about deposited coordinates, so they can
+be measured rather than quoted. Reading the heme irons out of the deposited mmCIF
+files and taking each one's distance to its nearest neighbour
+([`heme_geometry.py`](EXTRACELLULAR_CYTOCHROME_NANOWIRES/heme_geometry.py),
+[results](EXTRACELLULAR_CYTOCHROME_NANOWIRES/RESULTS.md)):
+
+| PDB | Protein | Hemes / protomer | Median nearest-neighbour Fe–Fe |
+|---|---|---:|---:|
+| 7TFS | OmcE | 4 | 10.4 Å |
+| 6NEF | OmcS | 6 | 9.3 Å |
+| 7LQ5 | OmcZ | 8 | 9.2 Å |
+| 8D9M | OmcZ, independent deposition | 8 | 9.4 Å |
+
+Three proteins, four six and eight hemes, no sequence or fold similarity, and the
+medians fall in a band about 1.2 Å wide. The two independent OmcZ depositions agree
+to 0.2 Å, which is the control showing the spread between proteins is not deposition
+noise. Fe–Fe is a proxy for the edge-to-edge distances the papers quote, which are
+smaller, and four structures is a consistency check rather than a survey.
+
 ## The three *Geobacter sulfurreducens* filaments
 
 | | hemes | structure | established role | GOA before review |
@@ -138,6 +159,45 @@ Two pieces of work follow from this:
 `PTHR35038`, OmcE's family, is not yet reviewed and looks at least as heterogeneous:
 its SF6 holds OmcE alongside MtrA and a hydroxylamine oxidoreductase, and its single
 PAINT node carries only `GO:0016491` oxidoreductase activity, seeded by NrfB.
+
+## Could this be autoclassified, and would AlphaFold help?
+
+Worth setting out, because the obvious answers are both wrong in the same way.
+
+**A sequence HMM cannot see it**, which is the whole problem above. **Foldseek cannot
+either**, and for the same reason: it matches backbone fold, and the fold is precisely
+what the papers say is *not* conserved. A structural search inherits the HMM's blind
+spot rather than fixing it.
+
+**Plain AlphaFold does not solve it on its own.** AFDB models are apo monomers. They
+give you the backbone — the part that varies — and no hemes at all. Worse, the
+published signature of the class is *inter*-subunit: a heme ligated by a histidine from
+the neighbouring subunit. A monomer model cannot show that by construction.
+
+**There is a route, and the measurement above says what it would key on.** The hemes
+are covalently attached at CXXCH motifs, which are in the sequence and findable by
+regex. A predicted monomer places those cysteines and the axial histidines in three
+dimensions, and a heme iron sits in a near-fixed position relative to its own CXXCH
+plus its distal ligand. So pseudo-iron positions can be placed on an apo model without
+predicting the ligand at all, and the resulting distance matrix asked whether it looks
+like a chain at ~9–10 Å spacing. In the terms of
+[STRUCTURE_FUNCTION](STRUCTURE_FUNCTION.md) this is a Level 2 local-motif search, but
+keyed on a **cofactor geometry** rather than a catalytic site, which is why M-CSA /
+EnzyMM and PARSE do not cover it off the shelf.
+
+Caveats, stated plainly: this is untested, the premise is measured but the method is
+not; a monomer model captures only the intra-protomer chain and misses the
+cross-subunit ligation that the literature calls the signature; and these proteins are
+loop-rich and partly disordered, so predicted confidence may be poor exactly where it
+matters.
+
+**Try the cheap baseline first.** "At least four CXXCH motifs, a signal peptide, and no
+transmembrane segment" is a pure-sequence filter that catches all three of these
+proteins today. It will be sensitive and not specific — *G. sulfurreducens* alone has
+111 cytochromes (PMID:36732469) and many are multiheme — so it is a candidate
+generator, not a classifier. The sensible shape is that filter for recall, then heme
+geometry for precision. Establishing how badly the baseline over-selects is the first
+experiment, and it needs no structures at all.
 
 ## Proposed GO terms
 
