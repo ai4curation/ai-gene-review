@@ -47,10 +47,14 @@ A quote that occurs in several places is flagged only when every occurrence
 would be flagged, so a phrase that is also in a supported comment is not
 reported. Before matching, a quote loses any flat-file line codes and feature
 keys copied with it; feature ranges (``102..292``) are positions, not an
-ellipsis; brackets the verbatim check treats as editorial are gaps, while
-literal notation such as ``[2Fe-2S]`` stays; and a part left as a lone number
-(``?..649``) is dropped. While a part remains, dropping one can only make a
-flag more likely, since a flag must hold for every part. A quote that cannot be
+ellipsis; and a part left as a lone number (``?..649``) is dropped. Brackets
+are first read as quoted text, since UniProt writes them into names and
+reactions (``Succinate dehydrogenase [ubiquinone]``, ``Pimeloyl-[acp]``); only
+if that reading is not in the record are the brackets the verbatim check treats
+as editorial read as gaps (literal notation such as ``[2Fe-2S]`` always stays).
+A part of two or more words may have its first and last words cut off, as when
+a quote stops mid-word. While a part remains, dropping one can only make a flag
+more likely, since a flag must hold for every part. A quote that cannot be
 located, including one left with no part, is not flagged and is left to the
 verbatim check.
 Snapshot support covers embedded UniSave ``record_text`` flat files; JSON fields
@@ -363,25 +367,40 @@ def _indexed(path: Path, mtime_ns: int, size: int) -> Tuple[Tuple[Statement, ...
 
 
 def _occurrences(part: str, statements, text: str, starts) -> List[List[Statement]]:
-    """Every whole-word place *part* occurs, as the list of statements each occurrence spans.
+    """Every place *part* occurs, as the list of statements each occurrence spans.
 
     Normalised text is space-separated words, so padding both sides with a
-    space keeps "nad" from matching inside "canadensis".
+    space keeps "nad" from matching inside "canadensis". Only when a part of two
+    or more words has no whole-word occurrence may its first and last words be
+    cut off (a quote that stops mid-word); its inner words are still whole, so a
+    lone fragment is never matched inside a longer word.
     """
-    padded, needle = f" {text} ", f" {part} "
-    ends = list(starts[1:]) + [len(text) + 1]
-    found = []
-    i = padded.find(needle)
-    while i >= 0:
-        # padded[i] is the space before the match, so the match starts at text[i]
-        end = i + len(part)
-        found.append([s for s, a, b in zip(statements, starts, ends) if a < end and b - 1 > i])
-        i = padded.find(needle, i + 1)
+    found = _spans(f" {part} ", statements, f" {text} ", starts, 1)
+    if not found and " " in part:
+        found = _spans(part, statements, text, starts, 0)
     return found
 
 
-def _quote_parts(quote: str) -> List[str]:
+def _spans(needle: str, statements, haystack: str, starts, pad: int) -> List[List[Statement]]:
+    """Statements spanned by each occurrence of *needle* in *haystack*, which is the
+    normalised text with *pad* characters added before it."""
+    ends = list(starts[1:]) + [len(haystack) - 2 * pad + 1]
+    width = len(needle) - 2 * pad
+    found = []
+    i = haystack.find(needle)
+    while i >= 0:
+        begin = i  # with padding, haystack[i] is the space before the match: text[i]
+        end = begin + width
+        found.append([s for s, a, b in zip(statements, starts, ends) if a < end and b - 1 > begin])
+        i = haystack.find(needle, i + 1)
+    return found
+
+
+def _quote_parts(quote: str, literal_brackets: bool = False) -> List[str]:
     """Normalised ``...``-separated parts of a quote, without evidence tags.
+
+    Bracketed text the verbatim check treats as editorial becomes a gap, unless
+    *literal_brackets* keeps it as quoted text (see ``_part_variants``).
 
     >>> _quote_parts("Oxidoreductase {ECO:0000256|ARBA:ARBA00023002, ... NAD {ECO:0000256|ARBA:ARBA1};")
     ['oxidoreductase', 'nad']
@@ -391,6 +410,8 @@ def _quote_parts(quote: str) -> List[str]:
     ['reaction l seryl', 'atp']
     >>> _quote_parts("Name=[2Fe-2S] cluster")
     ['name 2fe 2s cluster']
+    >>> _quote_parts("Full=Succinate dehydrogenase [ubiquinone] iron-sulfur", literal_brackets=True)
+    ['full succinate dehydrogenase ubiquinone iron sulfur']
     >>> _quote_parts("FT   DNA_BIND        102..292")
     ['102 292']
     >>> _quote_parts("FT   CHAIN           ?..649")
@@ -402,11 +423,51 @@ def _quote_parts(quote: str) -> List[str]:
         inner = m.group(0)[1:-1]
         return m.group(0) if any(p.search(inner) for p in validator._literal_bracket_regexes) else " ... "
 
-    stripped = _BRACKETED.sub(gap, _RANGE.sub(" ", _LINE_CODE.sub(" ", quote)))
+    stripped = _RANGE.sub(" ", _LINE_CODE.sub(" ", quote))
+    if literal_brackets:
+        # bracket characters become spaces: the verbatim splitter would drop their text
+        stripped = stripped.replace("[", " ").replace("]", " ")
+    else:
+        stripped = _BRACKETED.sub(gap, stripped)
     stripped = _STRAY_EVIDENCE.sub(" ", _BRACE.sub(" ", stripped))
     # A lone number (what ``?..649`` leaves) would match any position in the record.
     parts = (validator.normalize_text(x) for x in validator._split_query(stripped))
     return [p for p in parts if p and not p.isdigit()]
+
+
+def _part_variants(quote: str) -> List[List[str]]:
+    """The ways to split *quote* into parts, tried in order.
+
+    UniProt writes brackets into names and reactions (``Succinate dehydrogenase
+    [ubiquinone]``, ``L-seryl-[protein]``), so a quote is first read with its
+    brackets as text; only if that is not in the record are they editorial gaps.
+    Reading them as gaps first would split a protein name into fragments that
+    also occur in other sections, and a flag that must hold for every occurrence
+    would then never be raised.
+
+    >>> _part_variants("Full=Succinate dehydrogenase [ubiquinone] iron-sulfur")
+    [['full succinate dehydrogenase ubiquinone iron sulfur'], ['full succinate dehydrogenase', 'iron sulfur']]
+    >>> _part_variants("Name=[2Fe-2S] cluster")
+    [['name 2fe 2s cluster']]
+    """
+    variants: List[List[str]] = []
+    for literal in (True, False):
+        parts = _quote_parts(quote, literal_brackets=literal)
+        if parts not in variants:
+            variants.append(parts)
+    return variants
+
+
+def _resolve(quote: str, statements, text: str, starts) -> Optional[List[Tuple[str, List[List[Statement]]]]]:
+    """``(part, occurrences)`` for each part of the first reading of *quote* whose
+    parts all occur in the record; None if no reading has a part, or none is found."""
+    for parts in _part_variants(quote):
+        if not parts:
+            continue
+        found = [(part, _occurrences(part, statements, text, starts)) for part in parts]
+        if all(occ for _, occ in found):
+            return found
+    return None
 
 
 def _index(path: Path):
@@ -416,12 +477,9 @@ def _index(path: Path):
 
 def locate_quote(quote: str, path: Path) -> List[Statement]:
     """Statements spanned by the first occurrence of each part of *quote*; [] if not located."""
-    statements, text, starts = _index(path)
+    resolved = _resolve(quote, *_index(path))
     located: List[Statement] = []
-    for part in _quote_parts(quote):
-        occ = _occurrences(part, statements, text, starts)
-        if not occ:
-            return []
+    for _, occ in resolved or ():
         located.extend(s for s in occ[0] if s not in located)
     return located
 
@@ -529,14 +587,13 @@ def _locate_part(
             return UNLOCATED, []
         # search the rest as text; the key is not text in the parsed record
         raw = f"{location} {rest}"
-    parts = _quote_parts(raw)
-    if not parts:
+    if not any(_part_variants(raw)):
         return UNSEARCHABLE, []
+    resolved = _resolve(raw, statements, text, starts)
+    if resolved is None:
+        return UNLOCATED, []
     sections: List[str] = []
-    for part in parts:
-        occurrences = _occurrences(part, statements, text, starts)
-        if not occurrences:
-            return UNLOCATED, []
+    for _, occurrences in resolved:
         candidates = {tuple(dict.fromkeys(s.section for s in o)) for o in occurrences}
         if len(candidates) > 1:
             return AMBIGUOUS, []
@@ -559,16 +616,12 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, bool, L
 
     A flag holds only if it holds for every occurrence of every part.
     """
-    statements, text, starts = _index(path)
-    parts = _quote_parts(quote)
-    if not parts:
+    resolved = _resolve(quote, *_index(path))
+    if resolved is None:
         return None
     unvetted = restating = existence = True
     first: List[Statement] = []
-    for part in parts:
-        occ = _occurrences(part, statements, text, starts)
-        if not occ:
-            return None
+    for _, occ in resolved:
         first.extend(s for s in occ[0] if s not in first)
         unvetted &= all(all(s.is_unvetted for s in o) for o in occ)
         restating &= all(all(s.is_restating for s in o) for o in occ)
