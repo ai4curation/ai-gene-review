@@ -13,10 +13,17 @@ from ai_gene_review.tools.wrong_gene_leads import (
     CitingEntry,
     GeneRecord,
     MAX_CITING_ENTRIES,
+    MAX_RANGE,
+    SHARED_ANNOTATION_GENES,
     candidate_rows,
     fetch_citing_entries,
     find_leads,
+    gene_specific_names,
+    named_in_abstract,
+    pombase_names,
     score_lead,
+    shared_annotation_counts,
+    token_forms,
 )
 
 GENES = Path(__file__).resolve().parents[1] / "genes"
@@ -387,3 +394,162 @@ def test_group_author_matching_does_not_swallow_sentences(paragraph, expected):
     from ai_gene_review.tools.wrong_gene_leads import _is_author_list
 
     assert _is_author_list(paragraph) is expected
+
+
+PUBLICATIONS = GENES.parent / "publications"
+
+
+@pytest.mark.parametrize(
+    "gene, pmid",
+    [
+        ("DROME/spz", "19018662"),  # "Spätzle": diacritic, name is "Protein spatzle"
+        ("DROME/btl", "16831830"),  # "Breathless": name is "Protein breathless"
+        ("SCHPO/cds1", "11027263"),  # "Cds1p-dependent": yeast protein suffix
+        ("SCHPO/fas2", "9693066"),  # "lsd1+/fas2+": allele mark, slash pair
+        ("SCHPO/idh1", "7903653"),  # "glu3": old name only PomBase lists
+        ("human/ABL1", "18280240"),  # "c-Abl": cellular-homolog prefix
+        ("human/AKR1C4", "21851338"),  # "AKR1C1-AKR1C4": a range
+        ("human/ACADVL", "16020546"),  # "very-long-chain acyl-CoA dehydrogenase"
+    ],
+)
+def test_name_forms_found_in_fourth_lead_batch(gene, pmid):
+    """Each paper names the gene in a form the fourth lead review found missed."""
+    own, _ = candidate_rows(GENES / gene)
+    assert named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+
+
+@pytest.mark.parametrize(
+    "gene, pmid",
+    [
+        ("human/ADAM17", "24990881"),  # "ADAM proteases" only
+        ("human/ALDOB", "6696436"),  # muscle aldolase (ALDOA)
+        ("DROME/rl", "8946916"),  # DJNK/basket
+        ("mouse/Rbpj", "23571214"),  # BEND6
+    ],
+)
+def test_confirmed_leads_stay_unnamed(gene, pmid):
+    """Papers found to be about another gene must still not name the annotated one."""
+    own, _ = candidate_rows(GENES / gene)
+    assert (
+        named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "text, names, expected",
+    [
+        ("proteins (AKR1C1-AKR1C3) were assayed", {"AKR1C4"}, False),
+        ("proteins (AKR1C1-AKR1C3) were assayed", {"AKR1C2"}, True),
+        ("isoforms AKR1C1-4 were assayed", {"AKR1C4"}, True),
+        ("phosphorylation by c-Abl", {"ABL2"}, False),
+        ("phosphorylation by c-Abl", {"ABL"}, True),
+        ("Rad21p was cleaved", {"RAD21"}, True),
+        ("the Hsp70 chaperone", {"HSP7"}, False),
+        ("GFP-tagged GDI/D4 was diffuse", {"GDID4"}, True),
+    ],
+)
+def test_token_name_forms(tmp_path, text, names, expected):
+    """Ranges, prefixes and suffixes are expanded without matching neighbours."""
+    (tmp_path / "PMID_1.md").write_text(f"title: X\n## Abstract\n{text}\n")
+    assert named_in_abstract("1", names, tmp_path) is expected
+
+
+@pytest.mark.parametrize(
+    "shared, expected",
+    [
+        (1, (1, "few_citing_entries")),
+        (SHARED_ANNOTATION_GENES - 1, (1, "few_citing_entries")),
+        (SHARED_ANNOTATION_GENES, (-1, "few_citing_entries;shared_by_many_genes")),
+    ],
+)
+def test_rows_shared_by_many_genes_are_down_weighted(shared, expected):
+    """A row its source gave to many genes (a complex, a proteomics list) ranks lower."""
+    own = GeneRecord("P1", "9606", frozenset(), frozenset({"ABC1"}), frozenset())
+    others = [CitingEntry("P2", "X", "10090", frozenset())]
+    assert score_lead(own, others, None, shared) == expected
+
+
+def test_shared_annotation_counts_real_complex_rows():
+    """ComplexPortal's bBAF rows reach several local subunits; ALDOB's row does not."""
+    dirs = list(GENES.glob("human/*"))
+    counts = shared_annotation_counts(dirs)
+    assert (
+        counts[("PMID:12192000", "GO:0000785", "ComplexPortal")]
+        >= SHARED_ANNOTATION_GENES
+    )
+    assert (
+        1
+        <= counts[("PMID:6696436", "GO:0004332", "Reactome")]
+        < SHARED_ANNOTATION_GENES
+    )
+    assert (
+        1
+        <= counts[("PMID:24990881", "GO:0004175", "UniProt")]
+        < SHARED_ANNOTATION_GENES
+    )
+
+
+def test_paralog_sharing_a_base_name_does_not_cancel_the_lead(tmp_path):
+    """MDH1 and MDH2 differ only in their location qualifier, so the base name is shared."""
+    own, _ = candidate_rows(GENES / "human/MDH2")
+    mdh1 = CitingEntry(
+        "P40925",
+        "MDH1",
+        "9606",
+        frozenset(),
+        frozenset({"Malate dehydrogenase, cytoplasmic"}),
+    )
+    (tmp_path / "PMID_1.md").write_text(
+        "title: X\n## Abstract\nCytosolic malate dehydrogenase was purified.\n"
+    )
+    forms = gene_specific_names(own, [mdh1])
+    assert named_in_abstract("1", own.gene_names, tmp_path, forms) is False
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Similar results were seen. Levels were similar in mutants.", False),
+        ("We find that Similar binds Tango in the nucleus.", True),
+    ],
+)
+def test_one_word_short_name_needs_a_capitalised_mention(tmp_path, text, expected):
+    """DROME/sima is "Protein similar": prose "similar" must not name it."""
+    own, _ = candidate_rows(GENES / "DROME/sima")
+    (tmp_path / "PMID_1.md").write_text(f"title: X\n## Abstract\n{text}\n")
+    assert (
+        named_in_abstract("1", own.gene_names, tmp_path, own.protein_names) is expected
+    )
+
+
+def test_pombase_names_union_genes_sharing_an_accession():
+    """Three histone H4 genes share P09322; every name must be kept."""
+    names = pombase_names()["P09322"]
+    assert {"hhf1", "hhf2", "hhf3", "h4.1", "h4.3"} <= names
+
+
+@pytest.mark.parametrize("token, expanded", [("X1-X20", True), ("X1-X21", False)])
+def test_range_expansion_is_capped(token, expanded):
+    """A range is expanded only when it names at most MAX_RANGE (20) genes."""
+    assert MAX_RANGE == 20
+    assert ("X10" in token_forms(token)) is expanded
+
+
+def test_short_name_that_cannot_be_prose_matches_case_insensitively(tmp_path):
+    """rat/Jag1 is "Protein jagged-1": a hyphenated, numbered name needs no capital."""
+    own, _ = candidate_rows(GENES / "rat/Jag1")
+    (tmp_path / "PMID_1.md").write_text(
+        "title: X\n## Abstract\nNotch signalling requires jagged-1 in the ear.\n"
+    )
+    assert named_in_abstract("1", own.gene_names, tmp_path, own.protein_names)
+
+
+def test_title_case_title_does_not_name_a_one_word_gene():
+    """DROME/tub is "Protein Tube"; "Polar Tube Proteins" in a Title-Case title is not it.
+
+    Only the protein-name path is tested: tub also has the gene synonym "tube",
+    which the gene-name token check matches in "polar tube" (a known limitation).
+    """
+    own, _ = candidate_rows(GENES / "DROME/tub")
+    assert named_in_abstract("28031263", [], PUBLICATIONS, own.protein_names) is False

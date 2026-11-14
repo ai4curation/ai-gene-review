@@ -66,6 +66,7 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    | Three or fewer citing entries | +1 |
    | The cached title and abstract do not name the annotated gene | +2 |
    | The cached title or abstract names the annotated gene | −3 |
+   | The same term from the same paper and source is on 4 or more local gene folders | −2 |
 
    The name check matters because papers often study several members of a family; a
    paper whose abstract names the annotated gene probably did study it. ARHGDIB's
@@ -76,6 +77,25 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    entry: a family name such as "Tubulin alpha chain" does not say which paralog a
    paper studied. The check reads the cached title and abstract only, up to the next
    section heading.
+
+   Names are normalised before matching. Diacritics are folded (Spätzle). Each part of
+   a slashed or hyphenated token counts (lsd1+/fas2+, c-Abl, Cds1p-dependent). A
+   protein suffix `p` after a final digit is dropped (the yeast Cds1p). Numbered ranges are expanded
+   (AKR1C1-AKR1C4, AKR1C1-4). A one-word "Protein X" name also matches X when X is
+   written capitalised and not at the start of a sentence (Breathless, but not prose
+   "similar" for Protein similar), outside a Title-Case title; an X with a digit,
+   hyphen or inner capital (jagged-1) is matched like any other name. A one-word qualifier after a comma is dropped ("…dehydrogenase,
+   mitochondrial"). Fission yeast genes also take their PomBase gene name and
+   synonyms (glu3 for idh1), from the PomBase identifiers snapshot under
+   `projects/PROTNLM_EVALUATION/`. Protein names that a citing paralog shares after
+   these short forms are expanded (MDH1 and MDH2 are both "Malate dehydrogenase"
+   once ", cytoplasmic" and ", mitochondrial" are dropped) do not count as naming
+   the gene.
+
+   The last signal marks complex-wide and list annotations: ComplexPortal giving one
+   term to every subunit, or a proteomics paper annotated to every protein it found.
+   It counts the gene folders in the sweep (every folder in a default run), so it
+   undercounts for complexes whose subunits are not reviewed here.
 
 The report is written to `reports/wrong-gene-leads/leads.tsv`. It is generated and
 git-ignored, never committed, because it aggregates every review. It joins each lead
@@ -271,6 +291,33 @@ Across all four batches (66 leads): 8 wrong-gene annotations, 4 wrong evidence c
 5 wrong references, 15 queries pending full text, and 34 false positives or no change.
 No review action was changed on the strength of an abstract alone.
 
+## Name normalisation and shared-row signal (2026-11-14)
+
+The fourth batch found that most false positives came from names the check did not
+recognise, plus complex-wide rows. Both are now handled (see Method). A fresh sweep
+finds 10,981 leads in 2,993 genes. 465 rows that were read as not naming the gene are
+now read as naming it, and none moved the other way. 2,302 rows are marked as shared by
+four or more local genes. The top tier (score 6 or more) shrank from 466 rows to 382,
+in 193 genes.
+
+On the genes already checked by hand:
+
+- **False positives that drop out of the top tier:** btl, piwi, cds1, fas2, idh1,
+  ACADVL, AKR1C4 and AP3S2, and spz (5 at most).
+- **False positives that stay:**
+  - The papers that do not name the gene in their abstract at all: GstO1, GstO2, Prx4
+    and RfC4 (only their full texts show the gene), JAK2, SRPRB, and AGPAT2, which is
+    named only through a citation of its cloning paper.
+  - ActRII for ACVR2A, which is not a UniProt name.
+  - Complex rows shared by fewer than four local genes (AP2S1, some ACTB rows), and
+    MADS3.
+- **Confirmed defects and queries keep their scores:** Rbpj, PARD6B, DLG3, GNAQ, PPP3CA,
+  JAK1, ADAM17, ALDOB, rl, ttv__Q9V730, rad21, ABCB7, ACVR2A, AP2M1, EloC and Med.
+- **The one cost:** the three Septins (probable wrong gene toward pnut) fall from 6 to 4.
+  Their rows are ComplexPortal annotations given to every septin subunit, so the
+  shared-row signal treats them as complex-wide. A complex-wide row on the wrong gene
+  looks the same as a correct complex-wide row, so this is a trade-off, not a bug.
+
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
@@ -279,19 +326,19 @@ No review action was changed on the strength of an abstract alone.
 - **The name check misses names UniProt does not list.** An abstract that uses an
   unlisted synonym (DSP21 for rat Dusp21) is read as not naming the gene, which leaves
   some multi-gene papers ranked too high.
+- **Gene synonyms that are ordinary words match prose.** A lowercase synonym such as
+  "tube" (fly *tub*) is matched as a token, so "the polar tube" reads as naming the
+  gene. Protein short names are guarded against this; gene names are not yet.
 - **IPI rows are noisy.** An interaction paper is often cited by UniProt for only one
   partner.
 - **Uncached papers** get no name-check adjustment.
 
 ## Next steps
 
-- Normalise names before the abstract check: fold diacritics, strip a trailing yeast `p` or `+`,
-  accept `c-` prefixes, expand ranges such as AKR1C1-AKR1C4, and take SCHPO synonyms from
-  PomBase's names file. The fourth batch suggests this would remove most of the remaining
-  false positives.
-- Down-weight rows whose source annotated the same term to every subunit of a complex or
-  every protein in a proteomics list, which QuickGO shows by reference.
-
+- Count shared rows from QuickGO by reference rather than from local gene folders,
+  so complexes whose subunits are not reviewed here are caught too.
+- Take synonyms for other model organisms from their databases (FlyBase, WormBase,
+  SGD), as is now done for PomBase.
 - Review the top tier, starting with the non-IPI human rows, and record confirmed
   cases as `WRONG_GENE_PRODUCT` source defects in the gene reviews.
 - Consider scoring IPI rows separately, or requiring that the abstract names a citing
