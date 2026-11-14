@@ -22,7 +22,8 @@ edits only that row's review block:
   ``nd_case`` is TRUE_GAP when the review has a BIOLOGY gap for the aspect,
   INFERABLE when a retained inferred row or a new row covers it, and is left
   unset otherwise. With ``new_row``, the replacement term becomes its own NEW
-  row carrying the earlier quotes.
+  row carrying the earlier quotes; ``new_row.note`` is appended to its reason
+  and ``new_row.quotes`` to its support (a caveat the earlier text lacked).
 
 The restore step reads the pre-pass rows from git. ``ORIGINAL_COMMITS`` were
 squash-merged into ``main`` (PR 5416), so they are reachable only from the
@@ -387,11 +388,14 @@ def main(only: list[str]) -> None:
                             "reason": folded_scalar(new_row_reason(
                                 rep.get("label"), d["new_row"]["evidence_type"],
                                 str(o_review.get("reason") or ""),
-                                inherit=len(o_review.get("proposed_replacement_terms") or []) == 1)),
+                                inherit=len(o_review.get("proposed_replacement_terms") or []) == 1)
+                                + (f" {d['new_row']['note']}" if d["new_row"].get("note") else "")),
                         },
                     }
-                    if o_review.get("supported_by"):
-                        row["review"]["supported_by"] = copy.deepcopy(o_review["supported_by"])
+                    support = copy.deepcopy(o_review.get("supported_by") or [])
+                    support += copy.deepcopy(d["new_row"].get("quotes") or [])
+                    if support:
+                        row["review"]["supported_by"] = support
                     new_rows.append(row)
             others = [b for b in parsed["existing_annotations"]
                       if b.get("evidence_type") != "ND" and (b.get("term") or {}).get("id")

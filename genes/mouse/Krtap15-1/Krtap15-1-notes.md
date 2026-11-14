@@ -26,5 +26,5 @@ Family-batched review of mammalian keratin-associated proteins (KRTAPs). No deep
 
 ## ND re-check (2026-11-14)
 
-- PubMed searched 2026-11-14 through E-utilities, "Krtap15-1", "pmg-2" in All Fields: 4 hits for Krtap15-1, all on goat or sheep KAP15-1 (PMID:41164236, PMID:39409811, PMID:36212123, PMID:31807622); of 8 hits for pmg-2 the only relevant one is PMID:10446281 (RNA expression of pmg-1 and pmg-2).
+- PubMed searched 2026-11-14 through E-utilities, "Krtap15-1", "pmg-2" in All Fields: 4 hits for Krtap15-1, none on mouse: goat or sheep KAP15-1 studies (PMID:41164236, PMID:36212123, PMID:31807622) and an ovine KRTAP13 paper that names KRTAP15-1 in passing (PMID:39409811); of 8 hits for pmg-2 the only relevant one is PMID:10446281 (RNA expression of pmg-1 and pmg-2).
 - No paper on mouse Krtap15-1 identifies a molecular function, biological process or cellular component of the protein. The ND rows therefore follow the evidence-code guideline and are ACCEPT with nd_case INFERABLE (projects/NO_DATA.md); the family-level terms they were earlier MODIFYed to are kept as NEW ISS rows. This replaces the MODIFY decisions of the first pass.
