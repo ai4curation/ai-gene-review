@@ -1,9 +1,9 @@
 ---
 title: "Transcription Factor Annotation Review Project"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-05
+last_reviewed: 2026-11-04
 tags: [BIOLOGY_DOMAIN, EVALUATION]
-species: [human]
+species: [human, PSEPK]
 genes: [NTN1, NTN3, HDAC4, RPS3, RFXAP, RFXANK, NME2]
 manifest:
   slides:
@@ -34,6 +34,14 @@ are all correctly excluded from dbTF. The planned ML second pass has not been
 run: 945 proteins in the 1,448-protein February 2026 raw QuickGO extraction
 have IEA-only dbTF support and are still waiting for DeepTFactor validation,
 and 50 GREEKC-only proteins are unreviewed.
+
+The bacterial workstream now uses **P. putida KT2440 (PSEPK)** as its pilot.
+The [bacterial regulon evidence plan](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md)
+defines a genome-wide TF census and separately tracks TF identity, regulatory
+relationships, and expression-module membership. Existing iModulonDB code and a
+BenR report provide a prototype. A [provisional KT2440 census](P_PUTIDA/tf_census/data/coverage.md)
+now reconciles regulator identities and existing reviews; repairing module
+membership/weight import semantics still precedes batch use for curation.
 
 ## Objective
 
@@ -133,23 +141,20 @@ Input: UniProt ID
 - Identify potential DNA-binding surfaces
 - Link "dark" proteins to annotated TF families via structure
 
-### Phase 4: Transcriptomic validation (where available)
+### Phase 4: Transcriptomic comparison (bacterial pilot)
 
-For bacterial TFs, leverage iModulon data:
+Use iModulonDB to compare expression modules with independently supported
+regulatory relationships. Membership does not identify a protein as a TF, prove
+direct regulation, or establish an activation/repression sign. A regulator can
+control a module without belonging to it, and a module can reflect multiple
+regulators or a physiological response.
 
-```
-Input: Gene symbol
-    │
-    ├─► iModulonDB lookup
-    │   └─► Is this gene associated with a known iModulon?
-    │
-    └─► Compare predicted regulon with GO annotations
-```
-
-**Validation criteria:**
-
-- TF annotation supported by iModulon membership
-- Predicted target genes consistent with GO BP annotations
+Track the published regulator assignment separately from module membership and
+from each experimentally supported TF-target relationship. Overlap metrics use
+the source's reference regulon; they are not independent validation when that
+same regulon was used to name the module. The
+[workstream plan](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md) specifies
+the KT2440 pilot, source provenance, import repairs, and completion criteria.
 
 ## Implementation
 
@@ -162,7 +167,7 @@ Input: Gene symbol
 | ESM-2 | Meta AI | HuggingFace / local |
 | AlphaFold DB | EBI | REST API for structures |
 | Foldseek | [GitHub](https://github.com/steineggerlab/foldseek) | Local or web server |
-| iModulonDB | [imodulondb.org](https://imodulondb.org) | Web API |
+| iModulonDB | [imodulondb.org](https://imodulondb.org) | Existing supplementary-data prototype; repairs tracked in bacterial workstream |
 
 ### Data sources
 
@@ -211,6 +216,7 @@ existing_annotations:
 | Organism | Rationale |
 |----------|-----------|
 | Human | Clinical relevance, most annotations |
+| P. putida KT2440 (PSEPK) | Bacterial regulon evidence pilot; existing proteome inventory, gene reviews, and PRECISE321 prototype |
 | E. coli K-12 | Best characterized, iModulon data available |
 | S. cerevisiae | Well-studied TF network |
 | A. thaliana | Plant-specific TF families |
@@ -354,6 +360,13 @@ Tracked in [ai-gene-review#4021](https://github.com/ai4curation/ai-gene-review/i
 - Todo: run DeepTFactor predictions
 - Todo: analyze discrepancies
 
-### Phase 3-4: Structure & Transcriptomics (Not Started)
+### Phase 3-4: Structure & Transcriptomics
 - Todo: Foldseek validation for ambiguous cases
-- Todo: iModulon integration for bacterial TFs
+- Done: inventory existing iModulonDB scripts, organism mappings, and BenR example
+- Done: define [bacterial regulon evidence workstream](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md), with KT2440 as pilot
+- Done: repair the iModulon importer; verify all 84 PRECISE321 module memberships and weights against pinned source exports
+- Done: build the [provisional KT2440 TF census and coverage report](P_PUTIDA/tf_census/data/coverage.md), with unresolved identities retained
+- Done: select [20 calibration cases](P_PUTIDA/tf_census/data/calibration.tsv)
+- Done: complete [20 scoped evidence assessments](P_PUTIDA/tf_census/calibration-review.md), including identity conflicts and separate importer checks
+- Done: complete [first four full GO reviews](P_PUTIDA/batches/tf_carbon_utilization_01.md), with 12 supported regulatory relationships and pathway context
+- Todo: complete the remaining 16 calibration GO reviews, then expand regulatory-system/family batches
