@@ -1,5 +1,28 @@
 # mon1 notes
 
+## 2026-11-06 re-review
+
+Rechecked Q10150 against the refreshed `PTHR13027` PAINT cache and current
+web/PubMed searches for `Q10150`, `SPAC1D4.03c`,
+`Schizosaccharomyces pombe mon1`, `fission yeast Mon1 Ccz1`, and
+`Schizosaccharomyces pombe Mon1-Ccz1 Ypt7`. I still did not find a direct
+S. pombe `mon1` functional paper. The 2026-11-13 PomBase gene_summaries API
+response lists SPAC1805.10/ccz1 as a current S. pombe gene for a Mon1-Ccz1 GEF
+complex subunit Ccz1 with S. cerevisiae CCZ1 and human CCZ1 orthologs.
+
+The current PAINT rows still support the eukaryotic `PTN000315021`
+`GO:0005085` contributes_to GEF IBA and the fungal `PTN000989606`
+`GO:0000329`/`GO:0006623` IBAs. `GO:0035658 Mon1-Ccz1 complex` is different:
+PAINT places the ancestral IBD at Opisthokonta `PTN000315023`, but a
+2025-09-03 `PTN008545077` IRD on the Schizosaccharomyces branch now blocks that
+IBA for S. pombe. The existing `GO:0035658` row is therefore a PomBase ISO
+transfer from S. cerevisiae MON1 rather than an active GO_Central IBA. I left
+the row accepted because PomBase's ISO is plausible and PomBase now identifies a
+fission-yeast Ccz1 partner; the PAINT loss is recorded as too broad and should
+be revisited with SPAC1805.10/ccz1 in hand. `just paint-losses SCHPO mon1`
+reports `PTN008545077 | GO:0035658 | IRD | 20250903 | PTN000315023 | 2 | no |
+ISO:ACCEPT; CORE_FUNCTION`.
+
 ## 2026-10-17 review
 
 PTHR13027 is the PANTHER SAND/Mon1 family. S. pombe `mon1` (Q10150) is in
