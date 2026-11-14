@@ -332,7 +332,22 @@ Updated 2026-10-06.
 - [x] Fix the PAINT slicer so IRD nodes are not dropped; refresh the 545 affected slices
 - [x] `just fill-node-evidence`: copy PAINT evidence, negation and loss seeds into every
       node assessment, so new reviews of loss rows no longer fail NODE_POLARITY by omission
-- [ ] Adjudicate the remaining 151 seeded IRD rows (their families have no review yet)
+- [x] Adjudicate the 29 seeded IRD rows in families that already have a review (2026-11-14).
+      28 are now node assessments in 24 family reviews: 13 LOSS_CONTRADICTED, 5
+      LOSS_TOO_BROAD, 6 LOSS_SUPPORTED and 4 UNRESOLVED. Each verdict was checked against
+      the clade's members in the PANTHER tree, not only the seed list. Notable cases:
+      - A gene-level IRD denies ubiquinone biosynthesis to mouse Coq7, although Coq7
+        knockout embryos make no CoQ9 (PTHR11237).
+      - PTN002259328 (PTHR11309) is not an SFRP-only node. It also holds FZD9, FZD10,
+        lin-17 and fz3, so its plasma-membrane and Wnt-receptor IRDs are too broad. This
+        answers the depth question the family review had left open.
+      - Too-broad pairs where one branch keeps the function and the loss belongs on a
+        sibling branch: KCS1/ARG82, ORT1/YMC and MAPDA/ADA2.
+      - The four LOSS_SUPPORTED cytosol IRDs on plastid and mitochondrial enzymes conflict
+        only with crude-fraction proteomics.
+      - The PTHR42902 row is no longer in the PAINT slice, so it was not assessed.
+- [ ] Adjudicate the remaining 114 seeded IRD rows in 91 families that have no family
+      review yet (44 of them also need their PANTHER slice fetched first)
 - [x] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows:
       144 of 2,538 IRD rows (5.7%), in 113 families, have an experimental seed of the
       blocked IBD inside their clade ([ird_seed_check.md](IRD_EVIDENCE/ird_seed_check.md),
