@@ -457,11 +457,13 @@ assertions inherited from non-fungal branches.
 
 - [x] `yeast/PPN1` - *S. cerevisiae* endo/exopolyphosphatase anchor; drafted in
   this branch
-- [ ] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
+- [x] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
   catabolic-process node
-- [ ] `CANGA/PPN1` - CGD *Candida glabrata* Ppn1-family member
-- [ ] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog
-- [ ] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
+- [x] `CANGA/PPN1` - CGD *Candida glabrata* ortholog reviewed against the
+  fungal polyphosphate catabolic-process node
+- [x] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog with inferred fungal
+  vacuolar polyphosphatase activity
+- [x] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
 
 ---
 
@@ -479,6 +481,30 @@ assertions inherited from non-fungal branches.
   `CGD:CAL*` *Candida albicans* seed rather than the CANGA member; and records
   the newer 2025 polyphosphate-engineering and FRET-assay papers without
   changing the core GO conclusions.
+- Drafted `CANGA/PPN1`; it accepts the conserved fungal Ppn1
+  endopolyphosphatase, exopolyphosphatase, fungal-type vacuole, and
+  polyphosphate-catabolism transfers from `PTN000818947`; keeps vacuole
+  membrane and cytosol as non-core inherited locations; leaves the inferred
+  nuclear location undecided; and removes the stale TreeGrafter
+  `GO:0008081 phosphoric diester hydrolase activity` row because PAINT now has
+  an agreeing 2026 IRD at the fungal Ppn1 node.
+- Added `SCHPO/ppn1`, accepting the four `PTN000818947` fungal Ppn1 PAINT
+  IBAs and using the completed S. cerevisiae/C. glabrata family reviews plus
+  the Q9C1W8 UniProt entry to refine generic vacuole, vacuolar membrane,
+  membrane, hydrolase, and energy-reserve rows to fungal vacuolar
+  polyphosphate catabolism. The S. pombe GOA set has no stale TreeGrafter
+  `GO:0008081` row, so no PTHR10340 IRD loss needed to be recorded.
+- Added `NEUCR/epp-1`, accepting the four `PTN000818947` fungal Ppn1 PAINT
+  IBAs and the exact UniProt endopolyphosphatase inferences, refining generic
+  vacuole and membrane rows to fungal-type vacuole or fungal-type vacuole
+  membrane, and recording that literature searches found no direct N. crassa
+  EPP-1 deletion, localization, or purified-enzyme paper.
+- Drafted `CANAL/PPN1`; it resolves the SC5314 CGD member to UniProt
+  `A0A1D8PQR0`/PHM5, accepts the fungal Ppn1 endopolyphosphatase,
+  exopolyphosphatase, fungal-type vacuole, and polyphosphate-catabolism IBAs
+  from `PTN000818947`, accepts the CGD genetics-based
+  polyphosphate-catabolism annotation, and narrows broad predicted vacuole and
+  membrane rows to the fungal vacuolar membrane.
 
 ## 2026-11-01
 
