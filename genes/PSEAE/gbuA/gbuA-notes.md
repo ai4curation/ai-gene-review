@@ -77,3 +77,37 @@ GO_CENTRAL MISSING_NEGATION defect.
 - Source defects: GO_CENTRAL MISSING_NEGATION (NOT GO:0047972 at GbuA leaf, PROBABLE);
   GO_CENTRAL MISSING_NEGATION CHECK for the L-arginine catabolic process IBD on GpuA
   and vertebrate AGMAT leaves (SUSPECTED).
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN004253691 fetched with `projects/PSEUDOCAP/panther_tree.py node
+PTN004253691 --depth 3 / --leaves` (PANTHER `treeinfo` for PTHR11358).
+
+**PTN004253691: HORIZ_TRANSFER, 34 leaves, all PTHR11358:SF26.**
+
+| child node | event / taxon | leaves | subfamilies | content | verdict |
+|---|---|---|---|---|---|
+| PTN002260450 | LEAF *P. aeruginosa* | 1 | SF26 | GpuA, guanidinopropionase | sister to all other leaves; GO:0047972 seed; not arginine catabolic |
+| PTN000888137 | SPECIATION Eumetazoa | 33 | SF26 | everything else, GbuA included | — |
+| └ PTN004253692 | HORIZ_TRANSFER | 31 | SF26 | GbuA + Deuterostomia | — |
+| &nbsp;&nbsp;&nbsp;└ PTN002260452 | LEAF *P. aeruginosa* | 1 | SF26 | GbuA, guanidinobutyrase | the only correct home for GO:0006527; no GO:0047972 activity |
+| &nbsp;&nbsp;&nbsp;└ PTN000144490 | SPECIATION Deuterostomia | 30 | SF26 | vertebrate/urochordate/echinoderm AGMAT (incl. human Q9BSE5) | guanidino acid hydrolases; GO:0047972 seed; not arginine catabolic |
+| └ PTN000888144 | DUPLICATION *Nematostella* | 2 | SF26 | two agmatinases | not arginine catabolic |
+
+Conclusions:
+
+- **The two P. aeruginosa enzymes are not sisters.** GpuA is the outgroup leaf of the
+  whole node and GbuA is nested inside the animal clade through a second
+  horizontal-transfer node, so there is **no bacterial guanidinobutyrase subnode**.
+  The L-arginine-catabolic IBD cannot be relocated; its only correct scope is the
+  GbuA leaf PTN002260452. Equivalently, NOT annotations at PTN002260450,
+  PTN000144490 and PTN000888144 cover all 33 other leaves without touching GbuA.
+- For the same reason the GO:0047972 guanidinopropionase IBD **cannot** be moved off
+  GbuA: the smallest clade containing both of its seeds (GpuA PTN002260450 and human
+  AGMAT inside PTN000144490) is PTN004253691 itself. A NOT at the GbuA leaf
+  PTN002260452 is the only fix.
+
+Both defects raised to CONFIRMED (SUSPECTED -> CONFIRMED for the GO:0006527 defect,
+PROBABLE -> CONFIRMED for the GO:0047972 defect). The annotation actions are unchanged:
+ACCEPT on the GO:0006527 IBA (correct for this gene) and REMOVE on the GO:0047972 IBA
+(contradicted by direct assay, and the tree confirms no relocation can rescue it).

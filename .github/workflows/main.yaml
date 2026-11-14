@@ -23,6 +23,11 @@ concurrency:
 
 env:
   FORCE_COLOR: "1" # Make tools pretty.
+  # scripts/term_validate.sh blocks (rather than skips) on an ontology-service
+  # outage only when this is set, so the authoritative weekly/manual full pass
+  # still catches an unverified term once the service is back, while PR and
+  # merge_group runs skip-and-warn so an upstream blip cannot jam the merge queue.
+  TERM_VALIDATION_STRICT: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '1' || '' }}
 
 #permissions: {}
 
@@ -267,6 +272,19 @@ jobs:
             echo "History records added:"
             echo "$ADDED_HISTORY"
           fi
+
+      # PANTHER family trees (treeinfo) back the proposed_action check in family
+      # reviews: a target node must sit correctly in the family's tree. Trees change
+      # only with a PANTHER release, so cache them on a weekly key (as for UniProt
+      # sequences); restore-keys keep earlier trees offline, and a tree first needed
+      # mid-week is saved with the next week's cache.
+      - name: Cache PANTHER family trees
+        uses: actions/cache@v6
+        with:
+          path: .cache/panther_trees
+          key: panther-trees-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            panther-trees-${{ runner.os }}-
 
       # Family reviews carry residue sites and node assessments that gene reviews
       # cite, so a change to either side can break the join.
