@@ -1,0 +1,13 @@
+# GALP Curation Notes (Human Galanin-Like Peptide, UniProtKB:Q9UBC7)
+
+## Summary of Gene Function
+- **Gene symbol / ID**: `GALP` (`UniProtKB:Q9UBC7`, `HGNC:24842`)
+- **PANTHER family**: `PANTHER:PTHR20950:SF1` (`GALANIN-LIKE PEPTIDE`, within `PANTHER:PTHR20950` `GALANIN-RELATED PEPTIDE`; PAINT node `PANTHER:PTN001463568`).
+- **Preprohormone processing**: Synthesized in hypothalamic arcuate nucleus neurons and posterior pituitary pituicytes as a 116-amino-acid preprohormone (signal peptide residues 1-24) that is proteolytically cleaved into mature 60-residue non-amidated **galanin-like peptide** (`GALP`, residues 25-84) [PMID:10601261]. An alternatively spliced transcript (skipping exon 3) encodes **alarin**, a 25-residue vasoactive peptide sharing only the first 5 N-terminal residues of mature GALP.
+- **Signaling mechanism**: Residues 9-21 of mature 60-residue `GALP` (`GWTLNSAGYLLGP`, corresponding to precursor residues 33-45) are 100% identical to the N-terminal 1-13 receptor-activating pharmacophore of galanin (`GAL`). Through this conserved pharmacophore, secreted `GALP` acts as an endogenous neuropeptide hormone (`GO:0005184` *neuropeptide hormone activity*) that binds and activates the seven-transmembrane galanin receptors `GALR2` and `GALR3` with high affinity (and `GALR1` with lower affinity) to initiate the galanin-activated signaling pathway (`GO:0090663`) [PMID:10601261].
+- **Physiological roles**: Regulated by leptin and metabolic state in the arcuate nucleus to modulate feeding behavior, body weight, thermogenesis, behavioral response to starvation (`GO:0042595`), and GnRH-dependent luteinizing hormone secretion [PMID:10601261].
+
+## Ligands in Signaling Pathways Assessment (Tranche 4C)
+- Human `GALP` has only 8 GOA annotations: `GO:0005576` (*extracellular region*, IEA), `GO:0005179` (*hormone activity*, IEA), `GO:0007165` (*signal transduction*, IEA), `GO:0042595` (*behavioral response to starvation*, IBA from `PTN001463568` and IEA from `UniProtKB:Q810H5`), and three HuRI yeast two-hybrid `GO:0005515` (*protein binding*, IPI `PMID:32296183`) rows.
+- Consequently, `GALP` is a Category A gap for `GO:0090663` (*galanin-activated signaling pathway*): neither GOA nor PAINT (`PTHR20950`) asserts `GO:0090663` or `GO:0005184` (*neuropeptide hormone activity*).
+- We `MODIFY` `GO:0005179` (*hormone activity*, IEA) to the more specific `GO:0005184` (*neuropeptide hormone activity*), `MODIFY` `GO:0007165` (*signal transduction*, IEA) to `GO:0090663` (*galanin-activated signaling pathway*), and add `NEW` (`ISS`) annotations for `GO:0005184` and `GO:0090663` backed by [PMID:10601261], linking `GALP` to `MODULE:galanin_signaling`.

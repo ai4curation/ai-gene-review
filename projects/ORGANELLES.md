@@ -2,7 +2,7 @@
 title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2]
+autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2, SERCA]
 ---
 
 # Organelles
@@ -186,6 +186,66 @@ plastids come later.
    organelle-level claim is independently supported. A well-supported
    sub-compartment location is not by itself where the function acts (MMADHC,
    2026-10-18).
+7. **ER and secretory-pathway rows** (settled in ER batches 1-4, 2026-11-04
+   to 2026-11-06):
+   - **Transit is not residence.** Every secreted, plasma-membrane and
+     lysosomal protein passes through the ER. A biosynthetic ER pool stays
+     `KEEP_AS_NON_CORE` when there is direct evidence on the gene itself or
+     the endogenous protein is seen in its native cell; a synthesis row whose
+     source shows only transit, or retention of an overexpressed or mutant
+     protein, is `MARK_AS_OVER_ANNOTATED`.
+   - **Topology does not force a sub-compartment on a transit pool.** A
+     membrane protein that only passes through the ER gets no ER membrane row.
+   - **Membrane and lumen lines.** A tail anchor or TM without a signal
+     peptide, plus one ER-specific assay on the endogenous protein (a
+     marker-controlled fraction, an ER Ca2+ function, ER-membrane partners),
+     supports `GO:0005789`; a predicted TM with only an overexpression assay
+     does not. A soluble signal-peptide protein that is retained, by a
+     KDEL-type motif or shown by protease protection, supports `GO:0005788`.
+     The ER exit site (`GO:0070971`) needs a marker of transitional ER.
+   - **Stable tethering by an integral partner** (added 2026-11-11, UFSP2) is
+     a third route to a sub-compartment row, for a soluble protein with no TM
+     or signal peptide. It needs (a) direct evidence that the endogenous
+     protein is at the organelle, (b) a named integral membrane protein of the
+     organelle that binds it, (c) dependence on that partner: losing it
+     (knockout or a binding mutant) releases the protein or destabilises it,
+     and (d) cytosolic synthesis with no signal peptide and no organelle
+     targeting or transit sequence, so the cytoplasmic leaflet is the only face
+     it can reach. Check (d) against the literature as well as UniProt
+     features: non-cleavable import signals (PTS1/PTS2, internal carrier
+     signals, twin-CX9C motifs) have no transit feature. (a) carries the location and (b) names what holds it
+     there; stability alone shows only an obligate partnership. A protein that
+     fails (d), such as a mitochondrial matrix protein held by an inner-membrane
+     partner, gets the side term for its own compartment instead (e.g.
+     `GO:0099617` matrix side of mitochondrial inner membrane). Add the
+     cytoplasmic-side term as a `NEW` IC row beside the root: `GO:0098554` for
+     the ER, whose definition includes peripherally associated proteins. `GO:0098554` is `part_of` `GO:0005789`, so it is the
+     more specific statement, not an alternative to it. A `NEW` `GO:0005789`
+     row that we author still needs the protein's own TM or tail anchor; an
+     existing direct-evidence `GO:0005789` row on a tethered protein (UFL1,
+     CDK5RAP3) stays `ACCEPT` and can be refined by adding the cytoplasmic-side
+     row. Brief or regulated recruitment (signalling, stress, autophagy,
+     Rab-dependent docking, a cycling complex such as SRP) is not tethering.
+     The same test will apply to the other organelles, but GO has no
+     cytoplasmic-side term for the Golgi stack or the peroxisome (only the
+     trans-Golgi network, `GO:0160281`, the lysosome, `GO:0098574`, and the
+     mitochondrial outer membrane, `GO:0032473`). A Golgi or peroxisome case
+     raises a `proposed_new_terms` entry rather than being forced onto a
+     narrower term.
+   - **Recruited cytosolic pools stay at the root**, core only when the
+     function is shown at the ER. Membership of an ER-acting complex supports
+     the organelle root for an obligate subunit but never localises it to a
+     sub-compartment, and it is not core when the subunit's own data place it
+     elsewhere (TRAPPC4).
+   - **A new sub-compartment row refines generic rows**: the gene's
+     `GO:0016020` membrane rows become `MODIFY` to it, all rows on the term
+     alike.
+   - **Microsomes are not ER** without an ER marker, and an isoform-restricted
+     UniProt ER location on a GO row with no isoform is a `source_defects`
+     entry.
+   - **Unreadable sources:** a curated human `ECO:0000269` line from a paper
+     we cannot read is kept on curator deference; a projection whose donor
+     paper is also unreadable is `UNDECIDED`.
 
 ## Survey under this policy
 
@@ -234,7 +294,10 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   are mechanical, using the script's ancestor test.
 - How should we say "peripheral, cytosolic face" now that intrinsic-component
   terms are obsolete? Is the bare membrane term enough, or is this a
-  `proposed_new_terms` or GO-ticket question?
+  `proposed_new_terms` or GO-ticket question? *Answered 2026-11-11 for stably
+  tethered proteins:* the "cytoplasmic side of X membrane" terms (e.g.
+  `GO:0098554` for the ER) include peripherally associated proteins; see the
+  tethering bullet in rule 7. Briefly recruited proteins stay at the root.
 - For IBA red flags with a consistent pattern (a PAINT node at the root term
   whose experimental descendants all show the same sub-compartment), should
   we raise this with PAINT rather than fixing gene by gene?
@@ -274,9 +337,99 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         distinct, since GBA duplicates GBA1)
   - [x] ER batch 3: 20 human genes (2026-11-05); 20 human genes remain (19
         distinct)
+  - [x] ER batch 4: the last 19 human genes (2026-11-06); human root-only ER
+        list done except GBA, a duplicate folder of GBA1
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-11 (tethering route added to rule 7)
+
+Settled the open question from ER batch 4: should a soluble protein stably held
+on the organelle by an integral-membrane partner get a sub-compartment row? Yes,
+the cytoplasmic-side term, under a new bullet in rule 7. GO:0098554 cytoplasmic
+side of endoplasmic reticulum membrane is defined to include proteins
+"peripherally associated with" the cytoplasmic leaflet (GO definition: "The leaflet
+of the endoplasmic reticulum membrane that faces the cytoplasm, including any
+protein embedded in, attached to, or peripherally associated with it."). It is
+`part_of` GO:0005789,
+so it says more than the bare membrane term (which side, and that the attachment
+is peripheral) rather than avoiding it. The route needs direct evidence that the
+protein is at the organelle, a named integral partner, dependence on it, and
+cytosolic synthesis with no signal or targeting sequence (which fixes the side),
+checked both in the UniProt features and in the literature (for UFSP2, worm ODR-8 is
+diffusely cytosolic without its partner); a
+stability result alone shows an obligate partnership, not a location.
+
+- **UFSP2** gains a NEW GO:0098554 IC row. It has no TM or signal peptide; its
+  partner ODR4 is a transmembrane ER protein; endogenous UFSP2 is lost in ODR4
+  knockout cells, which phenocopy UFSP2 loss (PMID:35926457); and it deUFMylates
+  uL24 on membrane-bound 60S subunits (PMID:38383785). The ODR4-UFSP2 complex at
+  the ER membrane was first shown in worm and human proteins by Chen et al.
+  (PMID:24603482), including a partner-dependent release test: worm ODR-8 washes
+  out of digitonin-permeabilised HeLa cells alone but is partly retained with
+  ODR-4, which also places it on the cytosolic face. The 2022 and 2024 papers cite
+  that work for the anchoring. The
+  location itself rests on the curated IDA row (PMID:35926457). The three root
+  rows stay ACCEPT and the second core function names the cytoplasmic side.
+- **What this means for the UFMylation machinery.** UFL1 and CDK5RAP3 are also
+  soluble and held at the ER by DDRGK1, and both already carry direct-evidence
+  GO:0005789 rows ACCEPTed in their reviews. Those rows stay: they are true,
+  because the cytoplasmic side is part of the ER membrane, and an assay on the
+  endogenous protein cannot be second-guessed by topology. A cytoplasmic-side row
+  would refine them and is left for a later pass. DDRGK1 has its own TM segment,
+  so GO:0005789 is the right term for it.
+- **Checked and left at the root.** The other ER-batch reviews whose reasons
+  mention tethering or peripheral pools do not meet the test. UVRAG reaches the ER
+  through PtdIns(3)P and RINT-1, a peripheral complex, and leaves on autophagy;
+  USO1 is Rab1-recruited; the TRAPP subunits and SRP72 belong to complexes that
+  cycle on and off the membrane; UFM1 is a modifier whose ER pool is its
+  conjugates; KIFAP3, CAVIN1 and DLG4 have no named integral ER partner.
+
+## 2026-11-06 (ER batch 4: the last 19 human genes)
+
+The last 19 human genes on the root-only ER list (SMPD2 to ZDHHC23); with GBA
+left to the duplicate-folder cleanup, this finishes the human ER list. Two gained
+a sub-compartment term (SMPD2 ER membrane, TRAPPC3 ER exit site) and three
+changed action (STAU2, TP53, TRAPPC4, UFM1). The same PR carries the optional SCP2 and
+PGRMC2 wording fixes from the ER batch 3 review and corrects NRXN1's mouse donor
+claim on three non-ER rows.
+
+| gene | outcome | evidence |
+|---|---|---|
+| SMPD2 | root; NEW GO:0005789 ER membrane (IC) | two predicted TM helices whose removal abolishes activity; overexpressed nSMase1 with ER and Golgi markers (PMID:10681556); endogenous phospho-nSMase1 co-stains with calnexin (PMID:25168245) |
+| SPG11 | root | endogenous spatacsin fractionates with REEP5 and STIM1 and resists extraction (PMID:37871017), but no TM is predicted, so no membrane row |
+| SPHK2 | root | serum starvation raises the ER share of overexpressed SphK2 (PMID:16118219); soluble kinase, recruited pool |
+| SQSTM1 | root | curated from an abstract-only TRIM13 paper (PMID:22178386), curator deference; consistent with its mitochondrion rows |
+| SRP68 | root; rows stay ACCEPT | tagged SRP68 co-stains with an ER marker and a point mutant loses it (PMID:28369529); core because SRP hands over at the ER |
+| SRP72 | root; rows stay ACCEPT | GFP-SRP72 co-localises with ER-Tracker (PMID:28369529); soluble SRP subunit on the cytosolic face |
+| STAU2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | by similarity only; mouse donor's abstract calls wild-type Stau2 mostly cytosolic (PMID:15166236) |
+| TMF1 | root; rows stay MARK_AS_OVER_ANNOTATED | the sole mouse source calls TMF/ARA160 "a Golgi-associated protein" (PMID:23000399); human TMF1 at Golgi cisternal tips (PMID:17698061) |
+| TP53 | root; IEA ACCEPT to KEEP_AS_NON_CORE | Synoviolin sequesters p53 at the ER (PMID:17170702); wild-type p53 at ER and MAM binding SERCA (PMID:25624484); recruited pool of a nuclear factor |
+| TRAPPC1 | root; row stays ACCEPT | TRAPP acts at ER exit sites or ERGIC (PMID:21525244); support is at complex level |
+| TRAPPC3 | root; NEW GO:0070971 ER exit site (IC) | endogenous mammalian Bet3 on Sec31-marked transitional ER, 7.6-22-fold enriched there by immuno-EM (PMID:16880271); binds SEC23 |
+| TRAPPC4 | root; IEA and ISS ACCEPT to KEEP_AS_NON_CORE | mouse ER line is a curator inference; its own synbindin immuno-EM shows Golgi and vesicles, not ER (PMID:11018053); the ER is plausible only through TRAPP membership |
+| TRAPPC5 | root | by similarity with no named source; holds through TRAPP membership (PMID:16880271) |
+| UFM1 | root; IEA and ISS KEEP_AS_NON_CORE to ACCEPT | endogenous UFM1 partly in the BiP-marked ER fraction with UFBP1 (PMID:21494687); UFMylated RPL26 on ER-bound ribosomes (PMID:30626644) |
+| UFSP2 | root | ER localization depends on the TM protein ODR4, and ODR4 loss phenocopies UFSP2 loss for RPL26 deUFMylation (PMID:35926457) |
+| USO1 | root | fly p115 on tERs, Golgi and ER cisternae (PMID:12876273); soluble peripheral protein |
+| UVRAG | root | "depends on PtdIns(3)P for its ER localization" in the RINT-1 tether (PMID:24056303); recruited C2-domain protein |
+| VEGFA | root | ER line is for the L-VEGF189 isoform (PMID:11731620), curator deference; secreted, no retention signal |
+| human/ZDHHC23 | root; IBA stays MARK_AS_OVER_ANNOTATED | ZDHHC23 itself is at the Golgi and TGN (PMID:22399288); the ER evidence comes from paralogs |
+
+What ER batch 4 showed:
+
+- **A new sub-compartment can be the exit site.** TRAPPC3's immuno-EM puts it
+  on Sec31-marked transitional ER, so GO:0070971 is the right sub-compartment,
+  not membrane or lumen. TRAPPC1, TRAPPC4 and TRAPPC5 stay at the root: complex
+  membership alone does not localise a subunit.
+- **Tethered without a TM.** UFSP2 has no anchor of its own but is held at the
+  ER by ODR4; that is a location, not a sub-compartment, so it stays at the
+  root.
+- **Paralog evidence behind an IBA is not the gene's own.** ZDHHC23's ER
+  claim rests on other ZDHHC enzymes; its own data say Golgi.
+- **`is_active_in`:** UFSP2 (IBA and IDA) and SPG11 IEA are justified; SMPD2
+  and USO1 IBA are soft; TMF1 and ZDHHC23 IBA are not supported.
 
 ## 2026-11-05 (ER batch 3: 20 human genes)
 
@@ -393,7 +546,8 @@ What ER batch 2 showed:
 - **`is_active_in`:** one ER row carries it (KCNRG IBA), defensible because
   the channel-retention activity is proposed to act at the ER.
 - **Duplicate folder.** `genes/human/GBA` duplicates `genes/human/GBA1`
-  (same accession); it should be retired in a separate change.
+  (same accession); it should be retired in a separate change. Done in
+  #6088, which removes the GBA folder and points its history at GBA1.
 
 ## 2026-11-04 (ER batch 1: 20 human genes)
 

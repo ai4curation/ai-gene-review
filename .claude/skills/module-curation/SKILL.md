@@ -73,3 +73,11 @@ Load only the reference needed for the decision at hand:
 - Treat deep research as retrieval support, not authority. Every structural
   claim must still be grounded in identifiers, gene reviews, GOA/UniProt, GO-CAM,
   literature, or explicit curator judgment.
+- Record every ontology request in a structured field, never only in prose.
+  A missing term (no specific process, no fitting activity) goes in the
+  module's top-level `proposed_new_terms`, with `proposed_name`,
+  `proposed_definition`, `justification`, a verified `proposed_parent` and
+  `supported_by` quotes. A fault in an existing term goes in
+  `proposed_ontology_changes`. Notes may point to the entry but must not be the
+  only record. `export_proposed_terms.py` collects module requests with the
+  gene ones.

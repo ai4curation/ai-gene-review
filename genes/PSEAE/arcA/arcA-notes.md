@@ -53,3 +53,45 @@ as a CHECK (SUSPECTED) on the IBA row. Not verified by sequence analysis here.
   (IEA), cytoplasm (IEA).
 - PSEUDOCAP: no defect; IMP is acceptable (enzyme-deficient structural-gene mutant).
 - GO_CENTRAL: CHECK (SUSPECTED) for DDAH-like short leaves under PTN005338738.
+
+## PANTHER tree check (2026-11-05)
+
+Topology of PTN005338738 fetched with `projects/PSEUDOCAP/panther_tree.py node
+PTN005338738 --depth 5 / --leaves` (PANTHER `treeinfo` for PTHR47271).
+
+**PTN005338738: SPECIATION, placed at LUCA, 23 leaves** (PTHR47271:SF2 20, SF3 3).
+
+| child node | event / taxon | leaves | subfamilies | content | verdict for GO:0016990 |
+|---|---|---|---|---|---|
+| PTN005338739 | SPECIATION Archaea-Eukaryota | 10 | SF2 | Bikonts PTN008230055 (Giardia ADI; *Trichomonas* triplet PTN009208904; *Chlamydomonas* ADI) + Archaea PTN005338744 | mixed; see below |
+| └ PTN005338744 | SPECIATION Archaea | 5 | SF2 | *Korarchaeum* pair PTN008230056 (B1L3J0 DDAH-named, B1L477 amidinotransferase); *Sulfolobus* Q97TX4 "arginine deiminase, hypothetical"; Euryarchaeota pair PTN005338745 = *Methanosarcina* Q8TSK4 + *Halobacterium* F2Z681, both named arginine deiminase | only PTN008230056 still doubtful |
+| PTN008715727 | DUPLICATION | 13 | SF2 10, SF3 3 | the two bacterial clades | — |
+| └ PTN008715728 | SPECIATION Eubacteria | 3 | SF3 | *S. coelicolor* Q9RJN1, *Bradyrhizobium* Q89DX7, **PAO1 ArcA P13981** (PTN002291359) | the seed clade |
+| └ PTN000978201 | SPECIATION Eubacteria | 10 | SF2 | Terrabacteria PTN008230058 (Actinomycetales pair; Firmicutes PTN001763871) + Gammaproteobacteria PTN001763884 (*Vibrio*, *Salmonella* ArcA) | all named ArcA |
+| &nbsp;&nbsp;&nbsp;└ PTN002933241 | SPECIATION *Bacillus* | 2 | SF2 | *B. subtilis* YkgA (O34497) + *B. cereus* ArcA (Q81II1) | YkgA's sister is a genuine ArcA |
+
+Conclusions (three quarters of the original concern is withdrawn):
+
+- **Q8TSK4 and Q97TX4 are not "unannotated".** *Methanosarcina* Q8TSK4 pairs with
+  *Halobacterium* F2Z681 (PTN005338745) and both carry the UniProt name arginine
+  deiminase, as does *Sulfolobus* Q97TX4. Their shorter length alone is weak evidence
+  against the term, so they are dropped from the defect.
+- **B. subtilis YkgA sits inside a Bacillales ADI clade.** Its sister is *B. cereus*
+  ArcA (node PTN002933241), within PTN001763879 alongside the *S. aureus* and
+  *L. monocytogenes* ArcA enzymes. The topology argues YkgA is an orthologous ADI whose
+  Swiss-Prot name lags, not an over-propagation -- even though *B. subtilis* 168 itself
+  uses arginase rather than the ADI pathway.
+- **What survives is the *Korarchaeum cryptofilum* duplication pair PTN008230056**
+  (B1L3J0 N-dimethylarginine dimethylaminohydrolase, B1L477 amidinotransferase): the
+  only leaves of the node whose names point to a different pentein activity, and a
+  clean 2-leaf NOT target.
+- The *Trichomonas* triplet PTN009208904 is **not** flagged: its names are
+  uninformative ("amidinotransferase family protein") and trichomonads do run an
+  arginine dihydrolase pathway.
+- The general point stands and is now evidenced: the node is a **LUCA-level**
+  SPECIATION, so the IBD asserts a substrate-specific pentein activity as ancestral to
+  all life.
+
+Defect raised SUSPECTED -> PROBABLE and retargeted from four scattered leaves to
+PTN008230056; the suggested question and experiment were rewritten to match. No
+annotation actions changed (the GO:0016990 IBA stays ACCEPT for ArcA itself).
