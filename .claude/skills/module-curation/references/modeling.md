@@ -76,6 +76,9 @@ See `projects/GOCAM_COMPARTMENTS.md`.
   exemplars that orient the reader and satisfy leaf grounding QC.
 - Representative members are examples, not an exhaustive species list and not a
   claim that the module is limited to those proteins.
+- In `COMPLETE` concrete modules, every terminal role must either ground to at
+  least one representative member or be marked `intentionally_ungrounded: true`
+  because the leaf is genuinely distributed/open-ended.
 - Use `ancestral_nodes` for the stronger PAINT claim that a function arose at or
   was present in a PANTHER ancestral node and is inherited by descendants unless
   diverged.

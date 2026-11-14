@@ -47,13 +47,16 @@ Rendered module pages include derived QC from `ai_gene_review.module_qc`:
 
 - recommended-field compliance;
 - module deep-research provider detection;
-- leaf nodes lacking representative members;
+- leaf nodes lacking representative members, with true distributed/open-ended
+  leaves reported separately when marked `intentionally_ungrounded`;
 - gene-review completeness for UniProt groundings;
 - advisory reaction chaining for `PRECEDES` connections.
 
-Treat leaf-grounding warnings as modeling signals. Add a concrete UniProt
-representative only when it truly helps orient an abstract family role; do not
-add every organism mentioned in evidence just to improve a count.
+For `COMPLETE` concrete modules, treat leaf-grounding failures as blockers.
+Add a concrete UniProt representative only when it truly helps orient an
+abstract family role; do not add every organism mentioned in evidence just to
+improve a count. Mark a leaf `intentionally_ungrounded: true` only when the
+module genuinely needs a distributed or open-ended terminal role.
 
 ## Cache Noise
 
