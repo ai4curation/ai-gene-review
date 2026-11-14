@@ -188,10 +188,12 @@ gonadotropins, and the mouse null reaches puberty).
   from perturbation data (Drd1, Drd2, Trpv1, Mc5r, Nmu, Fto), against **zero** annotations
   in any species for GO:0031653 heat dissipation, GO:0031654 and GO:0031656 (QuickGO,
   2026-11-13). Decision: NEW GO:0001659 on the ligand, with the cocktail limitation stated
-  in the row and the remaining gap recorded as a knowledge gap. Evidence code IDA, as in
-  that review, because the primary experiment activates the peptide-releasing neurons and
-  measures the response; the human TACR3 and TAC3 rows for the same term use EXP, because
-  their evidence is agonist or antagonist exposure in people, which ECO files as
+  in the row and the remaining gap recorded as a knowledge gap. Evidence code IDA, because
+  the primary experiment is chemogenetic and optogenetic activation of the peptide-releasing
+  neurons with the physiological response as the readout, and no drug in the sufficiency
+  arm; the antagonist infusion enters only as the blocking control. The human TACR3 and
+  TAC3 rows for the same term use EXP, and so does the mouse *Tacr3* row, because in all
+  three the primary experiment is agonist or antagonist exposure, which ECO files as
   pharmacological assay evidence (ECO:0006053) rather than as a direct assay or a mutant
   phenotype.
 

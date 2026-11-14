@@ -152,6 +152,20 @@ Decision: GO:0007209 ACCEPT (core), GO:0007189 KEEP_AS_NON_CORE, as in the human
   cell population and no mouse data, whereas here the *Tacr3*-expressing population is
   mapped in mouse, its removal shifts core temperature, systemic selective agonist
   reproduces the response in mouse, and the endogenous NKB projection is sufficient.
+- Evidence code: EXP, the same code and the same ECO reasoning as the human TACR3 and
+  TAC3 rows for this term. The primary experiment is systemic senktide, and ECO files an
+  organism's response to a receptor agonist as pharmacological assay evidence
+  (ECO:0006053), which sits under experimental phenotypic evidence and under neither the
+  IDA class nor the IMP class (ECO:0000315, whose descendants cover mutation, RNAi,
+  morpholino, antisense and over-expression but no drug); the manual-assertion form
+  resolves to EXP. The two genetic arms do not make it an IDA either: ablating a
+  *Tacr3*-reporter-defined neuron population perturbs the receptor-expressing cells
+  rather than assaying the gene product, and the Kiss1 arm manipulates the presynaptic
+  neurons and reads out through a three-antagonist cocktail. The companion mouse *Tac2*
+  row keeps IDA because its sufficiency arm is optogenetic and chemogenetic activation of
+  the peptide-releasing neurons with no drug. GO's own IMP and IDA guidance pages could
+  not be read from this environment (wiki.geneontology.org returns 403), so this is
+  reasoning from ECO and not a verified consortium convention.
 
 ## Rat agonist pharmacology behind the transferred behaviour rows
 

@@ -35,7 +35,8 @@ module for the KNDy pulse generator.
   `GO:0031656`) carry no annotations in any species, so the hot-flush role is
   annotated to `GO:0001659` temperature homeostasis. In human this rests on drug and
   infusion studies (NK3R antagonist trials in postmenopausal women; NKB infusion in
-  premenopausal women), and in mouse on neuron manipulation.
+  premenopausal women), and in mouse on a selective NK3R agonist plus manipulation of the
+  kisspeptin and NK3R neuron populations.
 
 ## Wave 1 status
 
