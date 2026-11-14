@@ -12,3 +12,9 @@
 
 ## GO-CAM
 - 6796b94c00002484 (Leloir, usually silenced): gal10 enables GO:0003978 (ISO from SGD GAL10), cytosol (IBA), part_of GO:0033499. The model omits the mutarotase activity (aldose 1-epimerase), which the S. cerevisiae GAL10 review treats as a second core function.
+
+## 2026-11-12 audit (to COMPLETE)
+- No deep-research provider file was available; none was generated. Literature check: cached abstracts PMID:19942659, PMID:21075050; web search found nothing further on the gal10 mutarotase domain.
+- Softened the IMP GO:0003978 summary (only the abstract is cached; deferred to curator).
+- Aldose 1-epimerase (GO:0004034) rows kept ACCEPT and as a second core function by homology to S. cerevisiae GAL10 (whose mutarotase domain has direct evidence); in S. pombe it rests on the conserved C-terminal domain (UniProt REGION 351..713 "Mutarotase", predicted ACT_SITE 532) only. Suggested experiment added.
+- No PAINT IRD/IKR on the gal10 lineage.

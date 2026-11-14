@@ -2,8 +2,8 @@
 title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
-species: [human, ECOLI, ARATH, DICDI, DROME, mouse]
-genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4]
+species: [human, ECOLI, ARATH, DICDI, DROME, mouse, SCHPO]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4, ADAM17, ALDOB, spz, rl, ttv__Q9V730, rad21, ABCB7, ABL1, ACVR2A]
 ---
 
 # Wrong-Gene Leads
@@ -236,6 +236,41 @@ Across all three batches (46 leads): 7 wrong-gene annotations, 4 wrong evidence 
 4 wrong references, 9 queries pending full text, and 22 false positives or no change.
 No review action was changed on the strength of an abstract alone.
 
+## Fourth lead review (2026-11-12)
+
+The sweep was re-run on current main: 10,811 leads. The next 20 genes were taken the same way
+as before. These were the first score-6 genes not already checked (the score-7 and score-8
+rows were all checked in earlier batches).
+
+| Gene | Row | Outcome |
+|---|---|---|
+| human/ADAM17 | endopeptidase activity; membrane protein ectodomain proteolysis (IMP, UniProt) | **Probable wrong gene.** PMID:24990881's abstract names only "ADAM proteases". The authors' follow-up (PMID:28855300) summarises the paper as showing ADAM10 as "the sole sheddase of TREM2". UniProt made the identical rows on ADAM10, whose entry cites the paper. `WRONG_GENE_PRODUCT` / `CHECK` / `PROBABLE` toward ADAM10, on both rows. The claims are true of ADAM17 from other papers, so the actions are unchanged and the reasons reworded. |
+| human/ALDOB | fructose-bisphosphate aldolase activity (EXP, Reactome) | **Wrong reference.** PMID:6696436 sequenced aldolase purified from skeletal muscle (ALDOA). Reactome gave the same reference to all three aldolases. `WRONG_REFERENCE` / `PROBABLE`. |
+| DROME/spz | defense response to Gram-negative bacterium (IMP, UniProt) | **Wrong term, confirmed** (found while checking the lead). The open-access full text of PMID:26843333 challenges flies only with Gram-positive bacteria. UniProt's rows from the same paper on SPE, psh and modSP use the Gram-positive term. The row moves from UNDECIDED to REMOVE, with a `WRONG_TERM` / `DELETE_ROW` / `CONFIRMED` defect. The 17 flagged spz rows themselves are false positives: the papers write Spätzle, spaetzle or spatzle. |
+| DROME/rl, DROME/ttv__Q9V730, SCHPO/rad21 (two rows), human/ABCB7, human/ABL1, human/ACVR2A | IDA, IMP and EXP rows | **Query.** In each case the abstract concerns another gene and the full text could not be read: DJNK/bsk (rl); DEXT3/botv (DROME/ttv__Q9V730); Rec8, and Eso1/Pds5 (rad21); ABCB6 (ABCB7); CRK and its partners (ABL1, a CAFA row given to every CRK partner); ActR-IIB (ACVR2A). Recorded as `SUSPECTED`, with no action changed. ABL1 is filed as an evidence-code query. DROME/ttv__Q9V730, ABCB7 and ACVR2A are filed as wrong-reference queries, since their claims are true for the gene on other evidence. The rule used: `WRONG_GENE_PRODUCT` when the row's specific claim belongs to another gene (the TREM2 shedding in ADAM17's paper is later described by its authors as ADAM10's), and `WRONG_REFERENCE` when the term is true of the annotated gene on other evidence and only the citation is borrowed from another gene's paper (ALDOB's aldolase row cites an ALDOA sequencing study). rad21's cohesion row also quoted an eso1 phenotype; it now quotes the Methods sentence listing the rad21-K1 mutant. |
+| DROME/btl, DROME/piwi, ORYSJ/MADS3, SCHPO/cds1, SCHPO/fas2, SCHPO/idh1, human/ACADVL, human/ACTB, human/AGPAT2, human/AKR1C4, human/AP2S1 | various | **False positives.** The papers name the gene in a form the name check misses, and the cases are listed below. ACTB's 24 rows are ComplexPortal complex-wide annotations from papers listing actin as a subunit. ACADVL's nucleoid row comes from a proteomics list. MADS3's TAS row restates background ABC-model text, which AgBase applied to several MADS genes from one paper. |
+
+So of 20 leads: 1 is a probable wrong-gene annotation (ADAM17), 1 a wrong reference
+(ALDOB), 6 are queries, and 12 are false positives. One of those false positives (spz)
+turned up a confirmed wrong-term row. The false-positive rate is higher than in earlier
+batches. Most of the misses come from how papers write gene names:
+
+- spelling and diacritic variants (Spätzle, spaetzle);
+- the yeast protein suffix (Cds1p) and allele marks (lsd1+/fas2+);
+- a prefix on the symbol (c-Abl);
+- an older name (ActRII for ACVR2A, Breathless for btl);
+- a range (AKR1C1-AKR1C4);
+- old genetic names that only PomBase lists (glu3 for idh1);
+- a gene named only through a citation of its cloning paper (AGPAT2);
+- a protein name worded differently from UniProt's (very-long-chain acyl-CoA
+  dehydrogenase).
+
+Complex-wide ComplexPortal rows and proteomics lists are a second, separate source of noise.
+
+Across all four batches (66 leads): 8 wrong-gene annotations, 4 wrong evidence codes,
+5 wrong references, 15 queries pending full text, and 34 false positives or no change.
+No review action was changed on the strength of an abstract alone.
+
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
@@ -249,6 +284,13 @@ No review action was changed on the strength of an abstract alone.
 - **Uncached papers** get no name-check adjustment.
 
 ## Next steps
+
+- Normalise names before the abstract check: fold diacritics, strip a trailing yeast `p` or `+`,
+  accept `c-` prefixes, expand ranges such as AKR1C1-AKR1C4, and take SCHPO synonyms from
+  PomBase's names file. The fourth batch suggests this would remove most of the remaining
+  false positives.
+- Down-weight rows whose source annotated the same term to every subunit of a complex or
+  every protein in a proteomics list, which QuickGO shows by reference.
 
 - Review the top tier, starting with the non-IPI human rows, and record confirmed
   cases as `WRONG_GENE_PRODUCT` source defects in the gene reviews.
