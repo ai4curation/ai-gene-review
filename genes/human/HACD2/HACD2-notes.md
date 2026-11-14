@@ -1,5 +1,12 @@
 # HACD2 (Q6Y1H2) review notes
 
+This is the HACD2 paralog-companion correction arising from the HACD1 ClinGen review
+in [PR #6311](https://github.com/ai4curation/ai-gene-review/pull/6311). The campaign's
+user-authorized generic-binding exception applies to this companion work: supported
+interactions remain KEEP_AS_NON_CORE unless a specific refinement is supported.
+HACD2 is not being added as a ClinGen Mendelian association or counted as a ClinGen
+completion.
+
 ## Identity and family
 
 - HGNC:9640; UniProt Q6Y1H2; gene HACD2, synonym PTPLB (protein-tyrosine
@@ -162,3 +169,18 @@ computed state. The dated 2026-11-12 counts above describe the earlier commit.
 Correct the older donor-name error: [P40857 is yeast Phs1](https://www.uniprot.org/uniprotkb/P40857/entry),
 verified from the official UniProt entry on 2026-11-14. It is a dehydratase, not
 KAR/HSD17B12. The native IGI source identifier is unchanged.
+
+
+## 2026-11-14 UTC — Companion scope and source-context clarification
+
+The 33 native GOA rows are represented by 27 retained review contexts. Six HuRI
+partner rows map to one legacy context; the two PMID:38422897 TECR rows from IntAct
+and UniProt map to one context. The mixed HuRI context includes TECR, but its other
+partners do not support a uniform enzyme-binding replacement. Its non-core generic
+action does not reject the TECR-specific interpretation in the three TECR-only
+contexts. This bounded correction preserves the source rows and context structure.
+
+The core-function description now distinguishes the curated elongation enzyme class
+and C16 assay from an unmeasured C18-C26 panel. Annotation actions remain 14 ACCEPT,
+7 KEEP_AS_NON_CORE and 6 MODIFY; status remains DRAFT, with no NEW annotation or
+ClinGen completion credit. The top-level biological description is only rewrapped.
