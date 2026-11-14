@@ -62,3 +62,7 @@ Retain the supported GO:0050527 core inference and all existing annotation paylo
 ## 2026-11-11 — supported activity with a residual construct-specific gap
 
 The earlier MF_DARK classification was incorrect: GO:0050527 chemistry is already supported by the close-strain product-resolved assay. Use RESIDUAL_SUBGAP for the exact target/construct comparison and native substrate profile. Add an ISS proposal identifying KT2442 PhaZ pPAZ3 by its publication and construct name, without inventing an accession, sequence identity, or KT2440 IDA assay. This supersedes the preceding decision to withhold an annotation solely because a stable donor accession is unavailable. All pre-existing annotation payloads/actions and broader activity proposals are retained.
+
+## 2026-11-13 — PR #6194 evidence and identifier follow-up
+
+Omit the unestablished donor accession from supporting_entities; the KT2442 pPAZ3 construct remains identified in the ISS reason. Add a qualified live ISS granule-localization proposal alongside the retired target-direct IDA payload, using the KT2442 immunoblot plus explicitly limited KT2440 fraction corroboration. Family PAINT identifiers, seeds, dates and polarity are preserved while their raw-row citations and cross-family scope are made explicit. See `analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/review9-20261113/`.
