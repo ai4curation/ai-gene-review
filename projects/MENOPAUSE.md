@@ -17,7 +17,8 @@ circuit that generates GnRH pulses and, after estrogen withdrawal, drives hot fl
 neurokinin B (TAC3) acting on NK3R (TACR3) and kisspeptin (KISS1) acting on KISS1R, in
 arcuate kisspeptin / neurokinin B / dynorphin (KNDy) neurons, together with the FSH
 receptor and estrogen receptor beta. Wave 1 covers six human genes, their four mouse
-orthologs, the seven production GO-CAMs that contain them, and five PANTHER families.
+orthologs, the seven production GO-CAMs that contain them, five PANTHER families, and a
+module for the KNDy pulse generator.
 
 ## Scope rules
 
@@ -45,7 +46,22 @@ orthologs, the seven production GO-CAMs that contain them, and five PANTHER fami
 | Ortholog revisit | worm fshr-1 (hormone-receptor rows reinstated) | done |
 | GO-CAM reviews | 68d5ebd600000043, 68d5ebd600000736, 68d5ebd600001111, 68d5ebd600001504, 59dc728000000351, 69b3372b00003343, 6606056e00000678 | done |
 | PANTHER family reviews | PTHR46925, PTHR15536, PTHR45695, PTHR16955, PTHR24372 | done |
-| Module | KNDy GnRH pulse generator | in progress |
+| Module | `kndy_gnrh_pulse_generator` | draft |
+
+## The KNDy module
+
+`modules/kndy_gnrh_pulse_generator.yaml` models the arcuate oscillator as five parts:
+estradiol negative feedback through ESR1 (linked to the `estrogen_receptor_signaling`
+module); neurokinin B autoexcitation (TAC3, NK3R, Gq); dynorphin termination of each
+burst (PDYN, KOR); kisspeptin output onto GnRH neurons (KISS1, KISS1R, Gq, a TRPC
+channel), with direct arcuate and relayed rostral routes as alternatives; and GnRH
+release. The pituitary steps (GnRH receptor, gonadotropin secretion) and the median
+preoptic thermoregulatory output are outside its boundary: the second uses the same
+NKB–NK3R pair on a different neuron population and is a candidate for its own module.
+The feedback loop is left open, because estradiol comes from the gonad, which is also
+outside the boundary. ESR1, OPRK1, GNRH1 and TRPC4 have no gene reviews yet, and the
+module proposes GO terms for GnRH secretion, its regulation, and kisspeptin receptor
+activity.
 
 ## Findings for upstream resources
 
