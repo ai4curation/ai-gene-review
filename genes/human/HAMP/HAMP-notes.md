@@ -153,3 +153,30 @@ biological QA found no actionable issue and confirmed that PMID:37277838 include
 hepcidin experiments, not merely transferrin findings. A preliminary schema check
 caught the suggested-question object format, which was corrected before the final
 successful validation.
+
+### PR #6372 review follow-up — 2026-11-14
+
+The two processing products are now explicitly represented in `functional_isoforms`
+as `CLEAVAGE_PRODUCT` records mapped to the native UniProt chain identifiers and
+residue ranges. This schema field covers proteolytic products as well as splice
+classes. Their descriptions distinguish the established endocrine action of
+hepcidin-25 from the bounded cell/mouse truncation result and unresolved
+physiological antimicrobial contribution of hepcidin-20. Native GOA isoform fields
+remain unchanged.
+
+The core unit no longer lists GO:0007165 signal transduction or GO:0010039 response
+to iron ion. The specific ferroportin-regulatory mechanism remains; the corresponding
+original GOA rows retain their supported ACCEPT decisions.
+
+The suggested extracellular-region refinement was checked against the live
+[QuickGO term service](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0005615,GO:0005576)
+on 2026-11-14. GO:0005615 was returned as **obsolete extracellular space** with
+`isObsolete: true`, whereas GO:0005576 extracellular region was non-obsolete.
+Accordingly, all four GO:0005576 contexts retain ACCEPT with the ontology check
+recorded in their reasons; an obsolete replacement is not proposed. The annotation
+action counts, native fields, references and supporting quotations are unchanged.
+
+Follow-up validation passed: `just validate human HAMP`, the new history record,
+and canonical rendering in memory. References and all supporting quotations were
+preserved exactly from the previously validated revision. The runtime guard
+confirmed unchanged `uv.lock` and no checkout-local environment.
