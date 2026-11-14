@@ -250,8 +250,76 @@ TPV-004, the npp-20 MODIFY, and TPV-008 with CR-0006.
 Verdicts are in [rar_rerun_triage.yaml](RAR_MISANNOTATION/data/rar_rerun_triage.yaml). They are
 first-pass: they rest on curated UniProt function text, term definitions and constraints, not on
 reading each paper. Where a verdict rests on a cached paper or UniProt record, the file quotes it
-verbatim, so `just validate-quotes` checks it. Plant-, animal- and fungus-flagged candidates (about 1,040 kingdom-level
-terms) are not triaged yet.
+verbatim, so `just validate-quotes` checks it. Plant- and animal-flagged candidates are
+screened in the next section; the fungus-flagged ones are not yet.
+
+### Plant and animal candidates (2026-11-11)
+
+All 958 kingdom-level candidates flagged in plants (604) or animals (354) have a first-pass
+verdict in
+[rar_rerun_triage_plant_animal.yaml](RAR_MISANNOTATION/data/rar_rerun_triage_plant_animal.yaml).
+They were screened in five groups, by lineage and by evidence type: plant IBA, plant inferred,
+plant experimental, animal inferred and animal experimental. A merge step checked that every
+term is covered and that every proposed replacement is a live GO term (109 ids); `quote_check`
+verifies all 39 quotes.
+
+| Verdict | Entries |
+|---|---|
+| Annotation wrong | 139 |
+| Rare but right (flag fails) | 363 |
+| Experimental, deferred to the curator | 379 |
+| Right but too general | 36 |
+| Constraint looks too narrow | 4 |
+| Uncertain | 66 |
+
+Experimental rows are not overruled on first-pass evidence. They are called wrong only when
+the term's definition or GO taxon constraint excludes the lineage, which makes the error a term
+choice. Otherwise they are deferred to the curator, who read the full text.
+
+Most flags fail. The flag measures curation density as often as error, as in the first round:
+- plant metabolic enzymes look rare because bacteria dominate the denominator;
+- conserved eukaryotic machinery looks rare in plants because plants are under-curated;
+- many animal flags are real enzymology that is rare in animals, such as the nematode
+  glyoxylate cycle, phytochelatin synthase and insect trehalose metabolism.
+
+The 139 errors fall into a few kinds:
+
+- **PAINT nodes placed above a lineage that lacks the function (IBA).** Examples:
+  - GATOR2 (SEACAT) complex terms on plant SEH1 and SEC13. Neither Arabidopsis nor
+    *Selaginella* has a member of the NPRL2, WDR24 or MIOS families.
+  - TNF signalling on COMMD proteins, and Wnt signalling on cereblon.
+  - Centrosome, polytene chromosome and myosin filament terms on plant proteins.
+  - Calcium-dependent protein binding from a node seeded only by vertebrate S100 proteins.
+  - In animals, yeast polarisome locations on fly CG6108.
+- **Family signatures and rules that over-reach (IEA).** Examples:
+  - InterPro2GO: Deltex to Notch signalling and HMMR to hyaluronic acid binding on plant
+    proteins; plant tetraspanins to auxin signalling on TSPAN13; yeast Inp1 to peroxisome
+    inheritance on worm spartin.
+  - UniRules wrong for every protein they match: any RCK_C domain to potassium channel
+    regulator activity, and a rule pooling mammalian PEMT with plant PLMT.
+  - GO's SL-0038 mapping, which sends every plasmodesmal protein to anchoring junction.
+- **Rat (RGD) rows that misread their papers, then copied to mouse by ISO.** Examples:
+  - Pon3 to phenylacetate catabolism; the paper measured phenyl acetate esterase activity.
+  - Txnrd1 to selenate reductase; the paper is about selenite.
+  - Dgat1 to poly-hydroxybutyrate biosynthesis; the paper reports raised beta-hydroxybutyrate.
+- **Term-choice slips on curated rows.** Examples:
+  - "Cytokine" for "cytokinin" (FLZ17, KNAT3, Psg18).
+  - Seed-coat "endothelium" read as vascular endothelium (MYB56).
+  - CDPK annotated as protein kinase C (CPK32).
+  - MyD88 annotated to the plant term induced systemic resistance.
+  - Older TAS/NAS rows that picked the bacterial version of an enzyme class (NNT, PRDX3,
+    NUDT2, ATP7A/B).
+- **A symbol collision.** Arabidopsis CASP3, a Casparian strip protein, carries an
+  amyloid-beta term transferred by ISS from human caspase-3.
+
+The four too-narrow constraints repeat the first round's cases: glutamate-gated calcium channel
+and plasma membrane repair (both Metazoa-only, but plant GLR3.3 and SYT1 do these), sperm
+axoneme assembly (*Selaginella*), and ionotropic glutamate receptor signalling. One verdict
+disagreed with an existing review. Mouse Acadl's carnitine catabolic process row was kept as
+non-core, but the term means breaking down carnitine itself, which mammals do not do; the
+knockout paper shows only acylcarnitine build-up from blocked beta-oxidation. The Acadl
+review now removes the row, and the two CoA-linked carnitine metabolic process rows that
+rest on the same paper.
 
 ## Next steps
 
@@ -271,7 +339,10 @@ terms) are not triaged yet.
 - [x] Gene review: Drosophila boss, the positive control for curated rule CR-0006 (2026-11-07). It accepts both rule consequents on experimental evidence. It also narrowed CR-0006 from Arthropoda to Diptera, since experimental evidence for Boss acting as the Sev ligand is restricted to Drosophila, and no Sevenless-binding BOSS ectodomain has been identified outside Diptera (PMID:42043338); 135 of the 211 arthropod matches were non-dipteran.
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
 - [x] Rerun RAR on current GOA (2026-11-11): script, candidates and a first-pass triage of the constraint breaks and prokaryote IBA nodes; see [above](#rar-rerun-on-current-goa-2026-11-11).
-- [ ] Triage the plant-, animal- and fungus-flagged RAR candidates (about 1,040 kingdom-level terms), starting with IBA nodes.
+- [x] Triage the plant- and animal-flagged RAR candidates (958 terms, 2026-11-11); see [above](#plant-and-animal-candidates-2026-11-11).
+- [ ] Triage the 81 fungus-flagged RAR candidates and the 280 vertebrate-vs-invertebrate candidates.
+- [ ] Turn the family-wide mapping errors into SSSOM rows or curated rules: InterPro2GO for Deltex, HMMR and IPR021006; UniRules UR000414538 (RCK_C) and UR000345849 (PEMT/PLMT); GO's SL-0038 cell-junction mapping.
+- [x] Revisit the mouse Acadl review's carnitine catabolic process row: now REMOVE (2026-11-11).
 - [ ] For the 14 annotation errors that break a taxon constraint, find out why GO's constraint check did not filter them; for the 5 questionable constraints, check the cited papers and propose TPV entries.
 - [ ] Look at the TreeGrafter prokaryote annotations by PAINT node, since one deep node yields many rows.
 - [ ] Check the archived neXtProt release for how IBA rows were graded.

@@ -1,0 +1,15 @@
+# sucC (Q88FB2, PP_4186) notes
+
+## Retrospective audit corrections (2026-11-12)
+
+A retrospective audit of the succinyl-CoA synthetase reviews found the points below. This file did not exist before; earlier reasoning is in the review YAML and its history records.
+
+- GO:0004776 succinate-CoA ligase (GDP-forming) activity (IEA): KEEP_AS_NON_CORE changed back to ACCEPT. The earlier reason called GDP formation a secondary activity "as for E. coli SucC". That transferred the E. coli kinetic ranking to an enzyme for which no ranking is known. The HAMAP rule records both reactions [file:PSEPK/sucC/sucC-uniprot.txt "coupling the hydrolysis of succinyl-CoA to the synthesis of either ATP or GTP"]. The nearest assayed enzyme is P. aeruginosa SucCD [PMID:10671455 "Scs synthesizes essentially an equimolar amount of ATP and GTP"]. Identity computed from UniProt sequences by global alignment (BLOSUM62): Q88FB2 against P. aeruginosa P53593 is 363 of 388 residues (94%), against E. coli P0A836 298 of 388 (77%).
+- Limits of the P. aeruginosa result. Only the abstract was read; the full text is not cached. The abstract gives an end-point result and no kinetic constants, and it says the enzyme copurifies with nucleoside diphosphate kinase [PMID:10671455 "Scs was previously shown to copurify with Ndk, presumably as a complex."]. The relative use of ADP and GDP by the P. putida enzyme is unknown, so neither activity is ranked above the other.
+- core_functions now has two entries, GO:0004775 and GO:0004776, both as contributes_to_molecular_function (the activity belongs to the SucC/SucD complex), with location cytosol and in_complex GO:0042709.
+- GO:0042709 succinate-CoA ligase complex stays ACCEPT. This gene has no row for the ADP-forming child GO:0009361, and the generic term is the one that fits an enzyme forming ATP or GTP. QuickGO (checked 2026-11-12) shows PseudoCAP annotated the P. aeruginosa subunits P53593 and Q51567 to GO:0042709 by IDA from PMID:10671455.
+- GO:0006104 succinyl-CoA metabolic process: KEEP_AS_NON_CORE changed to ACCEPT. The earlier reason said the term is subsumed by the TCA-cycle step. GO:0006104 is not an ancestor of GO:0006099, and the enzyme is reversible, so the term is as precise as warranted.
+- GO:0003824 catalytic activity: MARK_AS_OVER_ANNOTATED changed to TOO_GENERAL. The term is true and is entailed by GO:0004775.
+- GO:0046872 metal ion binding: MARK_AS_OVER_ANNOTATED changed to MODIFY with replacement GO:0000287 magnesium ion binding, which the gene carries [file:PSEPK/sucC/sucC-uniprot.txt "Note=Binds 1 Mg(2+) ion per subunit."].
+- GO:0000287 magnesium ion binding and GO:0005524 ATP binding: ACCEPT changed to KEEP_AS_NON_CORE. Cofactor and substrate binding are part of the core reaction, not functions in their own right.
+- Supporting quotes that cited the record's own DR GO lines were removed from six rows. Those lines restate annotations and are not evidence. The curated HAMAP statements (CATALYTIC ACTIVITY, COFACTOR, PATHWAY, SUBUNIT) remain.
