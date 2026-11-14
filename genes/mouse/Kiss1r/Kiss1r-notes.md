@@ -32,8 +32,11 @@ says so where it does. Every claim below traces to a cached publication or the U
 
 MF conclusion (same as human): `GO:0008188 neuropeptide receptor activity` is the core term.
 OLS confirms GO:0008188 is_a GO:0008528 is_a GO:0004930, and GO:0008188 has_part GO:0042923
-neuropeptide binding and part_of GO:0007218 neuropeptide signaling pathway, so GPCR activity,
-peptide receptor activity and neuropeptide binding rows are all entailed (TOO_GENERAL).
+neuropeptide binding and part_of GO:0007218 neuropeptide signaling pathway, so the GPCR activity,
+peptide receptor activity and neuropeptide binding rows are all entailed by it. Each such row is
+judged on its own evidence: it is refined to GO:0008188 where that row's source identifies
+kisspeptin as the ligand, and kept where the source is a generic signature, an ARBA rule or
+surrogate invertebrate agonists.
 
 ## Physiology: the HPG axis (mouse is the primary evidence here)
 
@@ -100,9 +103,9 @@ GO consequences:
 - `GO:0007200` PLC-activating GPCR signaling: ACCEPT (Stafford 2002 mouse receptor; Liu 2008 in
   mouse GnRH neurons).
 - `GO:0003254 regulation of membrane depolarization` (IDA, PMID:18434521): correct but general; the
-  evidence is directional (depolarisation). Human review marks its IEA copy TOO_GENERAL only
-  because human also carries `GO:1904181 positive regulation of membrane depolarization` (TAS).
-  Mouse has no GO:1904181 row, so here the right action is MODIFY → GO:1904181 (OLS-verified).
+  evidence is directional (depolarisation), so MODIFY → `GO:1904181 positive regulation of membrane
+  depolarization` (OLS-verified). The human IEA copy is modified to the same term, on the strength
+  of this mouse paper as its donor; human additionally carries GO:1904181 by TAS.
 - `GO:1904062 regulation of monoatomic cation transmembrane transport` (IDA): the receptor's
   signalling both opens TRPC-like NSCCs and closes Kir channels, so the non-directional
   "regulation" is as precise as warranted. KEEP_AS_NON_CORE (as human).
@@ -172,8 +175,9 @@ Decisions:
   proliferation and cell migration"]) → KEEP_AS_NON_CORE.
 - positive regulation of synaptic transmission: one rat slice study, pharmacological, no mouse data
   → KEEP_AS_NON_CORE (peripheral; not contradicted).
-- positive regulation of hormone secretion (IBA + ISO): entailed by GO:0032278 → TOO_GENERAL (as
-  human IBA).
+- positive regulation of hormone secretion (IBA + ISO): entailed by GO:0032278, but the PTN009086039
+  node supports only the hormone-secretion level and the rat ISO donor's evidence is oxytocin, so
+  both rows are kept → ACCEPT (as the human IBA).
 
 ## Protein binding
 
@@ -194,7 +198,7 @@ itself among the donors.
 1. Mouse GOA lacks any experimental gonadotropin-secretion row despite the mouse knockout
    literature; human has two IMP rows. Both reviews ACCEPT GO:0032278.
 2. GO:0045671 is ISS on human (from mouse) but absent from mouse GOA → NEW here.
-3. GO:0003254: human TOO_GENERAL (human has GO:1904181); mouse MODIFY → GO:1904181.
+3. GO:0003254: both MODIFY → GO:1904181; human also carries GO:1904181 by TAS, mouse does not.
 4. Cilium: mouse has native-cell evidence (Koemeter-Cox) but only transferred rows; human has the
    overexpression IDA. Same action in both.
 5. Mouse carries rat-derived rows (arachidonate secretion, stress fibres, synaptic transmission,
