@@ -23,6 +23,11 @@ concurrency:
 
 env:
   FORCE_COLOR: "1" # Make tools pretty.
+  # scripts/term_validate.sh blocks (rather than skips) on an ontology-service
+  # outage only when this is set, so the authoritative weekly/manual full pass
+  # still catches an unverified term once the service is back, while PR and
+  # merge_group runs skip-and-warn so an upstream blip cannot jam the merge queue.
+  TERM_VALIDATION_STRICT: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '1' || '' }}
 
 #permissions: {}
 
@@ -49,6 +54,12 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 1
+
+      # Rendered gene review HTML is gitignored and built by the Pages workflow
+      # (#6221). Runs ungated, before the path filter, so `git add -f` in an
+      # agent PR cannot re-add it.
+      - name: Reject newly added gene review HTML
+        run: bash .github/scripts/reject_added_review_html.sh
 
       - name: Check for source changes
         uses: dorny/paths-filter@v4 # merge_group support requires >=4.0.1
@@ -124,7 +135,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .cache/panther
-          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml', 'interpro/panther/panther-members-overrides.tsv') }}
           restore-keys: |
             panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
             panther-${{ runner.os }}-
@@ -194,6 +205,16 @@ jobs:
           steps.changes.outputs.modules == 'true'
         run: just validate-modules
 
+      # Every supporting_text quote outside gene reviews (modules, family reviews,
+      # GO-CAM reviews, rules, projects) against its source: PMID/DOI against
+      # publications/, file:/Reactome: against the file on disk. Deliberately NOT
+      # path-scoped: a quote breaks when its *source* changes, and the source is
+      # usually a different file (a family review quoting a gene review, a module
+      # quoting a bioinformatics RESULTS.md). Path scoping is how the 20 stale
+      # family-review quotes in conf/quote_check_baseline.yaml went unnoticed (#6021).
+      - name: Validate supporting_text quotes (whole repo)
+        run: just validate-quotes
+
       # History records (append-only session provenance under history/, ported
       # from dismech) validate against src/ai_gene_review/schema/history.yaml.
       # Cheap, so run whenever they, their tooling, or the curated dirs whose
@@ -251,6 +272,19 @@ jobs:
             echo "History records added:"
             echo "$ADDED_HISTORY"
           fi
+
+      # PANTHER family trees (treeinfo) back the proposed_action check in family
+      # reviews: a target node must sit correctly in the family's tree. Trees change
+      # only with a PANTHER release, so cache them on a weekly key (as for UniProt
+      # sequences); restore-keys keep earlier trees offline, and a tree first needed
+      # mid-week is saved with the next week's cache.
+      - name: Cache PANTHER family trees
+        uses: actions/cache@v6
+        with:
+          path: .cache/panther_trees
+          key: panther-trees-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            panther-trees-${{ runner.os }}-
 
       # Family reviews carry residue sites and node assessments that gene reviews
       # cite, so a change to either side can break the join.
@@ -419,10 +453,14 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: .cache/panther
-          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml', 'interpro/panther/panther-members-overrides.tsv') }}
           restore-keys: |
             panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
             panther-${{ runner.os }}-
+
+      - name: Settle PANTHER member index
+        if: steps.scope.outputs.run == 'true'
+        run: just ensure-panther-members
 
       - name: Test valid/invalid examples
         if: github.event_name == 'merge_group' || steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
@@ -440,7 +478,8 @@ jobs:
           uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
-            tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py -q
+            tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py \
+            tests/test_reject_added_review_html.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \

@@ -1,0 +1,20 @@
+# metE review notes
+
+2026-11-07: All 4 seeded rows reviewed, with original ordered payloads and qualifiers preserved and no NEW rows. Full33468593 provides the native mc²155 cofactor/regulatory evidence; ADP1 studies18319726/18840283 do not establish these targets. Official UniProt identity and the paper's CP000480.1 reference-genome context support the source-to-protein bridge; the main text explicitly names MSMEG_4185, whereas the MetE locus mapping relies additionally on the official reference entry.
+
+The real Falcon attempt returned HTTP403 authentication failure; no provider report was invented. PAINT-loss commands completed but the target accession is absent from its cached tree, so no resolved target loss claim is made. These seeds contain no IBA rows. Fresh QuickGO definitions and applicable ancestry are archived locally. Primary kinetics/cofactor experiments from homologs are separated from native target genetic evidence.
+
+Canonical771aa two-domain MetE is distinguished from compact MesD/MesB. Zinc binding is supported; one-versus-two stoichiometry predictions remain unresolved and are not asserted as measurements.
+
+## PR6196 evidence follow-up, 2026-11-07
+
+- Repair malformed PMID references in authored prose; source payloads, quotations and fetched titles remain unchanged.
+
+Source adjudication and additive receipt: analysis/module_audits/bacterial_methionine_cycle/review-followup/. Original rows, qualifiers and prior audit artifacts are preserved.
+
+
+## PR 6196 review 5812380406 follow-up (2026-11-07)
+
+Clarified that PMID33468593 names MSMEG_4185 as metH, while the named metE is bridged to MSMEG_6638 using the reference genome. Corrected the authorship-correction citation spelling; no catalytic judgment changed.
+
+Original ordered annotation payloads, qualifiers, evidence codes and historical NEW lifecycle are preserved. No sources refreshed; only lightweight preservation/quotation checks were run under disk constraints. Root will coordinate focused schema/reference/history checks and rendering.

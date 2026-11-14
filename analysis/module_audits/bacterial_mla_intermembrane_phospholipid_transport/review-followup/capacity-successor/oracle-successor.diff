@@ -1,0 +1,78 @@
+diff --git a/analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/capacity-consultation/check_capacity.py b/analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/review-followup/capacity-successor/check_capacity.py
+index 280f032a8d..6d0f3ef119 100644
+--- a/analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/capacity-consultation/check_capacity.py
++++ b/analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/review-followup/capacity-successor/check_capacity.py
+@@ -16,7 +16,7 @@ from ai_gene_review.module_logic import (
+ )
+ 
+ A = Path(__file__).resolve().parent
+-ROOT = A.parents[3]
++ROOT = A.parents[4]
+ MODULE = ROOT / "modules/bacterial_mla_intermembrane_phospholipid_transport.yaml"
+ BIO = yaml.safe_load((A / "biology.yaml").read_text())
+ TEST = yaml.safe_load((A / "cases.yaml").read_text())
+@@ -129,6 +129,37 @@ def members():
+     return result
+ 
+ 
++def carrier_binding_satisfies(asserted_terms):
++    """Use only frozen official is_a ancestors for the carrier binding requirement.
++
++    Unknown terms receive no inferred ancestry. This does not relax transport,
++    native-panel, source, identity, location, partner or assembly requirements.
++    """
++    ancestors = {"GO:0005543": {"GO:0005543"}}
++    definitions_path = A / "binding-terms.json"
++    INPUTS.add(definitions_path)
++    definitions = {
++        item["id"]: item for item in json.loads(definitions_path.read_text())["results"]
++    }
++    assert all(not item["isObsolete"] for item in definitions.values())
++    assert {"id": "GO:0008429", "relation": "is_a"} in definitions["GO:0005543"][
++        "children"
++    ]
++    for name, expected_id in [
++        ("pe-binding-ancestors.json", "GO:0008429"),
++        ("lipid-binding-ancestors.json", "GO:0008289"),
++    ]:
++        path = A / name
++        INPUTS.add(path)
++        records = json.loads(path.read_text())["results"]
++        assert len(records) == 1 and records[0]["id"] == expected_id
++        assert not records[0]["isObsolete"]
++        ancestors[expected_id] = set(records[0]["ancestors"])
++    assert "GO:0005543" in ancestors["GO:0008429"]
++    assert "GO:0005543" not in ancestors["GO:0008289"]
++    return any("GO:0005543" in ancestors.get(term, {term}) for term in asserted_terms)
++
++
+ def core_activity(member, role):
+     cores = member["review"].get("core_functions", [])
+     mf = {c.get("molecular_function", {}).get("id") for c in cores}
+@@ -143,7 +174,9 @@ def core_activity(member, role):
+     if rule.get("qualified_transfer") and "GO:0120014" not in mf | contribution:
+         return False
+     if rule.get("carrier"):
+-        if not ("GO:0120014" in mf or ("GO:0005543" in mf and "GO:0120010" in bp)):
++        if not (
++            "GO:0120014" in mf or (carrier_binding_satisfies(mf) and "GO:0120010" in bp)
++        ):
+             return False
+     if rule.get("structural_or_transfer_contribution"):
+         structural = (
+@@ -229,7 +262,14 @@ def evaluate(doc, case, bank, bypass=()):
+                         "contributes_to_molecular_function",
+                     ]
+                 }
+-                if declared not in supported:
++                # Only the carrier phospholipid-binding requirement gains
++                # verified subclass entailment; other unit terms stay exact.
++                carrier_refinement = (
++                    role == "C"
++                    and declared == "GO:0005543"
++                    and carrier_binding_satisfies(supported)
++                )
++                if declared not in supported and not carrier_refinement:
+                     return fail(atom, "declared_unit_activity")
+         if "matched_panel" not in bypass and member["panel"] != case["panel"]:
+             return fail(atom, "matched_panel")

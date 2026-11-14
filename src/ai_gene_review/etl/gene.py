@@ -385,11 +385,26 @@ def _primary_gene_name(uniprot_data: str) -> Optional[str]:
     'hglS'
     >>> _primary_gene_name("ID   X\nDE   RecName: Full=Protein SHMOOSE;\n") is None
     True
+
+    Many bacterial entries carry no ``Name=`` at all, only an ordered locus tag.
+    The locus tag is the identifier of record for those genes -- it is what the
+    review folder is named after -- so prefer it over falling back to the
+    accession:
+
+    >>> _primary_gene_name("GN   OrderedLocusNames=PA1107 {ECO:0000313};\n")
+    'PA1107'
+    >>> _primary_gene_name("GN   OrderedLocusNames=At5g03810;\n")
+    'At5g03810'
     """
     match = re.search(r"^GN   Name=([^;{]+)", uniprot_data, re.MULTILINE)
-    if not match:
-        return None
-    return match.group(1).strip() or None
+    if match and match.group(1).strip():
+        return match.group(1).strip()
+    locus = re.search(
+        r"^GN   .*?OrderedLocusNames=([^;{,]+)", uniprot_data, re.MULTILINE
+    )
+    if locus and locus.group(1).strip():
+        return locus.group(1).strip()
+    return None
 
 
 def fetch_gene_data(
@@ -1256,9 +1271,9 @@ def fetch_goa_data(uniprot_id: str) -> str:
         key=lambda x: (
             0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
             -(
-                int(x.get("date", "0")) if x.get("date", "").isdigit() else 0
+                int(x.get("date") or "0") if (x.get("date") or "").isdigit() else 0
             ),  # Negative for descending date
-            x.get("goId", ""),  # Then by GO ID
+            x.get("goId") or "",  # Then by GO ID
         ),
     )
 
@@ -1309,7 +1324,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("date", ""),  # DATE
         ]
 
-        tsv_row = "\t".join(row)
+        # QuickGO can supply an ECO term without a legacy GO evidence code
+        # (for example CACAO's ECO:0007744). Keep that column empty, rather
+        # than inventing a GO code or failing on the JSON null. Other optional
+        # display fields can also be null.
+        tsv_row = "\t".join("" if value is None else str(value) for value in row)
         if tsv_row in seen_tsv_rows:
             continue
         seen_tsv_rows.add(tsv_row)

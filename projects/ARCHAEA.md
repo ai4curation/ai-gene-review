@@ -2,7 +2,7 @@
 title: "Archaea"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD]
+species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD, METTM, METKA, METBF, 9EURY]
 autolink_exclude: [ftsZ]
 genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055]
 ---
@@ -25,10 +25,13 @@ haloarchaea (*Haloferax*, *Halobacterium*) as a calibration set.
 So far, twenty-five new archaeal reviews are complete (a five-gene pilot, a
 second round of four, and two rounds on the *M. sedula* CO2-fixation
 cycle), the cycle is built as a module, METAC mcrA has been revised, and the duplicate amoA
-reviews have been merged. Most archaeal annotation turns out to be
+reviews have been merged. A cross-clade review of the methyl-coenzyme M
+reductase alpha subunit added six more proteins: four methanogen orders, an
+anaerobic methanotroph and an ethane oxidizer
+([mcrA across clades](ARCHAEA/mcrA-across-clades.md)). Most archaeal annotation turns out to be
 electronic: of the 20 GOA rows on the pilot genes, only two were
 experimental, and even the two best-studied haloarchaeal proteins have
-thin, old experimental coverage. Sixteen recurring error patterns are
+thin, old experimental coverage. Seventeen recurring error patterns are
 collected in [annotation-patterns](ARCHAEA/annotation-patterns.md). The
 largest affect hundreds of archaeal proteins each: InterPro2GO mappings
 that put catalytic activity on non-catalytic proteasome alpha subunits
@@ -71,7 +74,7 @@ quality:
 | METJA | *Methanocaldococcus jannaschii* | nadX | Q58325 | COMPLETE | 7 | 1 ACCEPT, 2 KEEP_AS_NON_CORE, 3 MODIFY, 1 NEW |
 | METJA | *M. jannaschii* | thiL | Q60337 | COMPLETE | 6 | 4 ACCEPT, 1 KEEP_AS_NON_CORE, 1 NEW |
 | METJA | *M. jannaschii* | MJ1511 | Q58906 | IN_PROGRESS | 1 | 1 REMOVE |
-| METAC | *Methanosarcina acetivorans* | mcrA | Q8THH1 | COMPLETE | 11 (4 retired) | 7 ACCEPT, 1 MODIFY, 1 TOO_GENERAL, 2 NEW |
+| METAC | *Methanosarcina acetivorans* | mcrA | Q8THH1 | COMPLETE | 11 (4 retired) | 5 ACCEPT, 3 MODIFY, 1 TOO_GENERAL, 2 NEW (harmonized 2026-11-13) |
 | METTP | *Methanothrix thermoacetophila* | gatC | A0B5K3 | COMPLETE | 10 | 2 ACCEPT, 1 KEEP_AS_NON_CORE, 5 REMOVE, 2 NEW |
 | FERPA | *Ferroglobus placidus* | Ferp_0128 | D3S180 | DRAFT | 6 | 3 ACCEPT, 1 KEEP_AS_NON_CORE, 1 REMOVE, 1 UNDECIDED |
 | 9ARCH | *Nitrososphaera viennensis* | ureC1 | A0A060HK93 | DRAFT | 6 | 4 ACCEPT, 2 KEEP_AS_NON_CORE |
@@ -205,6 +208,25 @@ metabolism term is marked over-annotated. Msed_2055's isomerase row was a
 whole-complex activity on a cofactor subunit (pattern 16). What remains open
 for the module is biological: no step has genetic (knockout) evidence.
 
+## mcrA across clades (November 2026)
+
+Six new MCR alpha-subunit reviews and a harmonization of the METTH and METAC
+reviews. Details, residue comparison and follow-ups are on the
+[sub-page](ARCHAEA/mcrA-across-clades.md).
+
+| Code | Gene folder | UniProt | Clade | Actions | Main finding |
+|---|---|---|---|---|---|
+| METTM | mcrA | P11558 | Methanobacteriales | 8 ACCEPT, 1 MODIFY, 2 NEW | Reference enzyme; all experimental activity rows accepted; methanogenesis narrowed to the CO2 route |
+| METJA | mcrA | Q58256 | Methanococcales | 4 ACCEPT, 1 MODIFY, 2 NEW | No protein-level work; transfer supported by full active-site conservation |
+| METKA | mcrA | Q49605 | Methanopyrales | 4 ACCEPT, 1 MODIFY, 2 NEW | Structure confirms the active site; CO2 route |
+| METBF | mcrA | P07962 | Methanosarcinales | 4 ACCEPT, 1 MODIFY, 2 NEW | Methanogenesis split into CO2, methanol and acetate routes |
+| 9EURY | mcrA__A0A284VQI9 | A0A284VQI9 | ANME-2d | 1 ACCEPT, 1 MODIFY, 2 NEW | Methanotroph: methanogenesis corrected to methane catabolic process |
+| 9EURY | mcrA__A0A7R9R780 | A0A7R9R780 | GoM-Arc1 (ethane) | 2 MODIFY, 1 NEW | Ethyl-CoM reductase: methanogenesis and the methyl-specific activity both wrong (pattern 17) |
+| METTH | mcrA | O27232 | Methanobacteriales | 5 ACCEPT, 1 MODIFY, 2 NEW | Harmonized: F430 (tetrapyrrole) binding added |
+
+Every review now carries the MCR complex row (except the ethane enzyme) and
+a tetrapyrrole binding row, and all eight propose a coenzyme F430 binding term.
+
 ## Anchor organisms
 
 Chosen on 2026-10-14 for relevance to DOE missions (bioenergy, critical
@@ -285,7 +307,9 @@ families.
 
 Together with the existing METAC mcrA review, this puts the same enzyme in
 three methanogen lineages: hydrogenotrophic (METTH, METJA) and
-methylotrophic/acetoclastic (METAC). The CO2-reduction pathway of
+methylotrophic/acetoclastic (METAC). Done for mcrA, and extended to four
+methanogen orders plus ANME-2d and an ethane oxidizer: see
+[mcrA across clades](ARCHAEA/mcrA-across-clades.md). The CO2-reduction pathway of
 *M. jannaschii* or *Methanothermobacter* would be a good first archaeal
 GO-CAM.
 
