@@ -27,3 +27,11 @@
   binding was not asserted: there is no direct binding measurement for MlaA (lipid interaction comes from
   MD and channel structure). No GO term exists for OM phospholipid extraction by a channel; raised as a
   suggested question. No NEW annotation rows added.
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Replace the 2017 handoff-model quote with direct 2025 loading evidence in the core; correct 2024 reporter identity to NBD-PE.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Genuine default Falcon attempt failed with HTTP403 authentication; no provider report was generated. Manual consultation used cached primary papers and current ontology snapshots.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.
