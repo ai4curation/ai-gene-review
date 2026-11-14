@@ -18,6 +18,7 @@ import yaml
 from ai_gene_review.validation import ValidationSeverity, validate_gene_review
 from ai_gene_review.validation.uniprot_quote_source import (
     UNVETTED_CHECK,
+    _part_variants,
     EXISTENCE_CHECK,
     classify_quote,
     FIELD_CHECK,
@@ -247,10 +248,23 @@ def test_feature_quote_with_key_and_location_is_located(reference_id, quote, top
     assert [(s.field, s.topic) for s in statements] == [("FT", topic)]
 
 
-def test_editorial_bracket_is_a_gap():
-    """[protein] is dropped as editorial; the words either side are not adjacent in the record."""
+def test_bracket_in_the_record_is_read_as_text():
+    """UniProt writes [protein] into the reaction, so the quote is located as written."""
     quote = "CC       Reaction=L-seryl-[protein] + ATP = O-phospho-L-seryl-[protein] + ADP +"
+    assert _part_variants(quote)[0] == ["reaction l seryl protein atp o phospho l seryl protein adp"]
     statements = locate_quote(quote, _path(AURKB))
+    assert {(s.field, s.topic) for s in statements} == {("CC", "CATALYTIC ACTIVITY")}
+
+
+def test_editorial_bracket_not_in_the_record_is_a_gap():
+    """[a histone] is not in the record, so the literal reading fails and the bracket
+    becomes a gap; the words either side are then located on their own."""
+    quote = "Reaction=L-seryl-[a histone] + ATP"
+    literal, gapped = _part_variants(quote)
+    path = _path(AURKB)
+    assert not locate_quote(" ".join(literal), path)
+    assert gapped == ["reaction l seryl", "atp"]
+    statements = locate_quote(quote, path)
     assert {(s.field, s.topic) for s in statements} == {("CC", "CATALYTIC ACTIVITY")}
 
 

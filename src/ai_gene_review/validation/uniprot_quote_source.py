@@ -366,32 +366,42 @@ def _indexed(path: Path, mtime_ns: int, size: int) -> Tuple[Tuple[Statement, ...
     return statements, " ".join(pieces), tuple(starts)
 
 
-def _occurrences(part: str, statements, text: str, starts) -> List[List[Statement]]:
+def _occurrences(
+    part: str, statements: Tuple[Statement, ...], text: str, starts: Tuple[int, ...]
+) -> List[List[Statement]]:
     """Every place *part* occurs, as the list of statements each occurrence spans.
 
     Normalised text is space-separated words, so padding both sides with a
     space keeps "nad" from matching inside "canadensis". Only when a part of two
-    or more words has no whole-word occurrence may its first and last words be
-    cut off (a quote that stops mid-word); its inner words are still whole, so a
-    lone fragment is never matched inside a longer word.
+    or more words has no whole-word occurrence may its words at the edges be cut
+    off (a quote that stops mid-word): first its last word, then also its first.
+    Its inner words are still whole, so a lone fragment is never matched inside
+    a longer word.
     """
-    found = _spans(f" {part} ", statements, f" {text} ", starts, 1)
+    found = _spans(f" {part} ", statements, f" {text} ", starts, len(text))
     if not found and " " in part:
-        found = _spans(part, statements, text, starts, 0)
+        found = _spans(f" {part}", statements, f" {text}", starts, len(text))
+    if not found and " " in part:
+        found = _spans(part, statements, text, starts, len(text))
     return found
 
 
-def _spans(needle: str, statements, haystack: str, starts, pad: int) -> List[List[Statement]]:
-    """Statements spanned by each occurrence of *needle* in *haystack*, which is the
-    normalised text with *pad* characters added before it."""
-    ends = list(starts[1:]) + [len(haystack) - 2 * pad + 1]
-    width = len(needle) - 2 * pad
+def _spans(
+    needle: str, statements: Tuple[Statement, ...], haystack: str, starts: Tuple[int, ...], text_length: int
+) -> List[List[Statement]]:
+    """Statements spanned by each occurrence of *needle* in *haystack*.
+
+    *haystack* is the normalised text, of length *text_length*, with a space
+    added before it exactly when *needle* starts with one (and possibly after
+    it), so a match found at ``haystack[i]`` begins at ``text[i]`` either way.
+    """
+    ends = list(starts[1:]) + [text_length + 1]
+    width = len(needle.strip(" "))
     found = []
     i = haystack.find(needle)
     while i >= 0:
-        begin = i  # with padding, haystack[i] is the space before the match: text[i]
-        end = begin + width
-        found.append([s for s, a, b in zip(statements, starts, ends) if a < end and b - 1 > begin])
+        end = i + width
+        found.append([s for s, a, b in zip(statements, starts, ends) if a < end and b - 1 > i])
         i = haystack.find(needle, i + 1)
     return found
 
@@ -458,15 +468,21 @@ def _part_variants(quote: str) -> List[List[str]]:
     return variants
 
 
-def _resolve(quote: str, statements, text: str, starts) -> Optional[List[Tuple[str, List[List[Statement]]]]]:
-    """``(part, occurrences)`` for each part of the first reading of *quote* whose
-    parts all occur in the record; None if no reading has a part, or none is found."""
+def _resolve(
+    quote: str, statements: Tuple[Statement, ...], text: str, starts: Tuple[int, ...]
+) -> Optional[List[List[List[Statement]]]]:
+    """The occurrences of each part, for the first reading of *quote* whose parts
+    all occur in the record; None if no reading has a part, or none is found."""
     for parts in _part_variants(quote):
-        if not parts:
-            continue
-        found = [(part, _occurrences(part, statements, text, starts)) for part in parts]
-        if all(occ for _, occ in found):
-            return found
+        found: List[List[List[Statement]]] = []
+        for part in parts:
+            occurrences = _occurrences(part, statements, text, starts)
+            if not occurrences:
+                break
+            found.append(occurrences)
+        else:
+            if found:
+                return found
     return None
 
 
@@ -479,7 +495,7 @@ def locate_quote(quote: str, path: Path) -> List[Statement]:
     """Statements spanned by the first occurrence of each part of *quote*; [] if not located."""
     resolved = _resolve(quote, *_index(path))
     located: List[Statement] = []
-    for _, occ in resolved or ():
+    for occ in resolved or ():
         located.extend(s for s in occ[0] if s not in located)
     return located
 
@@ -593,7 +609,7 @@ def _locate_part(
     if resolved is None:
         return UNLOCATED, []
     sections: List[str] = []
-    for _, occurrences in resolved:
+    for occurrences in resolved:
         candidates = {tuple(dict.fromkeys(s.section for s in o)) for o in occurrences}
         if len(candidates) > 1:
             return AMBIGUOUS, []
@@ -621,7 +637,7 @@ def classify_quote(quote: str, path: Path) -> Optional[Tuple[bool, bool, bool, L
         return None
     unvetted = restating = existence = True
     first: List[Statement] = []
-    for _, occ in resolved:
+    for occ in resolved:
         first.extend(s for s in occ[0] if s not in first)
         unvetted &= all(all(s.is_unvetted for s in o) for o in occ)
         restating &= all(all(s.is_restating for s in o) for o in occ)
