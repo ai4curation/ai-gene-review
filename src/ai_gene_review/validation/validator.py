@@ -43,6 +43,10 @@ from ai_gene_review.validation.decomposition import (
     go_is_a_ancestors,
     go_names,
 )
+from ai_gene_review.validation.ec_class_consistency import (
+    check_ec_class_consistency,
+    go_term_ecs,
+)
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -517,6 +521,8 @@ def check_best_practices_rules(
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )
+    if check_ontology and yaml_file is not None:
+        check_ec_class_consistency(data, report, Path(yaml_file), go_term_ecs())
     if has_paint_losses(data):
         from ai_gene_review.validation.module_validator import load_paint_index
 
