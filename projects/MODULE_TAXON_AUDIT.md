@@ -44,8 +44,6 @@ For each module, record evidence that all of the following are satisfied:
 
 ## Status
 
-- [ ] `bacterial_choline_to_glycine_betaine_biosynthesis`: PR #6108: main 0ca78c07ea integrated at cf5f369d83; 183 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope.
-
 - [ ] `bacterial_glutamate_to_p5c_biosynthesis`: PR #6160: main 0ca78c07ea integrated at 049188ba91; 207 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope.
 
 - [ ] `bacterial_flagellar_assembly_export`: PR #6138: main ac30fe31cf integrated at 5bb074ac23; 316 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits.
@@ -986,44 +984,6 @@ Integrated main 5f65fb600c4150f550f37e334c15eaf8dad4032a after the passing full 
 
 PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Per-path preservation and validation scope](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json). The incoming OPG completion and flavonoid row are retained exactly. All 33 previously complete rows remain unchanged; no completion is inferred from an open-row status or from this local integration. Both parents’ dated journal entries and the pins autolink exclusion are preserved. The historical round-17 module pin describes its recorded revision; round27-full-run.json supersedes its validation status, without retrospectively changing that earlier receipt.
 
-## 2026-11-06 — PR #6108 integration with published main
-
-Integrated published main `db69104296` with the approved PR #6108 head `b4d51143d1`. All 154 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged approved row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
-
-## 2026-11-06 — PR #6108 integration with published main
-
-Integrated published main `fd782f231a` with the validated PR #6108 head `8a615d00af`. All 156 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
-
-## 2026-11-06 — PR #6108 integration with published main
-
-Integrated published main `1970e159b9` with the validated PR #6108 head `c16695a3b3`. All 158 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Validation implementation is unchanged. Prior validation remains evidence for the preserved science; renewed CI and review gate this integration commit.
-
-## 2026-11-06 — PR #6108 integration with published main
-
-Integrated published main `488d370561` with the validated PR #6108 head `20bd987aa0`. All 159 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row; both dated journals are preserved. Incoming main adds warning-level ancestor-action consistency checks and qualifier-aware comparisons. All scoped gene reviews pass best-practice and GO-hierarchy validation under the incoming implementation. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
-
-## 2026-11-06 — PR #6108 integration with published main 577501df51
-
-Integrated published main `577501df51` with the validated PR #6108 head `f9a3c93b65`. All 161 scoped files outside the shared tracker and rendered index remain byte-identical, including curated science and source evidence. The 777-row inventory retains every incoming row except this module's unchanged validated row (no earlier completion rows regressed); both dated journals are preserved. Incoming main contains the merged beta-oxidation audit; validation implementation is unchanged. All incoming completion records and dated journal entries remain intact. The historical full run is evidence for preserved science under its recorded implementation; renewed CI and review gate this integration commit.
-
-Integration proof: [validated-head-main4-integration.json](../analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/validated-head-main4-integration.json).
-
-## 2026-11-07 — bacterial_choline_to_glycine_betaine_biosynthesis main integration
-
-Integrated main 5b68ef3aaca8960576ae1ad557815fe675f1e8a6 into approved head 8a3e90bcc680939709e42964a8393480dda92928. All 163 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
-
-## 2026-11-07 — bacterial_choline_to_glycine_betaine_biosynthesis main integration
-
-Integrated main f5b02387a85bfaa85982a32f0c7cc0e41fe60c9e into approved head 5b8b7ddc0466fa4fae83ea3e2122344d84b67e9c. All 163 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
-
-## 2026-11-07 — bacterial_choline_to_glycine_betaine_biosynthesis main integration
-
-Integrated main 7eee074bca991ff31c7ec235110dd6c93ebb2ece into approved head 7e3ce12429d5d9a99694ad078d0ec3d708b6fdab. All 165 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
-
-## 2026-11-07 — bacterial_choline_to_glycine_betaine_biosynthesis main integration
-
-Integrated main 0a807fc55576d0371b2dfacb482f8d695992535b into approved head cb9e8f5816ce3e6a820ee8555fed2786acf0270c. All 170 frozen files outside shared project metadata remain byte-identical. Incoming inventory rows are retained except this audit row and 0 independently reverified merged-completion rows; 0 missing historical rows are retained from this branch, and no completed audit regresses. Historical full-validation results remain scoped to their recorded heads; this integration is not a new full-corpus run. Fresh review, CI and actual merge remain pending.
-
 ## 2026-11-06 — comparative fructose science completed
 
 Complete the comparative fructose science: 16 gene reviews with all 148 original/seed annotation payloads and 34 raw/provider files preserved, no NEW rows; 11 references including two review articles; three scoped family reviews; and 49 production-circuit evidence-coverage checks with seven mutations rejected. Retain the bacterial mechanism envelope with explicit alpha/gamma and Deinococcus strain limits. Require supported same-protein architecture and substrate specificity without inferring these from PANTHER names. Do not impose an unverified second EIIB domain on Azospirillum. Native flux, strict intramolecular relay and unresolved full-family phylogenetic partitions are not claimed. Final validation, dedicated PR and actual merge remain pending.
@@ -1384,23 +1344,9 @@ Superseded parent snapshot lines retained for provenance:
 
 > - [ ] `bacterial_cellulose_biosynthesis`: PR #2143 approved at 3bbce661d5; main 7eee074bca integrated locally with all 288 approved nonshared files preserved. Focused integration checks are recorded separately; the full-corpus PASS remains scoped to acee1d329a. Publication, current-head review/CI and actual merge remain pending. [Integration proof](../analysis/module_audits/bacterial_cellulose_biosynthesis/round28-main-integration.json).
 
-## 2026-11-08 — resume PR #6108 after disk cleanup
-
-Integrate main a344758bae648a999bbe316e9b1e2289a958d1bc into paused PR #6108 at b0eaac5c9c6e0e095378b78f9ae4655f3bb9dd0d. All 173 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
-
 ## 2026-11-08 — resume PR #6144 after disk cleanup
 
 Integrate main a344758bae648a999bbe316e9b1e2289a958d1bc into paused PR #6144 at 5a2e681898c894c4cff64e810825f3b7b4383389. All 201 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
-
-## 2026-11-08 — resume PR #6108 after disk cleanup
-
-Integrate main ec787ac8700cacbf94a72abbbbe9dee9b622592b into paused PR #6108 at fc0aaa9765278e87f3e41df37b35cc0a5027b236. All 174 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
-
-## 2026-11-08 — reconcile resumed PR #6108 tracker
-
-PR #6108: main ec787ac870 integrated at 3335e5a50f; 174 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round2-20261108/integration-proof.json](../analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round2-20261108/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
-
-Superseded parent snapshot lines retained for provenance:
 
 ## 2026-11-08 — resume PR #6160 after disk cleanup
 
@@ -1442,14 +1388,6 @@ Superseded parent snapshot lines retained for provenance:
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 727 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
-## 2026-11-10 — resume PR #6108 after disk cleanup
-
-Integrate main 65bf77f9587b5f1614ed1a0434f015e9560b2516 into paused PR #6108 at b055008b2fa0ce1f40949f85853f82ed380338e4. All 177 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
-
-## 2026-11-10 — reconcile resumed PR #6108 tracker
-
-PR #6108: main 65bf77f958 integrated at c7a6003770; 177 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round3-20261110/integration-proof.json](../analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round3-20261110/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
-
 ## 2026-11-10 — resume PR #6160 after disk cleanup
 
 Integrate main 65bf77f9587b5f1614ed1a0434f015e9560b2516 into paused PR #6160 at 1b3e0c1de6d624056222e0d53afae71393c21232. All 201 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
@@ -1463,14 +1401,6 @@ Superseded parent snapshot lines retained for provenance:
 > - [ ] Ledger snapshot after this integration: 777 modules; 37 COMPLETE, 12 PR_OPEN, 3 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 725 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
-
-## 2026-11-11 — resume PR #6108 after disk cleanup
-
-Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6108 at 2f121bc038614054316966fe6f3844f9793bddaa. All 180 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
-
-## 2026-11-11 — reconcile resumed PR #6108 tracker
-
-PR #6108: main ac30fe31cf integrated at 789c94ffb6; 180 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round4-20261111/integration-proof.json](../analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round4-20261111/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
 
 ## 2026-11-11 — resume PR #6160 after disk cleanup
 
@@ -1510,16 +1440,6 @@ Superseded parent snapshot lines retained for provenance:
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 43 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
-## 2026-11-11 — resume PR #6108 after disk cleanup
-
-Integrate main 0ca78c07ea0a7ee0ce4760193cc5b22848471d21 into paused PR #6108 at 84ed50b8614ed2573bb91f5db939b57f3a224160. All 183 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
-
-## 2026-11-11 — current integration accounting for PR #6108
-
-PR #6108: main 0ca78c07ea integrated at cf5f369d83; 183 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope. [Preservation and follow-up record](../analysis/module_audits/bacterial_choline_to_glycine_betaine_biosynthesis/resume-round5-20261111/integration-proof.json).
-
-## 2026-11-11 — reconcile inherited ledger snapshots for PR #6108
-
 ## 2026-11-11 — resume PR #6160 after disk cleanup
 
 Integrate main 0ca78c07ea0a7ee0ce4760193cc5b22848471d21 into paused PR #6160 at 2dc7c6a665a1e916c498ea5ee097fa72b9397369. All 207 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
@@ -1535,7 +1455,3 @@ The Status section now contains one count computed from this branch's inventory.
 > - [ ] Ledger snapshot after this integration: 777 modules; 42 COMPLETE, 10 PR_OPEN, 1 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 43 COMPLETE, 9 PR_OPEN, 1 IN_PROGRESS, 724 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
-
-## 2026-11-13 — resume PR #6108 after disk cleanup
-
-Integrate main 70e3fa209b3741446dd23cb676cd6a9774398531 into paused PR #6108 at 4c4d730c03bfc62ecc786712a2c3f40bbf0b0ec1. All 187 branch-specific files outside shared project metadata retain their exact Git object ids. Conflicting project status entries and dated journal sections are retained from both parents. Prior validation/review results remain scoped to their recorded commits; this merge requires fresh CI and review.
