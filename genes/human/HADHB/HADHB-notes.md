@@ -1,5 +1,27 @@
 # HADHB Review Notes
 
+## 2026-11-14 UTC — Current corrections and PR #6317 follow-up
+
+**Retired rows preserve historical judgments, not current endorsements.**
+All six retired source/review blocks remain byte-identical, following
+docs/goa_source_refresh.md. The retired GO:0050633 claim that native UniProt
+lists EC:2.3.1.155 is superseded: the refreshed record lists EC:2.3.1.16.
+Current GO:0050633 support instead uses the exact RHEA:18161 reaction.
+The retired GO:0016740, GO:0006629 and GO:0006631 KEEP_AS_NON_CORE rationales
+calling those terms too general are also superseded historical judgments.
+
+Refine mouse viperin binding to enzyme binding, add positive mouse lncFAO
+association evidence with the human direct-binding caveat, and remove the human
+GO:0044877 IEA with the contradicted rat donor identity. Retain the source
+CHECK/PROBABLE request without guessing a unique replacement. Keep four disputed
+location rows UNDECIDED with separate IEA/IDA rationales. Add exact reaction
+support for six current GO:0050633 rows and bounded C4-flux/MALAT1-binding gaps.
+
+The PTHR18919 C4 node and term scope remain UNRESOLVED; positive known-member
+information is retained without inventing a boundary, loss or HADHB exception.
+All 63 current contexts, six retired records and native source fields remain;
+no NEW annotation or cached-source change is introduced.
+
 ## 2026-02-05: Initial Review
 
 ### Context

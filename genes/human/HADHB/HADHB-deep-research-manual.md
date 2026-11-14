@@ -59,10 +59,12 @@ PMID:18063578 discusses nucleoid-associated metabolic proteins collectively; it
 does not establish HADHB-specific cross-linking results. The nucleoid row remains
 UNDECIDED pending the relevant target-specific results.
 
-The GO:0044877 transfer traces to rat Q60587 and PMID:20132223, a PPARalpha/peroxisomal
-thiolase study. Its thiolase identity needs source-side review; binding to a complex
-is not synonymous with being a subunit of mitochondrial TFP. The transfer is kept
-UNDECIDED instead of silently substituting the mitochondrial assembly as its evidence.
+The GO:0044877 transfer traces to rat Q60587 and PMID:20132223, a
+PPARalpha/peroxisomal thiolase study. The explicit peroxisomal identity and
+antibody-peptide comparison contradict the HADHB donor assignment. Remove the
+derived human IEA while retaining a CHECK/PROBABLE source-defect request.
+Selecting a unique replacement is unnecessary for rejecting this transfer;
+this does not assert that HADHB cannot bind protein complexes.
 
 The source-identity check used official UniProt sequences on 2026-11-12:
 
@@ -89,3 +91,25 @@ The PAINT-loss helper used the retained IBD cache (SHA256
 and a freshly fetched compact PTHR18919 tree. No IRD/IKR loss was reported on
 P55084's lineage in these inputs. This does not establish the state of later unseen
 PAINT updates, nor justify inventing a pruning node for the uncertain C4 reaction.
+
+## 2026-11-14 UTC — Review follow-up
+
+The inspected official [mouse Rsad2/Q8CBB9 record](https://www.uniprot.org/uniprotkb/Q8CBB9/entry)
+classifies the partner as a radical-SAM enzyme with CTP-dehydration activity
+(RHEA:65944). This supports enzyme binding without transferring human
+construct-specific kinetics. Positive mouse lncFAO association evidence is now
+quoted alongside the distinct human MALAT1 direct-binding limitation.
+
+Native UniProt curates RHEA:18161:
+`Reaction=tetradecanoyl-CoA + acetyl-CoA = 3-oxohexadecanoyl-CoA + CoA;`
+This supports all six current GO:0050633 rows. Its reaction list contains C6 and
+longer 3-oxoacyl-CoA reactions but no acetoacetyl-CoA/two-acetyl-CoA reaction.
+That records coverage, not proved curator rejection or universal C4 inactivity.
+
+Both IEA and both IDA disputed compartment rows remain UNDECIDED. Absence of
+annotated SIGNAL/TRANSMEM features does not exclude peripheral recruitment.
+Official PMC ID conversion found no PMCID for PMID:21527675; Europe PMC reports
+no PMC/open-full-text record. An indexed original-paper passage mentioning
+inner/outer membrane detection and Fig. S11 is a lead only: neither the full
+article nor that figure was retrieved or inspected. No cleavage or import
+mechanism is asserted.
