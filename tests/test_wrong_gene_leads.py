@@ -430,7 +430,10 @@ def test_name_forms_found_in_fourth_lead_batch(gene, pmid):
 def test_confirmed_leads_stay_unnamed(gene, pmid):
     """Papers found to be about another gene must still not name the annotated one."""
     own, _ = candidate_rows(GENES / gene)
-    assert not named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+    assert (
+        named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+        is False
+    )
 
 
 @pytest.mark.parametrize(
@@ -501,7 +504,7 @@ def test_paralog_sharing_a_base_name_does_not_cancel_the_lead(tmp_path):
         "title: X\n## Abstract\nCytosolic malate dehydrogenase was purified.\n"
     )
     forms = gene_specific_names(own, [mdh1])
-    assert not named_in_abstract("1", own.gene_names, tmp_path, forms)
+    assert named_in_abstract("1", own.gene_names, tmp_path, forms) is False
 
 
 @pytest.mark.parametrize(
@@ -549,4 +552,4 @@ def test_title_case_title_does_not_name_a_one_word_gene():
     which the gene-name token check matches in "polar tube" (a known limitation).
     """
     own, _ = candidate_rows(GENES / "DROME/tub")
-    assert not named_in_abstract("28031263", [], PUBLICATIONS, own.protein_names)
+    assert named_in_abstract("28031263", [], PUBLICATIONS, own.protein_names) is False

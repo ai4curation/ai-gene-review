@@ -294,8 +294,9 @@ class NameForm(NamedTuple):
     alphabetic word. Such names are often ordinary words ("Protein similar",
     "Protein rolled", "Protein Tube"), so X counts only when written capitalised
     and not at the start of a sentence. An X with a digit, a hyphen or an inner
-    capital ("jagged-1", "FAM10A1", "GrpE") cannot be prose and is matched as an
-    ordinary phrase.
+    capital ("jagged-1", "FAM10A1") cannot be prose and is matched as an
+    ordinary phrase, so like any phrase it needs six or more characters (a short
+    "GrpE" or "TraC" is left to the gene-name check).
     """
 
     text: str
