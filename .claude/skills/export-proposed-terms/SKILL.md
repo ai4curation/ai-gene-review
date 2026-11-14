@@ -6,7 +6,7 @@ description: Export top-level ai-gene-review `proposed_new_terms` entries to a d
 # Export Proposed Terms
 
 Use this skill when the user asks for a TSV or tabular extract of ontology term
-requests recorded in gene review YAML files.
+requests recorded in gene review or module YAML files.
 
 Run the helper from the repository root:
 
@@ -15,7 +15,9 @@ uv run python src/ai_gene_review/tools/export_proposed_terms.py -o reports/propo
 ```
 
 Pass files or directories after the options to restrict the export. With no
-inputs, the helper scans `genes/**/*-ai-review.yaml`.
+inputs, the helper scans `genes/**/*-ai-review.yaml` and `modules/**/*.yaml`.
+Module rows carry the module id in `review_id` and leave the gene and taxon
+columns empty.
 
 The TSV defaults to `reports/proposed_new_terms.tsv`. It has one row per
 top-level `proposed_new_terms` entry and skips reviews where

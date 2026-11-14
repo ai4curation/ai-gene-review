@@ -323,9 +323,14 @@ are not covered yet. For these five terms the policy is an exception to the
   `KEEP_AS_NON_CORE` only with direct evidence on the gene or the endogenous protein in its
   native cell; a synthesis row resting only on transit or on retention of an overexpressed or
   mutant protein is `MARK_AS_OVER_ANNOTATED`. Never add a topology-forced ER membrane row for a
-  protein that only passes through. An ER membrane (`GO:0005789`) row needs a TM or tail anchor
+  protein that only passes through. A `NEW` ER membrane (`GO:0005789`) row needs a TM or tail anchor
   plus an ER-specific assay on the endogenous protein; a lumen (`GO:0005788`) row needs a
-  soluble signal-peptide protein shown to be retained. See rule 7 in `projects/ORGANELLES.md`.
+  soluble signal-peptide protein shown to be retained. A soluble, cytosolically made protein
+  (no signal peptide or targeting sequence) shown at the organelle and stably tethered there by a
+  named integral partner (losing the partner releases or destabilises it) gets the cytoplasmic-side
+  term, `GO:0098554` for the ER, which is the more
+  specific child of `GO:0005789`; brief or regulated recruitment stays at the root. See rule 7 in
+  `projects/ORGANELLES.md`.
 
 ### Do not overrule curators from incomplete evidence
 
@@ -464,6 +469,15 @@ same claim.
 
 See `projects/IBA_REVIEW.md` for the full propagation taxonomy and catalogued failure
 patterns.
+
+In a family review (`interpro/panther/<PTHR>/<PTHR>-review.yaml`), a node assessment that
+disputes a PAINT row records the fix in `proposed_action` as well as in prose:
+`paint_action` (MOVE_IBD, REMOVE_IBD, ADD_IRD, ADD_IKR, REMOVE_LOSS, MOVE_LOSS) and, for
+the moves and added losses, `target_node_id`. `family_residue_validator` checks that the
+action fits the verdict and that the target sits correctly in the family's PANTHER tree
+(below the node for TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD). PAINT prunes per
+annotation: a loss of a general term does not block a more specific term asserted at an
+ancestral node, so request each change separately.
 
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
