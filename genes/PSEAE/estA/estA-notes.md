@@ -97,3 +97,60 @@ Other PseudoCAP rows (not seeds):
 - Which ester substrate does EstA hydrolyse in vivo, and how does that affect
   rhamnolipid levels (biosynthesis, export, or turnover/regulation)?
 - Does the effect on rhamnolipid act via the quorum-sensing regulators of rhlAB?
+
+## 2026-11-14: full text of PMID:17631636 read
+
+The earlier pass through this gene was made from the abstract alone, because
+`ai-gene-review fetch-pmid 17631636 --force` cannot retrieve PMC2045186 by
+either the HTML or the PDF route and leaves the cache abstract-only. The
+publisher version was supplied directly (J Bacteriol 189:6695-6703,
+doi:10.1128/JB.00023-07) and has now been read in full. Because the cache still
+holds only the abstract, nothing below is quoted as `supporting_text` in the
+review: quotes there must be verbatim substrings of the cached file, and a quote
+the validator cannot check is worse than a paraphrase that is honest about its
+source. The findings are recorded as `findings[].statement` and in row reasons.
+
+What the full text settles:
+
+- **Rhamnolipid is not made by EstA.** The authors state there is no obvious
+  function in the rhamnolipid biosynthesis pathway that would directly require an
+  esterase, and no rhamnolipid accumulates inside the mutant, which rules out a
+  block in export or hydrolytic turnover. Their preliminary transcriptome work
+  finds *rhlB* and *rhlC* significantly downregulated in the *estA* mutant, so
+  EstA sits upstream of the enzymes that do the biosynthetic work, acting
+  "probably by hydrolysis of a yet-unknown compound". This strengthens the
+  `MARK_AS_OVER_ANNOTATED` calls on GO:0008610 and GO:0009247 rather than
+  changing them. I considered escalating to `REMOVE` and did not: the requirement
+  is real and depends on catalytic activity (the Ser38->Ala variant fails to
+  complement), so the rows are not false, they assert the wrong relation for a
+  genuine dependency.
+- **The motility defect does not run through rhamnolipid.** Adding wild-type
+  amounts of rhamnolipid back to the mutant's medium does not restore motility;
+  the authors conclude the rhamnolipid deficiency is not the reason for the
+  motility defects. My earlier reason on GO:0048870 proposed exactly that
+  mechanism and was wrong; it has been corrected.
+- **The flagellar row is the weakest of the motility rows.** Type IV pilus genes
+  (*pilA*, *pilX*, *pilG*, *pilB*) are downregulated, which the authors say
+  explains twitching and swarming, but they report no change in flagellar gene
+  expression that would explain the loss of swimming. GO:0071973 therefore names
+  the one motility form the paper cannot account for.
+- **The biofilm phenotype is secondary to non-motility,** not to rhamnolipid:
+  mutant biofilms show reduced surface coverage and large aggregates separated by
+  low-density regions, "as expected for nonmotile strains that can expand only by
+  clonal growth". The earlier reason attributed it to rhamnolipid and has been
+  corrected.
+- **Ser38 is the catalytic nucleophile.** It is the serine of the GDSL motif
+  (31-STLVVFGDSLSDAGQF-46) in the displayed O33407 sequence, and UniProt carries
+  both `ACT_SITE 38 /note="Nucleophile"` and a `MUTAGEN 38` feature citing this
+  paper, so the paper's numbering matches the canonical sequence directly.
+- The authors are explicit that the phenotypes "have no obvious physiological or
+  regulatory link and thus cannot be explained satisfyingly and in a
+  comprehensive way at the moment".
+
+Answers an open question above: the rhamnolipid effect is **not** mediated by
+quorum sensing. The *A. tumefaciens* AHL bioassay shows the *estA* mutant
+produces AHLs at wild-type levels, so the EstA-dependent effect on rhamnolipid is
+not a consequence of altered autoinducer levels. The other open question (which
+ester substrate EstA hydrolyses in vivo) remains open, and the authors say
+settling it will require lipid-composition analysis plus fuller transcriptome
+data.
