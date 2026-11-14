@@ -62,3 +62,32 @@
 |---|---|---|---|---|---|---|
 | PTN001248394 | GO:0006355 regulation of DNA-templated transcription | 7 | 202 (30 taxa) | GO:0045893, IDA, PMID:20370820 (PseudoCAP) | SOUND | Purified CysB binds the pvdS promoter and activates pvdS expression in vivo; direct evidence for transcriptional regulation. The generic regulation term suits a 202-leaf LysR clade; six further seeds (E. coli, B. subtilis, P. aeruginosa paralogs) also support it. |
 | PTN002824317 | GO:0019344 L-cysteine biosynthetic process | 1 (sole) | 10 (9 taxa) | GO:0019344, IMP, PMID:9218775 (PseudoCAP) | INDIRECT-PHENOTYPE | The seed is the cysteine auxotrophy of a cysB insertion mutant. CysB is the transcriptional activator of the cys regulon and performs no step of cysteine synthesis; the enzymes (CysE, CysK/M) do. Every leaf of the node is a CysB/Cbl-type regulator, none with experimental support for the process (E. coli CysB has none in EcoCyc). The term is wrong for the whole clade as a participation claim. |
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the "all 10 IBA leaves are CysB or Cbl regulators" claim in the
+`GO_CENTRAL` source defect on PTN002824317. Membership confirmed with
+`uv run python projects/PSEUDOCAP/panther_tree.py node PTN002824317 --leaves`
+(10 leaves, all PTHR30126:SF6); UniProt flat files fetched for all ten.
+
+All 10 have exactly the two-domain LysR architecture and nothing else (Pfam
+PF00126 HTH_1 + PF03466 LysR_substrate), all 10 match a CysB-type NCBIfam
+profile (NF009327 PRK12684, or NF009325 PRK12680 for Q8P602), and none carries a
+cysteine-biosynthetic enzyme domain (no CysE serine acetyltransferase, no
+CysK/CysM O-acetylserine sulfhydrylase).
+
+| Leaf | Name and its evidence | Experimental annotations | Verdict |
+|---|---|---|---|
+| P0A9F3 (E. coli CysB) | RecName, curated (Reviewed); PE 3 | **GO:0003677 DNA binding (IDA), GO:0005829 cytosol (IDA), GO:0006351 (EXP), GO:0010165 (IMP)**; no experimental GO:0019344 | Regulator, confirmed experimentally; confirms the "no experimental GO:0019344 on E. coli CysB" claim |
+| Q47083 (E. coli Cbl) | RecName, curated; PE 1 | **GO:0045883 positive regulation of sulfur utilization (IDA)** | Regulator, confirmed experimentally |
+| P06614 (S. typhimurium CysB) | RecName, curated; PE 1 | none | Curated regulator; identity rests on curation + architecture |
+| P45105 (H. influenzae CysB) | RecName, curated; PE 3 | none; FUNCTION by ECO:0000250 | Same |
+| G3XCU6 (P. aeruginosa CysB) | RecName (this gene) | PseudoCAP IMP/IDA rows under review | Seed |
+| Q9K116, Q8EDU4, Q9KQU1, Q8P602, Q0WEU7 | **SubName** {ECO:0000313\|EMBL}; PE 3 | none | "Cys regulon transcriptional activator" wording is a **predicted name, not evidence**; the regulator claim for these five now rests on the PF00126+PF03466 architecture and the CysB-type NCBIfam match |
+
+Outcome: the leaf claim survives, but reworded so it rests on domain
+architecture plus two verified experimental regulator annotations rather than on
+names. The entry's core argument (CysB is a LysR activator that performs no step
+of cysteine synthesis; auxotrophy shows necessity, not participation) is
+independent of the leaf list, and the explanation now says so explicitly.
+Confidence held at CONFIRMED, now resting on that core argument.
