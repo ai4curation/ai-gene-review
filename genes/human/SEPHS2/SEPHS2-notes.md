@@ -123,3 +123,19 @@ Sec-containing selenophosphate synthetase.
 - GO:0005737 cytoplasm; GO:0005829 cytosol; GO:0005524 ATP binding — current.
 - GO:0016259 "selenocysteine metabolic process" — OBSOLETE (unnecessary grouping term);
   appears only in UniProt DR / Reactome, NOT in the GOA-seeded set, so not used here.
+
+## 2026-11-11 policy audit and completion
+
+Supersedes the curation summary above where they differ.
+
+- GO:0005515 protein binding (IPI, BioPlex PMID:33961781): now REMOVE under the protein-binding
+  policy (MARK_AS_OVER_ANNOTATED is excluded for this term). The SEPHS1 interaction is real
+  [PMID:28414460 "SEPHS2 interacts with SEPSECS and SEPHS1; these interactions were confirmed by co-immunoprecipitation"].
+- GO:0005737 cytoplasm (IBA, IEA GO_REF:0000044, IDA PMID:28414460): all MODIFY -> GO:0005829
+  cytosol, which the gene already carries (Reactome TAS); soluble enzyme, consistent action across rows.
+- All rows now carry a reason and verbatim support; ATP-binding no longer listed as a separate
+  core function (it is a property of the dikinase activity).
+- Added PMID:26138980 (CRL2/KLHDC3 clearance of truncated SEPHS2)
+  [PMID:26138980 "KLHDC3, APPBP2 and KLHDC2 were used to target SEPHS2, SELV and SELK, respectively"].
+- `just paint-losses human SEPHS2`: no IRD/IKR losses.
+- No deep-research provider file; `just deep-research` cannot resolve its dependencies offline.

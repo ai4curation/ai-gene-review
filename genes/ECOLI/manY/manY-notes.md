@@ -54,3 +54,10 @@ ManY is the EIIC component of the mannose-specific phosphotransferase system (Ma
 - Several key publications (PMID:353494, PMID:4604906, PMID:31209249, PMID:8774730) did not have cached full text in the publications directory
 - PMID:5545083 (Kundig & Roseman 1971) had no abstract available in the cached file
 - The review relied heavily on PMID:2951378 (Erni et al. 1987), which is the definitive characterization paper
+
+
+## 2026-11-07 complete annotation re-review
+
+All existing annotations and genuine Falcon research were re-read. No source file was refreshed. Historical notes above are retained; this audit supersedes their broad-term decisions and unsupported source attributions. General membrane/cytoplasm and ManX enzyme genera now refine to supported specific terms. ManX allows intra- and intersubunit phosphotransfer [PMID:2681202, PMID:8262947]; ManYZ supplies direct substrate-binding/translocation work, with contributes_to core rather than autonomous phosphorylation [PMID:31209249, PMID:2951378]. No new rows were added; historical complex NEW rows remain intact.
+
+Source/construct scope, exact short quotations, access failures and ontology snapshots: `analysis/module_audits/bacterial_mannose_pts/ecoli-consultation/evidence.md`. In particular,1985IIMan is not uniquely modern ManZ,1996single-anchor ManZ topology is superseded by2019structure, and lambda membrane-component sufficiency does not establish a ManX pore. The2019ManYZ assay is counterflow in liposomes, not the complete PEP/ManX reaction; sequence-exact K-12 proteins were expressed recombinantly in knockoutBL21. Early sugar experimental annotations are retained with independent substrate corroboration and explicit inaccessible-table limits. All PAINT checks reported no IRD/IKR on the recovered target lineages.

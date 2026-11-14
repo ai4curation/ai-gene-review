@@ -89,3 +89,13 @@ location GO:0005789 (ER membrane) [+ nuclear membrane GO:0031965].
 - 1-alkenyl-2-acylglycerol choline phosphotransferase (GO:0047359, EXP PMID:10191259 / IEA): KEEP_AS_NON_CORE —
   a real but minor side activity (plasmenylcholine/PAF-precursor synthesis), primarily characterized in PMID:10893425.
 - protein binding IPI (GO:0005515) x2: MARK_AS_OVER_ANNOTATED (uninformative MF).
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Row: GO:0005794 IBA (GO_REF:0000033, `is_active_in`, PTN000045767).
+
+Checks:
+- interpro/panther/PTHR10414/PTHR10414-paint.tsv: the GO:0005794 IBD at PTN000045767 is seeded by FB:FBgn0031948 (fly CG7149/cpt), MGI:2384841 (mouse Chpt1; UniProt xref search) and UniProtKB:Q8WUD6 (human CHPT1), all cholinephosphotransferase (CHPT1) lineage. CEPT1 (Q9Y6K0) is a seed of the GO:0005789 ER membrane IBD at the same node.
+- PMID:12221122 abstract: "brefeldin A treatment relocalizes CPT1, but not CEPT1, implying CPT1 is found in the Golgi" and "A combination of coimmunofluorescence and subcellular fractionation experiments with various endoplasmic reticulum, Golgi, and nuclear markers confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic reticulum and nuclear membranes."
+
+Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (the old reason already argued exclusion). Paralog location propagated across a node where the enzymes differ, the ZDHHC23 pattern; added propagation_review (PROPAGATION_BAD; WRONG_ORTHOLOG_OR_PARALOG, COMPARTMENT_OR_COMPLEX_MISMATCH). REMOVE was the close alternative. `is_active_in` not supported.
