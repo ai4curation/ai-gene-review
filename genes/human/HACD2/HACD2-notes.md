@@ -22,8 +22,8 @@
   four-step elongation cycle (condensation → reduction → dehydration → reduction).
   [file:human/HACD2/HACD2-uniprot.txt "a very-long-chain (3R)-3-hydroxyacyl-CoA = a very-long-chain"]
   [file:human/HACD2/HACD2-uniprot.txt "This enzyme catalyzes the dehydration of the"]
-- Active over a broad chain-length range (C16 through C26 substrates listed as
-  distinct Rhea catalytic-activity entries). KM = 121.7 uM for 3-hydroxypalmitoyl-CoA.
+- UniProt curates C16-C26 reaction entries; this is not a statement that a full
+  chain-length kinetic panel was measured. KM = 121.7 uM for 3-hydroxypalmitoyl-CoA.
   [file:human/HACD2/HACD2-uniprot.txt "KM=121.7 uM for 3-hydroxypalmitoyl-CoA (at 37 degrees Celsius)"]
 - Experimentally established in [PMID:18554506], which characterized all four mammalian
   HACD proteins by rescue of a PHS1-shutoff yeast strain and in vitro 3-hydroxypalmitoyl-CoA
@@ -62,7 +62,9 @@
   PMID:38422897 (TECR). The three HT-interactome papers' cached full text does not
   mention HACD2/PTPLB by name (interactions are in supplementary data), consistent with
   large-scale screens. Bare "protein binding" is uninformative and is marked as
-  over-annotated rather than removed.
+  non-core under the ClinGen exception when no supported specific refinement is available.
+  The three TECR-specific contexts are refined to enzyme binding using independent
+  HACD2-TECR complex evidence from PMID:38422897.
 
 ## Not a phosphatase
 
@@ -77,7 +79,7 @@
 - VLCFAs made by this elongation cycle are precursors of membrane lipids and lipid
   mediators, including sphingolipids/ceramides.
   [file:human/HACD2/HACD2-uniprot.txt "participates in the production of"]
-  Sphingolipid biosynthetic process (GO:0030148, IGI with KAR/HSD17B12 P40857) is a
+  Sphingolipid biosynthetic process (GO:0030148, IGI involving yeast Phs1, UniProt P40857) is a
   downstream consequence of supplying VLCFAs, not the direct catalytic function — kept
   as non-core.
 
@@ -86,15 +88,19 @@
 - Core MF: GO:0102158 very-long-chain (3R)-3-hydroxyacyl-CoA dehydratase activity.
 - Core BP: fatty acid elongation (GO:0030497) and very long-chain fatty acid biosynthetic
   process (GO:0042761).
-- Core CC: endoplasmic reticulum membrane (GO:0005789).
-- GO:0080023 "(2E)-enoyl-CoA hydratase activity" (IEA/Rhea) describes the same chemistry
-  under a reverse-direction hydratase name; MODIFY to the physiologically-correct
-  dehydratase term GO:0102158.
-- Bare GO:0005515 protein binding (5 IPI) → MARK_AS_OVER_ANNOTATED (per policy, not removed).
+- Core CC: endoplasmic reticulum membrane (GO:0005789) and the experimentally supported
+  ER compartment (GO:0005783).
+- GO:0080023 "(2E)-enoyl-CoA hydratase activity" (IEA/Rhea) already defines the
+  reversible dehydration chemistry. MODIFY to GO:0102158 for enzyme-class specificity.
+  The earlier reverse-direction argument incorrectly inferred reaction direction from
+  the hydratase label; it was not a valid reason for this refinement.
+- GO:0005515 protein binding (5 IPI): three TECR-specific contexts → MODIFY to
+  GO:0019899 enzyme binding; the BAP31 and mixed-partner HuRI contexts →
+  KEEP_AS_NON_CORE under the ClinGen exception. Generic binding is not itself
+  over-annotation.
 - Sphingolipid biosynthesis, general fatty acid biosynthetic process, long-chain
-  fatty-acyl-CoA biosynthetic process, plain ER, and enzyme binding → KEEP_AS_NON_CORE.
-</content>
-</invoke>
+  fatty-acyl-CoA biosynthetic process, and the original GO:0019899 IDA enzyme-binding
+  annotation → KEEP_AS_NON_CORE.
 
 ## 2026-11-12: correct the GO:0080023 refinement rationale
 
@@ -120,3 +126,39 @@ The 1,634-byte response has SHA256
 This is a bounded rationale correction: the other 26 annotation contexts,
 all actions, native source fields, earlier quotations and `INITIALIZED` status
 are preserved. It is not a full reassessment or ClinGen completion.
+
+
+## 2026-11-14: PR #6316 review follow-up
+
+Correct the earlier reaction-direction claim in place, including why it was wrong,
+and remove stray markup. Refine both GO:0018812 contexts to GO:0102158: the supported
+HACD2 enzyme class is more informative than the general dehydratase class. UniProt's
+generic very-long-chain reaction carries ECO:0000269|PubMed:18554506; physiological
+direction is separately curated. Neither a hydratase label nor an equilibrium `=`
+reaction establishes an incompatible direction.
+
+The directly inspectable ontology evidence is from the official
+[QuickGO term endpoint](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0018812,GO:0080023,GO:0102158),
+checked 2026-11-14. [QuickGO GO/about](https://www.ebi.ac.uk/QuickGO/services/ontology/go/about)
+identifies `http://purl.obolibrary.org/obo/go/releases/2026-11-12/extensions/go-plus.owl`.
+The exact GO:0080023 `definition.text` is "Catalysis of the reaction: a
+(3R)-3-hydroxyacyl-CoA = a (2E)-enoyl-CoA + H2O." Its `children` contain
+`{"id":"GO:0102158","relation":"is_a"}`; GO:0018812's `children` contain
+`{"id":"GO:0080023","relation":"is_a"}`. These small source fragments record the
+claimed edges directly, rather than relying on the earlier uncommitted response hash.
+
+Also correct the five legacy generic-binding judgments: the three TECR-specific
+contexts are refined to enzyme binding with independent complex evidence; the BAP31
+and mixed HuRI contexts are retained as non-core under the ClinGen exception. Do not
+apply the TECR-specific refinement to every partner in the combined HuRI context.
+Accept the two informative ER-compartment annotations as core localization,
+without using term breadth to argue against the localization. All 27 native contexts and
+source fields are preserved. No NEW annotation or ClinGen completion is added.
+
+Final follow-up accounting: 27 contexts; 14 ACCEPT, 7 KEEP_AS_NON_CORE, 6 MODIFY.
+The status helper reports DRAFT; the stale INITIALIZED value is reconciled to that
+computed state. The dated 2026-11-12 counts above describe the earlier commit.
+
+Correct the older donor-name error: [P40857 is yeast Phs1](https://www.uniprot.org/uniprotkb/P40857/entry),
+verified from the official UniProt entry on 2026-11-14. It is a dehydratase, not
+KAR/HSD17B12. The native IGI source identifier is unchanged.
