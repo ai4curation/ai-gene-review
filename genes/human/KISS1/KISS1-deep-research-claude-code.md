@@ -1,6 +1,5 @@
 ---
 provider: claude_code
-model: redacted
 cached: false
 start_time: '2026-11-13T22:29:25.122269'
 end_time: '2026-11-13T22:31:32.393453'
@@ -35,7 +34,6 @@ provider_config:
     min_report_chars: 200
     extra_args: []
 run_metadata:
-  models_used: redacted
   web_search_requests: 6
   num_turns: 14
   total_cost_usd: 0.8953169
