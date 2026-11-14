@@ -65,3 +65,33 @@ Retain target-specific cross-system judgments and assay limits from this audit. 
 ## 2026-11-11 — review follow-up: evidence and source routing
 
 Quote the Discussion inference that FruB delivers phosphate to NPr where that target-specific claim distinguishes NPr from PtsP. Route InterPro2GO and TreeGrafter source defects to INTERPRO and PANTHER respectively, retaining their claims and requested corrections. No annotation payload or action changes.
+
+
+## Incoming historical review (reconciled below)
+
+# ptsP (Pseudomonas putida KT2440) notes
+
+## Provenance
+
+- Re-reviewed while completing the bacterial nitrogen-regulatory PTS module
+  (modules/bacterial_nitrogen_regulatory_pts.yaml). No new deep-research provider
+  report was generated: no provider API key is configured in this session.
+- Primary evidence: PMID:18296519 (full text; in vivo relay order PEP to PtsP to
+  PtsO/NPr to PtsN, and FruB cross-talk), PMID:17416664, PMID:26224366 and
+  PMID:21236318 (abstracts).
+
+## Decisions in this pass
+
+- Sugar-PTS process and carbohydrate phosphotransferase rows remain removed, now with
+  quoted support ("comprise a branch of the system unrelated to sugar traffic") and
+  source_defects naming the InterPro2GO / UniRule mappings.
+- Correct-but-general MF rows (transferase, kinase, phosphorus-group transferase) are
+  MODIFY to the specific activity rather than KEEP_AS_NON_CORE.
+- For NPr (PP_0948) the phosphocarrier step is captured with GO:0016775
+  (phosphotransferase activity, nitrogenous group as acceptor), matching the E. coli
+  NPr review (genes/ECOLI/ptsO).
+
+
+## 2026-11-13 — integrate the reviewed nitrogen-PTS audit
+
+Preserve all machine annotation payloads and the approved branch decisions. Compatible incoming positive quotations are retained without duplicate nested quotations. For ECOLI PtsI, the native carbohydrate EI-HPr-NagE pathway supports the existing non-core N-acetylglucosamine claim despite the broader family node also covering non-carbohydrate EI(Ntr); homodimerization remains the functional enzyme assembly. For ECOLI PtsN and PtsP, preferred regulatory partners and parallel-chain evidence do not prove every cross-system contribution absent; the conservative MARK_AS_OVER_ANNOTATED sugar-process assessment supersedes incoming universal deletion language. PtsN kinase activation retains its specific biochemical refinement of the KdpD interaction. PSEPK PtsP retains the target-specific distinction between FruB-to-NPr cross talk and PtsP function, and the unverified localization remains UNDECIDED. Incoming questions are preserved, while stronger claims unsupported by the target evidence are not adopted. Cached full-text publications are retained byte-for-byte from the audit branch.

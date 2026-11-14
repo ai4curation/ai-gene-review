@@ -98,3 +98,43 @@ Quote the Discussion inference that FruB delivers phosphate to NPr where that ta
 ## 2026-11-11 — separate coupled transporter activity from process scope
 
 Remove the obsolete cross-species BP contrast from the GO:0008982 MF reason. This coupled transmembrane carbohydrate transport/phosphorylation activity remains REMOVE for soluble PtsN effectors, regardless of measured cross-system protein phosphate exchange. The target-specific BP judgments are unchanged.
+
+
+## Incoming historical review (reconciled below)
+
+# ptsN / EIIA(Ntr) (E. coli K-12, P69829) notes
+
+## Provenance
+
+- Deep research could not be generated: no deep-research provider API key is
+  configured in this session, so `just deep-research ECOLI ptsN` was not run and no
+  `-deep-research-*.md` file exists. The review is based on the UniProt record, the
+  GOA table and the cached publications PMID:7876255, PMID:17289841, PMID:19400808
+  (abstracts), PMID:18304323 and PMID:24561554 (full text).
+
+## Findings
+
+- Dephosphorylated IIA(Ntr) binds TrkA and limits K+ accumulation [PMID:17289841
+  "We demonstrate that dephosphorylated EIIA(Ntr), but not its phosphorylated form,
+  forms a tight complex with TrkA that inhibits the accumulation of high
+  intracellular concentrations of K(+)."].
+- IIA(Ntr) binds KdpD and stimulates its kinase activity [PMID:19400808 "Two-hybrid
+  data and biochemical analysis revealed that IIA(Ntr) interacts with sensor kinase
+  KdpD and stimulates kinase activity, resulting in increased levels of
+  phosphorylated response regulator KdpE."].
+- In P. putida the PtsN-KdpD interaction represses kdpFABC (PMID:26224366, see the
+  PSEPK ptsN review), so the direction of KdpD regulation is lineage-dependent.
+
+## Curation decisions
+
+- InterPro2GO maps IPR006320 (PTS_Nitro_regul, the nitrogen-regulatory IIA family
+  itself) to sugar-PTS terms; both rows are removed and recorded as source defects.
+- enzyme inhibitor activity (TrkA) is refined to transporter inhibitor activity:
+  TrkA is the regulatory subunit of a K+ transporter, not an enzyme.
+- The bare protein-binding rows are replaced by the regulatory activities each paper
+  shows; the large-scale yeast two-hybrid row (PMID:24561554) is removed.
+
+
+## 2026-11-13 — integrate the reviewed nitrogen-PTS audit
+
+Preserve all machine annotation payloads and the approved branch decisions. Compatible incoming positive quotations are retained without duplicate nested quotations. For ECOLI PtsI, the native carbohydrate EI-HPr-NagE pathway supports the existing non-core N-acetylglucosamine claim despite the broader family node also covering non-carbohydrate EI(Ntr); homodimerization remains the functional enzyme assembly. For ECOLI PtsN and PtsP, preferred regulatory partners and parallel-chain evidence do not prove every cross-system contribution absent; the conservative MARK_AS_OVER_ANNOTATED sugar-process assessment supersedes incoming universal deletion language. PtsN kinase activation retains its specific biochemical refinement of the KdpD interaction. PSEPK PtsP retains the target-specific distinction between FruB-to-NPr cross talk and PtsP function, and the unverified localization remains UNDECIDED. Incoming questions are preserved, while stronger claims unsupported by the target evidence are not adopted. Cached full-text publications are retained byte-for-byte from the audit branch.
