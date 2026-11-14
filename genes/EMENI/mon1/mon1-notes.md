@@ -1,5 +1,25 @@
 # EMENI mon1 notes
 
+## 2026-11-06
+
+- Re-reviewed Q5BBI7 against `interpro/panther/PTHR13027/PTHR13027-paint.tsv`
+  and confirmed that the four existing PAINT rows map to the broad eukaryotic
+  `PTN000315021` Rab7/Ypt7 GEF node, the Opisthokonta `PTN000315023`
+  Mon1-Ccz1 complex node, and the fungal `PTN000989606` vacuole membrane and
+  vacuolar protein-targeting node.
+- PubMed/web searches for `Q5BBI7`, `AN2093`, `"Aspergillus nidulans" MonA`,
+  `"Aspergillus nidulans" mon1`, `Aspergillus MonA Ccz1`, and `Aspergillus
+  Mon1 Ccz1 Rab7` did not find a direct A. nidulans MonA paper newer than
+  PMID:32010467 or an Aspergillus Ccz1/Rab7 assay.
+- The review already accepts the fungal vacuole IBA rows and GEF IBA,
+  narrows the broad IEA vacuolar membrane and vesicle-mediated transport
+  terms, keeps MVB membrane as non-core, proposes macroautophagy by ISS from
+  yeast and Fusarium Mon1 evidence, and leaves direct A. nidulans
+  MonA-Ccz1/Rab7 validation as an open experiment. On re-review, the
+  `GO:0035658` Mon1-Ccz1-complex IBA should be marked over-annotated rather
+  than cleanly accepted because filamentous-fungal Ccz1 partners remain
+  diverged/unidentified.
+
 ## 2026-10-24
 
 - Seeded Q5BBI7 with `just fetch-gene EMENI mon1`; GOA contains four PAINT
@@ -41,8 +61,10 @@
   conserved complex, but filamentous-fungal Ccz1 partners are diverged. Son and
   Park reported in 2019 that standard searches did not find Ccz1 orthologs in
   Aspergillus, Fusarium, or Penicillium; the PAINT row is still defensible for
-  Mon1, but a direct A. nidulans MonA-Ccz1/Rab7 assay remains the main open
-  experiment.
+  Mon1 at family level, but PAINT's Schizosaccharomyces-specific
+  `PTN008545077` IRD shows that this complex-membership assertion is
+  term-selectively retractable inside fungi. A direct A. nidulans MonA-partner
+  and Rab7 assay remains the main open experiment.
 - S. cerevisiae MON1 carries `GO:0016236 macroautophagy` by IMP, and the
   Fusarium FgMon1 paper directly reports impaired autophagosome-vacuole fusion.
   I used the specific macroautophagy child rather than adding parent
@@ -68,8 +90,10 @@
 - `GO:0032585 multivesicular body membrane`: KEEP_AS_NON_CORE. The inferred
   MVB/prevacuolar site matches Mon1-Ccz1 endosomal recruitment, but the fungal
   vacuole membrane is the better core localization.
-- `GO:0035658 Mon1-Ccz1 complex`: ACCEPT with the caveat that direct
-  filamentous-fungal complex formation remains untested.
+- `GO:0035658 Mon1-Ccz1 complex`: MARK_AS_OVER_ANNOTATED because the
+  opisthokont complex IBA is plausible family context, but a clean complex
+  assertion is too specific for A. nidulans while its diverged Ccz1 partner
+  remains unidentified.
 - Add `GO:0016236 macroautophagy` as a conservative NEW row because
   Mon1-Ccz1 executes Rab7/Ypt7-dependent autophagosome-vacuole fusion in yeast,
   and Fusarium FgMon1 has direct autophagy and Rab7 evidence.

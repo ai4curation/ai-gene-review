@@ -45,8 +45,10 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
-| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
+| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`ASPFU/rmt2`/`EMENI/rmt2` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
+| `PTHR32385` MANNOSYL PHOSPHORYLINOSITOL CERAMIDE SYNTHASE | fungal IPC mannosyltransferase node | `SUR1`/`CSH1`/`imt1`/`imt2`/`imt3`/`MIT1`/`Q4WDG6` |
+| `PTHR13027` SAND PROTEIN-RELATED | eukaryotic and fungal Mon1-Ccz1/Ypt7 GEF nodes | `MON1`/`mon1`/`MON1`/`apg-13`/`ASPFU/mon1`/`EMENI/mon1` |
 
 ---
 
@@ -93,7 +95,8 @@ paralog-aware activity and complex checks.
 
 ## Later Candidates
 
-- [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
+- [x] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways; covered
+  by Family 4
 - [x] `PTHR19370` fungal NADH-cytochrome b5 reductases
 
 ## Family 3: Chitin Synthase Export Chaperones
@@ -438,12 +441,15 @@ node for protein arginine N5-methyltransferase activity. The official PANTHER
 family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
 to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 
-- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
-  drafted in this branch
-- [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
-- [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
-- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
-- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
+- [x] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  merged in PR #6035
+- [x] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog; merged in PR #6037
+- [x] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member; merged in PR
+  #6038
+- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; review open
+  in PR #6039
+- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; review open in
+  PR #6040
 
 ## Family 20: Sec2 Rab GEFs
 
@@ -461,7 +467,65 @@ vegetative `sec2` and sporulation-specific `spo13`.
   drafted in this branch
 - [x] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog;
   drafted in this branch
-- [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
+- [x] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member;
+  drafted in this branch
+
+## Family 21: IPC Mannosyltransferases
+
+`PTHR32385` contains the fungal GT32 IPC mannosyltransferases that transfer
+mannose from GDP-mannose to inositol phosphorylceramide to form
+mannosyl-inositol phosphorylceramide. PAINT places generic
+`GO:0000030 mannosyltransferase activity` and
+`GO:0051999 mannosyl-inositol phosphorylceramide biosynthetic process` on
+`PANTHER:PTN001285482`, a node seeded by SGD `SUR1`/`CSH1`, the three
+PomBase `imt` paralogs, a CGD *Candida albicans* member, and the
+*Aspergillus fumigatus* MitA protein. The node is sound, but each review should
+prefer the exact `GO:0103064 inositol phosphorylceramide mannosyltransferase
+activity` term when enough evidence is present.
+
+- [x] `yeast/SUR1` - *S. cerevisiae* Csg2-dependent IPC mannosyltransferase;
+  the `PTN001285482` IBAs are sound, with the generic MF IBA modified to the
+  exact EC-backed `GO:0103064` row
+- [x] `yeast/CSH1` - *S. cerevisiae* Csh1-Csg2 IPC mannosyltransferase;
+  rechecked in the PTHR32385 context with both `PTN001285482` IBA rows sound
+- [x] `SCHPO/imt1` - fission-yeast IPC mannosyltransferase in the Imt1
+  subfamily; drafted in this branch
+- [x] `SCHPO/SPCC4F11.04c` - fission-yeast imt2, an SF20 imt paralog;
+  re-reviewed in PR #6112
+- [x] `SCHPO/SPAC17G8.11c` - fission-yeast imt3, an SF20 imt paralog;
+  review the `PTN001285482` MF IBA as sound but generic, add the exact
+  IPC mannosyltransferase activity, and accept the `GO:0051999` IBA
+- [x] `CANAL/MIT1` - CGD-seeded *Candida albicans* IPC mannosyltransferase;
+  review the `PTN001285482` IBAs as sound, accept exact EC-backed
+  `GO:0103064`, and prune broad/downstream ARBA process calls
+- [x] `ASPFU/Q4WDG6` - *Aspergillus fumigatus* Af293 MitA-family IPC
+  mannosyltransferase PAINT seed; the `PTN001285482` IBAs are sound, with the
+  generic MF row and older AspGD generic IMP rows replaced by exact `GO:0103064`
+
+## Family 22: Mon1-Ccz1 Rab7 GEF Subunits
+
+`PTHR13027` contains the conserved Mon1/SAND family. PAINT places the
+`contributes_to` guanyl-nucleotide exchange factor activity on the eukaryotic
+`PANTHER:PTN000315021` node, Mon1-Ccz1 complex membership on the
+Opisthokonta `PANTHER:PTN000315023` node with a fungal IRD branch, and fungal
+vacuole-membrane and vacuolar-protein-targeting rows on
+`PANTHER:PTN000989606`. The first pass should keep Mon1 separate from the Ccz1
+subunit and from upstream Vps21/Ypt10 regulators while checking direct
+stationary-phase lipid-droplet, Cvt/autophagy, and endosomal-maturation
+evidence for the budding-yeast seed.
+
+- [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1/Ypt7 GEF subunit; rechecked in
+  PTHR13027 after 2026 VINE/Ypt10 and lipid-droplet papers
+- [x] `SCHPO/mon1` - fission-yeast Mon1 ortholog with curated ISO rows;
+  rechecked against PTHR13027 and its Schizosaccharomyces Mon1-Ccz1 IRD
+- [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 family member; rechecked
+  against PTHR13027 after the yeast/MON1 refresh
+- [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 family member; rechecked
+  against PTHR13027 with no IBA action changes
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* Af293 Mon1 family member;
+  rechecked against PTHR13027 with no IBA action changes
+- [x] `EMENI/mon1` - *Aspergillus nidulans* Mon1 family member; rechecked
+  against PTHR13027 and marked the Mon1-Ccz1-complex IBA over-annotated
 
 ---
 
@@ -469,6 +533,41 @@ vegetative `sec2` and sporulation-specific `spo13`.
 
 ## 2026-11-06
 
+- Reopened `PTHR32385`, the fungal IPC mannosyltransferase family, for
+  PAINT-focused re-review. The first new review covers `SCHPO/imt1`: both
+  `PTN001285482` PAINT assertions are sound for the fission-yeast
+  Imt1/Imt2/Imt3 trio, with the generic mannosyltransferase IBD marked too broad
+  because the exact `GO:0103064` IPC mannosyltransferase term already exists.
+- Added `SCHPO/SPCC4F11.04c`: both `PTN001285482` PAINT assertions are sound
+  for the fission-yeast Imt2 paralog. SPCC4F11.04c lacks the exact
+  `GO:0103064` row in GOA, so the review proposes that exact term as `NEW`
+  and treats the generic mannosyltransferase IBA as too broad.
+- Added `SCHPO/SPAC17G8.11c`: the Imt3 PAINT review mirrors Imt2. The generic
+  `GO:0000030` IBA is inherited from the right node but is too broad because
+  GOA lacks the exact `GO:0103064` IPC mannosyltransferase row, so the review
+  proposes that exact MF as `NEW` and accepts the MIPC-biosynthesis IBA.
+- Added `CANAL/MIT1`: the CGD-seeded Candida Mit1 branch supports the
+  `PTN001285482` MF row; the sibling process IBA is inherited from other fungal
+  seeds on the same node. GOA already has exact `GO:0103064` from the EC
+  ARBA mapping, so the generic PAINT and CGD MF rows are modified to that
+  activity, and the downstream M(IP)2C ARBA row is retained as non-core
+  pathway context one step after Mit1's direct IPC-to-MIPC step.
+- Added `yeast/SUR1`: the SGD Sur1 seed supports the `PTN001285482` MF row,
+  while the sibling process IBA is inherited from other fungal seeds on the same
+  node. The review keeps Sur1-Csg2 complex membership, modifies generic
+  sphingolipid-process parents to exact MIPC biosynthesis, and keeps M(IP)2C
+  rows as non-core downstream context because Ipt1, not Sur1, converts MIPC
+  to M(IP)2C.
+- Added `ASPFU/Q4WDG6`: the A. fumigatus Af293 MitA seed also supports both
+  `PTN001285482` PAINT rows. The review keeps the MIPC-biosynthesis IBA, treats
+  generic mannosyltransferase/transferase rows as older stand-ins for
+  `GO:0103064`, and keeps only the generic membrane call because no direct
+  MitA Golgi-localization paper was found.
+- Rechecked `yeast/CSH1`: the final PTHR32385 member also keeps the
+  `PTN001285482` MIPC-biosynthesis IBA and modifies the generic MF IBA to the
+  exact `GO:0103064` activity. Newer Csh1 N-glycan and ethanol-stress papers
+  sharpen substrate-specificity and downstream phenotype context without adding
+  a new direct process annotation.
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
   review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
   cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
@@ -485,6 +584,44 @@ vegetative `sec2` and sporulation-specific `spo13`.
   Candida Sec2 ortholog. The cell-tip IBA is especially well grounded because
   the CGD row for this gene is one of the two experimental seeds for the fungal
   PTN001024876 node.
+- Added `ASPFU/sec2`: the long *Aspergillus fumigatus* Sec2 ortholog inherits
+  the PTHR14430 Rab-GEF and fungal cell-tip IBA rows. A 2025 knockout paper is
+  direct to A. fumigatus `sec2` and reports hyphal-tip, autophagy, cell-wall,
+  and virulence phenotypes, but it does not support adding new process
+  annotations for those downstream outputs.
+- Started `PTHR13027`, the Mon1/SAND family. The existing `yeast/MON1` review
+  already accepted the fungal `PTN000989606` vacuole-membrane and
+  vacuolar-protein-targeting IBAs, the eukaryotic `PTN000315021`
+  `contributes_to` GEF row, and the Opisthokonta `PTN000315023` Mon1-Ccz1
+  complex row; newer 2026 papers add VINE/Ypt10 upstream regulation and a
+  stationary-phase Pdr16-lipid-droplet context without changing those GO calls.
+- Rechecked `CANAL/MON1` as the *Candida albicans* `PTHR13027:SF7` ortholog.
+  Its four IBA rows still match the fungal `PTN000989606`, eukaryotic
+  `PTN000315021`, and Opisthokonta `PTN000315023` placements; the only review
+  edits cite the no-direct-Candida-literature search for CGD's accepted `ND`
+  placeholders.
+- Rechecked `NEUCR/apg-13`, the *Neurospora crassa* `PTHR13027:SF7` Mon1
+  ortholog. The existing review already accepted the same fungal, eukaryotic,
+  and Opisthokonta IBA rows; the 2026 follow-up search did not find direct
+  Q870Q4 literature, and the newer N. crassa prevacuolar and autophagy
+  morphology papers add Rab7/vacuole context without assaying Mon1.
+- Rechecked `ASPFU/mon1`, the *A. fumigatus* Af293 `PTHR13027:SF7` Mon1
+  member. The PAINT IBA decisions remain sound against the Aspergillus MonA and
+  Fusarium FgMon1 literature; the review only needed a `PMID:12364329` quote
+  normalized to the exact cached text.
+- Rechecked `EMENI/mon1`, the *A. nidulans* `PTHR13027:SF7` MonA ortholog. Its
+  existing review already paired the Aspergillus MonA deletion paper with the
+  yeast and Fusarium Mon1 seeds; the 2026 follow-up search did not find a newer
+  direct MonA paper or an Aspergillus Ccz1/Rab7 assay. Son & Park's failure to
+  find Ccz1 orthologs in Aspergillus/Fusarium/Penicillium makes the
+  Mon1-Ccz1-complex IBA over-annotated for `EMENI/mon1`, while the GEF,
+  vacuolar-membrane, vacuolar-protein-targeting and ISS autophagy decisions
+  still stand.
+- Rechecked `SCHPO/mon1`, the fission-yeast `PTHR13027:SF7` Mon1 ortholog. The
+  fungal vacuole-membrane/protein-targeting and eukaryotic GEF IBAs still align
+  with PAINT; the Mon1-Ccz1 complex row is PomBase ISO-only because the
+  2025-09-03 `PTN008545077` IRD blocks the broad Opisthokonta complex IBA on the
+  Schizosaccharomyces branch.
 
 ## 2026-11-01
 
