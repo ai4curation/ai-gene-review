@@ -43,3 +43,26 @@ Same-gene canonical product A0A3Q2HM61 (652 aa) has no review in the repo (`gene
 
 - interpro/panther/PTHR22594/PTHR22594-review.yaml lists this accession and Q6PI48 under SF5; placement agrees. Minor issue: the family review's preferred_name/summary describe the family as "Aspartyl/asparaginyl" whereas PANTHER's official name is "ASPARTYL/LYSYL-TRNA SYNTHETASE"; and it lists the exon-skipping isoform rather than the canonical horse product as a representative.
 - Module: modules/mitochondrial_trna_charging_and_initiator_formylation.yaml (human DARS2 is a part).
+
+## 2026-11-06 — tRNA aminoacylation BP obsoletion
+
+GO obsoleted the 42 amino-acid-specific tRNA aminoacylation biological processes,
+`GO:0070146` mitochondrial aspartyl-tRNA aminoacylation among them, because the amino acid
+is already carried by the paired molecular function. Verified in `go-edit.obo`:
+`GO:0070146` is `is_obsolete: true` with `replaced_by: GO:0070127`, and its comment names
+`GO:0004815` aspartate-tRNA ligase activity as the molecular function.
+
+This supersedes two decisions recorded above:
+
+- "tRNA aminoacylation for protein translation: ACCEPT -> MODIFY to GO:0070146" is now
+  MODIFY to `GO:0070127` tRNA aminoacylation for mitochondrial protein translation.
+- "Core function now names GO:0070146" is now `GO:0070127`.
+
+The derivation that produced `GO:0070146` — the conjunction of PAINT's aspartyl-tRNA
+aminoacylation (PTN000502597) and mitochondrion (PTN000502598) — is still sound about the
+facts, but its conclusion is no longer a term: `GO:0006422` went in the same batch, so only
+the compartment half of the conjunction remains a process. Aspartate specificity stays on
+the `GO:0004815` rows this review already proposes.
+
+The caution above about `GO:0070145` being the asparaginyl term no longer applies: both
+terms are obsolete, so the confusion it guarded against can no longer arise.

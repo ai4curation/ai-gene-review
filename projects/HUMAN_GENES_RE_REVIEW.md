@@ -5,7 +5,7 @@ tags: [EVALUATION]
 autolink_gene_symbols: true
 species:
   - human
-last_reviewed: 2026-10-04
+last_reviewed: 2026-11-10
 sidecars:
   slide_figures:
     - HUMAN_GENES_RE_REVIEW/slides/not-audit.svg
@@ -38,6 +38,16 @@ review files, so 1,489 newer reviews have not had this second pass.
 We did this to measure how far the first-pass actions can be trusted before
 building summaries and modules on them, and to find any systematic reviewer
 errors worth a guideline change.
+
+**November 2026 update:** the one action the sweep had left to reviewer
+discretion, `REMOVE` used for claims that are true, was re-read in full. All
+23,802 REMOVE rows in the 3,588 human review files were checked against the
+current rules. Of the 1,789 that are not bare `protein binding`, 408 (23%)
+moved to another action, 1,381 stand, and 64 errors in source records were
+recorded as `source_defects`. The four fence cases and two literature
+questions below are resolved. Of the 34 rows that the pass left `UNDECIDED` for
+want of full text, 15 were settled in a follow-up on 12 November and 19 remain. See
+[Re-review of REMOVE actions](HUMAN_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
 
 ## Purpose
 
@@ -108,6 +118,9 @@ The per-batch progress log is retained below as the audit trail.
   MARK_AS_OVER_ANNOTATED would be the more conventional call. These are within reviewer
   discretion and I am not editing them unless the term is biologically wrong (not just
   peripheral). Flagging the pattern here rather than per-gene.
+  *Superseded in November 2026:* the action rules now say that REMOVE judges the
+  claim, so these rows were re-read and changed where the claim holds (see the REMOVE
+  re-review under **Completed systematic audits**).
 - Observed reviewer quality is high: catches include name-confusion mis-annotations
   (ACAT1 vs SOAT1 cholesterol acyltransferase; AARSD1 vs AARS1 synthetase) and
   substrate-specificity over-calls (ACOX2 branched-chain vs ACOX1 straight-chain).
@@ -119,6 +132,32 @@ The per-batch progress log is retained below as the audit trail.
   FZD7, ELOVL5, BCS1L, CFTR.
 
 ## Completed systematic audits
+
+- **All REMOVE actions (23,802 rows in 1,699 reviews), November 2026** — fully
+  re-adjudicated against the current action rules; written up in
+  [Re-review of REMOVE actions](HUMAN_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md), with every
+  changed row in
+  [`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+  - 22,013 bare `protein binding` rows: audited by script against the protein-binding
+    policy; no action changed.
+  - 1,789 other rows, read one at a time: 1,381 stand; 178 → MARK_AS_OVER_ANNOTATED,
+    123 → KEEP_AS_NON_CORE, 34 → UNDECIDED, 30 → TOO_GENERAL, 26 → ACCEPT, 17 → MODIFY.
+  - Follow-up, 12 November: 15 of the 34 UNDECIDED rows settled from annotation
+    provenance, curated UniProt statements and independent papers (8 → MODIFY,
+    5 → KEEP_AS_NON_CORE, 1 → ACCEPT, 1 → MARK_AS_OVER_ANNOTATED), with 7 further `source_defects`;
+    19 rows remain UNDECIDED, each waiting on the full text of one paper.
+  - Same change: five SIRT2 rows that cite a study of "Sir2", probably SIRT1
+    (PMID:12887892), reviewed on evidence about SIRT2 itself; 5 more `source_defects`,
+    and two of the rows are now UNDECIDED.
+  - Removals of proteomics observations (HDA) mostly fell (39 of 45); removals of
+    phylogenetic annotations (IBA) almost all stand (209 of 216).
+  - 64 `source_defects` recorded (40 wrong gene product, 12 wrong term, 7 wrong
+    reference, 3 wrong evidence code, 2 wrong With/From).
+  - All 12 removed NOT rows and all 11 removed ND rows stand.
+
+  Principle: REMOVE is for a claim that is unlikely to be correct. A duplicate row, a
+  true but broad term, an unimportant but real observation and an experimental
+  annotation that could not be read each have their own action.
 
 - **All NOT/negated annotations (143 total across human genes)** — fully adjudicated.
   Distribution: 127 ACCEPT, 8 KEEP_AS_NON_CORE, 3 MARK_AS_OVER_ANNOTATED, 2 UNDECIDED,
@@ -146,6 +185,9 @@ The per-batch progress log is retained below as the audit trail.
   CAVEAT: the scan's awk errored on some files (ASCL1, ATF3, ...), so this is NOT a
   complete audit — those two are captured separately under Needs literature via the
   reliable per-gene digest sweep, which remains the primary method.
+  *Superseded in November 2026* by the complete REMOVE re-review above, which read all
+  279 REMOVE rows with IDA, IMP, EXP or IGI evidence outside bare protein binding and
+  changed 71 of them.
 
 ## Progress log
 
@@ -235,6 +277,10 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
 
 (gene — annotation — old action → new action — rationale)
 
+The three edits of the July sweep are listed here. The 408 action changes of the
+November 2026 REMOVE re-review, in 186 reviews, are listed row by row in
+[`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+
 - **ABL1** — GO:0004515 nicotinate-nucleotide adenylyltransferase activity (TAS,
   PMID:20841568) — UNDECIDED → **REMOVE**. Biologically implausible (ABL1 is a
   tyrosine kinase, no NAD-biosynthesis role); the cited reference is a review of
@@ -259,6 +305,10 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
 
 (gene — annotation — the tension)
 
+All four were settled in the November 2026 REMOVE re-review; the outcome is added
+to each entry, and the detail is in
+[Re-review of REMOVE actions](HUMAN_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
+
 - **AGO3 / AGR2 — REMOVE of negated (NOT) experimental annotations** — reviewed and
   agreed, but flagging the pattern. AGO3 GO:0035279 NOT (IDA, 2004) removed because a
   2017 paper (PMID:29040713) directly shows guide-dependent AGO3 slicer — legitimate
@@ -267,6 +317,7 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   stress assay), and PMID:34237462 shows an AGR2 mutant impaired in alleviating
   tunicamycin ER stress — direct positive contradicting the gene-level NOT. Both OK,
   but removing NOT annotations warrants curator awareness.
+  *Resolved:* both removals stand; each negative is contradicted by later direct evidence.
 
 - **ATP23 — DSB-repair / DNA-PK moonlighting removals** — reviewed, agree on the
   reannotation but flagging. ATP23 was formerly XRCC6BP1/KUB3 and carries DSB-repair
@@ -275,6 +326,8 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   is not a kinase). REMOVE of the DSB-repair *process*/complex is more debatable — those
   reflect documented (if minor) KUB3 associations, and the reviewer's mitochondrial-
   protease reannotation is strong but supersedes rather than disproves the moonlighting.
+  *Resolved:* the DNA-PK complex (NAS) and non-homologous end joining (TAS) rows are now
+  MARK_AS_OVER_ANNOTATED; the kinase activity row stays REMOVE.
 
 - **GAPDH — aggressive REMOVE of documented moonlighting** — reviewed, not edited.
   ~43 REMOVEs; generic-parent and NADP-binding removals clearly correct (GAPDH is
@@ -284,6 +337,9 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   Guideline would prefer KEEP_AS_NON_CORE for real-but-non-core functions; REMOVE is
   stronger than warranted for the well-supported ones. Consistent with project's
   anti-over-annotation stance so left as-is, flagged for curator.
+  *Resolved:* 13 rows changed. The GAIT-complex translation rows are ACCEPT,
+  ribonucleoprotein complex is MODIFY to GAIT complex, nine moonlighting rows are
+  KEEP_AS_NON_CORE and lipid droplet is MARK_AS_OVER_ANNOTATED. NADP binding stays REMOVE.
 
 - **HSPA1B — REMOVE of own IDA core-chaperone annotations** — reviewed, not edited.
   HSPA1B (HSP70-1B) is ~99% identical to HSPA1A (HSP70-1A). HSPA1A's review keeps more
@@ -293,10 +349,22 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   retained on HSPA1B via other-evidence rows, but the twin-gene handling is
   inconsistent — verify these IDAs aren't genuine HSPA1B experimental data being lost
   (guideline: don't REMOVE experimental annotations you can't refute).
+  *Resolved:* 12 HSPA1B rows changed, among them five direct-assay rows to ACCEPT and
+  unfolded protein binding to MODIFY (protein folding chaperone); four HSPA1A rows were
+  changed with them so that the twin genes agree. The electronic centriole row of
+  HSPA1B (previously MARK_AS_OVER_ANNOTATED) was aligned with its accepted
+  direct-assay rows.
 
 ## Needs literature (cannot adjudicate from YAML + cache)
 
 (gene — annotation — the specific question a lit search must answer)
+
+Both were given the guideline-preferred fallback in the November 2026 REMOVE
+re-review. The same pass left 32 further rows UNDECIDED for want of full text; each
+reason states the question, and they are listed in
+[`remove_rereview_changes.yaml`](HUMAN_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+A follow-up on 12 November settled 15 of the 34, the ASCL1 rows among them; the 19
+that remain are listed in the same file under `undecided_followup`.
 
 - **ASCL1** — GO:0045665 negative regulation of neuron differentiation (**IDA** and
   IEA) both REMOVEd. ASCL1 is the canonical proneural bHLH activator, so the
@@ -305,9 +373,17 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   (Kageyama oscillatory-vs-sustained model) that could underlie a genuine "negative
   regulation of neuron differentiation" IDA. Verify the IDA source paper before
   endorsing removal; guideline-preferred fallback would be UNDECIDED for the IDA.
+  *Now KEEP_AS_NON_CORE* (IDA and IEA rows). The pass left both UNDECIDED; the
+  follow-up found that the IEA donor is rat Ascl1, annotated by direct assay from a
+  study whose abstract reports that forced Mash1 expression lowered the yield of GABA
+  neurons from hindbrain and spinal cord precursors (PMID:17936272). The claim is kept
+  as a non-core, region-dependent effect. The paper of the human IDA row was read only
+  as an abstract, which shows an expression change and no functional assay.
 - **ATF3** — GO:0001228 DNA-binding transcription activator activity (**IDA**) and
   GO:0045944 positive regulation of transcription by Pol II (**IDA**) REMOVEd; the
   reviewer treats ATF3 as primarily a repressor. But ATF3 has documented context-
   dependent activator function (heterodimers with c-Jun). Removing the activator IDA
   annotations may lose real biology; verify the source papers. Guideline-preferred
   fallback: UNDECIDED / KEEP_AS_NON_CORE rather than REMOVE.
+  *Now ACCEPT:* the activator rows share their terms with rows the review already
+  accepts, so they take the same action.

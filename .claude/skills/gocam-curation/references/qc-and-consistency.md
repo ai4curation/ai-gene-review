@@ -35,6 +35,8 @@ Record every specific issue observed (multivalued):
 | `ORPHAN_ACTIVITY` | no causal edges | causal-relations.md |
 | `MISSING_EVIDENCE` | no ECO code / reference | — |
 | `COMPLEX_SUBUNIT_REPRESENTATION` | wrong subunit/complex attribution | complexes.md |
+| `UNRESOLVED_COMPARTMENT` | `occurs_in` reaches no distinct compartment (e.g. chromatin) | compartments.md |
+| `NONADJACENT_COMPARTMENTS` | causal edge skips a compartment (e.g. cytosol → extracellular) | compartments.md |
 
 Use no flag rather than a near miss: `verdict` and `source_defects` already
 carry the signal, and an inaccurate flag poisons flag queries.
@@ -70,6 +72,7 @@ literature; see `docs/gocam_lint.md`.
 - [ ] `has input` names the substrate/target-gene/effector/cargo — not a ligand or raw DNA.
 - [ ] Causal edges are direct/indirect as the mechanism warrants, pointing subject→object.
 - [ ] `occurs_in` and `part_of` present where known.
+- [ ] Each `just gocam-compartments` lead checked against the evidence, and either flagged with the missing step named or dismissed in `notes`.
 - [ ] Every activity/edge has an ECO code + reference; claims have verbatim support.
 - [ ] Complex activities attributed to the right subunit(s).
 - [ ] `verdict`, any `qc_flags`, and `consistency` recorded for every activity.

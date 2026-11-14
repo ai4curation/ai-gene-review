@@ -81,3 +81,30 @@
 - Cofactor-binding MFs GO:0030170 (PLP binding) and GO:0042803 (homodimerization) are real (structure)
   but supportive, not the core catalytic function -> ACCEPT / KEEP_AS_NON_CORE.
 - Location cytosol (Reactome TAS) ACCEPT; mitochondrion (IBA + HTP) MARK_AS_OVER_ANNOTATED.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IBA (GO_REF:0000033, is_active_in) and GO:0005739 HTP (PMID:34800366,
+MitoCoP, located_in). No sub-compartment rows.
+
+Checks:
+- PAINT: `interpro/panther/PTHR10851/PTHR10851-paint.tsv` puts GO:0005739 at PTN000091367
+  (taxon:2759), seeds AGI_LocusCode:AT5G49970 (PPOX1/PDX3, Q9LTX3) and SGD:S000000239 (PDX3,
+  P38075), identities checked via UniProt REST. QuickGO (2026-11-03): Q9LTX3 has TAIR IDA
+  mitochondrion (PMID:24599492); P38075 has SGD IDA GO:0005758 intermembrane space
+  (PMID:22984289). The node is soundly seeded.
+- MitoCoP (PMID:34800366) is a human proteome, not mouse as the earlier notes said
+  [PMID:34800366 "we combined subtractive proteomics, spatial proteomics, mitochondria-specific importomics, and literature/database curation by stringent criteria"].
+  Per-protein calls are in supplementary tables, not in the cached text.
+- MitoCarta3.0: PNPO listed; evidence "APEX_matrix, yeast mito homolog++, coexpression, MS/MS";
+  SubMitoLocalization "Matrix"; MSMS "0-25pure" (2 mouse tissues); TargetP score 5; HPA column
+  "Cytosol;Nucleoplasm (Enhanced)". Not a cached, citable source.
+- UniProt Q9NVS9 has no subcellular-location comment, no transit peptide, no TM. Reactome puts
+  both reactions in the cytosol.
+
+Outcome: both rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (DTYMK precedent: MitoCoP plus
+MitoCarta3.0 with an in-cell APEX line; bulk enzyme cytosolic). IBA propagation_review root
+cause PROPAGATION_BAD -> NO_FAILURE_NON_CORE. PMID:34800366 reference_review changed from
+MISCITED to VERIFIED. `is_active_in`: not shown (no PNPO activity measured in human mitochondria).
+Stay at the root: the sub-compartment lines disagree (APEX matrix vs yeast IMS seed) and
+there is no targeting signal.

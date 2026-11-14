@@ -31,3 +31,29 @@ The `GO:0071288 cellular response to mercury ion` row from PMID:8584435 should
 be removed. The evidence is an inhibitor experiment with
 p-chloromercuribenzene sulphonate in oocyte glycerol-flux assays, not evidence
 that GlpF performs an E. coli cellular mercury-response process.
+
+## 2026-11-03 review completion
+
+- No deep-research provider file exists for this gene; the review rests on the
+  cached PubMed records (all abstract-only), the UniProt record and the PAINT
+  file for PTHR43829 (node PTN000440994 carries the GO:0005886, GO:0015254 and
+  GO:0015793 IBDs, with P0AER0 as a seed).
+- NOT water rows (GO:0005372, GO:0006833; PMID:8584435) changed from UNDECIDED
+  to REMOVE, with source_defects (UNIPROT, CHECK). UniProt's own curated
+  FUNCTION text says GlpF is "less well permeated by water (PubMed:11226336)",
+  the structure/MD paper shows a water single file and a mutant with increased
+  water permeability [PMID:11964478 "an increased water permeability for the
+  W48F/F200T mutant"], and the PubMed abstract of PMID:11226336 (not cached;
+  checked on PubMed) reports purified GlpF raising proteoliposome water
+  permeability up to 10-fold. A positive water-channel term was not proposed;
+  recorded as a suggested question.
+- Generic InterPro2GO rows (channel activity, membrane, transmembrane
+  transport) changed from MARK_AS_OVER_ANNOTATED to MODIFY toward GO:0015254,
+  GO:0005886 and GO:0015793. GO:0015168 rows stay MODIFY to GO:0015254.
+- GO:0071288 cellular response to mercury ion kept as REMOVE; added a
+  WRONG_TERM source defect (UNIPROT).
+- Every row now has verbatim supported_by quotes; status set to COMPLETE.
+
+## 2026-11-04 (PR #5936 review follow-up)
+
+- Cached PMID:11226336 (abstract). Its proteoliposome result (water permeability up to 10-fold over control liposomes) and the UniProt FT MUTAGEN 236..237 PL->FW quote (no detectable water or glycerol permeability; ECO:0000269 PubMed:11226336) now support both NOT-water REMOVE rows. The same weak-but-measurable water conduction is why the PTHR43829 family review withholds water channel activity from bacterial GlpF members.

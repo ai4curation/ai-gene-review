@@ -44,6 +44,10 @@ For each activity, work through these and record the outcome in the
 4. **Complexes** — right active subunit vs complex term.
    → `references/complexes.md`
 5. **Context & evidence** — `occurs_in`, `part_of`, ECO + reference present.
+   `just gocam-compartments <model_id>` lists leads: `occurs_in` terms that
+   reach no distinct compartment, and causal edges between compartments that do
+   not touch. Check each against the evidence before flagging it.
+   → `references/compartments.md`
 6. **Verdict, QC flags, and consistency with the gene review** — the controlled
    vocabularies and the final checklist.
    → `references/qc-and-consistency.md`
@@ -62,6 +66,7 @@ you hit that case. They map directly onto the schema enums (`GoCamClaimVerdictEn
 - `references/has-input.md` — `has input` semantics per activity type.
 - `references/causal-relations.md` — direct/indirect causal, directionality, mechanism vs phenotype.
 - `references/complexes.md` — complex subunit representation.
+- `references/compartments.md` — unresolved locations (e.g. chromatin) and causal edges that skip compartments.
 - `references/qc-and-consistency.md` — verdict scale, QC-flag glossary, consistency categories, checklist.
 
 ## Workflow
@@ -69,6 +74,7 @@ you hit that case. They map directly onto the schema enums (`GoCamClaimVerdictEn
 ```bash
 just gocam-lint <model_id>             # structural anomalies to check first
 just seed-gocam-review <model_id>      # one PENDING entry per cached annoton
+just gocam-compartments <model_id>     # location / adjacency leads to check
 # ... assess each activity using this skill ...
 just validate-gocam-review gocams/<model_id>/<model_id>-review.yaml
 ```

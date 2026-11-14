@@ -1,0 +1,31 @@
+# MCL-PHA source and taxon consultation
+
+The supported module is intracellular storage-polyester synthesis and mobilization. Its core starts at supplied (R)-3-hydroxyacyl-CoA, uses a compatible mcl-active PhaC to polymerize it, and uses an intracellular PhaZ to remobilize stored polymer. Requiring both activities describes the combined synthesis-and-mobilization profile; it does not make PhaZ necessary for polymer synthesis alone. PhaC1 and PhaC2 are alternative realizers, not two sequential reactions. Family membership or a generic acyltransferase/hydrolase annotation alone cannot establish either substrate role.
+
+Retain PhaG as optional upstream routing. PMID35338129 supports forward ACP-to-CoA transfer with discriminating heterologous genetic controls, whereas PMID12200450 directly measures the reverse transfer to ACP. PMID22101037's free-hydroxyacid/ligase observations remain valid, but their attribution to intrinsic PhaG hydrolysis is not uniquely determined. The 2022 controls favor transacylation and endogenous downstream thioesterases as the alternative explanation. Avoid presenting both chemistry models as equally supported, claiming purified forward kinetics, or requiring a CoA ligase for every PhaG-containing native organism. These references are now normally cached without altering earlier sources.
+
+Three full reviews were manually read: DOI10.1007/s10924-024-03474-4 (classification, substrate scope, intracellular/extracellular depolymerases); PMID38845815 (wild-type producer/substrate and composition overview); PMID28425176 (Pseudomonas phasins and granule organization). The first is a review despite publisher OriginalPaper metadata. The second reports non-Pseudomonas mcl producers, but those reports do not establish specific matching enzymes. Do not use Pseudomonas-only as a universal biological restriction, or taxonomic names as a substitute for source-qualified roles. Class II is a useful positive anchor, not proof that all class I proteins are incapable of mcl acceptance. Phasins and beta-oxidation are relevant adjacent systems outside this core boundary.
+
+## Minimal informative panel
+
+| Strain / official code | Genes / accessions | Evidence and limit |
+| --- | --- | --- |
+| KT2440 / PSEPK | phaA/PhaC1 Q88D25; phaC/PhaC2 Q88D23; phaZ Q88D24; phaG O85207 | Existing reviewed panel; native and heterologous evidence must remain source-specific. KT2442 proteins used in PMID17170116/41055782 are not a native KT2440 assay by title alone. |
+| GPo1 / ECTOL | phaC1 P26494; phaC2 P26496; phaZ P26495 | Official M58445 translations match559/559,560/560,283/283 residues. UniProt ties the original study to GPo1. Original locus complementation and full PMID11133449 native turnover support a separate strain-qualified core. |
+| PAO1 / PSEAE | phaG Q51553 | AF209711/AAF61903.1 matches300/300 residues; archived source ATCC15692 and curated PAO1 record bridge the strain. Native gluconate phenotype plus heterologous complementation support optional routing; not a complete separately verified PAO1 module panel. |
+
+Current UniProt names GPo1 proteins Ectopseudomonas oleovorans. Literature also says P. oleovorans or P. putida GPo1. These are names for the same assayed strain, not extra taxon replication. Historical M58445 gene names phaA/phaB/phaC correspond to modern phaC1/phaZ/phaC2. Do not confuse phaA with an unrelated PHB-pathway thiolase.
+
+P26494/P26496 are PTHR36837:SF5. P26495 is **PTHR43798:SF5**, unlike Q88D24/PTHR43433:SF5. Both may perform intracellular PHA depolymerization; the differing broad classifications are not a reason to silently force one family onto the other. Q51553 is PTHR43194:SF5. These are official classifications from saved UniProt JSON, not invented evolutionary nodes or universal functional grants.
+
+A complete PAO1 PhaC/PhaZ expansion is not needed to establish an additional mechanism here. PMID10952003 offers valuable purified class II synthesis evidence, but its abstract does not fully resolve exact construct strain identity. Historical X66592 depolymerase and C2 match current G3XD91 and G3XCZ9, whereas historical C1 is557aa versus current G3XCV5 559aa. Preserve that unresolved difference rather than calling an entire modern PAO1 panel directly assayed. Q9KJH8 belongs to another E. oleovorans strain, not GPo1, and its available UniProt sequence reference alone is not equivalent to the PAO1 genetic evidence.
+
+## Native turnover and substrate boundaries
+
+Full PMID11133449 was recovered from the University of Buenos Aires repository, while its protected normal cache remains abstract-only. GPo500 is a leaky phaZ mutant. Complementation uses a fragment containing phaC1 plus phaZ and promoter, not a purified single-enzyme reconstitution. Figures5–6 measure native polymer decline and nucleotide correlations. The primarily C8/C6 polymer and the degradation phenotype support mobilization; stress resistance and ppGpp accumulation are downstream consequences, not new intrinsic PhaZ activities. Its introductory acyl-CoA language is not a product-resolved depolymerase assay.
+
+PMID41055782 uses KT2442-derived pPAZ3 and KT2442 genomic templates despite KT2440 in the title. E. coli supplies the expression host; GPo1 supplies radiolabeled polymer. The purchased test polymer is mainly C8 with C6. WT esterase activity and intracellular mcl-polymer activity do not mean extracellular polymer depolymerization or broad all-polyester activity. A complete KT2442-to-Q88D24 sequence bridge was not established by this consultation; another agent owns the detailed17170116 native-granule scope. Do not manufacture an exact-sequence claim from the fact that KT2442 is a derivative of KT2440.
+
+## Access and preservation
+
+`reference-ledger.yaml` records source-specific access grades, manual assessments and11 checked short quotations. Failed PMC/EuropePMC/publisher routes are recorded in `access-attempts.json`; challenge HTML is never full text. `preflight-transfer-receipt.json` preserves the original root-worktree handoff and exact byte copies into the dedicated ignored cache. `identity/` contains official source records and reproducible exact-CDS comparisons. No original curated file, raw/provider file or preexisting publication was edited. Root owns module, family and gene integration.

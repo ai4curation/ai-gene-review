@@ -34,3 +34,7 @@
 - The old `GO:0051276 chromosome organization` IMP row comes from a dosage
   chromosome-stability screen rather than normal Ytm1 mechanism. I marked it
   over-annotated and did not propagate it to the core function.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[2], GO:0003674 molecular_function (ND, GO_REF:0000015), ACCEPT: the ND may be stale. These notes cite yeast Ytm1 papers showing that Ytm1 binds directly to Erb1 in the Nop7-Erb1-Ytm1 subcomplex (PMID:16287855) and that Rea1 releases the Ytm1-Erb1-Nop7 subcomplex from the nascent 60S particle (PMID:20542003, PMID:36929751); the notes also describe the Ytm1 MIDO/UBL region as the conserved Rea1 handle. Those are direct molecular studies of this gene product in S. cerevisiae, so a curator should decide whether they support an informative MF, such as a structural or adaptor activity within the pre-60S particle, instead of ND. The review's 2026-10-31 re-check judged that an interaction alone identifies no activity. The review action was left unchanged.

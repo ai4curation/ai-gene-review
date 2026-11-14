@@ -1,0 +1,7 @@
+# CUPNH PhaC class-I comparator
+
+P23608/H16_A1437 is COMPLETE with all three ordered source payloads unchanged: two MODIFY refinements (cytoplasm to dynamic granule location; acyltransferase to non-amino-acyl transfer) and canonical PHB-biosynthesis ACCEPT. No NEW or retired rows. The specific polymerase proposal remains separate from the valid GO genus.
+
+Normal new source caches2670936 and28389545 are included in this handoff. Both caches are abstract-only; the2017 full primary was additionally read from the publisher. Original1989 native H16 complementation supports PHB synthesis. The2017 chromosomal-fusion study supports granule association and subsequent detachment, not a permanently bound population or PhaM DNA-binding activity on PhaC. The frozen class-I source package establishes context-dependent mixed SCL/MCL incorporation, not pure/predominantMCL polymer or complete nativeMCL turnover. Its reference-sequence bridge is independently reproduced by this checker; the2000 full assay construct remains unresolved.
+
+Focused validation has zero warnings; render/history/preservation/Ruff pass. Falcon failed403 honestly, with manual notes instead of fabricated provider output. PAINT did not resolve a target leaf, so no loss-free ancestry claim is made. All59 original protected sources and prior PSEPK/PAO1/class-I receipts remain unchanged. Run check_preservation.py to reproduce exact payload/raw/reference-sequence and prior-handoff checks. No module/family/project edit, full-corpus run, commit or push occurred.

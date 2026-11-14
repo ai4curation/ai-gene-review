@@ -1,0 +1,15 @@
+# Bacterial GroEL/GroES comparative audit
+
+The required folding cage contains GroEL and GroES family active units, sampled in E. coli K-12, P. putida KT2440, B. subtilis 168, M. tuberculosis H37Rv and Caulobacter NA1000/CB15N. Bacterial scope denotes capacity where present. Optional E. coli and Caulobacter CnoX branches retain distinct chemistry and evidence limits.
+
+Twelve gene reviews are COMPLETE. The frozen baselines and root preservation proof establish 201 original ordered annotation payloads, including two inherited NEW rows; no rows were added. This corrects the initial arithmetic of 202. All 81 unique frozen sources are unchanged. Three mandatory consultations were independently hash-verified; their proofs, genuine failed Falcon attempts, and PAINT availability limits are retained here. A failed provider run is not represented as a research report.
+
+Twelve manually assessed module references contain sixteen findings. Family grounding verifies official labels and all ten cage representatives against the release-pinned PANTHER member index. The heterogeneous GroEL family is qualified by independently reviewed activity. CnoX descriptors intentionally omit an unestablished PANTHER identifier.
+
+Module schema and custom validation pass. Seven conformance advisories reflect the holdase ontology gap and unresolved family-wide GroEL activity, not unreviewed member functions. The production compiler treats the folding cage as one atom; the source-based oracle explicitly checks its two active units, activity and compatible pairing. Its 24 cases include five cognate pairs, one experimentally supported heterologous pair, missing witnesses and arbitrary pairing controls. Passing this panel does not establish native flux, universal presence or kinetic order.
+
+Full-corpus validation passed on science commit 6332a1d51e0e1488c73d594a62e1cfb2aeb9f458: 10,742 gene reviews, zero blocking errors and 220 frozen inputs. See full-run-proof.json for advisory counts and the exact scope. main-integration-proof.json records preserved-science integration; prepublication-lint-proof.json records equivalent checker formatting. Independent review, CI and actual merge remain required. Module status COMPLETE records curation readiness; the audit tracker is not COMPLETE until merge.
+
+## PR review follow-up, 2026-11-07
+
+See round1-review-response.md and round1-root-receipt.json for the corrected citation provenance, two annotation-action changes, refined holdase parent and core-complex context. Focused checks pass. The original full-corpus result above remains historical; a fresh full run is required for these scientific changes.

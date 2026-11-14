@@ -52,3 +52,17 @@ therefore drawn from the UniProt record and homology-based family knowledge.
 - ATP binding/hydrolysis: although they are "broad" P-loop NTPase terms, ATP binding and
   hydrolysis are the mechanistic engine of UvrA's ABC-ATPase damage-recognition cycle, so
   they are accepted as core rather than marked over-annotated.
+
+## Re-check (2026-11-10, Claude (AI-assisted))
+- Re-reviewed alongside the new E. coli UvrA review (genes/ECOLI/uvrA, P0A698) so shared
+  terms carry the same actions.
+- General-but-correct rows (catalytic activity, DNA repair, DNA damage response,
+  cytoplasm) changed from MARK_AS_OVER_ANNOTATED/ACCEPT to MODIFY with specific
+  replacements (ATP hydrolysis activity; nucleotide-excision repair; cytosol), matching
+  the E. coli review; every row now has a verbatim supported_by.
+- Replaced the UniProt keyword quote ("Zinc-finger") on zinc ion binding with the E. coli
+  ortholog's curated note [UniProt P0A698 "Binds about 2 zinc atoms/molecule."].
+- Damage-specific DNA binding is supported by the E. coli ortholog
+  [PMID:19208636 "AFM analysis of UvrA bound to a DNA substrate containing a defined lesion revealed that ATP is not required for damage detection."];
+  SOS-regulon membership by E. coli evidence
+  [PMID:19183285 "The SOS regulon includes the uvrA and uvrB genes involved in the nucleotide excision repair (NER) pathway"].

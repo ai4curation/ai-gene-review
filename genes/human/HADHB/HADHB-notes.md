@@ -1,5 +1,27 @@
 # HADHB Review Notes
 
+## 2026-11-14 UTC — Current corrections and PR #6317 follow-up
+
+**Retired rows preserve historical judgments, not current endorsements.**
+All six retired source/review blocks remain byte-identical, following
+docs/goa_source_refresh.md. The retired GO:0050633 claim that native UniProt
+lists EC:2.3.1.155 is superseded: the refreshed record lists EC:2.3.1.16.
+Current GO:0050633 support instead uses the exact RHEA:18161 reaction.
+The retired GO:0016740, GO:0006629 and GO:0006631 KEEP_AS_NON_CORE rationales
+calling those terms too general are also superseded historical judgments.
+
+Refine mouse viperin binding to enzyme binding, add positive mouse lncFAO
+association evidence with the human direct-binding caveat, and remove the human
+GO:0044877 IEA with the contradicted rat donor identity. Retain the source
+CHECK/PROBABLE request without guessing a unique replacement. Keep four disputed
+location rows UNDECIDED with separate IEA/IDA rationales. Add exact reaction
+support for six current GO:0050633 rows and bounded C4-flux/MALAT1-binding gaps.
+
+The PTHR18919 C4 node and term scope remain UNRESOLVED; positive known-member
+information is retained without inventing a boundary, loss or HADHB exception.
+All 63 current contexts, six retired records and native source fields remain;
+no NEW annotation or cached-source change is introduced.
+
 ## 2026-02-05: Initial Review
 
 ### Context
@@ -55,3 +77,76 @@ HADHB is relevant to AD metabolic dysfunction through:
 3. **Lipid metabolism** - Dysregulated in AD brains
 
 The Recon3D error could affect metabolic modeling of AD brain metabolism.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and IDA (PMID:21527675); no qualifier recorded in the review; no ER sub-compartment rows.
+
+- UniProt: "Mitochondrion outer membrane {ECO:0000269|PubMed:21527675}. Endoplasmic reticulum {ECO:0000269|PubMed:21527675}." Both rows trace to the viperin/HCMV paper.
+- PMID:21527675 (Science 2011; abstract only, no PMC id): the abstract describes viperin relocalizing from the ER to mitochondria and binding the trifunctional protein there; it says nothing about an ER pool of HADHB itself, or about an ER marker. The existing reasons' "viral-induced localization" reading is therefore not established; noted in both reasons.
+- Topology: FT TRANSIT 1..33 (mitochondrion); no ER signal, TM or retention motif; any ER pool would be cytosolic-face; stays at root.
+- Outcome: both rows stay KEEP_AS_NON_CORE, deferring to the curator's full-text reading; UniProt curated location quote added. Close call with MARK_AS_OVER_ANNOTATED if the ER signal is fractionation cross-contamination (MAM), stated in the reasons.
+
+## 2026-11-12 ClinGen re-review
+
+The manual research supplement records the primary-source checks and supersedes
+unsupported interpretations in earlier entries. The biological description now
+separates beta thiolysis from alpha hydratase/dehydrogenase activity without an
+absolute “ONLY” claim or a C10–C16 substrate cutoff. Native-complex and recombinant
+HADHB C4 measurements conflict; both C4 assertions remain UNDECIDED. The matching
+PTHR18919 node assessment and term scope are UNRESOLVED, with no invented loss,
+pruning node or reassignment of family members.
+
+The current source export has 63 rows, all canonical P55084. Six older assertions
+are absent from a second complete QuickGO query (63/63 hits, 2026-11-12):
+
+| Term | Evidence | Reference |
+|---|---|---|
+| GO:0050633 | IEA | GO_REF:0000120 |
+| GO:0016740 | IEA | GO_REF:0000043 |
+| GO:0016746 | IEA | GO_REF:0000120 |
+| GO:0006629 | IEA | GO_REF:0000043 |
+| GO:0006631 | IEA | GO_REF:0000043 |
+| GO:0016507 | IEA | GO_REF:0000120 |
+
+Following `docs/goa_source_refresh.md`, these six records retain their original
+review blocks and source fields with `retired: true`. Retirement records source
+disappearance, not biological rejection. All 69 records remain available. The 63
+current contexts have 38 ACCEPT, 8 MODIFY, 7 KEEP_AS_NON_CORE, 2 REMOVE and 8
+UNDECIDED decisions; no NEW or PENDING rows remain. The file remains DRAFT because
+the unresolved evidence is explicit.
+
+Six current binding contexts are refined to enzyme binding (five HADHA contexts
+and human viperin). GABARAPL1, MTLN and mouse-viperin rows retain the project's
+non-core treatment of supported generic interactions. The later human viperin
+experiment does not independently verify details of the mouse-viperin context.
+RNA-associated and macrophage-response evidence is retained with species and
+assay limitations. The human MALAT1 study does not establish direct affinity or
+purified HADHB kinetics.
+
+The rat complex-binding transfer is UNDECIDED with a probable source-identity
+defect marked CHECK, not reported upstream. PMID:20132223 calls its TH peroxisomal.
+Its antibody peptide core matches ACAA1 paralogs rather than rat HADHB; no unique
+replacement donor is guessed. ER, outer-membrane and nucleoid assertions are also
+UNDECIDED. Earlier explanations about import intermediates, contamination,
+membrane-face topology and HADHB-specific negative DNA cross-linking were not
+established by the accessible sources and are withdrawn as review reasoning.
+
+Reactome GOA rows assert inner-membrane location. Their reaction titles do not
+alone assert that HADHB independently catalyzes HADHA's chemistry; the earlier
+question suggesting removal of those location annotations was therefore replaced.
+The inherited Recon3D and Alzheimer's paragraphs were not revalidated in this
+session and do not support new GO assertions.
+
+Native UniProt/GOA were refreshed through the fetcher. The existing Falcon report
+and pre-existing publication caches remain unchanged. Four additional publications
+were fetched by the normal cache pipeline. The viperin paper's cache remains
+abstract-only after a provider-chain attempt; a short primary-page Methods excerpt
+and access limits are recorded in the manual supplement. No new checkout or
+environment was created.
+
+Several inherited quotations were stitched with ellipses, paraphrased, or applied
+to HADHB more specifically than their source allowed. Those evidence strings were
+corrected or removed; this session does not claim that every old quotation is
+byte-identical. Retired review blocks remain historical and are not an endorsement
+of their older specificity or redundancy arguments.

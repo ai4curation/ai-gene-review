@@ -68,3 +68,16 @@ Project follow-up: the UPB decision-rule table routes ATP-dependent Hsp70s to
 GO:0140662, while its historical cross-species E. coli DnaK row still says
 GO:0044183. This one-gene PR follows the more specific current rule and leaves
 the project-table cleanup to a separate scoped change.
+
+
+## 2026-11-06 comparative DnaK-cycle audit
+
+The target remains an inferred ATP-dependent DnaK foldase. PMID:33668424 methods explicitly use PaW85 derivatives described as isogenic to KT2440, with dnaK amplified from the PaW85 chromosome; this supports physiological comparison but is not a purified Q88DU2 KJE cycle assay. E. coli luciferase reconstitution supplies the direct mechanistic comparison. The inherited NEW foldase row remains unchanged outside its review judgment.
+
+All historical annotation rows, including inherited NEW proposals, were preserved outside their review fields; no new annotation rows were added. Source UniProt/GOA, genuine research and prediction artifacts were protected against the pre-edit baseline. PAINT-loss checks found no applicable IRD or IKR.
+
+Primary scope: [PMID:1826368] separates DnaJ stimulation of DnaK-bound ATP hydrolysis from GrpE-mediated nucleotide release. [PMID:7937953] follows denatured firefly luciferase through the E. coli DnaK-DnaJ-GrpE cycle. [PMID:20953191] measures remodeling of a tested misfolded luciferase species; its ATP cost is assay-specific, not a universal per-client constant. Normal forced fetches of those papers and PMID:11162122 and PMID:9103205 succeeded but remained abstract-only. Exact assay construct and E. coli substrain details not stated in those abstracts are not invented. Existing curator assignments are retained where independently supported; the particular complex-assembly process rows citing PMID:9103205 remain UNDECIDED because a structural complex does not alone resolve the assembly-process assertion.
+
+Comparative boundary: [PMID:11162122, abstract] states "Here, DnaJ does not stimulate the DnaK-mediated ATP hydrolysis" for Thermus thermophilus. This is not negative evidence for the E. coli or KT2440 proteins, but rules out treating J-domain identity alone as a universal kinetic guarantee. Official QuickGO definitions were retrieved on 2026-11-06; GO:0051082 and GO:0003767 are obsolete, while GO:0044183 describes folding assistance and GO:0051087 binding to a chaperone protein. Client binding is not chaperone-partner binding.
+
+The pre-existing genuine Falcon report was read as background and preserved unchanged; primary and curated evidence control the review.
