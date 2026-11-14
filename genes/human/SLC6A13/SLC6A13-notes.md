@@ -29,7 +29,7 @@ GAT-2 carries, besides GABA, a range of small zwitterionic/β-amino substrates:
 Creatine transporter activity (GO:0005308) and creatine transmembrane transport
 (GO:0015881) are ISS transfers from a rodent ortholog, but the dedicated creatine
 transporter is SLC6A8/CRT. GAA (the creatine precursor), not creatine itself, is the
-GAT2 substrate; in the GAA study creatine showed [PMID:29175673 "creatine, a substrate of creatine transporter (CRT)/Slc6a8"] had little inhibitory effect on GAT2-mediated GAA uptake. Treated as over-annotation.
+GAT2 substrate; in the GAA study, creatine [PMID:29175673 "creatine, a substrate of creatine transporter (CRT)/Slc6a8"] had little inhibitory effect on GAT2-mediated GAA uptake. Treated as over-annotation.
 
 ## Localization
 
