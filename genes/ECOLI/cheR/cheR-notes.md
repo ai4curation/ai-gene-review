@@ -32,3 +32,10 @@ Nomenclature: cheX is the old name of cheR (UniProt GN line synonym), so the 197
   does not relay the signal; it resets receptor output). Phosphorelay (GO:0000160) not assigned to CheR:
   it does not participate in the histidine-aspartate phosphotransfer.
 - MCP complex IBA + IDA: KEEP_AS_NON_CORE (tethered, not a defined core subunit).
+
+
+## 2026-11-06 taxonomic module audit
+
+Retained all 18 annotation actions. Removed cytosol from the core activity location: a soluble CheR pool is demonstrated, but its receptor methylation occurs on receptor cytoplasmic domains at the membrane. Qualified the family-wide chemotaxis wording; CheR is not universal among chemosensory systems.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.

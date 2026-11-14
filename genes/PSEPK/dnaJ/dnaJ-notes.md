@@ -59,3 +59,16 @@ DnaJ coordinates structural zinc via its cysteine-rich (CR-type) zinc-finger dom
 - Core BP: protein folding, protein refolding, response to heat / cellular response to stress.
 - Non-core BP: DNA replication (plasmid/phage initiation) — a downstream application of chaperone activity,
   co-opting the DnaK/DnaJ/GrpE machine; not in this GOA TSV but noted for completeness.
+
+
+## 2026-11-06 comparative DnaK-cycle audit
+
+Corrected GO:0051087 core text to DnaK binding rather than binding unfolded client proteins. Retained the inherited ATPase-activator NEW as a HAMAP-supported comparative assignment, not an exact Q88DU3 kinetic assay. Autonomous disaggregation in the frozen UniProt HAMAP statement is not treated as a directly demonstrated KT2440 activity. Zinc binding and cytoplasmic function remain supported comparative assignments. Earlier notes categorically rejecting ATP binding from lack of a Walker motif are superseded: the electronic claim is over-annotated relative to the documented partner-activation mechanism, without a claim of biochemical impossibility.
+
+All historical annotation rows, including inherited NEW proposals, were preserved outside their review fields; no new annotation rows were added. Source UniProt/GOA, genuine research and prediction artifacts were protected against the pre-edit baseline. PAINT-loss checks found no applicable IRD or IKR.
+
+Primary scope: [PMID:1826368] separates DnaJ stimulation of DnaK-bound ATP hydrolysis from GrpE-mediated nucleotide release. [PMID:7937953] follows denatured firefly luciferase through the E. coli DnaK-DnaJ-GrpE cycle. [PMID:20953191] measures remodeling of a tested misfolded luciferase species; its ATP cost is assay-specific, not a universal per-client constant. Normal forced fetches of those papers and PMID:11162122 and PMID:9103205 succeeded but remained abstract-only. Exact assay construct and E. coli substrain details not stated in those abstracts are not invented. Existing curator assignments are retained where independently supported; the particular complex-assembly process rows citing PMID:9103205 remain UNDECIDED because a structural complex does not alone resolve the assembly-process assertion.
+
+Comparative boundary: [PMID:11162122, abstract] states "Here, DnaJ does not stimulate the DnaK-mediated ATP hydrolysis" for Thermus thermophilus. This is not negative evidence for the E. coli or KT2440 proteins, but rules out treating J-domain identity alone as a universal kinetic guarantee. Official QuickGO definitions were retrieved on 2026-11-06; GO:0051082 and GO:0003767 are obsolete, while GO:0044183 describes folding assistance and GO:0051087 binding to a chaperone protein. Client binding is not chaperone-partner binding.
+
+No genuine provider report was present. The normal Falcon command was attempted and returned HTTP403 authentication/access failure. These are manual audit notes, not a fabricated provider report.

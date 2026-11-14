@@ -1,0 +1,13 @@
+# PBP3 catalytic specificity: primary-source scope
+
+Source: Adam et al., 1997, PMID:9324244, DOI:10.1128/jb.179.19.6005-6009.1997. The full author postprint is deposited at [ORBi](https://orbi.uliege.be/handle/2268/4054); the normal publication cache contains its abstract. This analysis used the full eight-page author postprint, not an inferred reconstruction of the 1981 experiment.
+
+The assayed protein was E. coli PBP3p, an anchor-free G57–V577 construct, not intact native FtsI. Its beta-lactam acylation profile resembled that of membrane-bound PBP3, supporting folding but not proving equivalence of every substrate reaction. The discussion states:
+
+> PBP3p has no detectable activity on the tripeptide (acetyl)2-L-lysyl-D-alanyl-D-alanine
+
+This is the peptide substrate named in the current GO:0009002 hydrolysis definition. The negative result is limited to this construct and assay; it is not proof that every conceivable peptide substrate or condition is inactive. In contrast, the measured synthetic thioester reactions included hydrolysis with water and aminolysis with D-alanine or a peptidoglycan-related tetrapeptide; HPLC separated products and mass spectrometry characterized the tetrapeptide transfer product. These experiments distinguish a hydrolytic side capability from the physiological peptide cross-linking reaction.
+
+Radiolabeled E. coli lipid II was tested in two polymerization protocols, including conditions previously proposed for PBP3. PBP1b was active in the controls, but PBP3p did not produce detectable glycan polymer. The paper also cites an earlier negative assay with complete PBP3. The principal limitation is the absent membrane anchor and absence of a native activated divisome. The conclusion is strengthened independently by the class-B domain organization, the curated UniProt caution about the historical bifunctional assignment, and the later assignment of glycan polymerization to its SEDS partner FtsW. The 1981 full text PMID:7030331 could not be obtained here, so its purification, contaminants, and exact experimental controls are not claimed to have been re-examined. No specific contaminant is asserted.
+
+The physiological D,D-transpeptidase assignment also rests on E. coli cellular/ether-permeabilized-cell evidence (PMID:3531167) and septal synthesis inhibition (PMID:6450748), rather than treating synthetic-thioester aminolysis as a reconstitution of natural septal cross-linking. GO:0009002 explicitly uses water as acceptor; it is not a transpeptidation half-reaction. GO:0071972 is L,D-transpeptidation and changes the donor bond, so it is not a substitute. The existing proposed D,D-transpeptidase term supplies the precise core activity.

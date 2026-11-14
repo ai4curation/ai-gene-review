@@ -1,0 +1,13 @@
+# Comparative GroEL/GroES audit
+
+2026-11-07 UTC. The canonical cage is retained at bacterial scope where present, with required folding/co-chaperonin functions beside verified family classifications. PTHR45633 is heterogeneous and includes noncanonical chaperonin-related members; family membership cannot alone establish a compatible native cage. PTHR10772:SF58 supplies the classified GroES exemplars. CnoX descriptors deliberately omit a PANTHER identifier because ordinary thioredoxins share the available classification.
+
+Three reviews were examined: PMID19416363 and PMID25986150 in full publisher text, and PMID38714141 as abstract only. Their conclusions guide a bounded cross-species model rather than supplying untested member activities. The initial draft had eight assessed references and twelve findings; the integrated version has twelve references and sixteen findings. The 2012 mycobacterial primary, PMID22834700, explicitly supports Cpn60.2 complementation with cognate cochaperonins despite solution-dependent oligomerization; its unavailable full text limits strain and construct claims.
+
+PMID42567683 updates the E. coli occupancy model: same-ring CnoX/GroES coexistence is structurally possible. Substrate-free AMP-PNP states do not establish kinetic order or productive client folding. PMID30482828 and its official supplements establish CB15N Caulobacter proteins, constitutive CnoX holdase/redox activities and recovery with the Caulobacter cage; neither stable binding nor direct client transfer is inferred. The two CnoX mechanisms are separately scoped optional branches.
+
+Five existing reviews (121 rows, 67 protected sources) and seven new seeds (80 rows, 14 raw files) are frozen before consultation. At that initial checkpoint, member reviews and coverage checks were in progress. The completed integration is recorded below; no PR has yet been opened.
+
+GroEL/GroES comparative curation: 12 complete member reviews, 201 preserved original rows and no added rows; 12 assessed references with 16 findings. Five bacterial species, verified cage families and separately scoped CnoX mechanisms. Full validation, dedicated PR and actual merge remain pending.
+
+The released consultations were independently hash-checked. All 201 ordered original payloads and 81 unique frozen source files are preserved. The family membership index verifies ten cage representatives; no CnoX-specific PANTHER identifier is invented. Production module logic treats the whole folding cage as one atom, so source-based coverage must explicitly inspect both active units and same-system compatibility.

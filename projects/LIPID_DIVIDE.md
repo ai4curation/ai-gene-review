@@ -110,12 +110,14 @@ mixed genes.
    tetraether, GDGT or membrane-spanning lipid biosynthesis. Bacterial
    heptaprenylglyceryl phosphate synthase (PcrB) is annotated only to the
    generic `GO:0046474` glycerophospholipid biosynthetic process.
-4. **Probable family-level mis-mappings.** The *Flavobacterium johnsoniae*
+4. **Family-level mis-mappings, confirmed.** The *Flavobacterium johnsoniae*
    GGGPS (A5FJK8, an FCB bacterium with an experimentally supported
-   GGGP synthase activity, EXP, PMID:24684232) also carries
+   GGGP synthase activity, EXP, PMID:24684232) also carried
    `GO:0000107` imidazoleglycerol-phosphate synthase activity by PANTHER IEA
-   (PTN001846602). That may be a mapping from a related family and needs
-   checking against the PANTHER node.
+   (PTN001846602). Checking the node confirmed the mis-mapping: the review
+   removes the row and reports a `WRONG_TERM` defect to PANTHER. Shared
+   TIM-barrel architecture is not shared catalysis, and TreeGrafter transferred
+   the histidine-biosynthetic reaction across that divide.
 
 ## Review targets
 
@@ -184,26 +186,56 @@ Two modules have been built for this project:
 ## Plan
 
 1. **Scoping (this page).** Done.
-2. **Fetch and review Part A.** Fetched; egsA and pcrB reviews are deferred to
-   a later pass, with the evidence and planned actions recorded in their notes
-   files.
+2. **Part A: done.** egsA and pcrB are reviewed and complete. Two reviewer
+   critiques of the earlier draft plans were settled rather than carried over:
+   egsA's `MODIFY` of `GO:0006650` is now grounded on the enzyme's ~170-fold
+   kinetic bias toward DHAP reduction and on the GO convention shown by *E.
+   coli* GpsA, not on the undemonstrated claim that EgsA supplies PcrB; and the
+   planned `GO:0042158` row on pcrB was dropped, because PcrB contributes no
+   atom to the modified lipoprotein and a comparator sweep over donor-making
+   enzymes (FDPS, GGPS1, MAT2A, ACLY, bioB) shows none carries the term for the
+   modification that consumes its product.
 3. **Part B acyltransferases: done.** plsY and plsC are reviewed and complete.
    G1P use was recorded as a proposed term plus knowledge gaps, not as a
    function: the near-equal in vitro result is from detergent, PlsY prefers G3P
    in a membrane, no kinetics exist, and the in vivo G1P source is unidentified.
-4. **Check the A5FJK8 `GO:0000107` row** against the PANTHER node and the
-   protein's own sequence. If it is wrong, record it as an error pattern,
-   in the same form as [ARCHAEA annotation-patterns](ARCHAEA/annotation-patterns.md).
-5. **Ontology questions** for GO: process terms for archaeal-type
-   (isoprenoid ether, G1P) membrane lipid biosynthesis and for
-   membrane-spanning lipid (GDGT, brGDGT, iso-diabolic acid) biosynthesis.
+4. **A5FJK8 `GO:0000107`: done, and the suspicion was right.** The
+   [Fjoh_1584](../genes/FLAJ1/Fjoh_1584/Fjoh_1584-ai-review.yaml) review removes
+   the row and records a `WRONG_TERM` source defect against
+   `PANTHER:PTN001846602`. The TreeGrafter node transfers the glutamine-dependent
+   histidine-biosynthetic reaction across divergent TIM-barrel activities, while
+   the curated FUNCTION evidence on this protein specifies GGGPS chemistry.
+5. **Ontology questions** for GO, now four: an `sn`-glycerol 1-phosphate
+   biosynthetic process term (GO has `GO:0046167` for the G3P enantiomer only);
+   process terms for archaeal-type (isoprenoid ether, G1P) and for
+   membrane-spanning (GDGT, brGDGT, iso-diabolic acid) lipid biosynthesis;
+   whether `GO:0008611`'s C-1 wording should be clarified, since pcrB's row is
+   its first prokaryotic use; and whether excluding carrier- and
+   donor-synthesising enzymes from the process terms they feed is deliberate
+   practice, given that UppS and human/DPM1 are annotated the other way.
 6. **Modules: two built** (above). A G1P/G3P backbone-choice module could
    still link the bacterial and archaeal halves once both sides are reviewed.
-7. **Follow-ups from the modules:** review YvoF (O34993) and LhaT/YpjA
-   (P54392), both uncharacterized or putative in UniProt; bacterial CdsA
-   (PA to CDP-DAG) is modelled in no bacterial module.
+7. **Follow-ups from the modules.** YvoF (O34993) and LhaT/YpjA (P54392) are
+   both reviewed and complete, so the ether-lipid module's four assigned steps
+   now all have gene reviews behind them. Bacterial CdsA is also done:
+   [ECOLI cdsA](../genes/ECOLI/cdsA/cdsA-ai-review.yaml) (P0ABG1) reviews the
+   single reaction joining
+   [bacterial_phosphatidic_acid_synthesis](../modules/bacterial_phosphatidic_acid_synthesis.yaml)
+   to the CDP-DAG modules, which previously had no bacterial gene review
+   anywhere in the repository. It reports a `WRONG_QUALIFIER` defect to EcoCyc
+   and adds a non-core `GO:0009247` row for the MPIase branch, where CdsA itself
+   forms the first intermediate of the glycolipid that drives membrane-protein
+   integration.
 
 ## Open questions
+
+- **Settled by the pcrB review:** `GO:0008611`'s definition centres the ether
+  linkage on C-1, while HepGP's is on C-3 of G1P. The objection dissolves: C-3
+  is the carbon distal to the phosphate, the same physical position as C-1 in
+  the mirror-image G3P numbering used for plasmalogens, and the number differs
+  only because `sn` numbering is fixed by backbone stereochemistry. The
+  definition's two "normally" hedges cover it, so no new term is needed for
+  ether-bond formation as such.
 
 - Is G1P acylation by PlsY/PlsC a physiological activity in *B. subtilis*,
   where G1P lipids occur, or only in vitro promiscuity?

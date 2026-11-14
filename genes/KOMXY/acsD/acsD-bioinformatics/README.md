@@ -1,0 +1,3 @@
+# Exact construct/record identity audit
+
+Run `just` in this directory (Python >=3.10, standard library only). The script reads the frozen UniProt sequences, ENA EMBL translations and complete RCSB entity sequences; it reports complete target matches and any extra residues. Inputs were downloaded 2026-11-06 from https://www.ebi.ac.uk/ena/browser/api/embl/X54676 and https://data.rcsb.org/rest/v1/core/polymer_entity/{3AJ2,3A8E}/1. The BcsA companion input is https://www.ebi.ac.uk/ena/browser/api/embl/M37202. Source organism, strain, expression host and tags are retained separately. No biological function is inferred by this script. Substring matching detects exact matches only; a nonmatch does not quantify homology.

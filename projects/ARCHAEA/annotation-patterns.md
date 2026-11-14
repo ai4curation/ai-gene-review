@@ -1,6 +1,7 @@
 ---
 title: "Archaeal GO annotation error patterns"
-species: [METTH, METS5, SACS2, ACIAM, SULAC]
+species: [METTH, METS5, SACS2, ACIAM, SULAC, 9EURY]
+autolink_exclude: [Delta]
 ---
 
 # Archaeal GO annotation error patterns
@@ -253,6 +254,25 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   (IPR006159) to isomerase activity with `enables`; in split-subunit mutases the
   protein matching it binds the cofactor but does not catalyse alone (active
   enzyme needs both subunits, PMID:22752162).
+
+## 17. Methanogenesis and a methyl-specific activity on non-methanogenic MCR homologs
+
+- **Pipeline:** InterPro2GO. All seven MCR alpha entries (the family IPR016212 and
+  the domain entries IPR003183, IPR008924, IPR009024, IPR009047, IPR015811,
+  IPR015823) map to GO:0015948 methanogenesis and GO:0050524
+  coenzyme-B sulfoethylthiotransferase activity. ARBA adds the EC 2.8.4.1 name,
+  reaction, pathway and methane-forming direction to unreviewed entries.
+- **Example (methanotroph):** 9EURY/mcrA__A0A284VQI9, the ANME-2d McrA of
+  *Ca.* Methanoperedens. The activity is right (the reaction is reversible); the
+  process is wrong, because the organism oxidizes methane (corrected to GO:0046188).
+  ANME-2 MCRs sit inside IPR016212, so only a taxon condition can separate them.
+- **Example (alkane oxidizer):** 9EURY/mcrA__A0A7R9R780, the ethyl-coenzyme M
+  reductase of *Ca.* Ethanoperedens. It lacks IPR016212 and receives both terms from
+  the domain entries alone. Process corrected to GO:0043448; activity to a proposed
+  ethyl-coenzyme M reductase activity (parent GO:0050497).
+- **Fix:** restrict the domain-level mappings to proteins that also match IPR016212
+  (or map them to GO:0050497 only), and add a taxon exclusion for ANME lineages to
+  the methanogenesis mapping. See [mcrA across clades](mcrA-across-clades.md).
 
 ## Related findings from round 2
 

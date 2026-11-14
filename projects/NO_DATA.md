@@ -286,20 +286,30 @@ search, so we cannot meaningfully propose one. These rows should become
      or `WHOLLY_DARK`), on the row, the gene or a core function;
    - `nd_case` on a non-ND row;
    - `ACCEPT` without evidence that the literature was searched: the row must
-     cite a publication (PMID, DOI, PMC), the deep-research file, or the notes
-     file recording the queries and their result (a search that finds nothing
-     has no paper to cite). The UniProt record, or its protein-existence (`PE`)
-     line, is not a search. A notes citation should quote the queries and
-     their result, as DROME/CG42763 does, since the check sees only the file
-     name. On 2026-11-01 this flags 206 of 311 accepted ND
-     rows in 147 reviews; 197 of them cite nothing, mostly rows the re-action
+     cite a publication (PMID, DOI, PMC), or quote in `supported_by` the gene's
+     own deep-research or notes file where it records the queries and their
+     result (a search that finds nothing has no paper to cite), as DROME/CG42763
+     does. The quote goes in `supporting_text`, the field the verbatim check
+     confirms (`supporting_text_fulltext` is not checked and does not count), so
+     a bare file citation, a file in `additional_reference_ids`, another gene's
+     file, or a MOD gene description (`-deep-research-sgd/-flybase/-wormbase`,
+     curator text rather than a search) does not count. A publication id needs
+     no quote: a paper checked and found silent on the aspect has no line to
+     quote, and the id is checkable on its own. The UniProt record, or its
+     protein-existence (`PE`) line, is not a search. Any verbatim line of the
+     gene's own file passes, so the check narrows the loophole rather than
+     closing it: the quote should be the line that records the search. Quotes listed in
+     `conf/local_quote_baseline.yaml` only warn when not verbatim, so for those
+     few the check does not confirm the file says it. On 2026-11-06 this flags
+     210 of 321 accepted ND rows in 150 reviews, mostly rows the re-action
      pass converted.
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites
    the literature search the same way the warning requires: a publication, or
-   the deep-research or notes file (not the UniProt record). The pass
-   adds no such citation itself: the credit is for a search a reviewer records,
-   so the rows the pass converted score 0 until one is.
+   a `supporting_text` quote from the gene's own deep-research or notes file
+   (not a MOD gene description, nor the UniProt record). The pass adds no
+   such citation itself: the credit is for a search a reviewer records, so
+   the rows the pass converted score 0 until one is.
    `nd_stale_support` credits a `REMOVE`d or `MODIFY`d ND only for a PMID/DOI
    quote from the literature that makes it stale.
 4. **Upstream (to do).** N1 rows where the MOD has already annotated the aspect
