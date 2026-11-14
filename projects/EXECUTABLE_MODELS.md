@@ -123,6 +123,9 @@ JSON and recomputes the attractors whenever a box is locked.
 | [FcRn IgG & albumin salvage](../modules/fcrn_igg_albumin_salvage_transcytosis.html) | [Neonatal Fc Receptor (FCGRT/B2M) IgG & Albumin Salvage (Agent-Based Cohort Model)](../models/fcrn_salvage_transcytosis_abm.html) | Agent-Based | derived | 6, all hold |
 | [Retromer & SORL1 TGN retrieval](../modules/retromer_endosome_to_tgn_retrieval.html) | [Retromer (VPS35/VPS26A/VPS29) & SORL1 Endosome-to-TGN Retrieval (Agent-Based Cohort Model)](../models/retromer_retrograde_sorting_abm.html) | Agent-Based | derived | 6, all hold |
 | [LDLR endocytosis](../modules/ldl_receptor_mediated_endocytosis.html) | [LDLR Endocytosis & Cholesterol Clearance (Agent-Based Cohort Model)](../models/ldlr_endocytosis_abm.html) | Agent-Based | derived | 4, all hold |
+| [Glycerol metabolism](../modules/glycerol_metabolism.html) | [Glycerol Catabolism, Synthesis & G3P Shuttle (Constraint-Based FBA / E-Flux Model)](../models/glycerol_metabolism_fba.html) | Constraint-Based | derived | 5, all hold |
+| [Alcoholic fermentation](../modules/alcoholic_fermentation.html) | [Alcoholic Fermentation & Goldfish Anoxic Pyruvate Bypass (Constraint-Based FBA / E-Flux Model)](../models/alcoholic_fermentation_fba.html) | Constraint-Based | derived | 5, all hold |
+| [PDH bypass acetyl-CoA synthesis](../modules/pdh_bypass_acetyl_coa_synthesis.html) | [Cytosolic PDH Bypass to Nucleocytosolic Acetyl-CoA (Constraint-Based FBA / E-Flux Model)](../models/pdh_bypass_acetyl_coa_fba.html) | Constraint-Based | derived | 4, all hold |
 | [Methionine cycle](../modules/methionine_cycle.html) | Maud kinetic model (biosustain) | Kinetic | external | |
 
 The ERK scenarios encode what the curated wiring predicts: no stimulus → rest;
@@ -178,10 +181,14 @@ what the curated wiring implies; they are not a literature-validated mechanism.
    (`models/boolean/*/mapping_to_modules.yaml`). A node-level `model_associations`
    slot ([schema gaps §5](BOOLEAN_MODELS/schema_gaps.md)) would make the mapping
    visible on module pages.
-4. **Constraint-based models (GEMMs).** Metabolic modules map to reactions. A
-   derived flux model per module (or a module's reactions checked against a
-   genome-scale model's) is the next type to add. Small ones can run in the
-   browser with a JS LP solver.
+4. **Constraint-based models (FBA / pFBA / E-Flux).** Metabolic modules compile into
+   steady-state stoichiometric flux networks (`src/ai_gene_review/module_fba.py`) with
+   hierarchical gene-protein-reaction (GPR) rules derived from `variant_sets`,
+   `annotons`, and `PROTEIN_COMPLEX` `active_units` (`all_of` for multi-subunit
+   complexes, `any_of` for isozymes/paralogs), cross-checked against COBRApy LP and
+   rendered as interactive in-browser FBA / E-Flux simulators (`executable_fba.html.j2`).
+   Linking module reactions to external genome-scale reconstructions (BiGG / MetaNetX)
+   is the next extension.
 5. **Agent-based models ([ABM_TRAFFICKING](ABM_TRAFFICKING.md)).** Intracellular
    trafficking and delivery modules ([Deliverome](DELIVEROME.md)) track a conserved
    cohort of cargo particles partitioning across competing sorting branches (`src/ai_gene_review/module_abm.py`)
@@ -204,15 +211,18 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - `src/ai_gene_review/module_abm.py`: agent-based compartment & particle cohort
   compiler, conservation-preserving simulator, scenario runner (`expected_active`,
   `expected_inactive`, `expected_outcome_order`), and browser payload builder.
-- `src/ai_gene_review/module_dynamics.py`: attractors, scenario checks (Boolean and
-  Agent-Based), browser payload.
+- `src/ai_gene_review/module_fba.py`: constraint-based steady-state stoichiometric
+  FBA / pFBA / E-Flux compiler, hierarchical GPR capacity evaluator, scenario runner,
+  and browser payload builder.
+- `src/ai_gene_review/module_dynamics.py`: attractors, scenario checks (Boolean,
+  Agent-Based, and Constraint-Based), browser payload.
 - `src/ai_gene_review/render_models.py` and templates
-  `executable_model.html.j2`, `executable_abm.html.j2`,
+  `executable_model.html.j2`, `executable_abm.html.j2`, `executable_fba.html.j2`,
   `executable_model_index.html.j2`: model pages, rendered with the module pages
   into `pages/models/`.
 - `src/ai_gene_review/validation/module_validator.py`:
   `validate_executable_models` (blocking).
-- `tests/test_module_dynamics.py`, `tests/test_module_abm.py`, `tests/test_render_models.py`.
+- `tests/test_module_dynamics.py`, `tests/test_module_abm.py`, `tests/test_module_fba.py`, `tests/test_render_models.py`.
 - `projects/EXECUTABLE_MODELS/architecture.md`: dependency layers and the
   consolidation plan with AmiGO 3.
 
@@ -232,13 +242,29 @@ what the curated wiring implies; they are not a literature-validated mechanism.
 - [x] Corpus audit of multi-activator steps for `activation_logic`: generated, 40 settled by structure, 8 curated
 - [ ] Curate the 226 undecided steps in the audit
 - [ ] Node-level `model_associations` for external model variables
-- [ ] First constraint-based model type
+- [x] First constraint-based model type (`glycerol_metabolism_fba`, `alcoholic_fermentation_fba`, and `pdh_bypass_acetyl_coa_fba`), with steady-state FBA / pFBA / E-Flux solver, hierarchical GPR bounds, in-browser simulator, and blocking scenario checks
 - [x] First agent-based models (`endosomal_trafficking_abm` and `ldlr_endocytosis_abm`), with Python + in-browser cohort simulator and blocking scenario checks
 - [ ] Payload JSON Schema and a `--json` mode for `module-to-bnet` ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 3)
 - [x] Shared conformance fixtures in `models/boolean/conformance/`, checked here against the translator, the engine and biodivine-aeon ([architecture](EXECUTABLE_MODELS/architecture.md), Order step 2)
 - [ ] AmiGO 3 runs the same conformance fixtures against its translator port and JS engine
 
 # NOTES
+
+## 2026-11-04
+
+Implemented `model_type: CONSTRAINT_BASED` (`derivation: DERIVED_FROM_MODULE`) in
+`src/ai_gene_review/module_fba.py` and `src/ai_gene_review/templates/executable_fba.html.j2`,
+closing the constraint-based roadmap item. Metabolic modules compile into steady-state
+flux-balance and E-Flux models ($\mathbf{S}\mathbf{v} = \mathbf{0}$, $0 \le v_r \le u_r(\mathbf{e})$)
+where reaction upper bounds are derived from hierarchical gene-protein-reaction (GPR)
+trees (`all_of` for multi-subunit `PROTEIN_COMPLEX` `active_units` such as the heterotetrameric
+Carassius $\alpha_3/\beta_2$ PDC complex; `any_of` for `variant_sets` and isozyme annotons).
+Unlike `AGENT_BASED` trafficking models where blocking a downstream step causes upstream
+cargo accumulation, steady-state mass balance forces dead-end upstream unbranched steps
+to zero flux and reroutes flux at upstream branch points. Curated derived constraint-based
+models and scenarios were added to `glycerol_metabolism.yaml`, `alcoholic_fermentation.yaml`,
+and `pdh_bypass_acetyl_coa_synthesis.yaml`, and cross-checked against COBRApy LP in
+`tests/test_module_fba.py`.
 
 ## 2026-10-25
 
