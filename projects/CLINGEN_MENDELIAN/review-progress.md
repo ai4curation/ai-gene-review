@@ -7969,3 +7969,29 @@ Integration tests executed: 6,156 tests, 386 doctests, 489 agentic checks, 19 Ja
 ROOT acceptance: local immutable `HADH-root-acceptance-750.json` (SHA256 `3d803c671d890fc62c83e4378f9c4d1905c19e83d1447396956b82e18c90b03e`). This identifier is provenance, not a public download link. Only HADH is newly checked; the 235 dated queue records, 174 earlier completion updates and full earlier journal remain unchanged. HACD1, HADHA, HADHB and the bounded HACD2 companion are not given completion credit here.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-12T013047Z-codex-10c2c3.yaml).
+
+## Completion checkpoint 753 (2026-11-14 22:38:11 UTC)
+
+753 complete; 2,123 of 2,876 remain. This publishes ROOT's prior acceptance of HACD1, HADHA and HADHB and grants no new acceptance. HACD2 was delivered as a HACD1 paralog companion and receives zero ClinGen completion credit.
+
+| Gene | Delivery | Executed merge-group CI | Current / retired contexts | Current actions |
+| --- | --- | --- | --- | --- |
+| HACD1 | [PR #6311](https://github.com/ai4curation/ai-gene-review/pull/6311), [merge c87d7483](https://github.com/ai4curation/ai-gene-review/commit/c87d748392e75a3c8c210f6d1c78018b7e489139) | [run 43572428190](https://github.com/ai4curation/ai-gene-review/actions/runs/43572428190) | 21 / 0 | 11 ACCEPT, 5 MODIFY, 5 KEEP_AS_NON_CORE |
+| HADHA | [PR #6313](https://github.com/ai4curation/ai-gene-review/pull/6313), [merge 2b36bd12](https://github.com/ai4curation/ai-gene-review/commit/2b36bd12d8a3f6cc3a32f144b11bb5d3931dba8c) | [run 43574698920](https://github.com/ai4curation/ai-gene-review/actions/runs/43574698920) | 61 / 0 | 42 ACCEPT, 5 MODIFY, 1 REMOVE, 1 UNDECIDED, 11 KEEP_AS_NON_CORE, 1 NEW |
+| HADHB | [PR #6317](https://github.com/ai4curation/ai-gene-review/pull/6317), [merge ac14aa61](https://github.com/ai4curation/ai-gene-review/commit/ac14aa61de06820b3288f11aff8ba4b750f5850a) | [run 43576276071](https://github.com/ai4curation/ai-gene-review/actions/runs/43576276071) | 63 / 6 | 7 UNDECIDED, 38 ACCEPT, 3 REMOVE, 9 MODIFY, 6 KEEP_AS_NON_CORE |
+| HACD2 | [PR #6316](https://github.com/ai4curation/ai-gene-review/pull/6316), [merge 638fcae0](https://github.com/ai4curation/ai-gene-review/commit/638fcae0511079cb7b91adb4fa0cffc1f2c31725) | [run 43574652070](https://github.com/ai4curation/ai-gene-review/actions/runs/43574652070) | 27 / 0 | 14 ACCEPT, 6 MODIFY, 7 KEEP_AS_NON_CORE |
+
+All four exact reviewed manifests (44 files total), head-specific approvals, actual merge commits and fresh-main ancestry were verified. Each integration run executed strict checks for the changed gene, repository-wide gene schema checks, quote checks, histories and family validation. Each suite passed 6,213 tests, 390 doctests, 489 automation tests and 12 example checks; 98 tests were deselected and 37 doctests skipped. Gene semantics were scoped to the changed gene. Repository-wide quote checks retained 321 unchecked gene quotes and 82 unchecked family quotes, with zero blocking mismatches. History coverage and upstream PAINT verification were skipped by workflow conditions; the conditional sequence-cache save was also skipped for HADHA, HACD2 and HADHB.
+
+All four reviews remain DRAFT. HADHA retains one evidence-backed NEW molecular-function annotation and one UNDECIDED context; its cardiolipin role is bounded by the reviewed experimental context. HADHB retains seven UNDECIDED current contexts, six unchanged retired contexts, unresolved C4 substrate specificity and uncertainty about RNA interactions and extra-mitochondrial locations. Supported generic-binding exceptions remain explicit in the reviews. Completion does not resolve these biological questions.
+
+ROOT acceptance receipts (local immutable provenance identifiers, not public download links):
+
+- `HACD1-root-delivery-acceptance-v1.json` (SHA256 `6e3f020b82ce9eb7f8c50972b04c3d612e58dfb88363728045779a4ea8276d42`).
+- `HADHA-root-delivery-acceptance-v1.json` (SHA256 `7ec06f216b22e22a3612cb9fe112475c2d5f112c3fb6f23603b52285d584199b`).
+- `HADHB-root-delivery-acceptance-v1.json` (SHA256 `1121e3e96505f5153355a276b9370ccc68755ed8b3c356d34d39d5b408546267`).
+- `HACD2-root-delivery-acceptance-v1.json` (SHA256 `1311ae95dcb0a7bcf3b37dbbd75e64d292555692c85b16cc79822e07dfd4b65a`).
+
+Only HACD1, HADHA and HADHB are newly checked. The 235 dated queue records, 175 earlier completion updates and full earlier journal are unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-14T223634Z-codex-307548.yaml).
