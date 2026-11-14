@@ -234,7 +234,14 @@ activity` vs `serine-type endopeptidase activity`), use `MODIFY` with `proposed_
 set to the specific supported term (an `is_a`/`part_of` descendant, preferably one the gene
 already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that are as precise
 as warranted but peripheral to the core function. If the general term is already as precise as
-the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
+the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`).
+MODIFY needs both: a deeper replacement term, **and** this row's own evidence supporting it.
+A paper that identifies the ligand supports `GO:0016498` neuromedin K receptor activity; an
+InterPro2GO mapping from a generic GPCR signature supports only `GO:0004930`. A row whose
+evidence stops at the general term is not MODIFY, and a respectably specific term such as
+`G protein-coupled receptor activity` is not `TOO_GENERAL` either: keep it. `TOO_GENERAL` is for
+terms that are imprecise on their own once a more specific term is asserted elsewhere, such as
+`membrane` (which membrane?). The action must
 match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
 When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
