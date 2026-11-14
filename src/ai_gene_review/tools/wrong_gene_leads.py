@@ -45,7 +45,8 @@ from collections import Counter
 from dataclasses import dataclass, replace
 from functools import cache
 from pathlib import Path
-from typing import Any, Iterable
+import sys
+from typing import Any, Iterable, NamedTuple
 
 import yaml
 
@@ -242,9 +243,12 @@ def token_forms(token: str) -> set[str]:
     """The normalised names a whitespace token can stand for.
 
     Besides the whole token, each part between slashes or hyphens counts
-    ("lsd1+/fas2+", "c-Abl", "Cds1p-dependent"), a yeast protein suffix is dropped
-    from a name ending in a digit ("Cds1p"), and a numbered range is expanded
-    ("AKR1C1-AKR1C4", "AKR1C1-4").
+    ("lsd1+/fas2+", "c-Abl", "Cds1p-dependent"), a protein suffix ``p`` is dropped
+    from a name ending in a digit (the yeast convention, "Cds1p"; for any species,
+    since the wanted names it could produce are at least three characters), and a
+    numbered range of at most ``MAX_RANGE`` names is expanded ("AKR1C1-AKR1C4",
+    "AKR1C1-4"). A span written between two different genes ("Smad1-Smad5") is
+    expanded too, so interior members count as named.
 
     >>> sorted(token_forms("lsd1+/fas2+"))
     ['FAS2', 'LSD1', 'LSD1FAS2']
@@ -258,7 +262,7 @@ def token_forms(token: str) -> set[str]:
     m = _RANGE.fullmatch(raw.upper())
     if m:
         start, end = int(m.group(2)), int(m.group(3))
-        if start < end and end - start <= MAX_RANGE:
+        if start < end and end - start < MAX_RANGE:
             forms |= {f"{m.group(1)}{n}" for n in range(start, end + 1)}
     forms |= {f[:-1] for f in forms if re.fullmatch(r"[A-Z][A-Z0-9]*\dP", f)}
     return {f for f in forms if f}
@@ -283,27 +287,57 @@ def _phrase(text: str) -> str:
     )
 
 
-def protein_name_forms(name: str) -> set[str]:
+class NameForm(NamedTuple):
+    """One form of a protein name to look for in an abstract.
+
+    ``word`` marks the bare X of a one-word "Protein X" name. Such names are often
+    ordinary words ("Protein similar", "Protein rolled"), so X counts only when
+    written capitalised and not at the start of a sentence.
+    """
+
+    text: str
+    word: bool = False
+
+
+def protein_name_forms(name: str) -> set[NameForm]:
     """A protein name plus the shorter forms papers use for it.
 
     A one-word "Protein X" name (common for fly and plant genes) is also matched as
-    X, and a trailing location qualifier after a comma is dropped.
+    the word X, and a trailing one-word qualifier after a comma is dropped.
 
-    >>> sorted(protein_name_forms("Protein breathless"))
+    >>> sorted(f.text for f in protein_name_forms("Protein breathless"))
     ['Protein breathless', 'breathless']
-    >>> sorted(protein_name_forms("Very long-chain acyl-CoA dehydrogenase, mitochondrial"))
+    >>> sorted(f.text for f in protein_name_forms("Very long-chain acyl-CoA dehydrogenase, mitochondrial"))
     ['Very long-chain acyl-CoA dehydrogenase', 'Very long-chain acyl-CoA dehydrogenase, mitochondrial']
-    >>> sorted(protein_name_forms("Protein kinase C"))
+    >>> sorted(f.text for f in protein_name_forms("Protein kinase C"))
     ['Protein kinase C']
     """
-    forms = {name}
+    forms = {NameForm(name)}
     m = re.fullmatch(r"Protein (\S+)", name)
     if m:
-        forms.add(m.group(1))
+        forms.add(NameForm(m.group(1), word=True))
     base, sep, tail = name.rpartition(", ")
     if sep and " " not in tail:
-        forms.add(base)
+        forms.add(NameForm(base))
     return forms
+
+
+def _capitalised_words(text: str) -> set[str]:
+    """Capitalised words that do not start a sentence, split at slashes and hyphens.
+
+    >>> sorted(_capitalised_words("Similar results. We find that Similar and Tango-bound Spätzle act."))
+    ['Similar', 'Spatzle', 'Tango']
+    """
+    words: set[str] = set()
+    previous = "."
+    for token in _fold(text).split():
+        if not previous.endswith((".", "!", "?", ":")):
+            for part in re.split(r"[/\-\u2013]", token):
+                part = part.strip("()[]{},.;:'\"")
+                if part[:1].isupper() and part[1:].islower():
+                    words.add(part)
+        previous = token
+    return words
 
 
 def _names_protein(text: str, name: str) -> bool:
@@ -494,13 +528,16 @@ def named_in_abstract(
     pmid: str,
     names: Iterable[str],
     publications_dir: Path = PUBLICATIONS_DIR,
-    protein_names: Iterable[str] = (),
+    protein_names: Iterable[str | NameForm] = (),
 ) -> bool | None:
     """Whether the cached title or abstract names the gene or its protein.
 
-    Returns None when the paper is not cached. Gene names are matched per
-    whitespace token after normalisation (names shorter than three characters are
-    ignored); protein names are matched as phrases.
+    Returns None when the paper is not cached. Gene names are matched against the
+    forms of each whitespace token (``token_forms``: slash and hyphen parts, a
+    dropped ``p`` suffix, expanded ranges), after normalisation; names shorter than
+    three characters are ignored. Protein names are expanded to their short forms
+    (``protein_name_forms``) unless already given as ``NameForm`` values, and
+    matched as phrases, or as a capitalised word for a one-word short form.
 
     >>> import tempfile
     >>> tmp = tempfile.TemporaryDirectory()
@@ -520,40 +557,55 @@ def named_in_abstract(
     wanted = {_norm(n) for n in names}
     if {w for w in wanted if len(w) >= 3} & tokens:
         return True
+    forms: set[NameForm] = set()
+    for n in protein_names:
+        forms |= {n} if isinstance(n, NameForm) else protein_name_forms(n)
     phrased = _phrase(text)
+    words = _capitalised_words(text) if any(f.word for f in forms) else set()
     return any(
-        _names_protein(phrased, form)
-        for n in protein_names
-        for form in protein_name_forms(n)
+        _fold(f.text).capitalize() in words
+        if f.word
+        else _names_protein(phrased, f.text)
+        for f in forms
     )
 
 
-def gene_specific_names(own: GeneRecord, citing: Iterable[CitingEntry]) -> set[str]:
-    """The annotated protein's names that no citing entry for another gene shares.
+def gene_specific_names(
+    own: GeneRecord, citing: Iterable[CitingEntry]
+) -> set[NameForm]:
+    """The forms of the annotated protein's names that no citing entry for another gene shares.
 
     Family-level names are often shared verbatim by paralogs ("Tubulin alpha
     chain"). An abstract using such a name does not say which paralog it studied,
-    so it must not cancel the paralog signal. An ortholog with the same gene
-    symbol sharing the name is the expected case, so it does not count.
+    so it must not cancel the paralog signal. Both sides are expanded to their
+    short forms first, so "Malate dehydrogenase, cytoplasmic" and "..., mitochondrial"
+    share "Malate dehydrogenase". An ortholog with the same gene symbol sharing the
+    name is the expected case, so it does not count.
 
     >>> own = GeneRecord("P1", "1", frozenset(), frozenset(), frozenset(),
     ...                  frozenset({"Tubulin alpha chain", "Alpha-tubulin 1"}))
     >>> other = CitingEntry("P2", "TUA2", "1", frozenset(), frozenset({"Tubulin alpha chain"}))
-    >>> sorted(gene_specific_names(own, [other]))
+    >>> sorted(f.text for f in gene_specific_names(own, [other]))
     ['Alpha-tubulin 1']
     >>> mouse = CitingEntry("P3", "Tua1", "2", frozenset(), frozenset({"Tubulin alpha chain"}))
     >>> own = GeneRecord("P1", "1", frozenset(), frozenset({"TUA1"}), frozenset(),
     ...                  frozenset({"Tubulin alpha chain"}))
-    >>> sorted(gene_specific_names(own, [mouse]))
+    >>> sorted(f.text for f in gene_specific_names(own, [mouse]))
     ['Tubulin alpha chain']
     """
     shared = {
-        _phrase(n)
+        _phrase(f.text)
         for c in citing
         if not same_gene_symbol(c.gene, own.gene_names)
         for n in c.protein_names
+        for f in protein_name_forms(n)
     }
-    return {n for n in own.protein_names if _phrase(n) not in shared}
+    return {
+        f
+        for n in own.protein_names
+        for f in protein_name_forms(n)
+        if _phrase(f.text) not in shared
+    }
 
 
 def score_lead(
@@ -608,34 +660,44 @@ def _share_key(row: dict[str, str]) -> ShareKey:
 
 
 def shared_annotation_counts(gene_dirs: Iterable[Path]) -> Counter[ShareKey]:
-    """How many gene folders carry each (reference, GO term, assigned-by) row.
+    """How many of the given gene folders carry each (reference, GO term, assigned-by) row.
 
-    Only literature references are counted; GO_REF rows are shared by design.
+    Only the folders passed in are counted, so a sweep of one species or one gene
+    sees fewer shared rows than the default sweep of every folder. Only literature
+    references are counted; GO_REF rows are shared by design.
     """
-    genes: dict[ShareKey, set[Path]] = {}
+    counts: Counter[ShareKey] = Counter()
     for gene_dir in gene_dirs:
+        keys: set[ShareKey] = set()
         for goa in gene_dir.glob("*-goa.tsv"):
             with goa.open() as fh:
                 for row in csv.DictReader(fh, delimiter="\t"):
                     key = _share_key(row)
                     if key[0].startswith("PMID:"):
-                        genes.setdefault(key, set()).add(gene_dir)
-    return Counter({key: len(dirs) for key, dirs in genes.items()})
+                        keys.add(key)
+        counts.update(keys)
+    return counts
 
 
 @cache
 def pombase_names(path: Path = POMBASE_NAMES) -> dict[str, frozenset[str]]:
     """PomBase gene names and synonyms keyed by UniProt accession.
 
-    Returns an empty map when the snapshot is not present.
+    Several PomBase genes can share one accession (the histone H4 genes), so their
+    names are pooled. Returns an empty map, with a warning, when the snapshot is
+    not present.
     """
     if not path.exists():
+        print(f"warning: {path} not found; no PomBase synonyms used", file=sys.stderr)
         return {}
     names: dict[str, frozenset[str]] = {}
     with path.open() as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
             found = {row["gene_name"], *row["synonyms"].split(",")}
-            names[row["external_id"]] = frozenset(n.strip() for n in found if n.strip())
+            acc = row["external_id"]
+            names[acc] = names.get(acc, frozenset()) | {
+                n.strip() for n in found if n.strip()
+            }
     return names
 
 

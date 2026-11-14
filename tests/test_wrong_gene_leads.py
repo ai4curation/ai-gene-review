@@ -13,13 +13,17 @@ from ai_gene_review.tools.wrong_gene_leads import (
     CitingEntry,
     GeneRecord,
     MAX_CITING_ENTRIES,
+    MAX_RANGE,
     SHARED_ANNOTATION_GENES,
     candidate_rows,
     fetch_citing_entries,
     find_leads,
+    gene_specific_names,
     named_in_abstract,
+    pombase_names,
     score_lead,
     shared_annotation_counts,
+    token_forms,
 )
 
 GENES = Path(__file__).resolve().parents[1] / "genes"
@@ -471,5 +475,59 @@ def test_shared_annotation_counts_real_complex_rows():
         counts[("PMID:12192000", "GO:0000785", "ComplexPortal")]
         >= SHARED_ANNOTATION_GENES
     )
-    assert counts[("PMID:6696436", "GO:0004332", "Reactome")] < SHARED_ANNOTATION_GENES
-    assert counts[("PMID:24990881", "GO:0004175", "UniProt")] < SHARED_ANNOTATION_GENES
+    assert (
+        1
+        <= counts[("PMID:6696436", "GO:0004332", "Reactome")]
+        < SHARED_ANNOTATION_GENES
+    )
+    assert (
+        1
+        <= counts[("PMID:24990881", "GO:0004175", "UniProt")]
+        < SHARED_ANNOTATION_GENES
+    )
+
+
+def test_paralog_sharing_a_base_name_does_not_cancel_the_lead(tmp_path):
+    """MDH1 and MDH2 differ only in their location qualifier, so the base name is shared."""
+    own, _ = candidate_rows(GENES / "human/MDH2")
+    mdh1 = CitingEntry(
+        "P40925",
+        "MDH1",
+        "9606",
+        frozenset(),
+        frozenset({"Malate dehydrogenase, cytoplasmic"}),
+    )
+    (tmp_path / "PMID_1.md").write_text(
+        "title: X\n## Abstract\nCytosolic malate dehydrogenase was purified.\n"
+    )
+    forms = gene_specific_names(own, [mdh1])
+    assert not named_in_abstract("1", own.gene_names, tmp_path, forms)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Similar results were seen. Levels were similar in mutants.", False),
+        ("We find that Similar binds Tango in the nucleus.", True),
+    ],
+)
+def test_one_word_short_name_needs_a_capitalised_mention(tmp_path, text, expected):
+    """DROME/sima is "Protein similar": prose "similar" must not name it."""
+    own, _ = candidate_rows(GENES / "DROME/sima")
+    (tmp_path / "PMID_1.md").write_text(f"title: X\n## Abstract\n{text}\n")
+    assert (
+        named_in_abstract("1", own.gene_names, tmp_path, own.protein_names) is expected
+    )
+
+
+def test_pombase_names_union_genes_sharing_an_accession():
+    """Three histone H4 genes share P09322; every name must be kept."""
+    names = pombase_names()["P09322"]
+    assert {"hhf1", "hhf2", "hhf3", "h4.1", "h4.3"} <= names
+
+
+@pytest.mark.parametrize("token, expanded", [("X1-X20", True), ("X1-X21", False)])
+def test_range_expansion_is_capped(token, expanded):
+    """A range is expanded only when it names at most MAX_RANGE (20) genes."""
+    assert MAX_RANGE == 20
+    assert ("X10" in token_forms(token)) is expanded
