@@ -2,16 +2,19 @@
 
 The rule (projects/NO_DATA.md): an ND row is ACCEPT unless literature on this
 gene product, in this species, identifies a function in that aspect. The
-decisions live in ``projects/NO_DATA/data/nd-decisions.yaml``; they were made
+decisions live in ``projects/NO_DATA/data/nd-decisions.yaml``; most were made
 by reading each ND row and the review's other rows in the same aspect, not by
-a new literature search, and the generated text says so.
+a new literature search, and the generated text says so. A decision with
+``searched`` (e.g. ``PubMed, 2026-11-14``) rests on a search recorded in the
+gene's notes file, and the generated reason says that instead.
 
 For each decision the script restores the ND row as it was before the pass
 (``ORIGINAL_COMMITS``), drops any NEW row an earlier run generated, and then
 edits only that row's review block:
 
 - ``STALE``: the earlier REMOVE/MODIFY stays; ``nd_case: STALE`` is added.
-- ``ACCEPT``: action becomes ACCEPT and the reason is rewritten. The summary
+- ``ACCEPT``: action becomes ACCEPT and the reason is rewritten; ``quotes``,
+  when given, become its ``supported_by`` (the record of the literature search). The summary
   is rewritten when the earlier action was MODIFY (it argued for the
   replacement) or it says the ND is obsolete (``SUMMARY_CONFLICT``), or as
   ``rewrite_summary`` in the table says; otherwise it is kept. ``proposed_replacement_terms`` and
@@ -21,12 +24,15 @@ edits only that row's review block:
   unset otherwise. With ``new_row``, the replacement term becomes its own NEW
   row carrying the earlier quotes.
 
-The restore step reads the pre-pass rows from git, so re-running needs those
-commits to be reachable (it is not possible after a squash merge).
+The restore step reads the pre-pass rows from git. ``ORIGINAL_COMMITS`` were
+squash-merged into ``main`` (PR 5416), so they are reachable only from the
+history of the ``claude/happy-cray-yngr26`` branch; fetch it before
+re-running for genes from the first passes.
 
-Run from the repository root, then ``just backfill-record-sections`` on the
-changed reviews to restore ``record_section`` on restored UniProt quotes:
-    uv run python projects/NO_DATA/scripts/apply_acceptance_rule.py
+Pass gene prefixes to apply only those decisions. Run from the repository
+root, then ``just backfill-record-sections`` on the changed reviews to restore
+``record_section`` on restored UniProt quotes:
+    uv run python projects/NO_DATA/scripts/apply_acceptance_rule.py mouse/Krtap
 """
 
 from __future__ import annotations
@@ -41,13 +47,17 @@ from pathlib import Path
 
 import yaml
 from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import FoldedScalarString
 
 ROOT = Path(__file__).resolve().parents[3]
 DECISIONS = ROOT / "projects" / "NO_DATA" / "data" / "nd-decisions.yaml"
 
-#: The commit before each pass touched a review: the first pass (2026-10-24)
-#: and the follow-up over reviews merged from main (2026-10-26).
-ORIGINAL_COMMITS = ("589ca34bd", "d2fa590c5")
+#: The commit before each pass touched a review: the first pass (2026-10-24),
+#: the follow-up over reviews merged from main (2026-10-26), and the mouse
+#: Krtap reviews (2026-11-06, from main after the squash merge of PR 5416; the
+#: two earlier commits are no longer on main, so re-run those genes only from a
+#: clone that still has them).
+ORIGINAL_COMMITS = ("589ca34bd7", "d2fa590c5f", "ce73640bac")
 
 ROOT_ASPECT = {"GO:0003674": "MF", "GO:0008150": "BP", "GO:0005575": "CC"}
 ASPECT_NAME = {"MF": "molecular function", "BP": "biological process", "CC": "cellular component"}
@@ -65,6 +75,7 @@ GENERATED_NEW_ROW = ("proposed during the NO_DATA re-action pass",
 #: earlier action; they are not carried into the NEW row's reason.
 ND_CLAUSE = re.compile(
     r"\bND\b|placeholder|superseded|out of date|outdated|\bearlier\b"
+    r"|\broot (?:term|row|annotation|MF|BP|CC)\b"
     r"|\b(?:MODIFY|REMOVE|KEEP_AS_NON_CORE|TOO_GENERAL|UNDECIDED|MARK_AS_OVER_ANNOTATED)\b",
     re.I,
 )
@@ -90,14 +101,26 @@ def summary_text(aspect: str) -> str:
     )
 
 
-def reason_text(aspect: str, earlier: str, note: str | None, new_label: str | None) -> str:
+def reason_text(aspect: str, earlier: str, note: str | None, new_label: str | None,
+                searched: str | None = None) -> str:
+    """Reason for an accepted ND row; ``searched`` names a recorded literature search.
+
+    >>> "not from a new" in reason_text("MF", "MODIFY", None, None)
+    True
+    >>> reason_text("MF", "MODIFY", None, None, "PubMed, 2026-11-14").split(". ")[2]
+    "A literature search (PubMed, 2026-11-14) is recorded in the gene's notes file"
+    """
+    how = (
+        f"A literature search ({searched}) is recorded in the gene's notes file."
+        if searched else
+        "This was judged from the review's own content during the NO_DATA re-action "
+        "pass, not from a new literature search."
+    )
     parts = [
         "ACCEPT under the ND acceptance rule (projects/NO_DATA.md). The evidence this "
         f"review cites for the {ASPECT_NAME[aspect]} is inferred (from orthologs, family "
         "membership or sequence features) or comes from other species; none of it is "
-        "literature on this gene product in this species. This was judged from the "
-        "review's own content during the NO_DATA re-action pass, not from a new "
-        f"literature search. Earlier action: {earlier}."
+        f"literature on this gene product in this species. {how} Earlier action: {earlier}."
     ]
     if note:
         parts.append(note)
@@ -112,14 +135,26 @@ def new_row_reason(label: str, evidence: str, old_reason: str, inherit: bool) ->
     Sentences of the earlier reason are inherited only when it argued for this one
     term (``inherit``), and never those about the ND row or the earlier action.
 
+    >>> new_row_reason("x", "ISS", "The ND row records Y, but family data establish X.", True)[-24:]
+    'Family data establish X.'
+    >>> new_row_reason("x", "ISS", "The root term is replaced, and no Y term is proposed: Z.", True)[-25:]
+    'No Y term is proposed: Z.'
     >>> new_row_reason("x activity", "ISS", "Known in S. pombe (Apc2). The ND is stale.", True)
     'X activity is inferred for this gene product (ISS), not shown for it experimentally; \
 the ND row for the aspect therefore stays (projects/NO_DATA.md). Known in S. pombe (Apc2).'
     """
+    text = " ".join(old_reason.split())
+    # Keep the argument of a sentence that opens on the ND row ("The ND row
+    # records that ..., but KAP-family literature establishes ...").
+    # The same holds for "The root term is replaced ..., and no binding term is
+    # proposed: ...", whose second clause is a separate judgement.
+    text = re.sub(r"\bThe ND (?:row|placeholder)[^.]*?, but (\w)", lambda m: m.group(1).upper(), text)
+    text = re.sub(r"\bThe root (?:term|row)[^.:]*?, (?:and|but) (\w)", lambda m: m.group(1).upper(), text)
     kept = [
         # On a NEW row the term is no longer a replacement for anything.
-        re.sub(r"\b([Tt])he replacement\b", lambda m: f"{m.group(1)}he term", s)
-        for s in SENTENCE_END.split(" ".join(old_reason.split()))
+        re.sub(r"\breplacement for the (?:uninformative )?root(?: term)?\b", "term",
+               re.sub(r"\b([Tt])he replacement\b", lambda m: f"{m.group(1)}he term", s))
+        for s in SENTENCE_END.split(text)
         if inherit and s and not ND_CLAUSE.search(s)
     ]
     head = (
@@ -127,6 +162,18 @@ the ND row for the aspect therefore stays (projects/NO_DATA.md). Known in S. pom
         "experimentally; the ND row for the aspect therefore stays (projects/NO_DATA.md)."
     )
     return " ".join([head, *kept])
+
+
+def folded_scalar(text: str, width: int = 80) -> FoldedScalarString:
+    """``text`` as a folded block scalar (``>-``), so a colon never forces quoting.
+
+    >>> folded_scalar("a: b c", width=4).fold_pos
+    [4]
+    """
+    lines = textwrap.wrap(text, width, break_on_hyphens=False)
+    scalar = FoldedScalarString(" ".join(lines))
+    scalar.fold_pos = [sum(len(x) + 1 for x in lines[:i]) - 1 for i in range(1, len(lines))]
+    return scalar
 
 
 def folded(key: str, text: str, pad: str) -> list[str]:
@@ -227,7 +274,15 @@ def core_function_report(decisions: list[dict], aspect_of) -> list[str]:
     return out
 
 
-def main() -> None:
+def dump_quotes(quotes: list, child: str, rt: YAML) -> list[str]:
+    """A ``supported_by`` section for ``quotes``, indented for a review block."""
+    buf = io.StringIO()
+    rt.dump({"supported_by": quotes}, buf)
+    return [f"{child}{ln.rstrip()}\n" for ln in buf.getvalue().splitlines()]
+
+
+def main(only: list[str]) -> None:
+    """Apply the decisions; with ``only``, just the genes named (or prefixed) there."""
     from ai_gene_review.validation.action_consistency import go_ancestors
 
     ancestors = go_ancestors()
@@ -241,6 +296,8 @@ def main() -> None:
     decisions = yaml.safe_load(DECISIONS.read_text())["decisions"]
     by_file: dict[str, dict[str, dict]] = defaultdict(dict)
     for d in decisions:
+        if only and not any(d["gene"].startswith(prefix) for prefix in only):
+            continue
         organism, gene = d["gene"].split("/")
         by_file[f"genes/{organism}/{gene}/{gene}-ai-review.yaml"][d["term"]] = d
 
@@ -305,9 +362,7 @@ def main() -> None:
                     replace["reason"] = folded("reason", f"{earlier} NO_DATA re-check: {d['note']}".strip(), child)
                 if d.get("quotes"):
                     quotes = list(o_review.get("supported_by") or []) + d["quotes"]
-                    buf = io.StringIO()
-                    rt.dump({"supported_by": quotes}, buf)
-                    replace["supported_by"] = [f"{child}{ln.rstrip()}\n" for ln in buf.getvalue().splitlines()]
+                    replace["supported_by"] = dump_quotes(quotes, child, rt)
                 out.append("".join(rewrite_review(block, set(), replace, "STALE")))
                 continue
             aspect = d["aspect"]
@@ -329,10 +384,10 @@ def main() -> None:
                             "summary": f"Inferred {rep.get('label')} for this gene product, "
                                        "proposed during the NO_DATA re-action pass.",
                             "action": "NEW",
-                            "reason": new_row_reason(
+                            "reason": folded_scalar(new_row_reason(
                                 rep.get("label"), d["new_row"]["evidence_type"],
                                 str(o_review.get("reason") or ""),
-                                inherit=len(o_review.get("proposed_replacement_terms") or []) == 1),
+                                inherit=len(o_review.get("proposed_replacement_terms") or []) == 1)),
                         },
                     }
                     if o_review.get("supported_by"):
@@ -357,10 +412,14 @@ def main() -> None:
             replace = {
                 "action": [f"{child}action: ACCEPT\n"],
                 "reason": folded("reason", reason_text(aspect, d["earlier_action"],
-                                                       d.get("note"), labels), child),
+                                                       d.get("note"), labels,
+                                                       d.get("searched")), child),
             }
             if rewrite:
                 replace["summary"] = folded("summary", summary_text(aspect), child)
+            if d.get("quotes"):
+                # The record of the literature search that the ACCEPT rests on.
+                replace["supported_by"] = dump_quotes(d["quotes"], child, rt)
             out.append("".join(rewrite_review(block, drop, replace, nd_case)))
             additions.extend(new_rows)
         if additions:
@@ -380,4 +439,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("prefixes", nargs="*", metavar="PREFIX",
+                        help="apply only decisions whose gene starts with this (e.g. mouse/Krtap)")
+    main(parser.parse_args().prefixes)
