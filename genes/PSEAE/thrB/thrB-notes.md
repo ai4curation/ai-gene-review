@@ -50,3 +50,26 @@
   extract assay).
 - GO_CENTRAL: MISSING_NEGATION CHECK (SUSPECTED) for B. subtilis AmiN/YerI under
   PTN001464661.
+
+## PANTHER tree check (2026-11-05)
+
+Topology fetched with `projects/PSEUDOCAP/panther_tree.py node PTN001464661 --depth 3
+--leaves` (PTHR21064), plus two `--contains` queries. The node is a Eubacteria
+SPECIATION node, 10 leaves, all PTHR21064:SF6.
+
+| Child node | Event / taxon | Leaves | Subfamilies | Verdict |
+|---|---|---|---|---|
+| PTN007684856 | SPECIATION, Terrabacteria | 3 (A9WJ27 Chloroflexus; PTN001843206 Bacillus: O34640 AmiN, Q81HY9) | SF6:3 | Over-propagated; AmiN is an experimentally shown amicoumacin kinase and B. subtilis has a separate GHMP ThrB |
+| PTN001843208 | LEAF, Deinococcus radiodurans | 1 (Q9RXC1, uncharacterised) | SF6 | No support |
+| PTN002326065 | LEAF, Synechocystis | 1 (P73341, uncharacterised) | SF6 | No support |
+| PTN001843209 | LEAF, Fusobacterium nucleatum | 1 (Q8RF07, named homoserine kinase) | SF6 | Plausible but unverified; needs its own IBD if kept |
+| PTN002326066 | SPECIATION, Proteobacteria | 4 (P29364 ThrB, Q4W557 thrB, Q89UU4 thrB, Q8PCP9) | SF6:4 | Correct home for both IBDs |
+
+`--contains P29364,Q4W557,Q89UU4` returns PTN002326066 (4 leaves); `--contains
+P29364,Q8RF07` returns the root PTN001464661 itself, so there is no intermediate node
+that keeps the Fusobacterium leaf without also keeping the Terrabacteria amicoumacin
+kinase clade. The earlier concern is therefore confirmed by the topology and sharpened:
+the defect is kept, raised SUSPECTED -> CONFIRMED, and now names PTN002326066 as the
+target node. NOT annotations on the Bacillus leaves become unnecessary if the IBDs move.
+The P. aeruginosa rows in this review are unaffected (P29364 is inside the target clade,
+so its IBAs stand).

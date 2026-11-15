@@ -73,3 +73,30 @@ defect is filed.
 - MODIFY: kinase activity, transferase activity, and transferase activity
   transferring phosphorus-containing groups (IEA) -> PEP-protein
   phosphotransferase activity.
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the `GO_CENTRAL` defect on PTN000532509, which previously argued from
+what the other leaves of the Enzyme I node are *called*. Leaf membership
+confirmed with `panther_tree.py node PTN000532509 --leaves` (43 leaves, 25
+taxa); UniProt entries fetched from `rest.uniprot.org`.
+
+| Leaf | Name and its evidence | Experimental annotations found | Verdict |
+|---|---|---|---|
+| P08839 (E. coli ptsI) | Curated `RecName` "Phosphoenolpyruvate-protein phosphotransferase", ECO:0000303|PubMed:2960675; EC 2.7.3.9 ECO:0000269|PubMed:12705838 | `GO:0008965` EXP; `GO:0005737` EXP; `GO:0005829` HDA; `GO:0042802` IPI. Curated FUNCTION with ECO:0000269 ×3 states it is the "General (non sugar-specific) component" of the PTS | SURVIVES, and is now the strongest claim: experimentally non-sugar-specific, so it cannot inherit a GlcNAc-specific process |
+| P37177 (E. coli ptsP, EI-Ntr) | Curated `RecName`, ECO:0000303|PubMed:8973315; EC 2.7.3.9 ECO:0000269|PubMed:10473571 | `GO:0008965` IDA:EcoCyc; `GO:0006468` IDA:EcoCyc | SURVIVES. The EI-Ntr identity is additionally a domain fact: GAF domain (Pfam PF01590, PROSITE PS50813) absent from PtsI |
+| Q9HY55 (P. aeruginosa PA3562, "fruI") | `RecName` and EC from **ARBA** (ECO:0000256|ARBA:ARBA00012232) — a predicted name; gene name `fruI` is ECO:0000313|EMBL (submitter) | None in UniProt (all IEA/IBA/UniRule). **But** PMID:18833300, the paper that seeds this IBD, reports the PA3562 knockout failing to grow on D-fructose and fructose induction of the gene | SURVIVES on the experiment, not the name. Same subfamily (PTHR46244:SF6) and same organism as PA3760, yet dedicated to a different sugar |
+| P77439 (E. coli fryA, MTP 1) | `RecName` ECO:0000305|PubMed:11361063; PE 1 | No experimental GO; `GO:0008965` ISS | Name claim dropped. Retained claim is the domain fact: type-2 fructose-class EIIA (PF00359, PS51094, IPR004715 `PTS_IIA_fruc`) + HPr + EI |
+| P32670 (E. coli ptsA, MTP 2) | `RecName` ECO:0000303|PubMed:7773398; PE 3 | None; `GO:0008965` ISS, two NAS rows from ComplexPortal | As above — domain fact only |
+| P45597 (X. campestris fruB) | `RecName` ECO:0000303|PubMed:7496537; PE 3 | None; `GO:0008965` ISS | As above — domain fact only |
+
+PA3760 itself (Q9HXN5) carries a **type-1** PTS EIIA domain (Pfam PF00358,
+PROSITE PS51093, PS00371), while all four fused multiphosphoryl leaves carry
+the **type-2** fructose-class EIIA; P08839 and P37177 carry no EIIA or HPr
+domain at all. That domain split, not the names `fruB`/`ptsA`/`fruI`, is what
+the node-level objection now rests on, together with the PA3562 growth
+phenotype and the experimental non-specificity of E. coli PtsI.
+
+Confidence raised PROBABLE -> CONFIRMED: PMID:18833300 is cached full text and
+states the decisive PA3562 fact outright, and the domain content is primary
+data checked here.
