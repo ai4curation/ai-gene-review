@@ -137,8 +137,12 @@ On 2026-11-15 it found:
      2,187 new failures without it (541 ids, 1,091 labels, 555 memberships) and none
      with it. The one new failure is real: P0ABZ4, first classified in 20.0, sits
      outside its declared subfamily, which the bump did not change.
-   - **Modules: to do.** Term labels go through the OAK term validator, and
-     membership through `validate_family_members`.
+   - **Modules: done.** PANTHER terms whose label matches the previous release are
+     set aside with a warning before OAK term validation
+     (`defer_previous_release_panther_terms`), and `validate_family_members` treats a
+     family that matched the members in the previous release as a warning. A simulated
+     bump over all modules gives 443 new term errors and 1 new membership error
+     without it, and none with it.
 2. The bump PR changes only the pinned constants and rebuilt caches (2.1).
 3. Remap PRs follow in batches of about 50 files each, one directory at a time
    (modules, then family reviews, then rules), each regenerated from the report and
