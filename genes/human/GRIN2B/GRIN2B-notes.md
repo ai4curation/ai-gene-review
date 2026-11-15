@@ -49,3 +49,13 @@
 
 ## Action totals
 See the PR body. 150 annotation rows.
+
+## 2026-11-15: full text of PMID:19666514
+
+The requester supplied the full text of PMID:19666514 (Bidoret et al. 2009), which the cache holds as abstract
+only. It is the paper behind the three SynGO rows for GO:0099507 (ligand-gated channel activity involved in
+regulation of presynaptic membrane potential; IDA, IMP, NAS). The paper assigns the presynaptic NMDA receptor
+role at rat cerebellar parallel fibres to NR2A: "NR2A- but not NR2B-containing NMDARs are required for LTD
+induction" (the NR2B-selective antagonist Ro25-6981 did not prevent LTD; nanomolar zinc did). NR2B labelled
+about 10% of parallel fibre boutons, against 23% for NR2A and 49% for NR1. The three rows changed from UNDECIDED
+to REMOVE, and the SynGO query became a confirmed wrong-gene-product source defect (the evidence fits rat Grin2a).
