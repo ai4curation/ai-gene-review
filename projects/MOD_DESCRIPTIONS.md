@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [worm, yeast, DROME]
 autolink_exclude: [MOD, MODS, GET3, EGF]
+manifest:
+  slides:
+    - href: MOD_DESCRIPTIONS/slides/MOD_DESCRIPTIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Uak8ttS9nu4C36Fh9JypKg
+      title: Project brief
 ---
 
 # MOD gene descriptions as review input
@@ -20,9 +27,10 @@ deep-research source, scores it against our review, and acts on what it finds.
 | With a curated MOD description | 374 (87%) | 890 (100%) | 345 (64%) |
 | Median MOD text length (words) | 75 | 33 | 37 |
 | MOD text correctness, 1-5 (UniProt) | 4.2 (4.5) | 4.8 (4.6) | 4.7 (4.6) |
-| Description-text defects recorded (MOD + UniProt) | 100 (73 + 27) | 89 (44 + 45) | 73 (39 + 34) |
+| Description-text defects recorded (MOD + UniProt) | 105 (76 + 29) | 92 (47 + 45) | 75 (39 + 36) |
+| Of which confirmed by a quoted paper | 33 | 40 | 27 |
 | Reviews edited in the follow-up | about 60 | 249 | 124 |
-| NEW annotation rows | 0 | 2 | 1 |
+| NEW annotation rows | 1 | 2 | 1 |
 
 What we learned:
 
@@ -34,19 +42,24 @@ What we learned:
   FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
   often the more informative source, especially for fly.
 - **Most errors are stale, transferred or copied text, in both MOD and UniProt
-  descriptions.** The 262 recorded defects split 156 MOD and 106 UniProt. They are the
-`WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects (plus one worm
-`WRONG_REFERENCE`) on the cited MOD and UniProt files, counted per resource across
-`genes/worm`, `genes/yeast` and `genes/DROME`. Other source defects in those folders,
-mostly on GO annotations, are not included. Typical
-  cases are a claim later overturned (FlyBase says amon cleaves Slit; Tolkin is the
-  Slit protease), text carried over from another species (UniProt gives fly SCAP the
-  mammalian sterol-sensing mechanism) and a copy error (UniProt names Gurken, another
-  ligand, as the receptor for Spitz). Each defect quotes the offending sentence, and
-  `just export-source-defects` turns them into per-resource reports. Filing those
-  reports is a manual step that has not been done yet.
+  descriptions.** There are 272 recorded defects, 162 in MOD text and 110 in UniProt
+  text, and 100 of them are confirmed by a quoted paper. Typical cases are a claim later
+  overturned (FlyBase says amon cleaves Slit; Tolkin is the Slit protease), text carried
+  over from another species (UniProt gives fly SCAP the mammalian sterol-sensing
+  mechanism) and a copy error (UniProt names Gurken, another ligand, as the receptor for
+  Spitz). Each defect quotes the offending sentence, and `just export-source-defects`
+  turns them into per-resource reports. Filing those reports is a manual step that has
+  not been done yet.
+- **How the defects are counted.** [defect_tally.py](MOD_DESCRIPTIONS/defect_tally.py)
+  counts the `WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects
+  (plus one worm `WRONG_REFERENCE`) on the cited MOD and UniProt files in `genes/worm`,
+  `genes/yeast` and `genes/DROME`, and writes them with their quotes and evidence to
+  [defect-tally.yaml](MOD_DESCRIPTIONS/defect-tally.yaml) (2026-11-15). Other source
+  defects in those folders, mostly on GO annotations, are left out. The total was 262 on
+  2026-11-02; reviews merged since then added 10.
 - **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
-  NEW rows. Most gaps are mutant phenotypes, which show that the gene is needed,
+  NEW rows (yeast MIH1 and HOG1, fly Tango5); the fourth, worm fshr-1, came from the
+  hand comparison. Most gaps are mutant phenotypes, which show that the gene is needed,
   not that it does the work, so they become description sentences instead.
 - **The Alliance automated text is the weakest source.** It is generated from the
   GO annotations under review, so it is never cited as evidence, and it scores lowest
