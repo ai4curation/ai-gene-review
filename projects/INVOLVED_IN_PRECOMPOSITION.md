@@ -121,14 +121,14 @@ here.
 | rows where the gene is in any cached GO-CAM | 355 |
 | rows where a GO-CAM of the same gene realizes Y | 35 |
 | rows where a same-symbol GO-CAM in another species realizes Y | 22 (lower bound: the script maps 12 species folders to GO-CAM index labels, and rows in the other folders get no same-symbol hit) |
-| rows whose gene is named in a module | 735 |
+| rows whose gene is named in a module | 737 |
 | rows on label-only terms (Y entailed by the regulated process; see round 3) | 11 |
-| rows on terms kept as the right grain (`keep_precomposed.yaml`; see round 5) | 41 |
+| rows on terms kept as the right grain (`keep_precomposed.yaml`; see rounds 5 and 6) | 71 |
 
 Figures refreshed 2026-11-07, after merging `main`; they are a snapshot, and
 `data/summary.yaml` is authoritative. The first snapshot
 (2026-10-18) had 1,023 rows over 519 genes. Current review actions on these
-rows (after round 5): KEEP_AS_NON_CORE 699, ACCEPT 358, MODIFY 160,
+rows (after round 6): KEEP_AS_NON_CORE 690, ACCEPT 358, MODIFY 169,
 MARK_AS_OVER_ANNOTATED 116, UNDECIDED 77, REMOVE 26, NEW 17, TOO_GENERAL 9. Apart from the rows this
 project decomposed, the existing MODIFYs do not decompose: in the first
 snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves to a different term (e.g.
@@ -186,7 +186,7 @@ the GAF.
 ### Recurring Y contexts
 
 [`data/module_candidates.yaml`](INVOLVED_IN_PRECOMPOSITION/data/module_candidates.yaml)
-groups rows by Y. There are 197 contexts; 94 have three or more genes, and
+groups rows by Y. There are 195 contexts; 93 have three or more genes, and
 70 of those are named by no module (crude test: the GO id does not appear in
 any module YAML). They are **not** a module to-do list. Read them through the
 module policy below: some Y's are really mechanisms (module material), most
@@ -252,7 +252,7 @@ saying where Y went:
 | **B. BP `part_of` BP** | 586 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
 | **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
 | **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition, unless the term turns out to be the right grain (GO:0106074, round 5: see *Kept terms*). |
-| **Kept terms** (any class) | 41 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
+| **Kept terms** (any class) | 71 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication; round 6: GO:0050910, GO:0050973 and GO:0050974, the per-sense mechanical detection terms). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
 | **E. label-only** | 11 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
 
 Outcomes:
@@ -415,14 +415,14 @@ terms, core-function terms and isoform-specific terms that a review
 introduced, rather than GOA rows it reviewed, plus combined terms used
 anywhere in a module annoton (function, processes, targets). These are in
 [`data/authored_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/data/authored_precomposed.yaml).
-After round 4 there are 314 uses: 283 across 171 genes (164 in
-`directly_involved_in`, 111 as MODIFY replacements, 6 as core-function MFs
+After round 6 there are 302 uses: 271 across 166 genes (164 in
+`directly_involved_in`, 99 as MODIFY replacements, 6 as core-function MFs
 and 2 as isoform-specific terms) and 31 in 12 modules (30 as annoton
 processes and 1 as an annoton function, GO:0099626 in
 `synaptic_vesicle_exocytosis`). 56 of them are on the label-only MOMP terms
-(round 3) and are flagged `label_only`; they need no decomposition. 49 more
-are on the two terms kept in round 5 and are flagged `kept`. That leaves 209
-to work through. Label-only and kept rows are also left out of
+(round 3) and are flagged `label_only`; they need no decomposition. 71 more
+are on the five terms kept in rounds 5 and 6 and are flagged `kept`. That
+leaves 175 to work through. Label-only and kept rows are also left out of
 `module_candidates.yaml`: a label-only filler is the regulated process, and a
 kept term is not being decomposed, so neither is a context to model. This is a second work stream:
 reviews have been actively moving annotations *toward* these terms.
@@ -649,6 +649,96 @@ whether GO:0006271 should exist.
    take both out of the "involved in" set without moving an annotation
    (ticket 6).
 
+## Worked cases (round 6): hearing detection kept, developmental apoptosis decomposed
+
+### GO:0050910 *detection of mechanical stimulus involved in sensory perception of sound* — kept, with GO:0050973 and GO:0050974
+
+The plan had this term down for a module. The module now exists:
+`hair_cell_mechanotransduction`, built from RGD PW:0001503, models the
+CDH23/PCDH15 tip link, the TMC1/TMC2 channel with LHFPL5, TMIE and CIB2, the
+upper tip-link density and the inner-hair-cell synapse. Its annotons already
+use GO:0050910, and its notes record that the same apparatus serves balance
+in vestibular hair cells, where it uses the sibling GO:0050973 (TMC2 carries
+both; the MYO1C adaptation motor carries GO:0050973).
+
+That looks like "mechanism X used in context Y", but the round-5 test says
+keep:
+
+- **The bare genus loses the sense.** GO:0050982 *detection of mechanical
+  stimulus* also covers non-perceptual detection: GO:0001981 baroreceptor
+  detection of arterial stretch, GO:0002000 detection of renal blood flow,
+  GO:0035995 detection of muscle stretch. For TMC1 or LHFPL5, "which sense
+  this detection serves" is the information.
+- **The terms are a per-sense family, not one-off combinations.** Under
+  GO:0050974 *detection of mechanical stimulus involved in sensory
+  perception* sit hearing (GO:0050910), touch, pain and equilibrioception
+  (GO:0050973), each the transduction stage of its sense, with EXACT
+  synonyms such as "detection of sound" and "sensory transduction of
+  sound".
+- **The shared apparatus already has a term.** Where one apparatus serves
+  several senses, GO:0050974 states it without either context, and the
+  zebrafish lhfpl5a/lhfpl5b, tmc2a/tmc2b and tomt reviews already use it.
+
+So the three terms go on the keep list (30 rows, 22 authored uses), and the
+module and reviews are unchanged. The alternative, MODIFY to GO:0050982 with
+the sense carried by the module, was considered and rejected because the
+genus is a grouping of interoceptive and sensory detection that no review
+would choose on its own. The rows on these terms are judged on their own
+merits as before (most of the 30 are phenotype or orthology rows on
+transcription factors, efferent receptors and bundle proteins, and are
+MARK_AS_OVER_ANNOTATED or KEEP_AS_NON_CORE).
+
+### GO:1904747 *positive regulation of apoptotic process involved in development* → GO:0043065 *positive regulation of apoptotic process*
+
+GO:1904747 is class C and nested: `biological regulation and
+positively_regulates GO:1902742`, where GO:1902742 is `apoptotic process and
+part_of GO:0048856 anatomical structure development`. Its 12 authored uses
+were all MODIFY replacements in six *C. elegans* engulfment-gene reviews.
+They come from the APOPTOSIS project's
+[assay-readout page](APOPTOSIS/ASSAY_READOUT_OVERANNOTATION.md). That page
+found that the CED-8 paper (PMID:24225442) gave GO:1902742 to engulfment
+mutants it used only as a corpse-preserving background. It moved those rows
+to positive regulation, because engulfment genes promote death from the
+engulfing cell (Reddien 2001; Hoeppner 2001) rather than taking part in the
+dying cell's program.
+
+That sign correction stands. What round 6 removes is the developmental
+context the term inherited from GO:1902742: it is where the pro-death role
+was measured, not a mechanism, and every review calls the role non-core.
+Under the class C rule the term unfolds to `regulation of X`, GO:0043065.
+
+| Gene | Rows | Outcome |
+|---|---|---|
+| ced-1, ced-2, ced-5, ced-6, ced-7, ced-12 | 12 | GO:1902742 MODIFY replacements → GO:0043065, `context_dropped` |
+| ced-1 (4), ced-6 (2), ced-7 (3), GOA GO:1904747 (IMP/IGI, PMID:23505386) | 9 | KEEP_AS_NON_CORE → MODIFY to GO:0043065, `context_dropped`; the non-core judgment stays in the reason |
+
+The second line is needed for consistency. Had only the replacements moved,
+ced-1, ced-6 and ced-7 would propose GO:0043065 while keeping its child
+GO:1904747 on other rows of the same claim. The assay-readout table, the
+six notes files, a ced-2 reason and a ced-12 reference note are updated to
+match.
+
+Left as they are: the ACCEPT rows on GO:1904747 for worm egl-1 and
+*Drosophila* hid, which need their own reading in the full pass, and the
+ced-3, ced-4 and *Drosophila* Dark rows, which already MODIFY GO:1904747
+laterally (to execution phase, apoptotic signaling pathway, or positive
+regulation of apoptotic signaling pathway) for reasons unrelated to the
+context.
+
+### Lessons from round 6
+
+1. **A module for the mechanism does not by itself retire the term.**
+   `hair_cell_mechanotransduction` is the mechanism, and it still needs a
+   process term to say which sense each part serves; GO's per-sense
+   detection terms do that, and their common parent covers the shared case.
+2. **Decompose the gene's own GOA rows when they make the same claim.**
+   Moving only the replacements would have left three genes proposing a
+   term and keeping its child. The non-core judgment survives in the
+   reason, as the non-core rule above allows.
+3. **Another project's choice can be kept and refined.** The assay-readout
+   page chose the term for its sign; this round keeps the sign and drops
+   only the context, and records that on the page itself.
+
 ### Lessons from round 4
 
 1. **A term without "involved in" in its label can still be precomposed in
@@ -692,9 +782,9 @@ whether GO:0006271 should exist.
      10 rows, TSG101/VPS28/VPS37A–D/MVB12A/UBAP1). First check whether
      `dmel_escrt_machinery` can be generalized into a species-neutral ESCRT
      module rather than adding a parallel one.
-   - **hair-cell mechanotransduction** (`detection of mechanical stimulus
-     involved in sensory perception of sound`, 18 rows). A module for the MET
-     complex (TMC1/2, LHFPL5, TMIE, PCDH15, CDH23), not for hearing.
+   - ~~**hair-cell mechanotransduction**~~: the module
+     `hair_cell_mechanotransduction` now exists (built from RGD PW:0001503),
+     and round 6 kept its detection terms.
 5. **Authored combined terms** — work through
    `data/authored_precomposed.yaml`, skipping `label_only` entries.
    - ~~GO:1901030/GO:1901029 (MOMP)~~: label-only, no decomposition (round 3).
@@ -709,11 +799,17 @@ whether GO:0006271 should exist.
      then.
    - ~~GO:0106074 (aminoacyl-tRNA editing) and GO:0006271 (replication
      elongation)~~: kept as the right grain in round 5.
-   - Next: GO:0050910 *detection of mechanical stimulus involved in sensory
-     perception of sound* (12 uses, 6 genes; the hair-cell
-     mechanotransduction module in item 4) and GO:1904747 *positive
-     regulation of apoptotic process involved in development* (12 uses, 6
-     genes; class C, likely context to drop).
+   - ~~GO:0050910 / GO:0050973 / GO:0050974 (mechanical detection in
+     sensory perception)~~: kept in round 6.
+   - ~~GO:1904747 (positive regulation of developmental apoptosis)~~:
+     decomposed in round 6 for the *C. elegans* engulfment genes. Its
+     remaining uses (egl-1 and *Drosophila* hid ACCEPT rows; ced-3, ced-4 and
+     *Drosophila* Dark rows already moved laterally) wait for the full pass.
+   - Next: GO:0035735 *intraciliary transport involved in cilium assembly*
+     (10 uses, 8 genes) and GO:0003351 *epithelial cilium movement involved
+     in extracellular fluid movement* (10 uses, 4 genes). The other sensory
+     detection terms (chemical, light, temperature) are keep candidates, to
+     be decided term by term by the round-6 test.
 6. **Full pass** — walk `data/annotations.yaml` gene by gene, from class A to
    B, C and D. Check `gocam_same_gene` and `gocam_same_symbol_other_species`
    first, and confirm orthology before citing the symbol-matched hits.

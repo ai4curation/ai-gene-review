@@ -116,11 +116,16 @@ fixed, then can become ERRORs.
 
 The REMOVE-on-ancestor rule first fired on 304 REMOVE rows in 209 reviews. Exempting
 ND root-term rows and making hierarchical rules respect qualifiers left 210 rows in
-136 reviews. The 123 rows whose broad term was plainly true (redundant, removed for
+136 reviews. The 124 rows whose broad term was plainly true (redundant, removed for
 one row's weak evidence, or `cytoplasm`/`membrane` read as cytosol or integral
 membrane) were then changed to TOO_GENERAL, or to the action already on another row for
-the same term. The rest are judgement cases (ontology placements a review disputes,
-pseudoenzymes, unqualified `is_active_in` rows, process terms) and stay WARNINGs.
+the same term. By the second batch, 47 rows in 43 reviews were still flagged on main;
+the rest had been re-curated by other PRs or dropped by GOA and GO refreshes in between.
+That batch fixed 15 more rows in 13 reviews. The rest are judgement cases and stay WARNINGs:
+ontology placements a review disputes (some GO edges look wrong, such as microtubule
+motor activity under an isomerase term), pseudoenzymes, genuine biological disputes, and
+rows on GO:0061753, which GOA's ontology now marks obsolete but the local GO release
+used for validation does not.
 
 ### Hierarchical rules and the ontology
 

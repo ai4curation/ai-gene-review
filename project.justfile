@@ -321,6 +321,12 @@ wrong-gene-leads *args="":
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
+# Report structural anomalies in cached GO-CAM models (see docs/gocam_lint.md)
+# Example: just gocam-lint 59cc772c00000000
+# Example: just gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+gocam-lint *args="":
+    uv run ai-gene-review gocam-lint {{args}}
+
 # Check GO-CAM activity locations against the disjoint compartment model
 # (unresolved occurs_in terms; causal edges between non-adjacent compartments)
 # Example: just gocam-compartments 59cc772c00000000
@@ -1084,10 +1090,20 @@ validate-prediction-terms +files:
     #!/usr/bin/env bash
     set -uo pipefail
     uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
-    out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
+    # scripts/term_validate.sh normalizes a transient ontology-service outage
+    # (exit 97 skip, or exit 96 under TERM_VALIDATION_STRICT) so an EBI blip cannot
+    # jam the merge queue; every other case passes through unchanged, so the grep
+    # below still classifies ❌ ERROR / NCBITaxon mismatch (blocking) vs advisory
+    # ⚠️ WARN (validate-data exits 1 for both). See the script header.
+    out=$(scripts/term_validate.sh validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
     rc=$?
     echo "$out"
-    if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
+    if [ "$rc" -eq 97 ]; then
+        echo "::warning::Ontology service unavailable; prediction term validation skipped (not a data error)."
+    elif [ "$rc" -eq 96 ]; then
+        echo "✗ Ontology service unavailable during strict term validation (full pass blocks)"
+        exit 1
+    elif [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Label mismatch for '?NCBITaxon:"; then
         exit 1
     fi
     uv run validate-goa-support {{files}}
@@ -1176,7 +1192,17 @@ validate organism gene:
 test-examples:
     #!/usr/bin/env bash
     set -euo pipefail
-    pass=0; fail=0; errors=()
+    pass=0; fail=0; skipped=0; errors=()
+    # Route the term-validator stages through scripts/term_validate.sh so a
+    # transient ontology-service outage does not mark a valid example as failed
+    # or (worse) score an invalid example as "correctly rejected" when nothing
+    # was actually checked. Exit 97 = outage skip (non-strict), exit 96 = outage
+    # under TERM_VALIDATION_STRICT (the weekly/manual pass blocks). No per-file
+    # retries (the first outage short-circuits the rest via svc_state) so a
+    # sustained outage cannot stall this per-file loop. Set -e is active, so the
+    # helper's status is captured with `|| trc=$?`.
+    export TERM_VALIDATE_RETRIES=0
+    svc_state=""   # "" | skip | fail, once the service is seen to be down
 
     echo "=== Valid examples (must pass) ==="
     for f in tests/data/valid/*.yaml; do
@@ -1184,7 +1210,22 @@ test-examples:
         ok=true
         uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1 || ok=false
         if $ok; then
-            uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || ok=false
+            if [ "$svc_state" = skip ]; then
+                echo "  ⊘ $name (term check skipped: ontology service unavailable)"; skipped=$((skipped + 1)); continue
+            elif [ "$svc_state" = fail ]; then
+                echo "  ✗ $name (ontology service unavailable, strict)"; errors+=("VALID $name: service unavailable (strict)"); fail=$((fail + 1)); continue
+            fi
+            trc=0
+            scripts/term_validate.sh validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || trc=$?
+            if [ "$trc" -eq 97 ]; then
+                svc_state=skip
+                echo "  ⊘ $name (term check skipped: ontology service unavailable)"; skipped=$((skipped + 1)); continue
+            elif [ "$trc" -eq 96 ]; then
+                svc_state=fail
+                echo "  ✗ $name (ontology service unavailable, strict)"; errors+=("VALID $name: service unavailable (strict)"); fail=$((fail + 1)); continue
+            elif [ "$trc" -ne 0 ]; then
+                ok=false
+            fi
         fi
         if $ok; then
             echo "  ✓ $name"
@@ -1204,8 +1245,25 @@ test-examples:
         if ! uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1; then
             echo "  ✓ $name (correctly rejected by schema)"
             pass=$((pass + 1))
-        # If schema passes, try term validation
-        elif ! uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1; then
+            continue
+        fi
+        # Schema passed, so the term validator must be the one to reject it. A
+        # service outage cannot confirm that, so never score such a file as
+        # "correctly rejected": skip it (non-strict) or fail (strict).
+        if [ "$svc_state" = skip ]; then
+            echo "  ⊘ $name (term check skipped: ontology service unavailable)"; skipped=$((skipped + 1)); continue
+        elif [ "$svc_state" = fail ]; then
+            echo "  ✗ $name (ontology service unavailable, strict)"; errors+=("INVALID $name: service unavailable (strict)"); fail=$((fail + 1)); continue
+        fi
+        trc=0
+        scripts/term_validate.sh validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || trc=$?
+        if [ "$trc" -eq 97 ]; then
+            svc_state=skip
+            echo "  ⊘ $name (term check skipped: ontology service unavailable)"; skipped=$((skipped + 1))
+        elif [ "$trc" -eq 96 ]; then
+            svc_state=fail
+            echo "  ✗ $name (ontology service unavailable, strict)"; errors+=("INVALID $name: service unavailable (strict)"); fail=$((fail + 1))
+        elif [ "$trc" -ne 0 ]; then
             echo "  ✓ $name (correctly rejected by term validator)"
             pass=$((pass + 1))
         else
@@ -1216,7 +1274,10 @@ test-examples:
     done
 
     echo ""
-    echo "Results: $pass passed, $fail failed"
+    echo "Results: $pass passed, $fail failed, $skipped skipped"
+    if [ "$skipped" -gt 0 ]; then
+        echo "::warning::$skipped example(s) had term validation skipped (ontology service unavailable)."
+    fi
     if [ $fail -gt 0 ]; then
         echo "Failures:"
         for e in "${errors[@]}"; do echo "  - $e"; done
@@ -1349,10 +1410,21 @@ validate-all:
     # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
     # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
     # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
-    term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
+    # scripts/term_validate.sh normalizes a transient ontology-service outage so
+    # an EBI blip cannot jam the merge queue (exit 97 = skip), while the weekly /
+    # manual full pass runs with TERM_VALIDATION_STRICT set so an outage blocks
+    # (exit 96) and the unverified terms are caught once the service is back. All
+    # other cases pass through, so the grep still classifies ❌ ERROR / NCBITaxon
+    # mismatch (blocking) vs advisory ⚠️ WARN. See the script header.
+    term_out="$(scripts/term_validate.sh validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)"
+    term_rc=$?
     printf '%s\n' "$term_out"
-    # "Unable to validate" is LTV's ontology-service-unavailable message: every check was skipped.
-    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate"; then
+    if [ "$term_rc" -eq 97 ]; then
+        echo "::warning::Ontology service unavailable; term validation skipped (not a data error)."
+    elif [ "$term_rc" -eq 96 ]; then
+        echo "✗ Ontology service unavailable during strict term validation (full pass blocks)"
+        exit_code=1
+    elif printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
         echo "✗ Term validation found errors (see above)"
         exit_code=1
     elif printf '%s\n' "$term_out" | grep -qE "Label mismatch for '?NCBITaxon:"; then
@@ -2451,6 +2523,17 @@ init-rule-review rule_id *args:
 arba-sync *args="":
     uv run ai-gene-review arba-sync {{args}}
 
+# Check whether ARBA rules fire on a protein (current UniProt data, rules fetched fresh)
+# Example: just arba-check Q88KS6 ARBA00086692 ARBA00028620
+arba-check accession *rule_ids:
+    uv run ai-gene-review arba-check {{accession}} {{rule_ids}}
+
+# Check each ARBA row (GO_REF:0000117) of a gene's GOA file against the rule it cites.
+# Rows whose rule was edited after the GOA load are RULE_EDITED_SINCE_LOAD, not MISMATCH.
+# Example: just arba-check-gene PSEPK PP_2213
+arba-check-gene organism gene *args:
+    uv run ai-gene-review arba-check-goa genes/{{organism}}/{{gene}}/{{gene}}-goa.tsv {{args}}
+
 # Sync UniRules with GO annotations from UniProt (stores in rules/unirule/)
 # By default only syncs rules that have GO term annotations
 # Examples:
@@ -2873,9 +2956,22 @@ validate-families: ensure-panther-members
     uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
         --target-class FamilyReview "${files[@]}" || rc=1
     echo "Validating GO term ids and labels (batch)..."
-    uv run linkml-term-validator validate-data "${files[@]}" \
+    # Via scripts/term_validate.sh so a transient ontology-service outage does
+    # not block (exit 97 skip); the weekly/manual pass runs TERM_VALIDATION_STRICT
+    # and an outage blocks (exit 96). Any real validator error (exit 1) still sets
+    # rc=1. An EBI blip here otherwise jams the merge queue (runs every merge_group).
+    scripts/term_validate.sh validate-data "${files[@]}" \
         -s src/ai_gene_review/schema/family_review.yaml \
-        -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
+        -t FamilyReview --labels -c conf/oak_config.yaml
+    trc=$?
+    if [ "$trc" -eq 97 ]; then
+        echo "::warning::Ontology service unavailable; family term validation skipped (not a data error)."
+    elif [ "$trc" -eq 96 ]; then
+        echo "✗ Ontology service unavailable during strict family term validation (full pass blocks)"
+        rc=1
+    elif [ "$trc" -ne 0 ]; then
+        rc=1
+    fi
     echo "Validating supporting_text quotes against cached publications..."
     # One multi-file call (schema parsed once); same wrapper and config as gene reviews.
     scripts/run_reference_validator.sh validate data "${files[@]}" \

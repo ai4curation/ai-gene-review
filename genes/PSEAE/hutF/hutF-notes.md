@@ -60,8 +60,30 @@
   GO:0019239 in GO).
 - Source defects: PSEUDOCAP WRONG_REFERENCE CHECK (PROBABLE) on the IMP row, re-key
   to PMID:16475788; GO_CENTRAL CHECK (SUSPECTED) on PTN000138516 for re-anchoring the
-  BP IBD and for the nematode leaves.
+  BP IBD and for the nematode leaves (raised to CONFIRMED after the tree check below).
 
 ## Full-text check of PMID:4290562 (2026-11-05)
 
 The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810) was supplied by the user and read. Its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. Step IV is measured only as crude-extract formiminoglutamate degradation (shared by HutF and HutE in PAO1) and there is no hutF mutant. The WRONG_REFERENCE defect on the IMP row is now CONFIRMED and the reference is marked MISCITED.
+
+## PANTHER tree check (2026-11-05)
+
+Topology fetched with `projects/PSEUDOCAP/panther_tree.py node PTN000138516 --depth 5
+--leaves` (PTHR11271). PTN000138516 is the family's LUCA SPECIATION root; every leaf is
+subfamily PTHR11271:SF48.
+
+| Child node | Event / taxon | Leaves | Subfamilies | Verdict |
+|---|---|---|---|---|
+| PTN000884852 | SPECIATION, Rhabditida-Chromadorea | 3 (Q20166 cpin-1, A8Y0T4 cpin-1, A0A2A6BT36) | SF48:3 | Over-propagated: no HutF signatures, no known histidine-degradation route |
+| PTN000138520 | SPECIATION, Eubacteria | 5 (Q9HU77 hutF, Q9KZ77, Q89GV1, Q8PAA5 sdeB, Q9ZC76) | SF48:5 | Correct anchor for both IBDs |
+| PTN000138522 | SPECIATION, Proteobacteria | 4 | SF48:4 | Narrower option |
+| PTN001681702 | SPECIATION, Gammaproteobacteria | 3 (Q8PAA5, Q9HU77, Q9ZC76) | SF48:3 | Narrowest clade option; smallest clade holding Q9HU77 is its own leaf PTN002462020 |
+
+The earlier concern is confirmed by the topology: the nematode leaves are not scattered
+through the tree but form one clean child clade, so moving the GO:0006548 and GO:0050416
+IBDs from PTN000138516 to PTN000138520 removes all three unsupported leaf IBAs without
+touching any bacterial leaf. Note that within the bacterial clade only Q9HU77 is a
+characterised formimidoylglutamate deiminase; the other four leaves are named
+chlorohydrolase/hydrolase, which the tree cannot resolve further - that would need
+enzymology on one of Q9KZ77, Q89GV1, Q8PAA5 or Q9ZC76. The P. aeruginosa leaf IBAs
+reviewed here are unaffected (ACCEPT stands).

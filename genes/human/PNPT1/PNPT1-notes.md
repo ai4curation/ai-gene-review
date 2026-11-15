@@ -13,3 +13,12 @@ openai key rejected). The review uses the cached literature and UniProt.
 ## Claude Code deep research (2026-10-14)
 
 `PNPT1-deep-research-claude-code.md` was produced by `just deep-research-claude-code human PNPT1`. In two separate runs the provider answered in a single turn with no web search (`run_metadata` has no `web_search_requests`), so its references come from the model's own knowledge and were not retrieved. Treat its citations as unverified leads; nothing in the review rests on them.
+
+## 2026-11-11 cross-reference: GO:0000175 and the PNPase family
+
+The PNPase family review (`interpro/panther/PTHR11252/PTHR11252-review.yaml`)
+leaves GO:0000175 (3'-5'-RNA exonuclease activity) UNRESOLVED. GO places the term
+under GO:0016896 (hydrolysis yielding 5'-phosphomonoesters), whereas PNPase is
+phosphorolytic. The bacterial pnp reviews (ECOLI, PSEPK) modify the term to
+GO:0004654, while this review accepts it as core. The verdicts here are left
+unchanged pending a GO decision, recorded as a suggested question.

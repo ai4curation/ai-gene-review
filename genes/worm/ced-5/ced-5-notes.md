@@ -75,3 +75,5 @@ PMID:22801495 and PMID:24225442 have full text cached).
   with propagation_review (LINEAGE_OR_TAXON_MISMATCH).
 - ced-5 (WB:WBGene00000419) appears among the sources of its own cell migration IBA; that is expected, not
   circular.
+
+Round 6 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-10): the two GO:1902742 MODIFY replacements now use GO:0043065 positive regulation of apoptotic process instead of the precomposed GO:1904747 positive regulation of apoptotic process involved in development, with `decomposed_into.context_dropped`. The sign correction (the gene promotes death from the engulfing cell rather than taking part in the dying cell's program) is unchanged; only the developmental context is dropped. Earlier mentions of GO:1904747 above are superseded.

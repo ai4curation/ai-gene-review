@@ -110,3 +110,24 @@ Human MitoCoP evidence remains inspectable as the original Table S1 full headers
 The preceding heme-A UNDECIDED assessment is superseded by KEEP_AS_NON_CORE. The [complete exact-term QuickGO query](https://www.ebi.ac.uk/QuickGO/services/annotation/search?goId=GO%3A0006784&goUsage=exact&taxonId=9606%2C10090%2C10116&taxonUsage=exact&limit=200&page=1), captured 2026-10-12, contains 73 human/mouse/rat records, including experimental mouse annotations for Alad, Hmbs, Uros, Urod, Ppox, Fech, Alas1 and Cpox. These are observations of current annotation practice, not new reads of each comparator paper. They resolve the proposed terminal-enzyme-only interpretation of the pathway. The actual mouse activity experiment in [PMID:8407975](https://pubmed.ncbi.nlm.nih.gov/8407975/) establishes upstream chemical work; it does not measure heme A or make CPOX a terminal heme-A synthase. The single core remains heme-B biosynthesis.
 
 Lens structural activity remains UNDECIDED. The current donor is real, but the original 2002 full text remains unavailable. Later hypomorphic enzyme activity, porphyrin accumulation and transgene rescue establish a lens phenotype; they do not distinguish metabolic protection from a second structural function. The membrane annotation remains non-core using the separately evidenced rat association, not an assumption that the mouse ghost experiment alone demonstrates attachment. The rat authors also report failure to retain binding on isolated membranes (PMID:31872, Discussion, p. 102), so the biochemical context is retained explicitly.
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+- Every row now has verbatim supported_by quotes (UniProt CC:FUNCTION/CATALYTIC ACTIVITY/PATHWAY/
+  SUBUNIT/SUBCELLULAR LOCATION tied to PubMed:8159699 and 16176984; abstracts of PMID:8159699,
+  16176984, 31872, 8407975, 9888388, 23631845; Reactome R-HSA-189421; PANTHER PTHR10755 for IBA).
+- Lens UNDECIDED resolved as REMOVE (IEA projection). PMID:23631845 abstract: the Nakano cataract
+  is a hypomorphic Cpox allele (p.R380L, 15% activity) with coproporphyrin III accumulation in the
+  lens, rescued by a wild-type Cpox transgene. That is enzyme necessity for lens transparency, not
+  a structural molecular function; a structural constituent of the lens would be a lens building
+  block, and CPOX is a mitochondrial intermembrane-space enzyme. Recorded a PROBABLE WRONG_TERM
+  source defect against the mouse (MGI) IMP row with requested_change CHECK. The lens question is
+  kept in suggested_questions.
+- heme biosynthetic process TAS (PMID:8159699) changed MODIFY -> ACCEPT, to agree with the IBA/IEA
+  rows on the same term (validator consistency warning); heme B is used in core_functions.
+- porphyrin-containing compound biosynthetic process -> MODIFY to heme biosynthetic process
+  (the reason already argued it is a broader ancestor).
+- membrane (Compara IEA) -> MODIFY to mitochondrial inner membrane (the only membrane association
+  evidenced, PMID:31872).
+- The GO_REF:0000044 intermembrane-space row is retired from current GOA (see
+  CPOX-source-evidence.yaml) but kept in the review, accepted, with support.

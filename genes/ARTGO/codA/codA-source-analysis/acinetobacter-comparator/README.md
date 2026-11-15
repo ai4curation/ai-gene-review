@@ -1,0 +1,11 @@
+# Acinetobacter BetA comparator: identity and chemistry gap
+
+PMID34431198 (doi:10.1111/1462-2920.15741) studies A. baumannii ATCC19606 HMPREF0010_01460, described as571 residues. Official NCBI EEX04066.1 links this locus and strain. Current UniProt A0ABX6CCX8 (FQU82_00963; QFQ04397.1) is552 residues and exactly equals EEX04066.1 residues20–571. The older extension is MPSSLYRLLRQTVSKKRIV. UniParc UPI0001B8F6A6 confirms exact571-residue UniProt accessions are all inactive, including D0C9Z7. These are frozen official records, not fabricated UniProt raw files. Run `uv run python genes/ARTGO/codA/codA-source-analysis/acinetobacter-comparator/verify_identity.py`.
+
+The paper's TableS1 cloning primers could resolve whether the recombinant construct included that extension. Official supplementary-download attempts returned403; actual cloned start remains unverified. No new gene review is seeded and no activity is silently attributed to the shorter current protein. Same strain and a completely matching core sequence establish a strong locus relationship, not exact construct identity.
+
+## Primary-paper interpretation
+
+The accessible Wiley full text reports a C-terminal His6-tagged preparation from E. coli BL21STAR, enriched but containing a second protein band. PMS is the assay's primary electron acceptor; oxygen consumption follows spontaneous PMS reoxidation. The absence of activity without PMS argues against direct oxidase activity. Betaine aldehyde also supports the coupled assay, establishing a secondary in-vitro capability. Neither native electron-acceptor identity nor BetB dispensability was established. Native betA deletion impairs choline-dependent osmoprotection; that does not demonstrate a BetB-independent pathway. Thus this paper is a literature comparator, not evidence for replacing the native BetA+BetB route with a single-enzyme route.
+
+Source: https://enviromicro-journals.onlinelibrary.wiley.com/doi/10.1111/1462-2920.15741 (read2026-11-06). Normal publication cache retrieval is coordinated with the existing-gene reviewer. Browser full text was accessible; direct HTTP source/supplement downloads were403. No unavailable full text or provider report was reconstructed.

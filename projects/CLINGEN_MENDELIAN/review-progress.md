@@ -7937,3 +7937,108 @@ The linked merge-group runs executed their full integration suites and required 
 Only H1-4, GSDME, GUCY2D and GUCA1A are newly checked in this fixed window. All other catalogue identities and checkboxes, 235 dated queue records, 171 previous completion updates, the complete prior journal, scientific files, instructions and earlier histories remain unchanged.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-08T160616Z-codex-73c0e1.yaml).
+
+## Completion checkpoint 748 (2026-11-10 04:45:41 UTC)
+
+748 complete; 2,128 of 2,876 remain. This publishes ROOT's prior acceptance of H3-3A and grants no new acceptance.
+
+H3-3A: [PR #6217](https://github.com/ai4curation/ai-gene-review/pull/6217), [actual merge dc1892ff](https://github.com/ai4curation/ai-gene-review/commit/dc1892ffdbd2e436f6b843ca2981e053bec3177a), [executed merge-group run 42747632016](https://github.com/ai4curation/ai-gene-review/actions/runs/42747632016). The merged review remains DRAFT with six UNDECIDED judgments and zero NEW annotations. All 147 literal input records, 146 downloaded TSV rows, 147 stored contexts and three extension atoms are retained.
+
+ROOT acceptance: local immutable `h3-root-acceptance-20261110T044541Z.json` (SHA256 `3aac8742127f2e9dc26c249db1fe9e7d51751618eccd16da2f10ace25cae8474`, pointer `/records/0`). This provenance identifier is not a public download link. Only H3-3A is newly checked; 235 dated queue records, 172 earlier completion updates and the full earlier journal remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-10T044620Z-codex-3c96b8.yaml).
+
+## Completion checkpoint 749 (2026-11-11 18:04:57 UTC)
+
+749 complete; 2,127 of 2,876 remain. This publishes ROOT's prior acceptance of HAAO and grants no new acceptance.
+
+HAAO: [PR #6272](https://github.com/ai4curation/ai-gene-review/pull/6272), [actual merge 3f52339d](https://github.com/ai4curation/ai-gene-review/commit/3f52339d309d36e8a224b4f7467fba8c40b36fe0), [executed merge-group run 43068188719](https://github.com/ai4curation/ai-gene-review/actions/runs/43068188719). The merged review remains DRAFT with three UNDECIDED judgments and zero NEW annotations. The current input has 35 literal records and 35 downloaded TSV rows; all 38 stored contexts are preserved, including three explicitly retired historical contexts.
+
+ROOT acceptance: local immutable `HAAO-root-acceptance-749.json` (SHA256 `5334d4e245407026a7a537484472d952a589a8b4b8187598be4eaecb12b43ffd`, pointer `/records/0`). Delivery proof: local `haao-delivery-candidate-v2.json` (SHA256 `e2d3452432ae8371a6247ae96005059492925e54bb4f140d60dfc4489e81f805`). These provenance identifiers are not public download links. Only HAAO is newly checked; 235 dated queue records, 173 earlier completion updates and the full earlier journal remain unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-11T180530Z-codex-f52412.yaml).
+
+## Completion checkpoint 750 (2026-11-12 01:28:39 UTC)
+
+750 complete; 2,126 of 2,876 remain. This publishes ROOT's prior acceptance of HADH and grants no new acceptance.
+
+HADH: [PR #6312](https://github.com/ai4curation/ai-gene-review/pull/6312), [actual merge 24b5db4f](https://github.com/ai4curation/ai-gene-review/commit/24b5db4fefd0bce27acab827aa52b8b6ad024927), [executed merge-group run 43130690079](https://github.com/ai4curation/ai-gene-review/actions/runs/43130690079). The exact 12 reviewed files and head-specific approval were verified against the actual merge and fresh main. The review remains DRAFT: 41 GOA rows and 41 stored contexts, with 31 ACCEPT, 7 KEEP_AS_NON_CORE, 2 MODIFY and 1 MARK_AS_OVER_ANNOTATED; no retired, NEW or UNDECIDED contexts.
+
+Integration tests executed: 6,156 tests, 386 doctests, 489 agentic checks, 19 JavaScript tests and 12 examples passed. Gene semantic/reference/ontology checks covered HADH, with two advisories; repository-wide gene checks were schema-only. Other repository checks passed with existing warnings, unresolved cases and unreadable-source quotes still explicit. The history-coverage advisory, conditional sequence-cache save and upstream PAINT verification steps were skipped by workflow conditions. Completion does not make these limitations disappear.
+
+ROOT acceptance: local immutable `HADH-root-acceptance-750.json` (SHA256 `3d803c671d890fc62c83e4378f9c4d1905c19e83d1447396956b82e18c90b03e`). This identifier is provenance, not a public download link. Only HADH is newly checked; the 235 dated queue records, 174 earlier completion updates and full earlier journal remain unchanged. HACD1, HADHA, HADHB and the bounded HACD2 companion are not given completion credit here.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-12T013047Z-codex-10c2c3.yaml).
+
+## Completion checkpoint 753 (2026-11-14 22:38:11 UTC)
+
+753 complete; 2,123 of 2,876 remain. This publishes ROOT's prior acceptance of HACD1, HADHA and HADHB and grants no new acceptance. HACD2 was delivered as a HACD1 paralog companion and receives zero ClinGen completion credit.
+
+| Gene | Delivery | Executed merge-group CI | Current / retired contexts | Current actions |
+| --- | --- | --- | --- | --- |
+| HACD1 | [PR #6311](https://github.com/ai4curation/ai-gene-review/pull/6311), [merge c87d7483](https://github.com/ai4curation/ai-gene-review/commit/c87d748392e75a3c8c210f6d1c78018b7e489139) | [run 43572428190](https://github.com/ai4curation/ai-gene-review/actions/runs/43572428190) | 21 / 0 | 11 ACCEPT, 5 MODIFY, 5 KEEP_AS_NON_CORE |
+| HADHA | [PR #6313](https://github.com/ai4curation/ai-gene-review/pull/6313), [merge 2b36bd12](https://github.com/ai4curation/ai-gene-review/commit/2b36bd12d8a3f6cc3a32f144b11bb5d3931dba8c) | [run 43574698920](https://github.com/ai4curation/ai-gene-review/actions/runs/43574698920) | 61 / 0 | 42 ACCEPT, 5 MODIFY, 1 REMOVE, 1 UNDECIDED, 11 KEEP_AS_NON_CORE, 1 NEW |
+| HADHB | [PR #6317](https://github.com/ai4curation/ai-gene-review/pull/6317), [merge ac14aa61](https://github.com/ai4curation/ai-gene-review/commit/ac14aa61de06820b3288f11aff8ba4b750f5850a) | [run 43576276071](https://github.com/ai4curation/ai-gene-review/actions/runs/43576276071) | 63 / 6 | 7 UNDECIDED, 38 ACCEPT, 3 REMOVE, 9 MODIFY, 6 KEEP_AS_NON_CORE |
+| HACD2 | [PR #6316](https://github.com/ai4curation/ai-gene-review/pull/6316), [merge 638fcae0](https://github.com/ai4curation/ai-gene-review/commit/638fcae0511079cb7b91adb4fa0cffc1f2c31725) | [run 43574652070](https://github.com/ai4curation/ai-gene-review/actions/runs/43574652070) | 27 / 0 | 14 ACCEPT, 6 MODIFY, 7 KEEP_AS_NON_CORE |
+
+All four exact reviewed manifests (44 files total), head-specific approvals, actual merge commits and fresh-main ancestry were verified. Each integration run executed strict checks for the changed gene, repository-wide gene schema checks, quote checks, histories and family validation. Each suite passed 6,213 tests, 390 doctests, 489 automation tests and 12 example checks; 98 tests were deselected and 37 doctests skipped. Gene semantics were scoped to the changed gene. Repository-wide quote checks retained 321 unchecked gene quotes and 82 unchecked family quotes, with zero blocking mismatches. History coverage and upstream PAINT verification were skipped by workflow conditions; the conditional sequence-cache save was also skipped for HADHA, HACD2 and HADHB.
+
+All four reviews remain DRAFT. HADHA retains one evidence-backed NEW molecular-function annotation and one UNDECIDED context; its cardiolipin role is bounded by the reviewed experimental context. HADHB retains seven UNDECIDED current contexts, six unchanged retired contexts, unresolved C4 substrate specificity and uncertainty about RNA interactions and extra-mitochondrial locations. Supported generic-binding exceptions remain explicit in the reviews. Completion does not resolve these biological questions.
+
+ROOT acceptance receipts (local immutable provenance identifiers, not public download links):
+
+- `HACD1-root-delivery-acceptance-v1.json` (SHA256 `6e3f020b82ce9eb7f8c50972b04c3d612e58dfb88363728045779a4ea8276d42`).
+- `HADHA-root-delivery-acceptance-v1.json` (SHA256 `7ec06f216b22e22a3612cb9fe112475c2d5f112c3fb6f23603b52285d584199b`).
+- `HADHB-root-delivery-acceptance-v1.json` (SHA256 `1121e3e96505f5153355a276b9370ccc68755ed8b3c356d34d39d5b408546267`).
+- `HACD2-root-delivery-acceptance-v1.json` (SHA256 `1311ae95dcb0a7bcf3b37dbbd75e64d292555692c85b16cc79822e07dfd4b65a`).
+
+Only HACD1, HADHA and HADHB are newly checked. The 235 dated queue records, 175 earlier completion updates and full earlier journal are unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-14T223634Z-codex-307548.yaml).
+
+## Completion checkpoint 757 (2026-11-15 02:43:34 UTC)
+
+757 complete; 2,119 of 2,876 remain. This publishes ROOT's prior acceptance of four merged reviews and grants no new acceptance. HBA1 (HGNC:4823) and HBA2 (HGNC:4824) are distinct loci despite sharing UniProt P69905; shared sources and protein forms do not receive additional credit.
+
+| Gene / locus | Delivery | Executed merge-group CI | Current contexts | Current actions | Direct gene quotes |
+| --- | --- | --- | --- | --- | --- |
+| HAMP / HGNC:15598 | [PR #6372](https://github.com/ai4curation/ai-gene-review/pull/6372), [merge 89ea925c](https://github.com/ai4curation/ai-gene-review/commit/89ea925c2bb911dd21f70de395975192df5de8ab) | [run 43659971196](https://github.com/ai4curation/ai-gene-review/actions/runs/43659971196) | 21 | 1 UNDECIDED, 16 ACCEPT, 2 KEEP_AS_NON_CORE, 2 MODIFY | 51 |
+| HBA1 / HGNC:4823 | [PR #6373](https://github.com/ai4curation/ai-gene-review/pull/6373), [merge 6213aecb](https://github.com/ai4curation/ai-gene-review/commit/6213aecbfcc4eb12927ccdcdcb54927005100b89) | [run 43659974781](https://github.com/ai4curation/ai-gene-review/actions/runs/43659974781) | 86 | 37 KEEP_AS_NON_CORE, 27 ACCEPT, 10 MODIFY, 10 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED, 1 NEW | 152 |
+| HBA2 / HGNC:4824 | [PR #6374](https://github.com/ai4curation/ai-gene-review/pull/6374), [merge b3951fc8](https://github.com/ai4curation/ai-gene-review/commit/b3951fc8061740ee1a8e491c59f0cc4bb45ed894) | [run 43660818513](https://github.com/ai4curation/ai-gene-review/actions/runs/43660818513) | 86 | 37 KEEP_AS_NON_CORE, 27 ACCEPT, 10 MODIFY, 10 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED, 1 NEW | 166 |
+| HBB / HGNC:4827 | [PR #6375](https://github.com/ai4curation/ai-gene-review/pull/6375), [merge a0fef8e0](https://github.com/ai4curation/ai-gene-review/commit/a0fef8e0aa0b75e1842f20a7795c1d413e0ff1ba) | [run 43665411628](https://github.com/ai4curation/ai-gene-review/actions/runs/43665411628) | 93 | 38 KEEP_AS_NON_CORE, 33 ACCEPT, 11 MODIFY, 6 UNDECIDED, 5 MARK_AS_OVER_ANNOTATED | 214 |
+
+Each reviewed manifest, approval on the reviewed head, actual merge commit and fresh-main ancestry was verified. The HAMP and HBA1 merges contain all 13 and 46 reviewed paths. HBA2 changes 10 paths and inherits 40 byte-identical reviewed source paths from its actual parent; HBB changes 33 and inherits 29. No shared file earns additional gene credit.
+
+All four actual merge-group runs executed successful suites, strict validation of their changed gene, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; a separate canonical check verified 583 direct gene quotes against pinned review/source inputs, with zero unchecked, blocking or baselined target quotes. The corpus checks retained 396 unchecked quotes and the family checks 82 unchecked quotes; these are not claims that every repository quote was verified. PANTHER member-index refresh returned HTTP 400, leaving affected membership checks unperformed. Curation-history coverage, conditional sequence-cache save and upstream PAINT verification were skipped. Other source warnings and unresolved family/residue comparisons remain documented in the retained evidence.
+
+All four reviews remain DRAFT. HAMP retains one UNDECIDED mouse-derived transcription context; HBA1 and HBA2 each retain ten unresolved interaction/NO/localization contexts, with locus-specific human expression evidence kept distinct. HBB retains six unresolved interaction, exosome/microvesicle and renal contexts. Peptide physiology and disputed nitric-oxide mechanisms remain bounded by the source evidence. HBA1 and HBA2 each retain one supported NEW annotation; it does not confer extra locus credit. Delivery does not resolve these biological questions.
+
+ROOT acceptance receipts (local immutable provenance identifiers, not public download links):
+- `HAMP-root-delivery-acceptance-v1.json` (SHA256 `0ff78a5b327f5a8781f9df6f8baf14cdae9f4a6b20ce34e2f8eea72e75487a41`).
+- `HBA1-root-delivery-acceptance-v1.json` (SHA256 `ea3dc609aed98d75150078193341e96498d1fe904f1fd8078b1b469dd67dba7c`).
+- `HBA2-root-delivery-acceptance-v1.json` (SHA256 `eefd6227533ffdcc060f31b19bfe6b7dd5e8f65a908bcd2a1cd10b69c0e7cb98`).
+- `HBB-root-delivery-acceptance-v1.json` (SHA256 `d730c3a90ac569d3c6367e328378524d07f8a37a10b86b33e5e00e1f5147c341`).
+
+Only HAMP, HBA1, HBA2 and HBB are newly checked. The 235 dated queue records, 176 earlier completion updates and full earlier journal are unchanged.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T024137Z-codex-a0e7e3.yaml).
+
+## Completion checkpoint 758 (2026-11-15 04:59:10 UTC)
+
+758 complete; 2,118 of 2,876 remain. This publishes ROOT's prior acceptance of HCFC1 (HGNC:4839; P51610) and grants no new acceptance credit.
+
+[PR #6380](https://github.com/ai4curation/ai-gene-review/pull/6380) merged as [b11c1b52](https://github.com/ai4curation/ai-gene-review/commit/b11c1b522557ae27839bd5238febd53c563257d5); [merge-group run 43676593362](https://github.com/ai4curation/ai-gene-review/actions/runs/43676593362) passed. The approved head, actual merged manifest and fresh-main ancestry were verified.
+
+HCFC1 has 114 reviewed contexts from 126 raw GOA rows: 29 KEEP_AS_NON_CORE, 30 MODIFY, 44 ACCEPT, 11 UNDECIDED; no NEW annotations. The separate input-bound check verified all 163 direct gene quotes with zero unchecked, blocking or baselined quotes.
+
+The actual merge-group run executed the suite (6,290 pytest tests passed), strict HCFC1 validation, repository gene schemas, history and family checks. HCFC1 retained 24 advisories, including 22 generic-binding rows retained as non-core under the standing user policy. The whole-repository quote step excludes gene reviews and retained 396 unchecked quotes; family checks retained 82 unchecked quotes. These results do not establish that every repository quote was verified.
+
+PANTHER member-index refresh returned HTTP400, leaving affected membership checks unperformed. Curation-history coverage, conditional sequence-cache save and upstream PAINT verification were skipped. Corpus source warnings and unresolved family/residue comparisons remain in the delivery evidence.
+
+The review remains DRAFT with 11 UNDECIDED contexts. Inaccessible interaction or localization evidence remains unresolved; proximity and complex association do not establish a direct interface. Retracted PMID19377461 remains quarantined. OGT-dependent HCFC1 processing does not make HCFC1 the processing enzyme. Delivery does not resolve these biological limitations.
+
+ROOT receipt `HCFC1-root-delivery-acceptance-v1.json` (SHA256 `62e31ae8f23909370ce516dc759ff5ade3486552c339e23cb01afbd2650bc972`) is retained local provenance, not a public download link.
+
+Only HCFC1 is newly checked. All 235 dated queue records, 177 earlier completion updates and earlier journal bytes are preserved.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T045715Z-codex-122ea1.yaml).
