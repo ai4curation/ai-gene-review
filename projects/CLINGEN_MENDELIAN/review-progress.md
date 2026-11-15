@@ -8022,3 +8022,23 @@ ROOT acceptance receipts (local immutable provenance identifiers, not public dow
 Only HAMP, HBA1, HBA2 and HBB are newly checked. The 235 dated queue records, 176 earlier completion updates and full earlier journal are unchanged.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T024137Z-codex-a0e7e3.yaml).
+
+## Completion checkpoint 758 (2026-11-15 04:59:10 UTC)
+
+758 complete; 2,118 of 2,876 remain. This publishes ROOT's prior acceptance of HCFC1 (HGNC:4839; P51610) and grants no new acceptance credit.
+
+[PR #6380](https://github.com/ai4curation/ai-gene-review/pull/6380) merged as [b11c1b52](https://github.com/ai4curation/ai-gene-review/commit/b11c1b522557ae27839bd5238febd53c563257d5); [merge-group run 43676593362](https://github.com/ai4curation/ai-gene-review/actions/runs/43676593362) passed. The approved head, actual merged manifest and fresh-main ancestry were verified.
+
+HCFC1 has 114 reviewed contexts from 126 raw GOA rows: 29 KEEP_AS_NON_CORE, 30 MODIFY, 44 ACCEPT, 11 UNDECIDED; no NEW annotations. The separate input-bound check verified all 163 direct gene quotes with zero unchecked, blocking or baselined quotes.
+
+The actual merge-group run executed the suite (6,290 pytest tests passed), strict HCFC1 validation, repository gene schemas, history and family checks. HCFC1 retained 24 advisories, including 22 generic-binding rows retained as non-core under the standing user policy. The whole-repository quote step excludes gene reviews and retained 396 unchecked quotes; family checks retained 82 unchecked quotes. These results do not establish that every repository quote was verified.
+
+PANTHER member-index refresh returned HTTP400, leaving affected membership checks unperformed. Curation-history coverage, conditional sequence-cache save and upstream PAINT verification were skipped. Corpus source warnings and unresolved family/residue comparisons remain in the delivery evidence.
+
+The review remains DRAFT with 11 UNDECIDED contexts. Inaccessible interaction or localization evidence remains unresolved; proximity and complex association do not establish a direct interface. Retracted PMID19377461 remains quarantined. OGT-dependent HCFC1 processing does not make HCFC1 the processing enzyme. Delivery does not resolve these biological limitations.
+
+ROOT receipt `HCFC1-root-delivery-acceptance-v1.json` (SHA256 `62e31ae8f23909370ce516dc759ff5ade3486552c339e23cb01afbd2650bc972`) is retained local provenance, not a public download link.
+
+Only HCFC1 is newly checked. All 235 dated queue records, 177 earlier completion updates and earlier journal bytes are preserved.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T045715Z-codex-122ea1.yaml).
