@@ -1,7 +1,7 @@
 # Plan: anchor PANTHER claims on tree nodes, and prepare for PANTHER 20
 
-Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phases 2 and 3 not
-started. The decisions below keep churn to curated files minimal: no schema changes,
+Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phase 2 has its dry-run
+report (`just panther-release-diff`); Phase 3 not started. The decisions below keep churn to curated files minimal: no schema changes,
 and no edits to existing modules or reviews until PANTHER 20 forces them.
 
 ## Summary
@@ -110,11 +110,38 @@ files PANTHER keeps per release (releases back to 14.1 are still on the FTP site
 
 Start when `just check-panther-release` reports that PAINT and the API serve 20.
 
+**Dry run, available now.** `just panther-release-diff 20.0` writes
+`reports/panther-release-diff-19.0-to-20.0.yaml` (git-ignored) and edits nothing. It
+lists every cited family or subfamily id that is gone or renamed (with how far the name
+moved), and every anchor with representative members (module family descriptors and
+family-review subfamilies) whose members fall into a different id in the target
+release, with a proposed id when they agree. Anchors whose members were already split
+or unclassified in 19.0 are counted but not listed, since the bump did not cause them.
+On 2026-11-15 it found:
+
+- 6,073 cited ids: 337 gone, 253 renamed to a divergent name, 138 partially renamed,
+  389 cosmetically renamed.
+- 5,265 anchors: 473 with a proposed remap, 193 newly split across ids, 5 no longer
+  classified; 661 have members outside the classified organisms in both releases.
+- 476 files hold a listed anchor, and 513 cite an id that is gone or substantively
+  renamed. The two sets overlap.
+
+**No mega-migration PR.** About 500 files change, so the switch is split:
+
+1. A transition PR (before the switch, or with it) lets validators accept an id that is
+   valid in the previous release but changed in the new one, as a warning carrying the
+   report's proposal, instead of an error.
+2. The bump PR changes only the pinned constants and rebuilt caches (2.1).
+3. Remap PRs follow in batches of about 50 files each, one directory at a time
+   (modules, then family reviews, then rules), each regenerated from the report and
+   checked by a curator.
+4. A final PR removes the transition allowance.
+
 | Item | Change | Done when |
 |---|---|---|
 | 2.1 | Bump `PANTHER_RELEASE` and `PAINT_SNAPSHOT` together; rebuild `interpro/panther/panther.obo` and the member index (`just refresh-panther-members --rebuild`); re-fetch PAINT slices and trees. | All caches carry 20.0 paths. |
 | 2.2 | Re-check every cited PTN against the version 20 trees and sort them into: survives with the same representative members below it; survives with different members; gone. A gone node is re-located through its representative members (their lowest common ancestor in the new tree). It is never silently removed. | A report lists every PTN in each group, with proposed re-locations for review. |
-| 2.3 | Remap SF ids through representative members to the version 20 SF, not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with `just fix-panther-labels` is not allowed for this step: some ids now name a different protein (for example `PTHR10133:SF27` changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI"). | Validation passes; remaps are reviewed in a PR. |
+| 2.3 | Remap SF ids through representative members to the version 20 SF (`just panther-release-diff 20.0`), not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with `just fix-panther-labels` is not allowed for this step: some ids now name a different protein (for example `PTHR10133:SF27` changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI"). | Validation passes; remaps are reviewed in a PR. |
 | 2.4 | Re-check the reviewed human genes whose family changes (17; listed in the appendix) and the families they appear in. | Each one has a family review and module check. |
 | 2.5 | Expect IBA rows to turn into TreeGrafter IEA rows (GO_REF:0000118) for species dropped from PANTHER 20. In this repo that is `genes/PHAVU/LBA` and `genes/SOLTU/{CCOAOMT,JOKA2,PATB1}`. Re-review them after the next `just fetch-gene`. Poplar stays in PANTHER, so the CASPL project is unaffected. | Reviews updated after the GOA refresh. |
 | 2.6 | Re-check the open upstream discrepancies in `projects/PANTHER_FAMILY_ASSIGNMENT_DISCREPANCIES.md` and the DNAH12 case in `projects/IBA_REVIEW.md`. Both are unchanged in the 20.0 classification files, so the upstream reports still stand. | Pages updated with the version 20 status. |
