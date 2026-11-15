@@ -1,0 +1,71 @@
+# How badly does the cheap sequence filter over-select?
+
+Run `uv run python filament_baseline.py` in this folder to reproduce. The proteome
+TSV is fetched from UniProt and cached under a git-ignored `.cache/`.
+
+## Why run it
+
+The project page argues that extracellular cytochrome nanowires cannot be found by
+sequence, because the class is defined by heme geometry, and proposes a structural
+route. Before building anything structural, the cheap alternative has to be
+eliminated: a pure-sequence filter for **at least four covalent heme motifs, a signal
+peptide, and no transmembrane segment** catches all three characterised filament
+subunits. If that filter is specific enough on its own, the structural work is
+unnecessary. If it is hopeless, the structural work has to carry everything. Either
+way the number settles it, and it needs no structures.
+
+## Result (run 2026-11-15, *G. sulfurreducens* PCA, UP000000577, 3,402 proteins)
+
+| Filter stage | ≥4 motifs | 4–8 motifs |
+|---|---:|---:|
+| heme motifs in range | 63 | 35 |
+| … and a signal peptide | 55 | 28 |
+| … and no TM segment | **52** | **26** |
+
+**Recall is perfect in both.** OmcS, OmcE, OmcZ and OmcT all pass. The inner-membrane
+multiheme cytochromes that must not be caught — ImcH, CbcL, GSU2359 — are all excluded,
+by the transmembrane clause.
+
+**Precision is not.** 52 candidates against three characterised filament subunits is
+17-fold over-selection. The upper bound helps, and it is not arbitrary: the known
+subunits carry 4, 6, 6 and 8 motifs, while the false positives run to 34, 27 and 26
+— they are the large outer-membrane polyheme cytochromes (OmcB, OmcC, OmcA-family) and
+lipoprotein cytochromes. Capping at 8 motifs halves the set to 26 while keeping 4/4
+recall.
+
+Of those 26, four are members of CDD `cd21555`, the hand-curated OmcS-like model
+(OmcS, OmcT, OmcJ and GSU2501), so they are plausible rather than clear errors. The
+remainder are not: the set still contains three nitrite reductases, including NrfA,
+which is a well-characterised pentaheme enzyme and emphatically not a filament subunit.
+
+### A second proteome
+
+*S. oneidensis* MR-1 (UP000008186, 4,068 proteins), which has no known cytochrome
+filaments, yields 10 candidates under the same 4–8 filter. That the filter returns a
+non-empty set from an organism with no known members is the expected behaviour of a
+recall-oriented screen, and is a reminder that a hit is a question, not an answer.
+
+## What this settles
+
+The filter is a **good candidate generator and not a classifier**. It cuts 3,402
+proteins to 26, a 130-fold reduction, with no loss of the known subunits — which is
+exactly what a first-stage screen should do. It cannot do the second stage: it keeps
+nitrite reductases, and nothing in the sequence distinguishes them from a filament
+subunit, because what distinguishes them is where the hemes end up.
+
+So the structural half is worth building, and the experiment that could have made it
+unnecessary did not. The sensible shape is this filter for recall, then heme geometry
+for precision, as the project page proposes.
+
+## Honest limits
+
+- **"Known filament subunit" is a set of three.** Precision measured against three
+  positives is a weak estimate; the true positive set in this organism is unknown and
+  is plausibly larger than three, which is the point of the cd21555 overlap above.
+- **Motif counting is approximate.** `CXXCH`, `CXXXCH` and long-linker variants are
+  counted greedily and non-overlapping; a motif that is present but not used for heme
+  attachment still counts, and an unusual attachment chemistry would be missed.
+- **Signal-peptide and TM calls are UniProt's**, largely from SignalP and Phobius for
+  unreviewed entries, so the filter inherits their error rates.
+- **One organism, one genus.** The *S. oneidensis* run is a sanity check, not a second
+  measurement; the filter has not been tested on the archaeal members at all.

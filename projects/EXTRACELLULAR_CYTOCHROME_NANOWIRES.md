@@ -191,13 +191,38 @@ cross-subunit ligation that the literature calls the signature; and these protei
 loop-rich and partly disordered, so predicted confidence may be poor exactly where it
 matters.
 
-**Try the cheap baseline first.** "At least four CXXCH motifs, a signal peptide, and no
-transmembrane segment" is a pure-sequence filter that catches all three of these
-proteins today. It will be sensitive and not specific — *G. sulfurreducens* alone has
-111 cytochromes (PMID:36732469) and many are multiheme — so it is a candidate
-generator, not a classifier. The sensible shape is that filter for recall, then heme
-geometry for precision. Establishing how badly the baseline over-selects is the first
-experiment, and it needs no structures at all.
+### The cheap baseline, run
+
+Before building anything structural, the alternative had to be eliminated: a
+pure-sequence filter of **at least four covalent heme motifs, a signal peptide, and no
+transmembrane segment** catches all three characterised subunits, and if it were
+specific enough on its own the structural work would be unnecessary. So it was run
+([`filament_baseline.py`](EXTRACELLULAR_CYTOCHROME_NANOWIRES/filament_baseline.py),
+[results](EXTRACELLULAR_CYTOCHROME_NANOWIRES/BASELINE.md)), over the whole
+*G. sulfurreducens* proteome:
+
+| | ≥4 motifs | 4–8 motifs |
+|---|---:|---:|
+| of 3,402 proteins, with that many heme motifs | 63 | 35 |
+| … and a signal peptide | 55 | 28 |
+| … and no transmembrane segment | **52** | **26** |
+
+**Recall is perfect**: OmcS, OmcE, OmcZ and OmcT all pass, and the inner-membrane
+cytochromes that must not be caught — ImcH, CbcL, GSU2359 — are all excluded by the
+transmembrane clause. **Precision is not**: 52 candidates against three characterised
+subunits. The upper bound is worth having and is not arbitrary, since the known
+subunits carry 4, 6, 6 and 8 motifs while the false positives run to 34, 27 and 26 —
+they are the large outer-membrane polyheme cytochromes. Capping at eight halves the set
+with no loss of recall.
+
+Of the remaining 26, four are CDD `cd21555` members and so are plausible rather than
+wrong. The rest are not: the set still holds three nitrite reductases, NrfA among them.
+
+That settles the question the experiment was for. The filter is a good **candidate
+generator** — 3,402 down to 26, a 130-fold cut with nothing lost — and not a
+classifier, because nothing in the sequence separates a pentaheme nitrite reductase
+from a filament subunit. What separates them is where the hemes end up. The structural
+half is worth building.
 
 ## Proposed GO terms
 
