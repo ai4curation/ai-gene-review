@@ -130,7 +130,15 @@ On 2026-11-15 it found:
 
 1. A transition PR (before the switch, or with it) lets validators accept an id that is
    valid in the previous release but changed in the new one, as a warning carrying the
-   report's proposal, instead of an error.
+   report's proposal, instead of an error. It is switched on by setting
+   `PANTHER_PREVIOUS_RELEASE` in `etl/panther_families.py`.
+   - **Family reviews: done.** `check_panther_ids` reports such ids, labels and
+     memberships as UNRESOLVED. A simulated bump to 20.0 over all family reviews gives
+     2,187 new failures without it (541 ids, 1,091 labels, 555 memberships) and none
+     with it. The one new failure is real: P0ABZ4, first classified in 20.0, sits
+     outside its declared subfamily, which the bump did not change.
+   - **Modules: to do.** Term labels go through the OAK term validator, and
+     membership through `validate_family_members`.
 2. The bump PR changes only the pinned constants and rebuilt caches (2.1).
 3. Remap PRs follow in batches of about 50 files each, one directory at a time
    (modules, then family reviews, then rules), each regenerated from the report and

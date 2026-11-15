@@ -79,6 +79,14 @@ PAINT_ROOT = "https://data.pantherdb.org/ftp/downloads/paint"
 PAINT_BASE = f"{PAINT_ROOT}/{PANTHER_RELEASE}/{PAINT_SNAPSHOT}"
 
 
+# The release being left during a PANTHER switch, or None outside one. The bump PR sets
+# it; the last remap PR clears it (docs/panther_node_anchoring_plan.md, Phase 2). While
+# it is set, validators report an id, label or membership that was right in this
+# release, but changed in PANTHER_RELEASE, as unresolved rather than as a failure, so
+# remaps can land in batches instead of one PR.
+PANTHER_PREVIOUS_RELEASE: Optional[str] = None
+
+
 def paint_cache_dir(cache_root: Path) -> Path:
     """Folder under ``cache_root`` for files from the pinned PAINT snapshot.
 
@@ -1310,3 +1318,39 @@ def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
             "PAINT and the tree API may not serve it yet"
         )
     return stale, notices
+
+
+# --------------------------------------------------------------------------- #
+# Transition window: the previous release's names and memberships
+# --------------------------------------------------------------------------- #
+
+
+def previous_release_names(cache_dir: Path, release: str) -> Dict[str, str]:
+    """``PANTHER:<id> -> name`` for every family and subfamily in ``release``.
+
+    Read from that release's HMM classification file (downloaded into ``cache_dir``
+    once), keyed like :func:`load_obo_names` so the two can be compared directly.
+    """
+    path = fetch_hmm_classifications(cache_dir, url=hmm_url(release))
+    entries = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+    return {f"PANTHER:{entry.accession}": entry.name for entry in entries}
+
+
+def previous_release_members(
+    cache_dir: Path, release: str, organisms: Iterable[str] = DEFAULT_ORGANISMS
+) -> Dict[str, str]:
+    """UniProt accession -> ``PTHR family:SF`` in ``release``, for the given organisms.
+
+    Not pruned to cited accessions: it backs a temporary allowance, and every
+    accession a review cites must be answerable from it.
+    """
+    index: Dict[str, str] = {}
+    for organism in organisms:
+        path = fetch_sequence_classification(organism, cache_dir, release=release)
+        if path is None:
+            continue
+        for accession, family_sf in parse_sequence_classification(
+            path.read_text(errors="replace").splitlines()
+        ).items():
+            index.setdefault(accession, family_sf)
+    return index
