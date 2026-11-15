@@ -1,0 +1,173 @@
+"""How do IMPC-phenotyped genes stand in GO, and how does GO encode knockout evidence?
+
+Two questions:
+
+1. For mouse genes IMPC has phenotyped, how many have an experimentally
+   supported GO molecular function, and does IMPC reach a cellular level for
+   the genes that lack one (the "dark" genes IMPC set out to illuminate)?
+2. How does MGI's own knockout-derived GO curation (IMP, IGI) qualify its
+   annotations: does it claim the gene product participates in the process
+   (``involved_in``) or only that it acts upstream of it
+   (``acts_upstream_of_or_within``)?
+
+Inputs (git-ignored): ``.cache/impc/{genotype_phenotype,genes}.tsv``,
+``.cache/impc/mgi.gaf.gz`` (http://current.geneontology.org/annotations/mgi.gaf.gz),
+and ``projects/IMPC/results/mp_term_levels.tsv`` from ``mp_resolution.py``.
+
+Output: ``projects/IMPC/results/go_coverage.yaml`` and ``GO_COVERAGE.md``.
+
+    uv run python projects/IMPC/go_coverage.py
+"""
+
+from __future__ import annotations
+
+import gzip
+from collections import Counter, defaultdict
+from pathlib import Path
+
+import pandas as pd
+import yaml
+
+CACHE = Path(".cache/impc")
+HERE = Path(__file__).parent
+RESULTS = HERE / "results"
+
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+PROTEIN_BINDING = "GO:0005515"
+LEVELS = [
+    "CELLULAR",
+    "CIRCULATING_MOLECULE",
+    "ORGAN_PROCESS",
+    "ANATOMY",
+    "BEHAVIOUR",
+    "NO_LOGICAL_DEFINITION",
+]
+
+
+def read_gaf(path: Path) -> pd.DataFrame:
+    rows = []
+    with gzip.open(path, "rt") as fh:
+        for line in fh:
+            if line.startswith("!"):
+                continue
+            f = line.rstrip("\n").split("\t")
+            rows.append(
+                {
+                    "gene": f[1],
+                    "symbol": f[2],
+                    "qualifier": f[3],
+                    "go": f[4],
+                    "ref": f[5],
+                    "evidence": f[6],
+                    "aspect": f[8],
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def main() -> None:
+    gaf = read_gaf(CACHE / "mgi.gaf.gz")
+    gp = pd.read_csv(CACHE / "genotype_phenotype.tsv", sep="\t")
+    genes = pd.read_csv(CACHE / "genes.tsv", sep="\t")
+    levels = pd.read_csv(RESULTS / "mp_term_levels.tsv", sep="\t")
+    gp["level"] = gp.mp_term_id.map(dict(zip(levels.mp_term_id, levels.level)))
+
+    exp = gaf[gaf.evidence.isin(EXPERIMENTAL)]
+    not_rows = exp.qualifier.str.startswith("NOT")
+    exp = exp[~not_rows]
+    exp_mf = exp[(exp.aspect == "F") & (exp.go != PROTEIN_BINDING)]
+    exp_bp = exp[exp.aspect == "P"]
+    has_mf = set(exp_mf.gene)
+    has_bp = set(exp_bp.gene)
+    has_bp_participates = set(exp_bp[exp_bp.qualifier == "involved_in"].gene)
+
+    phenotyped = set(genes.loc[genes.phenotyping_data_available == True, "mgi_accession_id"])  # noqa: E712
+    with_call = set(gp.marker_accession_id)
+
+    def finest(acc_levels: pd.Series) -> str:
+        s = set(acc_levels.dropna())
+        for lv in LEVELS:
+            if lv in s:
+                return lv
+        return "NO_LOGICAL_DEFINITION"
+
+    gene_level = gp.groupby("marker_accession_id")["level"].agg(finest)
+    dark = with_call - has_mf
+    dark_bp = with_call - has_mf - has_bp
+
+    # How MGI qualifies knockout-derived (IMP) biological-process annotations.
+    imp_bp = gaf[(gaf.evidence == "IMP") & (gaf.aspect == "P")]
+    ida_bp = gaf[(gaf.evidence == "IDA") & (gaf.aspect == "P")]
+
+    out = {
+        "mgi_gaf_rows": int(len(gaf)),
+        "impc_genes_phenotyped": len(phenotyped),
+        "impc_genes_with_significant_call": len(with_call),
+        "phenotyped_without_significant_call": len(phenotyped - with_call),
+        "genes_with_call_and_experimental_mf": len(with_call & has_mf),
+        "genes_with_call_no_experimental_mf": len(dark),
+        "genes_with_call_no_experimental_mf_or_bp": len(dark_bp),
+        "finest_impc_level_all_genes_with_call": {
+            k: int(v) for k, v in gene_level.value_counts().items()
+        },
+        "finest_impc_level_genes_without_experimental_mf": {
+            k: int(v) for k, v in gene_level[gene_level.index.isin(dark)].value_counts().items()
+        },
+        "finest_impc_level_genes_without_experimental_mf_or_bp": {
+            k: int(v) for k, v in gene_level[gene_level.index.isin(dark_bp)].value_counts().items()
+        },
+        "mgi_imp_bp_qualifiers": {k: int(v) for k, v in imp_bp.qualifier.value_counts().items()},
+        "mgi_ida_bp_qualifiers": {k: int(v) for k, v in ida_bp.qualifier.value_counts().items()},
+        "mgi_gaf_references_naming_impc": int(gaf.ref.str.contains("IMPC|mousephenotype", case=False).sum()),
+    }
+    RESULTS.mkdir(exist_ok=True)
+    (RESULTS / "go_coverage.yaml").write_text(yaml.safe_dump(out, sort_keys=False))
+
+    def pct(a: int, b: int) -> str:
+        return f"{a:,} ({100 * a / b:.0f}%)" if b else str(a)
+
+    n = out["impc_genes_with_significant_call"]
+    lines = [
+        "# IMPC genes and GO (generated)",
+        "",
+        "Generated by `go_coverage.py`; do not edit by hand. Experimental evidence ="
+        f" {', '.join(sorted(EXPERIMENTAL))}; bare protein binding ({PROTEIN_BINDING}) does not count as a molecular function.",
+        "",
+        f"- Genes IMPC reports as phenotyped: {out['impc_genes_phenotyped']:,}",
+        f"- With at least one significant call: {n:,}",
+        f"- ...of which have an experimental mouse MF annotation: {pct(out['genes_with_call_and_experimental_mf'], n)}",
+        f"- ...with no experimental mouse MF: {pct(out['genes_with_call_no_experimental_mf'], n)}",
+        f"- ...with no experimental mouse MF or BP: {pct(out['genes_with_call_no_experimental_mf_or_bp'], n)}",
+        f"- MGI GO annotations whose reference names IMPC: {out['mgi_gaf_references_naming_impc']}",
+        "",
+        "## Finest level IMPC reaches for a gene",
+        "",
+        "| Finest level | All genes with a call | No experimental MF | No experimental MF or BP |",
+        "|---|---:|---:|---:|",
+    ]
+    a = out["finest_impc_level_all_genes_with_call"]
+    b = out["finest_impc_level_genes_without_experimental_mf"]
+    c = out["finest_impc_level_genes_without_experimental_mf_or_bp"]
+    for lv in LEVELS:
+        lines.append(f"| {lv} | {a.get(lv, 0):,} | {b.get(lv, 0):,} | {c.get(lv, 0):,} |")
+    lines += [
+        "",
+        "## How MGI qualifies GO biological-process annotations",
+        "",
+        "| Qualifier | IMP (mutant phenotype) | IDA (direct assay) |",
+        "|---|---:|---:|",
+    ]
+    quals = sorted(set(out["mgi_imp_bp_qualifiers"]) | set(out["mgi_ida_bp_qualifiers"]))
+    ti, td = len(imp_bp), len(ida_bp)
+    for q in quals:
+        lines.append(
+            f"| {q} | {pct(out['mgi_imp_bp_qualifiers'].get(q, 0), ti)} | "
+            f"{pct(out['mgi_ida_bp_qualifiers'].get(q, 0), td)} |"
+        )
+    lines.append("")
+    (RESULTS / "GO_COVERAGE.md").write_text("\n".join(lines))
+    print("\n".join(lines))
+
+
+if __name__ == "__main__":
+    main()
