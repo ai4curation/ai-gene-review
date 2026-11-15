@@ -348,16 +348,18 @@ checkers also tried the fifth batch's sequence-deposit test on cloning papers.
 
 | Gene | Row | Outcome |
 |---|---|---|
-| human/COQ8B | Purkinje layer IMP; NOT kinase activity and NOT protein phosphorylation (IDA); ubiquinone biosynthesis IMP (UniProt) | **Wrong gene, confirmed.** The cached full text of PMID:27499294 reports no COQ8B experiment: its knockouts and kinase assays are Coq8a, COQ8A and yeast Coq8p. The Purkinje row and the two NOT rows move to **REMOVE**. The NOT rows have no COQ8B evidence, and COQ8B phosphorylates COQ3 in vitro. The ubiquinone row stays ACCEPT on the ADCK4 patient paper, with a `WRONG_REFERENCE` defect. |
-| human/CNGB3, CNGA1, CNGB1 | visual perception IMP (UniProt) | **Wrong gene, three times.** Each row comes from a mutation paper on another subunit: CNGB3's from a CNGA3 screen (`CONFIRMED`), CNGA1's from a CNGB1 family, and CNGB1's from a CNGA1 screen (both `PROBABLE`). The CNGA1 and CNGB1 rows are reciprocal swaps. |
-| human/CHRNB4 | acetylcholine-gated channel IDA (UniProt) | **Wrong gene, confirmed.** The oocyte recordings used α4β2 and α7 only. UniProt has the row on CHRNB2 and CHRNA7 but not CHRNA4, so this is probably a slip for CHRNA4. |
+| human/COQ8B | Purkinje layer IMP; NOT kinase activity and NOT protein phosphorylation (IDA); ubiquinone biosynthesis IMP (UniProt) | **Wrong gene (one row), wrong evidence code (two rows), wrong reference (one row).** The cached full text of PMID:27499294 reports no COQ8B experiment: its knockouts and kinase assays are Coq8a, COQ8A and yeast Coq8p. The Purkinje phenotype is the Coq8a knockout's, and COQ8A has no such row, so that row is a wrong gene and moves to **REMOVE**. COQ8A carries the same two NOT rows and the ubiquinone IMP from this paper, and the Discussion extends its conclusion to COQ8A and COQ8B, so those rows are a family-level conclusion applied to the paralog, not a mis-keyed gene. The NOT rows are `WRONG_EVIDENCE_CODE` (IDA where ISS from COQ8A is due) and still move to **REMOVE**, because COQ8B phosphorylates COQ3 in vitro. The ubiquinone row stays ACCEPT on the ADCK4 patient paper, with a `WRONG_REFERENCE` defect. |
+| human/CNGB3, CNGA1, CNGB1 | visual perception IMP (UniProt) | **Wrong gene, three times.** Each row comes from a mutation paper on another subunit: CNGB3's from a CNGA3 screen (`CONFIRMED`), CNGA1's from a CNGB1 family, and CNGB1's from a CNGA1 screen (both `PROBABLE`). The CNGA1 and CNGB1 rows are reciprocal swaps. Where the right subunit already carries the identical row (CNGB3, CNGA1) the defect asks to delete the duplicate; CNGA1 has no IMP row from its own screen, so the CNGB1 row is a `CHECK` to move it. |
+| human/CHRNB4 | acetylcholine-gated channel IDA (UniProt) | **Wrong gene, confirmed.** The oocyte recordings used α4β2 and α7 only, so the row does not belong on CHRNB4. UniProt has the row on CHRNB2 and CHRNA7 but not CHRNA4, so a slip for CHRNA4 is possible; that destination is not confirmed, and the defect names none. |
 | human/COL1A2 | skeletal system development IMP (UniProt) | **Probable wrong gene.** The paper is a COL1A1 Sp1-site study, and UniProt cites it only on COL1A1, which has no GO row from it. |
 | human/EZH2 | two TAS rows (PINC) | **Probable wrong gene.** The paper cloned EZH1, and the TAS statements are about EZH1. |
-| human/CUL1 | plasma membrane IDA (UniProt) | **Query.** The abstract shows only CUL3 at membranes. The reason no longer claims the full text was read. |
+| human/CUL1 | plasma membrane IDA (UniProt) | **Query.** The abstract shows only CUL3 at membranes. The reason no longer claims the full text was read, and the action moves from KEEP_AS_NON_CORE to **UNDECIDED** until it is. |
 | COL9A3, COMP, CREB1, CSF2RA, CSF2RB, CYP11B1, DLAT, DNMT3L, EGLN1, EHMT1, EYA1, FGB | various | **False positives.** Most name the gene in a form the check misses: bare "CREB", "βc", "type IX collagen", "TSPs", "PHD2" or "GLP" (full text only), "P-450(11)beta", "E2", "DNMT3B-3L". Others are complex-wide rows from complexes too small for the shared-row signal (fibrinogen, the SCF core). DNMT3L's lead came from a stale local UniProt file that did not yet cite the paper. |
 
 So of 20 leads: 7 are wrong-gene annotations (COQ8B, CNGB3, CNGA1, CNGB1, CHRNB4, COL1A2,
-EZH2), 1 is a query, and 12 are false positives.
+EZH2), 1 is a query, and 12 are false positives. Leads are counted per gene, under the gene's
+most severe outcome, so COQ8B counts once as wrong gene although two of its rows are wrong
+evidence codes and one is a wrong reference.
 
 **Disease papers.** UniProt's disease-mutation papers tend to spread to the partner subunit: one
 mutation paper gives a "visual perception" IMP row to both subunits of a channel. A check for
@@ -367,8 +369,8 @@ IMP rows whose paper reports mutations only in a co-subunit would catch this cla
 the CNG channels the full text was enough.
 
 Across all six batches (106 leads): 18 wrong-gene annotations, 4 wrong evidence codes, 8 wrong
-references, 18 queries pending full text, and 58 false positives or no change. No action was
-changed on an abstract alone.
+references, 18 queries pending full text, and 58 false positives or no change (genes, each
+counted once under its most severe outcome). No action was changed on an abstract alone.
 
 ## Limitations
 
