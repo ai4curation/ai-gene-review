@@ -30,7 +30,7 @@ MCT2 is reported to require the single-pass ancillary glycoprotein **EMBIGIN (EM
 - [file:human/SLC16A7/SLC16A7-uniprot.txt "Requires the ancillary protein,"] EMB for plasma membrane localization (By similarity).
 - Also "Interacts with isoform 2 of BSG (By similarity)" and "Colocalizes with BSG in spermatozoa."
 
-Caveat (debated necessity): the human cryo-EM study found that mEGFP-MCT2 localized to the plasma membrane of HEK293 cells *without* embigin co-expression, and notes embigin "was reported necessary ... or unnecessary" for MCT2 trafficking [PMID:32415067 "embigin was reported necessary9,10 or unnecessary11 for the intracellular trafficking of the MCT2 to the plasma membrane"]. The MCT2–EMBIGIN partnership is modeled here as **complex membership** (GO:1902495 transmembrane transporter complex, part_of; NEW row, ISS) rather than as a bare protein-binding annotation; this mirrors the batch-10 B0AT1/ACE2 treatment. EMBIGIN (Q6PCB8) is NOT among the GOA IntAct protein-binding partners, so there is no EMBIGIN row to remove.
+Caveat (debated necessity): the human cryo-EM study found that mEGFP-MCT2 localized to the plasma membrane of HEK293 cells *without* embigin co-expression, and notes embigin "was reported necessary ... or unnecessary" for MCT2 trafficking [PMID:32415067 "embigin was reported necessary9,10 or unnecessary11 for the intracellular trafficking of the MCT2 to the plasma membrane"]. **The EMBIGIN partnership is NOT asserted as complex membership in this review.** Unlike the MCT4/SLC16A3–BSG complex (direct human co-IP/cross-linking, PMID:10921872, IDA), the only support for an MCT2–EMBIGIN complex is a UniProt SUBUNIT note whose evidence is `By similarity` to rodent orthologs (ECO:0000250 from mouse O70451 / rat Q63344), and the same source also reports a BSG interaction, so even the partner identity is unsettled — and the human cryo-EM data directly contradict an obligatory requirement. `NEW` manufactures an assertion and this evidence does not clear that bar, so no GO:1902495 complex row or core_functions `in_complex` entry is asserted; the EMBIGIN question is kept as a `suggested_questions` entry and documented here. EMBIGIN (Q6PCB8) is NOT among the GOA IntAct protein-binding partners, so there is no EMBIGIN row to remove either.
 
 ## Protein-binding (GO:0005515) IntAct rows — PDZ scaffolds
 
@@ -58,9 +58,9 @@ High in testis; moderate-to-low in spleen, heart, kidney, pancreas, skeletal mus
 ## Action summary
 
 - ACCEPT (21): core transporter MF (lactate/pyruvate transporter activities), plasma membrane CC rows, homodimer (GO:0042802), lactate/pyruvate transport BP, monocarboxylate family MF/BP.
-- MODIFY (3): GO:0015293 symporter activity ×2 → GO:0015650 lactate:proton symporter activity (generic symport → specific proton-coupled monocarboxylate symport, supported by the H+-coupled transport evidence); GO:0016020 membrane → GO:0005886 plasma membrane.
+- MODIFY (3): GO:0015293 symporter activity ×2 → GO:0015355 secondary active monocarboxylate transmembrane transporter activity (generic symport → substrate-accurate secondary-active monocarboxylate transport; the H+-coupled evidence on these rows demonstrates pyruvate, not lactate, so they are not refined to the lactate-specific GO:0015650); GO:0016020 membrane → GO:0005886 plasma membrane.
 - KEEP_AS_NON_CORE (10): cytoplasm ×2, basolateral PM ×3, neuronal/synaptic ×5.
 - TOO_GENERAL (2): GO:0022857 transmembrane transporter activity, GO:0055085 transmembrane transport.
 - MARK_AS_OVER_ANNOTATED (1): GO:0150104 transport across blood-brain barrier.
 - REMOVE (39): bare GO:0005515 protein binding (PDZ-scaffold IntAct rows; protein-binding policy).
-- NEW (1): GO:1902495 transmembrane transporter complex (part_of) — MCT2–EMBIGIN ancillary complex.
+- NEW (1): GO:0015650 lactate:proton symporter activity — the combined core MF (GOA carries the lactate substrate GO:0015129 IDA and the GO:0015293 symport mechanism separately but not the combined term); asserted as a synthesis of the direct lactate transport and proton-coupled mechanism.
