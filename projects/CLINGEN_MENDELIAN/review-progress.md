@@ -8042,3 +8042,69 @@ ROOT receipt `HCFC1-root-delivery-acceptance-v1.json` (SHA256 `62e31ae8f23909370
 Only HCFC1 is newly checked. All 235 dated queue records, 177 earlier completion updates and earlier journal bytes are preserved.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T045715Z-codex-122ea1.yaml).
+
+## Completion checkpoint 759 (2026-11-15 07:29:05 UTC)
+
+759 complete; 2,117 of 2,876 remain. This publishes ROOT's prior acceptance of ACBD5 (HGNC:23338; Q5T8D3), with zero new acceptance credit.
+
+[PR #6384](https://github.com/ai4curation/ai-gene-review/pull/6384) merged as [76534e12](https://github.com/ai4curation/ai-gene-review/commit/76534e12abdec25fffca984067cf27cebdb58f46); [merge-group run 43688257187](https://github.com/ai4curation/ai-gene-review/actions/runs/43688257187) passed. Exact-head approval, all 27 reviewed files, the 20-path actual delta and fresh-main ancestry were verified. The separate input-bound check verified all 51 direct gene quotes, with zero unchecked, blocking or baselined quotes.
+
+ACBD5 retains all 18 native annotation contexts and four alternative products. Its 20 reviewed contexts comprise 11 ACCEPT, one TOO_GENERAL, six UNDECIDED and two NEW molecular functions: peroxisome–ER and peroxisome–mitochondrion membrane tethering. The three core functions distinguish acyl-CoA binding from VAP-mediated ER tethering and PTPIP51-mediated mitochondrial tethering.
+
+The review remains DRAFT. Published ACBD5-depletion results differ across human systems; three Reactome cytosol contexts and the original high-throughput membrane evidence remain unverified. Isoform/construct residue mapping, direct ROS transport and catalytic fatty-acid oxidation are not asserted. The 2025 mitochondrial-contact paper supports tethering; necessity and redox phenotypes do not establish an ACBD5 transport or enzyme activity.
+
+Integration executed strict ACBD5 validation, the test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; its results do not replace the 51-quote direct ACBD5 audit. Executed-check advisories, skips and unresolved corpus checks remain documented in the pinned delivery verification.
+
+ACBD5 restores literal catalogue priority after the earlier cached-review exception while initialization was unavailable. ACD is next unchecked in the Definitive section, but [existing PR #6278](https://github.com/ai4curation/ai-gene-review/pull/6278) already contains its review; inspect ownership, evidence and checks before taking it over, and do not seed a duplicate.
+
+Only ACBD5 is newly checked. All 235 dated queue records, 178 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACBD5-root-delivery-acceptance-v1.json` (SHA256 `3f28848df52986353e0e06cfe08500a29930a15654eb985dece136b5184a122d`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T072846Z-codex-72f7fc.yaml).
+
+## Completion checkpoint 760 (2026-11-15 09:33:51 UTC)
+
+760 complete; 2,116 of 2,876 remain. This publishes ROOT's prior acceptance of human ACD (HGNC:25070; Q96AP0), with zero new acceptance credit.
+
+[PR #6278](https://github.com/ai4curation/ai-gene-review/pull/6278) merged as [77870238](https://github.com/ai4curation/ai-gene-review/commit/7787023812a50d7e2d4b9f73592ce4b686c97ef9); [merge-group run 43696797938](https://github.com/ai4curation/ai-gene-review/actions/runs/43696797938) passed. Exact-head approval, the 64-path actual delta and fresh-main ancestry were verified. Sixty-three reviewed files match exactly. The generated GO cache has an explicitly checked additive reconciliation: the same three complete reviewed rows were added to the actual parent, preserving its 34 disjoint additions. The original reviewed manifest remains unchanged.
+
+Human ACD retains 138 GOA source rows, which collapse to 137 native annotation contexts; with one NEW context, the review has 138 contexts: 31 ACCEPT, 75 MODIFY, 5 KEEP_AS_NON_CORE, 3 TOO_GENERAL, 4 REMOVE, 19 UNDECIDED and 1 NEW. It remains DRAFT. Seventeen inaccessible BiFC interactions and telomerase inhibitor activity and regulation of protein localization to telomeres remain unresolved. The two native alternative products are not a one-to-one mapping to the two functional isoform records. Shelterin TPP1/ACD is distinct from lysosomal TPP1.
+
+The delivered PR also includes mouse Acd (57 contexts; DRAFT), rat Acd (44; DRAFT), fission-yeast tpz1 (30; COMPLETE) and the PTHR14487 family review (NEEDS_REVIEW). Uncertain human inhibitor support does not establish conserved rodent inhibition; the corresponding rodent inhibitor transfers were removed while rodent localization-process transfers remain UNDECIDED. These orthologs, family and isoforms add no human-locus credit.
+
+The separate input-bound audit verified 644 quotation occurrences across 96 bindings to 56 distinct paths: 288 human, 138 mouse, 92 rat, 74 fission yeast and 52 family, with zero unchecked, blocking or baselined quotes. Actual integration ran the four-gene strict batch (four valid, zero errors, six advisories), full GeneReview schemas, history, family validation and the test suite. The whole-repository quote check excludes gene reviews; it does not replace those direct checks. PANTHER member-index refresh failed with HTTP400, leaving affected membership checks unchecked. GenBank finding mappings and other corpus uncertainties remain documented in the pinned delivery proof.
+
+Only human ACD is newly checked. All 235 dated queue records, 179 prior completion updates and earlier journal bytes are preserved. ACE is the next unchecked catalogue entry; ownership and current PRs must be checked before seeding. ROOT receipt `ACD-root-delivery-acceptance-v2.json` (SHA256 `a5b0f05d1e9d926d5eb9c576af9c78e535b919fd69c5cff416bbef5f79031ab5`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T093332Z-codex-b11086.yaml).
+
+## Completion checkpoint 761 (2026-11-15 11:30:48 UTC)
+
+761 complete; 2,115 of 2,876 remain. This publishes ROOT's prior acceptance of human ACE (HGNC:2707; P12821), with zero new acceptance credit.
+
+[PR #6395](https://github.com/ai4curation/ai-gene-review/pull/6395) merged as [8bcaac48](https://github.com/ai4curation/ai-gene-review/commit/8bcaac48a09c9b5c08ad5b6328b5ca1b0e8f1583); [merge-group run 43706884176](https://github.com/ai4curation/ai-gene-review/actions/runs/43706884176) passed. Exact-head approval, all 30 reviewed files, the 30-path actual delta and fresh-main ancestry were verified.
+
+Human ACE retains 147 GOA source rows representing 144 native annotation contexts: 75 ACCEPT, 24 KEEP_AS_NON_CORE, 23 UNDECIDED, eight TOO_GENERAL, ten MARK_AS_OVER_ANNOTATED and four MODIFY. There are no NEW annotations. The review remains DRAFT, including uncertainty where the relevant original full-text evidence could not be accessed. Four native alternative-product records remain preserved. Somatic ACE, testis ACE and the shed ectodomain are distinguished; two catalytic domains in somatic ACE do not imply identical substrate preferences.
+
+The delivered companion rat Ace review retains 137 native contexts and DRAFT status. Four bounded source corrections avoid treating inaccessible donor evidence or absent electronic propagation as disproof. Rat Ace and functional isoforms add no human-locus credit.
+
+The direct source audit verified 236 human quotation occurrences and 262 rat occurrences, with zero unchecked, blocking or baselined quotes. The rat total includes 138 canonical publication checks and 124 explicit UniProtKB:P47820 checks against the native rat UniProt record. All input files were pinned to the approved head and actual merge. Integration executed the two-gene strict batch, the full test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; it does not replace the direct human and rat audits. Corpus advisories, skips and unresolved checks remain in the pinned delivery proof.
+
+Only human ACE is newly checked. All 235 dated queue records, 180 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACE-root-delivery-acceptance-v1.json` (SHA256 `1501833bd86993bc4193fc7e65bcaf5870b69180cb3cca607e5b7f69b05231ec`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T113024Z-codex-5e05eb.yaml).
+
+## Completion checkpoint 762 (2026-11-15 14:06:41 UTC)
+
+762 complete; 2,114 of 2,876 remain. This publishes ROOT's prior acceptance of human ACO2 (HGNC:118; Q99798), with zero new acceptance credit.
+
+[PR #6400](https://github.com/ai4curation/ai-gene-review/pull/6400) merged as [b8129862](https://github.com/ai4curation/ai-gene-review/commit/b81298621147b2131d59414db3b5beee9462de76); [merge-group run 43718970390](https://github.com/ai4curation/ai-gene-review/actions/runs/43718970390) passed. Approval of the exact commit, all 15 reviewed files, the 15-path actual delta and fresh-main ancestry were verified.
+
+Human ACO2 retains all 26 native GOA rows and adds one NEW nuclear location: 24 ACCEPT, one UNDECIDED, one TOO_GENERAL and one NEW. The review is COMPLETE under the no-PENDING/no-validation-warning schema definition, while the cytosolic localization remains explicitly UNDECIDED. This status does not imply that every original assay was accessible: PMID:9630632 full text and ACO2-specific supplementary rows in PMID:20833797 and PMID:34800366 remain uninspected. Established claim judgments defer to the curators while those source limitations remain explicit.
+
+The core is mitochondrial aconitate hydratase activity in the TCA cycle. Cytosol remains UNDECIDED: qualitative 22Rv1 fractionation does not distinguish a resident pool from soluble mitochondrial carryover. Neither contamination nor cytosolic residency is asserted. The description makes no affirmative cytosolic claim. Nucleus is supported in human MDA-MB-468 cells; a complete nuclear TCA cycle and normal-tissue generality are not inferred. Mouse assays and other enzymes' activities are kept separate. The PAINT placement remains unresolved. Nuclear and cytosolic pools add no additional locus credit.
+
+The direct source audit verified 84 quotation occurrences against 17 input files, with zero unchecked, blocking or baselined quotes. Inputs were pinned to the approved commit and actual merge. Integration executed scoped ACO2 validation, the full test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; it does not replace the direct ACO2 audit. Corpus advisories, skips and unresolved checks remain in the pinned delivery proof.
+
+Only human ACO2 is newly checked. All 235 dated queue records, 181 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACO2-root-delivery-acceptance-v1.json` (SHA256 `6dc155311fb887c7af685e157bcbc051a4a0266bba69d15a40dab2f4d68b3687`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T140625Z-codex-579c21.yaml).
