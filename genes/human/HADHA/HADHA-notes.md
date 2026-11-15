@@ -137,3 +137,62 @@ mitochondrial inner membrane; in_complex GO:0016507.
 A third, independent (subunit-beta-independent) activity: monolysocardiolipin acyltransferase
 in cardiolipin remodeling (GO:0035965), arguably a secondary/non-core but well-supported
 moonlighting function.
+
+
+## 2026-11-11: evidence and annotation-context audit
+
+This audit supersedes the earlier restrictive chain-length, reaction-direction,
+wrong-paper and HADHA-specific DNA-crosslink claims above; the original notes
+and 2026-11-10 history are preserved as provenance.
+
+- Fresh native GOA seeding retains 60 contexts, including four distinct
+  PMID:20562859 ATG8-family partners previously collapsed into one context.
+- PMID:1550553 reports C6-and-longer activity and maximal measured dehydrogenase
+  activity at C10-C16, not a strict C10-C16 substrate boundary. QuickGO defines
+  GO:0018812 under GO:0004300; both use dehydration equations. Valid parent
+  terms, NAD+ binding and broad mitochondrial location remain core assertions.
+- Keep the HADHA thiolase REMOVE on subunit-specific experimental grounds;
+  GO:0003985 has a C4 reaction scope and should not be mechanically reassigned
+  to the long-chain thiolase HADHB.
+- Set the GO:0052816/PMID:22586271 annotation to UNDECIDED. The original main
+  text was inspected, but the complete supplement could not be read. The
+  partial cache's full-text flag did not justify the earlier universal-absence
+  or wrong-gene claims. GO-CAM 67b1629100002092 repeats this hydrolase assertion
+  with tetralinoleoyl cardiolipin as output; ask the curator to reconcile the
+  activity, reference and output mapping rather than declaring a repair.
+- PMID:23152787 assays full-length recombinant HADHA separately from truncated
+  MLCLAT1. Figure 2 favors linoleoyl-CoA, despite native UniProt prose favoring
+  oleoyl-CoA. The native record is unchanged. GO:0071617 better describes this
+  core MLCL acyltransferase chemistry; no NEW annotation is added. The broader
+  term does not imply activity on other tested lysophospholipids.
+- PMID:22453275 provides positive human HEK293T purification/SILAC evidence for
+  nucleoid association, without proving HADHA DNA binding or a nucleic-acid
+  function. Retain non-core association and original PMID:18063578 provenance.
+- PMID:8651282 is present in the retained cache; the older absence note is stale.
+  Other target-specific supplemental proteomics assertions not inspected are
+  explicitly distinguished from independently supported location/binding.
+
+See HADHA-deep-research-manual.md for primary-source links, access limits and
+provider failure details. The draft has 47 ACCEPT, 11 KEEP_AS_NON_CORE,
+1 REMOVE and 1 UNDECIDED; all 28 inherited quotations are preserved.
+
+
+## PR #6313 review follow-up — 2026-11-11
+
+Refine nine broad MF rows with MODIFY to the supported specific activities: GO:0004300 → GO:0018812 (four contexts); GO:0003857, GO:0016491 and GO:0016616 → GO:0016509 (four contexts); GO:0003824 → all three supported catalytic activities. The hydratase core uses GO:0018812 with explicit physiological reverse-hydration semantics. This does not deny the broader chemistry or measured medium-chain activity. Retain the informative pathway-level fatty acid metabolic process and root mitochondrial locations; neither needs to be demoted simply because a more specific process or compartment is also known.
+
+Propose one NEW GO:0071617 molecular-function annotation, supported by direct full-length recombinant HADHA MLCL acylation in PMID:23152787. This fills a distinct catalytic branch, not a new process claim inferred from necessity or a missing database row. Keep donor and acceptor limits explicit, distinguish truncated MLCLAT1, and retain the unresolved GO:0052816 hydrolase assertion as UNDECIDED. The existing separation-of-function experiment remains the appropriate prospective test; no broader claim that the literature has established every mechanistic relationship is added.
+
+Final accounting supersedes the preceding candidate: 60 preserved native GOA contexts plus 1 NEW; 38 ACCEPT, 11 KEEP_AS_NON_CORE, 9 MODIFY, 1 REMOVE, 1 UNDECIDED, 1 NEW. The description is phrased as biology rather than a study narrative. A fresh history links PR #6313 with correctly spaced counts; existing history records remain append-only. Native source files and publication caches are unchanged.
+
+## 2026-11-14 UTC — PR #6313 review follow-up
+
+Restore four GO:0004300 rows to ACCEPT and use enoyl-CoA hydratase activity for the
+first core function and generic catalytic replacement. Retain all three GO:0018812
+rows: this is a genuine narrower (2E)-reaction child, not a synonym or wrong-direction
+annotation. Replace the unsupported policy attribution for GO:0006631 with the
+biological rationale. Add a bounded BIOLOGY gap about separation of HADHA activities
+in the reviewed cardiomyocyte experiments, with primary-source provenance. All 60
+native contexts, one NEW molecular-function row, native fields and sources are
+preserved. No family or cached-source edit is made. This supersedes earlier notes
+that directed every hydratase parent row to GO:0018812.

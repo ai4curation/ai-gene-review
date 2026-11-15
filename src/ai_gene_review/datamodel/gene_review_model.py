@@ -2607,6 +2607,10 @@ class GoCamQcFlagEnum(str, Enum):
     """
     An overly generic MF term is used where a specific child term applies.
     """
+    WRONG_MF_TERM = "WRONG_MF_TERM"
+    """
+    The MF term is wrong rather than vague: the gene product does not have the asserted activity (e.g. a too-specific or lateral term), so the fix is a different term, possibly a parent. Pairs with a WRONG_TERM source defect.
+    """
     HAS_INPUT_MISUSE = "HAS_INPUT_MISUSE"
     """
     'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA instead of the substrate/target gene/downstream effector.
@@ -2618,6 +2622,10 @@ class GoCamQcFlagEnum(str, Enum):
     INCORRECT_DIRECTIONALITY = "INCORRECT_DIRECTIONALITY"
     """
     Causal edge directionality (subject -> object) appears reversed.
+    """
+    WRONG_CAUSAL_SIGN = "WRONG_CAUSAL_SIGN"
+    """
+    A causal edge has the wrong sign (positive where the evidence shows inhibition, or vice versa). Pairs with a WRONG_CAUSAL_RELATION source defect.
     """
     MISSING_LOCATION = "MISSING_LOCATION"
     """
@@ -2735,7 +2743,7 @@ class GeneReview(ConfiguredBaseModel):
                        'PredictionReview']} })
     existing_annotations: Optional[list[ExistingAnnotation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
     core_functions: Optional[list[CoreFunction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
-    proposed_new_terms: Optional[list[ProposedOntologyTerm]] = Field(default=None, description="""Proposed new ontology terms that should exist but don't""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview']} })
+    proposed_new_terms: Optional[list[ProposedOntologyTerm]] = Field(default=None, description="""Proposed new ontology terms that should exist but don't. Gene reviews and modules both carry this list. Record a new-term request here rather than only in prose (notes, reasons), so that it can be exported.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'ModuleReview']} })
     proposed_ontology_changes: Optional[list[ProposedOntologyChange]] = Field(default=None, description="""Proposed changes to ontology terms that already exist - obsoletion, merge, definition or label fix, reparenting, mapping removal. The counterpart of `proposed_new_terms`, which covers only creation. Use this rather than prose when a review concludes that a term itself is wrong, and keep it distinct from `source_defects`, which fix an annotation record that used the wrong term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'ModuleReview']} })
     suggested_questions: Optional[list[Question]] = Field(default=None, description="""Suggested questions to ask experts about the gene. Only include if not obvious from the literature.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview'], 'recommended': True} })
     suggested_experiments: Optional[list[Experiment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview'], 'recommended': True} })
@@ -5038,6 +5046,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'ModuleNode',
                        'Review',
                        'CoreFunction']} })
+    proposed_new_terms: Optional[list[ProposedOntologyTerm]] = Field(default=None, description="""Proposed new ontology terms that should exist but don't. Gene reviews and modules both carry this list. Record a new-term request here rather than only in prose (notes, reasons), so that it can be exported.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'ModuleReview']} })
     proposed_ontology_changes: Optional[list[ProposedOntologyChange]] = Field(default=None, description="""Proposed changes to ontology terms that already exist - obsoletion, merge, definition or label fix, reparenting, mapping removal. The counterpart of `proposed_new_terms`, which covers only creation. Use this rather than prose when a review concludes that a term itself is wrong, and keep it distinct from `source_defects`, which fix an annotation record that used the wrong term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'ModuleReview']} })
     status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'ReferenceProteomeAssessment',

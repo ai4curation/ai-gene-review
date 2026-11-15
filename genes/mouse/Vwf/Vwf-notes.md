@@ -37,3 +37,11 @@
   cells"]. GO:0033363 secretory granule organization could fit (VWF tubules are the
   organelle's scaffold), but this was left as a suggested question rather than a NEW
   row, pending a comparator check of how GO treats cargo-scaffold proteins.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0001889 / PMID:7854452: defect downgraded (evidence depth: ABSTRACT). Identifiers verified (MGI:1857656 is Hgf<tm1Cbm>; MGI:96079 is Hgf), and the two Vwf rows are the only GO rows from this paper while Hgf has none, so the claim is strong. But the full text is not obtainable and a Vwf read-out annotation in Hgf mutants cannot be excluded, so CONFIRMED was too high for abstract plus GAF-row evidence. REPOINT kept; explanation now states the depth and both readings.
+- GO:0001890 / PMID:7854452: defect downgraded (evidence depth: ABSTRACT). As for GO:0001889 from the same paper and allele.
+- GO:0009897 / PMID:8562500: defect withdrawn (evidence depth: ABSTRACT). The only basis was that the abstract does not mention VWF, which the deference rule says is not evidence. The location is plausible for VWF, and Selp, the suggested intended gene, already carries its own GO:0009897 IDA from the paper. Nothing in the source record is identifiably wrong; defect deleted, action stays UNDECIDED because the full text could not be read.
