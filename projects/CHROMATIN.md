@@ -1,7 +1,7 @@
 ---
 title: "Chromatin: complexes, locations and the GO chromatin subtree"
 maturity: SCOPING
-last_reviewed: '2026-11-14'
+last_reviewed: '2026-11-15'
 tags: [BIOLOGY_DOMAIN]
 species: [yeast]
 genes: [HAT1, HAT2, HIF1]
@@ -89,12 +89,31 @@ GO:0000123 (IDA, IPI), so they inherit `part_of chromatin`. Meanwhile
 UniProt's curated text for Hat1 says it acetylates free histone H4 in the
 cytoplasm and that modification of chromatin-packaged H4 is not established.
 
+## Gene reviews
+
+| Gene | Rows | ACCEPT | KEEP_AS_NON_CORE | MODIFY | MARK_AS_OVER_ANNOTATED | TOO_GENERAL | REMOVE | NEW |
+|---|---|---|---|---|---|---|---|---|
+| HAT1 | 36 | 11 | 9 | 9 | 1 | 1 | 4 | 1 |
+| HAT2 | 35 | 15 | 4 | 3 | 2 | 0 | 11 | 0 |
+| HIF1 | 29 | 9 | 6 | 7 | 1 | 0 | 5 | 1 |
+
+The main corrections:
+
+- **Activity terms refined to the acetylation site.** "Histone acetyltransferase activity" and its broader parents on Hat1 are modified to histone H4K12 acetyltransferase activity (the primary site) and H4K5 (the minor site, shown in vivo). Hat2's `contributes_to` rows get the same refinement.
+- **Rpd3L complex removed from Hat2.** Both Rpd3L rows on Hat2 come from a fungal PAINT node that sits above all three budding-yeast RbAp46/48 paralogs, with only Ume1 and *S. pombe* Prw1 as seeds. Ume1, not Hat2, is the WD40 subunit of Rpd3L. Hat2's "regulation of DNA-templated transcription" IBA is marked over-annotated for the same reason.
+- **Hif1 histone binding refined.** Its histone binding rows are modified to H3-H4 histone complex chaperone activity.
+- **Telomeric location marked over-annotated.** The electronic "chromosome, telomeric region" rows on all three genes are inferred from the silencing phenotype, and no study shows any of the three at telomeres. Telomeric silencing itself is kept as non-core: it needs histone H3 tail mutations to appear and is indirect.
+- **New location rows.** Hat1 and Hif1 each get a NEW "site of double-strand break" row (ChIP, PMID:16612003).
+- **Generic protein binding resolved by partner.** High-throughput rows whose partner is another HAT-B subunit are removed (18 rows): the interaction is already captured by the complex rows. Four Hif1 rows whose partner is histone H4 are modified to histone binding. The Hif1 row from the structural study, whose partner is Hif1 itself, is modified to protein homodimerization activity.
+- **Complex rows kept.** The GO:0000123 histone acetyltransferase complex rows are accepted, because the membership claim is right; the chromatin problem lies in the ontology. HAT1 carries the proposed HAT-B complex term and the proposed edge deletion.
+- **Catalytic base recorded as a gap.** UniProt annotates Glu255 as Hat1's active site from an author statement. Mutagenesis shows neither Glu255 nor any nearby acidic residue is needed for activity, so HAT1 records the catalytic base as a knowledge gap.
+
 ## Plan
 
 Yeast histone acetyltransferase complexes, each as its own module:
 
 - [x] HAT-B (Hat1, Hat2, Hif1)
-- [ ] gene reviews for HAT1, HAT2 and HIF1 (scaffolds created; annotations PENDING)
+- [x] gene reviews for HAT1, HAT2 and HIF1
 - [ ] Rtt109-Vps75 (H3K56 acetylation of new histones; RTT109 already reviewed)
 - [ ] NuA4 and piccolo NuA4 (Esa1, Epl1, Yng2; ESA1 already reviewed)
 - [ ] SAGA HAT module (Gcn5, Ada2, Ada3, Sgf29; GCN5 already reviewed)
