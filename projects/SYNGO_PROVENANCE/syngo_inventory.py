@@ -3,12 +3,16 @@
 Reads every committed ``genes/<org>/<GENE>/<GENE>-goa.tsv``, keeps rows whose
 ASSIGNED BY is SynGO, and joins each row to the matching
 ``existing_annotations`` entry of the gene's review (same GO term, evidence
-code and reference) to pick up the review action.
+code, reference and negation) to pick up the review actions.
+
+Two units are counted. A *row* is one GOA line (deduplicated on term,
+qualifier, evidence code and reference). A *claim* is one gene + term +
+reference: SynGO usually files a single assertion as an IDA + IMP (+ NAS)
+set on the same paper, so several rows make one claim.
 
 Writes ``data/syngo_rows.yaml`` (one record per SynGO row) and prints a summary.
 Deterministic: rows are sorted, and nothing is fetched from the network.
-
-Run from the repository root:
+Paths are resolved from this file, so it can be run from any directory:
 
     python projects/SYNGO_PROVENANCE/syngo_inventory.py
 """
@@ -16,81 +20,100 @@ from __future__ import annotations
 
 import collections
 import csv
-import glob
-import os
 import sys
+from pathlib import Path
 
 import yaml
 
-OUT = "projects/SYNGO_PROVENANCE/data/syngo_rows.yaml"
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "projects/SYNGO_PROVENANCE/data/syngo_rows.yaml"
+COLUMNS = ("ASSIGNED BY", "GO TERM", "GO NAME", "GO EVIDENCE CODE", "REFERENCE", "TAXON ID", "QUALIFIER")
 csv.field_size_limit(10**8)
 
 
-def review_index(review_path: str) -> dict:
-    """Map (term, evidence, reference) -> list of review actions."""
+def review_index(review_path: Path) -> dict:
+    """Map (term, evidence, reference, negated) -> list of review actions."""
     idx: dict = collections.defaultdict(list)
-    if not os.path.exists(review_path):
+    if not review_path.exists():
         return idx
     try:
-        doc = yaml.safe_load(open(review_path)) or {}
+        with review_path.open() as fh:
+            doc = yaml.load(fh, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader)) or {}
     except yaml.YAMLError:
         return idx
     for ann in doc.get("existing_annotations") or []:
-        key = (ann["term"]["id"], ann.get("evidence_type"), ann.get("original_reference_id"))
-        idx[key].append(((ann.get("review") or {}).get("action")))
+        key = (ann["term"]["id"], ann.get("evidence_type"), ann.get("original_reference_id"),
+               bool(ann.get("negated")))
+        idx[key].append((ann.get("review") or {}).get("action"))
     return idx
 
 
 def main() -> None:
+    goa_files = sorted((ROOT / "genes").glob("*/*/*-goa.tsv"))
+    if not goa_files:
+        sys.exit(f"no GOA files found under {ROOT / 'genes'}")
     records = []
-    for goa in sorted(glob.glob("genes/*/*/*-goa.tsv")):
-        with open(goa) as fh:
+    for goa in goa_files:
+        with goa.open() as fh:
             rows = list(csv.reader(fh, delimiter="\t"))
         if not rows or "ASSIGNED BY" not in rows[0]:
             continue
-        h = rows[0]
-        col = {name: (h.index(name) if name in h else None)
-               for name in ("ASSIGNED BY", "GO TERM", "GO NAME", "GO EVIDENCE CODE", "REFERENCE", "TAXON ID", "QUALIFIER")}
-        get = lambda r, name: r[col[name]] if col[name] is not None and col[name] < len(r) else None
-        org, gene = goa.split("/")[1], goa.split("/")[2]
-        idx = review_index(goa.replace("-goa.tsv", "-ai-review.yaml"))
+        col = {name: (rows[0].index(name) if name in rows[0] else None) for name in COLUMNS}
+
+        def get(r, name):
+            i = col[name]
+            return r[i] if i is not None and i < len(r) else None
+
+        syngo = [r for r in rows[1:] if get(r, "ASSIGNED BY") == "SynGO"]
+        if not syngo:
+            continue
+        org, gene = goa.parent.parent.name, goa.parent.name
+        idx = review_index(goa.with_name(goa.name.replace("-goa.tsv", "-ai-review.yaml")))
         seen = set()
-        for r in rows[1:]:
-            if len(r) <= col["ASSIGNED BY"] or r[col["ASSIGNED BY"]] != "SynGO":
+        for r in syngo:
+            term, code, ref, qual = get(r, "GO TERM"), get(r, "GO EVIDENCE CODE"), get(r, "REFERENCE"), get(r, "QUALIFIER")
+            if not (term and code and ref):
                 continue
-            key = (r[col["GO TERM"]], r[col["GO EVIDENCE CODE"]], r[col["REFERENCE"]])
+            key = (term, qual, code, ref)
             if key in seen:  # GOA repeats rows that differ only in extensions or date
                 continue
             seen.add(key)
-            actions = [a for a in idx.get(key, []) if a not in (None, "PENDING")]
+            negated = bool(qual and qual.startswith("NOT"))
+            actions = sorted({a for a in idx.get((term, code, ref, negated), []) if a not in (None, "PENDING")})
             records.append({
                 "organism_dir": org,
                 "gene": gene,
                 "taxon": get(r, "TAXON ID"),
-                "term_id": key[0],
+                "term_id": term,
                 "term_label": get(r, "GO NAME"),
-                "qualifier": get(r, "QUALIFIER"),
-                "evidence": key[1],
-                "reference": key[2],
-                "review_action": actions[0] if len(set(actions)) == 1 else (sorted(set(actions)) or None),
+                "qualifier": qual,
+                "evidence": code,
+                "reference": ref,
+                "review_actions": actions,
             })
-    records.sort(key=lambda x: (x["organism_dir"], x["gene"], x["term_id"], x["evidence"], x["reference"]))
+    records.sort(key=lambda x: (x["organism_dir"], x["gene"], x["term_id"], x["qualifier"] or "",
+                                x["evidence"], x["reference"]))
 
-    taxa = collections.Counter(x["taxon"] for x in records)
-    reviewed = [x for x in records if x["review_action"]]
+    def claim(x):
+        return (x["organism_dir"], x["gene"], x["term_id"], x["qualifier"], x["reference"])
+
+    claims = {claim(x): x["taxon"] for x in records}
+    human = [x for x in records if x["taxon"] == "9606"]
     actions = collections.Counter(
-        x["review_action"] if isinstance(x["review_action"], str) else "MIXED" for x in reviewed)
-    human_codes = collections.Counter(x["evidence"] for x in records if x["taxon"] == "9606")
+        x["review_actions"][0] if len(x["review_actions"]) == 1 else ("MIXED" if x["review_actions"] else "UNREVIEWED")
+        for x in records)
     summary = {
         "syngo_rows": len(records),
+        "distinct_claims": len(claims),
         "genes": len({(x["organism_dir"], x["gene"]) for x in records}),
-        "rows_by_taxon": dict(taxa.most_common()),
-        "human_rows_by_evidence": dict(human_codes.most_common()),
-        "reviewed_rows": len(reviewed),
-        "reviewed_rows_by_action": dict(actions.most_common()),
+        "rows_by_taxon": dict(collections.Counter(x["taxon"] for x in records).most_common()),
+        "claims_by_taxon": dict(collections.Counter(claims.values()).most_common()),
+        "human_rows_by_evidence": dict(collections.Counter(x["evidence"] for x in human).most_common()),
+        "human_experimental_claims": len({claim(x) for x in human if x["evidence"] in ("IDA", "IMP", "EXP", "IEP")}),
+        "rows_by_review_action": dict(actions.most_common()),
     }
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w") as fh:
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    with OUT.open("w") as fh:
         yaml.safe_dump({"summary": summary, "rows": records}, fh, sort_keys=False, allow_unicode=True, width=120)
     yaml.safe_dump(summary, sys.stdout, sort_keys=False)
 
