@@ -1,6 +1,8 @@
 # Plan: anchor PANTHER claims on tree nodes, and prepare for PANTHER 20
 
-Status: proposed, 2026-11-14. Nothing here is implemented yet.
+Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phases 2 and 3 not
+started. The decisions below keep churn to curated files minimal: no schema changes,
+and no edits to existing modules or reviews until PANTHER 20 forces them.
 
 ## Summary
 
@@ -14,15 +16,15 @@ most do.
 
 This plan does three things:
 
-1. **Phase 0:** stop the pipeline from silently mixing PANTHER releases (now).
-2. **Phase 1:** make PTNs, not SFs, the anchor for claims about where a function
-   sits in a family, and convert existing SF anchors while version 19 is still
-   live.
-3. **Phase 2:** prepare a checked, member-based procedure for the switch to 20.
+1. **Phase 0 (done):** stop the pipeline from silently mixing PANTHER releases.
+2. **Phase 1:** prefer PTNs over SFs for new claims about where a function sits.
+   Existing SF anchors stay as they are.
+3. **Phase 2:** at the switch to 20, remap through representative members and edit
+   only the files whose ids actually changed.
 
 Phase 3 lists the new PANTHER 20 features worth using afterwards.
 
-## Background: three PANTHER identifiers
+## Background: PANTHER identifiers
 
 | Identifier | Example | What it names | Stable across releases? | Has a name? |
 |---|---|---|---|---|
@@ -37,72 +39,82 @@ every SF corresponds to a PTN, but most PTNs are not SF roots. A PAINT
 annotation can sit above or below SF level. We store PTNs and never ANs; the
 `PAINT_TreeGrafter_Annotations_TOTAL` file maps one to the other.
 
-## Convention to adopt
+## Convention
 
 - **Claims about where a function sits, or which lineage has it:** anchor on a
-  PTN, always stored with its family id (PTN ids are not family-unique in our
-  PAINT slices; see Risks) and the PANTHER release it was checked against.
+  PTN, stored with its family id (PTN ids are not family-unique in our PAINT
+  slices; see Risks). Node assessments and `ancestral_nodes` already do this.
 - **Claims about membership ("protein P is one of these"):** use the family id
   and `representative_members`. Only HMMs can classify a sequence from outside
   the reference genomes, and the member index is built from HMM classifications.
-- **SF ids:** an optional, release-pinned, readable label beside a PTN. An SF is
-  never the only anchor of a claim.
+- **SF ids:** a release-specific, readable label. Existing SF anchors stay; new
+  work should not make an SF the only anchor of a placement claim.
 - **`representative_members` stay required beside a PTN.** They are how we
   detect that a surviving node now holds different genes.
 
-## Phase 0: version guards (do now)
+## Decisions (2026-11-15)
 
-The repo pins `PANTHER_RELEASE = "19.0"` in `src/ai_gene_review/etl/panther_families.py`,
-but other inputs follow whatever PANTHER serves today:
+- **No mass migration.** The 1,771 SF anchors in modules stay as they are. Waiting
+  loses nothing: the version 19 subfamily-to-node mapping can be rebuilt later from
+  files PANTHER keeps per release (see Phase 1).
+- **No `panther_release` slot.** The pinned constants in code are the single record
+  of which release the repo is checked against. Every file is re-validated at a bump,
+  so a per-file release would add backfill churn without adding a check.
+- **No `clade_nodes` slot yet.** It will be added only when a module needs a clade
+  that is not a subfamily root and has no PAINT annotation.
 
-- `etl/panther_paint.py` downloads `IBD.gaf`, the leaf IBA GAF and the TreeGrafter
-  node table from `paint/current/`.
-- `etl/panther_trees.py` fetches trees from the live `treeinfo` API into
-  `.cache/panther_trees/<FAM>.json.gz`, with no version in the path or the file.
+## Phase 0: version guards (done)
 
-Once PAINT moves to 20, a family review could combine a 19.0 member index, 20.0
-PAINT nodes and a tree from either release.
+Before this phase, the repo pinned `PANTHER_RELEASE = "19.0"` for the family and
+member data, but read PAINT from `paint/current/` and trees from the live API into
+an unversioned cache. Once PAINT moved to 20, a family review could have combined a
+19.0 member index, 20.0 PAINT nodes and a tree from either release.
 
-| Item | Change | Done when |
+| Item | Change | Status |
 |---|---|---|
-| 0.1 | Use one release constant for all PANTHER inputs. Download PAINT from the numbered folder (`paint/19.0/` exists) instead of `paint/current/`. | `panther_paint.py` and `panther_families.py` read the same constant; a test asserts the PAINT URL contains it. |
-| 0.2 | Key the tree cache by release: `.cache/panther_trees/<release>/<FAM>.json.gz`. Read the release from the response (`search.product.version`) and fail if it differs from the constant. | A doctest covers the mismatch; old unversioned cache files are ignored, not reused. |
-| 0.3 | Keep more of each tree in the compact cache: internal-node `event_type` (speciation, duplication, horizontal transfer), `sf_id` and species label. `compact_tree` keeps only leaves' subfamilies today. | Phase 1.3 and the Phase 3 taxon checks can run from the cache alone. |
-| 0.4 | Add a `panther_release` slot to `FamilyReview` (top level) and to module `FamilyDescriptor`. `paint_snapshot` records a PAINT row date, not which tree a `target_node_id` was checked against. | Schema updated; `just validate-families` and `just validate-modules` pass; existing files default to 19.0 through a one-off backfill. |
-| 0.5 | Add a release-drift check: compare the constant with the `paint/current` README and tarball name and with `treeinfo`'s reported version, and warn when PANTHER has moved on. | Runs as an integration test, not in normal CI, because it needs the network. |
+| 0.1 | PAINT is read from `paint/<PANTHER_RELEASE>/<PAINT_SNAPSHOT>/` (both constants in `src/ai_gene_review/etl/panther_families.py`). The PAINT URLs are defined once. | Done |
+| 0.2 | PAINT downloads are cached in a `paint-<release>-<snapshot>/` folder under the existing cache roots (`paint_cache_dir`), so a bump never reuses older files. | Done |
+| 0.3 | Trees are cached under `.cache/panther_trees/<release>/`. A tree the API serves for another release is refused: `load_family` returns `None` and the checks report "not checked". | Done |
+| 0.4 | `just check-panther-release` compares the pins with PANTHER's FTP site and API. It exits 1 on a newer PAINT snapshot or when PAINT or the API serve another release, and reports newer library releases as notices. It is a command, not a test, because integration tests replay recorded responses and cannot see drift. | Done |
+| — | Keep internal-node event type, subfamily and taxon in the compact tree cache. | Dropped for now; add with the first check that needs it (Phase 3) |
 
-## Phase 1: PTN clade anchors in modules
+First run (2026-11-15): "PANTHER 20.0 family classifications are published; PAINT
+and the tree API may not serve it yet". No stale pins.
 
-Modules can cite PTNs today only through `FamilyDescriptor.ancestral_nodes`.
-That slot means "the function arose at this node", and `validate_paint_ptns`
-(`src/ai_gene_review/validation/module_validator.py`) rightly requires a positive
-IBD there. A module that only wants to name a clade, such as "the plant CASPL4C
-orthologs", has nowhere to put a PTN, so it uses an SF.
+## Phase 1: prefer PTNs for new claims
 
-Current module anchors (`id:` occurrences under `modules/`): 1,771 SF, 1,567 family,
-1,231 PTN. Family reviews already link SFs to PTNs through
-`subfamilies[].clade_node_id` (253 uses).
+Modules can cite PTNs today only through `FamilyDescriptor.ancestral_nodes`. That
+slot means "the function arose at this node", and `validate_paint_ptns`
+(`src/ai_gene_review/validation/module_validator.py`) requires a positive IBD
+there. Family reviews already link subfamilies to PTNs through
+`subfamilies[].clade_node_id` (253 uses). Current module anchors (`id:`
+occurrences under `modules/`): 1,771 SF, 1,567 family, 1,231 PTN.
 
-| Item | Change | Done when |
+| Item | Change | Status |
 |---|---|---|
-| 1.1 | Schema: add `clade_nodes` to `FamilyDescriptor`, meaning "the clade rooted at this PTN is what this descriptor names". It makes no claim that a function arose there. Leave `ancestral_nodes` and its meaning unchanged. | Schema and docstrings explain the difference between the two slots. |
-| 1.2 | Validator for `clade_nodes`: the node exists in the release-matched cached tree of the declared family, and the representative members are leaves below it (an error if none are, a warning if some are not). No IBD required. | Tests use real cached trees, not mocks. |
-| 1.3 | Tool to map each SF to the PTN at its root, from version 19 trees: the lowest node whose leaves include every leaf carrying the SF, cross-checked against internal `sf_id` once 0.3 lands. An SF whose leaves do not form one clade is reported, not mapped. | Output goes to `.cache/` and is not committed; the tool reports how many SFs were mapped, how many were not one clade, and how many were missing. |
-| 1.4 | Migration: for each SF anchor in `modules/`, add the root PTN as a `clade_nodes` entry and keep the SF as its readable label. For family reviews, fill `clade_node_id` on subfamilies that lack it. | Module and family validation pass; a short receipt in the PR gives counts and lists anchors that could not be mapped. |
-| 1.5 | Guidance: update the PANTHER section of `CLAUDE.md`, the `module-curation` skill and the family-review docs to the convention above. | Reviewed and merged with 1.4. |
+| 1.1 | Guidance: one line in the PANTHER section of `CLAUDE.md`. | Done |
+| 1.2 | `clade_nodes` slot on `FamilyDescriptor`, meaning "the clade rooted at this PTN", with no claim that a function arose there. Validated against the release-matched tree: the node is in the declared family and the representative members are below it. No IBD needed. | Deferred until a module needs it |
+| 1.3 | Tool mapping each SF to the PTN at its root. | Deferred; only needed if anchors are converted |
 
-Do 1.3 and 1.4 before Phase 2. While 19 is live, every SF still resolves in its
-own tree. After the switch, the same mapping needs member-based detective work.
+If 1.3 is ever needed after the switch, the version 19 mapping can be rebuilt from
+files PANTHER keeps per release (releases back to 14.1 are still on the FTP site):
+
+- `downloads/paint/19.0/<date>/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz` maps every
+  tree node (AN number) to its PTN;
+- `downloads/TreeGrafter/PANTHER19.0_data_trees_hmms_only.tar.gz` (3.1 GB) has the tree
+  topology, with AN numbers;
+- `sequence_classifications/19.0/` gives each leaf's subfamily, so an SF's root is the
+  lowest node above all of its leaves.
 
 ## Phase 2: the switch to PANTHER 20
 
-Start only when `paint/current` and `treeinfo` both report 20 (the 0.5 check).
+Start when `just check-panther-release` reports that PAINT and the API serve 20.
 
 | Item | Change | Done when |
 |---|---|---|
-| 2.1 | Bump the release constant; rebuild `interpro/panther/panther.obo` and the member index (`just refresh-panther-members --rebuild`); re-fetch PAINT slices and trees. | All caches carry 20.0 paths. |
+| 2.1 | Bump `PANTHER_RELEASE` and `PAINT_SNAPSHOT` together; rebuild `interpro/panther/panther.obo` and the member index (`just refresh-panther-members --rebuild`); re-fetch PAINT slices and trees. | All caches carry 20.0 paths. |
 | 2.2 | Re-check every cited PTN against the version 20 trees and sort them into: survives with the same representative members below it; survives with different members; gone. A gone node is re-located through its representative members (their lowest common ancestor in the new tree). It is never silently removed. | A report lists every PTN in each group, with proposed re-locations for review. |
-| 2.3 | Remap SF ids through representative members to the version 20 SF, not by label. Bulk relabelling with `just fix-panther-labels` is not allowed for this step: some ids now name a different protein (for example `PTHR10133:SF27` changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI"). | Validation passes; remaps are reviewed in a PR. |
+| 2.3 | Remap SF ids through representative members to the version 20 SF, not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with `just fix-panther-labels` is not allowed for this step: some ids now name a different protein (for example `PTHR10133:SF27` changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI"). | Validation passes; remaps are reviewed in a PR. |
 | 2.4 | Re-check the reviewed human genes whose family changes (17; listed in the appendix) and the families they appear in. | Each one has a family review and module check. |
 | 2.5 | Expect IBA rows to turn into TreeGrafter IEA rows (GO_REF:0000118) for species dropped from PANTHER 20. In this repo that is `genes/PHAVU/LBA` and `genes/SOLTU/{CCOAOMT,JOKA2,PATB1}`. Re-review them after the next `just fetch-gene`. Poplar stays in PANTHER, so the CASPL project is unaffected. | Reviews updated after the GOA refresh. |
 | 2.6 | Re-check the open upstream discrepancies in `projects/PANTHER_FAMILY_ASSIGNMENT_DISCREPANCIES.md` and the DNAH12 case in `projects/IBA_REVIEW.md`. Both are unchanged in the 20.0 classification files, so the upstream reports still stand. | Pages updated with the version 20 status. |
@@ -138,11 +150,11 @@ Start only when `paint/current` and `treeinfo` both report 20 (the 0.5 check).
 
 ## Non-goals
 
-- Removing SF ids wholesale. They remain useful labels.
+- Removing or converting existing SF ids.
 - Changing what `ancestral_nodes` means, or relaxing its IBD requirement.
 - Rewriting history records or old receipts.
 
-## Risks and open questions
+## Risks
 
 - **PTN ids are not family-unique in our PAINT slices.** 283 of 6,094 nodes appear
   under more than one family (`family_residue_validator.py`). This is why every PTN
@@ -155,23 +167,21 @@ Start only when `paint/current` and `treeinfo` both report 20 (the 0.5 check).
 - **pantherdb.org is now behind Cloudflare.** On 2026-11-14 `treeinfo` returned 200,
   but the OpenAPI spec page returned 403. Prefer `data.pantherdb.org` downloads,
   cache trees, and rate-limit API calls.
-- **Open question:** the slot name `clade_nodes`, and whether `panther_release`
-  belongs on each node or once per file.
-- **Open question:** will PANTHER keep serving version 19 trees after the switch?
-  `paint/19.0/` exists on the FTP site; no versioned tree endpoint is known.
+- **The API will probably stop serving version 19 trees at the switch.** No
+  versioned tree endpoint is known. Trees already cached under `19.0/` stay usable,
+  and the per-release FTP archives listed in Phase 1 remain.
 
 ## Appendix: measurements (2026-11-14)
 
 All counts come from files on `data.pantherdb.org` and from this repo at commit
-`984b61419e`. They are a snapshot, not maintained values. Phase 0 should add a
-script that regenerates them.
+`984b61419e`. They are a snapshot, not maintained values.
 
 **Release status.**
 
 - `hmm_classifications/` and `sequence_classifications/` have a `20.0/` folder
   dated 2026-09-24; `current_release/` still holds 19.0.
 - `paint/current/` holds `Pthr_GO_19.0.tsv.tar.gz`; its files are dated 2026-08-28,
-  built from the GO release of 2026-08-05.
+  built from the GO release of 2026-08-05, and match `paint/19.0/2026-08-28/`.
 - `treeinfo` reports `version: 19`; `supportedgenomes` lists 144 genomes. The paper
   gives 131 for version 20.
 

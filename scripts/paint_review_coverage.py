@@ -24,6 +24,7 @@ from pathlib import Path
 
 import yaml
 
+from ai_gene_review.etl.panther_families import paint_cache_dir
 from ai_gene_review.etl.panther_paint import (
     IBD_GAF_URL,
     LEAF_GAF_URL,
@@ -35,7 +36,7 @@ from ai_gene_review.etl.panther_paint import (
 )
 
 ROOT = Path(__file__).resolve().parent.parent
-CACHE = ROOT / ".cache" / "paint"
+CACHE = paint_cache_dir(ROOT / ".cache" / "paint")
 
 
 def node_families(path: Path) -> dict[str, set[str]]:

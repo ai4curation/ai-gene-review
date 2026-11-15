@@ -4076,7 +4076,7 @@ def fetch_panther_paint(
         Optional[Path],
         typer.Option(
             "--cache-dir",
-            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther/paint-<release>-<snapshot>).",
         ),
     ] = None,
     extra_uniprot: Annotated[
@@ -4108,13 +4108,14 @@ def fetch_panther_paint(
         ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
         ai-gene-review fetch-panther-paint --all
     """
+    from ai_gene_review.etl.panther_families import paint_cache_dir
     from ai_gene_review.etl.panther_paint import (
         fetch_family_paint,
         fetch_all_family_paint,
     )
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    cache = cache_dir or paint_cache_dir(repo_root / ".cache" / "panther")
     panther_root = repo_root / "interpro" / "panther"
 
     if all_families:
@@ -4962,6 +4963,36 @@ def refresh_panther_members(
 
 
 @app.command()
+def check_panther_release():
+    """Report whether PANTHER has moved past the pinned release or PAINT snapshot.
+
+    Compares PANTHER_RELEASE and PAINT_SNAPSHOT (etl/panther_families.py) with
+    PANTHER's FTP site and API. Exits 1 when the pinned PAINT snapshot or tree
+    release is no longer what PANTHER serves; a newer library release that PAINT
+    and the API do not serve yet is only reported. Needs the network.
+
+    Example:
+        ai-gene-review check-panther-release
+    """
+    from ai_gene_review.etl.panther_families import (
+        PAINT_SNAPSHOT,
+        PANTHER_RELEASE,
+        panther_release_drift,
+    )
+
+    stale, notices = panther_release_drift()
+    typer.echo(f"pinned: PANTHER {PANTHER_RELEASE}, PAINT snapshot {PAINT_SNAPSHOT}")
+    for notice in notices:
+        typer.echo(f"ℹ️  {notice}")
+    for problem in stale:
+        typer.echo(f"⚠️  {problem}")
+    if stale:
+        typer.echo("See docs/panther_node_anchoring_plan.md (Phase 2) before bumping.")
+        raise typer.Exit(code=1)
+    typer.echo("✓ PAINT and the tree API still serve the pinned release and snapshot.")
+
+
+@app.command()
 def verify_panther_paint(
     output_dir: Annotated[
         Optional[Path],
@@ -4970,7 +5001,7 @@ def verify_panther_paint(
     cache_dir: Annotated[
         Optional[Path],
         typer.Option(
-            help="Where to cache the download (default: <repo>/.cache/panther)."
+            help="Where to cache the download (default: <repo>/.cache/panther/paint-<release>-<snapshot>)."
         ),
     ] = None,
 ):
@@ -4993,11 +5024,12 @@ def verify_panther_paint(
         fetch_ibd_gaf,
         find_pruned_paint_rows,
         load_committed_paint_rows,
+        paint_cache_dir,
         parse_ibd_row_keys,
     )
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    cache = cache_dir or paint_cache_dir(repo_root / ".cache" / "panther")
     upstream = parse_ibd_row_keys(fetch_ibd_gaf(cache).read_text().splitlines())
     committed = load_committed_paint_rows(repo_root / "interpro" / "panther")
 

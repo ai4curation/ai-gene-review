@@ -546,6 +546,8 @@ PANTHER's own HMM classifications. Two rules follow:
 
 PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
 `validate_paint_ptns`. Their label is conventionally just the bare id.
+For where a function sits in a family, cite the PTN; subfamily ids are renumbered and
+renamed between PANTHER releases (see `docs/panther_node_anchoring_plan.md`).
 
 **If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
 When you cannot establish that a PANTHER family corresponds to what the descriptor
