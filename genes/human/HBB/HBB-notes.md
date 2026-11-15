@@ -232,3 +232,71 @@ the direct quotation check verified all 210 quotations with none unchecked.
 The repository helper derived 40 UniProt record-section fields. Canonical
 rendering succeeded in memory. Independent scientific review found no
 blocking concern with the evidence boundaries, refinements, core or forms.
+
+## 2026-11-15 PR review follow-up
+
+The source-specific decisions now total 33 ACCEPT, 38 KEEP_AS_NON_CORE,
+11 MODIFY, 6 UNDECIDED and 5 MARK_AS_OVER_ANNOTATED, with no NEW rows.
+The review remains DRAFT for the six unresolved source contexts.
+
+The HBZ-associated assembly row now proposes
+[GO:0030492 hemoglobin binding](https://www.ebi.ac.uk/QuickGO/term/GO:0030492).
+This names the bound protein class; the native supporting entity P02008
+continues to identify the exact zeta-chain partner. PMID:11159543 establishes
+human Portland-2 zeta2-beta2 assembly, and PMID:24100324 supplies additional
+zeta-betaS dimer structural evidence. The latter retains its mutant,
+CO-liganded, mouse-expression limits. The other HBZ screening rows do not
+independently establish the same assembly context. The alpha-binding child
+term does not describe the zeta partner, so that existing refinement does
+not replace this distinct interaction context.
+
+Full-text reinspection of [PMID:19740759](https://pmc.ncbi.nlm.nih.gov/articles/PMC2781594/)
+supports narrowing two process assertions. The peroxide assays establish
+biochemical catalysis and cross-linking. Macrophages received preformed
+aggregates after peroxide treatment was terminated with catalase; their
+altered state is therefore an aggregate response. The
+[hydrogen-peroxide response term](https://www.ebi.ac.uk/QuickGO/term/GO:0042542)
+requires a change in a cell or organism following that stimulus, though it
+need not be adaptive or protective. Aggregate-induced oxidative stress,
+cytotoxicity and occurrence in septic plasma also do not establish HBB
+executing the tissue defensive reaction described by
+[inflammatory response](https://www.ebi.ac.uk/QuickGO/term/GO:0006954).
+Both rows are now MARK_AS_OVER_ANNOTATED. Peroxidase activity and peroxide
+catabolism remain non-core, with the original contributes_to qualifier
+preserved on the molecular-function annotation.
+
+The retained QuickGO check at 2026-11-15 00:35 UTC used
+[the is_a/part_of ancestor endpoint](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0042744/ancestors?relations=is_a,part_of).
+Its closure for GO:0042744 contains GO:0008150, GO:0072593, GO:0009056,
+GO:0008152, GO:0009987, GO:0042743 and GO:0042744 itself; GO:0098869 is
+absent. The response SHA256 is
+`9b348828cb50570c24af233d855f2d028b473c31089358ae8fff176bca0bbd25`.
+Thus the peroxide-catabolism decision does not imply acceptance of the
+distinct cellular-oxidant-detoxification assertion.
+
+The proposed over-annotation change for
+[GO:0045429 positive regulation of NO biosynthesis](https://www.ebi.ac.uk/QuickGO/term/GO:0045429)
+was assessed separately. Its definition concerns increasing the rate or
+extent of NO formation; it does not require the regulator itself to be a
+nitric-oxide synthase. [PMID:7965120](https://pubmed.ncbi.nlm.nih.gov/7965120/)
+experimentally adds purified human Hb to rat smooth-muscle cells and reports
+increased IL-1beta-induced nitrite accumulation persisting after Hb removal.
+That intervention differs from the platelet abundance association and the
+secondary renal clinical phenotype. The existing NAS association is retained
+as non-core at the whole-hemoglobin level. The experiment does not isolate
+beta-chain activity or establish an endogenous human vascular mechanism.
+The inhibitor experiments described in the abstract concern IL-1beta
+induction and are not represented as a dissection of Hb's augmentation
+mechanism. Publisher full-text endpoints returned 403 during follow-up, so
+the detailed mechanism remains unverified; this limitation is not evidence
+that the reported contextual regulatory effect is false.
+
+One physiological gas-carrier core is retained, now explicitly describing
+heme-b coordination and alpha-chain assembly and supported by the native
+heme-binding feature and normal human HbA interface evidence. These
+prerequisites remain ACCEPTed annotations; a core synthesis need not create
+a separate physiological role for each prerequisite. The contributes_to
+slot is not used to misrepresent beta-globin's own heme binding. Thirty-four
+reference assessments were made source-specific, preserving the distinctions
+among normal HbA, variants, chimeras, ferric samples, unresolved tables and
+processed-peptide pharmacology.
