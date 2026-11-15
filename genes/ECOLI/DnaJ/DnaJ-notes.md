@@ -89,3 +89,23 @@ IMP is narrowed to GO:0044829 *host-mediated activation of viral genome replicat
 matching the demonstrated lambda-phage phenotype. The direct historical membrane
 assays remain non-core rather than being overruled; the open question is what mechanism
 or fractionation behavior explains that experimentally observed pool.
+
+
+## 2026-11-06 comparative DnaK-cycle audit
+
+Retained client-directed folding assistance (GO:0044183), DnaK ATPase activation and sigma32 antagonism as distinct activities. The current general chaperone definition does not require ATP hydrolysis by DnaJ itself. Direct ATP binding is marked over-annotated: absence of a Walker motif is not a negative binding assay. Replaced an incorrect DnaK-DnaJ structure finding for PMID:19439666 with its actual ADP/client-bound DnaK scope. Both DNA-replication rows retain the specialized phage/plasmid role; no rejection on broadness alone.
+
+All historical annotation rows, including inherited NEW proposals, were preserved outside their review fields; no new annotation rows were added. Source UniProt/GOA, genuine research and prediction artifacts were protected against the pre-edit baseline. PAINT-loss checks found no applicable IRD or IKR.
+
+Primary scope: [PMID:1826368] separates DnaJ stimulation of DnaK-bound ATP hydrolysis from GrpE-mediated nucleotide release. [PMID:7937953] follows denatured firefly luciferase through the E. coli DnaK-DnaJ-GrpE cycle. [PMID:20953191] measures remodeling of a tested misfolded luciferase species; its ATP cost is assay-specific, not a universal per-client constant. Normal forced fetches of those papers and PMID:11162122 and PMID:9103205 succeeded but remained abstract-only. Exact assay construct and E. coli substrain details not stated in those abstracts are not invented. Existing curator assignments are retained where independently supported; the particular complex-assembly process rows citing PMID:9103205 remain UNDECIDED because a structural complex does not alone resolve the assembly-process assertion.
+
+Comparative boundary: [PMID:11162122, abstract] states "Here, DnaJ does not stimulate the DnaK-mediated ATP hydrolysis" for Thermus thermophilus. This is not negative evidence for the E. coli or KT2440 proteins, but rules out treating J-domain identity alone as a universal kinetic guarantee. Official QuickGO definitions were retrieved on 2026-11-06; GO:0051082 and GO:0003767 are obsolete, while GO:0044183 describes folding assistance and GO:0051087 binding to a chaperone protein. Client binding is not chaperone-partner binding.
+
+The pre-existing genuine Falcon report was read as background and preserved unchanged; primary and curated evidence control the review.
+
+
+## 2026-11-06 — PR6125 evidence/action follow-up
+
+1: preserve both lambda and plasmid replication contexts; 2/5: core physical complex membership versus an assembly-process step. Original machine rows and source bytes were frozen before edits. Published PMID and raw-source evidence remain separate from native target-specific experiments. Core location changes, where made, retain cytoplasm when finer cytosol resolution was not independently supported. Physiological uncertainty is not treated as automatic disproof of a directly measured molecular activity.
+
+Recovered the genuine PMID:18304323 Supplementary Table S2 from the publisher. The exact P08622 row is detected, but its separately compiled prior-localization column is OM and group is low; this does not independently resolve a native cytosol assignment. PMID:6220698 explicitly describes membrane-bound minicell material. Cytoplasm is retained and the existing cytosol IDA remains UNDECIDED without a full source-level resolution; no outer-membrane annotation is added. See DnaJ-source-analysis/cytosol-table-scope.yaml for the bounded extract and provenance.

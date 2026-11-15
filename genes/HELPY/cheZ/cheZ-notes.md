@@ -1,0 +1,13 @@
+# cheZ / HP_0170 curation notes
+
+## 2026-11-06 — chemotaxis taxon audit
+
+Reviewed all three pristine GOA-derived rows for UniProt O24976 (H. pylori 26695). The two cytoplasm claims are retained consistently. The broad phosphatase term is refined to phosphoprotein phosphatase activity (GO:0004721), supported by CheY-P hydrolysis. Added two missing claims: regulation of chemotaxis and cell pole. Status COMPLETE means decisions are complete, not that all strain-specific experiments have been performed.
+
+PMID:20497335 was read in full. It uses SS1 genomic DNA for CheZ, CheY and CheV constructs; 26695 locus and residue numbering is also used. The active-site positions D189/Q193 in 26695 correspond to D177/Q181 in SS1. CheZ acts on CheY and on the receiver domain of CheAY, weakly on CheV2, and not detectably on CheV1 or CheV3. Failure to act on CheA without its receiver domain does not support histidine-phosphatase activity. This is strong mechanistic support for the curated 26695 ortholog, explicitly transferred across strains rather than relabeled as an exact O24976 assay. It also establishes a divergent CheZ outside Gammaproteobacteria without making CheZ universal.
+
+PMID:26061894 was read in full. G27 derivatives supply the main cellular experiments; SS1, SS2000, 26695 and J99 confirm localization in some cases. Direct CheZ-ChePep binding, mutual polar localization and a complex independent of the core receptor-CheA cluster are supported. A complete cheZ deletion causes hyperreversals; an earlier partial deletion that retained terminal fragments had a different phenotype. Neither an E. coli-style CheA-S anchoring mechanism nor a flagellar motor localization is transferred to H. pylori.
+
+The new BP is based on CheZ itself catalyzing phosphosignal removal, not on knockout necessity. Current QuickGO confirms GO:0050920 is regulation of chemotaxis and has a regulation-of-biological-process ancestry. Same-step comparator E. coli CheZ P0A9H9 carries it; E. coli CheA/CheA-S P07363 also carries it, relevant to organization of the phosphatase. These comparator annotations are a convention check, not supporting evidence. No target entry was found in gocams/index.tsv. No redundant chemotaxis parent was proposed.
+
+Normal Falcon attempt (`just deep-research HELPY cheZ --provider falcon`) failed HTTP403 authentication/access. No provider report was fabricated. Log: `.cache/module-audit-logs/chemotaxis-20261106/HELPY-cheZ-falcon.log`. Literature and these manual notes provide the review basis. Frozen UniProt/GOA sources and all original machine payloads are preserved; there were no inherited NEW rows. Validation and preservation results are logged with the module audit.

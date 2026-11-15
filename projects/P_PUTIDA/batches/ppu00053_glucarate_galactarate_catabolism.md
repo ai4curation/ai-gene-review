@@ -85,10 +85,15 @@ unique physiological paralog.
   locus-linked Q88GW5 and cross-species KgsD Q6FFQ0 are pathway exemplars;
   Q88NF5 and Q88JR4 remain comparison paralogs outside the leaf.
 
+- The shared module (`modules/glucarate_galactarate_catabolism.yaml`) is now
+  species-neutral: KT2440 is an exemplar of its oxidative KDG-disposal route,
+  and the enterobacterial GarL/GarR/GarK aldolase route is modelled as an
+  alternative variant that KT2440 does not encode.
+
 ## Research Status
 
 The completed OpenScientist
-[module-level report](../../../modules/bacterial_glucarate_and_galactarate_catabolism-deep-research-openscientist.md)
+[module-level report](../../../modules/glucarate_galactarate_catabolism-deep-research-openscientist.md)
 supports the reusable three-stage boundary. The separate
 [module/pathway/taxon report](../deep-research/PSEPK__glucarate_galactarate_catabolism__ppu00053-deep-research-openscientist.md)
 identifies aldarate-locus PP_3602 as the leading terminal candidate. Its claim

@@ -73,3 +73,9 @@ GOA ships 107 rows for O35604. They fall into a small number of groups:
   (secondary storage, no activity shown). PMID:22147702 (NPC1 knockdown raises
   cellular chloroquine) supports the existing response-to-xenobiotic row rather
   than a new term.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005635 / PMID:20457914: defect retyped (evidence depth: FULL_TEXT). The reference is the right paper for the batch of nuclear envelope marker rows MGI made that day (Lmna, Lmnb1, Lmnb2, Lbr, Syne2, Tor1aip1). The cached full text never mentions NPC1; its only "NPC" is the nuclear pore complex antibody "anti-NPC (414)". Retyped to WRONG_GENE_PRODUCT / SYMBOL_COLLISION / DELETE_ROW with a verbatim quote; no corrected gene since the antibody is not gene-specific. Supplementary figures not read. Action left as is to match the three other nuclear envelope rows.
