@@ -14,8 +14,10 @@ Batch 10 canonical-surfaceome backfill. Human serotonin transporter.
 ## Core molecular function: serotonin:Na+:Cl- symporter (secondary active)
 
 - Core MF = **GO:0005335 serotonin:sodium:chloride symporter activity** (verified real,
-  non-obsolete via OLS; its 21 is_a ancestors run through symporter / secondary-active /
-  solute:Na+ / sodium / chloride transporter activity — it is a mechanism-based term).
+  non-obsolete; QuickGO is_a ancestry — OLS getAncestors was returning glitched byte-identical
+  lists this session — shows it runs through both the symporter / solute:Na+ / sodium:chloride
+  branch AND GO:0008504 monoamine transmembrane transporter activity; it is NOT under
+  GO:0005326 neurotransmitter transmembrane transporter activity).
 - Na+- and Cl--dependent, secondary-active symport driven by the Na+ (and Cl-) gradient;
   K+ counter-transport in the cycle; overall electroneutral. Not an antiporter, not a
   uniporter, not heteromeric.
@@ -98,15 +100,16 @@ executes the process. Necessity ≠ participation. Therefore:
 
 ## Actions applied to transporter MF granularity
 
-- GO:0005326 (neurotransmitter transmembrane transporter) and GO:0008504 (monoamine
-  transmembrane transporter) are substrate-based classifications, true but less specific
-  than serotonin; GO:0005335 is NOT their is_a descendant (different ontology branch), so
-  TOO_GENERAL is not usable. Treated as MODIFY → GO:0005335 (the specific serotonin symporter
-  term the gene already carries).
+- GO:0008504 (monoamine transmembrane transporter) IS an is_a ancestor of the accepted
+  GO:0005335 (QuickGO-verified), so its rows are TOO_GENERAL, harmonized with the NET
+  (SLC6A2) and DAT (SLC6A3) treatment. GO:0005326 (neurotransmitter transmembrane
+  transporter) is NOT an is_a ancestor (parallel branch), so TOO_GENERAL cannot apply and
+  those rows are ACCEPT as a true, broader classification.
 - GO:0016020 membrane → MODIFY → GO:0005886 plasma membrane.
 - GO:0012505 endomembrane system → MODIFY → GO:0010008 endosome membrane (the specific
   intracellular location the gene carries, supported by SCAMP2/recycling-endosome data).
-- GO:0006836 neurotransmitter transport → MODIFY → GO:0051610 serotonin uptake.
+- GO:0006836 neurotransmitter transport → TOO_GENERAL (entailed by the accepted GO:0098810
+  neurotransmitter reuptake / GO:0051610 serotonin uptake rows the gene carries).
 
 No proposed_new_terms (core term exists). No source_defects found (retracted papers already
 flagged by UniProt CAUTION; not annotated in GOA).
