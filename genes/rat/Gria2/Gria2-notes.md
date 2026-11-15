@@ -36,3 +36,9 @@
   on GluA1(Q) and unedited/mutant GluA2 constructs; native edited GluA2 makes channels
   Ca2+-impermeable.
 - Phenotype/expression codes on CC rows (IEP 16903873; IMP 11348590) -> WRONG_EVIDENCE_CODE CHECK.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0042802 / PMID:31925409: defect withdrawn (evidence depth: FULL_TEXT). The earlier claim that the full text never mentions GluA2 is false: the cached text has 36 mentions, and purified rat GluA2 (GluA2cryst) is the control in the glutaraldehyde cross-linking assay, running as tetramers; that is the IntAct self-interaction. Rat Grid1 (Q62640) carries its own identical-protein-binding row from the paper. Defect deleted, reason corrected, verbatim quote added, reference_review changed from MISCITED/NONE to VERIFIED/LOW.

@@ -3,7 +3,7 @@ title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI, ARATH, DICDI, DROME, mouse, SCHPO]
-genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4, ADAM17, ALDOB, spz, rl, ttv__Q9V730, rad21, ABCB7, ABL1, ACVR2A]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4, ADAM17, ALDOB, spz, rl, ttv__Q9V730, rad21, ABCB7, ABL1, ACVR2A, CACNB2, CHRNB1, CDK1, BDKRB1, CHD4, CDK16, CAMK2A, BAX, COQ8B, CHRNB4, CNGA1, CNGB1, CNGB3, COL1A2, EZH2, CUL1]
 ---
 
 # Wrong-Gene Leads
@@ -318,6 +318,60 @@ On the genes already checked by hand:
   shared-row signal treats them as complex-wide. A complex-wide row on the wrong gene
   looks the same as a correct complex-wide row, so this is a trade-off, not a bug.
 
+## Fifth lead review (2026-11-14)
+
+This review is the first sweep with the normalised name check (11,004 leads, 382 rows in the
+top tier). It took the next 20 genes the same way as before. All 20 are human: the
+higher-ranked fly, plant and yeast genes had been checked already.
+
+| Gene | Row | Outcome |
+|---|---|---|
+| human/CACNB2 | five IDA rows from PMID:1309651 (BHF-UCL) | **Wrong gene, toward CACNB1.** The paper's "beta 2" is the pre-1993 numbering. Its deposited cDNA (GenBank M76560) is cross-referenced from CACNB1 (Q02641), and UniProt cites the paper only there. `WRONG_GENE_PRODUCT` / `PROBABLE`, cause `LEGACY_ALIAS`. The claims hold for CACNB2 on other evidence, so the actions stay and the reasons are reworded. |
+| human/CHRNB1 | nervous system process (IMP, UniProt); NMJ terms (IMP, SynGO) | **Wrong gene.** PMID:11104662 is a CHRNB2 V287M paper, which the cached full text confirms (`CONFIRMED`, toward CHRNB2). PMID:7531341 attributes the slow-channel syndrome to an epsilon-subunit mutation, and SynGO has the same IMP rows on CHRNE (`PROBABLE`, toward CHRNE). The IDA rows from the same paper are endplate recordings and are unaffected. |
+| human/CDK1 | serine/threonine kinase activity, positive regulation of smoothened signaling (IDA, UniProt) | **Wrong gene, confirmed.** The full text of PMID:31279575 never mentions CDK1, Cdc2 or any cyclin; the kinases are ULK3 and STK36, and UniProt has the same row on ULK3. The Hedgehog row moves to **REMOVE**. The kinase row stays ACCEPT, now supported by a CDK1 paper. A G2/M row citing a CDK2 structure paper gets a `SUSPECTED` reference query. |
+| human/BDKRB1, human/CHD4, human/CDK16 | various | **Wrong reference.** BDKRB1's receptor-activity row cites the B2-receptor cloning paper. CHD4's zinc row cites a paper that sequenced the 240-kDa Mi-2 antigen, which is CHD3. CDK16's three cyclin Y rows cite a paper on PFTK1 (CDK14). All are `PROBABLE`. Each claim is true of the gene on other evidence, so no action changes. |
+| human/BAX, human/CAMK2A | IDA rows | **Query.** BAX has two rows citing a BOK paper and a screen of hypothetical genes, where BAX was probably a control. CAMK2A's angiotensin row rests on CaMKII inhibition in opossum cells, so it is filed as an evidence-code query (`WRONG_EVIDENCE_CODE` / `SUSPECTED`), and it is counted with the queries, not the wrong evidence codes. All are `SUSPECTED`. |
+| human/ATP1A1, BAK1, BCL2L1, BMP4, C1QB, CA2, CA5A, CASP9, CD28, CHMP2A, CHRNA10, CHRNB2 | various | **False positives or no change.** Many name the gene in a form the check still misses: alpha1 or α1 for ATP1A1, Bcl-X(L), B-chain, α4β2, Mi2beta, HsCHD4. Others name it only in the full text (BAK1, CHMP2A, CHRNB2), or annotate a whole panel (caspases, carbonic anhydrase isozymes). |
+
+So of 20 leads: 3 are wrong-gene annotations (CACNB2, CHRNB1, CDK1), 3 are wrong references, 2 are queries, and 12 are false positives. The fourth batch found one wrong-gene annotation in 20. The rise fits the detector fixes, though 20 leads is a small sample.
+
+Two new patterns:
+- **Legacy numbering.** CACNB2's rows come from an old subunit name ("beta 2") that now belongs to a paralog. Matching "beta 2" against CACNB2's names would have hidden this lead, so old numbering should not count as naming a gene.
+- **The paper's own sequence deposit.** A deposited sequence can settle which gene a paper cloned when the abstract cannot, as it did for CACNB2 and CHD4. Checking the paper's GenBank records against the annotated protein is a cheap test for the cloning papers of the 1990s.
+
+Across all five batches (86 leads): 11 wrong-gene annotations, 4 wrong evidence codes, 8 wrong references, 17 queries pending full text, and 46 false positives or no change. No action was changed on an abstract alone.
+
+## Sixth lead review (2026-11-15)
+
+A fresh sweep found 11,104 leads. The next 20 genes were taken the same way, all human. The
+checkers also tried the fifth batch's sequence-deposit test on cloning papers.
+
+| Gene | Row | Outcome |
+|---|---|---|
+| human/COQ8B | Purkinje layer IMP; NOT kinase activity and NOT protein phosphorylation (IDA); ubiquinone biosynthesis IMP (UniProt) | **Wrong gene (one row), wrong evidence code (two rows), wrong reference (one row).** The cached full text of PMID:27499294 reports no COQ8B experiment: its knockouts and kinase assays are Coq8a, COQ8A and yeast Coq8p. The Purkinje phenotype is the Coq8a knockout's, and COQ8A has no such row, so that row is a wrong gene and moves to **REMOVE**. COQ8A carries the same two NOT rows and the ubiquinone IMP from this paper, and the Discussion extends its conclusion to COQ8A and COQ8B, so those rows are a family-level conclusion applied to the paralog, not a mis-keyed gene. The NOT rows are `WRONG_EVIDENCE_CODE` (IDA where ISS from COQ8A is due) and still move to **REMOVE**, because COQ8B phosphorylates COQ3 in vitro. The ubiquinone row stays ACCEPT on the ADCK4 patient paper, with a `WRONG_REFERENCE` defect. |
+| human/CNGB3, CNGA1, CNGB1 | visual perception IMP (UniProt) | **Wrong gene, three times.** Each row comes from a mutation paper on another subunit: CNGB3's from a CNGA3 screen (`CONFIRMED`), CNGA1's from a CNGB1 family, and CNGB1's from a CNGA1 screen (both `PROBABLE`). The CNGA1 and CNGB1 rows are reciprocal swaps. Where the right subunit already carries the identical row (CNGB3, CNGA1) the defect asks to delete the duplicate; CNGA1 has no IMP row from its own screen, so the CNGB1 row is a `CHECK` to move it. |
+| human/CHRNB4 | acetylcholine-gated channel IDA (UniProt) | **Wrong gene, confirmed.** The oocyte recordings used α4β2 and α7 only, so the row does not belong on CHRNB4. UniProt has the row on CHRNB2 and CHRNA7 but not CHRNA4, so a slip for CHRNA4 is possible; that destination is not confirmed, and the defect names none. |
+| human/COL1A2 | skeletal system development IMP (UniProt) | **Probable wrong gene.** The paper is a COL1A1 Sp1-site study, and UniProt cites it only on COL1A1, which has no GO row from it. |
+| human/EZH2 | two TAS rows (PINC) | **Probable wrong gene.** The paper cloned EZH1, and the TAS statements are about EZH1. |
+| human/CUL1 | plasma membrane IDA (UniProt) | **Query.** The abstract shows only CUL3 at membranes. The reason no longer claims the full text was read, and the action moves from KEEP_AS_NON_CORE to **UNDECIDED** until it is. |
+| COL9A3, COMP, CREB1, CSF2RA, CSF2RB, CYP11B1, DLAT, DNMT3L, EGLN1, EHMT1, EYA1, FGB | various | **False positives.** Most name the gene in a form the check misses: bare "CREB", "βc", "type IX collagen", "TSPs", "PHD2" or "GLP" (full text only), "P-450(11)beta", "E2", "DNMT3B-3L". Others are complex-wide rows from complexes too small for the shared-row signal (fibrinogen, the SCF core). DNMT3L's lead came from a stale local UniProt file that did not yet cite the paper. |
+
+So of 20 leads: 7 are wrong-gene annotations (COQ8B, CNGB3, CNGA1, CNGB1, CHRNB4, COL1A2,
+EZH2), 1 is a query, and 12 are false positives. Leads are counted per gene, under the gene's
+most severe outcome, so COQ8B counts once as wrong gene although two of its rows are wrong
+evidence codes and one is a wrong reference.
+
+**Disease papers.** UniProt's disease-mutation papers tend to spread to the partner subunit: one
+mutation paper gives a "visual perception" IMP row to both subunits of a channel. A check for
+IMP rows whose paper reports mutations only in a co-subunit would catch this class directly.
+
+**Sequence deposits.** The deposit test settled EZH2 (the paper's cDNA is EZH1). For COQ8B and
+the CNG channels the full text was enough.
+
+Across all six batches (106 leads): 18 wrong-gene annotations, 4 wrong evidence codes, 8 wrong
+references, 18 queries pending full text, and 58 false positives or no change (genes, each
+counted once under its most severe outcome). No action was changed on an abstract alone.
+
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
@@ -334,6 +388,12 @@ On the genes already checked by hand:
 - **Uncached papers** get no name-check adjustment.
 
 ## Next steps
+
+- Flag IMP and TAS rows from mutation papers whose abstract names a different subunit of the same complex as the mutated gene, the pattern of the sixth batch's CNG channel rows.
+- Refresh the local UniProt files before a sweep; a stale file (DNMT3L) produced a lead that the current entry would not.
+
+- Use each paper's GenBank deposits (the `RX` link from ENA to PubMed) to check which protein a cloning paper sequenced, as was done by hand for CACNB2 and CHD4.
+- Add the name forms the fifth batch still misses: Greek subunit letters (α1, α4β2), UniProt isoform names (Bcl-X(L)), chain letters (B-chain) and species prefixes (HsCHD4). Do not let legacy numbering ("beta 2") count as naming a gene.
 
 - Count shared rows from QuickGO by reference rather than from local gene folders,
   so complexes whose subunits are not reviewed here are caught too.

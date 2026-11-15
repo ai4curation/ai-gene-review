@@ -8,3 +8,14 @@
 - UniProt SubCell lacks lipid droplet (lists Microsome + Mitochondrion only).
 - Self-interaction by split-ubiquitin, Y2H, DHFR-PCA -> identical protein binding KEEP_AS_NON_CORE.
 - Decisions: 20 ACCEPT, 7 MODIFY, 6 MARK_AS_OVER_ANNOTATED, 3 KEEP_AS_NON_CORE.
+- 2026-11-06 PTHR44068 re-review: refreshed UniProt from entry version 212
+  to 213; the only visible drift was interaction/xref metadata (BioGRID count,
+  MINT, and OMA). Re-checked the PTN002226525 sterol-SMT and PTN000802684
+  fungal Erg6 PAINT nodes against the `PTHR44068` family review; the
+  Saccharomyces IBAs for sterol 24-C-methyltransferase activity, ER location,
+  and ergosterol biosynthesis remain sound. Web and PubMed searches found a
+  2025 sterol-intermediate paper using an `erg6Delta` strain, where
+  "expected sterol intermediates were the most abundant sterol in erg6" as
+  expected [PMID:40267201], but this biophysical phase-separation study does not
+  supersede the direct activity, pathway or lipid-droplet/ER localization
+  evidence already cited here.
