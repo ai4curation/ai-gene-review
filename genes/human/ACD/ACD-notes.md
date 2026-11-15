@@ -56,3 +56,9 @@ The supported UPF1, mouse RNF8 and USP7 associations remain KEEP_AS_NON_CORE und
 Seventeen PMID:21044950 screen interactions are UNDECIDED. The cached full-text flag overstates the supplied abstract/discussion content. Indexed primary methods were readable, but individual supplemental hit records could not be recovered: PMC presented a browser challenge and Europe PMC returned HTTP500/403. Study-wide hit counts cannot verify an individual pair. The immutable publication cache was left unchanged.
 
 PMID:16880378 supports shelterin assembly. The detailed POT1-domain interface is not established by its accessible abstract; PMID:15231715 supports the POT1-TIN2 bridge. Human review status is DRAFT because the unresolved contexts remain explicit.
+
+## 2026-11-15 round-four follow-up: source queries and transfer scope
+
+Explicitly cite projects/CLINGEN_MENDELIAN.md#curation-instructions for the three supported generic-binding policy exceptions. Their KEEP_AS_NON_CORE decisions leave three protein_binding_policy warnings; human status remains DRAFT with 19 UNDECIDED contexts. Restore machine-readable CHECK requests to ARUK_UCL for native PMID:25172512 evidence, without claiming a confirmed wrong term or demanding deletion. GO:0010521 does not require a purified-enzyme assay; the unresolved question is the evidence supporting the native activity assignment. Restore functional identities of the 17 screen prey proteins without inferring those activities for ACD or resolving their inaccessible hit records.
+
+PMID:22101936's Lys233/POT1 localization comparison uses human TPP1 constructs and mouse POT1a in mouse MEFs: "we co-transfected Myc-mPOT1a with either FLAG-hTPP1WT or FLAG-tagged hTPP1 mutants into wild-type MEFs.". The earlier shorthand contrasting mouse and human results must not be read as a controlled comparison of the two species' TPP1 proteins. Regulation of TPP1 itself does not settle whether it performs GO:0070203.

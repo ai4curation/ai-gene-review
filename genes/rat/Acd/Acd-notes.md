@@ -30,3 +30,13 @@
 ## 2026-11-15 follow-up: limits of transferred assertions
 
 The earlier GO:0010521 and GO:0070203 REMOVE recommendations are superseded by UNDECIDED. Human inhibitor activity and the interpretation of localization regulation remain unresolved; neither transfer validity nor target-function absence is established. No human long-isoform mechanism is asserted for rat. The mouse skeletal p53-rescue results do not establish a urogenital mechanism: GO:0001655 is also UNDECIDED, while skeletal/limb/segmentation judgments are explicitly restricted to the studied source phenotypes. The review remains DRAFT. Native GOA identifiers and citations were retained.
+
+## 2026-11-15 round-four follow-up: source queries and transfer scope
+
+The preceding entry's UNDECIDED inhibitor decision is superseded by REMOVE for the GO:0010521 ISO transfer. The weakly grounded human source and the absence of the human long-form extension from retained canonical rat Q4FZR5 do not support that transfer. This does not establish absence of every inhibitory context or survey all rat transcripts. The PMID:31216472 statement about mice is removed from rat annotation evidence. GO:0070203 remains UNDECIDED because neither the negative human localization result nor the inhibitor-specific sequence argument settles the regulatory role in rat. Rat status remains DRAFT with two UNDECIDED contexts.
+
+PMID:22101936's Lys233/POT1 localization comparison uses human TPP1 constructs and mouse POT1a in mouse MEFs: "we co-transfected Myc-mPOT1a with either FLAG-hTPP1WT or FLAG-tagged hTPP1 mutants into wild-type MEFs.". The earlier shorthand contrasting mouse and human results must not be read as a controlled comparison of the two species' TPP1 proteins. Regulation of TPP1 itself does not settle whether it performs GO:0070203.
+
+Sequence comparison: the retained human Q96AP0 short-form, mouse Q5EE38 and rat Q4FZR5 records each place the shared PWIRELILGS anchor at residues 11-20. PMID:31216472 defines the human short form as residues 87-544 of the long form; the anchor thus maps to long-form residues 97-106, after the inhibitory-extension R43/R46/R48 region. The sequence evidence comes from the three committed *-uniprot.txt files, not from the paper's mouse-only Discussion sentence.
+
+The validator flags the raw UniProt sequence quotation as a sequence-evidence advisory. It is retained here to make the N-terminal comparison inspectable; the activity decision also depends on the cited human functional experiment and the explicit sequence comparison above.
