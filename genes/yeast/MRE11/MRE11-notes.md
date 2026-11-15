@@ -86,3 +86,11 @@ Genetics in vivo:
   [PMID:9845372].
 - The sporulation and meiotic-transcription phenotypes [PMID:17396017] are
   downstream phenotypes. They are not process participation.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0000729 / PMID:23080121: defect retyped (evidence depth: FULL_TEXT). PMID is the intended paper (UniProt P32829 also cites it for FUNCTION and MUTAGENESIS of Trp-239), but the cached full text is S. pombe (mre11/rad32 W248R, Ctp1, Rad3, nmt41) plus human and P. furiosus biochemistry; S. cerevisiae appears only in citations. Trp-248 (Q09683), Trp-243 (P49959) and Trp-239 (P32829) verified as the aligned residue. Retyped to WRONG_GENE_PRODUCT; DELETE_ROW because S. pombe rad32 already carries this term from the paper (PomBase IMP). An ISS/WRONG_EVIDENCE_CODE reading is the alternative and is named in the explanation.
+- GO:0004520 / PMID:23080121: defect retyped (evidence depth: FULL_TEXT). Same paper and finding as above. Retyped to WRONG_GENE_PRODUCT with corrected_value UniProtKB:Q09683 (verified RAD32_SCHPO) but requested_change kept CHECK, because whether the S. pombe data support endonuclease activity by IMP is a curator call (W248R retains nuclease activity).
+- GO:0042138 / PMID:23080121: defect retyped (evidence depth: FULL_TEXT). Same paper. Retyped to WRONG_GENE_PRODUCT, DELETE_ROW - the paper measures spore viability and meiotic DSB repair in S. pombe, not DSB formation, so the term is unsupported for any species from this paper.
