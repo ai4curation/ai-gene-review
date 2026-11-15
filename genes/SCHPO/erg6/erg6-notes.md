@@ -7,3 +7,12 @@
 - Induction by Sre1 under anaerobiosis [PMID:16537923 "Oxygen-requiring biosynthetic pathways for ergosterol, heme, sphingolipid, and ubiquinone were primary targets of Sre1p."].
 - Budding-yeast ERG6 review: core GO:0003838, LD + ER. S. pombe core location set to ER only (no LD evidence in fission yeast).
 - GO-CAM 66c7d41500002088: erg6 GO:0003838 in ER, -> erg2. Agrees.
+- 2026-11-06 PTHR44068 re-review: refreshed UniProt from entry version 160
+  to 161; the only functional-adjacent drift was UniProt's `GO:0003838
+  sterol 24-C-methyltransferase activity` cross-reference changing from a
+  UniProtKB-EC IEA to the current GO_Central IBA, plus an OMA xref change.
+  Re-checked the PTN002226525 sterol-SMT and PTN000802684 fungal Erg6 PAINT
+  nodes against the `PTHR44068` family review. The S. pombe IBAs for sterol
+  24-C-methyltransferase activity, ER location, and ergosterol biosynthesis
+  remain sound; newer web/PubMed searches did not find a newer direct
+  fission-yeast Erg6 enzyme-assay or localization paper.

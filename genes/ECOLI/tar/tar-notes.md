@@ -25,3 +25,14 @@
 - PMID:18931127 is Tsr-focused and abstract-only; its Tar rows were accepted/kept deferring to the curator, as all the claims are well established for Tar.
 - Phosphorelay (GO:0000160) not added: Tar controls CheA but is not itself a phosphorelay participant; no row exists and none proposed.
 - No NEW rows. Considered GO:0070335 aspartate binding (ligand-binding domain structures exist, PMID:15299315, 9315712) but not cached; raised as a suggested question instead.
+
+
+## 2026-11-06 taxonomic module audit
+
+Refined the intracellular-signaling row to the chemotaxis phosphorelay using the independent receptor-controlled CheA assay (PMID1326408), instead of rejecting the claim because its original adaptation paper is abstract-only. Retained the ligand-specific E. coli receptor core and all other actions.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.
+
+## PR 6100 round 1 follow-up — 2026-11-06
+
+Item 12: retained MODIFY of GO:0035556 to GO:0000160. The current QuickGO is_a/part_of ancestor response contains GO:0035556; the audit response is preserved in `.cache/module-audit-logs/chemotaxis-20261106/GO_0000160-alpha-round1-ancestors.json`. Tar contributes the ligand-controlled receptor step of the assembled receptor–CheW–CheA phosphorelay (PMID:1326408), while CheA executes kinase chemistry. Process participation does not assign Tar the molecular function of a phosphoryl acceptor or kinase.

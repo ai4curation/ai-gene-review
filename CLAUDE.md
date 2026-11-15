@@ -234,7 +234,24 @@ activity` vs `serine-type endopeptidase activity`), use `MODIFY` with `proposed_
 set to the specific supported term (an `is_a`/`part_of` descendant, preferably one the gene
 already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that are as precise
 as warranted but peripheral to the core function. If the general term is already as precise as
-the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
+the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`).
+MODIFY needs both: a deeper replacement term, **and** this row's own evidence supporting it.
+A paper that identifies the ligand supports `GO:0016498` neuromedin K receptor activity; an
+InterPro2GO mapping from a generic GPCR signature supports only `GO:0004930`. A row whose
+evidence stops at the general term is not MODIFY, and a respectably specific term such as
+`G protein-coupled receptor activity` is not `TOO_GENERAL` either: keep it. `TOO_GENERAL` is for
+terms that are imprecise on their own once a more specific term is asserted elsewhere, such as
+`membrane` (which membrane?).
+
+This paragraph is a **maintainer ruling** (2026-11-14), made because two reviews in one batch
+read the enum the two opposite ways for the same kind of row. It narrows `TOO_GENERAL` without
+contradicting the `ActionEnum` docstring: that action is still term-level and still never says
+the row's evidence is wrong, but it is now reserved for terms that are imprecise on their own,
+and the bar for `MODIFY` is this row's own evidence. **Reviews merged before the ruling are not
+retroactively defective** — a handful mark `GO:0004930` `TOO_GENERAL` exactly as the docstring
+prescribed, and the ruling applies to new and revisited reviews rather than condemning those.
+A corpus sweep is a separate pass, not a condition of any content PR; whether the `ActionEnum`
+docstring should be reworded to match is a schema change and is still open. The action must
 match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
 When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
@@ -360,6 +377,36 @@ Therefore:
 - Reserve confident "this reference is about organism/gene X" caveats for cases where the
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
+
+### Claiming a wrong gene or wrong reference: judge what the evidence can show
+
+A `WRONG_GENE_PRODUCT` or `WRONG_REFERENCE` source defect goes to the resource as a
+correction request, so its confidence must match what you actually saw. This is a
+judgement, not a rule keyed to whether the full text was read: ask whether the
+unread part of the paper could overturn the claim.
+
+- **It could not, so the claim can be confident from a title, abstract or record.**
+  A PMID whose title is on an unrelated subject (a thyroid-surgery paper on an
+  *E. coli* gene), especially when a near-identical PMID is the obvious intended
+  paper; a paper that predates the cloning of the gene; an abstract that defines
+  the entity as another protein ("p43, the precursor of EMAP II"; an 802-residue
+  enzyme when the annotated protein has 532); a WITH/FROM allele that belongs to
+  another gene; the identical row already present on the right gene.
+- **It could, so the claim is a query at most.** The title or abstract foregrounds
+  a paralog, another family member or another organism; the abstract "does not
+  mention" the gene; a TAS is faulted because the paper "does not assay" the
+  process (a TAS needs only an author statement, which may sit in a table); a
+  Reactome event summary does not name the gene (check the participant list,
+  including complexes and sets). Use `SUSPECTED` or `PROBABLE`, `requested_change:
+  CHECK`, and not `REMOVE`.
+- **Before claiming a mis-attribution, look at how the resource annotated the
+  paper as a whole.** The same row made on the same day across a family, or on
+  every isozyme an unfractionated assay cannot separate, is a deliberate practice,
+  not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
+  reference page) shows this in one query.
+- **Say in `explanation` what depth the claim rests on**, and name a candidate
+  correction as a candidate when the intended paper or gene was inferred and not
+  read.
 
 ### Do not add what curators deliberately declined to add
 
