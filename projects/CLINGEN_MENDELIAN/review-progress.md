@@ -8042,3 +8042,21 @@ ROOT receipt `HCFC1-root-delivery-acceptance-v1.json` (SHA256 `62e31ae8f23909370
 Only HCFC1 is newly checked. All 235 dated queue records, 177 earlier completion updates and earlier journal bytes are preserved.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T045715Z-codex-122ea1.yaml).
+
+## Completion checkpoint 759 (2026-11-15 07:29:05 UTC)
+
+759 complete; 2,117 of 2,876 remain. This publishes ROOT's prior acceptance of ACBD5 (HGNC:23338; Q5T8D3), with zero new acceptance credit.
+
+[PR #6384](https://github.com/ai4curation/ai-gene-review/pull/6384) merged as [76534e12](https://github.com/ai4curation/ai-gene-review/commit/76534e12abdec25fffca984067cf27cebdb58f46); [merge-group run 43688257187](https://github.com/ai4curation/ai-gene-review/actions/runs/43688257187) passed. Exact-head approval, all 27 reviewed files, the 20-path actual delta and fresh-main ancestry were verified. The separate input-bound check verified all 51 direct gene quotes, with zero unchecked, blocking or baselined quotes.
+
+ACBD5 retains all 18 native annotation contexts and four alternative products. Its 20 reviewed contexts comprise 11 ACCEPT, one TOO_GENERAL, six UNDECIDED and two NEW molecular functions: peroxisome–ER and peroxisome–mitochondrion membrane tethering. The three core functions distinguish acyl-CoA binding from VAP-mediated ER tethering and PTPIP51-mediated mitochondrial tethering.
+
+The review remains DRAFT. Published ACBD5-depletion results differ across human systems; three Reactome cytosol contexts and the original high-throughput membrane evidence remain unverified. Isoform/construct residue mapping, direct ROS transport and catalytic fatty-acid oxidation are not asserted. The 2025 mitochondrial-contact paper supports tethering; necessity and redox phenotypes do not establish an ACBD5 transport or enzyme activity.
+
+Integration executed strict ACBD5 validation, the test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; its results do not replace the 51-quote direct ACBD5 audit. Executed-check advisories, skips and unresolved corpus checks remain documented in the pinned delivery verification.
+
+ACBD5 restores literal catalogue priority after the earlier cached-review exception while initialization was unavailable. ACD is next unchecked in the Definitive section, but [existing PR #6278](https://github.com/ai4curation/ai-gene-review/pull/6278) already contains its review; inspect ownership, evidence and checks before taking it over, and do not seed a duplicate.
+
+Only ACBD5 is newly checked. All 235 dated queue records, 178 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACBD5-root-delivery-acceptance-v1.json` (SHA256 `3f28848df52986353e0e06cfe08500a29930a15654eb985dece136b5184a122d`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T072846Z-codex-72f7fc.yaml).
