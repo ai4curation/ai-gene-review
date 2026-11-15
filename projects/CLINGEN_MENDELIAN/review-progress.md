@@ -8092,3 +8092,19 @@ The direct source audit verified 236 human quotation occurrences and 262 rat occ
 Only human ACE is newly checked. All 235 dated queue records, 180 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACE-root-delivery-acceptance-v1.json` (SHA256 `1501833bd86993bc4193fc7e65bcaf5870b69180cb3cca607e5b7f69b05231ec`) is retained local provenance, not a public download link.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T113024Z-codex-5e05eb.yaml).
+
+## Completion checkpoint 762 (2026-11-15 14:06:41 UTC)
+
+762 complete; 2,114 of 2,876 remain. This publishes ROOT's prior acceptance of human ACO2 (HGNC:118; Q99798), with zero new acceptance credit.
+
+[PR #6400](https://github.com/ai4curation/ai-gene-review/pull/6400) merged as [b8129862](https://github.com/ai4curation/ai-gene-review/commit/b81298621147b2131d59414db3b5beee9462de76); [merge-group run 43718970390](https://github.com/ai4curation/ai-gene-review/actions/runs/43718970390) passed. Approval of the exact commit, all 15 reviewed files, the 15-path actual delta and fresh-main ancestry were verified.
+
+Human ACO2 retains all 26 native GOA rows and adds one NEW nuclear location: 24 ACCEPT, one UNDECIDED, one TOO_GENERAL and one NEW. The review is COMPLETE under the no-PENDING/no-validation-warning schema definition, while the cytosolic localization remains explicitly UNDECIDED. This status does not imply that every original assay was accessible: PMID:9630632 full text and ACO2-specific supplementary rows in PMID:20833797 and PMID:34800366 remain uninspected. Established claim judgments defer to the curators while those source limitations remain explicit.
+
+The core is mitochondrial aconitate hydratase activity in the TCA cycle. Cytosol remains UNDECIDED: qualitative 22Rv1 fractionation does not distinguish a resident pool from soluble mitochondrial carryover. Neither contamination nor cytosolic residency is asserted. The description makes no affirmative cytosolic claim. Nucleus is supported in human MDA-MB-468 cells; a complete nuclear TCA cycle and normal-tissue generality are not inferred. Mouse assays and other enzymes' activities are kept separate. The PAINT placement remains unresolved. Nuclear and cytosolic pools add no additional locus credit.
+
+The direct source audit verified 84 quotation occurrences against 17 input files, with zero unchecked, blocking or baselined quotes. Inputs were pinned to the approved commit and actual merge. Integration executed scoped ACO2 validation, the full test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; it does not replace the direct ACO2 audit. Corpus advisories, skips and unresolved checks remain in the pinned delivery proof.
+
+Only human ACO2 is newly checked. All 235 dated queue records, 181 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACO2-root-delivery-acceptance-v1.json` (SHA256 `6dc155311fb887c7af685e157bcbc051a4a0266bba69d15a40dab2f4d68b3687`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T140625Z-codex-579c21.yaml).
