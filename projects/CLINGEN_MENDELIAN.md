@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**758 of 2,876 genes are complete; 2,118 remain.**
-This checkpoint records the accepted HCFC1 actual merge and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-758-2026-11-15-045910-utc) records the evidence and retained uncertainties.
+**761 of 2,876 genes are complete; 2,115 remain.**
+This checkpoint records the accepted human ACE actual merge and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-761-2026-11-15-113048-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3099,9 +3099,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ACADVL** — HGNC:92; [very long chain acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_130ca053-9f40-4fd5-b89c-b9b374694fda-2018-02-20T170000.000Z) (MONDO:0008723; AR; Definitive).
 - [x] **ACAN** — HGNC:319; [ACAN-related short stature spectrum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fbf745d3-628c-4b90-aaa6-a0e28dd7bae1-2025-05-07T160000.000Z) (MONDO:1060149; AD; Definitive).
 - [x] **ACAT1** — HGNC:93; [beta-ketothiolase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_99bcab0a-de59-479d-8fe6-8b76cbce90ee-2018-05-22T160000.000Z) (MONDO:0008760; AR; Definitive).
-- [ ] **ACBD5** — HGNC:23338; [acyl-CoA binding domain containing protein 5 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ac052f6-de8d-4c14-adf2-bbecb624defd-2024-06-21T160000.000Z) (MONDO:0100112; AR; Definitive).
-- [ ] **ACD** — HGNC:25070; [ACD-related short telomere syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c29b6517-54ab-414e-a3ab-e5aa006e0d54-2024-02-20T170000.000Z) (MONDO:0100569; SD; Definitive).
-- [ ] **ACE** — HGNC:2707; [renal tubular dysgenesis - ACE](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14a5efd4-d71f-40b1-91ff-90f7f8d63ec7-2024-12-11T170000.000Z) (MONDO:0700337; AR; Definitive).
+- [x] **ACBD5** — HGNC:23338; [acyl-CoA binding domain containing protein 5 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ac052f6-de8d-4c14-adf2-bbecb624defd-2024-06-21T160000.000Z) (MONDO:0100112; AR; Definitive).
+- [x] **ACD** — HGNC:25070; [ACD-related short telomere syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c29b6517-54ab-414e-a3ab-e5aa006e0d54-2024-02-20T170000.000Z) (MONDO:0100569; SD; Definitive).
+- [x] **ACE** — HGNC:2707; [renal tubular dysgenesis - ACE](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14a5efd4-d71f-40b1-91ff-90f7f8d63ec7-2024-12-11T170000.000Z) (MONDO:0700337; AR; Definitive).
 - [ ] **ACO2** — HGNC:118; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2bca6e9c-e167-4862-bf45-3ec787b92f49-2023-10-19T040000.000Z) (MONDO:0044970; AD; Strong); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5892fec8-dc8b-467b-abba-fb6be142bb7a-2023-10-19T040000.000Z) (MONDO:0044970; AR; Definitive); [optic atrophy 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_236ff728-58f0-4f71-8575-8dd8546c8fba-2024-04-05T190000.000Z) (MONDO:0014571; SD; Definitive).
 - [x] **ACOX1** — HGNC:119; [Mitchell syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2efeef00-0803-472b-8e25-080e4728c018-2025-12-05T170000.000Z) (MONDO:0030073; AD; Definitive); [peroxisomal acyl-CoA oxidase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_96026ae4-050d-4eb5-849c-178c703a556e-2022-11-04T160000.000Z) (MONDO:0009919; AR; Definitive).
 - [x] **ACOX2** — HGNC:120; [congenital bile acid synthesis defect 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5627eadb-12f9-4768-915c-3da73c425650-2024-07-25T180000.000Z) (MONDO:0015015; AR; Definitive).

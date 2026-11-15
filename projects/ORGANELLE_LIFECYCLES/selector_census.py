@@ -6,7 +6,9 @@ subfamily ids select is counted in each organism's PANTHER release-pinned sequen
 A descriptor sits under a required part unless the top-level part holding it is ``optional: true``; an
 organism meets the module's required parts when every required descriptor selects at least one of its
 proteins. That is a scratch satisfiability reading of the selectors only: it ignores annoton functions,
-``ONE_OR_MORE`` variant logic and module references.
+``ONE_OR_MORE`` variant logic and module references, and it honours ``optional`` only on top-level parts
+(a descriptor inside an optional nested part is counted as required). Classification rows with an empty
+accession column are skipped, so they cannot turn a zero count into a hit.
 
 Usage (from the repository root)::
 
@@ -140,6 +142,8 @@ def load_classification(path: Path, mnemonic: str | None) -> dict[str, set[str]]
             if len(fields) < 4 or not fields[3].startswith("PTHR"):
                 continue
             if mnemonic and not fields[0].startswith(f"{mnemonic}|"):
+                continue
+            if not fields[1].strip():
                 continue
             index[fields[3]].add(fields[1])
             index[fields[3].split(":")[0]].add(fields[1])
