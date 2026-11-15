@@ -155,7 +155,8 @@ from PANTHER's release-pinned sequence classification files.
 - [ ] Phagosome: repoint the three `phagosome_maturation` selectors that miss human (Rab5, PIKfyve, V0a), already named in the module's own notes
 - [ ] Specialized organelles: lineage-specific organelles
 - [x] Evaluate the rule candidates against PANTHER's reference-proteome classification files for 24 organisms, with the module engine ([rule-evaluation](ORGANELLE_LIFECYCLES/rule-evaluation.md)); mitosome- and hydrogenosome-bearing lineages fail the mitochondrial and peroxisomal rules as expected, and several rules fail in model organisms on one selector
-- [ ] Fix the selector defects listed in the rule evaluation: MPP beta and alpha (human-only subfamilies), Pex2 (non-plant Pex2 in PTHR23350:SF4), ISD11 in plants, Pex14 in worm, Pex1 in rice, SRbeta in fission yeast, Vps15 and Atg2 in rice, COPI delta in fission yeast and beta' in rice, Nup88 in worm, Sec13 in Arabidopsis, Cse1 in rice
+- [ ] Fix the selector defects listed in the rule evaluation: MPP beta and alpha (human-only subfamilies), Pex2 (non-plant Pex2 in PTHR23350:SF4, a placement UniProt disputes), Pex14 in worm, Pex1 in rice, SRbeta in fission yeast, Vps15 and Atg2 in rice, COPI delta in fission yeast and beta' in rice, Nup88 in worm, Sec13 in Arabidopsis, Cse1 in rice
 - [ ] Check the cilium rule's fly (IFT81, IFT74, IFT139) and worm (DYNC2I2) gaps
+- [ ] Find out whether plants carry an ISD11 that PANTHER and UniProt do not name (the iron-sulfur rule fails Arabidopsis, rice and Chlamydomonas on it)
 - [ ] Compile protein-complex annotons into their active units in `module_logic`, so family-keyed oracles can evaluate complex steps
 - [ ] Check the census gaps against the proteomes themselves, starting with the mitosome and hydrogenosome lineages once the selector defects are fixed

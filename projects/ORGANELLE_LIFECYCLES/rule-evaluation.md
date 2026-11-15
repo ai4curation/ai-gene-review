@@ -115,6 +115,11 @@ The two largest are:
   family), while UniProt puts them in `PTHR48178:SF1`; *Neurospora* and *Trypanosoma* Pex2 are in SF4 in
   both. Yeast PEX2 is not in PANTHER's yeast file at all, though UniProt places it in `PTHR48178`.
 
+- **ISD11 in plants.** The iron-sulfur rule selects ISD11 by the family `PTHR13166`, which holds no
+  Arabidopsis, rice or Chlamydomonas protein in these files. No plant protein is named ISD11 or LYRM4 in
+  PANTHER's plant files or in UniProt, and the plant LYR-motif proteins UniProt lists are in other
+  families, so whether plants carry an unrecognised ISD11 is open; the selector is not changed.
+
 ## The cilium rule in fly and worm
 
 `intraflagellar_transport_core` was defined on eleven ciliated lineages that did not include
