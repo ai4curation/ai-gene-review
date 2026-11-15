@@ -14,9 +14,11 @@ structural test to the rules that assert a keyword:
 
 One difference from GO matters when reading the numbers: UniProt keeps only the
 most specific ARBA GO term on a protein, so a covered GO set emits nothing, but
-keywords from different rules stack. A covered keyword set still emits its
-keyword; it is redundant only if the parent keyword could be derived from the
-child, which this script does not establish.
+keywords from different rules stack, and UniProt does not derive a parent
+keyword from a child (unreviewed entries carry the parent with its own rule
+evidence). A covered keyword set therefore still does work: it is what puts the
+parent keyword on the protein. The table measures overlap between rules, not
+sets that could be dropped.
 
 Writes ``keyword_redundancy.tsv`` (one row per ARBA keyword rule).
 

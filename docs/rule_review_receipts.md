@@ -115,7 +115,8 @@ the paper or database record the lead points to.
   selecting families worth keeping under their own terms is SPLIT (ARBA00026480,
   ARBA00027624, ARBA00026572). This ground is for GO rules only: UniProt keeps
   the most specific ARBA GO term on a protein, but keywords from different rules
-  stack, so a covered keyword set still emits. A true but general term whose
+  stack and a parent keyword is not derived from a child, so a covered keyword
+  set still does work and is not a parsimony defect. A true but general term whose
   sets are not all covered is SPLIT or MODIFY; low recall alone is not a defect.
 - **WITHDRAWN records that UniProt no longer serves the rule** (`rule.withdrawn`).
   It is a fact about the rule, not a verdict, and needs no confidence.
