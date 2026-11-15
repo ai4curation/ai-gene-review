@@ -54,3 +54,28 @@
 - GO:0005615 extracellular space is obsolete in the current GO release. The GO:0005576
   extracellular region rows that had been MODIFIED to it are now ACCEPT (the extracellular
   location is correct and core), and core_functions locations use GO:0005576 extracellular region.
+
+## 2026-11-15 — bounded donor-source corrections during human ACE review
+
+This follow-up supersedes the earlier actin-binding and metallocarboxypeptidase
+source statements above. Four contexts were corrected; all 137 native
+annotation identities and the other 133 decisions were retained.
+
+- The human UniProt record retains an IDA actin-binding cross-reference even
+  though the exact human row was not recovered from QuickGO. That discrepancy
+  leaves the donor experiment unresolved; a short cytoplasmic tail does not
+  disprove binding. The rat transfer is now UNDECIDED.
+- PMID:18158355 studies C-domain-inactivated mice and angiotensin metabolism;
+  its abstract was inspected. PMID:27649628 has accessible full text on renal
+  angiotensin metabolism, with ACE-inhibitor controls alongside NEP/ACE2
+  experiments. They are not antigen-peptide-trimming studies. The evidence for
+  a single-C-terminal-residue reaction remains unresolved, so GO:0004181
+  remains UNDECIDED with corrected source descriptions.
+- The two GO:0070573 transfers trace to human IDA PMID:7961923. Its abstract
+  describes Hip-His-Leu kinetics; that supports terminal dipeptide release but
+  does not expose every assay in the inaccessible full text. Both transfers
+  are now UNDECIDED, with the automatic replacement terms removed.
+
+The human UniProt GO cross-reference is quoted only to document source
+provenance, not as independent experimental evidence for actin binding.
+No new annotation or additional human-locus completion credit is claimed.
