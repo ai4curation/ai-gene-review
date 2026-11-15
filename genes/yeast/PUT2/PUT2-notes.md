@@ -28,3 +28,10 @@ The local ontology cache may warn on the older GO:0003842 label without NAD+. Li
 The mitochondrial proteome observation is independently corroborated by Put2 fractionation and activity-latency analysis in PMID:3025596. Retain the informative mitochondrial organelle claim alongside the separately supported matrix assignment. The original proteome assay need not resolve the submitochondrial compartment. Existing matrix annotations and core functions are preserved.
 
 The current policy retains informative organelle terms; the earlier blanket MODIFY-to-matrix rationale was incorrect. Original machine annotation payloads are preserved.
+
+
+## 2026-11-06 PR #6150 review follow-up
+
+The existing GO:0097054 IDA row changes KEEP_AS_NON_CORE to ACCEPT, and the same process is included beside proline catabolism in the core synthesis. Live QuickGO defines this term as reactions/pathways forming L-glutamate, without a de novo GDH/GOGAT restriction. Put2 directly performs the glutamate-forming reaction; calling that chemistry catabolic does not make it peripheral. This matches the bacterial PutA GSALDH judgment, without claiming Put2 is the principal cellular glutamate source. [PMID:387737 "Proline is converted to glutamate in the yeast Saccharomyces cerevisiae by the sequential action of two enzymes, proline oxidase and delta 1-pyrroline-5-carboxylate (P5C) dehydrogenase"] The original PMID:4145181 payload is preserved; its bibliographic-only cache is not promoted to an independently read assay.
+
+The scoped action ledger and ontology checks are in `analysis/module_audits/bacterial_fused_puta_proline_catabolism/round1-action-reversal-ledger.yaml` and `round1-review-response.md`. Original annotation rows and source fields are retained in order.

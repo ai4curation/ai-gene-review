@@ -1,0 +1,14 @@
+# CheA family consistency follow-up — 2026-11-06
+
+GO:0000155 describes histidine phosphorylation in response to extracellular-signal detection. It does not require the kinase itself to bind the ligand. PMID3280143 measures CheA autophosphorylation; PMID1326408 directly links receptor ligand binding to kinase modulation; PMID12094812 establishes attractant-stimulated Bacillus CheA. Thus the old suggestion that GO:0004673 is the preferable neutral term was removed. The original root IBD remains SOUND; no PAINT node or row was invented or changed.
+
+The existing family review also identifies 15 uncharacterized eukaryotic SF10 leaves under an IRD at PTN008681482. The term-scope enum offers FAMILY_WIDE, SUBFAMILY_ONLY, RESIDUE_DETERMINED, NOT_APPLICABLE and UNRESOLVED, but no node/taxon-limited scope. Neither universal family membership nor SF10 membership alone warrants a sensor-kinase grant to those sequences. Both the broad kinase term and GO:0000155 now explicitly leave blanket family coverage UNRESOLVED while affirming the bacterial evidence. No evidence-backed bacterial annotation is downgraded. A module restricted to demonstrated bacterial CheA can retain its role while carrying the narrower family-scope caveat.
+
+The architecture summary was also narrowed: recognizable P2/PF07194/IPR010808 is not a universal selector, as the frozen RHIME Q52880 record lacks that profile despite the experimentally characterized RU interaction region. The Sinorhizobium gene review documents the five sequence discrepancies and distinguishes RU measurements from1021 inference.
+
+Primary caches are normally fetched, unmodified and abstract-only; quoted claims are explicit in those abstracts. Validation uses the focused equivalents of the family-validation recipe, avoiding a classification-index rebuild. Original family documents and raw classification hashes are preserved in .cache/module-audit-logs/chemotaxis-20261106/chea-fliy-family-baseline.json.
+
+
+## 2026-11-06 — PR #6100 review follow-up
+
+QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor activity, as well as GO:0004673. The sensor parent describes ligand binding with an activity change in response to intracellular ligand level. Receptor-controlled histidine phosphorylation is established, but the experiments do not establish that sensor activity on CheA itself: chemoreceptors detect the stimulus and control CheA through the coupling complex. The child definition alone had obscured this inherited requirement. Retain the demonstrated kinase chemistry as GO:0004673 and the receptor-controlled phosphorelay in the process/core description; ask GO to resolve the term-scope mismatch rather than asserting an experimentally disproven kinase or a wrong PAINT node. The root sensor-term assessment is UNRESOLVED because the schema has no term-scope-specific assessment. No eukaryotic loss assessment, node identifier, donor list or official family label was changed.
