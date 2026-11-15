@@ -19,3 +19,10 @@
 - GO has no exact terms for EC 2.3.1.317 (CdhC/BcoG) or EC 3.1.2.33
   (CdhB/BcoE-BcoF C-terminal region); these are recorded as proposed_new_terms
   and annotated at the parents GO:0016747 and GO:0016289.
+
+
+## 2026-11-07 — independent PAO1 consultation
+
+CdhC transfers CoA from acetyl-CoA to 3-dehydrocarnitine, yielding acetoacetate and betainyl-CoA. Dataset 2 of PMID24240508 maps this exact PAO1 protein to BKACE_529; neither BKACE529 nor the PA14 BKACE361 appears in the accessible Dataset 4 screen. Table 6 kinetics are from other G5 members. The broad acyltransferase replacement of the KAH-specific mapping follows target-curated physiological chemistry, not a claimed negative KAH assay. PSEPK Q88R31/BKACE511 does have both substrates in that screen, so the clade cannot be declared devoid of KAH activity. Original fourth row (zero-based index 3) NEW GO:0016747 exactly duplicates the third row (zero-based index 2) MODIFY; it remains present with retired:true and its distinct evidence retained on the active replacement/core.
+
+Source scope and access receipts are preserved in [primary-scope](../../../analysis/module_audits/bacterial_l_carnitine_catabolism/pseae-consultation/primary-scope.md). The genuine Falcon attempt failed with HTTP 403 authentication/access rejection; no provider report was invented. The original ordered source payloads and protected caches remain intact. The mapped PANTHER lineage has no reported IRD/IKR loss. All primary source quotations are distinguished from analyst interpretation.

@@ -19,3 +19,10 @@
 - GO has no exact terms for EC 2.3.1.317 (CdhC/BcoG) or EC 3.1.2.33
   (CdhB/BcoE-BcoF C-terminal region); these are recorded as proposed_new_terms
   and annotated at the parents GO:0016747 and GO:0016289.
+
+
+## 2026-11-07 — independent PAO1 consultation
+
+CaiX is a periplasmic carnitine-recognition subunit working with CbcWV. The full PMID19406895 study distinguishes PA5388 uptake from the downstream enzyme pathway; the catabolism IMP row is therefore refined to the already supported carnitine transport process. PAO1 transposon mutants are explicitly included, while targeted deletion/complementation mainly uses PA14. PMID19919675 Table 5 combines B728a CaiX with PAO1 CbcWV in E. coli; uptake Km is not a purified PAO1 CaiX binding Kd. No PANTHER family was recoverable from this raw record, so a lineage-loss check remains unresolved rather than negative.
+
+Source scope and access receipts are preserved in [primary-scope](../../../analysis/module_audits/bacterial_l_carnitine_catabolism/pseae-consultation/primary-scope.md). The genuine Falcon attempt failed with HTTP 403 authentication/access rejection; no provider report was invented. The original ordered source payloads and protected caches remain intact. All primary source quotations are distinguished from analyst interpretation.
