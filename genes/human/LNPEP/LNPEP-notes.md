@@ -50,3 +50,9 @@
 4. Major gap: determine whether the cytosolic-tail-dependent GLUT4-sorting role demonstrated in mouse adipocytes is conserved in normal human adipocytes and which human binding partner executes it.
 5. Major gap: define the peptide repertoire and TAP requirement of LNPEP-dependent cross-presentation across human dendritic-cell states.
 6. Isoform experiment: compare Q9UIQ6-1, -2, and -3 for trafficking, tankyrase binding, and catalytic activity without assuming that the HuRI-tested isoform 2 has unique function.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0004177 / PMID:15691326: defect withdrawn (evidence depth: ABSTRACT). TAS row (HGNC-UCL). The abstract itself names placental leucine aminopeptidase (P-LAP = LNPEP) as one of three closely related aminopeptidases, which is exactly what a traceable author statement records; the same paper gave HGNC-UCL TAS rows on ERAP1 and ERAP2. Nothing in the source record is identifiably wrong, only weak, so the defect was deleted and the reason rewritten (abstract quote moved to review.supported_by). Full text (Wiley) returned 403.

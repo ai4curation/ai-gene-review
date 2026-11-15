@@ -15,3 +15,12 @@ Decisions:
 - NEW GO:0006935 chemotaxis, IMP, PMID:23677992 (no BP in GOA; CheR2 performs the adaptation methylation step).
 - The project synthesis lists CheR2 as "homology + operon context" and treats paralog assignment as unresolved; PMID:23677992 resolves it experimentally (CheR2 = flagellar chemotaxis; CheR1 = biofilm route).
 - Not added: GO:0000160 phosphorelay (CheR is not a phosphorelay participant); cytoplasm (no direct data, not in GOA).
+
+
+## Taxon/module audit, 2026-11-06
+
+All three existing rows and the core remain unchanged after substantive review. The biochemical substrate methylation and chemotaxis phenotype support CheR2 as flagellar adaptation enzyme; CheR1 biofilm phenotypes do not transfer here. McpT was an in-vitro substrate, not evidence that KT2440 encodes it. Existing abstract and experimental UniProt statements suffice for these recorded claims; full-text retrieval attempts returned HTTP500/recaptcha and are logged. No provider report was generated.
+
+Source anchor: [PMID:23677992 "Methylation assays show that CheR2, but not the other paralogues, methylates the McpS and McpT chemotaxis receptors."]
+
+All existing annotations were reassessed. Machine annotation fields, inherited NEW rows, UniProt/GOA files and provider reports were preserved. No new annotation rows were added; unchanged actions reflect retained biological judgments, not skipped review. Existing provider/manual research was consulted; this focused audit creates no provider-authored report. Current ontology definitions and primary literature take precedence over module completeness.

@@ -55,3 +55,12 @@ PMID:9098084, PMID:2851701, PMID:8479928, PMID:28712849.
   quinone-dependent FAD reoxidation at the inner membrane).
 - Not added: cytosol (the DNA-bound repressor state is cytoplasmic per PMID:8483946);
   left as a possible NEW for a later pass.
+
+
+## 2026-11-06 comparative PutA-module audit
+
+All original annotation payloads/order and historical NEW actions retained. All rows and core functions were re-read; only evidence/role inconsistencies were changed. Refined true anion/heterocyclic binding to supported FAD/proline/NAD interactions after official GO ancestor checks; no new annotation rows. Binding need not be a separate autonomous activity. Retained both catalytic reactions without assigning a universal quinone species or channeling mechanism.
+
+GO0097054 directly describes formation of the central product L-glutamate and does not require de novo anabolism; existing product-formation rows are ACCEPT alongside proline catabolism. Specific cofactor/self-association/inducer-binding claims central to catalysis or repression are retained as core where already present. No universal RHH repression or channeling inference is made across all PutAs. [PMID:28712849; exact catalytic reactions in the protected UniProt record.]
+
+A genuine default Falcon attempt was run and failed with HTTP403 authentication; no provider report was fabricated. Manual review used existing primary/review caches plus explicitly scoped independent PMC captures where recorded. PAINT loss checks found no IRD/IKR on the target lineage.
