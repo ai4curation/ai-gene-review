@@ -8060,3 +8060,19 @@ ACBD5 restores literal catalogue priority after the earlier cached-review except
 Only ACBD5 is newly checked. All 235 dated queue records, 178 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACBD5-root-delivery-acceptance-v1.json` (SHA256 `3f28848df52986353e0e06cfe08500a29930a15654eb985dece136b5184a122d`) is retained local provenance, not a public download link.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T072846Z-codex-72f7fc.yaml).
+
+## Completion checkpoint 760 (2026-11-15 09:33:51 UTC)
+
+760 complete; 2,116 of 2,876 remain. This publishes ROOT's prior acceptance of human ACD (HGNC:25070; Q96AP0), with zero new acceptance credit.
+
+[PR #6278](https://github.com/ai4curation/ai-gene-review/pull/6278) merged as [77870238](https://github.com/ai4curation/ai-gene-review/commit/7787023812a50d7e2d4b9f73592ce4b686c97ef9); [merge-group run 43696797938](https://github.com/ai4curation/ai-gene-review/actions/runs/43696797938) passed. Exact-head approval, the 64-path actual delta and fresh-main ancestry were verified. Sixty-three reviewed files match exactly. The generated GO cache has an explicitly checked additive reconciliation: the same three complete reviewed rows were added to the actual parent, preserving its 34 disjoint additions. The original reviewed manifest remains unchanged.
+
+Human ACD retains 138 GOA source rows, which collapse to 137 native annotation contexts; with one NEW context, the review has 138 contexts: 31 ACCEPT, 75 MODIFY, 5 KEEP_AS_NON_CORE, 3 TOO_GENERAL, 4 REMOVE, 19 UNDECIDED and 1 NEW. It remains DRAFT. Seventeen inaccessible BiFC interactions and telomerase inhibitor activity and regulation of protein localization to telomeres remain unresolved. The two native alternative products are not a one-to-one mapping to the two functional isoform records. Shelterin TPP1/ACD is distinct from lysosomal TPP1.
+
+The delivered PR also includes mouse Acd (57 contexts; DRAFT), rat Acd (44; DRAFT), fission-yeast tpz1 (30; COMPLETE) and the PTHR14487 family review (NEEDS_REVIEW). Uncertain human inhibitor support does not establish conserved rodent inhibition; the corresponding rodent inhibitor transfers were removed while rodent localization-process transfers remain UNDECIDED. These orthologs, family and isoforms add no human-locus credit.
+
+The separate input-bound audit verified 644 quotation occurrences across 96 bindings to 56 distinct paths: 288 human, 138 mouse, 92 rat, 74 fission yeast and 52 family, with zero unchecked, blocking or baselined quotes. Actual integration ran the four-gene strict batch (four valid, zero errors, six advisories), full GeneReview schemas, history, family validation and the test suite. The whole-repository quote check excludes gene reviews; it does not replace those direct checks. PANTHER member-index refresh failed with HTTP400, leaving affected membership checks unchecked. GenBank finding mappings and other corpus uncertainties remain documented in the pinned delivery proof.
+
+Only human ACD is newly checked. All 235 dated queue records, 179 prior completion updates and earlier journal bytes are preserved. ACE is the next unchecked catalogue entry; ownership and current PRs must be checked before seeding. ROOT receipt `ACD-root-delivery-acceptance-v2.json` (SHA256 `a5b0f05d1e9d926d5eb9c576af9c78e535b919fd69c5cff416bbef5f79031ab5`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T093332Z-codex-b11086.yaml).
