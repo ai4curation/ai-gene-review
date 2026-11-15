@@ -59,3 +59,10 @@ role at rat cerebellar parallel fibres to NR2A: "NR2A- but not NR2B-containing N
 induction" (the NR2B-selective antagonist Ro25-6981 did not prevent LTD; nanomolar zinc did). NR2B labelled
 about 10% of parallel fibre boutons, against 23% for NR2A and 49% for NR1. The three rows changed from UNDECIDED
 to REMOVE, and the SynGO query became a confirmed wrong-gene-product source defect (the evidence fits rat Grin2a).
+
+## 2026-11-15: review round on PR #6368
+
+- GO:0099505 (inter-ontology IEA from GO:0099507) is now REMOVE: it inherits the wrong-subunit defect of the three SynGO rows it is generated from.
+- The SynGO source defects now request REPOINT to GRIN2A (UniProtKB:Q12879) rather than CHECK, since the full text was read.
+- PDZ-scaffold IPI rows from PMID:11937501 are MODIFY to GO:0030165 PDZ domain binding; CaMKII alpha rows (PMID:19453375, PMID:28130356) are MODIFY to GO:0019901 protein kinase binding. A third core function records the C-tail scaffolding role.
+- Location rows now quote the UniProt SUBCELLULAR LOCATION lines rather than the complex-membership sentence.
