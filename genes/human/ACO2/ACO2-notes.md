@@ -1,8 +1,9 @@
 # Human ACO2 review notes
 
-Current decisions after PR review: 24 ACCEPT, one KEEP_AS_NON_CORE (cytosol), one
-TOO_GENERAL, and one NEW nucleus annotation. The follow-up journal entry below
-explains the revisions; original-source access limitations remain explicit.
+Current decisions after the second PR review: 24 ACCEPT, one UNDECIDED (cytosol),
+one TOO_GENERAL, and one NEW nucleus annotation. The final journal entry below
+supersedes the earlier KEEP_AS_NON_CORE cytosol assessment; original-source access
+limitations remain explicit.
 
 ## 2026-11-15 — initial evidence review
 
@@ -202,3 +203,66 @@ rendering succeeds. All 26 native identities and native source bytes, the NEW
 nucleus identity, and the initial CREATE history record remain unchanged. The
 new EDIT history record captures this follow-up. These checks do not claim that
 unavailable original assays have been recovered or grant campaign delivery credit.
+
+
+## 2026-11-15 — second PR review: cytosolic residency remains unresolved
+
+[Review 5910848709](https://github.com/ai4curation/ai-gene-review/pull/6400#pullrequestreview-5910848709)
+accepts the six earlier claim-level corrections and acknowledges that the cited
+budding-yeast ACO2 precedent is not human ACO2. Those corrections remain intact.
+The carryover concern warrants a narrower interpretation of the human fractionation.
+ROOT and an independent consultant re-inspected the original Fig. 1 image linked
+above in memory; its bytes and SHA256 match the previously recorded image.
+
+In the displayed 22Rv1 fractions, ACO2, FH and OGDH have visible C-lane signal; SDHA is predominantly mitochondrial with no confidently resolved discrete C band, and MDH2 C-lane signal is faint or ambiguous relative to its clear M band.
+
+The image and reported markers do not by themselves distinguish a resident cytosolic ACO2 pool from soluble mitochondrial carryover; neither contamination nor true cytosolic residency is established by this qualitative inspection.
+
+Beta-tubulin is present in the C lane, Lamin A/C is predominantly N, and Tom20 is
+predominantly M without an obvious C band. These qualitative marker observations
+have no calibrated detection limit or cross-antibody abundance comparison. A
+negative membrane marker does not exclude leakage of a soluble matrix protein;
+we do not infer either quantitative contamination or an ACO2-to-Tom20 abundance
+ratio. Lower intensity than M alone is not a reason to reject a location claim.
+
+The controls must also be described accurately. The Results place OGDH with CS,
+ACO2 and IDH2 among enzymes seen in nuclear fractions. The subsequent
+predominantly-mitochondrial list is SUCLG1, SDHA, FH and MDH2, specifically contrasted
+with little signal in the nucleus. It is not a categorical claim that all of these
+proteins are absent from cytosol. Thus FH/OGDH C signal is not, by itself, proof of
+carryover. Conversely, the displayed panel does not supply an independently
+validated quantitative test excluding soluble mitochondrial carryover. The Methods
+state that the Dignam modifications optimized nuclear and mitochondrial purity.
+The paper's orthogonal ACO2 localization and flux experiments establish nuclear
+biology; they do not independently resolve endogenous cytosolic residency in 22Rv1.
+
+The native cytosol IBA is therefore UNDECIDED. This reverses the earlier
+KEEP_AS_NON_CORE conclusion because the location itself remains uncertain, not
+because a cytosolic catalytic assay is demanded and not because the cytosolic pool
+has been disproved. The human PAINT gain/loss placement remains UNRESOLVED;
+mitochondrial targeting and other-species precedents still do not prove a human
+loss. The positive mitochondrial and human nuclear conclusions are unchanged.
+
+The separate qualifier objection does not control this assessment. The
+[annotation-reviewer skill](https://github.com/ai4curation/ai-gene-review/blob/c5137909dd32dd7d635f26cde65a7f2db6cfe2c6/.codex/skills/annotation-reviewer/SKILL.md#L156)
+explicitly treats relationship values as inert for adjudication except NOT and
+contributes_to. The native is_active_in value is preserved unchanged; it is not
+used to impose an additional catalytic-activity criterion. The nucleus annotation
+and all other native identities likewise remain unchanged.
+
+The confident cytosol sentence is removed from the biological description. The
+figure-reading inference is recorded here and cited as reviewer analysis, rather
+than presented as the authors' cytosolic conclusion. This notes citation makes the
+interpretation traceable; it is not independent biological corroboration. No
+NEW process or cytosolic activity is proposed. All 26 native contexts and the one
+NEW nucleus context remain: 24 ACCEPT, one UNDECIDED, one TOO_GENERAL and one NEW.
+The single core function remains mitochondrial citrate/isocitrate isomerization.
+
+Round-two schema, term and best-practice validation passes with zero curation
+warnings. Reference validation checks 17 snippets and eight titles with no issues;
+its 42 skipped snippets are covered by the canonical audit of all 84 quote
+occurrences against 17 input files. Rendering succeeds in memory. COMPLETE is
+retained under the schema definition (no PENDING and no validation warnings); it
+does not mean the one explicitly UNDECIDED localization has become certain.
+The third, append-only EDIT history record documents this reassessment. Neither
+local validation nor record status grants delivery or campaign completion credit.
