@@ -35,6 +35,9 @@ uv run python projects/ORGANELLE_LIFECYCLES/selector_census.py \
 The classification files are reference proteomes as PANTHER classifies them. A missing protein can be a
 real loss, a protein PANTHER placed in another subfamily, or a gene missing from the proteome; the
 census cannot tell these apart, and none of the gaps below was checked against the proteomes themselves.
+The census reads PANTHER's files only. Where UniProt's PANTHER cross-reference places a protein elsewhere,
+the repository's member index accepts either placement, but the census does not, so a gap here can be a
+disagreement between the two sources rather than a wrong selector.
 
 ## Results
 
@@ -106,9 +109,11 @@ The two largest are:
   lineage's MPP is elsewhere in PTHR11851 (beta mostly in SF149, alpha mostly in SF49), so the rule fails
   in every non-human genome on MPP alone.
 - **Pex2.** `peroxisomal_protein_import` selects Pex2 by the family `PTHR48178`, which in these files
-  holds only the human, moss, Arabidopsis and rice proteins. The fly, worm, *Neurospora*, Dictyostelium
-  and Chlamydomonas proteins named Pex2 in these files are in `PTHR23350:SF4`, a family PANTHER names after
-  Pex10; the two yeasts' Pex2 proteins were not found there by name, and their placement is not checked.
+  holds only the human, moss, Arabidopsis and rice proteins. This one is mostly a disagreement between
+  sources rather than a wrong selector: PANTHER's files put the fly, worm, Dictyostelium and Chlamydomonas
+  Pex2 proteins in `PTHR23350:SF4` (a subfamily named Peroxisome biogenesis factor 2 in the Pex10-named
+  family), while UniProt puts them in `PTHR48178:SF1`; *Neurospora* and *Trypanosoma* Pex2 are in SF4 in
+  both. Yeast PEX2 is not in PANTHER's yeast file at all, though UniProt places it in `PTHR48178`.
 
 ## The cilium rule in fly and worm
 
