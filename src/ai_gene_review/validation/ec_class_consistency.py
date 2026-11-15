@@ -303,7 +303,7 @@ def _message(conflict: EcClassConflict) -> tuple[str, str]:
     )
     if conflict.claims_granularity:
         how = (
-            "TOO_GENERAL treats it as true but too broad"
+            f"{conflict.action} treats it as true but too broad"
             if conflict.action in GRANULARITY_ACTIONS
             else "the MODIFY reason treats it as too broad"
         )
