@@ -141,5 +141,6 @@ The organelle-by-stage matrix lives in
 - [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
 - [x] Plant vacuole: `plant_vacuolar_sorting_receptor_cycle` (VSR, retromer; RMR optional) and `plant_tonoplast_transport` (V-PPase, TIP1, vacuolar NHX; TPC1, TPK1, CLC-a, ALMT9 optional), both required by `plant_vacuole_lifecycle`; `RULE_CANDIDATE`
 - [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713; resolve the VSR and RMR placements between UniProt and PANTHER's files; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
+- [x] Phagosome: assessed; `phagosome_maturation` stays descriptive. Its core is the endolysosomal machinery, which the lysosome/endosome endosome-maturation item will model as a rule; three of its required selectors miss the human proteins in PANTHER's files and two required steps (RILP, LAMP) are holozoan-only (see coverage)
 - [ ] Specialized organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
