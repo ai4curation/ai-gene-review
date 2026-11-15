@@ -1,0 +1,10 @@
+# Curation Notes: Human `ARHGEF2` (`UniProtKB:Q92974`, `HGNC:682`)
+
+## 1. Identity, Isoform Coordinate Frames & Structural Mechanism
+- **Gene / Protein**: `ARHGEF2` (*Rho guanine nucleotide exchange factor 2*; aliases `GEF-H1`, `LFC`, `KIAA0651`; `UniProtKB:Q92974`, `sv=4`, 986 aa; `PANTHER:PTHR13944:SF20`).
+- **Three Literature Numbering Schemes Reconciled**:
+  1. **Canonical `Q92974-1` (986 aa, `sv=4`)**: `ZN_FING` `39-86` (`Cys53` in `53-CYAC-56`), `DH` `235-432` (`Glu242` in CR1, `Tyr394` in CR3), `PH` `472-593` (2.45 Å `PDB:5EFX`, `PMID:26820534`), `Thr679` (ERK1/2 site), `Ser886` (`883-RRRSLP-888` PAK1/Aurora/PKA 14-3-3 site), `Ser896` (PAK4 site).
+  2. **Isoform 2 `Q92974-2` (985 aa, lacking Ser194 via `VSP_039458`; matching 985-aa mouse `Q60875` and rat `Q5FVC2` C-terminally)**: shifts all residues C-terminal to 194 by `-1` (`Tyr393` in `PMID:11912491`, `Thr678` in `PMID:18211802`, `Ser885` in `PMID:14970201`). Recorded via `residue_mappings` on `findings`!
+  3. **Truncated `KIAA0651` / `BAA31626` cDNA (900 aa, missing N-terminal 86 aa)**: used in `PMID:15827085`, where reported `Ser810` = canonical `Ser896` (`810 + 86 = 896`; canonical residue 810 is `Gln810`).
+- **UniProt `Q92974` Defect Caught**: `FT MUTAGEN 394` states `Y->A: Reduces phosphorylation level, normal ... microtubule localization and activity.`, corrupting `PMID:17488622` / `PMID:11912491` where `Y393A` (canonical `Tyr394`) is the **exchange-dead dominant-negative** DH mutant. Recorded as a `CONFIRMED` `WRONG_STATEMENT` `source_defect`.
+- **Affinage Evaluation (`ARHGEF2-deep-research-affinage.md`)**: Passed blocking trust gates (`Q92974`, `self_evaluation_pairwise: win`, 64 refs), strong coverage of signaling/innate-immunity/NEDMHM, but (1) emitted `molecular_activity: *(none)*` (`MISSING_STATEMENT` `source_defect` for `GO:0005085`), (2) missed both structural papers (`PMID:26820534` `PDB:5EFX` and `PMID:41365297` `PDB:9H1O`/`9H75`) and omitted the N-terminal C1 microtubule-docking domain in its summary, (3) conflated all three residue-numbering schemes (`Ser810`, `Ser885`, `Ser886`), and (4) asserted catalytic Rac1 activation despite `PMID:8910315`.
