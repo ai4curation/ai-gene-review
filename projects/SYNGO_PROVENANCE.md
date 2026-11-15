@@ -43,7 +43,7 @@ removed them (the in-progress GRIN3B review).
 
 ## Inventory
 
-`SYNGO_PROVENANCE/syngo_inventory.py` reads every committed `*-goa.tsv`, keeps rows
+[`SYNGO_PROVENANCE/syngo_inventory.py`](SYNGO_PROVENANCE/syngo_inventory.py) reads every committed `*-goa.tsv`, keeps rows
 assigned by SynGO, and joins each to its review actions. Output:
 [`SYNGO_PROVENANCE/data/syngo_rows.yaml`](SYNGO_PROVENANCE/data/syngo_rows.yaml).
 It counts two units. A **row** is one GOA line. A **claim** is one gene, term, qualifier
@@ -55,7 +55,7 @@ so rows overstate claims by about two to one. Run on `main` as of 2026-11-15:
 | SynGO annotations | 558 | 300 |
 | Genes | 104 | 104 |
 | By taxon | rat 230, mouse 161, human 130, fly 21, worm 16 | rat 132, mouse 89, human 60, fly 11, worm 8 |
-| Human, by evidence (rows) | IDA 60, IMP 51, NAS 9, EXP 5, IEP 5 | 60 human claims carry experimental evidence |
+| Human, by evidence (rows) | IDA 60, IMP 51, NAS 9, EXP 5, IEP 5 | all 60 human claims carry experimental evidence |
 | Review actions (rows) | KEEP_AS_NON_CORE 325, ACCEPT 173, MODIFY 31, UNDECIDED 21, MARK_AS_OVER_ANNOTATED 8 | |
 
 Every SynGO row on `main` has been reviewed, and none has been removed. The GRIN2B,
@@ -90,12 +90,14 @@ query URL, retrieval date and a sorted table to `SYNGO_PROVENANCE/data/reference
    ([`PMID_22564863.yaml`](SYNGO_PROVENANCE/data/reference_level/PMID_22564863.yaml))
    shows the GRIN3B triple is SynGO's only annotation from the paper. The paper supports
    channel activity for the GluN3B-containing receptor, not a presynaptic role.
-3. **GRIN2D, PMID:8886398 — probable wrong term.** Now cached (abstract only): memantine
-   and MK-801 block of rat NR1a/NR2A, NR1a/NR2B and NR1a/NR2D receptors in transfected
-   HEK 293 cells, with no presynaptic content. The reference-level view
+3. **GRIN2D, PMID:8886398 — probable wrong term, on the rat gene.** Now cached (abstract
+   only): memantine and MK-801 block of rat NR1a/NR2A, NR1a/NR2B and NR1a/NR2D receptors in
+   transfected HEK 293 cells, with no presynaptic content. The reference-level view
    ([`PMID_8886398.yaml`](SYNGO_PROVENANCE/data/reference_level/PMID_8886398.yaml)) shows
-   one SynGO claim, on rat Grin2d. Whether the human GRIN2D row is a mapping of it is to be
-   checked when the GRIN2D review is finished.
+   one SynGO claim from the paper, on rat Grin2d (UniProtKB:Q62645), and no human row.
+   Human GRIN2D carries `GO:0099507` only as an electronic IEA (GO_REF:0000107, Ensembl
+   orthology) with rat Grin2d as its source, so the defect to report is the rat SynGO
+   claim; the human IEA would follow from correcting it.
 
 GRIN2A, GRIN2B, GRIN2D and GRIN3B are not in this page's `genes:` list until their reviews
 merge.

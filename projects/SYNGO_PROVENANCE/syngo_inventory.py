@@ -3,11 +3,11 @@
 Reads every committed ``genes/<org>/<GENE>/<GENE>-goa.tsv``, keeps rows whose
 ASSIGNED BY is SynGO, and joins each row to the matching
 ``existing_annotations`` entry of the gene's review (same GO term, evidence
-code, reference and negation) to pick up the review actions.
+code, reference and qualifier) to pick up the review actions.
 
 Two units are counted. A *row* is one GOA line (deduplicated on term,
 qualifier, evidence code and reference). A *claim* is one gene + term +
-reference: SynGO usually files a single assertion as an IDA + IMP (+ NAS)
+qualifier + reference: SynGO usually files a single assertion as an IDA + IMP (+ NAS)
 set on the same paper, so several rows make one claim.
 
 Writes ``data/syngo_rows.yaml`` (one record per SynGO row) and prints a summary.
@@ -27,12 +27,13 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "projects/SYNGO_PROVENANCE/data/syngo_rows.yaml"
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
 COLUMNS = ("ASSIGNED BY", "GO TERM", "GO NAME", "GO EVIDENCE CODE", "REFERENCE", "TAXON ID", "QUALIFIER")
 csv.field_size_limit(10**8)
 
 
 def review_index(review_path: Path) -> dict:
-    """Map (term, evidence, reference, negated) -> list of review actions."""
+    """Map (term, evidence, reference, qualifier) -> list of review actions."""
     idx: dict = collections.defaultdict(list)
     if not review_path.exists():
         return idx
@@ -42,8 +43,10 @@ def review_index(review_path: Path) -> dict:
     except yaml.YAMLError:
         return idx
     for ann in doc.get("existing_annotations") or []:
-        key = (ann["term"]["id"], ann.get("evidence_type"), ann.get("original_reference_id"),
-               bool(ann.get("negated")))
+        qualifier = ann.get("qualifier")
+        if ann.get("negated") and qualifier and not qualifier.startswith("NOT"):
+            qualifier = f"NOT|{qualifier}"
+        key = (ann["term"]["id"], ann.get("evidence_type"), ann.get("original_reference_id"), qualifier)
         idx[key].append((ann.get("review") or {}).get("action"))
     return idx
 
@@ -78,8 +81,7 @@ def main() -> None:
             if key in seen:  # GOA repeats rows that differ only in extensions or date
                 continue
             seen.add(key)
-            negated = bool(qual and qual.startswith("NOT"))
-            actions = sorted({a for a in idx.get((term, code, ref, negated), []) if a not in (None, "PENDING")})
+            actions = sorted({a for a in idx.get((term, code, ref, qual), []) if a not in (None, "PENDING")})
             records.append({
                 "organism_dir": org,
                 "gene": gene,
@@ -109,7 +111,7 @@ def main() -> None:
         "rows_by_taxon": dict(collections.Counter(x["taxon"] for x in records).most_common()),
         "claims_by_taxon": dict(collections.Counter(claims.values()).most_common()),
         "human_rows_by_evidence": dict(collections.Counter(x["evidence"] for x in human).most_common()),
-        "human_experimental_claims": len({claim(x) for x in human if x["evidence"] in ("IDA", "IMP", "EXP", "IEP")}),
+        "human_experimental_claims": len({claim(x) for x in human if x["evidence"] in EXPERIMENTAL}),
         "rows_by_review_action": dict(actions.most_common()),
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
