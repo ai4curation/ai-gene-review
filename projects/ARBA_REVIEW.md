@@ -96,11 +96,12 @@ have several findings.
 
 | Action | Rules |
 |---|---:|
-| MODIFY | 29 |
+| MODIFY | 26 |
 | SPLIT | 25 |
-| ACCEPT | 12 |
+| ACCEPT | 14 |
 | WITHDRAWN | 6 |
 | DEPRECATE | 6 |
+| UNDECIDED | 1 |
 
 | Finding | Rules | Defined by |
 |---|---:|---|
@@ -109,9 +110,10 @@ have several findings.
 | HETEROGENEOUS | 13 | The best curated term of some units lies outside the consequent (biological_meaning HETEROGENEOUS). |
 | UMBRELLA_TERM | 25 | True, but units carry more specific descendant terms (biological_meaning TRUE_BUT_UNINFORMATIVE). |
 | EMITS_NOTHING | 6 | Every condition set is covered by a rule for a more specific term (sets_covered_by_more_specific_rule equals the number of sets). |
-| SETS_DO_NO_WORK | 40 | Some condition sets are redundant or match nothing (parsimony REDUNDANT or OVERLY_COMPLEX). |
+| SETS_DO_NO_WORK | 37 | Some condition sets are redundant or match nothing (parsimony REDUNDANT or OVERLY_COMPLEX). |
 | TAXON_SCOPE | 30 | The taxon restriction does not follow the biology (taxonomic_scope other than APPROPRIATE). |
-| NONE | 13 | No finding: accurate, coherent and parsimonious. |
+| NOT_EXAMINED | 1 | The review reaches no verdict (action UNDECIDED). |
+| NONE | 15 | No finding: accurate, coherent and parsimonious. |
 
 Selection caveat: most of these rules were chosen because GO curators had
 flagged them, so the counts describe flagged rules, not ARBA as a whole.
@@ -156,18 +158,21 @@ What the findings show:
   combination.
 - **Keyword rules are accurate where they could be checked in full.** Every
   condition set of the methyltransferase, serine protease, helicase, tyrosine
-  kinase, oxidoreductase, lyase, hydrolase and nuclease keyword rules was scanned
-  against Swiss-Prot. Apart from the sets named above, no reviewed match lacks
+  kinase, kinase, protease, oxidoreductase, lyase, hydrolase and nuclease keyword
+  rules was scanned against Swiss-Prot. Apart from the sets named above, no reviewed match lacks
   the keyword. The scan says nothing about unreviewed matches, which is where
   the translin and lactonase errors were found.
 - **Scale.** The largest rules are ARBA00022679 (Transferase keyword, 4,603
   condition sets), ARBA00022801 (Hydrolase, 4,171), ARBA00023002
   (Oxidoreductase, 2,158) and ARBA00004173 (Mitochondrion). Size is not a
-  finding. What is: 2,661 of the Transferase sets are also sets of a
-  child-keyword rule (Kinase, Methyltransferase and others). Unlike GO terms,
-  keywords from different rules stack on a protein, so these sets do emit;
-  whether they could be dropped depends on whether ARBA can derive a parent
-  keyword from a child, which we have not verified.
+  finding. Nor is overlap between keyword rules: 2,661 of the Transferase sets
+  are also sets of a child-keyword rule (Kinase, Methyltransferase and others;
+  [keyword_redundancy.tsv](ARBA_REVIEW/keyword_redundancy.tsv)), but UniProt
+  does not derive a parent keyword from a child. In samples of 500 unreviewed
+  entries each for three child keywords, the parent keyword always carried its
+  own rule evidence. Those sets are what puts Transferase on a kinase, so they
+  do work. This is the opposite of the GO case, where only the most specific
+  ARBA term is kept and a covered set emits nothing.
 - **Maintenance.** Six of the 78 rules are no longer served. One of them,
   ARBA00028538, asserted GO:0046467, which GO obsoleted on 2025-12-09.
 
@@ -376,12 +381,12 @@ keyword rules.
 
 | Action | Before the audit | After the accuracy pass | After the meaning pass |
 |---|---:|---:|---:|
-| ACCEPT | 3 | 30 | 12 |
-| MODIFY | 26 | 12 | 29 |
+| ACCEPT | 3 | 30 | 14 |
+| MODIFY | 26 | 12 | 26 |
 | SPLIT | 2 | 0 | 25 |
 | DEPRECATE or REMOVE | 46 | 6 | 6 |
 | WITHDRAWN | | | 6 |
-| UNDECIDED | 1 | 30 | 0 |
+| UNDECIDED | 1 | 30 | 1 |
 
 What the verdicts mean, and do not mean:
 
@@ -392,13 +397,15 @@ What the verdicts mean, and do not mean:
   every set is covered by a rule for a more specific term. The six DEPRECATEs of
   the accuracy pass were withdrawn rules and are now **WITHDRAWN**, which is a
   fact about the rule, not a verdict.
-- **MODIFY (29)** names a set, a term or a taxon to change. Three (ARBA00026249,
+- **MODIFY (26)** names a set, a term or a taxon to change. Three (ARBA00026249,
   ARBA00026799, ARBA00004725) rest on redundancy alone: the duplicated
   annotations are true, and if harmless duplication is acceptable they are
   ACCEPT.
-- **No review is UNDECIDED.** That is not a claim that every set of every rule
-  was read; the sampled reviews say what was sampled.
-- **ACCEPT (12) is a weaker claim than it looks.** It means every condition set
+- **UNDECIDED (1)** is the Transferase keyword rule ARBA00022679: no defect was
+  found, but only every tenth of its 4,603 sets was screened. That the others
+  are decided is not a claim that every set of every rule was read; the sampled
+  reviews say what was sampled.
+- **ACCEPT (14) is a weaker claim than it looks.** It means every condition set
   was examined and its reviewed (Swiss-Prot) matches carry the consequent on
   evidence other than ARBA, usually with at least one experimental annotation
   per set, and that the rule is coherent and its conditions do work. It does not measure precision on the unreviewed entries the rule
@@ -487,6 +494,8 @@ term, reviewers kept 93% of entailed annotations and removed none.
 - [ARBA_REVIEW/rule_failure_modes.yaml](ARBA_REVIEW/rule_failure_modes.yaml):
   rule-level findings of the 78 rule reviews, generated by
   [ARBA_REVIEW/rule_failure_modes.py](ARBA_REVIEW/rule_failure_modes.py)
+- [ARBA_REVIEW/keyword_redundancy.py](ARBA_REVIEW/keyword_redundancy.py):
+  overlap between ARBA keyword rules; writes `keyword_redundancy.tsv`
 - [ARBA_REVIEW/gene_side_failures.py](ARBA_REVIEW/gene_side_failures.py):
   gene-review breakdown; writes `GENE_SIDE_RESULTS.md`, `gene_side_rows.tsv`
   and `gene_side_rules.tsv`
