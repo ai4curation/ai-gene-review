@@ -3,11 +3,12 @@
 ## 2026-11-15 — Primary-literature review
 
 ACBD5 (HGNC:23338; UniProt Q5T8D3) is a tail-anchored peroxisomal membrane
-protein with two experimentally separable activities: acyl-CoA binding and
-VAP-mediated peroxisome–ER tethering. Native initialization supplied 18 annotation
+protein with acyl-CoA-binding and organelle-tethering activities. Its binding and
+VAP-mediated peroxisome–ER tethering functions are experimentally separable; a
+2025 study additionally establishes peroxisome–mitochondrion tethering. Native initialization supplied 18 annotation
 contexts and four alternative products. All source fields and alternative products
-are preserved. The review has 11 ACCEPT, one KEEP_AS_NON_CORE, six UNDECIDED,
-and one NEW molecular-function annotation. DRAFT reflects the unresolved evidence,
+are preserved. The review has 11 ACCEPT, one TOO_GENERAL, six UNDECIDED,
+and two NEW molecular-function annotations. DRAFT reflects the unresolved evidence,
 not unreviewed rows.
 
 Falcon research failed authentication and its Perplexity-lite fallback reported
@@ -56,7 +57,7 @@ tethering and associated membrane-growth/lipid-homeostasis effects
 [PMID:28108526, *VAPs and ACBD5 tether peroxisomes to the ER for peroxisome
 maintenance and lipid homeostasis*]. Both full texts are cached.
 
-The one proposed NEW annotation is
+The ER-specific NEW annotation is
 [GO:0160229, peroxisome-endoplasmic reticulum membrane tether activity](https://www.ebi.ac.uk/QuickGO/term/GO:0160229).
 QuickGO's official API verified the active MF term on 2026-11-15. Its definition
 covers a molecule that bridges these membranes through lipid or membrane-protein
@@ -123,3 +124,57 @@ studies, not independent new experiments.
   is Q5T8D3-1 (534 aa), while the native MANE-select mapping is Q5T8D3-3. Literature
   residue numbering and constructs are not silently mapped onto the displayed
   sequence or generalized to every isoform.
+
+
+## 2026-11-15 — PR review follow-up
+
+The generic cytoplasm row is TOO_GENERAL under the current specificity policy:
+the accepted peroxisome row has the same `is_active_in` qualifier and entails
+cytoplasm. QuickGO confirms the path peroxisomal membrane —part_of→ peroxisome
+—is_a→ microbody —part_of→ cytoplasm. This changes the assessment of the term's
+informativeness, not the validity of the PAINT ancestral assertion or its
+descendant evidence. Native fields and all four alternative products are unchanged.
+
+The native UniProt `CC:FUNCTION` uses “receptor for pexophagy” with
+`ECO:0000269|PubMed:24535825`. The review now quotes that experimental curated
+statement explicitly. It is not dismissed as an automated prediction: the
+underlying human localization/depletion observations are preserved, while direct
+mammalian cargo recognition or recruitment remains unestablished by those
+experiments. The detailed Atg30/Atg11 mechanism in that paper is a yeast result.
+Both pexophagy annotations remain UNDECIDED, and “preserve the observation” does
+not mean accepting the unsettled generalized annotation.
+
+The abstract-only NK-cell HDA context remains UNDECIDED deliberately. Although
+“membrane” is broad and independent membrane evidence is strong, the original
+target evidence remains inaccessible. Two proposed experiments address matched
+pexophagy conditions and the separation of acyl-CoA capture/transfer from
+VAP-dependent tethering; they are proposals, not claimed experimental results.
+
+
+### Later primary evidence and ontology check
+
+[PMID:40638754, *ROS transfer at peroxisome-mitochondria contact regulates
+mitochondrial redox*](https://pubmed.ncbi.nlm.nih.gov/40638754/) supports a distinct
+NEW GO:0160190 tether MF and third core activity. The native cache is abstract-only;
+the [institutional main paper](https://www.unisr.it/attachments/Paper-Ricerca-Base/4e186e52-d977-41b5-b738-a1283f7e08d9/9028aa93-d750-485c-875e-849c71793a0f.pdf)
+and [supplement](https://www.unisr.it/attachments/Supplementary-Materials-for-Basic-Research-Paper/4e186e52-d977-41b5-b738-a1283f7e08d9/c9fe6893-cd53-48df-83f1-a8b0b0e9d6c5.pdf)
+were readable through indexed web copies, although live downloads returned 404.
+Fig. 1 and Fig. S10 provide interaction, contact and rescue evidence in human
+HEK293, HeLa and Huh7 cells; EM corroboration uses COS-7. Bacterial-lysate binding
+is not purified membrane reconstitution. Peroxisomal HyPer7 was confounded by
+catalase relocalization. The proposal assigns tethering, not ROS transport or
+catalysis. Supplement construct coordinates are not transferred to the displayed
+534-aa product.
+
+[PMID:39939783, *ACOT12, a novel factor in the pathogenesis of kidney fibrosis,
+modulates ACBD5*](https://pmc.ncbi.nlm.nih.gov/articles/PMC11873122/) adds mouse
+ACOT12-deficiency context. Its ACBD5 expression association and fibrosis rescue
+do not establish a direct human cargo-receptor mechanism; Fig. 7c tests ACOT12
+restoration. It does not resolve the pexophagy disagreement.
+
+Official QuickGO verifies GO:0160190 and the ER-specific GO:0160229 as distinct,
+nonredundant MFs. Searching the organelle-contact-site branch found no specifically
+ER–peroxisome CC term. GO:0160189 names the peroxisomal–mitochondrial contact site;
+it is not an ER-contact substitute. No additional CC or BP annotation is proposed.
+The two suggested experiments are retained without a categorical claim that all
+possible lipid-handoff mechanisms remain unknown.
