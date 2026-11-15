@@ -163,3 +163,89 @@ reviews found no actionable concern. A final reference-review wording
 clarification explicitly separates alpha-globin as a heme-reductase substrate
 from its own nitrite-reductase activity; it changes no evidence quotation,
 annotation decision or source field.
+
+## PR #6374 review follow-up (2026-11-15)
+
+The oxygen-binding and two heme-binding reasons now address their own ligands.
+The oxygen row retains the human oxyhemoglobin structure and adds the native
+O2 feature; the heme rows add the native heme-b feature and resolved prosthetic
+heme groups from PMID:28665412. Precursor His88 is the proximal residue
+(conventional mature-alpha His87); precursor His59 is the distal residue.
+
+Four MODIFY rows now quote their own original papers. Their reasons distinguish
+engineered alpha-chain fusion (PMID:10930828), assembled ferric methemoglobin
+cryo-EM (PMID:28665412), beta6-mutant fiber packing (PMID:9830011), and engineered
+globin disassembly/reassembly (PMID:9894000). Independent alpha-beta dimer and
+assembly evidence remains the basis for the heterodimerization refinement;
+structural observations are not described as wild-type assembly kinetics.
+
+The four unresolved proteomics rows now rest only on inaccessible protein-level
+evidence. Shared accession P69905 is not itself a reason to withhold an
+annotation from either locus: verified shared-protein observations apply to
+both identical products, without establishing which locus supplied a particular
+sample. The source-specific protein tables remain unverified.
+
+### Ontology and optional suggestions
+
+A [live QuickGO ancestry check](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0042744/ancestors?relations=is_a,part_of)
+on 2026-11-15 found GO:0008150, GO:0072593, GO:0009056, GO:0008152,
+GO:0009987, GO:0042743 and GO:0042744 in the is_a/part_of closure of
+GO:0042744. GO:0098869 is absent. Thus peroxide breakdown does not entail
+cellular oxidant detoxification; the existing non-core/over-annotated split
+remains consistent. This establishes non-descendancy, not an immediate sibling
+relationship. The payload SHA256 was
+`9b348828cb50570c24af233d855f2d028b473c31089358ae8fff176bca0bbd25`.
+
+GO:0070026 nitric oxide binding is a valid possible MF for the spectroscopic
+observation in PMID:8292032. This bounded follow-up retains that observation
+and the existing NO-related question without adding another annotation to the
+DRAFT; it does not reject the ligand-binding finding or require in-vivo evidence
+for all molecular functions. The unresolved NO-transport process is unchanged.
+
+The [GO:0072562 definition](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0072562)
+specifies a cell-derived phospholipid microvesicle. Evidence for soluble
+extracellular hemoglobin and haptoglobin binding does not by itself establish
+residence in that compartment. The blood-microparticle row therefore remains
+UNDECIDED until the source protein table or equivalent compartment-specific
+evidence is available; this does not reject extracellular hemoglobin.
+
+### Shared-accession tooling audit
+
+Code inspection at base `c81db5dece15279feec216530b401fc4465b578e` confirms
+that keeping both locus-specific folders and the genuine shared UniProt
+accession is supported for ordinary export and browser display, with these
+current limits:
+
+- `src/ai_gene_review/export/annotation_export.py` appends review rows and
+  preserves each gene symbol and source-path link. The browser uses array
+  positions; payload compaction preserves both records. No review is replaced
+  merely because its accession is P69905.
+- The exported annotation ID uses accession, GO term and evidence code without
+  locus, reference or full row context. These IDs can collide within and across
+  reviews. External consumers must not treat that field as a unique row key.
+  DuckDB redundancy calculations group by protein ID and skip equal annotation
+  IDs, so their derived comparisons do not fully distinguish loci or contexts.
+- Propagation export keys reviews by species/gene folder and retains distinct
+  links, but its displayed target comes from native GOA SYMBOL. Both native
+  alpha-globin files say HBA1; HBA2-linked rows can therefore display HBA1, and
+  search does not independently include the review folder name.
+- `src/ai_gene_review/etl/gocam.py` indexes model activities by their enabled_by
+  protein identifier. A P69905 join is a shared-protein join, not a locus-specific
+  expression assertion. `src/ai_gene_review/gocam_compartments.py` selects the
+  first sorted GOA file per accession with `setdefault`; with both folders
+  present it selects HBA1, so differing HBA2 location judgments would not enter
+  that lookup.
+
+A focused tooling follow-up should address unique annotation context keys,
+propagation display identity and shared-accession location-review aggregation.
+No source accession or native GOA symbol was rewritten to conceal these limits.
+
+### Follow-up validation
+
+The revised review passes schema/ontology validation with the same 16 expected
+generic-binding warnings and no errors. Reference validation checks 102 snippets
+and 47 titles with no issues; the separate quote checker verifies all 166 quote
+occurrences, with zero unchecked or blocking. Canonical rendering passes in
+memory. Independent read-only scientific review finds no actionable concern.
+All 85 native contexts, the existing NEW row, decisions, propagation assessments,
+core functions and prior evidence quotations are preserved.
