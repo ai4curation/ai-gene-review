@@ -39,7 +39,7 @@ What 1,609 hand-written gene descriptions from WormBase, SGD and FlyBase told us
 ## Bottom line
 
 - **A recall checklist, not an authority.** The MOD text kept naming roles our reviews had missed, but our reviews were usually more mechanistic and more current.
-- **272 errors recorded** in MOD and UniProt description text (162 MOD, 110 UniProt), each with the offending sentence quoted and the paper against it; **100 confirmed**.
+- **272 errors recorded** in MOD and UniProt description text (162 MOD, 110 UniProt): **186 wrong or outdated statements** and **85 omissions**, plus one wrong citation. Each quotes the offending sentence; 252 cite a paper as evidence.
 - **SGD and FlyBase beat UniProt on accuracy; WormBase does not.** The Alliance automated text is last everywhere.
 - **794 gaps and conflicts → 4 new annotations.** Most gaps are mutant phenotypes, which became description sentences instead.
 
@@ -78,12 +78,13 @@ What 1,609 hand-written gene descriptions from WormBase, SGD and FlyBase told us
 
 | | Worm · WormBase | Yeast · SGD | Fly · FlyBase |
 |---|---:|---:|---:|
-| Gene reviews | 432 | 890 | 539 |
+| Gene reviews (at each run) | 432 | 890 | 539 |
 | With a curated MOD description | 374 (87%) | 890 (100%) | 345 (64%) |
 | Median MOD text length, words | 75 | 33 | 37 |
 | Gaps and conflicts checked | 244 | 345 | 205 |
 | Errors recorded (MOD + UniProt) | 105 (76 + 29) | 92 (47 + 45) | 75 (39 + 36) |
-| Confirmed by a quoted paper | 33 | 40 | 27 |
+| Cite a quoted paper as evidence | 96 | 84 | 72 |
+| Recorded as `CONFIRMED` | 33 | 40 | 27 |
 | Reviews edited | about 60 | 249 | 124 |
 | New GO annotations | 1 | 2 | 1 |
 
@@ -302,7 +303,7 @@ MGI's note summarises mutant phenotypes. 22 of 22 notes in a seeded sample of 25
 
 <b>Src</b> <blockquote>Homozygotes for a targeted null mutation exhibit growth retardation, failure of tooth eruption, osteopetrosis with lack of secondary bone resorption, and lethality at 3-4 weeks.</blockquote>
 <b>Ccne1</b> <blockquote>Mice homozygous for disruptions in this gene display no abnormal phenotype.</blockquote>
-<b>Cd79a</b> and <b>Cd79b</b>, word for word: <blockquote>Homozygotes for targeted null mutations exhibit arrested development of B cells at the pro-B cell stage due to diminished signaling of the B cell receptor.</blockquote>
+<b>Cd79a</b> and <b>Cd79b</b>, outside the sample, word for word: <blockquote>Homozygotes for targeted null mutations exhibit arrested development of B cells at the pro-B cell stage due to diminished signaling of the B cell receptor.</blockquote>
 
 </div>
 
@@ -324,7 +325,7 @@ Phenotypes show necessity, not function, so the tool now skips MGI. Rat has only
 
 ## Next steps
 
-- **File the reports** with WormBase, SGD, FlyBase and UniProt (manual): 272 errors, 100 confirmed by a quoted paper.
+- **File the reports** with WormBase, SGD, FlyBase and UniProt (manual): 272 errors, 252 of them with a quoted paper as evidence.
 - **Merge the duplicate yeast folders** MVD1 and ERG19 (issue #5837).
 - **Use the MOD text on every new worm, yeast and fly review**: `just mod-description-deep-research SPECIES GENE`.
 
