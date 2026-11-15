@@ -157,6 +157,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also drop lipoproteins and proteins carrying a named InterPro family",
     )
+    p.add_argument(
+        "--no-require-signal",
+        dest="require_signal",
+        action="store_false",
+        help=(
+            "do not require an annotated signal peptide. Measured to recover a genuine "
+            "member whose UniProt entry lacks the annotation, at ~25%% more candidates, "
+            "while excluding no known negative; see BASELINE.md"
+        ),
+    )
     args = p.parse_args(argv)
 
     cache = Path(__file__).resolve().parent / ".cache"
@@ -179,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
         multiheme += 1
         has_signal = bool(f[idx["Signal peptide"]].strip())
         has_tm = bool(f[idx["Transmembrane"]].strip())
-        if not has_signal:
+        if args.require_signal and not has_signal:
             continue
         with_signal += 1
         if has_tm:
@@ -210,7 +220,12 @@ def main(argv: list[str] | None = None) -> int:
         else f"{args.min_hemes}-{args.max_hemes}"
     )
     print(f"  {window} heme motifs{'':<16}{multiheme:>5}")
-    print(f"  ... and a signal peptide      {with_signal:>5}")
+    sig_label = (
+        "  ... and a signal peptide     "
+        if args.require_signal
+        else "  ... (signal not required)   "
+    )
+    print(f"{sig_label}{with_signal:>5}")
     if args.refine:
         print(f"  ... and no TM segment         {passing:>5}")
         print(

@@ -90,10 +90,32 @@ rule: its UniProt entry has no signal-peptide annotation at all, and running wit
 `--refine` loses it too. Its InterPro profile (`IPR051174`, `IPR036280`) is exactly
 the positive profile.
 
-So the signal-peptide clause is now the known weak point. It is doing real work —
-it is part of what excludes the inner-membrane cytochromes — but it depends on an
-annotation that is missing for at least one genuine member, and a secreted protein
-whose signal peptide was never annotated is invisible to this screen.
+### The signal-peptide clause should be dropped (measured, 2026-11-15)
+
+The obvious reading of that miss was that the screen needs a real signal-peptide
+prediction instead of UniProt's annotation, which would mean installing and running
+SignalP over every proteome. Measuring first made that unnecessary. Running with
+`--no-require-signal`:
+
+| Proteome | signal required | signal dropped | known members kept |
+|---|---:|---:|---|
+| *G. sulfurreducens* | 17 | 21 | 4/4 → 4/4 |
+| *C. bemidjiense* | 12 | 16 | 4/5 → **5/5** |
+| *G. daltonii* | 14 | 17 | 2/2 → 2/2 |
+
+Dropping the clause costs about 25% more candidates and buys complete recall: 11/11
+known members across the three organisms instead of 10/11, with `B5EHF0` recovered.
+
+**It also excludes none of the known negatives**, which is the part worth recording,
+because an earlier draft of this page asserted the opposite. Checking each one
+directly: ImcH is excluded because it *has a transmembrane segment*; CbcL and
+GSU2359 are excluded on heme count and on carrying a named InterPro family
+(Isochorismatase-like hydrolase, DsbC/G disulphide bond isomerase). None of the three
+is excluded by the signal-peptide test. The clause was costing a real positive and
+contributing nothing against the negatives it was credited with catching.
+
+The default still requires a signal peptide so the funnel above reproduces; use
+`--no-require-signal` for the recommended setting.
 
 ## Honest limits
 

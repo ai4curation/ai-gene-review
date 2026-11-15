@@ -239,13 +239,19 @@ fool yourself, so they were tested on two Geobacteraceae not used to derive them
 | *G. daltonii* (held out) | 19 | **14** | 2 / 2 |
 
 Precision improves by about a third at no cost in recall: every known member that
-entered the refinement came out of it. The one miss is instructive and belongs to the
-*base* filter — *C. bemidjiense* `B5EHF0` (omcS-3) has no signal-peptide annotation in
-UniProt at all, so the screen never sees it, even though its InterPro profile is
-exactly the positive one. The signal-peptide clause is doing real work, since it is
-part of what excludes the inner-membrane cytochromes, but it now stands as the known
-recall risk: a secreted protein whose signal peptide was never annotated is invisible
-here.
+entered the refinement came out of it. The one miss belongs to the *base* filter —
+*C. bemidjiense* `B5EHF0` (omcS-3) has no signal-peptide annotation in UniProt at all,
+so the screen never sees it, even though its InterPro profile is exactly the positive
+one.
+
+**That pointed at running SignalP, and measuring first made it unnecessary.** Simply
+dropping the signal-peptide requirement costs about 25% more candidates (17→21, 12→16,
+14→17) and buys complete recall, 11/11 known members instead of 10/11. It also
+excludes none of the known negatives: ImcH is caught by its transmembrane segment, and
+CbcL and GSU2359 by heme count and by carrying a named InterPro family. The clause was
+costing a real positive while contributing nothing against the negatives it appeared
+to be catching, so the recommended setting is `--no-require-signal` and no
+signal-peptide predictor is needed.
 
 ## Proposed GO terms
 
