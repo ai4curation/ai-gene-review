@@ -57,6 +57,44 @@ So the structural half is worth building, and the experiment that could have mad
 unnecessary did not. The sensible shape is this filter for recall, then heme geometry
 for precision, as the project page proposes.
 
+## Refining it: two more rules, validated on held-out organisms (2026-11-15)
+
+Run with `--refine`. The 26 survivors above were inspected for features the four
+characterised subunits share and the rest do not, which gave two rules:
+
+1. **Not a lipoprotein** (`--refine`). A lipid-anchored protein is tethered to a
+   membrane; a filament subunit is a free polymer. None of OmcS, OmcE, OmcZ or OmcT
+   carries a lipid anchor. This is mechanistically motivated rather than fitted.
+2. **No named InterPro family.** The characterised subunits carry only homologous
+   superfamilies (`IPR036280` multiheme cytochrome) and structural domains (Ig-like,
+   IPT, doubled CXXCH), plus `IPR051174`, which is only the mirror of PANTHER
+   `PTHR30333` — the family this project's own review records as heterogeneous, so it
+   is excluded from the rule. A protein that *does* carry a family-level entry has
+   already been classified as something else: Cytochrome c552, Octaheme c-type
+   cytochrome, Cytochrome c550/c551-like.
+
+The obvious risk is fitting two rules to four positives, so they were tested on two
+Geobacteraceae not used to derive them, each with known OmcS-family members from CDD
+`cd21555`:
+
+| Proteome | proteins | base 4–8 | not lipo | no named family | known members kept |
+|---|---:|---:|---:|---:|---|
+| *G. sulfurreducens* (tuned on) | 3,402 | 26 | 20 | **17** | 4 / 4 |
+| *C. bemidjiense* (held out) | 4,042 | 24 | 17 | **12** | 4 / 5 |
+| *G. daltonii* (held out) | 3,798 | 19 | 18 | **14** | 2 / 2 |
+
+**The refinements cost no recall.** Precision improves by about a third, and every
+known member that entered the refinement came out of it. The single miss, *C.
+bemidjiense* `B5EHF0` (omcS-3), is lost by the **base** filter, not by either new
+rule: its UniProt entry has no signal-peptide annotation at all, and running without
+`--refine` loses it too. Its InterPro profile (`IPR051174`, `IPR036280`) is exactly
+the positive profile.
+
+So the signal-peptide clause is now the known weak point. It is doing real work —
+it is part of what excludes the inner-membrane cytochromes — but it depends on an
+annotation that is missing for at least one genuine member, and a secreted protein
+whose signal peptide was never annotated is invisible to this screen.
+
 ## Honest limits
 
 - **"Known filament subunit" is a set of three.** Precision measured against three

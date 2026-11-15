@@ -30,6 +30,7 @@ The proteome TSV is cached under a git-ignored .cache/ beside this script.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import urllib.parse
 import urllib.request
@@ -39,9 +40,15 @@ DEFAULT_PROTEOME = "UP000000577"  # Geobacter sulfurreducens PCA
 
 FIELDS = (
     "accession,id,protein_name,gene_names,length,reviewed,"
-    "ft_signal,ft_transmem,sequence"
+    "ft_signal,ft_transmem,ft_lipid,keyword,xref_interpro,sequence"
 )
 STREAM = "https://rest.uniprot.org/uniprotkb/stream"
+INTERPRO_ENTRY = "https://www.ebi.ac.uk/interpro/api/entry/interpro/{acc}/"
+
+#: InterPro family-level entries the characterised subunits themselves carry, so
+#: they cannot be used to exclude. IPR051174 is only the mirror of PANTHER
+#: PTHR30333, the family this project's own review records as heterogeneous.
+GENERIC_FAMILIES = {"IPR051174"}
 
 CXXCH = re.compile(r"C..CH")
 CXXXCH = re.compile(r"C...CH")
@@ -81,6 +88,48 @@ def fetch(proteome: str, cache: Path) -> Path:
     return path
 
 
+_IPR_TYPE: dict[str, tuple[str, str]] = {}
+
+
+def interpro_type(acc: str) -> tuple[str, str]:
+    """(entry type, name) for an InterPro accession; ('?', '?') if unreachable."""
+    if acc not in _IPR_TYPE:
+        try:
+            req = urllib.request.Request(
+                INTERPRO_ENTRY.format(acc=acc),
+                headers={"User-Agent": "filament-baseline/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310 (EBI)
+                m = json.load(resp)["metadata"]
+            _IPR_TYPE[acc] = (m.get("type") or "?", m["name"]["name"])
+        except Exception:  # pragma: no cover - network dependent
+            _IPR_TYPE[acc] = ("?", "?")
+    return _IPR_TYPE[acc]
+
+
+def named_families(interpro_field: str) -> list[tuple[str, str]]:
+    """InterPro family-level entries that name a specific functional class.
+
+    The characterised subunits carry only homologous superfamilies and structural
+    domains, so a family-level entry such as Cytochrome c552 or Octaheme c-type
+    cytochrome marks a protein whose function is already classified as something
+    else. See BASELINE.md for why this rule is the weaker of the two.
+    """
+    out = []
+    for acc in (x.strip() for x in interpro_field.split(";")):
+        if not acc or acc in GENERIC_FAMILIES:
+            continue
+        kind, name = interpro_type(acc)
+        if kind == "family":
+            out.append((acc, name))
+    return out
+
+
+def is_lipoprotein(lipid_field: str, keyword_field: str) -> bool:
+    """A lipid-anchored protein is tethered to a membrane, not a free polymer subunit."""
+    return bool(lipid_field.strip()) or "Lipoprotein" in keyword_field
+
+
 def heme_motifs(seq: str) -> int:
     """Non-overlapping count of covalent heme-attachment motifs."""
     spans: list[tuple[int, int]] = []
@@ -103,6 +152,11 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="upper bound on heme motifs; the known subunits carry 4-8",
     )
+    p.add_argument(
+        "--refine",
+        action="store_true",
+        help="also drop lipoproteins and proteins carrying a named InterPro family",
+    )
     args = p.parse_args(argv)
 
     cache = Path(__file__).resolve().parent / ".cache"
@@ -111,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     idx = {name: i for i, name in enumerate(header)}
 
     total = multiheme = with_signal = passing = 0
+    dropped_lipo = dropped_family = refined = 0
     hits = []
     for line in rows[1:]:
         f = line.split("\t")
@@ -130,6 +185,14 @@ def main(argv: list[str] | None = None) -> int:
         if has_tm:
             continue
         passing += 1
+        if args.refine:
+            if is_lipoprotein(f[idx["Lipidation"]], f[idx["Keywords"]]):
+                dropped_lipo += 1
+                continue
+            if named_families(f[idx["InterPro"]]):
+                dropped_family += 1
+                continue
+            refined += 1
         hits.append(
             (
                 f[idx["Entry"]],
@@ -148,13 +211,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"  {window} heme motifs{'':<16}{multiheme:>5}")
     print(f"  ... and a signal peptide      {with_signal:>5}")
-    print(f"  ... and no TM segment         {passing:>5}   <- candidate set")
+    if args.refine:
+        print(f"  ... and no TM segment         {passing:>5}")
+        print(
+            f"  ... and not a lipoprotein     {passing - dropped_lipo:>5}  (-{dropped_lipo})"
+        )
+        print(
+            f"  ... and no named IPR family   {refined:>5}  (-{dropped_family})   <- candidate set"
+        )
+        final = refined
+    else:
+        print(f"  ... and no TM segment         {passing:>5}   <- candidate set")
+        final = passing
     print(
-        f"\n  over-selection vs the 3 characterised filament subunits: {passing / 3:.0f}x"
+        f"\n  over-selection vs the 3 characterised filament subunits: {final / 3:.0f}x"
     )
     also_cd = sum(1 for h in hits if h[0] in CD21555)
     print(
-        f"  of the {passing} candidates, {also_cd} are also CDD cd21555 members"
+        f"  of the {final} candidates, {also_cd} are also CDD cd21555 members"
         f" (plausible, not clear errors)\n"
     )
 

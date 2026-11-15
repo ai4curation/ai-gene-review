@@ -224,6 +224,29 @@ classifier, because nothing in the sequence separates a pentaheme nitrite reduct
 from a filament subunit. What separates them is where the hemes end up. The structural
 half is worth building.
 
+**Two further sequence rules buy precision for free.** Inspecting the 26 survivors
+gave a mechanistic rule, *not a lipoprotein* (a lipid-anchored protein is tethered,
+not a free polymer subunit), and a classification rule, *no named InterPro family*
+(the characterised subunits carry only superfamilies and structural domains, while
+the false positives are already classified as Cytochrome c552, Octaheme c-type
+cytochrome and the like). Fitting two rules to four positives is an obvious way to
+fool yourself, so they were tested on two Geobacteraceae not used to derive them:
+
+| Proteome | base 4–8 | refined | known members kept |
+|---|---:|---:|---|
+| *G. sulfurreducens* (tuned on) | 26 | **17** | 4 / 4 |
+| *C. bemidjiense* (held out) | 24 | **12** | 4 / 5 |
+| *G. daltonii* (held out) | 19 | **14** | 2 / 2 |
+
+Precision improves by about a third at no cost in recall: every known member that
+entered the refinement came out of it. The one miss is instructive and belongs to the
+*base* filter — *C. bemidjiense* `B5EHF0` (omcS-3) has no signal-peptide annotation in
+UniProt at all, so the screen never sees it, even though its InterPro profile is
+exactly the positive one. The signal-peptide clause is doing real work, since it is
+part of what excludes the inner-membrane cytochromes, but it now stands as the known
+recall risk: a secreted protein whose signal peptide was never annotated is invisible
+here.
+
 ## Proposed GO terms
 
 The primary deliverable. One term is already proposed in two gene reviews; this page
