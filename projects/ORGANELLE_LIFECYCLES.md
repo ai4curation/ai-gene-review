@@ -141,5 +141,7 @@ The organelle-by-stage matrix lives in
 - [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
 - [x] Plant vacuole: `plant_vacuolar_sorting_receptor_cycle` (VSR, retromer; RMR optional) and `plant_tonoplast_transport` (V-PPase, TIP1, vacuolar NHX; TPC1, TPK1, CLC-a, ALMT9 optional), both required by `plant_vacuole_lifecycle`; `RULE_CANDIDATE`
 - [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713; resolve the VSR and RMR placements between UniProt and PANTHER's files; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
-- [ ] Specialized organelles
+- [x] Cilium: `cilium_lifecycle` umbrella (Eukaryota) requiring one new rule module, `intraflagellar_transport_core` (nine IFT-B and four IFT-A subunits and the dynein-2 intermediate chain; IFT88, IFT56, IFT54, IFT20, the other dynein-2 chains and kinesin-2 optional), human-grounded at Eukaryota-level PAINT nodes; `RULE_CANDIDATE`
+- [ ] Cilium: check the moss IFT gaps and the optional subunits' missing lineages against proteomes; add the BBSome, transition zone and motile axoneme as eukaryote-wide rules; model ciliary membrane trafficking and resorption
+- [ ] Specialized organelles: phagosome and synaptic vesicle umbrellas (assess as rules); lineage-specific organelles
 - [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
