@@ -199,3 +199,36 @@ was created.
 The next step is to adjudicate all 93 seeded contexts, retain source-access
 uncertainty, synthesize the core and processing records, and run the schema,
 reference, quote, history and rendering checks before publishing the HBB PR.
+
+## 2026-11-15 completed curation
+
+All 93 native contexts have now been adjudicated: 33 ACCEPT, 40
+KEEP_AS_NON_CORE, 11 MODIFY, 6 UNDECIDED and 3 MARK_AS_OVER_ANNOTATED.
+No NEW annotation was added. Native annotation fields, including both
+contributes_to qualifiers, were preserved. The review remains DRAFT because
+six source-specific questions are unresolved.
+
+The respiratory core identifies oxygen-carrier activity, oxygen and carbon
+dioxide transport, cytosol and the hemoglobin complex. Structured records
+separate the mature chain, LVV-hemorphin-7 and spinorphin. The nitric-oxide
+findings preserve both positive and conflicting beta-Cys93 physiological
+studies. Experimental peroxidase chemistry is not treated as sufficient
+evidence for protective cellular oxidant detoxification.
+
+The compact [source-evidence report](HBB-source-evidence/RESULTS.md) records
+the HBB-specific urinary-exosome and platelet table rows and the two human
+P68871 Reactome granule entities. Its script parses primary responses in
+memory and retains selected records, URLs, retrieval times and hashes; it
+does not archive entire responses or infer a biological role from imported
+GO columns. A second urinary-exosome row serves as a parser control.
+
+Schema, ontology and best-practice validation passed. Thirteen advisory
+warnings are intentional: eleven supported generic-binding contexts remain
+non-core under the standing user policy; the urinary/prostatic exosome and
+renal-absorption pairs differ because one source in each pair can be
+adjudicated and the other retains a full-text access limitation. The
+reference validator checked 118 snippets and 51 titles with zero issues;
+the direct quotation check verified all 210 quotations with none unchecked.
+The repository helper derived 40 UniProt record-section fields. Canonical
+rendering succeeded in memory. Independent scientific review found no
+blocking concern with the evidence boundaries, refinements, core or forms.
