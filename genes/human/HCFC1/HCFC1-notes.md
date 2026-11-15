@@ -51,3 +51,15 @@ Retained PAINT source SHA256 values:
 - Leaf GAF: `8ccffa658f6cb8a925a66353a236091a14130ffa7457e1fbf3681d737102b199`
 - IBD GAF: `0c672914e10c1f79d3fb365077d843a92e518eb6eee2aac00c67150274adf569`
 - TreeGrafter annotations: `03ad195b42a48ff2fb0caadd337bf2c98464382855618c1f14fe2869b3d6bf3f`
+
+## Completed annotation pass and targeted scientific QA
+
+All 114 native contexts have decisions: 44 ACCEPT, 29 KEEP_AS_NON_CORE, 30 MODIFY and 11 UNDECIDED. No native row was retired and no NEW annotation was added. The unresolved contexts are source-specific: WDR5 (PMID:15960975), two CREB3/CREBZF interactions (PMID:18391022), three chromatin-network interactions (PMID:24981860), three localization contexts (PMID:20091349), membrane proteomics (PMID:19946888), and cadherin binding/proximity (PMID:25468996).
+
+Targeted independent QA refined the generic self-association annotation to heterodimerization of nonidentical processed N/C chains, supported by fragment and structural studies (PMID:12743030; PMID:23045687). The E2F4 binding context is refined to transcription coregulator activity: the activation result uses a GAL4-fused human E2F4 fragment in hamster cells (PMID:14532282), while a separate human study supports E2F4-associated repression (PMID:17612494). Native VP16-associated DNA-binding transcription factor binding is retained because VP16 has experimentally separable DNA-contact and HCFC1-binding residues (PMID:9199328; PMID:10398682); cooperative binding with Oct-1 does not eliminate those DNA contacts.
+
+The source-linked interaction checks independently retrieved all 12 selected IntAct records across five cited papers. The compact report records the actual pair, method, taxon and publication identifiers, with response hashes and no retained API payload. These database records index the original experiments and do not constitute independent replication. In particular, the selected PMID:33961781 records are classified as anti-tag coimmunoprecipitation; that method is retained rather than inferred from the paper's broader network-screen design.
+
+The initial schema, term and best-practice validation passed. Its 24 advisory warnings are explained by 22 supported generic-binding contexts retained as non-core under the standing project instruction, and two location terms having both established contexts and an unresolved PMID:20091349 context. Do not erase the evidence-specific uncertainty solely to make all actions agree. The review remains DRAFT because these source questions are unresolved.
+
+The bounded Reactome API follow-up verified nucleoplasm (GO:0005654) for all ten existing event contexts. Nine have explicit HCFC1 participant/member paths; the NSL(PHF20) catalytic event has its named nucleoplasmic catalyst verified, with that exact variant membership path untraversed and independently supported NSL membership kept explicit. The separate source report preserves selected facts and 20 response hashes; it does not turn cached summary prose into compartment evidence or claim an independent localization experiment.
