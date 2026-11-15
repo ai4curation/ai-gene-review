@@ -74,3 +74,9 @@ papers cached in `publications/`.
 Not proposed: neuron migration / Reelin signalling (abstract-only evidence; necessity
 data); cognition/behaviour (organismal phenotypes); C-type lectin carbohydrate binding
 (no data).
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0050890 / GO_REF:0000119: defect retyped (evidence depth: FULL_TEXT). Defect is on the human donor row (record UniProtKB:P98153, IMP, PMID:23227193, UniProt), still present. The PMID is the intended paper and names DGCR2 (tables/footnote, one case CNV shared with HLA-DRA), so it is not a mis-keyed reference; the fault is a mutant-phenotype code on a candidate-gene listing. Retyped to WRONG_EVIDENCE_CODE (slot Evidence_Code, asserted ECO:0000315, cause SPECULATION_AS_ASSERTION) and noted that 12 genes got the same row on 2014-05-13.

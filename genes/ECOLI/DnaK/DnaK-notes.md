@@ -14,3 +14,21 @@
 - Evidence restraint was applied throughout. Of the physical PMID caches, only PMID:18304323, PMID:24561554, and PMID:35289645 contain full text; the remaining cached records are abstract-only. Experimental annotations were not removed merely because an abstract lacked assay detail.
 - Final physical-row actions: 33 `ACCEPT`, 14 `MODIFY`, 14 `KEEP_AS_NON_CORE`, 0 `REMOVE`, 0 `MARK_AS_OVER_ANNOTATED`, 0 `UNDECIDED`, and 0 `PENDING`. The review is marked `COMPLETE` because every current signature has an evidence-aware decision, all IBA rows have current node provenance, and the remaining biological uncertainties are captured as questions and experiments rather than undecided annotations.
 - Reconciled the coupled BioReason-Pro SFT prediction for GO:0008270 from `NPI` to `CNN`. The direct radioactive Zn(II)-binding result and pre-existing GOA IDA make the prediction correct but not novel; the negative structural survey remains useful as a limitation on mechanism and physiological interpretation, not as a refutation of the assay [PMID:11985624 "nine zinc-binding proteins were newly identified including: acetate kinase (AckA), DnaK, serine hydroxymethyltransferase (GlyA)"].
+
+
+## 2026-11-06 comparative DnaK-cycle audit
+
+Refined general folding-chaperone and nucleotide-binding rows to the supported ATP-driven function and both ATP/ADP binding. Kept ATP-independent RNA-polymerase protection as a separate supported holdase core using the already present NTR. Inclusion-body surface localization remains accepted, but is not itself evidence that folding occurs inside the aggregate. Kept sigma32 feedback, replication-client remodeling, membrane association and Zn-screen evidence distinct from the core ATP-driven cycle.
+
+All historical annotation rows, including inherited NEW proposals, were preserved outside their review fields; no new annotation rows were added. Source UniProt/GOA, genuine research and prediction artifacts were protected against the pre-edit baseline. PAINT-loss checks found no applicable IRD or IKR.
+
+Primary scope: [PMID:1826368] separates DnaJ stimulation of DnaK-bound ATP hydrolysis from GrpE-mediated nucleotide release. [PMID:7937953] follows denatured firefly luciferase through the E. coli DnaK-DnaJ-GrpE cycle. [PMID:20953191] measures remodeling of a tested misfolded luciferase species; its ATP cost is assay-specific, not a universal per-client constant. Normal forced fetches of those papers and PMID:11162122 and PMID:9103205 succeeded but remained abstract-only. Exact assay construct and E. coli substrain details not stated in those abstracts are not invented. Existing curator assignments are retained where independently supported; the particular complex-assembly process rows citing PMID:9103205 remain UNDECIDED because a structural complex does not alone resolve the assembly-process assertion.
+
+Comparative boundary: [PMID:11162122, abstract] states "Here, DnaJ does not stimulate the DnaK-mediated ATP hydrolysis" for Thermus thermophilus. This is not negative evidence for the E. coli or KT2440 proteins, but rules out treating J-domain identity alone as a universal kinetic guarantee. Official QuickGO definitions were retrieved on 2026-11-06; GO:0051082 and GO:0003767 are obsolete, while GO:0044183 describes folding assistance and GO:0051087 binding to a chaperone protein. Client binding is not chaperone-partner binding.
+
+The pre-existing genuine Falcon report was read as background and preserved unchanged; primary and curated evidence control the review.
+
+
+## 2026-11-06 — PR6125 evidence/action follow-up
+
+2/5: retain core complex membership without conflating it with assembly catalysis; 6: retain both ATP-dependent folding and ATP-independent protection in refinement. Original machine rows and source bytes were frozen before edits. Published PMID and raw-source evidence remain separate from native target-specific experiments. Core location changes, where made, retain cytoplasm when finer cytosol resolution was not independently supported. Physiological uncertainty is not treated as automatic disproof of a directly measured molecular activity.
