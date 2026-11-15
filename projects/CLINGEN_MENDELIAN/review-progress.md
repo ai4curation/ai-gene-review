@@ -8076,3 +8076,19 @@ The separate input-bound audit verified 644 quotation occurrences across 96 bind
 Only human ACD is newly checked. All 235 dated queue records, 179 prior completion updates and earlier journal bytes are preserved. ACE is the next unchecked catalogue entry; ownership and current PRs must be checked before seeding. ROOT receipt `ACD-root-delivery-acceptance-v2.json` (SHA256 `a5b0f05d1e9d926d5eb9c576af9c78e535b919fd69c5cff416bbef5f79031ab5`) is retained local provenance, not a public download link.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T093332Z-codex-b11086.yaml).
+
+## Completion checkpoint 761 (2026-11-15 11:30:48 UTC)
+
+761 complete; 2,115 of 2,876 remain. This publishes ROOT's prior acceptance of human ACE (HGNC:2707; P12821), with zero new acceptance credit.
+
+[PR #6395](https://github.com/ai4curation/ai-gene-review/pull/6395) merged as [8bcaac48](https://github.com/ai4curation/ai-gene-review/commit/8bcaac48a09c9b5c08ad5b6328b5ca1b0e8f1583); [merge-group run 43706884176](https://github.com/ai4curation/ai-gene-review/actions/runs/43706884176) passed. Exact-head approval, all 30 reviewed files, the 30-path actual delta and fresh-main ancestry were verified.
+
+Human ACE retains 147 GOA source rows representing 144 native annotation contexts: 75 ACCEPT, 24 KEEP_AS_NON_CORE, 23 UNDECIDED, eight TOO_GENERAL, ten MARK_AS_OVER_ANNOTATED and four MODIFY. There are no NEW annotations. The review remains DRAFT, including uncertainty where the relevant original full-text evidence could not be accessed. Four native alternative-product records remain preserved. Somatic ACE, testis ACE and the shed ectodomain are distinguished; two catalytic domains in somatic ACE do not imply identical substrate preferences.
+
+The delivered companion rat Ace review retains 137 native contexts and DRAFT status. Four bounded source corrections avoid treating inaccessible donor evidence or absent electronic propagation as disproof. Rat Ace and functional isoforms add no human-locus credit.
+
+The direct source audit verified 236 human quotation occurrences and 262 rat occurrences, with zero unchecked, blocking or baselined quotes. The rat total includes 138 canonical publication checks and 124 explicit UniProtKB:P47820 checks against the native rat UniProt record. All input files were pinned to the approved head and actual merge. Integration executed the two-gene strict batch, the full test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; it does not replace the direct human and rat audits. Corpus advisories, skips and unresolved checks remain in the pinned delivery proof.
+
+Only human ACE is newly checked. All 235 dated queue records, 180 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACE-root-delivery-acceptance-v1.json` (SHA256 `1501833bd86993bc4193fc7e65bcaf5870b69180cb3cca607e5b7f69b05231ec`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T113024Z-codex-5e05eb.yaml).
