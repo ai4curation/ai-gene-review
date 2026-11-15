@@ -79,3 +79,12 @@ annotation identities and the other 133 decisions were retained.
 The human UniProt GO cross-reference is quoted only to document source
 provenance, not as independent experimental evidence for actin binding.
 No new annotation or additional human-locus completion credit is claimed.
+
+## 2026-11-15 — provenance presentation follow-up
+
+The human UniProt actin-binding cross-reference remains described in the
+reference finding and annotation reason, but its `DR GO` line is no longer
+used as `supporting_text`. This supersedes the quotation statement immediately
+above and avoids presenting a restated database annotation in an evidence-quote
+field. All 137 rat annotation decisions are unchanged from the published
+PR #6395 draft.

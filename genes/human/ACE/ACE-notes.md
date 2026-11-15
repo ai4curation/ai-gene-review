@@ -158,3 +158,40 @@ unresolved actin-binding provenance, misdescribed mouse angiotensin-metabolism
 papers, and two overconfident free-dipeptide activity corrections. All rat
 native annotation identities and its other 133 decisions remain unchanged.
 This companion correction earns no additional human locus credit.
+
+## 2026-11-15 — PR #6395 review follow-up
+
+The final action counts supersede the initial draft tally above: 75 ACCEPT,
+24 KEEP_AS_NON_CORE, 23 UNDECIDED, eight TOO_GENERAL,
+10 MARK_AS_OVER_ANNOTATED and four MODIFY; no NEW annotations.
+
+The eight GO:0008237 metallopeptidase rows now retain the informative
+metal-dependent mechanism of the core reaction. GO:0008241 describes terminal
+dipeptide removal without encoding that mechanism, and the non-core
+metalloendopeptidase activity does not replace the core mechanistic assertion.
+This also follows the 2026-11-14 maintainer ruling on informative mechanism
+classes. There are four IDA rows in this eight-row group; its other evidence
+contexts remain unchanged.
+
+The two broad GO:0006508 proteolysis rows are now TOO_GENERAL. Fresh QuickGO
+inspection confirmed the accepted angiotensin-maturation ancestry:
+[GO:0002003](https://www.ebi.ac.uk/QuickGO/term/GO:0002003) →
+GO:0016486 → GO:0140448 → GO:0016485 → GO:0006508, all `is_a` edges.
+GO:0043171 peptide catabolic process lies outside that ancestry, so the former
+replacement was not the claimed refinement. Its separate native rows remain.
+
+The load-bearing tripeptidase ancestry was independently rechecked against
+[GO:0008240](https://www.ebi.ac.uk/QuickGO/term/GO:0008240),
+[GO:0070008](https://www.ebi.ac.uk/QuickGO/term/GO:0070008) and
+[GO:0008236](https://www.ebi.ac.uk/QuickGO/term/GO:0008236):
+GO:0008240 `is_a` GO:0070008 `is_a` GO:0008236. The parent explicitly specifies
+serine-catalytic chemistry. The zinc-enzyme mechanism mismatch therefore remains
+an ontology-scope question, without dismissing the observed substrate cleavage.
+
+The description now states the mouse sperm-ACE fertility requirement plainly,
+supported by PMID:11723129 and PMID:12777443. The gap-junction reasons distinguish
+loss of channel-forming Cx43 subunits from regulation of production of the gene
+product. Source-specific UNDECIDED contexts are retained because the relevant
+historical papers or source-specific assay details remain inaccessible; they
+are not converted into verified original experiments by independent support
+for the same biological function.
