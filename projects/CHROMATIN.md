@@ -83,6 +83,7 @@ filing.
 | Module | Members | Status | Notes |
 |---|---|---|---|
 | [HAT-B complex](../modules/scer_hat_b_complex.html) (`modules/scer_hat_b_complex.yaml`) | HAT1, HAT2, HIF1 | DRAFT | Proposes a GO term for the type B HAT complex and records the GO:0000123 `part_of chromatin` edge as a proposed deletion. Two biology gaps: free H4 versus H3-H4 dimer as substrate, and HAT-B's role at double-strand breaks. |
+| [Rtt109-Vps75 complex](../modules/scer_rtt109_vps75_complex.html) (`modules/scer_rtt109_vps75_complex.yaml`) | RTT109, VPS75 | DRAFT | Uses GO:0070775 H3 histone acetyltransferase complex, which is also inferred to be part of chromatin; the complex has no activity on nucleosomal H3, so it is a second counterexample to the GO:0000123 edge. Vps75 drives H3 tail (K9, K27) acetylation; K56 needs Asf1 and not Vps75. Two biology gaps: where the complex acts (before or after nuclear import), and Rtt109-independent roles of Vps75. |
 
 The HAT-B case is concrete: all three yeast subunits are annotated `part_of`
 GO:0000123 (IDA, IPI), so they inherit `part_of chromatin`. Meanwhile
@@ -114,7 +115,8 @@ Yeast histone acetyltransferase complexes, each as its own module:
 
 - [x] HAT-B (Hat1, Hat2, Hif1)
 - [x] gene reviews for HAT1, HAT2 and HIF1
-- [ ] Rtt109-Vps75 (H3K56 acetylation of new histones; RTT109 already reviewed)
+- [x] Rtt109-Vps75 (H3 acetylation of new histones; RTT109 already reviewed)
+- [ ] gene review for VPS75 (scaffold created; annotations PENDING)
 - [ ] NuA4 and piccolo NuA4 (Esa1, Epl1, Yng2; ESA1 already reviewed)
 - [ ] SAGA HAT module (Gcn5, Ada2, Ada3, Sgf29; GCN5 already reviewed)
 - [ ] NuA3 (Sas3; SAS3 already reviewed)
