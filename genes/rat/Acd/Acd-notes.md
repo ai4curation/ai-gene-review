@@ -26,3 +26,7 @@
   - `GO:0005697` (`telomerase holoenzyme complex`, `IEA` `IPR019437`).
   - `GO:0042162` (`telomeric repeat DNA binding`, `IBA`/`IEA`/`ISO`): Acd/TPP1 does not bind DNA directly; POT1/TRF1/TRF2 do (`PMID:31216472`, `PMID:35201900`).
   - `GO:0010521` (`telomerase inhibitor activity`, `ISO` from `Q96AP0`) and `GO:0070203` (`regulation of establishment of protein localization to telomere`, `ISO` from `Q96AP0`), both propagated from erroneous BHF-UCL annotations on `PMID:25172512`.
+
+## 2026-11-15 follow-up: limits of transferred assertions
+
+The earlier GO:0010521 and GO:0070203 REMOVE recommendations are superseded by UNDECIDED. Human inhibitor activity and the interpretation of localization regulation remain unresolved; neither transfer validity nor target-function absence is established. No human long-isoform mechanism is asserted for rat. The mouse skeletal p53-rescue results do not establish a urogenital mechanism: GO:0001655 is also UNDECIDED, while skeletal/limb/segmentation judgments are explicitly restricted to the studied source phenotypes. The review remains DRAFT. Native GOA identifiers and citations were retained.

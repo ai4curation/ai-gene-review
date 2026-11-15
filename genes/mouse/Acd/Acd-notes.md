@@ -37,3 +37,11 @@
   - `GO:0042162` (`telomeric repeat DNA binding`, `IBA`/`IDA`/`IEA`/`ISO`): `PMID:23685356` pulled down whole shelterin from nuclear extract on ds-`TTAGGG` DNA; purified TPP1/Acd does not contact DNA (`PMID:31216472`, `PMID:35201900`), whereas POT1a/POT1b bind ssDNA (`PMID:17053789`, `PMID:17632522`).
   - `GO:0010521` (`telomerase inhibitor activity`, `ISO`/`IEA` from human `PMID:25172512`): unsupported in source paper and opposite to Acd/TPP1's direct telomerase-stimulating activity.
   - `GO:0070203` (`regulation of establishment of protein localization to telomere`, `ISO`/`IEA` from human `PMID:25172512`): propagated from an erroneous BHF-UCL `IDA` on `PMID:25172512` (which assayed TPP1's own localization upon deubiquitinase perturbation, whereas Acd directly mediates `GO:0070200` for POT1a/b and TERT).
+
+## 2026-11-15 follow-up: restricted developmental conclusions
+
+This entry supersedes the inclusion of urogenital development among p53-rescued phenotypes above. PMID:19660449 and PMID:22038471 support skeletal, vertebral and limb findings; they do not establish rescue or mechanism of the urogenital phenotype. The latter annotation remains UNDECIDED because the original PMID:15537664 evidence is incompletely accessible. Skeletal/limb/segmentation terms remain MARK_AS_OVER_ANNOTATED with the reasons limited to those studied outcomes.
+
+The prior GO:0010521 and GO:0070203 REMOVE recommendations are superseded by UNDECIDED. Canonical telomerase stimulation does not alone prove absence of inhibitor activity in every context. Human TPP1-L is explicitly absent in mice (PMID:31216472); its mechanism is not transferred to mouse Acd. RNF8-dependent localization in mouse experiments (PMID:22101936) differs from the negative human ubiquitination result (PMID:25172512), and regulation of TPP1 itself does not prove its participation as a regulator.
+
+The PMID:23685356 DNA-capture assay used nuclear extracts, including mouse embryonic stem-cell extracts. Human purified-protein and structural evidence (PMID:31216472, PMID:35201900) supplies the contrary direct-DNA-binding evidence, with species scope explicit. The review remains DRAFT with unresolved propagation assessments.

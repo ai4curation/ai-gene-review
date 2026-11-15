@@ -41,3 +41,9 @@ Tpz1 is the central architectural hub at the single-stranded/double-stranded jun
     - `GO:0042162` (`telomeric repeat DNA binding`, `IEA` `IPR019437`): Pot1 and Taz1 bind telomeric DNA directly, whereas Tpz1 is a protein–protein bridge (`PMID:18535244`, `PMID:24013504`).
   - **`NEW`**:
     - `GO:0032211` (`negative regulation of telomere maintenance via telomerase`, `IMP`, `PMID:24013504`) — Tpz1–Poz1 (`tpz1-I501R`), Tpz1–Pot1 (`tpz1-I200R`), and Tpz1-K242 SUMOylation (`PMID:24925530`) restrict telomerase-mediated telomere elongation (whereas `GO:0030674`, `GO:0070182`, and `GO:0032212` are already introduced via `MODIFY` replacements on existing GOA rows).
+
+## 2026-11-15 follow-up: domain and assay scope
+
+The N-terminal OB fold and the central Pot1-binding interface are distinct. PMID:25131669 maps the Pot1 interface to aa155-213, with separate Ccq1 aa422-490 and Poz1 aa479-508 regions; this corrects the former description attributing Pot1 heterodimer formation to the OB fold.
+
+PMID:27253066 supports TEL-patch-dependent Tpz1-Trt1 association through co-immunoprecipitation, separation-of-function genetics and fusion rescue. These results justify the DNA polymerase binding refinement without claiming purified binary-binding reconstitution. Original Ccq1-source quotations were added to the relevant adaptor refinements. The reviewed decisions remain complete; the accompanying family review retains unresolved inhibitor/localization scopes.
