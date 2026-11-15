@@ -7,8 +7,9 @@ Satisfiability comes from the module engine (``ai_gene_review.module_logic``), s
 variant sets and module references count as the engine reads them: a step holds in an organism when one
 of its PANTHER family or subfamily ids selects a protein there (a step with no PANTHER id falls back to its
 UniProt accessions, and a protein-complex step holds when every active unit's PANTHER ids do, because
-the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are the engine's innermost gaps. Annoton
-functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
+the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are
+the engine's innermost gaps, and ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all
+(a step with neither a PANTHER id nor an accession), which never hold. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
 is ``optional``; it is a reading aid, not the verdict. Classification rows with an empty
 accession column are skipped, so they cannot turn a zero count into a hit.
 
@@ -194,13 +195,19 @@ def complex_units(module: dict) -> dict[str, list[tuple[str, ...]]]:
 
 
 def atom_holds(
-    index: dict[str, set[str]], units: dict[str, list[tuple[str, ...]]] | None = None
+    index: dict[str, set[str]],
+    units: dict[str, list[tuple[str, ...]]] | None = None,
+    accessions: set[str] | None = None,
+    unevaluable: set[str] | None = None,
 ) -> Callable[[Atom], bool]:
     """Oracle for one organism: a step holds when its PANTHER family ids select a protein.
 
     A protein-complex step (its id in ``units``, keyed as the engine names atoms) holds when every
     active unit's PANTHER ids select a protein. A step with neither falls back to its UniProt
-    accessions, which hold when the organism's classification file lists one of them.
+    accessions, which hold when the organism's classification file lists one of them. A step this
+    oracle cannot evaluate (no PANTHER id, no accession, or a complex none of whose units has a PANTHER
+    id) does not hold, and its id is added to ``unevaluable`` so it is reported rather than read as an
+    absence.
 
     >>> holds = atom_holds({"PTHR1": {"P1"}, "PTHR2:SF3": {"P2"}}, {"cx": [("PTHR1",), ("PTHR9",)]})
     >>> holds(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)))
@@ -211,8 +218,14 @@ def atom_holds(
     True
     >>> holds(Atom("cx", "cx", None, None))
     False
+    >>> seen: set[str] = set()
+    >>> atom_holds({}, unevaluable=seen)(Atom("f", "f", None, None, function_ids=("GO:1",)))
+    False
+    >>> seen
+    {'f'}
     """
-    accessions = set().union(*index.values()) if index else set()
+    if accessions is None:
+        accessions = set().union(*index.values()) if index else set()
     units = units or {}
 
     def holds(atom: Atom) -> bool:
@@ -223,10 +236,14 @@ def atom_holds(
         ]
         if panther:
             return any(index.get(f) for f in panther)
-        if atom.node_id in units:
+        if atom.node_id in units and any(units[atom.node_id]):
             return all(
                 any(index.get(f) for f in unit) for unit in units[atom.node_id] if unit
             )
+        if not atom.uniprots:
+            if unevaluable is not None:
+                unevaluable.add(atom.node_id)
+            return False
         return any(acc in accessions for acc in atom.uniprots)
 
     return holds
@@ -240,6 +257,9 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
         if path is None:
             raise SystemExit(f"no PANTHER classification file for {org.slug}")
         data[org.slug] = load_classification(path, org.mnemonic)
+    all_accessions = {
+        slug: set().union(*index.values()) for slug, index in data.items()
+    }
     modules = []
     for name in module_names:
         doc = yaml.safe_load((repo_root / "modules" / f"{name}.yaml").read_text())
@@ -275,8 +295,9 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 {f"{ref}#{k}": v for k, v in complex_units(ref_doc["module"]).items()}
             )
         met, gaps = {}, {}
+        unevaluable: set[str] = set()
         for o in ORGANISMS:
-            holds = atom_holds(data[o.slug], units)
+            holds = atom_holds(data[o.slug], units, all_accessions[o.slug], unevaluable)
             met[o.slug] = is_satisfied(circuit, holds)
             if not met[o.slug]:
                 gaps[o.slug] = ["/".join(g.path) for g in gap_report(circuit, holds)]
@@ -286,6 +307,7 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 "descriptors": rows,
                 "required_parts_met": met,
                 "unsatisfied_gaps": gaps,
+                "unevaluable_steps": sorted(unevaluable),
             }
         )
     return {
