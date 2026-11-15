@@ -26,3 +26,6 @@ PTHR43322:SF5).
 - GO:0016744 transketolase or transaldolase activity: changed KEEP_AS_NON_CORE -> TOO_GENERAL (is_a ancestor of GO:0008661, which is asserted; runoak ancestors of GO:0008661 = GO:0016744 > GO:0016740 > GO:0003824).
 - GO:0019288 MEP pathway IPP biosynthesis: ACCEPT (core BP).
 - core_functions: dropped the UniProt keyword quote ("Thiamine biosynthesis"), which restates an annotation, in favour of the cofactor note and the branch-point quote.
+
+## 2026-11-15 merge reconciliation
+- GO:0016114 terpenoid biosynthesis: changed to KEEP_AS_NON_CORE, superseding the MARK_AS_OVER_ANNOTATED entry above. The MEP isoprenoid precursor module review (merged on main) set the same row to KEEP_AS_NON_CORE on KT2440 ispE/F/G/H and the E. coli orthologs, because IPP and DMAPP are the units all terpenoids are built from. Dxs is taken to the same standard so the pathway enzymes stay consistent.

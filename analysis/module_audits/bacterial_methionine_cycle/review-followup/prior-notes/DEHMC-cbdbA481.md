@@ -1,0 +1,11 @@
+# cbdbA481 / MesB evidence notes
+
+The exact CBDB1 protein is current UniProt A0A916P3S8, 343 residues, cross-referenced to EMBL CAI82680.1. Full PMID:32034217 explicitly identifies cbdbA481/CAI82680 and 343 residues. The paper's target bridge is independent of the current ProtNLM name, which is not used as evidence.
+
+The first tagged purification was unsuitable; the functional preparation was untagged recombinant protein from E. coli, purified by anion exchange and identified by47 unique peptides/87% coverage. Native PAGE and size exclusion indicated a monomer. Dim-light anoxic assays contained 0.5 mM methylcobalamin, 0.1 µM enzyme and 2 mM D,L-homocysteine. No-enzyme, no-homocysteine and E. coli crude-extract controls lacked activity. LC-MS verified methionine. These controlled target assays justify one IDA NEW GO0008172, the donor-unspecified sulfur-methyltransferase genus; the zero-row seed contained no existing annotation covering it.
+
+Current QuickGO definitions and all 12 direct children of GO0008172 were inspected. Existing folate, SAM, betaine, thetin and S-methylmethionine donor terms do not describe the measured methylcobalamin reaction. A methylcobalamin search returned other corrinoid/coenzymeM reactions, not this homocysteine reaction. The broad genus is accurate; the exact chemistry remains explicit in the core and an ontology question. No redundant parent/child or process NEW is added.
+
+The folate-triglutamate assay did not form methionine with MesB while the E. coli MetE control did. Failed complementation of E. coli ΔmetE is condition-dependent and does not invalidate purified chemistry. Native CBDB1 mutagenesis was not performed. The proposed AcsCD/CoFeSP donor is explicitly speculative and could involve an intermediate; do not claim direct native donor transfer, complete native-cycle flux, or canonical MetH chemistry. Zinc coordination is modeled/conserved, not a new target metal-binding assay; no separate zinc NEW is added.
+
+A genuine `just deep-research-falcon DEHMC cbdbA481` attempt on 2026-11-07 returned HTTP 403 authentication/access failure (exit 1). The exact log is archived in the consultation. No provider report was fabricated; curation used the primary full texts above.
