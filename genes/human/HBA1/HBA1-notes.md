@@ -159,3 +159,63 @@ The extracellular-term replacement is also documented in upstream
 and [the April removal of the outdated recommendation](https://github.com/geneontology/go-ontology/commit/1fb09f6d67dbaa312ac6c4616263a6c180ac098c).
 Older local ontology tables or annotation rows are not evidence that the former
 term remains current.
+
+### PR6373 evidence follow-up — 2026-11-15 UTC
+
+The erythrocyte-development IBA remains KEEP_AS_NON_CORE on the retained PAINT
+judgment. Its PMID:25156257 corroborating quote now reports maturation arrest
+and apoptosis, rather than only HSP70 binding. This is a pathological
+beta-thalassemia perturbation, not evidence that alpha-globin normally regulates
+erythroid differentiation.
+
+The direct human-protein assay in PMID:36302779 warrants a separate NEW molecular
+function: **GO:0098809 nitrite reductase activity**. Purified deoxyferrous human
+alpha-globin reacts with nitrite under dithionite-supported reducing conditions,
+forming the ferrous-NO product. This activity is contextual and remains outside
+the principal respiratory-carrier core. The native GO:0030185 nitric oxide
+transport assertion remains UNDECIDED; NO generation is not directed transport.
+The paper's mouse endothelial deletion and exercise experiments are not promoted
+to new human vascular-process annotations. The protein assay cannot distinguish
+the identical HBA1 and HBA2 products.
+
+Both [QuickGO](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0098809,GO:0050421,GO:0008942)
+and [OLS](https://www.ebi.ac.uk/ols4/api/ontologies/go/terms?iri=http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FGO_0098809)
+were checked directly. GO:0050421's NO-forming label is attractive, but its
+definition specifies cytochrome c as the redox partner; the alpha-globin assay
+does not establish that specificity. GO:0008942 instead specifies NAD(P)H and
+ammonium formation. The broader GO:0098809 is already used for human myoglobin
+P02144 with IDA evidence from PMID:32891753 in
+[QuickGO's annotation records](https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId=UniProtKB:P02144&goId=GO:0098809&goUsage=exact&limit=100).
+This comparator checks established term usage; it is not the evidence for HBA1.
+The term's ancestor closure has no overlap with the seeded molecular activities,
+and no narrower nitrite-reductase activity is already present. Its official
+definition awkwardly says "product(s) of nitrate reduction"; that text is not
+silently corrected or treated as a reason to substitute an incompatible
+donor-specific reaction. The classification and direct assay determine this
+bounded annotation.
+
+For the PMID:10390349 and PMID:11724557 binding refinements, the reason now
+distinguishes their ligand-kinetic/crystal-structure experiments from the separate
+alpha-beta assembly evidence (PMID:1552945 and PMID:15550245) that supports the
+specific heterodimerization function. Their original references and partners are
+unchanged. UniProt CC:INTERACTION evidence is explicitly a summary of the same
+IntAct curation lineage, not independent experimental replication. The direct
+IntAct lookups verify the source records, not additional experiments.
+
+DRAFT records the remaining source-level uncertainties, including the specific
+experimental contexts marked UNDECIDED and the endogenous human hemopressin
+question. The membrane/vesicle assertions remain unresolved without asserting
+contamination from a general expectation about proteomic preparations.
+
+A read-only follow-up of the merged AHSP review supplied two concrete leads:
+EBI-16247582 for PMID:25156257 and EBI-61099167 for PMID:40205054. Exact-ID and
+publication-linked legacy PSICQUIC queries returned no rows; the current official
+IntAct interaction-detail endpoints returned HTTP 200 with empty bodies. Thus
+these are unverified leads, not new evidence, and the two AHSP contexts remain
+UNDECIDED. Absence from these responses does not contradict the curators' assays.
+
+Follow-up checks passed: schema/ontology validation with the same 16 expected
+generic-binding warnings, 96 reference snippets and 43 titles without issues,
+and all 152 quote occurrences verified with zero unchecked. Canonical rendering
+passed in memory. Independent scientific QA found no actionable concern with the
+new MF, the maturation quote, or the clarified assembly refinements.
