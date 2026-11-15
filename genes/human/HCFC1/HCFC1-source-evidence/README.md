@@ -10,4 +10,10 @@ Run from the repository root with its existing runtime:
 python genes/human/HCFC1/HCFC1-source-evidence/check_sources.py
 ```
 
-The script refuses to overwrite retained results. To refresh, first choose explicit versioned outputs and preserve this evidence revision. It does not install dependencies, create an environment, or retain complete API payloads. Missing records remain unresolved instead of being converted into negative evidence.
+The script refuses to overwrite retained results. To refresh, choose a new versioned output directory, for example:
+
+```
+python genes/human/HCFC1/HCFC1-source-evidence/check_sources.py --output-dir /tmp/hcfc1-source-checks-2026-11-16
+```
+
+The directory is created if needed; existing `checks.json` or `RESULTS.md` files cause an error before any requests. The committed results retain the hash of the script revision that generated them. Keep that evidence revision until its replacement has been checked and recorded. The script does not install dependencies, create an environment, or retain complete API payloads. Missing records remain unresolved instead of being converted into negative evidence.
