@@ -116,8 +116,11 @@ def test_same_basename_in_two_directories_is_attributed_separately(
     missing = write_prediction_review(
         tmp_path / "b" / "x-predictions-review.yaml", UNCACHED
     )
-    # A third file makes one batch multi-file, so header attribution is exercised.
-    write_prediction_review(tmp_path / "a" / "y-predictions-review.yaml", CACHED)
+    # A third file, with a finding, shares a multi-file batch with a/x, so a real
+    # "❌ name - N issue(s):" header is parsed and its count checked.
+    write_prediction_review(
+        tmp_path / "a" / "y-predictions-review.yaml", (CACHED[0], "Mus musculus")
+    )
 
     report = measure_coverage(expand_inputs([tmp_path]), warm=False)
 

@@ -34,8 +34,9 @@ marked ``needs_network`` unless its adapter is a known local scheme (``sqlite:``
 ``simpleobo:``, ``pronto:``, ``obograph:``); an unknown scheme counts as remote.
 ``--network-only`` restricts ``--check`` to the misses that need the network.
 
-``--warm`` measures coverage, runs LTV online on the same files (which fills the
-cache with whatever the service can answer), and measures again, so the report
+``--warm`` measures coverage, runs LTV online on the batches that had a miss or
+an unchecked file (which fills the cache with whatever the service can answer;
+a batch that hits an outage is retried once), and measures again, so the report
 shows the before/after miss counts and whether the online pass reached the
 service. Warming writes to the cache directory (the committed ``cache/`` by
 default); review the diff, run ``just lint-caches`` and commit it like any other
@@ -53,7 +54,8 @@ reviews (``*-predictions-review.yaml``) and PANTHER family reviews
 Pfam-entry QA recipes in the justfile also run LTV, but outside CI.
 
 Exit codes with ``--check``: 0 covered, 1 cache misses, 2 incomplete run or bad
-arguments.
+arguments. Label mismatches, blocking or not, never change the exit code: this is
+a coverage gate, and CI's term check judges mismatches itself.
 """
 
 from __future__ import annotations
@@ -62,6 +64,7 @@ import argparse
 import re
 import subprocess
 import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -76,6 +79,7 @@ FAMILY_SCHEMA = Path("src/ai_gene_review/schema/family_review.yaml")
 OAK_CONFIG = Path("conf/oak_config.yaml")
 DEFAULT_CACHE_DIR = Path("cache")
 BATCH_SIZE = 200
+OUTAGE_RETRY_SECONDS = 8
 LOCAL_ADAPTER_SCHEMES = frozenset({"sqlite", "simpleobo", "pronto", "obograph"})
 
 LABEL_MISS = re.compile(r"Term '(?P<curie>[^']+)' not found in offline cache")
@@ -395,8 +399,9 @@ def parse_offline_output(
                 report.unattributed_output.append(line.strip())
             else:
                 accounted.add(current)
-                if header.group("issues") is not None:
-                    announced[current] = int(header.group("issues"))
+                # A bare "✅ name.yaml" header announces zero issues.
+                issues = header.group("issues")
+                announced[current] = int(issues) if issues is not None else 0
             continue
         if len(files) == 1 and SINGLE_FILE_RESULT.match(line):
             accounted.add(files[0].as_posix())
@@ -427,7 +432,7 @@ def parse_offline_output(
         posix = path.as_posix()
         if posix not in accounted:
             report.unchecked_files[posix] = reason
-        elif announced.get(posix, parsed[posix]) != parsed[posix]:
+        elif posix in announced and announced[posix] != parsed[posix]:
             report.unchecked_files[posix] = (
                 f"validator announced {announced[posix]} issue(s) "
                 f"but {parsed[posix]} were parsed"
@@ -555,6 +560,13 @@ def measure_coverage(
         print(f"[warm] batch {number}/{len(warm_work)}", file=sys.stderr)
         output, returncode = run_ltv(kind, batch, offline=False, cache_dir=cache_dir)
         outcome = classify_online_pass(output, returncode)
+        if outcome == "outage":
+            # Ride out a brief blip, as scripts/term_validate.sh does.
+            time.sleep(OUTAGE_RETRY_SECONDS)
+            output, returncode = run_ltv(
+                kind, batch, offline=False, cache_dir=cache_dir
+            )
+            outcome = classify_online_pass(output, returncode)
         if outcome == "outage":
             warm_pass.outage_batches += 1
         elif outcome == "failed":
