@@ -286,6 +286,12 @@ def keyword_redundancy_row(rule_id: str, table: Optional[Path] = None) -> Option
 
 _CITES_REDUNDANCY_TABLE = re.compile(r"(?:rule|keyword)_redundancy\.tsv")
 _TABLE_FIELD = re.compile(r"\b(go_descendants|condition_sets|covered_sets)\s+(\d[\d,]*)")
+_BARE_COVERED = re.compile(
+    r"(?<![\d.:])(?<!of )(?<!of the )(\d[\d,]*)\s+(?:condition\s+)?sets\s+(?:are\s+)?(?:already\s+|also\s+)?covered\s+by\s+"
+    r"(?:more\s+specific\s+rules|(?:class-level\s+)?rules\s+(?:for|asserting|with)\s+(?:a\s+|the\s+|those\s+)?"
+    r"(?:more\s+specific|child|class|such)\b)"
+    r"|(?:already\s+)?cover\s+(\d[\d,]*)\s+sets\b|\((\d[\d,]*)\s+covered\s+sets\)"
+)
 _N_OF_M = re.compile(r"(?<![\d.:])(\d[\d,]*)\s+of\s+(?:the\s+)?(?:rule's\s+)?(\d[\d,]*)\s+(?:condition\s+)?sets\b")
 
 
@@ -757,6 +763,41 @@ def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, st
                 if column in keyword_row and value != int(keyword_row[column]):
                     add(error, "redundancy_prose_mismatch",
                         f"cites keyword_redundancy.tsv for {column} {value}; the table gives {keyword_row[column]}", path)
+
+    # A correction whose evidence names the table states the review's current position:
+    # an "N of M sets ... covered" in its text is a figure from that table too.
+    if row and len(go_ids) == 1 and row["term"] == go_ids[0]:
+        for c, correction in enumerate(data.get("corrections") or []):
+            if not isinstance(correction, dict):
+                continue
+            if not any(_CITES_REDUNDANCY_TABLE.search(str(item)) for item in correction.get("evidence") or []):
+                continue
+            for sentence in re.split(r"(?<=[.;])\s+", " ".join(str(correction.get("correction") or "").split())):
+                for match in _N_OF_M.finditer(sentence):
+                    # "covered" must belong to this figure: same clause, no other number between.
+                    if not re.match(r"[^,\d]*\bcovered\b", sentence[match.end():]):
+                        continue
+                    stated = (int(match.group(1).replace(",", "")), int(match.group(2).replace(",", "")))
+                    if stated != (int(row["covered_sets"]), int(row["condition_sets"])):
+                        add(error, "redundancy_prose_mismatch",
+                            f"says {stated[0]} of {stated[1]} sets are covered and cites rule_redundancy.tsv as "
+                            f"evidence; the table gives {row['covered_sets']} of {row['condition_sets']}",
+                            f"corrections[{c}].correction")
+
+    # A bare "N sets are already covered by more specific rules" is the table's figure whether or
+    # not the sentence names the file. Flagged as a warning, since N may be a stated subset.
+    if row and len(go_ids) == 1 and row["term"] == go_ids[0]:
+        quoted_all = list(iter_prose(data)) + [
+            (f"corrections[{c}].correction", str(correction.get("correction") or ""))
+            for c, correction in enumerate(data.get("corrections") or []) if isinstance(correction, dict)
+        ]
+        for path, text in quoted_all:
+            for match in _BARE_COVERED.finditer(" ".join(text.split())):
+                value = int(next(g for g in match.groups() if g).replace(",", ""))
+                if value != int(row["covered_sets"]):
+                    add(warning, "redundancy_prose_unconfirmed",
+                        f"says {value} sets are covered by more specific rules; rule_redundancy.tsv gives "
+                        f"{row['covered_sets']}", path, "Quote the table, or say which subset the figure is.")
 
     examined, total_sets = meaning.get("sets_examined_for_meaning"), rule.get("source_condition_set_count")
     if (isinstance(examined, int) and isinstance(total_sets, int) and examined < total_sets

@@ -162,7 +162,7 @@ def main() -> None:
             "keyword_descendants": descendants[rule.keyword],
             "condition_sets": len(rule.sets),
             "covered_sets": covered,
-            "covered_by_keywords": "|".join(f"{k}={n}" for k, n in by_keyword.most_common()),
+            "covered_by_keywords": "|".join(f"{k}={n}" for k, n in sorted(by_keyword.items(), key=lambda kv: (-kv[1], kv[0]))),
         })
     with OUT.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")

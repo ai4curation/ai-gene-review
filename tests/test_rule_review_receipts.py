@@ -414,3 +414,15 @@ def test_unit_evidence_is_looked_up(evidence: str, expected: bool) -> None:
     report = ValidationReport(is_valid=True)
     check_review_online(data, report)
     assert any(issue.check_type == "unit_evidence_not_found" for issue in report.issues) is expected
+
+
+@pytest.mark.parametrize("figure,fires", [("320 of 355", True), ("313 of 343", False)])
+def test_correction_text_backed_by_the_table_must_match_it(figure: str, fires: bool, tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    correction = {"withdrawn_claim": "x", "correction": f"{figure} sets are covered by rules with more specific terms.",
+                  "evidence": ["projects/ARBA_REVIEW/rule_redundancy.tsv: ARBA00026480 condition_sets 343, covered_sets 313"]}
+    data = review(id="ARBA00026480", rule=rule, corrections=[correction])
+    assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is fires
