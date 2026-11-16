@@ -404,6 +404,14 @@ unread part of the paper could overturn the claim.
   every isozyme an unfractionated assay cannot separate, is a deliberate practice,
   not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
   reference page) shows this in one query.
+- **An annotation pattern is a lead, never the proof.** How a resource annotated
+  a paper (same-day batches, a reciprocal row, which entry cites the paper, a
+  sequence deposit) can tell you where to look and is reason enough to *drop* an
+  accusation, but it does not by itself show that a curator got the gene wrong.
+  To assert a wrong gene (`CONFIRMED`, `REPOINT` or `DELETE_ROW`, or a `REMOVE`
+  that rests on it) either read the whole paper or have it be very obvious from
+  the abstract or the record itself, as in the first bullet. Otherwise record the
+  lead as a `CHECK` query and name the candidate as a candidate.
 - **Say in `explanation` what depth the claim rests on**, and name a candidate
   correction as a candidate when the intended paper or gene was inferred and not
   read.
