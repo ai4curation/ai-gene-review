@@ -1,5 +1,6 @@
 ---
 title: "RHEA → GO Contribution & Gap Project"
+collections: [MAPPINGS]
 maturity: IN_PROGRESS
 last_reviewed: 2026-10-05
 tags: [PIPELINE]

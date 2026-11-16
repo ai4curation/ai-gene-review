@@ -1,6 +1,6 @@
 ---
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
-collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION, MAPPINGS]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 autolink_exclude: [ParB, parB]

@@ -1027,6 +1027,16 @@ just render-gocams     # every gocams/<id>/<id>-review.yaml, plus an index
 Output: `pages/gocams/<id>.html` and `pages/gocams/index.html`. Like gene HTML,
 this is a gitignored build product rendered by the Pages workflow; do not commit it.
 
+### Feedback and rules landing pages
+```bash
+just render-hubs       # pages/feedback/ and pages/rules/index.html
+```
+`pages/feedback/` publishes the exporters' output (`export-ontology-changes`,
+`export-source-defects`, `export_proposed_terms.py`) as HTML reports plus TSV
+downloads, and lists the `OBSOLETION`-tagged and `MAPPINGS` projects.
+`pages/rules/index.html` lists the curated rules (`rules/curated/CR-*.yaml`) and
+links the external rule reviews. Both are gitignored build products.
+
 ### Project pages
 Project docs live in `projects/`. Render with:
 ```bash
@@ -1064,7 +1074,10 @@ index page gets an auto-generated member table, members get a link back to it,
 and the all-projects table gains a Collection filter. Current collections:
 `FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
 `HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
-browser at `app/propagation/`).
+browser at `app/propagation/`), and `MAPPINGS` (index `MAPPING_REVIEWS`), for reviews
+of vocabulary-to-GO mappings such as InterPro2GO, Rhea2GO and TC2GO. A mapping review
+project should join `MAPPINGS`; one proposing an obsoletion should carry the
+`OBSOLETION` tag. Both feed the feedback-to-resources page.
 
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if

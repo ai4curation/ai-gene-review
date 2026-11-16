@@ -3546,6 +3546,30 @@ def render_projects(
 
 
 @app.command()
+def render_hubs(
+    root: Annotated[
+        Path, typer.Option("--root", help="Repository root to read reviews from")
+    ] = Path("."),
+    pages_dir: Annotated[
+        Path, typer.Option("--pages-dir", help="Site pages directory to write into")
+    ] = Path("pages"),
+):
+    """Render the feedback-to-resources and annotation-rules landing pages.
+
+    Writes pages/feedback/ (ontology changes, proposed new terms, source defects,
+    mapping and rule reviews, with TSV downloads) and pages/rules/index.html.
+
+    Examples:
+        ai-gene-review render-hubs
+    """
+    from ai_gene_review.render_hubs import render_feedback, render_rules
+
+    feedback = render_feedback(root=root, output_dir=pages_dir / "feedback")
+    rules = render_rules(root=root, output_dir=pages_dir / "rules")
+    typer.echo(f"Rendered {len(feedback)} feedback page(s) and {rules}")
+
+
+@app.command()
 def render_gocams(
     gocams_dir: Annotated[
         Path,

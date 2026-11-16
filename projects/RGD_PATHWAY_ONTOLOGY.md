@@ -1,5 +1,6 @@
 ---
 title: "RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds"
+collections: [MAPPINGS]
 maturity: SCOPING
 last_reviewed: 2026-10-26
 tags: [PIPELINE]
