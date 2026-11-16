@@ -321,6 +321,35 @@ knockout paper shows only acylcarnitine build-up from blocked beta-oxidation. Th
 review now removes the row, and the two CoA-linked carnitine metabolic process rows that
 rest on the same paper.
 
+### Mapping and rule fixes (2026-11-15)
+
+Six of the triage's errors come from a mapping or rule that is wrong for a whole family or lineage,
+not from one protein. Five are now written up in the repo's formats; the sixth turned out to be a GO
+ontology problem.
+
+| Source | Problem | Record | Proposed fix |
+|---|---|---|---|
+| InterPro2GO IPR039398 (Deltex family) | Notch signaling pathway on 221 non-metazoan rows | [interpro2go.sssom.yaml](INTERPRO/interpro2go.sssom.yaml), broadMatch | Rule [CR-0008](../rules/curated/CR-0008.yaml): IPR039398 AND Metazoa |
+| InterPro2GO IPR026203 (RHAMM family) | Hyaluronic acid binding on about 300 rows in lineages without hyaluronan | interpro2go.sssom.yaml, broadMatch | Rule [CR-0009](../rules/curated/CR-0009.yaml): IPR026203 AND (Vertebrata OR Cephalochordata) |
+| InterPro2GO IPR021006 (Hda2/Hda3) | HDA1 complex on 29 plant rows, mostly MOM1 helicases | interpro2go.sssom.yaml, broadMatch | Rule [CR-0010](../rules/curated/CR-0010.yaml): IPR021006 AND Fungi |
+| UniRule UR000414538 (RCK_C) | Potassium channel regulator terms on about 10,000 DASS transporters and RimK ligases | [UR000414538 review](../rules/unirule/UR000414538/UR000414538-review.yaml), MODIFY | Negative conditions on IPR051679 and IPR004666 |
+| UniRule UR000345849 (PEMT/PLMT) | PE N-methyltransferase activity on 310 plant PLMTs | [UR000345849 review](../rules/unirule/UR000345849/UR000345849-review.yaml), MODIFY | Exclude Viridiplantae from case 2, as case 6 already does |
+| UniProt SL-0038 to GO, and GO itself | Anchoring junction on plant plasmodesmal proteins | This page | See below |
+
+Two of the triage verdicts needed correcting along the way, and the triage file now says so:
+
+- **The PEMT rule is closer to right than the triage said.** It already gives the PE methylation
+  reaction and the PEMT name only outside fungi and plants. Only its GO:0004608 case excludes fungi
+  alone.
+- **Anchoring junction on plasmodesmal proteins is mostly an ontology problem, not a mapping problem.**
+  UniProt's "Cell junction" location (SL-0038) maps to GO:0070161 anchoring junction, where GO:0030054
+  cell junction would be right, but that mapping gives only 8 plant rows. Since 2019-11-20 GO has placed
+  GO:0005911 cell-cell junction under anchoring junction, and plasmodesma and gap junction sit under cell-cell
+  junction. So every plasmodesma annotation implies anchoring junction: 43,286 plant annotations fall
+  under GO:0070161 (QuickGO, 2026-11-15). The definition of anchoring junction, a junction that
+  mechanically attaches a cell and its cytoskeleton to neighbours or matrix, fits neither plasmodesmata
+  nor gap junctions. This should go to GO as an ontology question rather than as a mapping fix.
+
 ## Next steps
 
 - [x] Gene review: Arabidopsis DDL (At3g08840), on the MF IBA.
@@ -341,7 +370,8 @@ rest on the same paper.
 - [x] Rerun RAR on current GOA (2026-11-11): script, candidates and a first-pass triage of the constraint breaks and prokaryote IBA nodes; see [above](#rar-rerun-on-current-goa-2026-11-11).
 - [x] Triage the plant- and animal-flagged RAR candidates (958 terms, 2026-11-11); see [above](#plant-and-animal-candidates-2026-11-11).
 - [ ] Triage the 81 fungus-flagged RAR candidates and the 280 vertebrate-vs-invertebrate candidates.
-- [ ] Turn the family-wide mapping errors into SSSOM rows or curated rules: InterPro2GO for Deltex, HMMR and IPR021006; UniRules UR000414538 (RCK_C) and UR000345849 (PEMT/PLMT); GO's SL-0038 cell-junction mapping.
+- [x] Turn the family-wide mapping errors into SSSOM rows or curated rules (2026-11-15): three InterPro2GO rows with rules CR-0008 to CR-0010, and reviews of UniRules UR000414538 and UR000345849; see [above](#mapping-and-rule-fixes-2026-11-15).
+- [ ] Raise with GO the placement of cell-cell junction under anchoring junction, which makes every plasmodesma and gap junction annotation imply anchoring junction; also ask UniProt to map SL-0038 to GO:0030054.
 - [x] Revisit the mouse Acadl review's carnitine catabolic process row: now REMOVE (2026-11-11).
 - [ ] For the 14 annotation errors that break a taxon constraint, find out why GO's constraint check did not filter them; for the 5 questionable constraints, check the cited papers and propose TPV entries.
 - [ ] Look at the TreeGrafter prokaryote annotations by PAINT node, since one deep node yields many rows.
