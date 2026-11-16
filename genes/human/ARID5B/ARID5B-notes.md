@@ -25,6 +25,8 @@
 
 ## 4. Existing Annotation Decisions
 - **`GO:0000976` (`IBA` from `PTN000359478` & `IDA` from `PMID:21532585`), `GO:0003713` (`IDA` from `PMID:21532585`), `GO:0000122` (`IDA` from `PMID:8649988`), `GO:0006357` (`IBA` from `PTN000359478`), `GO:0045815` (`IDA` from `PMID:21532585`), `GO:0005654` (`TAS` x2) -> `ACCEPT`**.
-- **`GO:0003677` (`EXP`, `IDA`, `IEA`), `GO:0045892` (`TAS`), `GO:0045893` (`IEA`), `GO:1902494` (`catalytic complex`, `IPI`) -> `TOO_GENERAL`** (subsumed by specific `GO:0000976`, `GO:0000122`, and `GO:0003713`/`GO:0045815`, or `KEEP_AS_NON_CORE` on `GO:1902494` since `PHF2-ARID5B` lacks its own specific GO complex term — YES! `KEEP_AS_NON_CORE` on `GO:1902494` because no more specific `PHF2-ARID5B` complex term is asserted in the review, whereas `TOO_GENERAL` requires a more specific asserted descendant in the same ontology!).
+- **`GO:0045893` (`IEA`) -> `MODIFY` to `GO:0045944` (`positive regulation of transcription by RNA polymerase II`)** based on direct PHF2-ARID5B Pol II promoter coactivation at *Pepck*, *G6pc*, *Col2a1*, and *Agc1* (`PMID:21532585`, `PMID:24276541`).
+- **`GO:0003677` (`EXP`, `IDA`, `IEA`) & `GO:0045892` (`TAS`) -> `TOO_GENERAL`** (subsumed by specific `GO:0000976` and `GO:0000122`).
+- **`GO:1902494` (`catalytic complex`, `IPI`) -> `KEEP_AS_NON_CORE`** (genuine PHF2-ARID5B catalytic demethylase complex membership without a more specific asserted GO complex descendant).
 - **7 bare `GO:0005515` (`protein binding`, `IPI`) rows (`PMID:21532585`, `PMID:23752268`, `PMID:26496610`, `PMID:28514442`, `PMID:33961781`, `PMID:35271311`, `PMID:40205054`) -> `REMOVE`** per `protein_binding_policy.py` (uninformative generic protein binding).
 - **`GO:0005634` (`IBA`, `IEA`), `GO:0001889` (`liver development`, `TAS`), `GO:0060612` (`adipose tissue development`, `IEA`, `ISS`) -> `KEEP_AS_NON_CORE`**.
