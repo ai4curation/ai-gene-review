@@ -321,6 +321,12 @@ wrong-gene-leads *args="":
 function-requirements command *args="":
     uv run python -m ai_gene_review.tools.function_requirements {{command}} {{args}}
 
+# Report structural anomalies in cached GO-CAM models (see docs/gocam_lint.md)
+# Example: just gocam-lint 59cc772c00000000
+# Example: just gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+gocam-lint *args="":
+    uv run ai-gene-review gocam-lint {{args}}
+
 # Check GO-CAM activity locations against the disjoint compartment model
 # (unresolved occurs_in terms; causal edges between non-adjacent compartments)
 # Example: just gocam-compartments 59cc772c00000000
@@ -1388,6 +1394,14 @@ validate-quotes *args:
 [group('QC')]
 local-quote-baseline *args:
     uv run python scripts/local_quote_baseline.py {{args}}
+
+# List kept MF terms whose GO EC class contradicts the protein's UniProt EC
+# (e.g. a "synthase" term on a "synthetase"). Same rule as the ec_class_conflict
+# warning in `just validate`; writes reports/ec-class-conflicts.tsv (git-ignored).
+# Example: just ec-class-audit genes/PSEPK/PP_2213/PP_2213-ai-review.yaml
+[group('QC')]
+ec-class-audit *files:
+    uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
 
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
