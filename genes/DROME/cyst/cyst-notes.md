@@ -4,7 +4,7 @@
 - **Gene symbol / FlyBase ID**: `cyst` (*cysts*; synonyms `CG10188`, `Dp114RhoGEF`; `FB:FBgn0032796`).
 - **UniProtKB record**: `UniProtKB:M9PBE1` (`M9PBE1_DROME`, sequence version `1`, 1,334 aa; isoform B of CG10188). Alternative *Drosophila* UniProt entries for the same locus include `Q9VIV0` (1,288 aa) and `Q8MQR4`.
 - **PANTHER 19.0 classification**: `PANTHER:PTHR13944:SF21` (*RHO GUANINE NUCLEOTIDE EXCHANGE FACTOR CYSTS*), representing the single-copy invertebrate/protostome ortholog of the four vertebrate Lbc-family RhoGEFs (`ARHGEF18`/p114RhoGEF in `SF23`, `ARHGEF2`/GEF-H1 in `SF20`, `ARHGEF28`/p190RhoGEF in `SF22`, and `AKAP13`/AKAP-Lbc in `SF18`) [PMID:31409654].
-- **MOD description status**: `ai-gene-review mod-description-deep-research DROME cyst` returned `no_curated: 1` (FlyBase currently has no hand-written gene snapshot/summary text for `FBgn0032796`).
+- **MOD description status**: `just mod-description-deep-research DROME cyst` (`ai-gene-review mod-description-deep-research DROME cyst`) queried Alliance `/api/gene/FB:FBgn0032796` and returned `no_curated: 1` (`FB:FBgn0032796 has no curated description` — FlyBase `FBgn0032796` has only an automated GO-derived synopsis and no hand-written `MOD_provided_gene_description` gene snapshot), so per `AGENTS.md` no `cyst-deep-research-flybase.md` file was fabricated.
 
 ## 2. Domain Architecture & Catalytic Residue Conservation (`M9PBE1`, `sv=1`, 1,334 aa)
 - **N-terminal C1-like zinc finger**: `343-CDVC-346` (`Cys343` aligns with `Cys53` of human `ARHGEF2` `Q92974`, `site_ref: PANTHER:PTHR13944#c1_zn_finger_cys53`).
