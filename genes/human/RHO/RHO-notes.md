@@ -193,3 +193,77 @@ QuickGO, queried 2026-11-16 for the mouse donor rows:
 ### 5.4 PAINT
 
 `just paint-losses human RHO` (2026-11-16): "No IRD or IKR loss on this gene's lineage."
+
+## 6. Papers I cached myself (2026-11-16) and what they show
+
+All were confirmed by PubMed esummary before fetching. Abstract-only unless stated.
+
+- PMID:11773008 (Liu 2002, IOVS): RP1 localization in human and mouse retina; the
+  probable intended reference of the PMID:11767049 rows (section 5.1).
+- PMID:31924821 (Roy 2020, Sci Rep; full text): rhodopsin immunostaining in mouse and
+  human sperm (section 5.3).
+- PMID:19153612 (Mazelova 2009, EMBO J): [PMID:19153612 "the newly identified ciliary
+  targeting VxPx motif present in rhodopsin binds the small GTPase Arf4 and regulates its
+  association with the trans-Golgi network (TGN), which is the site of assembly and
+  function of a ciliary targeting complex"]. Frog retina and transgenic Xenopus; the
+  abstract does not name the species. This is the evidence behind the Reactome
+  trafficking events.
+- PMID:9892703 (Lem 1999, PNAS; mouse knockout): [PMID:9892703 "Retinas in mice lacking
+  both opsin alleles initially developed normally, except that rod outer segments failed
+  to form"]. Rhodopsin is needed to build the outer segment; heterozygotes have
+  [PMID:9892703 "half the normal complement of rhodopsin"] and rods
+  [PMID:9892703 "approximately 50% less sensitive to light"].
+- PMID:30514708 (Scott 2019, Genetics): direct functional assay of the human protein:
+  [PMID:30514708 "we successfully engineered, for the first time, activation by human
+  rhodopsin of the yeast mating pathway, resulting in signaling via a fluorescent
+  reporter"]. Light-dependent G protein signalling by human rhodopsin in a heterologous
+  cell.
+- PMID:10926528 (Palczewski 2000, Science): bovine rhodopsin crystal structure.
+  [PMID:10926528 "The ground-state chromophore, 11-cis-retinal, holds the transmembrane
+  region of the protein in the inactive conformation"]. The abstract does not say
+  "bovine"; the species is known from the paper and from PDB 1F88, not from the cache.
+- PMID:7846071 (Sieving 1995, PNAS): human G90D kindred. [PMID:7846071 "Absolute
+  threshold for visual perception was elevated nearly 3 logarithmic units in 7
+  individuals tested (ages 11-64), indicating greatly compromised rod threshold
+  signaling"]. Human in vivo evidence that the gene is needed for dim-light vision.
+- PMID:2447095 (Molday 1987, J Cell Biol): bovine rod outer segments.
+  [PMID:2447095 "In disk membranes rhodopsin appeared as the only major protein"] and
+  [PMID:2447095 "the ROS plasma membrane contained about half as much rhodopsin as disk
+  membranes"]. Direct evidence (bovine) for both the disc membrane and the outer segment
+  plasma membrane.
+- PMID:28524165 (He 2017, Cell Res; full text; UniProt-cited): human rhodopsin and human
+  GRK1. [PMID:28524165 "GRK1 phosphorylates light-activated Rho and initiates a series
+  of events that lead to rapid quenching of the receptor signaling18"].
+- PMID:31300275 (Gao 2019, Mol Cell; full text, already in the cache): bovine rhodopsin
+  in native ROS membranes with transducin. [PMID:31300275 "Rhodopsin (Rho), a
+  prototypical G-protein-coupled receptor (GPCR) in vertebrate vision, activates the
+  G-protein transducin (GT) by catalyzing GDP-GTP exchange on its α subunit (GαT)"].
+
+## 7. Module and GO-CAM
+
+- `modules/visual_phototransduction.yaml`, annoton `rho_photoreceptor_activity`:
+  function GO:0008020 G protein-coupled photoreceptor activity, target GNAT1, process
+  GO:0141190 transducin-mediated opsin signaling pathway, location GO:0120202 rod
+  photoreceptor disc membrane.
+- `gocams/6918f23700000035/`: activity enabled by P08100 with GO:0008020, occurs_in
+  GO:0120202, part_of GO:0141190, directly positively regulating the GNAT1 G protein
+  activity.
+- My core function uses the same three terms, so it agrees with both.
+
+## 8. Deep-research report (lead only)
+
+`RHO-deep-research-openscientist.md` was read once as a source of leads. I opened only
+PMID:10926528 from its citation list; the other PMIDs in it were not opened and are not
+cited. Its statements about bovine structures, single-photon noise, the visual cycle and
+PDE6 are about the pathway rather than about annotations on this gene.
+
+## 9. Not verified
+
+- Species of the opsin used in PMID:8107847 and PMID:2218504 (abstract-only; probably the
+  synthetic bovine gene).
+- Results sections of PMID:19934218 (cache has Introduction and Discussion only), so the
+  EDEM1 co-immunoprecipitation and the retinal staining behind the outer and inner
+  segment membrane rows were not read; species of the retina not seen.
+- Full text of PMID:11773008, PMID:23793062, PMID:17693260, PMID:12754272, PMID:23704327.
+- Species of the rhodopsin cDNA in the PMID:25664179 reporter.
+- Figure panels of PMID:31730232 for OPN2.

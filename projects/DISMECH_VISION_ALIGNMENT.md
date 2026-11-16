@@ -609,6 +609,11 @@ Updated 2026-11-16.
 
 ## 2026-11-16
 
-Project started. The first audit ran over dismech `0669e13e5` and ai-gene-review
-`ba3c1b4ad`, before any review was written. Deep research by Falcon failed to
-authenticate; OpenScientist works and is used instead.
+Project started. The committed audit report is the baseline: it ran over dismech
+`0669e13e5` and ai-gene-review `d6828d1c9`, after gene data had been fetched for the 22
+unreviewed tranche 1 genes (their seeded stubs count as INITIALIZED reviews, which is why
+the table shows fewer `NO_AIGR_REVIEW` rows than the 104 unreviewed genes the project
+started with) and before any annotation had been reviewed. Deep research by Falcon
+failed to authenticate; OpenScientist works and is used instead. The instructions given
+to the workers who write the gene reviews and who align the dismech entries are in
+`projects/DISMECH_VISION_ALIGNMENT/briefs/`.

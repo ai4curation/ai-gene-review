@@ -149,4 +149,120 @@ PMID:10854264.
 
 ## 7. Papers fetched and read for this review
 
-(filled in below as each is read)
+Abstract-only unless marked full text. Species is stated for each because almost none of
+the biochemistry is on the human protein.
+
+Activation, effector and deactivation (bovine)
+- PMID:31300275 (Gao 2019, full text). Cryo-EM of light-activated bovine rhodopsin with
+  transducin (native bovine Gbeta1gamma1 and a recombinant GalphaT carrying 18 Galpha-i1
+  residues). [PMID:31300275 "activates the G-protein transducin (GT) by catalyzing GDP-GTP
+  exchange on its α subunit (GαT)"]. This is the IDA behind bovine G protein activity,
+  heterotrimer membership and GO:0141190.
+- PMID:33007200 (Gao 2020, full text). Cryo-EM of native bovine PDE6 with GTP-bound
+  recombinant GalphaT (GTPase-defective R174C/Q200L, same chimeric backbone).
+  [PMID:33007200 "The structure reveals two GαT·GTP subunits engaging the PDE6
+  hetero-tetramer at both the PDE6 catalytic core and the PDEγ subunits, driving extensive
+  rearrangements to relieve all inhibitory constraints on enzyme catalysis"]. Effector is
+  PDE6, via the gamma subunits. Deactivation: [PMID:33007200 "The RGS9 complex involved in
+  deactivating GTP-bound GαT is attached to the membrane by the RGS9 anchor protein (R9AP)"].
+- PMID:16469737 (Majumdar 2006). Chimeric alpha-T* with R174C or Q200L: [PMID:16469737
+  "both the alpha(T)*(R174C) and alpha(T)*(Q200L) mutants exhibited severely compromised
+  GTPase activity"] yet [PMID:16469737 "both stimulated effector activity in the absence
+  of rhodopsin and Gbetagamma"]. Gln-200 is the residue changed in the human Q200E family.
+- PMID:2538446 (Kroll 1989). Source of the bovine IDA rows for GDP binding and for
+  "negative regulation of cyclic-nucleotide phosphodiesterase activity". The experiment:
+  [PMID:2538446 "the addition of the pure alpha T.GDP species to the trypsin-treated PDE
+  (tPDE) results in a significant (90-100%) inhibition of the enzyme activity"]. The same
+  abstract records the activating role: [PMID:2538446 "alpha T.GTP gamma S] which elicits
+  a marked stimulation of the native enzyme activity"]. So the "negative regulation" row
+  is an in vitro effect of the GDP-bound form on protease-activated PDE; the physiological
+  relation of GTP-bound transducin to PDE6 is activation. GO has no live positive
+  counterpart: GO:0051343 (positive regulation of cyclic-nucleotide phosphodiesterase
+  activity) is obsolete in QuickGO; GO:0051344 is still live.
+- PMID:8552184 (Lambright 1996). Crystal structure of the transducin heterotrimer
+  (bovine; chimeric alpha). [PMID:8552184 "The structure of a heterotrimeric G protein
+  reveals the mechanism of the nucleotide-dependent engagement of the alpha and beta gamma
+  subunits that regulates their interaction with receptor and effector molecules"].
+- PMID:11024022 (Natochin 2000, AGS3; donor of bovine GTP/GDP binding IMP): fetch failed,
+  not read.
+
+Lipid anchor and membrane attachment
+- PMID:9498812 (Neubert and Hurley 1998, bovine). [PMID:9498812 "The N-terminal glycine
+  of transducin alpha subunits is acylated by lauroyl (C12:0), myristoyl (C14:0),
+  (cis-delta5)-tetradecaenoyl (C14:1) or (cis,cis-delta5,delta8)-tetradecadienoyl (C14:2)
+  fatty acyl groups"]. This is covalent N-acylation of transducin alpha, and it is the only
+  source of the `acyl binding` row. GO:0005488 binding is defined in QuickGO as "The
+  selective, non-covalent, often stoichiometric, interaction of a molecule with one or more
+  specific sites on another molecule", so a covalently attached acyl chain is not acyl
+  binding by the modified protein.
+- PMID:17881533 (Kerov 2007, mouse transgenic G2A). [PMID:17881533 "In contrast to native
+  G alpha(t), which resides in the outer segments of dark-adapted rods, G alpha(t)G2A was
+  found predominantly in the inner compartments of the photoreceptor cells"];
+  [PMID:17881533 "N-acylation is critical for correct compartmentalization of transducin
+  and controls the rate of its deactivation"]. MGI takes GTPase activity IDA, G-beta/gamma
+  binding IDA and connecting cilium IDA from the full text, which I could not read.
+- PMID:21642972 (Zhang 2011, full text). UNC119 binds the acylated N terminus of transducin
+  alpha; pulldowns from bovine retina, a lauroylated bovine N-terminal peptide
+  (2-GAGASAEEKH-11, identical in human GNAT1 residues 2-11), mouse Unc119 knockout.
+  [PMID:21642972 "UNC119 bound Tα-GTP, inhibiting its GTPase activity, thereby providing a
+  stable UNC119-Tα-GTP complex capable of diffusing from the inner segment back to the
+  outer segment after light-induced translocation"]. UniProt's "myristoylation at Gly-2"
+  for the human protein rests on this peptide work.
+
+Localization and light-driven translocation
+- PMID:11931744 (Sokolov 2002, rat). [PMID:11931744 "Up to 90% of transducin translocates
+  from rod outer segments to other cellular compartments on the time scale of tens of
+  minutes"]; [PMID:11931744 "The reduction in the transducin content of the rod outer
+  segments is accompanied by a corresponding reduction in the amplification of the rod
+  photoresponse"]. RGD takes outer segment, inner segment, neuronal cell body, response to
+  light intensity (IDA) and G protein-coupled opsin signaling (IMP) from this paper.
+- PMID:17507570 (Rosenzweig 2007; mouse/other, donor of bovine "response to light
+  stimulus" IDA). [PMID:17507570 "In darkness, transducin is sequestered within the
+  membrane-enriched outer segments of the rod cell. In light, it disperses throughout the
+  entire neuron"]; [PMID:17507570 "When rod transducin is stimulated, its subunits
+  dissociate, leave outer segment membranes, and equilibrate throughout the cell"].
+- PMID:31696965 (Chaya 2019, mouse). Cul3-Klhl18 and Unc119 modulate rod transducin alpha
+  translocation; source of the mouse inner segment IDA.
+- PMID:11095744 (Calvert 2000, mouse Gnat1 knockout). [PMID:11095744 "Rod-driven components
+  were absent from the electroretinogram, whereas cone-driven components were retained"];
+  [PMID:11095744 "These results indicate that most if not all rods use a single transducin
+  type in phototransduction"].
+- PMID:1614872 (Fong 1992, human gene). [PMID:1614872 "the gene is transcribed by rod
+  photoreceptors into two species of mRNA, 1.3 kb and 2.4 kb in size"].
+
+Taste and other non-visual sites
+- PMID:7596440 (Ruiz-Avila 1995, rat and bovine material). [PMID:7596440 "rod transducin
+  is also present in vertebrate taste cells, where it specifically activates a
+  phosphodiesterase isolated from taste tissue"]; [PMID:7596440 "the bitter compound
+  denatonium in the presence of taste-cell membranes activates transducin but not Gi"].
+  The conclusion is stated as a suggestion: [PMID:7596440 "These results suggest that rod
+  transducin transduces bitter taste"]. This is the rat IDA behind the Ensembl bitter-taste
+  row; it is about rod transducin itself (not gustducin), in vitro with taste membranes.
+- PMID:7878085 (McLaughlin 1994, rat taste tissue cloning). Donor of rat "cGMP catabolic
+  process" IDA. The abstract shows cloning and expression only: [PMID:7878085 "alpha i-3,
+  alpha 14, alpha s, and alpha t-rod are more highly expressed in taste tissue than in the
+  surrounding nonsensory tissue"], and a proposal: [PMID:7878085 "We propose that gustducin
+  and transducin regulate phosphodiesterase activity in taste cells"].
+- PMID:17495045 (Mace 2007, rat jejunum). Donor of rat "apical plasma membrane" IDA. The
+  abstract speaks of "transducin" without saying rod or cone alpha: [PMID:17495045 "T1Rs
+  are colocalized with each other and with alpha-gustducin, transducin or phospholipase C
+  beta2 to different extents"]. Enterocyte/brush-cell staining, full text not read.
+- PMID:10854264 (Kasahara 2000, chicken pineal). [PMID:10854264 "the pineal Gt(1)alpha is
+  activated in a light-dependent manner in the presence of GTPgammaS"]. Donor of the AgBase
+  ISS rows (response to light stimulus, membrane).
+
+Other
+- PMID:11032890 (Bell 2000, bovine ROS; rat retina in vivo). [PMID:11032890 "Several
+  tyrosine-phosphorylated proteins, including Src, coimmunoprecipitated with Talpha"];
+  site mapped [PMID:11032890 "to Tyr(142) in the helical domain of Talpha"]. Donor of
+  "protein kinase binding". The functional consequence is not established:
+  [PMID:11032890 "Talpha was also tyrosine-phosphorylated in vivo in rat retina, but this
+  phosphorylation was not affected by light"].
+
+## 8. Ontology checks (QuickGO)
+
+- GO:0003925 G protein activity is_a GO:0003924 GTPase activity (ancestor list read).
+- GO:0141190 definition names transducin, PDE and CNG-channel closure; it is the specific
+  pathway term for this gene.
+- GO:0120202 rod photoreceptor disc membrane: the discs are separated from the ciliary and
+  plasma membrane.
