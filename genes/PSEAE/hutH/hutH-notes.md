@@ -79,3 +79,30 @@
 ## Full-text check of PMID:4290562 (2026-11-05)
 
 The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810) was supplied by the user and read. Its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. Histidase is assayed directly, partly purified and characterised (about 210 kDa; Km for histidine 1.8 to 2 mM); no histidase-deficient structural mutant is described. The IMP-to-IDA WRONG_EVIDENCE_CODE defect is now CONFIRMED.
+
+## PANTHER tree check (2026-11-05)
+
+The node's family could not be resolved automatically (none of its IBD seeds has a
+PANTHER cross-reference in UniProt), so the family was taken from this gene's own UniProt
+record (`DR PANTHER; PTHR10362; HISTIDINE AMMONIA-LYASE`) and passed as
+`--family PTHR10362`. PTN002233700 is in that family, so the node is correctly placed.
+
+Ancestor path of the PA5093 leaf (`panther_tree.py`, PTHR10362):
+
+| Node | Event / taxon | Leaves | Note |
+|---|---|---|---|
+| PTN000796617 | SPECIATION, LUCA | 424 | family root |
+| PTN000796665 | SPECIATION, Eubacteria | 21 | the node carrying the GO:0004397 / GO:0006548 IBDs seeded by PA5098 |
+| PTN000796672 | SPECIATION, Proteobacteria | 11 | |
+| PTN001621799 | SPECIATION, Gammaproteobacteria | 10 | |
+| PTN002233699 | DUPLICATION | 2 | PA5093 + hutH, both P. aeruginosa, both PTHR10362:SF7 |
+| PTN002233700 | LEAF, P. aeruginosa | 1 (Q9HU90 PA5093) | target for the NOT annotations |
+| PTN002233701 | LEAF, P. aeruginosa | 1 (Q9HU85 hutH) | the seed gene |
+
+The topology confirms the defect and removes its one open alternative. PTN002233699 is a
+terminal, P. aeruginosa-specific DUPLICATION whose only two members are hutH and PA5093,
+so the IBAs on PA5093 are inherited directly from its own in-paralog, and there is no
+HutH1-type clade in PTHR10362 that a node-level NOT could cover. The NOT annotations for
+GO:0004397 and GO:0006548 belong at the leaf PTN002233700. Confidence raised PROBABLE ->
+CONFIRMED. Nothing in this review's own annotation actions changes: PA5098 is the
+functional histidase and its rows stand.

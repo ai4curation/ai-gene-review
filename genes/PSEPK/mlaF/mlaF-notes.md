@@ -17,3 +17,11 @@ acknowledges that "precisely how ATP hydrolysis is coupled to the direction and
 steps of lipid movement is still debated and not fully resolved". The review
 therefore assigns ATP hydrolysis directly to MlaF and direction-neutral
 intermembrane phospholipid transfer to the assembled system.
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Refine nucleotide binding to ATP binding and lipid transport to the specific process; locate the energy-coupling activity on the cytoplasmic face by qualified ortholog inference.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Existing genuine OpenScientist research was reused and preserved byte-for-byte; comparative mechanism is explicitly distinguished from target-specific assays.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.
