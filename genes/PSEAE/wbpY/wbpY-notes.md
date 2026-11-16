@@ -40,3 +40,9 @@ publications).
 |---|---|---|---|---|---|---|
 | PTN005302544 | GO:0016757 glycosyltransferase activity | 2 (WbpY, WbpX) | 60 (22 taxa) | GO:0016757 glycosyltransferase activity, IMP, PMID:9680202 | INDIRECT-PHENOTYPE (term correct) | As far as the abstract and the IMP code show (full text not read), the 1998 MF assignment rests on mutant LPS phenotype plus sequence similarity, not an activity assay. The term is nevertheless true: WbpY (and WbpX) were shown in vitro to be GDP-D-Rha rhamnosyltransferases (PMID:35166992). Node conclusion sound for a GT4 clade; re-seed with IDA from PMID:35166992. |
 | PTN000749272 | GO:0009103 lipopolysaccharide biosynthetic process | 1 (sole seed) | 51 (19 taxa) | GO:0009103 LPS biosynthetic process, IMP, PMID:9680202 | SOUND | Mutants lack A-band (CPA) LPS and WbpY itself catalyses a chain-extension step of the CPA O antigen, so participation in LPS biosynthesis is direct. LPS biosynthesis is a reasonable breadth for a WbbK-related GT4 subclade from O-antigen clusters; members in other species could instead make capsule or exopolysaccharide, which was not checked. |
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0016757 / PMID:9680202: defect withdrawn (evidence depth: ABSTRACT). PMID:9680202 is the correct wbpY paper (A-band rhamnan; wbpY mutant lacks A-band LPS), and an IMP MF from that phenotype uses the right reference. Nothing in the source record is identifiably wrong - the entry was only a curation-improvement note ("direct evidence now exists in 35166992; please add an IDA and consider retiring the IMP"). Per the "disagreement with curator judgement is not a source defect" rule, removed the source_defects block. The MODIFY to GO:0016758 (hexosyltransferase) stands on the direct D-RhaT assays of 35166992.

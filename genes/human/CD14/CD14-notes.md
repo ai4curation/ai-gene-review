@@ -91,3 +91,14 @@ CD14-dependent cytosolic LPS delivery for the non-canonical (caspase-11/4/5) inf
 (Vasudevan 2022, Cell Rep), and flotillin-dependent CD14 trafficking through early endosomes,
 recycling endosomes and TGN (Matveichuk 2024). None of these primary papers were cached, so no
 NEW annotations were proposed from them.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Rows: GO:0005794 IDA (PMID:16880211) and GO:0005794 IEA (GO_REF:0000044, SL-0132). Both `located_in`.
+
+Checks:
+- PMID:16880211 is abstract-only and has no PMC record (checked with the PubMed ID converter). The abstract says "All TLR2 receptor clusters accumulate in lipid rafts and are targeted to the Golgi apparatus" and "Activation occurs at the cell surface"; it does not name CD14 or the Golgi marker.
+- UniProt (curated, ECO:0000269 PubMed:16880211): "these clusters trigger signaling from the cell surface and subsequently are targeted to the Golgi in a lipid-raft dependent pathway (PubMed:16880211)" and "Golgi apparatus {ECO:0000269|PubMed:16880211}". The IEA maps that root-only line.
+- CD14 is GPI-anchored and secreted; the Golgi pool is a ligand-induced trafficking destination (plus biosynthetic transit), not residence.
+
+Outcome: both rows stay KEEP_AS_NON_CORE on curator deference (close alternative MARK_AS_OVER_ANNOTATED as a transit pool); the partner-only abstract quote was replaced by the UniProt quotes that name the CD14-containing clusters. Root only. Added a `file:human/CD14/CD14-uniprot.txt` reference entry. The full text's Golgi marker would settle TGN vs stack.

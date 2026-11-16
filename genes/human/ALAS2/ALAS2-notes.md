@@ -265,3 +265,15 @@ quoted passages now have local source records and pass exact normalized-text
 checks. With no outstanding citation-cache gate, status is COMPLETE. No
 biological action, core term, machine-fetched source or published history was
 rewritten.
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+- UNDECIDED resolved: GO:0032364 intracellular oxygen homeostasis (NAS, PMID:16234850) ->
+  MARK_AS_OVER_ANNOTATED. The readable abstract shows ALAS2 is regulated by oxygen (normoxic
+  vHL association, ubiquitination, proteasomal degradation; hypoxia stabilizes it), which is
+  captured by response to hypoxia; it does not show ALAS2 maintaining a steady intracellular
+  oxygen level (GO definition: "A homeostatic process involved in the maintenance of a steady
+  state level of oxygen within a cell.").
+- porphyrin-containing compound metabolic process and tetrapyrrole biosynthetic process
+  (InterPro2GO) -> MODIFY to heme biosynthetic process (reasons already called them general).
+- PANTHER PTHR13693:SF58 added as support on the IBA rows.

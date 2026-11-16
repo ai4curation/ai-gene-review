@@ -108,3 +108,9 @@ file exists for this gene. The notes below come from the cached publications in
   divalent-metal binding residues (ECO:0000255). GT7 enzymes typically use Mn2+ with
   UDP-sugar donors, but there is no CSGALNACT1-specific metal data in the cached
   sources. Kept as non-core.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0000139 / PMID:11514575: defect retyped (evidence depth: ABSTRACT). Abstract of PMID:11514575 explicitly states an 802-aa, chromosome-15 chondroitin synthase; UniProt Q86X52 (CHSY1) is 802 aa and cites the paper, Q8TDX6 is 532 aa and does not; QuickGO shows CHSY1 already carries this paper's IDA rows. Full text unreachable (JBC 403). Retyped to WRONG_GENE_PRODUCT (CHECK, corrected Q86X52): the row is one of nine same-day Q8TDX6 rows from this CHSY1 paper, so the paper was intended and the protein is wrong; re-citing PMID:11788602 is kept as the alternative. Cause UNKNOWN added.
