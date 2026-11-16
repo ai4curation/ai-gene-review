@@ -1,8 +1,8 @@
 ---
 title: "Actin Dynamics: Process Terms to Molecular Functions"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
-species: [human, yeast, SCHPO, DROME]
+species: [human, mouse, yeast, SCHPO, DROME]
 collections: [GO_TRACKER_BACKLOG]
 ---
 
@@ -16,10 +16,24 @@ now exist (GO:0003789 *actin filament severing activity*, restored in 2022,
 and GO:7770064 *actin-filament cross-linking activity*, created 2026-04-16).
 None of the process terms they replace has been obsoleted. Nucleator and
 polymerase MFs are still missing, blocked on design questions. In this repo,
-94 rows on 50 reviewed genes use the affected terms. Most are ACCEPTed
-process rows that would need a per-gene MF decision. That decision is what
-the cross-linking and severing obsoletions are waiting for. Scoped, not
-started.
+94 rows on 50 reviewed genes use the affected terms.
+
+Cross-linking is now done on our side. All 24 experimental GOA rows on
+GO:0051764 *actin crosslink formation* have been checked against their papers
+in a [reannotation table](ACTIN_DYNAMICS_MF_REFACTORING/crosslinking_reannotation.yaml):
+
+- **16 rows** show the protein cross-linking or bundling filaments, so they
+  move to GO:7770064.
+- **3 rows** are knockdown or deletion phenotypes that belong on a process
+  term.
+- **4 rows** need the curator or the full text.
+- **1 row**, rat troponin T, is a wrong-sense annotation from a paper about
+  myosin cross-bridges.
+
+Four PAINT nodes give the term to the other 268 phylogenetic (IBA) rows, and
+the electronic rows follow those nodes. The table says what each node should
+carry. Five reviews in this repo now carry GO:7770064 in place of the process
+term. Severing, nucleation and polymerase are not started.
 
 ## Upstream tickets
 
@@ -70,7 +84,7 @@ summaries are as of 2026-11-16. Nothing has been posted to these issues.
 ## What this repo already has
 
 Rows in `existing_annotations` across all reviews, by action, computed
-2026-11-16 with
+2026-11-16 after the cross-linking edits, with
 [`term_actions.py`](GO_TRACKER_BACKLOG/term_actions.py). "Core in" counts
 reviews naming the term in `core_functions`.
 
@@ -81,9 +95,9 @@ reviews naming the term in `core_functions`.
 | GO:1903919 negative regulation of actin filament severing | 3 | 1 | 0 | 0 | 0 | 3 | 0 | 0 |  | 0 |
 | GO:0071846 actin filament debranching | 4 | 2 | 4 | 0 | 0 | 0 | 0 | 0 |  | 2 |
 | GO:0030043 actin filament fragmentation | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |  | 0 |
-| GO:7770064 actin-filament cross-linking activity | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |  | 1 |
-| GO:0051764 actin crosslink formation | 10 | 7 | 7 | 1 | 0 | 0 | 0 | 1 | NEW 1 | 4 |
-| GO:0051017 actin filament bundle assembly | 14 | 12 | 7 | 3 | 0 | 1 | 0 | 1 | NEW 2 | 5 |
+| GO:7770064 actin-filament cross-linking activity | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | NEW 1 | 3 |
+| GO:0051764 actin crosslink formation | 9 | 6 | 1 | 0 | 7 | 0 | 0 | 1 |  | 1 |
+| GO:0051017 actin filament bundle assembly | 14 | 12 | 7 | 3 | 0 | 1 | 0 | 1 | NEW 2 | 6 |
 | GO:0045010 actin nucleation | 2 | 2 | 0 | 0 | 1 | 0 | 0 | 0 | NEW 1 | 1 |
 | GO:0034314 Arp2/3 complex-mediated actin nucleation | 16 | 5 | 16 | 0 | 0 | 0 | 0 | 0 |  | 5 |
 | GO:0030041 actin filament polymerization | 21 | 17 | 10 | 6 | 3 | 2 | 0 | 0 |  | 5 |
@@ -96,12 +110,16 @@ GO:1903920 and GO:0070060 have no rows.
 
 What stands out:
 
-- **Our reviews accept the process terms GO wants to retire.** All 16 rows
+- **Our reviews accepted the process terms GO wants to retire.** All 16 rows
   on GO:0034314 are ACCEPT across ARPC1B, ARPC4, ARPC5 and DROME SCAR and
-  wash, and seven of ten GO:0051764 rows are ACCEPT, on FLNA, BAIAP2,
-  BAIAP2L1 and DPYSL3. These are MF_in_BP cases: process terms that
-  describe one protein's activity. Each row should carry an MF instead, once
-  one exists.
+  wash. Before this round, seven of ten GO:0051764 rows were ACCEPT too.
+  These are MF_in_BP cases: process terms that describe one protein's
+  activity. Each row should carry an MF instead, once one exists. For
+  cross-linking it now does:
+  - seven GO:0051764 rows are MODIFY to GO:7770064 (BAIAP2, BAIAP2L1,
+    DPYSL3, DROME wash);
+  - FLNA's row is left as accepted;
+  - BAIAP2L2's row stays UNDECIDED.
 - **One review already uses GO:7770064 as a core MF** (human/ESPN), and
   human/AFAP1's review cites it as supported, so the cross-linking replacement
   has been exercised here. Likewise human/CFL2 already names GO:0003789 as its
@@ -130,8 +148,11 @@ What stands out:
 
 ### Re-check existing reviews (process rows that need an MF decision)
 
-- [ ] human/FLNA, BAIAP2, BAIAP2L1, BAIAP2L2, DPYSL3; DROME/wash; and the
-      mouse/Afap1l2 NEW row: GO:0051764, decide GO:7770064 vs GO:0051015
+- [x] human/BAIAP2, BAIAP2L1, DPYSL3; DROME/wash; and the mouse/Afap1l2 NEW
+      row: GO:0051764 rows moved to GO:7770064 (2026-11-16)
+- [ ] human/FLNA: GO:0051764 IDA row (PMID:10051605) left as accepted
+      pending the full text; see the CHECK entry in the table
+- [ ] human/BAIAP2L2: GO:0051764 IBA row left UNDECIDED, as its review chose
 - [ ] human/CFL2 (GO:0051014 ACCEPT beside a GO:0003789 core MF), CAPG
       (GO:0051014 REMOVE), MYH9 (GO:1903919 marked over-annotated): severing
 - [ ] human/GMFB, GMFG: GO:0071846, decide GO:0140775
@@ -148,16 +169,25 @@ What stands out:
 - [ ] Nucleators and polymerases: human ACTR2, ACTR3, ARPC2, ARPC3, VASP,
       ENAH, FMN2; SCHPO for3, fus1
 
-### Deliverable
+### Deliverables
 
-A per-gene table (gene, current process row, proposed MF, evidence) for the
-cross-linking and severing rows, kept in this project folder and offered to
-the issue owners. Nothing is posted to the tracker without a decision by the
-project lead.
+- [x] Cross-linking: [crosslinking_reannotation.yaml](ACTIN_DYNAMICS_MF_REFACTORING/crosslinking_reannotation.yaml).
+      One entry per experimental GOA row on GO:0051764 (24 rows, 22 gene
+      products), each with a verdict, a proposed term and verbatim quotes
+      checked by `just validate-quotes`, plus the four PAINT nodes and their
+      seeds.
+- [ ] Severing and fragmentation: the same table for GO:0051014, its
+      regulation terms, GO:0071846 and GO:0030043.
+
+The tables are kept here and offered to the issue owners. Nothing is posted
+to the tracker without a decision by the project lead.
 
 ## STATUS
 
-- 2026-11-16: project scoped from the GO tracker backlog. No reviews started.
+- 2026-11-16: project scoped from the GO tracker backlog.
+- 2026-11-16: cross-linking reannotation table done (24 rows: 16 MIGRATE_TO_MF,
+  3 PROCESS_ONLY, 4 CHECK, 1 WRONG_SENSE). Five reviews updated to GO:7770064.
+  Severing, nucleation and polymerase not started.
 
 ## NOTES
 
@@ -170,3 +200,30 @@ project lead.
   migrated.
 - `genes/yeast/FMN1` is riboflavin kinase, not a formin. Do not queue it
   here.
+
+### 2026-11-16 (cross-linking)
+
+- Retrieved the 24 experimental GOA rows on GO:0051764 from QuickGO. Cached
+  the 18 cited papers that were missing. Judged each row on what its paper
+  shows the protein doing.
+- The term carries 12,659 GOA rows in all:
+  - 11,853 are TreeGrafter IEA;
+  - 478 are Ensembl Compara IEA;
+  - 268 are IBA from four PAINT nodes, each with one seed;
+  - the remaining 60 are the 24 experimental rows, 33 ISS (11 of them ISO),
+    two other IEA and one NAS.
+
+  The four nodes are PTN005319067 (seed Dictyostelium Trix/gxcB; it also
+  covers the GAS2 family and calponin), PTN001022094 (seed mouse Baiap2),
+  PTN002616333 (seed rat Dpysl3) and PTN002200687 (seed Dictyostelium abpB).
+  Three should simply carry GO:7770064. The GAS2/calponin node is a placement
+  question for PAINT.
+- Rat Tnnt2 (RGD IDA, PMID:16443664) is about sarcomere length-dependent
+  recruitment of myosin cross-bridges. It is the clearest wrong-sense row.
+  Mouse Marcks (CAFA IDA, PMID:15640140) cites an abstract saying intact
+  MARCKS does not bind actin, so it is marked CHECK rather than REMOVE.
+- In the reviews here, the GO:0051764 rows moved by MODIFY are lateral
+  MF_in_BP corrections, not refinements. The three IBA rows carry a
+  `propagation_review` with root cause TERM_SCOPING_PROBLEM. BAIAP2 and
+  Afap1l2 now name GO:7770064 as their core MF. Neither the DPYSL3 nor the
+  BAIAP2 core function lists GO:0051764 as a process any more.
