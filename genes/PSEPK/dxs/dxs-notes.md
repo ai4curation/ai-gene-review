@@ -29,3 +29,4 @@ PTHR43322:SF5).
 
 ## 2026-11-15 merge reconciliation
 - GO:0016114 terpenoid biosynthesis: changed to KEEP_AS_NON_CORE, superseding the MARK_AS_OVER_ANNOTATED entry above. The MEP isoprenoid precursor module review (merged on main) set the same row to KEEP_AS_NON_CORE on KT2440 ispE/F/G/H and the E. coli orthologs, because IPP and DMAPP are the units all terpenoids are built from. Dxs is taken to the same standard so the pathway enzymes stay consistent.
+- GO:0016744 transketolase or transaldolase activity: reverted to KEEP_AS_NON_CORE, superseding the TOO_GENERAL entry above. The 2026-11-14 maintainer ruling reserves TOO_GENERAL for terms that are imprecise on their own; this is a respectably specific activity term, and the TreeGrafter row's evidence does not reach the DXS level, so the term is kept as non-core, matching the TreeGrafter re-review (projects/TREEGRAFTER/rereview-2026-09-24/batch-04.yaml).
