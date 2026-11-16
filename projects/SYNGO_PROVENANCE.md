@@ -103,21 +103,65 @@ GRIN2A, GRIN2B, GRIN2D and GRIN3B are not in this page's `genes:` list until the
 merge.
 
 Other human `GO:0099507` / `GO:1904315` SynGO rows on `main` (GRIA1, GRIA4, CHRNA1,
-CHRNB1, CHRND, CHRNE) were already reviewed as MODIFY or UNDECIDED; they are the next
-sample.
+CHRNB1, CHRND, CHRNE) were already reviewed as MODIFY or UNDECIDED. The audit below
+covers the `GO:0099507` ones.
+
+## Audit: every SynGO `GO:0099507` annotation
+
+[`SYNGO_PROVENANCE/term_audit_rows.py`](SYNGO_PROVENANCE/term_audit_rows.py) lists every
+SynGO annotation to the term in QuickGO, grouped by paper
+([`GO_0099507-rows.yaml`](SYNGO_PROVENANCE/data/term_audit/GO_0099507-rows.yaml), retrieved
+2026-11-16): 99 rows, 25 gene-product claims, 19 papers. Each paper was cached, read
+(abstract, or full text where cached), and checked with `reference_level.py`. The verdicts,
+each with a verbatim quote, are in
+[`GO_0099507-verdicts.yaml`](SYNGO_PROVENANCE/data/term_audit/GO_0099507-verdicts.yaml).
+
+| Verdict | Papers | Claims | Human claims |
+|---|---|---|---|
+| Supported (presynaptic function of the annotated gene) | 4 | 6 | 0 |
+| Wrong gene product (GRIN2B, PMID:19666514) | — | 1 | 1 |
+| No presynaptic context (channel studies, mostly HEK cells or oocytes) | 12 | 14 | 9 |
+| Postsynaptic context | 2 | 3 | 1 |
+| Wrong reference (an erratum notice) | 1 | 1 | 1 |
+| **Total** | **19** | **25** | **12** |
+
+The supported claims are all rodent: BK channels (Kcnma1) in hippocampal terminals, GluK2
+and GluK3 presynaptic autoreceptors at mossy fibre synapses, GABA-C receptors (Gabrr1) on
+rod bipolar cell terminals, and rat Grin1 and Grin2a at parallel fibre synapses. **None of
+the 12 human claims is supported.**
+
+Most of the unsupported claims come from biophysics or pharmacology of a receptor
+expressed in HEK cells or *Xenopus* oocytes. Those papers support ligand-gated channel
+activity, but say nothing about where in a synapse the channel acts. In 15 of the 19
+papers the word "presynaptic" does not occur in the cached text, and 17 of the 19 got
+the presynaptic term without the postsynaptic twin `GO:1904315`. A pattern this regular
+looks like a systematic choice, such as a default term for channel-function evidence,
+rather than 18 separate slips. It should go to SynGO as one question with this table,
+not as 18 row-level defect claims. The SynGO paper (PMID:31171447) documents no rule
+for heterologous-cell evidence; its portal is a JavaScript application with no bulk
+download reachable from here, so SynGO's own assay records were not compared.
+
+One reference is simply mis-keyed. PMID:8137830 is the 1994 erratum notice for the 1993
+EMBO J glycine receptor paper, PMID:8404844 (found by PubMed search, title confirmed). That
+paper is itself a HEK-293 study with no presynaptic content.
 
 ## Plan
 
 - [ ] For every human IDA/IMP SynGO claim (not a sample), record the species and cell
   system of the paper (neurons, heterologous cells, oocytes), from the cached abstract and
   full text.
-- [ ] For every `GO:0099507` and `GO:1904315` claim, check that the paper assays the
-  annotated subunit and a presynaptic (or postsynaptic) context. Both are precomposed
-  "X involved in Y" terms, so a row that survives the check is also decomposed under
+- [x] For every `GO:0099507` claim, check that the paper assays the annotated subunit and a
+  presynaptic context (done 2026-11-16; see the audit above).
+- [ ] Do the same for `GO:1904315` (124 rows; same scripts), checking for a postsynaptic
+  context. Both terms are precomposed "X involved in Y" terms, so a row that survives the
+  check is also decomposed under
   [INVOLVED_IN_PRECOMPOSITION](INVOLVED_IN_PRECOMPOSITION.md) (`review.decomposed_into`),
   as GRIA4's MODIFY rows already do; the CHRN MODIFY rows and GRIA1 do not yet record it.
 - [ ] For each suspected case, run `reference_level.py` (how SynGO annotated the whole
   paper) before recording a defect, as for PMID:19666514.
 - [ ] Re-run the inventory once the GRIN reviews merge.
+- [ ] Add a `SYNGO` value to `SourceResourceEnum` (schema change), so defects export under
+  SynGO's name rather than `OTHER`.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to
-  SynGO, with the ISO convention raised as a separate question.
+  SynGO, with two convention questions kept separate from the row-level defects: the ISO
+  question, and the use of `GO:0099507` for channel evidence without presynaptic context.
