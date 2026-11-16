@@ -54,3 +54,10 @@ remains abstract-only. Both WRONG_REFERENCE defects stay PROBABLE: the
 abstract states outright that the purified, assayed protein is Synechocystis
 ArsH. Not upgraded without the full text. Reference correctness changed
 from MISCITED to UNVERIFIED. No action changes.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0016655 / GO_REF:0000033: defect withdrawn (evidence depth: DB_RECORD). Nothing in the GO_Central/PAINT record is wrong (the entry itself said the IBD need not change) and the asserted PMID is not a field of the IBA row. It duplicated the PseudoCAP seed-row defect against a second resource. Defect removed; the seed problem stays in propagation_review and one sentence in reason.
+- GO:0016655 / PMID:22304305: defect retyped (evidence depth: ABSTRACT). Abstract of PMID:22304305 describes only Synechocystis ArsH; full text not obtainable. This is an ortholog result under IDA, so retyped to WRONG_EVIDENCE_CODE with CHECK (recode as ISS, or keep IDA and re-cite to PMID:26621870), and CONFIRMED -> PROBABLE because the claim is abstract-level. Slot added; REPOINT dropped.
