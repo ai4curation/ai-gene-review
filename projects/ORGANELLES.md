@@ -401,6 +401,14 @@ Lessons, adding to batch 1:
 - **UNDECIDED is now the most common change.** Six of the eleven changes are
   unreadable donors. That is the policy working, but it argues for a later pass
   that retrieves these papers rather than for loosening the line.
+- **reference_review convention.** `correctness` judges whether the identifier
+  resolves to the intended paper, so an abstract-only source whose Golgi content
+  cannot be read is VERIFIED, with the unreadability in `review_notes` (GFRA1
+  aligned after review; COQ6, CLU and DPAGT1 already followed it).
+- **Source defects, not prose.** A finding about the source (a stale paralog
+  transfer, a qualifier the evidence does not support) goes into
+  `source_defects` so `just export-source-defects` reports it: FGD4
+  (WRONG_WITH_FROM), DRC4 and CUL3 (WRONG_QUALIFIER, CHECK), added after review.
 - **Judgement calls to revisit:** FGD1 (ACCEPT is close: the TGN export role is
   shown in human cells), DYNLT1 and DNM1L (deference to abstracts that name
   markers), CSNK1D (ACCEPT, with the Golgi function from perturbation), CERKL
