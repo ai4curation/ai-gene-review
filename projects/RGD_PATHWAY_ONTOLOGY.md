@@ -1083,7 +1083,11 @@ Possible upstream errors found in this set:
 - Model the remaining pathways. The broad ones (RNA polymerase II, translation,
   ribosome biogenesis, the spliceosome and histone modification, plus RNA
   polymerase transcription and calcium-mediated signaling, which match only by
-  gene overlap) need a split plan first.
+  gene overlap) now have split plans in
+  [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
+  with a suggested order: Pol II core and Mediator, the cytoplasmic ribosome and
+  translation initiation, the spliceosome, Polycomb and COMPASS, then ribosome
+  biogenesis.
 - Add the obligatory PMCA subunits NPTN and BSG to
   `plasma_membrane_calcium_extrusion`.
 - Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
