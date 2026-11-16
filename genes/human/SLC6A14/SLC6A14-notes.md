@@ -21,4 +21,8 @@
   (GO:0003333, GO:0006865, GO:0015171) treated as ACCEPT; only bare parents TOO_GENERAL. Here the
   bare GO:0015370 solute:sodium symporter activity (ARBA) set to TOO_GENERAL (bare, unspecified
   solute), entailed by the curated GO:0015374 amino acid:Na:Cl symporter activity. GO:0016020
-  membrane rows remain TOO_GENERAL (refined by the apical plasma membrane term).
+  membrane: both rows are TOO_GENERAL here because their own (electronic) evidence stops at
+  "membrane", while the specific apical/plasma-membrane location is asserted on other rows. The
+  action for a membrane row follows whether that row's own evidence resolves the compartment —
+  MODIFY -> plasma membrane only where it does (see SLC6A15's IDA/NAS membrane rows), TOO_GENERAL
+  where it stops at membrane.
