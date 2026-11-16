@@ -2,43 +2,56 @@
 
 ``linkml-term-validator`` (LTV) checks term ids and labels cache-first: labels come
 from ``cache/<prefix>/terms.csv`` and dynamic-enum memberships from
-``cache/enums/*.csv``, and only a miss goes to the ontology service. When every
-term a file uses is in the committed cache, its term check needs no network, so
-an ontology-service outage cannot affect it (ai4curation/ai-gene-review#5731).
+``cache/enums/*.csv``, and only a miss goes to the ontology adapter. When every
+term a file uses is in the committed cache, its term check needs no ontology
+service, so an outage cannot affect it (ai4curation/ai-gene-review#5731).
 
 This tool measures that coverage. It runs LTV with ``--offline`` on the given
-files, which resolves only from the cache and reports each miss as an error,
-and sorts the misses into two kinds:
+files, which resolves only from the cache and reports each miss, and sorts what
+LTV reports into:
 
-* a **label miss**: ``Term 'X' not found in offline cache``;
-* an **enum-membership miss**: ``Cannot validate 'X' against dynamic enum 'E'
-  offline``.
+* **label misses**: ``Term 'X' not found in offline cache``;
+* **enum-membership misses**: ``Cannot validate 'X' against dynamic enum 'E'
+  offline``;
+* **label mismatches**: the cached label differs from the file's label. Offline,
+  this cannot tell a stale cache from a wrong label in the file: online CI
+  compares against the current ontology instead, and blocks on a real mismatch
+  (``scripts/run_term_validator.sh`` runs LTV strictly). Check which side is out
+  of date before editing a review;
+* **other findings**: any other error or warning, such as a term outside its enum.
 
-Any other error or warning is a real finding about the data (a wrong label, a
-term outside its enum, ...) and is listed separately as ``other_findings`` with
-its severity: it is not a coverage gap, and the online validators still report it
-in CI.
+A file the run did not account for (LTV crashed, could not read it, or printed
+something this parser does not recognise) is listed under ``unchecked_files``,
+and the report is then ``complete: false``: the tool fails closed, so a coverage
+gate can never pass because nothing was checked.
 
 Not every miss is an outage risk. ``conf/oak_config.yaml`` serves some prefixes
-from a local SQLite build (GO) and others from the EBI Ontology Lookup Service
-(``ols:``, e.g. NCBITaxon); only a miss on a service-backed prefix needs the
-network. Each miss is marked ``needs_network`` accordingly, and
-``--network-only`` restricts ``--check`` to those.
+from a SQLite build that oaklib downloads once and caches (GO, RHEA) and others
+from a remote service at validation time (``ols:``, e.g. NCBITaxon). Each miss is
+marked ``needs_network`` unless its adapter is a known local scheme (``sqlite:``,
+``simpleobo:``, ``pronto:``, ``obograph:``); an unknown scheme counts as remote.
+``--network-only`` restricts ``--check`` to the misses that need the network.
 
-``--warm`` first runs LTV online on the same files, which fills the cache with
-whatever the service can answer, and then measures coverage offline, so the
-report shows what is still missing after warming. Warming writes to the
-committed ``cache/``; review and commit the result like any other change.
+``--warm`` measures coverage, runs LTV online on the same files (which fills the
+cache with whatever the service can answer), and measures again, so the report
+shows the before/after miss counts and whether the online pass reached the
+service. Warming writes to the cache directory (the committed ``cache/`` by
+default); review the diff, run ``just lint-caches`` and commit it like any other
+change.
 
 Usage::
 
     uv run python -m ai_gene_review.tools.ontology_cache_coverage genes/human/TP53
     uv run python -m ai_gene_review.tools.ontology_cache_coverage --warm --check FILES...
 
-Gene reviews (``*-ai-review.yaml``), prediction reviews
-(``*-predictions-review.yaml``) and PANTHER family reviews
-(``interpro/panther/**/PTHR*-review.yaml``) are the document kinds CI checks with
-LTV, so those are the kinds this tool recognises.
+The tool recognises the three review kinds CI routes through
+``scripts/term_validate.sh``: gene reviews (``*-ai-review.yaml``), prediction
+reviews (``*-predictions-review.yaml``) and PANTHER family reviews
+(``interpro/panther/**/PTHR*-review.yaml``). The manual ``*2go`` mapping-set and
+Pfam-entry QA recipes in the justfile also run LTV, but outside CI.
+
+Exit codes with ``--check``: 0 covered, 1 cache misses, 2 incomplete run or bad
+arguments.
 """
 
 from __future__ import annotations
@@ -59,31 +72,40 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 GENE_SCHEMA = Path("src/ai_gene_review/schema/gene_review.yaml")
 FAMILY_SCHEMA = Path("src/ai_gene_review/schema/family_review.yaml")
 OAK_CONFIG = Path("conf/oak_config.yaml")
+DEFAULT_CACHE_DIR = Path("cache")
+BATCH_SIZE = 200
+LOCAL_ADAPTER_SCHEMES = frozenset({"sqlite", "simpleobo", "pronto", "obograph"})
 
 LABEL_MISS = re.compile(r"Term '(?P<curie>[^']+)' not found in offline cache")
 ENUM_MISS = re.compile(
     r"Cannot validate '(?P<curie>[^']+)' against dynamic enum '(?P<enum>[^']+)' offline"
 )
+LABEL_MISMATCH = re.compile(r"Label mismatch for '(?P<curie>[^']+)'")
 FILE_HEADER = re.compile(r"^(?:❌|✅) (?P<name>\S+\.ya?ml)(?: - \d+ issue\(s\):)?\s*$")
+SINGLE_FILE_RESULT = re.compile(r"^(?:✅ Validation passed|❌ Validation failed)")
 FINDING_LINE = re.compile(
     r"^\s*(?:❌ (?P<error>ERROR)|⚠️\s+(?P<warn>WARN)): (?P<message>.+)$"
 )
+OUTAGE_BANNER = re.compile(r"ontology service unavailable", re.IGNORECASE)
 
 
-def network_prefixes(config_path: Path = OAK_CONFIG) -> set[str]:
-    """Return the prefixes whose OAK adapter is a remote service (``ols:``).
+def remote_prefixes(config_path: Path) -> set[str]:
+    """Return the prefixes whose OAK adapter may contact a service at validation time.
 
-    >>> "NCBITaxon" in network_prefixes(PROJECT_ROOT / OAK_CONFIG)
-    True
-    >>> "GO" in network_prefixes(PROJECT_ROOT / OAK_CONFIG)
-    False
+    A prefix is local only when its adapter scheme is in ``LOCAL_ADAPTER_SCHEMES``;
+    ``null`` (skipped) prefixes are not validated at all.
+
+    >>> prefixes = remote_prefixes(PROJECT_ROOT / OAK_CONFIG)
+    >>> "NCBITaxon" in prefixes, "GO" in prefixes, "PMID" in prefixes
+    (True, False, False)
     """
     config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     adapters = config.get("ontology_adapters") or {}
     return {
         prefix
         for prefix, adapter in adapters.items()
-        if isinstance(adapter, str) and adapter.startswith("ols:")
+        if isinstance(adapter, str)
+        and adapter.split(":", 1)[0] not in LOCAL_ADAPTER_SCHEMES
     }
 
 
@@ -138,6 +160,7 @@ def document_kind(path: Path) -> DocumentKind | None:
 def expand_inputs(inputs: list[Path]) -> dict[DocumentKind, list[Path]]:
     """Group the given files, and the recognised files under given directories, by kind."""
     grouped: dict[DocumentKind, list[Path]] = defaultdict(list)
+    seen: set[Path] = set()
     for item in inputs:
         if item.is_dir():
             candidates = sorted(item.rglob("*.yaml"))
@@ -147,9 +170,58 @@ def expand_inputs(inputs: list[Path]) -> dict[DocumentKind, list[Path]]:
             raise FileNotFoundError(f"Input does not exist: {item}")
         for candidate in candidates:
             kind = document_kind(candidate)
-            if kind is not None and candidate not in grouped[kind]:
+            resolved = candidate.resolve()
+            if kind is not None and resolved not in seen:
+                seen.add(resolved)
                 grouped[kind].append(candidate)
     return dict(grouped)
+
+
+def batches(files: list[Path], size: int = BATCH_SIZE) -> list[list[Path]]:
+    """Split files into batches of at most ``size`` with no repeated basename.
+
+    LTV names each file in its output by basename only, so two files sharing a
+    basename (``rpoB-ai-review.yaml`` in several organisms) must never share a
+    batch, or their findings could not be told apart.
+
+    >>> [[p.as_posix() for p in b] for b in batches(
+    ...     [Path("a/x.yaml"), Path("b/x.yaml"), Path("a/y.yaml")], size=5)]
+    [['a/x.yaml', 'a/y.yaml'], ['b/x.yaml']]
+    >>> [len(b) for b in batches([Path(f"{i}.yaml") for i in range(5)], size=2)]
+    [2, 2, 1]
+    """
+    result: list[list[Path]] = []
+    names: list[set[str]] = []
+    for path in files:
+        for batch, batch_names in zip(result, names):
+            if len(batch) < size and path.name not in batch_names:
+                batch.append(path)
+                batch_names.add(path.name)
+                break
+        else:
+            result.append([path])
+            names.append({path.name})
+    return result
+
+
+@dataclass
+class WarmPass:
+    """Outcome of the online warming pass."""
+
+    batches: int = 0
+    outage_batches: int = 0
+    failed_batches: int = 0
+    misses_before: int = 0
+
+    def to_dict(self, misses_after: int) -> dict:
+        """Return a plain mapping for the report."""
+        return {
+            "online_batches": self.batches,
+            "outage_batches": self.outage_batches,
+            "failed_batches": self.failed_batches,
+            "misses_before": self.misses_before,
+            "misses_after": misses_after,
+        }
 
 
 @dataclass
@@ -157,22 +229,36 @@ class CoverageReport:
     """Cache misses and other term findings from an offline LTV run."""
 
     files_checked: int = 0
-    label_misses: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
-    enum_misses: dict[tuple[str, str], set[str]] = field(
+    label_misses: defaultdict[str, set[str]] = field(
         default_factory=lambda: defaultdict(set)
     )
+    enum_misses: defaultdict[tuple[str, str], set[str]] = field(
+        default_factory=lambda: defaultdict(set)
+    )
+    label_mismatches: list[tuple[str, str]] = field(default_factory=list)
     other_findings: list[tuple[str, str, str]] = field(default_factory=list)
+    unchecked_files: dict[str, str] = field(default_factory=dict)
     unattributed_output: list[str] = field(default_factory=list)
-    remote_prefixes: set[str] = field(default_factory=set)
+    remote: set[str] = field(default_factory=set)
+    warm: WarmPass | None = None
 
     @property
     def covered(self) -> bool:
-        """True when the cache answered every term check."""
+        """True when the cache answered every term check that ran."""
         return not self.label_misses and not self.enum_misses
+
+    @property
+    def complete(self) -> bool:
+        """True when every file was checked and all validator output was understood."""
+        return not self.unchecked_files and not self.unattributed_output
 
     def needs_network(self, curie: str) -> bool:
         """True when a miss on ``curie`` would go to a remote ontology service."""
-        return prefix_of(curie) in self.remote_prefixes
+        return prefix_of(curie) in self.remote
+
+    def miss_count(self) -> int:
+        """Count distinct label and enum-membership misses."""
+        return len(self.label_misses) + len(self.enum_misses)
 
     def network_misses(self) -> int:
         """Count the misses that would need a remote ontology service."""
@@ -182,8 +268,9 @@ class CoverageReport:
 
     def to_dict(self) -> dict:
         """Return a plain, deterministically ordered mapping for YAML output."""
-        return {
+        result: dict = {
             "files_checked": self.files_checked,
+            "complete": self.complete,
             "covered": self.covered,
             "misses_needing_network": self.network_misses(),
             "missing_labels": [
@@ -203,69 +290,120 @@ class CoverageReport:
                 }
                 for (curie, enum), files in sorted(self.enum_misses.items())
             ],
+            "label_mismatches": [
+                {"file": path, "message": message}
+                for path, message in sorted(self.label_mismatches)
+            ],
+            "label_mismatch_note": (
+                "Offline, a mismatch means the cached label differs from the file's: "
+                "the cache may be stale or the file may be wrong. Online CI compares "
+                "against the current ontology."
+            ),
             "other_findings": [
                 {"file": path, "severity": severity, "message": message}
                 for path, severity, message in sorted(self.other_findings)
             ],
+            "unchecked_files": [
+                {"file": path, "reason": reason}
+                for path, reason in sorted(self.unchecked_files.items())
+            ],
+            "unattributed_output": list(self.unattributed_output),
         }
+        if self.warm is not None:
+            result["warm"] = self.warm.to_dict(self.miss_count())
+        return result
 
 
 def parse_offline_output(
-    output: str, files: list[Path], report: CoverageReport
+    output: str, returncode: int, files: list[Path], report: CoverageReport
 ) -> None:
-    """Add the misses and errors in one offline LTV run's output to ``report``.
+    """Add one offline LTV run's findings to ``report``, failing closed.
 
-    LTV names each file in a multi-file run; a single-file run names none, so its
-    issues belong to that file.
+    ``files`` must have unique basenames (see ``batches``). LTV names each file in
+    a multi-file run; a single-file run names none but prints one result line.
+    Any file LTV did not account for is recorded in ``unchecked_files``.
 
-    >>> report = CoverageReport()
+    >>> report = CoverageReport(remote={"NCBITaxon"})
     >>> out = '''
-    ... ❌ X-predictions-review.yaml - 2 issue(s):
+    ... ❌ X-predictions-review.yaml - 3 issue(s):
     ...   ❌ ERROR: Cannot validate 'NCBITaxon:1' against dynamic enum 'NCBITaxonEnum' offline: enum closure not materialized
     ...   ❌ ERROR: Term 'NCBITaxon:1' not found in offline cache
+    ...   ⚠️  WARN: Label mismatch for 'GO:0000002': expected 'a', got 'b'
     ... ✅ Y-predictions-review.yaml
     ... '''
-    >>> parse_offline_output(out, [Path("a/X-predictions-review.yaml"), Path("b/Y-predictions-review.yaml")], report)
-    >>> report.to_dict()["missing_labels"]
-    [{'curie': 'NCBITaxon:1', 'needs_network': False, 'files': ['a/X-predictions-review.yaml']}]
-    >>> report.remote_prefixes = {"NCBITaxon"}
-    >>> report.network_misses()
-    2
-    >>> report.label_misses["GO:0000001"].add("a/X-predictions-review.yaml")
-    >>> report.needs_network("GO:0000001"), report.network_misses()
-    (False, 2)
-    >>> report.to_dict()["missing_enum_memberships"][0]["enum"]
-    'NCBITaxonEnum'
+    >>> files = [Path("a/X-predictions-review.yaml"), Path("b/Y-predictions-review.yaml")]
+    >>> parse_offline_output(out, 1, files, report)
+    >>> d = report.to_dict()
+    >>> d["missing_labels"]
+    [{'curie': 'NCBITaxon:1', 'needs_network': True, 'files': ['a/X-predictions-review.yaml']}]
+    >>> d["missing_enum_memberships"][0]["enum"], report.network_misses()
+    ('NCBITaxonEnum', 2)
+    >>> len(d["label_mismatches"]), d["complete"]
+    (1, True)
+
+    A run that names only one of two files, or crashes, leaves files unchecked:
+
+    >>> report = CoverageReport()
+    >>> parse_offline_output("✅ X-predictions-review.yaml", 0, files, report)
+    >>> report.complete, list(report.unchecked_files)
+    (False, ['b/Y-predictions-review.yaml'])
+    >>> report = CoverageReport()
+    >>> parse_offline_output("Traceback (most recent call last):", 1, files[:1], report)
+    >>> report.complete, report.covered
+    (False, True)
     """
-    by_name: dict[str, list[str]] = defaultdict(list)
-    for path in files:
-        by_name[path.name].append(path.as_posix())
-    current = [files[0].as_posix()] if len(files) == 1 else []
+    by_name = {path.name: path.as_posix() for path in files}
+    accounted: set[str] = set()
+    current: str | None = files[0].as_posix() if len(files) == 1 else None
     for line in output.splitlines():
         header = FILE_HEADER.match(line)
         if header:
-            current = by_name.get(header.group("name"), [header.group("name")])
+            current = by_name.get(header.group("name"))
+            if current is None:
+                report.unattributed_output.append(line.strip())
+            else:
+                accounted.add(current)
+            continue
+        if len(files) == 1 and SINGLE_FILE_RESULT.match(line):
+            accounted.add(files[0].as_posix())
             continue
         finding = FINDING_LINE.match(line)
         if not finding:
             continue
         severity = finding.group("error") or finding.group("warn")
         message = finding.group("message").strip()
-        if not current:
+        if current is None:
             report.unattributed_output.append(message)
-            continue
-        if match := LABEL_MISS.search(message):
-            report.label_misses[match.group("curie")].update(current)
+        elif match := LABEL_MISS.search(message):
+            report.label_misses[match.group("curie")].add(current)
         elif match := ENUM_MISS.search(message):
-            report.enum_misses[(match.group("curie"), match.group("enum"))].update(
-                current
-            )
+            report.enum_misses[(match.group("curie"), match.group("enum"))].add(current)
+        elif LABEL_MISMATCH.search(message):
+            report.label_mismatches.append((current, message))
         else:
-            report.other_findings.extend((path, severity, message) for path in current)
+            report.other_findings.append((current, severity, message))
+    reason = (
+        f"validator exited {returncode} without a result for this file"
+        if returncode
+        else "validator printed no result for this file"
+    )
+    for path in files:
+        posix = path.as_posix()
+        if posix not in accounted:
+            report.unchecked_files[posix] = reason
 
 
-def ltv_command(kind: DocumentKind, files: list[Path], offline: bool) -> list[str]:
-    """Build the LTV ``validate-data`` command for one batch of same-kind files."""
+def ltv_command(
+    kind: DocumentKind, files: list[Path], offline: bool, cache_dir: Path
+) -> list[str]:
+    """Build the LTV ``validate-data`` command for one batch of same-kind files.
+
+    >>> cmd = ltv_command(GENE_REVIEW, [Path("x-ai-review.yaml")], False, Path("cache"))
+    >>> "--offline" in cmd, cmd[cmd.index("--cache-dir") + 1]
+    (False, 'cache')
+    >>> "--offline" in ltv_command(GENE_REVIEW, [], True, Path("cache"))
+    True
+    """
     command = [
         *_tool_command("linkml-term-validator"),
         "validate-data",
@@ -277,22 +415,48 @@ def ltv_command(kind: DocumentKind, files: list[Path], offline: bool) -> list[st
         "--labels",
         "-c",
         OAK_CONFIG.as_posix(),
+        "--cache-dir",
+        cache_dir.as_posix(),
     ]
     if offline:
         command.append("--offline")
     return command
 
 
-def run_ltv(kind: DocumentKind, files: list[Path], offline: bool) -> str:
-    """Run LTV from the project root and return its combined output."""
+def run_ltv(
+    kind: DocumentKind, files: list[Path], offline: bool, cache_dir: Path
+) -> tuple[str, int]:
+    """Run LTV from the project root; return its combined output and exit code."""
     completed = subprocess.run(
-        ltv_command(kind, files, offline),
+        ltv_command(kind, files, offline, cache_dir),
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
         check=False,
     )
-    return "\n".join(part for part in (completed.stdout, completed.stderr) if part)
+    output = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
+    return output, completed.returncode
+
+
+def classify_online_pass(output: str, returncode: int) -> str:
+    """Classify one online warming run as ``ok``, ``outage`` or ``failed``.
+
+    ``validate-data`` exits 0 or 1 when it ran (1 also covers warnings); LTV exits
+    2 with an "ontology service unavailable" banner when it could not reach the
+    service.
+
+    >>> classify_online_pass("✅ Validation passed", 0)
+    'ok'
+    >>> classify_online_pass("Terms could not be checked: ontology service unavailable", 2)
+    'outage'
+    >>> classify_online_pass("Traceback (most recent call last):", 2)
+    'failed'
+    """
+    if returncode in (0, 1):
+        return "ok"
+    if OUTAGE_BANNER.search(output):
+        return "outage"
+    return "failed"
 
 
 def relative_to_root(path: Path) -> Path:
@@ -303,17 +467,47 @@ def relative_to_root(path: Path) -> Path:
     return resolved
 
 
-def measure_coverage(
-    grouped: dict[DocumentKind, list[Path]], warm: bool
+def offline_pass(
+    work: list[tuple[DocumentKind, list[Path]]], cache_dir: Path, label: str
 ) -> CoverageReport:
-    """Optionally warm the cache online, then measure coverage offline."""
-    report = CoverageReport(remote_prefixes=network_prefixes(PROJECT_ROOT / OAK_CONFIG))
-    for kind, files in grouped.items():
-        rel = [relative_to_root(path) for path in files]
-        if warm:
-            run_ltv(kind, rel, offline=False)
-        parse_offline_output(run_ltv(kind, rel, offline=True), rel, report)
-        report.files_checked += len(rel)
+    """Measure coverage offline over prepared batches."""
+    report = CoverageReport(remote=remote_prefixes(PROJECT_ROOT / OAK_CONFIG))
+    for number, (kind, batch) in enumerate(work, start=1):
+        print(
+            f"[{label}] batch {number}/{len(work)}: {len(batch)} {kind.target_class}",
+            file=sys.stderr,
+        )
+        output, returncode = run_ltv(kind, batch, offline=True, cache_dir=cache_dir)
+        parse_offline_output(output, returncode, batch, report)
+        report.files_checked += len(batch)
+    return report
+
+
+def measure_coverage(
+    grouped: dict[DocumentKind, list[Path]],
+    warm: bool,
+    cache_dir: Path = DEFAULT_CACHE_DIR,
+) -> CoverageReport:
+    """Measure coverage offline; with ``warm``, also warm online and re-measure."""
+    work = [
+        (kind, batch)
+        for kind, files in grouped.items()
+        for batch in batches([relative_to_root(path) for path in files])
+    ]
+    if not warm:
+        return offline_pass(work, cache_dir, "offline")
+    before = offline_pass(work, cache_dir, "before warm")
+    warm_pass = WarmPass(batches=len(work), misses_before=before.miss_count())
+    for number, (kind, batch) in enumerate(work, start=1):
+        print(f"[warm] batch {number}/{len(work)}", file=sys.stderr)
+        output, returncode = run_ltv(kind, batch, offline=False, cache_dir=cache_dir)
+        outcome = classify_online_pass(output, returncode)
+        if outcome == "outage":
+            warm_pass.outage_batches += 1
+        elif outcome == "failed":
+            warm_pass.failed_batches += 1
+    report = offline_pass(work, cache_dir, "after warm")
+    report.warm = warm_pass
     return report
 
 
@@ -324,45 +518,62 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--warm",
         action="store_true",
-        help="Run the validator online first, filling the committed cache/",
+        help="Warm the cache online between two offline measurements",
     )
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Exit 1 when any term check needs the ontology service",
+        help="Exit 1 on cache misses and 2 on an incomplete run",
     )
     parser.add_argument(
         "--network-only",
         action="store_true",
         help="With --check, fail only on misses that need a remote ontology service",
     )
+    parser.add_argument(
+        "--cache-dir",
+        type=Path,
+        default=DEFAULT_CACHE_DIR,
+        help="LTV cache directory, relative to the project root (default: cache)",
+    )
     parser.add_argument("-o", "--output", type=Path, help="Write the YAML report here")
     args = parser.parse_args(argv)
+    if args.network_only and not args.check:
+        parser.error("--network-only only applies with --check")
 
     grouped = expand_inputs(args.inputs)
     if not grouped:
-        print("No gene, prediction or family review files found.", file=sys.stderr)
-        return 0
-    report = measure_coverage(grouped, warm=args.warm)
+        print(
+            "No gene, prediction or family review files found in the inputs.",
+            file=sys.stderr,
+        )
+        return 2
+    report = measure_coverage(grouped, warm=args.warm, cache_dir=args.cache_dir)
     text = yaml.safe_dump(report.to_dict(), sort_keys=False, allow_unicode=True)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text, encoding="utf-8")
     else:
         sys.stdout.write(text)
-    for message in report.unattributed_output:
-        print(f"Unattributed validator error: {message}", file=sys.stderr)
-    missing = len(report.label_misses) + len(report.enum_misses)
-    network = report.network_misses()
     print(
-        f"{report.files_checked} files; {missing} cache misses "
-        f"({network} needing the network); "
-        f"{len(report.other_findings)} other term findings",
+        f"{report.files_checked} files; {report.miss_count()} cache misses "
+        f"({report.network_misses()} needing the network); "
+        f"{len(report.label_mismatches)} label mismatches; "
+        f"{len(report.other_findings)} other findings; "
+        f"{len(report.unchecked_files)} unchecked files",
         file=sys.stderr,
     )
+    if report.warm is not None and report.warm.outage_batches:
+        print(
+            f"Warning: {report.warm.outage_batches} warming batch(es) hit an "
+            "ontology-service outage; the cache was not filled for them.",
+            file=sys.stderr,
+        )
     if not args.check:
         return 0
-    failing = network if args.network_only else missing
+    if not report.complete:
+        return 2
+    failing = report.network_misses() if args.network_only else report.miss_count()
     return 1 if failing else 0
 
 

@@ -67,7 +67,7 @@ def test_uncached_term_is_reported_against_its_file(tmp_path: Path) -> None:
     assert report["misses_needing_network"] == 2
 
 
-def test_wrong_label_is_a_finding_not_a_cache_miss(tmp_path: Path) -> None:
+def test_wrong_label_is_a_label_mismatch_not_a_cache_miss(tmp_path: Path) -> None:
     review = write_prediction_review(
         tmp_path / "wrong-label-predictions-review.yaml",
         (CACHED[0], "Mus musculus"),
@@ -76,9 +76,10 @@ def test_wrong_label_is_a_finding_not_a_cache_miss(tmp_path: Path) -> None:
     report = measure_coverage(expand_inputs([review]), warm=False)
 
     assert report.covered
-    [(path, severity, message)] = report.other_findings
+    assert report.complete
+    assert report.other_findings == []
+    [(path, message)] = report.label_mismatches
     assert path == review.resolve().as_posix()
-    assert severity == "WARN"
     assert "Label mismatch" in message
 
 
@@ -100,4 +101,49 @@ def test_unrecognised_files_are_skipped(tmp_path: Path) -> None:
     (tmp_path / "notes.yaml").write_text("a: 1\n", encoding="utf-8")
 
     assert expand_inputs([tmp_path]) == {}
-    assert main([str(tmp_path), "--check"]) == 0
+
+
+def test_same_basename_in_two_directories_is_attributed_separately(
+    tmp_path: Path,
+) -> None:
+    """LTV prints basenames only, so same-named files must not share a batch."""
+    covered = write_prediction_review(
+        tmp_path / "a" / "x-predictions-review.yaml", CACHED
+    )
+    missing = write_prediction_review(
+        tmp_path / "b" / "x-predictions-review.yaml", UNCACHED
+    )
+
+    report = measure_coverage(expand_inputs([tmp_path]), warm=False)
+
+    assert report.complete
+    assert report.files_checked == 2
+    assert set(report.label_misses[UNCACHED[0]]) == {missing.resolve().as_posix()}
+    assert covered.resolve().as_posix() not in report.label_misses[UNCACHED[0]]
+
+
+def test_unreadable_file_fails_closed(tmp_path: Path) -> None:
+    """A file the validator cannot read is unchecked, never silently covered."""
+    bad = tmp_path / "bad-predictions-review.yaml"
+    bad.write_text("id: [unclosed\n", encoding="utf-8")
+
+    report = measure_coverage(expand_inputs([bad]), warm=False)
+
+    assert not report.complete
+    assert list(report.unchecked_files) == [bad.resolve().as_posix()]
+    assert main([str(bad), "--check"]) == 2
+
+
+def test_network_only_requires_check(tmp_path: Path) -> None:
+    review = write_prediction_review(tmp_path / "x-predictions-review.yaml", CACHED)
+
+    with pytest.raises(SystemExit) as excinfo:
+        main([str(review), "--network-only"])
+    assert excinfo.value.code == 2
+
+
+def test_inputs_with_no_review_files_are_an_error(tmp_path: Path) -> None:
+    """A mistyped path must not pass a coverage gate."""
+    (tmp_path / "notes.yaml").write_text("a: 1\n", encoding="utf-8")
+
+    assert main([str(tmp_path), "--check"]) == 2
