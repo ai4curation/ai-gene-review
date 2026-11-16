@@ -208,15 +208,17 @@ specific enough on its own the structural work would be unnecessary. So it was r
 | … and no transmembrane segment | **52** | **27** |
 
 **Recall is perfect**: OmcS, OmcE, OmcZ and OmcT all pass, and the inner-membrane
-cytochromes that must not be caught — ImcH, CbcL, GSU2359 — are all excluded by the
-transmembrane clause. **Precision is not**: 52 candidates against three characterised
+cytochromes that must not be caught — ImcH (`Q747K6`) and CbcL (`Q74GH2`) — are both
+excluded by the transmembrane clause. The periplasmic nitrite reductase NrfA (`Q747W1`)
+is not: four motifs, a signal peptide and no TM segment carry it through this stage. **Precision is not**: 52 candidates against three characterised
 subunits. The upper bound is worth having and is not arbitrary, since the known
 subunits carry 4, 6, 6 and 8 motifs while the false positives run to 34, 27 and 26 —
 they are the large outer-membrane polyheme cytochromes. Capping at eight nearly halves
 the set with no loss of recall.
 
-Of the remaining 27, four are CDD `cd21555` members and so are plausible rather than
-wrong. The rest are not: the set still holds three nitrite reductases, NrfA among them.
+Of the remaining 27, four are CDD `cd21555` members — though two of those are OmcS and
+OmcT, already known positives, so only two are genuinely plausible extras. The rest are
+not: the set still holds three nitrite reductases, NrfA among them.
 
 That settles the question the experiment was for. The filter is a good **candidate
 generator** — 3,402 down to 27, a 126-fold cut with nothing lost — and not a
@@ -247,8 +249,9 @@ one.
 **That pointed at running SignalP, and measuring first made it unnecessary.** Simply
 dropping the signal-peptide requirement costs about 25% more candidates (17→21, 12→16,
 14→17) and buys complete recall, 11/11 known members instead of 10/11. It also
-excludes none of the known negatives: ImcH is caught by its transmembrane segment, and
-CbcL and GSU2359 by heme count and by carrying a named InterPro family. The clause was
+excludes none of the known negatives: ImcH and CbcL are caught by their transmembrane
+segments and NrfA by the named-family rule, each attribution checked by removing one
+clause at a time rather than asserted. The clause was
 costing a real positive while contributing nothing against the negatives it appeared
 to be catching, so the recommended setting is `--no-require-signal` and no
 signal-peptide predictor is needed.

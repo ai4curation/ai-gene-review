@@ -88,10 +88,17 @@ KNOWN: dict[str, dict] = {
             "Q74BG5": "OmcZ, filament",
             "Q74A87": "OmcT, OmcS paralog",
         },
+        # Each negative is excluded by a different clause, so the output shows which
+        # clause is doing the work. Two earlier entries here were wrong proteins:
+        # Q74FN7 is a nicotinamidase-related hydrolase and Q74EV9 a DsbC/DsbG
+        # isomerase, neither of them CbcL, GSU2359 or any kind of cytochrome, and
+        # GSU2359 (Q74AJ5) is a glycoside hydrolase that was never a sensible
+        # negative for this screen. See BASELINE.md.
         "negatives": {
-            "Q747K6": "ImcH, inner membrane",
-            "Q74FN7": "CbcL, inner membrane",
-            "Q74EV9": "GSU2359",
+            "Q747K6": "ImcH (GSU3259), inner membrane; 6 motifs, has TM",
+            "Q74GH2": "CbcL (GSU0274), inner membrane; 9 motifs, has TM",
+            "Q747W1": "NrfA (GSU3154), periplasmic nitrite reductase; 4 motifs,"
+            " no TM, signal peptide -- excluded only by the named-family rule",
         },
         #: Members of CDD cd21555, the hand-curated OmcS-like model. A hit that is
         #: also a cd21555 member is a plausible candidate, not a clear error.
@@ -387,10 +394,13 @@ def main(argv: list[str] | None = None) -> int:
             f" subunit(s): {final / len(positives):.0f}x"
         )
     if cd21555:
-        also_cd = sum(1 for h in hits if h[0] in cd21555)
+        # Only the cd21555 members that are NOT already known positives are
+        # "plausible": OmcS and OmcT are true positives, so counting them here
+        # would report them as uncertain and understate precision.
+        extra_cd = sum(1 for h in hits if h[0] in cd21555 and h[0] not in positives)
         print(
-            f"  of the {final} candidates, {also_cd} are also CDD cd21555 members"
-            f" (plausible, not clear errors)"
+            f"  of the {final} candidates, {extra_cd} are cd21555 members beyond the"
+            f" known positives (plausible, not clear errors)"
         )
     if not known:
         print(f"\n  no ground truth registered for {args.proteome}")

@@ -28,8 +28,10 @@ the order the measurements happened, so the recommended setting is the one at th
 | … and no TM segment | **52** | **27** |
 
 **Recall is perfect in both.** OmcS, OmcE, OmcZ and OmcT all pass. The inner-membrane
-multiheme cytochromes that must not be caught — ImcH, CbcL, GSU2359 — are all excluded,
-by the transmembrane clause.
+multiheme cytochromes that must not be caught — ImcH (`Q747K6`) and CbcL (`Q74GH2`) —
+are both excluded by the transmembrane clause, and the periplasmic nitrite reductase
+NrfA (`Q747W1`) is not: it has four motifs, a signal peptide and no TM segment, so it
+survives this stage and is removed later, by the named-family rule alone.
 
 **Precision is not.** 52 candidates against three characterised filament subunits is
 17-fold over-selection. The upper bound helps, and it is not arbitrary: the known
@@ -38,9 +40,10 @@ subunits carry 4, 6, 6 and 8 motifs, while the false positives run to 34, 27 and
 lipoprotein cytochromes. Capping at 8 motifs nearly halves the set, to 27, while keeping
 4/4 recall.
 
-Of those 27, four are members of CDD `cd21555`, the hand-curated OmcS-like model
-(OmcS, OmcT, OmcJ and GSU2501), so they are plausible rather than clear errors. The
-remainder are not: the set still contains three nitrite reductases, including NrfA,
+Of those 27, four are members of CDD `cd21555`, the hand-curated OmcS-like model —
+but two of those four are OmcS and OmcT, which are known positives rather than uncertain
+hits, so the honest figure is **two** plausible extras (OmcJ and GSU2501). The
+remainder are not plausible: the set still contains three nitrite reductases, including NrfA,
 which is a well-characterised pentaheme enzyme and emphatically not a filament subunit.
 
 ### A second proteome
@@ -112,12 +115,16 @@ Dropping the clause costs about 25% more candidates and buys complete recall: 11
 known members across the three organisms instead of 10/11, with `B5EHF0` recovered.
 
 **It also excludes none of the known negatives**, which is the part worth recording,
-because an earlier draft of this page asserted the opposite. Checking each one
-directly: ImcH is excluded because it *has a transmembrane segment*; CbcL and
-GSU2359 are excluded on heme count and on carrying a named InterPro family
-(Isochorismatase-like hydrolase, DsbC/G disulphide bond isomerase). None of the three
-is excluded by the signal-peptide test. The clause was costing a real positive and
-contributing nothing against the negatives it was credited with catching.
+because an earlier draft of this page asserted the opposite. Running the screen with and
+without the clause leaves the verdict on every negative identical: ImcH and CbcL are
+excluded because each *has a transmembrane segment* (CbcL also carries nine motifs, over
+the upper bound), and NrfA is excluded by the named-family rule. None is excluded by the
+signal-peptide test. The clause was costing a real positive and contributing nothing
+against the negatives it was credited with catching.
+
+Each attribution is checked by removing one clause at a time rather than asserted: NrfA
+becomes a false positive as soon as `--refine` is dropped, and CbcL stays excluded even
+with no upper bound, which is what pins its exclusion on the TM call.
 
 The default still requires a signal peptide so the funnel above reproduces; use
 `--no-require-signal` for the recommended setting.
@@ -179,6 +186,50 @@ would quietly pass. A measurement that cannot resolve its inputs should stop, no
 bigger number. The failure path was checked with a control arm — an unmutated run resolves
 `IPR003321` (Cytochrome c552) and an unreachable endpoint raises — so the gate is known to
 be able to fire. Every number in the table below was produced twice and is identical.
+
+### Two of the three negatives were the wrong proteins
+
+Found by review challenge, not by this screen, and the worst of the three errors because
+it was invisible: the accessions registered as CbcL and GSU2359 were neither.
+
+| registered as | accession | what it actually is | CXXCH |
+|---|---|---|---:|
+| ImcH | `Q747K6` | ImcH (GSU3259), multiheme c-type cytochrome | 6 |
+| CbcL | `Q74FN7` | **nicotinamidase-related cysteine hydrolase** (GSU0569) | 0 |
+| GSU2359 | `Q74EV9` | **DsbC/DsbG-like disulphide isomerase** (GSU0850) | 0 |
+
+Neither wrong entry is a cytochrome, and neither has a single heme motif, so both were
+excluded from the funnel before any clause of the filter applied — which is exactly why
+nothing caught it: a negative that is correctly excluded for a nonsense reason looks
+identical in the output to one correctly excluded for a real reason. The InterPro family
+names quoted for them in an earlier revision of this page (Isochorismatase-like
+hydrolase, DsbC/G disulphide bond isomerase) were read correctly off the records; the
+records were the wrong proteins. **No claim about CbcL or GSU2359 on this page before
+this revision was tested.**
+
+Looking up the real ones changed the negative set substantively:
+
+- **CbcL is `Q74GH2`** (GSU0274), "Cytochrome c, and cytochrome b", 619 aa, **nine**
+  CXXCH motifs, with a TM segment — a genuine inner-membrane multiheme cytochrome, and
+  still correctly excluded.
+- **GSU2359 is `Q74AJ5`**, a family-57 glycoside hydrolase with no hemes. It was never a
+  sensible negative for a cytochrome screen and is dropped rather than fixed.
+- In its place, **NrfA `Q747W1`** (GSU3154), the periplasmic nitrite reductase this page
+  has named as a false positive throughout. It is a far better negative: four motifs, a
+  signal peptide and no TM segment, so every clause of the base filter passes it and it
+  is removed **only** by the named-family rule.
+
+The set is now built so each negative tests a different clause — ImcH the TM call, CbcL
+the TM call with the upper bound as backup, NrfA the named-family rule alone — and each
+attribution is verified by removing one clause at a time. That also answers a fair
+objection to the named-family rule, that it drops the informative negatives before they
+can be scored: with NrfA registered, the rule's one hard case is now scored explicitly
+instead of being argued about in prose.
+
+The conclusions this page draws survive the correction, and were re-run rather than
+assumed: no candidate count depends on the negative list, and the signal-peptide verdict
+is identical with the corrected set, since NrfA has a signal peptide and the other two
+are excluded on topology.
 
 ### The falsification: a floor of four hemes loses the PcECN
 
