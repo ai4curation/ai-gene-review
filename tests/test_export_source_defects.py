@@ -333,6 +333,18 @@ def test_source_resource_enum_has_the_pipeline_values_reports_route_on() -> None
     distinct from the MOD values and from GO_CENTRAL.
     """
     values = set(_schema_enum_values("SourceResourceEnum"))
-    for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC", "SYNGO"):
+    for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC"):
         assert expected in values, f"SourceResourceEnum lost {expected}"
     assert "GO_CENTRAL" in values, "PANTHER must not have replaced GO_CENTRAL"
+
+
+def test_source_resource_enum_names_syngo() -> None:
+    """SynGO is a curation group in its own right, not a pipeline.
+
+    Its curated rows are filed as SYNGO; PAINT IBAs propagated from SynGO
+    seeds are GO_CENTRAL. Both values must exist so each report reaches the
+    group that can fix it.
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    assert "SYNGO" in values, "SourceResourceEnum lost SYNGO"
+    assert "GO_CENTRAL" in values
