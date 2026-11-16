@@ -546,6 +546,24 @@ class SourceDefectConfidenceEnum(str, Enum):
     """
 
 
+class SourceDefectSeverityEnum(str, Enum):
+    """
+    How much a source defect matters if it is never fixed - the consequence of the error, not the reviewer's certainty that there is one (that is SourceDefectConfidenceEnum, and the two axes are independent). Ordered worst first. The values name kinds of consequence rather than magnitudes, so the grade is checkable against the record rather than being a feeling about it.
+    """
+    MISLEADING = "MISLEADING"
+    """
+    The record makes a claim that a reader or a downstream pipeline will act on and that is false: it names the wrong entity, asserts the opposite of what the evidence shows, or sends an analysis to unrelated biology. Fixing it changes the conclusions drawn from the record.
+    """
+    IMPRECISE = "IMPRECISE"
+    """
+    The record's claim is defensible but less accurate than the evidence supports: an over-broad term, a qualifier that overstates a subunit's role, an evidence code stronger than the experiment behind it. Fixing it sharpens the record without changing what anyone would conclude from it. This is the ordinary case, so it records that the consequence was assessed without moving the defect's position in the worklist.
+    """
+    COSMETIC = "COSMETIC"
+    """
+    The record's substance is right and the defect is in its bookkeeping or presentation: a duplicated assertion, a mis-keyed reference whose intended paper is unambiguous, a stale label beside a correct identifier. Nothing downstream draws a wrong conclusion from it.
+    """
+
+
 class SourceDefectRequestedChangeEnum(str, Enum):
     """
     The change a source defect asks the responsible resource to make.
@@ -3434,6 +3452,7 @@ class SourceDefect(ConfiguredBaseModel):
     corrected_label: Optional[str] = Field(default=None, description="""Human-readable label for corrected_value (e.g. \"HAM1 MYST histone acetyltransferase\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     cause: Optional[SourceDefectCauseEnum] = Field(default=None, description="""Most likely mechanism of the error, where it can be inferred.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     confidence: SourceDefectConfidenceEnum = Field(default=..., description="""How firmly the defect is established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyChange', 'SourceDefect', 'RuleReview']} })
+    severity: Optional[SourceDefectSeverityEnum] = Field(default=None, description="""How much the defect matters if nobody fixes it - the consequence of leaving the record as it stands. This is the one thing the source-defect worklist cannot derive from the other fields, and it is not confidence: confidence is how sure the reviewer is that the record is wrong, severity is what goes wrong downstream while it stays wrong. The two are independent, so a CONFIRMED defect can be COSMETIC and a SUSPECTED one MISLEADING. Optional, and unset means the consequence has not been assessed, which is not the same as IMPRECISE. Set, it overrides the position the worklist derives from the reported reasons. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     explanation: str = Field(default=..., description="""Self-contained explanation suitable for pasting into a report to the resource's curators.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceDefect']} })
     supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Verbatim evidence for the defect (and for the corrected value).""", json_schema_extra = { "linkml_meta": {'domain_of': ['AlternativeRecordEvidence',
                        'GeneModelIssue',

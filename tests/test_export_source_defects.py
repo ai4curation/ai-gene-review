@@ -2,11 +2,23 @@
 
 import csv
 import json
+import random
 from pathlib import Path
 
 import pytest
 
-from ai_gene_review.tools.export_source_defects import _describe_change, COLUMNS, collect, render_report, write_outputs
+from ai_gene_review.tools.export_source_defects import (
+    COLUMNS,
+    SEVERITY_BANDS,
+    SEVERITY_ORDER,
+    _describe_change,
+    collect,
+    group_defects,
+    rank,
+    render_report,
+    render_worklist,
+    write_outputs,
+)
 
 GENE_REVIEW = """
 id: P42760
@@ -110,7 +122,12 @@ def test_write_outputs_writes_tsv_and_one_report_per_resource(repo: Path) -> Non
     write_outputs(repo, tsv, report_dir)
     with tsv.open(encoding="utf-8") as fh:
         assert len(list(csv.DictReader(fh, delimiter="\t"))) == 3
-    assert sorted(p.name for p in report_dir.iterdir()) == ["GO_CAM.md", "TAIR.md"]
+    # WORKLIST.md is the cross-resource ranked queue, written beside the reports.
+    assert sorted(p.name for p in report_dir.iterdir()) == [
+        "GO_CAM.md",
+        "TAIR.md",
+        "WORKLIST.md",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -336,3 +353,616 @@ def test_source_resource_enum_has_the_pipeline_values_reports_route_on() -> None
     for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC"):
         assert expected in values, f"SourceResourceEnum lost {expected}"
     assert "GO_CENTRAL" in values, "PANTHER must not have replaced GO_CENTRAL"
+
+
+# --- grouping: one item per real upstream defect ------------------------------
+#
+# 2554 recorded instances collapse to ~1800 distinct fixes, because the same fix
+# is recorded independently by many reviews. The grouping key is the *fix* --
+# who must change what, in which field, from what, to what -- and not the
+# annotation context (gene, GO term, evidence code), which varies across the
+# instances of one fix. These tests pin both halves of that.
+
+
+def _instance(**over: str) -> dict:
+    """Build one exported defect row, overriding the fields a test cares about."""
+    row = {c: "" for c in COLUMNS}
+    row.update(
+        {
+            "resource": "TAIR",
+            "report_status": "NOT_REPORTED",
+            "defect_type": "WRONG_TERM",
+            "confidence": "PROBABLE",
+            "asserted_value": "GO:1",
+            "explanation": "Mapped to the wrong term.",
+            "supported_by": "[]",
+            "source_path": "genes/ARATH/A/A-ai-review.yaml",
+        }
+    )
+    row.update(over)
+    return row
+
+
+def test_one_fix_recorded_by_several_reviews_is_one_group() -> None:
+    """The annotation context differs per instance; the fix is the same."""
+    rows = [
+        _instance(term_id="GO:9", gene_symbol="A", evidence_type="IDA"),
+        _instance(
+            term_id="GO:8",
+            gene_symbol="B",
+            evidence_type="IBA",
+            source_path="genes/ARATH/B/B-ai-review.yaml",
+        ),
+    ]
+    (group,) = group_defects(rows)
+    assert group.count == 2
+    assert group.source_paths == (
+        "genes/ARATH/A/A-ai-review.yaml",
+        "genes/ARATH/B/B-ai-review.yaml",
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "other_value"),
+    [
+        ("resource", "MGI"),
+        ("defect_type", "WRONG_QUALIFIER"),
+        ("record", "gomodel:1/2"),
+        ("slot", "has_input"),
+        ("asserted_value", "GO:3"),
+        ("corrected_value", "GO:2"),
+        ("requested_change", "DELETE_ROW"),
+    ],
+)
+def test_a_different_fix_is_a_different_group(field: str, other_value: str) -> None:
+    """Every field of the key names part of the fix, so changing one splits."""
+    assert len(group_defects([_instance(), _instance(**{field: other_value})])) == 2
+
+
+def test_two_wrong_references_on_one_record_are_two_groups() -> None:
+    """`record` does not displace `asserted_value`: one activity, two bad PMIDs."""
+    rows = [
+        _instance(record="gomodel:1/2", defect_type="WRONG_REFERENCE", asserted_value="PMID:1"),
+        _instance(record="gomodel:1/2", defect_type="WRONG_REFERENCE", asserted_value="PMID:2"),
+    ]
+    assert len(group_defects(rows)) == 2
+
+
+def test_competing_corrections_stay_apart() -> None:
+    """Two reviews proposing different replacements disagree; merging would hide it."""
+    rows = [_instance(corrected_value="GO:2"), _instance(corrected_value="GO:3")]
+    assert {g.corrected_value for g in group_defects(rows)} == {"GO:2", "GO:3"}
+
+
+def test_group_id_depends_only_on_the_key() -> None:
+    """A group's id is stable, so it can be used to join the TSV across runs."""
+    alone = group_defects([_instance()])[0].id
+    with_others = next(
+        g.id for g in group_defects([_instance(), _instance(resource="MGI")]) if g.resource == "TAIR"
+    )
+    assert alone == with_others
+    assert alone != group_defects([_instance(resource="MGI")])[0].id
+
+
+def test_closed_instances_are_dropped_before_grouping() -> None:
+    """FIXED and DECLINED rows leave the worklist, as they leave the resource reports."""
+    rows = [
+        _instance(report_status="FIXED"),
+        _instance(report_status="DECLINED", source_path="genes/ARATH/B/B-ai-review.yaml"),
+        _instance(resource="MGI"),
+    ]
+    assert [g.resource for g in group_defects(rows)] == ["MGI"]
+
+
+# --- reasons: named, independently true, printed beside the item --------------
+
+
+@pytest.mark.parametrize(
+    ("resource", "propagates"),
+    [
+        ("INTERPRO", True),
+        ("PANTHER", True),
+        ("GOC", True),
+        ("GO_CENTRAL", False),
+        ("GOA_EBI", False),
+        ("UNIPROT", False),
+        ("TAIR", False),
+    ],
+)
+def test_only_pipeline_and_ontology_resources_propagate_by_resource(
+    resource: str, propagates: bool
+) -> None:
+    """GO_CENTRAL is PAINT curation, not a pipeline (docs/source_defects.md)."""
+    (group,) = group_defects([_instance(resource=resource)])
+    assert group.propagates is propagates
+
+
+@pytest.mark.parametrize("cause", ["OVER_PROPAGATION", "SCOPE_OVER_REACH"])
+def test_a_propagating_cause_marks_any_resource(cause: str) -> None:
+    """A defect whose own cause says it spread is a one-fix-many-rows defect."""
+    (group,) = group_defects([_instance(resource="GO_CENTRAL", cause=cause)])
+    assert group.propagates
+
+
+def test_an_instance_that_named_no_cause_does_not_block_propagation() -> None:
+    """Silence is not disagreement; nor is UNKNOWN, which identifies no mechanism."""
+    for silent in ("", "UNKNOWN"):
+        rows = [
+            _instance(cause=silent),
+            _instance(cause="OVER_PROPAGATION", source_path="genes/ARATH/B/B-ai-review.yaml"),
+        ]
+        (group,) = group_defects(rows)
+        assert group.propagates, silent
+
+
+def test_a_competing_identified_cause_withdraws_the_propagation_claim() -> None:
+    """The corpus's largest group is 55 row-level fixes whose mechanism is disputed.
+
+    5 of its instances say SCOPE_OVER_REACH and 27 name other mechanisms. One fix
+    does not correct all 55, so the group must not claim that it does.
+    """
+    rows = [
+        _instance(cause="SCOPE_OVER_REACH"),
+        _instance(cause="OTHER", source_path="genes/ARATH/B/B-ai-review.yaml"),
+    ]
+    (group,) = group_defects(rows)
+    assert not group.propagates
+
+
+def test_a_competing_cause_cannot_demote_a_pipeline_resource() -> None:
+    """INTERPRO records are inherited whatever mechanism put the term there."""
+    rows = [
+        _instance(resource="INTERPRO", cause="SCOPE_OVER_REACH"),
+        _instance(resource="INTERPRO", cause="OTHER", source_path="genes/ARATH/B/B-ai-review.yaml"),
+    ]
+    (group,) = group_defects(rows)
+    assert group.propagates
+
+
+@pytest.mark.parametrize(
+    ("defect_type", "misattributed"),
+    [
+        ("WRONG_GENE_PRODUCT", True),
+        ("MISSING_NEGATION", True),
+        ("WRONG_TERM", False),
+        ("WRONG_QUALIFIER", False),
+        ("WRONG_EVIDENCE_CODE", False),
+    ],
+)
+def test_misattributed_covers_the_wrong_entity_and_the_inverted_sense(
+    defect_type: str, misattributed: bool
+) -> None:
+    (group,) = group_defects([_instance(defect_type=defect_type)])
+    assert group.misattributed is misattributed
+
+
+def test_confidence_is_the_strongest_instance() -> None:
+    """One review verifying the defect is enough to file it as a correction."""
+    rows = [
+        _instance(confidence="SUSPECTED"),
+        _instance(confidence="CONFIRMED", source_path="genes/ARATH/B/B-ai-review.yaml"),
+    ]
+    (group,) = group_defects(rows)
+    assert group.confidence == "CONFIRMED"
+    assert group.confirmed
+
+
+def test_the_instances_reason_appears_only_above_one() -> None:
+    (single,) = group_defects([_instance()])
+    assert not [r for r in single.reasons if r.token.startswith("instances")]
+    (several,) = group_defects(
+        [_instance(), _instance(source_path="genes/ARATH/B/B-ai-review.yaml")]
+    )
+    assert "instances: 2" in [r.token for r in several.reasons]
+
+
+def test_every_reason_states_why_it_is_true_of_this_item() -> None:
+    """A rank is only explainable if each reason carries its own ground."""
+    (group,) = group_defects(
+        [
+            _instance(
+                resource="INTERPRO",
+                defect_type="WRONG_GENE_PRODUCT",
+                confidence="CONFIRMED",
+                cause="SCOPE_OVER_REACH",
+            ),
+            _instance(
+                resource="INTERPRO",
+                defect_type="WRONG_GENE_PRODUCT",
+                confidence="CONFIRMED",
+                cause="SCOPE_OVER_REACH",
+                source_path="genes/ARATH/B/B-ai-review.yaml",
+            ),
+        ]
+    )
+    assert [r.token for r in group.reasons] == [
+        "propagates",
+        "instances: 2",
+        "misattributed",
+        "confirmed",
+    ]
+    assert all(reason.because for reason in group.reasons)
+
+
+# --- ranking: lexicographic over the named reasons, no weighted score ---------
+
+
+def _ranked_ids(rows: list[dict]) -> list[str]:
+    return [g.id for g in rank(group_defects(rows))]
+
+
+def test_ranking_precedence_is_breadth_then_kind_then_certainty() -> None:
+    """propagates > instances > misattributed > confirmed, each independently true."""
+    propagating = _instance(resource="INTERPRO")
+    systematic = [
+        _instance(asserted_value="GO:20"),
+        _instance(asserted_value="GO:20", source_path="genes/ARATH/B/B-ai-review.yaml"),
+        _instance(asserted_value="GO:20", source_path="genes/ARATH/C/C-ai-review.yaml"),
+    ]
+    misattributed = _instance(defect_type="WRONG_GENE_PRODUCT")
+    confirmed = _instance(asserted_value="GO:30", confidence="CONFIRMED")
+    plain = _instance(asserted_value="GO:40")
+    rows = [plain, confirmed, misattributed, *systematic, propagating]
+    ranked = rank(group_defects(rows))
+    assert [(g.resource, g.defect_type, g.count, g.confidence) for g in ranked] == [
+        ("INTERPRO", "WRONG_TERM", 1, "PROBABLE"),
+        ("TAIR", "WRONG_TERM", 3, "PROBABLE"),
+        ("TAIR", "WRONG_GENE_PRODUCT", 1, "PROBABLE"),
+        ("TAIR", "WRONG_TERM", 1, "CONFIRMED"),
+        ("TAIR", "WRONG_TERM", 1, "PROBABLE"),
+    ]
+
+
+def test_ranking_does_not_depend_on_input_order() -> None:
+    """Same corpus, any read order, same worklist."""
+    rows = [
+        _instance(resource="INTERPRO"),
+        _instance(resource="MGI", defect_type="MISSING_NEGATION"),
+        _instance(resource="UNIPROT", confidence="CONFIRMED"),
+        _instance(resource="SGD", asserted_value="GO:7"),
+        _instance(resource="SGD", asserted_value="GO:7", source_path="genes/ARATH/B/B-ai-review.yaml"),
+    ]
+    expected = _ranked_ids(rows)
+    for seed in range(5):
+        shuffled = rows[:]
+        random.Random(seed).shuffle(shuffled)
+        assert _ranked_ids(shuffled) == expected
+
+
+def test_ranking_is_total_for_groups_alike_in_every_reason() -> None:
+    """Two groups with identical reasons are ordered by their key, not by chance."""
+    rows = [_instance(asserted_value="GO:9"), _instance(asserted_value="GO:2")]
+    assert [g.asserted_value for g in rank(group_defects(rows))] == ["GO:2", "GO:9"]
+
+
+# --- severity: the curator-set axis the reasons cannot derive -----------------
+
+
+def test_severity_band_table_covers_every_schema_value_and_the_unset_case() -> None:
+    """A schema value the ranker does not know would raise at rank time."""
+    assert set(_schema_enum_values("SourceDefectSeverityEnum")) <= set(SEVERITY_BANDS)
+    assert "" in SEVERITY_BANDS, "an unassessed defect must still have a band"
+
+
+def test_severity_enum_has_exactly_three_values() -> None:
+    assert len(_schema_enum_values("SourceDefectSeverityEnum")) == 3
+
+
+def test_severity_order_matches_the_schema_worst_first() -> None:
+    """The group takes the worst severity, so the code's order must be the schema's.
+
+    A value missing from SEVERITY_ORDER raises in `GroupedDefect.severity`, and a
+    reordering would silently pick the wrong one.
+    """
+    assert SEVERITY_ORDER == tuple(_schema_enum_values("SourceDefectSeverityEnum"))
+
+
+def test_a_curator_severity_overrides_the_derived_position() -> None:
+    """MISLEADING lifts a one-off above a propagating defect; COSMETIC sinks one."""
+    propagating = _instance(resource="INTERPRO")
+    misleading = _instance(resource="TAIR", severity="MISLEADING")
+    cosmetic = _instance(resource="PANTHER", severity="COSMETIC")
+    ranked = rank(group_defects([propagating, misleading, cosmetic]))
+    assert [g.resource for g in ranked] == ["TAIR", "INTERPRO", "PANTHER"]
+
+
+def test_imprecise_records_an_assessment_without_moving_the_item() -> None:
+    """IMPRECISE is the default band, so it changes no position."""
+    rows = [_instance(resource="INTERPRO"), _instance(resource="TAIR")]
+    without = [g.resource for g in rank(group_defects(rows))]
+    with_imprecise = [
+        g.resource
+        for g in rank(
+            group_defects([_instance(resource="INTERPRO", severity="IMPRECISE"), _instance(resource="TAIR")])
+        )
+    ]
+    assert without == with_imprecise == ["INTERPRO", "TAIR"]
+    (group,) = group_defects([_instance(severity="IMPRECISE")])
+    assert group.severity == "IMPRECISE"
+
+
+def test_the_worst_curator_severity_in_a_group_wins() -> None:
+    rows = [
+        _instance(severity="COSMETIC"),
+        _instance(severity="MISLEADING", source_path="genes/ARATH/B/B-ai-review.yaml"),
+    ]
+    (group,) = group_defects(rows)
+    assert group.severity == "MISLEADING"
+
+
+# --- the worklist -------------------------------------------------------------
+
+
+def test_worklist_lists_groups_worst_first_with_their_reasons() -> None:
+    rows = [
+        _instance(resource="TAIR", asserted_value="GO:40"),
+        _instance(resource="INTERPRO", cause="SCOPE_OVER_REACH"),
+    ]
+    worklist = render_worklist(rank(group_defects(rows)))
+    headings = [line for line in worklist.splitlines() if line.startswith("## ")]
+    assert headings[0].startswith("## 1. INTERPRO")
+    assert headings[1].startswith("## 2. TAIR")
+    assert "propagates" in worklist
+    assert "SCOPE_OVER_REACH" in worklist
+
+
+def test_worklist_shows_the_change_the_explanation_and_the_reviews() -> None:
+    rows = [
+        _instance(
+            resource="MGI",
+            asserted_value="GO:1",
+            corrected_value="GO:2",
+            corrected_label="better term",
+            requested_change="REPOINT",
+            explanation="The mapped term names a different reaction.",
+            gene_symbol="Abc1",
+            term_id="GO:1",
+            term_label="old term",
+            evidence_type="IEA",
+        ),
+        _instance(
+            resource="MGI",
+            asserted_value="GO:1",
+            corrected_value="GO:2",
+            corrected_label="better term",
+            requested_change="REPOINT",
+            explanation="The mapped term names a different reaction.",
+            gene_symbol="Abc2",
+            source_path="genes/mouse/Abc2/Abc2-ai-review.yaml",
+        ),
+    ]
+    worklist = render_worklist(rank(group_defects(rows)))
+    assert "GO:1 → GO:2 (better term)" in worklist
+    assert "The mapped term names a different reaction." in worklist
+    assert "genes/ARATH/A/A-ai-review.yaml" in worklist
+    assert "genes/mouse/Abc2/Abc2-ai-review.yaml" in worklist
+
+
+def test_worklist_says_what_a_group_spans() -> None:
+    """A GAF-row defect has no record id, so a group of them is a class of asks.
+
+    The spans line is how a reader tells one upstream edit from a table of
+    row-level asks that happen to request the same change.
+    """
+    rows = [
+        _instance(subject_id="UniProtKB:P1", term_id="GO:7", term_label="a"),
+        _instance(
+            subject_id="UniProtKB:P2",
+            term_id="GO:8",
+            term_label="b",
+            source_path="genes/ARATH/B/B-ai-review.yaml",
+        ),
+    ]
+    worklist = render_worklist(rank(group_defects(rows)))
+    assert "- **Spans:** 2 gene products and 2 annotated terms" in worklist
+    single = render_worklist(rank(group_defects([_instance(subject_id="UniProtKB:P1")])))
+    assert "**Spans:**" not in single
+
+
+def test_worklist_distinguishes_two_defective_rows_of_one_gene() -> None:
+    """Two rows of one review differ by reference, not by path, so name both."""
+    rows = [
+        _instance(term_id="GO:7", term_label="a", evidence_type="EXP", original_reference_id="PMID:1"),
+        _instance(term_id="GO:7", term_label="a", evidence_type="EXP", original_reference_id="PMID:2"),
+    ]
+    worklist = render_worklist(rank(group_defects(rows)))
+    assert "(EXP, PMID:1)" in worklist and "(EXP, PMID:2)" in worklist
+
+
+def test_worklist_reports_when_the_instances_explain_the_defect_differently() -> None:
+    rows = [
+        _instance(explanation="One reading."),
+        _instance(explanation="Another reading.", source_path="genes/ARATH/B/B-ai-review.yaml"),
+    ]
+    worklist = render_worklist(rank(group_defects(rows)))
+    assert "2 distinct explanations" in worklist
+
+
+def test_worklist_marks_a_severity_as_curator_set() -> None:
+    worklist = render_worklist(rank(group_defects([_instance(severity="MISLEADING")])))
+    assert "- **Severity:** MISLEADING (curator-set)" in worklist
+    unset = render_worklist(rank(group_defects([_instance()])))
+    assert "- **Severity:** not assessed" in unset
+    assert "(curator-set)" not in unset
+
+
+def test_worklist_sections_filed_defects_below_the_queue() -> None:
+    """A filed defect needs chasing, not filing, so it does not dilute the queue."""
+    rows = [
+        _instance(resource="MGI", report_status="REPORTED", report_url="https://example.org/1"),
+        _instance(resource="TAIR"),
+    ]
+    worklist = render_worklist(rank(group_defects(rows)))
+    assert worklist.index("## 1. TAIR") < worklist.index("Already filed")
+    assert worklist.index("Already filed") < worklist.index("MGI")
+    assert "https://example.org/1" in worklist
+
+
+# --- exported artifacts -------------------------------------------------------
+
+
+def test_tsv_carries_the_group_and_rank_columns(repo: Path) -> None:
+    tsv = repo / "out" / "d.tsv"
+    write_outputs(repo, tsv, repo / "out" / "reports")
+    with tsv.open(encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream, delimiter="\t"))
+    for column in ("group_id", "group_rank", "group_size", "group_reasons", "severity"):
+        assert column in rows[0]
+    open_gocam = next(r for r in rows if r["resource"] == "GO_CAM" and r["report_status"] != "FIXED")
+    assert open_gocam["group_size"] == "1"
+    assert int(open_gocam["group_rank"]) >= 1
+    fixed = next(r for r in rows if r["report_status"] == "FIXED")
+    assert fixed["group_id"] and fixed["group_rank"] == ""
+
+
+def test_write_outputs_writes_a_ranked_worklist(repo: Path) -> None:
+    report_dir = repo / "out" / "reports"
+    write_outputs(repo, repo / "out" / "d.tsv", report_dir)
+    worklist = (report_dir / "WORKLIST.md").read_text(encoding="utf-8")
+    assert worklist.startswith("# Source-record defect worklist")
+    assert "## 1. " in worklist
+    assert sorted(p.name for p in report_dir.iterdir()) == ["GO_CAM.md", "TAIR.md", "WORKLIST.md"]
+
+
+# --- every document kind that can carry a defect is accounted for -------------
+#
+# source_defects sits on four classes; a defect recorded in a document kind the
+# exporter does not glob is invisible to every report. These derive the set of
+# top-level document classes that can reach the slot from the schema itself, so
+# a new one is noticed rather than assumed.
+
+COLLECTED_DOCUMENT_CLASSES = {"GeneReview", "GoCamReview"}
+UNCOLLECTED_DOCUMENT_CLASSES = {
+    # Each reaches source_defects only through references[].reference_review.
+    "ModuleReview": ("modules/*.yaml",),
+    "PredictionReview": ("genes/*/*/*-predictions-review.yaml",),
+    "RuleReview": ("rules/*/*-review.yaml", "rules/*/*/*-review.yaml"),
+    "CuratedRule": ("rules/curated/*.yaml",),
+}
+
+
+def _document_classes_reaching(slot_name: str) -> set[str]:
+    """Top-level classes (referenced by no other class) that can reach ``slot_name``."""
+    import yaml
+
+    schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
+    classes, slots = schema["classes"], schema.get("slots", {})
+    subclasses: dict[str, list[str]] = {}
+    for name, body in classes.items():
+        if body.get("is_a"):
+            subclasses.setdefault(body["is_a"], []).append(name)
+
+    def declarations(name: str) -> set[tuple[str, str | None]]:
+        """Every (slot name, range) pair the class declares or inherits."""
+        inherited: list[str] = []
+        cursor: str | None = name
+        while cursor:
+            inherited.append(cursor)
+            cursor = classes[cursor].get("is_a")
+        found: set[tuple[str, str | None]] = set()
+        for ancestor in inherited:
+            body = classes[ancestor]
+            for declared in body.get("slots") or []:
+                found.add((declared, (slots.get(declared) or {}).get("range")))
+            for declared, definition in (body.get("attributes") or {}).items():
+                found.add((declared, (definition or {}).get("range")))
+        return found
+
+    def descendants(name: str) -> set[str]:
+        """``name`` and every class that inherits from it."""
+        seen, stack = {name}, [name]
+        while stack:
+            for child in subclasses.get(stack.pop(), []):
+                if child not in seen:
+                    seen.add(child)
+                    stack.append(child)
+        return seen
+
+    holders = {
+        name for name in classes if any(declared == slot_name for declared, _ in declarations(name))
+    }
+    referenced_by: dict[str, set[str]] = {}
+    for name in classes:
+        for _, target in declarations(name):
+            if target is not None and target in classes:
+                for concrete in descendants(target):
+                    referenced_by.setdefault(concrete, set()).add(name)
+    reaching, frontier = set(holders), list(holders)
+    while frontier:
+        for parent in referenced_by.get(frontier.pop(), set()):
+            if parent not in reaching:
+                reaching.add(parent)
+                frontier.append(parent)
+    return {name for name in reaching if not referenced_by.get(name)}
+
+
+def test_the_schema_permits_source_defects_in_exactly_the_known_document_kinds() -> None:
+    """A new document kind able to carry a defect must be collected or listed here."""
+    assert _document_classes_reaching("source_defects") == (
+        COLLECTED_DOCUMENT_CLASSES | set(UNCOLLECTED_DOCUMENT_CLASSES)
+    )
+
+
+def test_family_reviews_cannot_carry_source_defects() -> None:
+    """family_review.yaml is standalone and its Reference has no reference_review."""
+    import yaml
+
+    family = yaml.safe_load(
+        (SCHEMA_PATH.parent / "family_review.yaml").read_text(encoding="utf-8")
+    )
+    assert "gene_review" not in str(family.get("imports", []))
+    assert set(family["classes"]["Reference"]["slots"]) == {"id", "title"}
+
+
+def test_no_uncollected_document_kind_has_source_defects_to_lose() -> None:
+    """If this fails, that kind's defects are invisible: give collect() its glob."""
+    repo = SCHEMA_PATH.resolve().parents[3]
+    carrying = [
+        str(path.relative_to(repo))
+        for globs in UNCOLLECTED_DOCUMENT_CLASSES.values()
+        for pattern in globs
+        for path in repo.glob(pattern)
+        if "source_defects:" in path.read_text(encoding="utf-8")
+    ]
+    assert not carrying, f"source_defects recorded in uncollected documents: {carrying}"
+
+
+# --- docs must document the new fields ----------------------------------------
+
+
+def test_docs_table_lists_every_severity_value() -> None:
+    row = _docs_table_row("severity")
+    missing = [v for v in _schema_enum_values("SourceDefectSeverityEnum") if f"`{v}`" not in row]
+    assert not missing, f"docs/source_defects.md `severity` row is missing {missing}"
+
+
+def test_docs_distinguish_severity_from_confidence() -> None:
+    """The one thing a curator must not get wrong about the new field."""
+    docs = DOCS_PATH.read_text(encoding="utf-8")
+    assert "## Severity is not confidence" in docs
+
+
+def test_docs_name_every_ranking_reason() -> None:
+    """Every reason the ranker can emit is explained in the docs, derived from the code."""
+    import re
+
+    docs = DOCS_PATH.read_text(encoding="utf-8")
+    rows = [
+        _instance(resource="INTERPRO", defect_type="WRONG_GENE_PRODUCT", confidence="CONFIRMED"),
+        _instance(
+            resource="INTERPRO",
+            defect_type="WRONG_GENE_PRODUCT",
+            confidence="CONFIRMED",
+            source_path="genes/ARATH/B/B-ai-review.yaml",
+        ),
+    ]
+    (group,) = group_defects(rows)
+    assert {r.token for r in group.reasons} == {
+        "propagates",
+        "instances: 2",
+        "misattributed",
+        "confirmed",
+    }
+    for reason in group.reasons:
+        word = reason.token.split(":")[0]
+        assert re.search(rf"`{word}(`|:)", docs), f"docs do not name the `{word}` reason"

@@ -56,6 +56,7 @@ should fix, in a form from which a report to that resource can be generated.
 | `corrected_value` / `corrected_label` | no | What it should say, when known. Leave unset when the value is wrong but the right one is unknown. |
 | `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OVER_PROPAGATION`, `SCOPE_OVER_REACH`, `LABEL_WITHOUT_DEFINITION`, `SPECULATION_AS_ASSERTION`, `PRACTICE_CHANGE`, `OTHER`, `UNKNOWN`. The first five are gene-identity confusions; the next five are pipeline and process mechanisms - see [Choosing a cause](#choosing-a-cause). |
 | `confidence` | yes | `CONFIRMED` (file as a correction), `PROBABLE` (file as a query), `SUSPECTED` |
+| `severity` | no | How much it matters if nobody fixes it: `MISLEADING`, `IMPRECISE`, `COSMETIC`. See [Severity is not confidence](#severity-is-not-confidence). |
 | `explanation` | yes | Self-contained text a curator at the resource can act on. |
 | `supported_by` | no | Verbatim quotes, checked like any other `supporting_text`. |
 | `report_status` / `report_url` | no | `NOT_REPORTED` (default), `REPORTED`, `ACKNOWLEDGED`, `FIXED`, `DECLINED`, plus a link once filed. |
@@ -110,21 +111,138 @@ entry does not contain. When a paper only *numbers* residues on a non-displayed
 isoform, nothing in UniProt is wrong: record that with `residue_mappings` on
 the finding instead (see `CLAUDE.md`, Isoform and Negation Tracking).
 
+## Severity is not confidence
+
+`confidence` is how sure the reviewer is that the record is wrong. `severity` is
+how much it matters that it stays wrong. They are independent axes: a defect can
+be `CONFIRMED` and `COSMETIC` (a duplicated row, verified by eye) or `SUSPECTED`
+and `MISLEADING` (an annotation that may name the wrong gene, which would send
+anyone reading it to the wrong protein). Do not use one for the other, and do
+not reach for `severity` to express doubt.
+
+`severity` is optional, and leaving it unset is the normal state: it means the
+consequence has not been assessed, which is *not* the same as `IMPRECISE`. Set
+it when you have a view the worklist's reasons cannot derive — which is the
+point of the field, since every other input to the ranking is already in the
+record.
+
+| value | the consequence of leaving it |
+|---|---|
+| `MISLEADING` | The record makes a claim a reader or a pipeline will act on and that is false: the wrong entity, the opposite of the evidence, an analysis sent to unrelated biology. Fixing it changes conclusions. |
+| `IMPRECISE` | The claim is defensible but less accurate than the evidence supports: an over-broad term, a qualifier overstating a subunit's role, an evidence code stronger than the experiment. Fixing it sharpens the record without changing what anyone would conclude. |
+| `COSMETIC` | The substance is right and the defect is bookkeeping: a duplicated assertion, a mis-keyed reference whose intended paper is unambiguous, a stale label beside a correct identifier. |
+
+In the worklist a set `severity` overrides the position the reasons derive:
+`MISLEADING` sorts above every unassessed defect and `COSMETIC` below every one.
+`IMPRECISE` shares the default band, so recording it states that the consequence
+was assessed and is ordinary without moving the defect — which is worth saying,
+because it stops the next reader assuming nobody looked.
+
 ## Generating reports
 
 ```bash
 just export-source-defects
 ```
 
-This writes `reports/source-defects.tsv`, with one row per defect, and
-`reports/source-defects/<RESOURCE>.md`, with one report per resource listing
-the defects that are not yet `FIXED` or `DECLINED`. These outputs are
-generated and git-ignored: do not commit them. Each one aggregates every
-review in the repository, so a committed copy would conflict between any two
-PRs that touch a defect. The `source_defects` blocks in the reviews are the
-record. Generate the reports when you need them. Filing a report is a
-manual step. When it is done, set `report_status: REPORTED` and
-`report_url`, and set `FIXED` once a re-fetch shows the correction.
+This writes three things, all generated and git-ignored: do not commit them.
+Each aggregates every review in the repository, so a committed copy would
+conflict between any two PRs that touch a defect. The `source_defects` blocks in
+the reviews are the record. Generate the reports when you need them.
+
+| output | contents |
+|---|---|
+| `reports/source-defects.tsv` | one row per recorded instance, with the grouping and ranking columns (`group_id`, `group_rank`, `group_size`, `group_reasons`, `group_severity`) so the data can be queried |
+| `reports/source-defects/<RESOURCE>.md` | the defects for one resource that are not yet `FIXED` or `DECLINED` — the material that is sent upstream |
+| `reports/source-defects/WORKLIST.md` | every open defect once, grouped and ordered worst first across all resources |
+
+Filing a report is a manual step. When it is done, set `report_status:
+REPORTED` and `report_url`, and set `FIXED` once a re-fetch shows the
+correction.
+
+## The worklist: grouping and ranking
+
+### One item per fix, not per review
+
+The same upstream defect is recorded independently by every review that trips
+over it, so the instance count is a fact about our reviewing, not about the
+resource. The worklist groups instances on the **fix** — who must change what,
+in which field of which record, from what, to what:
+
+```
+resource  defect_type  record  slot  asserted_value  corrected_value  requested_change
+```
+
+Everything else on a row is either context that varies across the instances of
+one fix (the gene, the GO term, the evidence code, the reference) or a judgement
+about it (`confidence`, `cause`, `severity`, `explanation`), which is aggregated
+across the group instead. An item is what gets filed: many rows of one
+convention problem are one ticket.
+
+Each field of the key earns its place against the corpus. Dropping `record`
+merges two wrong references on one GO-CAM activity; dropping `slot` merges a
+wrong term in an activity's `part_of` with one in its `has_input`; dropping
+`corrected_value` merges two reviews proposing *different* replacements for the
+same term, which hides a disagreement rather than recording it; dropping
+`requested_change` merges "delete this row" with "repoint it". `asserted_value`
+is kept beside `record`, not displaced by it, for the GO-CAM activity whose two
+bad references are two defects.
+
+**The key's limit is worth knowing.** A GOA-row defect has no `record` of its own
+— the enclosing annotation identifies it, which is why the field is left unset —
+so a group of such defects keyed on a generic `asserted_value` (a qualifier, an
+evidence code) is a *class* of row-level asks rather than one upstream edit. Each
+item therefore reports what it spans (how many gene products, how many annotated
+terms) and how many distinct explanations its instances wrote, so a reader can
+tell the two apart. Over-splitting is recoverable — a maintainer bundles two
+items into one ticket, as one already did for two separate defects on LCMT1 —
+whereas over-merging hides a disagreement, so the key errs towards splitting.
+
+### Ranked by named reasons, not a score
+
+There is no weighted score and no coefficients. Each item carries a small set of
+reasons that are independently true or false of it, printed beside it with the
+ground for each, and the order is lexicographic over those reasons:
+
+1. a curator-set **`severity`**, as described above.
+2. **`propagates`** — one fix corrects every record that inherits it, rather than
+   one row. True when the resource's records are inherited (`INTERPRO` mappings,
+   `PANTHER` node associations, and `GOC`, where the defect is in a term and the
+   fix reaches every annotation using it), or when the defect's own `cause` says
+   it spread. `GOC` is gated on the resource and not additionally on
+   `defect_type: WRONG_TERM`, because by this field's own definition a `GOC`
+   defect *is* an ontology defect, and in fact only one of the six committed
+   `GOC` rows carries that type — the other five are bad definitions, placements
+   and an EC class, all filed `OTHER` because the `defect_type` enum has no value
+   for them. `GO_CENTRAL` is deliberately not in that resource set: it is
+   PAINT's own IBD/IBA curation, not a pipeline (see [Choosing a
+   resource](#choosing-a-resource)); a PAINT row that did over-propagate says so
+   in its `cause` and is picked up that way. The cause limb requires every
+   mechanism the instances *identified* to be a spreading one — `UNKNOWN` and an
+   absent cause are silence, `OTHER` is a different mechanism that was
+   identified, so it counts against. Without that, the corpus's largest group
+   (55 UniProt qualifier rows, 5 of which say `SCOPE_OVER_REACH` and 27 of which
+   name other mechanisms) would claim that one fix corrects all 55.
+3. **`instances: N`**, descending — how many reviews recorded the same fix. More
+   than one means systematic rather than a one-off.
+4. **`misattributed`** — `WRONG_GENE_PRODUCT` or `MISSING_NEGATION`: the record
+   asserts something false about a *different* entity, or the opposite of the
+   evidence, rather than being imprecise about the right one.
+5. **`confirmed`** — a tiebreaker only. Certainty decides *how* to file a defect
+   (a correction rather than a query); it is not how much the defect matters,
+   which is what `severity` is for, so it never outranks the reasons above it.
+6. the grouping key, so the order is total and the file is stable between runs.
+
+Reasons 2 and 3 are both breadth — how many records one fix corrects — and
+breadth is what a worklist orders by, so they come before the kind of wrongness
+and before certainty. An item with no reason at all is a single, unconfirmed,
+non-propagating defect, and the worklist says so rather than leaving its position
+unexplained.
+
+Defects whose every instance has already been filed (`REPORTED`,
+`ACKNOWLEDGED`) are listed in a trailing section instead of the queue: they need
+chasing, not filing, and leaving them in the ranking would dilute it. `FIXED` and
+`DECLINED` instances are dropped before grouping, as they are from the
+per-resource reports, so a group's instance count is the work that remains.
 
 ## Choosing a resource
 
