@@ -146,6 +146,37 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-11-16 — Re-read with the tree: candidate genes and families
+
+Asked to run the re-read as batches of agents. 278 gene rows (every gene with a row on the
+candidate list) and all 386 disputed family node assessments were read against the tree
+and checked by a second agent; 575 rows now quote their extract or listing and say what
+the tree shows, and 87 are left for a curator. Results:
+[tree-evidence.md](tree-evidence.md#the-re-read); method and run records:
+[tree-rereview](tree-rereview/README.md).
+
+What I would do the same way again, and what I would not:
+
+- **Agents read; one script writes.** A checkout is 7.7 GB, so a worktree per agent does
+  not fit. The agents return readings, and `tree_rereview.py` makes the edits from one
+  checkout: quotes assembled from the extract's own sentences, one row's text changed at a
+  time, the file reloaded and compared, the review validated and put back if it fails.
+- **Give the reader a dossier and nothing else.** The first reader was given a 45-row
+  dossier and leave to look around the repository. It spent 400k tokens exploring and
+  returned nothing. With a 24-row dossier and an instruction to work from it alone, a
+  reader finishes in two minutes.
+- **The verifier earns its place.** It faulted about one reading in six, mostly a number
+  or relation stated loosely, and it caught the cases where a row read as harmless hid a
+  claim the tree contradicts.
+- **A smaller model is not a substitute reader.** On two batches it agreed with the
+  larger model on 38 of 43 readings and missed four of the five contradictions.
+- **Seven in ten overrulings are not about the tree at all.** The extract's job there is
+  to show that placement is not the issue.
+
+Not done: the 61 gene batches with no candidate row, about 1,420 rows.
+
+---
+
 ## 2026-11-10 — Tree and alignment evidence
 
 Asked how deeply these reviews look at the full tree and the alignment, I counted the

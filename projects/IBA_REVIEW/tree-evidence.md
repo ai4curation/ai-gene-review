@@ -196,9 +196,11 @@ three gene reviews (MYCTU and VIBCH `cds1`, human CIRBP) quote their extracts.
 
 ## Rows to re-review
 
-`tree-evidence-candidates.yaml` lists 233 rows in three groups. None is a finding that the
-verdict is wrong; each is a row where the verdict and the tree pull apart and someone
-should look.
+`tree-evidence-candidates.yaml` listed 233 rows in three groups when it was first built
+(the counts below). None is a finding that the verdict is wrong; each is a row where the
+verdict and the tree pull apart and someone should look. The file is regenerated from the
+current reviews, so rows leave it as they are corrected: after the re-read below it holds
+229, with 15 in the second group.
 
 | Group | Rows | Why it is listed |
 |---|---:|---|
@@ -212,9 +214,77 @@ their path as well as on that of SSB1, SSB2 and SSZ1. Either the loss is too bro
 accepted rows are stale. SCHPO cab4, yeast CAB4 and worm pnk-1 are overruled as wrong
 paralogs where every seed is a one-to-one ortholog.
 
-Beyond these lists, 1,689 overruled rows now have an extract and 4 quote it (the rows
-re-read above), and 392 node assessments in 219 family reviews dispute a placement, 6 of
-them citing a tree listing. Re-reading the rest with the tree is the remaining work.
+Beyond these lists, 1,689 overruled rows had an extract and 4 quoted it, and 392 node
+assessments in 219 family reviews disputed a placement, 6 of them citing a tree listing.
+
+## The re-read
+
+Between 2026-11-11 and 2026-11-16 every gene with a row on the candidate list, and every
+disputed family node assessment, was read against the tree: by one agent working from a
+dossier of the review's verdict next to the tree facts, checked by a second agent, and
+then edited by script. The method, the plans and a record of every row are in
+[tree-rereview](tree-rereview/README.md).
+
+| | Rows read | Applied | Left for adjudication |
+|---|---:|---:|---:|
+| Gene reviews: the 12 batches that hold every candidate gene | 278 | 236 | 40, and 2 not read |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 339 | 47 |
+
+An applied row quotes its own extract or listing in `supported_by` and says in its reason
+what the tree shows. The script changed no verdict. 239 of the 1,689 overruled IBA rows
+now quote their extract, and 345 of the 392 disputed node assessments cite a tree listing.
+
+What the readers found in the gene rows, which were chosen as the ones most likely to have
+a problem:
+
+| Reading | Rows |
+|---|---:|
+| The verdict rests on something the tree cannot settle, and the tree contradicts nothing the review says | 198 |
+| The review states something about placement, relatedness or the seeds that the tree contradicts | 27 |
+| The tree agrees with a placement argument | 26 |
+| PAINT has itself removed the term on the path | 10 |
+| A kept row under a PAINT loss (loss too broad 7, loss applies 6) | 13 |
+| The verdict is not supported by the tree | 2 |
+| Not read | 2 |
+
+And in the family node assessments:
+
+| Reading | Rows |
+|---|---:|
+| The tree agrees with the reviewer's argument about the node, its seeds or the subfamilies | 210 |
+| The assessment rests on functional evidence the tree cannot settle | 115 |
+| The assessment states something about the tree that the listing contradicts | 30 |
+| The listing has no entry for the node or the term | 26 |
+| The assessment is not supported by the tree | 5 |
+
+Three things follow.
+
+- **Most overrulings of an IBA are not arguments about the tree.** Seven in ten of the
+  gene rows object to the term's scope, to the seed annotation itself, or to a missing
+  domain, and the tree neither helps nor hurts them. For these the extract's use is to
+  show that placement is not the issue, which several reviews had implied it was.
+- **About one gene row in ten, and one family row in thirteen, said something about the
+  tree that was wrong.** Typical cases:
+  a "paralog" that the tree makes a one-to-one ortholog, a "broad" node with five leaves,
+  a seed list described from gene names, a subfamily named as affected that does not
+  descend from the node. 10 gene rows and 24 family rows had their reason corrected after
+  the verifier agreed with the correction; the rest are among the rows left for a curator.
+- **Family reviewers argue from the tree more than gene reviewers, and are mostly right.**
+  More than half of the disputed node assessments make a placement argument that the tree
+  bears out.
+
+87 rows are left for adjudication, each with its reason in the run records: 7 verdicts or
+assessments the tree does not support, 13 kept rows under a PAINT loss, 26 family rows
+whose node or term is not in the listing, and rows where the verifier did not accept the
+reading or its correction.
+
+Not yet read: the 61 gene batches with no candidate row, about 1,420 overruled rows. They
+still raise `missing_tree_evidence`.
+
+The readers of the gene batches and of the first four family batches ran on the session's
+model; the remaining family batches ran on Opus. A trial of a smaller model as reader on
+two batches gave the same reading on 38 of 43 rows but missed four of the five rows where
+the review contradicts the tree, so it is not used.
 
 ## Reproduce
 
