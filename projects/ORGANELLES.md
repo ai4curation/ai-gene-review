@@ -342,12 +342,51 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Golgi batch 1: 20 human genes (2026-11-13); 53 human genes remain on
         the root-only Golgi list with a synthesis row (73 at the 2026-11-13
         survey; 118 human genes are root-only for GO:0005794)
+  - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
+        batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
+        checked and left without one
   - [ ] Write the Golgi rule after more batches; promote "curator deference
         stops at a readable paper" into the numbered rules, since it now
         governs direct-evidence rows too (CABP2, Golgi batch 1 review)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-15 (follow-ups to the tethering and Golgi batch 1 PRs)
+
+Items promised in the reviews of #6297 and #6353.
+
+- **Abstract-only readings swept.** The ER batch 1 GO:0005783 rows were scanned
+  for reasons that rest on a figure from a paper whose cached copy is
+  abstract-only. One case was left: AIMP1, whose ER reason and propagation
+  comment read Figure 2 of PMID:17525271 (endogenous AIMP1 with calnexin). They
+  now say what the Golgi row already said: the UniProt ER item is by similarity to
+  mouse P31230, curated (ECO:0000269) from that paper, and the root is kept on
+  curator deference; the figure reading is not relied on. The action is unchanged
+  (KEEP_AS_NON_CORE). AHCY also cites a figure from an abstract-only cache, but its
+  reason says the figure was read in an externally recovered author manuscript, which
+  the policy allows; BRSK2 cites no figure.
+- **UFSP2.** The caveat now names both the release and the localisation tests as
+  overexpressed worm proteins in HeLa cells, and the notes record the literature
+  half of condition (d) (worm ODR-8 diffusely cytosolic without ODR-4, PMID:24603482
+  Fig 8E).
+- **UFL1 gains the tethering row.** A NEW GO:0098554 IC row beside its ER and ER
+  membrane rows, which all stay as they were. (a) Seven curated ECO:0000269 ER
+  membrane citations; (b) DDRGK1 has an N-terminal transmembrane domain
+  (PMID:38383785) and binds UFL1 directly (PMID:36543799); (c) two dependence tests
+  from two laboratories: GFP-UFL1 spreads through the cytoplasm in UFBP1 knockout
+  cells and returns to KDEL-positive ER on re-expression (PMID:36543799), and
+  deleting the DDRGK1 TM keeps the interaction but makes both proteins cytoplasmic
+  (PMID:32160526); (d) no TM, signal or transit feature, and cytoplasmic whenever
+  DDRGK1 is absent or unanchored. A pre-existing UFL1 quote that was not in its
+  UniProt file (listed in `conf/local_quote_baseline.yaml`) now quotes PMID:32160526,
+  and the baseline was pruned.
+- **CDK5RAP3 does not.** Its stability depends on UFL1 (PMID:20228063), which is
+  soluble, and no cached paper shows CDK5RAP3 released or destabilised when DDRGK1
+  is lost, so condition (c) on an integral partner is not met. Its GO:0005789 IDA
+  rows stay ACCEPT. This is the first case where the route separates two subunits of
+  one complex: being a subunit of a membrane-held complex is not enough unless the
+  subunit's own dependence on the integral partner is shown.
 
 ## 2026-11-13 (Golgi batch 1: 20 human genes)
 

@@ -21,3 +21,8 @@ Principal site: **ER membrane** (extensive EXP/IDA evidence). Also cytoplasm/cyt
 
 ## Core function conclusion
 Core MF: **GO:0061666 UFM1 ligase activity** (E3). Core BP: protein ufmylation (RPL26) supporting 60S recycling / ER-RQC. Many other roles (DNA damage, immune, reticulophagy, transcription) are downstream/non-core.
+
+## 2026-11-15 ORGANELLES tethering route (rule 7)
+
+- Added a NEW GO:0098554 cytoplasmic side of endoplasmic reticulum membrane IC row. The four conditions: (a) ER membrane location with seven curated ECO:0000269 citations; (b) the integral partner DDRGK1 [PMID:38383785 "DDRGK1 contains an N-terminal transmembrane domain and a flexible linker region"], which binds UFL1 directly [PMID:36543799 "We confirmed the direct interaction between UFL1 and UFBP1 by an in vitro pull-down assay"]; (c) dependence [PMID:36543799 "GFP-tagged UFL1 (GFP-UFL1) was present throughout the cytoplasm in the UFBP1 knockout HeLa cells"; PMID:32160526 "Deleting DDRGK1’s N-terminal ER-targeting transmembrane domain (TM) still supported a DDRGK1-UFL1 interaction but led to cytoplasmic localization of both DDRGK1 and UFL1 without ER-phagy"]; (d) no TM, signal or transit feature in UniProt, and cytoplasmic in the literature whenever DDRGK1 is absent or unanchored. Both dependence tests image tagged UFL1, so the row is IC and located_in. The existing GO:0005783 and GO:0005789 rows are unchanged.
+- Fixed a pre-existing quote on the GO:1903895 IDA row (PMID:32160526): the text "Ufmylation-dependent reticulophagy inhibits the unfolded protein response" is not in the UniProt file, so the row now quotes PMID:32160526 directly.
