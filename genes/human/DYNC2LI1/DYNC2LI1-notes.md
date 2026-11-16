@@ -23,3 +23,16 @@ Falcon deep research succeeded (`DYNC2LI1-deep-research-falcon.md`; the first at
 - Module stage 4: dynein-2 subunit; complex-level MF minus-end-directed MT motor activity; retrograde IFT; axoneme.
 - HPA v25: Primary cilium (Supported), Basal body (Supported); main locations Cytosol and Mid piece. GOA carries the HPA rows (GO_REF:0000052) for cilium, ciliary basal body and cytosol, all reviewed (cilium/basal body ACCEPT, cytosol non-core).
 - Assessment: HPA agrees with the module role (cilium plus ciliary base pool). core_functions uses contributes_to minus-end-directed MT motor activity, in cytoplasmic dynein complex, for retrograde IFT. No disagreement.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Rows: EXP (PMID:11907264) and IEA (GO_REF:0000044, SL-0132), both `located_in`, both stay KEEP_AS_NON_CORE.
+- Full text of PMID:11907264 is in the cache (PMC99601). Endogenous D2LIC in COS-7 cells co-stains with p58,
+  "a marker for the pre-Golgi intermediate compartment and cis -Golgi elements"; it stays on nocodazole-induced
+  Golgi fragments with p58; and on brefeldin A "some D2LIC and most DHC2 disappeared from the Golgi apparatus",
+  with recovery on washout. So the Golgi claim has a marker and drug dispersal of the protein itself.
+- No sub-compartment: p58 does not separate ERGIC from cis-Golgi. Recruited motor subunit; antibody injection
+  and myc-D2LIC overexpression left Golgi morphology unchanged, so no activity is shown at the Golgi; the core
+  location remains the cilium and ciliary base.
+- The UniProt Golgi item is ECO:0000269 from the same paper, so the IEA row rests on the same data. Added the
+  UniProt flat file to references (it was already quoted elsewhere in the review).
