@@ -47,8 +47,10 @@ For each family tree the gene's rows sit in:
 - **`seeds`** lists every seed the rows cite. `relation` is read from the event where
   the seed and the gene join: `ORTHOLOG` at a speciation, `PARALOG` at a duplication,
   `XENOLOG` at a horizontal transfer. `duplications_between` and `transfers_between` count
-  the events on the way: an ortholog with no duplication between is one-to-one, while one
-  with duplications between is an ortholog of a whole group of later paralogs. `identity` is over the alignment columns both proteins occupy;
+  the events on the way: an ortholog with neither between is one-to-one, one with
+  duplications between is an ortholog of a whole group of later paralogs, and one with a
+  horizontal-transfer node between is counted apart (see Limits). `identity` is over the
+  alignment columns both proteins occupy;
   `covers_target` and `covers_seed` are those columns as a share of each full-length
   protein. `seed_regions_without_target` and `target_regions_without_seed` are stretches
   of 30 or more aligned residues that the other protein lacks, in the protein's own
@@ -60,9 +62,17 @@ For each family tree the gene's rows sit in:
     ancestor is. When it is the PAINT node, the seeds bracket the node. When it is below
     the node, all the seeds sit in one branch and the curator placed the term above the
     evidence.
-  - `target_in_seed_clade`: whether the gene lies inside the clade the seeds span.
+  - `seeds_resolved`, `seeds_unresolved`: how many of the row's seed tokens were found
+    among the leaves of this tree. `seed_leaves` is given only when two tokens name the
+    same leaf (a gene id and an accession), and is the number of distinct leaves.
+  - `target_in_seed_clade`: whether the gene lies inside the clade the seeds span. When
+    the seeds bracket the node (`seed_mrca_steps_below_node: 0`) that clade is everything
+    below the node, so this is true of every gene the row reaches and says nothing more;
+    `seeds_on_target_branch` then says how many seeds share the gene's own branch.
   - `orthologs`, `one_to_one_orthologs`, `paralogs`, `xenologs`: how the seeds other than
-    the gene itself are related to it.
+    the gene itself are related to it. `orthologs_across_transfers`, given when it is not
+    zero, counts the orthologs with a horizontal-transfer node between them and the gene;
+    they are never counted as one-to-one, and the summary names them apart.
   - `self_seed`: the gene's own experimental annotation is among the seeds.
   - `paint_losses_on_path`: IRD or IKR rows for the same term between the node and the
     gene, from the family's PAINT slice. A non-empty list means the cached IBA is stale.
@@ -143,7 +153,13 @@ facts and lists the rows where the two pull apart
   says one of its branches was transferred, not which one, so transfers on a path are
   counted rather than interpreted.
 - `ORTHOLOG` and `PARALOG` are read from one event. Two proteins joined at a speciation
-  can still have many duplications between them; `duplications_between` says so.
+  can still have many duplications between them; `duplications_between` says so. They
+  can also have a horizontal-transfer node between them, in which case the tree does not
+  say that they descend from the same gene of their common ancestor by vertical descent
+  alone. Such a pair is reported as an ortholog across horizontal-transfer nodes and is
+  not one-to-one, however few duplications lie between. An "ortholog" in an extract is
+  therefore never by itself a refutation of a review that disputes the family or
+  subfamily a gene was placed in: the relation is read from that placement.
 - Identity and coverage are over the family model's columns. A domain the family model
   does not cover is invisible to both.
 - Sequences are those of the PANTHER 19.0 build. Check `same_as_uniprot_file` before

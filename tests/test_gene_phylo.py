@@ -292,7 +292,8 @@ def test_root_row_with_self_seed_transfer_and_unresolved_token(root: Path, relea
     # is counted, not read as making the pair xenologs.
     assert (row["orthologs"], row["paralogs"], row["xenologs"]) == (1, 0, 0)
     assert "its own experimental annotation" in row["summary"]
-    assert "By the tree the other seed is an ortholog across later duplications of TEST1." in row["summary"]
+    assert (row["one_to_one_orthologs"], row["orthologs_across_transfers"]) == (0, 1)
+    assert "By the tree the other seed is an ortholog across horizontal-transfer nodes of TEST1." in row["summary"]
     assert "none of the other seeds shares TEST1's own branch below it (PTN007416424)." in row["summary"]
     seeds = {s["id"]: s for s in tree["seeds"]}
     assert seeds[f"UniProtKB:{TARGET}"]["relation"] == "SELF"
@@ -574,6 +575,79 @@ def test_one_to_one_ortholog_is_told_apart_from_an_ortholog_across_duplications(
     # at Triticeae, but the wheat lineage duplicated afterwards.
     assert (facts["orthologs"], facts["one_to_one_orthologs"]) == (2, 1)
     assert "1 one-to-one ortholog and 1 ortholog across later duplications of TEST6" in facts["summary"]
+
+
+def _barley_row(root: Path, gene: str, with_from: str) -> None:
+    """A gene folder for the barley leaf, with one IBA row citing ``with_from``."""
+    folder = root / "genes" / "HORVV" / gene
+    folder.mkdir(parents=True)
+    row = _goa_row("enables", "GO:0003824", "catalytic activity", "molecular_function", "IBA", with_from)
+    (folder / f"{gene}-goa.tsv").write_text(HEADER + "\n" + row.replace(f"\t{TARGET}\t", "\tA0A8I6Z3U3\t") + "\n")
+
+
+def test_ortholog_across_a_transfer_node_is_not_one_to_one(root: Path, release: PantherRelease) -> None:
+    """A transfer node between two leaves disqualifies a one-to-one call, as a duplication does.
+
+    Brachypodium joins barley at Pooideae with nothing between. The bacterial leaf joins
+    barley at the speciation root with no duplication on either side, but the transfer
+    node AN1 lies between them.
+    """
+    _barley_row(root, "TEST7", "PANTHER:PTN007416421|UniProtKB:A0A0Q3IKV9|UniProtKB:Q747I8")
+    doc = build_gene_phylo(root, "HORVV", "TEST7", release)
+    assert doc is not None
+    tree = doc["trees"][0]
+    bacterial = {s["id"]: s for s in tree["seeds"]}["UniProtKB:Q747I8"]
+    assert (bacterial["relation"], bacterial["transfers_between"]) == ("ORTHOLOG", 1)
+    assert "duplications_between" not in bacterial
+    facts = tree["rows"][0]
+    assert (facts["orthologs"], facts["one_to_one_orthologs"], facts["orthologs_across_transfers"]) == (2, 1, 1)
+    assert (
+        "By the tree the seeds are 1 one-to-one ortholog and 1 ortholog across horizontal-transfer nodes of TEST7."
+        in facts["summary"]
+    )
+
+
+def test_rows_without_a_transfer_between_say_nothing_about_transfers(root: Path, release: PantherRelease) -> None:
+    doc = build_gene_phylo(root, "WHEAT", "TEST1", release)
+    assert doc is not None
+    assert "orthologs_across_transfers" not in doc["trees"][0]["rows"][0]
+
+
+@pytest.mark.parametrize(
+    ("seed", "sentence"),
+    [
+        ("UniProtKB:A0A0Q3IKV9", "By the tree the seed is a one-to-one ortholog of TEST8."),
+        ("UniProtKB:A0A3B6RI80", "By the tree the seed is an ortholog across later duplications of TEST8."),
+        ("UniProtKB:Q747I8", "By the tree the seed is an ortholog across horizontal-transfer nodes of TEST8."),
+    ],
+)
+def test_single_seed_sentence_takes_the_right_article(
+    root: Path, release: PantherRelease, seed: str, sentence: str
+) -> None:
+    _barley_row(root, "TEST8", f"PANTHER:PTN007416421|{seed}")
+    doc = build_gene_phylo(root, "HORVV", "TEST8", release)
+    assert doc is not None
+    assert sentence in doc["trees"][0]["rows"][0]["summary"]
+
+
+def test_two_tokens_for_one_leaf_are_both_resolved(root: Path, release: PantherRelease) -> None:
+    """A gene id and an accession that name the same leaf are two resolved seeds on one leaf."""
+    _barley_row(root, "TEST9", "PANTHER:PTN007416421|EnsemblGenome:GSU3278|UniProtKB:Q747I8|UniProtKB:A0A0Q3IKV9")
+    doc = build_gene_phylo(root, "HORVV", "TEST9", release)
+    assert doc is not None
+    facts = doc["trees"][0]["rows"][0]
+    assert (facts["seeds_resolved"], facts["seeds_unresolved"], facts["seed_leaves"]) == (3, 0, 2)
+    assert "Seeds: 3 of 3 resolved to leaves of this tree, 2 distinct leaves." in facts["summary"]
+    # The two tokens count once: one bacterial leaf across the transfer node, one Brachypodium leaf.
+    assert (facts["orthologs"], facts["one_to_one_orthologs"], facts["orthologs_across_transfers"]) == (2, 1, 1)
+
+
+def test_distinct_leaf_count_is_left_out_when_every_token_has_its_own_leaf(root: Path, release: PantherRelease) -> None:
+    doc = build_gene_phylo(root, "WHEAT", "TEST1", release)
+    assert doc is not None
+    row = doc["trees"][0]["rows"][0]
+    assert "seed_leaves" not in row
+    assert "Seeds: 2 of 2 resolved to leaves of this tree." in row["summary"]
 
 
 def test_loss_lifted_by_a_reassertion_below_it(root: Path, release: PantherRelease) -> None:

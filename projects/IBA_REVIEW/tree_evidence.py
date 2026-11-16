@@ -51,9 +51,9 @@ FIELDS = [
     "gene", "term", "label", "aspect", "negated", "action", "root_cause", "failure_modes",
     "family", "ibd_node", "node_event", "node_taxon", "node_is_root", "node_leaves",
     "node_species", "node_subfamilies", "placed", "steps", "duplications_on_path",
-    "transfers_on_path", "path_length", "seeds", "seeds_resolved", "seeds_unresolved", "self_seed",
-    "seed_branches", "node_branches", "seed_mrca_steps_below_node", "target_in_seed_clade",
-    "orthologs", "one_to_one_orthologs", "paralogs", "xenologs", "nearest_seed",
+    "transfers_on_path", "path_length", "seeds", "seeds_resolved", "seeds_unresolved", "seed_leaves",
+    "self_seed", "seed_branches", "node_branches", "seed_mrca_steps_below_node", "target_in_seed_clade",
+    "orthologs", "one_to_one_orthologs", "orthologs_across_transfers", "paralogs", "xenologs", "nearest_seed",
     "nearest_relation", "nearest_distance", "nearest_identity", "nearest_covers_target",
     "nearest_covers_seed", "max_identity", "paint_losses_on_path", "has_extract", "cites_extract",
 ]
@@ -150,9 +150,11 @@ def facts(root: Path, organism: str, gene: str, release: PantherRelease) -> Iter
                 "seeds": len(row["seeds"]),
                 "seeds_resolved": row["seeds_resolved"],
                 "seeds_unresolved": row["seeds_unresolved"],
+                "seed_leaves": row.get("seed_leaves", row["seeds_resolved"]),
                 **{key: row.get(key, "") for key in (
                     "self_seed", "seed_branches", "node_branches", "seed_mrca_steps_below_node",
-                    "target_in_seed_clade", "orthologs", "one_to_one_orthologs", "paralogs", "xenologs",
+                    "target_in_seed_clade", "orthologs", "one_to_one_orthologs", "orthologs_across_transfers",
+                    "paralogs", "xenologs",
                 )},
                 "nearest_seed": row.get("nearest_seed") or "",
                 "nearest_relation": nearest.get("relation", ""),
@@ -287,7 +289,7 @@ def summary(rows: list[dict[str, str]]) -> str:
 
     groups = defaultdict(list)
     for r in placed:
-        if r["seed_mrca_steps_below_node"] != "" and int(r["seeds_resolved"] or 0) >= 2:
+        if r["seed_mrca_steps_below_node"] != "" and int(r["seed_leaves"] or 0) >= 2:
             groups[_bin(r["seed_mrca_steps_below_node"], [1, 2, 4], ["0 steps: seeds bracket the node", "1 step below", "2-3 steps below", "4 or more steps below"])].append(r)
     out += _table("Verdict by how far the seeds' common ancestor is below the PAINT node (two or more seeds)", groups)
 
@@ -297,8 +299,8 @@ def summary(rows: list[dict[str, str]]) -> str:
     ]
     out.append(
         f"WRONG_ORTHOLOG_OR_PARALOG overrulings: {len(claims)}; with only ortholog seeds and no duplication "
-        f"between the node and the gene: {sum(_only_orthologs(r) for r in claims)}; of those, with every seed "
-        f"a one-to-one ortholog: {sum(_only_orthologs(r, strict=True) for r in claims)}"
+        f"or horizontal-transfer node between the node and the gene: {sum(_only_orthologs(r) for r in claims)}; "
+        f"of those, with every seed a one-to-one ortholog: {sum(_only_orthologs(r, strict=True) for r in claims)}"
     )
     out.append(
         f"overruled although the gene is itself a seed: "
@@ -312,14 +314,15 @@ def summary(rows: list[dict[str, str]]) -> str:
 def _only_orthologs(row: dict[str, str], strict: bool = False) -> bool:
     """True when the tree shows no paralogy between the gene and any seed of the row.
 
-    The seeds are all orthologs and no duplication lies between the PAINT node and the
-    gene. With ``strict`` every seed must also be a one-to-one ortholog, that is, the
-    seeds' own lineages have not duplicated either.
+    The seeds are all orthologs, and neither a duplication nor a horizontal-transfer node
+    lies between the PAINT node and the gene. With ``strict`` every seed must also be a
+    one-to-one ortholog, that is, no duplication or transfer node lies between the gene
+    and any seed either.
     """
     orthologs = int(row["orthologs"] or 0)
     if not orthologs or int(row["paralogs"] or 0) or int(row["xenologs"] or 0):
         return False
-    if int(row["duplications_on_path"] or 0):
+    if int(row["duplications_on_path"] or 0) or int(row["transfers_on_path"] or 0):
         return False
     return not strict or int(row["one_to_one_orthologs"] or 0) == orthologs
 

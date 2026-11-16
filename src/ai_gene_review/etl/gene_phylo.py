@@ -325,6 +325,7 @@ def _relation(tree: FamilyTree, seed: str, target: str) -> tuple[str, str, int, 
     duplication paralogs, horizontal transfer xenologs. Events strictly between that node
     and either leaf are only counted: a transfer node on the way says that one of its
     branches was transferred, not which one, so it is reported rather than interpreted.
+    A pair of orthologs is one-to-one only when neither count is above zero.
     """
     if seed == target:
         return "SELF", target, 0, 0
@@ -546,6 +547,67 @@ def _spread_sentence(tree: FamilyTree, spread: dict[str, Any], gene: str = "") -
     return text + "."
 
 
+def _seeds_sentence(resolved: int, cited: int, leaves: int | None = None) -> str:
+    """How many of a row's seed tokens were found in the tree.
+
+    ``leaves`` is given only when several tokens name the same leaf.
+
+    >>> _seeds_sentence(2, 3)
+    'Seeds: 2 of 3 resolved to leaves of this tree.'
+    >>> _seeds_sentence(3, 3, 2)
+    'Seeds: 3 of 3 resolved to leaves of this tree, 2 distinct leaves.'
+    """
+    text = f"Seeds: {resolved} of {cited} resolved to leaves of this tree"
+    if leaves is not None:
+        text += f", {_count(leaves, 'distinct leaf')}"
+    return text + "."
+
+
+def _relations_sentence(facts: dict[str, Any], gene: str) -> str:
+    """How the seeds other than the gene itself are related to it, as one sentence.
+
+    An ortholog is one-to-one only when neither a duplication nor a horizontal-transfer
+    node lies between it and the gene. An ortholog with a transfer node between is
+    counted apart, whether or not duplications lie between as well.
+
+    >>> _relations_sentence({"orthologs": 1, "one_to_one_orthologs": 1}, "cab4")
+    'By the tree the seed is a one-to-one ortholog of cab4.'
+    >>> _relations_sentence({"orthologs": 6, "one_to_one_orthologs": 2, "orthologs_across_transfers": 4}, "cab4")
+    'By the tree the seeds are 2 one-to-one orthologs and 4 orthologs across horizontal-transfer nodes of cab4.'
+    >>> _relations_sentence({"orthologs": 2, "paralogs": 1, "self_seed": True}, "X")
+    'By the tree the other seeds are 2 orthologs across later duplications and 1 paralog of X.'
+    >>> _relations_sentence({"orthologs": 0}, "X")
+    ''
+    """
+    one_to_one = facts.get("one_to_one_orthologs", 0)
+    across_transfers = facts.get("orthologs_across_transfers", 0)
+    kinds = [
+        (one_to_one, "a one-to-one ortholog", "one-to-one orthologs"),
+        (
+            facts.get("orthologs", 0) - one_to_one - across_transfers,
+            "an ortholog across later duplications",
+            "orthologs across later duplications",
+        ),
+        (
+            across_transfers,
+            "an ortholog across horizontal-transfer nodes",
+            "orthologs across horizontal-transfer nodes",
+        ),
+        (facts.get("paralogs", 0), "a paralog", "paralogs"),
+        (facts.get("xenologs", 0), "a xenolog", "xenologs"),
+    ]
+    kinds = [kind for kind in kinds if kind[0]]
+    if not kinds:
+        return ""
+    other = "other " if facts.get("self_seed") else ""
+    if len(kinds) == 1 and kinds[0][0] == 1:
+        return f"By the tree the {other}seed is {kinds[0][1]} of {gene}."
+    listed = _join(
+        [f"1 {singular.split(' ', 1)[1]}" if n == 1 else f"{n} {plural}" for n, singular, plural in kinds]
+    )
+    return f"By the tree the {other}seeds are {listed} of {gene}."
+
+
 def _summary(
     gene: str,
     row: IbaRow,
@@ -578,33 +640,17 @@ def _summary(
     if not row.seeds:
         parts.append("The row cites no seed.")
         return " ".join(parts)
-    parts.append(f"Seeds: {facts['seeds_resolved']} of {len(row.seeds)} resolved to leaves of this tree.")
-    only_self = facts.get("self_seed") and facts["seeds_resolved"] == 1
+    parts.append(_seeds_sentence(facts["seeds_resolved"], len(row.seeds), facts.get("seed_leaves")))
+    only_self = facts.get("self_seed") and facts.get("seed_leaves", facts["seeds_resolved"]) == 1
     if "seed_mrca" in facts and not only_self:
         parts.append(_spread_sentence(tree, facts, gene))
     if facts.get("self_seed"):
         parts.append(
             f"{gene} is itself a seed: its own experimental annotation is among the evidence for the node."
         )
-    one_to_one = facts.get("one_to_one_orthologs", 0)
-    kinds = [
-        (one_to_one, "one-to-one ortholog", "one-to-one orthologs"),
-        (
-            facts.get("orthologs", 0) - one_to_one,
-            "ortholog across later duplications",
-            "orthologs across later duplications",
-        ),
-        (facts.get("paralogs", 0), "paralog", "paralogs"),
-        (facts.get("xenologs", 0), "xenolog", "xenologs"),
-    ]
-    kinds = [kind for kind in kinds if kind[0]]
-    other = "other " if facts.get("self_seed") else ""
-    if len(kinds) == 1 and kinds[0][0] == 1:
-        noun = kinds[0][1]
-        parts.append(f"By the tree the {other}seed is {'an' if noun[0] == 'o' else 'a'} {noun} of {gene}.")
-    elif kinds:
-        listed = _join([f"{n} {singular if n == 1 else plural}" for n, singular, plural in kinds])
-        parts.append(f"By the tree the {other}seeds are {listed} of {gene}.")
+    relations = _relations_sentence(facts, gene)
+    if relations:
+        parts.append(relations)
     nearest = seeds.get(facts.get("nearest_seed") or "")
     if nearest and "mrca" in nearest:
         top = tree.an_of.get(nearest["mrca"], "")
@@ -801,9 +847,11 @@ def _row_facts(
     distinct = sorted(set(resolved.values()), key=lambda an: tree.ptn_of.get(an, an))
     facts: dict[str, Any] = {
         "seeds": list(row.seeds),
-        "seeds_resolved": len(distinct),
+        "seeds_resolved": len(resolved),
         "seeds_unresolved": len(row.seeds) - len(resolved),
     }
+    if len(distinct) != len(resolved):
+        facts["seed_leaves"] = len(distinct)
     if facts["seeds_unresolved"]:
         facts["unresolved_seeds"] = [t for t in row.seeds if seed_leaf[t] is None]
     outside = sorted(t for t, leaf in resolved.items() if not tree.is_ancestor(ibd_an, leaf))
@@ -836,8 +884,16 @@ def _row_facts(
     relations = Counter(seed["relation"] for seed in others)
     facts["orthologs"] = relations.get("ORTHOLOG", 0)
     facts["one_to_one_orthologs"] = sum(
-        seed["relation"] == "ORTHOLOG" and not seed.get("duplications_between") for seed in others
+        seed["relation"] == "ORTHOLOG"
+        and not seed.get("duplications_between")
+        and not seed.get("transfers_between")
+        for seed in others
     )
+    across_transfers = sum(
+        seed["relation"] == "ORTHOLOG" and bool(seed.get("transfers_between")) for seed in others
+    )
+    if across_transfers:
+        facts["orthologs_across_transfers"] = across_transfers
     facts["paralogs"] = relations.get("PARALOG", 0)
     facts["xenologs"] = relations.get("XENOLOG", 0)
     if relations.get("UNRESOLVED"):
@@ -944,7 +1000,10 @@ def build_gene_phylo(
             )
             unplaced.append({"term": term, "with_from": row.with_from, "reason": reason})
             continue
-        # With several nodes, use the one closest to the leaves (the most specific assertion).
+        # A row is placed in the family of the first node it cites that the release knows.
+        # Of that family's nodes, use the one closest to the leaves (the most specific
+        # assertion); every other node the row cites, in this or another family, is listed
+        # under ``other_nodes``.
         family = located[0][0]
         tree = release.tree(family)
         assert tree is not None
@@ -1021,10 +1080,13 @@ def build_family_nodes(root: Path, family: str, release: PantherRelease) -> dict
                 leaves = [leaf for t in seed_tokens if (leaf := resolve_seed(t, tree, release)[0]) is not None]
                 distinct = sorted(set(leaves), key=lambda x: tree.ptn_of.get(x, x))
                 item["seeds"] = len(seed_tokens)
-                item["seeds_resolved"] = len(distinct)
+                item["seeds_resolved"] = len(leaves)
+                shared = len(distinct) if len(distinct) != len(leaves) else None
+                if shared is not None:
+                    item["seed_leaves"] = shared
                 spread = seed_spread(tree, an, distinct)
                 item.update(spread)
-                text = f"{lead} Seeds: {len(distinct)} of {len(seed_tokens)} resolved to leaves of this tree."
+                text = f"{lead} {_seeds_sentence(len(leaves), len(seed_tokens), shared)}"
                 if spread:
                     text += " " + _spread_sentence(tree, spread)
                 item["summary"] = text

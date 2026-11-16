@@ -23,7 +23,9 @@ entry for that node and term, whose reason is ``assessment_reason`` and whose ve
 Some reviews share one ``supported_by`` list between rows through a YAML anchor and
 alias. Appending to a shared list would change every row that uses it, so the alias is
 first written out as a copy of the list, which leaves the data of the other rows as it
-was. Any other shared value on the path of an edit is refused.
+was. Any other shared value on the path of an edit is refused, whether the row being
+edited refers to the value or is the one that defines it: the text of an anchored value
+is what every row using the anchor reads.
 
 The same approach, for one inserted key, is in
 :mod:`ai_gene_review.tools.backfill_record_sections`.
@@ -31,7 +33,6 @@ The same approach, for one inserted key, is in
 
 from __future__ import annotations
 
-import copy
 import json
 import re
 import textwrap
@@ -373,6 +374,39 @@ def _support_changes(
     return changes
 
 
+def _shared_nodes(root: yaml.Node | None) -> set[int]:
+    """Ids of the nodes a document reaches more than once: those behind an anchor and an alias.
+
+    The composer hands every alias the node of its anchor, so a shared value is one node
+    with several parents.
+
+    >>> root = yaml.compose("a: &x [1]\\nb: *x\\nc: [1]\\n", Loader=yaml.CSafeLoader)
+    >>> shared = _shared_nodes(root)
+    >>> [id(value) in shared for _, value in root.value]
+    [True, True, False]
+    """
+    seen: set[int] = set()
+    shared: set[int] = set()
+    stack = [root] if root is not None else []
+    while stack:
+        node = stack.pop()
+        if id(node) in seen:
+            shared.add(id(node))
+            continue
+        seen.add(id(node))
+        if isinstance(node, yaml.MappingNode):
+            stack.extend(part for pair in node.value for part in pair)
+        elif isinstance(node, yaml.SequenceNode):
+            stack.extend(node.value)
+    return shared
+
+
+def _refuse_shared(node: yaml.Node | None, shared: set[int], what: str) -> None:
+    """Refuse to edit a value that another row also uses."""
+    if node is not None and id(node) in shared:
+        raise RowEditError(f"{what} is shared with another row through a YAML alias")
+
+
 def _alias_sites(text: str) -> dict[str, list[int]]:
     """Text offsets of every alias in the document, by anchor name."""
     sites: dict[str, list[int]] = {}
@@ -389,17 +423,20 @@ def _row_changes(
     edit: RowEdit,
     aliases: dict[str, list[int]],
     rewrite: bool,
+    shared: set[int],
 ) -> list[_Change]:
     """The text changes one edit makes to one row, whose loaded form is ``data``.
 
     With ``rewrite`` an appended reason is written out whole; otherwise the new sentence
-    goes on lines of its own under the existing text.
+    goes on lines of its own under the existing text. ``shared`` holds the ids of the
+    nodes that an anchor and an alias make common to several places (:func:`_shared_nodes`).
     """
     layout = _layout(edit)
     review = _fields(row).get(layout.body) if layout.body else row
     fields = _fields(review)
     if not isinstance(review, yaml.MappingNode) or review.flow_style or not fields or not _inside(row, review):
         raise RowEditError(f"{edit.term_id}: the row has no block-style review of its own")
+    _refuse_shared(review, shared, f"{edit.term_id}: the review")
     key_column = review.start_mark.column
     changes: list[_Change] = []
 
@@ -407,9 +444,14 @@ def _row_changes(
     if edit.new_action:
         if not isinstance(action, yaml.ScalarNode) or action.style:
             raise RowEditError(f"{edit.term_id}: {layout.action} is not a plain scalar")
+        _refuse_shared(action, shared, f"{edit.term_id}: {layout.action}")
         changes.append(_Change(action.start_mark.index, action.end_mark.index, edit.new_action))
 
     reason = edit.replace_reason
+    if edit.append_reason or reason is not None:
+        _refuse_shared(fields.get(layout.reason), shared, f"{edit.term_id}: {layout.reason}")
+    if edit.replace_summary is not None:
+        _refuse_shared(fields.get("summary"), shared, f"{edit.term_id}: summary")
     if edit.append_reason:
         old = fields.get(layout.reason)
         if old is not None and not rewrite:
@@ -436,8 +478,17 @@ def _row_changes(
         what = f"{edit.term_id}: propagation_review.failure_modes"
         propagation = fields.get("propagation_review")
         modes = _block_sequence(_fields(propagation).get("failure_modes"), what)
+        # Shared from either side: this row refers to another row's value (it is written
+        # elsewhere), or other rows refer to this row's (it has more than one parent).
+        _refuse_shared(propagation, shared, what)
+        _refuse_shared(modes, shared, what)
         if propagation is None or not _inside(review, propagation) or not _inside(propagation, modes):
             raise RowEditError(f"{what} is shared with another row through a YAML alias")
+        kept = [item.value for item in modes.value if item.value not in edit.remove_failure_modes]
+        if not kept and not edit.add_failure_modes:
+            raise RowEditError(
+                f"{edit.term_id}: removing {', '.join(edit.remove_failure_modes)} would leave the row without a failure mode"
+            )
         for mode in edit.remove_failure_modes:
             items = [item for item in modes.value if isinstance(item, yaml.ScalarNode) and item.value == mode]
             if not items:
@@ -470,9 +521,33 @@ def _matches(row: Any, edit: RowEdit) -> bool:
     )
 
 
+def _unshared(value: Any) -> Any:
+    """A copy of loaded YAML data in which no list or mapping is one object used in two places.
+
+    The loader gives an anchor and its aliases the same object, and ``copy.deepcopy`` keeps
+    that. A change made to one row of such a copy would show in every row sharing the
+    object, and so would agree with a text edit that leaked the same way.
+
+    >>> shared = ["a"]
+    >>> copied = _unshared({"x": shared, "y": shared})
+    >>> copied["x"].append("b")
+    >>> copied, shared
+    ({'x': ['a', 'b'], 'y': ['a']}, ['a'])
+    """
+    if isinstance(value, dict):
+        return {key: _unshared(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_unshared(item) for item in value]
+    return value
+
+
 def _expected(data: Any, edits: Sequence[RowEdit]) -> Any:
-    """The original data with every edit applied, for comparison with the reloaded text."""
-    expected = copy.deepcopy(data)
+    """The original data with every edit applied to its own rows only.
+
+    Compared with the reloaded text: a text edit that reaches a row it was not meant for,
+    for instance through a YAML anchor, then differs from this and is refused.
+    """
+    expected = _unshared(data)
     for edit in edits:
         layout = _layout(edit)
         for row in expected[layout.collection]:
@@ -562,6 +637,7 @@ def _edited(text: str, edits: Sequence[RowEdit], rewrite: bool) -> str:
     root = yaml.compose(text, Loader=yaml.CSafeLoader)
     changes: list[_Change] = []
     aliases = _alias_sites(text) if any(edit.add_support for edit in edits) else {}
+    shared = _shared_nodes(root)
     for edit in edits:
         collection = _layout(edit).collection
         rows = _fields(root).get(collection)
@@ -571,7 +647,7 @@ def _edited(text: str, edits: Sequence[RowEdit], rewrite: bool) -> str:
         if not matched:
             raise RowEditError(f"no {_target(edit)}")
         for row, node in matched:
-            changes.extend(_row_changes(text, node, row, edit, aliases, rewrite))
+            changes.extend(_row_changes(text, node, row, edit, aliases, rewrite, shared))
     result = _apply(text, changes)
     try:
         reloaded = yaml.load(result, Loader=yaml.CSafeLoader)

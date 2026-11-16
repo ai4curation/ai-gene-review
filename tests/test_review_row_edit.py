@@ -8,7 +8,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ai_gene_review.tools.review_row_edit import RowEdit, RowEditError, apply_row_edits, block_scalar
+from ai_gene_review.tools.review_row_edit import (
+    RowEdit,
+    RowEditError,
+    _expected,
+    apply_row_edits,
+    block_scalar,
+)
 
 REVIEW = """\
 id: P00001
@@ -321,13 +327,84 @@ def test_a_value_cut_short_by_a_comment_is_refused() -> None:
         apply_row_edits(text, [RowEdit("GO:0005681", append_reason="Tree: x.")])
 
 
-def test_failure_modes_shared_through_an_alias_are_refused() -> None:
-    text = REVIEW.replace(
-        "    action: MARK_AS_OVER_ANNOTATED\n    reason: 'A quoted reason'\n",
-        "    action: MARK_AS_OVER_ANNOTATED\n    reason: 'A quoted reason'\n    propagation_review: *shared\n",
-    ).replace("    propagation_review:\n      root_cause", "    propagation_review: &shared\n      root_cause")
-    with pytest.raises(RowEditError, match="shared"):
-        apply_row_edits(text, [RowEdit("GO:0005681", add_failure_modes=("GRANULARITY_MISMATCH",))])
+#: The second row uses the first row's whole ``propagation_review`` block.
+BLOCK_SHARED = REVIEW.replace(
+    "    action: MARK_AS_OVER_ANNOTATED\n    reason: 'A quoted reason'\n",
+    "    action: MARK_AS_OVER_ANNOTATED\n    reason: 'A quoted reason'\n    propagation_review: *shared\n",
+).replace("    propagation_review:\n      root_cause", "    propagation_review: &shared\n      root_cause")
+#: The second row has a block of its own, but its list of failure modes is the first row's.
+LIST_SHARED = REVIEW.replace(
+    "    action: MARK_AS_OVER_ANNOTATED\n    reason: 'A quoted reason'\n",
+    "    action: MARK_AS_OVER_ANNOTATED\n    reason: 'A quoted reason'\n"
+    "    propagation_review:\n      root_cause: PROPAGATION_BAD\n      failure_modes: *modes\n",
+).replace("      failure_modes:\n      - WRONG", "      failure_modes: &modes\n      - WRONG")
+#: The IEA row's reason is the second row's.
+REASON_SHARED = REVIEW.replace("    reason: 'A quoted reason'", "    reason: &why 'A quoted reason'").replace(
+    "    reason: No change here.", "    reason: *why"
+)
+
+
+@pytest.mark.parametrize("text", [BLOCK_SHARED, LIST_SHARED], ids=["block", "list"])
+@pytest.mark.parametrize(
+    "edit",
+    [
+        # The row that refers to the shared value.
+        RowEdit("GO:0005681", add_failure_modes=("GRANULARITY_MISMATCH",)),
+        # The row that defines it: its text is what every other user of the anchor reads.
+        RowEdit("GO:0000398", remove_failure_modes=("WRONG_ORTHOLOG_OR_PARALOG",)),
+        RowEdit("GO:0000398", add_failure_modes=("GRANULARITY_MISMATCH",)),
+    ],
+    ids=["referring-row-add", "defining-row-remove", "defining-row-add"],
+)
+def test_failure_modes_shared_through_an_alias_are_refused_on_either_side(text: str, edit: RowEdit) -> None:
+    assert rows(text)[1]["review"]["propagation_review"]["failure_modes"] == [
+        "WRONG_ORTHOLOG_OR_PARALOG",
+        "FUNCTIONAL_DIVERGENCE",
+    ]
+    with pytest.raises(RowEditError, match="shared with another row through a YAML alias"):
+        apply_row_edits(text, [edit])
+
+
+def test_removing_the_last_failure_mode_is_refused_unless_another_takes_its_place() -> None:
+    text = REVIEW.replace("      - WRONG_ORTHOLOG_OR_PARALOG\n", "")
+    with pytest.raises(RowEditError, match="without a failure mode"):
+        apply_row_edits(text, [RowEdit("GO:0000398", remove_failure_modes=("FUNCTIONAL_DIVERGENCE",))])
+    swapped = RowEdit(
+        "GO:0000398", remove_failure_modes=("FUNCTIONAL_DIVERGENCE",), add_failure_modes=("GRANULARITY_MISMATCH",)
+    )
+    out = apply_row_edits(text, [swapped])
+    assert rows(out)[0]["review"]["propagation_review"]["failure_modes"] == ["GRANULARITY_MISMATCH"]
+
+
+@pytest.mark.parametrize(
+    "edit",
+    [
+        RowEdit("GO:0005681", evidence_type="IBA", append_reason="Tree: one branch."),
+        RowEdit("GO:0005681", evidence_type="IBA", replace_reason="A new reason for this row only."),
+        RowEdit("GO:0005681", evidence_type="IEA", append_reason="Tree: one branch."),
+    ],
+    ids=["defining-row-append", "defining-row-replace", "referring-row-append"],
+)
+def test_a_reason_shared_through_an_alias_is_refused_on_either_side(edit: RowEdit) -> None:
+    assert rows(REASON_SHARED)[2]["review"]["reason"] == "A quoted reason"
+    with pytest.raises(RowEditError, match="shared with another row through a YAML alias"):
+        apply_row_edits(REASON_SHARED, [edit])
+
+
+def test_the_expected_data_gives_each_row_its_own_values() -> None:
+    """The reload check must see a change that reaches a second row through a shared object."""
+    data = yaml.safe_load(BLOCK_SHARED)
+    first, second = (row["review"]["propagation_review"] for row in data["existing_annotations"][:2])
+    assert first is second
+    expected = _expected(data, [RowEdit("GO:0000398", remove_failure_modes=("WRONG_ORTHOLOG_OR_PARALOG",))])
+    first, second = (row["review"]["propagation_review"] for row in expected["existing_annotations"][:2])
+    assert first["failure_modes"] == ["FUNCTIONAL_DIVERGENCE"]
+    assert second["failure_modes"] == ["WRONG_ORTHOLOG_OR_PARALOG", "FUNCTIONAL_DIVERGENCE"]
+    # The data handed in is left as it was.
+    assert data["existing_annotations"][0]["review"]["propagation_review"]["failure_modes"] == [
+        "WRONG_ORTHOLOG_OR_PARALOG",
+        "FUNCTIONAL_DIVERGENCE",
+    ]
 
 
 STYLES = """\
